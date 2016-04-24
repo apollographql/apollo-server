@@ -1,0 +1,14 @@
+language: node_js
+node_js:
+  - "5.1"
+  - "4.2"
+install:
+  - npm install -g coveralls
+  - npm install
+
+script:
+  - npm test
+  - coveralls < ./coverage/lcov.info || true # if coveralls doesn't have it covered
+
+# Allow Travis tests to run in containers.
+sudo: false
