@@ -10,7 +10,8 @@
     "test": "istanbul cover ./node_modules/mocha/bin/_mocha -- --reporter spec --full-trace test/index.js",
     "lint": "eslint .",
     "testonly": "mocha test/index.js",
-    "prepublish": "babel ./src --ignore test --out-dir ./dist"
+    "prepublish": "babel ./src --ignore test --out-dir ./dist",
+    "postinstall": "npm dedupe"
   },
   "repository": {
     "type": "git",
