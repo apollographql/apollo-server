@@ -1,5 +1,7 @@
 import { apolloServer } from '../src/apolloServer';
+import { MockList } from 'graphql-tools';
 import { makeExecutableSchema } from 'graphql-tools';
+import { Tracer } from 'graphql-tools';
 import { expect } from 'chai';
 import express from 'express';
 import request from 'supertest-as-promised';
@@ -49,6 +51,27 @@ const server = apolloServer({
   connectors: testConnectors,
 });
 
+// XXX this app key is not really a secret. It's here so we can either log it
+// or filter it out.
+const t1 = new Tracer({ TRACER_APP_KEY: 'BDE05C83-E58F-4837-8D9A-9FB5EA605D2A' });
+
+const serverWithTracer = apolloServer({
+  schema: testSchema,
+  resolvers: testResolvers,
+  connectors: testConnectors,
+  tracer: t1,
+});
+
+const jsSchema = makeExecutableSchema({
+  typeDefs: testSchema,
+  resolvers: testResolvers,
+  connectors: testConnectors,
+});
+const vanillaServerWithTracer = apolloServer({
+  schema: jsSchema,
+  tracer: t1,
+});
+
 describe('ApolloServer', () => {
   it('can serve a basic request', () => {
     const app = express();
@@ -64,6 +87,89 @@ describe('ApolloServer', () => {
       return expect(res.body.data).to.deep.equal(expected);
     });
   });
+  it('can add tracer', () => {
+    const app = express();
+    app.use('/graphql', serverWithTracer);
+    const expected = {
+      stuff: 'stuff',
+      useTestConnector: 'works',
+      species: 'ROOTuhu',
+    };
+    return request(app)
+    .get(
+      '/graphql?query={stuff useTestConnector species(name: "uhu")}'
+    )
+    .set('X-Apollo-Tracer-Extension', 'on')
+    .then((res) => {
+      // TODO: this test is silly. actually test the output
+      expect(res.body.extensions.timings.length).to.equal(9);
+      return expect(res.body.data).to.deep.equal(expected);
+    });
+  });
+  it('does not return traces unless you ask it to', () => {
+    const app = express();
+    app.use('/graphql', serverWithTracer);
+    const expected = {
+      stuff: 'stuff',
+      useTestConnector: 'works',
+      species: 'ROOTuhu',
+    };
+    return request(app)
+    .get(
+      '/graphql?query={stuff useTestConnector species(name: "uhu")}'
+    )
+    .then((res) => {
+      // eslint-disable-next-line no-unused-expressions
+      expect(res.body.extensions).to.be.undefined;
+      return expect(res.body.data).to.deep.equal(expected);
+    });
+  });
+  it('can add tracer to a graphql-js schema', () => {
+    const app = express();
+    app.use('/graphql', vanillaServerWithTracer);
+    const expected = {
+      stuff: 'stuff',
+      useTestConnector: 'works',
+      species: 'ROOTuhu',
+    };
+    return request(app).get(
+      '/graphql?query={stuff useTestConnector species(name: "uhu")}'
+    )
+    .set('X-Apollo-Tracer-Extension', 'on')
+    .then((res) => {
+      // TODO: this test is silly. actually test the output
+      expect(res.body.extensions.timings.length).to.equal(9);
+      return expect(res.body.data).to.deep.equal(expected);
+    });
+  });
+
+  it('logs tracer events', () => {
+    const realSendReport = t1.sendReport;
+    let interceptedReport;
+    t1.sendReport = (report) => { interceptedReport = report; };
+
+    const app = express();
+    app.use('/graphql', serverWithTracer);
+    const expected = {
+      stuff: 'stuff',
+      useTestConnector: 'works',
+      species: 'ROOTuhu',
+    };
+    return request(app).get(
+      '/graphql?query={stuff useTestConnector species(name: "uhu")}'
+    )
+    .set('X-Apollo-Tracer-Extension', 'on')
+    .then((res) => {
+      // TODO can have race conditions here if executing tests in parallel?
+      // probably better to set up separate tracer instance for this.
+      t1.sendReport = realSendReport;
+      // TODO: this test is silly. actually test the output
+      expect(res.body.extensions.timings.length).to.equal(9);
+      expect(interceptedReport.events.length).to.equal(25);
+      return expect(res.body.data).to.deep.equal(expected);
+    });
+  });
+
   it('throws an error if schema is shorthand and resolvers not defined', () => {
     const app = express();
     const verySadServer = apolloServer({
@@ -101,6 +207,54 @@ describe('ApolloServer', () => {
       '/graphql?query={stuff useTestConnector species(name: "uhu")}'
     ).then((res) => {
       return expect(res.body.data).to.deep.equal(expected);
+    });
+  });
+  it('can mock a schema with unions', () => {
+    const app = express();
+    const schema = `
+      enum SomeEnum {
+        X
+        Y
+        Z
+      }
+      type A {
+        a: SomeEnum!
+      }
+      type B {
+        b: Int!
+      }
+      union C = A | B
+      type Query {
+        someCs: [C]
+      }
+      schema {
+        query: Query
+      }
+    `;
+    const mockServer = apolloServer({
+      schema,
+      resolvers: {
+        C: {
+          __resolveType(data, ctx, info) {
+            return info.schema.getType(data.typename);
+          },
+        },
+      },
+      mocks: {
+        Int: () => 10,
+        SomeEnum: () => 'X',
+        Query: () => ({
+          someCs: () => new MockList(40),
+        }),
+      },
+    });
+    app.use('/graphql', mockServer);
+    return request(app).get(
+      '/graphql?query={someCs {... on A {a} ... on B {b}}}'
+    ).then((res) => {
+      const someCs = res.body.data.someCs;
+      expect(someCs).to.include({a: 'X'});
+      return expect(someCs).to.include({b: 10});
     });
   });
   it('can log errors', () => {
