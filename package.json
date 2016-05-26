@@ -33,8 +33,13 @@
   "homepage": "https://github.com/apollostack/apollo-proxy#readme",
   "dependencies": {
     "babel-polyfill": "^6.5.0",
-    "express-graphql": "^0.5.1",
-    "graphql-tools": "^0.3.10"
+    "graphql-tools": "^0.4.2",
+    "express-widgetizer": "^0.5.2",
+    "fs": "0.0.2",
+    "lodash": "^4.10.0",
+    "node-uuid": "^1.4.7",
+    "performance-now": "^0.2.0",
+    "request": "^2.72.0"
   },
   "devDependencies": {
     "babel-cli": "^6.6.5",
@@ -58,6 +63,9 @@
     "request-promise": "^2.0.1",
     "supertest": "^1.0.1",
     "supertest-as-promised": "^2.0.2"
+  },
+  "peerDependencies": {
+    "graphql": "^0.5.0"
   },
   "eslintConfig": {
     "parser": "babel-eslint",
