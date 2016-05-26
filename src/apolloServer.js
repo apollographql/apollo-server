@@ -87,6 +87,7 @@ export default function apolloServer(options, ...rest) {
         addMockFunctionsToSchema({
           schema: executableSchema,
           mocks: myMocks,
+          preserveResolvers: true,
         });
       } else {
         // this is just basics, makeExecutableSchema should catch the rest

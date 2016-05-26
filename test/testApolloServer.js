@@ -209,6 +209,40 @@ describe('ApolloServer', () => {
       return expect(res.body.data).to.deep.equal(expected);
     });
   });
+  it('can mock a schema and use partially implemented resolvers', () => {
+    const app = express();
+    const mockServer = apolloServer({
+      schema: `
+        type Query {
+          mocked: String
+          resolved(name: String): String
+        }
+        schema {
+          query: Query
+        }
+      `,
+      mocks: {
+        String: () => 'Mocked fallback',
+      },
+      resolvers: {
+        Query: {
+          resolved(root, { name }) {
+            return `Hello, ${name}!`;
+          },
+        },
+      },
+    });
+    app.use('/graphql', mockServer);
+    const expected = {
+      mocked: 'Mocked fallback',
+      resolved: 'Hello, world!',
+    };
+    return request(app).get(
+      '/graphql?query={mocked resolved(name: "world")}'
+    ).then((res) => {
+      return expect(res.body.data).to.deep.equal(expected);
+    });
+  });
   it('can mock a schema with unions', () => {
     const app = express();
     const schema = `
