@@ -45,7 +45,7 @@ const testResolvers = {
     useTestConnector: (r, a, ctx) => {
       return ctx.connectors.TestConnector.get();
     },
-    species: (root, { name }) => root.species + name,
+    species: (root, { name }) => root ? root.species + name : name,
     errorField: () => {
       throw new Error('throws error');
     },
@@ -205,25 +205,13 @@ describe('ApolloServer', () => {
     const app = express();
     const jsServer = apolloServer({
       schema: testJSSchema,
-      resolvers: testResolvers,
-      mocks: {
-        RootQuery: () => ({
-          stuff: () => 'stuffs',
-          useTestConnector: () => 'utc',
-          species: 'rawr',
-        }),
-      }
+      resolvers: testResolvers
     });
     app.use('/graphql', jsServer);
-    const expected = {
-      stuff: 'stuffs',
-      useTestConnector: 'utc',
-      species: 'rawr',
-    };
     return request(app).get(
       '/graphql?query={stuff useTestConnector species(name: "uhu")}'
     ).then((res) => {
-      return expect(res.body.data).to.deep.equal(expected);
+      return expect(res.body.data.species).to.equal("uhu");
     });
   });
 
