@@ -82,7 +82,11 @@ export default function apolloServer(options, ...rest) {
         // TODO: mocks doesn't yet work with a normal GraphQL schema, but it should!
         // have to rewrite these functions
         const myMocks = mocks || {};
-        executableSchema = buildSchemaFromTypeDefinitions(schema);
+        if (schema instanceof GraphQLSchema) {
+          executableSchema = schema
+        } else {
+          executableSchema = buildSchemaFromTypeDefinitions(schema);
+        }
         addResolveFunctionsToSchema(executableSchema, resolvers || {});
         addMockFunctionsToSchema({
           schema: executableSchema,
@@ -104,6 +108,9 @@ export default function apolloServer(options, ...rest) {
             addCatchUndefinedToSchema(schema);
           }
           executableSchema = schema;
+          if (resolvers) {
+            addResolveFunctionsToSchema(executableSchema, resolvers);
+          }
         } else {
           if (!resolvers) {
             // TODO: test this error

@@ -4,6 +4,7 @@ import { makeExecutableSchema } from 'graphql-tools';
 import { Tracer } from 'graphql-tools';
 import { expect } from 'chai';
 import express from 'express';
+import { GraphQLSchema, GraphQLObjectType, GraphQLString } from 'graphql';
 import request from 'supertest-as-promised';
 
 const testSchema = `
@@ -19,6 +20,20 @@ const testSchema = `
         query: RootQuery
       }
     `;
+
+const testJSSchema = new GraphQLSchema({
+  query: new GraphQLObjectType({
+    name: 'RootQuery',
+    fields: {
+      usecontext: { type: GraphQLString },
+      useTestConnector: { type: GraphQLString },
+      species: { type: GraphQLString, args: { name: { type: GraphQLString } } },
+      stuff: { type: GraphQLString },
+      errorField: { type: GraphQLString }
+    }
+  })
+})
+
 const testResolvers = {
   __schema: () => {
     return { stuff: 'stuff', species: 'ROOT' };
@@ -30,7 +45,7 @@ const testResolvers = {
     useTestConnector: (r, a, ctx) => {
       return ctx.connectors.TestConnector.get();
     },
-    species: (root, { name }) => root.species + name,
+    species: (root, { name }) => root ? root.species + name : name,
     errorField: () => {
       throw new Error('throws error');
     },
@@ -185,6 +200,42 @@ describe('ApolloServer', () => {
       );
     });
   });
+
+  it('will append resolvers to a js schema', () => {
+    const app = express();
+    const jsServer = apolloServer({
+      schema: testJSSchema,
+      resolvers: testResolvers
+    });
+    app.use('/graphql', jsServer);
+    return request(app).get(
+      '/graphql?query={stuff useTestConnector species(name: "uhu")}'
+    ).then((res) => {
+      return expect(res.body.data.species).to.equal("uhu");
+    });
+  });
+
+  it('will append resolvers to a js schema when mocked', () => {
+    const app = express();
+    const jsServer = apolloServer({
+      schema: testJSSchema,
+      resolvers: testResolvers,
+      mocks: {
+        RootQuery: () => ({
+          stuff: () => 'stuffs',
+          useTestConnector: () => 'utc',
+          species: 'rawr',
+        }),
+      }
+    });
+    app.use('/graphql', jsServer);
+    return request(app).get(
+      '/graphql?query={stuff useTestConnector species(name: "uhu")}'
+    ).then((res) => {
+      return expect(res.body.data.species).to.equal("uhu");
+    });
+  });
+
   it('can mock a schema', () => {
     const app = express();
     const mockServer = apolloServer({
