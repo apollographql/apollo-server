@@ -215,6 +215,27 @@ describe('ApolloServer', () => {
     });
   });
 
+  it('will append resolvers to a js schema when mocked', () => {
+    const app = express();
+    const jsServer = apolloServer({
+      schema: testJSSchema,
+      resolvers: testResolvers,
+      mocks: {
+        RootQuery: () => ({
+          stuff: () => 'stuffs',
+          useTestConnector: () => 'utc',
+          species: 'rawr',
+        }),
+      }
+    });
+    app.use('/graphql', jsServer);
+    return request(app).get(
+      '/graphql?query={stuff useTestConnector species(name: "uhu")}'
+    ).then((res) => {
+      return expect(res.body.data.species).to.equal("uhu");
+    });
+  });
+
   it('can mock a schema', () => {
     const app = express();
     const mockServer = apolloServer({
