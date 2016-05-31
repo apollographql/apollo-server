@@ -64,6 +64,7 @@ const server = apolloServer({
   schema: testSchema,
   resolvers: testResolvers,
   connectors: testConnectors,
+  context: { usecontext: 'Hi there!' },
 });
 
 // XXX this app key is not really a secret. It's here so we can either log it
@@ -95,9 +96,10 @@ describe('ApolloServer', () => {
       stuff: 'stuff',
       useTestConnector: 'works',
       species: 'ROOTuhu',
+      usecontext: 'Hi there!'
     };
     return request(app).get(
-      '/graphql?query={stuff useTestConnector species(name: "uhu")}'
+      '/graphql?query={stuff useTestConnector usecontext species(name: "uhu")}'
     ).then((res) => {
       return expect(res.body.data).to.deep.equal(expected);
     });
@@ -267,11 +269,17 @@ describe('ApolloServer', () => {
         type Query {
           mocked: String
           resolved(name: String): String
+          usecontext: String
+          useTestConnector: String
         }
         schema {
           query: Query
         }
       `,
+      context: {
+        usecontext: 'Hi there!',
+      },
+      connectors: testConnectors,
       mocks: {
         String: () => 'Mocked fallback',
       },
@@ -280,6 +288,12 @@ describe('ApolloServer', () => {
           resolved(root, { name }) {
             return `Hello, ${name}!`;
           },
+          usecontext(root, args, ctx) {
+            return ctx.usecontext;
+          },
+          useTestConnector: (r, a, ctx) => {
+            return ctx.connectors.TestConnector.get();
+          },
         },
       },
     });
@@ -287,9 +301,11 @@ describe('ApolloServer', () => {
     const expected = {
       mocked: 'Mocked fallback',
       resolved: 'Hello, world!',
+      usecontext: 'Hi there!',
+      useTestConnector: 'works',
     };
     return request(app).get(
-      '/graphql?query={mocked resolved(name: "world")}'
+      '/graphql?query={mocked usecontext useTestConnector resolved(name: "world")}'
     ).then((res) => {
       return expect(res.body.data).to.deep.equal(expected);
     });
