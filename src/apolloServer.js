@@ -5,6 +5,7 @@ import {
   addCatchUndefinedToSchema,
   addResolveFunctionsToSchema,
   addTracingToResolvers,
+  attachConnectorsToContext,
 } from 'graphql-tools';
 import { addMockFunctionsToSchema } from 'graphql-tools';
 import graphqlHTTP from 'express-widgetizer';
@@ -83,7 +84,7 @@ export default function apolloServer(options, ...rest) {
         // have to rewrite these functions
         const myMocks = mocks || {};
         if (schema instanceof GraphQLSchema) {
-          executableSchema = schema
+          executableSchema = schema;
         } else {
           executableSchema = buildSchemaFromTypeDefinitions(schema);
         }
@@ -93,6 +94,9 @@ export default function apolloServer(options, ...rest) {
           mocks: myMocks,
           preserveResolvers: true,
         });
+        if (connectors) {
+          attachConnectorsToContext(executableSchema, connectors);
+        }
       } else {
         // this is just basics, makeExecutableSchema should catch the rest
         // TODO: should be able to provide a GraphQLschema and still use resolvers
