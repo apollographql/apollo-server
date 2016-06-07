@@ -1,7 +1,7 @@
 import { apolloServer } from '../src/apolloServer';
 import { MockList } from 'graphql-tools';
 import { makeExecutableSchema } from 'graphql-tools';
-import { Tracer } from 'graphql-tools';
+import { Tracer } from 'apollo-tracer';
 import { expect } from 'chai';
 import express from 'express';
 import { GraphQLSchema, GraphQLObjectType, GraphQLString } from 'graphql';

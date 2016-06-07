@@ -33,7 +33,8 @@
   "homepage": "https://github.com/apollostack/apollo-proxy#readme",
   "dependencies": {
     "babel-polyfill": "^6.5.0",
-    "graphql-tools": "^0.4.2",
+    "graphql-tools": "^0.6.0",
+    "apollo-tracer": "^0.1.3",
     "express-widgetizer": "^0.5.11",
     "fs": "0.0.2",
     "lodash": "^4.10.0",
