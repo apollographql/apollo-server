@@ -4,9 +4,9 @@ import {
   addErrorLoggingToSchema,
   addCatchUndefinedToSchema,
   addResolveFunctionsToSchema,
-  addTracingToResolvers,
   attachConnectorsToContext,
 } from 'graphql-tools';
+import { addTracingToResolvers } from 'apollo-tracer';
 import { addMockFunctionsToSchema } from 'graphql-tools';
 import graphqlHTTP from 'express-widgetizer';
 import { GraphQLSchema, formatError } from 'graphql';
