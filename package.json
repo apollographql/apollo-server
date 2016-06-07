@@ -34,7 +34,7 @@
   "dependencies": {
     "babel-polyfill": "^6.5.0",
     "graphql-tools": "^0.4.2",
-    "express-widgetizer": "^0.5.2",
+    "express-widgetizer": "^0.5.11",
     "fs": "0.0.2",
     "lodash": "^4.10.0",
     "node-uuid": "^1.4.7",
