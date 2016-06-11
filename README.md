@@ -5,10 +5,18 @@
 [![Coverage Status](https://coveralls.io/repos/github/apollostack/apollo-server/badge.svg?branch=master)](https://coveralls.io/github/apollostack/apollo-server?branch=master)
 [![Get on Slack](http://slack.apollostack.com/badge.svg)](http://slack.apollostack.com/)
 
-## Documentation
 
-Documentation and a tutorial can be found on [docs.apollostack.com](http://docs.apollostack.com/apollo-server).
-
-## Contributions
+### Contributions
 
 Contributions, issues and feature requests are very welcome. If you are using this package and fixed a bug for yourself, please consider submitting a PR!
+
+### Folder structure
+
+**/src/core**:
+- contains the core functionality that is independent of any particular node.js server framework
+
+**/src/bindings/<name>**:
+- Contains the bindings for Node.js server framework <name> (i.e. express, HAPI, Koa, connect)
+
+**/test**:
+- Contains only the index file for tests. All other test files go in the same folder as the code they are testing, and should be named *.test.ts.
