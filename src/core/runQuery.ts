@@ -1,9 +1,15 @@
-import { GraphQLSchema, GraphQLResult, Document } from 'graphql';
-import { parse, validate, execute } from 'graphql';
+import {
+    GraphQLSchema,
+    GraphQLResult,
+    Document,
+    parse,
+    validate,
+    execute,
+} from 'graphql';
 
-interface gqlResponse {
-    data?: Object,
-    errors?: Array<string>,
+export interface GqlResponse {
+    data?: Object;
+    errors?: Array<string>;
 }
 
 function runQuery(
@@ -12,13 +18,13 @@ function runQuery(
   rootValue?: any,
   context?: any,
   variables?: { [key: string]: any },
-  operationName?: string,
+  operationName?: string
   //logFunction?: function => void,
-) : Promise<GraphQLResult> {
+): Promise<GraphQLResult> {
     let documentAST: Document;
 
     // if query is already an AST, don't parse or validate
-    if (typeof query === 'string'){
+    if (typeof query === 'string') {
         // parse
         try {
             documentAST = parse(query);
@@ -29,10 +35,10 @@ function runQuery(
         // validate
         const validationErrors = validate(schema, documentAST, []);
         if (validationErrors.length) {
-            return Promise.resolve({ errors: validationErrors })
+            return Promise.resolve({ errors: validationErrors });
         }
     } else {
-        documentAST = query
+        documentAST = query;
     }
 
     // execute
