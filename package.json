@@ -10,7 +10,14 @@
     "compile": "tsc",
     "postinstall": "typings install && npm dedupe",
     "prepublish": "npm run compile",
-    "test": "mocha --reporter spec --full-trace test/tests.js"
+    "pretest": "npm run compile",
+    "test": "npm run testonly --",
+    "posttest": "npm run lint",
+    "lint": "tslint ./src/**/*",
+    "watch": "tsc -w",
+    "testonly": "mocha --reporter spec --full-trace ./dist/test/tests.js",
+    "coverage": "istanbul cover ./node_modules/mocha/bin/_mocha -- --reporter spec --full-trace --recursive ./dist/test",
+    "postcoverage": "remap-istanbul --input coverage/coverage.raw.json --type lcovonly --output coverage/lcov.info"
   },
   "repository": {
     "type": "git",
@@ -32,13 +39,18 @@
   "homepage": "https://github.com/apollostack/apollo-proxy#readme",
   "dependencies": {
     "es6-promise": "^3.2.1",
+    "graphql": "^0.6.0",
     "source-map-support": "^0.4.0"
   },
   "devDependencies": {
     "chai": "^3.5.0",
+    "es6-promise": "^3.2.1",
     "graphql": "^0.6.0",
     "istanbul": "1.0.0-alpha.2",
     "mocha": "^2.3.3",
+    "remap-istanbul": "^0.5.1",
+    "source-map-support": "^0.4.0",
+    "tslint": "^3.11.0",
     "typescript": "^1.8.10",
     "typings": "^1.0.4"
   },

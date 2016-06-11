@@ -1,0 +1,21 @@
+// Place your settings in this file to overwrite default and user settings.
+{
+  "editor.tabSize": 2,
+  "editor.rulers": [100],
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+  "editor.wrappingColumn": 100,
+  "files.exclude": {
+    "**/.git": true,
+    "**/.DS_Store": true,
+    "node_modules": true,
+    "dist": true,
+    "coverage": true,
+    "coverage.lcov": true,
+    "tsconfig.json": true,
+    "tslint.json": true,
+    "typings.json": false,
+    "typings": true,
+    ".gitignore": false
+  }
+}

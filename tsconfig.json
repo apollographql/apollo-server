@@ -1,19 +1,19 @@
 {
   "compilerOptions": {
-    "target": "es5",
+    "target": "es6",
     "module": "commonjs",
     "moduleResolution": "node",
     "sourceMap": true,
     "declaration": true,
     "noImplicitAny": false,
-    "rootDir": ".",
-    "outDir": "dist",
+    "rootDir": "./src",
+    "outDir": "./dist",
     "allowSyntheticDefaultImports": true,
     "pretty": true,
     "removeComments": true
   },
     "files": [
-        "typings/main.d.ts",
+        "typings/index.d.ts",
         "src/core/runQuery.ts",
         "src/test/tests.ts"
     ]
