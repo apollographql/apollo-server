@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "target": "es5",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "sourceMap": true,
+    "declaration": true,
+    "noImplicitAny": false,
+    "rootDir": ".",
+    "outDir": "dist",
+    "allowSyntheticDefaultImports": true,
+    "pretty": true,
+    "removeComments": true
+  },
+    "files": [
+        "typings/main.d.ts",
+        "src/core/runQuery.ts",
+        "src/test/tests.ts"
+    ]
+}

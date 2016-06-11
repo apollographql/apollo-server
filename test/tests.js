@@ -1,2 +1,0 @@
-import './testApolloServer';
-import './testApolloServerHTTP';

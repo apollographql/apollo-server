@@ -1,0 +1,11 @@
+{
+  "resolution": "main",
+  "tree": {
+    "src": "https://raw.githubusercontent.com/nitintutlani/typed-graphql/master/typings.json",
+    "raw": "github:nitintutlani/typed-graphql",
+    "main": "graphql.d.ts",
+    "global": false,
+    "name": "graphql",
+    "type": "typings"
+  }
+}
