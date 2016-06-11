@@ -18,5 +18,5 @@ Contributions, issues and feature requests are very welcome. If you are using th
 **/src/bindings/<name>**:
 - Contains the bindings for Node.js server framework <name> (i.e. express, HAPI, Koa, connect)
 
-**/test**:
-- Contains only the index file for tests. All other test files go in the same folder as the code they are testing, and should be named *.test.ts.
+**/src/test**:
+- Contains only the `tests.ts` file that imports other tests. All real test files go in the same folder as the code they are testing, and should be named `*.test.ts`.
