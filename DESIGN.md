@@ -29,9 +29,9 @@ Apollo Server should come with a set of integrations for different Node.js serve
 - Koa
 - ...
 
-Framework integrations take care of parsing requests, submitting them to Apollo Server’s core runQuery  function, and sending the response back to the client. As a minimum requirement, wrappers have to accept requests over HTTP and pass the tests written for express-graphql. They should however be written in such a way that makes it easy to add features, such as websocket support, batched queries, subscriptions etc.
+Framework integrations take care of parsing requests, submitting them to Apollo Server’s core runQuery  function, and sending the response back to the client. These integrations should accept requests over HTTP, websockets or other means, then invoke `runQuery` as appropriate, and return the result. They should be written in such a way that makes it easy to add features, such as batched queries, subscriptions etc.
 
-Integrations should be limited to handling transport-specific (eg. setting headers) and framework-specific things (eg. registering a route).
+Framework integrations should hide all transport-specific (eg. setting headers) and framework-specific things (eg. registering a route) from the core functions.
 
-### Extensions
-Things that are not part of runQuery’s tasks, but are GraphQL specific (such as serving the GraphiQL UI, generating a schema, storing prepared queries, etc.)should be implemented in another core module of Apollo Server that lives alongside runQuery, or be imported from graphql-tools or other related packages.
+### Modules
+Things that are not part of runQuery’s tasks, but are GraphQL specific (such as providing a bundle for the GraphiQL UI, generating a schema, storing prepared queries, etc.) should be implemented in another core module of Apollo Server that lives alongside runQuery, or be imported from graphql-tools or other related packages.
