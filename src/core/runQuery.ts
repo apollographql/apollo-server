@@ -12,15 +12,22 @@ export interface GqlResponse {
     errors?: Array<string>;
 }
 
-function runQuery(
+function runQuery({
+    schema,
+    query,
+    rootValue,
+    context,
+    variables,
+    operationName
+ }: {
   schema: GraphQLSchema,
   query: string | Document,
   rootValue?: any,
   context?: any,
   variables?: { [key: string]: any },
   operationName?: string
-  //logFunction?: function => void,
-): Promise<GraphQLResult> {
+  //logFunction?: function => void
+ }): Promise<GraphQLResult> {
     let documentAST: Document;
 
     // if query is already an AST, don't parse or validate

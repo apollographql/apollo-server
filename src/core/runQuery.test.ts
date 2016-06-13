@@ -1,5 +1,5 @@
 import {
-  assert,
+  expect,
 } from 'chai';
 
 // XXX can be removed after tests are actually writen
@@ -35,6 +35,9 @@ describe('runQuery', () => {
       // XXX can be removed after tests are actually writen
       // tslint:disable-next-line:no-unused-variable
       const query = `{ testString }`;
-      assert(true);
+      const expected = { testString: 'it works' };
+      return runQuery({ schema: Schema, query: query }).then((res) => {
+          return expect(res.data).to.deep.equal(expected);
+      });
   });
 });
