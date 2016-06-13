@@ -18,14 +18,14 @@ function runQuery({
     rootValue,
     context,
     variables,
-    operationName
+    operationName,
  }: {
   schema: GraphQLSchema,
   query: string | Document,
   rootValue?: any,
   context?: any,
   variables?: { [key: string]: any },
-  operationName?: string
+  operationName?: string,
   //logFunction?: function => void
  }): Promise<GraphQLResult> {
     let documentAST: Document;
