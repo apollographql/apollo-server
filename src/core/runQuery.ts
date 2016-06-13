@@ -27,6 +27,7 @@ function runQuery({
   variables?: { [key: string]: any },
   operationName?: string,
   //logFunction?: function => void
+  //validationRules?: No, too risky. If you want extra validation rules, then parse it yourself.
  }): Promise<GraphQLResult> {
     let documentAST: Document;
 
@@ -40,7 +41,7 @@ function runQuery({
         }
 
         // validate
-        const validationErrors = validate(schema, documentAST, []);
+        const validationErrors = validate(schema, documentAST);
         if (validationErrors.length) {
             return Promise.resolve({ errors: validationErrors });
         }
