@@ -12,9 +12,8 @@
     "pretty": true,
     "removeComments": true
   },
-    "files": [
-        "typings/index.d.ts",
-        "src/core/runQuery.ts",
-        "src/test/tests.ts"
-    ]
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
 }
