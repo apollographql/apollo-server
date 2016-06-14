@@ -39,6 +39,7 @@
   "homepage": "https://github.com/apollostack/apollo-proxy#readme",
   "dependencies": {
     "es6-promise": "^3.2.1",
+    "express": "^4.13.4",
     "graphql": "^0.6.0",
     "source-map-support": "^0.4.0"
   },
@@ -56,5 +57,9 @@
   },
   "peerDependencies": {
     "graphql": "^0.6.0"
+  },
+  "typings": "dist/index.d.ts",
+  "typescript": {
+    "definition": "dist/index.d.ts"
   }
 }

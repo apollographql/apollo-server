@@ -7,6 +7,8 @@ import {
     execute,
 } from 'graphql';
 
+import { Promise } from 'es6-promise';
+
 export interface GqlResponse {
     data?: Object;
     errors?: Array<string>;
