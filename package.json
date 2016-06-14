@@ -57,5 +57,9 @@
   },
   "peerDependencies": {
     "graphql": "^0.6.0"
+  },
+  "typings": "dist/index.d.ts",
+  "typescript": {
+    "definition": "dist/index.d.ts"
   }
 }
