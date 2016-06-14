@@ -130,7 +130,6 @@ describe('runQuery', () => {
   });
 
   it('correctly passes in variables (and arguments)', () => {
-      // XXX can be removed after tests are actually writen
       const query = `query TestVar($base: Int!){ testArgumentValue(base: $base) }`;
       const expected = { testArgumentValue: 6 };
       return runQuery({
