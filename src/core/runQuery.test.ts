@@ -2,8 +2,6 @@ import {
   expect,
 } from 'chai';
 
-// XXX can be removed after tests are actually writen
-/* tslint:disable:no-unused-variable */
 import {
     GraphQLSchema,
     GraphQLObjectType,
