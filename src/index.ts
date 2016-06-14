@@ -1,3 +1,3 @@
-import expressApollo from './bindings/expressApollo';
+import expressApollo from './integrations/expressApollo';
 
 export { expressApollo };

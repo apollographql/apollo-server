@@ -8,4 +8,4 @@ declare function require(name: string);
 require('source-map-support').install();
 
 import '../core/runQuery.test';
-import '../bindings/expressApollo.test';
+import '../integrations/expressApollo.test';
