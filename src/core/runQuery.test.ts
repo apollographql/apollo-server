@@ -71,6 +71,20 @@ describe('runQuery', () => {
       });
   });
 
+    it('returns a syntax error if the query string contains one', () => {
+      const query = `query { test`;
+      const expected = 'Syntax Error GraphQL (1:13) Expected Name, found EOF\n\n1: query { test\n               ^\n';
+      return runQuery({
+          schema: Schema,
+          query: query,
+          variables: { base: 1 },
+      }).then((res) => {
+          expect(res.data).to.be.undefined;
+          expect(res.errors.length).to.equal(1);
+          return expect(res.errors[0].message).to.deep.equal(expected);
+      });
+  });
+
   it('returns a validation error if the query string does not pass validation', () => {
       const query = `query TestVar($base: String){ testArgumentValue(base: $base) }`;
       const expected = 'Variable "$base" of type "String" used in position expecting type "Int!".';
