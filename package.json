@@ -15,7 +15,7 @@
     "posttest": "npm run lint",
     "lint": "tslint ./src/**/*",
     "watch": "tsc -w",
-    "testonly": "mocha --reporter spec --full-trace ./dist/test/tests.js",
+    "testonly": "mocha --harmony --harmony-destructuring --reporter spec --full-trace ./dist/test/tests.js",
     "coverage": "istanbul cover ./node_modules/mocha/bin/_mocha -- --reporter spec --full-trace --recursive ./dist/test",
     "postcoverage": "remap-istanbul --input coverage/coverage.raw.json --type lcovonly --output coverage/lcov.info"
   },

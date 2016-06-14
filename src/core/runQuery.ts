@@ -12,15 +12,23 @@ export interface GqlResponse {
     errors?: Array<string>;
 }
 
-function runQuery(
+function runQuery({
+    schema,
+    query,
+    rootValue,
+    context,
+    variables,
+    operationName,
+ }: {
   schema: GraphQLSchema,
   query: string | Document,
   rootValue?: any,
   context?: any,
   variables?: { [key: string]: any },
-  operationName?: string
-  //logFunction?: function => void,
-): Promise<GraphQLResult> {
+  operationName?: string,
+  //logFunction?: function => void
+  //validationRules?: No, too risky. If you want extra validation rules, then parse it yourself.
+ }): Promise<GraphQLResult> {
     let documentAST: Document;
 
     // if query is already an AST, don't parse or validate
@@ -33,7 +41,7 @@ function runQuery(
         }
 
         // validate
-        const validationErrors = validate(schema, documentAST, []);
+        const validationErrors = validate(schema, documentAST);
         if (validationErrors.length) {
             return Promise.resolve({ errors: validationErrors });
         }
