@@ -138,7 +138,7 @@ export default function apolloServer(options, ...rest) {
       tracerLogger = {
         log: undefined,
         report: () => {},
-        sumbit: () => {}
+        submit: () => {}
       };
       if (tracer) {
         tracerLogger = tracer.newLoggerInstance();
