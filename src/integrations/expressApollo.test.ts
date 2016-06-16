@@ -2,15 +2,13 @@ import {
   assert,
 } from 'chai';
 
-// XXX can be removed after tests are actually writen
-/* tslint:disable:no-unused-variable */
 import {
     GraphQLSchema,
     GraphQLObjectType,
     GraphQLString,
 } from 'graphql';
 
-import expressApollo from './expressApollo';
+import { graphqlHTTP, renderGraphiQL } from './expressApollo';
 
 const QueryType = new GraphQLObjectType({
     name: 'QueryType',
@@ -27,17 +25,30 @@ const QueryType = new GraphQLObjectType({
 const Schema = new GraphQLSchema({
     query: QueryType,
 });
-// XXX can be removed after tests are actually writen
-/* tslint:enable:no-unused-variable */
 
 describe('expressApollo', () => {
-  it('returns express middleware', () => {
-      // XXX can be removed after tests are actually writen
-      // tslint:disable-next-line:no-unused-variable
-      const query = `{ testString }`;
-      const middleware = expressApollo({
-        schema: Schema,
-      });
-      assert(typeof middleware === 'function');
+  describe('graphqlHTTP', () => {
+    it('returns express middleware', () => {
+        const middleware = graphqlHTTP({
+            schema: Schema,
+        });
+        assert(typeof middleware === 'function');
+    });
+    // it('throws error if called without schema', () => {
+       // XXX there's no way to test this in Typescript, right?
+       // but we need to test this for JavaScript users,
+       // so maybe we should write all tests in JavaScript?
+       // is that possible?
+    // });
+  });
+
+  describe('renderGraphiQL', () => {
+    it('returns express middleware', () => {
+        const query = `{ testString }`;
+        const middleware = renderGraphiQL({
+            query: query,
+        });
+        assert(typeof middleware === 'function');
+    });
   });
 });

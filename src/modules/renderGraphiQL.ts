@@ -3,11 +3,15 @@
  * (https://github.com/graphql/express-graphql/blob/master/LICENSE)
  */
 
+// TODO: in the future, build the GraphiQL app on the server, so it does not
+// depend on any CDN and can be run offline.
+
 export type GraphiQLData = {
   query?: string,
   variables?: Object,
   operationName?: string,
-  result?: Object
+  result?: Object,
+  // graphQLEndpointURL?: String, // TODO: make this URL thing work.
 };
 
 // Current latest version of GraphiQL.
@@ -32,6 +36,7 @@ export function renderGraphiQL(data: GraphiQLData): string {
   const resultString =
     data.result ? JSON.stringify(data.result, null, 2) : null;
   const operationName = data.operationName;
+  // const graphqlEndpointURL = data.graphQLEndpointURL;
 
   /* eslint-disable max-len */
   return `<!--

@@ -2,13 +2,22 @@ import * as express from 'express';
 import * as graphql from 'graphql';
 import { runQuery } from '../core/runQuery';
 
-export interface ExpressBindings {
+import { renderGraphiQL, GraphiQLData } from '../modules/renderGraphiQL';
+
+// TODO: will these be the same or different for other integrations?
+export interface ExpressApolloOptions {
   schema: graphql.GraphQLSchema;
+  formatError?: Function;
+  rootValue?: any;
+  context?: any;
+  logFunction?: Function;
+  // TODO: does this need to be able to take a promise as well, like express-graphql does?
+  // answer: yes, it does. Func(req) => options
 }
 
-export default function(options: ExpressBindings) {
+export function graphqlHTTP(options: ExpressApolloOptions) {
   if (!options) {
-    throw new Error('GraphQL middleware requires options.');
+    throw new Error('Apollo graphqlHTTP middleware requires options.');
   }
 
   if (arguments.length > 1) {
@@ -21,9 +30,22 @@ export default function(options: ExpressBindings) {
       query: req.body,
     }).then(gqlResponse => {
       res.set('Content-Type', 'application/json');
-      res.send({ data: gqlResponse.data });
-    }).catch(gqlResponse => {
-      res.send(gqlResponse.errorCode, { errors: gqlResponse.errors });
+      res.send({ data: gqlResponse.data, errors: gqlResponse.errors });
     });
+  };
+}
+
+// this returns the html for the GraphiQL interactive query UI
+// TODO: it's still missing a way to tell it where the GraphQL endpoint is.
+export function renderGraphiQL(options: GraphiQLData) {
+  return (req: express.Request, res: express.Response, next) => {
+    const graphiQLString = renderGraphiQL({
+      query: options.query,
+      variables: options.variables,
+      operationName: options.operationName,
+      result: options.result,
+    });
+    res.set('Content-Type', 'text/html');
+    res.send(graphiQLString);
   };
 }
