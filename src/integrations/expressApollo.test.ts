@@ -1,5 +1,6 @@
 import {
   assert,
+  expect,
 } from 'chai';
 
 import {
@@ -8,7 +9,12 @@ import {
     GraphQLString,
 } from 'graphql';
 
-import { graphqlHTTP, renderGraphiQL } from './expressApollo';
+// TODO use import, not require... help appreciated.
+import * as express from 'express';
+// tslint:disable-next-line
+const request = require('supertest-as-promised');
+
+import { graphqlHTTP, ExpressApolloOptions, renderGraphiQL } from './expressApollo';
 
 const QueryType = new GraphQLObjectType({
     name: 'QueryType',
@@ -28,19 +34,31 @@ const Schema = new GraphQLSchema({
 
 describe('expressApollo', () => {
   describe('graphqlHTTP', () => {
-    it('returns express middleware', () => {
+     it('returns express middleware', () => {
         const middleware = graphqlHTTP({
             schema: Schema,
         });
         assert(typeof middleware === 'function');
     });
-    // it('throws error if called without schema', () => {
-       // XXX there's no way to test this in Typescript, right?
-       // but we need to test this for JavaScript users,
-       // so maybe we should write all tests in JavaScript?
-       // is that possible?
-    // });
+    it('throws error if called without schema', () => {
+       expect(() => graphqlHTTP(undefined as ExpressApolloOptions)).to.throw('Apollo graphqlHTTP middleware requires options.');
+    });
+
+
+    it('can serve a basic request', () => {
+        const app = express();
+        app.use('/graphql', graphqlHTTP({ schema: Schema }));
+        const expected = {
+            testString: 'it works',
+        };
+        return request(app).get(
+            '/graphql?query={ testString }'
+        ).then((res) => {
+            return expect(res.body.data).to.deep.equal(expected);
+        });
+    });
   });
+
 
   describe('renderGraphiQL', () => {
     it('returns express middleware', () => {

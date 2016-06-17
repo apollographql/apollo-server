@@ -25,14 +25,23 @@ export function graphqlHTTP(options: ExpressApolloOptions) {
   }
 
   return (req: express.Request, res: express.Response, next) => {
-    runQuery({
+    return runQuery({
       schema: options.schema,
-      query: req.body,
+      query: getQueryString(req),
     }).then(gqlResponse => {
       res.set('Content-Type', 'application/json');
       res.send({ data: gqlResponse.data, errors: gqlResponse.errors });
     });
   };
+}
+
+function getQueryString(req: express.Request): string {
+    if (req.method === 'POST') {
+      return req.body;
+    } else if (req.method === 'GET') {
+      return req.query['query'];
+    }
+    throw new Error(`HTTP method ${req.method} not supported`);
 }
 
 // this returns the html for the GraphiQL interactive query UI
