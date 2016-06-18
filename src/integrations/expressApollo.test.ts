@@ -11,7 +11,8 @@ import {
 
 // TODO use import, not require... help appreciated.
 import * as express from 'express';
-import request from 'supertest-as-promised';
+// tslint:disable-next-line
+const request = require('supertest-as-promised');
 
 import { graphqlHTTP, ExpressApolloOptions, renderGraphiQL } from './expressApollo';
 
@@ -52,9 +53,7 @@ describe('expressApollo', () => {
         };
         return request(app).get(
             '/graphql?query={ testString }'
-        )
-        .expect(200)
-        .then((res) => {
+        ).then((res) => {
             return expect(res.body.data).to.deep.equal(expected);
         });
     });
