@@ -16,7 +16,7 @@ export interface HapiApolloOptions {
     logFunction?: Function;
 }
 
-export default class Plugin {
+export class HapiApollo {
     constructor() {
         this.register.attributes = {
             name: 'graphql',
@@ -24,7 +24,7 @@ export default class Plugin {
         };
     }
 
-    public register: IRegister = (server, options, next) => {
+    public register: IRegister = (server: hapi.Server, options: HapiApolloOptions, next) => {
         server.route({
             method: 'GET',
             path: '/test',
