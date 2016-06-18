@@ -2,7 +2,7 @@ import * as express from 'express';
 import * as graphql from 'graphql';
 import { runQuery } from '../core/runQuery';
 
-import { renderGraphiQL, GraphiQLData } from '../modules/renderGraphiQL';
+import * as GraphiQL from '../modules/renderGraphiQL';
 
 // TODO: will these be the same or different for other integrations?
 export interface ExpressApolloOptions {
@@ -15,7 +15,11 @@ export interface ExpressApolloOptions {
   // answer: yes, it does. Func(req) => options
 }
 
-export function graphqlHTTP(options: ExpressApolloOptions) {
+export interface ExpressHandler {
+  (req: express.Request, res: express.Response, next): void;
+}
+
+export function graphqlHTTP(options: ExpressApolloOptions): ExpressHandler {
   if (!options) {
     throw new Error('Apollo graphqlHTTP middleware requires options.');
   }
@@ -46,9 +50,9 @@ function getQueryString(req: express.Request): string {
 
 // this returns the html for the GraphiQL interactive query UI
 // TODO: it's still missing a way to tell it where the GraphQL endpoint is.
-export function renderGraphiQL(options: GraphiQLData) {
+export function renderGraphiQL(options: GraphiQL.GraphiQLData) {
   return (req: express.Request, res: express.Response, next) => {
-    const graphiQLString = renderGraphiQL({
+    const graphiQLString = GraphiQL.renderGraphiQL({
       query: options.query,
       variables: options.variables,
       operationName: options.operationName,

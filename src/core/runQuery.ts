@@ -7,58 +7,51 @@ import {
     execute,
 } from 'graphql';
 
-import { Promise } from 'es6-promise';
-
 export interface GqlResponse {
     data?: Object;
     errors?: Array<string>;
 }
 
-function runQuery({
-    schema,
-    query,
-    rootValue,
-    context,
-    variables,
-    operationName,
- }: {
-  schema: GraphQLSchema,
-  query: string | Document,
-  rootValue?: any,
-  context?: any,
-  variables?: { [key: string]: any },
-  operationName?: string,
-  //logFunction?: function => void
-  //validationRules?: No, too risky. If you want extra validation rules, then parse it yourself.
- }): Promise<GraphQLResult> {
+export interface QueryOptions {
+ schema: GraphQLSchema;
+ query: string | Document;
+ rootValue?: any;
+ context?: any;
+ variables?: { [key: string]: any };
+ operationName?: string;
+ //logFunction?: function => void
+ //validationRules?: No, too risky. If you want extra validation rules, then parse it yourself.
+}
+
+function runQuery(options: QueryOptions): Promise<GraphQLResult> {
     let documentAST: Document;
 
     // if query is already an AST, don't parse or validate
-    if (typeof query === 'string') {
+    if (typeof options.query === 'string') {
         // parse
         try {
-            documentAST = parse(query);
+            documentAST = parse(options.query as string);
         } catch (syntaxError) {
             return Promise.resolve({ errors: [syntaxError] });
         }
 
         // validate
-        const validationErrors = validate(schema, documentAST);
+        const validationErrors = validate(options.schema, documentAST);
         if (validationErrors.length) {
             return Promise.resolve({ errors: validationErrors });
         }
     } else {
-        documentAST = query;
+        documentAST = options.query as Document;
     }
 
     // execute
     return execute(
-        schema,
+        options.schema,
         documentAST,
-        rootValue,
-        context,
-        variables,
-        operationName
+        options.rootValue,
+        options.context,
+        options.variables,
+        options.operationName
     );
 }
 
