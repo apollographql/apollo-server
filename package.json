@@ -41,14 +41,17 @@
     "es6-promise": "^3.2.1",
     "express": "^4.13.4",
     "graphql": "^0.6.0",
+    "http-errors": "^1.5.0",
     "source-map-support": "^0.4.0"
   },
   "devDependencies": {
+    "body-parser": "^1.15.2",
     "chai": "^3.5.0",
     "es6-promise": "^3.2.1",
     "graphql": "^0.6.0",
     "istanbul": "1.0.0-alpha.2",
     "mocha": "^2.3.3",
+    "multer": "^1.1.0",
     "remap-istanbul": "^0.5.1",
     "source-map-support": "^0.4.0",
     "supertest": "^1.2.0",

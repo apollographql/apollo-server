@@ -4,6 +4,8 @@ import { runQuery } from '../core/runQuery';
 
 import { renderGraphiQL, GraphiQLData } from '../modules/renderGraphiQL';
 
+import httpError from 'http-errors';
+
 // TODO: will these be the same or different for other integrations?
 export interface ExpressApolloOptions {
   schema: graphql.GraphQLSchema;
@@ -11,37 +13,74 @@ export interface ExpressApolloOptions {
   rootValue?: any;
   context?: any;
   logFunction?: Function;
+  // pretty?: boolean;
   // TODO: does this need to be able to take a promise as well, like express-graphql does?
   // answer: yes, it does. Func(req) => options
 }
 
-export function graphqlHTTP(options: ExpressApolloOptions) {
+export interface ExpressApolloOptionsFunction {
+  (req?: express.Request): ExpressApolloOptions;
+}
+
+// Design principles:
+// - there is just one way allowed: POST request with JSON body. Nothing else.
+// - simple, fast and secure
+//
+export function graphqlHTTP(options: ExpressApolloOptions | ExpressApolloOptionsFunction) {
   if (!options) {
-    throw new Error('Apollo graphqlHTTP middleware requires options.');
+    throw new Error('Apollo Server requires options.');
   }
 
   if (arguments.length > 1) {
-    throw new Error(`apolloServer expects exactly one argument, got ${arguments.length + 1}`);
+    // TODO: test this
+    throw new Error(`Apollo Server expects exactly one argument, got ${arguments.length + 1}`);
   }
 
   return (req: express.Request, res: express.Response, next) => {
+    let optionsObject: ExpressApolloOptions;
+    if (isOptionsFunction(options)) {
+      optionsObject = options(req);
+    } else {
+      optionsObject = options;
+    }
+
+    if (req.method !== 'POST') {
+      res.setHeader('Allow', 'POST');
+      throw httpError(405, 'Apollo Server supports only POST requests for GraphQL.');
+    }
+
+    // TODO: some sanity checks here.
+    const { query, variables, operationName } = req.body;
+
+    // either query or operationName must be present. Return 400 otherwise
+    // if only operationName is present, check if it's in store. Return 400 otherwise
+
+    // TODO: in store, fragments should only have to be written once, then used across queries.
+
     return runQuery({
-      schema: options.schema,
-      query: getQueryString(req),
+      schema: optionsObject.schema,
+      query: query,
+      variables: variables,
+      rootValue: optionsObject.rootValue,
+      operationName: operationName,
     }).then(gqlResponse => {
       res.set('Content-Type', 'application/json');
-      res.send({ data: gqlResponse.data, errors: gqlResponse.errors });
+      if (gqlResponse.errors && !gqlResponse.data) {
+        res.status(400);
+      }
+      const response = {
+        data: gqlResponse.data,
+      };
+      if (gqlResponse.errors) {
+        response['errors'] = gqlResponse.errors.map(graphql.formatError);
+      }
+      res.send(JSON.stringify(response));
     });
   };
 }
 
-function getQueryString(req: express.Request): string {
-    if (req.method === 'POST') {
-      return req.body;
-    } else if (req.method === 'GET') {
-      return req.query['query'];
-    }
-    throw new Error(`HTTP method ${req.method} not supported`);
+function isOptionsFunction(arg: ExpressApolloOptions | ExpressApolloOptionsFunction): arg is ExpressApolloOptionsFunction {
+  return typeof arg === 'function';
 }
 
 // this returns the html for the GraphiQL interactive query UI

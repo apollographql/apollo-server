@@ -7,7 +7,12 @@ import {
     execute,
 } from 'graphql';
 
-import { Promise } from 'es6-promise';
+// TODO: maybe return a status as well,
+// because for HTTP we need to return 200, 400, 405 etc.
+
+// the annoying thing is that if we want to allow operations over GET
+// then we need to parse the request before we pass it in to make sure
+// it's a query and not a mutation or something else.
 
 export interface GqlResponse {
     data?: Object;
@@ -33,6 +38,8 @@ function runQuery({
  }): Promise<GraphQLResult> {
     let documentAST: Document;
 
+    // TODO: add loggingFunction
+
     // if query is already an AST, don't parse or validate
     if (typeof query === 'string') {
         // parse
@@ -49,17 +56,23 @@ function runQuery({
         }
     } else {
         documentAST = query;
+        // validate variables here, i.e. noUndefinedVariables, NoUnusedVariables, ArgumentsOfCorrectType?
+        // TODO: the way graphql-js validates this could be inefficient.
     }
 
     // execute
-    return execute(
-        schema,
-        documentAST,
-        rootValue,
-        context,
-        variables,
-        operationName
-    );
+    try {
+        return execute(
+            schema,
+            documentAST,
+            rootValue,
+            context,
+            variables,
+            operationName
+        );
+    } catch (executionError) {
+        return Promise.resolve({ errors: [ executionError ] });
+    }
 }
 
 export { runQuery };
