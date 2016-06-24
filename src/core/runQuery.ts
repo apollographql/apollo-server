@@ -7,6 +7,7 @@ import {
     execute,
 } from 'graphql';
 
+<<<<<<< HEAD
 // TODO: maybe return a status as well,
 // because for HTTP we need to return 200, 400, 405 etc.
 
@@ -14,48 +15,45 @@ import {
 // then we need to parse the request before we pass it in to make sure
 // it's a query and not a mutation or something else.
 
+=======
+>>>>>>> f6f25c611ef12603e46c675ec01febd356579b70
 export interface GqlResponse {
     data?: Object;
     errors?: Array<string>;
 }
 
-function runQuery({
-    schema,
-    query,
-    rootValue,
-    context,
-    variables,
-    operationName,
- }: {
-  schema: GraphQLSchema,
-  query: string | Document,
-  rootValue?: any,
-  context?: any,
-  variables?: { [key: string]: any },
-  operationName?: string,
-  //logFunction?: function => void
-  //validationRules?: No, too risky. If you want extra validation rules, then parse it yourself.
- }): Promise<GraphQLResult> {
+export interface QueryOptions {
+ schema: GraphQLSchema;
+ query: string | Document;
+ rootValue?: any;
+ context?: any;
+ variables?: { [key: string]: any };
+ operationName?: string;
+ //logFunction?: function => void
+ //validationRules?: No, too risky. If you want extra validation rules, then parse it yourself.
+}
+
+function runQuery(options: QueryOptions): Promise<GraphQLResult> {
     let documentAST: Document;
 
     // TODO: add loggingFunction
 
     // if query is already an AST, don't parse or validate
-    if (typeof query === 'string') {
+    if (typeof options.query === 'string') {
         // parse
         try {
-            documentAST = parse(query);
+            documentAST = parse(options.query as string);
         } catch (syntaxError) {
             return Promise.resolve({ errors: [syntaxError] });
         }
 
         // validate
-        const validationErrors = validate(schema, documentAST);
+        const validationErrors = validate(options.schema, documentAST);
         if (validationErrors.length) {
             return Promise.resolve({ errors: validationErrors });
         }
     } else {
-        documentAST = query;
+        documentAST = options.query as Document;
         // validate variables here, i.e. noUndefinedVariables, NoUnusedVariables, ArgumentsOfCorrectType?
         // TODO: the way graphql-js validates this could be inefficient.
     }

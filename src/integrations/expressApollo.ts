@@ -2,7 +2,7 @@ import * as express from 'express';
 import * as graphql from 'graphql';
 import { runQuery } from '../core/runQuery';
 
-import { renderGraphiQL, GraphiQLData } from '../modules/renderGraphiQL';
+import * as GraphiQL from '../modules/renderGraphiQL';
 
 import httpError from 'http-errors';
 
@@ -26,7 +26,12 @@ export interface ExpressApolloOptionsFunction {
 // - there is just one way allowed: POST request with JSON body. Nothing else.
 // - simple, fast and secure
 //
-export function graphqlHTTP(options: ExpressApolloOptions | ExpressApolloOptionsFunction) {
+
+export interface ExpressHandler {
+  (req: express.Request, res: express.Response, next): void;
+}
+
+export function graphqlHTTP(options: ExpressApolloOptions): ExpressHandler {
   if (!options) {
     throw new Error('Apollo Server requires options.');
   }
@@ -85,9 +90,9 @@ function isOptionsFunction(arg: ExpressApolloOptions | ExpressApolloOptionsFunct
 
 // this returns the html for the GraphiQL interactive query UI
 // TODO: it's still missing a way to tell it where the GraphQL endpoint is.
-export function renderGraphiQL(options: GraphiQLData) {
+export function renderGraphiQL(options: GraphiQL.GraphiQLData) {
   return (req: express.Request, res: express.Response, next) => {
-    const graphiQLString = renderGraphiQL({
+    const graphiQLString = GraphiQL.renderGraphiQL({
       query: options.query,
       variables: options.variables,
       operationName: options.operationName,

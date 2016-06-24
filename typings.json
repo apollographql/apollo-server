@@ -7,7 +7,7 @@
     "body-parser": "registry:dt/body-parser#0.0.0+20160619023215",
     "express": "registry:dt/express#4.0.0+20160317120654",
     "express-serve-static-core": "registry:dt/express-serve-static-core#0.0.0+20160322035842",
-    "hapi": "registry:dt/hapi#13.0.0+20160521152637",
+    "hapi": "registry:dt/hapi#13.0.0+20160602125023",
     "koa": "registry:dt/koa#2.0.0+20160317120654",
     "mime": "registry:dt/mime#0.0.0+20160316155526",
     "mocha": "registry:dt/mocha#2.2.5+20160317120654",
