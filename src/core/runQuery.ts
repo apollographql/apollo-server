@@ -7,7 +7,6 @@ import {
     execute,
 } from 'graphql';
 
-<<<<<<< HEAD
 // TODO: maybe return a status as well,
 // because for HTTP we need to return 200, 400, 405 etc.
 
@@ -15,8 +14,6 @@ import {
 // then we need to parse the request before we pass it in to make sure
 // it's a query and not a mutation or something else.
 
-=======
->>>>>>> f6f25c611ef12603e46c675ec01febd356579b70
 export interface GqlResponse {
     data?: Object;
     errors?: Array<string>;
