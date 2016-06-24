@@ -1,7 +1,8 @@
 {
   "dependencies": {
     "chai": "registry:npm/chai#3.5.0+20160415060238",
-    "graphql": "github:nitintutlani/typed-graphql"
+    "graphql": "github:nitintutlani/typed-graphql",
+    "http-errors": "registry:npm/http-errors#1.4.0+20160305200728"
   },
   "globalDependencies": {
     "body-parser": "registry:dt/body-parser#0.0.0+20160619023215",

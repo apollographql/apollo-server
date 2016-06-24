@@ -35,6 +35,7 @@ function runQuery(options: QueryOptions): Promise<GraphQLResult> {
 
     // TODO: add loggingFunction
 
+
     // if query is already an AST, don't parse or validate
     if (typeof options.query === 'string') {
         // parse
@@ -58,12 +59,12 @@ function runQuery(options: QueryOptions): Promise<GraphQLResult> {
     // execute
     try {
         return execute(
-            schema,
+            options.schema,
             documentAST,
-            rootValue,
-            context,
-            variables,
-            operationName
+            options.rootValue,
+            options.context,
+            options.variables,
+            options.operationName
         );
     } catch (executionError) {
         return Promise.resolve({ errors: [ executionError ] });
