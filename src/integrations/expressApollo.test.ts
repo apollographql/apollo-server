@@ -148,9 +148,28 @@ describe('expressApollo', () => {
     it('returns express middleware', () => {
         const query = `{ testString }`;
         const middleware = renderGraphiQL({
+            location: '/graphql',
             query: query,
         });
         assert(typeof middleware === 'function');
     });
+
+    it('presents GraphiQL when accepting HTML', async () => {
+        const app = express();
+
+        app.use('/graphiql', renderGraphiQL({
+            location: '/graphql',
+        }));
+
+        const response = await request(app)
+          .get('/graphiql?query={test}')
+          .set('Accept', 'text/html');
+
+        expect(response.status).to.equal(200);
+        expect(response.type).to.equal('text/html');
+        expect(response.text).to.include('{test}');
+        expect(response.text).to.include('/graphql');
+        expect(response.text).to.include('graphiql.min.js');
+      });
   });
 });

@@ -92,11 +92,19 @@ function isOptionsFunction(arg: ExpressApolloOptions | ExpressApolloOptionsFunct
 // TODO: it's still missing a way to tell it where the GraphQL endpoint is.
 export function renderGraphiQL(options: GraphiQL.GraphiQLData) {
   return (req: express.Request, res: express.Response, next) => {
+
+    const {
+      query = '',
+      variables = '{}',
+      operationName = '',
+    } = req.query;
+
+
     const graphiQLString = GraphiQL.renderGraphiQL({
-      query: options.query,
-      variables: options.variables,
-      operationName: options.operationName,
-      result: options.result,
+      location: options.location,
+      query: query || options.query,
+      variables: JSON.parse(variables) || options.variables,
+      operationName: operationName || options.operationName,
     });
     res.set('Content-Type', 'text/html');
     res.send(graphiQLString);
