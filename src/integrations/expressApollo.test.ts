@@ -67,7 +67,7 @@ describe('expressApollo', () => {
     });
 
 
-    it('can handle a basic request', async () => {
+    it('can handle a basic request', () => {
         const app = express();
         app.use('/graphql', bodyParser.json());
         app.use('/graphql', graphqlHTTP({ schema: Schema }));
@@ -79,12 +79,13 @@ describe('expressApollo', () => {
             .send({
                 query: 'query test{ testString }',
             });
-        const res = await req;
-        expect(res.status).to.equal(200);
-        return expect(res.body.data).to.deep.equal(expected);
+        req.then((res) => {
+            expect(res.status).to.equal(200);
+            return expect(res.body.data).to.deep.equal(expected);
+        });
     });
 
-    it('can handle a request with variables', async () => {
+    it('can handle a request with variables', () => {
         const app = express();
         app.use('/graphql', bodyParser.json());
         app.use('/graphql', graphqlHTTP({ schema: Schema }));
@@ -97,12 +98,13 @@ describe('expressApollo', () => {
                 query: 'query test($echo: String){ testArgument(echo: $echo) }',
                 variables: { echo: 'world' },
             });
-        const res = await req;
-        expect(res.status).to.equal(200);
-        return expect(res.body.data).to.deep.equal(expected);
+        req.then((res) => {
+            expect(res.status).to.equal(200);
+            return expect(res.body.data).to.deep.equal(expected);
+        });
     });
 
-    it('can handle a request with operationName', async () => {
+    it('can handle a request with operationName', () => {
         const app = express();
         app.use('/graphql', bodyParser.json());
         app.use('/graphql', graphqlHTTP({ schema: Schema }));
@@ -118,12 +120,13 @@ describe('expressApollo', () => {
                 variables: { echo: 'world' },
                 operationName: 'test2',
             });
-        const res = await req;
-        expect(res.status).to.equal(200);
-        return expect(res.body.data).to.deep.equal(expected);
+        req.then((res) => {
+            expect(res.status).to.equal(200);
+            return expect(res.body.data).to.deep.equal(expected);
+        });
     });
 
-    it('can handle a request with a mutation', async () => {
+    it('can handle a request with a mutation', () => {
         const app = express();
         app.use('/graphql', bodyParser.json());
         app.use('/graphql', graphqlHTTP({ schema: Schema }));
@@ -136,9 +139,10 @@ describe('expressApollo', () => {
                 query: 'mutation test($echo: String){ testMutation(echo: $echo) }',
                 variables: { echo: 'world' },
             });
-        const res = await req;
-        expect(res.status).to.equal(200);
-        return expect(res.body.data).to.deep.equal(expected);
+        req.then((res) => {
+            expect(res.status).to.equal(200);
+            return expect(res.body.data).to.deep.equal(expected);
+        });
     });
 
   });
@@ -154,22 +158,23 @@ describe('expressApollo', () => {
         assert(typeof middleware === 'function');
     });
 
-    it('presents GraphiQL when accepting HTML', async () => {
+    it('presents GraphiQL when accepting HTML', () => {
         const app = express();
 
         app.use('/graphiql', renderGraphiQL({
             location: '/graphql',
         }));
 
-        const response = await request(app)
+        const req = request(app)
           .get('/graphiql?query={test}')
           .set('Accept', 'text/html');
-
-        expect(response.status).to.equal(200);
-        expect(response.type).to.equal('text/html');
-        expect(response.text).to.include('{test}');
-        expect(response.text).to.include('/graphql');
-        expect(response.text).to.include('graphiql.min.js');
+        req.then((response) => {
+            expect(response.status).to.equal(200);
+            expect(response.type).to.equal('text/html');
+            expect(response.text).to.include('{test}');
+            expect(response.text).to.include('/graphql');
+            expect(response.text).to.include('graphiql.min.js');
+        });
       });
   });
 });
