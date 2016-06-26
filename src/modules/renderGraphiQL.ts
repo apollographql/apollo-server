@@ -18,6 +18,7 @@ export type GraphiQLData = {
 const GRAPHIQL_VERSION = '0.7.1';
 
 // Ensures string values are safe to be used within a <script> tag.
+// TODO: I don't think that's the right escape function
 function safeSerialize(data) {
   return data ? JSON.stringify(data).replace(/\//g, '\\/') : null;
 }
@@ -72,8 +73,8 @@ export function renderGraphiQL(data: GraphiQLData): string {
       }
     });
     // Produce a Location query string from a parameter object.
-    function locationQuery(params) {
-      return ${safeSerialize(location)} + '?' + Object.keys(params).map(function (key) {
+    function locationQuery(location, params) {
+      return location + '?' + Object.keys(params).map(function (key) {
         return encodeURIComponent(key) + '=' +
           encodeURIComponent(params[key]);
       }).join('&');
@@ -90,7 +91,7 @@ export function renderGraphiQL(data: GraphiQLData): string {
         otherParams[k] = parameters[k];
       }
     }
-    var fetchURL = locationQuery(otherParams);
+    var fetchURL = locationQuery(${safeSerialize(location)}, otherParams);
     // Defines a GraphQL fetcher using the fetch API.
     function graphQLFetcher(graphQLParams) {
       return fetch(fetchURL, {
