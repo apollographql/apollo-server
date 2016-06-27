@@ -4,7 +4,7 @@ import { runQuery } from '../core/runQuery';
 
 import * as GraphiQL from '../modules/renderGraphiQL';
 
-import httpError from 'http-errors';
+import * as httpError from 'http-errors';
 
 // TODO: will these be the same or different for other integrations?
 export interface ExpressApolloOptions {
@@ -51,10 +51,13 @@ export function graphqlHTTP(options: ExpressApolloOptions | ExpressApolloOptions
 
     if (req.method !== 'POST') {
       res.setHeader('Allow', 'POST');
-      throw httpError(405, 'Apollo Server supports only POST requests for GraphQL.');
+      throw httpError(405, 'Apollo Server supports only POST requests.');
     }
 
-    // TODO: some sanity checks here.
+    if (!req.body) {
+      throw httpError(500, 'POST body missing. Did you forget "app.use(bodyParser.json())"?');
+    }
+
     const b = req.body;
     const query = b.query;
     const operationName = b.operationName;
@@ -70,6 +73,10 @@ export function graphqlHTTP(options: ExpressApolloOptions | ExpressApolloOptions
 
     // TODO: in store, fragments should only have to be written once, then used across queries.
 
+    if (!query) {
+      throw httpError(400, 'Must provide query string.');
+    }
+
     return runQuery({
       schema: optionsObject.schema,
       query: query,
@@ -78,14 +85,15 @@ export function graphqlHTTP(options: ExpressApolloOptions | ExpressApolloOptions
       operationName: operationName,
     }).then(gqlResponse => {
       res.set('Content-Type', 'application/json');
-      if (gqlResponse.errors && !gqlResponse.data) {
+      if (gqlResponse.errors && typeof gqlResponse.data === 'undefined') {
         res.status(400);
       }
       const response = {
         data: gqlResponse.data,
       };
       if (gqlResponse.errors) {
-        response['errors'] = gqlResponse.errors.map(graphql.formatError);
+        response['errors'] = gqlResponse.errors.map(optionsObject.formatError || graphql.formatError as any);
+        // TODO: stop any creep. Fix the issue here.
       }
       res.send(JSON.stringify(response));
     });
@@ -97,11 +105,10 @@ function isOptionsFunction(arg: ExpressApolloOptions | ExpressApolloOptionsFunct
 }
 
 // this returns the html for the GraphiQL interactive query UI
-// TODO: it's still missing a way to tell it where the GraphQL endpoint is.
 export function renderGraphiQL(options: GraphiQL.GraphiQLData) {
   return (req: express.Request, res: express.Response, next) => {
 
-    const q = req.query;
+    const q = req.query || {};
     const query = q.query || '';
     const variables = q.variables || '{}';
     const operationName = q.operationName || '';

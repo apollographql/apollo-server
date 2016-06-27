@@ -66,6 +66,20 @@ describe('expressApollo', () => {
        expect(() => graphqlHTTP(undefined as ExpressApolloOptions)).to.throw('Apollo Server requires options.');
     });
 
+    it('throws an error if POST body is missing', () => {
+        const app = express();
+        app.use('/graphql', graphqlHTTP({ schema: Schema }));
+        const req = request(app)
+            .post('/graphql')
+            .send({
+                query: 'query test{ testString }',
+            });
+        req.then((res) => {
+            expect(res.status).to.equal(500);
+            return expect(res.error.text).to.contain('POST body missing.');
+        });
+    });
+
 
     it('can handle a basic request', () => {
         const app = express();
