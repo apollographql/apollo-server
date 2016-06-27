@@ -26,7 +26,7 @@ import { graphqlHTTP } from '../integrations/expressApollo';
 
 import { expect } from 'chai';
 import { stringify } from 'querystring';
-import zlib from 'zlib';
+import * as zlib from 'zlib';
 import * as multer from 'multer';
 import * as bodyParser from 'body-parser';
 const request = require('supertest-as-promised');
@@ -337,10 +337,10 @@ describe('test harness', () => {
 
       */
 
-      /*
       it('allows gzipped POST bodies', async () => {
         const app = express();
 
+        app.use(urlString(), bodyParser.json());
         app.use(urlString(), graphqlHTTP(() => ({
           schema: TestSchema
         })));
@@ -367,6 +367,7 @@ describe('test harness', () => {
       it('allows deflated POST bodies', async () => {
         const app = express();
 
+        app.use(urlString(), bodyParser.json());
         app.use(urlString(), graphqlHTTP(() => ({
           schema: TestSchema
         })));
@@ -389,7 +390,6 @@ describe('test harness', () => {
           }
         });
       });
-      */
 
       it('allows for pre-parsed POST bodies', () => {
         // Note: this is not the only way to handle file uploads with GraphQL,
