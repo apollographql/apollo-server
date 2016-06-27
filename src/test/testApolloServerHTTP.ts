@@ -7,9 +7,6 @@
  */
 
 import { graphqlHTTP } from '../integrations/expressApollo';
-  // TODO: test that it accepts a promise as input object.
-  // XXX: how annoying will it be to keep these tests up to date for every
-  // release of graphql-http?
 
 /**
  *  Copyright (c) 2015, Facebook, Inc.

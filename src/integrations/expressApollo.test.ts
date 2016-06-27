@@ -178,6 +178,28 @@ describe('expressApollo', () => {
         });
     });
 
+    it('applies the formatResponse function', () => {
+        const app = express();
+        app.use('/graphql', bodyParser.json());
+        app.use('/graphql', graphqlHTTP({
+            schema: Schema,
+            formatResponse(response) {
+                response['extensions'] = { it: 'works' }; return response;
+            },
+        }));
+        const expected = { it: 'works' };
+        const req = request(app)
+            .post('/graphql')
+            .send({
+                query: 'mutation test($echo: String){ testMutation(echo: $echo) }',
+                variables: { echo: 'world' },
+            });
+        req.then((res) => {
+            expect(res.status).to.equal(200);
+            return expect(res.body.extensions).to.deep.equal(expected);
+        });
+    });
+
   });
 
 

@@ -13,9 +13,7 @@ export interface ExpressApolloOptions {
   rootValue?: any;
   context?: any;
   logFunction?: Function;
-  // pretty?: boolean;
-  // TODO: does this need to be able to take a promise as well, like express-graphql does?
-  // answer: yes, it does. Func(req) => options
+  formatResponse?: Function;
 }
 
 export interface ExpressApolloOptionsFunction {
@@ -88,12 +86,15 @@ export function graphqlHTTP(options: ExpressApolloOptions | ExpressApolloOptions
       if (gqlResponse.errors && typeof gqlResponse.data === 'undefined') {
         res.status(400);
       }
-      const response = {
+      let response = {
         data: gqlResponse.data,
       };
       if (gqlResponse.errors) {
         response['errors'] = gqlResponse.errors.map(optionsObject.formatError || graphql.formatError as any);
         // TODO: stop any creep. Fix the issue here.
+      }
+      if (optionsObject.formatResponse) {
+        response = optionsObject.formatResponse(response);
       }
       res.send(JSON.stringify(response));
     });
