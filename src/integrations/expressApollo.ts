@@ -81,6 +81,7 @@ export function graphqlHTTP(options: ExpressApolloOptions | ExpressApolloOptions
       variables: variables,
       rootValue: optionsObject.rootValue,
       operationName: operationName,
+      logFunction: optionsObject.logFunction,
     }).then(gqlResponse => {
       res.set('Content-Type', 'application/json');
       if (gqlResponse.errors && typeof gqlResponse.data === 'undefined') {
