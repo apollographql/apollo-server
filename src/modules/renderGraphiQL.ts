@@ -73,8 +73,8 @@ export function renderGraphiQL(data: GraphiQLData): string {
       }
     });
     // Produce a Location query string from a parameter object.
-    function locationQuery(location, params) {
-      return location + '?' + Object.keys(params).map(function (key) {
+    function locationQuery(params, location) {
+      return (location ? location: '') + '?' + Object.keys(params).map(function (key) {
         return encodeURIComponent(key) + '=' +
           encodeURIComponent(params[key]);
       }).join('&');
@@ -91,7 +91,7 @@ export function renderGraphiQL(data: GraphiQLData): string {
         otherParams[k] = parameters[k];
       }
     }
-    var fetchURL = locationQuery(${safeSerialize(location)}, otherParams);
+    var fetchURL = locationQuery(otherParams, ${safeSerialize(location)});
     // Defines a GraphQL fetcher using the fetch API.
     function graphQLFetcher(graphQLParams) {
       return fetch(fetchURL, {
