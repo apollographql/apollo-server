@@ -141,7 +141,7 @@ describe('runQuery', () => {
       });
   });
 
-  it('throws a validation error if there are missing variables', () => {
+  it('throws an error if there are missing variables', () => {
       const query = `query TestVar($base: Int!){ testArgumentValue(base: $base) }`;
       const expected = 'Variable "$base" of required type "Int!" was not provided.';
       return runQuery({
