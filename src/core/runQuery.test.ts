@@ -141,20 +141,32 @@ describe('runQuery', () => {
       });
   });
 
+  it('throws a validation error if there are missing variables', () => {
+      const query = `query TestVar($base: Int!){ testArgumentValue(base: $base) }`;
+      const expected = 'Variable "$base" of required type "Int!" was not provided.';
+      return runQuery({
+          schema: Schema,
+          query: query,
+      }).then((res) => {
+          return expect(res.errors[0].message).to.deep.equal(expected);
+      });
+  });
+
+
     it('runs the correct operation when operationName is specified', () => {
-      const query = `
+        const query = `
         query Q1 {
             testString
         }
         query Q2 {
             testRootValue
         }`;
-      const expected = {
-          testString: 'it works',
+        const expected = {
+            testString: 'it works',
         };
-      return runQuery({ schema: Schema, query: query, operationName: 'Q1' })
-      .then((res) => {
-          return expect(res.data).to.deep.equal(expected);
-      });
-  });
+        return runQuery({ schema: Schema, query: query, operationName: 'Q1' })
+        .then((res) => {
+            return expect(res.data).to.deep.equal(expected);
+        });
+    });
 });

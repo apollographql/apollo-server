@@ -55,7 +55,12 @@ export function graphqlHTTP(options: ExpressApolloOptions | ExpressApolloOptions
     }
 
     // TODO: some sanity checks here.
-    const { query, variables, operationName } = req.body;
+    let { query, variables, operationName } = req.body;
+
+    if (typeof variables === 'string') {
+      // TODO: catch errors
+      variables = JSON.parse(variables);
+    }
 
     // either query or operationName must be present. Return 400 otherwise
     // if only operationName is present, check if it's in store. Return 400 otherwise

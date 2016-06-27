@@ -104,6 +104,25 @@ describe('expressApollo', () => {
         });
     });
 
+    it('can handle a request with variables as string', () => {
+        const app = express();
+        app.use('/graphql', bodyParser.json());
+        app.use('/graphql', graphqlHTTP({ schema: Schema }));
+        const expected = {
+            testArgument: 'hello world',
+        };
+        const req = request(app)
+            .post('/graphql')
+            .send({
+                query: 'query test($echo: String!){ testArgument(echo: $echo) }',
+                variables: '{ "echo": "world" }',
+            });
+        req.then((res) => {
+            expect(res.status).to.equal(200);
+            return expect(res.body.data).to.deep.equal(expected);
+        });
+    });
+
     it('can handle a request with operationName', () => {
         const app = express();
         app.use('/graphql', bodyParser.json());
