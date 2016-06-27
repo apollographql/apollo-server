@@ -55,7 +55,10 @@ export function graphqlHTTP(options: ExpressApolloOptions | ExpressApolloOptions
     }
 
     // TODO: some sanity checks here.
-    let { query, variables, operationName } = req.body;
+    const b = req.body;
+    const query = b.query;
+    const operationName = b.operationName;
+    let variables = b.variables;
 
     if (typeof variables === 'string') {
       // TODO: catch errors
@@ -98,11 +101,10 @@ function isOptionsFunction(arg: ExpressApolloOptions | ExpressApolloOptionsFunct
 export function renderGraphiQL(options: GraphiQL.GraphiQLData) {
   return (req: express.Request, res: express.Response, next) => {
 
-    const {
-      query = '',
-      variables = '{}',
-      operationName = '',
-    } = req.query;
+    const q = req.query;
+    const query = q.query || '';
+    const variables = q.variables || '{}';
+    const operationName = q.operationName || '';
 
 
     const graphiQLString = GraphiQL.renderGraphiQL({

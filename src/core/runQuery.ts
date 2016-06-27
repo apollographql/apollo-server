@@ -19,8 +19,6 @@ export interface GqlResponse {
     errors?: Array<string>;
 }
 
-import { Promise } from 'es6-promise';
-
 export interface QueryOptions {
  schema: GraphQLSchema;
  query: string | Document;
