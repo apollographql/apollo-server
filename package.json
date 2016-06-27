@@ -1,6 +1,6 @@
 {
   "name": "widgetizer-widgetizer",
-  "version": "0.3.5",
+  "version": "0.3.6",
   "description": "Production-ready Node.js GraphQL server for Express, HAPI, Koa",
   "main": "dist/index.js",
   "directories": {
