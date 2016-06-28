@@ -78,7 +78,7 @@ describe('expressApollo', () => {
             .send({
                 query: 'query test{ testString }',
             });
-        req.then((res) => {
+        return req.then((res) => {
             expect(res.status).to.equal(200);
             return expect(res.body.data).to.deep.equal(expected);
         });
@@ -100,7 +100,7 @@ describe('expressApollo', () => {
             .send({
                 query: 'query test{ testString }',
             });
-        req.then((res) => {
+        return req.then((res) => {
             expect(res.status).to.equal(200);
             return expect(res.body.data).to.deep.equal(expected);
         });
@@ -114,7 +114,7 @@ describe('expressApollo', () => {
             .send({
                 query: 'query test{ testString }',
             });
-        req.then((res) => {
+        return req.then((res) => {
             expect(res.status).to.equal(500);
             return expect(res.error.text).to.contain('POST body missing.');
         });
@@ -133,7 +133,7 @@ describe('expressApollo', () => {
             .send({
                 query: 'query test{ testString }',
             });
-        req.then((res) => {
+        return req.then((res) => {
             expect(res.status).to.equal(200);
             return expect(res.body.data).to.deep.equal(expected);
         });
@@ -152,7 +152,7 @@ describe('expressApollo', () => {
                 query: 'query test($echo: String){ testArgument(echo: $echo) }',
                 variables: { echo: 'world' },
             });
-        req.then((res) => {
+        return req.then((res) => {
             expect(res.status).to.equal(200);
             return expect(res.body.data).to.deep.equal(expected);
         });
@@ -171,7 +171,7 @@ describe('expressApollo', () => {
                 query: 'query test($echo: String!){ testArgument(echo: $echo) }',
                 variables: '{ "echo": "world" }',
             });
-        req.then((res) => {
+        return req.then((res) => {
             expect(res.status).to.equal(200);
             return expect(res.body.data).to.deep.equal(expected);
         });
@@ -193,9 +193,46 @@ describe('expressApollo', () => {
                 variables: { echo: 'world' },
                 operationName: 'test2',
             });
-        req.then((res) => {
+        return req.then((res) => {
             expect(res.status).to.equal(200);
             return expect(res.body.data).to.deep.equal(expected);
+        });
+    });
+
+     it('can handle batch requests', () => {
+        const app = express();
+        app.use('/graphql', bodyParser.json());
+        app.use('/graphql', graphqlHTTP({ schema: Schema }));
+        const expected = [
+            {
+                data: {
+                    testString: 'it works',
+                },
+            },
+            {
+                data: {
+                    testArgument: 'hello yellow',
+                },
+            },
+        ];
+        const req = request(app)
+            .post('/graphql')
+            .send([{
+                query: `
+                    query test($echo: String){ testArgument(echo: $echo) }
+                    query test2{ testString }`,
+                variables: { echo: 'world' },
+                operationName: 'test2',
+            },
+            {
+                query: `
+                    query testX($echo: String){ testArgument(echo: $echo) }`,
+                variables: { echo: 'yellow' },
+                operationName: 'testX',
+            }]);
+        return req.then((res) => {
+            expect(res.status).to.equal(200);
+            return expect(res.body).to.deep.equal(expected);
         });
     });
 
@@ -212,7 +249,7 @@ describe('expressApollo', () => {
                 query: 'mutation test($echo: String){ testMutation(echo: $echo) }',
                 variables: { echo: 'world' },
             });
-        req.then((res) => {
+        return req.then((res) => {
             expect(res.status).to.equal(200);
             return expect(res.body.data).to.deep.equal(expected);
         });
@@ -234,7 +271,7 @@ describe('expressApollo', () => {
                 query: 'mutation test($echo: String){ testMutation(echo: $echo) }',
                 variables: { echo: 'world' },
             });
-        req.then((res) => {
+        return req.then((res) => {
             expect(res.status).to.equal(200);
             return expect(res.body.extensions).to.deep.equal(expected);
         });
@@ -263,7 +300,7 @@ describe('expressApollo', () => {
         const req = request(app)
           .get('/graphiql?query={test}')
           .set('Accept', 'text/html');
-        req.then((response) => {
+        return req.then((response) => {
             expect(response.status).to.equal(200);
             expect(response.type).to.equal('text/html');
             expect(response.text).to.include('{test}');

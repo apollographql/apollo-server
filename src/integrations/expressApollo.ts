@@ -11,6 +11,7 @@ export interface ExpressApolloOptions {
   rootValue?: any;
   context?: any;
   logFunction?: Function;
+  formatRequest?: Function;
   validationRules?: Array<Function>; // validation rules are functions
   formatResponse?: Function;
 }
@@ -59,41 +60,63 @@ export function graphqlHTTP(options: ExpressApolloOptions | ExpressApolloOptions
       return;
     }
 
-    const b = req.body;
+    let b = req.body;
+    let isBatch = true;
     // TODO: do something different here if the body is an array.
     // Throw an error if body isn't either array or object.
-    const query = b.query;
-    const operationName = b.operationName;
-    let variables = b.variables;
-
-    if (typeof variables === 'string') {
-      // TODO: catch errors
-      variables = JSON.parse(variables);
+    if (!Array.isArray(b)) {
+      isBatch = false;
+      b = [b];
     }
 
-    if (!query) {
-      res.status(400);
-      res.send('Must provide query string.');
-      return;
+    let responses: Array<graphql.GraphQLResult> = [];
+    for (let requestParams of b) {
+      const query = requestParams.query;
+      const operationName = requestParams.operationName;
+      let variables = requestParams.variables;
+
+      if (typeof variables === 'string') {
+        // TODO: catch errors
+        variables = JSON.parse(variables);
+      }
+
+      let params = {
+        schema: optionsObject.schema,
+        query: query,
+        variables: variables,
+        rootValue: optionsObject.rootValue,
+        operationName: operationName,
+        logFunction: optionsObject.logFunction,
+        validationRules: optionsObject.validationRules,
+        formatError: optionsObject.formatError,
+        formatResponse: optionsObject.formatResponse,
+      };
+
+      if (optionsObject.formatRequest) {
+        params = optionsObject.formatRequest(params);
+      }
+
+      if (!params.query) {
+        // TODO: shift this into runQuery
+        res.status(400);
+        res.send('Must provide query string.');
+        return;
+      }
+
+      responses.push(await runQuery(params));
     }
 
-    return runQuery({
-      schema: optionsObject.schema,
-      query: query,
-      variables: variables,
-      rootValue: optionsObject.rootValue,
-      operationName: operationName,
-      logFunction: optionsObject.logFunction,
-      validationRules: optionsObject.validationRules,
-      formatError: optionsObject.formatError,
-      formatResponse: optionsObject.formatResponse,
-    }).then(gqlResponse => {
-      res.set('Content-Type', 'application/json');
+    res.set('Content-Type', 'application/json');
+    if (isBatch) {
+      res.send(JSON.stringify(responses));
+    } else {
+      const gqlResponse = responses[0];
       if (gqlResponse.errors && typeof gqlResponse.data === 'undefined') {
         res.status(400);
       }
       res.send(JSON.stringify(gqlResponse));
-    });
+    }
+
   };
 }
 
