@@ -367,14 +367,12 @@ describe('test harness', () => {
         app.use(urlString(), bodyParser.json());
         app.use(urlString(), graphqlHTTP({ schema: TestSchema }));
 
-        const error = await catchError(
-          request(app)
-            .put(urlString({ query: '{test}' }))
-        );
+        const response = await request(app)
+            .get(urlString({ query: '{test}' }));
 
-        expect(error.response.status).to.equal(405);
-        expect(error.response.headers.allow).to.equal('POST');
-        expect(error.response.text).to.contain('Apollo Server supports only POST requests.');
+        expect(response.status).to.equal(405);
+        expect(response.headers.allow).to.equal('POST');
+        return expect(response.text).to.contain('Apollo Server supports only POST requests.');
       });
     });
   });

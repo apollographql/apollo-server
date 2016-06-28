@@ -66,6 +66,46 @@ describe('expressApollo', () => {
        expect(() => graphqlHTTP(undefined as ExpressApolloOptions)).to.throw('Apollo Server requires options.');
     });
 
+    it('can be called with an options function', () => {
+        const app = express();
+        app.use('/graphql', bodyParser.json());
+        app.use('/graphql', graphqlHTTP( (req) => ({ schema: Schema })));
+        const expected = {
+            testString: 'it works',
+        };
+        const req = request(app)
+            .post('/graphql')
+            .send({
+                query: 'query test{ testString }',
+            });
+        req.then((res) => {
+            expect(res.status).to.equal(200);
+            return expect(res.body.data).to.deep.equal(expected);
+        });
+    });
+
+    it('can be called with an options function that returns a promise', () => {
+        const app = express();
+        app.use('/graphql', bodyParser.json());
+        app.use('/graphql', graphqlHTTP( (req) => {
+            return new Promise(resolve => {
+                resolve({schema: Schema});
+            });
+        }));
+        const expected = {
+            testString: 'it works',
+        };
+        const req = request(app)
+            .post('/graphql')
+            .send({
+                query: 'query test{ testString }',
+            });
+        req.then((res) => {
+            expect(res.status).to.equal(200);
+            return expect(res.body.data).to.deep.equal(expected);
+        });
+    });
+
     it('throws an error if POST body is missing', () => {
         const app = express();
         app.use('/graphql', graphqlHTTP({ schema: Schema }));

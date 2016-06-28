@@ -4,8 +4,6 @@ import { runQuery } from '../core/runQuery';
 
 import * as GraphiQL from '../modules/renderGraphiQL';
 
-import * as httpError from 'http-errors';
-
 // TODO: will these be the same or different for other integrations?
 export interface ExpressApolloOptions {
   schema: graphql.GraphQLSchema;
@@ -18,7 +16,7 @@ export interface ExpressApolloOptions {
 }
 
 export interface ExpressApolloOptionsFunction {
-  (req?: express.Request): ExpressApolloOptions;
+  (req?: express.Request): ExpressApolloOptions | Promise<ExpressApolloOptions>;
 }
 
 // Design principles:
@@ -40,21 +38,25 @@ export function graphqlHTTP(options: ExpressApolloOptions | ExpressApolloOptions
     throw new Error(`Apollo Server expects exactly one argument, got ${arguments.length + 1}`);
   }
 
-  return (req: express.Request, res: express.Response, next) => {
+  return async (req: express.Request, res: express.Response, next) => {
     let optionsObject: ExpressApolloOptions;
     if (isOptionsFunction(options)) {
-      optionsObject = options(req);
+      optionsObject = await options(req);
     } else {
       optionsObject = options;
     }
 
     if (req.method !== 'POST') {
       res.setHeader('Allow', 'POST');
-      throw httpError(405, 'Apollo Server supports only POST requests.');
+      res.status(405);
+      res.send('Apollo Server supports only POST requests.');
+      return;
     }
 
     if (!req.body) {
-      throw httpError(500, 'POST body missing. Did you forget "app.use(bodyParser.json())"?');
+      res.status(500);
+      res.send('POST body missing. Did you forget "app.use(bodyParser.json())"?');
+      return;
     }
 
     const b = req.body;
@@ -70,7 +72,9 @@ export function graphqlHTTP(options: ExpressApolloOptions | ExpressApolloOptions
     }
 
     if (!query) {
-      throw httpError(400, 'Must provide query string.');
+      res.status(400);
+      res.send('Must provide query string.');
+      return;
     }
 
     return runQuery({
