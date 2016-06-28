@@ -5,7 +5,6 @@
     "http-errors": "registry:npm/http-errors#1.4.0+20160305200728"
   },
   "globalDependencies": {
-    "es6-promise": "registry:dt/es6-promise#0.0.0+20160317120654",
     "body-parser": "registry:dt/body-parser#0.0.0+20160619023215",
     "express": "registry:dt/express#4.0.0+20160317120654",
     "express-serve-static-core": "registry:dt/express-serve-static-core#0.0.0+20160322035842",
