@@ -3,7 +3,10 @@ import {
   validate,
   Document,
   GraphQLSchema,
+  OperationDefinition,
 } from 'graphql';
+
+const OPERATION_DEFINITION: string = 'OperationDefinition';
 
 export class OperationStore {
   private storedOperations: Map<string, Document>;
@@ -14,35 +17,41 @@ export class OperationStore {
     this.storedOperations = new Map();
   }
 
-  // TODO: maybe we should extract the operationName from the operationDefinition?
-  public put(operationName: string, operationDefinition: string) {
+  public put(operationDefinition: string): void {
     const ast = parse(operationDefinition);
-    const kind = ast.definitions[0].kind;
-    if (kind !== 'OperationDefinition') {
-      throw new Error(`operationDefinition must contain an OperationDefintion, got ${kind}: ${operationDefinition}`);
+
+    function isOperationDefinition(definition): definition is OperationDefinition {
+      return definition.kind === OPERATION_DEFINITION;
     }
+
     if (ast.definitions.length > 1) {
       throw new Error('operationDefinition must contain only one definition');
     }
-    const validationErrors = validate(this.schema, ast);
-    if (validationErrors.length > 0) {
-      const messages = validationErrors.map((e) => e.message);
-      const e = new Error(`Validation Errors:\n${messages.join('\n')}`);
-      e['originalErrors'] = validationErrors;
-      throw e;
+    const definition = ast.definitions[0];
+
+    if (isOperationDefinition(definition)) {
+      const validationErrors = validate(this.schema, ast);
+      if (validationErrors.length > 0) {
+        const messages = validationErrors.map((e) => e.message);
+        const e = new Error(`Validation Errors:\n${messages.join('\n')}`);
+        e['originalErrors'] = validationErrors;
+        throw e;
+      }
+      this.storedOperations.set(definition.name.value, ast);
+    } else {
+      throw new Error(`operationDefinition must contain an OperationDefinition: ${operationDefinition}`);
     }
-    this.storedOperations.set(operationName, ast);
   }
 
-  public get(operationName: string) {
+  public get(operationName: string): Document {
     return this.storedOperations.get(operationName);
   }
 
-  public delete(operationName: string) {
+  public delete(operationName: string): boolean {
     return this.storedOperations.delete(operationName);
   }
 
-  public getMap() {
+  public getMap(): Map<string, Document> {
     return this.storedOperations;
   }
 }

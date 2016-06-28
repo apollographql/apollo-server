@@ -52,27 +52,27 @@ const Schema = new GraphQLSchema({
 
 describe('operationStore', () => {
   it('can store a query and return its ast', () => {
-      const query = `{ testString }`;
-      const expected = `{\n  testString\n}\n`;
+      const query = `query testquery{ testString }`;
+      const expected = `query testquery {\n  testString\n}\n`;
 
       const store = new OperationStore(Schema);
-      store.put('testquery', query);
+      store.put(query);
 
       return expect(print(store.get('testquery'))).to.deep.equal(expected);
   });
 
   it('throws a parse error if the query is invalid', () => {
-      const query = `{ testString`;
+      const query = `query testquery{ testString`;
 
       const store = new OperationStore(Schema);
-      return expect(() => store.put('testquery', query)).to.throw(/found EOF/);
+      return expect(() => store.put(query)).to.throw(/found EOF/);
   });
 
   it('throws a validation error if the query is invalid', () => {
-      const query = `{ testStrin }`;
+      const query = `query testquery { testStrin }`;
 
       const store = new OperationStore(Schema);
-      return expect(() => store.put('testquery', query)).to.throw(/Cannot query field/);
+      return expect(() => store.put(query)).to.throw(/Cannot query field/);
   });
 
   it('throws an error if there is more than one query or mutation', () => {
@@ -82,15 +82,11 @@ describe('operationStore', () => {
       `;
 
       const store = new OperationStore(Schema);
-      return expect(() => store.put('testquery', query)).to.throw(/operationDefinition must contain only one definition/);
+      return expect(() => store.put(query)).to.throw(/operationDefinition must contain only one definition/);
   });
 
   it('throws an error if there is no operationDefinition found', () => {
       const query = `
-        type Q {
-            f1: Int
-        }
-
         schema {
             query: Q
         }
@@ -98,14 +94,14 @@ describe('operationStore', () => {
 
       const store = new OperationStore(Schema);
 
-      return expect(() => store.put('testquery', query)).to.throw(/must contain an OperationDefintion/);
+      return expect(() => store.put(query)).to.throw(/must contain an/);
   });
 
   it('can delete stored operations', () => {
-      const query = `{ testString }`;
+      const query = `query testquery{ testString }`;
 
       const store = new OperationStore(Schema);
-      store.put('testquery', query);
+      store.put(query);
       store.delete('testquery');
 
       return expect(store.get('testquery')).to.be.undefined;
