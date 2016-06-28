@@ -5,6 +5,8 @@ import {
     parse,
     validate,
     execute,
+    formatError,
+    // specifiedRules, // TODO: this isn't in the type definitions yet, so we can't import it.
 } from 'graphql';
 
 export interface GqlResponse {
@@ -20,6 +22,9 @@ export interface QueryOptions {
  variables?: { [key: string]: any };
  operationName?: string;
  logFunction?: Function;
+ validationRules?: Array<Function>;
+ formatError?: Function;
+ formatResponse?: Function;
 }
 
 function runQuery(options: QueryOptions): Promise<GraphQLResult> {
@@ -36,6 +41,13 @@ function runQuery(options: QueryOptions): Promise<GraphQLResult> {
         }
 
         // TODO: time this with log function
+
+        // TODO: allow extra validationRules
+        // let rules = specifiedRules;
+        // if (options.validationRules) {
+        //    rules = rules.concat(options.validationRules);
+        // }
+        // const validationErrors = validate(options.schema, documentAST, rules);
         const validationErrors = validate(options.schema, documentAST);
         if (validationErrors.length) {
             return Promise.resolve({ errors: validationErrors });
@@ -52,7 +64,19 @@ function runQuery(options: QueryOptions): Promise<GraphQLResult> {
             options.context,
             options.variables,
             options.operationName
-        );
+        ).then(gqlResponse => {
+            let response = {
+                data: gqlResponse.data,
+            };
+            if (gqlResponse.errors) {
+                response['errors'] = gqlResponse.errors.map(options.formatError || formatError as any);
+                // TODO: stop any creep. Fix the issue here.
+            }
+            if (options.formatResponse) {
+                response = options.formatResponse(response);
+            }
+            return response;
+        });
     } catch (executionError) {
         return Promise.resolve({ errors: [ executionError ] });
     }

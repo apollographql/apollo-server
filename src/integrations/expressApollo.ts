@@ -13,6 +13,7 @@ export interface ExpressApolloOptions {
   rootValue?: any;
   context?: any;
   logFunction?: Function;
+  validationRules?: Array<Function>; // validation rules are functions
   formatResponse?: Function;
 }
 
@@ -57,6 +58,8 @@ export function graphqlHTTP(options: ExpressApolloOptions | ExpressApolloOptions
     }
 
     const b = req.body;
+    // TODO: do something different here if the body is an array.
+    // Throw an error if body isn't either array or object.
     const query = b.query;
     const operationName = b.operationName;
     let variables = b.variables;
@@ -65,11 +68,6 @@ export function graphqlHTTP(options: ExpressApolloOptions | ExpressApolloOptions
       // TODO: catch errors
       variables = JSON.parse(variables);
     }
-
-    // either query or operationName must be present. Return 400 otherwise
-    // if only operationName is present, check if it's in store. Return 400 otherwise
-
-    // TODO: in store, fragments should only have to be written once, then used across queries.
 
     if (!query) {
       throw httpError(400, 'Must provide query string.');
@@ -82,22 +80,15 @@ export function graphqlHTTP(options: ExpressApolloOptions | ExpressApolloOptions
       rootValue: optionsObject.rootValue,
       operationName: operationName,
       logFunction: optionsObject.logFunction,
+      validationRules: optionsObject.validationRules,
+      formatError: optionsObject.formatError,
+      formatResponse: optionsObject.formatResponse,
     }).then(gqlResponse => {
       res.set('Content-Type', 'application/json');
       if (gqlResponse.errors && typeof gqlResponse.data === 'undefined') {
         res.status(400);
       }
-      let response = {
-        data: gqlResponse.data,
-      };
-      if (gqlResponse.errors) {
-        response['errors'] = gqlResponse.errors.map(optionsObject.formatError || graphql.formatError as any);
-        // TODO: stop any creep. Fix the issue here.
-      }
-      if (optionsObject.formatResponse) {
-        response = optionsObject.formatResponse(response);
-      }
-      res.send(JSON.stringify(response));
+      res.send(JSON.stringify(gqlResponse));
     });
   };
 }
