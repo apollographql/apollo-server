@@ -127,7 +127,16 @@ function isOptionsFunction(arg: ExpressApolloOptions | ExpressApolloOptionsFunct
   return typeof arg === 'function';
 }
 
-// this returns the html for the GraphiQL interactive query UI
+/* This middleware returns the html for the GraphiQL interactive query UI
+ *
+ * GraphiQLData arguments
+ *
+ * - endpointURL: the relative or absolute URL for the endpoint which GraphiQL will make queries to
+ * - (optional) query: the GraphQL query to pre-fill in the GraphiQL UI
+ * - (optional) variables: a JS object of variables to pre-fill in the GraphiQL UI
+ * - (optional) operationName: the operationName to pre-fill in the GraphiQL UI
+ * - (optional) result: the result of the query to pre-fill in the GraphiQL UI
+ */
 export function renderGraphiQL(options: GraphiQL.GraphiQLData) {
   return (req: express.Request, res: express.Response, next) => {
 
