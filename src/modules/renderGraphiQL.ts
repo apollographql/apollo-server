@@ -6,6 +6,17 @@
 // TODO: in the future, build the GraphiQL app on the server, so it does not
 // depend on any CDN and can be run offline.
 
+
+/*
+ * Arguments:
+ *
+ * - endpointURL: the relative or absolute URL for the endpoint which GraphiQL will make queries to
+ * - (optional) query: the GraphQL query to pre-fill in the GraphiQL UI
+ * - (optional) variables: a JS object of variables to pre-fill in the GraphiQL UI
+ * - (optional) operationName: the operationName to pre-fill in the GraphiQL UI
+ * - (optional) result: the result of the query to pre-fill in the GraphiQL UI
+ */
+
 export type GraphiQLData = {
   endpointURL: string,
   query?: string,
