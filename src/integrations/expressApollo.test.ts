@@ -312,14 +312,14 @@ describe('expressApollo', () => {
   });
 
   describe('stored queries', () => {
-    it('works with formatRequest', () => {
+    it('works with formatParams', () => {
         const store = new OperationStore(Schema);
         store.put('query testquery{ testString }');
         const app = express();
         app.use('/graphql', bodyParser.json());
         app.use('/graphql', graphqlHTTP({
             schema: Schema,
-            formatRequest(params) {
+            formatParams(params) {
                 params['query'] = store.get(params.operationName);
                 return params;
             },
@@ -343,7 +343,7 @@ describe('expressApollo', () => {
         app.use('/graphql', bodyParser.json());
         app.use('/graphql', graphqlHTTP({
             schema: Schema,
-            formatRequest(params) {
+            formatParams(params) {
                 if (params.query) {
                     throw new Error('Must not provide query, only operationName');
                 }
