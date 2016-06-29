@@ -138,7 +138,7 @@ export function renderGraphiQL(options: GraphiQL.GraphiQLData) {
 
 
     const graphiQLString = GraphiQL.renderGraphiQL({
-      location: options.location,
+      endpointURL: options.endpointURL,
       query: query || options.query,
       variables: JSON.parse(variables) || options.variables,
       operationName: operationName || options.operationName,

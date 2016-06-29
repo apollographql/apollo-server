@@ -285,7 +285,7 @@ describe('expressApollo', () => {
     it('returns express middleware', () => {
         const query = `{ testString }`;
         const middleware = renderGraphiQL({
-            location: '/graphql',
+            endpointURL: '/graphql',
             query: query,
         });
         assert(typeof middleware === 'function');
@@ -295,7 +295,7 @@ describe('expressApollo', () => {
         const app = express();
 
         app.use('/graphiql', renderGraphiQL({
-            location: '/graphql',
+            endpointURL: '/graphql',
         }));
 
         const req = request(app)
