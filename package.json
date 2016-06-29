@@ -1,7 +1,7 @@
 {
-  "name": "apollo-server",
-  "version": "0.2.0",
-  "description": "Apollo GraphQL server for Node.js",
+  "name": "widgetizer-widgetizer",
+  "version": "0.3.6",
+  "description": "Production-ready Node.js GraphQL server for Express, HAPI, Koa",
   "main": "dist/index.js",
   "directories": {
     "test": "test"
@@ -26,9 +26,9 @@
   "keywords": [
     "GraphQL",
     "Apollo",
-    "Meteor",
-    "Proxy",
-    "Cache",
+    "HAPI",
+    "Koa",
+    "Express",
     "Javascript"
   ],
   "author": "Jonas Helfer <jonas@helfer.email>",
@@ -42,14 +42,17 @@
     "express": "^4.13.4",
     "graphql": "^0.6.0",
     "hapi": "^13.4.1",
+    "http-errors": "^1.5.0",
     "source-map-support": "^0.4.0"
   },
   "devDependencies": {
+    "body-parser": "^1.15.2",
     "chai": "^3.5.0",
     "es6-promise": "^3.2.1",
     "graphql": "^0.6.0",
     "istanbul": "1.0.0-alpha.2",
     "mocha": "^2.3.3",
+    "multer": "^1.1.0",
     "remap-istanbul": "^0.5.1",
     "source-map-support": "^0.4.0",
     "supertest": "^1.2.0",

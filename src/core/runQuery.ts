@@ -5,6 +5,8 @@ import {
     parse,
     validate,
     execute,
+    formatError,
+    // specifiedRules, // TODO: this isn't in the type definitions yet, so we can't import it.
 } from 'graphql';
 
 export interface GqlResponse {
@@ -19,23 +21,33 @@ export interface QueryOptions {
  context?: any;
  variables?: { [key: string]: any };
  operationName?: string;
- //logFunction?: function => void
- //validationRules?: No, too risky. If you want extra validation rules, then parse it yourself.
+ logFunction?: Function;
+ validationRules?: Array<Function>;
+ formatError?: Function;
+ formatResponse?: Function;
 }
 
 function runQuery(options: QueryOptions): Promise<GraphQLResult> {
     let documentAST: Document;
 
+
     // if query is already an AST, don't parse or validate
     if (typeof options.query === 'string') {
-        // parse
         try {
+            // TODO: time this with log function
             documentAST = parse(options.query as string);
         } catch (syntaxError) {
             return Promise.resolve({ errors: [syntaxError] });
         }
 
-        // validate
+        // TODO: time this with log function
+
+        // TODO: allow extra validationRules
+        // let rules = specifiedRules;
+        // if (options.validationRules) {
+        //    rules = rules.concat(options.validationRules);
+        // }
+        // const validationErrors = validate(options.schema, documentAST, rules);
         const validationErrors = validate(options.schema, documentAST);
         if (validationErrors.length) {
             return Promise.resolve({ errors: validationErrors });
@@ -44,15 +56,30 @@ function runQuery(options: QueryOptions): Promise<GraphQLResult> {
         documentAST = options.query as Document;
     }
 
-    // execute
-    return execute(
-        options.schema,
-        documentAST,
-        options.rootValue,
-        options.context,
-        options.variables,
-        options.operationName
-    );
+    try {
+        return execute(
+            options.schema,
+            documentAST,
+            options.rootValue,
+            options.context,
+            options.variables,
+            options.operationName
+        ).then(gqlResponse => {
+            let response = {
+                data: gqlResponse.data,
+            };
+            if (gqlResponse.errors) {
+                response['errors'] = gqlResponse.errors.map(options.formatError || formatError as any);
+                // TODO: stop any creep. Fix the issue here.
+            }
+            if (options.formatResponse) {
+                response = options.formatResponse(response);
+            }
+            return response;
+        });
+    } catch (executionError) {
+        return Promise.resolve({ errors: [ executionError ] });
+    }
 }
 
 export { runQuery };

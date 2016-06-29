@@ -7,17 +7,18 @@
 // depend on any CDN and can be run offline.
 
 export type GraphiQLData = {
+  location: string,
   query?: string,
   variables?: Object,
   operationName?: string,
   result?: Object,
-  // graphQLEndpointURL?: String, // TODO: make this URL thing work.
 };
 
 // Current latest version of GraphiQL.
 const GRAPHIQL_VERSION = '0.7.1';
 
-// Ensures string values are save to be used within a <script> tag.
+// Ensures string values are safe to be used within a <script> tag.
+// TODO: I don't think that's the right escape function
 function safeSerialize(data) {
   return data ? JSON.stringify(data).replace(/\//g, '\\/') : null;
 }
@@ -30,22 +31,16 @@ function safeSerialize(data) {
  * requested query.
  */
 export function renderGraphiQL(data: GraphiQLData): string {
+  const location = data.location;
   const queryString = data.query;
   const variablesString =
     data.variables ? JSON.stringify(data.variables, null, 2) : null;
-  const resultString =
-    data.result ? JSON.stringify(data.result, null, 2) : null;
+  const resultString = null;
   const operationName = data.operationName;
   // const graphqlEndpointURL = data.graphQLEndpointURL;
 
   /* eslint-disable max-len */
-  return `<!--
-The request to this GraphQL server provided the header "Accept: text/html"
-and as a result has been presented GraphiQL - an in-browser IDE for
-exploring GraphQL.
-If you wish to receive JSON, provide the header "Accept: application/json" or
-add "&raw" to the end of the URL within a browser.
--->
+  return `
 <!DOCTYPE html>
 <html>
 <head>
@@ -78,8 +73,8 @@ add "&raw" to the end of the URL within a browser.
       }
     });
     // Produce a Location query string from a parameter object.
-    function locationQuery(params) {
-      return '?' + Object.keys(params).map(function (key) {
+    function locationQuery(params, location) {
+      return (location ? location: '') + '?' + Object.keys(params).map(function (key) {
         return encodeURIComponent(key) + '=' +
           encodeURIComponent(params[key]);
       }).join('&');
@@ -96,7 +91,7 @@ add "&raw" to the end of the URL within a browser.
         otherParams[k] = parameters[k];
       }
     }
-    var fetchURL = locationQuery(otherParams);
+    var fetchURL = locationQuery(otherParams, ${safeSerialize(location)});
     // Defines a GraphQL fetcher using the fetch API.
     function graphQLFetcher(graphQLParams) {
       return fetch(fetchURL, {
