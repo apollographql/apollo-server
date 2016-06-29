@@ -45,7 +45,7 @@ const QueryRootType = new GraphQLObjectType({
           type: GraphQLString
         }
       },
-      resolve: (root, { who }) => 'Hello ' + (who || 'World')
+      resolve: (root, args) => 'Hello ' + (args['who'] || 'World')
     },
     thrower: {
       type: new GraphQLNonNull(GraphQLString),
