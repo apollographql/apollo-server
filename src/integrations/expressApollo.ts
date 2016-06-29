@@ -47,6 +47,8 @@ export function graphqlHTTP(options: ExpressApolloOptions | ExpressApolloOptions
       optionsObject = options;
     }
 
+    const formatErrorFn = optionsObject.formatError || graphql.formatError;
+
     if (req.method !== 'POST') {
       res.setHeader('Allow', 'POST');
       res.status(405);
@@ -71,39 +73,40 @@ export function graphqlHTTP(options: ExpressApolloOptions | ExpressApolloOptions
 
     let responses: Array<graphql.GraphQLResult> = [];
     for (let requestParams of b) {
-      const query = requestParams.query;
-      const operationName = requestParams.operationName;
-      let variables = requestParams.variables;
+      try {
+        const query = requestParams.query;
+        const operationName = requestParams.operationName;
+        let variables = requestParams.variables;
 
-      if (typeof variables === 'string') {
-        // TODO: catch errors
-        variables = JSON.parse(variables);
+        if (typeof variables === 'string') {
+          // TODO: catch errors
+          variables = JSON.parse(variables);
+        }
+
+        let params = {
+          schema: optionsObject.schema,
+          query: query,
+          variables: variables,
+          rootValue: optionsObject.rootValue,
+          operationName: operationName,
+          logFunction: optionsObject.logFunction,
+          validationRules: optionsObject.validationRules,
+          formatError: formatErrorFn,
+          formatResponse: optionsObject.formatResponse,
+        };
+
+        if (optionsObject.formatRequest) {
+          params = optionsObject.formatRequest(params);
+        }
+
+        if (!params.query) {
+          throw new Error('Must provide query string.');
+        }
+
+        responses.push(await runQuery(params));
+      } catch (e) {
+        responses.push({ errors: [formatErrorFn(e)] });
       }
-
-      let params = {
-        schema: optionsObject.schema,
-        query: query,
-        variables: variables,
-        rootValue: optionsObject.rootValue,
-        operationName: operationName,
-        logFunction: optionsObject.logFunction,
-        validationRules: optionsObject.validationRules,
-        formatError: optionsObject.formatError,
-        formatResponse: optionsObject.formatResponse,
-      };
-
-      if (optionsObject.formatRequest) {
-        params = optionsObject.formatRequest(params);
-      }
-
-      if (!params.query) {
-        // TODO: shift this into runQuery
-        res.status(400);
-        res.send('Must provide query string.');
-        return;
-      }
-
-      responses.push(await runQuery(params));
     }
 
     res.set('Content-Type', 'application/json');

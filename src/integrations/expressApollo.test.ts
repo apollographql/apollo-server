@@ -16,6 +16,7 @@ import * as bodyParser from 'body-parser';
 const request = require('supertest-as-promised');
 
 import { graphqlHTTP, ExpressApolloOptions, renderGraphiQL } from './expressApollo';
+import { OperationStore } from '../modules/operationStore';
 
 const QueryType = new GraphQLObjectType({
     name: 'QueryType',
@@ -298,8 +299,8 @@ describe('expressApollo', () => {
         }));
 
         const req = request(app)
-          .get('/graphiql?query={test}')
-          .set('Accept', 'text/html');
+            .get('/graphiql?query={test}')
+            .set('Accept', 'text/html');
         return req.then((response) => {
             expect(response.status).to.equal(200);
             expect(response.type).to.equal('text/html');
@@ -307,6 +308,70 @@ describe('expressApollo', () => {
             expect(response.text).to.include('/graphql');
             expect(response.text).to.include('graphiql.min.js');
         });
-      });
+    });
+  });
+
+  describe('stored queries', () => {
+    it('works with formatRequest', () => {
+        const store = new OperationStore(Schema);
+        store.put('query testquery{ testString }');
+        const app = express();
+        app.use('/graphql', bodyParser.json());
+        app.use('/graphql', graphqlHTTP({
+            schema: Schema,
+            formatRequest(params) {
+                params['query'] = store.get(params.operationName);
+                return params;
+            },
+        }));
+        const expected = { testString: 'it works' };
+        const req = request(app)
+            .post('/graphql')
+            .send({
+                operationName: 'testquery',
+            });
+        return req.then((res) => {
+            expect(res.status).to.equal(200);
+            return expect(res.body.data).to.deep.equal(expected);
+        });
+    });
+
+    it('can reject non-whitelisted queries', () => {
+        const store = new OperationStore(Schema);
+        store.put('query testquery{ testString }');
+        const app = express();
+        app.use('/graphql', bodyParser.json());
+        app.use('/graphql', graphqlHTTP({
+            schema: Schema,
+            formatRequest(params) {
+                if (params.query) {
+                    throw new Error('Must not provide query, only operationName');
+                }
+                params['query'] = store.get(params.operationName);
+                return params;
+            },
+        }));
+        const expected = [{
+            data: {
+                testString: 'it works',
+            },
+        }, {
+            errors: [{
+                message: 'Must not provide query, only operationName',
+            }],
+        }];
+
+        const req = request(app)
+            .post('/graphql')
+            .send([{
+                operationName: 'testquery',
+            }, {
+                query: '{ testString }',
+            }]);
+        return req.then((res) => {
+            expect(res.status).to.equal(200);
+            return expect(res.body).to.deep.equal(expected);
+        });
+    });
   });
 });
