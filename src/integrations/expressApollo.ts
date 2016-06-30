@@ -5,14 +5,27 @@ import { runQuery } from '../core/runQuery';
 import * as GraphiQL from '../modules/renderGraphiQL';
 
 // TODO: will these be the same or different for other integrations?
+/*
+ * ExpressApolloOptions
+ *
+ * - schema: an executable GraphQL schema used to fulfill requests.
+ * - (optional) formatError: Formatting function applied to all errors before response is sent
+ * - (optional) rootValue: rootValue passed to GraphQL execution
+ * - (optional) context: the context passed to GraphQL execution
+ * - (optional) logFunction: a function called for logging events such as execution times
+ * - (optional) formatParams: a function applied to the parameters of every invocation of runQuery
+ * - (optional) validationRules: extra validation rules applied to requests
+ * - (optional) formatResponse: a function applied to each graphQL execution result
+ *
+ */
 export interface ExpressApolloOptions {
   schema: graphql.GraphQLSchema;
   formatError?: Function;
   rootValue?: any;
   context?: any;
   logFunction?: Function;
-  formatRequest?: Function;
-  validationRules?: Array<Function>; // validation rules are functions
+  formatParams?: Function;
+  validationRules?: Array<graphql.ValidationRule>;
   formatResponse?: Function;
 }
 
@@ -95,8 +108,8 @@ export function graphqlHTTP(options: ExpressApolloOptions | ExpressApolloOptions
           formatResponse: optionsObject.formatResponse,
         };
 
-        if (optionsObject.formatRequest) {
-          params = optionsObject.formatRequest(params);
+        if (optionsObject.formatParams) {
+          params = optionsObject.formatParams(params);
         }
 
         if (!params.query) {
@@ -127,7 +140,17 @@ function isOptionsFunction(arg: ExpressApolloOptions | ExpressApolloOptionsFunct
   return typeof arg === 'function';
 }
 
-// this returns the html for the GraphiQL interactive query UI
+/* This middleware returns the html for the GraphiQL interactive query UI
+ *
+ * GraphiQLData arguments
+ *
+ * - endpointURL: the relative or absolute URL for the endpoint which GraphiQL will make queries to
+ * - (optional) query: the GraphQL query to pre-fill in the GraphiQL UI
+ * - (optional) variables: a JS object of variables to pre-fill in the GraphiQL UI
+ * - (optional) operationName: the operationName to pre-fill in the GraphiQL UI
+ * - (optional) result: the result of the query to pre-fill in the GraphiQL UI
+ */
+
 export function renderGraphiQL(options: GraphiQL.GraphiQLData) {
   return (req: express.Request, res: express.Response, next) => {
 
@@ -138,7 +161,7 @@ export function renderGraphiQL(options: GraphiQL.GraphiQLData) {
 
 
     const graphiQLString = GraphiQL.renderGraphiQL({
-      location: options.location,
+      endpointURL: options.endpointURL,
       query: query || options.query,
       variables: JSON.parse(variables) || options.variables,
       operationName: operationName || options.operationName,

@@ -1,6 +1,10 @@
 // tslint:disable
 // TODO: enable when you figure out how to automatically fix trailing commas
 
+// TODO: maybe we should get rid of these tests entirely, and move them to expressApollo.test.ts
+
+// TODO: wherever possible the tests should be rewritten to make them easily work with HAPI, express, Koa etc.
+
 /*
  * Below are the HTTP tests from express-graphql. We're using them here to make
  * sure apolloServer still works if used in the place of express-graphql.
@@ -45,7 +49,7 @@ const QueryRootType = new GraphQLObjectType({
           type: GraphQLString
         }
       },
-      resolve: (root, { who }) => 'Hello ' + (who || 'World')
+      resolve: (root, args) => 'Hello ' + (args['who'] || 'World')
     },
     thrower: {
       type: new GraphQLNonNull(GraphQLString),
@@ -146,234 +150,233 @@ describe('test harness', () => {
 
 });
 
+const express = express4;
+const version = 'modern';
+describe(`GraphQL-HTTP (apolloServer) tests for ${version} express`, () => {
+  describe('POST functionality', () => {
 
-[[ express4, 'modern' ]].forEach(([ express, version ]) => {
-  describe(`GraphQL-HTTP (apolloServer) tests for ${version} express`, () => {
-    describe('POST functionality', () => {
+    it('allows gzipped POST bodies', async () => {
+      const app = express();
 
-      it('allows gzipped POST bodies', async () => {
-        const app = express();
+      app.use(urlString(), bodyParser.json());
+      app.use(urlString(), graphqlHTTP(() => ({
+        schema: TestSchema
+      })));
 
-        app.use(urlString(), bodyParser.json());
-        app.use(urlString(), graphqlHTTP(() => ({
-          schema: TestSchema
-        })));
+      const data = { query: '{ test(who: "World") }' };
+      const json = JSON.stringify(data);
+      // TODO had to write "as any as Buffer" to make tsc accept it. Does it matter?
+      const gzippedJson = await promiseTo(cb => zlib.gzip(json as any as Buffer, cb));
 
-        const data = { query: '{ test(who: "World") }' };
-        const json = JSON.stringify(data);
-        // TODO had to write "as any as Buffer" to make tsc accept it. Does it matter?
-        const gzippedJson = await promiseTo(cb => zlib.gzip(json as any as Buffer, cb));
+      const req = request(app)
+        .post(urlString())
+        .set('Content-Type', 'application/json')
+        .set('Content-Encoding', 'gzip');
+      req.write(gzippedJson);
+      const response = await req;
 
-        const req = request(app)
-          .post(urlString())
-          .set('Content-Type', 'application/json')
-          .set('Content-Encoding', 'gzip');
-        req.write(gzippedJson);
-        const response = await req;
-
-        expect(JSON.parse(response.text)).to.deep.equal({
-          data: {
-            test: 'Hello World'
-          }
-        });
-      });
-
-      it('allows deflated POST bodies', async () => {
-        const app = express();
-
-        app.use(urlString(), bodyParser.json());
-        app.use(urlString(), graphqlHTTP(() => ({
-          schema: TestSchema
-        })));
-
-        const data = { query: '{ test(who: "World") }' };
-        const json = JSON.stringify(data);
-        // TODO had to write "as any as Buffer" to make tsc accept it. Does it matter?
-        const deflatedJson = await promiseTo(cb => zlib.deflate(json as any as Buffer, cb));
-
-        const req = request(app)
-          .post(urlString())
-          .set('Content-Type', 'application/json')
-          .set('Content-Encoding', 'deflate');
-        req.write(deflatedJson);
-        const response = await req;
-
-        expect(JSON.parse(response.text)).to.deep.equal({
-          data: {
-            test: 'Hello World'
-          }
-        });
-      });
-
-      it('allows for pre-parsed POST bodies', () => {
-        // Note: this is not the only way to handle file uploads with GraphQL,
-        // but it is terse and illustrative of using express-graphql and multer
-        // together.
-
-        // A simple schema which includes a mutation.
-        const UploadedFileType = new GraphQLObjectType({
-          name: 'UploadedFile',
-          fields: {
-            originalname: { type: GraphQLString },
-            mimetype: { type: GraphQLString }
-          }
-        });
-
-        const TestMutationSchema = new GraphQLSchema({
-          query: new GraphQLObjectType({
-            name: 'QueryRoot',
-            fields: {
-              test: { type: GraphQLString }
-            }
-          }),
-          mutation: new GraphQLObjectType({
-            name: 'MutationRoot',
-            fields: {
-              uploadFile: {
-                type: UploadedFileType,
-                resolve(rootValue) {
-                  // For this test demo, we're just returning the uploaded
-                  // file directly, but presumably you might return a Promise
-                  // to go store the file somewhere first.
-                  return rootValue.request.file;
-                }
-              }
-            }
-          })
-        });
-
-        const app = express();
-
-        // Multer provides multipart form data parsing.
-        const storage = multer.memoryStorage();
-        app.use(urlString(), multer({ storage }).single('file'));
-
-        // Providing the request as part of `rootValue` allows it to
-        // be accessible from within Schema resolve functions.
-        app.use(urlString(), graphqlHTTP(req => {
-          return {
-            schema: TestMutationSchema,
-            rootValue: { request: req }
-          };
-        }));
-
-        const req = request(app)
-          .post(urlString())
-          .field('query', `mutation TestMutation {
-            uploadFile { originalname, mimetype }
-          }`)
-          .attach('file', __filename);
-
-        req.then((response) => {
-          expect(JSON.parse(response.text)).to.deep.equal({
-            data: {
-              uploadFile: {
-                originalname: 'testApolloServerHTTP.js',
-                mimetype: 'application/javascript'
-              }
-            }
-          });
-        });
+      expect(JSON.parse(response.text)).to.deep.equal({
+        data: {
+          test: 'Hello World'
+        }
       });
     });
 
-    describe('Error handling functionality', () => {
-      it('handles field errors caught by GraphQL', async () => {
-        const app = express();
+    it('allows deflated POST bodies', async () => {
+      const app = express();
 
-        app.use(urlString(), bodyParser.json());
-        app.use(urlString(), graphqlHTTP({
-          schema: TestSchema
-        }));
+      app.use(urlString(), bodyParser.json());
+      app.use(urlString(), graphqlHTTP(() => ({
+        schema: TestSchema
+      })));
 
-        const response = await request(app)
-          .post(urlString())
-          .send({
-            query: '{thrower}',
-          });
+      const data = { query: '{ test(who: "World") }' };
+      const json = JSON.stringify(data);
+      // TODO had to write "as any as Buffer" to make tsc accept it. Does it matter?
+      const deflatedJson = await promiseTo(cb => zlib.deflate(json as any as Buffer, cb));
 
-        // console.log(response.text);
-        expect(response.status).to.equal(200);
-        expect(JSON.parse(response.text)).to.deep.equal({
-          data: null,
-          errors: [ {
-            message: 'Throws!',
-            locations: [ { line: 1, column: 2 } ]
-          } ]
-        });
+      const req = request(app)
+        .post(urlString())
+        .set('Content-Type', 'application/json')
+        .set('Content-Encoding', 'deflate');
+      req.write(deflatedJson);
+      const response = await req;
+
+      expect(JSON.parse(response.text)).to.deep.equal({
+        data: {
+          test: 'Hello World'
+        }
+      });
+    });
+
+    it('allows for pre-parsed POST bodies', () => {
+      // Note: this is not the only way to handle file uploads with GraphQL,
+      // but it is terse and illustrative of using express-graphql and multer
+      // together.
+
+      // A simple schema which includes a mutation.
+      const UploadedFileType = new GraphQLObjectType({
+        name: 'UploadedFile',
+        fields: {
+          originalname: { type: GraphQLString },
+          mimetype: { type: GraphQLString }
+        }
       });
 
-      it('allows for custom error formatting to sanitize', async () => {
-        const app = express();
-
-        app.use(urlString(), bodyParser.json());
-        app.use(urlString(), graphqlHTTP({
-          schema: TestSchema,
-          formatError(error) {
-            return { message: 'Custom error format: ' + error.message };
+      const TestMutationSchema = new GraphQLSchema({
+        query: new GraphQLObjectType({
+          name: 'QueryRoot',
+          fields: {
+            test: { type: GraphQLString }
           }
-        }));
-
-        const response = await request(app)
-          .post(urlString())
-          .send({
-            query: '{thrower}',
-          });
-
-        expect(response.status).to.equal(200);
-        expect(JSON.parse(response.text)).to.deep.equal({
-          data: null,
-          errors: [ {
-            message: 'Custom error format: Throws!',
-          } ]
-        });
-      });
-
-      it('allows for custom error formatting to elaborate', async () => {
-        const app = express();
-
-        app.use(urlString(), bodyParser.json());
-        app.use(urlString(), graphqlHTTP({
-          schema: TestSchema,
-          formatError(error) {
-            return {
-              message: error.message,
-              locations: error.locations,
-              stack: 'Stack trace'
-            };
+        }),
+        mutation: new GraphQLObjectType({
+          name: 'MutationRoot',
+          fields: {
+            uploadFile: {
+              type: UploadedFileType,
+              resolve(rootValue) {
+                // For this test demo, we're just returning the uploaded
+                // file directly, but presumably you might return a Promise
+                // to go store the file somewhere first.
+                return rootValue.request.file;
+              }
+            }
           }
-        }));
+        })
+      });
 
-        const response = await request(app)
-          .post(urlString())
-          .send({
-            query: '{thrower}',
-          });
+      const app = express();
 
-        expect(response.status).to.equal(200);
+      // Multer provides multipart form data parsing.
+      const storage = multer.memoryStorage();
+      app.use(urlString(), multer({ storage }).single('file'));
+
+      // Providing the request as part of `rootValue` allows it to
+      // be accessible from within Schema resolve functions.
+      app.use(urlString(), graphqlHTTP(req => {
+        return {
+          schema: TestMutationSchema,
+          rootValue: { request: req }
+        };
+      }));
+
+      const req = request(app)
+        .post(urlString())
+        .field('query', `mutation TestMutation {
+          uploadFile { originalname, mimetype }
+        }`)
+        .attach('file', __filename);
+
+      req.then((response) => {
         expect(JSON.parse(response.text)).to.deep.equal({
-          data: null,
-          errors: [ {
-            message: 'Throws!',
-            locations: [ { line: 1, column: 2 } ],
-            stack: 'Stack trace',
-          } ]
+          data: {
+            uploadFile: {
+              originalname: 'testApolloServerHTTP.js',
+              mimetype: 'application/javascript'
+            }
+          }
         });
       });
+    });
+  });
 
-      it('handles unsupported HTTP methods', async () => {
-        const app = express();
+  describe('Error handling functionality', () => {
+    it('handles field errors caught by GraphQL', async () => {
+      const app = express();
 
-        app.use(urlString(), bodyParser.json());
-        app.use(urlString(), graphqlHTTP({ schema: TestSchema }));
+      app.use(urlString(), bodyParser.json());
+      app.use(urlString(), graphqlHTTP({
+        schema: TestSchema
+      }));
 
-        const response = await request(app)
-            .get(urlString({ query: '{test}' }));
+      const response = await request(app)
+        .post(urlString())
+        .send({
+          query: '{thrower}',
+        });
 
-        expect(response.status).to.equal(405);
-        expect(response.headers.allow).to.equal('POST');
-        return expect(response.text).to.contain('Apollo Server supports only POST requests.');
+      // console.log(response.text);
+      expect(response.status).to.equal(200);
+      expect(JSON.parse(response.text)).to.deep.equal({
+        data: null,
+        errors: [ {
+          message: 'Throws!',
+          locations: [ { line: 1, column: 2 } ]
+        } ]
       });
+    });
+
+    it('allows for custom error formatting to sanitize', async () => {
+      const app = express();
+
+      app.use(urlString(), bodyParser.json());
+      app.use(urlString(), graphqlHTTP({
+        schema: TestSchema,
+        formatError(error) {
+          return { message: 'Custom error format: ' + error.message };
+        }
+      }));
+
+      const response = await request(app)
+        .post(urlString())
+        .send({
+          query: '{thrower}',
+        });
+
+      expect(response.status).to.equal(200);
+      expect(JSON.parse(response.text)).to.deep.equal({
+        data: null,
+        errors: [ {
+          message: 'Custom error format: Throws!',
+        } ]
+      });
+    });
+
+    it('allows for custom error formatting to elaborate', async () => {
+      const app = express();
+
+      app.use(urlString(), bodyParser.json());
+      app.use(urlString(), graphqlHTTP({
+        schema: TestSchema,
+        formatError(error) {
+          return {
+            message: error.message,
+            locations: error.locations,
+            stack: 'Stack trace'
+          };
+        }
+      }));
+
+      const response = await request(app)
+        .post(urlString())
+        .send({
+          query: '{thrower}',
+        });
+
+      expect(response.status).to.equal(200);
+      expect(JSON.parse(response.text)).to.deep.equal({
+        data: null,
+        errors: [ {
+          message: 'Throws!',
+          locations: [ { line: 1, column: 2 } ],
+          stack: 'Stack trace',
+        } ]
+      });
+    });
+
+    it('handles unsupported HTTP methods', async () => {
+      const app = express();
+
+      app.use(urlString(), bodyParser.json());
+      app.use(urlString(), graphqlHTTP({ schema: TestSchema }));
+
+      const response = await request(app)
+          .get(urlString({ query: '{test}' }));
+
+      expect(response.status).to.equal(405);
+      expect(response.headers.allow).to.equal('POST');
+      return expect(response.text).to.contain('Apollo Server supports only POST requests.');
     });
   });
 });
