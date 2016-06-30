@@ -95,7 +95,7 @@ export function renderGraphiQL(data: GraphiQLData): string {
       }
     }
     // We don't use safe-serialize for location, becuase it's not client input.
-    var fetchURL = locationQuery(otherParams, ${endpointURL});
+    var fetchURL = locationQuery(otherParams, '${endpointURL}');
     // Defines a GraphQL fetcher using the fetch API.
     function graphQLFetcher(graphQLParams) {
       return fetch(fetchURL, {
