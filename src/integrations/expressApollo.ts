@@ -112,10 +112,6 @@ export function graphqlHTTP(options: ExpressApolloOptions | ExpressApolloOptions
           params = optionsObject.formatParams(params);
         }
 
-        if (!params.query) {
-          throw new Error('Must provide query string.');
-        }
-
         responses.push(await runQuery(params));
       } catch (e) {
         responses.push({ errors: [formatErrorFn(e)] });
