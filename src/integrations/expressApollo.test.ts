@@ -55,6 +55,21 @@ const Schema = new GraphQLSchema({
     mutation: MutationType,
 });
 
+interface CreateAppOptions {
+  excludeParser?: boolean;
+  apolloOptions?: ExpressApolloOptions;
+}
+
+function createApp(options?: CreateAppOptions) {
+  const app = express();
+  if (!options || !options.excludeParser) {
+    app.use('/graphql', bodyParser.json());
+  }
+  const opts = (!options || !options.apolloOptions) ? { schema: Schema } : options.apolloOptions;
+  app.use('/graphql', graphqlHTTP( (req) => (opts)  ));
+  return app;
+}
+
 describe('expressApollo', () => {
   describe('graphqlHTTP', () => {
      it('returns express middleware', () => {
@@ -68,9 +83,7 @@ describe('expressApollo', () => {
     });
 
     it('can be called with an options function', () => {
-        const app = express();
-        app.use('/graphql', bodyParser.json());
-        app.use('/graphql', graphqlHTTP( (req) => ({ schema: Schema })));
+        const app = createApp();
         const expected = {
             testString: 'it works',
         };
@@ -108,8 +121,7 @@ describe('expressApollo', () => {
     });
 
     it('throws an error if POST body is missing', () => {
-        const app = express();
-        app.use('/graphql', graphqlHTTP({ schema: Schema }));
+        const app = createApp({excludeParser: true});
         const req = request(app)
             .post('/graphql')
             .send({
@@ -123,9 +135,7 @@ describe('expressApollo', () => {
 
 
     it('can handle a basic request', () => {
-        const app = express();
-        app.use('/graphql', bodyParser.json());
-        app.use('/graphql', graphqlHTTP({ schema: Schema }));
+        const app = createApp();
         const expected = {
             testString: 'it works',
         };
@@ -141,9 +151,7 @@ describe('expressApollo', () => {
     });
 
     it('can handle a request with variables', () => {
-        const app = express();
-        app.use('/graphql', bodyParser.json());
-        app.use('/graphql', graphqlHTTP({ schema: Schema }));
+        const app = createApp();
         const expected = {
             testArgument: 'hello world',
         };
@@ -160,9 +168,7 @@ describe('expressApollo', () => {
     });
 
     it('can handle a request with variables as string', () => {
-        const app = express();
-        app.use('/graphql', bodyParser.json());
-        app.use('/graphql', graphqlHTTP({ schema: Schema }));
+        const app = createApp();
         const expected = {
             testArgument: 'hello world',
         };
@@ -179,9 +185,7 @@ describe('expressApollo', () => {
     });
 
     it('can handle a request with operationName', () => {
-        const app = express();
-        app.use('/graphql', bodyParser.json());
-        app.use('/graphql', graphqlHTTP({ schema: Schema }));
+        const app = createApp();
         const expected = {
             testString: 'it works',
         };
@@ -201,9 +205,7 @@ describe('expressApollo', () => {
     });
 
      it('can handle batch requests', () => {
-        const app = express();
-        app.use('/graphql', bodyParser.json());
-        app.use('/graphql', graphqlHTTP({ schema: Schema }));
+        const app = createApp();
         const expected = [
             {
                 data: {
@@ -238,9 +240,7 @@ describe('expressApollo', () => {
     });
 
     it('can handle a request with a mutation', () => {
-        const app = express();
-        app.use('/graphql', bodyParser.json());
-        app.use('/graphql', graphqlHTTP({ schema: Schema }));
+        const app = createApp();
         const expected = {
             testMutation: 'not really a mutation, but who cares: world',
         };
@@ -257,14 +257,12 @@ describe('expressApollo', () => {
     });
 
     it('applies the formatResponse function', () => {
-        const app = express();
-        app.use('/graphql', bodyParser.json());
-        app.use('/graphql', graphqlHTTP({
+        const app = createApp({apolloOptions: {
             schema: Schema,
             formatResponse(response) {
                 response['extensions'] = { it: 'works' }; return response;
             },
-        }));
+        }});
         const expected = { it: 'works' };
         const req = request(app)
             .post('/graphql')
