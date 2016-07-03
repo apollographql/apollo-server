@@ -24,6 +24,9 @@ export interface QueryOptions {
  operationName?: string;
  logFunction?: Function;
  validationRules?: Array<ValidationRule>;
+ // WARNING: these extra validation rules are only applied to queries
+ // submitted as string, not those submitted as Document!
+
  formatError?: Function;
  formatResponse?: Function;
 }
