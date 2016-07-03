@@ -379,4 +379,43 @@ describe(`GraphQL-HTTP (apolloServer) tests for ${version} express`, () => {
       return expect(response.text).to.contain('Apollo Server supports only POST requests.');
     });
   });
+
+  describe('Custom validation rules', () => {
+      const AlwaysInvalidRule = function (context) {
+        return {
+          enter() {
+            context.reportError(new GraphQLError(
+              'AlwaysInvalidRule was really invalid!'
+            ));
+            return BREAK;
+          }
+        };
+      };
+
+      it('Do not execute a query if it do not pass the custom validation.', async() => {
+        const app = express();
+
+        app.use(urlString(), bodyParser.json());
+        app.use(urlString(), graphqlHTTP({
+          schema: TestSchema,
+          validationRules: [ AlwaysInvalidRule ],
+        }));
+
+        const response = await request(app)
+            .post(urlString())
+            .send({
+              query: '{thrower}',
+            })
+
+        expect(response.status).to.equal(400);
+        expect(JSON.parse(response.text)).to.deep.equal({
+          errors: [
+            {
+              message: 'AlwaysInvalidRule was really invalid!'
+            },
+          ]
+        });
+
+      });
+    });
 });
