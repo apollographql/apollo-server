@@ -14,7 +14,7 @@ export class OperationStore {
 
   constructor(schema: GraphQLSchema) {
     this.schema = schema;
-    this.storedOperations = new Map();
+    this.storedOperations = new Map<string, Document>();
   }
 
   public put(operationDefinition: string): void {

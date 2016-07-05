@@ -1,5 +1,4 @@
 import {
-  assert,
   expect,
 } from 'chai';
 
@@ -9,13 +8,11 @@ import {
     GraphQLString,
 } from 'graphql';
 
-// TODO use import, not require... help appreciated.
-import * as express from 'express';
-import * as bodyParser from 'body-parser';
 // tslint:disable-next-line
 const request = require('supertest-as-promised');
 
-import { graphqlHTTP, ExpressApolloOptions, renderGraphiQL } from './expressApollo';
+import ApolloOptions from './apolloOptions';
+
 import * as GraphiQL from '../modules/renderGraphiQL';
 import { OperationStore } from '../modules/operationStore';
 
@@ -51,14 +48,14 @@ const MutationType = new GraphQLObjectType({
     },
 });
 
-const Schema = new GraphQLSchema({
+export const Schema = new GraphQLSchema({
     query: QueryType,
     mutation: MutationType,
 });
 
 export interface CreateAppOptions {
   excludeParser?: boolean;
-  apolloOptions?: ExpressApolloOptions;
+  apolloOptions?: ApolloOptions | {(): ApolloOptions | Promise<{}>};
   graphiqlOptions?: GraphiQL.GraphiQLData;
 }
 
@@ -66,30 +63,11 @@ export interface CreateAppFunc {
     (options?: CreateAppOptions): void;
 }
 
-export default (createWebApp: CreateAppFunc) => {
-
-  // wrap the createWebApp function to set the schema by default for all tests
-  let createApp: CreateAppFunc;
-  createApp = (options) => {
-    const opts = options || {};
-    opts.apolloOptions = (!options || !options.apolloOptions) ? { schema: Schema } : options.apolloOptions;
-    return createWebApp(opts);
-  };
-
-  describe('expressApollo', () => {
+export default (createApp: CreateAppFunc) => {
+  describe('apolloServer', () => {
     describe('graphqlHTTP', () => {
-       it('returns express middleware', () => {
-          const middleware = graphqlHTTP({
-              schema: Schema,
-          });
-          assert(typeof middleware === 'function');
-      });
-      it('throws error if called without schema', () => {
-         expect(() => graphqlHTTP(undefined as ExpressApolloOptions)).to.throw('Apollo Server requires options.');
-      });
-
       it('can be called with an options function', () => {
-          const app = createApp();
+          const app = createApp({apolloOptions: (): ApolloOptions => ({schema: Schema})});
           const expected = {
               testString: 'it works',
           };
@@ -105,13 +83,11 @@ export default (createWebApp: CreateAppFunc) => {
       });
 
       it('can be called with an options function that returns a promise', () => {
-          const app = express();
-          app.use('/graphql', bodyParser.json());
-          app.use('/graphql', graphqlHTTP( (req) => {
+          const app = createApp({ apolloOptions: () => {
               return new Promise(resolve => {
                   resolve({schema: Schema});
               });
-          }));
+          }});
           const expected = {
               testString: 'it works',
           };
@@ -286,15 +262,6 @@ export default (createWebApp: CreateAppFunc) => {
 
 
     describe('renderGraphiQL', () => {
-      it('returns express middleware', () => {
-          const query = `{ testString }`;
-          const middleware = renderGraphiQL({
-              endpointURL: '/graphql',
-              query: query,
-          });
-          assert(typeof middleware === 'function');
-      });
-
       it('presents GraphiQL when accepting HTML', () => {
           const app = createApp({graphiqlOptions: {
               endpointURL: '/graphql',
