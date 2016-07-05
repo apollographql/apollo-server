@@ -1,6 +1,6 @@
 {
   "name": "apollo-server",
-  "version": "0.3.6",
+  "version": "0.4.0",
   "description": "Production-ready Node.js GraphQL server for Express, HAPI, Koa",
   "main": "dist/index.js",
   "directories": {
