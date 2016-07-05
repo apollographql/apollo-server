@@ -104,7 +104,7 @@ export default (createApp: CreateAppFunc) => {
 
       it('throws an error if options promise is rejected', () => {
           const app = createApp({ apolloOptions: () => {
-            return Promise.reject({}) as any as ApolloOptions
+            return Promise.reject({}) as any as ApolloOptions;
           }});
           const expected = 'Invalid options';
           const req = request(app)
