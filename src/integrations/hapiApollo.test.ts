@@ -1,5 +1,5 @@
 import * as hapi from 'hapi';
-import { HapiApollo } from './hapiApollo';
+import { ApolloHAPI, GraphiQLHAPI } from './hapiApollo';
 
 import testSuite, { Schema, CreateAppOptions } from './integrations.test';
 
@@ -12,12 +12,18 @@ function createApp(options: CreateAppOptions = {}) {
   });
 
   server.register({
-      register: new HapiApollo(),
+      register: new ApolloHAPI(),
       options: { schema: Schema },
       routes: { prefix: '/graphql' },
   });
 
-  return server;
+  server.register({
+      register: new GraphiQLHAPI(),
+      options: { endpointURL: '/graphql' },
+      routes: { prefix: '/graphql' },
+  });
+
+  return server.listener;
 }
 
 testSuite(createApp);

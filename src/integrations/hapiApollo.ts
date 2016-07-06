@@ -1,5 +1,5 @@
 import * as hapi from 'hapi';
-import GraphiQL from '../modules/renderGraphiQL';
+import * as GraphiQL from '../modules/renderGraphiQL';
 import { runQuery } from '../core/runQuery';
 import apolloOptions from './apolloOptions';
 
@@ -9,7 +9,7 @@ export interface IRegister {
     attributes?: any;
 }
 
-export class HapiApollo {
+export class ApolloHAPI {
     constructor() {
         this.register.attributes = {
             name: 'graphql',
@@ -26,6 +26,7 @@ export class HapiApollo {
                     schema: options.schema,
                     query: request.payload,
                 }).then(gqlResponse => {
+                  console.dir(gqlResponse);
                     reply({ data: gqlResponse.data });
                 }).catch(errors => {
                     reply({ errors: errors }).code(500);
@@ -36,7 +37,7 @@ export class HapiApollo {
     }
 }
 
-export class HapiGraphiQL {
+export class GraphiQLHAPI {
     constructor() {
         this.register.attributes = {
             name: 'graphiql',
@@ -47,7 +48,7 @@ export class HapiGraphiQL {
     public register: IRegister = (server: hapi.Server, options: GraphiQL.GraphiQLData, next) => {
         server.route({
             method: 'GET',
-            path: '/graphiql',
+            path: '/',
             handler: (request, reply) => {
               const q = request.query || {};
               const query = q.query || '';
