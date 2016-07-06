@@ -9,4 +9,5 @@ require('source-map-support').install();
 import '../core/runQuery.test';
 import '../modules/operationStore.test';
 import '../integrations/expressApollo.test';
+import '../integrations/hapiApollo.test';
 import './testApolloServerHTTP';
