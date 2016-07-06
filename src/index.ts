@@ -1,2 +1,1 @@
-export { graphqlHTTP, renderGraphiQL } from './integrations/expressApollo';
-export { HapiApollo } from './integrations/hapiApollo';
+export { apolloExpress, graphiqlExpress } from './integrations/expressApollo';
