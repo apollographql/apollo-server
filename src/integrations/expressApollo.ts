@@ -18,7 +18,7 @@ export interface ExpressHandler {
   (req: express.Request, res: express.Response, next): void;
 }
 
-export function graphqlHTTP(options: ApolloOptions | ExpressApolloOptionsFunction): ExpressHandler {
+export function apolloExpress(options: ApolloOptions | ExpressApolloOptionsFunction): ExpressHandler {
   if (!options) {
     throw new Error('Apollo Server requires options.');
   }
@@ -128,7 +128,7 @@ function isOptionsFunction(arg: ApolloOptions | ExpressApolloOptionsFunction): a
  * - (optional) result: the result of the query to pre-fill in the GraphiQL UI
  */
 
-export function renderGraphiQL(options: GraphiQL.GraphiQLData) {
+export function graphiqlExpress(options: GraphiQL.GraphiQLData) {
   return (req: express.Request, res: express.Response, next) => {
 
     const q = req.query || {};
