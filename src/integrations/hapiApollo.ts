@@ -24,9 +24,8 @@ export class ApolloHAPI {
             handler: (request, reply) => {
                 return runQuery({
                     schema: options.schema,
-                    query: request.payload,
+                    query: request.payload.query,
                 }).then(gqlResponse => {
-                  console.dir(gqlResponse);
                     reply({ data: gqlResponse.data });
                 }).catch(errors => {
                     reply({ errors: errors }).code(500);
