@@ -26,6 +26,7 @@ This document contains a rough outline of a roadmap and a few designs for future
 * Better GraphQL error handling
 * Support for simple query timeouts
 * Websocket transport
+* GraphQL subscriptions
 
 ### Future
 
@@ -57,6 +58,13 @@ Query timeouts can be implemented by decorating the resolve functions, in a simi
 
 Websockets will be useful to implement many of the future reactive features of GraphQL, like subscriptions and @live.
 A first implementation could simply use the [ws library](https://github.com/websockets/ws), take queries sent in exactly the same format as they are currently sent over HTTP, pass them on to the core `runQuery` function and return the result over the websocket. Care must be taken to identify each request with a unique ID so the response can be sent with that same ID. Where the Express integration currently sends back HTTP error codes, the websocket implementation should omit those, and just send back JSON, for example `{ error: 'Invalid options provided to Apollo Server' }`.
+
+
+### Subscriptions
+
+(for reference on what GraphQL subscriptions are, see [here](https://medium.com/apollo-stack/new-features-in-graphql-batch-defer-stream-live-and-subscribe-7585d0c28b07))
+
+Technically subscriptions are a different type of GraphQL operation (in addition to query and mutation), but in an initial version they could be implemented without modifications to graphql-js, by setting up poll-and-diff on the server. Upon receiving a subscription, the server first executes it as a normal query, but then adds it to a list of active subscriptions. Depending on whether updates happen in-band or out-of-band, subscribed queries are either re-run periodically, or when a mutation happens. The initial implementation should be done with polling. After that we can get arbitrarily fancy with things like invalidations, Mongo oplog-tailing etc.
 
 
 ### Support for @defer, @live and @stream
