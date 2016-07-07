@@ -26,4 +26,4 @@ function createApp(options: CreateAppOptions = {}) {
   return server.listener;
 }
 
-testSuite(createApp);
+testSuite(createApp, 'HAPI');

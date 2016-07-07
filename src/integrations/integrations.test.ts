@@ -63,9 +63,9 @@ export interface CreateAppFunc {
     (options?: CreateAppOptions): void;
 }
 
-export default (createApp: CreateAppFunc) => {
-  describe('apolloServer', () => {
-    describe('graphqlHTTP', () => {
+export default (createApp: CreateAppFunc, integrationName: string) => {
+  describe(`integration:${integrationName}`, () => {
+    describe('apolloServer', () => {
       it('can be called with an options function', () => {
           const app = createApp({apolloOptions: (): ApolloOptions => ({schema: Schema})});
           const expected = {
