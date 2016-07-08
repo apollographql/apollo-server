@@ -1,4 +1,5 @@
 import * as hapi from 'hapi';
+import * as graphql from 'graphql';
 import * as GraphiQL from '../modules/renderGraphiQL';
 import { runQuery } from '../core/runQuery';
 import ApolloOptions from './apolloOptions';
@@ -38,10 +39,32 @@ export class ApolloHAPI {
                 return;
               }
 
-              return runQuery({
-                    schema: optionsObject.schema,
-                    query: request.payload.query,
-                }).then(gqlResponse => {
+              const formatErrorFn = optionsObject.formatError || graphql.formatError;
+              const operationName = request.payload.operationName;
+              let variables = request.payload.variables;
+
+              if (typeof variables === 'string') {
+                // TODO: catch errors
+                variables = JSON.parse(variables);
+              }
+
+              let params = {
+                schema: optionsObject.schema,
+                query: request.payload.query,
+                variables: variables,
+                rootValue: optionsObject.rootValue,
+                operationName: operationName,
+                logFunction: optionsObject.logFunction,
+                validationRules: optionsObject.validationRules,
+                formatError: formatErrorFn,
+                formatResponse: optionsObject.formatResponse,
+              };
+
+              if (optionsObject.formatParams) {
+                params = optionsObject.formatParams(params);
+              }
+
+              return runQuery(params).then(gqlResponse => {
                     reply({ data: gqlResponse.data });
                 }).catch(errors => {
                     reply({ errors: errors }).code(500);
