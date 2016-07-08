@@ -11,9 +11,11 @@ function createApp(options: CreateAppOptions = {}) {
       port: 8000,
   });
 
+  options.apolloOptions = options.apolloOptions || { schema: Schema };
+
   server.register({
       register: new ApolloHAPI(),
-      options: { schema: Schema },
+      options: options.apolloOptions,
       routes: { prefix: '/graphql' },
   });
 
@@ -26,6 +28,6 @@ function createApp(options: CreateAppOptions = {}) {
   return server.listener;
 }
 
-describe('integration:HAPI', () => {
+describe.only('integration:HAPI', () => {
   testSuite(createApp);
 });

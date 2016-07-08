@@ -1,7 +1,7 @@
 import * as hapi from 'hapi';
 import * as GraphiQL from '../modules/renderGraphiQL';
 import { runQuery } from '../core/runQuery';
-import apolloOptions from './apolloOptions';
+import ApolloOptions from './apolloOptions';
 
 
 export interface IRegister {
@@ -17,13 +17,24 @@ export class ApolloHAPI {
         };
     }
 
-    public register: IRegister = (server: hapi.Server, options: apolloOptions, next) => {
+    public register: IRegister = (server: hapi.Server, options: ApolloOptions | HAPIOptionsFunction, next) => {
         server.route({
             method: 'POST',
             path: '/',
-            handler: (request, reply) => {
-                return runQuery({
-                    schema: options.schema,
+            handler: async (request, reply) => {
+              let optionsObject: ApolloOptions;
+              if (isOptionsFunction(options)) {
+                try {
+                  optionsObject = await options(request);
+                } catch (e) {
+                  reply(`Invalid options provided to ApolloServer: ${e.message}`).code(500);
+                }
+              } else {
+                optionsObject = options;
+              }
+
+              return runQuery({
+                    schema: optionsObject.schema,
                     query: request.payload.query,
                 }).then(gqlResponse => {
                     reply({ data: gqlResponse.data });
@@ -65,4 +76,12 @@ export class GraphiQLHAPI {
         });
         next();
     }
+}
+
+export interface HAPIOptionsFunction {
+  (req?: hapi.Request): ApolloOptions | Promise<ApolloOptions>;
+}
+
+function isOptionsFunction(arg: ApolloOptions | HAPIOptionsFunction): arg is HAPIOptionsFunction {
+  return typeof arg === 'function';
 }
