@@ -33,6 +33,11 @@ export class ApolloHAPI {
                 optionsObject = options;
               }
 
+              if (!request.payload) {
+                reply('POST body missing.').code(500);
+                return;
+              }
+
               return runQuery({
                     schema: optionsObject.schema,
                     query: request.payload.query,
