@@ -6,7 +6,7 @@ Apollo Server consists of three parts:
 
 1. Core
 2. Integrations
-3. Extensions
+3. Modules
 
 At the core of Apollo Server is a function called `runQuery`, which handles parsing, validating and executing queries. Its interface is generic in order to allow for integrations with different Node.js server frameworks. Extensions provide useful functionality that can be shared between different integrations.
 
