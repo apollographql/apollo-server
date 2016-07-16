@@ -34,41 +34,66 @@ export class ApolloHAPI {
                 optionsObject = options;
               }
 
+              const formatErrorFn = optionsObject.formatError || graphql.formatError;
+
               if (!request.payload) {
                 reply('POST body missing.').code(500);
                 return;
               }
 
-              const formatErrorFn = optionsObject.formatError || graphql.formatError;
-              const operationName = request.payload.operationName;
-              let variables = request.payload.variables;
-
-              if (typeof variables === 'string') {
-                // TODO: catch errors
-                variables = JSON.parse(variables);
+              let b = request.payload;
+              let isBatch = true;
+              // TODO: do something different here if the body is an array.
+              // Throw an error if body isn't either array or object.
+              if (!Array.isArray(b)) {
+                isBatch = false;
+                b = [b];
               }
 
-              let params = {
-                schema: optionsObject.schema,
-                query: request.payload.query,
-                variables: variables,
-                rootValue: optionsObject.rootValue,
-                operationName: operationName,
-                logFunction: optionsObject.logFunction,
-                validationRules: optionsObject.validationRules,
-                formatError: formatErrorFn,
-                formatResponse: optionsObject.formatResponse,
-              };
+              let responses: Array<graphql.GraphQLResult> = [];
+              for (let payload of b) {
+                try {
+                  const operationName = payload.operationName;
+                  let variables = payload.variables;
 
-              if (optionsObject.formatParams) {
-                params = optionsObject.formatParams(params);
+                  if (typeof variables === 'string') {
+                    // TODO: catch errors
+                    variables = JSON.parse(variables);
+                  }
+
+                  let params = {
+                    schema: optionsObject.schema,
+                    query: payload.query,
+                    variables: variables,
+                    rootValue: optionsObject.rootValue,
+                    operationName: operationName,
+                    logFunction: optionsObject.logFunction,
+                    validationRules: optionsObject.validationRules,
+                    formatError: formatErrorFn,
+                    formatResponse: optionsObject.formatResponse,
+                  };
+
+                  if (optionsObject.formatParams) {
+                    params = optionsObject.formatParams(params);
+                  }
+
+                  responses.push(await runQuery(params));
+                } catch (e) {
+                  responses.push({ errors: [formatErrorFn(e)] });
+                }
               }
 
-              return runQuery(params).then(gqlResponse => {
-                    reply({ data: gqlResponse.data });
-                }).catch(errors => {
-                    reply({ errors: errors }).code(500);
-                });
+              if (isBatch) {
+                reply(responses);
+              } else {
+                const gqlResponse = responses[0];
+                if (gqlResponse.errors && typeof gqlResponse.data === 'undefined') {
+                  reply(gqlResponse).code(400);
+                } else {
+                  reply(gqlResponse);
+                }
+              }
+
             },
         });
         next();

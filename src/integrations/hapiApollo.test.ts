@@ -22,7 +22,7 @@ function createApp(options: CreateAppOptions = {}) {
   server.register({
       register: new GraphiQLHAPI(),
       options: { endpointURL: '/graphql' },
-      routes: { prefix: '/graphql' },
+      routes: { prefix: '/graphiql' },
   });
 
   return server.listener;
