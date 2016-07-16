@@ -10,6 +10,10 @@ export interface IRegister {
     attributes?: any;
 }
 
+export interface HAPIOptionsFunction {
+  (req?: hapi.Request): ApolloOptions | Promise<ApolloOptions>;
+}
+
 export class ApolloHAPI {
     constructor() {
         this.register.attributes = {
@@ -34,56 +38,14 @@ export class ApolloHAPI {
                 optionsObject = options;
               }
 
-              const formatErrorFn = optionsObject.formatError || graphql.formatError;
-
               if (!request.payload) {
                 reply('POST body missing.').code(500);
                 return;
               }
 
-              let b = request.payload;
-              let isBatch = true;
-              // TODO: do something different here if the body is an array.
-              // Throw an error if body isn't either array or object.
-              if (!Array.isArray(b)) {
-                isBatch = false;
-                b = [b];
-              }
+              const responses = await processQuery(request.payload, optionsObject);
 
-              let responses: Array<graphql.GraphQLResult> = [];
-              for (let payload of b) {
-                try {
-                  const operationName = payload.operationName;
-                  let variables = payload.variables;
-
-                  if (typeof variables === 'string') {
-                    // TODO: catch errors
-                    variables = JSON.parse(variables);
-                  }
-
-                  let params = {
-                    schema: optionsObject.schema,
-                    query: payload.query,
-                    variables: variables,
-                    rootValue: optionsObject.rootValue,
-                    operationName: operationName,
-                    logFunction: optionsObject.logFunction,
-                    validationRules: optionsObject.validationRules,
-                    formatError: formatErrorFn,
-                    formatResponse: optionsObject.formatResponse,
-                  };
-
-                  if (optionsObject.formatParams) {
-                    params = optionsObject.formatParams(params);
-                  }
-
-                  responses.push(await runQuery(params));
-                } catch (e) {
-                  responses.push({ errors: [formatErrorFn(e)] });
-                }
-              }
-
-              if (isBatch) {
+              if (responses.length > 1) {
                 reply(responses);
               } else {
                 const gqlResponse = responses[0];
@@ -131,8 +93,50 @@ export class GraphiQLHAPI {
     }
 }
 
-export interface HAPIOptionsFunction {
-  (req?: hapi.Request): ApolloOptions | Promise<ApolloOptions>;
+async function processQuery(body, optionsObject) {
+  const formatErrorFn = optionsObject.formatError || graphql.formatError;
+
+  let isBatch = true;
+  // TODO: do something different here if the body is an array.
+  // Throw an error if body isn't either array or object.
+  if (!Array.isArray(body)) {
+    isBatch = false;
+    body = [body];
+  }
+
+  let responses: Array<graphql.GraphQLResult> = [];
+  for (let payload of body) {
+    try {
+      const operationName = payload.operationName;
+      let variables = payload.variables;
+
+      if (typeof variables === 'string') {
+        // TODO: catch errors
+        variables = JSON.parse(variables);
+      }
+
+      let params = {
+        schema: optionsObject.schema,
+        query: payload.query,
+        variables: variables,
+        rootValue: optionsObject.rootValue,
+        operationName: operationName,
+        logFunction: optionsObject.logFunction,
+        validationRules: optionsObject.validationRules,
+        formatError: formatErrorFn,
+        formatResponse: optionsObject.formatResponse,
+      };
+
+      if (optionsObject.formatParams) {
+        params = optionsObject.formatParams(params);
+      }
+
+      responses.push(await runQuery(params));
+    } catch (e) {
+      responses.push({ errors: [formatErrorFn(e)] });
+    }
+  }
+  return responses;
 }
 
 function isOptionsFunction(arg: ApolloOptions | HAPIOptionsFunction): arg is HAPIOptionsFunction {

@@ -28,6 +28,6 @@ function createApp(options: CreateAppOptions = {}) {
   return server.listener;
 }
 
-describe.only('integration:HAPI', () => {
+describe('integration:HAPI', () => {
   testSuite(createApp);
 });
