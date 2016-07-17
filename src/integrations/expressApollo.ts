@@ -6,7 +6,7 @@ import ApolloOptions from './apolloOptions';
 import * as GraphiQL from '../modules/renderGraphiQL';
 
 export interface ExpressApolloOptionsFunction {
-  (req?: express.Request): ApolloOptions | Promise<ApolloOptions>;
+  (req?: express.Request, res?: express.Response): ApolloOptions | Promise<ApolloOptions>;
 }
 
 // Design principles:
@@ -32,7 +32,7 @@ export function apolloExpress(options: ApolloOptions | ExpressApolloOptionsFunct
     let optionsObject: ApolloOptions;
     if (isOptionsFunction(options)) {
       try {
-        optionsObject = await options(req);
+        optionsObject = await options(req, res);
       } catch (e) {
         res.status(500);
         res.send(`Invalid options provided to ApolloServer: ${e.message}`);
