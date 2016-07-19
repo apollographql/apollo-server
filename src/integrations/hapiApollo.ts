@@ -120,6 +120,7 @@ async function processQuery(body, optionsObject) {
         query: payload.query,
         variables: variables,
         rootValue: optionsObject.rootValue,
+        context: optionsObject.context,
         operationName: operationName,
         logFunction: optionsObject.logFunction,
         validationRules: optionsObject.validationRules,
