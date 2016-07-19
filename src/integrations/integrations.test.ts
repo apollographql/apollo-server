@@ -21,7 +21,10 @@ const QueryType = new GraphQLObjectType({
     fields: {
         testString: {
             type: GraphQLString,
-            resolve() {
+            resolve(_, params, context) {
+                if (context) {
+                  context();
+                }
                 return 'it works';
             },
         },
@@ -271,6 +274,24 @@ export default (createApp: CreateAppFunc) => {
           return req.then((res) => {
               expect(res.status).to.equal(200);
               return expect(res.body.extensions).to.deep.equal(expected);
+          });
+      });
+
+      it('passes the context to the resolver', () => {
+          let results;
+          const expected = 'it works';
+          const app = createApp({apolloOptions: {
+              schema: Schema,
+              context: () => results = expected,
+          }});
+          const req = request(app)
+              .post('/graphql')
+              .send({
+                  query: 'query test{ testString }',
+              });
+          return req.then((res) => {
+              expect(res.status).to.equal(200);
+              return expect(results).to.equal(expected);
           });
       });
 
