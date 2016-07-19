@@ -81,6 +81,7 @@ export function apolloExpress(options: ApolloOptions | ExpressApolloOptionsFunct
           schema: optionsObject.schema,
           query: query,
           variables: variables,
+          context: optionsObject.context,
           rootValue: optionsObject.rootValue,
           operationName: operationName,
           logFunction: optionsObject.logFunction,
