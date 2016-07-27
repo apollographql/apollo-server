@@ -48,4 +48,6 @@ describe('renderGraphiQL', () => {
   });
 });
 
-testSuite(createApp);
+describe('integration:Express', () => {
+  testSuite(createApp);
+});

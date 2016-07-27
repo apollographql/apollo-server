@@ -125,9 +125,7 @@ export default (createApp: CreateAppFunc) => {
           const app = createApp({excludeParser: true});
           const req = request(app)
               .post('/graphql')
-              .send({
-                  query: 'query test{ testString }',
-              });
+              .send();
           return req.then((res) => {
               expect(res.status).to.equal(500);
               return expect(res.error.text).to.contain('POST body missing.');
