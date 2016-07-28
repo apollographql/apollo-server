@@ -72,9 +72,21 @@ export interface DestroyAppFunc {
 
 export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
   describe('apolloServer', () => {
+    let app;
+
+    afterEach(() => {
+      if (app) {
+        if (destroyApp) {
+          destroyApp(app);
+        } else {
+          app = null;
+        }
+      }
+    });
+
     describe('graphqlHTTP', () => {
       it('can be called with an options function', () => {
-          const app = createApp({apolloOptions: (): ApolloOptions => ({schema: Schema})});
+          app = createApp({apolloOptions: (): ApolloOptions => ({schema: Schema})});
           const expected = {
               testString: 'it works',
           };
@@ -84,16 +96,13 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
                   query: 'query test{ testString }',
               });
           return req.then((res) => {
-              if (destroyApp) {
-                destroyApp(app);
-              }
               expect(res.status).to.equal(200);
               return expect(res.body.data).to.deep.equal(expected);
           });
       });
 
       it('can be called with an options function that returns a promise', () => {
-          const app = createApp({ apolloOptions: () => {
+          app = createApp({ apolloOptions: () => {
               return new Promise(resolve => {
                   resolve({schema: Schema});
               });
@@ -107,16 +116,13 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
                   query: 'query test{ testString }',
               });
           return req.then((res) => {
-              if (destroyApp) {
-                destroyApp(app);
-              }
               expect(res.status).to.equal(200);
               return expect(res.body.data).to.deep.equal(expected);
           });
       });
 
       it('throws an error if options promise is rejected', () => {
-          const app = createApp({ apolloOptions: () => {
+          app = createApp({ apolloOptions: () => {
             return Promise.reject({}) as any as ApolloOptions;
           }});
           const expected = 'Invalid options';
@@ -126,23 +132,17 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
                   query: 'query test{ testString }',
               });
           return req.then((res) => {
-              if (destroyApp) {
-                destroyApp(app);
-              }
               expect(res.status).to.equal(500);
               return expect(res.error.text).to.contain(expected);
           });
       });
 
       it('throws an error if POST body is missing', () => {
-          const app = createApp({excludeParser: true});
+          app = createApp({excludeParser: true});
           const req = request(app)
               .post('/graphql')
               .send();
           return req.then((res) => {
-              if (destroyApp) {
-                destroyApp(app);
-              }
               expect(res.status).to.equal(500);
               return expect(res.error.text).to.contain('POST body missing.');
           });
@@ -150,7 +150,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
 
 
       it('can handle a basic request', () => {
-          const app = createApp();
+          app = createApp();
           const expected = {
               testString: 'it works',
           };
@@ -160,16 +160,13 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
                   query: 'query test{ testString }',
               });
           return req.then((res) => {
-              if (destroyApp) {
-                destroyApp(app);
-              }
               expect(res.status).to.equal(200);
               return expect(res.body.data).to.deep.equal(expected);
           });
       });
 
       it('can handle a request with variables', () => {
-          const app = createApp();
+          app = createApp();
           const expected = {
               testArgument: 'hello world',
           };
@@ -180,16 +177,13 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
                   variables: { echo: 'world' },
               });
           return req.then((res) => {
-              if (destroyApp) {
-                destroyApp(app);
-              }
               expect(res.status).to.equal(200);
               return expect(res.body.data).to.deep.equal(expected);
           });
       });
 
       it('can handle a request with variables as string', () => {
-          const app = createApp();
+          app = createApp();
           const expected = {
               testArgument: 'hello world',
           };
@@ -200,16 +194,13 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
                   variables: '{ "echo": "world" }',
               });
           return req.then((res) => {
-              if (destroyApp) {
-                destroyApp(app);
-              }
               expect(res.status).to.equal(200);
               return expect(res.body.data).to.deep.equal(expected);
           });
       });
 
       it('can handle a request with operationName', () => {
-          const app = createApp();
+          app = createApp();
           const expected = {
               testString: 'it works',
           };
@@ -223,16 +214,13 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
                   operationName: 'test2',
               });
           return req.then((res) => {
-              if (destroyApp) {
-                destroyApp(app);
-              }
               expect(res.status).to.equal(200);
               return expect(res.body.data).to.deep.equal(expected);
           });
       });
 
        it('can handle batch requests', () => {
-          const app = createApp();
+          app = createApp();
           const expected = [
               {
                   data: {
@@ -261,16 +249,13 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
                   operationName: 'testX',
               }]);
           return req.then((res) => {
-              if (destroyApp) {
-                destroyApp(app);
-              }
               expect(res.status).to.equal(200);
               return expect(res.body).to.deep.equal(expected);
           });
       });
 
       it('can handle a request with a mutation', () => {
-          const app = createApp();
+          app = createApp();
           const expected = {
               testMutation: 'not really a mutation, but who cares: world',
           };
@@ -281,16 +266,13 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
                   variables: { echo: 'world' },
               });
           return req.then((res) => {
-              if (destroyApp) {
-                destroyApp(app);
-              }
               expect(res.status).to.equal(200);
               return expect(res.body.data).to.deep.equal(expected);
           });
       });
 
       it('applies the formatResponse function', () => {
-          const app = createApp({apolloOptions: {
+          app = createApp({apolloOptions: {
               schema: Schema,
               formatResponse(response) {
                   response['extensions'] = { it: 'works' }; return response;
@@ -304,9 +286,6 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
                   variables: { echo: 'world' },
               });
           return req.then((res) => {
-              if (destroyApp) {
-                destroyApp(app);
-              }
               expect(res.status).to.equal(200);
               return expect(res.body.extensions).to.deep.equal(expected);
           });
@@ -315,7 +294,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
       it('passes the context to the resolver', () => {
           let results;
           const expected = 'it works';
-          const app = createApp({apolloOptions: {
+          app = createApp({apolloOptions: {
               schema: Schema,
               context: () => results = expected,
           }});
@@ -325,9 +304,6 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
                   query: 'query test{ testString }',
               });
           return req.then((res) => {
-              if (destroyApp) {
-                destroyApp(app);
-              }
               expect(res.status).to.equal(200);
               return expect(results).to.equal(expected);
           });
@@ -338,7 +314,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
 
     describe('renderGraphiQL', () => {
       it('presents GraphiQL when accepting HTML', () => {
-          const app = createApp({graphiqlOptions: {
+          app = createApp({graphiqlOptions: {
               endpointURL: '/graphql',
           }});
 
@@ -346,9 +322,6 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
               .get('/graphiql?query={test}')
               .set('Accept', 'text/html');
           return req.then((response) => {
-              if (destroyApp) {
-                destroyApp(app);
-              }
               expect(response.status).to.equal(200);
               expect(response.type).to.equal('text/html');
               expect(response.text).to.include('{test}');
@@ -362,7 +335,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
       it('works with formatParams', () => {
           const store = new OperationStore(Schema);
           store.put('query testquery{ testString }');
-          const app = createApp({ apolloOptions: {
+          app = createApp({ apolloOptions: {
               schema: Schema,
               formatParams(params) {
                   params['query'] = store.get(params.operationName);
@@ -376,9 +349,6 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
                   operationName: 'testquery',
               });
           return req.then((res) => {
-              if (destroyApp) {
-                destroyApp(app);
-              }
               expect(res.status).to.equal(200);
               return expect(res.body.data).to.deep.equal(expected);
           });
@@ -387,7 +357,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
       it('can reject non-whitelisted queries', () => {
           const store = new OperationStore(Schema);
           store.put('query testquery{ testString }');
-          const app = createApp({ apolloOptions: {
+          app = createApp({ apolloOptions: {
               schema: Schema,
               formatParams(params) {
                   if (params.query) {
@@ -415,9 +385,6 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
                   query: '{ testString }',
               }]);
           return req.then((res) => {
-              if (destroyApp) {
-                destroyApp(app);
-              }
               expect(res.status).to.equal(200);
               return expect(res.body).to.deep.equal(expected);
           });
