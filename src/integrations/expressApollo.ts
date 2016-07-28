@@ -1,5 +1,6 @@
 import * as express from 'express';
 import * as graphql from 'graphql';
+import * as url from 'url';
 import { runQuery } from '../core/runQuery';
 
 import ApolloOptions from './apolloOptions';
@@ -34,8 +35,9 @@ export function apolloExpress(options: ApolloOptions | ExpressApolloOptionsFunct
       try {
         optionsObject = await options(req);
       } catch (e) {
-        res.status(500);
-        res.send(`Invalid options provided to ApolloServer: ${e.message}`);
+        res.statusCode = 500;
+        res.write(`Invalid options provided to ApolloServer: ${e.message}`);
+        res.end();
       }
     } else {
       optionsObject = options;
@@ -45,14 +47,16 @@ export function apolloExpress(options: ApolloOptions | ExpressApolloOptionsFunct
 
     if (req.method !== 'POST') {
       res.setHeader('Allow', 'POST');
-      res.status(405);
-      res.send('Apollo Server supports only POST requests.');
+      res.statusCode = 405;
+      res.write('Apollo Server supports only POST requests.');
+      res.end();
       return;
     }
 
     if (!req.body) {
-      res.status(500);
-      res.send('POST body missing. Did you forget "app.use(bodyParser.json())"?');
+      res.statusCode = 500;
+      res.write('POST body missing. Did you forget "app.use(bodyParser.json())"?');
+      res.end();
       return;
     }
 
@@ -100,15 +104,17 @@ export function apolloExpress(options: ApolloOptions | ExpressApolloOptionsFunct
       }
     }
 
-    res.set('Content-Type', 'application/json');
+    res.setHeader('Content-Type', 'application/json');
     if (isBatch) {
-      res.send(JSON.stringify(responses));
+      res.write(JSON.stringify(responses));
+      res.end();
     } else {
       const gqlResponse = responses[0];
       if (gqlResponse.errors && typeof gqlResponse.data === 'undefined') {
-        res.status(400);
+        res.statusCode = 400;
       }
-      res.send(JSON.stringify(gqlResponse));
+      res.write(JSON.stringify(gqlResponse));
+      res.end();
     }
 
   };
@@ -131,8 +137,7 @@ function isOptionsFunction(arg: ApolloOptions | ExpressApolloOptionsFunction): a
 
 export function graphiqlExpress(options: GraphiQL.GraphiQLData) {
   return (req: express.Request, res: express.Response, next) => {
-
-    const q = req.query || {};
+    const q = req.url && url.parse(req.url, true).query || {};
     const query = q.query || '';
     const variables = q.variables || '{}';
     const operationName = q.operationName || '';
@@ -144,7 +149,8 @@ export function graphiqlExpress(options: GraphiQL.GraphiQLData) {
       variables: JSON.parse(variables) || options.variables,
       operationName: operationName || options.operationName,
     });
-    res.set('Content-Type', 'text/html');
-    res.send(graphiQLString);
+    res.setHeader('Content-Type', 'text/html');
+    res.write(graphiQLString);
+    res.end();
   };
 }
