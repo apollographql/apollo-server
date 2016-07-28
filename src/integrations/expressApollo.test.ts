@@ -25,6 +25,8 @@ function createApp(options: CreateAppOptions = {}) {
   return app;
 }
 
+function destroyApp(app) {}
+
 describe('graphqlHTTP', () => {
    it('returns express middleware', () => {
       const middleware = apolloExpress({
@@ -49,5 +51,5 @@ describe('renderGraphiQL', () => {
 });
 
 describe('integration:Express', () => {
-  testSuite(createApp);
+  testSuite(createApp, destroyApp);
 });
