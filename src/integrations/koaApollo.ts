@@ -1,8 +1,6 @@
 import * as koa from 'koa';
-import * as koaBody from 'koa-bodyparser';
 import * as graphql from 'graphql';
 import { runQuery } from '../core/runQuery';
-
 import ApolloOptions from './apolloOptions';
 import * as GraphiQL from '../modules/renderGraphiQL';
 
@@ -116,7 +114,6 @@ export function graphiqlKoa(options: GraphiQL.GraphiQLData) {
     const query = q.query || '';
     const variables = q.variables || '{}';
     const operationName = q.operationName || '';
-
 
     const graphiQLString = GraphiQL.renderGraphiQL({
       endpointURL: options.endpointURL,

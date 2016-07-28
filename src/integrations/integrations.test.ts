@@ -70,7 +70,7 @@ export interface DestroyAppFunc {
   (app: any): void;
 }
 
-export default (createApp: CreateAppFunc, destroyApp: DestroyAppFunc) => {
+export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
   describe('apolloServer', () => {
     describe('graphqlHTTP', () => {
       it('can be called with an options function', () => {
@@ -84,7 +84,9 @@ export default (createApp: CreateAppFunc, destroyApp: DestroyAppFunc) => {
                   query: 'query test{ testString }',
               });
           return req.then((res) => {
-              destroyApp(app);
+              if (destroyApp) {
+                destroyApp(app);
+              }
               expect(res.status).to.equal(200);
               return expect(res.body.data).to.deep.equal(expected);
           });
@@ -105,7 +107,9 @@ export default (createApp: CreateAppFunc, destroyApp: DestroyAppFunc) => {
                   query: 'query test{ testString }',
               });
           return req.then((res) => {
-              destroyApp(app);
+              if (destroyApp) {
+                destroyApp(app);
+              }
               expect(res.status).to.equal(200);
               return expect(res.body.data).to.deep.equal(expected);
           });
@@ -122,7 +126,9 @@ export default (createApp: CreateAppFunc, destroyApp: DestroyAppFunc) => {
                   query: 'query test{ testString }',
               });
           return req.then((res) => {
-              destroyApp(app);
+              if (destroyApp) {
+                destroyApp(app);
+              }
               expect(res.status).to.equal(500);
               return expect(res.error.text).to.contain(expected);
           });
@@ -134,7 +140,9 @@ export default (createApp: CreateAppFunc, destroyApp: DestroyAppFunc) => {
               .post('/graphql')
               .send();
           return req.then((res) => {
-              destroyApp(app);
+              if (destroyApp) {
+                destroyApp(app);
+              }
               expect(res.status).to.equal(500);
               return expect(res.error.text).to.contain('POST body missing.');
           });
@@ -152,7 +160,9 @@ export default (createApp: CreateAppFunc, destroyApp: DestroyAppFunc) => {
                   query: 'query test{ testString }',
               });
           return req.then((res) => {
-              destroyApp(app);
+              if (destroyApp) {
+                destroyApp(app);
+              }
               expect(res.status).to.equal(200);
               return expect(res.body.data).to.deep.equal(expected);
           });
@@ -170,7 +180,9 @@ export default (createApp: CreateAppFunc, destroyApp: DestroyAppFunc) => {
                   variables: { echo: 'world' },
               });
           return req.then((res) => {
-              destroyApp(app);
+              if (destroyApp) {
+                destroyApp(app);
+              }
               expect(res.status).to.equal(200);
               return expect(res.body.data).to.deep.equal(expected);
           });
@@ -188,7 +200,9 @@ export default (createApp: CreateAppFunc, destroyApp: DestroyAppFunc) => {
                   variables: '{ "echo": "world" }',
               });
           return req.then((res) => {
-              destroyApp(app);
+              if (destroyApp) {
+                destroyApp(app);
+              }
               expect(res.status).to.equal(200);
               return expect(res.body.data).to.deep.equal(expected);
           });
@@ -209,7 +223,9 @@ export default (createApp: CreateAppFunc, destroyApp: DestroyAppFunc) => {
                   operationName: 'test2',
               });
           return req.then((res) => {
-              destroyApp(app);
+              if (destroyApp) {
+                destroyApp(app);
+              }
               expect(res.status).to.equal(200);
               return expect(res.body.data).to.deep.equal(expected);
           });
@@ -245,7 +261,9 @@ export default (createApp: CreateAppFunc, destroyApp: DestroyAppFunc) => {
                   operationName: 'testX',
               }]);
           return req.then((res) => {
-              destroyApp(app);
+              if (destroyApp) {
+                destroyApp(app);
+              }
               expect(res.status).to.equal(200);
               return expect(res.body).to.deep.equal(expected);
           });
@@ -263,7 +281,9 @@ export default (createApp: CreateAppFunc, destroyApp: DestroyAppFunc) => {
                   variables: { echo: 'world' },
               });
           return req.then((res) => {
-              destroyApp(app);
+              if (destroyApp) {
+                destroyApp(app);
+              }
               expect(res.status).to.equal(200);
               return expect(res.body.data).to.deep.equal(expected);
           });
@@ -284,7 +304,9 @@ export default (createApp: CreateAppFunc, destroyApp: DestroyAppFunc) => {
                   variables: { echo: 'world' },
               });
           return req.then((res) => {
-              destroyApp(app);
+              if (destroyApp) {
+                destroyApp(app);
+              }
               expect(res.status).to.equal(200);
               return expect(res.body.extensions).to.deep.equal(expected);
           });
@@ -303,7 +325,9 @@ export default (createApp: CreateAppFunc, destroyApp: DestroyAppFunc) => {
                   query: 'query test{ testString }',
               });
           return req.then((res) => {
-              destroyApp(app);
+              if (destroyApp) {
+                destroyApp(app);
+              }
               expect(res.status).to.equal(200);
               return expect(results).to.equal(expected);
           });
@@ -322,7 +346,9 @@ export default (createApp: CreateAppFunc, destroyApp: DestroyAppFunc) => {
               .get('/graphiql?query={test}')
               .set('Accept', 'text/html');
           return req.then((response) => {
-              destroyApp(app);
+              if (destroyApp) {
+                destroyApp(app);
+              }
               expect(response.status).to.equal(200);
               expect(response.type).to.equal('text/html');
               expect(response.text).to.include('{test}');
@@ -350,7 +376,9 @@ export default (createApp: CreateAppFunc, destroyApp: DestroyAppFunc) => {
                   operationName: 'testquery',
               });
           return req.then((res) => {
-              destroyApp(app);
+              if (destroyApp) {
+                destroyApp(app);
+              }
               expect(res.status).to.equal(200);
               return expect(res.body.data).to.deep.equal(expected);
           });
@@ -387,7 +415,9 @@ export default (createApp: CreateAppFunc, destroyApp: DestroyAppFunc) => {
                   query: '{ testString }',
               }]);
           return req.then((res) => {
-              destroyApp(app);
+              if (destroyApp) {
+                destroyApp(app);
+              }
               expect(res.status).to.equal(200);
               return expect(res.body).to.deep.equal(expected);
           });
