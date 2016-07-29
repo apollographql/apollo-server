@@ -21,11 +21,20 @@ const QueryType = new GraphQLObjectType({
     fields: {
         testString: {
             type: GraphQLString,
-            resolve(_, params, context) {
-                if (context) {
-                  context();
-                }
+            resolve() {
                 return 'it works';
+            },
+        },
+        testContext: {
+            type: GraphQLString,
+            resolve(_, args, context) {
+                return context;
+            },
+        },
+        testRootValue: {
+            type: GraphQLString,
+            resolve(rootValue) {
+                return rootValue;
             },
         },
         testArgument: {
@@ -292,20 +301,36 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
       });
 
       it('passes the context to the resolver', () => {
-          let results;
-          const expected = 'it works';
+          const expected = 'context works';
           app = createApp({apolloOptions: {
               schema: Schema,
-              context: () => results = expected,
+              context: expected,
           }});
           const req = request(app)
               .post('/graphql')
               .send({
-                  query: 'query test{ testString }',
+                  query: 'query test{ testContext }',
               });
           return req.then((res) => {
               expect(res.status).to.equal(200);
-              return expect(results).to.equal(expected);
+              return expect(res.body.data.testContext).to.equal(expected);
+          });
+      });
+
+      it('passes the rootValue to the resolver', () => {
+          const expected = 'it passes rootValue';
+          app = createApp({apolloOptions: {
+              schema: Schema,
+              rootValue: expected,
+          }});
+          const req = request(app)
+              .post('/graphql')
+              .send({
+                  query: 'query test{ testRootValue }',
+              });
+          return req.then((res) => {
+              expect(res.status).to.equal(200);
+              return expect(res.body.data.testRootValue).to.equal(expected);
           });
       });
 
