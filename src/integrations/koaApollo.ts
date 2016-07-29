@@ -18,7 +18,7 @@ export function apolloKoa(options: ApolloOptions | KoaApolloOptionsFunction): Ko
   }
 
   if (arguments.length > 1) {
-    throw new Error(`Apollo Server expects exactly one argument, got ${arguments.length + 1}`);
+    throw new Error(`Apollo Server expects exactly one argument, got ${arguments.length}`);
   }
 
   return async (ctx, next) => {

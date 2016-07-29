@@ -26,7 +26,7 @@ export function apolloExpress(options: ApolloOptions | ExpressApolloOptionsFunct
 
   if (arguments.length > 1) {
     // TODO: test this
-    throw new Error(`Apollo Server expects exactly one argument, got ${arguments.length + 1}`);
+    throw new Error(`Apollo Server expects exactly one argument, got ${arguments.length}`);
   }
 
   return async (req: express.Request, res: express.Response, next) => {
