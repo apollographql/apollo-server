@@ -8,8 +8,7 @@
   },
   "scripts": {
     "compile": "tsc",
-    "postinstall": "typings install && npm dedupe",
-    "prepublish": "npm run compile",
+    "typings": "typings install",
     "pretest": "npm run compile",
     "test": "npm run testonly --",
     "posttest": "npm run lint",
