@@ -6,6 +6,8 @@ import {
     GraphQLSchema,
     GraphQLObjectType,
     GraphQLString,
+    GraphQLError,
+    BREAK,
 } from 'graphql';
 
 // tslint:disable-next-line
@@ -369,6 +371,33 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
               });
           return req.then((res) => {
               expect(res.status).to.equal(200);
+              return expect(res.body.errors[0].message).to.equal(expected);
+          });
+      });
+
+      it('applies additional validationRules', () => {
+          const expected = 'AlwaysInvalidRule was really invalid!';
+          const AlwaysInvalidRule = function (context) {
+              return {
+                  enter() {
+                      context.reportError(new GraphQLError(
+                          expected
+                      ));
+                      return BREAK;
+                  },
+              };
+          };
+          app = createApp({apolloOptions: {
+              schema: Schema,
+              validationRules: [AlwaysInvalidRule],
+          }});
+          const req = request(app)
+              .post('/graphql')
+              .send({
+                  query: 'query test{ testString }',
+              });
+          return req.then((res) => {
+              expect(res.status).to.equal(400);
               return expect(res.body.errors[0].message).to.equal(expected);
           });
       });
