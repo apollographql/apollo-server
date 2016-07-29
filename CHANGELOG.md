@@ -12,6 +12,7 @@
 * Added `formatRequest` and `formatResponse` functions to apollo options.
 * Removed support for shorthand schema definitions, connectors and mocks (use `graphql-tools` instead)
 * Added Koa integration (@HriBB in #59)
+* Changed express integration to support connect as well (@helfer in #58)
 
 
 ### v0.1.5
