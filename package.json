@@ -51,7 +51,7 @@
     "connect": "^3.4.1",
     "express": "^4.14.0",
     "graphql": "^0.6.1",
-    "hapi": "^13.5.0",
+    "hapi": "^14.0.0",
     "istanbul": "1.0.0-alpha.2",
     "koa": "^2.0.0-alpha.4",
     "koa-bodyparser": "^3.0.0",
