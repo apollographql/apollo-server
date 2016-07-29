@@ -44,6 +44,12 @@ const QueryType = new GraphQLObjectType({
                 return `hello ${echo}`;
             },
         },
+        testError: {
+            type: GraphQLString,
+            resolve() {
+                throw new Error('Secret error message');
+            },
+        },
     },
 });
 
@@ -331,6 +337,39 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           return req.then((res) => {
               expect(res.status).to.equal(200);
               return expect(res.body.data.testRootValue).to.equal(expected);
+          });
+      });
+
+      it('returns errors', () => {
+          const expected = 'Secret error message';
+          app = createApp({apolloOptions: {
+              schema: Schema,
+          }});
+          const req = request(app)
+              .post('/graphql')
+              .send({
+                  query: 'query test{ testError }',
+              });
+          return req.then((res) => {
+              expect(res.status).to.equal(200);
+              return expect(res.body.errors[0].message).to.equal(expected);
+          });
+      });
+
+      it('applies formatError if provided', () => {
+          const expected = '--blank--';
+          app = createApp({apolloOptions: {
+              schema: Schema,
+              formatError: (err) => ({ message: expected }),
+          }});
+          const req = request(app)
+              .post('/graphql')
+              .send({
+                  query: 'query test{ testError }',
+              });
+          return req.then((res) => {
+              expect(res.status).to.equal(200);
+              return expect(res.body.errors[0].message).to.equal(expected);
           });
       });
 
