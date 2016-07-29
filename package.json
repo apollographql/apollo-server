@@ -40,7 +40,7 @@
   "dependencies": {
     "express": "^4.14.0",
     "graphql": "^0.6.1",
-    "hapi": "^13.5.0",
+    "hapi": "^14.0.0",
     "http-errors": "^1.5.0",
     "koa": "^2.0.0-alpha.4",
     "source-map-support": "^0.4.2"
