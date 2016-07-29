@@ -18,27 +18,27 @@ const QueryType = new GraphQLObjectType({
     fields: {
         testString: {
             type: GraphQLString,
-            resolve() {
+            /*resolve() {
                 return 'it works';
-            },
+            },*/
         },
         testRootValue: {
             type: GraphQLString,
-            resolve(root) {
+            /*resolve(root) {
                 return root + ' works';
-            },
+            },*/
         },
         testContextValue: {
             type: GraphQLString,
-            resolve(root, args, context) {
+            /*resolve(root, args, context) {
                 return context + ' works';
-            },
+            },*/
         },
         testArgumentValue: {
             type: GraphQLInt,
-            resolve(root, args, context) {
+            /*resolve(root, args, context) {
                 return args['base'] + 5;
-            },
+            },*/
             args: {
                 base: { type: new GraphQLNonNull(GraphQLInt) },
             },
@@ -59,6 +59,16 @@ describe('operationStore', () => {
       store.put(query);
 
       return expect(print(store.get('testquery'))).to.deep.equal(expected);
+  });
+
+  it('can store queries and return them with getMap', () => {
+      const query = `query testquery{ testString }`;
+      const query2 = `query testquery2{ testRootValue }`;
+
+      const store = new OperationStore(Schema);
+      store.put(query);
+      store.put(query2);
+      return expect(store.getMap().size).to.equal(2);
   });
 
   it('throws a parse error if the query is invalid', () => {
