@@ -29,7 +29,7 @@ function destroyApp(app) {
   app.close();
 }
 
-describe('expressApollo', () => {
+describe('koaApollo', () => {
   it('throws error if called without schema', function(){
      expect(() => apolloKoa(undefined as ApolloOptions)).to.throw('Apollo Server requires options.');
   });
