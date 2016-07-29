@@ -7,6 +7,7 @@
   "globalDependencies": {
     "body-parser": "registry:dt/body-parser#0.0.0+20160619023215",
     "cookies": "registry:dt/cookies#0.5.1+20160316171810",
+    "connect": "registry:dt/connect#3.4.0+20160317120654",
     "express": "registry:dt/express#4.0.0+20160708185218",
     "express-serve-static-core": "registry:dt/express-serve-static-core#4.0.0+20160715232503",
     "hapi": "registry:dt/hapi#13.0.0+20160709092105",
