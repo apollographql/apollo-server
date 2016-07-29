@@ -36,12 +36,6 @@ export function apolloKoa(options: ApolloOptions | KoaApolloOptionsFunction): Ko
 
     const formatErrorFn = optionsObject.formatError || graphql.formatError;
 
-    if (ctx.method !== 'POST') {
-      ctx.set('Allow', 'POST');
-      ctx.status = 405;
-      return ctx.body = 'Apollo Server supports only POST requests.';
-    }
-
     if (!ctx.request.body) {
       ctx.status = 500;
       return ctx.body = 'POST body missing. Did you forget "app.use(koaBody())"?';
