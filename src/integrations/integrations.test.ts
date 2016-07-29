@@ -154,6 +154,18 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
       });
 
+      it('rejects the request if the method is not POST', () => {
+          app = createApp({excludeParser: true});
+          const req = request(app)
+              .get('/graphql')
+              .send();
+          return req.then((res) => {
+              expect(res.status).to.be.oneOf([404, 405]);
+              // HAPI doesn't return allow header, so we can't test this.
+              // return expect(res.headers['allow']).to.equal('POST');
+          });
+      });
+
       it('throws an error if POST body is missing', () => {
           app = createApp({excludeParser: true});
           const req = request(app)
