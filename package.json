@@ -42,6 +42,7 @@
     "graphql": "^0.6.1",
     "hapi": "^13.5.0",
     "http-errors": "^1.5.0",
+    "koa": "^2.0.0-alpha.4",
     "source-map-support": "^0.4.2"
   },
   "devDependencies": {
@@ -52,6 +53,8 @@
     "body-parser": "^1.15.2",
     "chai": "^3.5.0",
     "istanbul": "1.0.0-alpha.2",
+    "koa-bodyparser": "^3.0.0",
+    "koa-router": "^7.0.1",
     "mocha": "^2.5.3",
     "multer": "^1.1.0",
     "remap-istanbul": "^0.6.4",

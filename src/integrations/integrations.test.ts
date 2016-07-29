@@ -66,11 +66,27 @@ export interface CreateAppFunc {
     (options?: CreateAppOptions): void;
 }
 
-export default (createApp: CreateAppFunc) => {
+export interface DestroyAppFunc {
+  (app: any): void;
+}
+
+export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
   describe('apolloServer', () => {
+    let app;
+
+    afterEach(() => {
+      if (app) {
+        if (destroyApp) {
+          destroyApp(app);
+        } else {
+          app = null;
+        }
+      }
+    });
+
     describe('graphqlHTTP', () => {
       it('can be called with an options function', () => {
-          const app = createApp({apolloOptions: (): ApolloOptions => ({schema: Schema})});
+          app = createApp({apolloOptions: (): ApolloOptions => ({schema: Schema})});
           const expected = {
               testString: 'it works',
           };
@@ -86,7 +102,7 @@ export default (createApp: CreateAppFunc) => {
       });
 
       it('can be called with an options function that returns a promise', () => {
-          const app = createApp({ apolloOptions: () => {
+          app = createApp({ apolloOptions: () => {
               return new Promise(resolve => {
                   resolve({schema: Schema});
               });
@@ -106,7 +122,7 @@ export default (createApp: CreateAppFunc) => {
       });
 
       it('throws an error if options promise is rejected', () => {
-          const app = createApp({ apolloOptions: () => {
+          app = createApp({ apolloOptions: () => {
             return Promise.reject({}) as any as ApolloOptions;
           }});
           const expected = 'Invalid options';
@@ -122,7 +138,7 @@ export default (createApp: CreateAppFunc) => {
       });
 
       it('throws an error if POST body is missing', () => {
-          const app = createApp({excludeParser: true});
+          app = createApp({excludeParser: true});
           const req = request(app)
               .post('/graphql')
               .send();
@@ -134,7 +150,7 @@ export default (createApp: CreateAppFunc) => {
 
 
       it('can handle a basic request', () => {
-          const app = createApp();
+          app = createApp();
           const expected = {
               testString: 'it works',
           };
@@ -150,7 +166,7 @@ export default (createApp: CreateAppFunc) => {
       });
 
       it('can handle a request with variables', () => {
-          const app = createApp();
+          app = createApp();
           const expected = {
               testArgument: 'hello world',
           };
@@ -167,7 +183,7 @@ export default (createApp: CreateAppFunc) => {
       });
 
       it('can handle a request with variables as string', () => {
-          const app = createApp();
+          app = createApp();
           const expected = {
               testArgument: 'hello world',
           };
@@ -184,7 +200,7 @@ export default (createApp: CreateAppFunc) => {
       });
 
       it('can handle a request with operationName', () => {
-          const app = createApp();
+          app = createApp();
           const expected = {
               testString: 'it works',
           };
@@ -204,7 +220,7 @@ export default (createApp: CreateAppFunc) => {
       });
 
        it('can handle batch requests', () => {
-          const app = createApp();
+          app = createApp();
           const expected = [
               {
                   data: {
@@ -239,7 +255,7 @@ export default (createApp: CreateAppFunc) => {
       });
 
       it('can handle a request with a mutation', () => {
-          const app = createApp();
+          app = createApp();
           const expected = {
               testMutation: 'not really a mutation, but who cares: world',
           };
@@ -256,7 +272,7 @@ export default (createApp: CreateAppFunc) => {
       });
 
       it('applies the formatResponse function', () => {
-          const app = createApp({apolloOptions: {
+          app = createApp({apolloOptions: {
               schema: Schema,
               formatResponse(response) {
                   response['extensions'] = { it: 'works' }; return response;
@@ -278,7 +294,7 @@ export default (createApp: CreateAppFunc) => {
       it('passes the context to the resolver', () => {
           let results;
           const expected = 'it works';
-          const app = createApp({apolloOptions: {
+          app = createApp({apolloOptions: {
               schema: Schema,
               context: () => results = expected,
           }});
@@ -298,7 +314,7 @@ export default (createApp: CreateAppFunc) => {
 
     describe('renderGraphiQL', () => {
       it('presents GraphiQL when accepting HTML', () => {
-          const app = createApp({graphiqlOptions: {
+          app = createApp({graphiqlOptions: {
               endpointURL: '/graphql',
           }});
 
@@ -319,7 +335,7 @@ export default (createApp: CreateAppFunc) => {
       it('works with formatParams', () => {
           const store = new OperationStore(Schema);
           store.put('query testquery{ testString }');
-          const app = createApp({ apolloOptions: {
+          app = createApp({ apolloOptions: {
               schema: Schema,
               formatParams(params) {
                   params['query'] = store.get(params.operationName);
@@ -341,7 +357,7 @@ export default (createApp: CreateAppFunc) => {
       it('can reject non-whitelisted queries', () => {
           const store = new OperationStore(Schema);
           store.put('query testquery{ testString }');
-          const app = createApp({ apolloOptions: {
+          app = createApp({ apolloOptions: {
               schema: Schema,
               formatParams(params) {
                   if (params.query) {

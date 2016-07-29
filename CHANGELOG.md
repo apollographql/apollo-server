@@ -11,6 +11,7 @@
 * Removed body parsing from express integration. Body must be parsed outside of apollo now
 * Added `formatRequest` and `formatResponse` functions to apollo options.
 * Removed support for shorthand schema definitions, connectors and mocks (use `graphql-tools` instead)
+* Added Koa integration (@HriBB in #59)
 
 
 ### v0.1.5
