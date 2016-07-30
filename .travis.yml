@@ -6,6 +6,7 @@ node_js:
 install:
   - npm install -g coveralls
   - npm install
+  - npm run typings
 
 script:
   - npm test
