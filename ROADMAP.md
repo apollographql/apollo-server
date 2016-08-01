@@ -12,17 +12,17 @@ This document contains a rough outline of a roadmap and a few designs for future
 * Express integration
 * Query batching (Express)
 * Query whitelisting / stored queries
-
-### In progress
-
 * HAPI integration
-
+* Koa integration
+* Connect integration
 * Complete rewrite of Apollo Server documentation
+
+### Current
+
+* Performance testing in production setting
 
 ### Next up
 
-* Koa integration
-* Connect integration
 * Better GraphQL error handling
 * Support for simple query timeouts
 * Websocket transport
@@ -35,14 +35,6 @@ This document contains a rough outline of a roadmap and a few designs for future
 
 
 ## Proposed designs
-
-### Koa integration
-
-The proposed Koa integration should support the same features as the currently existing Express integration and pass the same suite of tests. This should be easy to implement, since a lot of code and all of the generic tests can be reused from the Express integration that is already written.
-
-### Connect integration
-
-Because Express and Connect middleware are very similar, the Connect integration can either be done by rewriting the Express integration to work with both Connect or Express, or it can be done by copying the Express code and changing the few lines necessary to make it work with Connect.
 
 ### Error handling
 
