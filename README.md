@@ -115,4 +115,6 @@ Apollo Server and express-graphql are more or less the same thing (GraphQL middl
 * Apollo Server separates serving GraphiQL (GraphQL UI) from responding to GraphQL requests.
 * express-graphql contains code for parsing HTTP request bodies, Apollo Server leaves that to standard packages like body-parser.
 
+Despite express-graphql being a reference implementation, Apollo Server is actually easier to understand and more modular than express-graphql.
+
 That said, Apollo Server is heavily inspired by express-graphql (it's the reference implementation after all). Rather than seeing the two as competing alternatives, we think that they both have separate roles in the GraphQL ecosystem: express-graphql is a reference implementation, and Apollo Server is a GraphQL server to be used in production and evolve quickly with the needs of the community. Over time, express-graphql can adopt those features of Apollo Server that have proven their worth and become established more widely.
