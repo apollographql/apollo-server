@@ -5,6 +5,7 @@
 [![Coverage Status](https://coveralls.io/repos/github/apollostack/apollo-server/badge.svg?branch=master)](https://coveralls.io/github/apollostack/apollo-server?branch=master)
 [![Get on Slack](https://img.shields.io/badge/slack-join-orange.svg)](http://www.apollostack.com/#slack)
 
+Apollo server has integrations for Express, Connect, HAPI and Koa!
 
 ### Contributions
 
