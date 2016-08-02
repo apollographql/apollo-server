@@ -3,7 +3,7 @@
 ### vNEXT
 * `ExpressApollo` exposes the response object to the server's options callback.
 
-### v0.2.0
+### v0.2.1
 * Complete refactor of Apollo Server using TypeScript. PR [#41](https://github.com/apollostack/apollo-server/pull/41) including the following changes:
 * Dropped express-graphql dependency
 * Dropped support for GET requests, only POST requests are allowed now
