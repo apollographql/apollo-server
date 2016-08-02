@@ -32,6 +32,8 @@ npm install apollo-server
 typings i -SG dt~express dt~express-serve-static-core dt~serve-static dt~mime dt~hapi dt~cookies dt~koa
 ```
 
+For using the project in JavaScript, just run `npm install --save apollo-server` and you're good to go!
+
 ### Express
 
 ```js
