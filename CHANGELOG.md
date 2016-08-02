@@ -2,7 +2,7 @@
 
 ### v0.2.1
 * Complete refactor of Apollo Server using TypeScript. PR [#41](https://github.com/apollostack/apollo-server/pull/41)
-* Added HAPI integration [@nnance](https://github.com/nnance) in [#46](https://github.com/apollostack/apollo-server/pull/46))
+* Added HAPI integration ([@nnance](https://github.com/nnance) in [#46](https://github.com/apollostack/apollo-server/pull/46))
 * Added Koa integration ([@HriBB](https://github.com/HriBB) in [#59](https://github.com/apollostack/apollo-server/pull/59))
 * Changed express integration to support connect as well ([@helfer](https://github.com/helfer) in [#58](https://github.com/apollostack/apollo-server/pull/58))
 * Dropped express-graphql dependency
