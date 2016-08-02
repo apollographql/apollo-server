@@ -1,7 +1,10 @@
 # Changelog
 
 ### v0.2.1
-* Complete refactor of Apollo Server using TypeScript. PR [#41](https://github.com/apollostack/apollo-server/pull/41) including the following changes:
+* Complete refactor of Apollo Server using TypeScript. PR [#41](https://github.com/apollostack/apollo-server/pull/41)
+* Added HAPI integration ([@nnance]https://github.com/nnance) in [#46](https://github.com/apollostack/apollo-server/pull/46))
+* Added Koa integration ([@HriBB](https://github.com/HriBB) in [#59](https://github.com/apollostack/apollo-server/pull/59))
+* Changed express integration to support connect as well ([@helfer](https://github.com/helfer) in [#58](https://github.com/apollostack/apollo-server/pull/58))
 * Dropped express-graphql dependency
 * Dropped support for GET requests, only POST requests are allowed now
 * Split GraphiQL into a separate middleware
@@ -11,8 +14,6 @@
 * Removed body parsing from express integration. Body must be parsed outside of apollo now
 * Added `formatRequest` and `formatResponse` functions to apollo options.
 * Removed support for shorthand schema definitions, connectors and mocks (use `graphql-tools` instead)
-* Added Koa integration (@HriBB in #59)
-* Changed express integration to support connect as well (@helfer in #58)
 
 
 ### v0.1.5
