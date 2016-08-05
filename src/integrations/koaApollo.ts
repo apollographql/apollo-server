@@ -4,6 +4,9 @@ import { runQuery } from '../core/runQuery';
 import ApolloOptions from './apolloOptions';
 import * as GraphiQL from '../modules/renderGraphiQL';
 
+// tslint:disable-next-line
+const asyncBusboy = require('async-busboy');
+
 export interface KoaApolloOptionsFunction {
   (req: koa.Request): ApolloOptions | Promise<ApolloOptions>;
 }
@@ -36,16 +39,40 @@ export function apolloKoa(options: ApolloOptions | KoaApolloOptionsFunction): Ko
 
     const formatErrorFn = optionsObject.formatError || graphql.formatError;
 
-    if (!ctx.request.body) {
-      ctx.status = 500;
-      return ctx.body = 'POST body missing. Did you forget "app.use(koaBody())"?';
-    }
+    let b;
+    let isBatch;
 
-    let b = ctx.request.body;
-    let isBatch = true;
-    if (!Array.isArray(b)) {
+    if (ctx.request.is('multipart/*')) {
+      const { files, fields } = await asyncBusboy(ctx.req);
+      if (!files.length) {
+        return ctx.body = 'Using multipart/form-data but no files were uploaded.';
+      }
+      const file = files[0];
+
+      if (!optionsObject.rootValue) {
+        optionsObject.rootValue = { file };
+      } else {
+        optionsObject.rootValue.file = file;
+      }
+
       isBatch = false;
-      b = [b];
+      b = [{
+        query: fields.query,
+        variables: fields.variables ? JSON.parse(fields.variables) : {}
+      }];
+
+    } else {
+      if (!ctx.request.body) {
+        ctx.status = 500;
+        return ctx.body = 'POST body missing. Did you forget "app.use(koaBody())"?';
+      }
+
+      isBatch = true;
+      b = ctx.request.body;
+      if (!Array.isArray(b)) {
+        isBatch = false;
+        b = [b];
+      }
     }
 
     let responses: Array<graphql.GraphQLResult> = [];
