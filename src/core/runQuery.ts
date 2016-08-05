@@ -97,7 +97,7 @@ function runQuery(options: QueryOptions): Promise<GraphQLResult> {
                 response['errors'] = format(gqlResponse.errors);
             }
             if (options.formatResponse) {
-                response = options.formatResponse(response);
+                response = options.formatResponse(response, options);
             }
             logFunction('request.end');
             return response;

@@ -129,6 +129,24 @@ describe('runQuery', () => {
       });
   });
 
+  it('passes the options to formatResponse', () => {
+      const query = `{ testContextValue }`;
+      const expected = { testContextValue: 'it still works' };
+      return runQuery({
+          schema: Schema,
+          query: query,
+          context: 'it still',
+          formatResponse: (response, { context }) => {
+              response['extensions'] = context;
+              return response;
+          },
+        })
+      .then((res) => {
+          expect(res.data).to.deep.equal(expected);
+          return expect(res['extensions']).to.equal('it still');
+      });
+  });
+
   it('correctly passes in variables (and arguments)', () => {
       const query = `query TestVar($base: Int!){ testArgumentValue(base: $base) }`;
       const expected = { testArgumentValue: 6 };
