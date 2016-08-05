@@ -58,7 +58,7 @@ export function apolloKoa(options: ApolloOptions | KoaApolloOptionsFunction): Ko
       isBatch = false;
       b = [{
         query: fields.query,
-        variables: fields.variables ? JSON.parse(fields.variables) : {}
+        variables: fields.variables ? JSON.parse(fields.variables) : {},
       }];
 
     } else {
