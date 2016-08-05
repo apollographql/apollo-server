@@ -37,6 +37,7 @@
   },
   "homepage": "https://github.com/apollostack/apollo-proxy#readme",
   "dependencies": {
+    "async-busboy": "^0.1.1",
     "http-errors": "^1.5.0",
     "source-map-support": "^0.4.2"
   },
