@@ -169,4 +169,37 @@ describe('runQuery', () => {
             return expect(res.data).to.deep.equal(expected);
         });
     });
+
+    it('calls logFunction', () => {
+        const query = `
+        query Q1 {
+            testString
+        }`;
+        const logs = [];
+        const logFn = (...args) => {
+            logs.push(args);
+        };
+        const expected = {
+            testString: 'it works',
+        };
+        return runQuery({
+            schema: Schema,
+            query: query,
+            operationName: 'Q1',
+            variables: { test: 123 },
+            logFunction: logFn,
+        })
+        .then((res) => {
+            expect(res.data).to.deep.equal(expected);
+            expect(logs.length).to.equals(11);
+            expect(logs[0][0]).to.equals('request.start');
+            expect(logs[1][0]).to.equals('request.query');
+            expect(logs[1][1]).to.deep.equals(query);
+            expect(logs[2][0]).to.equals('request.variables');
+            expect(logs[2][1]).to.deep.equals({ test: 123 });
+            expect(logs[3][0]).to.equals('request.operationName');
+            expect(logs[3][1]).to.equals('Q1');
+            expect(logs[10][0]).to.equals('request.end');
+        });
+    });
 });
