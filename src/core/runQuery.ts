@@ -3,6 +3,7 @@ import {
     GraphQLResult,
     Document,
     parse,
+    print,
     validate,
     execute,
     formatError,
@@ -34,6 +35,10 @@ export interface QueryOptions {
 function runQuery(options: QueryOptions): Promise<GraphQLResult> {
     let documentAST: Document;
 
+    const logFunction = options.logFunction || function(){ return null; };
+
+    logFunction('request.start');
+
     function format(errors: Array<Error>): Array<Error> {
         // TODO: fix types! shouldn't have to cast.
         // the blocker is that the typings aren't right atm:
@@ -42,12 +47,19 @@ function runQuery(options: QueryOptions): Promise<GraphQLResult> {
         return errors.map(options.formatError || formatError as any) as Array<Error>;
     }
 
+    logFunction('request.query', typeof options.query === 'string' ? options.query : print(options.query));
+    logFunction('request.variables', options.variables);
+    logFunction('request.operationName', options.operationName);
+
     // if query is already an AST, don't parse or validate
     if (typeof options.query === 'string') {
         try {
             // TODO: time this with log function
+            logFunction('parse.start');
             documentAST = parse(options.query as string);
+            logFunction('parse.end');
         } catch (syntaxError) {
+            logFunction('parse.end');
             return Promise.resolve({ errors: format([syntaxError]) });
         }
 
@@ -57,7 +69,9 @@ function runQuery(options: QueryOptions): Promise<GraphQLResult> {
         if (options.validationRules) {
           rules = rules.concat(options.validationRules);
         }
+        logFunction('validation.start');
         const validationErrors = validate(options.schema, documentAST, rules);
+        logFunction('validation.end');
         if (validationErrors.length) {
             return Promise.resolve({ errors: format(validationErrors) });
         }
@@ -66,6 +80,7 @@ function runQuery(options: QueryOptions): Promise<GraphQLResult> {
     }
 
     try {
+        logFunction('execution.start');
         return execute(
             options.schema,
             documentAST,
@@ -74,6 +89,7 @@ function runQuery(options: QueryOptions): Promise<GraphQLResult> {
             options.variables,
             options.operationName
         ).then(gqlResponse => {
+            logFunction('execution.end');
             let response = {
                 data: gqlResponse.data,
             };
@@ -83,9 +99,12 @@ function runQuery(options: QueryOptions): Promise<GraphQLResult> {
             if (options.formatResponse) {
                 response = options.formatResponse(response);
             }
+            logFunction('request.end');
             return response;
         });
     } catch (executionError) {
+        logFunction('execution.end');
+        logFunction('request.end');
         return Promise.resolve({ errors: format([executionError]) });
     }
 }
