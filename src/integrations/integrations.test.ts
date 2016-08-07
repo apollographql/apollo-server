@@ -55,6 +55,14 @@ const QueryType = new GraphQLObjectType({
     },
 });
 
+const UploadedFileType = new GraphQLObjectType({
+  name: 'UploadedFile',
+  fields: {
+      filename: { type: GraphQLString },
+      mime: { type: GraphQLString },
+  },
+});
+
 const MutationType = new GraphQLObjectType({
     name: 'MutationType',
     fields: {
@@ -63,6 +71,16 @@ const MutationType = new GraphQLObjectType({
             args: { echo: { type: GraphQLString } },
             resolve(root, { echo }) {
                 return `not really a mutation, but who cares: ${echo}`;
+            },
+        },
+        testUpload: {
+            type: UploadedFileType,
+            args: { echo: { type: GraphQLString } },
+            resolve(root) {
+                return {
+                    filename: root.file.filename,
+                    mime: root.file.mime,
+                };
             },
         },
     },
@@ -298,6 +316,24 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
               expect(res.status).to.equal(200);
               return expect(res.body.data).to.deep.equal(expected);
           });
+      });
+
+      it('can handle a file upload request', () => {
+        app = createApp();
+        const expected = {
+            testUpload: {
+                filename: 'integrations.test.js',
+                mime: 'application/javascript',
+            },
+        };
+        const req = request(app)
+            .post('/graphql')
+            .field('query', 'mutation test { testUpload { filename mime } }')
+            .attach('file', __filename);
+        return req.then((res) => {
+            expect(res.status).to.equal(200);
+            return expect(res.body.data).to.deep.equal(expected);
+        });
       });
 
       it('applies the formatResponse function', () => {
