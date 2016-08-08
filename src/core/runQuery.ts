@@ -90,6 +90,7 @@ function runQuery(options: QueryOptions): Promise<GraphQLResult> {
             options.operationName
         ).then(gqlResponse => {
             logFunction('execution.end');
+            logFunction('request.end');
             let response = {
                 data: gqlResponse.data,
             };
@@ -99,7 +100,6 @@ function runQuery(options: QueryOptions): Promise<GraphQLResult> {
             if (options.formatResponse) {
                 response = options.formatResponse(response, options);
             }
-            logFunction('request.end');
             return response;
         });
     } catch (executionError) {
