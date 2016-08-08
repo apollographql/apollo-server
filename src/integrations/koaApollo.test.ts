@@ -4,6 +4,7 @@ import * as koaBody from 'koa-bodyparser';
 import { apolloKoa, graphiqlKoa } from './koaApollo';
 import ApolloOptions from './apolloOptions';
 import { expect } from 'chai';
+import * as http from 'http';
 
 import testSuite, { Schema, CreateAppOptions } from './integrations.test';
 
@@ -22,7 +23,7 @@ function createApp(options: CreateAppOptions = {}) {
   router.post('/graphql', apolloKoa( options.apolloOptions ));
   app.use(router.routes());
   app.use(router.allowedMethods());
-  return app.listen(3000);
+  return http.createServer(app.callback());
 }
 
 function destroyApp(app) {
