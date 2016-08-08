@@ -4,118 +4,143 @@ import { runQuery } from '../core/runQuery';
 import ApolloOptions from './apolloOptions';
 import * as GraphiQL from '../modules/renderGraphiQL';
 
+// tslint:disable-next-line
+const asyncBusboy = require('async-busboy');
+
 export interface KoaApolloOptionsFunction {
-  (req: koa.Request): ApolloOptions | Promise<ApolloOptions>;
+    (req: koa.Request): ApolloOptions | Promise<ApolloOptions>;
 }
 
 export interface KoaHandler {
-  (req: any, next): void;
+    (req: any, next): void;
 }
 
 export function apolloKoa(options: ApolloOptions | KoaApolloOptionsFunction): KoaHandler {
-  if (!options) {
-    throw new Error('Apollo Server requires options.');
-  }
-
-  if (arguments.length > 1) {
-    throw new Error(`Apollo Server expects exactly one argument, got ${arguments.length}`);
-  }
-
-  return async (ctx, next) => {
-    let optionsObject: ApolloOptions;
-    if (isOptionsFunction(options)) {
-      try {
-        optionsObject = await options(ctx.request);
-      } catch (e) {
-        ctx.status = 500;
-        return ctx.body = `Invalid options provided to ApolloServer: ${e.message}`;
-      }
-    } else {
-      optionsObject = options;
+    if (!options) {
+        throw new Error('Apollo Server requires options.');
     }
 
-    const formatErrorFn = optionsObject.formatError || graphql.formatError;
-
-    if (!ctx.request.body) {
-      ctx.status = 500;
-      return ctx.body = 'POST body missing. Did you forget "app.use(koaBody())"?';
+    if (arguments.length > 1) {
+        throw new Error(`Apollo Server expects exactly one argument, got ${arguments.length}`);
     }
 
-    let b = ctx.request.body;
-    let isBatch = true;
-    if (!Array.isArray(b)) {
-      isBatch = false;
-      b = [b];
-    }
-
-    let responses: Array<graphql.GraphQLResult> = [];
-    for (let requestParams of b) {
-      try {
-        const query = requestParams.query;
-        const operationName = requestParams.operationName;
-        let variables = requestParams.variables;
-
-        if (typeof variables === 'string') {
-          // TODO: catch errors
-          variables = JSON.parse(variables);
+    return async (ctx, next) => {
+        let optionsObject: ApolloOptions;
+        if (isOptionsFunction(options)) {
+            try {
+                optionsObject = await options(ctx.request);
+            } catch (e) {
+                ctx.status = 500;
+                return ctx.body = `Invalid options provided to ApolloServer: ${e.message}`;
+            }
+        } else {
+            optionsObject = options;
         }
 
-        let params = {
-          schema: optionsObject.schema,
-          query: query,
-          variables: variables,
-          context: optionsObject.context,
-          rootValue: optionsObject.rootValue,
-          operationName: operationName,
-          logFunction: optionsObject.logFunction,
-          validationRules: optionsObject.validationRules,
-          formatError: formatErrorFn,
-          formatResponse: optionsObject.formatResponse,
-        };
+        const formatErrorFn = optionsObject.formatError || graphql.formatError;
 
-        if (optionsObject.formatParams) {
-          params = optionsObject.formatParams(params);
+        let b;
+        let isBatch;
+        if (ctx.request.is('multipart/*')) {
+          // file upload
+          const { files, fields } = await asyncBusboy(ctx.req);
+          if (!files.length) {
+            return ctx.body = 'Using multipart/form-data but no files were uploaded.';
+          }
+          const file = files[0];
+
+          if (!optionsObject.rootValue) {
+            optionsObject.rootValue = { file };
+          } else {
+            optionsObject.rootValue.file = file;
+          }
+
+          b = [{ query: fields.query }];
+          isBatch = false;
+        } else {
+          // normal request
+          if (!ctx.request.body) {
+            ctx.status = 500;
+            return ctx.body = 'POST body missing. Did you forget "app.use(koaBody())"?';
+          }
+
+          b = ctx.request.body;
+          isBatch = true;
+          if (!Array.isArray(b)) {
+            isBatch = false;
+            b = [b];
+          }
         }
 
-        responses.push(await runQuery(params));
-      } catch (e) {
-        responses.push({ errors: [formatErrorFn(e)] });
-      }
-    }
 
-    ctx.set('Content-Type', 'application/json');
-    if (isBatch) {
-      return ctx.body = JSON.stringify(responses);
-    } else {
-      const gqlResponse = responses[0];
-      if (gqlResponse.errors && typeof gqlResponse.data === 'undefined') {
-        ctx.status = 400;
-      }
-      return ctx.body = JSON.stringify(gqlResponse);
-    }
+        let responses: Array<graphql.GraphQLResult> = [];
+        for (let requestParams of b) {
+            try {
+                const query = requestParams.query;
+                const operationName = requestParams.operationName;
+                let variables = requestParams.variables;
 
-  };
+                if (typeof variables === 'string') {
+                    // TODO: catch errors
+                    variables = JSON.parse(variables);
+                }
+
+                let params = {
+                    schema: optionsObject.schema,
+                    query: query,
+                    variables: variables,
+                    context: optionsObject.context,
+                    rootValue: optionsObject.rootValue,
+                    operationName: operationName,
+                    logFunction: optionsObject.logFunction,
+                    validationRules: optionsObject.validationRules,
+                    formatError: formatErrorFn,
+                    formatResponse: optionsObject.formatResponse,
+                };
+
+                if (optionsObject.formatParams) {
+                    params = optionsObject.formatParams(params);
+                }
+
+                responses.push(await runQuery(params));
+            } catch (e) {
+                responses.push({ errors: [formatErrorFn(e)] });
+            }
+        }
+
+        ctx.set('Content-Type', 'application/json');
+        if (isBatch) {
+            return ctx.body = JSON.stringify(responses);
+        } else {
+            const gqlResponse = responses[0];
+            if (gqlResponse.errors && typeof gqlResponse.data === 'undefined') {
+                ctx.status = 400;
+            }
+            return ctx.body = JSON.stringify(gqlResponse);
+        }
+
+    };
 }
 
 function isOptionsFunction(arg: ApolloOptions | KoaApolloOptionsFunction): arg is KoaApolloOptionsFunction {
-  return typeof arg === 'function';
+    return typeof arg === 'function';
 }
 
 export function graphiqlKoa(options: GraphiQL.GraphiQLData) {
-  return (ctx, next) => {
+    return (ctx, next) => {
 
-    const q = ctx.request.query || {};
-    const query = q.query || '';
-    const variables = q.variables || '{}';
-    const operationName = q.operationName || '';
+        const q = ctx.request.query || {};
+        const query = q.query || '';
+        const variables = q.variables || '{}';
+        const operationName = q.operationName || '';
 
-    const graphiQLString = GraphiQL.renderGraphiQL({
-      endpointURL: options.endpointURL,
-      query: query || options.query,
-      variables: JSON.parse(variables) || options.variables,
-      operationName: operationName || options.operationName,
-    });
-    ctx.set('Content-Type', 'text/html');
-    ctx.body = graphiQLString;
-  };
+        const graphiQLString = GraphiQL.renderGraphiQL({
+            endpointURL: options.endpointURL,
+            query: query || options.query,
+            variables: JSON.parse(variables) || options.variables,
+            operationName: operationName || options.operationName,
+        });
+        ctx.set('Content-Type', 'text/html');
+        ctx.body = graphiQLString;
+    };
 }
