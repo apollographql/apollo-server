@@ -13,6 +13,12 @@ import {
 
 import { runQuery } from './runQuery';
 
+// Make the global Promise constructor Fiber-aware to simulate a Meteor
+// environment.
+import { makeCompatible } from 'meteor-promise';
+import Fiber = require('fibers');
+makeCompatible(Promise, Fiber);
+
 const QueryType = new GraphQLObjectType({
     name: 'QueryType',
     fields: {
