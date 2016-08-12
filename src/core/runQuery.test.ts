@@ -46,8 +46,9 @@ const QueryType = new GraphQLObjectType({
         testAwaitedValue: {
             type: GraphQLString,
             resolve(root) {
-                // Calling Promise.await here calls Fiber.yield, whereas a
-                // normal await expression would not yield the Fiber.
+                // Calling Promise.await is legal here even though this is
+                // not an async function, because we are guaranteed to be
+                // running in a Fiber.
                 return 'it ' + (<any>Promise).await('works');
             },
         },
