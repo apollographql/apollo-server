@@ -32,7 +32,19 @@ export interface QueryOptions {
  formatResponse?: Function;
 }
 
+// Make the global Promise constructor Fiber-aware.
+import { makeCompatible } from 'meteor-promise';
+import Fiber = require('fibers');
+makeCompatible(Promise, Fiber);
+
+const resolvedPromise = Promise.resolve();
+
 function runQuery(options: QueryOptions): Promise<GraphQLResult> {
+    // Fiber-aware Promises run their .then callbacks in Fibers.
+    return resolvedPromise.then(() => doRunQuery(options));
+}
+
+function doRunQuery(options: QueryOptions): Promise<GraphQLResult> {
     let documentAST: Document;
 
     const logFunction = options.logFunction || function(){ return null; };

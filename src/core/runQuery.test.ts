@@ -43,6 +43,14 @@ const QueryType = new GraphQLObjectType({
                 base: { type: new GraphQLNonNull(GraphQLInt) },
             },
         },
+        testAwaitedValue: {
+            type: GraphQLString,
+            resolve(root) {
+                // Calling Promise.await here calls Fiber.yield, whereas a
+                // normal await expression would not yield the Fiber.
+                return 'it ' + (<any>Promise).await('works');
+            },
+        },
     },
 });
 
@@ -170,6 +178,16 @@ describe('runQuery', () => {
       });
   });
 
+    it('supports yielding resolver functions', () => {
+        return runQuery({
+            schema: Schema,
+            query: `{ testAwaitedValue }`,
+        }).then((res) => {
+            expect(res.data).to.deep.equal({
+                testAwaitedValue: 'it works',
+            });
+        });
+    });
 
     it('runs the correct operation when operationName is specified', () => {
         const query = `
