@@ -1,5 +1,9 @@
 # Changelog
 
+
+### v0.2.5
+* Made promise compatible with fibers ([@benjamn](https://github.com/benjamn) in [#92](https://github.com/apollostack/apollo-server/pull/92))
+
 ### v0.2.2
 * Log server events such as request start etc. with logFunction ([@helfer](https://github.com/helfer) in [#78](https://github.com/apollostack/apollo-server/pull/78))
 
@@ -20,7 +24,7 @@
 
 
 ### v0.1.5
-* BUG: Fixed a spelling error with `tracer.submit()` from PR [#26]((https://github.com/apollostack/apollo-server/pull/26)
+* BUG: Fixed a spelling error with `tracer.submit()` from PR [#26](https://github.com/apollostack/apollo-server/pull/26)
  in PR [#31](https://github.com/apollostack/apollo-server/pull/31)
 
 ### v.0.1.4
