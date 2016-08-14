@@ -32,7 +32,14 @@ export interface QueryOptions {
  formatResponse?: Function;
 }
 
+const resolvedPromise = Promise.resolve();
+
 function runQuery(options: QueryOptions): Promise<GraphQLResult> {
+    // Fiber-aware Promises run their .then callbacks in Fibers.
+    return resolvedPromise.then(() => doRunQuery(options));
+}
+
+function doRunQuery(options: QueryOptions): Promise<GraphQLResult> {
     let documentAST: Document;
 
     const logFunction = options.logFunction || function(){ return null; };

@@ -13,6 +13,12 @@ import {
 
 import { runQuery } from './runQuery';
 
+// Make the global Promise constructor Fiber-aware to simulate a Meteor
+// environment.
+import { makeCompatible } from 'meteor-promise';
+import Fiber = require('fibers');
+makeCompatible(Promise, Fiber);
+
 const QueryType = new GraphQLObjectType({
     name: 'QueryType',
     fields: {
@@ -41,6 +47,15 @@ const QueryType = new GraphQLObjectType({
             },
             args: {
                 base: { type: new GraphQLNonNull(GraphQLInt) },
+            },
+        },
+        testAwaitedValue: {
+            type: GraphQLString,
+            resolve(root) {
+                // Calling Promise.await is legal here even though this is
+                // not an async function, because we are guaranteed to be
+                // running in a Fiber.
+                return 'it ' + (<any>Promise).await('works');
             },
         },
     },
@@ -170,6 +185,16 @@ describe('runQuery', () => {
       });
   });
 
+    it('supports yielding resolver functions', () => {
+        return runQuery({
+            schema: Schema,
+            query: `{ testAwaitedValue }`,
+        }).then((res) => {
+            expect(res.data).to.deep.equal({
+                testAwaitedValue: 'it works',
+            });
+        });
+    });
 
     it('runs the correct operation when operationName is specified', () => {
         const query = `
