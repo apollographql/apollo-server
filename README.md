@@ -116,20 +116,20 @@ Apollo Server can be configured with an options object with the the following fi
 
 All options except for `schema` are optional.
 
-### White Listing
+### Whitelisting
 
 The `formatParams` function can be used in combination with the `OperationStore` to enable whitelisting.
 
 ```js
 const store = new OperationStore(Schema);
 store.put('query testquery{ testString }');
-app = createApp({ apolloOptions: {
+apolloOptions = {
     schema: Schema,
     formatParams(params) {
         params['query'] = store.get(params.operationName);
         return params;
     },
-}});
+};
 ```
 
 ## Differences to express-graphql
