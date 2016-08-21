@@ -104,7 +104,7 @@ app.listen(PORT);
 
 ## Options
 
-Apollo Server can be configured with an options oject with the the following fields:
+Apollo Server can be configured with an options object with the the following fields:
 
 * **schema**: the GraphQLSchema to be used
 * **context**: the context value passed to resolvers during GraphQL execution
@@ -116,6 +116,22 @@ Apollo Server can be configured with an options oject with the the following fie
 
 All options except for `schema` are optional.
 
+### Whitelisting
+
+The `formatParams` function can be used in combination with the `OperationStore` to enable whitelisting.
+
+```js
+const store = new OperationStore(Schema);
+store.put('query testquery{ testString }');
+apolloOptions = {
+    schema: Schema,
+    formatParams(params) {
+        params['query'] = store.get(params.operationName);
+        return params;
+    },
+};
+```
+
 ## Differences to express-graphql
 
 Apollo Server and express-graphql are more or less the same thing (GraphQL middleware for Node.js), but there are a few key differences:
@@ -125,6 +141,7 @@ Apollo Server and express-graphql are more or less the same thing (GraphQL middl
 * Compared to express-graphql, Apollo Server has a simpler interface and supports exactly one way of passing queries.
 * Apollo Server separates serving GraphiQL (GraphQL UI) from responding to GraphQL requests.
 * express-graphql contains code for parsing HTTP request bodies, Apollo Server leaves that to standard packages like body-parser.
+* Includes an `OperationStore` to easily manage whitelisting
 * Built with TypeScript
 
 Despite express-graphql being a reference implementation, Apollo Server is actually easier to understand and more modular than express-graphql.
