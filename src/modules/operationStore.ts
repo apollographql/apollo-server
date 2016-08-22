@@ -17,17 +17,26 @@ export class OperationStore {
     this.storedOperations = new Map<string, Document>();
   }
 
-  public put(operationDefinition: string): void {
-    const ast = parse(operationDefinition);
-
+  public put(operation: string | Document): void {
     function isOperationDefinition(definition): definition is OperationDefinition {
       return definition.kind === OPERATION_DEFINITION;
     }
 
-    if (ast.definitions.length > 1) {
+    function isString(definition): definition is string {
+      return typeof definition === 'string';
+    }
+
+    const ast = isString(operation) ? parse(operation as string) : operation as Document;
+
+    if (ast.definitions.length === 0) {
+      throw new Error('operationDefinition must contain at least one definition');
+    }
+
+    const definitions = ast.definitions.filter(isOperationDefinition);
+    if (definitions.length > 1) {
       throw new Error('operationDefinition must contain only one definition');
     }
-    const definition = ast.definitions[0];
+    const definition = definitions[0];
 
     if (isOperationDefinition(definition)) {
       const validationErrors = validate(this.schema, ast);
@@ -39,7 +48,7 @@ export class OperationStore {
       }
       this.storedOperations.set(definition.name.value, ast);
     } else {
-      throw new Error(`operationDefinition must contain an OperationDefinition: ${operationDefinition}`);
+      throw new Error(`operationDefinition must contain an OperationDefinition: ${operation}`);
     }
   }
 

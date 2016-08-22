@@ -9,6 +9,7 @@ import {
     GraphQLInt,
     GraphQLNonNull,
     print,
+    parse,
 } from 'graphql';
 
 import { OperationStore } from './operationStore';
@@ -57,6 +58,16 @@ describe('operationStore', () => {
 
       const store = new OperationStore(Schema);
       store.put(query);
+
+      return expect(print(store.get('testquery'))).to.deep.equal(expected);
+  });
+
+  it('can store a Document and return its ast', () => {
+      const query = `query testquery{ testString }`;
+      const expected = `query testquery {\n  testString\n}\n`;
+
+      const store = new OperationStore(Schema);
+      store.put(parse(query));
 
       return expect(print(store.get('testquery'))).to.deep.equal(expected);
   });
