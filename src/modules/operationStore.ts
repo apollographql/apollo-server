@@ -28,29 +28,22 @@ export class OperationStore {
 
     const ast = isString(operation) ? parse(operation as string) : operation as Document;
 
-    const definitions = ast.definitions.filter(isOperationDefinition);
+    const definitions = ast.definitions.filter(isOperationDefinition) as OperationDefinition[];
+    if (definitions.length === 0) {
+      throw new Error('operationDefinition must contain at least one definition');
+    }
     if (definitions.length > 1) {
       throw new Error('operationDefinition must contain only one definition');
     }
 
-    if (definitions.length === 0) {
-      throw new Error('operationDefinition must contain at least one definition');
+    const validationErrors = validate(this.schema, ast);
+    if (validationErrors.length > 0) {
+      const messages = validationErrors.map((e) => e.message);
+      const e = new Error(`Validation Errors:\n${messages.join('\n')}`);
+      e['originalErrors'] = validationErrors;
+      throw e;
     }
-
-    const definition = definitions[0];
-
-    if (isOperationDefinition(definition)) {
-      const validationErrors = validate(this.schema, ast);
-      if (validationErrors.length > 0) {
-        const messages = validationErrors.map((e) => e.message);
-        const e = new Error(`Validation Errors:\n${messages.join('\n')}`);
-        e['originalErrors'] = validationErrors;
-        throw e;
-      }
-      this.storedOperations.set(definition.name.value, ast);
-    } else {
-      throw new Error(`operationDefinition must contain an OperationDefinition: ${operation}`);
-    }
+    this.storedOperations.set(definitions[0].name.value, ast);
   }
 
   public get(operationName: string): Document {
