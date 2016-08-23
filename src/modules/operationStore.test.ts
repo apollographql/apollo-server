@@ -9,6 +9,7 @@ import {
     GraphQLInt,
     GraphQLNonNull,
     print,
+    parse,
 } from 'graphql';
 
 import { OperationStore } from './operationStore';
@@ -61,6 +62,16 @@ describe('operationStore', () => {
       return expect(print(store.get('testquery'))).to.deep.equal(expected);
   });
 
+  it('can store a Document and return its ast', () => {
+      const query = `query testquery{ testString }`;
+      const expected = `query testquery {\n  testString\n}\n`;
+
+      const store = new OperationStore(Schema);
+      store.put(parse(query));
+
+      return expect(print(store.get('testquery'))).to.deep.equal(expected);
+  });
+
   it('can store queries and return them with getMap', () => {
       const query = `query testquery{ testString }`;
       const query2 = `query testquery2{ testRootValue }`;
@@ -104,7 +115,7 @@ describe('operationStore', () => {
 
       const store = new OperationStore(Schema);
 
-      return expect(() => store.put(query)).to.throw(/must contain an/);
+      return expect(() => store.put(query)).to.throw(/must contain at least/);
   });
 
   it('can delete stored operations', () => {

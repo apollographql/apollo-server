@@ -1,6 +1,8 @@
 # Changelog
 
 * Expose the OperationStore as part of the public API. ([@nnance](https://github.com/nnance))
+* Support adding parsed operations to the OperationStore. ([@nnance](https://github.com/nnance))
+* Expose ApolloOptions as part of the public API.
 
 ### v0.2.5
 * Made promise compatible with fibers ([@benjamn](https://github.com/benjamn) in [#92](https://github.com/apollostack/apollo-server/pull/92))
