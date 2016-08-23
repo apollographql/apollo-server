@@ -115,7 +115,7 @@ describe('operationStore', () => {
 
       const store = new OperationStore(Schema);
 
-      return expect(() => store.put(query)).to.throw(/must contain an/);
+      return expect(() => store.put(query)).to.throw(/must contain at least/);
   });
 
   it('can delete stored operations', () => {

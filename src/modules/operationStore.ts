@@ -28,14 +28,15 @@ export class OperationStore {
 
     const ast = isString(operation) ? parse(operation as string) : operation as Document;
 
-    if (ast.definitions.length === 0) {
-      throw new Error('operationDefinition must contain at least one definition');
-    }
-
     const definitions = ast.definitions.filter(isOperationDefinition);
     if (definitions.length > 1) {
       throw new Error('operationDefinition must contain only one definition');
     }
+
+    if (definitions.length === 0) {
+      throw new Error('operationDefinition must contain at least one definition');
+    }
+
     const definition = definitions[0];
 
     if (isOperationDefinition(definition)) {
