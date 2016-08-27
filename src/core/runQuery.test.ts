@@ -86,7 +86,7 @@ describe('runQuery', () => {
 
     it('returns a syntax error if the query string contains one', () => {
       const query = `query { test`;
-      const expected = 'Syntax Error GraphQL (1:13) Expected Name, found EOF\n\n1: query { test\n               ^\n';
+      const expected = /Syntax Error GraphQL/;
       return runQuery({
           schema: Schema,
           query: query,
@@ -94,7 +94,7 @@ describe('runQuery', () => {
       }).then((res) => {
           expect(res.data).to.be.undefined;
           expect(res.errors.length).to.equal(1);
-          return expect(res.errors[0].message).to.deep.equal(expected);
+          return expect(res.errors[0].message).to.match(expected);
       });
   });
 
