@@ -52,7 +52,7 @@ app.listen(PORT);
 
 ### Connect
 ```js
-import connect from 'express';
+import connect from 'connect';
 import { apolloConnect } from 'apollo-server';
 
 const PORT = 3000;
