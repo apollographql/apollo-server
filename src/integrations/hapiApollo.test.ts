@@ -14,13 +14,13 @@ function createApp(options: CreateAppOptions = {}) {
   options.apolloOptions = options.apolloOptions || { schema: Schema };
 
   server.register({
-      register: new ApolloHAPI(),
+      register: ApolloHAPI,
       options: options.apolloOptions,
       routes: { prefix: '/graphql' },
   });
 
   server.register({
-      register: new GraphiQLHAPI(),
+      register: GraphiQLHAPI,
       options: { endpointURL: '/graphql' },
       routes: { prefix: '/graphiql' },
   });

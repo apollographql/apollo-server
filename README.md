@@ -79,7 +79,7 @@ server.connection({
 });
 
 server.register({
-    register: new ApolloHAPI(),
+    register: ApolloHAPI,
     options: { schema: myGraphQLSchema },
     routes: { prefix: '/graphql' },
 });
