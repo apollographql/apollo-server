@@ -64,7 +64,7 @@ app.use('/graphql', bodyParser.json(), apolloConnect({ schema: myGraphQLSchema }
 app.listen(PORT);
 ```
 
-### HAPI
+### hapi
 ```js
 import hapi from 'hapi';
 
@@ -82,6 +82,13 @@ server.register({
     register: new ApolloHAPI(),
     options: { schema: myGraphQLSchema },
     routes: { prefix: '/graphql' },
+});
+
+server.start((err) => {
+    if (err) {
+        throw err;
+    }
+    console.log(`Server running at: ${server.info.uri}`);
 });
 ```
 ### Koa
