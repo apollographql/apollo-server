@@ -64,9 +64,10 @@ app.use('/graphql', bodyParser.json(), apolloConnect({ schema: myGraphQLSchema }
 app.listen(PORT);
 ```
 
-### HAPI
+### hapi
 ```js
 import hapi from 'hapi';
+import { apolloHAPI } from 'apollo-server';
 
 const server = new hapi.Server();
 
