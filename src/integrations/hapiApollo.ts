@@ -17,37 +17,12 @@ export interface HAPIOptionsFunction {
 const ApolloHAPI: IRegister = function(server: hapi.Server, options: ApolloOptions | HAPIOptionsFunction, next) {
   server.route({
     method: 'POST',
-    path: '/',
-    handler: async (request, reply) => {
-      let optionsObject: ApolloOptions;
-      if (isOptionsFunction(options)) {
-        try {
-          optionsObject = await options(request);
-        } catch (e) {
-          reply(`Invalid options provided to ApolloServer: ${e.message}`).code(500);
-        }
-      } else {
-        optionsObject = options;
-      }
-
-      if (!request.payload) {
-        reply('POST body missing.').code(500);
-        return;
-      }
-
-      const responses = await processQuery(request.payload, optionsObject);
-
-      if (responses.length > 1) {
-        reply(responses);
-      } else {
-        const gqlResponse = responses[0];
-        if (gqlResponse.errors && typeof gqlResponse.data === 'undefined') {
-          reply(gqlResponse).code(400);
-        } else {
-          reply(gqlResponse);
-        }
-      }
-
+    path: '/graphql',
+    config: {
+      pre: [{
+        assign: 'graphQL',
+        method: 'processQueryRequest(payload, pre.options)',
+      }],
     },
   });
   next();
@@ -84,6 +59,38 @@ GraphiQLHAPI.attributes = {
   name: 'graphiql',
   version: '0.0.1',
 };
+
+async function processQueryRequest(request, reply) {
+  let optionsObject: ApolloOptions;
+  if (isOptionsFunction(options)) {
+    try {
+      optionsObject = await options(request);
+    } catch (e) {
+      reply(`Invalid options provided to ApolloServer: ${e.message}`).code(500);
+    }
+  } else {
+    optionsObject = options;
+  }
+
+  if (!request.payload) {
+    reply('POST body missing.').code(500);
+    return;
+  }
+
+  const responses = await processQuery(request.payload, optionsObject);
+
+  if (responses.length > 1) {
+    reply(responses);
+  } else {
+    const gqlResponse = responses[0];
+    if (gqlResponse.errors && typeof gqlResponse.data === 'undefined') {
+      reply(gqlResponse).code(400);
+    } else {
+      reply(gqlResponse);
+    }
+  }
+
+}
 
 async function processQuery(body, optionsObject) {
   const formatErrorFn = optionsObject.formatError || graphql.formatError;
