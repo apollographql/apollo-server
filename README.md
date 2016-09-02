@@ -67,7 +67,7 @@ app.listen(PORT);
 ### hapi
 ```js
 import hapi from 'hapi';
-import { apolloHAPI } from 'apollo-server';
+import { ApolloHAPI } from 'apollo-server';
 
 const server = new hapi.Server();
 
