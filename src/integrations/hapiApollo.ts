@@ -14,14 +14,39 @@ export interface HAPIOptionsFunction {
   (req?: hapi.Request): ApolloOptions | Promise<ApolloOptions>;
 }
 
-const ApolloHAPI: IRegister = function(server: hapi.Server, options: ApolloOptions | HAPIOptionsFunction, next) {
+export interface HAPIPluginOptions {
+  path: string;
+  apolloOptions: ApolloOptions | HAPIOptionsFunction;
+}
+
+const ApolloHAPI: IRegister = function(server: hapi.Server, options: HAPIPluginOptions, next) {
+  server.method('processQuery', processQuery);
+
   server.route({
     method: 'POST',
-    path: '/graphql',
+    path: options.path || '/graphql',
     config: {
       pre: [{
+        async method(request, reply) {
+          let optionsObject: ApolloOptions;
+          if (isOptionsFunction(options.apolloOptions)) {
+            try {
+              optionsObject = await options.apolloOptions(request);
+            } catch (e) {
+              reply(`Invalid options provided to ApolloServer: ${e.message}`).code(500);
+            }
+          } else {
+            optionsObject = options.apolloOptions;
+          }
+
+          if (!request.payload) {
+            reply('POST body missing.').code(500);
+            return;
+          }
+        },
+      }, {
         assign: 'graphQL',
-        method: 'processQueryRequest(payload, pre.options)',
+        method: 'processQuery(payload, pre.options)',
       }],
     },
   });
