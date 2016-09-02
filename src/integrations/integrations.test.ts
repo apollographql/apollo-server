@@ -283,6 +283,30 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
       });
 
+       it('can handle batch requests', () => {
+          app = createApp();
+          const expected = [
+              {
+                  data: {
+                      testString: 'it works',
+                  },
+              },
+          ];
+          const req = request(app)
+              .post('/graphql')
+              .send([{
+                  query: `
+                      query test($echo: String){ testArgument(echo: $echo) }
+                      query test2{ testString }`,
+                  variables: { echo: 'world' },
+                  operationName: 'test2',
+              }]);
+          return req.then((res) => {
+              expect(res.status).to.equal(200);
+              return expect(res.body).to.deep.equal(expected);
+          });
+      });
+
       it('can handle a request with a mutation', () => {
           app = createApp();
           const expected = {
