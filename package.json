@@ -51,7 +51,7 @@
     "express": "^4.14.0",
     "fibers": "^1.0.13",
     "graphql": "^0.7.0",
-    "hapi": "^15.0.1",
+    "hapi": "^15.0.3",
     "istanbul": "1.0.0-alpha.2",
     "koa": "^2.0.0-alpha.4",
     "koa-bodyparser": "^3.0.0",
