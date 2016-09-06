@@ -4,9 +4,6 @@
 * Support adding parsed operations to the OperationStore. ([@nnance](https://github.com/nnance))
 * Expose ApolloOptions as part of the public API.
 
-### vNEXT
-* Fixed query batching with hapi integration. [PR #123](https://github.com/apollostack/apollo-server/pull/123)
-
 ### v0.2.5
 * Made promise compatible with fibers ([@benjamn](https://github.com/benjamn) in [#92](https://github.com/apollostack/apollo-server/pull/92))
 

@@ -43,9 +43,9 @@ export class ApolloHAPI {
                 return;
               }
 
-              const {isBatch, responses} = await processQuery(request.payload, optionsObject);
+              const responses = await processQuery(request.payload, optionsObject);
 
-              if (isBatch) {
+              if (responses.length > 1) {
                 reply(responses);
               } else {
                 const gqlResponse = responses[0];
@@ -137,7 +137,7 @@ async function processQuery(body, optionsObject) {
       responses.push({ errors: [formatErrorFn(e)] });
     }
   }
-  return {isBatch, responses};
+  return responses;
 }
 
 function isOptionsFunction(arg: ApolloOptions | HAPIOptionsFunction): arg is HAPIOptionsFunction {
