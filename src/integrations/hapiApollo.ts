@@ -1,17 +1,18 @@
-import * as hapi from 'hapi';
-import * as graphql from 'graphql';
+import * as Boom from 'boom';
+import { Server, Request, IReply } from 'hapi';
+import { GraphQLResult, formatError } from 'graphql';
 import * as GraphiQL from '../modules/renderGraphiQL';
 import { runQuery } from '../core/runQuery';
 import ApolloOptions from './apolloOptions';
 
 
 export interface IRegister {
-    (server: hapi.Server, options: any, next: any): void;
+    (server: Server, options: any, next: any): void;
     attributes?: any;
 }
 
 export interface HAPIOptionsFunction {
-  (req?: hapi.Request): ApolloOptions | Promise<ApolloOptions>;
+  (req?: Request): ApolloOptions | Promise<ApolloOptions>;
 }
 
 export interface HAPIPluginOptions {
@@ -19,7 +20,7 @@ export interface HAPIPluginOptions {
   apolloOptions: ApolloOptions | HAPIOptionsFunction;
 }
 
-const ApolloHAPI: IRegister = function(server: hapi.Server, options: HAPIPluginOptions, next) {
+const ApolloHAPI: IRegister = function(server: Server, options: HAPIPluginOptions, next) {
   server.method('getApolloOptions', getApolloOptions);
   server.method('processQuery', processQuery);
 
@@ -27,6 +28,11 @@ const ApolloHAPI: IRegister = function(server: hapi.Server, options: HAPIPluginO
     method: 'POST',
     path: options.path || '/graphql',
     config: {
+      plugins: {
+        graphql: {
+          options,
+        },
+      },
       pre: [{
         assign: 'apolloOptions',
         method: 'getApolloOptions',
@@ -51,26 +57,6 @@ const ApolloHAPI: IRegister = function(server: hapi.Server, options: HAPIPluginO
   });
   return next();
 
-  async function getApolloOptions(request: hapi.Request, reply: hapi.IReply): Promise<{}> {
-    let optionsObject: ApolloOptions;
-    if (isOptionsFunction(options.apolloOptions)) {
-      try {
-        const opsFunc: HAPIOptionsFunction = <HAPIOptionsFunction>options.apolloOptions;
-        optionsObject = await opsFunc(request);
-      } catch (e) {
-        return reply(new Error(`Invalid options provided to ApolloServer: ${e.message}`));
-      }
-    } else {
-      optionsObject = <ApolloOptions>options.apolloOptions;
-    }
-
-    if (!request.payload) {
-      return reply(new Error('POST body missing.'));
-    } else {
-      return reply(optionsObject);
-    }
-  }
-
 };
 
 ApolloHAPI.attributes = {
@@ -78,8 +64,29 @@ ApolloHAPI.attributes = {
   version: '0.0.1',
 };
 
+async function getApolloOptions(request: Request, reply: IReply): Promise<{}> {
+  const options = request.route.settings.plugins['graphql'].options;
+  let optionsObject: ApolloOptions;
+  if (isOptionsFunction(options.apolloOptions)) {
+    try {
+      const opsFunc: HAPIOptionsFunction = <HAPIOptionsFunction>options.apolloOptions;
+      optionsObject = await opsFunc(request);
+    } catch (e) {
+      return reply(createErr(500, `Invalid options provided to ApolloServer: ${e.message}`));
+    }
+  } else {
+    optionsObject = <ApolloOptions>options.apolloOptions;
+  }
+
+  if (!request.payload) {
+    return reply(createErr(500, 'POST body missing.'));
+  } else {
+    return reply(optionsObject);
+  }
+}
+
 async function processQuery(payload, optionsObject: ApolloOptions, reply) {
-  const formatErrorFn = optionsObject.formatError || graphql.formatError;
+  const formatErrorFn = optionsObject.formatError || formatError;
 
   let isBatch = true;
   // TODO: do something different here if the body is an array.
@@ -89,7 +96,7 @@ async function processQuery(payload, optionsObject: ApolloOptions, reply) {
     payload = [payload];
   }
 
-  let responses: graphql.GraphQLResult[] = [];
+  let responses: GraphQLResult[] = [];
   for (let query of payload) {
     try {
       const operationName = query.operationName;
@@ -129,7 +136,13 @@ function isOptionsFunction(arg: ApolloOptions | HAPIOptionsFunction): arg is HAP
   return typeof arg === 'function';
 }
 
-const GraphiQLHAPI: IRegister =  function(server: hapi.Server, options: GraphiQL.GraphiQLData, next) {
+function createErr(code: number, message: string) {
+  const err = Boom.create(code);
+  err.output.payload.message = message;
+  return err;
+}
+
+const GraphiQLHAPI: IRegister =  function(server: Server, options: GraphiQL.GraphiQLData, next) {
   server.route({
     method: 'GET',
     path: '/',
