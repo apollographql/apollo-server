@@ -22,6 +22,7 @@ export interface HAPIPluginOptions {
 
 const ApolloHAPI: IRegister = function(server: Server, options: HAPIPluginOptions, next) {
   server.method('getApolloOptions', getApolloOptions);
+  server.method('checkForBatch', checkForBatch);
   server.method('processQuery', processQuery);
 
   server.route({
@@ -37,12 +38,15 @@ const ApolloHAPI: IRegister = function(server: Server, options: HAPIPluginOption
         assign: 'apolloOptions',
         method: 'getApolloOptions',
       }, {
+        assign: 'isBatch',
+        method: 'checkForBatch(payload)',
+      }, {
         assign: 'graphQL',
-        method: 'processQuery(payload, pre.apolloOptions)',
+        method: 'processQuery(payload, pre.isBatch, pre.apolloOptions)',
       }],
       handler: function (request, reply) {
         const responses = request.pre.graphQL;
-        if (responses.length > 1) {
+        if (request.pre.isBatch) {
             return reply(responses);
           } else {
             const gqlResponse = responses[0];
@@ -85,14 +89,16 @@ async function getApolloOptions(request: Request, reply: IReply): Promise<{}> {
   }
 }
 
-async function processQuery(payload, optionsObject: ApolloOptions, reply) {
+function checkForBatch(payload, reply) {
+  return reply(payload && Array.isArray(payload));
+}
+
+async function processQuery(payload, isBatch = false, optionsObject: ApolloOptions, reply) {
   const formatErrorFn = optionsObject.formatError || formatError;
 
-  let isBatch = true;
   // TODO: do something different here if the body is an array.
   // Throw an error if body isn't either array or object.
-  if (!Array.isArray(payload)) {
-    isBatch = false;
+  if (!isBatch) {
     payload = [payload];
   }
 
