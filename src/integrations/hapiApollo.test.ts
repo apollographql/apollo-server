@@ -21,8 +21,12 @@ function createApp(createOptions: HAPIPluginOptions) {
 
   server.register({
       register: GraphiQLHAPI,
-      options: { endpointURL: '/graphql' },
-      routes: { prefix: '/graphiql' },
+      options: {
+        path: '/graphiql',
+        graphiqlOptions: {
+          endpointURL: '/graphql',
+        },
+      },
   });
 
   return server.listener;

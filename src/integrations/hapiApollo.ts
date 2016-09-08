@@ -22,11 +22,14 @@ export interface HAPIPluginOptions {
 }
 
 const ApolloHAPI: IRegister = function(server: Server, options: HAPIPluginOptions, next) {
+  server.method('verifyPayload', verifyPayload);
+  server.method('getGraphQLParams', getGraphQLParams);
+  server.method('getApolloOptions', getApolloOptions);
+  server.method('processQuery', processQuery);
+
   const config = Object.assign(options.route || {}, {
     plugins: {
-      graphql: {
-        options,
-      },
+      graphql: options.apolloOptions,
     },
     pre: [{
       assign: 'isBatch',
@@ -42,11 +45,6 @@ const ApolloHAPI: IRegister = function(server: Server, options: HAPIPluginOption
       method: 'processQuery(pre.graphqlParams, pre.apolloOptions)',
     }],
   });
-
-  server.method('verifyPayload', verifyPayload);
-  server.method('getGraphQLParams', getGraphQLParams);
-  server.method('getApolloOptions', getApolloOptions);
-  server.method('processQuery', processQuery);
 
   server.route({
     method: 'POST',
@@ -111,17 +109,17 @@ function getGraphQLParams(payload, isBatch, reply) {
 };
 
 async function getApolloOptions(request: Request, reply: IReply): Promise<{}> {
-  const options = request.route.settings.plugins['graphql'].options;
+  const options = request.route.settings.plugins['graphql'];
   let optionsObject: ApolloOptions;
-  if (isOptionsFunction(options.apolloOptions)) {
+  if (isOptionsFunction(options)) {
     try {
-      const opsFunc: HAPIOptionsFunction = <HAPIOptionsFunction>options.apolloOptions;
+      const opsFunc: HAPIOptionsFunction = <HAPIOptionsFunction>options;
       optionsObject = await opsFunc(request);
     } catch (e) {
       return reply(createErr(500, `Invalid options provided to ApolloServer: ${e.message}`));
     }
   } else {
-    optionsObject = <ApolloOptions>options.apolloOptions;
+    optionsObject = <ApolloOptions>options;
   }
   reply(optionsObject);
 }
@@ -167,23 +165,35 @@ function createErr(code: number, message: string) {
   return err;
 }
 
-const GraphiQLHAPI: IRegister =  function(server: Server, options: GraphiQL.GraphiQLData, next) {
+export interface GraphiQLPluginOptions {
+  path: string;
+  route?: any;
+  graphiqlOptions: GraphiQL.GraphiQLData;
+}
+
+const GraphiQLHAPI: IRegister =  function(server: Server, options: GraphiQLPluginOptions, next) {
+  server.method('getGraphiQLParams', getGraphiQLParams);
+  server.method('renderGraphiQL', renderGraphiQL);
+
+  const config = Object.assign(options.route || {}, {
+    plugins: {
+      graphiql: options.graphiqlOptions,
+    },
+    pre: [{
+      assign: 'graphiqlParams',
+      method: 'getGraphiQLParams',
+    }, {
+      assign: 'graphiQLString',
+      method: 'renderGraphiQL(route, pre.graphiqlParams)',
+    }],
+  });
+
   server.route({
     method: 'GET',
-    path: '/',
+    path: options.path || '/graphql',
+    config,
     handler: (request, reply) => {
-      const q = request.query || {};
-      const query = q.query || '';
-      const variables = q.variables || '{}';
-      const operationName = q.operationName || '';
-
-      const graphiQLString = GraphiQL.renderGraphiQL({
-        endpointURL: options.endpointURL,
-        query: query || options.query,
-        variables: JSON.parse(variables) || options.variables,
-        operationName: operationName || options.operationName,
-      });
-      reply(graphiQLString).header('Content-Type', 'text/html');
+      reply(request.pre.graphiQLString).header('Content-Type', 'text/html');
     },
   });
   next();
@@ -193,5 +203,24 @@ GraphiQLHAPI.attributes = {
   name: 'graphiql',
   version: '0.0.1',
 };
+
+function getGraphiQLParams(request, reply) {
+  const q = request.query || {};
+  const query = q.query || '';
+  const variables = q.variables || '{}';
+  const operationName = q.operationName || '';
+  reply({ query, variables, operationName});
+}
+
+function renderGraphiQL(route, graphiqlParams: any, reply) {
+  const graphiqlOptions = route.settings.plugins['graphiql'];
+  const graphiQLString = GraphiQL.renderGraphiQL({
+    endpointURL: graphiqlOptions.endpointURL,
+    query: graphiqlParams.query || graphiqlOptions.query,
+    variables: JSON.parse(graphiqlParams.variables) || graphiqlOptions.variables,
+    operationName: graphiqlParams.operationName || graphiqlOptions.operationName,
+  });
+  reply(graphiQLString);
+}
 
 export { ApolloHAPI, GraphiQLHAPI };
