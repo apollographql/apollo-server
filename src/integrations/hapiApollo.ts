@@ -17,55 +17,97 @@ export interface HAPIOptionsFunction {
 
 export interface HAPIPluginOptions {
   path: string;
+  route?: any;
   apolloOptions: ApolloOptions | HAPIOptionsFunction;
 }
 
 const ApolloHAPI: IRegister = function(server: Server, options: HAPIPluginOptions, next) {
+  const config = Object.assign(options.route || {}, {
+    plugins: {
+      graphql: {
+        options,
+      },
+    },
+    pre: [{
+      assign: 'isBatch',
+      method: 'verifyPayload(payload)',
+    }, {
+      assign: 'graphqlParams',
+      method: 'getGraphQLParams(payload, pre.isBatch)',
+    }, {
+      assign: 'apolloOptions',
+      method: 'getApolloOptions',
+    }, {
+      assign: 'graphQL',
+      method: 'processQuery(pre.graphqlParams, pre.apolloOptions)',
+    }],
+  });
+
+  server.method('verifyPayload', verifyPayload);
+  server.method('getGraphQLParams', getGraphQLParams);
   server.method('getApolloOptions', getApolloOptions);
-  server.method('checkForBatch', checkForBatch);
   server.method('processQuery', processQuery);
 
   server.route({
     method: 'POST',
     path: options.path || '/graphql',
-    config: {
-      plugins: {
-        graphql: {
-          options,
-        },
-      },
-      pre: [{
-        assign: 'apolloOptions',
-        method: 'getApolloOptions',
-      }, {
-        assign: 'isBatch',
-        method: 'checkForBatch(payload)',
-      }, {
-        assign: 'graphQL',
-        method: 'processQuery(payload, pre.isBatch, pre.apolloOptions)',
-      }],
-      handler: function (request, reply) {
-        const responses = request.pre.graphQL;
-        if (request.pre.isBatch) {
-            return reply(responses);
-          } else {
-            const gqlResponse = responses[0];
-            if (gqlResponse.errors && typeof gqlResponse.data === 'undefined') {
-              return reply(gqlResponse).code(400);
-            } else {
-              return reply(gqlResponse);
-            }
-          }
-      },
+    config,
+    handler: function(request, reply) {
+      const responses = request.pre.graphQL;
+      if (request.pre.isBatch) {
+        return reply(responses);
+      } else {
+        const gqlResponse = responses[0];
+        if (gqlResponse.errors && typeof gqlResponse.data === 'undefined') {
+          return reply(gqlResponse).code(400);
+        } else {
+          return reply(gqlResponse);
+        }
+      }
     },
   });
-  return next();
 
+  return next();
 };
 
 ApolloHAPI.attributes = {
   name: 'graphql',
   version: '0.0.1',
+};
+
+function verifyPayload(payload, reply) {
+  if (!payload) {
+    return reply(createErr(500, 'POST body missing.'));
+  }
+
+  // TODO: do something different here if the body is an array.
+  // Throw an error if body isn't either array or object.
+  reply(payload && Array.isArray(payload));
+}
+
+function getGraphQLParams(payload, isBatch, reply) {
+  if (!isBatch) {
+    payload = [payload];
+  }
+
+  const params = [];
+  for (let query of payload) {
+    let variables = query.variables;
+    if (variables && typeof variables === 'string') {
+      try {
+        variables = JSON.parse(variables);
+      } catch (error) {
+        return reply(createErr(400, 'Variables are invalid JSON.'));
+      }
+    }
+
+    params.push({
+      query: query.query,
+      variables: variables,
+      operationName: query.operationName,
+    });
+  }
+  reply(params);
 };
 
 async function getApolloOptions(request: Request, reply: IReply): Promise<{}> {
@@ -81,45 +123,22 @@ async function getApolloOptions(request: Request, reply: IReply): Promise<{}> {
   } else {
     optionsObject = <ApolloOptions>options.apolloOptions;
   }
-
-  if (!request.payload) {
-    return reply(createErr(500, 'POST body missing.'));
-  } else {
-    return reply(optionsObject);
-  }
+  reply(optionsObject);
 }
 
-function checkForBatch(payload, reply) {
-  return reply(payload && Array.isArray(payload));
-}
-
-async function processQuery(payload, isBatch = false, optionsObject: ApolloOptions, reply) {
+async function processQuery(graphqlParams, optionsObject: ApolloOptions, reply) {
   const formatErrorFn = optionsObject.formatError || formatError;
 
-  // TODO: do something different here if the body is an array.
-  // Throw an error if body isn't either array or object.
-  if (!isBatch) {
-    payload = [payload];
-  }
-
   let responses: GraphQLResult[] = [];
-  for (let query of payload) {
+  for (let query of graphqlParams) {
     try {
-      const operationName = query.operationName;
-      let variables = query.variables;
-
-      if (typeof variables === 'string') {
-        // TODO: catch errors
-        variables = JSON.parse(variables);
-      }
-
       let params = {
         schema: optionsObject.schema,
         query: query.query,
-        variables: variables,
+        variables: query.variables,
         rootValue: optionsObject.rootValue,
         context: optionsObject.context,
-        operationName: operationName,
+        operationName: query.operationName,
         logFunction: optionsObject.logFunction,
         validationRules: optionsObject.validationRules,
         formatError: formatErrorFn,

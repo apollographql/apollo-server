@@ -54,7 +54,6 @@
     "graphql": "^0.7.0",
     "hapi": "^15.0.3",
     "istanbul": "1.0.0-alpha.2",
-    "joi": "^9.0.4",
     "koa": "^2.0.0-alpha.4",
     "koa-bodyparser": "^3.0.0",
     "koa-router": "^7.0.1",
