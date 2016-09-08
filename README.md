@@ -85,8 +85,10 @@ server.connection({
 server.register({
     register: ApolloHAPI,
     options: {
-      schema: myGraphQLSchema,
       path: '/graphql',
+      apolloOptions: {
+        schema: myGraphQLSchema,
+      },
       route: {
         cors: true
       }
