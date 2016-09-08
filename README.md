@@ -64,7 +64,7 @@ app.use('/graphql', bodyParser.json(), apolloConnect({ schema: myGraphQLSchema }
 app.listen(PORT);
 ```
 
-### hapi
+### HAPI
 
 Now with the HAPI plugins `ApolloHAPI` and `GraphiQLHAPI` you can pass a route object that includes options to be applied to the route.  The example below enables CORS on the `/graphql` route.
 
