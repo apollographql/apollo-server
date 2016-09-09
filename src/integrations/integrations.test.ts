@@ -161,7 +161,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
               .send();
           return req.then((res) => {
               expect(res.status).to.be.oneOf([404, 405]);
-              // HAPI doesn't return allow header, so we can't test this.
+              // Hapi doesn't return allow header, so we can't test this.
               // return expect(res.headers['allow']).to.equal('POST');
           });
       });

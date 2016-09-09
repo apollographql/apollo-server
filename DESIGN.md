@@ -16,7 +16,7 @@ At the core of Apollo Server is a function called `runQuery`, which handles pars
 The main goals of Apollo Server are (in order of priority):
 
 1. Simplicity: Apollo Server’s core API is very straight forward. It’s one function that does one thing really well (parsing, validating and executing GraphQL queries), and doesn’t do anything else.
-2. Flexibility: The core of Apollo Server should be transport-agnostic (e.g. it doesn’t deal with HTTP or Websockets directly. This is will be handled in the wrappers for Express, HAPI, etc.)
+2. Flexibility: The core of Apollo Server should be transport-agnostic (e.g. it doesn’t deal with HTTP or Websockets directly. This is will be handled in the wrappers for Express, Hapi, etc.)
 3. Performance: Apollo server should be be tunable to make it fast in production. One example of this is that it should be able to take pre-stored queries to skip parsing and validation. It should also allow easy integration of profiling tools like Apollo Tracer that help with debugging and optimizing server performance.
 
 ### Integrations
@@ -24,7 +24,7 @@ The main goals of Apollo Server are (in order of priority):
 Apollo Server should come with a set of integrations for different Node.js server frameworks:
 
 - Express
-- HAPI
+- Hapi
 - Connect
 - Koa
 - ...

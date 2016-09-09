@@ -1,11 +1,11 @@
-# GraphQL Server for Express, Connect, HAPI and Koa
+# GraphQL Server for Express, Connect, Hapi and Koa
 
 [![npm version](https://badge.fury.io/js/apollo-server.svg)](https://badge.fury.io/js/apollo-server)
 [![Build Status](https://travis-ci.org/apollostack/apollo-server.svg?branch=master)](https://travis-ci.org/apollostack/apollo-server)
 [![Coverage Status](https://coveralls.io/repos/github/apollostack/apollo-server/badge.svg?branch=master)](https://coveralls.io/github/apollostack/apollo-server?branch=master)
 [![Get on Slack](https://img.shields.io/badge/slack-join-orange.svg)](http://www.apollostack.com/#slack)
 
-Apollo Server is a community-maintained open-source GraphQL server. It works with all Node.js HTTP server frameworks: Express, Connect, HAPI and Koa.
+Apollo Server is a community-maintained open-source GraphQL server. It works with all Node.js HTTP server frameworks: Express, Connect, Hapi and Koa.
 
 ## Principles
 
@@ -64,13 +64,13 @@ app.use('/graphql', bodyParser.json(), apolloConnect({ schema: myGraphQLSchema }
 app.listen(PORT);
 ```
 
-### HAPI
+### Hapi
 
-Now with the HAPI plugins `ApolloHAPI` and `GraphiQLHAPI` you can pass a route object that includes options to be applied to the route.  The example below enables CORS on the `/graphql` route.
+Now with the Hapi plugins `ApolloHapi` and `GraphiQLHapi` you can pass a route object that includes options to be applied to the route.  The example below enables CORS on the `/graphql` route.
 
 ```js
 import hapi from 'hapi';
-import { ApolloHAPI } from 'apollo-server';
+import { ApolloHapi } from 'apollo-server';
 
 const server = new hapi.Server();
 
@@ -83,7 +83,7 @@ server.connection({
 });
 
 server.register({
-    register: ApolloHAPI,
+    register: ApolloHapi,
     options: {
       path: '/graphql',
       apolloOptions: {
@@ -155,7 +155,7 @@ apolloOptions = {
 
 Apollo Server and express-graphql are more or less the same thing (GraphQL middleware for Node.js), but there are a few key differences:
 
-* express-graphql works with Express and Connect, Apollo Server supports Express, Connect, HAPI and Koa.
+* express-graphql works with Express and Connect, Apollo Server supports Express, Connect, Hapi and Koa.
 * express-graphql's main goal is to be a minimal reference implementation, whereas Apollo Server's goal is to be a complete production-ready GraphQL server.
 * Compared to express-graphql, Apollo Server has a simpler interface and supports exactly one way of passing queries.
 * Apollo Server separates serving GraphiQL (GraphQL UI) from responding to GraphQL requests.
