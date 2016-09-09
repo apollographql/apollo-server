@@ -1,5 +1,14 @@
 # Changelog
 
+### v0.3.0
+* Refactor HAPI integration to improve the API and make the plugins more idiomatic. ([@nnance](https://github.com/nnance)) in 
+[PR #127](https://github.com/apollostack/apollo-server/pull/127)
+* Fixed query batching with HAPI integration.  Issue #123 ([@nnance](https://github.com/nnance)) in
+[PR #127](https://github.com/apollostack/apollo-server/pull/127)
+* Add support for route options in HAPI integration.  Issue #97. ([@nnance](https://github.com/nnance)) in
+[PR #127](https://github.com/apollostack/apollo-server/pull/127)
+
+### v0.2.6
 * Expose the OperationStore as part of the public API. ([@nnance](https://github.com/nnance))
 * Support adding parsed operations to the OperationStore. ([@nnance](https://github.com/nnance))
 * Expose ApolloOptions as part of the public API.

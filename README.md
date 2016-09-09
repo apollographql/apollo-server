@@ -25,11 +25,11 @@ Apollo Server is super-easy to set up. Just npm-install apollo-server, write a G
 
 ### TypeScript
 
-If you want to build your GraphQL server using TypeScript, Apollo Server is the project for you.
+If you want to build your GraphQL server using TypeScript, Apollo Server is the project for you.  **NOTE**: All typings mentioned below must be included in your project in order for it to compile.
 
 ```sh
 npm install apollo-server
-typings i -SG dt~express dt~express-serve-static-core dt~serve-static dt~mime dt~hapi dt~cookies dt~koa
+typings i -SG dt~express dt~express-serve-static-core dt~serve-static dt~mime dt~hapi dt~boom dt~cookies dt~koa
 ```
 
 For using the project in JavaScript, just run `npm install --save apollo-server` and you're good to go!
@@ -64,7 +64,10 @@ app.use('/graphql', bodyParser.json(), apolloConnect({ schema: myGraphQLSchema }
 app.listen(PORT);
 ```
 
-### hapi
+### HAPI
+
+Now with the HAPI plugins `ApolloHAPI` and `GraphiQLHAPI` you can pass a route object that includes options to be applied to the route.  The example below enables CORS on the `/graphql` route.
+
 ```js
 import hapi from 'hapi';
 import { ApolloHAPI } from 'apollo-server';
@@ -80,9 +83,16 @@ server.connection({
 });
 
 server.register({
-    register: new ApolloHAPI(),
-    options: { schema: myGraphQLSchema },
-    routes: { prefix: '/graphql' },
+    register: ApolloHAPI,
+    options: {
+      path: '/graphql',
+      apolloOptions: {
+        schema: myGraphQLSchema,
+      },
+      route: {
+        cors: true
+      }
+    },
 });
 
 server.start((err) => {
@@ -92,6 +102,7 @@ server.start((err) => {
     console.log(`Server running at: ${server.info.uri}`);
 });
 ```
+
 ### Koa
 ```js
 import koa from 'koa';

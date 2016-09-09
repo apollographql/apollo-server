@@ -6,6 +6,7 @@
   },
   "globalDependencies": {
     "body-parser": "registry:dt/body-parser#0.0.0+20160619023215",
+    "boom": "registry:dt/boom#0.0.0+20160724101333",
     "connect": "registry:dt/connect#3.4.0+20160317120654",
     "cookies": "registry:dt/cookies#0.5.1+20160316171810",
     "express": "registry:dt/express#4.0.0+20160708185218",
