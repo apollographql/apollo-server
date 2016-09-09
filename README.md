@@ -25,11 +25,11 @@ Apollo Server is super-easy to set up. Just npm-install apollo-server, write a G
 
 ### TypeScript
 
-If you want to build your GraphQL server using TypeScript, Apollo Server is the project for you.
+If you want to build your GraphQL server using TypeScript, Apollo Server is the project for you.  **NOTE**: All typings mentioned below must be included in your project in order for it to compile.
 
 ```sh
 npm install apollo-server
-typings i -SG dt~express dt~express-serve-static-core dt~serve-static dt~mime dt~hapi dt~cookies dt~koa
+typings i -SG dt~express dt~express-serve-static-core dt~serve-static dt~mime dt~hapi dt~boom dt~cookies dt~koa
 ```
 
 For using the project in JavaScript, just run `npm install --save apollo-server` and you're good to go!
