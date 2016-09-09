@@ -77,8 +77,14 @@ export function apolloExpress(options: ApolloOptions | ExpressApolloOptionsFunct
         let variables = requestParams.variables;
 
         if (typeof variables === 'string') {
-          // TODO: catch errors
-          variables = JSON.parse(variables);
+          try {
+            variables = JSON.parse(variables);
+          } catch (error) {
+            res.statusCode = 400;
+            res.write('Variables are invalid JSON.');
+            res.end();
+            return;
+          }
         }
 
         let params = {
