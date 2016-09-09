@@ -1,12 +1,14 @@
 # Changelog
 
 ### v0.3.0
-* Refactor Hapi integration to improve the API and make the plugins more idiomatic. ([@nnance](https://github.com/nnance)) in 
+* Refactor Hapi integration to improve the API and make the plugins more idiomatic. ([@nnance](https://github.com/nnance)) in
 [PR #127](https://github.com/apollostack/apollo-server/pull/127)
 * Fixed query batching with Hapi integration.  Issue #123 ([@nnance](https://github.com/nnance)) in
 [PR #127](https://github.com/apollostack/apollo-server/pull/127)
 * Add support for route options in Hapi integration.  Issue #97. ([@nnance](https://github.com/nnance)) in
 [PR #127](https://github.com/apollostack/apollo-server/pull/127)
+* Camelcase Hapi.  Issue #129. ([@nnance](https://github.com/nnance)) in
+[PR #132](https://github.com/apollostack/apollo-server/pull/132)
 
 ### v0.2.6
 * Expose the OperationStore as part of the public API. ([@nnance](https://github.com/nnance))
