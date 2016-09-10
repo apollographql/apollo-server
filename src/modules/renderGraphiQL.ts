@@ -15,7 +15,8 @@
  * - (optional) variables: a JS object of variables to pre-fill in the GraphiQL UI
  * - (optional) operationName: the operationName to pre-fill in the GraphiQL UI
  * - (optional) result: the result of the query to pre-fill in the GraphiQL UI
- * - (optional) passHeader: a string that will be added to the header object. For example "'Authorization': localStorage['Meteor.loginToken']" for meteor
+ * - (optional) passHeader: a string that will be added to the header object.
+ * For example "'Authorization': localStorage['Meteor.loginToken']" for meteor
  */
 
 export type GraphiQLData = {
@@ -43,7 +44,7 @@ export function renderGraphiQL(data: GraphiQLData): string {
     data.variables ? JSON.stringify(data.variables, null, 2) : null;
   const resultString = null;
   const operationName = data.operationName;
-  const passHeader = data.passHeader ? data.passHeader : ''
+  const passHeader = data.passHeader ? data.passHeader : '';
 
   /* eslint-disable max-len */
   return `
