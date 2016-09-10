@@ -21,12 +21,13 @@ export enum LogAction {
 }
 
 export enum LogStep {
-  start, end
+  start, end, status
 }
 
 export interface LogMessage {
   action: LogAction;
   step: LogStep;
+  key?: string;
   data?: Object;
 }
 
@@ -73,9 +74,9 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResult> {
     }
 
     const qry = typeof options.query === 'string' ? options.query : print(options.query);
-    logFunction({action: LogAction.request, step: LogStep.start, data: `query: ${qry}`});
-    logFunction({action: LogAction.request, step: LogStep.start, data: `variables: ${options.variables}`});
-    logFunction({action: LogAction.request, step: LogStep.start, data: `operationName: ${options.operationName}`});
+    logFunction({action: LogAction.request, step: LogStep.status, key: 'query', data: qry});
+    logFunction({action: LogAction.request, step: LogStep.status, key: 'variables', data: options.variables});
+    logFunction({action: LogAction.request, step: LogStep.status, key: 'operationName', data: options.operationName});
 
     // if query is already an AST, don't parse or validate
     if (typeof options.query === 'string') {
