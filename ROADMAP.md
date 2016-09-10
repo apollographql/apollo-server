@@ -12,7 +12,7 @@ This document contains a rough outline of a roadmap and a few designs for future
 * Express integration
 * Query batching (Express)
 * Query whitelisting / stored queries
-* HAPI integration
+* Hapi integration
 * Koa integration
 * Connect integration
 * Complete rewrite of Apollo Server documentation

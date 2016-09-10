@@ -1,12 +1,14 @@
 # Changelog
 
 ### v0.3.0
-* Refactor HAPI integration to improve the API and make the plugins more idiomatic. ([@nnance](https://github.com/nnance)) in 
+* Refactor Hapi integration to improve the API and make the plugins more idiomatic. ([@nnance](https://github.com/nnance)) in
 [PR #127](https://github.com/apollostack/apollo-server/pull/127)
-* Fixed query batching with HAPI integration.  Issue #123 ([@nnance](https://github.com/nnance)) in
+* Fixed query batching with Hapi integration.  Issue #123 ([@nnance](https://github.com/nnance)) in
 [PR #127](https://github.com/apollostack/apollo-server/pull/127)
-* Add support for route options in HAPI integration.  Issue #97. ([@nnance](https://github.com/nnance)) in
+* Add support for route options in Hapi integration.  Issue #97. ([@nnance](https://github.com/nnance)) in
 [PR #127](https://github.com/apollostack/apollo-server/pull/127)
+* Camelcase Hapi.  Issue #129. ([@nnance](https://github.com/nnance)) in
+[PR #132](https://github.com/apollostack/apollo-server/pull/132)
 
 ### v0.2.6
 * Expose the OperationStore as part of the public API. ([@nnance](https://github.com/nnance))
@@ -21,13 +23,13 @@
 
 ### v0.2.1
 * Complete refactor of Apollo Server using TypeScript. PR [#41](https://github.com/apollostack/apollo-server/pull/41)
-* Added HAPI integration ([@nnance](https://github.com/nnance) in [#46](https://github.com/apollostack/apollo-server/pull/46))
+* Added Hapi integration ([@nnance](https://github.com/nnance) in [#46](https://github.com/apollostack/apollo-server/pull/46))
 * Added Koa integration ([@HriBB](https://github.com/HriBB) in [#59](https://github.com/apollostack/apollo-server/pull/59))
 * Changed express integration to support connect as well ([@helfer](https://github.com/helfer) in [#58](https://github.com/apollostack/apollo-server/pull/58))
 * Dropped express-graphql dependency
 * Dropped support for GET requests, only POST requests are allowed now
 * Split GraphiQL into a separate middleware
-* Factored out core to support HAPI, Koa and connect implementations
+* Factored out core to support Hapi, Koa and connect implementations
 * Added support for query batching
 * Added support for query whitelisting / stored queries
 * Removed body parsing from express integration. Body must be parsed outside of apollo now

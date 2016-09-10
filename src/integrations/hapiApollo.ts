@@ -11,17 +11,17 @@ export interface IRegister {
     attributes?: any;
 }
 
-export interface HAPIOptionsFunction {
+export interface HapiOptionsFunction {
   (req?: Request): ApolloOptions | Promise<ApolloOptions>;
 }
 
-export interface HAPIPluginOptions {
+export interface HapiPluginOptions {
   path: string;
   route?: any;
-  apolloOptions: ApolloOptions | HAPIOptionsFunction;
+  apolloOptions: ApolloOptions | HapiOptionsFunction;
 }
 
-const ApolloHAPI: IRegister = function(server: Server, options: HAPIPluginOptions, next) {
+const ApolloHapi: IRegister = function(server: Server, options: HapiPluginOptions, next) {
   server.method('verifyPayload', verifyPayload);
   server.method('getGraphQLParams', getGraphQLParams);
   server.method('getApolloOptions', getApolloOptions);
@@ -68,7 +68,7 @@ const ApolloHAPI: IRegister = function(server: Server, options: HAPIPluginOption
   return next();
 };
 
-ApolloHAPI.attributes = {
+ApolloHapi.attributes = {
   name: 'graphql',
   version: '0.0.1',
 };
@@ -113,7 +113,7 @@ async function getApolloOptions(request: Request, reply: IReply): Promise<{}> {
   let optionsObject: ApolloOptions;
   if (isOptionsFunction(options)) {
     try {
-      const opsFunc: HAPIOptionsFunction = <HAPIOptionsFunction>options;
+      const opsFunc: HapiOptionsFunction = <HapiOptionsFunction>options;
       optionsObject = await opsFunc(request);
     } catch (e) {
       return reply(createErr(500, `Invalid options provided to ApolloServer: ${e.message}`));
@@ -155,7 +155,7 @@ async function processQuery(graphqlParams, optionsObject: ApolloOptions, reply) 
   return reply(responses);
 }
 
-function isOptionsFunction(arg: ApolloOptions | HAPIOptionsFunction): arg is HAPIOptionsFunction {
+function isOptionsFunction(arg: ApolloOptions | HapiOptionsFunction): arg is HapiOptionsFunction {
   return typeof arg === 'function';
 }
 
@@ -171,7 +171,7 @@ export interface GraphiQLPluginOptions {
   graphiqlOptions: GraphiQL.GraphiQLData;
 }
 
-const GraphiQLHAPI: IRegister =  function(server: Server, options: GraphiQLPluginOptions, next) {
+const GraphiQLHapi: IRegister =  function(server: Server, options: GraphiQLPluginOptions, next) {
   server.method('getGraphiQLParams', getGraphiQLParams);
   server.method('renderGraphiQL', renderGraphiQL);
 
@@ -199,7 +199,7 @@ const GraphiQLHAPI: IRegister =  function(server: Server, options: GraphiQLPlugi
   next();
 };
 
-GraphiQLHAPI.attributes = {
+GraphiQLHapi.attributes = {
   name: 'graphiql',
   version: '0.0.1',
 };
@@ -223,4 +223,4 @@ function renderGraphiQL(route, graphiqlParams: any, reply) {
   reply(graphiQLString);
 }
 
-export { ApolloHAPI, GraphiQLHAPI };
+export { ApolloHapi, GraphiQLHapi };
