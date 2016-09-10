@@ -94,7 +94,7 @@ export function renderGraphiQL(data: GraphiQLData): string {
         otherParams[k] = parameters[k];
       }
     }
-    // We don't use safe-serialize for location, becuase it's not client input.
+    // We don't use safe-serialize for location, because it's not client input.
     var fetchURL = locationQuery(otherParams, '${endpointURL}');
     // Defines a GraphQL fetcher using the fetch API.
     function graphQLFetcher(graphQLParams) {
@@ -102,7 +102,8 @@ export function renderGraphiQL(data: GraphiQLData): string {
         method: 'post',
         headers: {
           'Accept': 'application/json',
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': localStorage['Meteor.loginToken']
         },
         body: JSON.stringify(graphQLParams),
         credentials: 'include',
