@@ -56,8 +56,12 @@ export function apolloKoa(options: ApolloOptions | KoaApolloOptionsFunction): Ko
         let variables = requestParams.variables;
 
         if (typeof variables === 'string') {
-          // TODO: catch errors
-          variables = JSON.parse(variables);
+          try {
+            variables = JSON.parse(variables);
+          } catch (error) {
+            ctx.status = 400;
+            return ctx.body = 'Variables are invalid JSON.';
+          }
         }
 
         let params = {

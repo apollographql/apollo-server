@@ -228,6 +228,20 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
       });
 
+      it('can handle a request with variables as an invalid string', () => {
+          app = createApp();
+          const req = request(app)
+              .post('/graphql')
+              .send({
+                  query: 'query test($echo: String!){ testArgument(echo: $echo) }',
+                  variables: '{ echo: "world" }',
+              });
+          return req.then((res) => {
+              expect(res.status).to.equal(400);
+              return expect(res.error.text).to.contain('Variables are invalid JSON.');
+          });
+      });
+
       it('can handle a request with operationName', () => {
           app = createApp();
           const expected = {
