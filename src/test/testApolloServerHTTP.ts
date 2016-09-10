@@ -3,7 +3,7 @@
 
 // TODO: maybe we should get rid of these tests entirely, and move them to expressApollo.test.ts
 
-// TODO: wherever possible the tests should be rewritten to make them easily work with HAPI, express, Koa etc.
+// TODO: wherever possible the tests should be rewritten to make them easily work with Hapi, express, Koa etc.
 
 /*
  * Below are the HTTP tests from express-graphql. We're using them here to make

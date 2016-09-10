@@ -1,9 +1,9 @@
 import * as hapi from 'hapi';
-import { ApolloHAPI, GraphiQLHAPI, HAPIPluginOptions } from './hapiApollo';
+import { ApolloHapi, GraphiQLHapi, HapiPluginOptions } from './hapiApollo';
 
 import testSuite, { Schema } from './integrations.test';
 
-function createApp(createOptions: HAPIPluginOptions) {
+function createApp(createOptions: HapiPluginOptions) {
   const server = new hapi.Server();
 
   server.connection({
@@ -12,7 +12,7 @@ function createApp(createOptions: HAPIPluginOptions) {
   });
 
   server.register({
-      register: ApolloHAPI,
+      register: ApolloHapi,
       options: {
         apolloOptions: createOptions ? createOptions.apolloOptions : { schema: Schema },
         path: '/graphql',
@@ -20,7 +20,7 @@ function createApp(createOptions: HAPIPluginOptions) {
   });
 
   server.register({
-      register: GraphiQLHAPI,
+      register: GraphiQLHapi,
       options: {
         path: '/graphiql',
         graphiqlOptions: {
@@ -32,6 +32,6 @@ function createApp(createOptions: HAPIPluginOptions) {
   return server.listener;
 }
 
-describe('integration:HAPI', () => {
+describe('integration:Hapi', () => {
   testSuite(createApp);
 });
