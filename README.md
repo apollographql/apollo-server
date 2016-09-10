@@ -171,10 +171,12 @@ That said, Apollo Server is heavily inspired by express-graphql (it's the refere
 
 If you want to develop apollo server locally you must follow the following instructions:
 
+* Fork this repository
+
 * Install the Apollo Server project in your computer
 
 ```
-git clone https://github.com/apollostack/apollo-server
+git clone https://github.com/[your-user]/apollo-server
 cd apollo-server
 npm install -g typescript live-server
 npm install
