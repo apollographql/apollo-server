@@ -16,6 +16,25 @@ export interface GqlResponse {
     errors?: Array<string>;
 }
 
+export enum LogAction {
+  request, parse, validation, execute
+}
+
+export enum LogStep {
+  start, end, status
+}
+
+export interface LogMessage {
+  action: LogAction;
+  step: LogStep;
+  key?: string;
+  data?: Object;
+}
+
+export interface LogFunction {
+  (message: LogMessage);
+}
+
 export interface QueryOptions {
  schema: GraphQLSchema;
  query: string | Document;
@@ -23,7 +42,7 @@ export interface QueryOptions {
  context?: any;
  variables?: { [key: string]: any };
  operationName?: string;
- logFunction?: Function;
+ logFunction?: LogFunction;
  validationRules?: Array<ValidationRule>;
  // WARNING: these extra validation rules are only applied to queries
  // submitted as string, not those submitted as Document!
@@ -44,7 +63,7 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResult> {
 
     const logFunction = options.logFunction || function(){ return null; };
 
-    logFunction('request.start');
+    logFunction({action: LogAction.request, step: LogStep.start});
 
     function format(errors: Array<Error>): Array<Error> {
         // TODO: fix types! shouldn't have to cast.
@@ -54,19 +73,20 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResult> {
         return errors.map(options.formatError || formatError as any) as Array<Error>;
     }
 
-    logFunction('request.query', typeof options.query === 'string' ? options.query : print(options.query));
-    logFunction('request.variables', options.variables);
-    logFunction('request.operationName', options.operationName);
+    const qry = typeof options.query === 'string' ? options.query : print(options.query);
+    logFunction({action: LogAction.request, step: LogStep.status, key: 'query', data: qry});
+    logFunction({action: LogAction.request, step: LogStep.status, key: 'variables', data: options.variables});
+    logFunction({action: LogAction.request, step: LogStep.status, key: 'operationName', data: options.operationName});
 
     // if query is already an AST, don't parse or validate
     if (typeof options.query === 'string') {
         try {
             // TODO: time this with log function
-            logFunction('parse.start');
+            logFunction({action: LogAction.parse, step: LogStep.start});
             documentAST = parse(options.query as string);
-            logFunction('parse.end');
+            logFunction({action: LogAction.parse, step: LogStep.end});
         } catch (syntaxError) {
-            logFunction('parse.end');
+            logFunction({action: LogAction.parse, step: LogStep.end});
             return Promise.resolve({ errors: format([syntaxError]) });
         }
 
@@ -76,9 +96,9 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResult> {
         if (options.validationRules) {
           rules = rules.concat(options.validationRules);
         }
-        logFunction('validation.start');
+        logFunction({action: LogAction.validation, step: LogStep.start});
         const validationErrors = validate(options.schema, documentAST, rules);
-        logFunction('validation.end');
+        logFunction({action: LogAction.validation, step: LogStep.end});
         if (validationErrors.length) {
             return Promise.resolve({ errors: format(validationErrors) });
         }
@@ -87,7 +107,7 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResult> {
     }
 
     try {
-        logFunction('execution.start');
+        logFunction({action: LogAction.execute, step: LogStep.start});
         return execute(
             options.schema,
             documentAST,
@@ -96,8 +116,8 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResult> {
             options.variables,
             options.operationName
         ).then(gqlResponse => {
-            logFunction('execution.end');
-            logFunction('request.end');
+            logFunction({action: LogAction.execute, step: LogStep.end});
+            logFunction({action: LogAction.request, step: LogStep.end});
             let response = {
                 data: gqlResponse.data,
             };
@@ -110,8 +130,8 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResult> {
             return response;
         });
     } catch (executionError) {
-        logFunction('execution.end');
-        logFunction('request.end');
+        logFunction({action: LogAction.execute, step: LogStep.end});
+        logFunction({action: LogAction.request, step: LogStep.end});
         return Promise.resolve({ errors: format([executionError]) });
     }
 }

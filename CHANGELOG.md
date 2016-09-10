@@ -11,6 +11,8 @@
 [PR #132](https://github.com/apollostack/apollo-server/pull/132)
 * Fix error handling when parsing variables parameter. Issue #130. ([@nnance](https://github.com/nnance)) in
 [PR #131](https://github.com/apollostack/apollo-server/pull/131)
+* Improve logging function. Issue #79. ([@nnance](https://github.com/nnance)) in
+[PR #136](https://github.com/apollostack/apollo-server/pull/136)
 
 ### v0.2.6
 * Expose the OperationStore as part of the public API. ([@nnance](https://github.com/nnance))

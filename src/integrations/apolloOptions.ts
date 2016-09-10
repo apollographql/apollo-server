@@ -1,4 +1,5 @@
-import * as graphql from 'graphql';
+import { GraphQLSchema, ValidationRule } from 'graphql';
+import { LogFunction } from '../core/runQuery';
 
 /*
  * ExpressApolloOptions
@@ -14,13 +15,13 @@ import * as graphql from 'graphql';
  *
  */
 interface ApolloOptions {
-  schema: graphql.GraphQLSchema;
+  schema: GraphQLSchema;
   formatError?: Function;
   rootValue?: any;
   context?: any;
-  logFunction?: Function;
+  logFunction?: LogFunction;
   formatParams?: Function;
-  validationRules?: Array<graphql.ValidationRule>;
+  validationRules?: Array<ValidationRule>;
   formatResponse?: Function;
 }
 
