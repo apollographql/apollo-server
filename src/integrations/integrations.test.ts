@@ -1,6 +1,5 @@
-import {
-  expect,
-} from 'chai';
+import { expect } from 'chai';
+import { stub } from 'sinon';
 
 import {
     GraphQLSchema,
@@ -422,6 +421,45 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           return req.then((res) => {
               expect(res.status).to.equal(200);
               return expect(res.body.errors[0].message).to.equal(expected);
+          });
+      });
+
+      it('sends stack trace to error if debug mode is set', () => {
+          const expected = /at resolveOrError/;
+          const stackTrace = [];
+          const origError = console.error;
+          console.error = (...args) => stackTrace.push(args);
+          app = createApp({apolloOptions: {
+              schema: Schema,
+              debug: true,
+          }});
+          const req = request(app)
+              .post('/graphql')
+              .send({
+                  query: 'query test{ testError }',
+              });
+          return req.then((res) => {
+            console.error = origError;
+            return expect(stackTrace[0][0]).to.match(expected);
+          });
+      });
+
+      it('sends stack trace to error log if debug mode is set', () => {
+          const logStub = stub(console, 'error');
+          const expected = /at resolveOrError/;
+          app = createApp({apolloOptions: {
+              schema: Schema,
+              debug: true,
+          }});
+          const req = request(app)
+              .post('/graphql')
+              .send({
+                  query: 'query test{ testError }',
+              });
+          return req.then((res) => {
+            logStub.restore();
+            expect(logStub.callCount).to.equal(1);
+            return expect(logStub.getCall(0).args[0]).to.match(expected);
           });
       });
 

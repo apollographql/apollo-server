@@ -98,6 +98,7 @@ export function apolloExpress(options: ApolloOptions | ExpressApolloOptionsFunct
           validationRules: optionsObject.validationRules,
           formatError: formatErrorFn,
           formatResponse: optionsObject.formatResponse,
+          debug: optionsObject.debug,
         };
 
         if (optionsObject.formatParams) {

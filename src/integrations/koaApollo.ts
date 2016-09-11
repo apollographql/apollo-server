@@ -75,6 +75,7 @@ export function apolloKoa(options: ApolloOptions | KoaApolloOptionsFunction): Ko
           validationRules: optionsObject.validationRules,
           formatError: formatErrorFn,
           formatResponse: optionsObject.formatResponse,
+          debug: optionsObject.debug,
         };
 
         if (optionsObject.formatParams) {

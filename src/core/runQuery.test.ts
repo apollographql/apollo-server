@@ -1,6 +1,5 @@
-import {
-  expect,
-} from 'chai';
+import { expect } from 'chai';
+import { stub } from 'sinon';
 
 import {
     GraphQLSchema,
@@ -104,50 +103,31 @@ describe('runQuery', () => {
     });
   });
 
-  it('sends stack trace to error if in an error occurs and debug mode not set', () => {
-    const query = `query { testError }`;
-    const expected = /at resolveOrError/;
-    const stackTrace = [];
-    const origError = console.error;
-    console.error = (...args) => stackTrace.push(args);
-    return runQuery({
-        schema: Schema,
-        query: query,
-    }).then((res) => {
-        console.error = origError;
-        return expect(stackTrace[0][0]).to.match(expected);
-    });
-  });
-
   it('sends stack trace to error if in an error occurs and debug mode is set', () => {
     const query = `query { testError }`;
     const expected = /at resolveOrError/;
-    const stackTrace = [];
-    const origError = console.error;
-    console.error = (...args) => stackTrace.push(args);
+    const logStub = stub(console, 'error');
     return runQuery({
         schema: Schema,
         query: query,
         debug: true,
     }).then((res) => {
-        console.error = origError;
-        return expect(stackTrace[0][0]).to.match(expected);
+        logStub.restore();
+        expect(logStub.callCount).to.equal(1);
+        return expect(logStub.getCall(0).args[0]).to.match(expected);
     });
   });
 
   it('does not send stack trace if in an error occurs and not in debug mode', () => {
     const query = `query { testError }`;
-    const expected = [];
-    const stackTrace = [];
-    const origError = console.error;
-    console.error = (...args) => stackTrace.push(args);
+    const logStub = stub(console, 'error');
     return runQuery({
         schema: Schema,
         query: query,
         debug: false,
     }).then((res) => {
-        console.error = origError;
-        return expect(stackTrace).to.deep.equals(expected);
+        logStub.restore();
+        return expect(logStub.callCount).to.equal(0);
     });
   });
 

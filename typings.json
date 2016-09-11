@@ -2,7 +2,8 @@
   "dependencies": {
     "chai": "registry:npm/chai#3.5.0+20160723033700",
     "graphql": "github:nitintutlani/typed-graphql#ffe7e46e2249cc8f3824a5d15a44938f4354afe9",
-    "http-errors": "registry:npm/http-errors#1.4.0+20160723033700"
+    "http-errors": "registry:npm/http-errors#1.4.0+20160723033700",
+    "sinon": "registry:npm/sinon#1.16.0+20160723033700"
   },
   "globalDependencies": {
     "body-parser": "registry:dt/body-parser#0.0.0+20160619023215",

@@ -44,7 +44,8 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResult> {
     let documentAST: Document;
 
     const logFunction = options.logFunction || function(){ return null; };
-    const debug = typeof options.debug !== 'undefined' ? options.debug : process.env.NODE_ENV !== 'production';
+    const debugDefault = process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test';
+    const debug = typeof options.debug !== 'undefined' ? options.debug : debugDefault;
 
     logFunction('request.start');
 
