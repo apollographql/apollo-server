@@ -166,3 +166,28 @@ Apollo Server and express-graphql are more or less the same thing (GraphQL middl
 Despite express-graphql being a reference implementation, Apollo Server is actually easier to understand and more modular than express-graphql.
 
 That said, Apollo Server is heavily inspired by express-graphql (it's the reference implementation after all). Rather than seeing the two as competing alternatives, we think that they both have separate roles in the GraphQL ecosystem: express-graphql is a reference implementation, and Apollo Server is a GraphQL server to be used in production and evolve quickly with the needs of the community. Over time, express-graphql can adopt those features of Apollo Server that have proven their worth and become established more widely.
+
+## Apollo Server Development
+
+If you want to develop apollo server locally you must follow the following instructions:
+
+* Fork this repository
+
+* Install the Apollo Server project in your computer
+
+```
+git clone https://github.com/[your-user]/apollo-server
+cd apollo-server
+npm install -g typescript live-server
+npm install
+npm run typings
+npm run compile
+npm link
+```
+
+* Install your local Apollo Server in other App
+
+```
+cd ~/myApp
+npm link apollo-server
+```
