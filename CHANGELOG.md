@@ -13,6 +13,8 @@
 [PR #131](https://github.com/apollostack/apollo-server/pull/131)
 * Improve logging function. Issue #79. ([@nnance](https://github.com/nnance)) in
 [PR #136](https://github.com/apollostack/apollo-server/pull/136)
+* Output stack trace for errors in debug mode. Issue #111. ([@nnance](https://github.com/nnance)) in
+[PR #137](https://github.com/apollostack/apollo-server/pull/137)
 
 ### v0.2.6
 * Expose the OperationStore as part of the public API. ([@nnance](https://github.com/nnance))
