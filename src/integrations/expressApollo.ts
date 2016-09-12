@@ -155,6 +155,7 @@ export function graphiqlExpress(options: GraphiQL.GraphiQLData) {
       query: query || options.query,
       variables: JSON.parse(variables) || options.variables,
       operationName: operationName || options.operationName,
+      passHeader: options.passHeader,
     });
     res.setHeader('Content-Type', 'text/html');
     res.write(graphiQLString);

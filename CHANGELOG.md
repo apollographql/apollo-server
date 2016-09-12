@@ -1,5 +1,9 @@
 # Changelog
 
+### VNEXT
+
+* Allow to pass custom headers in GraphiQL ([@nicolaslopezj](https://github.com/nicolaslopezj) in [#133](https://github.com/apollostack/apollo-server/pull/133)).
+
 ### v0.3.0
 * Refactor Hapi integration to improve the API and make the plugins more idiomatic. ([@nnance](https://github.com/nnance)) in
 [PR #127](https://github.com/apollostack/apollo-server/pull/127)
