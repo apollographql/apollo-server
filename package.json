@@ -61,6 +61,7 @@
     "mocha": "^3.0.0",
     "multer": "^1.1.0",
     "remap-istanbul": "^0.6.4",
+    "sinon": "^1.17.5",
     "supertest": "^2.0.0",
     "supertest-as-promised": "^4.0.0",
     "tslint": "^3.13.0",

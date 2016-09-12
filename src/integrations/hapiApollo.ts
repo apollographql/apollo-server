@@ -141,6 +141,7 @@ async function processQuery(graphqlParams, optionsObject: ApolloOptions, reply) 
         validationRules: optionsObject.validationRules,
         formatError: formatErrorFn,
         formatResponse: optionsObject.formatResponse,
+        debug: optionsObject.debug,
       };
 
       if (optionsObject.formatParams) {

@@ -12,6 +12,7 @@ import { LogFunction } from '../core/runQuery';
  * - (optional) formatParams: a function applied to the parameters of every invocation of runQuery
  * - (optional) validationRules: extra validation rules applied to requests
  * - (optional) formatResponse: a function applied to each graphQL execution result
+ * - (optional) debug: a boolean that will print additional debug logging if execution errors occur
  *
  */
 interface ApolloOptions {
@@ -23,6 +24,7 @@ interface ApolloOptions {
   formatParams?: Function;
   validationRules?: Array<ValidationRule>;
   formatResponse?: Function;
+  debug?: boolean;
 }
 
 export default ApolloOptions;

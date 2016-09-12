@@ -1,6 +1,5 @@
-import {
-  expect,
-} from 'chai';
+import { expect } from 'chai';
+import { stub } from 'sinon';
 
 import {
     GraphQLSchema,
@@ -62,6 +61,12 @@ const QueryType = new GraphQLObjectType({
                 return 'it ' + (<any>Promise).await('works');
             },
         },
+        testError: {
+            type: GraphQLString,
+            resolve() {
+                throw new Error('Secret error message');
+            },
+        },
     },
 });
 
@@ -88,18 +93,46 @@ describe('runQuery', () => {
       });
   });
 
-    it('returns a syntax error if the query string contains one', () => {
-      const query = `query { test`;
-      const expected = /Syntax Error GraphQL/;
-      return runQuery({
-          schema: Schema,
-          query: query,
-          variables: { base: 1 },
-      }).then((res) => {
-          expect(res.data).to.be.undefined;
-          expect(res.errors.length).to.equal(1);
-          return expect(res.errors[0].message).to.match(expected);
-      });
+  it('returns a syntax error if the query string contains one', () => {
+    const query = `query { test `;
+    const expected = /Syntax Error GraphQL/;
+    return runQuery({
+        schema: Schema,
+        query: query,
+        variables: { base: 1 },
+    }).then((res) => {
+        expect(res.data).to.be.undefined;
+        expect(res.errors.length).to.equal(1);
+        return expect(res.errors[0].message).to.match(expected);
+    });
+  });
+
+  it('sends stack trace to error if in an error occurs and debug mode is set', () => {
+    const query = `query { testError }`;
+    const expected = /at resolveOrError/;
+    const logStub = stub(console, 'error');
+    return runQuery({
+        schema: Schema,
+        query: query,
+        debug: true,
+    }).then((res) => {
+        logStub.restore();
+        expect(logStub.callCount).to.equal(1);
+        return expect(logStub.getCall(0).args[0]).to.match(expected);
+    });
+  });
+
+  it('does not send stack trace if in an error occurs and not in debug mode', () => {
+    const query = `query { testError }`;
+    const logStub = stub(console, 'error');
+    return runQuery({
+        schema: Schema,
+        query: query,
+        debug: false,
+    }).then((res) => {
+        logStub.restore();
+        return expect(logStub.callCount).to.equal(0);
+    });
   });
 
   it('returns a validation error if the query string does not pass validation', () => {

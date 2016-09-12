@@ -49,6 +49,7 @@ export interface QueryOptions {
 
  formatError?: Function;
  formatResponse?: Function;
+ debug?: boolean;
 }
 
 const resolvedPromise = Promise.resolve();
@@ -62,6 +63,8 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResult> {
     let documentAST: Document;
 
     const logFunction = options.logFunction || function(){ return null; };
+    const debugDefault = process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test';
+    const debug = typeof options.debug !== 'undefined' ? options.debug : debugDefault;
 
     logFunction({action: LogAction.request, step: LogStep.start});
 
@@ -71,6 +74,10 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResult> {
         // GraphQLResult returns Array<GraphQLError>, but the formatError function
         // returns Array<GraphQLFormattedError>
         return errors.map(options.formatError || formatError as any) as Array<Error>;
+    }
+
+    function printStackTrace(error: Error) {
+      console.error(error.stack);
     }
 
     const qry = typeof options.query === 'string' ? options.query : print(options.query);
@@ -123,6 +130,9 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResult> {
             };
             if (gqlResponse.errors) {
                 response['errors'] = format(gqlResponse.errors);
+                if (debug) {
+                  gqlResponse.errors.map(printStackTrace);
+                }
             }
             if (options.formatResponse) {
                 response = options.formatResponse(response, options);
