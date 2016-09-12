@@ -76,7 +76,7 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResult> {
         return errors.map(options.formatError || formatError as any) as Array<Error>;
     }
 
-	function printStackTrace(error: Error) {
+    function printStackTrace(error: Error) {
       console.error(error.stack);
     }
 
