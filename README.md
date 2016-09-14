@@ -21,7 +21,7 @@ Anyone is welcome to contribute to Apollo Server, just read [CONTRIBUTING.md](./
 
 ## Getting started
 
-Apollo Server is super-easy to set up. Just npm-install apollo-server, write a GraphQL schema, and then use one of the following snippets to get started. For more info, read the [Apollo Server docs](http://docs.apollostack.com/apollo-server).
+Apollo Server is super-easy to set up. Just npm-install apollo-server, write a GraphQL schema, and then use one of the following snippets to get started. For more info, read the [Apollo Server docs](http://dev.apollodata.com/tools/apollo-server/index.html).
 
 ### TypeScript
 
