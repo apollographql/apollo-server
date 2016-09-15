@@ -70,7 +70,7 @@ Now with the Hapi plugins `ApolloHapi` and `GraphiQLHapi` you can pass a route o
 
 ```js
 import hapi from 'hapi';
-import { ApolloHapi } from 'apollo-server';
+import { ApolloHAPI } from 'apollo-server';
 
 const server = new hapi.Server();
 
@@ -83,16 +83,10 @@ server.connection({
 });
 
 server.register({
-    register: ApolloHapi,
-    options: {
-      path: '/graphql',
-      apolloOptions: {
-        schema: myGraphQLSchema,
-      },
-      route: {
-        cors: true
-      }
-    },
+    register: new ApolloHAPI(),
+    options: { schema: myGraphQLSchema },
+    // or options: request => ({ schema, ... })
+    routes: { prefix: '/graphql' },
 });
 
 server.start((err) => {
