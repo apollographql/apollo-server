@@ -37,6 +37,7 @@
   },
   "homepage": "https://github.com/apollostack/apollo-proxy#readme",
   "dependencies": {
+    "boom": "^4.0.0",
     "http-errors": "^1.5.0",
     "source-map-support": "^0.4.2"
   },
@@ -46,7 +47,6 @@
     "babel-polyfill": "^6.9.1",
     "babel-preset-es2015": "^6.9.0",
     "body-parser": "^1.15.2",
-    "boom": "^4.0.0",
     "chai": "^3.5.0",
     "connect": "^3.4.1",
     "express": "^4.14.0",
