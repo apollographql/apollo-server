@@ -2,6 +2,9 @@
 
 ### VNEXT
 
+### v0.3.2
+* Added missing exports for hapi integration ([@nnance](https://github.com/nnance)) in [PR #152](https://github.com/apollostack/apollo-server/pull/152)
+
 ### v0.3.1
 * Fixed dependency issue with boom package that affected the hapi integration. ([@sammkj](https://github.com/sammkj) in [#150](https://github.com/apollostack/apollo-server/pull/150))
 
