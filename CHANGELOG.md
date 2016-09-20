@@ -2,6 +2,8 @@
 
 ### VNEXT
 
+### v0.3.1
+* Fixed dependency issue with boom package that affected the hapi integration. ([@sammkj](https://github.com/sammkj) in [#150](https://github.com/apollostack/apollo-server/pull/150))
 
 ### v0.3.0
 * Refactor Hapi integration to improve the API and make the plugins more idiomatic. ([@nnance](https://github.com/nnance)) in
