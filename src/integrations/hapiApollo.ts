@@ -95,6 +95,7 @@ function getGraphQLParams(payload, isBatch, reply) {
       try {
         variables = JSON.parse(variables);
       } catch (error) {
+        console.error(error.stack)
         return reply(createErr(400, 'Variables are invalid JSON.'));
       }
     }
@@ -116,6 +117,7 @@ async function getApolloOptions(request: Request, reply: IReply): Promise<{}> {
       const opsFunc: HapiOptionsFunction = <HapiOptionsFunction>options;
       optionsObject = await opsFunc(request);
     } catch (e) {
+      console.error(e.stack)
       return reply(createErr(500, `Invalid options provided to ApolloServer: ${e.message}`));
     }
   } else {
@@ -150,6 +152,7 @@ async function processQuery(graphqlParams, optionsObject: ApolloOptions, reply) 
 
       responses.push(await runQuery(params));
     } catch (e) {
+      console.error(e.stack)
       responses.push({ errors: [formatErrorFn(e)] });
     }
   }
