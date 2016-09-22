@@ -5,7 +5,7 @@ import ApolloOptions from './apolloOptions';
 import * as GraphiQL from '../modules/renderGraphiQL';
 
 export interface KoaApolloOptionsFunction {
-  (req: koa.Request): ApolloOptions | Promise<ApolloOptions>;
+  (ctx: koa.Context): ApolloOptions | Promise<ApolloOptions>;
 }
 
 export interface KoaHandler {
