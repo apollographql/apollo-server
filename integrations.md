@@ -11,7 +11,7 @@ import * as bodyParser from "body-parser";
 import { graphqlHTTP, renderGraphiQL } from "apollo-server";
 
 const port = 3000;
-const endpointURL = "/grahpql";
+const endpointURL = "/graphql";
 const app = express();
 
 const schema = new graphql.GraphQLSchema({
