@@ -35,6 +35,7 @@ export function apolloExpress(options: ApolloOptions | ExpressApolloOptionsFunct
       try {
         optionsObject = await options(req, res);
       } catch (e) {
+        console.error(e.stack)
         res.statusCode = 500;
         res.write(`Invalid options provided to ApolloServer: ${e.message}`);
         res.end();
@@ -80,6 +81,7 @@ export function apolloExpress(options: ApolloOptions | ExpressApolloOptionsFunct
           try {
             variables = JSON.parse(variables);
           } catch (error) {
+            console.error(error.stack)
             res.statusCode = 400;
             res.write('Variables are invalid JSON.');
             res.end();
@@ -107,6 +109,7 @@ export function apolloExpress(options: ApolloOptions | ExpressApolloOptionsFunct
 
         responses.push(await runQuery(params));
       } catch (e) {
+        console.error(e.stack)
         responses.push({ errors: [formatErrorFn(e)] });
       }
     }

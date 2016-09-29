@@ -27,6 +27,7 @@ export function apolloKoa(options: ApolloOptions | KoaApolloOptionsFunction): Ko
       try {
         optionsObject = await options(ctx.request);
       } catch (e) {
+        console.error(e.stack);
         ctx.status = 500;
         return ctx.body = `Invalid options provided to ApolloServer: ${e.message}`;
       }
@@ -59,6 +60,7 @@ export function apolloKoa(options: ApolloOptions | KoaApolloOptionsFunction): Ko
           try {
             variables = JSON.parse(variables);
           } catch (error) {
+            console.error(error.stack);
             ctx.status = 400;
             return ctx.body = 'Variables are invalid JSON.';
           }
@@ -84,6 +86,7 @@ export function apolloKoa(options: ApolloOptions | KoaApolloOptionsFunction): Ko
 
         responses.push(await runQuery(params));
       } catch (e) {
+        console.error(e.stack);
         responses.push({ errors: [formatErrorFn(e)] });
       }
     }
