@@ -1,0 +1,41 @@
+{
+  "name": "apollo-server-core",
+  "version": "0.3.2",
+  "description": "Core engine ffor Apollo GraphQL server",
+  "main": "dist/index.js",
+  "scripts": {
+    "compile": "tsc",
+    "prepublish": "npm run compile"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/apollostack/apollo-server/tree/master/packages/apollo-server-core"
+  },
+  "keywords": [
+    "GraphQL",
+    "Apollo",
+    "Server",
+    "Javascript"
+  ],
+  "author": "Jonas Helfer <jonas@helfer.email>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/apollostack/apollo-server/issues"
+  },
+  "homepage": "https://github.com/apollostack/apollo-server#readme",
+  "dependencies": {
+    "typed-graphql": "^1.0.2"
+  },
+  "devDependencies": {
+    "@types/fibers": "0.0.29",
+    "fibers": "^1.0.15",
+    "meteor-promise": "^0.7.3"
+  },
+  "peerDependencies": {
+    "graphql": "^0.6.1 || ^0.7.0"
+  },
+  "typings": "dist/index.d.ts",
+  "typescript": {
+    "definition": "dist/index.d.ts"
+  }
+}

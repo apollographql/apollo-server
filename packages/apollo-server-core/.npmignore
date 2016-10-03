@@ -1,0 +1,5 @@
+*
+!dist
+!dist/**/*
+dist/**/*.test.*
+!package.json
