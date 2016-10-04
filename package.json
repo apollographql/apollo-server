@@ -9,7 +9,7 @@
     "compile": "lerna exec -- npm run compile",
     "lint": "tslint ./packages/**/src/**/*.ts",
     "prebootstrap": "npm install",
-    "bootstrap": "lerna bootstrap",
+    "postinstall": "lerna bootstrap",
     "pretest": "npm run compile",
     "test": "npm run testonly --",
     "posttest": "npm run lint",

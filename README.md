@@ -179,7 +179,7 @@ If you want to develop apollo server locally you must follow the following instr
 ```
 git clone https://github.com/[your-user]/apollo-server
 cd apollo-server
-npm run bootstrap
+npm install
 cd packages/apollo-server-<variant>/
 npm link
 ```
