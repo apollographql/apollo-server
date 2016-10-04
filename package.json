@@ -29,7 +29,7 @@
     "chai": "^3.5.0",
     "graphql": "^0.7.0",
     "istanbul": "1.0.0-alpha.2",
-    "lerna": "^2.0.0-beta.29",
+    "lerna": "git://github.com/DxCx/lerna.git#bootstrap-dev-bin-pkg",
     "mocha": "^3.1.1",
     "remap-istanbul": "^0.7.0",
     "sinon": "^1.17.6",
