@@ -25,13 +25,18 @@ Apollo Server is super-easy to set up. Just npm-install apollo-server, write a G
 
 ### Installation
 
-Just run `npm install --save apollo-server` and you're good to go!
+Just run `npm install --save apollo-server-<variant>` and you're good to go!
+
+where variant is one of the following:
+ - express
+ - koa
+ - hapi
 
 ### Express
 
 ```js
 import express from 'express';
-import { apolloExpress } from 'apollo-server';
+import { apolloExpress } from 'apollo-server-express';
 
 const myGraphQLSchema = // ... define or import your schema here!
 const PORT = 3000;
@@ -47,7 +52,7 @@ app.listen(PORT);
 ```js
 import connect from 'connect';
 import bodyParser from 'body-parser';
-import { apolloConnect } from 'apollo-server';
+import { apolloConnect } from 'apollo-server-express';
 import http from 'http';
 
 const PORT = 3000;
@@ -66,7 +71,7 @@ Now with the Hapi plugins `apolloHapi` and `graphiqlHapi` you can pass a route o
 
 ```js
 import hapi from 'hapi';
-import { apolloHapi } from 'apollo-server';
+import { apolloHapi } from 'apollo-server-hapi';
 
 const server = new hapi.Server();
 
@@ -103,7 +108,7 @@ server.start((err) => {
 ```js
 import koa from 'koa';
 import koaRouter from 'koa-router';
-import { apolloKoa } from 'apollo-server';
+import { apolloKoa } from 'apollo-server-koa';
 
 const app = new koa();
 const router = new koaRouter();
@@ -174,10 +179,8 @@ If you want to develop apollo server locally you must follow the following instr
 ```
 git clone https://github.com/[your-user]/apollo-server
 cd apollo-server
-npm install -g typescript live-server
-npm install
-npm run typings
-npm run compile
+npm run bootstrap
+cd packages/apollo-server-<variant>/
 npm link
 ```
 
