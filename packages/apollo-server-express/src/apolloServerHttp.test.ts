@@ -267,7 +267,7 @@ describe(`GraphQL-HTTP (apolloServer) tests for ${version} express`, () => {
         }`)
         .attach('file', __filename);
 
-      req.then((response) => {
+      return req.then((response) => {
         expect(JSON.parse(response.text)).to.deep.equal({
           data: {
             uploadFile: {
