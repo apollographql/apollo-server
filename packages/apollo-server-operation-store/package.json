@@ -23,13 +23,15 @@
     "url": "https://github.com/apollostack/apollo-server/issues"
   },
   "homepage": "https://github.com/apollostack/apollo-server#readme",
-  "dependencies": {
-    "typed-graphql": "^1.0.2"
-  },
+  "dependencies": {},
   "devDependencies": {
+    "typed-graphql": "^1.0.2"
   },
   "peerDependencies": {
     "graphql": "^0.6.1 || ^0.7.0"
+  },
+  "optionalDependencies": {
+    "typed-graphql": "^1.0.2"
   },
   "typings": "dist/index.d.ts",
   "typescript": {

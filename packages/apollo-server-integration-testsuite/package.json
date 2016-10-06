@@ -24,12 +24,16 @@
     "apollo-server-graphiql": "^0.3.2",
     "apollo-server-operation-store": "^0.3.2",
     "supertest": "^2.0.0",
-    "supertest-as-promised": "^4.0.0",
+    "supertest-as-promised": "^4.0.0"
+  },
+  "devDependencies": {
     "typed-graphql": "^1.0.2"
   },
-  "devDependencies": {},
   "peerDependencies": {
     "graphql": "^0.6.1 || ^0.7.0"
+  },
+  "optionalDependencies": {
+    "typed-graphql": "^1.0.2"
   },
   "typings": "dist/index.d.ts",
   "typescript": {

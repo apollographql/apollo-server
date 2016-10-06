@@ -26,13 +26,13 @@
   },
   "homepage": "https://github.com/apollostack/apollo-server#readme",
   "dependencies": {
-    "@types/express": "^4.0.33",
     "apollo-server-core": "^0.3.2",
     "apollo-server-graphiql": "^0.3.2"
   },
   "devDependencies": {
     "@types/body-parser": "0.0.33",
     "@types/connect": "^3.4.30",
+    "@types/express": "^4.0.33",
     "@types/multer": "0.0.32",
     "apollo-server-integration-testsuite": "^0.3.2",
     "body-parser": "^1.15.2",
@@ -43,6 +43,9 @@
   },
   "peerDependencies": {
     "graphql": "^0.6.1 || ^0.7.0"
+  },
+  "optionalDependencies": {
+    "@types/express": "^4.0.33"
   },
   "typings": "dist/index.d.ts",
   "typescript": {
