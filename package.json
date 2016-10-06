@@ -14,7 +14,7 @@
     "test": "npm run testonly --",
     "posttest": "npm run lint",
     "testonly": "mocha --compilers js:babel-core/register --reporter spec --full-trace ./test/tests.js",
-    "coverage": "babel-node ./node_modules/istanbul/lib/cli.js cover -x \"*.test.js\" _mocha -- --full-trace --reporter dot ./test/tests.js",
+    "coverage": "istanbul cover -x \"*.test.js\" _mocha -- --compilers js:babel-core/register --full-trace --reporter dot ./test/tests.js",
     "postcoverage": "remap-istanbul --input coverage/coverage.raw.json --type lcovonly --output coverage/lcov.info"
   },
   "devDependencies": {
