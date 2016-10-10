@@ -51,8 +51,8 @@ const apolloHapi: IRegister = function(server: Server, options: HapiPluginOption
     path: options.path || '/graphql',
     config,
     handler: function(request, reply) {
-      const responses = request.pre.graphQL;
-      if (request.pre.isBatch) {
+      const responses = request.pre['graphQL'];
+      if (request.pre['isBatch']) {
         return reply(responses);
       } else {
         const gqlResponse = responses[0];
@@ -194,7 +194,7 @@ const graphiqlHapi: IRegister =  function(server: Server, options: GraphiQLPlugi
     path: options.path || '/graphql',
     config,
     handler: (request, reply) => {
-      reply(request.pre.graphiQLString).header('Content-Type', 'text/html');
+      reply(request.pre['graphiQLString']).header('Content-Type', 'text/html');
     },
   });
   next();
