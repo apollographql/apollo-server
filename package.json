@@ -78,7 +78,7 @@
     "koa-bodyparser": "^3.0.0",
     "koa-router": "^7.0.1",
     "meteor-promise": "^0.7.3",
-    "mocha": "^3.0.0",
+    "mocha": "^3.1.1",
     "multer": "^1.1.0",
     "remap-istanbul": "^0.6.4",
     "sinon": "^1.17.5",
