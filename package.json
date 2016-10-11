@@ -80,7 +80,7 @@
     "meteor-promise": "^0.7.3",
     "mocha": "^3.1.1",
     "multer": "^1.1.0",
-    "remap-istanbul": "^0.6.4",
+    "remap-istanbul": "^0.7.0",
     "sinon": "^1.17.5",
     "supertest": "^2.0.0",
     "supertest-as-promised": "^4.0.0",
