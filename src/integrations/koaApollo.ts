@@ -119,6 +119,7 @@ export function graphiqlKoa(options: GraphiQL.GraphiQLData) {
       query: query || options.query,
       variables: JSON.parse(variables) || options.variables,
       operationName: operationName || options.operationName,
+      passHeader: options.passHeader
     });
     ctx.set('Content-Type', 'text/html');
     ctx.body = graphiQLString;
