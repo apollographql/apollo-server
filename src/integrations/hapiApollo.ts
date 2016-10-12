@@ -220,6 +220,7 @@ function renderGraphiQL(route, graphiqlParams: any, reply) {
     query: graphiqlParams.query || graphiqlOptions.query,
     variables: JSON.parse(graphiqlParams.variables) || graphiqlOptions.variables,
     operationName: graphiqlParams.operationName || graphiqlOptions.operationName,
+    passHeader: graphiqlOptions.passHeader,
   });
   reply(graphiQLString);
 }
