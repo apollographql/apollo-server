@@ -5,7 +5,7 @@ import ApolloOptions from './apolloOptions';
 import * as GraphiQL from '../modules/renderGraphiQL';
 
 export interface KoaApolloOptionsFunction {
-  (req: koa.Request): ApolloOptions | Promise<ApolloOptions>;
+  (ctx: koa.Context): ApolloOptions | Promise<ApolloOptions>;
 }
 
 export interface KoaHandler {
@@ -25,7 +25,7 @@ export function apolloKoa(options: ApolloOptions | KoaApolloOptionsFunction): Ko
     let optionsObject: ApolloOptions;
     if (isOptionsFunction(options)) {
       try {
-        optionsObject = await options(ctx.request);
+        optionsObject = await options(ctx);
       } catch (e) {
         ctx.status = 500;
         return ctx.body = `Invalid options provided to ApolloServer: ${e.message}`;
@@ -75,6 +75,7 @@ export function apolloKoa(options: ApolloOptions | KoaApolloOptionsFunction): Ko
           validationRules: optionsObject.validationRules,
           formatError: formatErrorFn,
           formatResponse: optionsObject.formatResponse,
+          debug: optionsObject.debug,
         };
 
         if (optionsObject.formatParams) {
@@ -118,6 +119,7 @@ export function graphiqlKoa(options: GraphiQL.GraphiQLData) {
       query: query || options.query,
       variables: JSON.parse(variables) || options.variables,
       operationName: operationName || options.operationName,
+      passHeader: options.passHeader,
     });
     ctx.set('Content-Type', 'text/html');
     ctx.body = graphiQLString;

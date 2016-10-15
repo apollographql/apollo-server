@@ -1,5 +1,18 @@
 # Changelog
 
+### VNEXT
+
+* Fix passHeader option in GraphiQL (Both Hapi and Koa)
+* Pass `ctx` instead of `ctx.request` to options function in Koa integration ([@HriBB](https://github.com/HriBB)) in [PR #154](https://github.com/apollostack/apollo-server/pull/154)
+* Manage TypeScript declaration files using npm. ([@od1k](https:/github.com/od1k) in [#162](https://github.com/apollostack/apollo-server/pull/162))
+* Fix connect example in readme. ([@conrad-vanl](https://github.com/conrad-vanl) in [#165](https://github.com/apollostack/apollo-server/pull/165))
+
+### v0.3.2
+* Added missing exports for hapi integration ([@nnance](https://github.com/nnance)) in [PR #152](https://github.com/apollostack/apollo-server/pull/152)
+
+### v0.3.1
+* Fixed dependency issue with boom package that affected the hapi integration. ([@sammkj](https://github.com/sammkj) in [#150](https://github.com/apollostack/apollo-server/pull/150))
+
 ### v0.3.0
 * Refactor Hapi integration to improve the API and make the plugins more idiomatic. ([@nnance](https://github.com/nnance)) in
 [PR #127](https://github.com/apollostack/apollo-server/pull/127)
@@ -11,6 +24,11 @@
 [PR #132](https://github.com/apollostack/apollo-server/pull/132)
 * Fix error handling when parsing variables parameter. Issue #130. ([@nnance](https://github.com/nnance)) in
 [PR #131](https://github.com/apollostack/apollo-server/pull/131)
+* Improve logging function. Issue #79. ([@nnance](https://github.com/nnance)) in
+[PR #136](https://github.com/apollostack/apollo-server/pull/136)
+* Output stack trace for errors in debug mode. Issue #111. ([@nnance](https://github.com/nnance)) in
+[PR #137](https://github.com/apollostack/apollo-server/pull/137)
+* Allow to pass custom headers in GraphiQL ([@nicolaslopezj](https://github.com/nicolaslopezj) in [#133](https://github.com/apollostack/apollo-server/pull/133)).
 
 ### v0.2.6
 * Expose the OperationStore as part of the public API. ([@nnance](https://github.com/nnance))

@@ -21,7 +21,7 @@ export interface HapiPluginOptions {
   apolloOptions: ApolloOptions | HapiOptionsFunction;
 }
 
-const ApolloHapi: IRegister = function(server: Server, options: HapiPluginOptions, next) {
+const apolloHapi: IRegister = function(server: Server, options: HapiPluginOptions, next) {
   server.method('verifyPayload', verifyPayload);
   server.method('getGraphQLParams', getGraphQLParams);
   server.method('getApolloOptions', getApolloOptions);
@@ -51,8 +51,8 @@ const ApolloHapi: IRegister = function(server: Server, options: HapiPluginOption
     path: options.path || '/graphql',
     config,
     handler: function(request, reply) {
-      const responses = request.pre.graphQL;
-      if (request.pre.isBatch) {
+      const responses = request.pre['graphQL'];
+      if (request.pre['isBatch']) {
         return reply(responses);
       } else {
         const gqlResponse = responses[0];
@@ -68,7 +68,7 @@ const ApolloHapi: IRegister = function(server: Server, options: HapiPluginOption
   return next();
 };
 
-ApolloHapi.attributes = {
+apolloHapi.attributes = {
   name: 'graphql',
   version: '0.0.1',
 };
@@ -141,6 +141,7 @@ async function processQuery(graphqlParams, optionsObject: ApolloOptions, reply) 
         validationRules: optionsObject.validationRules,
         formatError: formatErrorFn,
         formatResponse: optionsObject.formatResponse,
+        debug: optionsObject.debug,
       };
 
       if (optionsObject.formatParams) {
@@ -171,7 +172,7 @@ export interface GraphiQLPluginOptions {
   graphiqlOptions: GraphiQL.GraphiQLData;
 }
 
-const GraphiQLHapi: IRegister =  function(server: Server, options: GraphiQLPluginOptions, next) {
+const graphiqlHapi: IRegister =  function(server: Server, options: GraphiQLPluginOptions, next) {
   server.method('getGraphiQLParams', getGraphiQLParams);
   server.method('renderGraphiQL', renderGraphiQL);
 
@@ -193,13 +194,13 @@ const GraphiQLHapi: IRegister =  function(server: Server, options: GraphiQLPlugi
     path: options.path || '/graphql',
     config,
     handler: (request, reply) => {
-      reply(request.pre.graphiQLString).header('Content-Type', 'text/html');
+      reply(request.pre['graphiQLString']).header('Content-Type', 'text/html');
     },
   });
   next();
 };
 
-GraphiQLHapi.attributes = {
+graphiqlHapi.attributes = {
   name: 'graphiql',
   version: '0.0.1',
 };
@@ -219,8 +220,9 @@ function renderGraphiQL(route, graphiqlParams: any, reply) {
     query: graphiqlParams.query || graphiqlOptions.query,
     variables: JSON.parse(graphiqlParams.variables) || graphiqlOptions.variables,
     operationName: graphiqlParams.operationName || graphiqlOptions.operationName,
+    passHeader: graphiqlOptions.passHeader,
   });
   reply(graphiQLString);
 }
 
-export { ApolloHapi, GraphiQLHapi };
+export { apolloHapi, graphiqlHapi };

@@ -15,6 +15,8 @@
  * - (optional) variables: a JS object of variables to pre-fill in the GraphiQL UI
  * - (optional) operationName: the operationName to pre-fill in the GraphiQL UI
  * - (optional) result: the result of the query to pre-fill in the GraphiQL UI
+ * - (optional) passHeader: a string that will be added to the header object.
+ * For example "'Authorization': localStorage['Meteor.loginToken']" for meteor
  */
 
 export type GraphiQLData = {
@@ -23,6 +25,7 @@ export type GraphiQLData = {
   variables?: Object,
   operationName?: string,
   result?: Object,
+  passHeader?: string
 };
 
 // Current latest version of GraphiQL.
@@ -41,6 +44,7 @@ export function renderGraphiQL(data: GraphiQLData): string {
     data.variables ? JSON.stringify(data.variables, null, 2) : null;
   const resultString = null;
   const operationName = data.operationName;
+  const passHeader = data.passHeader ? data.passHeader : '';
 
   /* eslint-disable max-len */
   return `
@@ -94,7 +98,7 @@ export function renderGraphiQL(data: GraphiQLData): string {
         otherParams[k] = parameters[k];
       }
     }
-    // We don't use safe-serialize for location, becuase it's not client input.
+    // We don't use safe-serialize for location, because it's not client input.
     var fetchURL = locationQuery(otherParams, '${endpointURL}');
     // Defines a GraphQL fetcher using the fetch API.
     function graphQLFetcher(graphQLParams) {
@@ -102,7 +106,8 @@ export function renderGraphiQL(data: GraphiQLData): string {
         method: 'post',
         headers: {
           'Accept': 'application/json',
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          ${passHeader}
         },
         body: JSON.stringify(graphQLParams),
         credentials: 'include',

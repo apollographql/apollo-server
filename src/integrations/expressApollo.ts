@@ -98,6 +98,7 @@ export function apolloExpress(options: ApolloOptions | ExpressApolloOptionsFunct
           validationRules: optionsObject.validationRules,
           formatError: formatErrorFn,
           formatResponse: optionsObject.formatResponse,
+          debug: optionsObject.debug,
         };
 
         if (optionsObject.formatParams) {
@@ -154,6 +155,7 @@ export function graphiqlExpress(options: GraphiQL.GraphiQLData) {
       query: query || options.query,
       variables: JSON.parse(variables) || options.variables,
       operationName: operationName || options.operationName,
+      passHeader: options.passHeader,
     });
     res.setHeader('Content-Type', 'text/html');
     res.write(graphiQLString);

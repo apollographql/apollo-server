@@ -21,18 +21,11 @@ Anyone is welcome to contribute to Apollo Server, just read [CONTRIBUTING.md](./
 
 ## Getting started
 
-Apollo Server is super-easy to set up. Just npm-install apollo-server, write a GraphQL schema, and then use one of the following snippets to get started. For more info, read the [Apollo Server docs](http://docs.apollostack.com/apollo-server).
+Apollo Server is super-easy to set up. Just npm-install apollo-server, write a GraphQL schema, and then use one of the following snippets to get started. For more info, read the [Apollo Server docs](http://dev.apollodata.com/tools/apollo-server/index.html).
 
-### TypeScript
+### Installation
 
-If you want to build your GraphQL server using TypeScript, Apollo Server is the project for you.  **NOTE**: All typings mentioned below must be included in your project in order for it to compile.
-
-```sh
-npm install apollo-server
-typings i -SG dt~express dt~express-serve-static-core dt~serve-static dt~mime dt~hapi dt~boom dt~cookies dt~koa
-```
-
-For using the project in JavaScript, just run `npm install --save apollo-server` and you're good to go!
+Just run `npm install --save apollo-server` and you're good to go!
 
 ### Express
 
@@ -53,24 +46,27 @@ app.listen(PORT);
 ### Connect
 ```js
 import connect from 'connect';
+import bodyParser from 'body-parser';
 import { apolloConnect } from 'apollo-server';
+import http from 'http';
 
 const PORT = 3000;
 
 var app = connect();
 
-app.use('/graphql', bodyParser.json(), apolloConnect({ schema: myGraphQLSchema }));
+app.use('/graphql', bodyParser.json());
+app.use('/graphql', apolloConnect({ schema: myGraphQLSchema }));
 
-app.listen(PORT);
+http.createServer(app).listen(PORT);
 ```
 
 ### Hapi
 
-Now with the Hapi plugins `ApolloHapi` and `GraphiQLHapi` you can pass a route object that includes options to be applied to the route.  The example below enables CORS on the `/graphql` route.
+Now with the Hapi plugins `apolloHapi` and `graphiqlHapi` you can pass a route object that includes options to be applied to the route.  The example below enables CORS on the `/graphql` route.
 
 ```js
 import hapi from 'hapi';
-import { ApolloHapi } from 'apollo-server';
+import { apolloHapi } from 'apollo-server';
 
 const server = new hapi.Server();
 
@@ -83,7 +79,7 @@ server.connection({
 });
 
 server.register({
-    register: ApolloHapi,
+    register: apolloHapi,
     options: {
       path: '/graphql',
       apolloOptions: {
@@ -166,3 +162,28 @@ Apollo Server and express-graphql are more or less the same thing (GraphQL middl
 Despite express-graphql being a reference implementation, Apollo Server is actually easier to understand and more modular than express-graphql.
 
 That said, Apollo Server is heavily inspired by express-graphql (it's the reference implementation after all). Rather than seeing the two as competing alternatives, we think that they both have separate roles in the GraphQL ecosystem: express-graphql is a reference implementation, and Apollo Server is a GraphQL server to be used in production and evolve quickly with the needs of the community. Over time, express-graphql can adopt those features of Apollo Server that have proven their worth and become established more widely.
+
+## Apollo Server Development
+
+If you want to develop apollo server locally you must follow the following instructions:
+
+* Fork this repository
+
+* Install the Apollo Server project in your computer
+
+```
+git clone https://github.com/[your-user]/apollo-server
+cd apollo-server
+npm install -g typescript live-server
+npm install
+npm run typings
+npm run compile
+npm link
+```
+
+* Install your local Apollo Server in other App
+
+```
+cd ~/myApp
+npm link apollo-server
+```

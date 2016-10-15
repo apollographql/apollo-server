@@ -1,6 +1,5 @@
-import {
-  expect,
-} from 'chai';
+import { expect } from 'chai';
+import { stub } from 'sinon';
 
 import {
     GraphQLSchema,
@@ -11,7 +10,11 @@ import {
     parse,
 } from 'graphql';
 
-import { runQuery } from './runQuery';
+import {
+  runQuery,
+  LogAction,
+  LogStep,
+} from './runQuery';
 
 // Make the global Promise constructor Fiber-aware to simulate a Meteor
 // environment.
@@ -58,6 +61,12 @@ const QueryType = new GraphQLObjectType({
                 return 'it ' + (<any>Promise).await('works');
             },
         },
+        testError: {
+            type: GraphQLString,
+            resolve() {
+                throw new Error('Secret error message');
+            },
+        },
     },
 });
 
@@ -84,18 +93,46 @@ describe('runQuery', () => {
       });
   });
 
-    it('returns a syntax error if the query string contains one', () => {
-      const query = `query { test`;
-      const expected = /Syntax Error GraphQL/;
-      return runQuery({
-          schema: Schema,
-          query: query,
-          variables: { base: 1 },
-      }).then((res) => {
-          expect(res.data).to.be.undefined;
-          expect(res.errors.length).to.equal(1);
-          return expect(res.errors[0].message).to.match(expected);
-      });
+  it('returns a syntax error if the query string contains one', () => {
+    const query = `query { test `;
+    const expected = /Syntax Error GraphQL/;
+    return runQuery({
+        schema: Schema,
+        query: query,
+        variables: { base: 1 },
+    }).then((res) => {
+        expect(res.data).to.be.undefined;
+        expect(res.errors.length).to.equal(1);
+        return expect(res.errors[0].message).to.match(expected);
+    });
+  });
+
+  it('sends stack trace to error if in an error occurs and debug mode is set', () => {
+    const query = `query { testError }`;
+    const expected = /at resolveOrError/;
+    const logStub = stub(console, 'error');
+    return runQuery({
+        schema: Schema,
+        query: query,
+        debug: true,
+    }).then((res) => {
+        logStub.restore();
+        expect(logStub.callCount).to.equal(1);
+        return expect(logStub.getCall(0).args[0]).to.match(expected);
+    });
+  });
+
+  it('does not send stack trace if in an error occurs and not in debug mode', () => {
+    const query = `query { testError }`;
+    const logStub = stub(console, 'error');
+    return runQuery({
+        schema: Schema,
+        query: query,
+        debug: false,
+    }).then((res) => {
+        logStub.restore();
+        return expect(logStub.callCount).to.equal(0);
+    });
   });
 
   it('returns a validation error if the query string does not pass validation', () => {
@@ -219,9 +256,7 @@ describe('runQuery', () => {
             testString
         }`;
         const logs = [];
-        const logFn = (...args) => {
-            logs.push(args);
-        };
+        const logFn = (obj) => logs.push(obj);
         const expected = {
             testString: 'it works',
         };
@@ -235,14 +270,11 @@ describe('runQuery', () => {
         .then((res) => {
             expect(res.data).to.deep.equal(expected);
             expect(logs.length).to.equals(11);
-            expect(logs[0][0]).to.equals('request.start');
-            expect(logs[1][0]).to.equals('request.query');
-            expect(logs[1][1]).to.deep.equals(query);
-            expect(logs[2][0]).to.equals('request.variables');
-            expect(logs[2][1]).to.deep.equals({ test: 123 });
-            expect(logs[3][0]).to.equals('request.operationName');
-            expect(logs[3][1]).to.equals('Q1');
-            expect(logs[10][0]).to.equals('request.end');
+            expect(logs[0]).to.deep.equals({action: LogAction.request, step: LogStep.start});
+            expect(logs[1]).to.deep.equals({action: LogAction.request, step: LogStep.status, key: 'query', data: query});
+            expect(logs[2]).to.deep.equals({action: LogAction.request, step: LogStep.status, key: 'variables', data: { test: 123 }});
+            expect(logs[3]).to.deep.equals({action: LogAction.request, step: LogStep.status, key: 'operationName', data: 'Q1'});
+            expect(logs[10]).to.deep.equals({action: LogAction.request, step: LogStep.end});
         });
     });
 });

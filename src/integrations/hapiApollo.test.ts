@@ -1,5 +1,5 @@
 import * as hapi from 'hapi';
-import { ApolloHapi, GraphiQLHapi, HapiPluginOptions } from './hapiApollo';
+import { apolloHapi, graphiqlHapi, HapiPluginOptions } from './hapiApollo';
 
 import testSuite, { Schema } from './integrations.test';
 
@@ -12,7 +12,7 @@ function createApp(createOptions: HapiPluginOptions) {
   });
 
   server.register({
-      register: ApolloHapi,
+      register: apolloHapi,
       options: {
         apolloOptions: createOptions ? createOptions.apolloOptions : { schema: Schema },
         path: '/graphql',
@@ -20,7 +20,7 @@ function createApp(createOptions: HapiPluginOptions) {
   });
 
   server.register({
-      register: GraphiQLHapi,
+      register: graphiqlHapi,
       options: {
         path: '/graphiql',
         graphiqlOptions: {

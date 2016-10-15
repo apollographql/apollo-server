@@ -1,4 +1,5 @@
-import * as graphql from 'graphql';
+import { GraphQLSchema, ValidationRule } from 'graphql';
+import { LogFunction } from '../core/runQuery';
 
 /*
  * ExpressApolloOptions
@@ -11,17 +12,19 @@ import * as graphql from 'graphql';
  * - (optional) formatParams: a function applied to the parameters of every invocation of runQuery
  * - (optional) validationRules: extra validation rules applied to requests
  * - (optional) formatResponse: a function applied to each graphQL execution result
+ * - (optional) debug: a boolean that will print additional debug logging if execution errors occur
  *
  */
 interface ApolloOptions {
-  schema: graphql.GraphQLSchema;
+  schema: GraphQLSchema;
   formatError?: Function;
   rootValue?: any;
   context?: any;
-  logFunction?: Function;
+  logFunction?: LogFunction;
   formatParams?: Function;
-  validationRules?: Array<graphql.ValidationRule>;
+  validationRules?: Array<ValidationRule>;
   formatResponse?: Function;
+  debug?: boolean;
 }
 
 export default ApolloOptions;
