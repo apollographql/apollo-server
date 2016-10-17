@@ -75,7 +75,8 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResult> {
               return options.formatError(error);
             } catch (err) {
               console.error('Error in formatError function:', err);
-              return formatError(error);
+              const newError = new Error('Internal server error');
+              return formatError(newError);
             }
           } else {
             return formatError(error);

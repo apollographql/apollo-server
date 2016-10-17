@@ -436,18 +436,12 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
       });
 
-      it('should use default formatter if provided formatError fails', () => {
+      it('Return internal server error when formatError fails', () => {
           app = createApp({apolloOptions: {
               schema: Schema,
               formatError: (err) => {
                 throw new Error('I should be catched');
               },
-          }});
-          const logStub = stub(console, 'error');
-          const expected = /at resolveOrError/;
-          app = createApp({apolloOptions: {
-              schema: Schema,
-              debug: true,
           }});
           const req = request(app)
               .post('/graphql')
@@ -455,9 +449,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
                   query: 'query test{ testError }',
               });
           return req.then((res) => {
-              logStub.restore();
-              expect(logStub.callCount).to.equal(1);
-              return expect(logStub.getCall(0).args[0]).to.match(expected);
+              return expect(res.res.body.errors[0].message).to.equal('Internal server error');
           });
       });
 
