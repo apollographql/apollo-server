@@ -29,7 +29,7 @@ const apolloHapi: IRegister = function(server: Server, options: HapiPluginOption
 
   const config = Object.assign(options.route || {}, {
     plugins: {
-      graphql: options.apolloOptions,
+      graphql: isOptionsFunction(options.apolloOptions) ? options.apolloOptions : () => options.apolloOptions,
     },
     pre: [{
       assign: 'isBatch',
