@@ -436,7 +436,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
       });
 
-      it('Return internal server error when formatError fails', () => {
+      it('sends internal server error when formatError fails', () => {
           app = createApp({apolloOptions: {
               schema: Schema,
               formatError: (err) => {
