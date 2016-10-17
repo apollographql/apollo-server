@@ -69,11 +69,18 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResult> {
     logFunction({action: LogAction.request, step: LogStep.start});
 
     function format(errors: Array<Error>): Array<Error> {
-        // TODO: fix types! shouldn't have to cast.
-        // the blocker is that the typings aren't right atm:
-        // GraphQLResult returns Array<GraphQLError>, but the formatError function
-        // returns Array<GraphQLFormattedError>
-        return errors.map(options.formatError || formatError as any) as Array<Error>;
+        return errors.map((error) => {
+          if (options.formatError) {
+            try {
+              return options.formatError(error);
+            } catch (err) {
+              console.error('Error in formatError function:', err);
+              return formatError(error);
+            }
+          } else {
+            return formatError(error);
+          }
+        }) as Array<Error>;
     }
 
     function printStackTrace(error: Error) {
