@@ -6,6 +6,7 @@ import {
     GraphQLObjectType,
     GraphQLString,
     GraphQLError,
+    introspectionQuery,
     BREAK,
 } from 'graphql';
 
@@ -258,6 +259,17 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           return req.then((res) => {
               expect(res.status).to.equal(200);
               return expect(res.body.data).to.deep.equal(expected);
+          });
+      });
+
+      it('can handle introspection request', () => {
+          app = createApp();
+          const req = request(app)
+              .post('/graphql')
+              .send({query: introspectionQuery});
+          return req.then((res) => {
+              expect(res.status).to.equal(200);
+              return expect(res.body.data.__schema.types[0].fields[0].name).to.equal('testString');
           });
       });
 
