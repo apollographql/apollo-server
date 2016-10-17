@@ -29,7 +29,7 @@ const apolloHapi: IRegister = function(server: Server, options: HapiPluginOption
 
   const config = Object.assign(options.route || {}, {
     plugins: {
-      graphql: options.apolloOptions,
+      graphql: isOptionsFunction(options.apolloOptions) ? options.apolloOptions : () => options.apolloOptions,
     },
     pre: [{
       assign: 'isBatch',
@@ -220,7 +220,6 @@ function renderGraphiQL(route, graphiqlParams: any, reply) {
     query: graphiqlParams.query || graphiqlOptions.query,
     variables: JSON.parse(graphiqlParams.variables) || graphiqlOptions.variables,
     operationName: graphiqlParams.operationName || graphiqlOptions.operationName,
-    passHeader: graphiqlOptions.passHeader,
   });
   reply(graphiQLString);
 }
