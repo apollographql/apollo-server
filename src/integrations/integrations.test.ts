@@ -436,6 +436,23 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
       });
 
+      it('sends internal server error when formatError fails', () => {
+          app = createApp({apolloOptions: {
+              schema: Schema,
+              formatError: (err) => {
+                throw new Error('I should be catched');
+              },
+          }});
+          const req = request(app)
+              .post('/graphql')
+              .send({
+                  query: 'query test{ testError }',
+              });
+          return req.then((res) => {
+              return expect(res.res.body.errors[0].message).to.equal('Internal server error');
+          });
+      });
+
       it('sends stack trace to error if debug mode is set', () => {
           const expected = /at resolveOrError/;
           const stackTrace = [];
