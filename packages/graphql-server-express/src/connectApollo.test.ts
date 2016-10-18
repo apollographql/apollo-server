@@ -3,7 +3,7 @@ import * as bodyParser from 'body-parser';
 import { apolloConnect, graphiqlConnect } from './connectApollo';
 import 'mocha';
 
-import testSuite, { Schema, CreateAppOptions } from 'apollo-server-integration-testsuite';
+import testSuite, { Schema, CreateAppOptions } from 'graphql-server-integration-testsuite';
 
 function createConnectApp(options: CreateAppOptions = {}) {
   const app = connect();

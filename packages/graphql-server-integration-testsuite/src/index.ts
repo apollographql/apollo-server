@@ -14,9 +14,9 @@ import {
 // tslint:disable-next-line
 const request = require('supertest-as-promised');
 
-import { ApolloOptions } from 'apollo-server-core';
-import * as GraphiQL from 'apollo-server-graphiql';
-import { OperationStore } from 'apollo-server-operation-store';
+import { ApolloOptions } from 'graphql-server-core';
+import * as GraphiQL from 'graphql-server-module-graphiql';
+import { OperationStore } from 'graphql-server-module-operation-store';
 
 const QueryType = new GraphQLObjectType({
     name: 'QueryType',

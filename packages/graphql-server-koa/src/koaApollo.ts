@@ -1,7 +1,7 @@
 import * as koa from 'koa';
 import * as graphql from 'graphql';
-import { ApolloOptions, runQuery } from 'apollo-server-core';
-import * as GraphiQL from 'apollo-server-graphiql';
+import { ApolloOptions, runQuery } from 'graphql-server-core';
+import * as GraphiQL from 'graphql-server-module-graphiql';
 
 export interface KoaApolloOptionsFunction {
   (ctx: koa.Context): ApolloOptions | Promise<ApolloOptions>;

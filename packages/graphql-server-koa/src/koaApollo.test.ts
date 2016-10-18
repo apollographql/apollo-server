@@ -2,11 +2,11 @@ import * as koa from 'koa';
 import * as koaRouter from 'koa-router';
 import * as koaBody from 'koa-bodyparser';
 import { apolloKoa, graphiqlKoa } from './koaApollo';
-import { ApolloOptions } from 'apollo-server-core';
+import { ApolloOptions } from 'graphql-server-core';
 import { expect } from 'chai';
 import * as http from 'http';
 
-import testSuite, { Schema, CreateAppOptions } from 'apollo-server-integration-testsuite';
+import testSuite, { Schema, CreateAppOptions } from 'graphql-server-integration-testsuite';
 
 function createApp(options: CreateAppOptions = {}) {
   const app = new koa();

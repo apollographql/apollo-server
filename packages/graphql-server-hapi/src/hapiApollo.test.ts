@@ -2,7 +2,7 @@ import * as hapi from 'hapi';
 import { apolloHapi, graphiqlHapi, HapiPluginOptions } from './hapiApollo';
 import 'mocha';
 
-import testSuite, { Schema } from 'apollo-server-integration-testsuite';
+import testSuite, { Schema } from 'graphql-server-integration-testsuite';
 
 function createApp(createOptions: HapiPluginOptions) {
   const server = new hapi.Server();

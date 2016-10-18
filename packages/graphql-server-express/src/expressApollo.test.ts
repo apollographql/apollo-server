@@ -1,9 +1,9 @@
 import * as express from 'express';
 import * as bodyParser from 'body-parser';
 import { apolloExpress, graphiqlExpress } from './expressApollo';
-import testSuite, { Schema, CreateAppOptions } from 'apollo-server-integration-testsuite';
+import testSuite, { Schema, CreateAppOptions } from 'graphql-server-integration-testsuite';
 import { expect } from 'chai';
-import { ApolloOptions } from 'apollo-server-core';
+import { ApolloOptions } from 'graphql-server-core';
 import 'mocha';
 
 function createApp(options: CreateAppOptions = {}) {

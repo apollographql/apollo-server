@@ -1,8 +1,8 @@
 import * as Boom from 'boom';
 import { Server, Request, IReply } from 'hapi';
 import { GraphQLResult, formatError } from 'graphql';
-import * as GraphiQL from 'apollo-server-graphiql';
-import { ApolloOptions, runQuery } from 'apollo-server-core';
+import * as GraphiQL from 'graphql-server-module-graphiql';
+import { ApolloOptions, runQuery } from 'graphql-server-core';
 
 export interface IRegister {
     (server: Server, options: any, next: any): void;

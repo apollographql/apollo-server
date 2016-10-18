@@ -1,5 +1,5 @@
 {
-  "name": "apollo-server-core",
+  "name": "graphql-server-core",
   "version": "0.3.2",
   "description": "Core engine ffor Apollo GraphQL server",
   "main": "dist/index.js",
@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/apollostack/apollo-server/tree/master/packages/apollo-server-core"
+    "url": "https://github.com/apollostack/graphql-server/tree/master/packages/graphql-server-core"
   },
   "keywords": [
     "GraphQL",
@@ -20,9 +20,9 @@
   "author": "Jonas Helfer <jonas@helfer.email>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/apollostack/apollo-server/issues"
+    "url": "https://github.com/apollostack/graphql-server/issues"
   },
-  "homepage": "https://github.com/apollostack/apollo-server#readme",
+  "homepage": "https://github.com/apollostack/graphql-server#readme",
   "dependencies": {},
   "devDependencies": {
     "@types/fibers": "0.0.29",

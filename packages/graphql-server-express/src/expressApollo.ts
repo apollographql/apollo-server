@@ -1,8 +1,8 @@
 import * as express from 'express';
 import * as graphql from 'graphql';
 import * as url from 'url';
-import { ApolloOptions, runQuery } from 'apollo-server-core';
-import * as GraphiQL from 'apollo-server-graphiql';
+import { ApolloOptions, runQuery } from 'graphql-server-core';
+import * as GraphiQL from 'graphql-server-module-graphiql';
 
 export interface ExpressApolloOptionsFunction {
   (req?: express.Request, res?: express.Response): ApolloOptions | Promise<ApolloOptions>;
