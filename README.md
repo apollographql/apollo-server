@@ -117,6 +117,27 @@ app.use(router.allowedMethods());
 app.listen(PORT);
 ```
 
+### Restify
+```js
+import restify from 'restify';
+import { apolloRestify } from 'apollo-server';
+
+const myGraphQLSchema = // ... define or import your schema here!
+const PORT = 3000;
+
+const server = restify.createServer({
+  name: 'restify apollo-server',
+});
+
+server.use(restify.bodyParser());
+server.post('/graphql', apolloRestify({ schema: myGraphQLSchema }));
+
+server.listen(PORT, () => {
+  console.log('%s listening at %s', server.name, server.url);
+});
+
+```
+
 ## Options
 
 Apollo Server can be configured with an options object with the the following fields:

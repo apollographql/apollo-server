@@ -12,4 +12,5 @@ import '../integrations/expressApollo.test';
 import '../integrations/connectApollo.test';
 import '../integrations/hapiApollo.test';
 import '../integrations/koaApollo.test';
+import '../integrations/restifyApollo.test';
 import './testApolloServerHTTP';
