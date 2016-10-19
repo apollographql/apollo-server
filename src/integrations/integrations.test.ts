@@ -31,7 +31,7 @@ const QueryType = new GraphQLObjectType({
         testContext: {
             type: GraphQLString,
             resolve(_, args, context) {
-                return context;
+                return context.testField;
             },
         },
         testRootValue: {
@@ -419,7 +419,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           const expected = 'context works';
           app = createApp({apolloOptions: {
               schema: Schema,
-              context: expected,
+              context: {testField: expected},
           }});
           const req = request(app)
               .post('/graphql')
