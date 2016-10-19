@@ -1,5 +1,5 @@
 import * as restify from 'restify';
-import { apolloRestify, graphiqlRestify } from './restifyApollo';
+import { apolloRestify, graphiqlRestify } from '../';
 import testSuite, { Schema, CreateAppOptions } from './integrations.test';
 import { expect } from 'chai';
 import ApolloOptions from './apolloOptions';
