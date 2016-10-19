@@ -5,6 +5,7 @@ import {
     GraphQLSchema,
     GraphQLObjectType,
     GraphQLString,
+    GraphQLInt,
     GraphQLError,
     introspectionQuery,
     BREAK,
@@ -44,6 +45,16 @@ const QueryType = new GraphQLObjectType({
             args: { echo: { type: GraphQLString } },
             resolve(root, { echo }) {
                 return `hello ${echo}`;
+            },
+        },
+        testBatchIndex: {
+            type: GraphQLInt,
+            resolve(root, _, context) {
+                if (context) {
+                    return context.apolloBatchIndex;
+                } else {
+                    return null;
+                }
             },
         },
         testError: {
@@ -331,6 +342,41 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
               return expect(res.body).to.deep.equal(expected);
           });
       });
+
+       it('puts batch index in context', () => {
+          app = createApp();
+          const expected = [
+              {
+                  data: {
+                      testBatchIndex: 0,
+                  },
+              },
+              {
+                  data: {
+                      testString : 'it works',
+                  },
+              },
+              {
+                  data: {
+                      testBatchIndex: 2,
+                  },
+              },
+          ];
+          const req = request(app)
+              .post('/graphql')
+              .send([{
+                  query: `query test1 { testBatchIndex }`,
+              }, {
+                  query: `query test2 { testString }`,
+              }, {
+                  query: `query test3 { testBatchIndex }`,
+              }]);
+          return req.then((res) => {
+              expect(res.status).to.equal(200);
+              return expect(res.body).to.deep.equal(expected);
+          });
+      });
+
 
       it('can handle a request with a mutation', () => {
           app = createApp();

@@ -128,14 +128,22 @@ async function processQuery(graphqlParams, optionsObject: ApolloOptions, reply) 
   const formatErrorFn = optionsObject.formatError || formatError;
 
   let responses: GraphQLResult[] = [];
+  let batchIndex: number = -1;
   for (let query of graphqlParams) {
+    batchIndex += 1;
     try {
+      // shallow clone the context object to put batch markers in.
+      // create a context object if there isn't one passed in.
+      const context = Object.assign({}, optionsObject.context || {});
+      context.apolloBatchIndex = batchIndex;
+      context.apolloBatchSize = graphqlParams.length;
+
       let params = {
         schema: optionsObject.schema,
         query: query.query,
         variables: query.variables,
         rootValue: optionsObject.rootValue,
-        context: optionsObject.context,
+        context: context,
         operationName: query.operationName,
         logFunction: optionsObject.logFunction,
         validationRules: optionsObject.validationRules,

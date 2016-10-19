@@ -49,11 +49,13 @@ export function apolloKoa(options: ApolloOptions | KoaApolloOptionsFunction): Ko
     }
 
     let responses: Array<graphql.GraphQLResult> = [];
+    let batchIndex: number = -1;
     for (let requestParams of b) {
       try {
         const query = requestParams.query;
         const operationName = requestParams.operationName;
         let variables = requestParams.variables;
+        batchIndex += 1;
 
         if (typeof variables === 'string') {
           try {
@@ -64,11 +66,17 @@ export function apolloKoa(options: ApolloOptions | KoaApolloOptionsFunction): Ko
           }
         }
 
+        // shallow clone the context object to put batch markers in.
+        // create a context object if there isn't one passed in.
+        const context = Object.assign({}, optionsObject.context || {});
+        context.apolloBatchIndex = batchIndex;
+        context.apolloBatchSize = b.length;
+
         let params = {
           schema: optionsObject.schema,
           query: query,
           variables: variables,
-          context: optionsObject.context,
+          context: context,
           rootValue: optionsObject.rootValue,
           operationName: operationName,
           logFunction: optionsObject.logFunction,
