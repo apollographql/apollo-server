@@ -57,6 +57,16 @@ const QueryType = new GraphQLObjectType({
                 }
             },
         },
+        testBatchSize: {
+            type: GraphQLInt,
+            resolve(root, _, context) {
+                if (context) {
+                    return context.apolloBatchSize;
+                } else {
+                    return null;
+                }
+            },
+        },
         testError: {
             type: GraphQLString,
             resolve() {
@@ -349,6 +359,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
               {
                   data: {
                       testBatchIndex: 0,
+                      testBatchSize: 3,
                   },
               },
               {
@@ -365,7 +376,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           const req = request(app)
               .post('/graphql')
               .send([{
-                  query: `query test1 { testBatchIndex }`,
+                  query: `query test1 { testBatchIndex, testBatchSize }`,
               }, {
                   query: `query test2 { testString }`,
               }, {
