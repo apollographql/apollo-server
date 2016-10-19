@@ -91,9 +91,12 @@ export function apolloExpress(options: ApolloOptions | ExpressApolloOptionsFunct
 
         // shallow clone the context object to put batch markers in.
         // create a context object if there isn't one passed in.
-        const context = Object.assign({}, optionsObject.context || {});
-        context.apolloBatchIndex = batchIndex;
-        context.apolloBatchSize = b.length;
+        let context = optionsObject.context;
+        if (isBatch) {
+          context = Object.assign({},  context || {});
+          context.apolloBatchIndex = batchIndex;
+          context.apolloBatchSize = b.length;
+        }
 
         let params = {
           schema: optionsObject.schema,

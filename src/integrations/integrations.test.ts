@@ -389,6 +389,25 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
       });
 
 
+       it('does not put batch index in context', () => {
+          app = createApp();
+          const expected = {
+              data: {
+                  testBatchIndex: null,
+                  testBatchSize: null,
+              },
+          };
+          const req = request(app)
+              .post('/graphql')
+              .send({
+                  query: `query test1 { testBatchIndex, testBatchSize }`,
+              });
+          return req.then((res) => {
+              expect(res.status).to.equal(200);
+              return expect(res.body).to.deep.equal(expected);
+          });
+      });
+
       it('can handle a request with a mutation', () => {
           app = createApp();
           const expected = {
