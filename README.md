@@ -137,11 +137,11 @@ server.start((err) => {
 });
 ```
 
-### Koa
+### Koa ( POST )
 ```js
 import koa from 'koa'; // koa@2
-import koaBody from 'koa-bodyparser'; // koa-bodyparser@next
 import koaRouter from 'koa-router'; // koa-router@next
+import koaBody from 'koa-bodyparser'; // koa-bodyparser@next
 import { graphqlKoa } from 'graphql-server-koa';
 
 const app = new koa();
@@ -151,6 +151,22 @@ const PORT = 3000;
 app.use(koaBody());
 
 router.post('/graphql', graphqlKoa({ schema: myGraphQLSchema }));
+app.use(router.routes());
+app.use(router.allowedMethods());
+app.listen(PORT);
+```
+
+### Koa ( GET )
+```js
+import koa from 'koa';
+import koaRouter from 'koa-router';
+import { graphqlKoa } from 'graphql-server-koa';
+
+const app = new koa();
+const router = new koaRouter();
+const PORT = 3000;
+
+router.get('/graphql', graphqlKoa({ schema: myGraphQLSchema }));
 app.use(router.routes());
 app.use(router.allowedMethods());
 app.listen(PORT);

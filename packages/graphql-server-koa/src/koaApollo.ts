@@ -34,21 +34,38 @@ export function graphqlKoa(options: GraphQLOptions | KoaGraphQLOptionsFunction):
     }
 
     const formatErrorFn = optionsObject.formatError || graphql.formatError;
+    let buffer;
 
-    if (!ctx.request.body) {
-      ctx.status = 500;
-      return ctx.body = 'POST body missing. Did you forget "app.use(koaBody())"?';
+    switch ( ctx.request.method ) {
+      case 'GET':
+        if (!ctx.request.query) {
+            ctx.status = 500;
+            return ctx.body = 'GET query missing';
+        }
+
+        buffer = ctx.request.query;
+        break;
+      case 'POST':
+        if (!ctx.request.body) {
+            ctx.status = 500;
+            return ctx.body = 'POST body missing. Did you forget "app.use(koaBody())"?';
+        }
+
+        buffer = ctx.request.body;
+        break;
+      default:
+        ctx.status = 405;
+        return ctx.body = 'Apollo Server supports only GET/POST requests.';
     }
 
-    let b = ctx.request.body;
     let isBatch = true;
-    if (!Array.isArray(b)) {
+    if (!Array.isArray(buffer)) {
       isBatch = false;
-      b = [b];
+      buffer = [buffer];
     }
 
     let responses: Array<graphql.ExecutionResult> = [];
-    for (let requestParams of b) {
+    for (let requestParams of buffer) {
       try {
         const query = requestParams.query;
         const operationName = requestParams.operationName;

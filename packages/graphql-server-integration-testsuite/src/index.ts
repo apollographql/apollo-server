@@ -165,7 +165,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
               .head('/graphql')
               .send();
           return req.then((res) => {
-              expect(res.status).to.be.oneOf([404, 405]);
+              expect(res.status).to.equal(405);
               // Hapi doesn't return allow header, so we can't test this.
               // return expect(res.headers['allow']).to.equal('POST');
           });
