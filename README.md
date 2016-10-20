@@ -32,7 +32,7 @@ where variant is one of the following:
  - koa
  - hapi
 
-### Express
+### Express ( POST )
 
 ```js
 import express from 'express';
@@ -49,7 +49,23 @@ app.use('/graphql', bodyParser.json(), graphqlExpress({ schema: myGraphQLSchema 
 app.listen(PORT);
 ```
 
-### Connect
+### Express ( GET )
+
+```js
+import express from 'express';
+import { graphqlExpress } from 'graphql-server-express';
+
+const myGraphQLSchema = // ... define or import your schema here!
+const PORT = 3000;
+
+var app = express();
+
+app.use('/graphql', graphqlExpress({ schema: myGraphQLSchema }));
+
+app.listen(PORT);
+```
+
+### Connect ( POST )
 ```js
 import connect from 'connect';
 import bodyParser from 'body-parser';
@@ -61,6 +77,22 @@ const PORT = 3000;
 var app = connect();
 
 app.use('/graphql', bodyParser.json());
+app.use('/graphql', graphqlConnect({ schema: myGraphQLSchema }));
+
+http.createServer(app).listen(PORT);
+```
+
+### Connect ( GET )
+```js
+import connect from 'connect';
+import { graphqlConnect } from 'graphql-server-express';
+import http from 'http';
+
+const PORT = 3000;
+
+var app = connect();
+
+app.use('/graphql', require('connect-query')());
 app.use('/graphql', graphqlConnect({ schema: myGraphQLSchema }));
 
 http.createServer(app).listen(PORT);
