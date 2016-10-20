@@ -70,11 +70,13 @@ export function apolloExpress(options: ApolloOptions | ExpressApolloOptionsFunct
     }
 
     let responses: Array<graphql.GraphQLResult> = [];
+    let batchIndex: number = -1;
     for (let requestParams of b) {
       try {
         const query = requestParams.query;
         const operationName = requestParams.operationName;
         let variables = requestParams.variables;
+        batchIndex += 1;
 
         if (typeof variables === 'string') {
           try {
@@ -87,11 +89,20 @@ export function apolloExpress(options: ApolloOptions | ExpressApolloOptionsFunct
           }
         }
 
+        // shallow clone the context object to put batch markers in.
+        // create a context object if there isn't one passed in.
+        let context = optionsObject.context;
+        if (isBatch) {
+          context = Object.assign({},  context || {});
+          context.apolloBatchIndex = batchIndex;
+          context.apolloBatchSize = b.length;
+        }
+
         let params = {
           schema: optionsObject.schema,
           query: query,
           variables: variables,
-          context: optionsObject.context,
+          context: context,
           rootValue: optionsObject.rootValue,
           operationName: operationName,
           logFunction: optionsObject.logFunction,

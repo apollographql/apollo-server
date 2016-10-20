@@ -42,7 +42,7 @@ const apolloHapi: IRegister = function(server: Server, options: HapiPluginOption
       method: 'getApolloOptions',
     }, {
       assign: 'graphQL',
-      method: 'processQuery(pre.graphqlParams, pre.apolloOptions)',
+      method: 'processQuery(pre.graphqlParams, pre.apolloOptions, pre.isBatch)',
     }],
   });
 
@@ -124,18 +124,29 @@ async function getApolloOptions(request: Request, reply: IReply): Promise<{}> {
   reply(optionsObject);
 }
 
-async function processQuery(graphqlParams, optionsObject: ApolloOptions, reply) {
+async function processQuery(graphqlParams, optionsObject: ApolloOptions, isBatch: boolean, reply) {
   const formatErrorFn = optionsObject.formatError || formatError;
 
   let responses: GraphQLResult[] = [];
+  let batchIndex: number = -1;
   for (let query of graphqlParams) {
+    batchIndex += 1;
     try {
+      // shallow clone the context object to put batch markers in.
+      // create a context object if there isn't one passed in.
+      let context = optionsObject.context;
+      if (isBatch) {
+        context = Object.assign({},  context || {});
+        context.apolloBatchIndex = batchIndex;
+        context.apolloBatchSize = graphqlParams.length;
+      }
+
       let params = {
         schema: optionsObject.schema,
         query: query.query,
         variables: query.variables,
         rootValue: optionsObject.rootValue,
-        context: optionsObject.context,
+        context: context,
         operationName: query.operationName,
         logFunction: optionsObject.logFunction,
         validationRules: optionsObject.validationRules,
