@@ -98,7 +98,7 @@ app.use('/graphql', graphqlConnect({ schema: myGraphQLSchema }));
 http.createServer(app).listen(PORT);
 ```
 
-### Hapi
+### Hapi ( POST / GET )
 
 Now with the Hapi plugins `graphqlHapi` and `graphiqlHapi` you can pass a route object that includes options to be applied to the route.  The example below enables CORS on the `/graphql` route.
 

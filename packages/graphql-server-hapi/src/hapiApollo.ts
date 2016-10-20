@@ -20,7 +20,8 @@ export interface HapiPluginOptions {
 }
 
 const graphqlHapi: IRegister = function(server: Server, options: HapiPluginOptions, next) {
-  server.method('verifyPayload', verifyPayload);
+  server.method('assignIsBatch', assignIsBatch);
+  server.method('assignBuffer', assignBuffer);
   server.method('getGraphQLParams', getGraphQLParams);
   server.method('getGraphQLOptions', getGraphQLOptions);
   server.method('processQuery', processQuery);
@@ -29,12 +30,17 @@ const graphqlHapi: IRegister = function(server: Server, options: HapiPluginOptio
     plugins: {
       graphql: isOptionsFunction(options.graphqlOptions) ? options.graphqlOptions : () => options.graphqlOptions,
     },
-    pre: [{
+    pre: [
+    {
+        assign: 'buffer',
+        method: 'assignBuffer(method, payload, query)',
+    },
+    {
       assign: 'isBatch',
-      method: 'verifyPayload(payload)',
+      method: 'assignIsBatch(method, pre.buffer)',
     }, {
       assign: 'graphqlParams',
-      method: 'getGraphQLParams(payload, pre.isBatch)',
+      method: 'getGraphQLParams(pre.buffer, pre.isBatch)',
     }, {
       assign: 'graphqlOptions',
       method: 'getGraphQLOptions',
@@ -45,7 +51,7 @@ const graphqlHapi: IRegister = function(server: Server, options: HapiPluginOptio
   });
 
   server.route({
-    method: 'POST',
+    method: ['GET', 'POST'],
     path: options.path || '/graphql',
     config,
     handler: function(request, reply) {
@@ -71,23 +77,44 @@ graphqlHapi.attributes = {
   version: '0.0.1',
 };
 
-function verifyPayload(payload, reply) {
-  if (!payload) {
-    return reply(createErr(500, 'POST body missing.'));
-  }
-
-  // TODO: do something different here if the body is an array.
-  // Throw an error if body isn't either array or object.
-  reply(payload && Array.isArray(payload));
+function assignBuffer(method, payload, query, reply) {
+    switch ( method ) {
+        case 'get':
+            if (!query) {
+                return reply(createErr(500, 'GET query missing.'));
+            }
+            return reply(query);
+        case 'post':
+            if (!payload) {
+                return reply(createErr(500, 'POST body missing.'));
+            }
+            return reply(payload);
+        default:
+            return reply(createErr(405, 'Apollo Server supports only GET/POST requests.'));
+    }
 }
 
-function getGraphQLParams(payload, isBatch, reply) {
+function assignIsBatch(method, buffer, reply) {
+  // TODO: do something different here if the body is an array.
+  // Throw an error if body isn't either array or object.
+
+  switch ( method ) {
+      case 'get':
+          return reply(false);
+      case 'post':
+          return reply(Array.isArray(buffer));
+      default:
+          throw new Error(`Invalid case reached, method is ${method}`);
+  }
+}
+
+function getGraphQLParams(buffer, isBatch, reply) {
   if (!isBatch) {
-    payload = [payload];
+    buffer = [buffer];
   }
 
   const params = [];
-  for (let query of payload) {
+  for (let query of buffer) {
     let variables = query.variables;
     if (variables && typeof variables === 'string') {
       try {
