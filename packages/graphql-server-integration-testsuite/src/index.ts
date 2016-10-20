@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import { stub } from 'sinon';
 import 'mocha';
+import * as querystring from 'querystring';
 
 import {
     GraphQLSchema,
@@ -158,10 +159,10 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
       });
 
-      it('rejects the request if the method is not POST', () => {
+      it('rejects the request if the method is not POST or GET', () => {
           app = createApp({excludeParser: true});
           const req = request(app)
-              .get('/graphql')
+              .head('/graphql')
               .send();
           return req.then((res) => {
               expect(res.status).to.be.oneOf([404, 405]);
@@ -178,6 +179,39 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           return req.then((res) => {
               expect(res.status).to.equal(500);
               return expect(res.error.text).to.contain('POST body missing.');
+          });
+      });
+
+      it('can handle a basic GET request', () => {
+          app = createApp();
+          const expected = {
+              testString: 'it works',
+          };
+          const query = {
+              query: 'query test{ testString }',
+          };
+          const req = request(app)
+              .get(`/graphql?${querystring.stringify(query)}`);
+          return req.then((res) => {
+              expect(res.status).to.equal(200);
+              return expect(res.body.data).to.deep.equal(expected);
+          });
+      });
+
+      it('can handle a GET request with variables', () => {
+          app = createApp();
+          const query = {
+              query: 'query test($echo: String){ testArgument(echo: $echo) }',
+              variables: JSON.stringify({ echo: 'world' }),
+          };
+          const expected = {
+              testArgument: 'hello world',
+          };
+          const req = request(app)
+              .get(`/graphql?${querystring.stringify(query)}`);
+          return req.then((res) => {
+              expect(res.status).to.equal(200);
+              return expect(res.body.data).to.deep.equal(expected);
           });
       });
 

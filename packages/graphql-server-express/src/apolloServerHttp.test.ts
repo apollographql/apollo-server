@@ -372,11 +372,11 @@ describe(`GraphQL-HTTP (apolloServer) tests for ${version} express`, () => {
       app.use(urlString(), graphqlExpress({ schema: TestSchema }));
 
       const response = await request(app)
-          .get(urlString({ query: '{test}' }));
+          .put(urlString({ query: '{test}' }));
 
       expect(response.status).to.equal(405);
-      expect(response.headers.allow).to.equal('POST');
-      return expect(response.text).to.contain('Apollo Server supports only POST requests.');
+      expect(response.headers.allow).to.equal('GET, POST');
+      return expect(response.text).to.contain('Apollo Server supports only GET/POST requests.');
     });
   });
 

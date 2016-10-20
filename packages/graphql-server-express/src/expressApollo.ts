@@ -42,33 +42,48 @@ export function graphqlExpress(options: GraphQLOptions | ExpressGraphQLOptionsFu
     }
 
     const formatErrorFn = optionsObject.formatError || graphql.formatError;
+    let buffer;
 
-    if (req.method !== 'POST') {
-      res.setHeader('Allow', 'POST');
-      res.statusCode = 405;
-      res.write('Apollo Server supports only POST requests.');
-      res.end();
-      return;
+    switch ( req.method ) {
+      case 'POST':
+        if ( !req.body ) {
+          res.statusCode = 500;
+          res.write('POST body missing. Did you forget "app.use(bodyParser.json())"?');
+          res.end();
+          return;
+        }
+
+        buffer = req.body;
+        break;
+      case 'GET':
+        if ( !req.query ) {
+          res.statusCode = 500;
+          res.write('GET query missing.');
+          res.end();
+          return;
+        }
+
+        buffer = req.query;
+        break;
+
+      default:
+        res.setHeader('Allow', 'GET, POST');
+        res.statusCode = 405;
+        res.write('Apollo Server supports only GET/POST requests.');
+        res.end();
+        return;
     }
 
-    if (!req.body) {
-      res.statusCode = 500;
-      res.write('POST body missing. Did you forget "app.use(bodyParser.json())"?');
-      res.end();
-      return;
-    }
-
-    let b = req.body;
     let isBatch = true;
     // TODO: do something different here if the body is an array.
     // Throw an error if body isn't either array or object.
-    if (!Array.isArray(b)) {
+    if (!Array.isArray(buffer)) {
       isBatch = false;
-      b = [b];
+      buffer = [buffer];
     }
 
     let responses: Array<graphql.ExecutionResult> = [];
-    for (let requestParams of b) {
+    for (let requestParams of buffer) {
       try {
         const query = requestParams.query;
         const operationName = requestParams.operationName;
