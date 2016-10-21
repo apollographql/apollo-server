@@ -64,11 +64,19 @@ export function apolloKoa(options: ApolloOptions | KoaApolloOptionsFunction): Ko
           }
         }
 
+        // Shallow clone context for queries in batches. This allows
+        // users to distinguish multiple queries in the batch and to
+        // modify the context object without interfering with each other.
+        let context = optionsObject.context;
+        if (isBatch) {
+          context = Object.assign({},  context || {});
+        }
+
         let params = {
           schema: optionsObject.schema,
           query: query,
           variables: variables,
-          context: optionsObject.context,
+          context: context,
           rootValue: optionsObject.rootValue,
           operationName: operationName,
           logFunction: optionsObject.logFunction,
