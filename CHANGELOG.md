@@ -2,6 +2,10 @@
 
 ### VNEXT
 
+* ...
+
+### v0.3.3
+
 * Fix passHeader option in GraphiQL (Both Hapi and Koa)
 * Pass `ctx` instead of `ctx.request` to options function in Koa integration ([@HriBB](https://github.com/HriBB)) in [PR #154](https://github.com/apollostack/apollo-server/pull/154)
 * Manage TypeScript declaration files using npm. ([@od1k](https:/github.com/od1k) in [#162](https://github.com/apollostack/apollo-server/pull/162))
