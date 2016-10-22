@@ -30,7 +30,11 @@ const QueryType = new GraphQLObjectType({
         testContext: {
             type: GraphQLString,
             resolve(_, args, context) {
-                return context;
+                if (context.otherField) {
+                    return 'unexpected';
+                }
+                context.otherField = true;
+                return context.testField;
             },
         },
         testRootValue: {
@@ -332,6 +336,37 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
       });
 
+      it('clones batch context', () => {
+          app = createApp();
+          app = createApp({apolloOptions: {
+              schema: Schema,
+              context: {testField: 'expected'},
+          }});
+          const expected = [
+              {
+                  data: {
+                      testContext: 'expected',
+                  },
+              },
+              {
+                  data: {
+                      testContext: 'expected',
+                  },
+              },
+          ];
+          const req = request(app)
+              .post('/graphql')
+              .send([{
+                  query: 'query test{ testContext }',
+              }, {
+                  query: 'query test{ testContext }',
+              }]);
+          return req.then((res) => {
+              expect(res.status).to.equal(200);
+              return expect(res.body).to.deep.equal(expected);
+          });
+      });
+
       it('can handle a request with a mutation', () => {
           app = createApp();
           const expected = {
@@ -373,7 +408,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           const expected = 'context works';
           app = createApp({apolloOptions: {
               schema: Schema,
-              context: expected,
+              context: {testField: expected},
           }});
           const req = request(app)
               .post('/graphql')
