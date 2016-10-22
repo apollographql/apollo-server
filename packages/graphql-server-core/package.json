@@ -1,7 +1,7 @@
 {
   "name": "graphql-server-core",
   "version": "0.3.2",
-  "description": "Core engine ffor Apollo GraphQL server",
+  "description": "Core engine for Apollo GraphQL server",
   "main": "dist/index.js",
   "scripts": {
     "compile": "tsc",
