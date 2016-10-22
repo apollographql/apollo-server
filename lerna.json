@@ -4,7 +4,6 @@
   "changelog": {
     "repo": "apollostack/graphql-server",
     "labels": {
-      "tag: spec compliancy": ":eyeglasses: Spec Compliancy",
       "tag: breaking change": ":boom: Breaking Change",
       "tag: new feature": ":rocket: New Feature",
       "tag: bug fix": ":bug: Bug Fix",
