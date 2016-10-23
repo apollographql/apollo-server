@@ -1,2 +1,2 @@
 export { runQuery, LogFunction, LogMessage, LogStep, LogAction } from './runQuery'
-export { default as ApolloOptions} from './graphqlOptions'
+export { default as GraphQLOptions} from './graphqlOptions'

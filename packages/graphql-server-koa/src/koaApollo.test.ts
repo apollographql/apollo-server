@@ -2,7 +2,7 @@ import * as koa from 'koa';
 import * as koaRouter from 'koa-router';
 import * as koaBody from 'koa-bodyparser';
 import { graphqlKoa, graphiqlKoa } from './koaApollo';
-import { ApolloOptions } from 'graphql-server-core';
+import { GraphQLOptions } from 'graphql-server-core';
 import { expect } from 'chai';
 import * as http from 'http';
 
@@ -32,7 +32,7 @@ function destroyApp(app) {
 
 describe('koaApollo', () => {
   it('throws error if called without schema', function(){
-     expect(() => graphqlKoa(undefined as ApolloOptions)).to.throw('Apollo Server requires options.');
+     expect(() => graphqlKoa(undefined as GraphQLOptions)).to.throw('Apollo Server requires options.');
   });
 
   it('throws an error if called with more than one argument', function(){

@@ -1,11 +1,11 @@
 import * as express from 'express';
 import * as graphql from 'graphql';
 import * as url from 'url';
-import { ApolloOptions, runQuery } from 'graphql-server-core';
+import { GraphQLOptions, runQuery } from 'graphql-server-core';
 import * as GraphiQL from 'graphql-server-module-graphiql';
 
-export interface ExpressApolloOptionsFunction {
-  (req?: express.Request, res?: express.Response): ApolloOptions | Promise<ApolloOptions>;
+export interface ExpressGraphQLOptionsFunction {
+  (req?: express.Request, res?: express.Response): GraphQLOptions | Promise<GraphQLOptions>;
 }
 
 // Design principles:
@@ -17,7 +17,7 @@ export interface ExpressHandler {
   (req: express.Request, res: express.Response, next): void;
 }
 
-export function graphqlExpress(options: ApolloOptions | ExpressApolloOptionsFunction): ExpressHandler {
+export function graphqlExpress(options: GraphQLOptions | ExpressGraphQLOptionsFunction): ExpressHandler {
   if (!options) {
     throw new Error('Apollo Server requires options.');
   }
@@ -28,7 +28,7 @@ export function graphqlExpress(options: ApolloOptions | ExpressApolloOptionsFunc
   }
 
   return async (req: express.Request, res: express.Response, next) => {
-    let optionsObject: ApolloOptions;
+    let optionsObject: GraphQLOptions;
     if (isOptionsFunction(options)) {
       try {
         optionsObject = await options(req, res);
@@ -133,7 +133,7 @@ export function graphqlExpress(options: ApolloOptions | ExpressApolloOptionsFunc
   };
 }
 
-function isOptionsFunction(arg: ApolloOptions | ExpressApolloOptionsFunction): arg is ExpressApolloOptionsFunction {
+function isOptionsFunction(arg: GraphQLOptions | ExpressGraphQLOptionsFunction): arg is ExpressGraphQLOptionsFunction {
   return typeof arg === 'function';
 }
 

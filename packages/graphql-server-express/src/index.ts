@@ -1,5 +1,5 @@
 export {
-  ExpressApolloOptionsFunction,
+  ExpressGraphQLOptionsFunction,
   ExpressHandler,
   graphqlExpress,
   graphiqlExpress,

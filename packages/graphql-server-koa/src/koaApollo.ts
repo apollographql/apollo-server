@@ -1,17 +1,17 @@
 import * as koa from 'koa';
 import * as graphql from 'graphql';
-import { ApolloOptions, runQuery } from 'graphql-server-core';
+import { GraphQLOptions, runQuery } from 'graphql-server-core';
 import * as GraphiQL from 'graphql-server-module-graphiql';
 
 export interface KoaGraphQLOptionsFunction {
-  (ctx: koa.Context): ApolloOptions | Promise<ApolloOptions>;
+  (ctx: koa.Context): GraphQLOptions | Promise<GraphQLOptions>;
 }
 
 export interface KoaHandler {
   (req: any, next): void;
 }
 
-export function graphqlKoa(options: ApolloOptions | KoaGraphQLOptionsFunction): KoaHandler {
+export function graphqlKoa(options: GraphQLOptions | KoaGraphQLOptionsFunction): KoaHandler {
   if (!options) {
     throw new Error('Apollo Server requires options.');
   }
@@ -21,7 +21,7 @@ export function graphqlKoa(options: ApolloOptions | KoaGraphQLOptionsFunction): 
   }
 
   return async (ctx, next) => {
-    let optionsObject: ApolloOptions;
+    let optionsObject: GraphQLOptions;
     if (isOptionsFunction(options)) {
       try {
         optionsObject = await options(ctx);
@@ -109,7 +109,7 @@ export function graphqlKoa(options: ApolloOptions | KoaGraphQLOptionsFunction): 
   };
 }
 
-function isOptionsFunction(arg: ApolloOptions | KoaGraphQLOptionsFunction): arg is KoaGraphQLOptionsFunction {
+function isOptionsFunction(arg: GraphQLOptions | KoaGraphQLOptionsFunction): arg is KoaGraphQLOptionsFunction {
   return typeof arg === 'function';
 }
 

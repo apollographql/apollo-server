@@ -3,7 +3,7 @@ import * as bodyParser from 'body-parser';
 import { graphqlExpress, graphiqlExpress } from './expressApollo';
 import testSuite, { Schema, CreateAppOptions } from 'graphql-server-integration-testsuite';
 import { expect } from 'chai';
-import { ApolloOptions } from 'graphql-server-core';
+import { GraphQLOptions } from 'graphql-server-core';
 import 'mocha';
 
 function createApp(options: CreateAppOptions = {}) {
@@ -22,7 +22,7 @@ function createApp(options: CreateAppOptions = {}) {
 
 describe('expressApollo', () => {
   it('throws error if called without schema', function(){
-     expect(() => graphqlExpress(undefined as ApolloOptions)).to.throw('Apollo Server requires options.');
+     expect(() => graphqlExpress(undefined as GraphQLOptions)).to.throw('Apollo Server requires options.');
   });
 
   it('throws an error if called with more than one argument', function(){

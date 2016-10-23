@@ -2,7 +2,7 @@ import * as Boom from 'boom';
 import { Server, Request, IReply } from 'hapi';
 import { GraphQLResult, formatError } from 'graphql';
 import * as GraphiQL from 'graphql-server-module-graphiql';
-import { ApolloOptions, runQuery } from 'graphql-server-core';
+import { GraphQLOptions, runQuery } from 'graphql-server-core';
 
 export interface IRegister {
     (server: Server, options: any, next: any): void;
@@ -10,13 +10,13 @@ export interface IRegister {
 }
 
 export interface HapiOptionsFunction {
-  (req?: Request): ApolloOptions | Promise<ApolloOptions>;
+  (req?: Request): GraphQLOptions | Promise<GraphQLOptions>;
 }
 
 export interface HapiPluginOptions {
   path: string;
   route?: any;
-  graphqlOptions: ApolloOptions | HapiOptionsFunction;
+  graphqlOptions: GraphQLOptions | HapiOptionsFunction;
 }
 
 const graphqlHapi: IRegister = function(server: Server, options: HapiPluginOptions, next) {
@@ -108,7 +108,7 @@ function getGraphQLParams(payload, isBatch, reply) {
 
 async function getGraphQLOptions(request: Request, reply: IReply): Promise<{}> {
   const options = request.route.settings.plugins['graphql'];
-  let optionsObject: ApolloOptions;
+  let optionsObject: GraphQLOptions;
   if (isOptionsFunction(options)) {
     try {
       const opsFunc: HapiOptionsFunction = <HapiOptionsFunction>options;
@@ -117,12 +117,12 @@ async function getGraphQLOptions(request: Request, reply: IReply): Promise<{}> {
       return reply(createErr(500, `Invalid options provided to ApolloServer: ${e.message}`));
     }
   } else {
-    optionsObject = <ApolloOptions>options;
+    optionsObject = <GraphQLOptions>options;
   }
   reply(optionsObject);
 }
 
-async function processQuery(graphqlParams, optionsObject: ApolloOptions, isBatch: boolean, reply) {
+async function processQuery(graphqlParams, optionsObject: GraphQLOptions, isBatch: boolean, reply) {
   const formatErrorFn = optionsObject.formatError || formatError;
 
   let responses: GraphQLResult[] = [];
@@ -162,7 +162,7 @@ async function processQuery(graphqlParams, optionsObject: ApolloOptions, isBatch
   return reply(responses);
 }
 
-function isOptionsFunction(arg: ApolloOptions | HapiOptionsFunction): arg is HapiOptionsFunction {
+function isOptionsFunction(arg: GraphQLOptions | HapiOptionsFunction): arg is HapiOptionsFunction {
   return typeof arg === 'function';
 }
 

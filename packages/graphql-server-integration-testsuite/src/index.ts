@@ -14,7 +14,7 @@ import {
 // tslint:disable-next-line
 const request = require('supertest-as-promised');
 
-import { ApolloOptions } from 'graphql-server-core';
+import { GraphQLOptions } from 'graphql-server-core';
 import * as GraphiQL from 'graphql-server-module-graphiql';
 import { OperationStore } from 'graphql-server-module-operation-store';
 
@@ -79,7 +79,7 @@ export const Schema = new GraphQLSchema({
 
 export interface CreateAppOptions {
   excludeParser?: boolean;
-  graphqlOptions?: ApolloOptions | {(): ApolloOptions | Promise<{}>};
+  graphqlOptions?: GraphQLOptions | {(): GraphQLOptions | Promise<{}>};
   graphiqlOptions?: GraphiQL.GraphiQLData;
 }
 
@@ -107,7 +107,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
 
     describe('graphqlHTTP', () => {
       it('can be called with an options function', () => {
-          app = createApp({graphqlOptions: (): ApolloOptions => ({schema: Schema})});
+          app = createApp({graphqlOptions: (): GraphQLOptions => ({schema: Schema})});
           const expected = {
               testString: 'it works',
           };
@@ -144,7 +144,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
 
       it('throws an error if options promise is rejected', () => {
           app = createApp({ graphqlOptions: () => {
-            return Promise.reject({}) as any as ApolloOptions;
+            return Promise.reject({}) as any as GraphQLOptions;
           }});
           const expected = 'Invalid options';
           const req = request(app)
