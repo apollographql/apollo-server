@@ -1,0 +1,42 @@
+{
+  "name": "graphql-server-integration-testsuite",
+  "private": true,
+  "version": "0.4.2",
+  "description": "Apollo Server Integrations testsuite",
+  "main": "dist/index.js",
+  "scripts": {
+    "compile": "tsc",
+    "prepublish": "npm run compile"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/apollostack/graphql-server/tree/master/packages/graphql-server-integration-testsuite"
+  },
+  "keywords": [],
+  "author": "Jonas Helfer <jonas@helfer.email>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/apollostack/graphql-server/issues"
+  },
+  "homepage": "https://github.com/apollostack/graphql-server#readme",
+  "dependencies": {
+    "graphql-server-core": "^0.4.2",
+    "graphql-server-module-graphiql": "^0.4.0",
+    "graphql-server-module-operation-store": "^0.4.0",
+    "supertest": "^2.0.0",
+    "supertest-as-promised": "^4.0.0"
+  },
+  "devDependencies": {
+    "typed-graphql": "^1.0.2"
+  },
+  "peerDependencies": {
+    "graphql": "^0.6.1 || ^0.7.0"
+  },
+  "optionalDependencies": {
+    "typed-graphql": "^1.0.2"
+  },
+  "typings": "dist/index.d.ts",
+  "typescript": {
+    "definition": "dist/index.d.ts"
+  }
+}

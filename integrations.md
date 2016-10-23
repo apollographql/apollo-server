@@ -8,7 +8,7 @@ An Express Middleware for the Apollo Server
 import * as graphql from "graphql";
 import * as express from "express";
 import * as bodyParser from "body-parser";
-import { graphqlHTTP, renderGraphiQL } from "apollo-server";
+import { apolloExpress, graphiqlExpress } from "graphql-server-express";
 
 const port = 3000;
 const endpointURL = "/graphql";
@@ -24,8 +24,8 @@ const schema = new graphql.GraphQLSchema({
 });
 
 app.use(bodyParser.json());
-app.get("/", renderGraphiQL({endpointURL}));
-app.post(endpointURL, graphqlHTTP({schema}));
+app.get("/", graphiqlExpress({endpointURL}));
+app.post(endpointURL, apolloExpress({schema}));
 
 app.listen(port, () => {
     console.log(`Server is listen on ${port}`);

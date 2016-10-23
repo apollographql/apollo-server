@@ -3,9 +3,9 @@ node_js:
   - "6"
   - "4"
 install:
+  - npm install -g npm@3
   - npm install -g coveralls
   - npm install
-  - npm run typings
 
 script:
   - npm test

@@ -2,7 +2,18 @@
 
 ### VNEXT
 
-* ...
+### v0.4.2
+
+* **Restructure Apollo Server into 6 new packages, and rename to GraphQL Server** ([@DxCx](https://github.com/DxCx)) and ([@stubailo](https://github.com/stubailo)) in [#183](https://github.com/apollostack/graphql-server/pull/183) and [#164](https://github.com/apollostack/graphql-server/pull/183).
+* There are now 6 packages that make up the GraphQL server family:
+    * `graphql-server-core`
+    * `graphql-module-graphiql`
+    * `graphql-module-operation-store`
+    * `graphql-server-express`
+    * `graphql-server-hapi`
+    * `graphql-server-koa`
+* Exports have been renamed. Everything that used to export `apollo*` now exports `graphql*`, for example `apolloExpress` has become `graphqlExpress`.
+* The repository is now managed using [Lerna](https://github.com/lerna/lerna).
 
 ### v0.3.3
 

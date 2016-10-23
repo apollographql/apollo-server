@@ -1,0 +1,54 @@
+{
+  "name": "graphql-server-express",
+  "version": "0.4.2",
+  "description": "Production-ready Node.js GraphQL server for Express and Connect",
+  "main": "dist/index.js",
+  "scripts": {
+    "compile": "tsc",
+    "prepublish": "npm run compile"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/apollostack/graphql-server/tree/master/packages/graphql-server-express"
+  },
+  "keywords": [
+    "GraphQL",
+    "Apollo",
+    "Server",
+    "Express",
+    "Connect",
+    "Javascript"
+  ],
+  "author": "Jonas Helfer <jonas@helfer.email>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/apollostack/graphql-server/issues"
+  },
+  "homepage": "https://github.com/apollostack/graphql-server#readme",
+  "dependencies": {
+    "graphql-server-core": "^0.4.2",
+    "graphql-server-module-graphiql": "^0.4.0"
+  },
+  "devDependencies": {
+    "@types/body-parser": "0.0.33",
+    "@types/connect": "^3.4.30",
+    "@types/express": "^4.0.33",
+    "@types/multer": "0.0.32",
+    "graphql-server-integration-testsuite": "^0.4.2",
+    "body-parser": "^1.15.2",
+    "connect": "^3.4.1",
+    "express": "^4.14.0",
+    "multer": "^1.2.0",
+    "typed-graphql": "^1.0.2"
+  },
+  "peerDependencies": {
+    "graphql": "^0.6.1 || ^0.7.0"
+  },
+  "optionalDependencies": {
+    "@types/express": "^4.0.33"
+  },
+  "typings": "dist/index.d.ts",
+  "typescript": {
+    "definition": "dist/index.d.ts"
+  }
+}
