@@ -3,7 +3,7 @@ import * as graphql from 'graphql';
 import { ApolloOptions, runQuery } from 'graphql-server-core';
 import * as GraphiQL from 'graphql-server-module-graphiql';
 
-export interface KoaApolloOptionsFunction {
+export interface KoaGraphQLOptionsFunction {
   (ctx: koa.Context): ApolloOptions | Promise<ApolloOptions>;
 }
 
@@ -11,7 +11,7 @@ export interface KoaHandler {
   (req: any, next): void;
 }
 
-export function apolloKoa(options: ApolloOptions | KoaApolloOptionsFunction): KoaHandler {
+export function graphqlKoa(options: ApolloOptions | KoaGraphQLOptionsFunction): KoaHandler {
   if (!options) {
     throw new Error('Apollo Server requires options.');
   }
@@ -109,7 +109,7 @@ export function apolloKoa(options: ApolloOptions | KoaApolloOptionsFunction): Ko
   };
 }
 
-function isOptionsFunction(arg: ApolloOptions | KoaApolloOptionsFunction): arg is KoaApolloOptionsFunction {
+function isOptionsFunction(arg: ApolloOptions | KoaGraphQLOptionsFunction): arg is KoaGraphQLOptionsFunction {
   return typeof arg === 'function';
 }
 

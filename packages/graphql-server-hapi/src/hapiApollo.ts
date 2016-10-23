@@ -19,7 +19,7 @@ export interface HapiPluginOptions {
   apolloOptions: ApolloOptions | HapiOptionsFunction;
 }
 
-const apolloHapi: IRegister = function(server: Server, options: HapiPluginOptions, next) {
+const graphqlHapi: IRegister = function(server: Server, options: HapiPluginOptions, next) {
   server.method('verifyPayload', verifyPayload);
   server.method('getGraphQLParams', getGraphQLParams);
   server.method('getApolloOptions', getApolloOptions);
@@ -66,7 +66,7 @@ const apolloHapi: IRegister = function(server: Server, options: HapiPluginOption
   return next();
 };
 
-apolloHapi.attributes = {
+graphqlHapi.attributes = {
   name: 'graphql',
   version: '0.0.1',
 };
@@ -231,4 +231,4 @@ function renderGraphiQL(route, graphiqlParams: any, reply) {
   reply(graphiQLString);
 }
 
-export { apolloHapi, graphiqlHapi };
+export { graphqlHapi, graphiqlHapi };

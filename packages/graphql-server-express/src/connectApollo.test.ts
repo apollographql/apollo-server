@@ -1,6 +1,6 @@
 import * as connect from 'connect';
 import * as bodyParser from 'body-parser';
-import { apolloConnect, graphiqlConnect } from './connectApollo';
+import { graphqlConnect, graphiqlConnect } from './connectApollo';
 import 'mocha';
 
 import testSuite, { Schema, CreateAppOptions } from 'graphql-server-integration-testsuite';
@@ -15,7 +15,7 @@ function createConnectApp(options: CreateAppOptions = {}) {
   if (options.graphiqlOptions ) {
     app.use('/graphiql', graphiqlConnect( options.graphiqlOptions ));
   }
-  app.use('/graphql', apolloConnect( options.apolloOptions ));
+  app.use('/graphql', graphqlConnect( options.apolloOptions ));
   return app;
 }
 

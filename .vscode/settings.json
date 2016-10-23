@@ -16,6 +16,7 @@
     "tslint.json": true,
     "typings.json": false,
     "typings": true,
-    ".gitignore": false
+    ".gitignore": false,
+    "**/dist": true
   }
 }

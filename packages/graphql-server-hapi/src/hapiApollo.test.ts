@@ -1,5 +1,5 @@
 import * as hapi from 'hapi';
-import { apolloHapi, graphiqlHapi, HapiPluginOptions } from './hapiApollo';
+import { graphqlHapi, graphiqlHapi, HapiPluginOptions } from './hapiApollo';
 import 'mocha';
 
 import testSuite, { Schema } from 'graphql-server-integration-testsuite';
@@ -13,7 +13,7 @@ function createApp(createOptions: HapiPluginOptions) {
   });
 
   server.register({
-      register: apolloHapi,
+      register: graphqlHapi,
       options: {
         apolloOptions: createOptions ? createOptions.apolloOptions : { schema: Schema },
         path: '/graphql',

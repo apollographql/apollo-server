@@ -1,11 +1,11 @@
 export {
   ExpressApolloOptionsFunction,
   ExpressHandler,
-  apolloExpress,
+  graphqlExpress,
   graphiqlExpress,
 } from './expressApollo';
 
 export {
-  apolloConnect,
+  graphqlConnect,
   graphiqlConnect,
 } from './connectApollo';

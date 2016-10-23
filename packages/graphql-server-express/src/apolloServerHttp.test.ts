@@ -10,7 +10,7 @@
  * sure apolloServer still works if used in the place of express-graphql.
  */
 
-import { apolloExpress } from './expressApollo';
+import { graphqlExpress } from './expressApollo';
 
 /**
  *  Copyright (c) 2015, Facebook, Inc.
@@ -158,7 +158,7 @@ describe(`GraphQL-HTTP (apolloServer) tests for ${version} express`, () => {
       const app = express();
 
       app.use(urlString(), bodyParser.json());
-      app.use(urlString(), apolloExpress(() => ({
+      app.use(urlString(), graphqlExpress(() => ({
         schema: TestSchema
       })));
 
@@ -185,7 +185,7 @@ describe(`GraphQL-HTTP (apolloServer) tests for ${version} express`, () => {
       const app = express();
 
       app.use(urlString(), bodyParser.json());
-      app.use(urlString(), apolloExpress(() => ({
+      app.use(urlString(), graphqlExpress(() => ({
         schema: TestSchema
       })));
 
@@ -253,7 +253,7 @@ describe(`GraphQL-HTTP (apolloServer) tests for ${version} express`, () => {
 
       // Providing the request as part of `rootValue` allows it to
       // be accessible from within Schema resolve functions.
-      app.use(urlString(), apolloExpress(req => {
+      app.use(urlString(), graphqlExpress(req => {
         return {
           schema: TestMutationSchema,
           rootValue: { request: req }
@@ -285,7 +285,7 @@ describe(`GraphQL-HTTP (apolloServer) tests for ${version} express`, () => {
       const app = express();
 
       app.use(urlString(), bodyParser.json());
-      app.use(urlString(), apolloExpress({
+      app.use(urlString(), graphqlExpress({
         schema: TestSchema
       }));
 
@@ -310,7 +310,7 @@ describe(`GraphQL-HTTP (apolloServer) tests for ${version} express`, () => {
       const app = express();
 
       app.use(urlString(), bodyParser.json());
-      app.use(urlString(), apolloExpress({
+      app.use(urlString(), graphqlExpress({
         schema: TestSchema,
         formatError(error) {
           return { message: 'Custom error format: ' + error.message };
@@ -336,7 +336,7 @@ describe(`GraphQL-HTTP (apolloServer) tests for ${version} express`, () => {
       const app = express();
 
       app.use(urlString(), bodyParser.json());
-      app.use(urlString(), apolloExpress({
+      app.use(urlString(), graphqlExpress({
         schema: TestSchema,
         formatError(error) {
           return {
@@ -368,7 +368,7 @@ describe(`GraphQL-HTTP (apolloServer) tests for ${version} express`, () => {
       const app = express();
 
       app.use(urlString(), bodyParser.json());
-      app.use(urlString(), apolloExpress({ schema: TestSchema }));
+      app.use(urlString(), graphqlExpress({ schema: TestSchema }));
 
       const response = await request(app)
           .get(urlString({ query: '{test}' }));
@@ -395,7 +395,7 @@ describe(`GraphQL-HTTP (apolloServer) tests for ${version} express`, () => {
         const app = express();
 
         app.use(urlString(), bodyParser.json());
-        app.use(urlString(), apolloExpress({
+        app.use(urlString(), graphqlExpress({
           schema: TestSchema,
           validationRules: [ AlwaysInvalidRule ],
         }));

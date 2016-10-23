@@ -1,7 +1,7 @@
 import * as koa from 'koa';
 import * as koaRouter from 'koa-router';
 import * as koaBody from 'koa-bodyparser';
-import { apolloKoa, graphiqlKoa } from './koaApollo';
+import { graphqlKoa, graphiqlKoa } from './koaApollo';
 import { ApolloOptions } from 'graphql-server-core';
 import { expect } from 'chai';
 import * as http from 'http';
@@ -20,7 +20,7 @@ function createApp(options: CreateAppOptions = {}) {
   if (options.graphiqlOptions ) {
     router.get('/graphiql', graphiqlKoa( options.graphiqlOptions ));
   }
-  router.post('/graphql', apolloKoa( options.apolloOptions ));
+  router.post('/graphql', graphqlKoa( options.apolloOptions ));
   app.use(router.routes());
   app.use(router.allowedMethods());
   return http.createServer(app.callback());
@@ -32,11 +32,11 @@ function destroyApp(app) {
 
 describe('koaApollo', () => {
   it('throws error if called without schema', function(){
-     expect(() => apolloKoa(undefined as ApolloOptions)).to.throw('Apollo Server requires options.');
+     expect(() => graphqlKoa(undefined as ApolloOptions)).to.throw('Apollo Server requires options.');
   });
 
   it('throws an error if called with more than one argument', function(){
-     expect(() => (<any>apolloKoa)({}, 'x')).to.throw(
+     expect(() => (<any>graphqlKoa)({}, 'x')).to.throw(
        'Apollo Server expects exactly one argument, got 2');
   });
 });

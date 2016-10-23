@@ -2,7 +2,7 @@ import { GraphQLSchema, ValidationRule } from 'graphql';
 import { LogFunction } from './runQuery';
 
 /*
- * ExpressApolloOptions
+ * GraphQLServerOptions
  *
  * - schema: an executable GraphQL schema used to fulfill requests.
  * - (optional) formatError: Formatting function applied to all errors before response is sent
@@ -15,7 +15,7 @@ import { LogFunction } from './runQuery';
  * - (optional) debug: a boolean that will print additional debug logging if execution errors occur
  *
  */
-interface ApolloOptions {
+interface GraphQLServerOptions {
   schema: GraphQLSchema;
   formatError?: Function;
   rootValue?: any;
@@ -27,4 +27,4 @@ interface ApolloOptions {
   debug?: boolean;
 }
 
-export default ApolloOptions;
+export default GraphQLServerOptions;

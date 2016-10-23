@@ -17,7 +17,7 @@ export interface ExpressHandler {
   (req: express.Request, res: express.Response, next): void;
 }
 
-export function apolloExpress(options: ApolloOptions | ExpressApolloOptionsFunction): ExpressHandler {
+export function graphqlExpress(options: ApolloOptions | ExpressApolloOptionsFunction): ExpressHandler {
   if (!options) {
     throw new Error('Apollo Server requires options.');
   }
