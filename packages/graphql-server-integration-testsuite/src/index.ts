@@ -336,7 +336,6 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
       });
 
       it('clones batch context', () => {
-          app = createApp();
           app = createApp({graphqlOptions: {
               schema: Schema,
               context: {testField: 'expected'},
