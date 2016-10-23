@@ -15,7 +15,7 @@ function createApp(createOptions: HapiPluginOptions) {
   server.register({
       register: graphqlHapi,
       options: {
-        apolloOptions: createOptions ? createOptions.apolloOptions : { schema: Schema },
+        graphqlOptions: createOptions ? createOptions.graphqlOptions : { schema: Schema },
         path: '/graphql',
       },
   });

@@ -9,14 +9,14 @@ import 'mocha';
 function createApp(options: CreateAppOptions = {}) {
   const app = express();
 
-  options.apolloOptions = options.apolloOptions || { schema: Schema };
+  options.graphqlOptions = options.graphqlOptions || { schema: Schema };
   if (!options.excludeParser) {
     app.use('/graphql', bodyParser.json());
   }
   if (options.graphiqlOptions ) {
     app.use('/graphiql', graphiqlExpress( options.graphiqlOptions ));
   }
-  app.use('/graphql', graphqlExpress( options.apolloOptions ));
+  app.use('/graphql', graphqlExpress( options.graphqlOptions ));
   return app;
 }
 

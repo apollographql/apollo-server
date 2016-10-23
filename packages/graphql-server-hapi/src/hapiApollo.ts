@@ -16,18 +16,18 @@ export interface HapiOptionsFunction {
 export interface HapiPluginOptions {
   path: string;
   route?: any;
-  apolloOptions: ApolloOptions | HapiOptionsFunction;
+  graphqlOptions: ApolloOptions | HapiOptionsFunction;
 }
 
 const graphqlHapi: IRegister = function(server: Server, options: HapiPluginOptions, next) {
   server.method('verifyPayload', verifyPayload);
   server.method('getGraphQLParams', getGraphQLParams);
-  server.method('getApolloOptions', getApolloOptions);
+  server.method('getGraphQLOptions', getGraphQLOptions);
   server.method('processQuery', processQuery);
 
   const config = Object.assign(options.route || {}, {
     plugins: {
-      graphql: isOptionsFunction(options.apolloOptions) ? options.apolloOptions : () => options.apolloOptions,
+      graphql: isOptionsFunction(options.graphqlOptions) ? options.graphqlOptions : () => options.graphqlOptions,
     },
     pre: [{
       assign: 'isBatch',
@@ -36,11 +36,11 @@ const graphqlHapi: IRegister = function(server: Server, options: HapiPluginOptio
       assign: 'graphqlParams',
       method: 'getGraphQLParams(payload, pre.isBatch)',
     }, {
-      assign: 'apolloOptions',
-      method: 'getApolloOptions',
+      assign: 'graphqlOptions',
+      method: 'getGraphQLOptions',
     }, {
       assign: 'graphQL',
-      method: 'processQuery(pre.graphqlParams, pre.apolloOptions, pre.isBatch)',
+      method: 'processQuery(pre.graphqlParams, pre.graphqlOptions, pre.isBatch)',
     }],
   });
 
@@ -106,7 +106,7 @@ function getGraphQLParams(payload, isBatch, reply) {
   reply(params);
 };
 
-async function getApolloOptions(request: Request, reply: IReply): Promise<{}> {
+async function getGraphQLOptions(request: Request, reply: IReply): Promise<{}> {
   const options = request.route.settings.plugins['graphql'];
   let optionsObject: ApolloOptions;
   if (isOptionsFunction(options)) {

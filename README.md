@@ -21,7 +21,7 @@ Anyone is welcome to contribute to GraphQL Server, just read [CONTRIBUTING.md](.
 
 ## Getting started
 
-GraphQL Server is super-easy to set up. Just npm-install graphql-server-<variant>, write a GraphQL schema, and then use one of the following snippets to get started. For more info, read the [GraphQL Server docs](http://dev.apollodata.com/tools/graphql-server/index.html).
+GraphQL Server is super easy to set up. Just `npm-install graphql-server-<variant>`, write a GraphQL schema, and then use one of the following snippets to get started. For more info, read the [GraphQL Server docs](http://dev.apollodata.com/tools/graphql-server/index.html).
 
 ### Installation
 
@@ -36,14 +36,14 @@ where variant is one of the following:
 
 ```js
 import express from 'express';
-import { apolloExpress } from 'graphql-server-express';
+import { graphqlExpress } from 'graphql-server-express';
 
 const myGraphQLSchema = // ... define or import your schema here!
 const PORT = 3000;
 
 var app = express();
 
-app.use('/graphql', bodyParser.json(), apolloExpress({ schema: myGraphQLSchema }));
+app.use('/graphql', bodyParser.json(), graphqlExpress({ schema: myGraphQLSchema }));
 
 app.listen(PORT);
 ```
@@ -52,7 +52,7 @@ app.listen(PORT);
 ```js
 import connect from 'connect';
 import bodyParser from 'body-parser';
-import { apolloConnect } from 'graphql-server-express';
+import { graphqlConnect } from 'graphql-server-express';
 import http from 'http';
 
 const PORT = 3000;
@@ -60,18 +60,18 @@ const PORT = 3000;
 var app = connect();
 
 app.use('/graphql', bodyParser.json());
-app.use('/graphql', apolloConnect({ schema: myGraphQLSchema }));
+app.use('/graphql', graphqlConnect({ schema: myGraphQLSchema }));
 
 http.createServer(app).listen(PORT);
 ```
 
 ### Hapi
 
-Now with the Hapi plugins `apolloHapi` and `graphiqlHapi` you can pass a route object that includes options to be applied to the route.  The example below enables CORS on the `/graphql` route.
+Now with the Hapi plugins `graphqlHapi` and `graphiqlHapi` you can pass a route object that includes options to be applied to the route.  The example below enables CORS on the `/graphql` route.
 
 ```js
 import hapi from 'hapi';
-import { apolloHapi } from 'graphql-server-hapi';
+import { graphqlHapi } from 'graphql-server-hapi';
 
 const server = new hapi.Server();
 
@@ -84,10 +84,10 @@ server.connection({
 });
 
 server.register({
-    register: apolloHapi,
+    register: graphqlHapi,
     options: {
       path: '/graphql',
-      apolloOptions: {
+      graphqlOptions: {
         schema: myGraphQLSchema,
       },
       route: {
@@ -108,7 +108,7 @@ server.start((err) => {
 ```js
 import koa from 'koa';
 import koaRouter from 'koa-router';
-import { apolloKoa } from 'graphql-server-koa';
+import { graphqlKoa } from 'graphql-server-koa';
 
 const app = new koa();
 const router = new koaRouter();
@@ -116,7 +116,7 @@ const PORT = 3000;
 
 app.use(koaBody());
 
-router.post('/graphql', apolloKoa({ schema: myGraphQLSchema }));
+router.post('/graphql', graphqlKoa({ schema: myGraphQLSchema }));
 app.use(router.routes());
 app.use(router.allowedMethods());
 app.listen(PORT);
@@ -143,7 +143,7 @@ The `formatParams` function can be used in combination with the `OperationStore`
 ```js
 const store = new OperationStore(Schema);
 store.put('query testquery{ testString }');
-apolloOptions = {
+graphqlOptions = {
     schema: Schema,
     formatParams(params) {
         params['query'] = store.get(params.operationName);

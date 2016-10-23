@@ -12,7 +12,7 @@ function createApp(options: CreateAppOptions = {}) {
   const app = new koa();
   const router = new koaRouter();
 
-  options.apolloOptions = options.apolloOptions || { schema: Schema };
+  options.graphqlOptions = options.graphqlOptions || { schema: Schema };
 
   if (!options.excludeParser) {
     app.use(koaBody());
@@ -20,7 +20,7 @@ function createApp(options: CreateAppOptions = {}) {
   if (options.graphiqlOptions ) {
     router.get('/graphiql', graphiqlKoa( options.graphiqlOptions ));
   }
-  router.post('/graphql', graphqlKoa( options.apolloOptions ));
+  router.post('/graphql', graphqlKoa( options.graphqlOptions ));
   app.use(router.routes());
   app.use(router.allowedMethods());
   return http.createServer(app.callback());

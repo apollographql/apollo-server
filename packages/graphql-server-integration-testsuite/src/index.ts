@@ -79,7 +79,7 @@ export const Schema = new GraphQLSchema({
 
 export interface CreateAppOptions {
   excludeParser?: boolean;
-  apolloOptions?: ApolloOptions | {(): ApolloOptions | Promise<{}>};
+  graphqlOptions?: ApolloOptions | {(): ApolloOptions | Promise<{}>};
   graphiqlOptions?: GraphiQL.GraphiQLData;
 }
 
@@ -107,7 +107,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
 
     describe('graphqlHTTP', () => {
       it('can be called with an options function', () => {
-          app = createApp({apolloOptions: (): ApolloOptions => ({schema: Schema})});
+          app = createApp({graphqlOptions: (): ApolloOptions => ({schema: Schema})});
           const expected = {
               testString: 'it works',
           };
@@ -123,7 +123,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
       });
 
       it('can be called with an options function that returns a promise', () => {
-          app = createApp({ apolloOptions: () => {
+          app = createApp({ graphqlOptions: () => {
               return new Promise(resolve => {
                   resolve({schema: Schema});
               });
@@ -143,7 +143,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
       });
 
       it('throws an error if options promise is rejected', () => {
-          app = createApp({ apolloOptions: () => {
+          app = createApp({ graphqlOptions: () => {
             return Promise.reject({}) as any as ApolloOptions;
           }});
           const expected = 'Invalid options';
@@ -337,7 +337,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
 
       it('clones batch context', () => {
           app = createApp();
-          app = createApp({apolloOptions: {
+          app = createApp({graphqlOptions: {
               schema: Schema,
               context: {testField: 'expected'},
           }});
@@ -384,7 +384,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
       });
 
       it('applies the formatResponse function', () => {
-          app = createApp({apolloOptions: {
+          app = createApp({graphqlOptions: {
               schema: Schema,
               formatResponse(response) {
                   response['extensions'] = { it: 'works' }; return response;
@@ -405,7 +405,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
 
       it('passes the context to the resolver', () => {
           const expected = 'context works';
-          app = createApp({apolloOptions: {
+          app = createApp({graphqlOptions: {
               schema: Schema,
               context: {testField: expected},
           }});
@@ -422,7 +422,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
 
       it('passes the rootValue to the resolver', () => {
           const expected = 'it passes rootValue';
-          app = createApp({apolloOptions: {
+          app = createApp({graphqlOptions: {
               schema: Schema,
               rootValue: expected,
           }});
@@ -439,7 +439,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
 
       it('returns errors', () => {
           const expected = 'Secret error message';
-          app = createApp({apolloOptions: {
+          app = createApp({graphqlOptions: {
               schema: Schema,
           }});
           const req = request(app)
@@ -455,7 +455,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
 
       it('applies formatError if provided', () => {
           const expected = '--blank--';
-          app = createApp({apolloOptions: {
+          app = createApp({graphqlOptions: {
               schema: Schema,
               formatError: (err) => ({ message: expected }),
           }});
@@ -471,7 +471,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
       });
 
       it('sends internal server error when formatError fails', () => {
-          app = createApp({apolloOptions: {
+          app = createApp({graphqlOptions: {
               schema: Schema,
               formatError: (err) => {
                 throw new Error('I should be catched');
@@ -492,7 +492,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           const stackTrace = [];
           const origError = console.error;
           console.error = (...args) => stackTrace.push(args);
-          app = createApp({apolloOptions: {
+          app = createApp({graphqlOptions: {
               schema: Schema,
               debug: true,
           }});
@@ -510,7 +510,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
       it('sends stack trace to error log if debug mode is set', () => {
           const logStub = stub(console, 'error');
           const expected = /at resolveOrError/;
-          app = createApp({apolloOptions: {
+          app = createApp({graphqlOptions: {
               schema: Schema,
               debug: true,
           }});
@@ -538,7 +538,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
                   },
               };
           };
-          app = createApp({apolloOptions: {
+          app = createApp({graphqlOptions: {
               schema: Schema,
               validationRules: [AlwaysInvalidRule],
           }});
@@ -578,7 +578,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
       it('works with formatParams', () => {
           const store = new OperationStore(Schema);
           store.put('query testquery{ testString }');
-          app = createApp({ apolloOptions: {
+          app = createApp({ graphqlOptions: {
               schema: Schema,
               formatParams(params) {
                   params['query'] = store.get(params.operationName);
@@ -600,7 +600,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
       it('can reject non-whitelisted queries', () => {
           const store = new OperationStore(Schema);
           store.put('query testquery{ testString }');
-          app = createApp({ apolloOptions: {
+          app = createApp({ graphqlOptions: {
               schema: Schema,
               formatParams(params) {
                   if (params.query) {

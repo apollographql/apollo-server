@@ -8,14 +8,14 @@ import testSuite, { Schema, CreateAppOptions } from 'graphql-server-integration-
 function createConnectApp(options: CreateAppOptions = {}) {
   const app = connect();
 
-  options.apolloOptions = options.apolloOptions || { schema: Schema };
+  options.graphqlOptions = options.graphqlOptions || { schema: Schema };
   if (!options.excludeParser) {
     app.use('/graphql', bodyParser.json());
   }
   if (options.graphiqlOptions ) {
     app.use('/graphiql', graphiqlConnect( options.graphiqlOptions ));
   }
-  app.use('/graphql', graphqlConnect( options.apolloOptions ));
+  app.use('/graphql', graphqlConnect( options.graphqlOptions ));
   return app;
 }
 
