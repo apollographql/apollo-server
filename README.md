@@ -1,11 +1,11 @@
-# GraphQL Server for Express, Connect, Hapi and Koa
+# GraphQL Server for Express, Connect, Hapi, Koa, and Restify
 
 [![npm version](https://badge.fury.io/js/graphql-server.svg)](https://badge.fury.io/js/graphql-server)
 [![Build Status](https://travis-ci.org/apollostack/graphql-server.svg?branch=master)](https://travis-ci.org/apollostack/graphql-server)
 [![Coverage Status](https://coveralls.io/repos/github/apollostack/graphql-server/badge.svg?branch=master)](https://coveralls.io/github/apollostack/graphql-server?branch=master)
 [![Get on Slack](https://img.shields.io/badge/slack-join-orange.svg)](http://www.apollostack.com/#slack)
 
-GraphQL Server is a community-maintained open-source GraphQL server. It works with all Node.js HTTP server frameworks: Express, Connect, Hapi and Koa.
+GraphQL Server is a community-maintained open-source GraphQL server. It works with all Node.js HTTP server frameworks: Express, Connect, Hapi, Koa and Restify.
 
 ## Principles
 
@@ -122,6 +122,26 @@ app.use(router.allowedMethods());
 app.listen(PORT);
 ```
 
+### Restify
+```js
+import restify from 'restify';
+import { graphqlRestify, graphiqlRestify } from 'graphql-server-restify';
+
+const PORT = 3000;
+
+const server = restify.createServer({
+  title: 'GraphQL Server'
+});
+
+server.use(restify.bodyParser());
+
+server.post('/graphql', graphqlRestify({ schema: myGraphQLSchema }));
+
+sever.get('/graphiql', graphiqlRestify({ endpointURL: '/graphql' }));
+
+server.listen(PORT, () => console.log(`Listening on ${PORT}`));
+```
+
 ## Options
 
 GraphQL Server can be configured with an options object with the the following fields:
@@ -156,7 +176,7 @@ graphqlOptions = {
 
 GraphQL Server and express-graphql are more or less the same thing (GraphQL middleware for Node.js), but there are a few key differences:
 
-* express-graphql works with Express and Connect, GraphQL Server supports Express, Connect, Hapi and Koa.
+* express-graphql works with Express and Connect, GraphQL Server supports Express, Connect, Hapi, Koa and Restify.
 * express-graphql's main goal is to be a minimal reference implementation, whereas GraphQL Server's goal is to be a complete production-ready GraphQL server.
 * Compared to express-graphql, GraphQL Server has a simpler interface and supports exactly one way of passing queries.
 * GraphQL Server separates serving GraphiQL (GraphQL UI) from responding to GraphQL requests.

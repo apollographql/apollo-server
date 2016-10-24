@@ -2,6 +2,8 @@
 
 ### VNEXT
 
+* Restify integration and documents/tests.
+
 ### v0.4.2
 
 * **Restructure Apollo Server into 6 new packages, and rename to GraphQL Server** ([@DxCx](https://github.com/DxCx)) and ([@stubailo](https://github.com/stubailo)) in [#183](https://github.com/apollostack/graphql-server/pull/183) and [#164](https://github.com/apollostack/graphql-server/pull/183).
