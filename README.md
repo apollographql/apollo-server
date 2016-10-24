@@ -21,7 +21,7 @@ Anyone is welcome to contribute to GraphQL Server, just read [CONTRIBUTING.md](.
 
 ## Getting started
 
-GraphQL Server is super easy to set up. Just `npm-install graphql-server-<variant>`, write a GraphQL schema, and then use one of the following snippets to get started. For more info, read the [GraphQL Server docs](http://dev.apollodata.com/tools/graphql-server/index.html).
+GraphQL Server is super easy to set up. Just `npm install graphql-server-<variant>`, write a GraphQL schema, and then use one of the following snippets to get started. For more info, read the [GraphQL Server docs](http://dev.apollodata.com/tools/graphql-server/index.html).
 
 ### Installation
 
