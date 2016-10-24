@@ -22,6 +22,8 @@ function createApp(options: CreateAppOptions = {}) {
     server.get('/graphiql', graphiqlRestify( options.graphiqlOptions ));
   }
   server.post('/graphql', graphqlRestify( options.graphqlOptions ));
+  server.put('/graphql', graphqlRestify( options.graphqlOptions ));
+
   return server;
 }
 
@@ -47,6 +49,17 @@ describe('graphqlRestify', () => {
       return req.then((res) => {
           expect(res.status).to.equal(500);
           return expect(res.error.text).to.contain('Invalid POST body sent');
+      });
+  });
+
+  it('throws an error on PUT calls', () => {
+      const app = createApp();
+      const req = request(app)
+          .put('/graphql')
+          .send();
+      return req.then((res) => {
+          expect(res.status).to.equal(405);
+          return expect(res.error.text).to.contain('supports only POST requests');
       });
   });
 });
