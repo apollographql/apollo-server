@@ -32,7 +32,7 @@ where variant is one of the following:
  - koa
  - hapi
 
-### Express ( POST )
+### Express
 
 ```js
 import express from 'express';
@@ -44,28 +44,13 @@ const PORT = 3000;
 
 var app = express();
 
+// bodyParser is needed just for POST.
 app.use('/graphql', bodyParser.json(), graphqlExpress({ schema: myGraphQLSchema }));
 
 app.listen(PORT);
 ```
 
-### Express ( GET )
-
-```js
-import express from 'express';
-import { graphqlExpress } from 'graphql-server-express';
-
-const myGraphQLSchema = // ... define or import your schema here!
-const PORT = 3000;
-
-var app = express();
-
-app.use('/graphql', graphqlExpress({ schema: myGraphQLSchema }));
-
-app.listen(PORT);
-```
-
-### Connect ( POST )
+### Connect
 ```js
 import connect from 'connect';
 import bodyParser from 'body-parser';
@@ -76,29 +61,14 @@ const PORT = 3000;
 
 var app = connect();
 
+// bodyParser is needed just for POST.
 app.use('/graphql', bodyParser.json());
 app.use('/graphql', graphqlConnect({ schema: myGraphQLSchema }));
 
 http.createServer(app).listen(PORT);
 ```
 
-### Connect ( GET )
-```js
-import connect from 'connect';
-import { graphqlConnect } from 'graphql-server-express';
-import http from 'http';
-
-const PORT = 3000;
-
-var app = connect();
-
-app.use('/graphql', require('connect-query')());
-app.use('/graphql', graphqlConnect({ schema: myGraphQLSchema }));
-
-http.createServer(app).listen(PORT);
-```
-
-### Hapi ( POST / GET )
+### Hapi
 
 Now with the Hapi plugins `graphqlHapi` and `graphiqlHapi` you can pass a route object that includes options to be applied to the route.  The example below enables CORS on the `/graphql` route.
 
@@ -137,7 +107,7 @@ server.start((err) => {
 });
 ```
 
-### Koa ( POST )
+### Koa
 ```js
 import koa from 'koa'; // koa@2
 import koaRouter from 'koa-router'; // koa-router@next
@@ -148,31 +118,16 @@ const app = new koa();
 const router = new koaRouter();
 const PORT = 3000;
 
+// koaBody is needed just for POST.
 app.use(koaBody());
 
 router.post('/graphql', graphqlKoa({ schema: myGraphQLSchema }));
-app.use(router.routes());
-app.use(router.allowedMethods());
-app.listen(PORT);
-```
-
-### Koa ( GET )
-```js
-import koa from 'koa';
-import koaRouter from 'koa-router';
-import { graphqlKoa } from 'graphql-server-koa';
-
-const app = new koa();
-const router = new koaRouter();
-const PORT = 3000;
-
 router.get('/graphql', graphqlKoa({ schema: myGraphQLSchema }));
+
 app.use(router.routes());
 app.use(router.allowedMethods());
 app.listen(PORT);
 ```
-
-## Options
 
 GraphQL Server can be configured with an options object with the the following fields:
 
