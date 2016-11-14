@@ -42,7 +42,7 @@ export function graphqlExpress(options: GraphQLOptions | ExpressGraphQLOptionsFu
     }
 
     const formatErrorFn = optionsObject.formatError || graphql.formatError;
-    let buffer;
+    let requestPayload;
 
     switch ( req.method ) {
       case 'POST':
@@ -53,7 +53,7 @@ export function graphqlExpress(options: GraphQLOptions | ExpressGraphQLOptionsFu
           return;
         }
 
-        buffer = req.body;
+        requestPayload = req.body;
         break;
       case 'GET':
         if ( !req.query ) {
@@ -63,7 +63,7 @@ export function graphqlExpress(options: GraphQLOptions | ExpressGraphQLOptionsFu
           return;
         }
 
-        buffer = req.query;
+        requestPayload = req.query;
         break;
 
       default:
@@ -77,13 +77,13 @@ export function graphqlExpress(options: GraphQLOptions | ExpressGraphQLOptionsFu
     let isBatch = true;
     // TODO: do something different here if the body is an array.
     // Throw an error if body isn't either array or object.
-    if (!Array.isArray(buffer)) {
+    if (!Array.isArray(requestPayload)) {
       isBatch = false;
-      buffer = [buffer];
+      requestPayload = [requestPayload];
     }
 
     let responses: Array<graphql.ExecutionResult> = [];
-    for (let requestParams of buffer) {
+    for (let requestParams of requestPayload) {
       try {
         const query = requestParams.query;
         const operationName = requestParams.operationName;

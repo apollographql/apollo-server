@@ -34,7 +34,7 @@ export function graphqlKoa(options: GraphQLOptions | KoaGraphQLOptionsFunction):
     }
 
     const formatErrorFn = optionsObject.formatError || graphql.formatError;
-    let buffer;
+    let requestPayload;
 
     switch ( ctx.request.method ) {
       case 'GET':
@@ -43,7 +43,7 @@ export function graphqlKoa(options: GraphQLOptions | KoaGraphQLOptionsFunction):
             return ctx.body = 'GET query missing';
         }
 
-        buffer = ctx.request.query;
+        requestPayload = ctx.request.query;
         break;
       case 'POST':
         if (!ctx.request.body) {
@@ -51,7 +51,7 @@ export function graphqlKoa(options: GraphQLOptions | KoaGraphQLOptionsFunction):
             return ctx.body = 'POST body missing. Did you forget "app.use(koaBody())"?';
         }
 
-        buffer = ctx.request.body;
+        requestPayload = ctx.request.body;
         break;
       default:
         ctx.status = 405;
@@ -59,13 +59,13 @@ export function graphqlKoa(options: GraphQLOptions | KoaGraphQLOptionsFunction):
     }
 
     let isBatch = true;
-    if (!Array.isArray(buffer)) {
+    if (!Array.isArray(requestPayload)) {
       isBatch = false;
-      buffer = [buffer];
+      requestPayload = [requestPayload];
     }
 
     let responses: Array<graphql.ExecutionResult> = [];
-    for (let requestParams of buffer) {
+    for (let requestParams of requestPayload) {
       try {
         const query = requestParams.query;
         const operationName = requestParams.operationName;

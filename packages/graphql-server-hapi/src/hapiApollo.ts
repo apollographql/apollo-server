@@ -21,7 +21,7 @@ export interface HapiPluginOptions {
 
 const graphqlHapi: IRegister = function(server: Server, options: HapiPluginOptions, next) {
   server.method('assignIsBatch', assignIsBatch);
-  server.method('assignBuffer', assignBuffer);
+  server.method('assignRequest', assignRequest);
   server.method('getGraphQLParams', getGraphQLParams);
   server.method('getGraphQLOptions', getGraphQLOptions);
   server.method('processQuery', processQuery);
@@ -32,15 +32,15 @@ const graphqlHapi: IRegister = function(server: Server, options: HapiPluginOptio
     },
     pre: [
     {
-        assign: 'buffer',
-        method: 'assignBuffer(method, payload, query)',
+        assign: 'requestPayload',
+        method: 'assignRequest(method, payload, query)',
     },
     {
       assign: 'isBatch',
-      method: 'assignIsBatch(method, pre.buffer)',
+      method: 'assignIsBatch(method, pre.requestPayload)',
     }, {
       assign: 'graphqlParams',
-      method: 'getGraphQLParams(pre.buffer, pre.isBatch)',
+      method: 'getGraphQLParams(pre.requestPayload, pre.isBatch)',
     }, {
       assign: 'graphqlOptions',
       method: 'getGraphQLOptions',
@@ -77,7 +77,7 @@ graphqlHapi.attributes = {
   version: '0.0.1',
 };
 
-function assignBuffer(method, payload, query, reply) {
+function assignRequest(method, payload, query, reply) {
     switch ( method ) {
         case 'get':
             if (!query) {
@@ -94,7 +94,7 @@ function assignBuffer(method, payload, query, reply) {
     }
 }
 
-function assignIsBatch(method, buffer, reply) {
+function assignIsBatch(method, requestPayload, reply) {
   // TODO: do something different here if the body is an array.
   // Throw an error if body isn't either array or object.
 
@@ -102,19 +102,19 @@ function assignIsBatch(method, buffer, reply) {
       case 'get':
           return reply(false);
       case 'post':
-          return reply(Array.isArray(buffer));
+          return reply(Array.isArray(requestPayload));
       default:
           throw new Error(`Invalid case reached, method is ${method}`);
   }
 }
 
-function getGraphQLParams(buffer, isBatch, reply) {
+function getGraphQLParams(requestPayload, isBatch, reply) {
   if (!isBatch) {
-    buffer = [buffer];
+    requestPayload = [requestPayload];
   }
 
   const params = [];
-  for (let query of buffer) {
+  for (let query of requestPayload) {
     let variables = query.variables;
     if (variables && typeof variables === 'string') {
       try {
