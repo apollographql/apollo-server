@@ -281,7 +281,7 @@ describe(`GraphQL-HTTP (apolloServer) tests for ${version} express`, () => {
   });
 
   describe('Error handling functionality', () => {
-    it('handles field errors caught by GraphQL', async () => {
+    it.only ('handles field errors caught by GraphQL', async () => {
       const app = express();
 
       app.use(urlString(), bodyParser.json());
@@ -301,7 +301,8 @@ describe(`GraphQL-HTTP (apolloServer) tests for ${version} express`, () => {
         data: null,
         errors: [ {
           message: 'Throws!',
-          locations: [ { line: 1, column: 2 } ]
+          locations: [ { line: 1, column: 2 } ],
+          path:["thrower"]
         } ]
       });
     });
