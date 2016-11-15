@@ -281,7 +281,7 @@ describe(`GraphQL-HTTP (apolloServer) tests for ${version} express`, () => {
   });
 
   describe('Error handling functionality', () => {
-    it.only ('handles field errors caught by GraphQL', async () => {
+    it('handles field errors caught by GraphQL', async () => {
       const app = express();
 
       app.use(urlString(), bodyParser.json());
