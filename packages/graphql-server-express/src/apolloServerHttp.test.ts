@@ -301,7 +301,8 @@ describe(`GraphQL-HTTP (apolloServer) tests for ${version} express`, () => {
         data: null,
         errors: [ {
           message: 'Throws!',
-          locations: [ { line: 1, column: 2 } ]
+          locations: [ { line: 1, column: 2 } ],
+          path:["thrower"]
         } ]
       });
     });

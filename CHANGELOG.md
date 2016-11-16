@@ -1,6 +1,7 @@
 # Changelog
 
 ### VNEXT
+* Upgrade to GraphQL-js 0.8.1.
 
 ### v0.4.2
 
