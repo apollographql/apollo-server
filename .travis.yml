@@ -1,7 +1,9 @@
 language: node_js
 node_js:
-  - "6"
   - "4"
+  - "6"
+  - "7"
+
 install:
   - npm install -g npm@3
   - npm install -g coveralls
