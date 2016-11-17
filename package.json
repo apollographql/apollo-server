@@ -36,6 +36,6 @@
     "supertest": "^2.0.0",
     "supertest-as-promised": "^4.0.0",
     "tslint": "^3.13.0",
-    "typescript": "^2.0.3"
+    "typescript": "^2.0.10"
   }
 }
