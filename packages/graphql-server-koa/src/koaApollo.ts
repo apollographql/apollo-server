@@ -47,7 +47,7 @@ export function graphqlKoa(options: GraphQLOptions | KoaGraphQLOptionsFunction):
       b = [b];
     }
 
-    let responses: Array<graphql.GraphQLResult> = [];
+    let responses: Array<graphql.ExecutionResult> = [];
     for (let requestParams of b) {
       try {
         const query = requestParams.query;

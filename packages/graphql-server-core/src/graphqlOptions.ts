@@ -1,4 +1,4 @@
-import { GraphQLSchema, ValidationRule } from 'graphql';
+import { GraphQLSchema, ValidationContext } from 'graphql';
 import { LogFunction } from './runQuery';
 
 /*
@@ -26,5 +26,7 @@ interface GraphQLServerOptions {
   formatResponse?: Function;
   debug?: boolean;
 }
+
+export type ValidationRule = (context: ValidationContext) => any;
 
 export default GraphQLServerOptions;
