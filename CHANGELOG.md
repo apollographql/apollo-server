@@ -1,6 +1,7 @@
 # Changelog
 
 ### VNEXT
+* Update GraphiQL to version 0.8.0 ([@DxCx](https://github.com/DxCx)) on [#192](https://github.com/apollostack/graphql-server/pull/192)
 * Upgrade to GraphQL-js 0.8.1.
 
 ### v0.4.2
