@@ -31,7 +31,7 @@
     "meteor-promise": "^0.7.3"
   },
   "peerDependencies": {
-    "graphql": "^0.6.1 || ^0.7.0"
+    "graphql": "^0.6.1 || ^0.7.0 || ^0.8.0"
   },
   "optionalDependencies": {
     "typed-graphql": "^1.0.2"
