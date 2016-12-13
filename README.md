@@ -36,6 +36,7 @@ where variant is one of the following:
 
 ```js
 import express from 'express';
+import bodyParser from 'body-parser';
 import { graphqlExpress } from 'graphql-server-express';
 
 const myGraphQLSchema = // ... define or import your schema here!
