@@ -107,6 +107,7 @@ server.start((err) => {
 ### Koa
 ```js
 import koa from 'koa';
+import koaBody from 'koa-body';
 import koaRouter from 'koa-router';
 import { graphqlKoa } from 'graphql-server-koa';
 
