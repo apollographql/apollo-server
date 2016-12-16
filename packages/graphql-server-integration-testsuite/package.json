@@ -26,12 +26,13 @@
     "supertest": "^2.0.0",
     "supertest-as-promised": "^4.0.0"
   },
-  "devDependencies": {},
+  "devDependencies": {
+  },
   "peerDependencies": {
     "graphql": "^0.6.1 || ^0.7.0 || ^0.8.0"
   },
   "optionalDependencies": {
-    "@types/graphql": "^0.8.1"
+    "@types/graphql": "^0.8.2"
   },
   "typings": "dist/index.d.ts",
   "typescript": {

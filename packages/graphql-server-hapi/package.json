@@ -31,7 +31,6 @@
   },
   "devDependencies": {
     "@types/boom": "0.0.32",
-    "@types/graphql": "^0.8.1",
     "@types/hapi": "^13.0.35",
     "graphql-server-integration-testsuite": "^0.4.3",
     "hapi": "^15.0.3"
@@ -40,7 +39,7 @@
     "graphql": "^0.6.1 || ^0.7.0 || ^0.8.0"
   },
   "optionalDependencies": {
-    "@types/graphql": "^0.8.1",
+    "@types/graphql": "^0.8.2",
     "@types/hapi": "^13.0.35"
   },
   "typings": "dist/index.d.ts",

@@ -33,7 +33,6 @@
     "@types/body-parser": "0.0.33",
     "@types/connect": "^3.4.30",
     "@types/express": "^4.0.33",
-    "@types/graphql": "^0.8.1",
     "@types/multer": "0.0.32",
     "body-parser": "^1.15.2",
     "connect": "^3.4.1",
@@ -45,7 +44,7 @@
     "graphql": "^0.6.1 || ^0.7.0 || ^0.8.0"
   },
   "optionalDependencies": {
-    "@types/graphql": "^0.8.1",
+    "@types/graphql": "^0.8.2",
     "@types/express": "^4.0.33"
   },
   "typings": "dist/index.d.ts",
