@@ -182,6 +182,16 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
       });
 
+      it('throws an error if GET query is missing', () => {
+          app = createApp();
+          const req = request(app)
+              .get(`/graphql`);
+          return req.then((res) => {
+              expect(res.status).to.equal(400);
+              return expect(res.error.text).to.contain('GET query missing.');
+          });
+      });
+
       it('can handle a basic GET request', () => {
           app = createApp();
           const expected = {

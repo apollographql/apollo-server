@@ -38,9 +38,9 @@ export function graphqlKoa(options: GraphQLOptions | KoaGraphQLOptionsFunction):
 
     switch ( ctx.request.method ) {
       case 'GET':
-        if (!ctx.request.query) {
-            ctx.status = 500;
-            return ctx.body = 'GET query missing';
+        if (!ctx.request.query || (Object.keys(ctx.request.query).length === 0)) {
+            ctx.status = 400;
+            return ctx.body = 'GET query missing.';
         }
 
         requestPayload = ctx.request.query;

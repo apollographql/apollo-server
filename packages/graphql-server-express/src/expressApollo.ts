@@ -56,8 +56,8 @@ export function graphqlExpress(options: GraphQLOptions | ExpressGraphQLOptionsFu
         requestPayload = req.body;
         break;
       case 'GET':
-        if ( !req.query ) {
-          res.statusCode = 500;
+        if ( !req.query || (Object.keys(req.query).length === 0) ) {
+          res.statusCode = 400;
           res.write('GET query missing.');
           res.end();
           return;

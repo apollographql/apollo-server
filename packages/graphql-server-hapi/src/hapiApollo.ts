@@ -80,8 +80,8 @@ graphqlHapi.attributes = {
 function assignRequest(method, payload, query, reply) {
     switch ( method ) {
         case 'get':
-            if (!query) {
-                return reply(createErr(500, 'GET query missing.'));
+            if (!query || (Object.keys(query).length === 0)) {
+                return reply(createErr(400, 'GET query missing.'));
             }
             return reply(query);
         case 'post':
