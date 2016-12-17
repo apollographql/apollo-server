@@ -3,6 +3,7 @@
 ### VNEXT
 
 * Restify: Fix for calling next() (([@jadkap](https://github.com/jadkap)) on [#285](https://github.com/apollostack/graphql-server/pull/285))
+* Add AWS Lambda Integration [#101](https://github.com/apollostack/graphql-server/issues/101)
 
 ### v0.5.2
 * **Restify integration** ([@joelgriffith](https://github.com/joelgriffith)) on [#189](https://github.com/apollostack/graphql-server/pull/189)
