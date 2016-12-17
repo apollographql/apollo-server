@@ -1,4 +1,4 @@
-# GraphQL Server for Express, Connect, Hapi, Koa, and Restify
+# GraphQL Server for Express, Connect, Hapi, Koa, Restify and AWS Lambda
 
 [![npm version](https://badge.fury.io/js/graphql-server-core.svg)](https://badge.fury.io/js/graphql-server-core)
 [![Build Status](https://travis-ci.org/apollostack/graphql-server.svg?branch=master)](https://travis-ci.org/apollostack/graphql-server)
@@ -31,6 +31,7 @@ where variant is one of the following:
  - express
  - koa
  - hapi
+ - lambda
 
 ### Express
 
@@ -153,7 +154,19 @@ server.get('/graphiql', graphiqlRestify({ endpointURL: '/graphql' }));
 server.listen(PORT, () => console.log(`Listening on ${PORT}`));
 ```
 
+### AWS Lambda
+
+Lambda function should be run with Node.js v4.3. Requires an API Gateway with Lambda Proxy Integration.
+
+```js
+var server = require("graphql-server-lambda");
+
+exports.handler = server.graphqlLambda({ schema: myGraphQLSchema });
+```
+
 ## Options
+
+=======
 
 GraphQL Server can be configured with an options object with the the following fields:
 
