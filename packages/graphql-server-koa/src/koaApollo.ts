@@ -49,13 +49,12 @@ export function graphiqlKoa(options: GraphiQL.GraphiQLData) {
 
     const q = ctx.request.query || {};
     const query = q.query || '';
-    const variables = q.variables || '{}';
     const operationName = q.operationName || '';
 
     const graphiQLString = GraphiQL.renderGraphiQL({
       endpointURL: options.endpointURL,
       query: query || options.query,
-      variables: JSON.parse(variables) || options.variables,
+      variables: q.variables && JSON.parse(q.variables) || options.variables,
       operationName: operationName || options.operationName,
       passHeader: options.passHeader,
     });
