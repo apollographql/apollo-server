@@ -35,8 +35,7 @@
     "graphql-server-integration-testsuite": "^0.4.3",
     "koa": "^2.0.0-alpha.4",
     "koa-bodyparser": "^3.0.0",
-    "koa-router": "^7.0.1",
-    "@types/graphql": "^0.8.5"
+    "koa-router": "^7.0.1"
   },
   "peerDependencies": {
     "graphql": "^0.6.1 || ^0.7.0 || ^0.8.0"
