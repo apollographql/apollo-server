@@ -38,14 +38,14 @@
     "body-parser": "^1.15.2",
     "connect": "^3.4.1",
     "express": "^4.14.0",
-    "multer": "^1.2.0",
-    "@types/graphql": "^0.8.5"
+    "multer": "^1.2.0"
   },
   "peerDependencies": {
     "graphql": "^0.6.1 || ^0.7.0 || ^0.8.0"
   },
   "optionalDependencies": {
-    "@types/express": "^4.0.33"
+    "@types/express": "^4.0.33",
+    "@types/graphql": "^0.8.5"
   },
   "typings": "dist/index.d.ts",
   "typescript": {

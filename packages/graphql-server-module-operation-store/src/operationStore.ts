@@ -1,7 +1,7 @@
 import {
   parse,
   validate,
-  Document,
+  DocumentNode,
   GraphQLSchema,
   OperationDefinition,
 } from 'graphql';
@@ -9,15 +9,15 @@ import {
 const OPERATION_DEFINITION: string = 'OperationDefinition';
 
 export class OperationStore {
-  private storedOperations: Map<string, Document>;
+  private storedOperations: Map<string, DocumentNode>;
   private schema: GraphQLSchema;
 
   constructor(schema: GraphQLSchema) {
     this.schema = schema;
-    this.storedOperations = new Map<string, Document>();
+    this.storedOperations = new Map<string, DocumentNode>();
   }
 
-  public put(operation: string | Document): void {
+  public put(operation: string | DocumentNode): void {
     function isOperationDefinition(definition): definition is OperationDefinition {
       return definition.kind === OPERATION_DEFINITION;
     }
@@ -26,7 +26,7 @@ export class OperationStore {
       return typeof definition === 'string';
     }
 
-    const ast = isString(operation) ? parse(operation as string) : operation as Document;
+    const ast = isString(operation) ? parse(operation as string) : operation as DocumentNode;
 
     const definitions = ast.definitions.filter(isOperationDefinition) as OperationDefinition[];
     if (definitions.length === 0) {
@@ -46,7 +46,7 @@ export class OperationStore {
     this.storedOperations.set(definitions[0].name.value, ast);
   }
 
-  public get(operationName: string): Document {
+  public get(operationName: string): DocumentNode {
     return this.storedOperations.get(operationName);
   }
 
@@ -54,7 +54,7 @@ export class OperationStore {
     return this.storedOperations.delete(operationName);
   }
 
-  public getMap(): Map<string, Document> {
+  public getMap(): Map<string, DocumentNode> {
     return this.storedOperations;
   }
 }

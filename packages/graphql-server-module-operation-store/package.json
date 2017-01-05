@@ -24,9 +24,6 @@
   },
   "homepage": "https://github.com/apollostack/graphql-server#readme",
   "dependencies": {},
-  "devDependencies": {
-    "@types/graphql": "^0.8.5"
-  },
   "peerDependencies": {
     "graphql": "^0.6.1 || ^0.7.0 || ^0.8.0"
   },
