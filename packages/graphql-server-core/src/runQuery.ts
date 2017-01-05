@@ -1,14 +1,14 @@
 import {
     GraphQLSchema,
-    GraphQLResult,
-    Document,
+    ExecutionResult,
+    DocumentNode,
     parse,
     print,
     validate,
     execute,
     formatError,
     specifiedRules,
-    ValidationRule,
+    ValidationContext,
 } from 'graphql';
 
 export interface GqlResponse {
@@ -37,13 +37,13 @@ export interface LogFunction {
 
 export interface QueryOptions {
  schema: GraphQLSchema;
- query: string | Document;
+ query: string | DocumentNode;
  rootValue?: any;
  context?: any;
  variables?: { [key: string]: any };
  operationName?: string;
  logFunction?: LogFunction;
- validationRules?: Array<ValidationRule>;
+ validationRules?: Array<(context: ValidationContext) => any>;
  // WARNING: these extra validation rules are only applied to queries
  // submitted as string, not those submitted as Document!
 
@@ -54,13 +54,13 @@ export interface QueryOptions {
 
 const resolvedPromise = Promise.resolve();
 
-function runQuery(options: QueryOptions): Promise<GraphQLResult> {
+function runQuery(options: QueryOptions): Promise<ExecutionResult> {
     // Fiber-aware Promises run their .then callbacks in Fibers.
     return resolvedPromise.then(() => doRunQuery(options));
 }
 
-function doRunQuery(options: QueryOptions): Promise<GraphQLResult> {
-    let documentAST: Document;
+function doRunQuery(options: QueryOptions): Promise<ExecutionResult> {
+    let documentAST: DocumentNode;
 
     const logFunction = options.logFunction || function(){ return null; };
     const debugDefault = process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test';
@@ -118,7 +118,7 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResult> {
             return Promise.resolve({ errors: format(validationErrors) });
         }
     } else {
-        documentAST = options.query as Document;
+        documentAST = options.query as DocumentNode;
     }
 
     try {
