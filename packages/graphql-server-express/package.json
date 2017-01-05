@@ -39,7 +39,7 @@
     "connect": "^3.4.1",
     "express": "^4.14.0",
     "multer": "^1.2.0",
-    "typed-graphql": "^1.0.2"
+    "@types/graphql": "^0.8.5"
   },
   "peerDependencies": {
     "graphql": "^0.6.1 || ^0.7.0 || ^0.8.0"

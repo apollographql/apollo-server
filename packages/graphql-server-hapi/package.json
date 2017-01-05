@@ -34,14 +34,14 @@
     "@types/hapi": "^13.0.35",
     "graphql-server-integration-testsuite": "^0.4.3",
     "hapi": "^15.0.3",
-    "typed-graphql": "^1.0.2"
+    "@types/graphql": "^0.8.5"
   },
   "peerDependencies": {
     "graphql": "^0.6.1 || ^0.7.0 || ^0.8.0"
   },
   "optionalDependencies": {
     "@types/hapi": "^13.0.35",
-    "typed-graphql": "^1.0.2"
+    "@types/graphql": "^0.8.5"
   },
   "typings": "dist/index.d.ts",
   "typescript": {

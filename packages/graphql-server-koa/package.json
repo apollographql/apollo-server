@@ -36,14 +36,14 @@
     "koa": "^2.0.0-alpha.4",
     "koa-bodyparser": "^3.0.0",
     "koa-router": "^7.0.1",
-    "typed-graphql": "^1.0.2"
+    "@types/graphql": "^0.8.5"
   },
   "peerDependencies": {
     "graphql": "^0.6.1 || ^0.7.0 || ^0.8.0"
   },
   "optionalDependencies": {
     "@types/koa": "^2.0.33",
-    "typed-graphql": "^1.0.2"
+    "@types/graphql": "^0.8.5"
   },
   "typings": "dist/index.d.ts",
   "typescript": {
