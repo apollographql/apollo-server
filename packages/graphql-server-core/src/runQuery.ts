@@ -1,15 +1,17 @@
 import {
+    GraphQLError,
+    GraphQLFormattedError,
     GraphQLSchema,
-    GraphQLResult,
-    Document,
+    ExecutionResult,
+    DocumentNode,
     parse,
     print,
     validate,
     execute,
     formatError,
     specifiedRules,
-    ValidationRule,
 } from 'graphql';
+import { ValidationRule } from './graphqlOptions';
 
 export interface GqlResponse {
     data?: Object;
@@ -37,7 +39,7 @@ export interface LogFunction {
 
 export interface QueryOptions {
  schema: GraphQLSchema;
- query: string | Document;
+ query: string | DocumentNode;
  rootValue?: any;
  context?: any;
  variables?: { [key: string]: any };
@@ -45,22 +47,22 @@ export interface QueryOptions {
  logFunction?: LogFunction;
  validationRules?: Array<ValidationRule>;
  // WARNING: these extra validation rules are only applied to queries
- // submitted as string, not those submitted as Document!
+ // submitted as string, not those submitted as DocumentNode!
 
- formatError?: Function;
+ formatError?: (e: GraphQLError) => GraphQLFormattedError;
  formatResponse?: Function;
  debug?: boolean;
 }
 
 const resolvedPromise = Promise.resolve();
 
-function runQuery(options: QueryOptions): Promise<GraphQLResult> {
+function runQuery(options: QueryOptions): Promise<ExecutionResult> {
     // Fiber-aware Promises run their .then callbacks in Fibers.
     return resolvedPromise.then(() => doRunQuery(options));
 }
 
-function doRunQuery(options: QueryOptions): Promise<GraphQLResult> {
-    let documentAST: Document;
+function doRunQuery(options: QueryOptions): Promise<ExecutionResult> {
+    let documentAST: DocumentNode;
 
     const logFunction = options.logFunction || function(){ return null; };
     const debugDefault = process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test';
@@ -68,20 +70,20 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResult> {
 
     logFunction({action: LogAction.request, step: LogStep.start});
 
-    function format(errors: Array<Error>): Array<Error> {
+    function format(errors: Array<GraphQLError>): Array<GraphQLFormattedError> {
         return errors.map((error) => {
           if (options.formatError) {
             try {
               return options.formatError(error);
             } catch (err) {
               console.error('Error in formatError function:', err);
-              const newError = new Error('Internal server error');
+              const newError = new GraphQLError('Internal server error');
               return formatError(newError);
             }
           } else {
             return formatError(error);
           }
-        }) as Array<Error>;
+        }) as Array<GraphQLFormattedError>;
     }
 
     function printStackTrace(error: Error) {
@@ -118,7 +120,7 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResult> {
             return Promise.resolve({ errors: format(validationErrors) });
         }
     } else {
-        documentAST = options.query as Document;
+        documentAST = options.query as DocumentNode;
     }
 
     try {

@@ -67,7 +67,7 @@ export function graphqlExpress(options: GraphQLOptions | ExpressGraphQLOptionsFu
       b = [b];
     }
 
-    let responses: Array<graphql.GraphQLResult> = [];
+    let responses: Array<graphql.ExecutionResult> = [];
     for (let requestParams of b) {
       try {
         const query = requestParams.query;

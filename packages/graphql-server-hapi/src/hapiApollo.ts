@@ -1,6 +1,6 @@
 import * as Boom from 'boom';
 import { Server, Request, IReply } from 'hapi';
-import { GraphQLResult, formatError } from 'graphql';
+import { ExecutionResult, formatError } from 'graphql';
 import * as GraphiQL from 'graphql-server-module-graphiql';
 import { GraphQLOptions, runQuery } from 'graphql-server-core';
 
@@ -125,7 +125,7 @@ async function getGraphQLOptions(request: Request, reply: IReply): Promise<{}> {
 async function processQuery(graphqlParams, optionsObject: GraphQLOptions, isBatch: boolean, reply) {
   const formatErrorFn = optionsObject.formatError || formatError;
 
-  let responses: GraphQLResult[] = [];
+  let responses: ExecutionResult[] = [];
   for (let query of graphqlParams) {
     try {
       // Shallow clone context for queries in batches. This allows
