@@ -1,7 +1,6 @@
 import * as express from 'express';
-import * as graphql from 'graphql';
 import * as url from 'url';
-import { GraphQLOptions, runQuery } from 'graphql-server-core';
+import { GraphQLOptions, HttpQueryError, runHttpQuery } from 'graphql-server-core';
 import * as GraphiQL from 'graphql-server-module-graphiql';
 
 export interface ExpressGraphQLOptionsFunction {
@@ -27,129 +26,31 @@ export function graphqlExpress(options: GraphQLOptions | ExpressGraphQLOptionsFu
     throw new Error(`Apollo Server expects exactly one argument, got ${arguments.length}`);
   }
 
-  return async (req: express.Request, res: express.Response, next) => {
-    let optionsObject: GraphQLOptions;
-    if (isOptionsFunction(options)) {
-      try {
-        optionsObject = await options(req, res);
-      } catch (e) {
-        res.statusCode = 500;
-        res.write(`Invalid options provided to ApolloServer: ${e.message}`);
-        res.end();
-      }
-    } else {
-      optionsObject = options;
-    }
-
-    const formatErrorFn = optionsObject.formatError || graphql.formatError;
-    let requestPayload;
-
-    switch ( req.method ) {
-      case 'POST':
-        if ( !req.body ) {
-          res.statusCode = 500;
-          res.write('POST body missing. Did you forget "app.use(bodyParser.json())"?');
-          res.end();
-          return;
-        }
-
-        requestPayload = req.body;
-        break;
-      case 'GET':
-        if ( !req.query || (Object.keys(req.query).length === 0) ) {
-          res.statusCode = 400;
-          res.write('GET query missing.');
-          res.end();
-          return;
-        }
-
-        requestPayload = req.query;
-        break;
-
-      default:
-        res.setHeader('Allow', 'GET, POST');
-        res.statusCode = 405;
-        res.write('Apollo Server supports only GET/POST requests.');
-        res.end();
-        return;
-    }
-
-    let isBatch = true;
-    // TODO: do something different here if the body is an array.
-    // Throw an error if body isn't either array or object.
-    if (!Array.isArray(requestPayload)) {
-      isBatch = false;
-      requestPayload = [requestPayload];
-    }
-
-    let responses: Array<graphql.ExecutionResult> = [];
-    for (let requestParams of requestPayload) {
-      try {
-        const query = requestParams.query;
-        const operationName = requestParams.operationName;
-        let variables = requestParams.variables;
-
-        if (typeof variables === 'string') {
-          try {
-            variables = JSON.parse(variables);
-          } catch (error) {
-            res.statusCode = 400;
-            res.write('Variables are invalid JSON.');
-            res.end();
-            return;
-          }
-        }
-
-        // Shallow clone context for queries in batches. This allows
-        // users to distinguish multiple queries in the batch and to
-        // modify the context object without interfering with each other.
-        let context = optionsObject.context;
-        if (isBatch) {
-          context = Object.assign({},  context || {});
-        }
-
-        let params = {
-          schema: optionsObject.schema,
-          query: query,
-          variables: variables,
-          context: context,
-          rootValue: optionsObject.rootValue,
-          operationName: operationName,
-          logFunction: optionsObject.logFunction,
-          validationRules: optionsObject.validationRules,
-          formatError: formatErrorFn,
-          formatResponse: optionsObject.formatResponse,
-          debug: optionsObject.debug,
-        };
-
-        if (optionsObject.formatParams) {
-          params = optionsObject.formatParams(params);
-        }
-
-        responses.push(await runQuery(params));
-      } catch (e) {
-        responses.push({ errors: [formatErrorFn(e)] });
-      }
-    }
-
-    res.setHeader('Content-Type', 'application/json');
-    if (isBatch) {
-      res.write(JSON.stringify(responses));
+  return (req: express.Request, res: express.Response): void => {
+    runHttpQuery([req, res], {
+      method: req.method,
+      options: options,
+      query: req.method === 'POST' ? req.body : req.query,
+    }).then((gqlResponse) => {
+      res.setHeader('Content-Type', 'application/json');
+      res.write(gqlResponse);
       res.end();
-    } else {
-      const gqlResponse = responses[0];
-      if (gqlResponse.errors && typeof gqlResponse.data === 'undefined') {
-        res.statusCode = 400;
+    }, (error: HttpQueryError) => {
+      if ( undefined === error.statusCode ) {
+        throw error;
       }
-      res.write(JSON.stringify(gqlResponse));
-      res.end();
-    }
 
+      if ( error.headers ) {
+        Object.keys(error.headers).forEach((header) => {
+          res.setHeader(header, error.headers[header]);
+        });
+      }
+
+      res.statusCode = error.statusCode;
+      res.write(error.message);
+      res.end();
+    });
   };
-}
-
-function isOptionsFunction(arg: GraphQLOptions | ExpressGraphQLOptionsFunction): arg is ExpressGraphQLOptionsFunction {
-  return typeof arg === 'function';
 }
 
 /* This middleware returns the html for the GraphiQL interactive query UI
@@ -164,7 +65,7 @@ function isOptionsFunction(arg: GraphQLOptions | ExpressGraphQLOptionsFunction):
  */
 
 export function graphiqlExpress(options: GraphiQL.GraphiQLData) {
-  return (req: express.Request, res: express.Response, next) => {
+  return (req: express.Request, res: express.Response) => {
     const q = req.url && url.parse(req.url, true).query || {};
     const query = q.query || '';
     const variables = q.variables || '{}';
