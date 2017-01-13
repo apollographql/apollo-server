@@ -75,8 +75,7 @@ export async function runHttpQuery(handlerArguments: Array<any>, request: HttpQu
   let responses: Array<ExecutionResult> = [];
   for (let requestParams of requestPayload) {
     if ( isGetRequest && !isQueryOperation(requestParams.query)) {
-      const errorMsg = `GET supports only query operation`;
-      throw new HttpQueryError(405, errorMsg, false, {
+      throw new HttpQueryError(405, `GET supports only query operation`, false, {
         'Allow':  'POST',
       });
     }

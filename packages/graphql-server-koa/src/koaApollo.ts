@@ -40,9 +40,6 @@ export function graphqlKoa(options: GraphQLOptions | KoaGraphQLOptionsFunction):
 
       ctx.status = error.statusCode;
       ctx.body = error.message;
-    }).then(undefined, (error) => {
-      console.error(error);
-      throw error;
     });
   };
 }
