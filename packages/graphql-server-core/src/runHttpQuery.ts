@@ -22,6 +22,7 @@ export class HttpQueryError extends Error {
 }
 
 export async function runHttpQuery(handlerArguments: Array<any>, request: HttpQueryRequest): Promise<string> {
+  let isGetRequest: boolean = false;
   let optionsObject: GraphQLOptions;
   if (isOptionsFunction(request.options)) {
     try {
@@ -49,6 +50,7 @@ export async function runHttpQuery(handlerArguments: Array<any>, request: HttpQu
        throw new HttpQueryError(400, 'GET query missing.');
      }
 
+     isGetRequest = true;
      requestPayload = request.query;
      break;
 
@@ -68,6 +70,13 @@ export async function runHttpQuery(handlerArguments: Array<any>, request: HttpQu
 
   let responses: Array<ExecutionResult> = [];
   for (let requestParams of requestPayload) {
+    if ( isGetRequest && !requestParams.query.trim().startsWith('query')) {
+      const errorMsg = `GET supports only query operation`;
+      throw new HttpQueryError(405, errorMsg, false, {
+        'Allow':  'POST',
+      });
+    }
+
     try {
       const query = requestParams.query;
       const operationName = requestParams.operationName;

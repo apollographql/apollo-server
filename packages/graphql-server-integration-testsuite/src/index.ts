@@ -207,6 +207,20 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
       });
 
+      it('throws error if trying to use mutation with GET request', () => {
+          app = createApp();
+          const query = {
+              query: 'mutation test{ testMutation(echo: "ping") }',
+          };
+          const req = request(app)
+              .get(`/graphql?${querystring.stringify(query)}`);
+          return req.then((res) => {
+              expect(res.status).to.equal(405);
+              expect(res.headers['allow']).to.equal('POST');
+              return expect(res.error.text).to.contain('GET supports only query operation');
+          });
+      });
+
       it('can handle a GET request with variables', () => {
           app = createApp();
           const query = {
