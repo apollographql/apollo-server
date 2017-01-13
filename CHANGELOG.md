@@ -1,6 +1,7 @@
 # Changelog
 
 ### VNEXT
+* add support for HTTP GET Method ([@DxCx](https://github.com/DxCx)) on [#180](https://github.com/apollostack/graphql-server/pull/180)
 
 ### v0.5.0
 * Switch graphql typings for typescript to @types/graphql [#260](https://github.com/apollostack/graphql-server/pull/260)
