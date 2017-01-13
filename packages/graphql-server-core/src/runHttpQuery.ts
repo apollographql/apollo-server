@@ -21,6 +21,10 @@ export class HttpQueryError extends Error {
   }
 }
 
+function isQueryOperation(query: string) {
+  return query.trim().startsWith('{') || query.trim().startsWith('query');
+}
+
 export async function runHttpQuery(handlerArguments: Array<any>, request: HttpQueryRequest): Promise<string> {
   let isGetRequest: boolean = false;
   let optionsObject: GraphQLOptions;
@@ -70,7 +74,7 @@ export async function runHttpQuery(handlerArguments: Array<any>, request: HttpQu
 
   let responses: Array<ExecutionResult> = [];
   for (let requestParams of requestPayload) {
-    if ( isGetRequest && !requestParams.query.trim().startsWith('query')) {
+    if ( isGetRequest && !isQueryOperation(requestParams.query)) {
       const errorMsg = `GET supports only query operation`;
       throw new HttpQueryError(405, errorMsg, false, {
         'Allow':  'POST',

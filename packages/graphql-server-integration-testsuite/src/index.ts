@@ -207,6 +207,22 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
       });
 
+      it('can handle a basic implicit GET request', () => {
+          app = createApp();
+          const expected = {
+              testString: 'it works',
+          };
+          const query = {
+              query: '{ testString }',
+          };
+          const req = request(app)
+              .get(`/graphql?${querystring.stringify(query)}`);
+          return req.then((res) => {
+              expect(res.status).to.equal(200);
+              return expect(res.body.data).to.deep.equal(expected);
+          });
+      });
+
       it('throws error if trying to use mutation with GET request', () => {
           app = createApp();
           const query = {
