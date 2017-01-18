@@ -1,4 +1,4 @@
-import { formatError, ExecutionResult } from 'graphql';
+import { parse, getOperationAST, DocumentNode, formatError, ExecutionResult } from 'graphql';
 import { runQuery } from './runQuery';
 import { default as GraphQLOptions, isOptionsFunction } from './graphqlOptions';
 
@@ -15,14 +15,16 @@ export class HttpQueryError extends Error {
 
   constructor (statusCode: number, message: string, isGraphQLError: boolean = false, headers?: { [key: string]: string }) {
     super(message);
+    this.name = 'HttpQueryError';
     this.statusCode = statusCode;
     this.isGraphQLError = isGraphQLError;
     this.headers = headers;
   }
 }
 
-function isQueryOperation(query: string) {
-  return query.trim().startsWith('{') || query.trim().startsWith('query');
+function isQueryOperation(query: DocumentNode, operationName: string) {
+  const operationAST = getOperationAST(query, operationName);
+  return operationAST.operation === 'query';
 }
 
 export async function runHttpQuery(handlerArguments: Array<any>, request: HttpQueryRequest): Promise<string> {
@@ -74,14 +76,21 @@ export async function runHttpQuery(handlerArguments: Array<any>, request: HttpQu
 
   let responses: Array<ExecutionResult> = [];
   for (let requestParams of requestPayload) {
-    if ( isGetRequest && !isQueryOperation(requestParams.query)) {
-      throw new HttpQueryError(405, `GET supports only query operation`, false, {
-        'Allow':  'POST',
-      });
-    }
-
     try {
-      const query = requestParams.query;
+      let query = requestParams.query;
+      if ( isGetRequest ) {
+        if (typeof query === 'string') {
+          // preparse the query incase of GET so we can assert the operation.
+          query = parse(query);
+        }
+
+        if ( ! isQueryOperation(query, requestParams.operationName) ) {
+          throw new HttpQueryError(405, `GET supports only query operation`, false, {
+            'Allow':  'POST',
+          });
+        }
+      }
+
       const operationName = requestParams.operationName;
       let variables = requestParams.variables;
 
@@ -121,6 +130,12 @@ export async function runHttpQuery(handlerArguments: Array<any>, request: HttpQu
 
       responses.push(await runQuery(params));
     } catch (e) {
+      // Populate any HttpQueryError to our handler which should
+      // convert it to Http Error.
+      if ( e.name === 'HttpQueryError' ) {
+        throw e;
+      }
+
       responses.push({ errors: [formatErrorFn(e)] });
     }
   }

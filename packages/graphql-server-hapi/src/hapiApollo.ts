@@ -26,7 +26,7 @@ function runHttpQueryWrapper(options: GraphQLOptions | HapiOptionsFunction, requ
   }).then((gqlResponse) => {
     return reply(gqlResponse).type('application/json');
   }, (error: HttpQueryError) => {
-    if ( undefined === error.statusCode ) {
+    if ( 'HttpQueryError' !== error.name ) {
       throw error;
     }
 

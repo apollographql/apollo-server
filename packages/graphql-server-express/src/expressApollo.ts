@@ -36,7 +36,7 @@ export function graphqlExpress(options: GraphQLOptions | ExpressGraphQLOptionsFu
       res.write(gqlResponse);
       res.end();
     }, (error: HttpQueryError) => {
-      if ( undefined === error.statusCode ) {
+      if ( 'HttpQueryError' !== error.name ) {
         throw error;
       }
 

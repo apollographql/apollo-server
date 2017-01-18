@@ -8,6 +8,7 @@ import {
     GraphQLObjectType,
     GraphQLString,
     GraphQLError,
+    GraphQLNonNull,
     introspectionQuery,
     BREAK,
 } from 'graphql';
@@ -60,6 +61,18 @@ const QueryType = new GraphQLObjectType({
     },
 });
 
+const PersonType = new GraphQLObjectType({
+    name: 'PersonType',
+    fields: {
+        firstName: {
+            type: GraphQLString,
+        },
+        lastName: {
+            type: GraphQLString,
+        },
+    },
+});
+
 const MutationType = new GraphQLObjectType({
     name: 'MutationType',
     fields: {
@@ -69,6 +82,20 @@ const MutationType = new GraphQLObjectType({
             resolve(root, { echo }) {
                 return `not really a mutation, but who cares: ${echo}`;
             },
+        },
+        testPerson: {
+          type: PersonType,
+          args: {
+            firstName: {
+              type: new GraphQLNonNull(GraphQLString),
+            },
+            lastName: {
+              type: new GraphQLNonNull(GraphQLString),
+            },
+          },
+          resolve(root, args) {
+            return args;
+          },
         },
     },
 });
@@ -223,10 +250,32 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
       });
 
-      it('throws error if trying to use mutation with GET request', () => {
+      it('throws error if trying to use mutation using GET request', () => {
           app = createApp();
           const query = {
               query: 'mutation test{ testMutation(echo: "ping") }',
+          };
+          const req = request(app)
+              .get(`/graphql?${querystring.stringify(query)}`);
+          return req.then((res) => {
+              expect(res.status).to.equal(405);
+              expect(res.headers['allow']).to.equal('POST');
+              return expect(res.error.text).to.contain('GET supports only query operation');
+          });
+      });
+
+      it('throws error if trying to use mutation with fragment using GET request', () => {
+          app = createApp();
+          const query = {
+            query: `fragment PersonDetails on PersonType {
+              firstName
+            }
+
+            mutation test {
+              testPerson(firstName: "Test", lastName: "Me") {
+                ...PersonDetails
+              }
+            }`,
           };
           const req = request(app)
               .get(`/graphql?${querystring.stringify(query)}`);

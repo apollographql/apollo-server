@@ -28,7 +28,7 @@ export function graphqlKoa(options: GraphQLOptions | KoaGraphQLOptionsFunction):
       ctx.set('Content-Type', 'application/json');
       ctx.body = gqlResponse;
     }, (error: HttpQueryError) => {
-      if ( undefined === error.statusCode ) {
+      if ( 'HttpQueryError' !== error.name ) {
         throw error;
       }
 
