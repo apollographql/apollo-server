@@ -1,6 +1,8 @@
 # Changelog
 
 ### VNEXT
+
+### v0.5.1
 * add support for HTTP GET Method ([@DxCx](https://github.com/DxCx)) on [#180](https://github.com/apollostack/graphql-server/pull/180)
 
 ### v0.5.0
