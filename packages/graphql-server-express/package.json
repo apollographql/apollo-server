@@ -37,6 +37,7 @@
     "graphql-server-integration-testsuite": "^0.5.0",
     "body-parser": "^1.15.2",
     "connect": "^3.4.1",
+    "connect-query": "^0.2.0",
     "express": "^4.14.0",
     "multer": "^1.2.0"
   },

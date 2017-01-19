@@ -44,6 +44,7 @@ const PORT = 3000;
 
 var app = express();
 
+// bodyParser is needed just for POST.
 app.use('/graphql', bodyParser.json(), graphqlExpress({ schema: myGraphQLSchema }));
 
 app.listen(PORT);
@@ -60,6 +61,7 @@ const PORT = 3000;
 
 var app = connect();
 
+// bodyParser is needed just for POST.
 app.use('/graphql', bodyParser.json());
 app.use('/graphql', graphqlConnect({ schema: myGraphQLSchema }));
 
@@ -108,23 +110,24 @@ server.start((err) => {
 ### Koa
 ```js
 import koa from 'koa'; // koa@2
-import koaBody from 'koa-bodyparser'; // koa-bodyparser@next
 import koaRouter from 'koa-router'; // koa-router@next
+import koaBody from 'koa-bodyparser'; // koa-bodyparser@next
 import { graphqlKoa } from 'graphql-server-koa';
 
 const app = new koa();
 const router = new koaRouter();
 const PORT = 3000;
 
+// koaBody is needed just for POST.
 app.use(koaBody());
 
 router.post('/graphql', graphqlKoa({ schema: myGraphQLSchema }));
+router.get('/graphql', graphqlKoa({ schema: myGraphQLSchema }));
+
 app.use(router.routes());
 app.use(router.allowedMethods());
 app.listen(PORT);
 ```
-
-## Options
 
 GraphQL Server can be configured with an options object with the the following fields:
 

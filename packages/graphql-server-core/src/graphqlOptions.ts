@@ -15,7 +15,7 @@ import { LogFunction } from './runQuery';
  * - (optional) debug: a boolean that will print additional debug logging if execution errors occur
  *
  */
-interface GraphQLServerOptions {
+export interface GraphQLServerOptions {
   schema: GraphQLSchema;
   formatError?: Function;
   rootValue?: any;
@@ -28,3 +28,7 @@ interface GraphQLServerOptions {
 }
 
 export default GraphQLServerOptions;
+
+export function isOptionsFunction(arg: GraphQLServerOptions | Function): arg is Function {
+  return typeof arg === 'function';
+}

@@ -1,6 +1,5 @@
 import * as koa from 'koa';
-import * as graphql from 'graphql';
-import { GraphQLOptions, runQuery } from 'graphql-server-core';
+import { GraphQLOptions, HttpQueryError, runHttpQuery } from 'graphql-server-core';
 import * as GraphiQL from 'graphql-server-module-graphiql';
 
 export interface KoaGraphQLOptionsFunction {
@@ -20,101 +19,33 @@ export function graphqlKoa(options: GraphQLOptions | KoaGraphQLOptionsFunction):
     throw new Error(`Apollo Server expects exactly one argument, got ${arguments.length}`);
   }
 
-  return async (ctx, next) => {
-    let optionsObject: GraphQLOptions;
-    if (isOptionsFunction(options)) {
-      try {
-        optionsObject = await options(ctx);
-      } catch (e) {
-        ctx.status = 500;
-        return ctx.body = `Invalid options provided to ApolloServer: ${e.message}`;
+  return (ctx: koa.Context): Promise<void> => {
+    return runHttpQuery([ctx], {
+      method: ctx.request.method,
+      options: options,
+      query: ctx.request.method === 'POST' ? ctx.request.body : ctx.request.query,
+    }).then((gqlResponse) => {
+      ctx.set('Content-Type', 'application/json');
+      ctx.body = gqlResponse;
+    }, (error: HttpQueryError) => {
+      if ( 'HttpQueryError' !== error.name ) {
+        throw error;
       }
-    } else {
-      optionsObject = options;
-    }
 
-    const formatErrorFn = optionsObject.formatError || graphql.formatError;
-
-    if (!ctx.request.body) {
-      ctx.status = 500;
-      return ctx.body = 'POST body missing. Did you forget "app.use(koaBody())"?';
-    }
-
-    let b = ctx.request.body;
-    let isBatch = true;
-    if (!Array.isArray(b)) {
-      isBatch = false;
-      b = [b];
-    }
-
-    let responses: Array<graphql.ExecutionResult> = [];
-    for (let requestParams of b) {
-      try {
-        const query = requestParams.query;
-        const operationName = requestParams.operationName;
-        let variables = requestParams.variables;
-
-        if (typeof variables === 'string') {
-          try {
-            variables = JSON.parse(variables);
-          } catch (error) {
-            ctx.status = 400;
-            return ctx.body = 'Variables are invalid JSON.';
-          }
-        }
-
-        // Shallow clone context for queries in batches. This allows
-        // users to distinguish multiple queries in the batch and to
-        // modify the context object without interfering with each other.
-        let context = optionsObject.context;
-        if (isBatch) {
-          context = Object.assign({},  context || {});
-        }
-
-        let params = {
-          schema: optionsObject.schema,
-          query: query,
-          variables: variables,
-          context: context,
-          rootValue: optionsObject.rootValue,
-          operationName: operationName,
-          logFunction: optionsObject.logFunction,
-          validationRules: optionsObject.validationRules,
-          formatError: formatErrorFn,
-          formatResponse: optionsObject.formatResponse,
-          debug: optionsObject.debug,
-        };
-
-        if (optionsObject.formatParams) {
-          params = optionsObject.formatParams(params);
-        }
-
-        responses.push(await runQuery(params));
-      } catch (e) {
-        responses.push({ errors: [formatErrorFn(e)] });
+      if ( error.headers ) {
+        Object.keys(error.headers).forEach((header) => {
+          ctx.set(header, error.headers[header]);
+        });
       }
-    }
 
-    ctx.set('Content-Type', 'application/json');
-    if (isBatch) {
-      return ctx.body = JSON.stringify(responses);
-    } else {
-      const gqlResponse = responses[0];
-      if (gqlResponse.errors && typeof gqlResponse.data === 'undefined') {
-        ctx.status = 400;
-      }
-      return ctx.body = JSON.stringify(gqlResponse);
-    }
-
+      ctx.status = error.statusCode;
+      ctx.body = error.message;
+    });
   };
 }
 
-function isOptionsFunction(arg: GraphQLOptions | KoaGraphQLOptionsFunction): arg is KoaGraphQLOptionsFunction {
-  return typeof arg === 'function';
-}
-
 export function graphiqlKoa(options: GraphiQL.GraphiQLData) {
-  return (ctx, next) => {
+  return (ctx: koa.Context) => {
 
     const q = ctx.request.query || {};
     const query = q.query || '';
