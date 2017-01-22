@@ -1,6 +1,6 @@
 {
   "name": "graphql-server-core",
-  "version": "0.4.3",
+  "version": "0.5.1",
   "description": "Core engine for Apollo GraphQL server",
   "main": "dist/index.js",
   "scripts": {
@@ -26,15 +26,15 @@
   "dependencies": {},
   "devDependencies": {
     "@types/fibers": "0.0.29",
-    "typed-graphql": "^1.0.2",
+    "@types/graphql": "^0.8.5",
     "fibers": "^1.0.15",
     "meteor-promise": "^0.7.3"
   },
   "peerDependencies": {
-    "graphql": "^0.6.1 || ^0.7.0"
+    "graphql": "^0.6.1 || ^0.7.0 || ^0.8.0"
   },
   "optionalDependencies": {
-    "typed-graphql": "^1.0.2"
+    "@types/graphql": "^0.8.5"
   },
   "typings": "dist/index.d.ts",
   "typescript": {

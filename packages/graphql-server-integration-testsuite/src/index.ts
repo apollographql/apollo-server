@@ -1,12 +1,14 @@
 import { expect } from 'chai';
 import { stub } from 'sinon';
 import 'mocha';
+import * as querystring from 'querystring';
 
 import {
     GraphQLSchema,
     GraphQLObjectType,
     GraphQLString,
     GraphQLError,
+    GraphQLNonNull,
     introspectionQuery,
     BREAK,
 } from 'graphql';
@@ -59,6 +61,18 @@ const QueryType = new GraphQLObjectType({
     },
 });
 
+const PersonType = new GraphQLObjectType({
+    name: 'PersonType',
+    fields: {
+        firstName: {
+            type: GraphQLString,
+        },
+        lastName: {
+            type: GraphQLString,
+        },
+    },
+});
+
 const MutationType = new GraphQLObjectType({
     name: 'MutationType',
     fields: {
@@ -68,6 +82,20 @@ const MutationType = new GraphQLObjectType({
             resolve(root, { echo }) {
                 return `not really a mutation, but who cares: ${echo}`;
             },
+        },
+        testPerson: {
+          type: PersonType,
+          args: {
+            firstName: {
+              type: new GraphQLNonNull(GraphQLString),
+            },
+            lastName: {
+              type: new GraphQLNonNull(GraphQLString),
+            },
+          },
+          resolve(root, args) {
+            return args;
+          },
         },
     },
 });
@@ -158,15 +186,14 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
       });
 
-      it('rejects the request if the method is not POST', () => {
+      it('rejects the request if the method is not POST or GET', () => {
           app = createApp({excludeParser: true});
           const req = request(app)
-              .get('/graphql')
+              .head('/graphql')
               .send();
           return req.then((res) => {
-              expect(res.status).to.be.oneOf([404, 405]);
-              // Hapi doesn't return allow header, so we can't test this.
-              // return expect(res.headers['allow']).to.equal('POST');
+              expect(res.status).to.equal(405);
+              expect(res.headers['allow']).to.equal('GET, POST');
           });
       });
 
@@ -178,6 +205,101 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           return req.then((res) => {
               expect(res.status).to.equal(500);
               return expect(res.error.text).to.contain('POST body missing.');
+          });
+      });
+
+      it('throws an error if GET query is missing', () => {
+          app = createApp();
+          const req = request(app)
+              .get(`/graphql`);
+          return req.then((res) => {
+              expect(res.status).to.equal(400);
+              return expect(res.error.text).to.contain('GET query missing.');
+          });
+      });
+
+      it('can handle a basic GET request', () => {
+          app = createApp();
+          const expected = {
+              testString: 'it works',
+          };
+          const query = {
+              query: 'query test{ testString }',
+          };
+          const req = request(app)
+              .get(`/graphql?${querystring.stringify(query)}`);
+          return req.then((res) => {
+              expect(res.status).to.equal(200);
+              return expect(res.body.data).to.deep.equal(expected);
+          });
+      });
+
+      it('can handle a basic implicit GET request', () => {
+          app = createApp();
+          const expected = {
+              testString: 'it works',
+          };
+          const query = {
+              query: '{ testString }',
+          };
+          const req = request(app)
+              .get(`/graphql?${querystring.stringify(query)}`);
+          return req.then((res) => {
+              expect(res.status).to.equal(200);
+              return expect(res.body.data).to.deep.equal(expected);
+          });
+      });
+
+      it('throws error if trying to use mutation using GET request', () => {
+          app = createApp();
+          const query = {
+              query: 'mutation test{ testMutation(echo: "ping") }',
+          };
+          const req = request(app)
+              .get(`/graphql?${querystring.stringify(query)}`);
+          return req.then((res) => {
+              expect(res.status).to.equal(405);
+              expect(res.headers['allow']).to.equal('POST');
+              return expect(res.error.text).to.contain('GET supports only query operation');
+          });
+      });
+
+      it('throws error if trying to use mutation with fragment using GET request', () => {
+          app = createApp();
+          const query = {
+            query: `fragment PersonDetails on PersonType {
+              firstName
+            }
+
+            mutation test {
+              testPerson(firstName: "Test", lastName: "Me") {
+                ...PersonDetails
+              }
+            }`,
+          };
+          const req = request(app)
+              .get(`/graphql?${querystring.stringify(query)}`);
+          return req.then((res) => {
+              expect(res.status).to.equal(405);
+              expect(res.headers['allow']).to.equal('POST');
+              return expect(res.error.text).to.contain('GET supports only query operation');
+          });
+      });
+
+      it('can handle a GET request with variables', () => {
+          app = createApp();
+          const query = {
+              query: 'query test($echo: String){ testArgument(echo: $echo) }',
+              variables: JSON.stringify({ echo: 'world' }),
+          };
+          const expected = {
+              testArgument: 'hello world',
+          };
+          const req = request(app)
+              .get(`/graphql?${querystring.stringify(query)}`);
+          return req.then((res) => {
+              expect(res.status).to.equal(200);
+              return expect(res.body.data).to.deep.equal(expected);
           });
       });
 

@@ -1,6 +1,6 @@
 # GraphQL Server for Express, Connect, Hapi, Koa, and Restify
 
-[![npm version](https://badge.fury.io/js/graphql-server.svg)](https://badge.fury.io/js/graphql-server)
+[![npm version](https://badge.fury.io/js/graphql-server-core.svg)](https://badge.fury.io/js/graphql-server-core)
 [![Build Status](https://travis-ci.org/apollostack/graphql-server.svg?branch=master)](https://travis-ci.org/apollostack/graphql-server)
 [![Coverage Status](https://coveralls.io/repos/github/apollostack/graphql-server/badge.svg?branch=master)](https://coveralls.io/github/apollostack/graphql-server?branch=master)
 [![Get on Slack](https://img.shields.io/badge/slack-join-orange.svg)](http://www.apollostack.com/#slack)
@@ -36,6 +36,7 @@ where variant is one of the following:
 
 ```js
 import express from 'express';
+import bodyParser from 'body-parser';
 import { graphqlExpress } from 'graphql-server-express';
 
 const myGraphQLSchema = // ... define or import your schema here!
@@ -43,6 +44,7 @@ const PORT = 3000;
 
 var app = express();
 
+// bodyParser is needed just for POST.
 app.use('/graphql', bodyParser.json(), graphqlExpress({ schema: myGraphQLSchema }));
 
 app.listen(PORT);
@@ -59,6 +61,7 @@ const PORT = 3000;
 
 var app = connect();
 
+// bodyParser is needed just for POST.
 app.use('/graphql', bodyParser.json());
 app.use('/graphql', graphqlConnect({ schema: myGraphQLSchema }));
 
@@ -106,17 +109,21 @@ server.start((err) => {
 
 ### Koa
 ```js
-import koa from 'koa';
-import koaRouter from 'koa-router';
+import koa from 'koa'; // koa@2
+import koaRouter from 'koa-router'; // koa-router@next
+import koaBody from 'koa-bodyparser'; // koa-bodyparser@next
 import { graphqlKoa } from 'graphql-server-koa';
 
 const app = new koa();
 const router = new koaRouter();
 const PORT = 3000;
 
+// koaBody is needed just for POST.
 app.use(koaBody());
 
 router.post('/graphql', graphqlKoa({ schema: myGraphQLSchema }));
+router.get('/graphql', graphqlKoa({ schema: myGraphQLSchema }));
+
 app.use(router.routes());
 app.use(router.allowedMethods());
 app.listen(PORT);
@@ -135,9 +142,9 @@ const server = restify.createServer({
 
 server.use(restify.bodyParser());
 
-server.post('/graphql', graphqlRestify({ schema: myGraphQLSchema }));
+server.use('/graphql', graphqlRestify({ schema: myGraphQLSchema }));
 
-sever.get('/graphiql', graphiqlRestify({ endpointURL: '/graphql' }));
+server.get('/graphiql', graphiqlRestify({ endpointURL: '/graphql' }));
 
 server.listen(PORT, () => console.log(`Listening on ${PORT}`));
 ```

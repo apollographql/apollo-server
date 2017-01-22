@@ -1,8 +1,17 @@
 # Changelog
 
 ### VNEXT
+* Restify integration and docs/tests.
 
-* Restify integration and documents/tests.
+### v0.5.1
+* add support for HTTP GET Method ([@DxCx](https://github.com/DxCx)) on [#180](https://github.com/apollostack/graphql-server/pull/180)
+
+### v0.5.0
+* Switch graphql typings for typescript to @types/graphql [#260](https://github.com/apollostack/graphql-server/pull/260)
+
+### v0.4.4
+* Update GraphiQL to version 0.8.0 ([@DxCx](https://github.com/DxCx)) on [#192](https://github.com/apollostack/graphql-server/pull/192)
+* Upgrade to GraphQL-js 0.8.1.
 
 ### v0.4.2
 

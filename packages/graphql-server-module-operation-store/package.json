@@ -1,6 +1,6 @@
 {
   "name": "graphql-server-module-operation-store",
-  "version": "0.4.3",
+  "version": "0.5.0",
   "description": "Persisted operation store module for Apollo GraphQL Servers",
   "main": "dist/index.js",
   "scripts": {
@@ -24,14 +24,11 @@
   },
   "homepage": "https://github.com/apollostack/graphql-server#readme",
   "dependencies": {},
-  "devDependencies": {
-    "typed-graphql": "^1.0.2"
-  },
   "peerDependencies": {
-    "graphql": "^0.6.1 || ^0.7.0"
+    "graphql": "^0.6.1 || ^0.7.0 || ^0.8.0"
   },
   "optionalDependencies": {
-    "typed-graphql": "^1.0.2"
+    "@types/graphql": "^0.8.5"
   },
   "typings": "dist/index.d.ts",
   "typescript": {

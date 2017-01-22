@@ -20,6 +20,7 @@ function createApp(options: CreateAppOptions = {}) {
   if (options.graphiqlOptions ) {
     router.get('/graphiql', graphiqlKoa( options.graphiqlOptions ));
   }
+  router.get('/graphql',  graphqlKoa( options.graphqlOptions ));
   router.post('/graphql', graphqlKoa( options.graphqlOptions ));
   app.use(router.routes());
   app.use(router.allowedMethods());

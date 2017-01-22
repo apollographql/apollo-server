@@ -1,4 +1,4 @@
-import { GraphQLSchema, ValidationRule } from 'graphql';
+import { GraphQLSchema, ValidationContext } from 'graphql';
 import { LogFunction } from './runQuery';
 
 /*
@@ -15,16 +15,20 @@ import { LogFunction } from './runQuery';
  * - (optional) debug: a boolean that will print additional debug logging if execution errors occur
  *
  */
-interface GraphQLServerOptions {
+export interface GraphQLServerOptions {
   schema: GraphQLSchema;
   formatError?: Function;
   rootValue?: any;
   context?: any;
   logFunction?: LogFunction;
   formatParams?: Function;
-  validationRules?: Array<ValidationRule>;
+  validationRules?: Array<(context: ValidationContext) => any>;
   formatResponse?: Function;
   debug?: boolean;
 }
 
 export default GraphQLServerOptions;
+
+export function isOptionsFunction(arg: GraphQLServerOptions | Function): arg is Function {
+  return typeof arg === 'function';
+}
