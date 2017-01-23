@@ -1,7 +1,7 @@
 import * as express from 'express';
 import * as bodyParser from 'body-parser';
 import { graphqlExpress, graphiqlExpress } from './expressApollo';
-import testSuite, { Schema, CreateAppOptions } from 'graphql-server-integration-testsuite';
+import testSuite, { schema as Schema, CreateAppOptions } from 'graphql-server-integration-testsuite';
 import { expect } from 'chai';
 import { GraphQLOptions } from 'graphql-server-core';
 import 'mocha';

@@ -20,7 +20,7 @@ import { GraphQLOptions } from 'graphql-server-core';
 import * as GraphiQL from 'graphql-server-module-graphiql';
 import { OperationStore } from 'graphql-server-module-operation-store';
 
-const QueryType = new GraphQLObjectType({
+const queryType = new GraphQLObjectType({
     name: 'QueryType',
     fields: {
         testString: {
@@ -61,7 +61,7 @@ const QueryType = new GraphQLObjectType({
     },
 });
 
-const PersonType = new GraphQLObjectType({
+const personType = new GraphQLObjectType({
     name: 'PersonType',
     fields: {
         firstName: {
@@ -73,7 +73,7 @@ const PersonType = new GraphQLObjectType({
     },
 });
 
-const MutationType = new GraphQLObjectType({
+const mutationType = new GraphQLObjectType({
     name: 'MutationType',
     fields: {
         testMutation: {
@@ -84,7 +84,7 @@ const MutationType = new GraphQLObjectType({
             },
         },
         testPerson: {
-          type: PersonType,
+          type: personType,
           args: {
             firstName: {
               type: new GraphQLNonNull(GraphQLString),
@@ -100,9 +100,9 @@ const MutationType = new GraphQLObjectType({
     },
 });
 
-export const Schema = new GraphQLSchema({
-    query: QueryType,
-    mutation: MutationType,
+export const schema = new GraphQLSchema({
+    query: queryType,
+    mutation: mutationType,
 });
 
 export interface CreateAppOptions {
@@ -135,7 +135,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
 
     describe('graphqlHTTP', () => {
       it('can be called with an options function', () => {
-          app = createApp({graphqlOptions: (): GraphQLOptions => ({schema: Schema})});
+          app = createApp({graphqlOptions: (): GraphQLOptions => ({schema})});
           const expected = {
               testString: 'it works',
           };
@@ -153,7 +153,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
       it('can be called with an options function that returns a promise', () => {
           app = createApp({ graphqlOptions: () => {
               return new Promise(resolve => {
-                  resolve({schema: Schema});
+                  resolve({schema});
               });
           }});
           const expected = {
@@ -459,7 +459,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
 
       it('clones batch context', () => {
           app = createApp({graphqlOptions: {
-              schema: Schema,
+              schema,
               context: {testField: 'expected'},
           }});
           const expected = [
@@ -506,7 +506,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
 
       it('applies the formatResponse function', () => {
           app = createApp({graphqlOptions: {
-              schema: Schema,
+              schema,
               formatResponse(response) {
                   response['extensions'] = { it: 'works' }; return response;
               },
@@ -527,7 +527,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
       it('passes the context to the resolver', () => {
           const expected = 'context works';
           app = createApp({graphqlOptions: {
-              schema: Schema,
+              schema,
               context: {testField: expected},
           }});
           const req = request(app)
@@ -544,7 +544,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
       it('passes the rootValue to the resolver', () => {
           const expected = 'it passes rootValue';
           app = createApp({graphqlOptions: {
-              schema: Schema,
+              schema,
               rootValue: expected,
           }});
           const req = request(app)
@@ -561,7 +561,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
       it('returns errors', () => {
           const expected = 'Secret error message';
           app = createApp({graphqlOptions: {
-              schema: Schema,
+              schema,
           }});
           const req = request(app)
               .post('/graphql')
@@ -577,7 +577,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
       it('applies formatError if provided', () => {
           const expected = '--blank--';
           app = createApp({graphqlOptions: {
-              schema: Schema,
+              schema,
               formatError: (err) => ({ message: expected }),
           }});
           const req = request(app)
@@ -593,7 +593,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
 
       it('sends internal server error when formatError fails', () => {
           app = createApp({graphqlOptions: {
-              schema: Schema,
+              schema,
               formatError: (err) => {
                 throw new Error('I should be catched');
               },
@@ -614,7 +614,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           const origError = console.error;
           console.error = (...args) => stackTrace.push(args);
           app = createApp({graphqlOptions: {
-              schema: Schema,
+              schema,
               debug: true,
           }});
           const req = request(app)
@@ -632,7 +632,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           const logStub = stub(console, 'error');
           const expected = /at resolveOrError/;
           app = createApp({graphqlOptions: {
-              schema: Schema,
+              schema,
               debug: true,
           }});
           const req = request(app)
@@ -648,20 +648,18 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
       });
 
       it('applies additional validationRules', () => {
-          const expected = 'AlwaysInvalidRule was really invalid!';
-          const AlwaysInvalidRule = function (context) {
+          const expected = 'alwaysInvalidRule was really invalid!';
+          const alwaysInvalidRule = function (context) {
               return {
                   enter() {
-                      context.reportError(new GraphQLError(
-                          expected
-                      ));
+                      context.reportError(new GraphQLError(expected));
                       return BREAK;
                   },
               };
           };
           app = createApp({graphqlOptions: {
-              schema: Schema,
-              validationRules: [AlwaysInvalidRule],
+              schema,
+              validationRules: [alwaysInvalidRule],
           }});
           const req = request(app)
               .post('/graphql')
@@ -727,10 +725,10 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
 
     describe('stored queries', () => {
       it('works with formatParams', () => {
-          const store = new OperationStore(Schema);
+          const store = new OperationStore(schema);
           store.put('query testquery{ testString }');
           app = createApp({ graphqlOptions: {
-              schema: Schema,
+              schema,
               formatParams(params) {
                   params['query'] = store.get(params.operationName);
                   return params;
@@ -749,10 +747,10 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
       });
 
       it('can reject non-whitelisted queries', () => {
-          const store = new OperationStore(Schema);
+          const store = new OperationStore(schema);
           store.put('query testquery{ testString }');
           app = createApp({ graphqlOptions: {
-              schema: Schema,
+              schema,
               formatParams(params) {
                   if (params.query) {
                       throw new Error('Must not provide query, only operationName');
