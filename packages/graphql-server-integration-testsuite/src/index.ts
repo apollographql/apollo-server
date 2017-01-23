@@ -691,6 +691,36 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
               expect(response.text).to.include('graphiql.min.js');
           });
       });
+
+      it('presents options variables', () => {
+        app = createApp({graphiqlOptions: {
+            endpointURL: '/graphql',
+            variables: {key: 'optionsValue'},
+        }});
+
+        const req = request(app)
+            .get('/graphiql')
+            .set('Accept', 'text/html');
+        return req.then((response) => {
+            expect(response.status).to.equal(200);
+            expect(response.text.replace(/\s/g, '')).to.include('variables:"{\\n\\"key\\":\\"optionsValue\\"\\n}"');
+        });
+      });
+
+      it('presents query variables over options variables', () => {
+        app = createApp({graphiqlOptions: {
+            endpointURL: '/graphql',
+            variables: {key: 'optionsValue'},
+        }});
+
+        const req = request(app)
+            .get('/graphiql?variables={"key":"queryValue"}')
+            .set('Accept', 'text/html');
+        return req.then((response) => {
+            expect(response.status).to.equal(200);
+            expect(response.text.replace(/\s/g, '')).to.include('variables:"{\\n\\"key\\":\\"queryValue\\"\\n}"');
+        });
+      });
     });
 
     describe('stored queries', () => {

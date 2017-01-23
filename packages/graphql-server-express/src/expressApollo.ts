@@ -68,13 +68,12 @@ export function graphiqlExpress(options: GraphiQL.GraphiQLData) {
   return (req: express.Request, res: express.Response) => {
     const q = req.url && url.parse(req.url, true).query || {};
     const query = q.query || '';
-    const variables = q.variables || '{}';
     const operationName = q.operationName || '';
 
     const graphiQLString = GraphiQL.renderGraphiQL({
       endpointURL: options.endpointURL,
       query: query || options.query,
-      variables: JSON.parse(variables) || options.variables,
+      variables: q.variables && JSON.parse(q.variables) || options.variables,
       operationName: operationName || options.operationName,
       passHeader: options.passHeader,
     });

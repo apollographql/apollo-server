@@ -1,6 +1,8 @@
 # Changelog
 
 ### VNEXT
+* Fix GraphiQL options variables. Issue #193. ([@alanchristensen](https://github.com/alanchristensen)) on
+[PR #255](https://github.com/apollostack/apollo-server/pull/255)
 
 ### v0.5.1
 * add support for HTTP GET Method ([@DxCx](https://github.com/DxCx)) on [#180](https://github.com/apollostack/graphql-server/pull/180)

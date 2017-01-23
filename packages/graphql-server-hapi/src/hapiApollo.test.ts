@@ -24,9 +24,7 @@ function createApp(options: CreateAppOptions) {
       register: graphiqlHapi,
       options: {
         path: '/graphiql',
-        graphiqlOptions: {
-          endpointURL: '/graphql',
-        },
+        graphiqlOptions: (options && options.graphiqlOptions) || { endpointURL: '/graphql' },
       },
   });
 
