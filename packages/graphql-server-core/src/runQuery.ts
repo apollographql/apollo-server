@@ -17,11 +17,11 @@ export interface GqlResponse {
 }
 
 export enum LogAction {
-  request, parse, validation, execute
+  request, parse, validation, execute,
 }
 
 export enum LogStep {
-  start, end, status
+  start, end, status,
 }
 
 export interface LogMessage {
@@ -129,7 +129,7 @@ function doRunQuery(options: QueryOptions): Promise<ExecutionResult> {
             options.rootValue,
             options.context,
             options.variables,
-            options.operationName
+            options.operationName,
         ).then(gqlResponse => {
             logFunction({action: LogAction.execute, step: LogStep.end});
             logFunction({action: LogAction.request, step: LogStep.end});
