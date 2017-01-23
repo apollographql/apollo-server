@@ -74,8 +74,7 @@ export async function runHttpQuery(handlerArguments: Array<any>, request: HttpQu
     requestPayload = [requestPayload];
   }
 
-  let responses: Array<ExecutionResult> = [];
-  for (let requestParams of requestPayload) {
+  const requests: Array<ExecutionResult> = requestPayload.map(requestParams => {
     try {
       let query = requestParams.query;
       if ( isGetRequest ) {
@@ -128,17 +127,18 @@ export async function runHttpQuery(handlerArguments: Array<any>, request: HttpQu
         params = optionsObject.formatParams(params);
       }
 
-      responses.push(await runQuery(params));
+      return runQuery(params);
     } catch (e) {
       // Populate any HttpQueryError to our handler which should
       // convert it to Http Error.
       if ( e.name === 'HttpQueryError' ) {
-        throw e;
+        return Promise.reject(e);
       }
 
-      responses.push({ errors: [formatErrorFn(e)] });
+      return Promise.resolve({ errors: [formatErrorFn(e)] });
     }
-  }
+  });
+  const responses = await Promise.all(requests);
 
   if (!isBatch) {
     const gqlResponse = responses[0];
