@@ -1,13 +1,10 @@
 import 'mocha';
 import * as restify from 'restify';
-import { expect } from 'chai';
+import { graphiqlRestify, graphqlRestify } from './restifyApollo';
 import testSuite, { Schema, CreateAppOptions } from 'graphql-server-integration-testsuite';
+import { expect } from 'chai';
 import { GraphQLOptions } from 'graphql-server-core';
-
-import { graphqlRestify, graphiqlRestify } from './';
-
-// tslint:disable-next-line
-const request = require('supertest-as-promised');
+import 'mocha';
 
 function createApp(options: CreateAppOptions = {}) {
   const server = restify.createServer({
@@ -17,12 +14,15 @@ function createApp(options: CreateAppOptions = {}) {
   options.graphqlOptions = options.graphqlOptions || { schema: Schema };
   if (!options.excludeParser) {
     server.use(restify.bodyParser());
+    server.use(restify.queryParser());
   }
+
   if (options.graphiqlOptions ) {
     server.get('/graphiql', graphiqlRestify( options.graphiqlOptions ));
   }
-  server.post('/graphql', graphqlRestify( options.graphqlOptions ));
-  server.put('/graphql', graphqlRestify( options.graphqlOptions ));
+
+  server.get('/graphql', graphqlRestify(options.graphqlOptions));
+  server.post('/graphql', graphqlRestify(options.graphqlOptions));
 
   return server;
 }
@@ -39,28 +39,6 @@ describe('graphqlRestify', () => {
 
   it('generates a function if the options are ok', () => {
     expect(() => graphqlRestify({ schema: Schema })).to.be.a('function');
-  });
-
-  it('throws an error if POST body is not an object or array', () => {
-      const app = createApp();
-      const req = request(app)
-          .post('/graphql')
-          .send('123');
-      return req.then((res) => {
-          expect(res.status).to.equal(500);
-          return expect(res.error.text).to.contain('Invalid POST body sent');
-      });
-  });
-
-  it('throws an error on PUT calls', () => {
-      const app = createApp();
-      const req = request(app)
-          .put('/graphql')
-          .send();
-      return req.then((res) => {
-          expect(res.status).to.equal(405);
-          return expect(res.error.text).to.contain('supports only POST requests');
-      });
   });
 });
 

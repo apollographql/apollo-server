@@ -140,9 +140,13 @@ const server = restify.createServer({
   title: 'GraphQL Server'
 });
 
-server.use(restify.bodyParser());
+const graphQLOptions = { schema: myGraphQLSchema };
 
-server.use('/graphql', graphqlRestify({ schema: myGraphQLSchema }));
+server.use(restify.bodyParser());
+server.use(restify.queryParser());
+
+server.post('/graphql', graphqlRestify(graphQLOptions));
+server.get('/graphql', graphqlRestify(graphQLOptions));
 
 server.get('/graphiql', graphiqlRestify({ endpointURL: '/graphql' }));
 

@@ -1,7 +1,6 @@
 import * as restify from 'restify';
-import * as graphql from 'graphql';
 import * as url from 'url';
-import { GraphQLOptions, runHttpQuery, HttpQueryError } from 'graphql-server-core';
+import { GraphQLOptions, HttpQueryError, runHttpQuery } from 'graphql-server-core';
 import * as GraphiQL from 'graphql-server-module-graphiql';
 
 export interface RestifyGraphQLOptionsFunction {
@@ -23,11 +22,10 @@ export function graphqlRestify(options: GraphQLOptions | RestifyGraphQLOptionsFu
   }
 
   if (arguments.length > 1) {
-    // TODO: test this
     throw new Error(`Apollo Server expects exactly one argument, got ${arguments.length}`);
   }
 
-  return async (req: restify.Request, res: restify.Response, next) => {
+  return (req: restify.Request, res: restify.Response, next): void => {
     runHttpQuery([req, res], {
       method: req.method,
       options: options,
@@ -52,10 +50,6 @@ export function graphqlRestify(options: GraphQLOptions | RestifyGraphQLOptionsFu
       res.end();
     });
   };
-}
-
-function isOptionsFunction(arg: GraphQLOptions | RestifyGraphQLOptionsFunction): arg is RestifyGraphQLOptionsFunction {
-  return typeof arg === 'function';
 }
 
 /* This middleware returns the html for the GraphiQL interactive query UI
