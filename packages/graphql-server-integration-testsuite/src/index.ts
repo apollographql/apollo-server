@@ -471,18 +471,20 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
 
        it('can handle batch requests in parallel', function() {
          // this test will fail due to timeout if running serially.
-         this.timeout(300);
+         const parallels = 100;
+         const delayPerReq = 40;
+         this.timeout(2000);
 
          app = createApp();
-         const expected = Array(10).fill({
+         const expected = Array(parallels).fill({
            data: { testStringWithDelay: 'it works' },
          });
          const req = request(app)
            .post('/graphql')
-           .send(Array(10).fill({
+           .send(Array(parallels).fill({
              query: `query test($delay: Int!) { testStringWithDelay(delay: $delay) }`,
              operationName: 'test',
-             variables: { delay: 40 },
+             variables: { delay: delayPerReq },
            }));
            return req.then((res) => {
              expect(res.status).to.equal(200);
