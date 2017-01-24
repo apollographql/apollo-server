@@ -8,8 +8,8 @@ install:
   - npm install
 
 script:
-  - npm test
-  - npm run coverage
+  # Both test & coverage.
+  - npm run travis
   - coveralls < ./coverage/lcov.info || true # ignore coveralls error
 
 # Allow Travis tests to run in containers.
