@@ -18,7 +18,8 @@
     "pretravis": "npm run compile",
     "travis": "istanbul cover -x \"*.test.js\" _mocha -- --timeout 5000 --compilers js:babel-core/register --full-trace ./test/tests.js",
     "posttravis": "npm run lint",
-    "postcoverage": "remap-istanbul --input coverage/coverage.raw.json --type lcovonly --output coverage/lcov.info"
+    "postcoverage": "remap-istanbul --input coverage/coverage.raw.json --type lcovonly --output coverage/lcov.info",
+    "check-updates": "lerna exec ./node_modules/.bin/npm-check-updates -- -u"
   },
   "devDependencies": {
     "@types/chai": "^3.4.34",
@@ -34,6 +35,7 @@
     "istanbul": "1.0.0-alpha.2",
     "lerna": "git://github.com/DxCx/lerna.git#bootstrap-dev-bin-pkg",
     "mocha": "^3.2.0",
+    "npm-check-updates": "^2.8.9",
     "remap-istanbul": "^0.8.4",
     "sinon": "^1.17.7",
     "supertest": "^2.0.1",
