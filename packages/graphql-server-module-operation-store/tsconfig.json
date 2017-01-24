@@ -15,7 +15,8 @@
         "node_modules/@types"
     ],
     "types": [
-        "@types/node"
+        "@types/node",
+        "@types/es6-shim"
     ]
   },
   "exclude": [

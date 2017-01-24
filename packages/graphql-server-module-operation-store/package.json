@@ -23,7 +23,9 @@
     "url": "https://github.com/apollostack/graphql-server/issues"
   },
   "homepage": "https://github.com/apollostack/graphql-server#readme",
-  "dependencies": {},
+  "dependencies": {
+    "es6-shim": "^0.35.3"
+  },
   "peerDependencies": {
     "graphql": "^0.6.1 || ^0.7.0 || ^0.8.0"
   },

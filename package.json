@@ -23,6 +23,7 @@
   },
   "devDependencies": {
     "@types/chai": "^3.4.34",
+    "@types/es6-shim": "^0.31.32",
     "@types/mocha": "^2.2.38",
     "@types/node": "^7.0.3",
     "@types/sinon": "^1.16.34",
