@@ -27,6 +27,7 @@ GraphQL Server should come with a set of integrations for different Node.js serv
 - Hapi
 - Connect
 - Koa
+- Restify
 - ...
 
 Framework integrations take care of parsing requests, submitting them to GraphQL Server’s core runQuery  function, and sending the response back to the client. These integrations should accept requests over HTTP, websockets or other means, then invoke `runQuery` as appropriate, and return the result. They should be written in such a way that makes it easy to add features, such as batched queries, subscriptions etc.
