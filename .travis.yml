@@ -8,14 +8,18 @@ cache:
   directories:
     - $HOME/.npm
 
-install:
+before_install:
   - npm install -g npm@4
   - npm install -g coveralls
+
+install:
   - npm install
 
 script:
   # Both test & coverage.
   - npm run travis
+
+after_install:
   - coveralls < ./coverage/lcov.info || true # ignore coveralls error
 
 # Allow Travis tests to run in containers.
