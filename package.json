@@ -7,7 +7,7 @@
   },
   "scripts": {
     "compile": "lerna exec -- npm run compile",
-    "lint": "tslint ./packages/**/src/**/*.ts",
+    "lint": "tslint ./packages/**/src/**/*.ts --exclude \"./packages/**/node_modules/**/*.ts\"",
     "prebootstrap": "npm install",
     "postinstall": "lerna bootstrap",
     "pretest": "npm run compile",
