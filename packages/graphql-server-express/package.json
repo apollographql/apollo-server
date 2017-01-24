@@ -32,21 +32,21 @@
   "devDependencies": {
     "@types/body-parser": "0.0.33",
     "@types/connect": "^3.4.30",
-    "@types/express": "^4.0.33",
+    "@types/express": "^4.0.35",
     "@types/multer": "0.0.32",
-    "graphql-server-integration-testsuite": "^0.5.1",
-    "body-parser": "^1.15.2",
-    "connect": "^3.4.1",
+    "body-parser": "^1.16.0",
+    "connect": "^3.5.0",
     "connect-query": "^0.2.0",
     "express": "^4.14.0",
-    "multer": "^1.2.0"
+    "graphql-server-integration-testsuite": "^0.5.1",
+    "multer": "^1.2.1"
   },
   "peerDependencies": {
     "graphql": "^0.6.1 || ^0.7.0 || ^0.8.0"
   },
   "optionalDependencies": {
-    "@types/express": "^4.0.33",
-    "@types/graphql": "^0.8.5"
+    "@types/express": "^4.0.35",
+    "@types/graphql": "^0.8.6"
   },
   "typings": "dist/index.d.ts",
   "typescript": {

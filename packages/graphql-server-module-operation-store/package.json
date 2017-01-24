@@ -28,7 +28,7 @@
     "graphql": "^0.6.1 || ^0.7.0 || ^0.8.0"
   },
   "optionalDependencies": {
-    "@types/graphql": "^0.8.5"
+    "@types/graphql": "^0.8.6"
   },
   "typings": "dist/index.d.ts",
   "typescript": {
