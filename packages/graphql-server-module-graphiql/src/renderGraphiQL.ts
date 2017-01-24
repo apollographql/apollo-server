@@ -6,7 +6,6 @@
 // TODO: in the future, build the GraphiQL app on the server, so it does not
 // depend on any CDN and can be run offline.
 
-
 /*
  * Arguments:
  *
@@ -25,7 +24,7 @@ export type GraphiQLData = {
   variables?: Object,
   operationName?: string,
   result?: Object,
-  passHeader?: string
+  passHeader?: string,
 };
 
 // Current latest version of GraphiQL.

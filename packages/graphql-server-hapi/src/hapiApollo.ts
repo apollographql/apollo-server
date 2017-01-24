@@ -112,7 +112,7 @@ graphiqlHapi.attributes = {
 function getGraphiQLParams(request, reply) {
   const q = request.query || {};
   const query = q.query || '';
-  const variables = q.variables || '{}';
+  const variables = q.variables;
   const operationName = q.operationName || '';
   reply({ query, variables, operationName});
 }
@@ -122,7 +122,7 @@ function renderGraphiQL(route, graphiqlParams: any, reply) {
   const graphiQLString = GraphiQL.renderGraphiQL({
     endpointURL: graphiqlOptions.endpointURL,
     query: graphiqlParams.query || graphiqlOptions.query,
-    variables: JSON.parse(graphiqlParams.variables) || graphiqlOptions.variables,
+    variables: graphiqlParams.variables && JSON.parse(graphiqlParams.variables) || graphiqlOptions.variables,
     operationName: graphiqlParams.operationName || graphiqlOptions.operationName,
     passHeader: graphiqlOptions.passHeader,
   });
