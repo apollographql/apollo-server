@@ -473,7 +473,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
          // this test will fail due to timeout if running serially.
          const parallels = 100;
          const delayPerReq = 40;
-         this.timeout(2000);
+         this.timeout(3000);
 
          app = createApp();
          const expected = Array(parallels).fill({
