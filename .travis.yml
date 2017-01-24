@@ -9,7 +9,7 @@ cache:
     - $HOME/.npm
 
 install:
-  - npm install -g npm@3
+  - npm install -g npm@4
   - npm install -g coveralls
   - npm install
 
