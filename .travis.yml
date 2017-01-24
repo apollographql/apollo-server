@@ -1,15 +1,37 @@
 language: node_js
 node_js:
-  - "6"
   - "4"
-install:
-  - npm install -g npm@3
+  - "6"
+  - "7"
+
+env:
+  - CXX=g++-4.8
+
+addons:
+    apt:
+      sources:
+        - ubuntu-toolchain-r-test
+      packages:
+        - g++-4.8
+
+cache:
+  directories:
+    - $HOME/.npm
+    - node_modules
+
+before_install:
+  - npm install -g npm@4
   - npm install -g coveralls
+
+install:
+  - npm prune
   - npm install
 
 script:
-  - npm test
-  - npm run coverage
+  # Both test & coverage.
+  - npm run travis
+
+after_install:
   - coveralls < ./coverage/lcov.info || true # ignore coveralls error
 
 # Allow Travis tests to run in containers.

@@ -30,10 +30,10 @@
     "boom": "^4.0.0"
   },
   "devDependencies": {
-    "@types/boom": "0.0.32",
+    "@types/boom": "0.0.33",
     "@types/hapi": "^13.0.35",
     "graphql-server-integration-testsuite": "^0.5.1",
-    "hapi": "^15.0.3",
+    "hapi": "^16.1.0",
     "@types/graphql": "^0.8.5"
   },
   "peerDependencies": {
