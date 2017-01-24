@@ -42,7 +42,7 @@
   },
   "optionalDependencies": {
     "@types/koa": "^2.0.33",
-    "@types/graphql": "^0.8.5"
+    "@types/graphql": "^0.8.6"
   },
   "typings": "dist/index.d.ts",
   "typescript": {
