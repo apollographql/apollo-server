@@ -4,6 +4,10 @@ node_js:
   - "6"
   - "7"
 
+cache:
+  directories:
+    - $HOME/.npm
+
 install:
   - npm install -g npm@3
   - npm install -g coveralls
