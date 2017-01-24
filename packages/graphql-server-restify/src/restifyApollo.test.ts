@@ -1,7 +1,7 @@
 import 'mocha';
 import * as restify from 'restify';
 import { graphiqlRestify, graphqlRestify } from './restifyApollo';
-import testSuite, { Schema, CreateAppOptions } from 'graphql-server-integration-testsuite';
+import testSuite, { schema, CreateAppOptions } from 'graphql-server-integration-testsuite';
 import { expect } from 'chai';
 import { GraphQLOptions } from 'graphql-server-core';
 import 'mocha';
@@ -11,7 +11,7 @@ function createApp(options: CreateAppOptions = {}) {
     name: 'Restify Test Server',
   });
 
-  options.graphqlOptions = options.graphqlOptions || { schema: Schema };
+  options.graphqlOptions = options.graphqlOptions || { schema };
   if (!options.excludeParser) {
     server.use(restify.bodyParser());
     server.use(restify.queryParser());
@@ -38,7 +38,7 @@ describe('graphqlRestify', () => {
   });
 
   it('generates a function if the options are ok', () => {
-    expect(() => graphqlRestify({ schema: Schema })).to.be.a('function');
+    expect(() => graphqlRestify({ schema })).to.be.a('function');
   });
 });
 
