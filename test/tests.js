@@ -1,6 +1,3 @@
-/* tslint:disable */
-require('babel-polyfill');
-
 process.env.NODE_ENV = 'test';
 
 require('source-map-support').install();
