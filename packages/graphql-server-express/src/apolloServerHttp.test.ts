@@ -154,7 +154,9 @@ const version = 'modern';
 describe(`GraphQL-HTTP (apolloServer) tests for ${version} express`, () => {
   describe('POST functionality', () => {
 
-    it('allows gzipped POST bodies', async () => {
+    it('allows gzipped POST bodies', async function () {
+      // Increase timeout for slow node 4
+      this.timeout(3000);
       const app = express();
 
       app.use(urlString(), bodyParser.json());
@@ -181,7 +183,9 @@ describe(`GraphQL-HTTP (apolloServer) tests for ${version} express`, () => {
       });
     });
 
-    it('allows deflated POST bodies', async () => {
+    it('allows deflated POST bodies', async function () {
+      // Increase timeout for slow node 4
+      this.timeout(3000);
       const app = express();
 
       app.use(urlString(), bodyParser.json());

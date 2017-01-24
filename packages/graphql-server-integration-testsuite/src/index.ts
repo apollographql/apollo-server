@@ -7,6 +7,7 @@ import {
     GraphQLSchema,
     GraphQLObjectType,
     GraphQLString,
+    GraphQLInt,
     GraphQLError,
     GraphQLNonNull,
     introspectionQuery,
@@ -27,6 +28,17 @@ const queryType = new GraphQLObjectType({
             type: GraphQLString,
             resolve() {
                 return 'it works';
+            },
+        },
+        testStringWithDelay: {
+            type: GraphQLString,
+            args: {
+              delay: { type: new GraphQLNonNull(GraphQLInt) },
+            },
+            resolve(root, args) {
+              return new Promise((resolve, reject) => {
+                setTimeout(() => resolve('it works'), args['delay']);
+              });
             },
         },
         testContext: {
@@ -455,6 +467,29 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
               expect(res.status).to.equal(200);
               return expect(res.body).to.deep.equal(expected);
           });
+      });
+
+       it('can handle batch requests in parallel', function() {
+         // this test will fail due to timeout if running serially.
+         const parallels = 100;
+         const delayPerReq = 40;
+         this.timeout(3000);
+
+         app = createApp();
+         const expected = Array(parallels).fill({
+           data: { testStringWithDelay: 'it works' },
+         });
+         const req = request(app)
+           .post('/graphql')
+           .send(Array(parallels).fill({
+             query: `query test($delay: Int!) { testStringWithDelay(delay: $delay) }`,
+             operationName: 'test',
+             variables: { delay: delayPerReq },
+           }));
+           return req.then((res) => {
+             expect(res.status).to.equal(200);
+             return expect(res.body).to.deep.equal(expected);
+           });
       });
 
       it('clones batch context', () => {
