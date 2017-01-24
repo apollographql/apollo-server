@@ -17,12 +17,14 @@ addons:
 cache:
   directories:
     - $HOME/.npm
+    - node_modules
 
 before_install:
   - npm install -g npm@4
   - npm install -g coveralls
 
 install:
+  - npm prune
   - npm install
 
 script:
