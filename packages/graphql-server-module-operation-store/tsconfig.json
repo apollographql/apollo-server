@@ -11,12 +11,12 @@
     "allowSyntheticDefaultImports": false,
     "pretty": true,
     "removeComments": true,
+    "lib": ["es6"],
     "typeRoots": [
         "node_modules/@types"
     ],
     "types": [
-        "@types/node",
-        "@types/es6-shim"
+        "@types/node"
     ]
   },
   "exclude": [
