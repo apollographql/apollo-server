@@ -12,7 +12,7 @@
     "dist": true,
     "coverage": true,
     "coverage.lcov": true,
-    "tsconfig.json": false,
+    "tsconfig.json": true,
     "tslint.json": true,
     "typings.json": true,
     "typings": true,
