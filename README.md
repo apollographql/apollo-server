@@ -31,6 +31,7 @@ where variant is one of the following:
  - express
  - koa
  - hapi
+ - restify
  - lambda
 
 ### Express
