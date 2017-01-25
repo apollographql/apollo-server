@@ -1,9 +1,5 @@
-/* tslint:disable */
-require('babel-polyfill');
-
 process.env.NODE_ENV = 'test';
 
-require('source-map-support').install();
 require('../packages/graphql-server-core/dist/runQuery.test.js');
 require('../packages/graphql-server-module-operation-store/dist/operationStore.test');
 require('../packages/graphql-server-express/dist/expressApollo.test');

@@ -3,10 +3,9 @@ import {
   validate,
   DocumentNode,
   GraphQLSchema,
-  OperationDefinition,
+  OperationDefinitionNode,
+  Kind,
 } from 'graphql';
-
-const OPERATION_DEFINITION: string = 'OperationDefinition';
 
 export class OperationStore {
   private storedOperations: Map<string, DocumentNode>;
@@ -18,8 +17,8 @@ export class OperationStore {
   }
 
   public put(operation: string | DocumentNode): void {
-    function isOperationDefinition(definition): definition is OperationDefinition {
-      return definition.kind === OPERATION_DEFINITION;
+    function isOperationDefinition(definition): definition is OperationDefinitionNode {
+      return definition.kind === Kind.OPERATION_DEFINITION;
     }
 
     function isString(definition): definition is string {
@@ -28,12 +27,12 @@ export class OperationStore {
 
     const ast = isString(operation) ? parse(operation as string) : operation as DocumentNode;
 
-    const definitions = ast.definitions.filter(isOperationDefinition) as OperationDefinition[];
+    const definitions = ast.definitions.filter(isOperationDefinition) as OperationDefinitionNode[];
     if (definitions.length === 0) {
-      throw new Error('operationDefinition must contain at least one definition');
+      throw new Error('OperationDefinitionNode must contain at least one definition');
     }
     if (definitions.length > 1) {
-      throw new Error('operationDefinition must contain only one definition');
+      throw new Error('OperationDefinitionNode must contain only one definition');
     }
 
     const validationErrors = validate(this.schema, ast);

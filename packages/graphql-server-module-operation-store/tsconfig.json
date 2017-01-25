@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "es6",
+    "target": "es5",
     "module": "commonjs",
     "moduleResolution": "node",
     "sourceMap": true,
@@ -15,7 +15,8 @@
         "node_modules/@types"
     ],
     "types": [
-        "@types/node"
+        "@types/node",
+        "@types/es6-shim"
     ]
   },
   "exclude": [

@@ -105,7 +105,7 @@ describe('operationStore', () => {
       `;
 
       const store = new OperationStore(schema);
-      return expect(() => store.put(query)).to.throw(/operationDefinition must contain only one definition/);
+      return expect(() => store.put(query)).to.throw(/OperationDefinitionNode must contain only one definition/);
   });
 
   it('throws an error if there is no operationDefinition found', () => {
