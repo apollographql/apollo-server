@@ -11,6 +11,7 @@
     "allowSyntheticDefaultImports": false,
     "pretty": true,
     "removeComments": true,
+    "lib": ["es6"],
     "typeRoots": [
         "node_modules/@types"
     ],
