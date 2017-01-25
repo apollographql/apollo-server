@@ -12,9 +12,9 @@
     "dist": true,
     "coverage": true,
     "coverage.lcov": true,
-    "tsconfig.json": true,
+    "tsconfig.json": false,
     "tslint.json": true,
-    "typings.json": false,
+    "typings.json": true,
     "typings": true,
     ".gitignore": false,
     "**/dist": true

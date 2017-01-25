@@ -1,22 +1,10 @@
 {
+  "extends": "../../tsconfig",
   "compilerOptions": {
-    "target": "es5",
-    "module": "commonjs",
-    "moduleResolution": "node",
-    "sourceMap": true,
-    "declaration": true,
-    "noImplicitAny": false,
     "rootDir": "./src",
     "outDir": "./dist",
-    "allowSyntheticDefaultImports": false,
-    "pretty": true,
-    "removeComments": true,
-    "lib": ["es6"],
     "typeRoots": [
-        "node_modules/@types"
-    ],
-    "types": [
-        "@types/node"
+      "node_modules/@types"
     ]
   },
   "exclude": [
