@@ -13,7 +13,7 @@ export interface RestifyGraphQLOptionsFunction {
 //
 
 export interface RestifyHandler {
-  (req: restify.Request, res: restify.Response, next): void;
+  (req: restify.Request, res: restify.Response, next: restify.Next): void;
 }
 
 export function graphqlRestify(options: GraphQLOptions | RestifyGraphQLOptionsFunction): RestifyHandler {
@@ -25,7 +25,7 @@ export function graphqlRestify(options: GraphQLOptions | RestifyGraphQLOptionsFu
     throw new Error(`Apollo Server expects exactly one argument, got ${arguments.length}`);
   }
 
-  return (req: restify.Request, res: restify.Response, next): void => {
+  return (req: restify.Request, res: restify.Response, next: restify.Next): void => {
     runHttpQuery([req, res], {
       method: req.method,
       options: options,
@@ -34,6 +34,7 @@ export function graphqlRestify(options: GraphQLOptions | RestifyGraphQLOptionsFu
       res.setHeader('Content-Type', 'application/json');
       res.write(gqlResponse);
       res.end();
+      next();
     }, (error: HttpQueryError) => {
       if ( 'HttpQueryError' !== error.name ) {
         throw error;
@@ -48,6 +49,7 @@ export function graphqlRestify(options: GraphQLOptions | RestifyGraphQLOptionsFu
       res.statusCode = error.statusCode;
       res.write(error.message);
       res.end();
+      next(false);
     });
   };
 }
@@ -64,7 +66,7 @@ export function graphqlRestify(options: GraphQLOptions | RestifyGraphQLOptionsFu
  */
 
 export function graphiqlRestify(options: GraphiQL.GraphiQLData) {
-  return (req: restify.Request, res: restify.Response, next) => {
+  return (req: restify.Request, res: restify.Response, next: restify.Next) => {
     const q = req.url && url.parse(req.url, true).query || {};
     const query = q.query || '';
     const operationName = q.operationName || '';
@@ -79,5 +81,6 @@ export function graphiqlRestify(options: GraphiQL.GraphiQLData) {
     res.setHeader('Content-Type', 'text/html');
     res.write(graphiQLString);
     res.end();
+    next();
   };
 }
