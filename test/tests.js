@@ -7,4 +7,5 @@ require('../packages/graphql-server-express/dist/connectApollo.test');
 require('../packages/graphql-server-hapi/dist/hapiApollo.test');
 require('../packages/graphql-server-koa/dist/koaApollo.test');
 require('../packages/graphql-server-restify/dist/restifyApollo.test');
+require('../packages/graphql-server-lambda/dist/lambdaApollo.test');
 require('../packages/graphql-server-express/dist/apolloServerHttp.test');
