@@ -26,14 +26,14 @@
   },
   "homepage": "https://github.com/apollostack/graphql-server#readme",
   "dependencies": {
-    "graphql-server-core": "^0.5.1",
-    "graphql-server-module-graphiql": "^0.4.4"
+    "graphql-server-core": "^0.6.0",
+    "graphql-server-module-graphiql": "^0.6.0"
   },
   "devDependencies": {
     "@types/body-parser": "0.0.33",
     "@types/connect": "^3.4.30",
     "@types/express": "^4.0.35",
-    "@types/multer": "0.0.32",
+    "@types/multer": "0.0.33",
     "body-parser": "^1.16.0",
     "connect": "^3.5.0",
     "connect-query": "^0.2.0",
