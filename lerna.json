@@ -1,5 +1,5 @@
 {
-  "lerna": "2.0.0-beta.32",
+  "lerna": "2.0.0-beta.35",
   "version": "0.5.1",
   "changelog": {
     "repo": "apollostack/graphql-server",
