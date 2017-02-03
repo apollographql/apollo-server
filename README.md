@@ -1,9 +1,9 @@
 # GraphQL Server for Express, Connect, Hapi, Koa, Restify and AWS Lambda
 
 [![npm version](https://badge.fury.io/js/graphql-server-core.svg)](https://badge.fury.io/js/graphql-server-core)
-[![Build Status](https://travis-ci.org/apollostack/graphql-server.svg?branch=master)](https://travis-ci.org/apollostack/graphql-server)
-[![Coverage Status](https://coveralls.io/repos/github/apollostack/graphql-server/badge.svg?branch=master)](https://coveralls.io/github/apollostack/graphql-server?branch=master)
-[![Get on Slack](https://img.shields.io/badge/slack-join-orange.svg)](http://www.apollostack.com/#slack)
+[![Build Status](https://travis-ci.org/apollographql/graphql-server.svg?branch=master)](https://travis-ci.org/apollographql/graphql-server)
+[![Coverage Status](https://coveralls.io/repos/github/apollographql/graphql-server/badge.svg?branch=master)](https://coveralls.io/github/apollographql/graphql-server?branch=master)
+[![Get on Slack](https://img.shields.io/badge/slack-join-orange.svg)](http://www.apollodata.com/#slack)
 
 GraphQL Server is a community-maintained open-source GraphQL server. It works with all Node.js HTTP server frameworks: Express, Connect, Hapi, Koa and Restify.
 
