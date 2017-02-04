@@ -25,11 +25,11 @@
   },
   "homepage": "https://github.com/apollostack/graphql-server#readme",
   "dependencies": {
-    "graphql-server-core": "^0.5.1",
-    "graphql-server-module-graphiql": "^0.4.4"
+    "graphql-server-core": "^0.6.0",
+    "graphql-server-module-graphiql": "^0.6.0"
   },
   "devDependencies": {
-    "@types/aws-lambda": "0.0.5",
+    "@types/aws-lambda": "0.0.6",
     "@types/graphql": "^0.8.6",
     "graphql-server-integration-testsuite": "^0.5.1"
   },

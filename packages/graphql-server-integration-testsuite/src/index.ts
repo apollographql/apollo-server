@@ -639,7 +639,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
                   query: 'query test{ testError }',
               });
           return req.then((res) => {
-              return expect(res.res.body.errors[0].message).to.equal('Internal server error');
+              return expect(res.body.errors[0].message).to.equal('Internal server error');
           });
       });
 
