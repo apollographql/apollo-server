@@ -215,7 +215,7 @@ That said, GraphQL Server is heavily inspired by express-graphql (it's the refer
 
 ## GraphQL Server Development
 
-If you want to develop apollo server locally you must follow the following instructions:
+If you want to develop GraphQL Server locally you must follow the following instructions:
 
 * Fork this repository
 
