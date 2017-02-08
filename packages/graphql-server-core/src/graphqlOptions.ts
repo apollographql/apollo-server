@@ -29,6 +29,18 @@ export interface GraphQLServerOptions {
 
 export default GraphQLServerOptions;
 
+export async function resolveGraphqlOptions(options: GraphQLServerOptions | Function, ...args): Promise<GraphQLServerOptions> {
+  if (isOptionsFunction(options)) {
+    try {
+      return await options(...args);
+    } catch (e) {
+      throw new Error(`Invalid options provided to ApolloServer: ${e.message}`);
+    }
+  } else {
+    return options;
+  }
+}
+
 export function isOptionsFunction(arg: GraphQLServerOptions | Function): arg is Function {
   return typeof arg === 'function';
 }
