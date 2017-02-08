@@ -27,6 +27,28 @@ export interface Subscription {
 export class Observable<T> implements IObservable<T> {
   private subscriberFunction: SubscriberFunction<T>;
 
+  public static of = (value) => {
+    return new Observable((observer) => {
+      observer.next(value);
+      observer.complete();
+      return () => {};
+    });
+  }
+
+  public static throw = (e: Error) => {
+    return new Observable((observer) => {
+      observer.error(e);
+      return () => {};
+    });
+  }
+
+  public static empty = () => {
+    return new Observable((observer) => {
+      observer.complete();
+      return () => {};
+    });
+  }
+
   constructor(subscriberFunction: SubscriberFunction<T>) {
     this.subscriberFunction = subscriberFunction;
   }
