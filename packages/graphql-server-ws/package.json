@@ -1,0 +1,46 @@
+{
+  "name": "graphql-server-ws",
+  "version": "0.5.1",
+  "description": "Production-ready Node.js GraphQL server for ws",
+  "main": "dist/index.js",
+  "scripts": {
+    "compile": "tsc",
+    "prepublish": "npm run compile"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/apollostack/graphql-server/tree/master/packages/graphql-server-ws"
+  },
+  "keywords": [
+    "GraphQL",
+    "Apollo",
+    "Websocket",
+    "Server",
+    "Javascript"
+  ],
+  "author": "Jonas Helfer <jonas@helfer.email>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/apollostack/graphql-server/issues"
+  },
+  "homepage": "https://github.com/apollostack/graphql-server#readme",
+  "dependencies": {
+    "graphql-server-core": "^0.6.0"
+  },
+  "devDependencies": {
+    "ws": "^2.0.2",
+    "@types/ws": "0.0.38"
+  },
+  "peerDependencies": {
+    "ws": "^2.0.2",
+    "graphql": "^0.8.0 || ^0.9.0"
+  },
+  "optionalDependencies": {
+    "@types/graphql": "^0.8.6",
+    "@types/ws": "0.0.38"
+  },
+  "typings": "dist/index.d.ts",
+  "typescript": {
+    "definition": "dist/index.d.ts"
+  }
+}

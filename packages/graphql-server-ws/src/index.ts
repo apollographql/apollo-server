@@ -1,0 +1,1 @@
+export { graphqlWs } from './wsApollo';
