@@ -38,12 +38,82 @@ function safeSerialize(data) {
 
 export function renderGraphiQL(data: GraphiQLData): string {
   const endpointURL = data.endpointURL;
+  const isWs = data.endpointURL.startsWith('ws://');
   const queryString = data.query;
   const variablesString =
     data.variables ? JSON.stringify(data.variables, null, 2) : null;
   const resultString = null;
   const operationName = data.operationName;
   const passHeader = data.passHeader ? data.passHeader : '';
+  const fetchLibrary = isWs ?
+      `<script src="//npmcdn.com/@reactivex/rxjs@5.0.0-beta.12/dist/global/Rx.min.js"></script>
+       <script src="//npmcdn.com/rxjs-diff-operator@0.1.0/dist/main.browser.js"></script>` :
+      `<script src="//cdn.jsdelivr.net/fetch/0.9.0/fetch.min.js"></script>`;
+  const fetcher = isWs ? `
+    Rx.Observable.prototype.fromDiff = rxjsDiffOperator.fromDiff;
+    var reqId = 0;
+
+    function graphQLFetcher(graphQLParams) {
+      var localReqId = reqId++;
+      return new Rx.Observable(function (observer) {
+        var payload = JSON.stringify(Object.assign({}, graphQLParams, {
+          action: "request",
+          id: localReqId,
+        }));
+        var isOpen = false;
+
+        var ws = new WebSocket(fetchURL);
+
+        ws.onmessage = function (msg) {
+          observer.next(msg.data);
+        };
+        ws.onerror = function(e) {
+          observer.error(new Error("WebSocket error"));
+        };
+        ws.onclose = function () {
+          observer.complete();
+        };
+        ws.onopen = function () {
+          isOpen = true;
+          ws.send(payload);
+        };
+
+        return function () {
+          if ( isOpen == true ) {
+            ws.send(JSON.stringify({ id: localReqId, action: "cancel" }));
+          }
+          ws.close();
+        };
+      })
+      .map(JSON.parse)
+      .filter(function (v) { return v.id == localReqId })
+      .fromDiff()
+      .catch((e) => {
+        return Rx.Observable.of({ errors: [e.message] });
+      });
+    }
+  ` : `
+    function graphQLFetcher(graphQLParams) {
+      return fetch(fetchURL, {
+        method: 'post',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          ${passHeader}
+        },
+        body: JSON.stringify(graphQLParams),
+        credentials: 'include',
+      }).then(function (response) {
+        return response.text();
+      }).then(function (responseBody) {
+        try {
+          return JSON.parse(responseBody);
+        } catch (error) {
+          return responseBody;
+        }
+      });
+    }
+  `;
 
   /* eslint-disable max-len */
   return `
@@ -62,7 +132,7 @@ export function renderGraphiQL(data: GraphiQLData): string {
     }
   </style>
   <link href="//cdn.jsdelivr.net/graphiql/${GRAPHIQL_VERSION}/graphiql.css" rel="stylesheet" />
-  <script src="//cdn.jsdelivr.net/fetch/0.9.0/fetch.min.js"></script>
+  ${fetchLibrary}
   <script src="//cdn.jsdelivr.net/react/15.0.0/react.min.js"></script>
   <script src="//cdn.jsdelivr.net/react/15.0.0/react-dom.min.js"></script>
   <script src="//cdn.jsdelivr.net/graphiql/${GRAPHIQL_VERSION}/graphiql.min.js"></script>
@@ -100,26 +170,7 @@ export function renderGraphiQL(data: GraphiQLData): string {
     // We don't use safe-serialize for location, because it's not client input.
     var fetchURL = locationQuery(otherParams, '${endpointURL}');
     // Defines a GraphQL fetcher using the fetch API.
-    function graphQLFetcher(graphQLParams) {
-      return fetch(fetchURL, {
-        method: 'post',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-          ${passHeader}
-        },
-        body: JSON.stringify(graphQLParams),
-        credentials: 'include',
-      }).then(function (response) {
-        return response.text();
-      }).then(function (responseBody) {
-        try {
-          return JSON.parse(responseBody);
-        } catch (error) {
-          return responseBody;
-        }
-      });
-    }
+    ${fetcher}
     // When the query and variables string is edited, update the URL bar so
     // that it can be easily shared.
     function onEditQuery(newQuery) {
