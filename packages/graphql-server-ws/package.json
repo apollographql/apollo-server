@@ -1,6 +1,6 @@
 {
   "name": "graphql-server-ws",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "description": "Production-ready Node.js GraphQL server for ws",
   "main": "dist/index.js",
   "scripts": {
