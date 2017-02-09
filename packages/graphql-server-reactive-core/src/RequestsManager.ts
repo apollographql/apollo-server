@@ -1,12 +1,26 @@
-import { IObservable, Observer, Observable, ReactiveQueryOptions, runQueryReactive, Subscription } from 'graphql-server-reactive-core';
-import { WSMessageParams, WSRequest } from './interfaces';
+import { IObservable, Observer, Observable, Subscription } from './Observable';
+import { ReactiveQueryOptions, runQueryReactive } from './runQueryReactive';
+import { ReactiveGraphQLOptions } from './reactiveOptions';
 import { toDiffObserver, IObservableDiff } from 'observable-diff-operator';
 import { formatError, ExecutionResult } from 'graphql';
+
+export interface ReactiveRequest {
+  id: number; // Per socket increasing number
+  action: 'request' | 'cancel';
+  query?: string; // GraphQL Printed Query.
+  variables?: any; // GraphQL variables.
+  operationName?: string; // GraphQL operationName
+}
+
+export interface ReactiveMessage {
+  requestParams: ReactiveRequest;
+  graphqlOptions?: ReactiveGraphQLOptions;
+}
 
 export class RequestsManager {
   protected requests = {};
 
-  public handleRequest(message: WSMessageParams, onMessageObserver: Observer<IObservableDiff>) {
+  public handleRequest(message: ReactiveMessage, onMessageObserver: Observer<IObservableDiff>) {
     this._subscribeRequest(this._prepareRequest(message), message.requestParams.id, onMessageObserver);
   }
 
@@ -45,7 +59,7 @@ export class RequestsManager {
     }
   }
 
-  protected _prepareRequest({requestParams, graphqlOptions}: WSMessageParams): IObservable<ExecutionResult> {
+  protected _prepareRequest({requestParams, graphqlOptions}: ReactiveMessage): IObservable<ExecutionResult> {
     const formatErrorFn = graphqlOptions.formatError || formatError;
 
     try {
@@ -97,7 +111,7 @@ export class RequestsManager {
     return runQueryReactive(params);
   }
 
-  protected _validateRequest(request: WSRequest) {
+  protected _validateRequest(request: ReactiveRequest) {
     if ( undefined === request.id ) {
       throw new Error('Message missing id field');
     }
