@@ -39,7 +39,5 @@
   "typescript": {
     "definition": "dist/index.d.ts"
   },
-  "dependencies": {
-    "symbol-observable": "^1.0.4"
-  }
+  "dependencies": {}
 }

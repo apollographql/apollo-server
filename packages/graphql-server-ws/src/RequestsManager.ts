@@ -1,4 +1,4 @@
-import { IObservable, Observer, Observable, ReactiveQueryOptions, runQueryReactive, Subscription } from 'graphql-server-core';
+import { IObservable, Observer, Observable, ReactiveQueryOptions, runQueryReactive, Subscription } from 'graphql-server-reactive-core';
 import { WSMessageParams, WSRequest } from './interfaces';
 import { toDiffObserver, IObservableDiff } from 'observable-diff-operator';
 import { formatError, ExecutionResult } from 'graphql';

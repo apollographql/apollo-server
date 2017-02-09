@@ -1,6 +1,5 @@
-import { GraphQLOptions } from 'graphql-server-core';
+import { GraphQLOptions, ReactiveExecuteFunction } from 'graphql-server-reactive-core';
 import { graphql, GraphQLSchema, ExecutionResult } from 'graphql';
-import { ReactiveExecuteFunction } from 'graphql-server-core';
 import * as WebSocket from 'ws';
 
 export interface WSRequest {

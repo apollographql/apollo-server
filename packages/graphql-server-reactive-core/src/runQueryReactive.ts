@@ -10,7 +10,7 @@ import {
     specifiedRules,
     ValidationContext,
 } from 'graphql';
-import { LogAction, LogFunction, LogMessage, LogStep, QueryOptions} from './runQuery';
+import { LogAction, LogFunction, LogMessage, LogStep, QueryOptions} from 'graphql-server-core';
 import { Observable, IObservable } from './Observable';
 
 export type ReactiveExecuteFunction = (

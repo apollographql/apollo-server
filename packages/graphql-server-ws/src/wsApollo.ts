@@ -4,7 +4,7 @@ import {
   Observable,
   GraphQLOptions,
   resolveGraphqlOptions,
-} from 'graphql-server-core';
+} from 'graphql-server-reactive-core';
 import { WSHandler, WSGraphQLOptionsFunction, WSMessageParams, WSGraphQLOptions } from './interfaces';
 import { IObservableDiff } from 'observable-diff-operator';
 import { RequestsManager } from './RequestsManager';
