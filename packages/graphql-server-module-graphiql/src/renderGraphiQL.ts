@@ -50,7 +50,7 @@ export function renderGraphiQL(data: GraphiQLData): string {
   const passHeader = data.passHeader ? data.passHeader : '';
   const fetchLibrary = isWs ?
       `<script src="//npmcdn.com/@reactivex/rxjs@5.0.0-beta.12/dist/global/Rx.min.js"></script>
-       <script src="//npmcdn.com/rxjs-diff-operator@0.1.1-1/dist/main.browser.js"></script>` :
+       <script src="//npmcdn.com/rxjs-diff-operator@0.1.1/dist/main.browser.js"></script>` :
       `<script src="//cdn.jsdelivr.net/fetch/0.9.0/fetch.min.js"></script>`;
   const fetcher = isWs ? `
     Rx.Observable.prototype.fromDiff = rxjsDiffOperator.fromDiff;
