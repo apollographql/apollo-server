@@ -1,6 +1,6 @@
 import { GraphQLOptions } from "graphql-server-core";
 import { graphql, GraphQLSchema, ExecutionResult } from 'graphql';
-import { IObservable } from 'graphql-server-core';
+import { ReactiveExecuteFunction } from 'graphql-server-core';
 import * as WebSocket from 'ws';
 
 export interface WSRequest {
@@ -20,13 +20,7 @@ export interface WSMessageParams {
 }
 
 export interface WSGraphQLEngine {
-  graphqlReactive: (
-    schema: GraphQLSchema,
-    requestString: string,
-    rootValue?: any,
-    contextValue?: any,
-    variableValues?: {[key: string]: any},
-    operationName?: string) => IObservable<ExecutionResult>;
+  executeReactive: ReactiveExecuteFunction;
 }
 
 export interface WSGraphQLOptions extends GraphQLOptions {
