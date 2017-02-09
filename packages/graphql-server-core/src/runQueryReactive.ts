@@ -19,14 +19,12 @@ export type ReactiveExecuteFunction = (
   rootValue?: any,
   contextValue?: any,
   variableValues?: {[key: string]: any},
-  operationName?: string
+  operationName?: string,
 ) => IObservable<ExecutionResult>;
 
 export interface ReactiveQueryOptions extends QueryOptions {
   executeReactive: ReactiveExecuteFunction;
 }
-
-const resolvedPromise = Promise.resolve();
 
 export function runQueryReactive(options: ReactiveQueryOptions): IObservable<ExecutionResult> {
     let documentAST: DocumentNode;
@@ -97,7 +95,7 @@ export function runQueryReactive(options: ReactiveQueryOptions): IObservable<Exe
           options.rootValue,
           options.context,
           options.variables,
-          options.operationName
+          options.operationName,
         ).subscribe({
           next: (gqlResponse) => {
             logFunction({action: LogAction.execute, step: LogStep.end});
@@ -130,7 +128,7 @@ export function runQueryReactive(options: ReactiveQueryOptions): IObservable<Exe
         logFunction({action: LogAction.request, step: LogStep.end});
         observer.next({ errors: format([executionError]) });
         observer.complete();
-        return () => {};
+        return () => {/*noop*/};
       }
     });
 }

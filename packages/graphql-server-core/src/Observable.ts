@@ -8,7 +8,7 @@ export type SubscriberFunction<T> = (observer: Observer<T>) => (Subscription | C
 
 function isSubscription(subscription: Function | Subscription): subscription is Subscription {
   return subscription &&
-         (typeof subscription) !== "function" &&
+         (typeof subscription) !== 'function' &&
          (<Subscription>subscription).unsubscribe !== undefined;
 }
 
@@ -33,21 +33,21 @@ export class Observable<T> implements IObservable<T> {
     return new Observable((observer) => {
       observer.next(value);
       observer.complete();
-      return () => {};
+      return () => {/* noop */};
     });
   }
 
   public static throw = (e: Error) => {
     return new Observable((observer) => {
       observer.error(e);
-      return () => {};
+      return () => {/* noop */};
     });
   }
 
   public static empty = () => {
     return new Observable((observer) => {
       observer.complete();
-      return () => {};
+      return () => {/* noop */};
     });
   }
 
