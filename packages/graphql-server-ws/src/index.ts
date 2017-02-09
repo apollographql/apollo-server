@@ -6,9 +6,12 @@ import {
   resolveGraphqlOptions,
   ReactiveGraphQLOptions,
   ReactiveRequest,
+  ReactiveGraphQLEngine,
   ReactiveMessage,
   RequestsManager,
 } from 'graphql-server-reactive-core';
+export { ReactiveGraphQLOptions, ReactiveGraphQLEngine };
+
 import * as Websocket from 'ws';
 
 export interface WSMessageParams extends ReactiveMessage {
