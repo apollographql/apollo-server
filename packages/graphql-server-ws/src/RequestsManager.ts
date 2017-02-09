@@ -87,7 +87,7 @@ export class RequestsManager {
       formatError: formatErrorFn,
       formatResponse: graphqlOptions.formatResponse,
       debug: graphqlOptions.debug,
-      executeReactive: graphqlOptions.engine.executeReactive,
+      executeReactive: graphqlOptions.engine.executeReactive.bind(graphqlOptions.engine),
     };
 
     if (graphqlOptions.formatParams) {
