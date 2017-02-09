@@ -88,47 +88,49 @@ export function runQueryReactive(options: ReactiveQueryOptions): IObservable<Exe
         documentAST = options.query as DocumentNode;
     }
 
-    try {
-        logFunction({action: LogAction.execute, step: LogStep.start});
-        return new Observable((observer) => {
-            return options.executeReactive(
-              options.schema,
-              documentAST,
-              options.rootValue,
-              options.context,
-              options.variables,
-              options.operationName
-            ).subscribe({
-              next: (gqlResponse) => {
-                logFunction({action: LogAction.execute, step: LogStep.end});
-                let response = {
-                  data: gqlResponse.data,
-                };
-                if (gqlResponse.errors) {
-                  response['errors'] = format(gqlResponse.errors);
-                  if (debug) {
-                    gqlResponse.errors.forEach(printStackTrace);
-                  }
-                }
-                if (options.formatResponse) {
-                  response = options.formatResponse(response, options);
-                }
-                observer.next(response);
-              },
-              error: (executionError) => {
-                logFunction({action: LogAction.execute, step: LogStep.end});
-                logFunction({action: LogAction.request, step: LogStep.end});
-                observer.next({ errors: format([executionError]) });
-              },
-              complete: () => {
-                logFunction({action: LogAction.request, step: LogStep.end});
-                observer.complete();
-              },
-            });
+    logFunction({action: LogAction.execute, step: LogStep.start});
+    return new Observable((observer) => {
+      try {
+        return options.executeReactive(
+          options.schema,
+          documentAST,
+          options.rootValue,
+          options.context,
+          options.variables,
+          options.operationName
+        ).subscribe({
+          next: (gqlResponse) => {
+            logFunction({action: LogAction.execute, step: LogStep.end});
+            let response = {
+              data: gqlResponse.data,
+            };
+            if (gqlResponse.errors) {
+              response['errors'] = format(gqlResponse.errors);
+              if (debug) {
+                gqlResponse.errors.forEach(printStackTrace);
+              }
+            }
+            if (options.formatResponse) {
+              response = options.formatResponse(response, options);
+            }
+            observer.next(response);
+          },
+          error: (executionError) => {
+            logFunction({action: LogAction.execute, step: LogStep.end});
+            logFunction({action: LogAction.request, step: LogStep.end});
+            observer.next({ errors: format([executionError]) });
+          },
+          complete: () => {
+            logFunction({action: LogAction.request, step: LogStep.end});
+            observer.complete();
+          },
         });
-    } catch (executionError) {
+      } catch (executionError) {
         logFunction({action: LogAction.execute, step: LogStep.end});
         logFunction({action: LogAction.request, step: LogStep.end});
-        return Observable.of({ errors: format([executionError]) });
-    }
+        observer.next({ errors: format([executionError]) });
+        observer.complete();
+        return () => {};
+      }
+    });
 }

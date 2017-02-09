@@ -1,6 +1,7 @@
-import { runQueryReactive, Observable, GraphQLOptions, resolveGraphqlOptions } from "graphql-server-core";
+import { runQueryReactive, Observer, Observable, GraphQLOptions, resolveGraphqlOptions, Subscription } from "graphql-server-core";
 import { WSHandler, WSGraphQLOptionsFunction, WSMessageParams, WSGraphQLOptions, WSRequest } from './interfaces';
 import { formatError } from 'graphql';
+import { toDiffObserver, IObservableDiff } from 'observable-diff-operator';
 import * as Websocket from 'ws';
 
 function validateRequest(request: WSRequest) {
@@ -26,7 +27,7 @@ function validateRequest(request: WSRequest) {
   }
 }
 
-function ObservableFromWs(ws: Websocket, graphqlOptions: WSGraphQLOptions): Observable<WSMessageParams> {
+function ObservableFromWs(ws: Websocket, graphqlOptions: WSGraphQLOptions): IObservable<WSMessageParams> {
 	return new Observable<WSMessageParams>((observer) => {
 		let nextListener = (data: any, flags: {binary: boolean}) => {
 			let request: WSMessageParams;
@@ -73,16 +74,30 @@ import { ExecutionResult } from 'graphql';
 class RequestsManager {
   protected requests = {};
 
-	public runQuery(key: number, params: ReactiveQueryOptions): IObservable<ExecutionResult> {
-		return new Observable((observer) => {
-			// TODO: Implement toDiff
-			// return runQueryReactive(params).toDiff().subscribe({
-			return runQueryReactive(params).subscribe({
-				next: (data) => observer.next(Object.assign(data, { id: key })),
-				error: observer.error,
-				complete: observer.complete,
-			});
-		});
+	public subscribeRequest(obs: IObservable<ExecutionResult>, key: number, onMessageObserver: Observer<IObservableDiff>): void {
+    const diffObs = new Observable((observer) => {
+      return obs.subscribe(toDiffObserver({
+        next: (data) => {
+          if ( undefined !== key ) {
+            observer.next(Object.assign(data, { id: key }));
+          } else {
+            observer.next(data);
+          }
+        },
+        error: observer.error,
+        complete: observer.complete,
+      }));
+    });
+
+    if ( key ) {
+      this.requests[key] = diffObs.subscribe(onMessageObserver);
+    } else {
+      diffObs.subscribe(onMessageObserver);
+    }
+  }
+
+  public storeSubscription(key: number, value: Subscription) {
+    this.requests[key] = value;
   }
 
   public unsubscribe(key: number) {
@@ -99,11 +114,15 @@ class RequestsManager {
   }
 }
 
-function handleRequest(ws: Websocket, rm: RequestsManager, {requestParams, graphqlOptions}: WSMessageParams) {
+function handleRequest(rm: RequestsManager, message: WSMessageParams, onMessageObserver: Observer<IObservableDiff>) {
+  rm.subscribeRequest(prepareRequest(rm, message), message.requestParams.id, onMessageObserver);
+}
+
+function prepareRequest(rm: RequestsManager, {requestParams, graphqlOptions}: WSMessageParams): IObservable<ExecutionResult> {
   const formatErrorFn = graphqlOptions.formatError || formatError;
 
   if (Array.isArray(requestParams)) {
-    return Observable.of({ errors: ['Does not support batching'] });
+    return Observable.of({ errors: [formatErrorFn(new Error('Websocket does not support batching'))] });
   }
   rm.unsubscribe(requestParams.id);
 
@@ -119,7 +138,7 @@ function handleRequest(ws: Websocket, rm: RequestsManager, {requestParams, graph
     try {
       variables = JSON.parse(variables);
     } catch (error) {
-      return Observable.throw(Error('Variables are invalid JSON.'));
+      return Observable.of({ errors: [formatErrorFn(new Error('Variables are invalid JSON.'))] });
     }
   }
 
@@ -142,7 +161,7 @@ function handleRequest(ws: Websocket, rm: RequestsManager, {requestParams, graph
     params = graphqlOptions.formatParams(params);
   }
 
-	return rm.runQuery(requestParams.id, params);
+  return runQueryReactive(params);
 }
 
 export function graphqlWs(options: WSGraphQLOptions | WSGraphQLOptionsFunction): WSHandler {
@@ -162,8 +181,7 @@ export function graphqlWs(options: WSGraphQLOptions | WSGraphQLOptionsFunction):
 			const requests = new RequestsManager();
 			const subscription = ObservableFromWs(ws, graphqlOptions).subscribe({
 				next: (message) => {
-				  handleRequest(ws, requests, message)
-					.subscribe({
+				  handleRequest(requests, message, {
 						next: (data) => ws.send(JSON.stringify(data)),
 						error: (e) => ws.close(1008, e.message),
 						complete: () => {},

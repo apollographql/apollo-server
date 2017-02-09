@@ -25,7 +25,8 @@
   },
   "homepage": "https://github.com/apollostack/graphql-server#readme",
   "dependencies": {
-    "graphql-server-core": "^0.6.0"
+    "graphql-server-core": "^0.6.0",
+    "observable-diff-operator": "^0.1.1-1"
   },
   "devDependencies": {
     "ws": "^2.0.2",

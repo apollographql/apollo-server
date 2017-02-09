@@ -7,7 +7,9 @@ export type CleanupFunction = () => void;
 export type SubscriberFunction<T> = (observer: Observer<T>) => (Subscription | CleanupFunction);
 
 function isSubscription(subscription: Function | Subscription): subscription is Subscription {
-  return (<Subscription>subscription).unsubscribe !== undefined;
+  return subscription &&
+         (typeof subscription) !== "function" &&
+         (<Subscription>subscription).unsubscribe !== undefined;
 }
 
 export interface IObservable<T> {
