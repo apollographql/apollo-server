@@ -101,14 +101,13 @@ export function runQueryReactive(options: ReactiveQueryOptions): IObservable<Exe
             ).subscribe({
               next: (gqlResponse) => {
                 logFunction({action: LogAction.execute, step: LogStep.end});
-                logFunction({action: LogAction.request, step: LogStep.end});
                 let response = {
                   data: gqlResponse.data,
                 };
                 if (gqlResponse.errors) {
                   response['errors'] = format(gqlResponse.errors);
                   if (debug) {
-                    gqlResponse.errors.map(printStackTrace);
+                    gqlResponse.errors.forEach(printStackTrace);
                   }
                 }
                 if (options.formatResponse) {
@@ -122,6 +121,7 @@ export function runQueryReactive(options: ReactiveQueryOptions): IObservable<Exe
                 observer.next({ errors: format([executionError]) });
               },
               complete: () => {
+                logFunction({action: LogAction.request, step: LogStep.end});
                 observer.complete();
               },
             });

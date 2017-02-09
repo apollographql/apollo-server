@@ -166,6 +166,7 @@ export function graphqlWs(options: WSGraphQLOptions | WSGraphQLOptionsFunction):
 					.subscribe({
 						next: (data) => ws.send(JSON.stringify(data)),
 						error: (e) => ws.close(1008, e.message),
+						complete: () => {},
 					});
 				},
 				error: (e) => {
