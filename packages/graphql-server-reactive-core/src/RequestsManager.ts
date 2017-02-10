@@ -8,6 +8,7 @@ import {
   RGQL_MSG_DATA,
   RGQL_MSG_START,
   RGQL_MSG_STOP,
+  RGQL_MSG_KEEPALIVE,
   RGQLPacket,
   RGQLPacketData,
   RGQLPayloadStart,
@@ -22,6 +23,11 @@ export class RequestsManager {
   constructor(protected graphqlOptions: ReactiveGraphQLOptions,
               protected requestsObservable: IObservable<RGQLPacket>) {
       this.respondsObservable = new Observable((observer) => {
+        const kaSub = this._keepAliveObservable().subscribe({
+          next: (packet) => observer.next(packet),
+          error: observer.error,
+          complete: () => { /* noop */ },
+        });
         const sub = requestsObservable.subscribe({
           next: (request) => this._handleRequest(request, observer),
           error: observer.error,
@@ -29,6 +35,9 @@ export class RequestsManager {
         });
 
         return () => {
+          if ( kaSub ) {
+            kaSub.unsubscribe();
+          }
           if ( sub ) {
             sub.unsubscribe();
           }
@@ -47,6 +56,24 @@ export class RequestsManager {
 
   protected _handleRequest(request: RGQLPacket, onMessageObserver: Observer<RGQLPacket>) {
     this._subscribeResponds(this._executeRequest(request.data), request, onMessageObserver);
+  }
+
+  protected _keepAliveObservable(): Observable<RGQLPacket> {
+    const keepAlive: number = this.graphqlOptions.keepAlive;
+
+    return new Observable((observer) => {
+      if ( ! keepAlive ) {
+        observer.complete();
+        return () => {};
+      }
+
+      const kaInterval = setInterval(() => {
+        observer.next({ data: { type: RGQL_MSG_KEEPALIVE } });
+      }, keepAlive)
+      return () => {
+        clearInterval(kaInterval);
+      };
+    });
   }
 
   protected _executeRequest(request: RGQLPacketData): IObservable<ExecutionResult> {

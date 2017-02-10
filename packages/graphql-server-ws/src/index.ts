@@ -83,10 +83,13 @@ export function graphqlWs(options: ReactiveGraphQLOptions | WSGraphQLOptionsFunc
     resolveGraphqlOptions(options, ws)
       .then((graphqlOptions: ReactiveGraphQLOptions) => {
         const rm = new RequestsManager(graphqlOptions, ObservableFromWs(ws));
-        rm.responds.subscribe({
+        const subscription = rm.responds.subscribe({
             next: (packet) => ws.send(JSON.stringify(packet.data)),
             error: (e) => ws.close(1008, e.message),
-            complete: () => ws.terminate(),
+            complete: () => {
+              subscription.unsubscribe();
+              ws.terminate();
+            },
         });
       })
       .catch((e) => {

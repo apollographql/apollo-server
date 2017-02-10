@@ -17,4 +17,6 @@ export interface RGQLExecutor {
 
 export interface ReactiveGraphQLOptions extends GraphQLOptions {
   executor: RGQLExecutor;
+  /* Optional keepAlive timer */
+  keepAlive?: number;
 }

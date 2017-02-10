@@ -1,17 +1,19 @@
 import { ExecutionResult } from 'graphql';
 
 // Refer to https://github.com/apollographql/graphql-server/issues/272#issuecomment-278805955 for more information about protocol
-export const RGQL_MSG_ERROR    = 'error';
-export const RGQL_MSG_COMPLETE = 'complete';
-export const RGQL_MSG_DATA     = 'data';
-export const RGQL_MSG_START    = 'start';
-export const RGQL_MSG_STOP     = 'stop';
+export const RGQL_MSG_ERROR     = 'error';
+export const RGQL_MSG_COMPLETE  = 'complete';
+export const RGQL_MSG_DATA      = 'data';
+export const RGQL_MSG_START     = 'start';
+export const RGQL_MSG_STOP      = 'stop';
+export const RGQL_MSG_KEEPALIVE = 'keepalive';
 export type RGQLMessageType   = (
-    'error'    |
-    'complete' |
-    'data'     |
-    'start'    |
-    'stop'
+  'error'     |
+  'complete'  |
+  'data'      |
+  'start'     |
+  'stop'      |
+  'keepalive'
 );
 
 export type RGQLPayloadError = Error;
