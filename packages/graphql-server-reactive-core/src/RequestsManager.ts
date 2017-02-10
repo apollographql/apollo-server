@@ -64,12 +64,12 @@ export class RequestsManager {
     return new Observable((observer) => {
       if ( ! keepAlive ) {
         observer.complete();
-        return () => {};
+        return () => {/* noop */};
       }
 
       const kaInterval = setInterval(() => {
         observer.next({ data: { type: RGQL_MSG_KEEPALIVE } });
-      }, keepAlive)
+      }, keepAlive);
       return () => {
         clearInterval(kaInterval);
       };
