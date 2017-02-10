@@ -38,7 +38,6 @@
   },
   "dependencies": {
     "graphql-server-core": "^0.6.0",
-    "observable-diff-operator": "^0.1.1",
     "symbol-observable": "^1.0.4"
   }
 }

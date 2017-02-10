@@ -1,27 +1,34 @@
 import { IObservable, Observer, Observable, Subscription } from './Observable';
 import { ReactiveQueryOptions, runQueryReactive } from './runQueryReactive';
 import { ReactiveGraphQLOptions } from './reactiveOptions';
-import { toDiffObserver, IObservableDiff } from 'observable-diff-operator';
 import { formatError, ExecutionResult } from 'graphql';
+import {
+  RGQL_MSG_ERROR,
+  RGQL_MSG_COMPLETE,
+  RGQL_MSG_DATA,
+  RGQL_MSG_START,
+  RGQL_MSG_STOP,
+  RGQLMessageType,
+  RGQLPayloadType,
+  RGQLPayloadStart,
+} from './messageTypes';
 
-export interface ReactiveRequest {
+export interface RGQLPacket {
   id: number; // Per socket increasing number
-  action: 'request' | 'cancel';
-  query?: string; // GraphQL Printed Query.
-  variables?: any; // GraphQL variables.
-  operationName?: string; // GraphQL operationName
+  type: RGQLMessageType;
+  payload: RGQLPayloadType,
 }
 
-export interface ReactiveMessage {
-  requestParams: ReactiveRequest;
+export interface ReactiveRequest {
+  packet: RGQLPacket;
   graphqlOptions?: ReactiveGraphQLOptions;
 }
 
 export class RequestsManager {
   protected requests = {};
 
-  public handleRequest(message: ReactiveMessage, onMessageObserver: Observer<IObservableDiff>) {
-    this._subscribeRequest(this._prepareRequest(message), message.requestParams.id, onMessageObserver);
+  public handleRequest(message: ReactiveRequest, onMessageObserver: Observer<RGQLPacket>) {
+    this._subscribeRequest(this._prepareRequest(message), message.packet.id, onMessageObserver);
   }
 
   public unsubscribeAll() {
@@ -30,9 +37,9 @@ export class RequestsManager {
     });
   }
 
-  protected _subscribeRequest(obs: IObservable<ExecutionResult>, key: number, onMessageObserver: Observer<IObservableDiff>): void {
-    const diffObs = new Observable((observer) => {
-      return obs.subscribe(toDiffObserver({
+  protected _prepareRespond(obs: IObservable<ExecutionResult>, key: number): IObservable<RGQLPacket> {
+    return new Observable((observer) => {
+      return this._convertRespond(obs).subscribe({
         next: (data) => {
           if ( undefined !== key ) {
             observer.next(Object.assign(data, { id: key }));
@@ -42,13 +49,42 @@ export class RequestsManager {
         },
         error: observer.error,
         complete: observer.complete,
-      }));
+      });
     });
+  }
 
+  protected _convertRespond(obs: IObservable<ExecutionResult>): IObservable<RGQLPacket> {
+    return new Observable((observer) => {
+      return obs.subscribe({
+        next: (data) => {
+          observer.next({
+            type: RGQL_MSG_DATA,
+            payload: data,
+          });
+        },
+        error: (e) => {
+          observer.next({
+            type: RGQL_MSG_ERROR,
+            payload: e,
+          });
+          observer.complete();
+        },
+        complete: () => {
+          observer.next({
+            type: RGQL_MSG_COMPLETE,
+          });
+          observer.complete();
+        },
+      });
+    });
+  }
+
+  protected _subscribeRequest(obs: IObservable<ExecutionResult>, key: number, onMessageObserver: Observer<RGQLPacket>): void {
+    const respondObs = this._prepareRespond(obs, key);
     if ( key ) {
-      this.requests[key] = diffObs.subscribe(onMessageObserver);
+      this.requests[key] = respondObs.subscribe(onMessageObserver);
     } else {
-      diffObs.subscribe(onMessageObserver);
+      respondObs.subscribe(onMessageObserver);
     }
   }
 
@@ -59,27 +95,27 @@ export class RequestsManager {
     }
   }
 
-  protected _prepareRequest({requestParams, graphqlOptions}: ReactiveMessage): IObservable<ExecutionResult> {
+  protected _prepareRequest({packet, graphqlOptions}: ReactiveRequest): IObservable<ExecutionResult> {
     const formatErrorFn = graphqlOptions.formatError || formatError;
 
     try {
-      this._validateRequest(requestParams);
+      this._validateRequest(packet);
     } catch (e) {
       return Observable.of({ errors: [formatErrorFn(e)] });
     }
 
-    if (Array.isArray(requestParams)) {
+    if (Array.isArray(packet)) {
       return Observable.of({ errors: [formatErrorFn(new Error('Websocket does not support batching'))] });
     }
-    this._unsubscribe(requestParams.id);
+    this._unsubscribe(packet.id);
 
-    if ( requestParams.action === 'cancel' ) {
+    if ( packet.type === RGQL_MSG_STOP ) {
       return Observable.empty();
     }
-
-    const query = requestParams.query;
-    const operationName = requestParams.operationName;
-    let variables = requestParams.variables;
+    const graphqlRequest: RGQLPayloadStart = packet.payload;
+    const query = graphqlRequest.query;
+    const operationName = graphqlRequest.operationName;
+    let variables = graphqlRequest.variables;
 
     if (typeof variables === 'string') {
       try {
@@ -111,26 +147,29 @@ export class RequestsManager {
     return runQueryReactive(params);
   }
 
-  protected _validateRequest(request: ReactiveRequest) {
-    if ( undefined === request.id ) {
+  protected _validateRequest(packet: RGQLPacket) {
+    if ( undefined === packet.id ) {
       throw new Error('Message missing id field');
     }
 
-    if ( undefined === request.action ) {
-      throw new Error('Message missing action field');
+    if ( undefined === packet.type ) {
+      throw new Error('Message missing type field');
     }
 
-    switch ( request.action ) {
-      case 'request':
-        if ( undefined === request.query ) {
-          throw new Error('Message missing query field');
+    switch ( packet.type ) {
+      case RGQL_MSG_START:
+        if ( undefined === packet.payload ) {
+          throw new Error('Message missing payload field');
+        }
+        if ( undefined === (<RGQLPayloadStart> packet.payload).query ) {
+          throw new Error('Message missing payload.query field');
         }
         return;
-    case 'cancel':
-     // Allgood :)
-     return;
-    default:
-     throw new Error('Invalid action used');
-      }
+      case RGQL_MSG_STOP:
+       // Nothing much to check, no payload.
+       return;
+      default:
+        throw new Error('Invalid type used');
+    }
   }
 }

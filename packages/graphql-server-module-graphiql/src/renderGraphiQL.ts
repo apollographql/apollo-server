@@ -49,20 +49,18 @@ export function renderGraphiQL(data: GraphiQLData): string {
   const operationName = data.operationName;
   const passHeader = data.passHeader ? data.passHeader : '';
   const fetchLibrary = isWs ?
-      `<script src="//npmcdn.com/@reactivex/rxjs@5.1.0/dist/global/Rx.min.js"></script>
-       <script src="//npmcdn.com/rxjs-diff-operator@0.1.1/dist/main.browser.js"></script>` :
+      `<script src="//npmcdn.com/@reactivex/rxjs@5.1.0/dist/global/Rx.min.js"></script>` :
       `<script src="//cdn.jsdelivr.net/fetch/0.9.0/fetch.min.js"></script>`;
   const fetcher = isWs ? `
-    Rx.Observable.prototype.fromDiff = rxjsDiffOperator.fromDiff;
     var reqId = 0;
 
-    function graphQLFetcher(graphQLParams) {
-      var localReqId = reqId++;
+    function messageObservable(localReqId, graphQLParams) {
       return new Rx.Observable(function (observer) {
-        var payload = JSON.stringify(Object.assign({}, graphQLParams, {
-          action: "request",
+        var payload = JSON.stringify({
+          type: "start",
           id: localReqId,
-        }));
+          payload: graphQLParams,
+        });
         var isOpen = false;
 
         var ws = new WebSocket(fetchURL);
@@ -73,8 +71,12 @@ export function renderGraphiQL(data: GraphiQLData): string {
         ws.onerror = function(e) {
           observer.error(new Error("WebSocket error"));
         };
-        ws.onclose = function () {
-          observer.complete();
+        ws.onclose = function (closeEvent) {
+          if ( closeEvent.wasClean ) {
+            observer.complete();
+          } else {
+            observer.error(new Error('Connection closed unexpectedly'));
+          }
         };
         ws.onopen = function () {
           isOpen = true;
@@ -82,17 +84,42 @@ export function renderGraphiQL(data: GraphiQLData): string {
         };
 
         return function () {
-          if ( isOpen == true ) {
-            ws.send(JSON.stringify({ id: localReqId, action: "cancel" }));
+          if ( (isOpen == true) && (ws.readyState === 1) ) {
+            ws.send(JSON.stringify({ id: localReqId, type: "stop" }));
           }
           ws.close();
         };
       })
+      .retryWhen((e) => e.delay(500))
+      .share()
       .map(JSON.parse)
       .filter(function (v) { return v.id == localReqId })
-      .fromDiff()
-      .catch((e) => {
-        return Rx.Observable.of({ errors: [e.message] });
+      .catch(function (e) {
+        return Rx.Observable.of({ id: localReqId, type: 'error', payload: e  });
+      });
+    }
+
+    function graphQLFetcher(graphQLParams) {
+      var localReqId = reqId++;
+      return new Rx.Observable(function (observer) {
+        return messageObservable(localReqId, graphQLParams)
+          .subscribe(function(packet) {
+            switch (packet.type) {
+              case 'data':
+                return observer.next(packet.payload);
+              case 'error':
+                observer.error(new Error(packet.payload));
+                return observer.complete();
+              case 'complete':
+                return observer.complete();
+              default:
+                observer.error(new Error('Recieved invalid message type from server'));
+            }
+          }, function(e) {
+            observer.error(e);
+          }, function() {
+            observer.complete();
+          });
       });
     }
   ` : `

@@ -6,14 +6,14 @@ import {
   resolveGraphqlOptions,
   ReactiveGraphQLOptions,
   ReactiveRequest,
-  ReactiveMessage,
+  RGQLPacket,
   RequestsManager,
 } from 'graphql-server-reactive-core';
 export { ReactiveGraphQLOptions };
 
 import * as Websocket from 'ws';
 
-export interface WSMessageParams extends ReactiveMessage {
+export interface WSRequest extends ReactiveRequest {
   flags: {
     binary: boolean;
   };
@@ -27,14 +27,14 @@ export interface WSHandler {
   (ws: Websocket): void;
 }
 
-function ObservableFromWs(ws: Websocket, graphqlOptions: ReactiveGraphQLOptions): IObservable<WSMessageParams> {
-  return new Observable<WSMessageParams>((observer) => {
+function ObservableFromWs(ws: Websocket, graphqlOptions: ReactiveGraphQLOptions): IObservable<WSRequest> {
+  return new Observable<WSRequest>((observer) => {
     let nextListener = (data: any, flags: {binary: boolean}) => {
-      let request: WSMessageParams;
+      let request: WSRequest;
       try {
         try {
           request = {
-            requestParams: JSON.parse(data) as ReactiveRequest,
+            packet: JSON.parse(data) as RGQLPacket,
             graphqlOptions,
             flags: flags,
           };
@@ -82,8 +82,8 @@ export function graphqlWs(options: ReactiveGraphQLOptions | WSGraphQLOptionsFunc
       .then((graphqlOptions: ReactiveGraphQLOptions) => {
         const requests = new RequestsManager();
         const subscription = ObservableFromWs(ws, graphqlOptions).subscribe({
-          next: (message) => {
-            requests.handleRequest(message, {
+          next: (request) => {
+            requests.handleRequest(request, {
               next: (data) => ws.send(JSON.stringify(data)),
               error: (e) => ws.close(1008, e.message),
               complete: () => {/* noop */},
