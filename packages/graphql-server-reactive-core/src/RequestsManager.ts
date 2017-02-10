@@ -101,7 +101,7 @@ export class RequestsManager {
       formatError: formatErrorFn,
       formatResponse: graphqlOptions.formatResponse,
       debug: graphqlOptions.debug,
-      executeReactive: graphqlOptions.engine.executeReactive.bind(graphqlOptions.engine),
+      executeReactive: graphqlOptions.executor.executeReactive.bind(graphqlOptions.executor),
     };
 
     if (graphqlOptions.formatParams) {

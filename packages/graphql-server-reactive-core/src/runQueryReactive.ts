@@ -12,18 +12,10 @@ import {
 } from 'graphql';
 import { LogAction, LogFunction, LogMessage, LogStep, QueryOptions} from 'graphql-server-core';
 import { Observable, IObservable } from './Observable';
-
-export type ReactiveExecuteFunction = (
-  schema: GraphQLSchema,
-  document: DocumentNode,
-  rootValue?: any,
-  contextValue?: any,
-  variableValues?: {[key: string]: any},
-  operationName?: string,
-) => IObservable<ExecutionResult>;
+import { RGQLExecuteFunction } from './reactiveOptions';
 
 export interface ReactiveQueryOptions extends QueryOptions {
-  executeReactive: ReactiveExecuteFunction;
+  executeReactive: RGQLExecuteFunction;
 }
 
 export function runQueryReactive(options: ReactiveQueryOptions): IObservable<ExecutionResult> {
