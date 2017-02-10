@@ -1,6 +1,6 @@
 import { IObservable, Observer, Observable, Subscription } from './Observable';
 import { ReactiveQueryOptions, runQueryReactive } from './runQueryReactive';
-import { ReactiveGraphQLOptions } from './reactiveOptions';
+import { ReactiveGraphQLOptions, RGQLExecuteFunction } from './reactiveOptions';
 import { formatError, ExecutionResult } from 'graphql';
 import {
   RGQL_MSG_ERROR,
@@ -8,111 +8,65 @@ import {
   RGQL_MSG_DATA,
   RGQL_MSG_START,
   RGQL_MSG_STOP,
-  RGQLMessageType,
-  RGQLPayloadType,
+  RGQLPacket,
+  RGQLPacketData,
   RGQLPayloadStart,
 } from './messageTypes';
 
-export interface RGQLPacket {
-  id: number; // Per socket increasing number
-  type: RGQLMessageType;
-  payload: RGQLPayloadType,
-}
-
-export interface ReactiveRequest {
-  packet: RGQLPacket;
-  graphqlOptions?: ReactiveGraphQLOptions;
-}
-
 export class RequestsManager {
-  protected requests = {};
+  protected requests: { [key: number]: Subscription } = {};
+  protected orphanedResponds: Subscription[] = [];
+  protected respondsObservable: IObservable<RGQLPacket>;
+  protected executeReactive: RGQLExecuteFunction;
 
-  public handleRequest(message: ReactiveRequest, onMessageObserver: Observer<RGQLPacket>) {
-    this._subscribeRequest(this._prepareRequest(message), message.packet.id, onMessageObserver);
-  }
+  constructor(protected graphqlOptions: ReactiveGraphQLOptions,
+              protected requestsObservable: IObservable<RGQLPacket>) {
+      this.respondsObservable = new Observable((observer) => {
+        const sub = requestsObservable.subscribe({
+          next: (request) => this._handleRequest(request, observer),
+          error: observer.error,
+          complete: observer.complete,
+        });
 
-  public unsubscribeAll() {
-    Object.keys(this.requests).forEach((k) => {
-      this._unsubscribe(parseInt(k, 10));
-    });
-  }
-
-  protected _prepareRespond(obs: IObservable<ExecutionResult>, key: number): IObservable<RGQLPacket> {
-    return new Observable((observer) => {
-      return this._convertRespond(obs).subscribe({
-        next: (data) => {
-          if ( undefined !== key ) {
-            observer.next(Object.assign(data, { id: key }));
-          } else {
-            observer.next(data);
+        return () => {
+          if ( sub ) {
+            sub.unsubscribe();
           }
-        },
-        error: observer.error,
-        complete: observer.complete,
+
+          this._unsubscribeAll();
+        };
       });
-    });
+
+      this.executeReactive = graphqlOptions.executor.executeReactive.bind(graphqlOptions.executor);
   }
 
-  protected _convertRespond(obs: IObservable<ExecutionResult>): IObservable<RGQLPacket> {
-    return new Observable((observer) => {
-      return obs.subscribe({
-        next: (data) => {
-          observer.next({
-            type: RGQL_MSG_DATA,
-            payload: data,
-          });
-        },
-        error: (e) => {
-          observer.next({
-            type: RGQL_MSG_ERROR,
-            payload: e,
-          });
-          observer.complete();
-        },
-        complete: () => {
-          observer.next({
-            type: RGQL_MSG_COMPLETE,
-          });
-          observer.complete();
-        },
-      });
-    });
+  public get responds(): IObservable<RGQLPacket> {
+    // XXX: Need to wrap with multicast.
+    return this.respondsObservable;
   }
 
-  protected _subscribeRequest(obs: IObservable<ExecutionResult>, key: number, onMessageObserver: Observer<RGQLPacket>): void {
-    const respondObs = this._prepareRespond(obs, key);
-    if ( key ) {
-      this.requests[key] = respondObs.subscribe(onMessageObserver);
-    } else {
-      respondObs.subscribe(onMessageObserver);
-    }
+  protected _handleRequest(request: RGQLPacket, onMessageObserver: Observer<RGQLPacket>) {
+    this._subscribeResponds(this._executeRequest(request.data), request, onMessageObserver);
   }
 
-  protected _unsubscribe(key: number) {
-    if ( this.requests.hasOwnProperty(key) ) {
-      this.requests[key].unsubscribe();
-      delete this.requests[key];
-    }
-  }
-
-  protected _prepareRequest({packet, graphqlOptions}: ReactiveRequest): IObservable<ExecutionResult> {
-    const formatErrorFn = graphqlOptions.formatError || formatError;
+  protected _executeRequest(request: RGQLPacketData): IObservable<ExecutionResult> {
+    const formatErrorFn = this.graphqlOptions.formatError || formatError;
 
     try {
-      this._validateRequest(packet);
+      this._validateRequest(request);
     } catch (e) {
       return Observable.of({ errors: [formatErrorFn(e)] });
     }
 
-    if (Array.isArray(packet)) {
+    if (Array.isArray(request)) {
       return Observable.of({ errors: [formatErrorFn(new Error('Websocket does not support batching'))] });
     }
-    this._unsubscribe(packet.id);
+    this._unsubscribe(request.id);
 
-    if ( packet.type === RGQL_MSG_STOP ) {
+    if ( request.type === RGQL_MSG_STOP ) {
       return Observable.empty();
     }
-    const graphqlRequest: RGQLPayloadStart = packet.payload;
+    const graphqlRequest: RGQLPayloadStart = request.payload;
     const query = graphqlRequest.query;
     const operationName = graphqlRequest.operationName;
     let variables = graphqlRequest.variables;
@@ -126,28 +80,39 @@ export class RequestsManager {
     }
 
     let params = {
-      schema: graphqlOptions.schema,
+      schema: this.graphqlOptions.schema,
       query: query,
       variables: variables,
-      context: graphqlOptions.context,
-      rootValue: graphqlOptions.rootValue,
+      context: this.graphqlOptions.context,
+      rootValue: this.graphqlOptions.rootValue,
       operationName: operationName,
-      logFunction: graphqlOptions.logFunction,
-      validationRules: graphqlOptions.validationRules,
+      logFunction: this.graphqlOptions.logFunction,
+      validationRules: this.graphqlOptions.validationRules,
       formatError: formatErrorFn,
-      formatResponse: graphqlOptions.formatResponse,
-      debug: graphqlOptions.debug,
-      executeReactive: graphqlOptions.executor.executeReactive.bind(graphqlOptions.executor),
+      formatResponse: this.graphqlOptions.formatResponse,
+      debug: this.graphqlOptions.debug,
+      executeReactive: this.executeReactive,
     };
 
-    if (graphqlOptions.formatParams) {
-      params = graphqlOptions.formatParams(params);
+    if (this.graphqlOptions.formatParams) {
+      params = this.graphqlOptions.formatParams(params);
     }
 
     return runQueryReactive(params);
   }
 
-  protected _validateRequest(packet: RGQLPacket) {
+  protected _subscribeResponds(obs: IObservable<ExecutionResult>, request: RGQLPacket, onMessageObserver: Observer<RGQLPacket>): void {
+    const key: number = request.data.id;
+    const respondSubscription = this._prepareRespondPacket(obs, key, request.metadata).subscribe(onMessageObserver);
+
+    if ( key ) {
+      this.requests[key] = respondSubscription;
+    } else {
+      this.orphanedResponds.push(respondSubscription);
+    }
+  }
+
+  protected _validateRequest(packet: RGQLPacketData) {
     if ( undefined === packet.id ) {
       throw new Error('Message missing id field');
     }
@@ -170,6 +135,68 @@ export class RequestsManager {
        return;
       default:
         throw new Error('Invalid type used');
+    }
+  }
+
+  protected _prepareRespondPacket(obs: IObservable<ExecutionResult>, key: number, metadata?: Object): IObservable<RGQLPacket> {
+    return new Observable((observer) => {
+      return this._flattenObservable(obs, key).subscribe({
+        next: (data: RGQLPacketData) => {
+          // data => packet (data + metadata)
+          const nextData = {
+            data,
+            ...(metadata ? { metadata } : {}),
+          };
+
+          observer.next(nextData);
+        },
+        error: observer.error,
+        complete: observer.complete,
+      });
+    });
+  }
+
+  protected _flattenObservable(obs: IObservable<ExecutionResult>, id?: number): IObservable<RGQLPacketData> {
+    return new Observable((observer) => {
+      return obs.subscribe({
+        next: (data) => {
+          observer.next({
+            ...((undefined !== id) ? { id } : {}),
+            type: RGQL_MSG_DATA,
+            payload: data,
+          });
+        },
+        error: (e) => {
+          observer.next({
+            ...((undefined !== id) ? { id } : {}),
+            type: RGQL_MSG_ERROR,
+            payload: e,
+          });
+        },
+        complete: () => {
+          observer.next({
+            ...((undefined !== id) ? { id } : {}),
+            type: RGQL_MSG_COMPLETE,
+          });
+        },
+      });
+    });
+  }
+
+  protected _unsubscribeAll() {
+    Object.keys(this.requests).forEach((k) => {
+      this._unsubscribe(parseInt(k, 10));
+    });
+
+    while ( this.orphanedResponds.length > 0 ) {
+      this.orphanedResponds.pop().unsubscribe();
+    }
+  }
+
+  protected _unsubscribe(key: number) {
+    if ( this.requests.hasOwnProperty(key) ) {
+      this.requests[key].unsubscribe();
+      delete this.requests[key];
     }
   }
 }

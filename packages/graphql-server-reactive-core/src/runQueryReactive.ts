@@ -1,14 +1,11 @@
 import {
-    GraphQLSchema,
     ExecutionResult,
     DocumentNode,
     parse,
     print,
     validate,
-    execute,
     formatError,
     specifiedRules,
-    ValidationContext,
 } from 'graphql';
 import { LogAction, LogFunction, LogMessage, LogStep, QueryOptions} from 'graphql-server-core';
 import { Observable, IObservable } from './Observable';
@@ -18,6 +15,7 @@ export interface ReactiveQueryOptions extends QueryOptions {
   executeReactive: RGQLExecuteFunction;
 }
 
+// Reactive implementation of runQuery from graphql-server-core
 export function runQueryReactive(options: ReactiveQueryOptions): IObservable<ExecutionResult> {
     let documentAST: DocumentNode;
 

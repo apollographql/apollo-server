@@ -5,17 +5,19 @@ import {
   GraphQLOptions,
   resolveGraphqlOptions,
   ReactiveGraphQLOptions,
-  ReactiveRequest,
   RGQLPacket,
+  RGQLPacketData,
   RequestsManager,
 } from 'graphql-server-reactive-core';
 export { ReactiveGraphQLOptions };
 
 import * as Websocket from 'ws';
 
-export interface WSRequest extends ReactiveRequest {
-  flags: {
-    binary: boolean;
+export interface WSPacket extends RGQLPacket {
+  metadata: {
+    flags: {
+      masked: boolean;
+    };
   };
 }
 
@@ -27,19 +29,18 @@ export interface WSHandler {
   (ws: Websocket): void;
 }
 
-function ObservableFromWs(ws: Websocket, graphqlOptions: ReactiveGraphQLOptions): IObservable<WSRequest> {
-  return new Observable<WSRequest>((observer) => {
-    let nextListener = (data: any, flags: {binary: boolean}) => {
-      let request: WSRequest;
+function ObservableFromWs(ws: Websocket): IObservable<WSPacket> {
+  return new Observable<WSPacket>((observer) => {
+    let nextListener = (data: any, flags: any) => {
+      let request: WSPacket;
       try {
         try {
           request = {
-            packet: JSON.parse(data) as RGQLPacket,
-            graphqlOptions,
-            flags: flags,
+            metadata: { flags },
+            data: JSON.parse(data) as RGQLPacketData,
           };
         } catch (e) {
-          throw new Error('Message must be JSON-parseable.');
+          throw new Error('Received unparsable json string');
         }
       } catch (e) {
         observer.error(e);
@@ -76,28 +77,16 @@ export function graphqlWs(options: ReactiveGraphQLOptions | WSGraphQLOptionsFunc
   }
 
   return (ws): void => {
-    // XXX graphlWs should be called as event emitter callback,
-    // they do not support promises.
+    // XXX: if we want to block connection by specific protocol
+    // or anything else, this is the place to do so.
+
     resolveGraphqlOptions(options, ws)
       .then((graphqlOptions: ReactiveGraphQLOptions) => {
-        const requests = new RequestsManager();
-        const subscription = ObservableFromWs(ws, graphqlOptions).subscribe({
-          next: (request) => {
-            requests.handleRequest(request, {
-              next: (data) => ws.send(JSON.stringify(data)),
-              error: (e) => ws.close(1008, e.message),
-              complete: () => {/* noop */},
-            });
-          },
-          error: (e) => {
-            // RFC 6455 - 7.4.1 ==> 1008 indicates that an endpoint is terminating the connection
-            // because it has received a message that violates its policy.
-            return ws.close(1008, e.message);
-          },
-          complete: () => {
-            requests.unsubscribeAll();
-            ws.terminate();
-          },
+        const rm = new RequestsManager(graphqlOptions, ObservableFromWs(ws));
+        rm.responds.subscribe({
+            next: (packet) => ws.send(JSON.stringify(packet.data)),
+            error: (e) => ws.close(1008, e.message),
+            complete: () => ws.terminate(),
         });
       })
       .catch((e) => {

@@ -91,12 +91,16 @@ export function renderGraphiQL(data: GraphiQLData): string {
         };
       })
       .retryWhen((e) => e.delay(500))
-      .share()
       .map(JSON.parse)
       .filter(function (v) { return v.id == localReqId })
       .catch(function (e) {
-        return Rx.Observable.of({ id: localReqId, type: 'error', payload: e  });
-      });
+        return Rx.Observable.of({
+          id: localReqId,
+          type: 'error',
+          payload: new Error('Could not parse server response: ' + e.message),
+        });
+      })
+      .share();
     }
 
     function graphQLFetcher(graphQLParams) {
@@ -113,7 +117,7 @@ export function renderGraphiQL(data: GraphiQLData): string {
               case 'complete':
                 return observer.complete();
               default:
-                observer.error(new Error('Recieved invalid message type from server'));
+                observer.error(new Error('Invalid message type was received from server'));
             }
           }, function(e) {
             observer.error(e);
