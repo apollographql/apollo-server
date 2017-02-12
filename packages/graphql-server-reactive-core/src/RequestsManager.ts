@@ -17,18 +17,18 @@ import {
 export class RequestsManager {
   protected requests: { [key: number]: Subscription } = {};
   protected orphanedResponds: Subscription[] = [];
-  protected respondsObservable: IObservable<RGQLPacket>;
+  protected _responseObservable: IObservable<RGQLPacket>;
   protected executeReactive: RGQLExecuteFunction;
 
   constructor(protected graphqlOptions: ReactiveGraphQLOptions,
-              protected requestsObservable: IObservable<RGQLPacket>) {
-      this.respondsObservable = new Observable((observer) => {
+              requestObservable: IObservable<RGQLPacket>) {
+      this._responseObservable = new Observable((observer) => {
         const kaSub = this._keepAliveObservable().subscribe({
           next: (packet) => observer.next(packet),
           error: observer.error,
           complete: () => { /* noop */ },
         });
-        const sub = requestsObservable.subscribe({
+        const sub = requestObservable.subscribe({
           next: (request) => this._handleRequest(request, observer),
           error: observer.error,
           complete: observer.complete,
@@ -49,9 +49,9 @@ export class RequestsManager {
       this.executeReactive = graphqlOptions.executor.executeReactive.bind(graphqlOptions.executor);
   }
 
-  public get responds(): IObservable<RGQLPacket> {
+  public get responseObservable(): IObservable<RGQLPacket> {
     // XXX: Need to wrap with multicast.
-    return this.respondsObservable;
+    return this._responseObservable;
   }
 
   protected _handleRequest(request: RGQLPacket, onMessageObserver: Observer<RGQLPacket>) {
