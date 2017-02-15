@@ -1,7 +1,7 @@
 {
-  "name": "graphql-server-ws",
+  "name": "graphql-server-reactive-protocol",
   "version": "0.6.0",
-  "description": "Production-ready Node.js GraphQL server for ws",
+  "description": "Reactive protocol handler for Apollo GraphQL server",
   "main": "dist/index.js",
   "scripts": {
     "compile": "tsc",
@@ -9,12 +9,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/apollostack/graphql-server/tree/master/packages/graphql-server-ws"
+    "url": "https://github.com/apollostack/graphql-server/tree/master/packages/graphql-server-reactive-protocol"
   },
   "keywords": [
     "GraphQL",
     "Apollo",
-    "Websocket",
     "Server",
     "Javascript"
   ],
@@ -24,24 +23,20 @@
     "url": "https://github.com/apollostack/graphql-server/issues"
   },
   "homepage": "https://github.com/apollostack/graphql-server#readme",
-  "dependencies": {
-    "graphql-server-reactive-core": "^0.6.0",
-    "graphql-server-reactive-protocol": "^0.6.0"
-  },
   "devDependencies": {
-    "ws": "^2.0.2",
-    "@types/ws": "0.0.38"
+    "@types/graphql": "^0.8.5"
   },
   "peerDependencies": {
-    "ws": "^2.0.2",
     "graphql": "^0.8.0 || ^0.9.0"
   },
   "optionalDependencies": {
-    "@types/graphql": "^0.8.6",
-    "@types/ws": "0.0.38"
+    "@types/graphql": "^0.8.5"
   },
   "typings": "dist/index.d.ts",
   "typescript": {
     "definition": "dist/index.d.ts"
+  },
+  "dependencies": {
+    "graphql-server-reactive-core": "^0.6.0"
   }
 }

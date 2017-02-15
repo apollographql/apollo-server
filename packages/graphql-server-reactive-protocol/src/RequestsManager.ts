@@ -1,7 +1,15 @@
-import { IObservable, Observer, Observable, Subscription } from './Observable';
-import { ReactiveQueryOptions, runQueryReactive } from './runQueryReactive';
-import { ReactiveGraphQLOptions, RGQLExecuteFunction } from './reactiveOptions';
+import {
+  ReactiveGraphQLOptions,
+  RGQLExecuteFunction ,
+  runQueryReactive,
+  IObservable,
+  Observer,
+  Observable,
+  Subscription
+} from 'graphql-server-reactive-core';
+
 import { formatError, ExecutionResult } from 'graphql';
+
 import {
   RGQL_MSG_ERROR,
   RGQL_MSG_COMPLETE,

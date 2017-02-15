@@ -1,13 +1,14 @@
 import {
   IObservable,
-  Observer,
-  Observable,
-  GraphQLOptions,
-  resolveGraphqlOptions,
   ReactiveGraphQLOptions,
   RGQLPacket,
   RGQLPacketData,
   RequestsManager,
+} from 'graphql-server-reactive-protocol';
+import {
+  Observer,
+  Observable,
+  resolveGraphqlOptions,
 } from 'graphql-server-reactive-core';
 export { ReactiveGraphQLOptions };
 
