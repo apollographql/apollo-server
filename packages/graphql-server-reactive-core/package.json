@@ -24,7 +24,12 @@
   },
   "homepage": "https://github.com/apollostack/graphql-server#readme",
   "devDependencies": {
-    "@types/graphql": "^0.8.5"
+    "@types/fibers": "0.0.29",
+    "@types/graphql": "^0.8.5",
+    "fibers": "^1.0.15",
+    "graphql-rxjs": "^0.9.1-rc.1",
+    "meteor-promise": "^0.8.0",
+    "rxjs": "^5.1.1"
   },
   "peerDependencies": {
     "graphql": "^0.8.0 || ^0.9.0"

@@ -5,7 +5,7 @@ import {
   IObservable,
   Observer,
   Observable,
-  Subscription
+  Subscription,
 } from 'graphql-server-reactive-core';
 
 import { formatError, ExecutionResult } from 'graphql';
