@@ -69,15 +69,15 @@ export class RequestsManager {
   protected _keepAliveObservable(): Observable<RGQLPacket> {
     const keepAlive: number = this.graphqlOptions.keepAlive;
 
-    return new Observable((observer) => {
-      if ( ! keepAlive ) {
-        observer.complete();
-        return () => {/* noop */};
-      }
+    if ( ! keepAlive ) {
+      return Observable.empty();
+    }
 
+    return new Observable((observer) => {
       const kaInterval = setInterval(() => {
         observer.next({ data: { type: RGQL_MSG_KEEPALIVE } });
       }, keepAlive);
+
       return () => {
         clearInterval(kaInterval);
       };

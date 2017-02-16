@@ -6,6 +6,7 @@ process.env.NODE_ENV = 'test';
 require('../packages/graphql-server-core/dist/runQuery.test.js');
 require('../packages/graphql-server-reactive-core/dist/Observable.test.js');
 require('../packages/graphql-server-reactive-core/dist/runQueryReactive.test.js');
+require('../packages/graphql-server-reactive-protocol/dist/RequestsManager.test.js');
 require('../packages/graphql-server-module-operation-store/dist/operationStore.test');
 
 // integrations
