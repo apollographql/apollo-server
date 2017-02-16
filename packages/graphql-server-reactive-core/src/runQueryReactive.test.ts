@@ -21,6 +21,9 @@ import {
   runQueryReactive,
 } from './runQueryReactive';
 
+// XXX: once GraphQLExecutorWithSubscriptions will be released, need to duplicate the tests to run with
+// it as well.
+
 function FailingVailidationRule(context: ValidationContext): any {
   return {
     Field(node) {
@@ -303,6 +306,53 @@ describe('runQueryReactive is competiable with runQuery', () => {
         expect(logs[10]).to.deep.equals({action: LogAction.request, step: LogStep.end});
       });
   });
+});
+
+// Same tests are runQuery.tests.ts with promise wrapper.
+describe('runQueryReactive', () => {
+  const queryType = new GraphQLObjectType({
+      name: 'QueryType',
+      fields: {
+          testString: {
+              type: GraphQLString,
+              resolve() {
+                  return 'it works';
+              },
+          },
+          testError: {
+              type: GraphQLString,
+              resolve() {
+                  throw new Error('Secret error message');
+              },
+          },
+      },
+  });
+
+  const subscriptionType = new GraphQLObjectType({
+      name: 'Subscription',
+      fields: {
+          testSerial: {
+              type: GraphQLInt,
+              resolve() {
+                  return Observable.interval(3);
+              },
+          },
+      },
+  });
+
+  const schema = new GraphQLSchema({
+      query: queryType,
+      subscription: subscriptionType,
+  });
+
+  const runQuery = (options: QueryOptions) : Observable<ExecutionResult> => {
+      // wrap with RxJs Observable
+      return new Observable((observer) => {
+        return runQueryReactive(Object.assign({
+          executeReactive: graphqlRxjs.executeReactive,
+        }, options)).subscribe(observer);
+      });
+  };
 
   // Extra tests for static results
   it('rejects request on bad variables', () => {
@@ -316,7 +366,7 @@ describe('runQueryReactive is competiable with runQuery', () => {
       schema,
       query: query,
       variables: () => ({}), // should be a map.
-    }).then((res) => {
+    }).take(1).toPromise().then((res) => {
       expect(res.errors).to.be.a('array');
       expect(res.errors.length).to.be.equal(1);
       expect(res.errors[0].message).to.be.match(expected);
@@ -336,7 +386,7 @@ describe('runQueryReactive is competiable with runQuery', () => {
       formatError: () => {
         throw new Error('faulty formatError');
       },
-    }).then((res) => {
+    }).take(1).toPromise().then((res) => {
       expect(res.errors).to.be.a('array');
       expect(res.errors.length).to.be.equal(1);
       expect(res.errors[0].message).to.be.match(expected);
@@ -354,10 +404,41 @@ describe('runQueryReactive is competiable with runQuery', () => {
       schema,
       query: query,
       validationRules: [ FailingVailidationRule ],
-    }).then((res) => {
+    }).take(1).toPromise().then((res) => {
       expect(res.errors).to.be.a('array');
       expect(res.errors.length).to.be.equal(1);
       expect(res.errors[0].message).to.be.match(expected);
+    });
+  });
+
+  it('supports subscriptions', () => {
+    const query = `
+      subscription {
+        testSerial
+      }`;
+    const expected = [
+      {
+        data: {
+          testSerial: 0,
+        },
+      },
+      {
+        data: {
+          testSerial: 1,
+        },
+      },
+      {
+        data: {
+          testSerial: 2,
+        },
+      },
+    ];
+
+    return runQuery({
+      schema,
+      query: query,
+    }).bufferCount(3).take(1).toPromise().then((res: ExecutionResult[]) => {
+      expect(res).to.be.deep.equal(expected);
     });
   });
 });
