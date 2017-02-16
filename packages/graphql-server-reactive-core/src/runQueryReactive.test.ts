@@ -3,13 +3,15 @@ import { stub } from 'sinon';
 import 'mocha';
 
 import {
-    GraphQLSchema,
-    GraphQLObjectType,
-    GraphQLString,
-    GraphQLInt,
-    GraphQLNonNull,
-    ExecutionResult,
-    parse,
+  GraphQLSchema,
+  GraphQLObjectType,
+  GraphQLString,
+  GraphQLInt,
+  GraphQLNonNull,
+  GraphQLError,
+  ValidationContext,
+  ExecutionResult,
+  parse,
 } from 'graphql';
 import { QueryOptions, LogAction, LogStep } from 'graphql-server-core';
 
@@ -18,6 +20,14 @@ import { Observable } from 'rxjs';
 import {
   runQueryReactive,
 } from './runQueryReactive';
+
+function FailingVailidationRule(context: ValidationContext): any {
+  return {
+    Field(node) {
+      context.reportError(new GraphQLError(`always fails`));
+    }
+  };
+}
 
 // Same tests are runQuery.tests.ts with promise wrapper.
 describe('runQueryReactive is competiable with runQuery', () => {
@@ -85,7 +95,7 @@ describe('runQueryReactive is competiable with runQuery', () => {
       });
 
       // Convert it to promise
-      return o.toPromise();
+      return o.take(1).toPromise();
     });
   };
 
@@ -292,5 +302,62 @@ describe('runQueryReactive is competiable with runQuery', () => {
         expect(logs[3]).to.deep.equals({action: LogAction.request, step: LogStep.status, key: 'operationName', data: 'Q1'});
         expect(logs[10]).to.deep.equals({action: LogAction.request, step: LogStep.end});
       });
+  });
+
+  // Extra tests for static results
+  it('rejects request on bad variables', () => {
+    const query = `
+      query {
+        testString
+      }`;
+    const expected = /Variables must be provided as an Object where each property is a variable value./;
+
+    return runQuery({
+      schema,
+      query: query,
+      variables: () => ({}), // should be a map.
+    }).then((res) => {
+      expect(res.errors).to.be.a('array');
+      expect(res.errors.length).to.be.equal(1);
+      expect(res.errors[0].message).to.be.match(expected);
+    });
+  });
+
+  it('does not blow with faulty formatError', () => {
+    const query = `
+      query {
+        testError
+      }`;
+    const expected = /Internal server error/;
+
+    return runQuery({
+      schema,
+      query: query,
+      formatError: () => {
+        throw new Error('faulty formatError');
+      },
+    }).then((res) => {
+      expect(res.errors).to.be.a('array');
+      expect(res.errors.length).to.be.equal(1);
+      expect(res.errors[0].message).to.be.match(expected);
+    });
+  });
+
+  it('supports injecting validation rules', () => {
+    const query = `
+      query {
+        testString
+      }`;
+    const expected = /always fails/;
+
+    return runQuery({
+      schema,
+      query: query,
+      validationRules: [ FailingVailidationRule ],
+    }).then((res) => {
+      expect(res.errors).to.be.a('array');
+      expect(res.errors.length).to.be.equal(1);
+      expect(res.errors[0].message).to.be.match(expected);
+    });
   });
 });
