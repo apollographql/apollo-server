@@ -28,7 +28,7 @@ function FailingVailidationRule(context: ValidationContext): any {
   return {
     Field(node) {
       context.reportError(new GraphQLError(`always fails`));
-    }
+    },
   };
 }
 

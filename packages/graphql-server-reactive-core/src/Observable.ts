@@ -27,8 +27,6 @@ export interface Subscription {
 }
 
 export class Observable<T> implements IObservable<T> {
-  private subscriberFunction: SubscriberFunction<T>;
-
   public static of = (value) => {
     return new Observable((observer) => {
       observer.next(value);
@@ -51,10 +49,9 @@ export class Observable<T> implements IObservable<T> {
     });
   }
 
-  constructor(subscriberFunction: SubscriberFunction<T>) {
-    this.subscriberFunction = subscriberFunction;
-  }
+  constructor(private subscriberFunction: SubscriberFunction<T>) { /* noop */ }
 
+  /* istanbul ignore next */
   public [$$observable]() {
     return this;
   }

@@ -110,7 +110,7 @@ export function runQueryReactive(options: ReactiveQueryOptions): IObservable<Exe
 
 function execute(
   options: ReactiveQueryOptions,
-  document: DocumentNode
+  document: DocumentNode,
 ): IObservable<ExecutionResult> {
     return new Observable((observer) => {
       try {
