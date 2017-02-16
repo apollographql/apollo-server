@@ -1,20 +1,55 @@
 import { expect } from 'chai';
 import { stub } from 'sinon';
 import 'mocha';
+
+import {
+  GraphQLObjectType,
+  GraphQLString,
+  GraphQLSchema,
+} from 'graphql';
 import * as graphqlRxjs from 'graphql-rxjs';
-import { Observable, Subject } from 'rxjs';
+import { Observable, BehaviorSubject, Subject } from 'rxjs';
 import { IObservable } from 'graphql-server-reactive-core';
 
+import {
+  RGQL_MSG_START,
+  RGQL_MSG_DATA,
+  RGQL_MSG_COMPLETE,
+  RGQLPacket,
+} from './messageTypes';
 import { RequestsManager } from './RequestsManager';
-import { RGQLPacket } from './messageTypes';
 
-describe.only('RequestsManager', () => {
+const queryType = new GraphQLObjectType({
+    name: 'QueryType',
+    fields: {
+        testString: {
+            type: GraphQLString,
+            resolve() {
+                return 'it works';
+            },
+        },
+        testError: {
+            type: GraphQLString,
+            resolve() {
+                throw new Error('Secret error message');
+            },
+        },
+    },
+});
+
+const schema = new GraphQLSchema({
+    query: queryType,
+});
+
+describe('RequestsManager', () => {
   // const makeRequest = (pkt: RGQLPacket): IObservable<RGQLPacket> => {
   //   return new Observable((observer) => {
 
   //   });
   // };
-  const wrapToRx = (o) => new Observable((observer) => o.subscribe(observer));
+  function wrapToRx<T>(o: IObservable<T>) {
+    return new Observable<T>((observer) => o.subscribe(observer));
+  }
 
   it('passes sanity', () => {
     expect(RequestsManager).to.be.a('function');
@@ -54,6 +89,46 @@ describe.only('RequestsManager', () => {
       .bufferWhen(() => Observable.interval(testTime))
       .take(1).toPromise().then((res) => {
       expect(res).to.deep.equal([]);
+    });
+  });
+
+  it('can handle simple requests', () => {
+    const input = Observable.of(<RGQLPacket>{
+      data: {
+        id: 1,
+        type: RGQL_MSG_START,
+        payload: {
+          query: `query { testString }`,
+        },
+      },
+    });
+
+    const expected = [
+      {
+        id: 1,
+        type: RGQL_MSG_DATA,
+        payload: {
+          data: {
+            testString: 'it works',
+          },
+        },
+      },
+      {
+        id: 1,
+        type: RGQL_MSG_COMPLETE,
+      },
+    ];
+
+    const reqMngr = new RequestsManager({
+      schema,
+      executor: graphqlRxjs,
+    }, input);
+
+    return wrapToRx(reqMngr.responseObservable)
+      .map((v) => v.data)
+      .bufferCount(expected.length + 1)
+      .toPromise().then((res) => {
+      expect(res).to.deep.equal(expected);
     });
   });
 });

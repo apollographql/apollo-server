@@ -2,11 +2,11 @@ import { expect } from 'chai';
 import { stub } from 'sinon';
 import 'mocha';
 
-import { Observable } from './Observable';
+import { Observer, Observable } from './Observable';
 import { Observable as RxObservable } from 'rxjs';
 
 describe('Observable', () => {
-  const observableToPromise = (obs) => {
+  function observableToPromise(obs) {
     return new Promise((resolve, reject) => {
       let err = undefined;
       let val = undefined;
@@ -18,20 +18,19 @@ describe('Observable', () => {
         });
       };
 
-      sub = obs.subscribe({
-        next: (v) => {
+      sub = obs.subscribe(
+      (v) => {
           val = v;
-        },
-        error: (e) => {
-          err = e;
-          complete();
-        },
-        complete,
-      });
+      },
+      (e) => {
+        err = e;
+        complete();
+      },
+      complete);
     });
   };
 
-  const observablesMatch = async (a, b) => {
+  async function observablesMatch(a, b) {
     let aval;
     let bval;
     let aerr;
@@ -50,7 +49,16 @@ describe('Observable', () => {
     }
 
     if ( aerr || berr ) {
-      expect(aerr.message).to.be.equals(berr.message);
+      if ( aerr && berr ) {
+        expect(aerr.message).to.be.equals(berr.message);
+      } else if ( aerr ) {
+        console.error('observablesMatch error A', aerr);
+        expect(aerr).to.be.equals(undefined);
+      } else if ( berr ) {
+        console.error('observablesMatch error b', berr);
+        expect(berr).to.be.equals(undefined);
+      }
+
       return;
     }
 
@@ -79,8 +87,9 @@ describe('Observable', () => {
   });
 
   it('is able to wrap observable', () => {
-    let originalObs = Observable.of('Original');
-    let craftedObs = new Observable((observer) => {
+    let originalObs = Observable.of<string>('Original');
+    let craftedObs = new Observable<string>((observer: Observer<string>) => {
+      // same observable type, we can take shortcut.
       return originalObs.subscribe(observer);
     });
     return observablesMatch(originalObs, craftedObs);
