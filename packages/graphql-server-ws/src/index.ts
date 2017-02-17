@@ -1,15 +1,18 @@
 import {
-  IObservable,
-  ReactiveGraphQLOptions,
   RGQLPacket,
   RGQLPacketData,
   RequestsManager,
 } from 'graphql-server-reactive-protocol';
 import {
+  resolveGraphqlOptions,
+  ReactiveGraphQLOptions,
+} from 'graphql-server-reactive-core';
+import {
+  IObservable,
   Observer,
   Observable,
-  resolveGraphqlOptions,
-} from 'graphql-server-reactive-core';
+} from 'graphql-server-observable';
+
 export { ReactiveGraphQLOptions };
 
 import * as Websocket from 'ws';

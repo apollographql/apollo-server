@@ -12,7 +12,7 @@ import {
 } from 'graphql';
 import * as graphqlRxjs from 'graphql-rxjs';
 import { Observable, BehaviorSubject, Subject } from 'rxjs';
-import { IObservable } from 'graphql-server-reactive-core';
+import { IObservable } from 'graphql-server-observable';
 
 import {
   RGQL_MSG_START,

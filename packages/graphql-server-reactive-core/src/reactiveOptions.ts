@@ -1,6 +1,6 @@
 import { GraphQLOptions } from 'graphql-server-core';
 import { ExecutionResult, GraphQLSchema, DocumentNode } from 'graphql';
-import { IObservable } from './Observable';
+import { IObservable } from 'graphql-server-observable';
 
 export type RGQLExecuteFunction = (
   schema: GraphQLSchema,

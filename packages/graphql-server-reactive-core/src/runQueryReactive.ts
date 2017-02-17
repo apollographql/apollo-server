@@ -8,7 +8,7 @@ import {
     specifiedRules,
 } from 'graphql';
 import { LogAction, LogFunction, LogMessage, LogStep, QueryOptions} from 'graphql-server-core';
-import { Observable, IObservable } from './Observable';
+import { Observable, IObservable } from 'graphql-server-observable';
 import { RGQLExecuteFunction } from './reactiveOptions';
 
 export interface ReactiveQueryOptions extends QueryOptions {

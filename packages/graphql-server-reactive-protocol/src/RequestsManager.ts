@@ -2,11 +2,14 @@ import {
   ReactiveGraphQLOptions,
   RGQLExecuteFunction ,
   runQueryReactive,
+} from 'graphql-server-reactive-core';
+
+import {
   IObservable,
   Observer,
   Observable,
   Subscription,
-} from 'graphql-server-reactive-core';
+} from 'graphql-server-observable';
 
 import { formatError, ExecutionResult } from 'graphql';
 
