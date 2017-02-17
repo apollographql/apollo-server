@@ -90,12 +90,9 @@ export class RequestsManager {
     try {
       this._validateRequest(request);
     } catch (e) {
-      return Observable.of({ errors: [formatErrorFn(e)] });
+      return Observable.throw(e);
     }
 
-    if (Array.isArray(request)) {
-      return Observable.of({ errors: [formatErrorFn(new Error('Websocket does not support batching'))] });
-    }
     this._unsubscribe(request.id);
 
     if ( request.type === RGQL_MSG_STOP ) {
@@ -110,7 +107,7 @@ export class RequestsManager {
       try {
         variables = JSON.parse(variables);
       } catch (error) {
-        return Observable.of({ errors: [formatErrorFn(new Error('Variables are invalid JSON.'))] });
+        return Observable.throw(new Error('Variables are invalid JSON.'));
       }
     }
 
@@ -149,27 +146,30 @@ export class RequestsManager {
 
   protected _validateRequest(packet: RGQLPacketData) {
     if ( undefined === packet.id ) {
-      throw new Error('Message missing id field');
+      throw new Error('Request is missing id field');
     }
 
     if ( undefined === packet.type ) {
-      throw new Error('Message missing type field');
+      throw new Error('Request is missing type field');
     }
 
     switch ( packet.type ) {
       case RGQL_MSG_START:
         if ( undefined === packet.payload ) {
-          throw new Error('Message missing payload field');
+          throw new Error('Request is missing payload field');
+        }
+        if (Array.isArray(packet.payload)) {
+          throw new Error('interface does does not support batching');
         }
         if ( undefined === (<RGQLPayloadStart> packet.payload).query ) {
-          throw new Error('Message missing payload.query field');
+          throw new Error('Request is missing payload.query field');
         }
         return;
       case RGQL_MSG_STOP:
        // Nothing much to check, no payload.
        return;
       default:
-        throw new Error('Invalid type used');
+        throw new Error('Request has invalid type');
     }
   }
 
@@ -196,7 +196,7 @@ export class RequestsManager {
       return obs.subscribe({
         next: (data) => {
           observer.next({
-            ...((undefined !== id) ? { id } : {}),
+            id,
             type: RGQL_MSG_DATA,
             payload: data,
           });
@@ -210,7 +210,7 @@ export class RequestsManager {
         },
         complete: () => {
           observer.next({
-            ...((undefined !== id) ? { id } : {}),
+            id,
             type: RGQL_MSG_COMPLETE,
           });
         },
