@@ -65,7 +65,7 @@ const schema = new GraphQLSchema({
     subscription: subscriptionType,
 });
 
-describe.only('RequestsManager', () => {
+describe('RequestsManager', () => {
   function wrapToRx<T>(o: IObservable<T>) {
     return new Observable<T>((observer) => o.subscribe(observer));
   }
@@ -397,7 +397,7 @@ describe.only('RequestsManager', () => {
 
   it('able to preserve metadata', () => {
     const inputPacket: RGQLPacket = {
-      metadata: "packet-info",
+      metadata: 'packet-info',
       data: {
         id: 1,
         type: RGQL_MSG_START,
@@ -409,7 +409,7 @@ describe.only('RequestsManager', () => {
     const input = Observable.of(inputPacket);
 
     const expected = [{
-        metadata: "packet-info",
+        metadata: 'packet-info',
         data: {
           id: 1,
           type: RGQL_MSG_DATA,
@@ -420,7 +420,7 @@ describe.only('RequestsManager', () => {
           },
         },
     }, {
-      metadata: "packet-info",
+      metadata: 'packet-info',
       data: {
         id: 1,
         type: RGQL_MSG_COMPLETE,
@@ -436,6 +436,92 @@ describe.only('RequestsManager', () => {
       .bufferCount(expected.length + 1)
       .toPromise().then((res) => {
       expect(res).to.deep.equal(expected);
+    });
+  });
+
+  it('able to subscribe for more then one subscription in one', () => {
+    const query = `subscription interval($interval: Int!) { testInterval(interval: $interval) }` ;
+    const input = Observable.from(<Observable<RGQLPacket>[]>[
+    Observable.of({
+      data: {
+        id: 1,
+        type: RGQL_MSG_START,
+        payload: {
+          query,
+          variables: { interval: 25 },
+        },
+      },
+    }),
+    Observable.of({
+      data: {
+        id: 2,
+        type: RGQL_MSG_START,
+        payload: {
+          query,
+          variables: { interval: 50 },
+        },
+      },
+    }),
+    Observable.of({
+      data: {
+        id: 1,
+        type: RGQL_MSG_STOP,
+      },
+    }).delay(120),
+    Observable.of({
+      data: {
+        id: 2,
+        type: RGQL_MSG_STOP,
+      },
+    }).delay(120),
+    ]).concatAll();
+
+    const expected1 = [];
+    for ( let i = 0 ; i < 4 ; i ++ ) {
+      expected1.push({
+        id: 1,
+        type: RGQL_MSG_DATA,
+        payload: {
+          data: {
+            testInterval: i,
+          },
+        },
+      });
+    }
+    expected1.push({
+      id: 1,
+      type: RGQL_MSG_COMPLETE,
+    });
+
+    const expected2 = [];
+    for ( let i = 0 ; i < 4 ; i ++ ) {
+      expected2.push({
+        id: 2,
+        type: RGQL_MSG_DATA,
+        payload: {
+          data: {
+            testInterval: i,
+          },
+        },
+      });
+    }
+    expected2.push({
+      id: 2,
+      type: RGQL_MSG_COMPLETE,
+    });
+
+    const reqMngr = new RequestsManager({
+      schema,
+      executor: graphqlRxjs,
+    }, input);
+
+    return wrapToRx(reqMngr.responseObservable)
+      .map((v) => v.data)
+      .groupBy((v) => v.id)
+      .flatMap(group => group.reduce((acc, curr) => [...acc, curr], []))
+      .bufferCount(2)
+      .toPromise().then((res) => {
+      expect(res).to.deep.equal([expected1, expected2]);
     });
   });
 });
