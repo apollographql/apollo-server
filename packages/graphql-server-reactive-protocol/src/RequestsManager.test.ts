@@ -16,6 +16,8 @@ import { IObservable } from 'graphql-server-observable';
 
 import {
   RGQL_MSG_START,
+  RGQL_MSG_INIT,
+  RGQL_MSG_INIT_SUCCESS,
   RGQL_MSG_DATA,
   RGQL_MSG_STOP,
   RGQL_MSG_ERROR,
@@ -164,6 +166,8 @@ describe('RequestsManager', () => {
           },
         },
       },
+
+      // finite result, the server sends complete.
       {
         id: 1,
         type: RGQL_MSG_COMPLETE,
@@ -193,10 +197,20 @@ describe('RequestsManager', () => {
     }, 'Request has invalid type');
   });
 
-  it('returns error if no id sent', () => {
+  it('returns error if no id sent for start', () => {
     return expectError({
       id: undefined,
       type: RGQL_MSG_START,
+      payload: {
+        query: `query { testString }`,
+      },
+    }, 'Request is missing id field', false);
+  });
+
+  it('returns error if no id sent for stop', () => {
+    return expectError({
+      id: undefined,
+      type: RGQL_MSG_STOP,
       payload: {
         query: `query { testString }`,
       },
@@ -252,6 +266,31 @@ describe('RequestsManager', () => {
     }, 'Variables are invalid JSON.');
   });
 
+  it('supports init packet', () => {
+    const input = Observable.of({
+      data: {
+        type: RGQL_MSG_INIT,
+        payload: {},
+      },
+    });
+
+    const expected = [{
+      type: RGQL_MSG_INIT_SUCCESS,
+    }];
+
+    const reqMngr = new RequestsManager({
+      schema,
+      executor: graphqlRxjs,
+    }, input);
+
+    return wrapToRx(reqMngr.responseObservable)
+      .map((v) => v.data)
+      .bufferCount(expected.length + 1)
+      .toPromise().then((res) => {
+      expect(res).to.deep.equal(expected);
+    });
+  });
+
   it('able to subscribe to changes', () => {
     const input = Observable.from(<Observable<RGQLPacket>[]>[
     Observable.of({
@@ -282,10 +321,6 @@ describe('RequestsManager', () => {
         },
       });
     }
-    expected.push({
-      id: 1,
-      type: RGQL_MSG_COMPLETE,
-    });
 
     const reqMngr = new RequestsManager({
       schema,
@@ -331,10 +366,6 @@ describe('RequestsManager', () => {
         },
       });
     }
-    expected.push({
-      id: 1,
-      type: RGQL_MSG_COMPLETE,
-    });
 
     const reqMngr = new RequestsManager({
       schema,
@@ -488,10 +519,6 @@ describe('RequestsManager', () => {
         },
       });
     }
-    expected1.push({
-      id: 1,
-      type: RGQL_MSG_COMPLETE,
-    });
 
     const expected2 = [];
     for ( let i = 0 ; i < 4 ; i ++ ) {
@@ -505,10 +532,6 @@ describe('RequestsManager', () => {
         },
       });
     }
-    expected2.push({
-      id: 2,
-      type: RGQL_MSG_COMPLETE,
-    });
 
     const reqMngr = new RequestsManager({
       schema,
