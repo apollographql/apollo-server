@@ -66,6 +66,7 @@ export function renderGraphiQL(data: GraphiQLData): string {
   <script src="//cdn.jsdelivr.net/react/15.0.0/react.min.js"></script>
   <script src="//cdn.jsdelivr.net/react/15.0.0/react-dom.min.js"></script>
   <script src="//cdn.jsdelivr.net/graphiql/${GRAPHIQL_VERSION}/graphiql.min.js"></script>
+  <script src="//unpkg.com/subscriptions-transport-ws@0.5.3/browser/client.js"></script>
 </head>
 <body>
   <script>
@@ -97,28 +98,73 @@ export function renderGraphiQL(data: GraphiQLData): string {
         otherParams[k] = parameters[k];
       }
     }
+    
+    var subscriptionsClient;
+    var activeSubscriptionId = -1;
+    function initSubscriptions() {
+      var subscriptionsEndpoint = 'ws://' + window.location.hostname + 
+        (window.location.port ? ':' + window.location.port: '') + '/subscriptions';
+
+      if (window.SubscriptionsTransportWs && window.SubscriptionsTransportWs.SubscriptionClient) {
+        subscriptionsClient = new window.SubscriptionsTransportWs.SubscriptionClient(subscriptionsEndpoint, {
+          reconnect: true
+        });
+        subscriptionsClient.onConnect(function() {
+          console.log('Connected to GraphQL Subscriptions server...');
+        });
+      }
+    }
+    
+    function graphQlSubscriptionFetcher(graphQLParams) {
+      return {
+        subscribe: function(observer) {
+          observer.next('Your subscription data will apear here after server publication!');
+          
+          activeSubscriptionId = subscriptionsClient.subscribe({
+            query: graphQLParams.query,
+            variables: graphQLParams.variables
+          }, function(error, result) {
+            if (error) {
+              observer.error(error);
+            }
+            else {
+              observer.next(result);
+            }
+          });
+        }
+      }
+    }
+    
     // We don't use safe-serialize for location, because it's not client input.
     var fetchURL = locationQuery(otherParams, '${endpointURL}');
+    
     // Defines a GraphQL fetcher using the fetch API.
     function graphQLFetcher(graphQLParams) {
-      return fetch(fetchURL, {
-        method: 'post',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-          ${passHeader}
-        },
-        body: JSON.stringify(graphQLParams),
-        credentials: 'include',
-      }).then(function (response) {
-        return response.text();
-      }).then(function (responseBody) {
-        try {
-          return JSON.parse(responseBody);
-        } catch (error) {
-          return responseBody;
-        }
-      });
+      if (subscriptionsClient && activeSubscriptionId !== -1) {
+        subscriptionsClient.unsubscribe(activeSubscriptionId);
+      }
+      if (subscriptionsClient && graphQLParams.query.startsWith('subscription')) {
+        return graphQlSubscriptionFetcher(graphQLParams);
+      }
+      else {
+        return fetch('/graphql', {
+          method: 'post',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(graphQLParams),
+          credentials: 'include',
+        }).then(function (response) {
+          return response.text();
+        }).then(function (responseBody) {
+          try {
+            return JSON.parse(responseBody);
+          } catch (error) {
+            return responseBody;
+          }
+        });
+      }
     }
     // When the query and variables string is edited, update the URL bar so
     // that it can be easily shared.
@@ -151,6 +197,8 @@ export function renderGraphiQL(data: GraphiQLData): string {
       }),
       document.body
     );
+    
+    initSubscriptions();
   </script>
 </body>
 </html>`;
