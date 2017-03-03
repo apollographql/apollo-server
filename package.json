@@ -32,7 +32,7 @@
     "lerna": "2.0.0-beta.35",
     "mocha": "^3.2.0",
     "npm-check-updates": "^2.8.9",
-    "remap-istanbul": "^0.8.4",
+    "remap-istanbul": "^0.9.1",
     "sinon": "^1.17.7",
     "supertest": "^3.0.0",
     "supertest-as-promised": "^4.0.2",
