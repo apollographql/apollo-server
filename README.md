@@ -1,7 +1,5 @@
 # GraphQL Server for Express, Connect, Hapi, Koa, Restify and AWS Lambda
 
-[![Greenkeeper badge](https://badges.greenkeeper.io/apollographql/graphql-server.svg)](https://greenkeeper.io/)
-
 [![npm version](https://badge.fury.io/js/graphql-server-core.svg)](https://badge.fury.io/js/graphql-server-core)
 [![Build Status](https://travis-ci.org/apollographql/graphql-server.svg?branch=master)](https://travis-ci.org/apollographql/graphql-server)
 [![Coverage Status](https://coveralls.io/repos/github/apollographql/graphql-server/badge.svg?branch=master)](https://coveralls.io/github/apollographql/graphql-server?branch=master)
