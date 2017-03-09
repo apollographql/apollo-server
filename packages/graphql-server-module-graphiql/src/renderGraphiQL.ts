@@ -20,6 +20,7 @@
 
 export type GraphiQLData = {
   endpointURL: string,
+  subscriptionsEndpoint: string,
   query?: string,
   variables?: Object,
   operationName?: string,
@@ -38,6 +39,7 @@ function safeSerialize(data) {
 
 export function renderGraphiQL(data: GraphiQLData): string {
   const endpointURL = data.endpointURL;
+  const subscriptionsEndpoint = data.subscriptionsEndpoint || '';
   const queryString = data.query;
   const variablesString =
     data.variables ? JSON.stringify(data.variables, null, 2) : null;
@@ -66,7 +68,7 @@ export function renderGraphiQL(data: GraphiQLData): string {
   <script src="//cdn.jsdelivr.net/react/15.0.0/react.min.js"></script>
   <script src="//cdn.jsdelivr.net/react/15.0.0/react-dom.min.js"></script>
   <script src="//cdn.jsdelivr.net/graphiql/${GRAPHIQL_VERSION}/graphiql.min.js"></script>
-  <script src="//unpkg.com/subscriptions-transport-ws@0.5.3/browser/client.js"></script>
+  <script src="//unpkg.com/subscriptions-transport-ws@0.5.5/browser/client.js"></script>
 </head>
 <body>
   <script>
@@ -98,55 +100,28 @@ export function renderGraphiQL(data: GraphiQLData): string {
         otherParams[k] = parameters[k];
       }
     }
-    
-    var subscriptionsClient;
-    var activeSubscriptionId = -1;
-    function initSubscriptions() {
-      var subscriptionsEndpoint = 'ws://' + window.location.hostname + 
-        (window.location.port ? ':' + window.location.port: '') + '/subscriptions';
 
-      if (window.SubscriptionsTransportWs && window.SubscriptionsTransportWs.SubscriptionClient) {
-        subscriptionsClient = new window.SubscriptionsTransportWs.SubscriptionClient(subscriptionsEndpoint, {
-          reconnect: true
-        });
-        subscriptionsClient.onConnect(function() {
-          console.log('Connected to GraphQL Subscriptions server...');
-        });
-      }
+    var fetcher;
+
+    if ('${subscriptionsEndpoint}' !== '') {
+      var subscriptionsClient = new window.SubscriptionsTransportWs.SubscriptionClient('${subscriptionsEndpoint}', {
+        reconnect: true
+      });
+
+      subscriptionsClient.onConnect(function() {
+        console.log('Connected to GraphQL Subscriptions server...');
+      });
+
+      fetcher = window.SubscriptionsTransportWs.graphQLFetcher(subscriptionsClient, graphQLFetcher);
+    } else {
+      fetcher = graphQLFetcher;
     }
-    
-    function graphQlSubscriptionFetcher(graphQLParams) {
-      return {
-        subscribe: function(observer) {
-          observer.next('Your subscription data will apear here after server publication!');
-          
-          activeSubscriptionId = subscriptionsClient.subscribe({
-            query: graphQLParams.query,
-            variables: graphQLParams.variables
-          }, function(error, result) {
-            if (error) {
-              observer.error(error);
-            }
-            else {
-              observer.next(result);
-            }
-          });
-        }
-      }
-    }
-    
+
     // We don't use safe-serialize for location, because it's not client input.
     var fetchURL = locationQuery(otherParams, '${endpointURL}');
-    
+
     // Defines a GraphQL fetcher using the fetch API.
     function graphQLFetcher(graphQLParams) {
-      if (subscriptionsClient && activeSubscriptionId !== -1) {
-        subscriptionsClient.unsubscribe(activeSubscriptionId);
-      }
-      if (subscriptionsClient && graphQLParams.query.startsWith('subscription')) {
-        return graphQlSubscriptionFetcher(graphQLParams);
-      }
-      else {
         return fetch('/graphql', {
           method: 'post',
           headers: {
@@ -164,7 +139,6 @@ export function renderGraphiQL(data: GraphiQLData): string {
             return responseBody;
           }
         });
-      }
     }
     // When the query and variables string is edited, update the URL bar so
     // that it can be easily shared.
@@ -186,7 +160,7 @@ export function renderGraphiQL(data: GraphiQLData): string {
     // Render <GraphiQL /> into the body.
     ReactDOM.render(
       React.createElement(GraphiQL, {
-        fetcher: graphQLFetcher,
+        fetcher: fetcher,
         onEditQuery: onEditQuery,
         onEditVariables: onEditVariables,
         onEditOperationName: onEditOperationName,
@@ -197,8 +171,6 @@ export function renderGraphiQL(data: GraphiQLData): string {
       }),
       document.body
     );
-    
-    initSubscriptions();
   </script>
 </body>
 </html>`;
