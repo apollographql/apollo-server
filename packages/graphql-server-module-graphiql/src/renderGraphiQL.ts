@@ -107,11 +107,6 @@ export function renderGraphiQL(data: GraphiQLData): string {
       var subscriptionsClient = new window.SubscriptionsTransportWs.SubscriptionClient('${subscriptionsEndpoint}', {
         reconnect: true
       });
-
-      subscriptionsClient.onConnect(function() {
-        console.log('Connected to GraphQL Subscriptions server...');
-      });
-
       fetcher = window.SubscriptionsTransportWs.graphQLFetcher(subscriptionsClient, graphQLFetcher);
     } else {
       fetcher = graphQLFetcher;
