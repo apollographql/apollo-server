@@ -215,7 +215,7 @@ That said, GraphQL Server is heavily inspired by express-graphql (it's the refer
 
 ### application/graphql requests
 
-express-graphql supports the `application/graphql` Content-Type for requests, which is an alternative to `application/json` request with only the query part sent as text. Because GraphQL server does not parse request bodies, you need to handle that in a separate middleware. Here's an example for express:
+express-graphql supports the `application/graphql` Content-Type for requests, which is an alternative to `application/json` request with only the query part sent as text. In the same way that we use `bodyParser.json` to parse `application/json` requests for graphql-server, we can use `bodyParser.text` plus one extra step in order to also parse `application/graphql` requests. Here's an example for express:
 
 ```js
 import express from 'express';
