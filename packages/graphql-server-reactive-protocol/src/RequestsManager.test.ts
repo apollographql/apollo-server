@@ -81,7 +81,7 @@ describe('RequestsManager', () => {
     const expected = <RGQLPacketData[]> [
       Object.assign({
         type: RGQL_MSG_ERROR,
-        payload: undefined,
+        payload: message,
         ...(inputPacket.data.id) ? { id: inputPacket.data.id } : {},
       }),
     ];
@@ -95,10 +95,6 @@ describe('RequestsManager', () => {
       .map((v) => v.data)
       .bufferCount(expected.length + 1)
       .toPromise().then((res) => {
-      const e: Error = res[0].payload as Error;
-      expect(e.message).to.be.equals(message);
-
-      expected[0].payload = e;
       expect(res).to.deep.equal(expected);
     });
 

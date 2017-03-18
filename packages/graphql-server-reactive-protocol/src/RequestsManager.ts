@@ -247,7 +247,7 @@ export class RequestsManager {
           observer.next({
             ...((undefined !== id) ? { id } : {}),
             type: RGQL_MSG_ERROR,
-            payload: e,
+            payload: e.message,
           });
         },
         complete: observer.complete,
