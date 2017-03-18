@@ -39,7 +39,8 @@ function safeSerialize(data) {
 
 export function renderGraphiQL(data: GraphiQLData): string {
   const endpointURL = data.endpointURL;
-  const subscriptionsEndpoint = data.subscriptionsEndpoint || '';
+  const subscriptionsEndpoint = data.subscriptionsEndpoint;
+  const usingSubscriptions = !!subscriptionsEndpoint;
   const queryString = data.query;
   const variablesString =
     data.variables ? JSON.stringify(data.variables, null, 2) : null;
@@ -68,7 +69,7 @@ export function renderGraphiQL(data: GraphiQLData): string {
   <script src="//cdn.jsdelivr.net/react/15.0.0/react.min.js"></script>
   <script src="//cdn.jsdelivr.net/react/15.0.0/react-dom.min.js"></script>
   <script src="//cdn.jsdelivr.net/graphiql/${GRAPHIQL_VERSION}/graphiql.min.js"></script>
-  <script src="//unpkg.com/subscriptions-transport-ws@0.5.5/browser/client.js"></script>
+  ${usingSubscriptions ? '<script src="//unpkg.com/subscriptions-transport-ws@0.5.5/browser/client.js"></script>' : ''}
 </head>
 <body>
   <script>
@@ -103,7 +104,7 @@ export function renderGraphiQL(data: GraphiQLData): string {
 
     var fetcher;
 
-    if ('${subscriptionsEndpoint}' !== '') {
+    if (${usingSubscriptions}) {
       var subscriptionsClient = new window.SubscriptionsTransportWs.SubscriptionClient('${subscriptionsEndpoint}', {
         reconnect: true
       });
