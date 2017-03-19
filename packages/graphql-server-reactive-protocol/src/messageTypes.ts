@@ -9,6 +9,7 @@ export const RGQL_MSG_STOP         = 'stop';
 export const RGQL_MSG_KEEPALIVE    = 'keepalive';
 export const RGQL_MSG_INIT         = 'init';
 export const RGQL_MSG_INIT_SUCCESS = 'init_success';
+export const RGQL_MSG_INIT_FAIL    = 'init_fail';
 export type RGQLMessageType   = (
   'error'        |
   'complete'     |
@@ -17,7 +18,8 @@ export type RGQLMessageType   = (
   'stop'         |
   'keepalive'    |
   'init'         |
-  'init_success'
+  'init_success' |
+  'init_fail'
 );
 
 export type RGQLPayloadError = Error;
