@@ -1,0 +1,30 @@
+{
+    "lines": 85,
+    "statements": 85,
+    "functions": 85,
+    "branches": 85,
+    "include": [
+	  "packages/**/*.ts"
+    ],
+    "exclude": [
+	  "packages/**/*.test.js",
+	  "packages/**/*.test.ts",
+	  "packages/**/*.d.ts"
+    ],
+    "reporter": [
+      "lcov",
+      "text-summary"
+    ],
+    "require": [
+	  "./test/ts-node-loader.js"
+    ],
+    "extension": [
+      ".ts"
+    ],
+    "cache": false,
+    "all": true,
+    "check-coverage": true,
+    "report-dir": "./coverage",
+    "sourceMap": false,
+    "instrument": false
+}
