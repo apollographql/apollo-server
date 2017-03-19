@@ -265,14 +265,14 @@ describe(`GraphQL-HTTP (apolloServer) tests for ${version} express`, () => {
         .field('query', `mutation TestMutation {
           uploadFile { originalname, mimetype }
         }`)
-        .attach('file', __filename);
+        .attach('file', `${__dirname}/uploadTest.txt`);
 
       return req.then((response) => {
         expect(JSON.parse(response.text)).to.deep.equal({
           data: {
             uploadFile: {
-              originalname: 'apolloServerHttp.test.js',
-              mimetype: 'application/javascript'
+              originalname: 'uploadTest.txt',
+              mimetype: 'text/plain'
             }
           }
         });
