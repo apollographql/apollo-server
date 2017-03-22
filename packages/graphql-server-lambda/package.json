@@ -29,7 +29,7 @@
     "graphql-server-module-graphiql": "^0.6.0"
   },
   "devDependencies": {
-    "@types/aws-lambda": "0.0.6",
+    "@types/aws-lambda": "0.0.9",
     "@types/graphql": "^0.8.6",
     "graphql-server-integration-testsuite": "^0.6.0"
   },
