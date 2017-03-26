@@ -71,7 +71,7 @@ export function renderGraphiQL(data: GraphiQLData): string {
   <script src="//cdn.jsdelivr.net/graphiql/${GRAPHIQL_VERSION}/graphiql.min.js"></script>
   ${usingSubscriptions ?
     '<script src="//unpkg.com/subscriptions-transport-ws@0.5.4/browser/client.js"></script>' +
-    '<script src="//unpkg.com/graphiql-subscriptions-fetcher@0.0.1/browser/client.js"></script>'
+    '<script src="//unpkg.com/graphiql-subscriptions-fetcher@0.0.2/browser/client.js"></script>'
     : ''}
 </head>
 <body>
