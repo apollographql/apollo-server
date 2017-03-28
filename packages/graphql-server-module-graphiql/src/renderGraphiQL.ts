@@ -20,7 +20,7 @@
 
 export type GraphiQLData = {
   endpointURL: string,
-  subscriptionsEndpoint: string,
+  subscriptionsEndpoint?: string,
   query?: string,
   variables?: Object,
   operationName?: string,
