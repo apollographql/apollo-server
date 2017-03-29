@@ -26,7 +26,7 @@ export interface Observer<T> {
 
 export interface Subscription {
   unsubscribe: CleanupFunction;
-  readonly closed: boolean;
+  readonly closed?: boolean;
 }
 
 class SubscriptionType {
