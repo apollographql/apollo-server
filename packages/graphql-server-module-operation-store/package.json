@@ -1,6 +1,6 @@
 {
   "name": "graphql-server-module-operation-store",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Persisted operation store module for Apollo GraphQL Servers",
   "main": "dist/index.js",
   "scripts": {
