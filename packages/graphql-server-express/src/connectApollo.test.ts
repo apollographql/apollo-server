@@ -3,7 +3,7 @@ import * as bodyParser from 'body-parser';
 import { graphqlConnect, graphiqlConnect } from './connectApollo';
 import 'mocha';
 
-import testSuite, { Schema, CreateAppOptions } from 'graphql-server-integration-testsuite';
+import testSuite, { schema as Schema, CreateAppOptions } from 'graphql-server-integration-testsuite';
 
 function createConnectApp(options: CreateAppOptions = {}) {
   const app = connect();
@@ -15,6 +15,7 @@ function createConnectApp(options: CreateAppOptions = {}) {
   if (options.graphiqlOptions ) {
     app.use('/graphiql', graphiqlConnect( options.graphiqlOptions ));
   }
+  app.use('/graphql', require('connect-query')());
   app.use('/graphql', graphqlConnect( options.graphqlOptions ));
   return app;
 }

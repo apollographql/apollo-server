@@ -1,12 +1,15 @@
 import { expect } from 'chai';
 import { stub } from 'sinon';
 import 'mocha';
+import * as querystring from 'querystring';
 
 import {
     GraphQLSchema,
     GraphQLObjectType,
     GraphQLString,
+    GraphQLInt,
     GraphQLError,
+    GraphQLNonNull,
     introspectionQuery,
     BREAK,
 } from 'graphql';
@@ -18,13 +21,24 @@ import { GraphQLOptions } from 'graphql-server-core';
 import * as GraphiQL from 'graphql-server-module-graphiql';
 import { OperationStore } from 'graphql-server-module-operation-store';
 
-const QueryType = new GraphQLObjectType({
+const queryType = new GraphQLObjectType({
     name: 'QueryType',
     fields: {
         testString: {
             type: GraphQLString,
             resolve() {
                 return 'it works';
+            },
+        },
+        testStringWithDelay: {
+            type: GraphQLString,
+            args: {
+              delay: { type: new GraphQLNonNull(GraphQLInt) },
+            },
+            resolve(root, args) {
+              return new Promise((resolve, reject) => {
+                setTimeout(() => resolve('it works'), args['delay']);
+              });
             },
         },
         testContext: {
@@ -59,7 +73,19 @@ const QueryType = new GraphQLObjectType({
     },
 });
 
-const MutationType = new GraphQLObjectType({
+const personType = new GraphQLObjectType({
+    name: 'PersonType',
+    fields: {
+        firstName: {
+            type: GraphQLString,
+        },
+        lastName: {
+            type: GraphQLString,
+        },
+    },
+});
+
+const mutationType = new GraphQLObjectType({
     name: 'MutationType',
     fields: {
         testMutation: {
@@ -69,12 +95,26 @@ const MutationType = new GraphQLObjectType({
                 return `not really a mutation, but who cares: ${echo}`;
             },
         },
+        testPerson: {
+          type: personType,
+          args: {
+            firstName: {
+              type: new GraphQLNonNull(GraphQLString),
+            },
+            lastName: {
+              type: new GraphQLNonNull(GraphQLString),
+            },
+          },
+          resolve(root, args) {
+            return args;
+          },
+        },
     },
 });
 
-export const Schema = new GraphQLSchema({
-    query: QueryType,
-    mutation: MutationType,
+export const schema = new GraphQLSchema({
+    query: queryType,
+    mutation: mutationType,
 });
 
 export interface CreateAppOptions {
@@ -107,7 +147,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
 
     describe('graphqlHTTP', () => {
       it('can be called with an options function', () => {
-          app = createApp({graphqlOptions: (): GraphQLOptions => ({schema: Schema})});
+          app = createApp({graphqlOptions: (): GraphQLOptions => ({schema})});
           const expected = {
               testString: 'it works',
           };
@@ -125,7 +165,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
       it('can be called with an options function that returns a promise', () => {
           app = createApp({ graphqlOptions: () => {
               return new Promise(resolve => {
-                  resolve({schema: Schema});
+                  resolve({schema});
               });
           }});
           const expected = {
@@ -158,15 +198,14 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
       });
 
-      it('rejects the request if the method is not POST', () => {
+      it('rejects the request if the method is not POST or GET', () => {
           app = createApp({excludeParser: true});
           const req = request(app)
-              .get('/graphql')
+              .head('/graphql')
               .send();
           return req.then((res) => {
-              expect(res.status).to.be.oneOf([404, 405]);
-              // Hapi doesn't return allow header, so we can't test this.
-              // return expect(res.headers['allow']).to.equal('POST');
+              expect(res.status).to.equal(405);
+              expect(res.headers['allow']).to.equal('GET, POST');
           });
       });
 
@@ -178,6 +217,101 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           return req.then((res) => {
               expect(res.status).to.equal(500);
               return expect(res.error.text).to.contain('POST body missing.');
+          });
+      });
+
+      it('throws an error if GET query is missing', () => {
+          app = createApp();
+          const req = request(app)
+              .get(`/graphql`);
+          return req.then((res) => {
+              expect(res.status).to.equal(400);
+              return expect(res.error.text).to.contain('GET query missing.');
+          });
+      });
+
+      it('can handle a basic GET request', () => {
+          app = createApp();
+          const expected = {
+              testString: 'it works',
+          };
+          const query = {
+              query: 'query test{ testString }',
+          };
+          const req = request(app)
+              .get(`/graphql?${querystring.stringify(query)}`);
+          return req.then((res) => {
+              expect(res.status).to.equal(200);
+              return expect(res.body.data).to.deep.equal(expected);
+          });
+      });
+
+      it('can handle a basic implicit GET request', () => {
+          app = createApp();
+          const expected = {
+              testString: 'it works',
+          };
+          const query = {
+              query: '{ testString }',
+          };
+          const req = request(app)
+              .get(`/graphql?${querystring.stringify(query)}`);
+          return req.then((res) => {
+              expect(res.status).to.equal(200);
+              return expect(res.body.data).to.deep.equal(expected);
+          });
+      });
+
+      it('throws error if trying to use mutation using GET request', () => {
+          app = createApp();
+          const query = {
+              query: 'mutation test{ testMutation(echo: "ping") }',
+          };
+          const req = request(app)
+              .get(`/graphql?${querystring.stringify(query)}`);
+          return req.then((res) => {
+              expect(res.status).to.equal(405);
+              expect(res.headers['allow']).to.equal('POST');
+              return expect(res.error.text).to.contain('GET supports only query operation');
+          });
+      });
+
+      it('throws error if trying to use mutation with fragment using GET request', () => {
+          app = createApp();
+          const query = {
+            query: `fragment PersonDetails on PersonType {
+              firstName
+            }
+
+            mutation test {
+              testPerson(firstName: "Test", lastName: "Me") {
+                ...PersonDetails
+              }
+            }`,
+          };
+          const req = request(app)
+              .get(`/graphql?${querystring.stringify(query)}`);
+          return req.then((res) => {
+              expect(res.status).to.equal(405);
+              expect(res.headers['allow']).to.equal('POST');
+              return expect(res.error.text).to.contain('GET supports only query operation');
+          });
+      });
+
+      it('can handle a GET request with variables', () => {
+          app = createApp();
+          const query = {
+              query: 'query test($echo: String){ testArgument(echo: $echo) }',
+              variables: JSON.stringify({ echo: 'world' }),
+          };
+          const expected = {
+              testArgument: 'hello world',
+          };
+          const req = request(app)
+              .get(`/graphql?${querystring.stringify(query)}`);
+          return req.then((res) => {
+              expect(res.status).to.equal(200);
+              return expect(res.body.data).to.deep.equal(expected);
           });
       });
 
@@ -335,9 +469,32 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
       });
 
+       it('can handle batch requests in parallel', function() {
+         // this test will fail due to timeout if running serially.
+         const parallels = 100;
+         const delayPerReq = 40;
+         this.timeout(3000);
+
+         app = createApp();
+         const expected = Array(parallels).fill({
+           data: { testStringWithDelay: 'it works' },
+         });
+         const req = request(app)
+           .post('/graphql')
+           .send(Array(parallels).fill({
+             query: `query test($delay: Int!) { testStringWithDelay(delay: $delay) }`,
+             operationName: 'test',
+             variables: { delay: delayPerReq },
+           }));
+           return req.then((res) => {
+             expect(res.status).to.equal(200);
+             return expect(res.body).to.deep.equal(expected);
+           });
+      });
+
       it('clones batch context', () => {
           app = createApp({graphqlOptions: {
-              schema: Schema,
+              schema,
               context: {testField: 'expected'},
           }});
           const expected = [
@@ -384,7 +541,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
 
       it('applies the formatResponse function', () => {
           app = createApp({graphqlOptions: {
-              schema: Schema,
+              schema,
               formatResponse(response) {
                   response['extensions'] = { it: 'works' }; return response;
               },
@@ -405,7 +562,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
       it('passes the context to the resolver', () => {
           const expected = 'context works';
           app = createApp({graphqlOptions: {
-              schema: Schema,
+              schema,
               context: {testField: expected},
           }});
           const req = request(app)
@@ -422,7 +579,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
       it('passes the rootValue to the resolver', () => {
           const expected = 'it passes rootValue';
           app = createApp({graphqlOptions: {
-              schema: Schema,
+              schema,
               rootValue: expected,
           }});
           const req = request(app)
@@ -439,7 +596,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
       it('returns errors', () => {
           const expected = 'Secret error message';
           app = createApp({graphqlOptions: {
-              schema: Schema,
+              schema,
           }});
           const req = request(app)
               .post('/graphql')
@@ -455,7 +612,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
       it('applies formatError if provided', () => {
           const expected = '--blank--';
           app = createApp({graphqlOptions: {
-              schema: Schema,
+              schema,
               formatError: (err) => ({ message: expected }),
           }});
           const req = request(app)
@@ -471,7 +628,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
 
       it('sends internal server error when formatError fails', () => {
           app = createApp({graphqlOptions: {
-              schema: Schema,
+              schema,
               formatError: (err) => {
                 throw new Error('I should be catched');
               },
@@ -482,7 +639,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
                   query: 'query test{ testError }',
               });
           return req.then((res) => {
-              return expect(res.res.body.errors[0].message).to.equal('Internal server error');
+              return expect(res.body.errors[0].message).to.equal('Internal server error');
           });
       });
 
@@ -492,7 +649,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           const origError = console.error;
           console.error = (...args) => stackTrace.push(args);
           app = createApp({graphqlOptions: {
-              schema: Schema,
+              schema,
               debug: true,
           }});
           const req = request(app)
@@ -510,7 +667,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           const logStub = stub(console, 'error');
           const expected = /at resolveOrError/;
           app = createApp({graphqlOptions: {
-              schema: Schema,
+              schema,
               debug: true,
           }});
           const req = request(app)
@@ -526,20 +683,18 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
       });
 
       it('applies additional validationRules', () => {
-          const expected = 'AlwaysInvalidRule was really invalid!';
-          const AlwaysInvalidRule = function (context) {
+          const expected = 'alwaysInvalidRule was really invalid!';
+          const alwaysInvalidRule = function (context) {
               return {
                   enter() {
-                      context.reportError(new GraphQLError(
-                          expected
-                      ));
+                      context.reportError(new GraphQLError(expected));
                       return BREAK;
                   },
               };
           };
           app = createApp({graphqlOptions: {
-              schema: Schema,
-              validationRules: [AlwaysInvalidRule],
+              schema,
+              validationRules: [alwaysInvalidRule],
           }});
           const req = request(app)
               .post('/graphql')
@@ -571,14 +726,44 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
               expect(response.text).to.include('graphiql.min.js');
           });
       });
+
+      it('presents options variables', () => {
+        app = createApp({graphiqlOptions: {
+            endpointURL: '/graphql',
+            variables: {key: 'optionsValue'},
+        }});
+
+        const req = request(app)
+            .get('/graphiql')
+            .set('Accept', 'text/html');
+        return req.then((response) => {
+            expect(response.status).to.equal(200);
+            expect(response.text.replace(/\s/g, '')).to.include('variables:"{\\n\\"key\\":\\"optionsValue\\"\\n}"');
+        });
+      });
+
+      it('presents query variables over options variables', () => {
+        app = createApp({graphiqlOptions: {
+            endpointURL: '/graphql',
+            variables: {key: 'optionsValue'},
+        }});
+
+        const req = request(app)
+            .get('/graphiql?variables={"key":"queryValue"}')
+            .set('Accept', 'text/html');
+        return req.then((response) => {
+            expect(response.status).to.equal(200);
+            expect(response.text.replace(/\s/g, '')).to.include('variables:"{\\n\\"key\\":\\"queryValue\\"\\n}"');
+        });
+      });
     });
 
     describe('stored queries', () => {
       it('works with formatParams', () => {
-          const store = new OperationStore(Schema);
+          const store = new OperationStore(schema);
           store.put('query testquery{ testString }');
           app = createApp({ graphqlOptions: {
-              schema: Schema,
+              schema,
               formatParams(params) {
                   params['query'] = store.get(params.operationName);
                   return params;
@@ -597,10 +782,10 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
       });
 
       it('can reject non-whitelisted queries', () => {
-          const store = new OperationStore(Schema);
+          const store = new OperationStore(schema);
           store.put('query testquery{ testString }');
           app = createApp({ graphqlOptions: {
-              schema: Schema,
+              schema,
               formatParams(params) {
                   if (params.query) {
                       throw new Error('Must not provide query, only operationName');

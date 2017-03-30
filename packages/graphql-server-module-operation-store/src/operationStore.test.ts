@@ -16,7 +16,7 @@ import {
 
 import { OperationStore } from './operationStore';
 
-const QueryType = new GraphQLObjectType({
+const queryType = new GraphQLObjectType({
     name: 'QueryType',
     fields: {
         testString: {
@@ -49,8 +49,8 @@ const QueryType = new GraphQLObjectType({
     },
 });
 
-const Schema = new GraphQLSchema({
-    query: QueryType,
+const schema = new GraphQLSchema({
+    query: queryType,
 });
 
 describe('operationStore', () => {
@@ -58,7 +58,7 @@ describe('operationStore', () => {
       const query = `query testquery{ testString }`;
       const expected = `query testquery {\n  testString\n}\n`;
 
-      const store = new OperationStore(Schema);
+      const store = new OperationStore(schema);
       store.put(query);
 
       return expect(print(store.get('testquery'))).to.deep.equal(expected);
@@ -68,7 +68,7 @@ describe('operationStore', () => {
       const query = `query testquery{ testString }`;
       const expected = `query testquery {\n  testString\n}\n`;
 
-      const store = new OperationStore(Schema);
+      const store = new OperationStore(schema);
       store.put(parse(query));
 
       return expect(print(store.get('testquery'))).to.deep.equal(expected);
@@ -78,7 +78,7 @@ describe('operationStore', () => {
       const query = `query testquery{ testString }`;
       const query2 = `query testquery2{ testRootValue }`;
 
-      const store = new OperationStore(Schema);
+      const store = new OperationStore(schema);
       store.put(query);
       store.put(query2);
       return expect(store.getMap().size).to.equal(2);
@@ -87,14 +87,14 @@ describe('operationStore', () => {
   it('throws a parse error if the query is invalid', () => {
       const query = `query testquery{ testString`;
 
-      const store = new OperationStore(Schema);
+      const store = new OperationStore(schema);
       return expect(() => store.put(query)).to.throw(/Syntax Error GraphQL/);
   });
 
   it('throws a validation error if the query is invalid', () => {
       const query = `query testquery { testStrin }`;
 
-      const store = new OperationStore(Schema);
+      const store = new OperationStore(schema);
       return expect(() => store.put(query)).to.throw(/Cannot query field/);
   });
 
@@ -104,8 +104,8 @@ describe('operationStore', () => {
         query Q2{ t2: testString }
       `;
 
-      const store = new OperationStore(Schema);
-      return expect(() => store.put(query)).to.throw(/operationDefinition must contain only one definition/);
+      const store = new OperationStore(schema);
+      return expect(() => store.put(query)).to.throw(/OperationDefinitionNode must contain only one definition/);
   });
 
   it('throws an error if there is no operationDefinition found', () => {
@@ -115,7 +115,7 @@ describe('operationStore', () => {
         }
       `;
 
-      const store = new OperationStore(Schema);
+      const store = new OperationStore(schema);
 
       return expect(() => store.put(query)).to.throw(/must contain at least/);
   });
@@ -123,7 +123,7 @@ describe('operationStore', () => {
   it('can delete stored operations', () => {
       const query = `query testquery{ testString }`;
 
-      const store = new OperationStore(Schema);
+      const store = new OperationStore(schema);
       store.put(query);
       store.delete('testquery');
 

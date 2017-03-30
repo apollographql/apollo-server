@@ -6,7 +6,6 @@
 // TODO: in the future, build the GraphiQL app on the server, so it does not
 // depend on any CDN and can be run offline.
 
-
 /*
  * Arguments:
  *
@@ -25,11 +24,11 @@ export type GraphiQLData = {
   variables?: Object,
   operationName?: string,
   result?: Object,
-  passHeader?: string
+  passHeader?: string,
 };
 
 // Current latest version of GraphiQL.
-const GRAPHIQL_VERSION = '0.8.0';
+const GRAPHIQL_VERSION = '0.9.1';
 
 // Ensures string values are safe to be used within a <script> tag.
 // TODO: I don't think that's the right escape function

@@ -1,32 +1,31 @@
-import * as express from 'express';
+import * as restify from 'restify';
 import * as url from 'url';
 import { GraphQLOptions, HttpQueryError, runHttpQuery } from 'graphql-server-core';
 import * as GraphiQL from 'graphql-server-module-graphiql';
 
-export interface ExpressGraphQLOptionsFunction {
-  (req?: express.Request, res?: express.Response): GraphQLOptions | Promise<GraphQLOptions>;
+export interface RestifyGraphQLOptionsFunction {
+  (req?: restify.Request, res?: restify.Response): GraphQLOptions | Promise<GraphQLOptions>;
 }
 
 // Design principles:
-// - there is just one way allowed: POST request with JSON body. Nothing else.
+// - You can issue a GET or POST with your query.
 // - simple, fast and secure
 //
 
-export interface ExpressHandler {
-  (req: express.Request, res: express.Response, next): void;
+export interface RestifyHandler {
+  (req: restify.Request, res: restify.Response, next: restify.Next): void;
 }
 
-export function graphqlExpress(options: GraphQLOptions | ExpressGraphQLOptionsFunction): ExpressHandler {
+export function graphqlRestify(options: GraphQLOptions | RestifyGraphQLOptionsFunction): RestifyHandler {
   if (!options) {
     throw new Error('Apollo Server requires options.');
   }
 
   if (arguments.length > 1) {
-    // TODO: test this
     throw new Error(`Apollo Server expects exactly one argument, got ${arguments.length}`);
   }
 
-  return (req: express.Request, res: express.Response): void => {
+  return (req: restify.Request, res: restify.Response, next: restify.Next): void => {
     runHttpQuery([req, res], {
       method: req.method,
       options: options,
@@ -35,6 +34,7 @@ export function graphqlExpress(options: GraphQLOptions | ExpressGraphQLOptionsFu
       res.setHeader('Content-Type', 'application/json');
       res.write(gqlResponse);
       res.end();
+      next();
     }, (error: HttpQueryError) => {
       if ( 'HttpQueryError' !== error.name ) {
         throw error;
@@ -49,6 +49,7 @@ export function graphqlExpress(options: GraphQLOptions | ExpressGraphQLOptionsFu
       res.statusCode = error.statusCode;
       res.write(error.message);
       res.end();
+      next(false);
     });
   };
 }
@@ -64,8 +65,8 @@ export function graphqlExpress(options: GraphQLOptions | ExpressGraphQLOptionsFu
  * - (optional) result: the result of the query to pre-fill in the GraphiQL UI
  */
 
-export function graphiqlExpress(options: GraphiQL.GraphiQLData) {
-  return (req: express.Request, res: express.Response) => {
+export function graphiqlRestify(options: GraphiQL.GraphiQLData) {
+  return (req: restify.Request, res: restify.Response, next: restify.Next) => {
     const q = req.url && url.parse(req.url, true).query || {};
     const query = q.query || '';
     const operationName = q.operationName || '';
@@ -80,5 +81,6 @@ export function graphiqlExpress(options: GraphiQL.GraphiQLData) {
     res.setHeader('Content-Type', 'text/html');
     res.write(graphiQLString);
     res.end();
+    next();
   };
 }

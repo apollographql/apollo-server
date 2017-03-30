@@ -14,7 +14,7 @@
     "coverage.lcov": true,
     "tsconfig.json": true,
     "tslint.json": true,
-    "typings.json": false,
+    "typings.json": true,
     "typings": true,
     ".gitignore": false,
     "**/dist": true

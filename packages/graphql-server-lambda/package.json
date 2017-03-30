@@ -1,7 +1,7 @@
 {
-  "name": "graphql-server-koa",
+  "name": "graphql-server-lambda",
   "version": "0.5.1",
-  "description": "Production-ready Node.js GraphQL server for Koa",
+  "description": "Production-ready Node.js GraphQL server for AWS Lambda",
   "main": "dist/index.js",
   "scripts": {
     "compile": "tsc",
@@ -9,13 +9,13 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/apollostack/graphql-server/tree/master/packages/graphql-server-koa"
+    "url": "https://github.com/apollostack/graphql-server/tree/master/packages/graphql-server-lambda"
   },
   "keywords": [
     "GraphQL",
     "Apollo",
-    "Koa",
     "Server",
+    "Lambda",
     "Javascript"
   ],
   "author": "Jonas Helfer <jonas@helfer.email>",
@@ -29,20 +29,12 @@
     "graphql-server-module-graphiql": "^0.6.0"
   },
   "devDependencies": {
-    "@types/koa": "^2.0.33",
-    "@types/koa-bodyparser": "^3.0.19",
-    "@types/koa-router": "^7.0.21",
-    "graphql-server-integration-testsuite": "^0.5.1",
-    "koa": "^2.0.0-alpha.4",
-    "koa-bodyparser": "^3.0.0",
-    "koa-router": "^7.0.1"
+    "@types/aws-lambda": "0.0.6",
+    "@types/graphql": "^0.8.6",
+    "graphql-server-integration-testsuite": "^0.5.1"
   },
   "peerDependencies": {
     "graphql": "^0.8.0 || ^0.9.0"
-  },
-  "optionalDependencies": {
-    "@types/koa": "^2.0.33",
-    "@types/graphql": "^0.8.6"
   },
   "typings": "dist/index.d.ts",
   "typescript": {

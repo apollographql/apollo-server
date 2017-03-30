@@ -1,10 +1,10 @@
 import * as hapi from 'hapi';
-import { graphqlHapi, graphiqlHapi, HapiPluginOptions } from './hapiApollo';
+import { graphqlHapi, graphiqlHapi } from './hapiApollo';
 import 'mocha';
 
-import testSuite, { Schema } from 'graphql-server-integration-testsuite';
+import testSuite, { schema as Schema, CreateAppOptions  } from 'graphql-server-integration-testsuite';
 
-function createApp(createOptions: HapiPluginOptions) {
+function createApp(options: CreateAppOptions) {
   const server = new hapi.Server();
 
   server.connection({
@@ -15,7 +15,7 @@ function createApp(createOptions: HapiPluginOptions) {
   server.register({
       register: graphqlHapi,
       options: {
-        graphqlOptions: createOptions ? createOptions.graphqlOptions : { schema: Schema },
+        graphqlOptions: (options && options.graphqlOptions) || { schema: Schema },
         path: '/graphql',
       },
   });
@@ -24,9 +24,7 @@ function createApp(createOptions: HapiPluginOptions) {
       register: graphiqlHapi,
       options: {
         path: '/graphiql',
-        graphiqlOptions: {
-          endpointURL: '/graphql',
-        },
+        graphiqlOptions: (options && options.graphiqlOptions) || { endpointURL: '/graphql' },
       },
   });
 

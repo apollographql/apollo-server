@@ -6,7 +6,7 @@ import { GraphQLOptions } from 'graphql-server-core';
 import { expect } from 'chai';
 import * as http from 'http';
 
-import testSuite, { Schema, CreateAppOptions } from 'graphql-server-integration-testsuite';
+import testSuite, { schema as Schema, CreateAppOptions } from 'graphql-server-integration-testsuite';
 
 function createApp(options: CreateAppOptions = {}) {
   const app = new koa();
@@ -20,6 +20,7 @@ function createApp(options: CreateAppOptions = {}) {
   if (options.graphiqlOptions ) {
     router.get('/graphiql', graphiqlKoa( options.graphiqlOptions ));
   }
+  router.get('/graphql',  graphqlKoa( options.graphqlOptions ));
   router.post('/graphql', graphqlKoa( options.graphqlOptions ));
   app.use(router.routes());
   app.use(router.allowedMethods());
