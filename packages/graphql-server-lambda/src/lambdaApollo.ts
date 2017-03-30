@@ -87,6 +87,7 @@ export function graphiqlLambda(options: GraphiQL.GraphiQLData) {
 
     const graphiQLString = GraphiQL.renderGraphiQL({
       endpointURL: options.endpointURL,
+      subscriptionsEndpoint: options.subscriptionsEndpoint,
       query: query || options.query,
       variables: q.variables && JSON.parse(variables) || options.variables,
       operationName: operationName || options.operationName,
