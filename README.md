@@ -167,8 +167,6 @@ exports.handler = server.graphqlLambda({ schema: myGraphQLSchema });
 
 ## Options
 
-=======
-
 GraphQL Server can be configured with an options object with the the following fields:
 
 * **schema**: the GraphQLSchema to be used

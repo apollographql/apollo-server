@@ -83,3 +83,64 @@ aws cloudformation deploy \
    --stack-name prod \
    --capabilities CAPABILITY_IAM
 ```
+
+## Access or Modify Lambda options
+### Read API Gateway event and Lambda Context
+To read information about the current request (HTTP headers, HTTP method, body, path, ...) or the current Lambda Context (Function Name, Function Version, awsRequestId, time remaning, ...) use the options function. This way they can be passed to your schema resolvers using the context option.
+```js
+var server = require("graphql-server-lambda"),
+    myGraphQLSchema = require("./schema");
+
+exports.graphqlHandler = server.graphqlLambda((event, context) => {
+    const headers = event.headers,
+        functionName = context.functionName;
+
+    return {
+        schema: myGraphQLSchema,
+        context: {
+            headers,
+            functionName,
+            event,
+            context
+        }
+        
+    };
+});
+```
+### Modify the Lambda Response (Enable CORS)
+To enable CORS the response HTTP headers need to be modified. To accomplish this pass in a callback filter to the generated handler of graphqlLambda.
+```js
+var server = require("graphql-server-lambda"),
+    myGraphQLSchema = require("./schema");
+
+exports.graphqlHandler = function(event, context, callback)  {
+    const callbackFilter = function(error, output) {
+        output.headers['Access-Control-Allow-Origin'] = '*';
+        callback(error, output);
+    };
+    const handler = server.graphqlLambda({ schema: myGraphQLSchema });
+    
+    return handler(event, context, callbackFilter);
+};
+```
+To enable CORS response for requests with credentials (cookies, http authentication) the allow origin header must equal the request origin and the allow credential header must be set to true.
+```js
+const CORS_ORIGIN = "https://example.com";
+
+var server = require("graphql-server-lambda"),
+    myGraphQLSchema = require("./schema");
+
+exports.graphqlHandler = function(event, context, callback)  {
+    const requestOrigin = event.headers.origin,
+        callbackFilter = function(error, output) {
+            if (requestOrigin === CORS_ORIGIN) {
+                output.headers['Access-Control-Allow-Origin'] = CORS_ORIGIN;
+                output.headers['Access-Control-Allow-Credentials'] = 'true';
+            }
+            callback(error, output);
+        };
+    const handler = server.graphqlLambda({ schema: myGraphQLSchema });
+    
+    return handler(event, context, callbackFilter);
+};
+```

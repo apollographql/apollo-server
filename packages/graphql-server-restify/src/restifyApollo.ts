@@ -73,6 +73,7 @@ export function graphiqlRestify(options: GraphiQL.GraphiQLData) {
 
     const graphiQLString = GraphiQL.renderGraphiQL({
       endpointURL: options.endpointURL,
+      subscriptionsEndpoint: options.subscriptionsEndpoint,
       query: query || options.query,
       variables: q.variables && JSON.parse(q.variables) || options.variables,
       operationName: operationName || options.operationName,
