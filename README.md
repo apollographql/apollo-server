@@ -211,6 +211,33 @@ Despite express-graphql being a reference implementation, GraphQL Server is actu
 
 That said, GraphQL Server is heavily inspired by express-graphql (it's the reference implementation after all). Rather than seeing the two as competing alternatives, we think that they both have separate roles in the GraphQL ecosystem: express-graphql is a reference implementation, and GraphQL Server is a GraphQL server to be used in production and evolve quickly with the needs of the community. Over time, express-graphql can adopt those features of GraphQL Server that have proven their worth and become established more widely.
 
+### application/graphql requests
+
+express-graphql supports the `application/graphql` Content-Type for requests, which is an alternative to `application/json` request with only the query part sent as text. In the same way that we use `bodyParser.json` to parse `application/json` requests for graphql-server, we can use `bodyParser.text` plus one extra step in order to also parse `application/graphql` requests. Here's an example for express:
+
+```js
+import express from 'express';
+import bodyParser from 'body-parser';
+import { graphqlExpress } from 'graphql-server-express';
+
+const myGraphQLSchema = // ... define or import your schema here!
+
+const helperMiddleware = [
+    bodyParser.json(),
+    bodyParser.text({ type: 'application/graphql' }),
+    (req, res, next) => {
+        if (req.is('application/graphql')) {
+            req.body = { query: req.body };
+        }
+        next();
+    }
+];
+
+express()
+    .use('/graphql', ...helperMiddleware, graphqlExpress({ schema: myGraphQLSchema }))
+    .listen(3000);
+```
+
 ## GraphQL Server Development
 
 If you want to develop GraphQL Server locally you must follow the following instructions:
