@@ -1,6 +1,6 @@
 {
   "name": "graphql-server-express",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "description": "Production-ready Node.js GraphQL server for Express and Connect",
   "main": "dist/index.js",
   "scripts": {
@@ -30,15 +30,15 @@
     "graphql-server-module-graphiql": "^0.6.0"
   },
   "devDependencies": {
-    "@types/body-parser": "0.0.33",
+    "@types/body-parser": "1.16.1",
     "@types/connect": "^3.4.30",
     "@types/express": "^4.0.35",
     "@types/multer": "0.0.33",
     "body-parser": "^1.16.0",
     "connect": "^3.5.0",
-    "connect-query": "^0.2.0",
+    "connect-query": "^1.0.0",
     "express": "^4.14.0",
-    "graphql-server-integration-testsuite": "^0.5.1",
+    "graphql-server-integration-testsuite": "^0.6.0",
     "multer": "^1.2.1"
   },
   "peerDependencies": {
