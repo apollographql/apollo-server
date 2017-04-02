@@ -1,9 +1,11 @@
 import { GraphQLOptions, HttpQueryError, runHttpQuery } from 'graphql-server-core';
+import * as GraphiQL from 'graphql-server-module-graphiql';
 import { json } from 'micro';
 import * as url from 'url';
+import {IncomingMessage, ServerResponse} from 'http';
 
 export interface MicroGraphQLOptionsFunction {
-  (req?: Request): GraphQLOptions | Promise<GraphQLOptions>;
+  (req?: IncomingMessage): GraphQLOptions | Promise<GraphQLOptions>;
 }
 
 export function microGraphql(options: GraphQLOptions | MicroGraphQLOptionsFunction) {
@@ -15,8 +17,8 @@ export function microGraphql(options: GraphQLOptions | MicroGraphQLOptionsFuncti
     throw new Error(`Apollo Server expects exactly one argument, got ${arguments.length}`);
   }
 
-  return async function (req, res) {
-    var query;
+  return async function (req: IncomingMessage, res: ServerResponse) {
+    let query;
     if (req.method === 'POST') {
       try {
         query = await json(req);
@@ -51,3 +53,21 @@ export function microGraphql(options: GraphQLOptions | MicroGraphQLOptionsFuncti
   };
 }
 
+export function microGraphiql(options: GraphiQL.GraphiQLData) {
+  return (req: IncomingMessage, res: ServerResponse) => {
+    const q = req.url && url.parse(req.url, true).query || {};
+    const query = q.query || '';
+    const operationName = q.operationName || '';
+
+    const graphiQLString = GraphiQL.renderGraphiQL({
+      endpointURL: options.endpointURL,
+      query: query || options.query,
+      variables: q.variables && JSON.parse(q.variables) || options.variables,
+      operationName: operationName || options.operationName,
+      passHeader: options.passHeader,
+    });
+    res.setHeader('Content-Type', 'text/html');
+    res.write(graphiQLString);
+    res.end();
+  };
+}

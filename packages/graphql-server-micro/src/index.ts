@@ -1,3 +1,2 @@
-import { microGraphql } from './microApollo';
-
-export default microGraphql;
+export { MicroGraphQLOptionsFunction,
+    microGraphql, microGraphiql } from './microApollo';
