@@ -26,12 +26,11 @@
   "homepage": "https://github.com/apollostack/graphql-server#readme",
   "dependencies": {
     "graphql-server-core": "^0.6.0",
-    "graphql-server-module-graphiql": "^0.6.0",
-    "then-sleep": "^1.0.1"
+    "graphql-server-module-graphiql": "^0.6.0"
   },
   "devDependencies": {
     "graphql-server-integration-testsuite": "^0.5.1",
-    "micro": "^6.1.0",
+    "micro": "^7.3.0",
     "@types/graphql": "^0.8.5"
   },
   "peerDependencies": {
