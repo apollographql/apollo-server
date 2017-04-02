@@ -1,6 +1,6 @@
 {
   "name": "graphql-server-core",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "description": "Core engine for Apollo GraphQL server",
   "main": "dist/index.js",
   "scripts": {

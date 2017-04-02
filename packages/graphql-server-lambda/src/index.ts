@@ -2,5 +2,5 @@ export {
   LambdaHandler,
   IHeaders,
   graphqlLambda,
-  graphiqlLambda
+  graphiqlLambda,
 } from './lambdaApollo';

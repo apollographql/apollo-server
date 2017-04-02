@@ -1,6 +1,6 @@
 {
   "name": "graphql-server-restify",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "description": "Production-ready Node.js GraphQL server for Restify",
   "main": "dist/index.js",
   "scripts": {
@@ -30,7 +30,7 @@
   },
   "devDependencies": {
     "@types/restify": "^2.0.38",
-    "graphql-server-integration-testsuite": "^0.5.1",
+    "graphql-server-integration-testsuite": "^0.6.0",
     "restify": "^4.1.1"
   },
   "peerDependencies": {
