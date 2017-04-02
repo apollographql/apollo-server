@@ -121,6 +121,7 @@ function renderGraphiQL(route, graphiqlParams: any, reply) {
   const graphiqlOptions = route.settings.plugins['graphiql'];
   const graphiQLString = GraphiQL.renderGraphiQL({
     endpointURL: graphiqlOptions.endpointURL,
+    subscriptionsEndpoint: graphiqlOptions.subscriptionsEndpoint,
     query: graphiqlParams.query || graphiqlOptions.query,
     variables: graphiqlParams.variables && JSON.parse(graphiqlParams.variables) || graphiqlOptions.variables,
     operationName: graphiqlParams.operationName || graphiqlOptions.operationName,
