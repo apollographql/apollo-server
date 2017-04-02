@@ -1,6 +1,6 @@
 {
   "name": "graphql-server-koa",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "description": "Production-ready Node.js GraphQL server for Koa",
   "main": "dist/index.js",
   "scripts": {
@@ -32,9 +32,9 @@
     "@types/koa": "^2.0.33",
     "@types/koa-bodyparser": "^3.0.19",
     "@types/koa-router": "^7.0.21",
-    "graphql-server-integration-testsuite": "^0.5.1",
+    "graphql-server-integration-testsuite": "^0.6.0",
     "koa": "^2.0.0-alpha.4",
-    "koa-bodyparser": "^3.0.0",
+    "koa-bodyparser": "^3.2.0",
     "koa-router": "^7.0.1"
   },
   "peerDependencies": {
