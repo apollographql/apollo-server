@@ -12,4 +12,5 @@ if (NODE_MAJOR_VERSION >= 6) {
 }
 require('../packages/graphql-server-restify/dist/restifyApollo.test');
 require('../packages/graphql-server-lambda/dist/lambdaApollo.test');
+require('../packages/graphql-server-micro/dist/microApollo.test');
 require('../packages/graphql-server-express/dist/apolloServerHttp.test');
