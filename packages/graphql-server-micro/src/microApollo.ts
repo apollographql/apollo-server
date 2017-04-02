@@ -22,9 +22,11 @@ export function microGraphql(options: GraphQLOptions | MicroGraphQLOptionsFuncti
     if (req.method === 'POST') {
       try {
         query = await json(req);
-      } catch(err) {}
+      } catch (err) {
+        query = undefined;
+      }
     } else {
-      query = url.parse(req.url, true).query
+      query = url.parse(req.url, true).query;
     }
 
     runHttpQuery([req, res], {

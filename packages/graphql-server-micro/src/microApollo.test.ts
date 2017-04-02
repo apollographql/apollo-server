@@ -1,7 +1,7 @@
 import { microGraphql, microGraphiql } from './microApollo';
 import 'mocha';
 
-import * as micro from 'micro'
+import * as micro from 'micro';
 import testSuite, { schema as Schema, CreateAppOptions  } from 'graphql-server-integration-testsuite';
 
 function createApp(options: CreateAppOptions) {
