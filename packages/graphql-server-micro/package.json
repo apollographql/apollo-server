@@ -33,7 +33,8 @@
     "micro": "^7.3.0"
   },
   "peerDependencies": {
-    "graphql": "^0.8.0 || ^0.9.0"
+    "graphql": "^0.8.0 || ^0.9.0",
+    "micro": "^7.3.0"
   },
   "optionalDependencies": {
     "@types/graphql": "^0.9.0"
