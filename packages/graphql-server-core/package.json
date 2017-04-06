@@ -29,7 +29,7 @@
     "fibers": "^1.0.15",
     "meteor-promise": "^0.8.0"
   },
-  "peerDependencies": {
+  "dependencies": {
     "graphql": "^0.8.0 || ^0.9.0"
   },
   "optionalDependencies": {
