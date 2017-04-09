@@ -1,6 +1,6 @@
 import { parse, getOperationAST, DocumentNode, formatError, ExecutionResult } from 'graphql';
 import { runQuery } from './runQuery';
-import { default as GraphQLOptions, isOptionsFunction } from './graphqlOptions';
+import { default as GraphQLOptions, resolveGraphqlOptions } from './graphqlOptions';
 
 export interface HttpQueryRequest {
   method: string;
@@ -30,16 +30,12 @@ function isQueryOperation(query: DocumentNode, operationName: string) {
 export async function runHttpQuery(handlerArguments: Array<any>, request: HttpQueryRequest): Promise<string> {
   let isGetRequest: boolean = false;
   let optionsObject: GraphQLOptions;
-  if (isOptionsFunction(request.options)) {
-    try {
-      optionsObject = await request.options(...handlerArguments);
-    } catch (e) {
-      throw new HttpQueryError(500, `Invalid options provided to ApolloServer: ${e.message}`);
-    }
-  } else {
-    optionsObject = request.options;
-  }
 
+  try {
+    optionsObject = await resolveGraphqlOptions(request.options, ...handlerArguments);
+  } catch (e) {
+    throw new HttpQueryError(500, e.message);
+  }
   const formatErrorFn = optionsObject.formatError || formatError;
   let requestPayload;
 
