@@ -28,7 +28,7 @@ describe('Observable', () => {
       },
       complete);
     });
-  };
+  }
 
   async function observablesMatch(a, b) {
     let aval;
@@ -64,7 +64,7 @@ describe('Observable', () => {
 
     expect(aval).to.deep.equal(bval);
     return aval;
-  };
+  }
 
   it('passes sanity', () => {
     expect(Observable).to.be.a('function');

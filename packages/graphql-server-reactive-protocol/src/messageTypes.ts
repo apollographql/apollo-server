@@ -28,7 +28,7 @@ export interface RGQLPayloadStart {
   query?: string;
   variables?: any;
   operationName?: string;
-};
+}
 export type RGQLPayloadType = RGQLPayloadError | RGQLPayloadData | RGQLPayloadStart;
 
 export interface RGQLPacketData {

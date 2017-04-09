@@ -128,7 +128,7 @@ describe('runQueryReactive is competiable with runQuery', () => {
       query: query,
       variables: { base: 1 },
     }).then((res) => {
-      expect(res.data).to.be.undefined;
+      expect(res.data).to.equal(undefined);
       expect(res.errors.length).to.equal(1);
       return expect(res.errors[0].message).to.match(expected);
     });
@@ -170,7 +170,7 @@ describe('runQueryReactive is competiable with runQuery', () => {
       query: query,
       variables: { base: 1 },
     }).then((res) => {
-      expect(res.data).to.be.undefined;
+      expect(res.data).to.equal(undefined);
       expect(res.errors.length).to.equal(1);
       return expect(res.errors[0].message).to.deep.equal(expected);
     });
