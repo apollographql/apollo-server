@@ -29,20 +29,20 @@
     "graphql-server-module-graphiql": "^0.6.0"
   },
   "devDependencies": {
-    "@types/koa": "^2.0.33",
-    "@types/koa-bodyparser": "^3.0.19",
-    "@types/koa-router": "^7.0.21",
+    "@types/koa": "^2.0.39",
+    "@types/koa-bodyparser": "^3.0.23",
+    "@types/koa-router": "^7.0.22",
     "graphql-server-integration-testsuite": "^0.6.0",
-    "koa": "^2.0.0-alpha.4",
-    "koa-bodyparser": "^3.2.0",
-    "koa-router": "^7.0.1"
+    "koa": "^2.2.0",
+    "koa-bodyparser": "^4.2.0",
+    "koa-router": "^7.1.1"
   },
   "peerDependencies": {
     "graphql": "^0.8.0 || ^0.9.0"
   },
   "optionalDependencies": {
-    "@types/koa": "^2.0.33",
-    "@types/graphql": "^0.8.6"
+    "@types/koa": "^2.0.39",
+    "@types/graphql": "^0.9.0"
   },
   "typings": "dist/index.d.ts",
   "typescript": {

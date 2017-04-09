@@ -29,16 +29,16 @@
     "graphql-server-module-graphiql": "^0.6.0"
   },
   "devDependencies": {
-    "@types/restify": "^2.0.38",
+    "@types/restify": "^2.0.42",
     "graphql-server-integration-testsuite": "^0.6.0",
-    "restify": "^4.1.1"
+    "restify": "^4.3.0"
   },
   "peerDependencies": {
     "graphql": "^0.8.0 || ^0.9.0"
   },
   "optionalDependencies": {
-    "@types/restify": "^2.0.38",
-    "@types/graphql": "^0.8.6"
+    "@types/restify": "^2.0.42",
+    "@types/graphql": "^0.9.0"
   },
   "typings": "dist/index.d.ts",
   "typescript": {

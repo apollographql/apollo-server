@@ -2,12 +2,12 @@
 
 ### VNEXT
 
-* Restify: Fix for calling next() (([@jadkap](https://github.com/jadkap)) on [#285](https://github.com/apollostack/graphql-server/pull/285))
-* Add AWS Lambda Integration [#101](https://github.com/apollostack/graphql-server/issues/101)
+* add support for subscriptionURL to GraphiQL ([@urigo](https://github.com/urigo) on [#320](https://github.com/apollostack/graphql-server/pull/320)
 * Restify: Fix for calling next() ([@jadkap](https://github.com/jadkap)) on [#285](https://github.com/apollostack/graphql-server/pull/285)
 * Update GraphiQL to version 0.9.1 ([@ephemer](https://github.com/ephemer)) on [#293](https://github.com/apollostack/graphql-server/pull/293)
 * Add AWS Lambda Integration [#101](https://github.com/apollostack/graphql-server/issues/101)
 * Add Zeit Micro Integration [#324](https://github.com/apollographql/graphql-server/issues/324)
+* Upgrade all dependencies **WARNING:** Breaking change [#329](https://github.com/apollographql/graphql-server/issues/329)
 
 ### v0.5.2
 * **Restify integration** ([@joelgriffith](https://github.com/joelgriffith)) on [#189](https://github.com/apollostack/graphql-server/pull/189)
