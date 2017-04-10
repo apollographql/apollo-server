@@ -8,6 +8,7 @@
 * Add AWS Lambda Integration [#101](https://github.com/apollostack/graphql-server/issues/101)
 * Add Zeit Micro Integration [#324](https://github.com/apollographql/graphql-server/issues/324)
 * Upgrade all dependencies **WARNING:** Breaking change [#329](https://github.com/apollographql/graphql-server/issues/329)
+* Add graphql as a explicit depenency on graphql-server-core [#351][(https://github.com/apollographql/graphql-server/pull/351)
 
 ### v0.5.2
 * **Restify integration** ([@joelgriffith](https://github.com/joelgriffith)) on [#189](https://github.com/apollostack/graphql-server/pull/189)
