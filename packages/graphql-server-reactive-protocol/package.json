@@ -1,0 +1,45 @@
+{
+  "name": "graphql-server-reactive-protocol",
+  "version": "0.6.0",
+  "description": "Reactive protocol handler for Apollo GraphQL server",
+  "main": "dist/index.js",
+  "scripts": {
+    "compile": "tsc",
+    "prepublish": "npm run compile"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/apollostack/graphql-server/tree/master/packages/graphql-server-reactive-protocol"
+  },
+  "keywords": [
+    "GraphQL",
+    "Apollo",
+    "Server",
+    "Javascript"
+  ],
+  "author": "Jonas Helfer <jonas@helfer.email>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/apollostack/graphql-server/issues"
+  },
+  "homepage": "https://github.com/apollostack/graphql-server#readme",
+  "devDependencies": {
+    "@types/graphql": "^0.9.0",
+    "graphql-rxjs": "^0.9.2-rc.0",
+    "rxjs": "^5.3.0"
+  },
+  "peerDependencies": {
+    "graphql": "^0.8.0 || ^0.9.0"
+  },
+  "optionalDependencies": {
+    "@types/graphql": "^0.9.0"
+  },
+  "typings": "dist/index.d.ts",
+  "typescript": {
+    "definition": "dist/index.d.ts"
+  },
+  "dependencies": {
+    "graphql-server-reactive-core": "^0.6.0",
+    "graphql-server-observable": "^0.6.0"
+  }
+}

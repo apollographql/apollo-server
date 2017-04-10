@@ -2,8 +2,14 @@ const NODE_VERSION = process.version.split('.');
 const NODE_MAJOR_VERSION = parseInt(NODE_VERSION[0].replace(/^v/, ''));
 process.env.NODE_ENV = 'test';
 
+// core functionality
 require('../packages/graphql-server-core/dist/runQuery.test.js');
+require('../packages/graphql-server-observable/dist/Observable.test.js');
+require('../packages/graphql-server-reactive-core/dist/runQueryReactive.test.js');
+require('../packages/graphql-server-reactive-protocol/dist/RequestsManager.test.js');
 require('../packages/graphql-server-module-operation-store/dist/operationStore.test');
+
+// integrations
 require('../packages/graphql-server-express/dist/expressApollo.test');
 require('../packages/graphql-server-express/dist/connectApollo.test');
 require('../packages/graphql-server-hapi/dist/hapiApollo.test');

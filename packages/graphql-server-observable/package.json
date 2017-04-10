@@ -1,0 +1,36 @@
+{
+  "name": "graphql-server-observable",
+  "version": "0.6.0",
+  "description": "Observable implementation for Apollo GraphQL server",
+  "main": "dist/index.js",
+  "scripts": {
+    "compile": "tsc",
+    "prepublish": "npm run compile"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/apollostack/graphql-server/tree/master/packages/graphql-server-observable"
+  },
+  "keywords": [
+    "GraphQL",
+    "Apollo",
+    "Server",
+    "Javascript"
+  ],
+  "author": "Jonas Helfer <jonas@helfer.email>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/apollostack/graphql-server/issues"
+  },
+  "homepage": "https://github.com/apollostack/graphql-server#readme",
+  "devDependencies": {
+    "rxjs": "^5.1.1"
+  },
+  "typings": "dist/index.d.ts",
+  "typescript": {
+    "definition": "dist/index.d.ts"
+  },
+  "dependencies": {
+    "symbol-observable": "^1.0.4"
+  }
+}

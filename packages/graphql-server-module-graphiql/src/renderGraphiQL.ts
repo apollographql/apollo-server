@@ -41,12 +41,113 @@ export function renderGraphiQL(data: GraphiQLData): string {
   const endpointURL = data.endpointURL;
   const subscriptionsEndpoint = data.subscriptionsEndpoint;
   const usingSubscriptions = !!subscriptionsEndpoint;
+  const isWs = data.endpointURL.startsWith('ws://');
   const queryString = data.query;
   const variablesString =
     data.variables ? JSON.stringify(data.variables, null, 2) : null;
   const resultString = null;
   const operationName = data.operationName;
   const passHeader = data.passHeader ? data.passHeader : '';
+  const fetchLibrary = isWs ?
+      `<script src="//npmcdn.com/@reactivex/rxjs@5.1.0/dist/global/Rx.min.js"></script>` :
+      `<script src="//cdn.jsdelivr.net/fetch/0.9.0/fetch.min.js"></script>`;
+  const fetcher = isWs ? `
+    var reqId = 0;
+
+    function messageObservable(localReqId, graphQLParams) {
+      return new Rx.Observable(function (observer) {
+        var payload = JSON.stringify({
+          type: "start",
+          id: localReqId,
+          payload: graphQLParams,
+        });
+        var isOpen = false;
+
+        var ws = new WebSocket(fetchURL);
+
+        ws.onmessage = function (msg) {
+          observer.next(msg.data);
+        };
+        ws.onerror = function(e) {
+          observer.error(new Error("WebSocket error"));
+        };
+        ws.onclose = function (closeEvent) {
+          if ( closeEvent.wasClean ) {
+            observer.complete();
+          } else {
+            observer.error(new Error('Connection closed unexpectedly'));
+          }
+        };
+        ws.onopen = function () {
+          isOpen = true;
+          ws.send(payload);
+        };
+
+        return function () {
+          if ( (isOpen == true) && (ws.readyState === 1) ) {
+            ws.send(JSON.stringify({ id: localReqId, type: "stop" }));
+          }
+          ws.close();
+        };
+      })
+      .retryWhen((e) => e.delay(500))
+      .map(JSON.parse)
+      .filter(function (v) { return v.id == localReqId })
+      .catch(function (e) {
+        return Rx.Observable.of({
+          id: localReqId,
+          type: 'error',
+          payload: new Error('Could not parse server response: ' + e.message),
+        });
+      })
+      .share();
+    }
+
+    function graphQLFetcher(graphQLParams) {
+      var localReqId = reqId++;
+      return new Rx.Observable(function (observer) {
+        return messageObservable(localReqId, graphQLParams)
+          .subscribe(function(packet) {
+            switch (packet.type) {
+              case 'data':
+                return observer.next(packet.payload);
+              case 'error':
+                observer.error(new Error(packet.payload));
+                return observer.complete();
+              case 'complete':
+                return observer.complete();
+              default:
+                observer.error(new Error('Invalid message type was received from server'));
+            }
+          }, function(e) {
+            observer.error(e);
+          }, function() {
+            observer.complete();
+          });
+      });
+    }
+  ` : `
+    function graphQLFetcher(graphQLParams) {
+      return fetch(fetchURL, {
+        method: 'post',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          ${passHeader}
+        },
+        body: JSON.stringify(graphQLParams),
+        credentials: 'include',
+      }).then(function (response) {
+        return response.text();
+      }).then(function (responseBody) {
+        try {
+          return JSON.parse(responseBody);
+        } catch (error) {
+          return responseBody;
+        }
+      });
+    }
+  `;
 
   /* eslint-disable max-len */
   return `
@@ -65,7 +166,7 @@ export function renderGraphiQL(data: GraphiQLData): string {
     }
   </style>
   <link href="//cdn.jsdelivr.net/graphiql/${GRAPHIQL_VERSION}/graphiql.css" rel="stylesheet" />
-  <script src="//cdn.jsdelivr.net/fetch/0.9.0/fetch.min.js"></script>
+  ${fetchLibrary}
   <script src="//cdn.jsdelivr.net/react/15.0.0/react.min.js"></script>
   <script src="//cdn.jsdelivr.net/react/15.0.0/react-dom.min.js"></script>
   <script src="//cdn.jsdelivr.net/graphiql/${GRAPHIQL_VERSION}/graphiql.min.js"></script>
@@ -120,25 +221,7 @@ export function renderGraphiQL(data: GraphiQLData): string {
     var fetchURL = locationQuery(otherParams, '${endpointURL}');
 
     // Defines a GraphQL fetcher using the fetch API.
-    function graphQLFetcher(graphQLParams) {
-        return fetch('/graphql', {
-          method: 'post',
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(graphQLParams),
-          credentials: 'include',
-        }).then(function (response) {
-          return response.text();
-        }).then(function (responseBody) {
-          try {
-            return JSON.parse(responseBody);
-          } catch (error) {
-            return responseBody;
-          }
-        });
-    }
+    ${fetcher}
     // When the query and variables string is edited, update the URL bar so
     // that it can be easily shared.
     function onEditQuery(newQuery) {
