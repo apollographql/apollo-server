@@ -1,6 +1,6 @@
 {
   "name": "graphql-server-lambda",
-  "version": "0.7.0",
+  "version": "0.6.0",
   "description": "Production-ready Node.js GraphQL server for AWS Lambda",
   "main": "dist/index.js",
   "scripts": {
@@ -25,13 +25,13 @@
   },
   "homepage": "https://github.com/apollostack/graphql-server#readme",
   "dependencies": {
-    "graphql-server-core": "^0.7.0",
-    "graphql-server-module-graphiql": "^0.7.0"
+    "graphql-server-core": "^0.6.0",
+    "graphql-server-module-graphiql": "^0.6.0"
   },
   "devDependencies": {
     "@types/aws-lambda": "0.0.9",
     "@types/graphql": "^0.9.0",
-    "graphql-server-integration-testsuite": "^0.7.0"
+    "graphql-server-integration-testsuite": "^0.6.0"
   },
   "peerDependencies": {
     "graphql": "^0.8.0 || ^0.9.0"
