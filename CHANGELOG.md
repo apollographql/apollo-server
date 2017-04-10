@@ -2,14 +2,17 @@
 
 ### VNEXT
 
+
+
+### v0.7.0
+* Add Zeit Micro Integration [#324](https://github.com/apollographql/graphql-server/issues/324)
 * add support for subscriptionURL to GraphiQL ([@urigo](https://github.com/urigo) on [#320](https://github.com/apollostack/graphql-server/pull/320)
 * Restify: Fix for calling next() ([@jadkap](https://github.com/jadkap)) on [#285](https://github.com/apollostack/graphql-server/pull/285)
-* Update GraphiQL to version 0.9.1 ([@ephemer](https://github.com/ephemer)) on [#293](https://github.com/apollostack/graphql-server/pull/293)
-* Add AWS Lambda Integration [#101](https://github.com/apollostack/graphql-server/issues/101)
-* Add Zeit Micro Integration [#324](https://github.com/apollographql/graphql-server/issues/324)
-* Upgrade all dependencies **WARNING:** Breaking change [#329](https://github.com/apollographql/graphql-server/issues/329)
+* **Breaking:** Update all dependencies [#329](https://github.com/apollographql/graphql-server/issues/329)
 
-### v0.5.2
+### v0.6.0
+* Add AWS Lambda Integration [PR #247](https://github.com/apollostack/graphql-server/pull/247)
+* Update GraphiQL to version 0.9.1 ([@ephemer](https://github.com/ephemer)) on [#293](https://github.com/apollostack/graphql-server/pull/293)
 * **Restify integration** ([@joelgriffith](https://github.com/joelgriffith)) on [#189](https://github.com/apollostack/graphql-server/pull/189)
 * run batched requests in parallel ([@DxCx](https://github.com/DxCx)) on [#273](https://github.com/apollostack/graphql-server/pull/273)
 * Fix GraphiQL options variables. Issue #193. ([@alanchristensen](https://github.com/alanchristensen)) on
