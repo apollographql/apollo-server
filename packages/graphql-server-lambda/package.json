@@ -30,7 +30,7 @@
   },
   "devDependencies": {
     "@types/aws-lambda": "0.0.9",
-    "@types/graphql": "^0.8.6",
+    "@types/graphql": "^0.9.0",
     "graphql-server-integration-testsuite": "^0.6.0"
   },
   "peerDependencies": {

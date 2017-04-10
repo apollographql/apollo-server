@@ -1,8 +1,7 @@
 {
-  "name": "graphql-server-integration-testsuite",
-  "private": true,
-  "version": "0.6.0",
-  "description": "Apollo Server Integrations testsuite",
+  "name": "graphql-server-micro",
+  "version": "0.5.1",
+  "description": "Production-ready Node.js GraphQL server for Micro",
   "main": "dist/index.js",
   "scripts": {
     "compile": "tsc",
@@ -10,10 +9,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/apollostack/graphql-server/tree/master/packages/graphql-server-integration-testsuite"
+    "url": "https://github.com/apollostack/graphql-server/tree/master/packages/graphql-server-micro"
   },
-  "keywords": [],
-  "author": "Jonas Helfer <jonas@helfer.email>",
+  "keywords": [
+    "GraphQL",
+    "Apollo",
+    "Micro",
+    "Server",
+    "Javascript"
+  ],
+  "author": "Nick Nance <nance.nick@gmail.email>",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/apollostack/graphql-server/issues"
@@ -21,16 +26,15 @@
   "homepage": "https://github.com/apollostack/graphql-server#readme",
   "dependencies": {
     "graphql-server-core": "^0.6.0",
-    "graphql-server-module-graphiql": "^0.6.0",
-    "graphql-server-module-operation-store": "^0.6.0",
-    "supertest": "^3.0.0",
-    "supertest-as-promised": "^4.0.0"
+    "graphql-server-module-graphiql": "^0.6.0"
   },
   "devDependencies": {
-    "@types/graphql": "^0.9.0"
+    "graphql-server-integration-testsuite": "^0.6.0",
+    "micro": "^7.3.0"
   },
   "peerDependencies": {
-    "graphql": "^0.8.0 || ^0.9.0"
+    "graphql": "^0.8.0 || ^0.9.0",
+    "micro": "^7.3.0"
   },
   "optionalDependencies": {
     "@types/graphql": "^0.9.0"

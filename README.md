@@ -33,6 +33,7 @@ where variant is one of the following:
  - hapi
  - restify
  - lambda
+ - [micro](https://github.com/zeit/micro)
 
 ### Express
 
@@ -163,6 +164,16 @@ Lambda function should be run with Node.js v4.3. Requires an API Gateway with La
 var server = require("graphql-server-lambda");
 
 exports.handler = server.graphqlLambda({ schema: myGraphQLSchema });
+```
+
+### Zeit Micro
+
+Micro function requires the micro module
+
+```js
+var server = require("graphql-server-micro");
+
+module.exports = server.microGraphql({ schema: myGraphQLSchema });
 ```
 
 ## Options
