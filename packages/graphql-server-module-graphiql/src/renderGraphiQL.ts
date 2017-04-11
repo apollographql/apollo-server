@@ -121,7 +121,7 @@ export function renderGraphiQL(data: GraphiQLData): string {
 
     // Defines a GraphQL fetcher using the fetch API.
     function graphQLFetcher(graphQLParams) {
-        return fetch('/graphql', {
+        return fetch(fetchURL, {
           method: 'post',
           headers: {
             'Accept': 'application/json',
