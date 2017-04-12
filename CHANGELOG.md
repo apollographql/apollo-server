@@ -1,7 +1,7 @@
 # Changelog
 
 ### VNEXT
-
+* Fix graphiql's client to use parameter endpointURL instead of hardcoded.
 
 
 ### v0.7.0
