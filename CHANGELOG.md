@@ -1,7 +1,9 @@
 # Changelog
 
 ### VNEXT
-* Fix graphiql's client to use parameter endpointURL instead of hardcoded.
+
+### v0.7.1
+* Fix graphiql fetcher to use endpointURL parameter instead of hardcoded URI.[#365](https://github.com/apollographql/graphql-server/issues/356)
 
 
 ### v0.7.0
