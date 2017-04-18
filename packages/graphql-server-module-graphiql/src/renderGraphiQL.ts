@@ -126,6 +126,7 @@ export function renderGraphiQL(data: GraphiQLData): string {
           headers: {
             'Accept': 'application/json',
             'Content-Type': 'application/json',
+            ${passHeader}
           },
           body: JSON.stringify(graphQLParams),
           credentials: 'include',
