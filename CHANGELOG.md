@@ -2,6 +2,10 @@
 
 ### VNEXT
 
+
+### v0.7.2
+* Fix include passHeader field that was accidentally removed
+
 ### v0.7.1
 * Fix graphiql fetcher to use endpointURL parameter instead of hardcoded URI.[#365](https://github.com/apollographql/graphql-server/issues/356)
 
