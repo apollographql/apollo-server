@@ -1,6 +1,6 @@
 {
   "lerna": "2.0.0-rc.4",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "changelog": {
     "repo": "apollostack/graphql-server",
     "labels": {

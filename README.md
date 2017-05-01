@@ -33,7 +33,7 @@ where variant is one of the following:
  - hapi
  - restify
  - lambda
- - [micro](https://github.com/zeit/micro)
+ - micro
 
 ### Express
 
