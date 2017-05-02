@@ -33,7 +33,7 @@
     "chai": "^3.5.0",
     "graphql": "^0.9.2",
     "istanbul": "1.0.0-alpha.2",
-    "lerna": "2.0.0-rc.3",
+    "lerna": "2.0.0-rc.4",
     "mocha": "^3.2.0",
     "npm-check-updates": "^2.10.5",
     "remap-istanbul": "^0.9.5",
