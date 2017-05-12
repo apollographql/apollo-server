@@ -1,7 +1,7 @@
 # Changelog
 
 ### VNEXT
-
+* Persist `window.location.hash` on URL updates [#386](https://github.com/apollographql/graphql-server/issues/386)
 
 ### v0.7.2
 * Fix include passHeader field that was accidentally removed
