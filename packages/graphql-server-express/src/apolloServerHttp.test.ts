@@ -35,6 +35,7 @@ import {
   GraphQLObjectType,
   GraphQLNonNull,
   GraphQLString,
+  GraphQLScalarType,
   GraphQLError,
   BREAK
 } from 'graphql';
@@ -54,6 +55,23 @@ const QueryRootType = new GraphQLObjectType({
     thrower: {
       type: new GraphQLNonNull(GraphQLString),
       resolve: () => { throw new Error('Throws!'); }
+    },
+    custom: {
+      type: GraphQLString,
+      args: {
+        foo: {
+          type: new GraphQLScalarType({
+            name: 'Foo',
+            serialize: v => v,
+            parseValue: () => {
+              throw new Error('Something bad happened');
+            },
+            parseLiteral: () => {
+              throw new Error('Something bad happened');
+            },
+          }),
+        }
+      }
     },
     context: {
       type: GraphQLString,
@@ -86,7 +104,7 @@ function urlString(urlParams?: any): string {
 function catchError(p) {
   return p.then(
     (res) => {
-      // workaround for unkown issues with testing against npm package of express-graphql.
+      // workaround for unknown issues with testing against npm package of express-graphql.
       // the same code works when testing against the source, I'm not sure why.
       if (res && res.error) {
         return { response: res };
@@ -328,6 +346,23 @@ describe(`GraphQL-HTTP (apolloServer) tests for ${version} express`, () => {
           locations: [ { line: 1, column: 12 } ],
         } ]
       });
+    });
+
+    it('handles errors thrown during custom graphql type handling', async () => {
+      const app = express();
+
+      app.use(urlString(), bodyParser.json());
+      app.use(urlString(), graphqlExpress({
+        schema: TestSchema
+      }));
+
+      const response = await request(app)
+        .post(urlString())
+        .send({
+          query: '{custom(foo: 123)}',
+        });
+
+      expect(response.status).to.equal(500);
     });
 
     it('allows for custom error formatting to sanitize', async () => {
