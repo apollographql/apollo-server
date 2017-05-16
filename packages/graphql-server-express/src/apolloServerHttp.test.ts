@@ -307,6 +307,29 @@ describe(`GraphQL-HTTP (apolloServer) tests for ${version} express`, () => {
       });
     });
 
+    it('handles type validation', async () => {
+      const app = express();
+
+      app.use(urlString(), bodyParser.json());
+      app.use(urlString(), graphqlExpress({
+        schema: TestSchema
+      }));
+
+      const response = await request(app)
+        .post(urlString())
+        .send({
+          query: '{test(who: 123)}',
+        });
+
+      expect(response.status).to.equal(400);
+      expect(JSON.parse(response.text)).to.deep.equal({
+        errors: [ {
+          message: 'Argument \"who\" has invalid value 123.\nExpected type \"String\", found 123.',
+          locations: [ { line: 1, column: 12 } ],
+        } ]
+      });
+    });
+
     it('allows for custom error formatting to sanitize', async () => {
       const app = express();
 
