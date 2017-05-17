@@ -1,5 +1,5 @@
 import * as Boom from 'boom';
-import { Server, Response, Request, IReply } from 'hapi';
+import { Server, Response, Request, ReplyNoContinue } from 'hapi';
 import * as GraphiQL from 'graphql-server-module-graphiql';
 import { GraphQLOptions, runHttpQuery, HttpQueryError } from 'graphql-server-core';
 
@@ -18,7 +18,7 @@ export interface HapiPluginOptions {
   graphqlOptions: GraphQLOptions | HapiOptionsFunction;
 }
 
-function runHttpQueryWrapper(options: GraphQLOptions | HapiOptionsFunction, request: Request, reply: IReply): Promise<Response> {
+function runHttpQueryWrapper(options: GraphQLOptions | HapiOptionsFunction, request: Request, reply: ReplyNoContinue): Promise<Response> {
   return runHttpQuery([request], {
     method: request.method.toUpperCase(),
     options: options,
