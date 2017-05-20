@@ -29,6 +29,7 @@ Just run `npm install --save graphql-server-<variant>` and you're good to go!
 
 where variant is one of the following:
  - express
+ - connect
  - koa
  - hapi
  - restify
