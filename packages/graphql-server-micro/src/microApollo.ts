@@ -1,6 +1,6 @@
 import { GraphQLOptions, HttpQueryError, runHttpQuery } from 'graphql-server-core';
 import * as GraphiQL from 'graphql-server-module-graphiql';
-import { json } from 'micro';
+import { createError, json, RequestHandler } from 'micro';
 import * as url from 'url';
 import {IncomingMessage, ServerResponse} from 'http';
 
@@ -8,7 +8,7 @@ export interface MicroGraphQLOptionsFunction {
   (req?: IncomingMessage): GraphQLOptions | Promise<GraphQLOptions>;
 }
 
-export function microGraphql(options: GraphQLOptions | MicroGraphQLOptionsFunction) {
+export function microGraphql(options: GraphQLOptions | MicroGraphQLOptionsFunction): RequestHandler {
   if (!options) {
     throw new Error('Apollo Server requires options.');
   }
@@ -29,33 +29,34 @@ export function microGraphql(options: GraphQLOptions | MicroGraphQLOptionsFuncti
       query = url.parse(req.url, true).query;
     }
 
-    runHttpQuery([req, res], {
-      method: req.method,
-      options: options,
-      query: query,
-    }).then((gqlResponse) => {
+    try {
+      const gqlResponse = await runHttpQuery([req, res], {
+        method: req.method,
+        options: options,
+        query: query,
+      });
+
       res.setHeader('Content-Type', 'application/json');
-      res.write(gqlResponse);
-      res.end();
-    }, (error: HttpQueryError) => {
-      if ( 'HttpQueryError' !== error.name ) {
-        throw error;
+      return gqlResponse;
+    } catch (error) {
+      if ('HttpQueryError' === error.name) {
+        if (error.headers) {
+          Object.keys(error.headers).forEach((header) => {
+            res.setHeader(header, error.headers[header]);
+          });
+        }
       }
 
-      if ( error.headers ) {
-        Object.keys(error.headers).forEach((header) => {
-          res.setHeader(header, error.headers[header]);
-        });
+      if (!error.statusCode) {
+        error.statusCode = 500;
       }
 
-      res.statusCode = error.statusCode;
-      res.write(error.message);
-      res.end();
-    });
+      throw error;
+    }
   };
 }
 
-export function microGraphiql(options: GraphiQL.GraphiQLData) {
+export function microGraphiql(options: GraphiQL.GraphiQLData): RequestHandler {
   return (req: IncomingMessage, res: ServerResponse) => {
     const q = req.url && url.parse(req.url, true).query || {};
     const query = q.query || '';
