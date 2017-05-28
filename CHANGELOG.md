@@ -3,6 +3,7 @@
 ### VNEXT
 * Persist `window.location.hash` on URL updates [#386](https://github.com/apollographql/graphql-server/issues/386)
 * Added support for `graphql-js` > 0.10.0 [#407](https://github.com/apollographql/graphql-server/pull/407)
+* Updated `subscriptions-transport-ws` for GraphiQL with subscritpions  [#407](https://github.com/apollographql/graphql-server/pull/407)
 
 ### v0.7.2
 * Fix include passHeader field that was accidentally removed
