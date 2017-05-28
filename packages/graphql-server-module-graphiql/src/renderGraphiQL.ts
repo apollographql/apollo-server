@@ -29,7 +29,8 @@ export type GraphiQLData = {
 };
 
 // Current latest version of GraphiQL.
-const GRAPHIQL_VERSION = '0.9.1';
+const GRAPHIQL_VERSION = '0.10.2';
+const SUBSCRIPTIONS_TRANSPORT_VERSION = '0.7.0';
 
 // Ensures string values are safe to be used within a <script> tag.
 // TODO: I don't think that's the right escape function
@@ -70,7 +71,7 @@ export function renderGraphiQL(data: GraphiQLData): string {
   <script src="//cdn.jsdelivr.net/react/15.0.0/react-dom.min.js"></script>
   <script src="//cdn.jsdelivr.net/graphiql/${GRAPHIQL_VERSION}/graphiql.min.js"></script>
   ${usingSubscriptions ?
-    '<script src="//unpkg.com/subscriptions-transport-ws@0.5.4/browser/client.js"></script>' +
+    `<script src="//unpkg.com/subscriptions-transport-ws@${SUBSCRIPTIONS_TRANSPORT_VERSION}/browser/client.js"></script>` +
     '<script src="//unpkg.com/graphiql-subscriptions-fetcher@0.0.2/browser/client.js"></script>'
     : ''}
 </head>
