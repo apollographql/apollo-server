@@ -644,7 +644,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
       });
 
       it('sends stack trace to error if debug mode is set', () => {
-          const expected = /at resolveOrError/;
+          const expected = /at resolveFieldValueOrError/;
           const stackTrace = [];
           const origError = console.error;
           console.error = (...args) => stackTrace.push(args);
@@ -665,7 +665,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
 
       it('sends stack trace to error log if debug mode is set', () => {
           const logStub = stub(console, 'error');
-          const expected = /at resolveOrError/;
+          const expected = /at resolveFieldValueOrError/;
           app = createApp({graphqlOptions: {
               schema,
               debug: true,
