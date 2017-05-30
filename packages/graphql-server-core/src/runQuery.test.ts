@@ -111,7 +111,7 @@ describe('runQuery', () => {
 
   it('sends stack trace to error if in an error occurs and debug mode is set', () => {
     const query = `query { testError }`;
-    const expected = /at resolveOrError/;
+    const expected = /at resolveFieldValueOrError/;
     const logStub = stub(console, 'error');
     return runQuery({
         schema,
