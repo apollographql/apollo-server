@@ -26,21 +26,21 @@
     "release": "lerna publish"
   },
   "devDependencies": {
-    "@types/chai": "^3.4.35",
-    "@types/mocha": "^2.2.40",
-    "@types/node": "^7.0.12",
-    "@types/sinon": "^2.1.2",
-    "chai": "^3.5.0",
+    "@types/chai": "^3.5.2",
+    "@types/mocha": "^2.2.41",
+    "@types/node": "^7.0.22",
+    "@types/sinon": "^2.2.2",
+    "chai": "^4.0.0",
     "graphql": "^0.10.1",
     "istanbul": "1.0.0-alpha.2",
-    "lerna": "2.0.0-rc.4",
-    "mocha": "^3.2.0",
-    "npm-check-updates": "^2.10.5",
+    "lerna": "2.0.0-rc.5",
+    "mocha": "^3.4.2",
+    "npm-check-updates": "^2.11.2",
     "remap-istanbul": "^0.9.5",
-    "sinon": "^2.1.0",
+    "sinon": "^2.3.2",
     "supertest": "^3.0.0",
     "supertest-as-promised": "^4.0.2",
-    "tslint": "^5.0.0",
-    "typescript": "^2.2.2"
+    "tslint": "^5.3.2",
+    "typescript": "^2.3.4"
   }
 }
