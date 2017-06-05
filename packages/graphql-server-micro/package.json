@@ -30,7 +30,8 @@
   },
   "devDependencies": {
     "graphql-server-integration-testsuite": "^0.8.4",
-    "micro": "^7.3.3"
+    "micro": "^7.3.3",
+    "microrouter": "^2.1.1"
   },
   "peerDependencies": {
     "graphql": "^0.9.0 || ^0.10.1",

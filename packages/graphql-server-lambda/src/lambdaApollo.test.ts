@@ -6,19 +6,28 @@ import 'mocha';
 import * as url from 'url';
 
 function createLambda(options: CreateAppOptions = {}) {
-  let handler,
+  let route,
+    handler,
     callback,
     event,
     context;
 
   options.graphqlOptions = options.graphqlOptions || { schema: Schema };
   if (options.graphiqlOptions ) {
+    route = '/graphiql';
     handler = graphiqlLambda( options.graphiqlOptions );
   } else {
+    route = '/graphql';
     handler = graphqlLambda( options.graphqlOptions );
   }
 
   return function(req, res) {
+    if (!req.url.startsWith(route)) {
+      res.statusCode = 404;
+      res.end();
+      return;
+    }
+
     let body = '';
     req.on('data', function (chunk) {
       body += chunk;
