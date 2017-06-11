@@ -1,6 +1,7 @@
 # Changelog
 
-### VNEXT
+### V0.9.0
+* Add Fastify Integration ([@phra](https://github.com/phra)) [#421](https://github.com/apollographql/graphql-server/issues/402)
 
 ### v0.8.0
 * Persist `window.location.hash` on URL updates [#386](https://github.com/apollographql/graphql-server/issues/386)
