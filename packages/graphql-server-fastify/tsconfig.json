@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig",
+  "compilerOptions": {
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "typeRoots": [
+      "node_modules/@types"
+    ],
+    "alwaysStrict": true
+  },
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+}

@@ -12,3 +12,4 @@ require('../packages/graphql-server-hapi/dist/hapiApollo.test');
 require('../packages/graphql-server-restify/dist/restifyApollo.test');
 require('../packages/graphql-server-lambda/dist/lambdaApollo.test');
 require('../packages/graphql-server-express/dist/apolloServerHttp.test');
+require('../packages/graphql-server-fastify/dist/fastifyApollo.test');
