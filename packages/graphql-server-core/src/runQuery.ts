@@ -105,21 +105,20 @@ function doRunQuery(options: QueryOptions): Promise<ExecutionResult> {
             logFunction({action: LogAction.parse, step: LogStep.end});
             return Promise.resolve({ errors: format([syntaxError]) });
         }
-
-        // TODO: time this with log function
-
-        let rules = specifiedRules;
-        if (options.validationRules) {
-          rules = rules.concat(options.validationRules);
-        }
-        logFunction({action: LogAction.validation, step: LogStep.start});
-        const validationErrors = validate(options.schema, documentAST, rules);
-        logFunction({action: LogAction.validation, step: LogStep.end});
-        if (validationErrors.length) {
-            return Promise.resolve({ errors: format(validationErrors) });
-        }
     } else {
         documentAST = options.query as DocumentNode;
+    }
+
+    // TODO: time this with log function
+    let rules = specifiedRules;
+    if (options.validationRules) {
+      rules = rules.concat(options.validationRules);
+    }
+    logFunction({action: LogAction.validation, step: LogStep.start});
+    const validationErrors = validate(options.schema, documentAST, rules);
+    logFunction({action: LogAction.validation, step: LogStep.end});
+    if (validationErrors.length) {
+      return Promise.resolve({ errors: format(validationErrors) });
     }
 
     try {
