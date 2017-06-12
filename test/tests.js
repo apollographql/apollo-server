@@ -9,6 +9,9 @@ require('../packages/graphql-server-express/dist/connectApollo.test');
 require('../packages/graphql-server-hapi/dist/hapiApollo.test');
 (NODE_MAJOR_VERSION >= 6) && require('../packages/graphql-server-micro/dist/microApollo.test');
 (NODE_MAJOR_VERSION >= 7) && require('../packages/graphql-server-koa/dist/koaApollo.test');
-require('../packages/graphql-server-restify/dist/restifyApollo.test');
 require('../packages/graphql-server-lambda/dist/lambdaApollo.test');
 require('../packages/graphql-server-express/dist/apolloServerHttp.test');
+
+// XXX: Running restify last as it breaks http.
+// for more info: https://github.com/restify/node-restify/issues/700
+require('../packages/graphql-server-restify/dist/restifyApollo.test');

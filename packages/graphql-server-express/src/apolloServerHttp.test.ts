@@ -351,7 +351,6 @@ describe(`GraphQL-HTTP (apolloServer) tests for ${version} express`, () => {
     it('handles type validation (GET)', async () => {
       const app = express();
 
-      app.use(urlString(), bodyParser.json());
       app.use(urlString(), graphqlExpress({
         schema: TestSchema
       }));
@@ -359,7 +358,7 @@ describe(`GraphQL-HTTP (apolloServer) tests for ${version} express`, () => {
       const response = await request(app)
         .get(urlString({ query: '{notExists}' }))
 
-      expect(response.status).to.equal(200);
+      expect(response.status).to.equal(400);
       expect(JSON.parse(response.text)).to.deep.equal({
         errors: [ {
           message: 'Cannot query field \"notExists\" on type \"QueryRoot\".',
