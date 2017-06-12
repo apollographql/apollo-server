@@ -336,14 +336,34 @@ describe(`GraphQL-HTTP (apolloServer) tests for ${version} express`, () => {
       const response = await request(app)
         .post(urlString())
         .send({
-          query: '{test(who: 123)}',
+          query: '{notExists}',
         });
 
       expect(response.status).to.equal(400);
       expect(JSON.parse(response.text)).to.deep.equal({
         errors: [ {
-          message: 'Argument \"who\" has invalid value 123.\nExpected type \"String\", found 123.',
-          locations: [ { line: 1, column: 12 } ],
+          message: 'Cannot query field \"notExists\" on type \"QueryRoot\".',
+          locations: [ { line: 1, column: 2 } ],
+        } ]
+      });
+    });
+
+    it('handles type validation (GET)', async () => {
+      const app = express();
+
+      app.use(urlString(), bodyParser.json());
+      app.use(urlString(), graphqlExpress({
+        schema: TestSchema
+      }));
+
+      const response = await request(app)
+        .get(urlString({ query: '{notExists}' }))
+
+      expect(response.status).to.equal(200);
+      expect(JSON.parse(response.text)).to.deep.equal({
+        errors: [ {
+          message: 'Cannot query field \"notExists\" on type \"QueryRoot\".',
+          locations: [ { line: 1, column: 2 } ],
         } ]
       });
     });
