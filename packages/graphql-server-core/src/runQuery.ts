@@ -94,6 +94,7 @@ function doRunQuery(options: QueryOptions): Promise<ExecutionResult> {
     logFunction({action: LogAction.request, step: LogStep.status, key: 'operationName', data: options.operationName});
 
     // if query is already an AST, don't parse or validate
+    // XXX: This refers the operations-store flow.
     if (typeof options.query === 'string') {
         try {
             // TODO: time this with log function
