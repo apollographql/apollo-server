@@ -97,7 +97,6 @@ function doRunQuery(options: QueryOptions): Promise<ExecutionResult> {
     // XXX: This refers the operations-store flow.
     if (typeof options.query === 'string') {
         try {
-            // TODO: time this with log function
             logFunction({action: LogAction.parse, step: LogStep.start});
             documentAST = parse(options.query as string);
             logFunction({action: LogAction.parse, step: LogStep.end});
@@ -109,7 +108,6 @@ function doRunQuery(options: QueryOptions): Promise<ExecutionResult> {
         documentAST = options.query as DocumentNode;
     }
 
-    // TODO: time this with log function
     let rules = specifiedRules;
     if (options.validationRules) {
       rules = rules.concat(options.validationRules);
