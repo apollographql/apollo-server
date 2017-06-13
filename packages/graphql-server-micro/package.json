@@ -1,6 +1,6 @@
 {
   "name": "graphql-server-micro",
-  "version": "0.8.1",
+  "version": "0.8.2",
   "description": "Production-ready Node.js GraphQL server for Micro",
   "main": "dist/index.js",
   "scripts": {
@@ -25,11 +25,11 @@
   },
   "homepage": "https://github.com/apollostack/graphql-server#readme",
   "dependencies": {
-    "graphql-server-core": "^0.8.1",
-    "graphql-server-module-graphiql": "^0.8.1"
+    "graphql-server-core": "^0.8.2",
+    "graphql-server-module-graphiql": "^0.8.2"
   },
   "devDependencies": {
-    "graphql-server-integration-testsuite": "^0.8.1",
+    "graphql-server-integration-testsuite": "^0.8.2",
     "micro": "^7.3.3"
   },
   "peerDependencies": {
