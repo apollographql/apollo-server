@@ -2,6 +2,7 @@
 
 ### VNEXT
 * **Security Fix** GET queries did not run through validation ([@DxCx](https://github.com/DxCx)) on [#424](https://github.com/apollographql/graphql-server/pull/424)
+* Allow GraphiQLOptions to be a function ([@NeoPhi](https://github.com/NeoPhi)) on [#426](https://github.com/apollographql/graphql-server/pull/426)
 
 ### v0.8.0
 * Persist `window.location.hash` on URL updates [#386](https://github.com/apollographql/graphql-server/issues/386)
