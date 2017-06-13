@@ -2,6 +2,9 @@
 
 ### VNEXT
 
+### v0.8.3
+* Pin Fibers to version 1.0.15 to avoid Lerna auto-update ([@helfer](https://github.com/helfer)) on [#425](https://github.com/apollographql/graphql-server/pull/425)
+
 ### v0.8.2
 * Fix: Revert update of package versions to fix node-gyp issue with Fibers ([@helfer](https://github.com/helfer)) on [#425](https://github.com/apollographql/graphql-server/pull/425)
 
