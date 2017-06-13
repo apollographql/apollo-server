@@ -70,64 +70,43 @@ graphqlHapi.attributes = {
   version: '0.0.1',
 };
 
-export interface GraphiQLPluginOptions {
-  path: string;
-  route?: any;
-  graphiqlOptions: GraphiQL.GraphiQLData;
+export interface HapiGraphiQLOptionsFunction {
+  (req?: Request): GraphiQL.GraphiQLData | Promise<GraphiQL.GraphiQLData>;
 }
 
-const graphiqlHapi: IRegister =  function(server: Server, options: GraphiQLPluginOptions, next) {
-  server.method('getGraphiQLParams', getGraphiQLParams);
-  server.method('renderGraphiQL', renderGraphiQL);
+export interface HapiGraphiQLPluginOptions {
+  path: string;
+  route?: any;
+  graphiqlOptions: GraphiQL.GraphiQLData | HapiGraphiQLOptionsFunction;
+}
 
-  const config = Object.assign(options.route || {}, {
-    plugins: {
-      graphiql: options.graphiqlOptions,
-    },
-    pre: [{
-      assign: 'graphiqlParams',
-      method: 'getGraphiQLParams',
-    }, {
-      assign: 'graphiQLString',
-      method: 'renderGraphiQL(route, pre.graphiqlParams)',
-    }],
-  });
+const graphiqlHapi: IRegister = function(server: Server, options: HapiGraphiQLPluginOptions, next) {
+  if (!options || !options.graphiqlOptions) {
+    throw new Error('Apollo Server GraphiQL requires options.');
+  }
+
+  if (arguments.length !== 3) {
+    throw new Error(`Apollo Server GraphiQL expects exactly 3 argument, got ${arguments.length}`);
+  }
 
   server.route({
     method: 'GET',
-    path: options.path || '/graphql',
-    config,
+    path: options.path || '/graphiql',
+    config: options.route || {},
     handler: (request, reply) => {
-      reply(request.pre['graphiQLString']).header('Content-Type', 'text/html');
+      const query = request.query;
+      GraphiQL.resolveGraphiQLString(query, options.graphiqlOptions, request).then(graphiqlString => {
+        reply(graphiqlString).header('Content-Type', 'text/html');
+      }, error => reply(error));
     },
   });
-  next();
+
+  return next();
 };
 
 graphiqlHapi.attributes = {
   name: 'graphiql',
   version: '0.0.1',
 };
-
-function getGraphiQLParams(request, reply) {
-  const q = request.query || {};
-  const query = q.query || '';
-  const variables = q.variables;
-  const operationName = q.operationName || '';
-  reply({ query, variables, operationName});
-}
-
-function renderGraphiQL(route, graphiqlParams: any, reply) {
-  const graphiqlOptions = route.settings.plugins['graphiql'];
-  const graphiQLString = GraphiQL.renderGraphiQL({
-    endpointURL: graphiqlOptions.endpointURL,
-    subscriptionsEndpoint: graphiqlOptions.subscriptionsEndpoint,
-    query: graphiqlParams.query || graphiqlOptions.query,
-    variables: graphiqlParams.variables && JSON.parse(graphiqlParams.variables) || graphiqlOptions.variables,
-    operationName: graphiqlParams.operationName || graphiqlOptions.operationName,
-    passHeader: graphiqlOptions.passHeader,
-  });
-  reply(graphiQLString);
-}
 
 export { graphqlHapi, graphiqlHapi };

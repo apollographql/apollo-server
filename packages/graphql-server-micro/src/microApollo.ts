@@ -55,21 +55,21 @@ export function microGraphql(options: GraphQLOptions | MicroGraphQLOptionsFuncti
   };
 }
 
-export function microGraphiql(options: GraphiQL.GraphiQLData) {
-  return (req: IncomingMessage, res: ServerResponse) => {
-    const q = req.url && url.parse(req.url, true).query || {};
-    const query = q.query || '';
-    const operationName = q.operationName || '';
+export interface MicroGraphiQLOptionsFunction {
+  (req?: IncomingMessage): GraphiQL.GraphiQLData | Promise<GraphiQL.GraphiQLData>;
+}
 
-    const graphiQLString = GraphiQL.renderGraphiQL({
-      endpointURL: options.endpointURL,
-      query: query || options.query,
-      variables: q.variables && JSON.parse(q.variables) || options.variables,
-      operationName: operationName || options.operationName,
-      passHeader: options.passHeader,
+export function microGraphiql(options: GraphiQL.GraphiQLData | MicroGraphiQLOptionsFunction) {
+  return (req: IncomingMessage, res: ServerResponse) => {
+    const query = req.url && url.parse(req.url, true).query || {};
+    GraphiQL.resolveGraphiQLString(query, options, req).then(graphiqlString => {
+      res.setHeader('Content-Type', 'text/html');
+      res.write(graphiqlString);
+      res.end();
+    }, error => {
+      res.statusCode = 500;
+      res.write(error.message);
+      res.end();
     });
-    res.setHeader('Content-Type', 'text/html');
-    res.write(graphiQLString);
-    res.end();
   };
 }

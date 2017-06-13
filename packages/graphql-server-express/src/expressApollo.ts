@@ -53,6 +53,10 @@ export function graphqlExpress(options: GraphQLOptions | ExpressGraphQLOptionsFu
   };
 }
 
+export interface ExpressGraphiQLOptionsFunction {
+  (req?: express.Request): GraphiQL.GraphiQLData | Promise<GraphiQL.GraphiQLData>;
+}
+
 /* This middleware returns the html for the GraphiQL interactive query UI
  *
  * GraphiQLData arguments
@@ -64,22 +68,13 @@ export function graphqlExpress(options: GraphQLOptions | ExpressGraphQLOptionsFu
  * - (optional) result: the result of the query to pre-fill in the GraphiQL UI
  */
 
-export function graphiqlExpress(options: GraphiQL.GraphiQLData) {
-  return (req: express.Request, res: express.Response) => {
-    const q = req.url && url.parse(req.url, true).query || {};
-    const query = q.query || '';
-    const operationName = q.operationName || '';
-
-    const graphiQLString = GraphiQL.renderGraphiQL({
-      endpointURL: options.endpointURL,
-      subscriptionsEndpoint: options.subscriptionsEndpoint,
-      query: query || options.query,
-      variables: q.variables && JSON.parse(q.variables) || options.variables,
-      operationName: operationName || options.operationName,
-      passHeader: options.passHeader,
-    });
-    res.setHeader('Content-Type', 'text/html');
-    res.write(graphiQLString);
-    res.end();
+export function graphiqlExpress(options: GraphiQL.GraphiQLData | ExpressGraphiQLOptionsFunction) {
+  return (req: express.Request, res: express.Response, next) => {
+    const query = req.url && url.parse(req.url, true).query;
+    GraphiQL.resolveGraphiQLString(query, options, req).then(graphiqlString => {
+      res.setHeader('Content-Type', 'text/html');
+      res.write(graphiqlString);
+      res.end();
+    }, error => next(error));
   };
 }
