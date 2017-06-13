@@ -1,7 +1,9 @@
 # Changelog
 
 ### VNEXT
-* **Security Fix** GET queries did not run through validation ([@DxCx](https://github.com/DxCx)) on [#424](https://github.com/apollographql/graphql-server/pull/424)
+
+### v0.8.1
+* **Security Fix** Ensure queries submitted via HTTP GET run through validation ([@DxCx](https://github.com/DxCx)) on [#424](https://github.com/apollographql/graphql-server/pull/424)
 
 ### v0.8.0
 * Persist `window.location.hash` on URL updates [#386](https://github.com/apollographql/graphql-server/issues/386)
