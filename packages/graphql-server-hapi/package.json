@@ -30,7 +30,7 @@
     "graphql-server-module-graphiql": "^0.8.2"
   },
   "devDependencies": {
-    "@types/boom": "4.3.5",
+    "@types/boom": "4.3.2",
     "@types/graphql": "^0.9.1",
     "@types/hapi": "^16.1.4",
     "graphql-server-integration-testsuite": "^0.8.2",
@@ -41,7 +41,7 @@
   },
   "optionalDependencies": {
     "@types/graphql": "^0.9.1",
-    "@types/hapi": "^16.1.4"
+    "@types/hapi": "^16.1.2"
   },
   "typings": "dist/index.d.ts",
   "typescript": {
