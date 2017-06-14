@@ -86,7 +86,7 @@ const graphiqlHapi: IRegister = function(server: Server, options: HapiGraphiQLPl
   }
 
   if (arguments.length !== 3) {
-    throw new Error(`Apollo Server GraphiQL expects exactly 3 argument, got ${arguments.length}`);
+    throw new Error(`Apollo Server GraphiQL expects exactly 3 arguments, got ${arguments.length}`);
   }
 
   server.route({
