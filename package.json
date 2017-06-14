@@ -19,10 +19,6 @@
     "travis": "istanbul cover -x \"*.test.js\" _mocha -- --timeout 5000 --full-trace ./test/tests.js",
     "posttravis": "npm run lint",
     "postcoverage": "remap-istanbul --input coverage/coverage.raw.json --type lcovonly --output coverage/lcov.info",
-    "check-updates": "ncu -a && lerna exec ../../node_modules/.bin/ncu -- -a",
-    "postcheck-updates": "npm test && npm run commit-updates",
-    "commit-updates": "git add \"packages/*/package.json\" package.json; git commit -m \"Update dependencies\" || exit 0",
-    "prerelease": "npm run check-updates",
     "release": "lerna publish"
   },
   "devDependencies": {
