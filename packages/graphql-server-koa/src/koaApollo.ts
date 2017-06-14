@@ -54,6 +54,9 @@ export function graphiqlKoa(options: GraphiQL.GraphiQLData | KoaGraphiQLOptionsF
     GraphiQL.resolveGraphiQLString(query, options, ctx).then(graphiqlString => {
       ctx.set('Content-Type', 'text/html');
       ctx.body = graphiqlString;
-    }, error => ctx.throw(error.message, 500));
+    }, error => {
+      ctx.status = 500;
+      ctx.body = error.message;
+    });
   };
 }
