@@ -843,5 +843,20 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
       });
     });
+
+    describe('server setup', () => {
+      it('throws error on 404 routes', () => {
+          app = createApp();
+
+          const query = {
+              query: '{ testString }',
+          };
+          const req = request(app)
+              .get(`/bogus-route?${querystring.stringify(query)}`);
+          return req.then((res) => {
+              expect(res.status).to.equal(404);
+          });
+      });
+    });
   });
 };
