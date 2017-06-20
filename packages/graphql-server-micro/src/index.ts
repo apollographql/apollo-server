@@ -1,2 +1,6 @@
-export { MicroGraphQLOptionsFunction,
-    microGraphql, microGraphiql } from './microApollo';
+export {
+  MicroGraphQLOptionsFunction,
+  MicroGraphiQLOptionsFunction,
+  microGraphql,
+  microGraphiql,
+} from './microApollo';

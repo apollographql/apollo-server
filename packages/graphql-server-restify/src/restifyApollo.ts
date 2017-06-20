@@ -54,6 +54,10 @@ export function graphqlRestify(options: GraphQLOptions | RestifyGraphQLOptionsFu
   };
 }
 
+export interface RestifyGraphiQLOptionsFunction {
+  (req?: restify.Request): GraphiQL.GraphiQLData | Promise<GraphiQL.GraphiQLData>;
+}
+
 /* This middleware returns the html for the GraphiQL interactive query UI
  *
  * GraphiQLData arguments
@@ -65,23 +69,19 @@ export function graphqlRestify(options: GraphQLOptions | RestifyGraphQLOptionsFu
  * - (optional) result: the result of the query to pre-fill in the GraphiQL UI
  */
 
-export function graphiqlRestify(options: GraphiQL.GraphiQLData) {
+export function graphiqlRestify(options: GraphiQL.GraphiQLData | RestifyGraphiQLOptionsFunction) {
   return (req: restify.Request, res: restify.Response, next: restify.Next) => {
-    const q = req.url && url.parse(req.url, true).query || {};
-    const query = q.query || '';
-    const operationName = q.operationName || '';
-
-    const graphiQLString = GraphiQL.renderGraphiQL({
-      endpointURL: options.endpointURL,
-      subscriptionsEndpoint: options.subscriptionsEndpoint,
-      query: query || options.query,
-      variables: q.variables && JSON.parse(q.variables) || options.variables,
-      operationName: operationName || options.operationName,
-      passHeader: options.passHeader,
+    const query = req.url && url.parse(req.url, true).query || {};
+    GraphiQL.resolveGraphiQLString(query, options, req).then(graphiqlString => {
+      res.setHeader('Content-Type', 'text/html');
+      res.write(graphiqlString);
+      res.end();
+      next();
+    }, error => {
+      res.statusCode = 500;
+      res.write(error.message);
+      res.end();
+      next(false);
     });
-    res.setHeader('Content-Type', 'text/html');
-    res.write(graphiQLString);
-    res.end();
-    next();
   };
 }

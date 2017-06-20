@@ -120,7 +120,7 @@ export const schema = new GraphQLSchema({
 export interface CreateAppOptions {
   excludeParser?: boolean;
   graphqlOptions?: GraphQLOptions | {(): GraphQLOptions | Promise<{}>};
-  graphiqlOptions?: GraphiQL.GraphiQLData;
+  graphiqlOptions?: GraphiQL.GraphiQLData | {(): GraphiQL.GraphiQLData | Promise<{}>};
 }
 
 export interface CreateAppFunc {
@@ -630,7 +630,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           app = createApp({graphqlOptions: {
               schema,
               formatError: (err) => {
-                throw new Error('I should be catched');
+                throw new Error('I should be caught');
               },
           }});
           const req = request(app)
@@ -725,6 +725,32 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
               expect(response.text).to.include('/graphql');
               expect(response.text).to.include('graphiql.min.js');
           });
+      });
+
+      it('allows options to be a function', () => {
+        app = createApp({graphiqlOptions: () => ({
+            endpointURL: '/graphql',
+        })});
+
+        const req = request(app)
+            .get('/graphiql')
+            .set('Accept', 'text/html');
+        return req.then((response) => {
+            expect(response.status).to.equal(200);
+        });
+      });
+
+      it('handles options function errors', () => {
+        app = createApp({graphiqlOptions: () => {
+          throw new Error('I should be caught');
+        }});
+
+        const req = request(app)
+            .get('/graphiql')
+            .set('Accept', 'text/html');
+        return req.then((response) => {
+            expect(response.status).to.equal(500);
+        });
       });
 
       it('presents options variables', () => {

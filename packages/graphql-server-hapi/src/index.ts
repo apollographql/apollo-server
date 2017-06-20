@@ -1,5 +1,6 @@
 export { IRegister,
          HapiOptionsFunction,
          HapiPluginOptions,
-         GraphiQLPluginOptions,
+         HapiGraphiQLOptionsFunction,
+         HapiGraphiQLPluginOptions,
          graphqlHapi, graphiqlHapi } from './hapiApollo';
