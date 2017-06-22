@@ -1,6 +1,6 @@
 {
   "name": "graphql-server-restify",
-  "version": "0.8.5",
+  "version": "0.9.0",
   "description": "Production-ready Node.js GraphQL server for Restify",
   "main": "dist/index.js",
   "scripts": {
@@ -25,12 +25,12 @@
   },
   "homepage": "https://github.com/apollostack/graphql-server#readme",
   "dependencies": {
-    "graphql-server-core": "^0.8.5",
-    "graphql-server-module-graphiql": "^0.8.5"
+    "graphql-server-core": "^0.9.0",
+    "graphql-server-module-graphiql": "^0.9.0"
   },
   "devDependencies": {
     "@types/restify": "^4.3.2",
-    "graphql-server-integration-testsuite": "^0.8.5",
+    "graphql-server-integration-testsuite": "^0.9.0",
     "restify": "^4.3.0"
   },
   "peerDependencies": {

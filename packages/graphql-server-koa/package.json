@@ -1,6 +1,6 @@
 {
   "name": "graphql-server-koa",
-  "version": "0.8.5",
+  "version": "0.9.0",
   "description": "Production-ready Node.js GraphQL server for Koa",
   "main": "dist/index.js",
   "scripts": {
@@ -25,14 +25,14 @@
   },
   "homepage": "https://github.com/apollostack/graphql-server#readme",
   "dependencies": {
-    "graphql-server-core": "^0.8.5",
-    "graphql-server-module-graphiql": "^0.8.5"
+    "graphql-server-core": "^0.9.0",
+    "graphql-server-module-graphiql": "^0.9.0"
   },
   "devDependencies": {
     "@types/koa": "^2.0.39",
     "@types/koa-bodyparser": "^3.0.23",
     "@types/koa-router": "^7.0.22",
-    "graphql-server-integration-testsuite": "^0.8.5",
+    "graphql-server-integration-testsuite": "^0.9.0",
     "koa": "^2.2.0",
     "koa-bodyparser": "^4.2.0",
     "koa-router": "^7.2.0"
