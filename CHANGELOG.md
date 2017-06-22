@@ -1,6 +1,8 @@
 # Changelog
 
 ### VNEXT
+
+### v0.9.0
 * Allow GraphiQLOptions to be a function ([@NeoPhi](https://github.com/NeoPhi)) on [#426](https://github.com/apollographql/graphql-server/pull/426)
 
 ### v0.8.5
