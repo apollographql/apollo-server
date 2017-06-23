@@ -29,7 +29,7 @@ The bucket name name must be universally unique.
 aws s3 mb s3://<bucket name>
 ```
 #### Create the Template
-This will look for a file called graphql.js with two exports: graphqlHandler and graphiqlHandler. It creates two API enpoints:
+This will look for a file called graphql.js with two exports: graphqlHandler and graphiqlHandler. It creates two API endpoints:
 - /graphql (GET and POST)
 - /graphiql (GET)
 
@@ -67,7 +67,7 @@ Resources:
             Method: get
 
 ```
-#### Pacakge source code and dependencies
+#### Package source code and dependencies
 This will read and transform the template, created in previous step. Package and upload the artifact to the S3 bucket and generate another template for the deployment.
 ```
 aws cloudformation package \
