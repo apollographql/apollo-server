@@ -94,9 +94,9 @@ function doRunQuery(options: QueryOptions): Promise<ExecutionResult> {
     logFunction({action: LogAction.request, step: LogStep.status, key: 'operationName', data: options.operationName});
 
     // if query is already an AST, don't parse or validate
+    // XXX: This refers the operations-store flow.
     if (typeof options.query === 'string') {
         try {
-            // TODO: time this with log function
             logFunction({action: LogAction.parse, step: LogStep.start});
             documentAST = parse(options.query as string);
             logFunction({action: LogAction.parse, step: LogStep.end});
@@ -104,21 +104,19 @@ function doRunQuery(options: QueryOptions): Promise<ExecutionResult> {
             logFunction({action: LogAction.parse, step: LogStep.end});
             return Promise.resolve({ errors: format([syntaxError]) });
         }
-
-        // TODO: time this with log function
-
-        let rules = specifiedRules;
-        if (options.validationRules) {
-          rules = rules.concat(options.validationRules);
-        }
-        logFunction({action: LogAction.validation, step: LogStep.start});
-        const validationErrors = validate(options.schema, documentAST, rules);
-        logFunction({action: LogAction.validation, step: LogStep.end});
-        if (validationErrors.length) {
-            return Promise.resolve({ errors: format(validationErrors) });
-        }
     } else {
         documentAST = options.query as DocumentNode;
+    }
+
+    let rules = specifiedRules;
+    if (options.validationRules) {
+      rules = rules.concat(options.validationRules);
+    }
+    logFunction({action: LogAction.validation, step: LogStep.start});
+    const validationErrors = validate(options.schema, documentAST, rules);
+    logFunction({action: LogAction.validation, step: LogStep.end});
+    if (validationErrors.length) {
+      return Promise.resolve({ errors: format(validationErrors) });
     }
 
     try {

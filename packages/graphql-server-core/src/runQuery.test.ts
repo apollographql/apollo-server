@@ -151,20 +151,6 @@ describe('runQuery', () => {
       });
   });
 
-  it('does not run validation if the query is a document', () => {
-      // this would not pass validation, because $base ought to be Int!, not String
-      // what effecively happens is string concatentation, but it's returned as Int
-      const query = parse(`query TestVar($base: String){ testArgumentValue(base: $base) }`);
-      const expected = { testArgumentValue: 15 };
-      return runQuery({
-          schema,
-          query: query,
-          variables: { base: 1 },
-      }).then((res) => {
-          return expect(res.data).to.deep.equal(expected);
-      });
-  });
-
   it('correctly passes in the rootValue', () => {
       const query = `{ testRootValue }`;
       const expected = { testRootValue: 'it also works' };

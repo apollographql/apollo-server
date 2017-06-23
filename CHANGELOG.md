@@ -3,6 +3,20 @@
 ### V0.9.0
 * Add Fastify Integration ([@phra](https://github.com/phra)) [#421](https://github.com/apollographql/graphql-server/issues/402)
 
+### v0.9.0
+* Allow GraphiQLOptions to be a function ([@NeoPhi](https://github.com/NeoPhi)) on [#426](https://github.com/apollographql/graphql-server/pull/426)
+
+### v0.8.5
+* Fix: graphql-server-micro now properly returns response promises [#401](https://github.com/apollographql/graphql-server/pull/401)
+
+### v0.8.4
+### v0.8.3
+### v0.8.2
+* Fix issue with auto-updating dependencies that caused fibers to update accidentally ([@helfer](https://github.com/helfer)) on [#425](https://github.com/apollographql/graphql-server/pull/425)
+
+### v0.8.1
+* **Security Fix** Ensure queries submitted via HTTP GET run through validation ([@DxCx](https://github.com/DxCx)) on [#424](https://github.com/apollographql/graphql-server/pull/424)
+
 ### v0.8.0
 * Persist `window.location.hash` on URL updates [#386](https://github.com/apollographql/graphql-server/issues/386)
 * Added support for `graphql-js` > 0.10.0 [#407](https://github.com/apollographql/graphql-server/pull/407)

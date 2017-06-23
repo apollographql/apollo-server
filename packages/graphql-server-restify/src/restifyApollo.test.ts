@@ -4,7 +4,6 @@ import { graphiqlRestify, graphqlRestify } from './restifyApollo';
 import testSuite, { schema, CreateAppOptions } from 'graphql-server-integration-testsuite';
 import { expect } from 'chai';
 import { GraphQLOptions } from 'graphql-server-core';
-import 'mocha';
 
 function createApp(options: CreateAppOptions = {}) {
   const server = restify.createServer({

@@ -120,7 +120,7 @@ export const schema = new GraphQLSchema({
 export interface CreateAppOptions {
   excludeParser?: boolean;
   graphqlOptions?: GraphQLOptions | {(): GraphQLOptions | Promise<{}>};
-  graphiqlOptions?: GraphiQL.GraphiQLData;
+  graphiqlOptions?: GraphiQL.GraphiQLData | {(): GraphiQL.GraphiQLData | Promise<{}>};
 }
 
 export interface CreateAppFunc {
@@ -630,7 +630,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           app = createApp({graphqlOptions: {
               schema,
               formatError: (err) => {
-                throw new Error('I should be catched');
+                throw new Error('I should be caught');
               },
           }});
           const req = request(app)
@@ -727,6 +727,32 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
       });
 
+      it('allows options to be a function', () => {
+        app = createApp({graphiqlOptions: () => ({
+            endpointURL: '/graphql',
+        })});
+
+        const req = request(app)
+            .get('/graphiql')
+            .set('Accept', 'text/html');
+        return req.then((response) => {
+            expect(response.status).to.equal(200);
+        });
+      });
+
+      it('handles options function errors', () => {
+        app = createApp({graphiqlOptions: () => {
+          throw new Error('I should be caught');
+        }});
+
+        const req = request(app)
+            .get('/graphiql')
+            .set('Accept', 'text/html');
+        return req.then((response) => {
+            expect(response.status).to.equal(500);
+        });
+      });
+
       it('presents options variables', () => {
         app = createApp({graphiqlOptions: {
             endpointURL: '/graphql',
@@ -814,6 +840,21 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           return req.then((res) => {
               expect(res.status).to.equal(200);
               return expect(res.body).to.deep.equal(expected);
+          });
+      });
+    });
+
+    describe('server setup', () => {
+      it('throws error on 404 routes', () => {
+          app = createApp();
+
+          const query = {
+              query: '{ testString }',
+          };
+          const req = request(app)
+              .get(`/bogus-route?${querystring.stringify(query)}`);
+          return req.then((res) => {
+              expect(res.status).to.equal(404);
           });
       });
     });

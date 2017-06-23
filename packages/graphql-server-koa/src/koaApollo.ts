@@ -44,22 +44,19 @@ export function graphqlKoa(options: GraphQLOptions | KoaGraphQLOptionsFunction):
   };
 }
 
-export function graphiqlKoa(options: GraphiQL.GraphiQLData) {
+export interface KoaGraphiQLOptionsFunction {
+  (ctx: koa.Context): GraphiQL.GraphiQLData | Promise<GraphiQL.GraphiQLData>;
+}
+
+export function graphiqlKoa(options: GraphiQL.GraphiQLData | KoaGraphiQLOptionsFunction) {
   return (ctx: koa.Context) => {
-
-    const q = ctx.request.query || {};
-    const query = q.query || '';
-    const operationName = q.operationName || '';
-
-    const graphiQLString = GraphiQL.renderGraphiQL({
-      endpointURL: options.endpointURL,
-      subscriptionsEndpoint: options.subscriptionsEndpoint,
-      query: query || options.query,
-      variables: q.variables && JSON.parse(q.variables) || options.variables,
-      operationName: operationName || options.operationName,
-      passHeader: options.passHeader,
+    const query = ctx.request.query;
+    GraphiQL.resolveGraphiQLString(query, options, ctx).then(graphiqlString => {
+      ctx.set('Content-Type', 'text/html');
+      ctx.body = graphiqlString;
+    }, error => {
+      ctx.status = 500;
+      ctx.body = error.message;
     });
-    ctx.set('Content-Type', 'text/html');
-    ctx.body = graphiQLString;
   };
 }

@@ -67,6 +67,10 @@ export function graphqlLambda( options: GraphQLOptions | LambdaGraphQLOptionsFun
   };
 }
 
+export interface LambdaGraphiQLOptionsFunction {
+  (event: any, context: lambda.Context): GraphiQL.GraphiQLData | Promise<GraphiQL.GraphiQLData>;
+}
+
 /* This Lambda Function Handler returns the html for the GraphiQL interactive query UI
  *
  * GraphiQLData arguments
@@ -78,30 +82,25 @@ export function graphqlLambda( options: GraphQLOptions | LambdaGraphQLOptionsFun
  * - (optional) result: the result of the query to pre-fill in the GraphiQL UI
  */
 
-export function graphiqlLambda(options: GraphiQL.GraphiQLData) {
+export function graphiqlLambda(options: GraphiQL.GraphiQLData | LambdaGraphiQLOptionsFunction) {
   return (event, lambdaContext: lambda.Context, callback: lambda.Callback) => {
-    const q = event.queryStringParameters || {};
-    const query = q.query || '';
-    const variables = q.variables || '{}';
-    const operationName = q.operationName || '';
-
-    const graphiQLString = GraphiQL.renderGraphiQL({
-      endpointURL: options.endpointURL,
-      subscriptionsEndpoint: options.subscriptionsEndpoint,
-      query: query || options.query,
-      variables: q.variables && JSON.parse(variables) || options.variables,
-      operationName: operationName || options.operationName,
-      passHeader: options.passHeader,
-    });
-    callback(
-      null,
-      {
-        'statusCode': 200,
-        'headers': {
-          'Content-Type': 'text/html',
+    const query = event.queryStringParameters;
+    GraphiQL.resolveGraphiQLString(query, options, event, lambdaContext).then(graphiqlString => {
+      callback(
+        null,
+        {
+          'statusCode': 200,
+          'headers': {
+            'Content-Type': 'text/html',
+          },
+          'body': graphiqlString,
         },
-        'body': graphiQLString,
-      },
-    );
+      );
+    }, error => {
+      callback(null, {
+        statusCode: 500,
+        body: error.message,
+      });
+    });
   };
 }
