@@ -22,7 +22,7 @@
     "release": "lerna publish"
   },
   "devDependencies": {
-    "@types/chai": "^3.5.2",
+    "@types/chai": "^4.0.1",
     "@types/mocha": "^2.2.41",
     "@types/node": "^8.0.0",
     "@types/sinon": "^2.2.2",
