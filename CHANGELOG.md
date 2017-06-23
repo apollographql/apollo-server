@@ -1,6 +1,7 @@
 # Changelog
 
-### VNEXT
+### V0.9.0
+* Add Fastify Integration ([@phra](https://github.com/phra)) [#421](https://github.com/apollographql/graphql-server/issues/402)
 
 ### v0.9.0
 * Allow GraphiQLOptions to be a function ([@NeoPhi](https://github.com/NeoPhi)) on [#426](https://github.com/apollographql/graphql-server/pull/426)

@@ -5,7 +5,7 @@
 [![Coverage Status](https://coveralls.io/repos/github/apollographql/graphql-server/badge.svg?branch=master)](https://coveralls.io/github/apollographql/graphql-server?branch=master)
 [![Get on Slack](https://img.shields.io/badge/slack-join-orange.svg)](http://www.apollodata.com/#slack)
 
-GraphQL Server is a community-maintained open-source GraphQL server. It works with all Node.js HTTP server frameworks: Express, Connect, Hapi, Koa and Restify.
+GraphQL Server is a community-maintained open-source GraphQL server. It works with all Node.js HTTP server frameworks: Express, Connect, Hapi, Koa, Restify and Fastify.
 
 ## Principles
 
@@ -32,6 +32,7 @@ where variant is one of the following:
  - koa
  - hapi
  - restify
+ - fastify
  - lambda
  - micro
 
@@ -154,6 +155,33 @@ server.get('/graphql', graphqlRestify(graphQLOptions));
 server.get('/graphiql', graphiqlRestify({ endpointURL: '/graphql' }));
 
 server.listen(PORT, () => console.log(`Listening on ${PORT}`));
+```
+
+### Fastify
+```js
+import * as fastify from 'fastify';
+import * as bodyParser from 'body-parser';
+import { graphqlFastify, graphiqlFastify } from 'graphql-server-fastify';
+import testSuite, { schema as Schema, CreateAppOptions } from 'graphql-server-integration-testsuite';
+import { GraphQLOptions } from 'graphql-server-core';
+
+const app = fastify();
+
+options.graphqlOptions = { schema: Schema };
+if (!options.excludeParser) {
+  app.use('/graphql', bodyParser.json());
+}
+app.use('/graphiql', graphiqlFastify({endpointURL: '/graphql'}));
+app.use('/graphql', graphqlFastify());
+
+app.listen(3000, function (err) {
+  if (err) {
+    throw err;
+  }
+
+  console.log(`server listening on ${app.server.address().port}`);
+});
+
 ```
 
 ### AWS Lambda
