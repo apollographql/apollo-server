@@ -45,7 +45,7 @@ import { graphqlExpress } from 'graphql-server-express';
 const myGraphQLSchema = // ... define or import your schema here!
 const PORT = 3000;
 
-var app = express();
+const app = express();
 
 // bodyParser is needed just for POST.
 app.use('/graphql', bodyParser.json(), graphqlExpress({ schema: myGraphQLSchema }));
@@ -62,7 +62,7 @@ import http from 'http';
 
 const PORT = 3000;
 
-var app = connect();
+const app = connect();
 
 // bodyParser is needed just for POST.
 app.use('/graphql', bodyParser.json());
@@ -171,7 +171,7 @@ exports.handler = server.graphqlLambda({ schema: myGraphQLSchema });
 Micro function requires the micro module
 
 ```js
-var server = require("graphql-server-micro");
+const server = require("graphql-server-micro");
 
 module.exports = server.microGraphql({ schema: myGraphQLSchema });
 ```
