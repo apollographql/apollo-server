@@ -168,7 +168,7 @@ exports.handler = server.graphqlLambda({ schema: myGraphQLSchema });
 
 ### ZEIT Micro
 
-Requires the [Micro](github.com/zeit/micro) module
+Requires the [Micro](https://github.com/zeit/micro) module
 
 ```js
 const server = require("graphql-server-micro");
