@@ -119,8 +119,8 @@ export const schema = new GraphQLSchema({
 
 export interface CreateAppOptions {
   excludeParser?: boolean;
-  graphqlOptions?: GraphQLOptions | {(): GraphQLOptions | Promise<{}>};
-  graphiqlOptions?: GraphiQL.GraphiQLData | {(): GraphiQL.GraphiQLData | Promise<{}>};
+  graphqlOptions?: GraphQLOptions | {(): GraphQLOptions | Promise<GraphQLOptions>};
+  graphiqlOptions?: GraphiQL.GraphiQLData | {(): GraphiQL.GraphiQLData | Promise<GraphiQL.GraphiQLData>};
 }
 
 export interface CreateAppFunc {
