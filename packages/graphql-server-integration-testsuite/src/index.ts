@@ -23,18 +23,18 @@ import { GraphQLOptions } from 'graphql-server-core';
 import * as GraphiQL from 'graphql-server-module-graphiql';
 import { OperationStore } from 'graphql-server-module-operation-store';
 
-const ParseLiteralErrorScalar = new GraphQLScalarType({
+const parseLiteralErrorScalar = new GraphQLScalarType({
     name: 'ParseLiteralErrorScalar',
-    parseLiteral(ast){
+    parseLiteral(ast) {
         if (ast.kind === Kind.STRING) {
             throw new Error(ast.value);
         }
-        throw new Error('Not a string')
+        throw new Error('Not a string');
     },
-    parseValue(value){
+    parseValue(value) {
         return value;
     },
-    serialize(value){
+    serialize(value) {
         return value;
     },
 });
@@ -94,9 +94,9 @@ const queryType = new GraphQLObjectType({
                 return 'This never gets executed if things go according to plan';
             },
             args: {
-                arg: { type: ParseLiteralErrorScalar},
-            }
-        }
+                arg: { type: parseLiteralErrorScalar},
+            },
+        },
     },
 });
 
