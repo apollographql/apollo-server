@@ -1,6 +1,6 @@
 {
   "name": "graphql-server-module-graphiql",
-  "version": "0.9.0",
+  "version": "1.0.0",
   "description": "GraphiQL renderer for Apollo GraphQL Server",
   "main": "dist/index.js",
   "scripts": {
