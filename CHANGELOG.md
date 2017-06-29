@@ -2,6 +2,9 @@
 
 ### VNEXT
 
+### v1.0.0
+* Updated & fixed typescript typings
+
 ### v0.9.0
 * Allow GraphiQLOptions to be a function ([@NeoPhi](https://github.com/NeoPhi)) on [#426](https://github.com/apollographql/graphql-server/pull/426)
 
