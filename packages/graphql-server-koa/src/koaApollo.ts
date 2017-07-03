@@ -51,7 +51,7 @@ export interface KoaGraphiQLOptionsFunction {
 export function graphiqlKoa(options: GraphiQL.GraphiQLData | KoaGraphiQLOptionsFunction) {
   return (ctx: koa.Context) => {
     const query = ctx.request.query;
-    GraphiQL.resolveGraphiQLString(query, options, ctx).then(graphiqlString => {
+    return GraphiQL.resolveGraphiQLString(query, options, ctx).then(graphiqlString => {
       ctx.set('Content-Type', 'text/html');
       ctx.body = graphiqlString;
     }, error => {
