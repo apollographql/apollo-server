@@ -61,16 +61,22 @@ export interface MicroGraphiQLOptionsFunction {
 }
 
 export function microGraphiql(options: GraphiQL.GraphiQLData | MicroGraphiQLOptionsFunction): RequestHandler {
-  return (req: IncomingMessage, res: ServerResponse) => {
+  return async (req: IncomingMessage, res: ServerResponse) => {
     const query = req.url && url.parse(req.url, true).query || {};
-    GraphiQL.resolveGraphiQLString(query, options, req).then(graphiqlString => {
-      res.setHeader('Content-Type', 'text/html');
-      res.write(graphiqlString);
-      res.end();
-    }, error => {
+    let graphiqlString;
+
+    try {
+      graphiqlString = await GraphiQL.resolveGraphiQLString(query, options, req);
+    } catch (error) {
       res.statusCode = 500;
       res.write(error.message);
       res.end();
-    });
+      return;
+    }
+
+    res.setHeader('Content-Type', 'text/html');
+    res.write(graphiqlString);
+    res.end();
+    return;
   };
 }
