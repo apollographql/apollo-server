@@ -38,9 +38,9 @@ export class OperationStore {
     const validationErrors = validate(this.schema, ast);
     if (validationErrors.length > 0) {
       const messages = validationErrors.map((e) => e.message);
-      const e = new Error(`Validation Errors:\n${messages.join('\n')}`);
-      e['originalErrors'] = validationErrors;
-      throw e;
+      const err = new Error(`Validation Errors:\n${messages.join('\n')}`);
+      err['originalErrors'] = validationErrors;
+      throw err;
     }
     this.storedOperations.set(definitions[0].name.value, ast);
   }
