@@ -1,8 +1,1 @@
-export {
-  LambdaHandler,
-  IHeaders,
-  LambdaGraphQLOptionsFunction,
-  LambdaGraphiQLOptionsFunction,
-  graphqlLambda,
-  graphiqlLambda,
-} from './lambdaApollo';
+export * from 'apollo-server-lambda';

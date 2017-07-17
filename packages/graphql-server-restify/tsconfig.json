@@ -2,8 +2,7 @@
   "extends": "../../tsconfig",
   "compilerOptions": {
     "rootDir": "./src",
-    "outDir": "./dist",
-    "types": []
+    "outDir": "./dist"
   },
   "exclude": [
     "node_modules",

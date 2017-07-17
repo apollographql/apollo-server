@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/apollostack/graphql-server/tree/master/packages/graphql-server-core"
+    "url": "https://github.com/apollographql/apollo-server/tree/master/packages/graphql-server-core"
   },
   "keywords": [
     "GraphQL",
@@ -20,20 +20,11 @@
   "author": "Jonas Helfer <jonas@helfer.email>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/apollostack/graphql-server/issues"
+    "url": "https://github.com/apollographql/apollo-server/issues"
   },
-  "homepage": "https://github.com/apollostack/graphql-server#readme",
-  "devDependencies": {
-    "@types/fibers": "0.0.29",
-    "@types/graphql": "^0.9.0",
-    "fibers": "1.0.15",
-    "meteor-promise": "^0.8.2"
-  },
-  "peerDependencies": {
-    "graphql": "^0.9.0 || ^0.10.1"
-  },
-  "optionalDependencies": {
-    "@types/graphql": "^0.9.0"
+  "homepage": "https://github.com/apollographql/apollo-server#readme",
+  "dependencies": {
+    "apollo-server-core": "^1.0.0"
   },
   "typings": "dist/index.d.ts",
   "typescript": {

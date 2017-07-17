@@ -2,7 +2,7 @@
   "lerna": "2.0.0",
   "version": "1.0.1",
   "changelog": {
-    "repo": "apollostack/graphql-server",
+    "repo": "apollographql/apollo-server",
     "labels": {
       "tag: breaking change": ":boom: Breaking Change",
       "tag: new feature": ":rocket: New Feature",

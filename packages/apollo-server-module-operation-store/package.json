@@ -1,0 +1,36 @@
+{
+  "name": "apollo-server-module-operation-store",
+  "version": "1.0.0",
+  "description": "Persisted operation store module for Apollo GraphQL Servers",
+  "main": "dist/index.js",
+  "scripts": {
+    "compile": "tsc",
+    "prepublish": "npm run compile"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-module-operation-store"
+  },
+  "keywords": [
+    "GraphQL",
+    "Apollo",
+    "Operation Store",
+    "Javascript"
+  ],
+  "author": "Jonas Helfer <jonas@helfer.email>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/apollographql/apollo-server/issues"
+  },
+  "homepage": "https://github.com/apollographql/apollo-server#readme",
+  "peerDependencies": {
+    "graphql": "^0.9.0 || ^0.10.1"
+  },
+  "optionalDependencies": {
+    "@types/graphql": "^0.9.1"
+  },
+  "typings": "dist/index.d.ts",
+  "typescript": {
+    "definition": "dist/index.d.ts"
+  }
+}

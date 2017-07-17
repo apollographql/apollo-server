@@ -1,6 +1,1 @@
-export { IRegister,
-         HapiOptionsFunction,
-         HapiPluginOptions,
-         HapiGraphiQLOptionsFunction,
-         HapiGraphiQLPluginOptions,
-         graphqlHapi, graphiqlHapi } from './hapiApollo';
+export * from 'apollo-server-hapi';

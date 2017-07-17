@@ -1,1 +1,1 @@
-export { OperationStore } from './operationStore';
+export * from 'apollo-server-module-operation-store';

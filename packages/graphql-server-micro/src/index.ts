@@ -1,6 +1,1 @@
-export {
-  MicroGraphQLOptionsFunction,
-  MicroGraphiQLOptionsFunction,
-  microGraphql,
-  microGraphiql,
-} from './microApollo';
+export * from 'apollo-server-micro';

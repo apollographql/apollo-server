@@ -1,7 +1,1 @@
-export {
-  RestifyGraphQLOptionsFunction,
-  RestifyHandler,
-  RestifyGraphiQLOptionsFunction,
-  graphqlRestify,
-  graphiqlRestify,
-} from './restifyApollo';
+export * from 'apollo-server-restify';

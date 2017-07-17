@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/apollostack/graphql-server/tree/master/packages/graphql-server-micro"
+    "url": "https://github.com/apollographql/apollo-server/tree/master/packages/graphql-server-micro"
   },
   "keywords": [
     "GraphQL",
@@ -21,25 +21,11 @@
   "author": "Nick Nance <nance.nick@gmail.email>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/apollostack/graphql-server/issues"
+    "url": "https://github.com/apollographql/apollo-server/issues"
   },
-  "homepage": "https://github.com/apollostack/graphql-server#readme",
+  "homepage": "https://github.com/apollographql/apollo-server#readme",
   "dependencies": {
-    "graphql-server-core": "^1.0.0",
-    "graphql-server-module-graphiql": "^1.0.0"
-  },
-  "devDependencies": {
-    "graphql-server-integration-testsuite": "^1.0.0",
-    "micro": "^7.3.3",
-    "microrouter": "^2.1.1"
-  },
-  "peerDependencies": {
-    "graphql": "^0.9.0 || ^0.10.1",
-    "micro": "^7.3.3"
-  },
-  "optionalDependencies": {
-    "@types/graphql": "^0.9.1",
-    "@types/micro": "^7.3.0"
+    "apollo-server-micro": "^1.0.0"
   },
   "typings": "dist/index.d.ts",
   "typescript": {
