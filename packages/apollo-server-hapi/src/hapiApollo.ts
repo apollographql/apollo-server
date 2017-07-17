@@ -1,7 +1,7 @@
 import * as Boom from 'boom';
 import { Server, Response, Request, ReplyNoContinue } from 'hapi';
-import * as GraphiQL from 'graphql-server-module-graphiql';
-import { GraphQLOptions, runHttpQuery, HttpQueryError } from 'graphql-server-core';
+import * as GraphiQL from 'apollo-server-module-graphiql';
+import { GraphQLOptions, runHttpQuery, HttpQueryError } from 'apollo-server-core';
 
 export interface IRegister {
     (server: Server, options: any, next: any): void;

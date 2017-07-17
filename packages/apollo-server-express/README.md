@@ -25,7 +25,7 @@ Anyone is welcome to contribute to GraphQL Server, just read [CONTRIBUTING.md](.
 ```js
 import express from 'express';
 import bodyParser from 'body-parser';
-import { graphqlExpress } from 'graphql-server-express';
+import { graphqlExpress } from 'apollo-server-express';
 
 const myGraphQLSchema = // ... define or import your schema here!
 const PORT = 3000;
@@ -42,7 +42,7 @@ app.listen(PORT);
 ```js
 import connect from 'connect';
 import bodyParser from 'body-parser';
-import { graphqlConnect } from 'graphql-server-express';
+import { graphqlConnect } from 'apollo-server-express';
 import http from 'http';
 
 const PORT = 3000;

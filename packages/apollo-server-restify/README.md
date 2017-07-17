@@ -22,7 +22,7 @@ Anyone is welcome to contribute to GraphQL Server, just read [CONTRIBUTING.md](.
 
 ```js
 import restify from 'restify';
-import { graphqlRestify, graphiqlRestify } from 'graphql-server-restify';
+import { graphqlRestify, graphiqlRestify } from 'apollo-server-restify';
 
 const PORT = 3000;
 

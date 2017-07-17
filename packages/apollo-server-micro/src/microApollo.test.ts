@@ -3,7 +3,7 @@ import 'mocha';
 
 import micro, { send } from 'micro';
 import { router, get, post, put, patch, del, head, options as opts } from 'microrouter';
-import testSuite, { schema, CreateAppOptions  } from 'graphql-server-integration-testsuite';
+import testSuite, { schema, CreateAppOptions  } from 'apollo-server-integration-testsuite';
 
 
 function createApp(options: CreateAppOptions) {

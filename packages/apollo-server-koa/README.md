@@ -24,7 +24,7 @@ Anyone is welcome to contribute to GraphQL Server, just read [CONTRIBUTING.md](.
 import koa from 'koa'; // koa@2
 import koaRouter from 'koa-router'; // koa-router@next
 import koaBody from 'koa-bodyparser'; // koa-bodyparser@next
-import { graphqlKoa } from 'graphql-server-koa';
+import { graphqlKoa } from 'apollo-server-koa';
 
 const app = new koa();
 const router = new koaRouter();

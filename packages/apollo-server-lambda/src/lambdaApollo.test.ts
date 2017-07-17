@@ -1,7 +1,7 @@
 import { graphqlLambda, graphiqlLambda } from './lambdaApollo';
-import testSuite, { schema as Schema, CreateAppOptions } from 'graphql-server-integration-testsuite';
+import testSuite, { schema as Schema, CreateAppOptions } from 'apollo-server-integration-testsuite';
 import { expect } from 'chai';
-import { GraphQLOptions } from 'graphql-server-core';
+import { GraphQLOptions } from 'apollo-server-core';
 import 'mocha';
 import * as url from 'url';
 

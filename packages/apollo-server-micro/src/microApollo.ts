@@ -1,5 +1,5 @@
-import { GraphQLOptions, HttpQueryError, runHttpQuery } from 'graphql-server-core';
-import * as GraphiQL from 'graphql-server-module-graphiql';
+import { GraphQLOptions, HttpQueryError, runHttpQuery } from 'apollo-server-core';
+import * as GraphiQL from 'apollo-server-module-graphiql';
 import { createError, json, RequestHandler } from 'micro';
 import * as url from 'url';
 import {IncomingMessage, ServerResponse} from 'http';

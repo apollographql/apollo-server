@@ -40,7 +40,7 @@ where variant is one of the following:
 ```js
 import express from 'express';
 import bodyParser from 'body-parser';
-import { graphqlExpress } from 'graphql-server-express';
+import { graphqlExpress } from 'apollo-server-express';
 
 const myGraphQLSchema = // ... define or import your schema here!
 const PORT = 3000;
@@ -57,7 +57,7 @@ app.listen(PORT);
 ```js
 import connect from 'connect';
 import bodyParser from 'body-parser';
-import { graphqlConnect } from 'graphql-server-express';
+import { graphqlConnect } from 'apollo-server-express';
 import http from 'http';
 
 const PORT = 3000;
@@ -77,7 +77,7 @@ Now with the Hapi plugins `graphqlHapi` and `graphiqlHapi` you can pass a route 
 
 ```js
 import hapi from 'hapi';
-import { graphqlHapi } from 'graphql-server-hapi';
+import { graphqlHapi } from 'apollo-server-hapi';
 
 const server = new hapi.Server();
 
@@ -115,7 +115,7 @@ server.start((err) => {
 import koa from 'koa'; // koa@2
 import koaRouter from 'koa-router'; // koa-router@next
 import koaBody from 'koa-bodyparser'; // koa-bodyparser@next
-import { graphqlKoa } from 'graphql-server-koa';
+import { graphqlKoa } from 'apollo-server-koa';
 
 const app = new koa();
 const router = new koaRouter();
@@ -135,7 +135,7 @@ app.listen(PORT);
 ### Restify
 ```js
 import restify from 'restify';
-import { graphqlRestify, graphiqlRestify } from 'graphql-server-restify';
+import { graphqlRestify, graphiqlRestify } from 'apollo-server-restify';
 
 const PORT = 3000;
 
@@ -229,7 +229,7 @@ express-graphql supports the `application/graphql` Content-Type for requests, wh
 ```js
 import express from 'express';
 import bodyParser from 'body-parser';
-import { graphqlExpress } from 'graphql-server-express';
+import { graphqlExpress } from 'apollo-server-express';
 
 const myGraphQLSchema = // ... define or import your schema here!
 

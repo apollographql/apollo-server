@@ -1,7 +1,7 @@
 import * as restify from 'restify';
 import * as url from 'url';
-import { GraphQLOptions, HttpQueryError, runHttpQuery } from 'graphql-server-core';
-import * as GraphiQL from 'graphql-server-module-graphiql';
+import { GraphQLOptions, HttpQueryError, runHttpQuery } from 'apollo-server-core';
+import * as GraphiQL from 'apollo-server-module-graphiql';
 
 export interface RestifyGraphQLOptionsFunction {
   (req?: restify.Request, res?: restify.Response): GraphQLOptions | Promise<GraphQLOptions>;

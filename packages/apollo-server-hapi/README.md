@@ -24,7 +24,7 @@ With the Hapi plugins `graphqlHapi` and `graphiqlHapi` you can pass a route obje
 
 ```js
 import hapi from 'hapi';
-import { graphqlHapi } from 'graphql-server-hapi';
+import { graphqlHapi } from 'apollo-server-hapi';
 
 const server = new hapi.Server();
 

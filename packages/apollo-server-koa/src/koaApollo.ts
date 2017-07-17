@@ -1,6 +1,6 @@
 import * as koa from 'koa';
-import { GraphQLOptions, HttpQueryError, runHttpQuery } from 'graphql-server-core';
-import * as GraphiQL from 'graphql-server-module-graphiql';
+import { GraphQLOptions, HttpQueryError, runHttpQuery } from 'apollo-server-core';
+import * as GraphiQL from 'apollo-server-module-graphiql';
 
 export interface KoaGraphQLOptionsFunction {
   (ctx: koa.Context): GraphQLOptions | Promise<GraphQLOptions>;
