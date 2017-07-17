@@ -1,5 +1,5 @@
 {
-  "name": "graphql-server-integration-testsuite",
+  "name": "apollo-server-integration-testsuite",
   "private": true,
   "version": "1.0.0",
   "description": "Apollo Server Integrations testsuite",
@@ -10,19 +10,19 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/apollostack/graphql-server/tree/master/packages/graphql-server-integration-testsuite"
+    "url": "https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-integration-testsuite"
   },
   "keywords": [],
   "author": "Jonas Helfer <jonas@helfer.email>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/apollostack/graphql-server/issues"
+    "url": "https://github.com/apollographql/apollo-server/issues"
   },
-  "homepage": "https://github.com/apollostack/graphql-server#readme",
+  "homepage": "https://github.com/apollographql/apollo-server#readme",
   "dependencies": {
-    "graphql-server-core": "^1.0.0",
-    "graphql-server-module-graphiql": "^1.0.0",
-    "graphql-server-module-operation-store": "^1.0.0",
+    "apollo-server-core": "^1.0.0",
+    "apollo-server-module-graphiql": "^1.0.0",
+    "apollo-server-module-operation-store": "^1.0.0",
     "supertest": "^3.0.0",
     "supertest-as-promised": "^4.0.0"
   },

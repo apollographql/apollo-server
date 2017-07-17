@@ -1,0 +1,51 @@
+{
+  "name": "apollo-server-koa",
+  "version": "1.0.0",
+  "description": "Production-ready Node.js GraphQL server for Koa",
+  "main": "dist/index.js",
+  "scripts": {
+    "compile": "tsc",
+    "prepublish": "npm run compile"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-koa"
+  },
+  "keywords": [
+    "GraphQL",
+    "Apollo",
+    "Koa",
+    "Server",
+    "Javascript"
+  ],
+  "author": "Jonas Helfer <jonas@helfer.email>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/apollographql/apollo-server/issues"
+  },
+  "homepage": "https://github.com/apollographql/apollo-server#readme",
+  "dependencies": {
+    "apollo-server-core": "^1.0.0",
+    "apollo-server-module-graphiql": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/koa": "^2.0.39",
+    "@types/koa-bodyparser": "^3.0.23",
+    "@types/koa-router": "^7.0.22",
+    "apollo-server-integration-testsuite": "^1.0.0",
+    "koa": "^2.2.0",
+    "koa-bodyparser": "^4.2.0",
+    "koa-router": "^7.2.0"
+  },
+  "peerDependencies": {
+    "graphql": "^0.9.0 || ^0.10.1"
+  },
+  "optionalDependencies": {
+    "@types/graphql": "^0.9.1",
+    "@types/koa": "^2.0.39"
+  },
+  "typings": "dist/index.d.ts",
+  "typescript": {
+    "definition": "dist/index.d.ts"
+  }
+}

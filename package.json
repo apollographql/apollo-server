@@ -3,7 +3,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/apollostack/graphql-server.git"
+    "url": "git+https://github.com/apollographql/apollo-server.git"
   },
   "scripts": {
     "compile": "lerna exec -- npm run compile",

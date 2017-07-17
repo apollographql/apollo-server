@@ -1,7 +1,7 @@
 {
-  "name": "graphql-server-koa",
+  "name": "apollo-server-module-graphiql",
   "version": "1.0.0",
-  "description": "Production-ready Node.js GraphQL server for Koa",
+  "description": "GraphiQL renderer for Apollo GraphQL Server",
   "main": "dist/index.js",
   "scripts": {
     "compile": "tsc",
@@ -9,13 +9,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/apollographql/apollo-server/tree/master/packages/graphql-server-koa"
+    "url": "https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-module-graphiql"
   },
   "keywords": [
     "GraphQL",
+    "GraphiQL",
     "Apollo",
-    "Koa",
-    "Server",
     "Javascript"
   ],
   "author": "Jonas Helfer <jonas@helfer.email>",
@@ -24,7 +23,10 @@
     "url": "https://github.com/apollographql/apollo-server/issues"
   },
   "homepage": "https://github.com/apollographql/apollo-server#readme",
-  "dependencies": {
-    "apollo-server-koa": "^1.0.0"
+  "dependencies": {},
+  "devDependencies": {},
+  "typings": "dist/index.d.ts",
+  "typescript": {
+    "definition": "dist/index.d.ts"
   }
 }
