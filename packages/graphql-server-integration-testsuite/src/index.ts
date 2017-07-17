@@ -7,9 +7,11 @@ import {
     GraphQLSchema,
     GraphQLObjectType,
     GraphQLString,
+    GraphQLScalarType,
     GraphQLInt,
     GraphQLError,
     GraphQLNonNull,
+    Kind,
     introspectionQuery,
     BREAK,
 } from 'graphql';
@@ -20,6 +22,22 @@ const request = require('supertest-as-promised');
 import { GraphQLOptions } from 'graphql-server-core';
 import * as GraphiQL from 'graphql-server-module-graphiql';
 import { OperationStore } from 'graphql-server-module-operation-store';
+
+const parseLiteralErrorScalar = new GraphQLScalarType({
+    name: 'ParseLiteralErrorScalar',
+    parseLiteral(ast) {
+        if (ast.kind === Kind.STRING) {
+            throw new Error(ast.value);
+        }
+        throw new Error('Not a string');
+    },
+    parseValue(value) {
+        return value;
+    },
+    serialize(value) {
+        return value;
+    },
+});
 
 const queryType = new GraphQLObjectType({
     name: 'QueryType',
@@ -68,6 +86,15 @@ const queryType = new GraphQLObjectType({
             type: GraphQLString,
             resolve() {
                 throw new Error('Secret error message');
+            },
+        },
+        testParseLiteralError: {
+            type: GraphQLString,
+            resolve() {
+                return 'This never gets executed if things go according to plan';
+            },
+            args: {
+                arg: { type: parseLiteralErrorScalar},
             },
         },
     },
@@ -602,6 +629,22 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
               .post('/graphql')
               .send({
                   query: 'query test{ testError }',
+              });
+          return req.then((res) => {
+              expect(res.status).to.equal(200);
+              return expect(res.body.errors[0].message).to.equal(expected);
+          });
+      });
+
+      it('returns errors in parseLiteral', () => {
+          const expected = 'The Error';
+          app = createApp({graphqlOptions: {
+              schema,
+          }});
+          const req = request(app)
+              .post('/graphql')
+              .send({
+                  query: 'query test{ testParseLiteralError(arg: "The Error") }',
               });
           return req.then((res) => {
               expect(res.status).to.equal(200);
