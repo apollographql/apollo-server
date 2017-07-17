@@ -1,6 +1,6 @@
 {
   "name": "apollo-server-module-graphiql",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "GraphiQL renderer for Apollo GraphQL Server",
   "main": "dist/index.js",
   "scripts": {
@@ -23,8 +23,6 @@
     "url": "https://github.com/apollographql/apollo-server/issues"
   },
   "homepage": "https://github.com/apollographql/apollo-server#readme",
-  "dependencies": {},
-  "devDependencies": {},
   "typings": "dist/index.d.ts",
   "typescript": {
     "definition": "dist/index.d.ts"
