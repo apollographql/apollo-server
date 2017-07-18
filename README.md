@@ -28,12 +28,12 @@ Apollo Server is super easy to set up. Just `npm install apollo-server-<variant>
 Just run `npm install --save apollo-server-<variant>` and you're good to go!
 
 where variant is one of the following:
- - express
- - koa
- - hapi
- - restify
- - lambda
- - micro
+ - `express`
+ - `koa`
+ - `hapi`
+ - `restify`
+ - `lambda`
+ - `micro`
 
 ### Express
 
@@ -206,20 +206,20 @@ graphqlOptions = {
 };
 ```
 
-## Comparison with express-graphql
+## Comparison with `express-graphql`
 
-Both Apollo Server and `express-graphql` are GraphQL servers for Node.js, built on top of the [`graphql-js` reference implementation](https://github.com/graphql/graphql-js), but there are a few key differences:
+Both Apollo Server and [`express-graphql`](https://github.com/graphql/express-graphql) are GraphQL servers for Node.js, built on top of the [`graphql-js` reference implementation](https://github.com/graphql/graphql-js), but there are a few key differences:
 
-* express-graphql works with Express and Connect, Apollo Server supports Express, Connect, Hapi, Koa and Restify.
-* Compared to express-graphql, Apollo Server has a simpler interface and supports exactly one way of passing queries.
+* `express-graphql` works with Express and Connect, Apollo Server supports Express, Connect, Hapi, Koa and Restify.
+* Compared to `express-graphql`, Apollo Server has a simpler interface and supports exactly one way of passing queries.
 * Apollo Server separates serving GraphiQL (GraphQL UI) from responding to GraphQL requests.
-* express-graphql contains code for parsing HTTP request bodies, Apollo Server leaves that to standard packages like body-parser.
+* `express-graphql` contains code for parsing HTTP request bodies, Apollo Server leaves that to standard packages like body-parser.
 * Apollo Server includes an `OperationStore` to easily manage whitelisting.
 * Apollo Server is built with TypeScript.
 
 ### application/graphql requests
 
-express-graphql supports the `application/graphql` Content-Type for requests, which is an alternative to `application/json` request with only the query part sent as text. In the same way that we use `bodyParser.json` to parse `application/json` requests for apollo-server, we can use `bodyParser.text` plus one extra step in order to also parse `application/graphql` requests. Here's an example for express:
+`express-graphql` supports the `application/graphql` Content-Type for requests, which is an alternative to `application/json` request with only the query part sent as text. In the same way that we use `bodyParser.json` to parse `application/json` requests for apollo-server, we can use `bodyParser.text` plus one extra step in order to also parse `application/graphql` requests. Here's an example for Express:
 
 ```js
 import express from 'express';
