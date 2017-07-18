@@ -208,7 +208,7 @@ graphqlOptions = {
 
 ## Comparison with express-graphql
 
-Both Apollo Server and `express-graphql` are GraphQL servers for Node.js, built on top of the `graphql-js` reference implementation](https://github.com/graphql/graphql-js), but there are a few key differences:
+Both Apollo Server and `express-graphql` are GraphQL servers for Node.js, built on top of the [`graphql-js` reference implementation](https://github.com/graphql/graphql-js), but there are a few key differences:
 
 * express-graphql works with Express and Connect, Apollo Server supports Express, Connect, Hapi, Koa and Restify.
 * Compared to express-graphql, Apollo Server has a simpler interface and supports exactly one way of passing queries.
