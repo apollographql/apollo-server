@@ -54,7 +54,7 @@ router.get('/graphiql', graphiqlKoa({
 }));
 ```
 
-In case your GraphQL endpoint is protected via authentication, or if you need to pass other custom headers in the request that GraphiQL makes, you can use the `passHeader` option – a **string** that will be added to the request header object.
+In case your GraphQL endpoint is protected via authentication, or if you need to pass other custom headers in the request that GraphiQL makes, you can use the [`passHeader`](https://github.com/apollographql/apollo-server/blob/v1.0.2/packages/apollo-server-module-graphiql/src/renderGraphiQL.ts#L17) option – a string that will be added to the request header object.
 
 For example:
 ```js
