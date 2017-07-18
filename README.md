@@ -27,7 +27,7 @@ Apollo Server is super easy to set up. Just `npm install apollo-server-<variant>
 
 Just run `npm install --save apollo-server-<variant>` and you're good to go!
 
-where variant is one of the following:
+where `<variant>` is one of the following:
  - `express`
  - `koa`
  - `hapi`
@@ -212,7 +212,7 @@ Both Apollo Server and [`express-graphql`](https://github.com/graphql/express-gr
 
 * `express-graphql` works with Express and Connect, Apollo Server supports Express, Connect, Hapi, Koa and Restify.
 * Compared to `express-graphql`, Apollo Server has a simpler interface and supports exactly one way of passing queries.
-* Apollo Server separates serving GraphiQL (GraphQL UI) from responding to GraphQL requests.
+* Apollo Server separates serving [GraphiQL](https://github.com/graphql/graphiql) (an in-browser IDE for exploring GraphQL) from responding to GraphQL requests.
 * `express-graphql` contains code for parsing HTTP request bodies, Apollo Server leaves that to standard packages like body-parser.
 * Apollo Server includes an `OperationStore` to easily manage whitelisting.
 * Apollo Server is built with TypeScript.
