@@ -22,8 +22,8 @@ Anyone is welcome to contribute to GraphQL Server, just read [CONTRIBUTING.md](h
 
 ```js
 import koa from 'koa'; // koa@2
-import koaRouter from 'koa-router'; // koa-router@next
-import koaBody from 'koa-bodyparser'; // koa-bodyparser@next
+import koaRouter from 'koa-router';
+import koaBody from 'koa-bodyparser';
 import { graphqlKoa } from 'apollo-server-koa';
 
 const app = new koa();
@@ -39,4 +39,29 @@ router.get('/graphql', graphqlKoa({ schema: myGraphQLSchema }));
 app.use(router.routes());
 app.use(router.allowedMethods());
 app.listen(PORT);
+```
+
+### GraphiQL
+
+You can also use `apollo-server-koa` for hosting the [GraphiQL](https://github.com/graphql/graphiql) in-browser IDE. Note the difference between `graphqlKoa` and `graphiqlKoa`.
+
+```js
+import { graphiqlKoa } from 'apollo-server-koa';
+
+// Setup the /graphiql route to show the GraphiQL UI
+router.get('/graphiql', graphiqlKoa({
+    endpointURL: '/graphql' // a POST endpoint that GraphiQL will make the actual requests to
+}));
+```
+
+In case your GraphQL endpoint is protected via authentication, or if you need to pass other custom headers in the request that GraphiQL makes, you can use the [`passHeader`](https://github.com/apollographql/apollo-server/blob/v1.0.2/packages/apollo-server-module-graphiql/src/renderGraphiQL.ts#L17) option – a string that will be added to the request header object.
+
+For example:
+```js
+import { graphiqlKoa } from 'apollo-server-koa';
+
+router.get('/graphiql', graphiqlKoa({
+    endpointURL: '/graphql',
+    passHeader: `'Authorization': 'Bearer lorem ipsum'`
+}));
 ```
