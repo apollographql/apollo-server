@@ -117,6 +117,7 @@ export async function runHttpQuery(handlerArguments: Array<any>, request: HttpQu
         formatError: formatErrorFn,
         formatResponse: optionsObject.formatResponse,
         debug: optionsObject.debug,
+        tracing: optionsObject.tracing
       };
 
       if (optionsObject.formatParams) {

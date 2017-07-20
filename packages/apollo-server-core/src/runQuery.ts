@@ -6,14 +6,22 @@ import {
     print,
     validate,
     execute,
+    GraphQLError,
     formatError,
     specifiedRules,
     ValidationContext,
 } from 'graphql';
 
+import {
+  TraceCollector,
+  instrumentSchemaForTracing,
+  formatTraceData
+} from 'apollo-tracing';
+
 export interface GqlResponse {
-    data?: Object;
-    errors?: Array<string>;
+  data?: object;
+  errors?: Array<GraphQLError & object>;
+  extensions?: object;
 }
 
 export enum LogAction {
@@ -50,16 +58,17 @@ export interface QueryOptions {
  formatError?: Function;
  formatResponse?: Function;
  debug?: boolean;
+ tracing?: boolean;
 }
 
 const resolvedPromise = Promise.resolve();
 
-function runQuery(options: QueryOptions): Promise<ExecutionResult> {
+function runQuery(options: QueryOptions): Promise<GqlResponse> {
     // Fiber-aware Promises run their .then callbacks in Fibers.
     return resolvedPromise.then(() => doRunQuery(options));
 }
 
-function doRunQuery(options: QueryOptions): Promise<ExecutionResult> {
+function doRunQuery(options: QueryOptions): Promise<GqlResponse> {
     let documentAST: DocumentNode;
 
     const logFunction = options.logFunction || function(){ return null; };
@@ -67,6 +76,14 @@ function doRunQuery(options: QueryOptions): Promise<ExecutionResult> {
     const debug = typeof options.debug !== 'undefined' ? options.debug : debugDefault;
 
     logFunction({action: LogAction.request, step: LogStep.start});
+
+    let traceCollector: TraceCollector;
+    if (options.tracing) {
+      traceCollector = new TraceCollector();
+      options.context._traceCollector = traceCollector;
+      traceCollector.requestDidStart();
+      instrumentSchemaForTracing(options.schema);
+    }
 
     function format(errors: Array<Error>): Array<Error> {
         return errors.map((error) => {
@@ -119,6 +136,10 @@ function doRunQuery(options: QueryOptions): Promise<ExecutionResult> {
       return Promise.resolve({ errors: format(validationErrors) });
     }
 
+    if (traceCollector) {
+      traceCollector.executionDidStart();
+    }
+
     try {
         logFunction({action: LogAction.execute, step: LogStep.start});
         return execute(
@@ -128,18 +149,26 @@ function doRunQuery(options: QueryOptions): Promise<ExecutionResult> {
             options.context,
             options.variables,
             options.operationName,
-        ).then(gqlResponse => {
+        ).then(result => {
             logFunction({action: LogAction.execute, step: LogStep.end});
             logFunction({action: LogAction.request, step: LogStep.end});
-            let response = {
-                data: gqlResponse.data,
+            let response: GqlResponse = {
+                data: result.data,
             };
-            if (gqlResponse.errors) {
-                response['errors'] = format(gqlResponse.errors);
+            if (result.errors) {
+                response.errors = format(result.errors);
                 if (debug) {
-                  gqlResponse.errors.map(printStackTrace);
+                  result.errors.map(printStackTrace);
                 }
             }
+
+            if (traceCollector) {
+              traceCollector.requestDidEnd();
+              response.extensions = {
+                'tracing': formatTraceData(traceCollector)
+              }
+            }
+
             if (options.formatResponse) {
                 response = options.formatResponse(response, options);
             }
