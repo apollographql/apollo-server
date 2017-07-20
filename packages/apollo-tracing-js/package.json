@@ -1,0 +1,31 @@
+{
+  "name": "apollo-tracing",
+  "version": "0.0.2",
+  "description": "Collect and expose trace data for GraphQL requests",
+  "main": "./lib/index.js",
+  "types": "./lib/index.d.ts",
+  "scripts": {
+    "clean": "rm -rf lib",
+    "compile": "tsc",
+    "watch": "tsc -w",
+    "prepare": "npm run clean && npm run compile",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "license": "MIT",
+  "repository": "apollographql/apollo-tracing",
+  "author": "Martijn Walraven <martijn@martijnwalraven.com>",
+  "engines": {
+    "node": ">=4.0"
+  },
+  "peerDependencies": {
+    "graphql": "^0.10.0"
+  },
+  "devDependencies": {
+    "@types/graphql": "^0.9.2",
+    "@types/node": "^8.0.13",
+    "typescript": "^2.4.1"
+  },
+  "dependencies": {
+    "graphql-tools": "^1.0.0"
+  }
+}
