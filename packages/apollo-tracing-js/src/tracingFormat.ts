@@ -40,13 +40,15 @@ export function formatTraceData(traceCollector: TraceCollector): TracingFormat {
 
 function formatResolverCalls(resolverCalls: ResolverCall[]) {
   return resolverCalls.map(resolverCall => {
+    const startOffset = durationHrTimeToNanos(resolverCall.startOffset);
+    const duration = resolverCall.endOffset ? durationHrTimeToNanos(resolverCall.endOffset) - startOffset : 0;
     return {
       path: responsePathAsArray(resolverCall.path),
       parentType: resolverCall.parentType.toString(),
       fieldName: resolverCall.fieldName,
       returnType: resolverCall.returnType.toString(),
-      startOffset: durationHrTimeToNanos(resolverCall.startOffset),
-      duration: resolverCall.endOffset ? durationHrTimeToNanos(resolverCall.endOffset) : 0,
+      startOffset,
+      duration,
     }
   });
 }
