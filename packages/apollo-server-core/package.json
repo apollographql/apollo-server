@@ -40,6 +40,6 @@
     "definition": "dist/index.d.ts"
   },
   "dependencies": {
-    "apollo-tracing": "0.0.4"
+    "apollo-tracing": "^0.0.5"
   }
 }
