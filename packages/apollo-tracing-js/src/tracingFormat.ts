@@ -21,7 +21,7 @@ export interface TracingFormat {
       fieldName: string,
       returnType: string,
       startOffset: number,
-      endOffset: number
+      duration: number
     }[]
   }
 }
@@ -46,7 +46,7 @@ function formatResolverCalls(resolverCalls: ResolverCall[]) {
       fieldName: resolverCall.fieldName,
       returnType: resolverCall.returnType.toString(),
       startOffset: durationHrTimeToNanos(resolverCall.startOffset),
-      endOffset: durationHrTimeToNanos(resolverCall.endOffset),
+      duration: resolverCall.endOffset ? durationHrTimeToNanos(resolverCall.endOffset) : 0,
     }
   });
 }
