@@ -1,16 +1,16 @@
 ---
 title: Migrating to v0.4
 order: 205
-description: How to migrate to GraphQL Server 0.4 from Apollo Server 0.3
+description: How to migrate to Apollo Server 0.4 from Apollo Server 0.3
 ---
 
-In version 0.4, Apollo Server has been renamed to GraphQL Server, to reduce confusion about its compatibility with other GraphQL-related packages and tools. In particular, the goal is to ensure people don't get confused that Apollo Client only works with Apollo Server and the other way around.
+In version 0.4, Apollo Server has been renamed to Apollo Server, to reduce confusion about its compatibility with other GraphQL-related packages and tools. In particular, the goal is to ensure people don't get confused that Apollo Client only works with Apollo Server and the other way around.
 
 > Note: This guide assumes you were previously up to date with `apollo-server` series `0.3.x`. If you are currently using `0.2.x` or below, consult the [previous migration guide](migration-hapi.md).
 
 ## Splitting into multiple packages
 
-Having all of Apollo Server in one npm package was causing some issues, particularly with TypeScript development. Starting with `0.4`, the GraphQL Server is shipping as 3 different packages:
+Having all of Apollo Server in one npm package was causing some issues, particularly with TypeScript development. Starting with `0.4`, Apollo Server is shipping as 3 different packages:
 
 * `apollo-server-express`
 * `apollo-server-hapi`

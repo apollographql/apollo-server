@@ -1,14 +1,14 @@
 ---
 title: Sending requests
 order: 203
-description: How to send requests to GraphQL Server
+description: How to send requests to Apollo Server
 ---
 
-GraphQL server accepts both GET and POST requests.
+Apollo Server accepts both GET and POST requests.
 
 <h2 id="postRequests">POST requests</h2>
 
-GraphQL Server accepts POST requests with a JSON body. A valid request must contain either a `query` or an `operationName` (or both, in case of a named query), and may include `variables.` Here's an example for a valid body of a post request:
+Apollo Server accepts POST requests with a JSON body. A valid request must contain either a `query` or an `operationName` (or both, in case of a named query), and may include `variables.` Here's an example for a valid body of a post request:
 
 ```js
 {
@@ -39,14 +39,14 @@ A batch of queries can be sent by simply sending a JSON-encoded array of queries
 
 If a batch of queries is sent, the response will be an array of GraphQL responses.
 
-If GraphQL Server is running under a different origin than your client, you will need to enable CORS support on the server, or proxy the GraphQL requests through a web server under the main origin.
+If Apollo Server is running under a different origin than your client, you will need to enable CORS support on the server, or proxy the GraphQL requests through a web server under the main origin.
 
 
 <h2 id="getRequests">GET requests</h2>
 
-GraphQL server also accepts GET requests. A GET request must pass query and optionally variables and operationName in the URL.
+Apollo Server also accepts GET requests. A GET request must pass query and optionally variables and operationName in the URL.
 
-Here is the same query from above in a well-formatted GET request to GraphQL Server:
+Here is the same query from above in a well-formatted GET request to Apollo Server:
 ```
 GET /graphql?query=query%20aTest(%24arg1%3A%20String!)%20%7B%20test(who%3A%20%24arg1)%20%7D&operationName=aTest&variables=me
 ```

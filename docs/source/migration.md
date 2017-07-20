@@ -48,7 +48,7 @@ graphQLServer.use('/graphql', apolloServer({
 }));
 
 graphQLServer.listen(GRAPHQL_PORT, () => console.log(
-  `GraphQL Server is now running on http://localhost:${GRAPHQL_PORT}/graphql`
+  `Apollo Server is now running on http://localhost:${GRAPHQL_PORT}/graphql`
 ));
 ```
 
@@ -97,6 +97,6 @@ graphQLServer.use('/graphiql', graphiqlExpress({
 }));
 
 graphQLServer.listen(GRAPHQL_PORT, () => console.log(
-  `GraphQL Server is now running on http://localhost:${GRAPHQL_PORT}/graphql`
+  `Apollo Server is now running on http://localhost:${GRAPHQL_PORT}/graphql`
 ));
 ```

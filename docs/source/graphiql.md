@@ -1,10 +1,10 @@
 ---
 title: GraphiQL
 order: 205
-description: How to set up GraphiQL with GraphQL Server
+description: How to set up GraphiQL with Apollo Server
 ---
 
-GraphQL Server allows you to easily use [GraphiQL](https://github.com/graphql/graphiql). Here's how:
+Apollo Server allows you to easily use [GraphiQL](https://github.com/graphql/graphiql). Here's how:
 
 <h2 id="graphiqlOptions">Configuring GraphiQL</h2>
 
@@ -21,7 +21,7 @@ const options = {
 }
 ```
 
-GraphQL Server's `graphiql` middleware does not run any query passed to it, it simply renders it in the UI.
+Apollo Server's `graphiql` middleware does not run any query passed to it, it simply renders it in the UI.
 To actually execute the query, the user must submit it via the GraphiQL UI, which will
 send the request to the GraphQL endpoint specified with `endpointURL`.
 
