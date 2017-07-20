@@ -37,5 +37,8 @@
   "typings": "dist/index.d.ts",
   "typescript": {
     "definition": "dist/index.d.ts"
+  },
+  "dependencies": {
+    "apollo-tracing": "^0.0.6"
   }
 }
