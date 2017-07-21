@@ -77,10 +77,12 @@ function doRunQuery(options: QueryOptions): Promise<GqlResponse> {
 
     logFunction({action: LogAction.request, step: LogStep.start});
 
+    const context = options.context || {};
+
     let traceCollector: TraceCollector;
     if (options.tracing) {
       traceCollector = new TraceCollector();
-      options.context._traceCollector = traceCollector;
+      context._traceCollector = traceCollector;
       traceCollector.requestDidStart();
       instrumentSchemaForTracing(options.schema);
     }
@@ -146,7 +148,7 @@ function doRunQuery(options: QueryOptions): Promise<GqlResponse> {
             options.schema,
             documentAST,
             options.rootValue,
-            options.context,
+            context,
             options.variables,
             options.operationName,
         ).then(result => {
