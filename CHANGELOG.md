@@ -1,6 +1,7 @@
 # Changelog
 
 ### VNEXT
+* Update restify lib ([@yucun](https://github.com/liyucun/)) in [#472](https://github.com/apollographql/apollo-server/issues/472)
 
 ### v1.0.1
 * Fix Express package not calling the callback on completion ([@chemdrew](https://github.com/chemdrew)) in [#463](https://github.com/apollographql/graphql-server/pull/463)
