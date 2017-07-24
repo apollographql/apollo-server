@@ -1,6 +1,6 @@
 {
   "name": "apollo-server-micro",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Production-ready Node.js GraphQL server for Micro",
   "main": "dist/index.js",
   "scripts": {
@@ -26,10 +26,10 @@
   "homepage": "https://github.com/apollographql/apollo-server#readme",
   "dependencies": {
     "apollo-server-core": "^1.0.2",
-    "apollo-server-module-graphiql": "^1.0.3"
+    "apollo-server-module-graphiql": "^1.0.4"
   },
   "devDependencies": {
-    "apollo-server-integration-testsuite": "^1.0.3",
+    "apollo-server-integration-testsuite": "^1.0.4",
     "micro": "^7.3.3",
     "microrouter": "^2.1.1"
   },
