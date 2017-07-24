@@ -2,6 +2,10 @@
 
 ### VNEXT
 
+### v1.1.0
+
+* Added ability to provide custom default field resolvers [#482](https://github.com/apollographql/apollo-server/pull/482)
+
 ### v1.0.3
 
 * Revert [#463](https://github.com/apollographql/graphql-server/pull/463),
