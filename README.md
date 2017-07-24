@@ -122,9 +122,7 @@ const router = new koaRouter();
 const PORT = 3000;
 
 // koaBody is needed just for POST.
-app.use(koaBody());
-
-router.post('/graphql', graphqlKoa({ schema: myGraphQLSchema }));
+router.post('/graphql', koaBody(), graphqlKoa({ schema: myGraphQLSchema }));
 router.get('/graphql', graphqlKoa({ schema: myGraphQLSchema }));
 
 router.post('/graphiql', graphiqlKoa({ endpointURL: '/graphql' }));
