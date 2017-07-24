@@ -33,6 +33,21 @@ const queryType = new GraphQLObjectType({
                 return 'it works';
             },
         },
+        testObject: {
+          type: new GraphQLObjectType({
+            name: 'TestObject',
+            fields: {
+              testString: {
+                type: GraphQLString,
+              },
+            },
+          }),
+          resolve() {
+            return {
+              testString: 'a very test string',
+            };
+          },
+        },
         testRootValue: {
             type: GraphQLString,
             resolve(root) {
@@ -264,5 +279,40 @@ describe('runQuery', () => {
             expect(logs[3]).to.deep.equals({action: LogAction.request, step: LogStep.status, key: 'operationName', data: 'Q1'});
             expect(logs[10]).to.deep.equals({action: LogAction.request, step: LogStep.end});
         });
+    });
+
+    it('uses custom field resolver', async () => {
+      const query = `
+        query Q1 {
+          testObject {
+            testString
+          }
+        }
+      `;
+
+      const result1 = await runQuery({
+          schema,
+          query: query,
+          operationName: 'Q1',
+      });
+
+      expect(result1.data).to.deep.equal({
+          testObject: {
+            testString: 'a very test string',
+          },
+      });
+
+      const result2 = await runQuery({
+          schema,
+          query: query,
+          operationName: 'Q1',
+          fieldResolver: () => 'a very testful field resolver string',
+      });
+
+      expect(result2.data).to.deep.equal({
+          testObject: {
+              testString: 'a very testful field resolver string',
+          },
+      });
     });
 });
