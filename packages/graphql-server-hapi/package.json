@@ -1,6 +1,6 @@
 {
   "name": "graphql-server-hapi",
-  "version": "1.0.2",
+  "version": "1.0.4",
   "description": "Production-ready Node.js GraphQL server for Hapi",
   "main": "dist/index.js",
   "scripts": {
@@ -25,7 +25,7 @@
   },
   "homepage": "https://github.com/apollographql/apollo-server#readme",
   "dependencies": {
-    "apollo-server-hapi": "^1.0.2"
+    "apollo-server-hapi": "^1.0.4"
   },
   "typings": "dist/index.d.ts",
   "typescript": {
