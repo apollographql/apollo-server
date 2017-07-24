@@ -35,7 +35,6 @@ export function graphqlExpress(options: GraphQLOptions | ExpressGraphQLOptionsFu
       res.setHeader('Content-Type', 'application/json');
       res.write(gqlResponse);
       res.end();
-      next();
     }, (error: HttpQueryError) => {
       if ( 'HttpQueryError' !== error.name ) {
         return next(error);
@@ -50,7 +49,6 @@ export function graphqlExpress(options: GraphQLOptions | ExpressGraphQLOptionsFu
       res.statusCode = error.statusCode;
       res.write(error.message);
       res.end();
-      next(false);
     });
   };
 }
