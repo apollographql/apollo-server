@@ -28,6 +28,8 @@ Variables can be an object or a JSON-encoded string. I.e. the following is equiv
 }
 ```
 
+<h3 id="batching">Batching</h3>
+
 A batch of queries can be sent by simply sending a JSON-encoded array of queries, e.g.
 
 ```js
