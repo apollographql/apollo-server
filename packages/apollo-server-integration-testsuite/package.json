@@ -1,7 +1,7 @@
 {
   "name": "apollo-server-integration-testsuite",
   "private": true,
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Apollo Server Integrations testsuite",
   "main": "dist/index.js",
   "scripts": {
@@ -21,7 +21,7 @@
   "homepage": "https://github.com/apollographql/apollo-server#readme",
   "dependencies": {
     "apollo-server-core": "^1.0.2",
-    "apollo-server-module-graphiql": "^1.0.2",
+    "apollo-server-module-graphiql": "^1.0.3",
     "apollo-server-module-operation-store": "^1.0.2",
     "supertest": "^3.0.0",
     "supertest-as-promised": "^4.0.0"
