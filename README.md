@@ -181,7 +181,7 @@ module.exports = server.microGraphql({ schema: myGraphQLSchema });
 
 ## Options
 
-Apollo Server can be configured with an options object with the the following fields:
+Apollo Server can be configured with an options object with the following fields:
 
 * **schema**: the GraphQLSchema to be used
 * **context**: the context value passed to resolvers during GraphQL execution
