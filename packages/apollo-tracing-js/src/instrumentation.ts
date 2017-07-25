@@ -12,7 +12,6 @@ import {
 
 import {
   forEachField,
-  addSchemaLevelResolveFunction
 } from 'graphql-tools'
 
 export type HighResolutionTime = [number, number]
@@ -60,14 +59,7 @@ export function instrumentSchemaForTracing(schema: GraphQLSchema & { _instrument
 
   forEachField(schema, instrumentField);
 
-  /*
-  addSchemaLevelResolveFunction(schema, (source, args, context, info) => {
-    const TraceCollector = new TraceCollector();
-    context._TraceCollector = TraceCollector;
-    TraceCollector.executionDidStart();
-    return source;
-  });
-  */
+  return schema;
 }
 
 function instrumentField(field: GraphQLField<any, any>): void {
