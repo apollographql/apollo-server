@@ -2,6 +2,8 @@
 
 ### VNEXT
 
+* Add support for GraphiQL editor themes in [#484](https://github.com/apollographql/apollo-server/pull/484) as requested in [#444](https://github.com/apollographql/apollo-server/issues/444)
+
 ### v1.0.3
 
 * Revert [#463](https://github.com/apollographql/graphql-server/pull/463),
