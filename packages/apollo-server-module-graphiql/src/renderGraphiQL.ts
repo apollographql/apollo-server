@@ -26,6 +26,7 @@ export type GraphiQLData = {
   operationName?: string,
   result?: Object,
   passHeader?: string,
+  editorTheme?: string,
 };
 
 // Current latest version of GraphiQL.
@@ -48,6 +49,8 @@ export function renderGraphiQL(data: GraphiQLData): string {
   const resultString = null;
   const operationName = data.operationName;
   const passHeader = data.passHeader ? data.passHeader : '';
+  const editorTheme = data.editorTheme;
+  const usingEditorTheme = !!editorTheme;
 
   /* eslint-disable max-len */
   return `
@@ -70,6 +73,9 @@ export function renderGraphiQL(data: GraphiQLData): string {
   <script src="//cdn.jsdelivr.net/react/15.0.0/react.min.js"></script>
   <script src="//cdn.jsdelivr.net/react/15.0.0/react-dom.min.js"></script>
   <script src="//cdn.jsdelivr.net/npm/graphiql@${GRAPHIQL_VERSION}/graphiql.min.js"></script>
+  ${usingEditorTheme ?
+    `<link href="//cdn.jsdelivr.net/npm/codemirror@5/theme/${editorTheme}.min.css" rel="stylesheet" />`
+    : ''}
   ${usingSubscriptions ?
     `<script src="//unpkg.com/subscriptions-transport-ws@${SUBSCRIPTIONS_TRANSPORT_VERSION}/browser/client.js"></script>` +
     '<script src="//unpkg.com/graphiql-subscriptions-fetcher@0.0.2/browser/client.js"></script>'
@@ -169,6 +175,7 @@ export function renderGraphiQL(data: GraphiQLData): string {
         response: ${safeSerialize(resultString)},
         variables: ${safeSerialize(variablesString)},
         operationName: ${safeSerialize(operationName)},
+        editorTheme: ${safeSerialize(editorTheme)},
       }),
       document.body
     );
