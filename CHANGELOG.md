@@ -9,6 +9,9 @@
 * Revert [#463](https://github.com/apollographql/graphql-server/pull/463),
   because it's a breaking change that shouldn't have been a patch update.
 
+### v1.0.2
+* Rename packages from graphql-server- to apollo-server- [#465](https://github.com/apollographql/apollo-server/pull/465). We'll continue to publish `graphql-server-` packages that depend on the renamed `apollo-server-` packages for the time being, to ensure backwards compatibility.
+
 ### v1.0.1
 * Fix Express package not calling the callback on completion ([@chemdrew](https://github.com/chemdrew)) in [#463](https://github.com/apollographql/graphql-server/pull/463)
 
@@ -40,7 +43,6 @@
 
 ### v0.7.1
 * Fix graphiql fetcher to use endpointURL parameter instead of hardcoded URI.[#365](https://github.com/apollographql/graphql-server/issues/356)
-
 
 ### v0.7.0
 * Add Zeit Micro Integration [#324](https://github.com/apollographql/graphql-server/issues/324)
