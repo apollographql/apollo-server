@@ -178,7 +178,14 @@ export function renderGraphiQL(data: GraphiQLData): string {
       updateURL();
     }
     function updateURL() {
-      history.replaceState(null, null, locationQuery(parameters) + window.location.hash);
+      var cleanParams = Object.keys(parameters).filter(function(v) {
+        return parameters[v] !== undefined;
+      }).reduce(function(old, v) {
+        old[v] = parameters[v];
+        return old;
+      }, {});
+
+      history.replaceState(null, null, locationQuery(cleanParams) + window.location.hash);
     }
     // Render <GraphiQL /> into the body.
     ReactDOM.render(
