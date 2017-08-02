@@ -38,6 +38,7 @@ function createGraphiQLData(params: GraphiQLParams, options: GraphiQLData): Grap
     variables: params.variables && JSON.parse(params.variables) || options.variables,
     operationName: params.operationName || options.operationName,
     passHeader: options.passHeader,
+    editorTheme: options.editorTheme,
   };
 }
 
