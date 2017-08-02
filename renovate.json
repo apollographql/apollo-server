@@ -1,0 +1,5 @@
+{
+  "pinVersions": true,
+  "semanticCommits": true,
+  "dependencies": {"pinVersions": false}
+}
