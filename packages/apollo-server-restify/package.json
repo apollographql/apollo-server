@@ -37,7 +37,7 @@
     "graphql": "^0.9.0 || ^0.10.1"
   },
   "optionalDependencies": {
-    "@types/graphql": "^0.9.1",
+    "@types/graphql": "^0.10.1",
     "@types/restify": "^4.3.2"
   },
   "typings": "dist/index.d.ts",

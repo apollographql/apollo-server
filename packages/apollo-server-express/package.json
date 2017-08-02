@@ -46,7 +46,7 @@
   },
   "optionalDependencies": {
     "@types/express": "^4.0.35",
-    "@types/graphql": "^0.9.1"
+    "@types/graphql": "^0.10.1"
   },
   "typings": "dist/index.d.ts",
   "typescript": {
