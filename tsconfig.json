@@ -9,7 +9,7 @@
     "allowSyntheticDefaultImports": false,
     "pretty": true,
     "removeComments": true,
-    "lib": ["es6"],
+    "lib": ["es6", "esnext.asynciterable"],
     "types": [
       "@types/node"
     ]

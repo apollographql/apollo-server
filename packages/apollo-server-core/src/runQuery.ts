@@ -1,5 +1,6 @@
 import {
     GraphQLSchema,
+    GraphQLFieldResolver,
     ExecutionResult,
     DocumentNode,
     parse,
@@ -44,6 +45,7 @@ export interface QueryOptions {
  operationName?: string;
  logFunction?: LogFunction;
  validationRules?: Array<(context: ValidationContext) => any>;
+ fieldResolver?: GraphQLFieldResolver<any, any>;
  // WARNING: these extra validation rules are only applied to queries
  // submitted as string, not those submitted as Document!
 
@@ -128,6 +130,7 @@ function doRunQuery(options: QueryOptions): Promise<ExecutionResult> {
             options.context,
             options.variables,
             options.operationName,
+            options.fieldResolver,
         ).then(gqlResponse => {
             logFunction({action: LogAction.execute, step: LogStep.end});
             logFunction({action: LogAction.request, step: LogStep.end});

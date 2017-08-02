@@ -38,7 +38,7 @@
     "micro": "^7.3.3"
   },
   "optionalDependencies": {
-    "@types/graphql": "^0.9.1",
+    "@types/graphql": "^0.10.1",
     "@types/micro": "^7.3.0"
   },
   "typings": "dist/index.d.ts",

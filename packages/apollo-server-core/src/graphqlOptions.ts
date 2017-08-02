@@ -1,4 +1,4 @@
-import { GraphQLSchema, ValidationContext } from 'graphql';
+import { GraphQLSchema, ValidationContext, GraphQLFieldResolver } from 'graphql';
 import { LogFunction } from './runQuery';
 
 /*
@@ -12,6 +12,7 @@ import { LogFunction } from './runQuery';
  * - (optional) formatParams: a function applied to the parameters of every invocation of runQuery
  * - (optional) validationRules: extra validation rules applied to requests
  * - (optional) formatResponse: a function applied to each graphQL execution result
+ * - (optional) fieldResolver: a custom default field resolver
  * - (optional) debug: a boolean that will print additional debug logging if execution errors occur
  *
  */
@@ -24,6 +25,7 @@ export interface GraphQLServerOptions {
   formatParams?: Function;
   validationRules?: Array<(context: ValidationContext) => any>;
   formatResponse?: Function;
+  fieldResolver?: GraphQLFieldResolver<any, any>;
   debug?: boolean;
 }
 
