@@ -30,12 +30,12 @@
   },
   "devDependencies": {
     "apollo-server-integration-testsuite": "^1.0.5",
-    "micro": "^7.3.3",
+    "micro": "^8.0.1",
     "microrouter": "^2.1.1"
   },
   "peerDependencies": {
     "graphql": "^0.9.0 || ^0.10.1",
-    "micro": "^7.3.3"
+    "micro": "^8.0.1"
   },
   "optionalDependencies": {
     "@types/graphql": "^0.10.1",
