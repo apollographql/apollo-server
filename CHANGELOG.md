@@ -1,7 +1,7 @@
 # Changelog
 
 ### VNEXT
-
+* Updated package apollo-server-micro, updated micro in devDependencies and peerDependencies to ^8.0.1
 ### v1.1.0
 
 * Added ability to provide custom default field resolvers [#482](https://github.com/apollographql/apollo-server/pull/482)
