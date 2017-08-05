@@ -31,7 +31,7 @@ export type GraphiQLData = {
 
 // Current latest version of GraphiQL.
 const GRAPHIQL_VERSION = '0.11.2';
-const SUBSCRIPTIONS_TRANSPORT_VERSION = '0.7.0';
+const SUBSCRIPTIONS_TRANSPORT_VERSION = '0.8.2';
 
 // Ensures string values are safe to be used within a <script> tag.
 // TODO: I don't think that's the right escape function
@@ -41,8 +41,12 @@ function safeSerialize(data) {
 
 export function renderGraphiQL(data: GraphiQLData): string {
   const endpointURL = data.endpointURL;
+  const endpointWs = endpointURL.startsWith('ws://');
   const subscriptionsEndpoint = data.subscriptionsEndpoint;
-  const usingSubscriptions = !!subscriptionsEndpoint;
+  const usingHttp = !endpointWs;
+  const usingWs = endpointWs || !!subscriptionsEndpoint;
+  const endpointURLWs = usingWs && (endpointWs ? endpointURL : subscriptionsEndpoint);
+
   const queryString = data.query;
   const variablesString =
     data.variables ? JSON.stringify(data.variables, null, 2) : null;
@@ -68,18 +72,23 @@ export function renderGraphiQL(data: GraphiQLData): string {
       width: 100%;
     }
   </style>
-  <link href="//cdn.jsdelivr.net/npm/graphiql@${GRAPHIQL_VERSION}/graphiql.css" rel="stylesheet" />
-  <script src="//cdn.jsdelivr.net/fetch/0.9.0/fetch.min.js"></script>
-  <script src="//cdn.jsdelivr.net/react/15.0.0/react.min.js"></script>
-  <script src="//cdn.jsdelivr.net/react/15.0.0/react-dom.min.js"></script>
-  <script src="//cdn.jsdelivr.net/npm/graphiql@${GRAPHIQL_VERSION}/graphiql.min.js"></script>
+  <link href="//unpkg.com/graphiql@${GRAPHIQL_VERSION}/graphiql.css" rel="stylesheet" />
+  <script src="//unpkg.com/react@15.6.1/dist/react.min.js"></script>
+  <script src="//unpkg.com/react-dom@15.6.1/dist/react-dom.min.js"></script>
+  <script src="//unpkg.com/graphiql@${GRAPHIQL_VERSION}/graphiql.min.js"></script>
   ${usingEditorTheme ?
     `<link href="//cdn.jsdelivr.net/npm/codemirror@5/theme/${editorTheme}.min.css" rel="stylesheet" />`
     : ''}
-  ${usingSubscriptions ?
-    `<script src="//unpkg.com/subscriptions-transport-ws@${SUBSCRIPTIONS_TRANSPORT_VERSION}/browser/client.js"></script>` +
+  ${usingHttp ?
+    `<script src="//cdn.jsdelivr.net/fetch/2.0.1/fetch.min.js"></script>`
+    : ''}
+  ${usingWs ?
+    `<script src="//unpkg.com/subscriptions-transport-ws@${SUBSCRIPTIONS_TRANSPORT_VERSION}/browser/client.js"></script>`
+    : ''}
+  ${usingWs && usingHttp ?
     '<script src="//unpkg.com/graphiql-subscriptions-fetcher@0.0.2/browser/client.js"></script>'
     : ''}
+
 </head>
 <body>
   <script>
@@ -112,41 +121,48 @@ export function renderGraphiQL(data: GraphiQLData): string {
       }
     }
 
-    var fetcher;
+    ${usingWs ? `
+    var subscriptionsClient = new window.SubscriptionsTransportWs.SubscriptionClient('${endpointURLWs}', {
+      reconnect: true
+    });
 
-    if (${usingSubscriptions}) {
-      var subscriptionsClient = new window.SubscriptionsTransportWs.SubscriptionClient('${subscriptionsEndpoint}', {
-        reconnect: true
-      });
-      fetcher = window.GraphiQLSubscriptionsFetcher.graphQLFetcher(subscriptionsClient, graphQLFetcher);
-    } else {
-      fetcher = graphQLFetcher;
-    }
+    var graphQLWSFetcher = subscriptionsClient.request.bind(subscriptionsClient);
+    ` : ''}
 
-    // We don't use safe-serialize for location, because it's not client input.
-    var fetchURL = locationQuery(otherParams, '${endpointURL}');
+    ${usingHttp ? `
+      // We don't use safe-serialize for location, because it's not client input.
+      var fetchURL = locationQuery(otherParams, '${endpointURL}');
 
-    // Defines a GraphQL fetcher using the fetch API.
-    function graphQLFetcher(graphQLParams) {
-        return fetch(fetchURL, {
-          method: 'post',
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-            ${passHeader}
-          },
-          body: JSON.stringify(graphQLParams),
-          credentials: 'include',
-        }).then(function (response) {
-          return response.text();
-        }).then(function (responseBody) {
-          try {
-            return JSON.parse(responseBody);
-          } catch (error) {
-            return responseBody;
-          }
-        });
-    }
+      // Defines a GraphQL fetcher using the fetch API.
+      function graphQLHttpFetcher(graphQLParams) {
+          return fetch(fetchURL, {
+            method: 'post',
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json',
+              ${passHeader}
+            },
+            body: JSON.stringify(graphQLParams),
+            credentials: 'include',
+          }).then(function (response) {
+            return response.text();
+          }).then(function (responseBody) {
+            try {
+              return JSON.parse(responseBody);
+            } catch (error) {
+              return responseBody;
+            }
+          });
+      }
+    ` : ''}
+
+    ${usingWs && usingHttp ? `
+      var fetcher =
+        window.GraphiQLSubscriptionsFetcher.graphQLFetcher(subscriptionsClient, graphQLHttpFetcher);
+    ` : `
+      var fetcher = ${usingWs ? 'graphQLWSFetcher' : 'graphQLHttpFetcher' };
+    `}
+
     // When the query and variables string is edited, update the URL bar so
     // that it can be easily shared.
     function onEditQuery(newQuery) {
@@ -162,7 +178,14 @@ export function renderGraphiQL(data: GraphiQLData): string {
       updateURL();
     }
     function updateURL() {
-      history.replaceState(null, null, locationQuery(parameters) + window.location.hash);
+      var cleanParams = Object.keys(parameters).filter(function(v) {
+        return parameters[v] !== undefined;
+      }).reduce(function(old, v) {
+        old[v] = parameters[v];
+        return old;
+      }, {});
+
+      history.replaceState(null, null, locationQuery(cleanParams) + window.location.hash);
     }
     // Render <GraphiQL /> into the body.
     ReactDOM.render(

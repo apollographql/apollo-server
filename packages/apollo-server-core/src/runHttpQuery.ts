@@ -116,6 +116,7 @@ export async function runHttpQuery(handlerArguments: Array<any>, request: HttpQu
         validationRules: optionsObject.validationRules,
         formatError: formatErrorFn,
         formatResponse: optionsObject.formatResponse,
+        fieldResolver: optionsObject.fieldResolver,
         debug: optionsObject.debug,
       };
 
