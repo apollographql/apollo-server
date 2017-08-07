@@ -125,7 +125,6 @@ const PORT = 3000;
 router.post('/graphql', koaBody(), graphqlKoa({ schema: myGraphQLSchema }));
 router.get('/graphql', graphqlKoa({ schema: myGraphQLSchema }));
 
-router.post('/graphiql', graphiqlKoa({ endpointURL: '/graphql' }));
 router.get('/graphiql', graphiqlKoa({ endpointURL: '/graphql' }));
 
 app.use(router.routes());
