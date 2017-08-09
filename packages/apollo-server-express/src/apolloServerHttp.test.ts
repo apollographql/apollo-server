@@ -342,7 +342,7 @@ describe(`GraphQL-HTTP (apolloServer) tests for ${version} express`, () => {
     it('handles type validation (GET)', async () => {
       const app = express();
 
-      app.use('/graphql', graphqlExpress({
+      app.use('/graphql', require('connect-query')(), graphqlExpress({
         schema: TestSchema
       }));
 

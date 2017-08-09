@@ -16,6 +16,7 @@ function createApp(options: CreateAppOptions = {}) {
   if (options.graphiqlOptions ) {
     app.use('/graphiql', graphiqlExpress( options.graphiqlOptions ));
   }
+  app.use('/graphql', require('connect-query')());
   app.use('/graphql', graphqlExpress( options.graphqlOptions ));
   return app;
 }
