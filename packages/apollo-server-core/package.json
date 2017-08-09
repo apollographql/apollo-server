@@ -24,9 +24,9 @@
   },
   "homepage": "https://github.com/apollographql/apollo-server#readme",
   "devDependencies": {
-    "@types/graphql": "^0.10.2",
     "@types/fibers": "0.0.29",
-    "fibers": "2.0.0",
+    "@types/graphql": "^0.10.2",
+    "fibers": "^1.0.15",
     "meteor-promise": "^0.8.6"
   },
   "peerDependencies": {
