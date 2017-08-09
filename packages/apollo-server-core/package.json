@@ -39,6 +39,6 @@
     "definition": "dist/index.d.ts"
   },
   "dependencies": {
-    "apollo-tracing": "^0.0.6"
+    "apollo-tracing": "^0.0.7"
   }
 }
