@@ -22,7 +22,6 @@ import { graphqlExpress } from './expressApollo';
  */
 
 import { expect } from 'chai';
-import { stringify } from 'querystring';
 import * as zlib from 'zlib';
 import * as multer from 'multer';
 import * as bodyParser from 'body-parser';
@@ -92,14 +91,6 @@ const TestSchema = new GraphQLSchema({
     }
   })
 });
-
-function urlString(urlParams?: any): string {
-  let str = '/graphql';
-  if (urlParams) {
-    str += ('?' + stringify(urlParams));
-  }
-  return str;
-}
 
 function catchError(p) {
   return p.then(
@@ -175,8 +166,8 @@ describe(`GraphQL-HTTP (apolloServer) tests for ${version} express`, () => {
     it('allows gzipped POST bodies', async () => {
       const app = express();
 
-      app.use(urlString(), bodyParser.json());
-      app.use(urlString(), graphqlExpress(() => ({
+      app.use('/graphql', bodyParser.json());
+      app.use('/graphql', graphqlExpress(() => ({
         schema: TestSchema
       })));
 
@@ -186,7 +177,7 @@ describe(`GraphQL-HTTP (apolloServer) tests for ${version} express`, () => {
       const gzippedJson = await promiseTo(cb => zlib.gzip(json as any as Buffer, cb));
 
       const req = request(app)
-        .post(urlString())
+        .post('/graphql')
         .set('Content-Type', 'application/json')
         .set('Content-Encoding', 'gzip');
       req.write(gzippedJson);
@@ -202,8 +193,8 @@ describe(`GraphQL-HTTP (apolloServer) tests for ${version} express`, () => {
     it('allows deflated POST bodies', async () => {
       const app = express();
 
-      app.use(urlString(), bodyParser.json());
-      app.use(urlString(), graphqlExpress(() => ({
+      app.use('/graphql', bodyParser.json());
+      app.use('/graphql', graphqlExpress(() => ({
         schema: TestSchema
       })));
 
@@ -213,7 +204,7 @@ describe(`GraphQL-HTTP (apolloServer) tests for ${version} express`, () => {
       const deflatedJson = await promiseTo(cb => zlib.deflate(json as any as Buffer, cb));
 
       const req = request(app)
-        .post(urlString())
+        .post('/graphql')
         .set('Content-Type', 'application/json')
         .set('Content-Encoding', 'deflate');
       req.write(deflatedJson);
@@ -267,11 +258,11 @@ describe(`GraphQL-HTTP (apolloServer) tests for ${version} express`, () => {
 
       // Multer provides multipart form data parsing.
       const storage = multer.memoryStorage();
-      app.use(urlString(), multer({ storage }).single('file'));
+      app.use('/graphql', multer({ storage }).single('file'));
 
       // Providing the request as part of `rootValue` allows it to
       // be accessible from within Schema resolve functions.
-      app.use(urlString(), graphqlExpress(req => {
+      app.use('/graphql', graphqlExpress(req => {
         return {
           schema: TestMutationSchema,
           rootValue: { request: req }
@@ -279,7 +270,7 @@ describe(`GraphQL-HTTP (apolloServer) tests for ${version} express`, () => {
       }));
 
       const req = request(app)
-        .post(urlString())
+        .post('/graphql')
         .field('query', `mutation TestMutation {
           uploadFile { originalname, mimetype }
         }`)
@@ -302,13 +293,13 @@ describe(`GraphQL-HTTP (apolloServer) tests for ${version} express`, () => {
     it('handles field errors caught by GraphQL', async () => {
       const app = express();
 
-      app.use(urlString(), bodyParser.json());
-      app.use(urlString(), graphqlExpress({
+      app.use('/graphql', bodyParser.json());
+      app.use('/graphql', graphqlExpress({
         schema: TestSchema
       }));
 
       const response = await request(app)
-        .post(urlString())
+        .post('/graphql')
         .send({
           query: '{thrower}',
         });
@@ -328,13 +319,13 @@ describe(`GraphQL-HTTP (apolloServer) tests for ${version} express`, () => {
     it('handles type validation', async () => {
       const app = express();
 
-      app.use(urlString(), bodyParser.json());
-      app.use(urlString(), graphqlExpress({
+      app.use('/graphql', bodyParser.json());
+      app.use('/graphql', graphqlExpress({
         schema: TestSchema
       }));
 
       const response = await request(app)
-        .post(urlString())
+        .post('/graphql')
         .send({
           query: '{notExists}',
         });
@@ -351,12 +342,12 @@ describe(`GraphQL-HTTP (apolloServer) tests for ${version} express`, () => {
     it('handles type validation (GET)', async () => {
       const app = express();
 
-      app.use(urlString(), graphqlExpress({
+      app.use('/graphql', graphqlExpress({
         schema: TestSchema
       }));
 
       const response = await request(app)
-        .get(urlString({ query: '{notExists}' }))
+        .get('/graphql').query({ query: '{notExists}' });
 
       expect(response.status).to.equal(400);
       expect(JSON.parse(response.text)).to.deep.equal({
@@ -370,13 +361,13 @@ describe(`GraphQL-HTTP (apolloServer) tests for ${version} express`, () => {
     it('handles errors thrown during custom graphql type handling', async () => {
       const app = express();
 
-      app.use(urlString(), bodyParser.json());
-      app.use(urlString(), graphqlExpress({
+      app.use('/graphql', bodyParser.json());
+      app.use('/graphql', graphqlExpress({
         schema: TestSchema
       }));
 
       const response = await request(app)
-        .post(urlString())
+        .post('/graphql')
         .send({
           query: '{custom(foo: 123)}',
         });
@@ -387,8 +378,8 @@ describe(`GraphQL-HTTP (apolloServer) tests for ${version} express`, () => {
     it('allows for custom error formatting to sanitize', async () => {
       const app = express();
 
-      app.use(urlString(), bodyParser.json());
-      app.use(urlString(), graphqlExpress({
+      app.use('/graphql', bodyParser.json());
+      app.use('/graphql', graphqlExpress({
         schema: TestSchema,
         formatError(error) {
           return { message: 'Custom error format: ' + error.message };
@@ -396,7 +387,7 @@ describe(`GraphQL-HTTP (apolloServer) tests for ${version} express`, () => {
       }));
 
       const response = await request(app)
-        .post(urlString())
+        .post('/graphql')
         .send({
           query: '{thrower}',
         });
@@ -413,8 +404,8 @@ describe(`GraphQL-HTTP (apolloServer) tests for ${version} express`, () => {
     it('allows for custom error formatting to elaborate', async () => {
       const app = express();
 
-      app.use(urlString(), bodyParser.json());
-      app.use(urlString(), graphqlExpress({
+      app.use('/graphql', bodyParser.json());
+      app.use('/graphql', graphqlExpress({
         schema: TestSchema,
         formatError(error) {
           return {
@@ -426,7 +417,7 @@ describe(`GraphQL-HTTP (apolloServer) tests for ${version} express`, () => {
       }));
 
       const response = await request(app)
-        .post(urlString())
+        .post('/graphql')
         .send({
           query: '{thrower}',
         });
@@ -445,11 +436,11 @@ describe(`GraphQL-HTTP (apolloServer) tests for ${version} express`, () => {
     it('handles unsupported HTTP methods', async () => {
       const app = express();
 
-      app.use(urlString(), bodyParser.json());
-      app.use(urlString(), graphqlExpress({ schema: TestSchema }));
+      app.use('/graphql', bodyParser.json());
+      app.use('/graphql', graphqlExpress({ schema: TestSchema }));
 
       const response = await request(app)
-          .put(urlString({ query: '{test}' }));
+        .put('/graphql').query({ query: '{test}' });
 
       expect(response.status).to.equal(405);
       expect(response.headers.allow).to.equal('GET, POST');
@@ -472,14 +463,14 @@ describe(`GraphQL-HTTP (apolloServer) tests for ${version} express`, () => {
       it('Do not execute a query if it do not pass the custom validation.', async() => {
         const app = express();
 
-        app.use(urlString(), bodyParser.json());
-        app.use(urlString(), graphqlExpress({
+        app.use('/graphql', bodyParser.json());
+        app.use('/graphql', graphqlExpress({
           schema: TestSchema,
           validationRules: [ AlwaysInvalidRule ],
         }));
 
         const response = await request(app)
-            .post(urlString())
+            .post('/graphql')
             .send({
               query: '{thrower}',
             })

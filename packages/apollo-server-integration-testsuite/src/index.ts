@@ -1,7 +1,6 @@
 import { expect } from 'chai';
 import { stub } from 'sinon';
 import 'mocha';
-import * as querystring from 'querystring';
 
 import {
     GraphQLSchema,
@@ -239,7 +238,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
               query: 'query test{ testString }',
           };
           const req = request(app)
-              .get(`/graphql?${querystring.stringify(query)}`);
+              .get('/graphql').query(query);
           return req.then((res) => {
               expect(res.status).to.equal(200);
               return expect(res.body.data).to.deep.equal(expected);
@@ -255,7 +254,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
               query: '{ testString }',
           };
           const req = request(app)
-              .get(`/graphql?${querystring.stringify(query)}`);
+              .get('/graphql').query(query);
           return req.then((res) => {
               expect(res.status).to.equal(200);
               return expect(res.body.data).to.deep.equal(expected);
@@ -268,7 +267,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
               query: 'mutation test{ testMutation(echo: "ping") }',
           };
           const req = request(app)
-              .get(`/graphql?${querystring.stringify(query)}`);
+              .get('/graphql').query(query);
           return req.then((res) => {
               expect(res.status).to.equal(405);
               expect(res.headers['allow']).to.equal('POST');
@@ -290,7 +289,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
             }`,
           };
           const req = request(app)
-              .get(`/graphql?${querystring.stringify(query)}`);
+              .get('/graphql').query(query);
           return req.then((res) => {
               expect(res.status).to.equal(405);
               expect(res.headers['allow']).to.equal('POST');
@@ -308,7 +307,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
               testArgument: 'hello world',
           };
           const req = request(app)
-              .get(`/graphql?${querystring.stringify(query)}`);
+              .get('/graphql').query(query);
           return req.then((res) => {
               expect(res.status).to.equal(200);
               return expect(res.body.data).to.deep.equal(expected);
@@ -716,7 +715,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           }});
 
           const req = request(app)
-              .get('/graphiql?query={test}')
+              .get('/graphiql').query('query={test}')
               .set('Accept', 'text/html');
           return req.then((response) => {
               expect(response.status).to.equal(200);
@@ -852,7 +851,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
               query: '{ testString }',
           };
           const req = request(app)
-              .get(`/bogus-route?${querystring.stringify(query)}`);
+              .get('/bogus-route').query(query);
           return req.then((res) => {
               expect(res.status).to.equal(404);
           });
