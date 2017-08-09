@@ -1,22 +1,19 @@
 // Place your settings in this file to overwrite default and user settings.
 {
   "editor.tabSize": 2,
-  "editor.rulers": [100],
+  "editor.rulers": [110],
   "files.trimTrailingWhitespace": true,
   "files.insertFinalNewline": true,
-  "editor.wrappingColumn": 100,
+  "editor.wordWrapColumn": 110,
+  "prettier.singleQuote": true,
+  "prettier.printWidth": 110,
   "files.exclude": {
     "**/.git": true,
     "**/.DS_Store": true,
-    "node_modules": true,
-    "dist": true,
+    "**/node_modules/": true,
+    "**/dist/": true,
     "coverage": true,
-    "coverage.lcov": true,
-    "tsconfig.json": true,
-    "tslint.json": true,
-    "typings.json": true,
-    "typings": true,
-    ".gitignore": false,
-    "**/dist": true
-  }
+    "coverage.lcov": true
+  },
+  "typescript.tsdk": "node_modules/typescript/lib"
 }
