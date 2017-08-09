@@ -29,7 +29,7 @@
     "apollo-server-module-graphiql": "^1.0.5"
   },
   "devDependencies": {
-    "@types/restify": "^4.3.2",
+    "@types/restify": "^5.0.1",
     "apollo-server-integration-testsuite": "^1.0.5",
     "restify": "^4.3.0"
   },
@@ -38,7 +38,7 @@
   },
   "optionalDependencies": {
     "@types/graphql": "^0.10.1",
-    "@types/restify": "^4.3.2"
+    "@types/restify": "^5.0.1"
   },
   "typings": "dist/index.d.ts",
   "typescript": {

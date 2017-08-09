@@ -1,6 +1,7 @@
 # Changelog
 
 ### VNEXT
+* Updated restify lib ([@yucun](https://github.com/liyucun/)) in [#472](https://github.com/apollographql/apollo-server/issues/472)
 * Updated package apollo-server-micro, updated micro in devDependencies and peerDependencies to ^8.0.1
 ### v1.1.0
 
