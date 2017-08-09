@@ -24,6 +24,7 @@
   },
   "homepage": "https://github.com/apollographql/apollo-server#readme",
   "devDependencies": {
+    "@types/graphql": "^0.10.2",
     "@types/fibers": "0.0.29",
     "fibers": "1.0.15",
     "meteor-promise": "^0.8.2"
@@ -31,11 +32,11 @@
   "peerDependencies": {
     "graphql": "^0.9.0 || ^0.10.1"
   },
-  "optionalDependencies": {
-    "@types/graphql": "^0.10.1"
-  },
   "typings": "dist/index.d.ts",
   "typescript": {
     "definition": "dist/index.d.ts"
+  },
+  "dependencies": {
+    "apollo-tracing": "^0.0.7"
   }
 }

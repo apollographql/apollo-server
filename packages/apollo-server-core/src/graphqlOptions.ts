@@ -27,6 +27,7 @@ export interface GraphQLServerOptions {
   formatResponse?: Function;
   fieldResolver?: GraphQLFieldResolver<any, any>;
   debug?: boolean;
+  tracing?: boolean;
 }
 
 export default GraphQLServerOptions;

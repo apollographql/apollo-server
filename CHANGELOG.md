@@ -1,13 +1,13 @@
 # Changelog
 
-### VNEXT
-* Updated restify lib ([@yucun](https://github.com/liyucun/)) in [#472](https://github.com/apollographql/apollo-server/issues/472)
-* Updated package apollo-server-micro, updated micro in devDependencies and peerDependencies to ^8.0.1
 ### v1.1.0
 
 * Added ability to provide custom default field resolvers [#482](https://github.com/apollographql/apollo-server/pull/482)
+* Add `tracing` option to collect and expose trace data in the [Apollo Tracing format](https://github.com/apollographql/apollo-tracing)
 * Add support for GraphiQL editor themes in [#484](https://github.com/apollographql/apollo-server/pull/484) as requested in [#444](https://github.com/apollographql/apollo-server/issues/444)
 * Add support for full websocket using GraphiQL [#491](https://github.com/apollographql/graphql-server/pull/491)
+* Updated restify lib ([@yucun](https://github.com/liyucun/)) in [#472](https://github.com/apollographql/apollo-server/issues/472)
+* Updated package apollo-server-micro, updated micro in devDependencies and peerDependencies to ^8.0.1
 
 ### v1.0.3
 

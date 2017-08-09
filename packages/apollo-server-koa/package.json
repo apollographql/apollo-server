@@ -29,6 +29,7 @@
     "apollo-server-module-graphiql": "^1.0.5"
   },
   "devDependencies": {
+     "@types/graphql": "^0.10.2",
     "@types/koa": "^2.0.39",
     "@types/koa-bodyparser": "^3.0.23",
     "@types/koa-router": "^7.0.22",
@@ -39,10 +40,6 @@
   },
   "peerDependencies": {
     "graphql": "^0.9.0 || ^0.10.1"
-  },
-  "optionalDependencies": {
-    "@types/graphql": "^0.10.1",
-    "@types/koa": "^2.0.39"
   },
   "typings": "dist/index.d.ts",
   "typescript": {

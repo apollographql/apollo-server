@@ -29,6 +29,8 @@
     "apollo-server-module-graphiql": "^1.0.5"
   },
   "devDependencies": {
+    "@types/graphql": "^0.10.2",
+    "@types/micro": "^7.3.0",
     "apollo-server-integration-testsuite": "^1.0.5",
     "micro": "^8.0.1",
     "microrouter": "^2.1.1"
@@ -36,10 +38,6 @@
   "peerDependencies": {
     "graphql": "^0.9.0 || ^0.10.1",
     "micro": "^8.0.1"
-  },
-  "optionalDependencies": {
-    "@types/graphql": "^0.10.1",
-    "@types/micro": "^7.3.0"
   },
   "typings": "dist/index.d.ts",
   "typescript": {
