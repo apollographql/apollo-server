@@ -146,8 +146,8 @@ const server = restify.createServer({
 
 const graphQLOptions = { schema: myGraphQLSchema };
 
-server.use(restify.bodyParser());
-server.use(restify.queryParser());
+server.use(restify.plugins.bodyParser());
+server.use(restify.plugins.queryParser());
 
 server.post('/graphql', graphqlRestify(graphQLOptions));
 server.get('/graphql', graphqlRestify(graphQLOptions));
