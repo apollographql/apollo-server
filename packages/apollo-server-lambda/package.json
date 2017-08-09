@@ -29,7 +29,7 @@
     "apollo-server-module-graphiql": "^1.0.5"
   },
   "devDependencies": {
-    "@types/aws-lambda": "0.0.10",
+    "@types/aws-lambda": "0.0.16",
     "@types/graphql": "^0.10.2",
     "apollo-server-integration-testsuite": "^1.0.5"
   },

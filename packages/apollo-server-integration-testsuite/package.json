@@ -24,7 +24,7 @@
     "apollo-server-module-graphiql": "^1.0.5",
     "apollo-server-module-operation-store": "^1.0.2",
     "supertest": "^3.0.0",
-    "supertest-as-promised": "^4.0.0"
+    "supertest-as-promised": "^4.0.2"
   },
   "devDependencies": {
     "@types/graphql": "^0.10.2"

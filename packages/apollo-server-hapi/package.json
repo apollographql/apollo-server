@@ -27,14 +27,14 @@
   "dependencies": {
     "apollo-server-core": "^1.0.2",
     "apollo-server-module-graphiql": "^1.0.5",
-    "boom": "^5.1.0"
+    "boom": "^5.2.0"
   },
   "devDependencies": {
     "@types/graphql": "^0.10.2",
-    "@types/boom": "4.3.2",
-    "@types/hapi": "^16.1.4",
+    "@types/boom": "4.3.6",
+    "@types/hapi": "^16.1.8",
     "apollo-server-integration-testsuite": "^1.0.5",
-    "hapi": "^16.4.3"
+    "hapi": "^16.5.2"
   },
   "peerDependencies": {
     "graphql": "^0.9.0 || ^0.10.1"

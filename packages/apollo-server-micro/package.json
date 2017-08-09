@@ -33,7 +33,7 @@
     "@types/micro": "^7.3.0",
     "apollo-server-integration-testsuite": "^1.0.5",
     "micro": "^8.0.1",
-    "microrouter": "^2.1.1"
+    "microrouter": "^2.2.2"
   },
   "peerDependencies": {
     "graphql": "^0.9.0 || ^0.10.1",
