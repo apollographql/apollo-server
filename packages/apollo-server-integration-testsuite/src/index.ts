@@ -15,7 +15,7 @@ import {
 } from 'graphql';
 
 // tslint:disable-next-line
-const request = require('supertest-as-promised');
+const request = require('supertest');
 
 import { GraphQLOptions } from 'apollo-server-core';
 import * as GraphiQL from 'apollo-server-module-graphiql';

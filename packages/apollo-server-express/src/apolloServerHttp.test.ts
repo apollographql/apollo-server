@@ -26,7 +26,7 @@ import { stringify } from 'querystring';
 import * as zlib from 'zlib';
 import * as multer from 'multer';
 import * as bodyParser from 'body-parser';
-const request = require('supertest-as-promised');
+const request = require('supertest');
 const express4 = require('express'); // modern
 //import express3 from 'express3'; // old but commonly still used
 const express3 = express4;
