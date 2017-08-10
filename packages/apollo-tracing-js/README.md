@@ -12,7 +12,7 @@ One use of Apollo Tracing is to add support for [Apollo Optics](https://www.apol
 
 ### Apollo Server
 
-Apollo Server will include built-in support for tracing in a future release. Until then, you can install a WIP version of tracing support with `npm install apollo-server-<variant>@tracing`.
+Apollo Server includes built-in support for tracing from version 1.1.0 onwards.
 
 The only code change required is to add `tracing: true` to the options passed to the Apollo Server middleware function for your framework of choice. For example, for Express:
 
