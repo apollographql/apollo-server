@@ -29,7 +29,7 @@
     "apollo-server-module-graphiql": "^1.0.5"
   },
   "devDependencies": {
-    "@ksjogo/azure-functions-typescript": "1.x.x",
+    "azure-functions-typescript": "0.0.1",
     "@types/graphql": "^0.10.1",
     "apollo-server-integration-testsuite": "^1.0.5"
   },

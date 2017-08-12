@@ -2,7 +2,7 @@ import {
     IHttpContext,
     IFunctionRequest,
     HttpStatusCodes,
-} from '@ksjogo/azure-functions-typescript';
+} from 'azure-functions-typescript';
 import { GraphQLOptions, runHttpQuery } from 'apollo-server-core';
 import * as GraphiQL from 'apollo-server-module-graphiql';
 
