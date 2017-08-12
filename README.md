@@ -34,6 +34,7 @@ where `<variant>` is one of the following:
  - `restify`
  - `lambda`
  - `micro`
+ - `azure-functions`
 
 ### Express
 
