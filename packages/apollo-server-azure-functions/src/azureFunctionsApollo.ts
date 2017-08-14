@@ -79,7 +79,7 @@ export function graphqlAzureFunctions(
 
                 httpContext.res = result;
 
-                httpContext.done(error, result);
+                httpContext.done(null, result);
             });
     };
 }
@@ -119,7 +119,7 @@ export function graphiqlAzureFunctions(
                     body: error.message,
                 };
 
-                httpContext.done(error, httpContext.res);
+                httpContext.done(null, httpContext.res);
             },
         );
     };
