@@ -1,0 +1,43 @@
+{
+  "name": "apollo-server-azure-functions",
+  "version": "1.1.0",
+  "description": "Node.js GraphQl server for Azure Functions",
+  "main": "dist/index.js",
+  "scripts": {
+    "compile": "tsc",
+    "prepublish": "npm run compile"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-azure-functions"
+  },
+  "keywords": [
+    "GraphQL",
+    "Apollo",
+    "Server",
+    "Azure",
+    "Functions"
+  ],
+  "author": "Ulrik Strid <ulrik.strid@outlook.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/apollographql/apollo-server/issues"
+  },
+  "homepage": "https://github.com/apollographql/apollo-server#readme",
+  "dependencies": {
+    "apollo-server-core": "^1.0.2",
+    "apollo-server-module-graphiql": "^1.0.5"
+  },
+  "devDependencies": {
+    "azure-functions-typescript": "0.0.1",
+    "@types/graphql": "^0.10.1",
+    "apollo-server-integration-testsuite": "^1.0.5"
+  },
+  "peerDependencies": {
+    "graphql": "^0.9.0 || ^0.10.1"
+  },
+  "typings": "dist/index.d.ts",
+  "typescript": {
+    "definition": "dist/index.d.ts"
+  }
+}
