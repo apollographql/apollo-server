@@ -12,8 +12,8 @@ function createApp(options: CreateAppOptions = {}) {
 
   options.graphqlOptions = options.graphqlOptions || { schema };
   if (!options.excludeParser) {
-    server.use(restify.bodyParser());
-    server.use(restify.queryParser());
+    server.use(restify.plugins.bodyParser());
+    server.use(restify.plugins.queryParser());
   }
 
   if (options.graphiqlOptions ) {
