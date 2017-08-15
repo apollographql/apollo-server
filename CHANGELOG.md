@@ -1,7 +1,7 @@
 # Changelog
 
 ### v1.1.1
-* Added support for Azure Functions [#503]
+* Added support for Azure Functions [#503](https://github.com/apollographql/apollo-server/pull/503)
 
 ### v1.1.0
 
