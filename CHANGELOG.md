@@ -1,5 +1,8 @@
 # Changelog
 
+### v1.1.1
+* Added support for Azure Functions [#503]
+
 ### v1.1.0
 
 * Added ability to provide custom default field resolvers [#482](https://github.com/apollographql/apollo-server/pull/482)
