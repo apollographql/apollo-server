@@ -16,6 +16,7 @@
  * - (optional) result: the result of the query to pre-fill in the GraphiQL UI
  * - (optional) passHeader: a string that will be added to the header object.
  * For example "'Authorization': localStorage['Meteor.loginToken']" for meteor
+ * - (optional) editorTheme: a CodeMirror theme to be applied to the GraphiQL UI
  */
 
 export type GraphiQLData = {
