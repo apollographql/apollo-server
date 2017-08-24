@@ -30,7 +30,7 @@
     "apollo-server-module-graphiql": "^1.1.2"
   },
   "devDependencies": {
-    "@types/body-parser": "1.16.4",
+    "@types/body-parser": "1.16.5",
     "@types/connect": "3.4.31",
     "@types/express": "4.0.37",
     "@types/graphql": "0.10.2",
