@@ -29,7 +29,7 @@
     "chai": "4.1.1",
     "graphql": "0.10.5",
     "istanbul": "1.0.0-alpha.2",
-    "lerna": "2.0.0",
+    "lerna": "2.1.0",
     "mocha": "3.5.0",
     "npm-check-updates": "2.12.1",
     "remap-istanbul": "0.9.5",
