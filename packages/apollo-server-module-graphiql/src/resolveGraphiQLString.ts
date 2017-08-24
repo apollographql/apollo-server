@@ -22,11 +22,12 @@ async function resolveGraphiQLOptions(options: GraphiQLData | Function, ...args)
   }
 }
 
-function createGraphiQLParams(query: any = {}): GraphiQLParams {
+function createGraphiQLParams(query: any): GraphiQLParams {
+  const queryObject = query || {};
   return {
-    query: query.query || '',
-    variables: query.variables,
-    operationName: query.operationName || '',
+    query: queryObject.query || '',
+    variables: queryObject.variables,
+    operationName: queryObject.operationName || '',
   };
 }
 
