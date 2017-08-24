@@ -42,7 +42,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: graphql.graphqlHandler
-      Runtime: nodejs4.3
+      Runtime: nodejs6.10
       Events:
         GetRequest:
           Type: Api
@@ -58,7 +58,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: graphql.graphiqlHandler
-      Runtime: nodejs4.3
+      Runtime: nodejs6.10
       Events:
         GetRequest:
           Type: Api
