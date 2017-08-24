@@ -1,5 +1,8 @@
 # Changelog
 
+### v1.1.2
+* Fixed bug with no URL query params with GraphiQL on Lambda [Issue #504](https://github.com/apollographql/apollo-server/issues/504) [PR #512](https://github.com/apollographql/apollo-server/pull/503)
+
 ### v1.1.1
 * Added support for Azure Functions [#503](https://github.com/apollographql/apollo-server/pull/503)
 
