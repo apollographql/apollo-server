@@ -26,7 +26,7 @@
   "devDependencies": {
     "@types/fibers": "0.0.29",
     "@types/graphql": "0.10.2",
-    "fibers": "1.0.15",
+    "fibers": "2.0.0",
     "meteor-promise": "0.8.6"
   },
   "peerDependencies": {
