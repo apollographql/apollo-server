@@ -28,7 +28,7 @@
     "@types/sinon": "2.3.3",
     "chai": "4.1.1",
     "graphql": "0.10.5",
-    "istanbul": "1.0.0-alpha.2",
+    "istanbul": "1.1.0-alpha.1",
     "lerna": "2.1.0",
     "mocha": "3.5.0",
     "npm-check-updates": "2.12.1",
