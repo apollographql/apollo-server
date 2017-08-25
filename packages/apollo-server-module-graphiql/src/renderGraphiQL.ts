@@ -144,7 +144,7 @@ export function renderGraphiQL(data: GraphiQLData): string {
               ${passHeader}
             },
             body: JSON.stringify(graphQLParams),
-            credentials: 'include',
+            credentials: 'same-origin',
           }).then(function (response) {
             return response.text();
           }).then(function (responseBody) {
