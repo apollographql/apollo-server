@@ -27,7 +27,7 @@
     "@types/node": "8.0.25",
     "@types/sinon": "2.3.3",
     "chai": "4.1.1",
-    "graphql": "0.10.5",
+    "graphql": "0.11.1",
     "istanbul": "1.1.0-alpha.1",
     "lerna": "2.1.0",
     "mocha": "3.5.0",
