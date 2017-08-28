@@ -32,9 +32,11 @@ export function graphqlExpress(options: GraphQLOptions | ExpressGraphQLOptionsFu
       options: options,
       query: req.method === 'POST' ? req.body : req.query,
     }).then((gqlResponse) => {
-      res.setHeader('Content-Type', 'application/json');
-      res.write(gqlResponse);
-      res.end();
+		if (JSON.stringify(req.body).indexOf("IntrospectionQuery") > -1) {
+			res.setHeader('Content-Type', 'application/json');
+			res.write(gqlResponse);
+			res.end();
+		}
     }, (error: HttpQueryError) => {
       if ( 'HttpQueryError' !== error.name ) {
         return next(error);
