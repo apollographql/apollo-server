@@ -1,5 +1,5 @@
 {
-  "name": "apollo-server-express",
+  "name": "apollo-server-express-gwt",
   "version": "1.1.2",
   "description": "Production-ready Node.js GraphQL server for Express and Connect",
   "main": "dist/index.js",
