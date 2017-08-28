@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-express"
+    "url": "https://github.com/arquio/apollo-server/tree/master/packages/apollo-server-express"
   },
   "keywords": [
     "GraphQL",
@@ -22,9 +22,9 @@
   "author": "Jonas Helfer <jonas@helfer.email>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/apollographql/apollo-server/issues"
+    "url": "https://github.com/arquio/apollo-server/issues"
   },
-  "homepage": "https://github.com/apollographql/apollo-server#readme",
+  "homepage": "https://github.com/arquio/apollo-server#readme",
   "dependencies": {
     "apollo-server-core": "^1.1.0",
     "apollo-server-module-graphiql": "^1.1.2"
