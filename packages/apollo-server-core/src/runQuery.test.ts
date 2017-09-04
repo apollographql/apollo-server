@@ -21,8 +21,9 @@ import {
 // Make the global Promise constructor Fiber-aware to simulate a Meteor
 // environment.
 import { makeCompatible } from 'meteor-promise';
-const Fiber = require('fibers');
-makeCompatible(Promise, Fiber);
+// tslint:disable-next-line
+const fiber = require('fibers');
+makeCompatible(Promise, fiber);
 
 const queryType = new GraphQLObjectType({
     name: 'QueryType',
