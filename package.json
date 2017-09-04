@@ -19,7 +19,8 @@
     "travis": "istanbul cover -x \"*.test.js\" _mocha -- --timeout 5000 --full-trace ./test/tests.js",
     "posttravis": "npm run lint",
     "postcoverage": "remap-istanbul --input coverage/coverage.raw.json --type lcovonly --output coverage/lcov.info",
-    "release": "lerna publish"
+    "release": "lerna publish",
+    "rollup": "lerna exec -- rollup --config ../../rollup.config.js"
   },
   "devDependencies": {
     "@types/chai": "4.0.4",
@@ -33,6 +34,9 @@
     "mocha": "3.5.0",
     "npm-check-updates": "2.12.1",
     "remap-istanbul": "0.9.5",
+    "rollup": "^0.49.2",
+    "rollup-plugin-commonjs": "^8.2.0",
+    "rollup-plugin-node-resolve": "^3.0.0",
     "sinon": "3.2.1",
     "supertest": "3.0.0",
     "supertest-as-promised": "4.0.2",
