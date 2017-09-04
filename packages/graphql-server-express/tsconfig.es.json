@@ -1,0 +1,11 @@
+{
+  "extends": "../../tsconfig.es",
+  "compilerOptions": {
+    "rootDir": "./src",
+    "outDir": "./dist/es"
+  },
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+}
