@@ -26,10 +26,10 @@
     "@types/mocha": "2.2.42",
     "@types/node": "8.0.26",
     "@types/sinon": "2.3.3",
-    "chai": "4.1.1",
+    "chai": "4.1.2",
     "graphql": "0.11.2",
     "istanbul": "1.1.0-alpha.1",
-    "lerna": "2.1.0",
+    "lerna": "2.1.2",
     "mocha": "3.5.0",
     "npm-check-updates": "2.12.1",
     "remap-istanbul": "0.9.5",
@@ -37,6 +37,6 @@
     "supertest": "3.0.0",
     "supertest-as-promised": "4.0.2",
     "tslint": "5.7.0",
-    "typescript": "2.5.1"
+    "typescript": "2.5.2"
   }
 }
