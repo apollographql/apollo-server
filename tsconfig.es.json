@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "es2015",
+    "module": "es2015",
+    "moduleResolution": "node",
+    "sourceMap": true,
+    "declaration": true,
+    "noImplicitAny": false,
+    "allowSyntheticDefaultImports": false,
+    "pretty": true,
+    "removeComments": true,
+    "lib": ["es6", "esnext.asynciterable"],
+    "types": [
+      "@types/node"
+    ]
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig.es",
+  "compilerOptions": {
+    "rootDir": "./src",
+    "outDir": "./dist/es",
+    "lib": ["es6", "esnext.asynciterable"],
+    "typeRoots": [
+      "node_modules/@types"
+    ]
+  },
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+}
