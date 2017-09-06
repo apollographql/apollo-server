@@ -1,4 +1,4 @@
-# graphql-server-lambda
+# apollo-server-lambda
 
 This is the AWS Lambda integration for the Apollo community GraphQL Server. [Read the docs.](http://dev.apollodata.com/tools/apollo-server/index.html)
 
@@ -12,7 +12,7 @@ We will use the [AWS Command Line Interface](https://aws.amazon.com/cli/).
 #### Write the API handlers
 graphql.js:
 ```javascript
-var server = require("graphql-server-lambda"),
+var server = require("apollo-server-lambda"),
     myGraphQLSchema = require("./schema");
 
 exports.graphqlHandler = server.graphqlLambda({ schema: myGraphQLSchema });
@@ -88,7 +88,7 @@ aws cloudformation deploy \
 ### Read API Gateway event and Lambda Context
 To read information about the current request (HTTP headers, HTTP method, body, path, ...) or the current Lambda Context (Function Name, Function Version, awsRequestId, time remaning, ...) use the options function. This way they can be passed to your schema resolvers using the context option.
 ```js
-var server = require("graphql-server-lambda"),
+var server = require("apollo-server-lambda"),
     myGraphQLSchema = require("./schema");
 
 exports.graphqlHandler = server.graphqlLambda((event, context) => {
@@ -110,7 +110,7 @@ exports.graphqlHandler = server.graphqlLambda((event, context) => {
 ### Modify the Lambda Response (Enable CORS)
 To enable CORS the response HTTP headers need to be modified. To accomplish this pass in a callback filter to the generated handler of graphqlLambda.
 ```js
-var server = require("graphql-server-lambda"),
+var server = require("apollo-server-lambda"),
     myGraphQLSchema = require("./schema");
 
 exports.graphqlHandler = function(event, context, callback)  {
@@ -127,7 +127,7 @@ To enable CORS response for requests with credentials (cookies, http authenticat
 ```js
 const CORS_ORIGIN = "https://example.com";
 
-var server = require("graphql-server-lambda"),
+var server = require("apollo-server-lambda"),
     myGraphQLSchema = require("./schema");
 
 exports.graphqlHandler = function(event, context, callback)  {
