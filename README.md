@@ -1,11 +1,11 @@
-# GraphQL Server for Express, Connect, Hapi, Koa, Restify and AWS Lambda
+# GraphQL Server for Express, Connect, Hapi, Koa, Restify, Micro, Azure Functions, and AWS Lambda
 
 [![npm version](https://badge.fury.io/js/apollo-server-core.svg)](https://badge.fury.io/js/apollo-server-core)
 [![Build Status](https://travis-ci.org/apollographql/apollo-server.svg?branch=master)](https://travis-ci.org/apollographql/apollo-server)
 [![Coverage Status](https://coveralls.io/repos/github/apollographql/apollo-server/badge.svg?branch=master)](https://coveralls.io/github/apollographql/apollo-server?branch=master)
 [![Get on Slack](https://img.shields.io/badge/slack-join-orange.svg)](http://www.apollodata.com/#slack)
 
-Apollo Server is a community-maintained open-source GraphQL server. It works with all Node.js HTTP server frameworks: Express, Connect, Hapi, Koa and Restify. It is built on top of the [`graphql-js` reference implementation](https://github.com/graphql/graphql-js).
+Apollo Server is a community-maintained open-source GraphQL server. It works with pretty much all Node.js HTTP server frameworks, and we're happy to take PRs for more! It works with any GraphQL schema built with the [`graphql-js` reference implementation](https://github.com/graphql/graphql-js). 
 
 ## Principles
 
@@ -15,9 +15,7 @@ Apollo Server is built with the following principles in mind:
 * **Simplicity**: by keeping things simple, Apollo Server is easier to use, easier to contribute to, and more secure
 * **Performance**: Apollo Server is well-tested and production-ready - no modifications needed
 
-
 Anyone is welcome to contribute to Apollo Server, just read [CONTRIBUTING.md](./CONTRIBUTING.md), take a look at the [roadmap](./ROADMAP.md) and make your first PR!
-
 
 ## Getting started
 
