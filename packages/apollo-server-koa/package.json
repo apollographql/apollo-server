@@ -29,7 +29,7 @@
     "apollo-server-module-graphiql": "^1.1.2"
   },
   "devDependencies": {
-    "@types/graphql": "0.11.0",
+    "@types/graphql": "0.11.1",
     "@types/koa": "2.0.39",
     "@types/koa-bodyparser": "3.0.24",
     "@types/koa-router": "7.0.23",
