@@ -28,6 +28,7 @@ export type GraphiQLData = {
   result?: Object,
   passHeader?: string,
   editorTheme?: string,
+  connectionParams?: Object,
 };
 
 // Current latest version of GraphiQL.
@@ -56,6 +57,7 @@ export function renderGraphiQL(data: GraphiQLData): string {
   const passHeader = data.passHeader ? data.passHeader : '';
   const editorTheme = data.editorTheme;
   const usingEditorTheme = !!editorTheme;
+  const connectionParams = data.connectionParams || null;
 
   /* eslint-disable max-len */
   return `
@@ -124,7 +126,8 @@ export function renderGraphiQL(data: GraphiQLData): string {
 
     ${usingWs ? `
     var subscriptionsClient = new window.SubscriptionsTransportWs.SubscriptionClient('${endpointURLWs}', {
-      reconnect: true
+      reconnect: true${connectionParams ? `,
+      connectionParams: ${JSON.stringify(connectionParams)}` : '' }
     });
 
     var graphQLWSFetcher = subscriptionsClient.request.bind(subscriptionsClient);
@@ -200,6 +203,7 @@ export function renderGraphiQL(data: GraphiQLData): string {
         variables: ${safeSerialize(variablesString)},
         operationName: ${safeSerialize(operationName)},
         editorTheme: ${safeSerialize(editorTheme)},
+        connectionParams: ${safeSerialize(connectionParams)},
       }),
       document.body
     );
