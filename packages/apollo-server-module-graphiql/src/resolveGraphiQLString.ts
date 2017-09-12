@@ -40,7 +40,7 @@ function createGraphiQLData(params: GraphiQLParams, options: GraphiQLData): Grap
     operationName: params.operationName || options.operationName,
     passHeader: options.passHeader,
     editorTheme: options.editorTheme,
-    connectionParams: options.connectionParams,
+    websocketConnectionParams: options.websocketConnectionParams,
   };
 }
 

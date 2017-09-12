@@ -17,6 +17,7 @@
  * - (optional) passHeader: a string that will be added to the header object.
  * For example "'Authorization': localStorage['Meteor.loginToken']" for meteor
  * - (optional) editorTheme: a CodeMirror theme to be applied to the GraphiQL UI
+ * - (optional) websocketConnectionParams: an object to pass to the web socket server
  */
 
 export type GraphiQLData = {
@@ -28,7 +29,7 @@ export type GraphiQLData = {
   result?: Object,
   passHeader?: string,
   editorTheme?: string,
-  connectionParams?: Object,
+  websocketConnectionParams?: Object,
 };
 
 // Current latest version of GraphiQL.
@@ -57,7 +58,7 @@ export function renderGraphiQL(data: GraphiQLData): string {
   const passHeader = data.passHeader ? data.passHeader : '';
   const editorTheme = data.editorTheme;
   const usingEditorTheme = !!editorTheme;
-  const connectionParams = data.connectionParams || null;
+  const websocketConnectionParams = data.websocketConnectionParams || null;
 
   /* eslint-disable max-len */
   return `
@@ -126,8 +127,8 @@ export function renderGraphiQL(data: GraphiQLData): string {
 
     ${usingWs ? `
     var subscriptionsClient = new window.SubscriptionsTransportWs.SubscriptionClient('${endpointURLWs}', {
-      reconnect: true${connectionParams ? `,
-      connectionParams: ${JSON.stringify(connectionParams)}` : '' }
+      reconnect: true${websocketConnectionParams ? `,
+      connectionParams: ${JSON.stringify(websocketConnectionParams)}` : '' }
     });
 
     var graphQLWSFetcher = subscriptionsClient.request.bind(subscriptionsClient);
@@ -203,7 +204,7 @@ export function renderGraphiQL(data: GraphiQLData): string {
         variables: ${safeSerialize(variablesString)},
         operationName: ${safeSerialize(operationName)},
         editorTheme: ${safeSerialize(editorTheme)},
-        connectionParams: ${safeSerialize(connectionParams)},
+        websocketConnectionParams: ${safeSerialize(websocketConnectionParams)},
       }),
       document.body
     );
