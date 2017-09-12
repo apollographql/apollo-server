@@ -31,7 +31,7 @@
   "devDependencies": {
     "@types/graphql": "0.11.3",
     "@types/koa": "2.0.39",
-    "@types/koa-bodyparser": "3.0.24",
+    "@types/koa-bodyparser": "3.0.25",
     "@types/koa-router": "7.0.23",
     "apollo-server-integration-testsuite": "^1.1.2",
     "koa": "2.3.0",
