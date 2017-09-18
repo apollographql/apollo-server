@@ -22,6 +22,8 @@ npm install graphql apollo-server-lambda
 npm install graphql apollo-server-micro
 ```
 
+> A note for those who’ve used Apollo Server previously: You may notice we now import from `apollo-server-` rather than `graphql-server-` npm packages. We felt the rename better reflects that it’s part of the Apollo project and family of libraries.
+
 The following features distinguish Apollo Server from [express-graphql](https://github.com/graphql/express-graphql), Facebook's reference HTTP server implementation:
 
 - Apollo Server has a simpler interface and allows fewer ways of sending queries, which makes it a bit easier to reason about what's going on.
