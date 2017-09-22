@@ -15,23 +15,30 @@ Apollo Server accepts a `GraphQLOptions` object as its single argument. The `Gra
 const GraphQLOptions = {
   schema: GraphQLSchema,
 
-  // values to be used as context and rootValue in resolvers
-  context?: any,
+  // rootValue passed to GraphQL execution
   rootValue?: any,
 
-  // function used to format errors before returning them to clients
+  // the context passed to GraphQL execution
+  context?: any,
+
+  // Formatting function applied to all errors before response is sent
   formatError?: Function,
 
-  // additional validation rules to be applied to client-specified queries
-  validationRules?: Array<ValidationRule>,
-
-  // function applied for each query in a batch to format parameters before passing them to `runQuery`
+  // a function called for logging events such as execution times
+  logFunction?: Function,
+  // a function applied to the parameters of every invocation of runQuery
   formatParams?: Function,
 
-  // function applied to each response before returning data to clients
-  formatResponse?: Function,
+  // * - (optional) validationRules: extra validation rules applied to requests
+  validationRules?: Array<ValidationRule>,
 
-  // a boolean option that will trigger additional debug logging if execution errors occur
+  // a function applied to each graphQL execution result
+  formatResponse?: Function
+
+  // a custom default field resolver
+  fieldResolver?: Function
+
+  // a boolean that will print additional debug logging if execution errors occur
   debug?: boolean
 }
 ```
