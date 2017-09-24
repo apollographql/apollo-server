@@ -1,0 +1,74 @@
+{
+  "data": {
+    "posts": [
+      {
+        "title": "Introduction to GraphQL",
+        "votes": 2,
+        "author": {
+          "firstName": "Tom",
+          "lastName": "Coleman"
+        }
+      },
+      {
+        "title": "GraphQL Rocks",
+        "votes": 3,
+        "author": {
+          "firstName": "Sashko",
+          "lastName": "Stubailo"
+        }
+      },
+      {
+        "title": "Advanced GraphQL",
+        "votes": 1,
+        "author": {
+          "firstName": "Sashko",
+          "lastName": "Stubailo"
+        }
+      }
+    ],
+    "me": {
+      "name": "Martijn Walraven"
+    }
+  },
+  "extensions": {
+    "cacheControl": {
+      "version": 1,
+      "hints": [
+        {
+          "path": ["posts"],
+          "maxAge": 3600,
+          "scope": "public"
+        },
+        {
+          "path": ["posts", 0, "votes"],
+          "maxAge": 30
+        },
+        {
+          "path": ["posts", 0, "author"],
+          "maxAge": 60
+        },
+        {
+          "path": ["posts", 1, "votes"],
+          "maxAge": 30
+        },
+        {
+          "path": ["posts", 1, "author"],
+          "maxAge": 60
+        },
+        {
+          "path": ["posts", 2, "votes"],
+          "maxAge": 30
+        },
+        {
+          "path": ["posts", 2, "author"],
+          "maxAge": 60
+        },
+        {
+          "path": ["me"],
+          "maxAge": 1200,
+          "scope": "private"
+        }
+      ]
+    }
+  }
+}

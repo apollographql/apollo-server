@@ -1,0 +1,31 @@
+{
+  "name": "apollo-cache-control",
+  "version": "0.0.1",
+  "description": "Track and expose cache control data for GraphQL requests",
+  "main": "./lib/index.js",
+  "types": "./lib/index.d.ts",
+  "scripts": {
+    "clean": "rm -rf lib",
+    "compile": "tsc",
+    "watch": "tsc -w",
+    "prepare": "npm run clean && npm run compile",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "license": "MIT",
+  "repository": "apollographql/apollo-cache-control-js",
+  "author": "Martijn Walraven <martijn@martijnwalraven.com>",
+  "engines": {
+    "node": ">=4.0"
+  },
+  "peerDependencies": {
+    "graphql": "^0.10.0"
+  },
+  "devDependencies": {
+    "@types/graphql": "^0.11.4",
+    "@types/node": "^8.0.30",
+    "typescript": "^2.5.2"
+  },
+  "dependencies": {
+    "graphql-extensions": "0.0.1"
+  }
+}
