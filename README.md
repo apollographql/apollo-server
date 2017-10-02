@@ -157,7 +157,7 @@ server.listen(PORT, () => console.log(`Listening on ${PORT}`));
 
 ### AWS Lambda
 
-Lambda function should be run with Node.js v4.3. Requires an API Gateway with Lambda Proxy Integration.
+Lambda function should be run with [Node.js 4.3 or v6.1](https://docs.aws.amazon.com/lambda/latest/dg/nodejs-prog-model-using-old-runtime.html#nodejs-prog-model-runtime-support-policy). Requires an API Gateway with Lambda Proxy Integration.
 
 ```js
 var server = require("apollo-server-lambda");
