@@ -1,0 +1,59 @@
+{
+  "name": "graphql-extensions",
+  "version": "0.0.1",
+  "description": "Add extensions to GraphQL servers",
+  "main": "./lib/index.js",
+  "types": "./lib/index.d.ts",
+  "scripts": {
+    "clean": "rm -rf lib",
+    "compile": "tsc",
+    "watch": "tsc -w",
+    "prepublish": "npm run clean && npm run compile",
+    "test": "./node_modules/.bin/jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "apollographql/graphql-extensions"
+  },
+  "author": "Martijn Walraven <martijn@martijnwalraven.com>",
+  "license": "MIT",
+  "engines": {
+    "node": ">=4.0"
+  },
+  "dependencies": {
+    "core-js": "^2.5.1",
+    "source-map-support": "^0.5.0"
+  },
+  "peerDependencies": {
+    "graphql": "^0.10.0 || ^0.11.0"
+  },
+  "devDependencies": {
+    "@types/graphql": "^0.11.5",
+    "@types/jest": "^21.1.2",
+    "jest": "^21.2.1",
+    "jest-matcher-utils": "^21.2.1",
+    "ts-jest": "^21.1.0",
+    "typescript": "^2.5.3"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "setupFiles": [
+      "<rootDir>/src/polyfills.js"
+    ],
+    "testMatch": [
+      "**/test/**/*.(js|ts)",
+      "**/test/*.(js|ts)"
+    ],
+    "testPathIgnorePatterns": [
+      "<rootDir>/node_modules/",
+      "<rootDir>/lib/"
+    ],
+    "transform": {
+      "^.+\\.(ts|js)x?$": "<rootDir>/node_modules/ts-jest/preprocessor.js"
+    },
+    "moduleFileExtensions": [
+      "ts",
+      "js"
+    ]
+  }
+}
