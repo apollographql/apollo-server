@@ -30,7 +30,7 @@
     "meteor-promise": "0.8.6"
   },
   "peerDependencies": {
-    "graphql": "^0.9.0 || ^0.10.1"
+    "graphql": "^0.9.0 || ^0.10.0 || ^0.11.0"
   },
   "typings": "dist/index.d.ts",
   "typescript": {
