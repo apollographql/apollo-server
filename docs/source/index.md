@@ -1,6 +1,5 @@
 ---
 title: Installing
-order: 201
 description: How to install Apollo Server
 ---
 

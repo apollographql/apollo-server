@@ -1,6 +1,5 @@
 ---
 title: GraphiQL
-order: 205
 description: How to set up GraphiQL with Apollo Server
 ---
 

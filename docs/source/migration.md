@@ -1,6 +1,5 @@
 ---
 title: Migrating to v0.2
-order: 207
 description: How to migrate from an older version of Apollo Server
 ---
 
