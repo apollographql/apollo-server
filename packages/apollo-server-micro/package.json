@@ -36,7 +36,6 @@
     "microrouter": "2.2.3"
   },
   "peerDependencies": {
-    "graphql": "^0.9.0 || ^0.10.1",
     "micro": "^8.0.1"
   },
   "typings": "dist/index.d.ts",

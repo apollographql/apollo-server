@@ -27,7 +27,7 @@
     "@types/graphql": "0.11.4"
   },
   "peerDependencies": {
-    "graphql": "^0.9.0 || ^0.10.1"
+    "graphql": "^0.9.0 || ^0.10.1 || ^0.11.0"
   },
   "typings": "dist/index.d.ts",
   "typescript": {

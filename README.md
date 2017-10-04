@@ -38,7 +38,7 @@ where `<variant>` is one of the following:
 ```js
 import express from 'express';
 import bodyParser from 'body-parser';
-import { graphqlExpress } from 'apollo-server-express';
+import { graphqlExpress, graphiqlExpress } from 'apollo-server-express';
 
 const myGraphQLSchema = // ... define or import your schema here!
 const PORT = 3000;
@@ -47,6 +47,7 @@ const app = express();
 
 // bodyParser is needed just for POST.
 app.use('/graphql', bodyParser.json(), graphqlExpress({ schema: myGraphQLSchema }));
+app.get('/graphiql', graphiqlExpress({ endpointURL: '/graphql' })); // if you want GraphiQL enabled
 
 app.listen(PORT);
 ```
@@ -156,7 +157,7 @@ server.listen(PORT, () => console.log(`Listening on ${PORT}`));
 
 ### AWS Lambda
 
-Lambda function should be run with Node.js v4.3. Requires an API Gateway with Lambda Proxy Integration.
+Lambda function should be run with [Node.js 4.3 or v6.1](https://docs.aws.amazon.com/lambda/latest/dg/nodejs-prog-model-using-old-runtime.html#nodejs-prog-model-runtime-support-policy). Requires an API Gateway with Lambda Proxy Integration.
 
 ```js
 var server = require("apollo-server-lambda");

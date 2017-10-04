@@ -33,9 +33,6 @@
     "apollo-server-integration-testsuite": "^1.1.2",
     "azure-functions-typescript": "0.0.1"
   },
-  "peerDependencies": {
-    "graphql": "^0.9.0 || ^0.10.1"
-  },
   "typings": "dist/index.d.ts",
   "typescript": {
     "definition": "dist/index.d.ts"
