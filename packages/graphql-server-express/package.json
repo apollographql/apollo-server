@@ -1,6 +1,6 @@
 {
   "name": "graphql-server-express",
-  "version": "1.1.2",
+  "version": "1.1.3",
   "description": "Production-ready Node.js GraphQL server for Express and Connect",
   "main": "dist/index.js",
   "scripts": {
@@ -26,7 +26,7 @@
   },
   "homepage": "https://github.com/apollographql/apollo-server#readme",
   "dependencies": {
-    "apollo-server-express": "^1.1.2"
+    "apollo-server-express": "^1.1.3"
   },
   "typings": "dist/index.d.ts",
   "typescript": {
