@@ -12,7 +12,7 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "license": "MIT",
-  "repository": "apollographql/apollo-tracing",
+  "repository": "apollographql/apollo-tracing-js",
   "author": "Martijn Walraven <martijn@martijnwalraven.com>",
   "engines": {
     "node": ">=4.0"
