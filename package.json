@@ -30,7 +30,7 @@
     "graphql": "0.11.7",
     "istanbul": "1.1.0-alpha.1",
     "lerna": "2.4.0",
-    "mocha": "4.0.0",
+    "mocha": "4.0.1",
     "npm-check-updates": "2.13.0",
     "remap-istanbul": "0.9.5",
     "sinon": "4.0.1",
