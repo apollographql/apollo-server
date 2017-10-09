@@ -1,6 +1,8 @@
 # Changelog
 
 ### vNEXT
+
+### v1.1.6
 * Fixes bug where CORS would not allow `Access-Control-Allow-Origin: *` with credential 'include', changed to 'same-origin' [Issue #514](https://github.com/apollographql/apollo-server/issues/514)
 * Update apollo-server-lambda README to reflect new package name.
 * Add support for connectionParams in GraphiQL plugin options [#452](https://github.com/apollographql/apollo-server/issues/452) [PR 548](https://github.com/apollographql/apollo-server/pull/548)
