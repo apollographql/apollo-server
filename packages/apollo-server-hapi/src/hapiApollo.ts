@@ -14,6 +14,7 @@ export interface HapiOptionsFunction {
 
 export interface HapiPluginOptions {
   path: string;
+  vhost?: string;
   route?: any;
   graphqlOptions: GraphQLOptions | HapiOptionsFunction;
 }
@@ -58,6 +59,7 @@ const graphqlHapi: IRegister = function(server: Server, options: HapiPluginOptio
   server.route({
     method: ['GET', 'POST'],
     path: options.path || '/graphql',
+    vhost: options.vhost || undefined,
     config: options.route || {},
     handler: (request, reply) => runHttpQueryWrapper(options.graphqlOptions, request, reply),
   });
