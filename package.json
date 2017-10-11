@@ -25,7 +25,7 @@
     "@types/chai": "4.0.4",
     "@types/mocha": "2.2.43",
     "@types/node": "8.0.34",
-    "@types/sinon": "2.3.5",
+    "@types/sinon": "2.3.6",
     "chai": "4.1.2",
     "graphql": "0.11.7",
     "istanbul": "1.1.0-alpha.1",
