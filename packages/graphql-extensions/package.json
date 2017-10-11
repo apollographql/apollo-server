@@ -8,7 +8,7 @@
     "clean": "rm -rf lib",
     "compile": "tsc",
     "watch": "tsc -w",
-    "prepublish": "npm run clean && npm run compile",
+    "prepare": "npm run clean && npm run compile",
     "test": "./node_modules/.bin/jest"
   },
   "repository": {
