@@ -26,7 +26,7 @@ With the Hapi plugins `graphqlHapi` and `graphiqlHapi` you can pass a route obje
 import hapi from 'hapi';
 import { graphqlHapi } from 'apollo-server-hapi';
 
-const server = new hapi.Server();
+const server = new hapi.Server({ debug: { request: "*" } });
 
 const HOST = 'localhost';
 const PORT = 3000;
