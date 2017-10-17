@@ -6,7 +6,7 @@
     "declaration": true,
     "sourceMap": true,
     "outDir": "lib",
-    "lib": ["es2017"],
+    "lib": ["es2017", "esnext.asynciterable"],
     "strict": true
   },
   "include" : [
