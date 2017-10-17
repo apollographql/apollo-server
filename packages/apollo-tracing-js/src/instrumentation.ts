@@ -1,4 +1,4 @@
-import { 
+import {
     GraphQLSchema,
     GraphQLType,
     getNamedType,
@@ -66,7 +66,11 @@ function instrumentField(field: GraphQLField<any, any>): void {
   const fieldResolver = field.resolve;
 
   const instrumentedFieldResolver: GraphQLFieldResolver<any, any> = (source, args, context, info) => {
-    const traceCollector = context._traceCollector;
+    const traceCollector = context && context._traceCollector;
+
+    if (!traceCollector) {
+      return (fieldResolver || defaultFieldResolver)(source, args, context, info);
+    }
 
     const resolverCall: ResolverCall = {
       path: info.path,
