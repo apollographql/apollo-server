@@ -1,15 +1,32 @@
-import { DirectiveNode, getNamedType, GraphQLObjectType, GraphQLResolveInfo, ResponsePath, responsePathAsArray } from 'graphql';
+import {
+  DirectiveNode,
+  getNamedType,
+  GraphQLObjectType,
+  GraphQLResolveInfo,
+  ResponsePath,
+  responsePathAsArray
+} from 'graphql';
 import { GraphQLExtension } from 'graphql-extensions';
+
+export interface CacheControlFormat {
+  version: 1;
+  hints: {
+    path: (string | number)[];
+    maxAge?: number;
+    scope?: CacheScope;
+  }[];
+}
 
 export class CacheControlExtension<TContext = any> implements GraphQLExtension<TContext> {
   cacheControl = new CacheControl();
 
-  beforeField(source: any, args: { [argName: string]: any }, context: TContext, info: GraphQLResolveInfo) {
+  beforeField(_source: any, _args: { [argName: string]: any }, _context: TContext, info: GraphQLResolveInfo) {
+    let hint: CacheHint = {};
+
     const targetType = getNamedType(info.returnType);
-    if (targetType instanceof GraphQLObjectType && targetType.astNode) {
-      const hint = cacheHintFromDirectives(targetType.astNode.directives);
-      if (hint) {
-        this.cacheControl.addHint(info.path, hint);
+    if (targetType instanceof GraphQLObjectType) {
+      if (targetType.astNode) {
+        hint = mergeHints(hint, cacheHintFromDirectives(targetType.astNode.directives));
       }
     }
 
@@ -17,27 +34,33 @@ export class CacheControlExtension<TContext = any> implements GraphQLExtension<T
     if (parentType instanceof GraphQLObjectType) {
       const fieldDef = parentType.getFields()[info.fieldName];
       if (fieldDef.astNode) {
-        const hint = cacheHintFromDirectives(fieldDef.astNode.directives);
-        if (hint) {
-          this.cacheControl.addHint(info.path, hint);
-        }
+        hint = mergeHints(hint, cacheHintFromDirectives(fieldDef.astNode.directives));
       }
+    }
+
+    if (targetType instanceof GraphQLObjectType && hint.maxAge === undefined) {
+      hint.maxAge = 0;
+    }
+
+    if (hint.maxAge !== undefined || hint.scope !== undefined) {
+      this.cacheControl.addHint(info.path, hint);
     }
   }
 
-  afterField(source: any, args: { [argName: string]: any }, context: TContext, info: GraphQLResolveInfo) {
+  setCacheHint(_hint: CacheHint) {
+    // this.cacheControl.addHint(info.path, hint);
   }
 
-  formatData() {
+  afterField(_source: any, _args: { [argName: string]: any }, _context: TContext, _info: GraphQLResolveInfo) {}
+
+  formatData(): CacheControlFormat {
     return {
-      cacheControl: {
-        version: 1,
-        hints: Array.from(this.cacheControl.hints).map(([path, hint]) => ({
-          path: responsePathAsArray(path),
-          ...hint
-        }))
-      }
-    }
+      version: 1,
+      hints: Array.from(this.cacheControl.hints).map(([path, hint]) => ({
+        path: responsePathAsArray(path),
+        ...hint
+      }))
+    };
   }
 }
 
@@ -54,9 +77,29 @@ function cacheHintFromDirectives(directives: DirectiveNode[] | undefined): Cache
 
   // TODO: Add proper typechecking of arguments
   return {
-    maxAge: maxAgeArgument && maxAgeArgument.value && maxAgeArgument.value.kind === 'IntValue' ? parseInt(maxAgeArgument.value.value) : undefined,
-    scope: scopeArgument && scopeArgument.value && scopeArgument.value.kind === 'EnumValue' ? scopeArgument.value.value as CacheScope : undefined
-  }
+    maxAge:
+      maxAgeArgument && maxAgeArgument.value && maxAgeArgument.value.kind === 'IntValue'
+        ? parseInt(maxAgeArgument.value.value)
+        : undefined,
+    scope:
+      scopeArgument && scopeArgument.value && scopeArgument.value.kind === 'EnumValue'
+        ? scopeArgument.value.value as CacheScope
+        : undefined
+  };
+}
+
+function mergeHints(hint: CacheHint, otherHint: CacheHint | undefined): CacheHint {
+  if (!otherHint) return hint;
+
+  const maxAges = [hint.maxAge, otherHint.maxAge].filter(x => x) as number[];
+
+  return {
+    maxAge: maxAges.length > 0 ? Math.min(...maxAges) : undefined,
+    scope:
+      hint.scope === CacheScope.Private || otherHint.scope === CacheScope.Private
+        ? CacheScope.Private
+        : hint.scope || otherHint.scope
+  };
 }
 
 export class CacheControl {
@@ -67,10 +110,7 @@ export class CacheControl {
   addHint(path: ResponsePath, hint: CacheHint) {
     const existingCacheHint = this.hints.get(path);
     if (existingCacheHint) {
-      this.hints.set(path, {
-        maxAge: Math.min(existingCacheHint.maxAge || 0, hint.maxAge || 0),
-        scope: existingCacheHint.scope === CacheScope.Private || hint.scope === CacheScope.Private ? CacheScope.Private : CacheScope.Public
-      });
+      this.hints.set(path, mergeHints(existingCacheHint, hint));
     } else {
       this.hints.set(path, hint);
     }

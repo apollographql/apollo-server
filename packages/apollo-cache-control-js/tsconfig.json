@@ -7,9 +7,16 @@
     "sourceMap": true,
     "outDir": "lib",
     "lib": ["es2017", "esnext.asynciterable"],
-    "strict": true
+    "strict": true,
+    "noUnusedParameters": true,
+    "noUnusedLocals": true
   },
-  "include" : [
+  "include": [
     "src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "lib",
+    "__tests__"
   ]
 }
