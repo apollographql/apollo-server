@@ -6,15 +6,8 @@ import {
 } from 'graphql';
 import { makeExecutableSchema } from 'graphql-tools';
 
-import { collectCacheControlData } from './test-utils/helpers';
-
-import { CacheControlExtension } from '../';
-
-declare module 'graphql/type/definition' {
-  interface GraphQLResolveInfo {
-    cacheControl: CacheControlExtension;
-  }
-}
+import { CacheScope } from '../';
+import { collectCacheControlHints } from './test-utils/helpers';
 
 export interface GraphQLResolvers {
   [fieldName: string]: (() => any) | GraphQLResolverObject | GraphQLScalarType;
@@ -32,7 +25,7 @@ export interface GraphQLResolverOptions {
 }
 
 describe('dynamic cache control', () => {
-  xit('should include the specified maxAge for a root field with a dynamic cache hint', async () => {
+  it('should set the maxAge for a field from a dynamic cache hint', async () => {
     const typeDefs = `
       type Query {
         droid(id: ID!): Droid
@@ -58,7 +51,7 @@ describe('dynamic cache control', () => {
 
     const schema = makeExecutableSchema({ typeDefs, resolvers });
 
-    const data = await collectCacheControlData(
+    const hints = await collectCacheControlHints(
       schema,
       `
         query {
@@ -69,6 +62,86 @@ describe('dynamic cache control', () => {
       `
     );
 
-    expect(data.hints).toContainEqual({ path: ['droid'], maxAge: 60 });
+    expect(hints).toContainEqual({ path: ['droid'], maxAge: 60 });
+  });
+
+  it('should set the scope for a field from a dynamic cache hint', async () => {
+    const typeDefs = `
+      type Query {
+        droid(id: ID!): Droid @cacheControl(maxAge: 60)
+      }
+
+      type Droid {
+        id: ID!
+        name: String!
+      }
+    `;
+
+    const resolvers: GraphQLResolvers = {
+      Query: {
+        droid: (_source, { _id }, _context, { cacheControl }) => {
+          cacheControl.setCacheHint({ scope: CacheScope.Private });
+          return {
+            id: 2001,
+            name: 'R2-D2'
+          };
+        }
+      }
+    };
+
+    const schema = makeExecutableSchema({ typeDefs, resolvers });
+
+    const hints = await collectCacheControlHints(
+      schema,
+      `
+        query {
+          droid(id: 2001) {
+            name
+          }
+        }
+      `
+    );
+
+    expect(hints).toContainEqual({ path: ['droid'], maxAge: 60, scope: CacheScope.Private });
+  });
+
+  it('should override the maxAge set for a field from a dynamic cache hint', async () => {
+    const typeDefs = `
+      type Query {
+        droid(id: ID!): Droid @cacheControl(maxAge: 60)
+      }
+
+      type Droid {
+        id: ID!
+        name: String!
+      }
+    `;
+
+    const resolvers: GraphQLResolvers = {
+      Query: {
+        droid: (_source, { _id }, _context, { cacheControl }) => {
+          cacheControl.setCacheHint({ maxAge: 120 });
+          return {
+            id: 2001,
+            name: 'R2-D2'
+          };
+        }
+      }
+    };
+
+    const schema = makeExecutableSchema({ typeDefs, resolvers });
+
+    const hints = await collectCacheControlHints(
+      schema,
+      `
+        query {
+          droid(id: 2001) {
+            name
+          }
+        }
+      `
+    );
+
+    expect(hints).toContainEqual({ path: ['droid'], maxAge: 120 });
   });
 });

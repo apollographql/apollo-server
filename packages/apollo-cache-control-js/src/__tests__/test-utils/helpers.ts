@@ -4,9 +4,9 @@ import {
 } from 'graphql';
 
 import { enableGraphQLExtensions } from 'graphql-extensions';
-import { CacheControlExtension, CacheControlFormat } from '../..';
+import { CacheControlExtension, CacheHint } from '../..';
 
-export async function collectCacheControlData(schema: GraphQLSchema, source: string): Promise<CacheControlFormat> {
+export async function collectCacheControlHints(schema: GraphQLSchema, source: string): Promise<CacheHint[]> {
   enableGraphQLExtensions(schema);
 
   const cacheControlExtension = new CacheControlExtension();
@@ -15,11 +15,11 @@ export async function collectCacheControlData(schema: GraphQLSchema, source: str
     schema,
     source,
     contextValue: {
-      __extensions: [cacheControlExtension]
+      _extensions: [cacheControlExtension]
     }
   });
 
   expect(response.errors).toBeUndefined();
 
-  return cacheControlExtension.formatData();
+  return cacheControlExtension.format()[1].hints;
 }

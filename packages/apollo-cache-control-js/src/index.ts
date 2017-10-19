@@ -10,17 +10,38 @@ import { GraphQLExtension } from 'graphql-extensions';
 
 export interface CacheControlFormat {
   version: 1;
-  hints: {
-    path: (string | number)[];
-    maxAge?: number;
-    scope?: CacheScope;
-  }[];
+  hints: ({ path: (string | number)[] } & CacheHint)[];
+}
+
+export interface CacheHint {
+  maxAge?: number;
+  scope?: CacheScope;
+}
+
+export enum CacheScope {
+  Public = 'PUBLIC',
+  Private = 'PRIVATE'
+}
+
+declare module 'graphql/type/definition' {
+  interface GraphQLResolveInfo {
+    cacheControl: {
+      setCacheHint: (hint: CacheHint) => void
+    };
+  }
 }
 
 export class CacheControlExtension<TContext = any> implements GraphQLExtension<TContext> {
-  cacheControl = new CacheControl();
+  constructor() {}
 
-  beforeField(_source: any, _args: { [argName: string]: any }, _context: TContext, info: GraphQLResolveInfo) {
+  private hints: Map<ResponsePath, CacheHint> = new Map();
+
+  willResolveField(
+    _source: any,
+    _args: { [argName: string]: any },
+    _context: TContext,
+    info: GraphQLResolveInfo
+  ) {
     let hint: CacheHint = {};
 
     const targetType = getNamedType(info.returnType);
@@ -43,24 +64,36 @@ export class CacheControlExtension<TContext = any> implements GraphQLExtension<T
     }
 
     if (hint.maxAge !== undefined || hint.scope !== undefined) {
-      this.cacheControl.addHint(info.path, hint);
+      this.addHint(info.path, hint);
+    }
+
+    info.cacheControl = {
+      setCacheHint: (hint: CacheHint) => {
+        this.addHint(info.path, hint);
+      }
     }
   }
 
-  setCacheHint(_hint: CacheHint) {
-    // this.cacheControl.addHint(info.path, hint);
+  addHint(path: ResponsePath, hint: CacheHint) {
+    const existingCacheHint = this.hints.get(path);
+    if (existingCacheHint) {
+      this.hints.set(path, mergeHints(existingCacheHint, hint));
+    } else {
+      this.hints.set(path, hint);
+    }
   }
 
-  afterField(_source: any, _args: { [argName: string]: any }, _context: TContext, _info: GraphQLResolveInfo) {}
-
-  formatData(): CacheControlFormat {
-    return {
-      version: 1,
-      hints: Array.from(this.cacheControl.hints).map(([path, hint]) => ({
-        path: responsePathAsArray(path),
-        ...hint
-      }))
-    };
+  format(): [string, CacheControlFormat] {
+    return [
+      'cacheControl',
+      {
+        version: 1,
+        hints: Array.from(this.hints).map(([path, hint]) => ({
+          path: responsePathAsArray(path),
+          ...hint
+        }))
+      }
+    ];
   }
 }
 
@@ -91,38 +124,8 @@ function cacheHintFromDirectives(directives: DirectiveNode[] | undefined): Cache
 function mergeHints(hint: CacheHint, otherHint: CacheHint | undefined): CacheHint {
   if (!otherHint) return hint;
 
-  const maxAges = [hint.maxAge, otherHint.maxAge].filter(x => x) as number[];
-
   return {
-    maxAge: maxAges.length > 0 ? Math.min(...maxAges) : undefined,
-    scope:
-      hint.scope === CacheScope.Private || otherHint.scope === CacheScope.Private
-        ? CacheScope.Private
-        : hint.scope || otherHint.scope
+    maxAge: otherHint.maxAge || hint.maxAge,
+    scope: otherHint.scope || hint.scope
   };
-}
-
-export class CacheControl {
-  hints: Map<ResponsePath, CacheHint> = new Map();
-
-  constructor() {}
-
-  addHint(path: ResponsePath, hint: CacheHint) {
-    const existingCacheHint = this.hints.get(path);
-    if (existingCacheHint) {
-      this.hints.set(path, mergeHints(existingCacheHint, hint));
-    } else {
-      this.hints.set(path, hint);
-    }
-  }
-}
-
-export interface CacheHint {
-  maxAge?: number;
-  scope?: CacheScope;
-}
-
-export enum CacheScope {
-  Public = 'PUBLIC',
-  Private = 'PRIVATE'
 }
