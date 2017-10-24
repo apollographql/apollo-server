@@ -33,6 +33,7 @@ export function graphqlExpress(options: GraphQLOptions | ExpressGraphQLOptionsFu
       query: req.method === 'POST' ? req.body : req.query,
     }).then((gqlResponse) => {
       res.setHeader('Content-Type', 'application/json');
+      res.setHeader('Content-Length', Buffer.byteLength(gqlResponse, 'utf8'));
       res.write(gqlResponse);
       res.end();
     }, (error: HttpQueryError) => {
