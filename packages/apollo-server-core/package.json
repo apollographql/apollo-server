@@ -5,6 +5,7 @@
   "main": "dist/index.js",
   "scripts": {
     "compile": "tsc",
+    "watch": "tsc -w",
     "prepublish": "npm run compile"
   },
   "repository": {
@@ -27,7 +28,8 @@
     "@types/fibers": "0.0.29",
     "@types/graphql": "0.11.5",
     "fibers": "1.0.15",
-    "meteor-promise": "0.8.6"
+    "meteor-promise": "0.8.6",
+    "typescript": "^2.5.3"
   },
   "peerDependencies": {
     "graphql": "^0.9.0 || ^0.10.0 || ^0.11.0"
@@ -37,6 +39,8 @@
     "definition": "dist/index.d.ts"
   },
   "dependencies": {
-    "apollo-tracing": "^0.0.x"
+    "graphql-extensions": "^0.0.x",
+    "apollo-tracing": "^0.1.0",
+    "apollo-cache-control": "^0.0.x"
   }
 }
