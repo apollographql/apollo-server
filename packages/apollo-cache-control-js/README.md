@@ -1,6 +1,10 @@
 # Apollo Cache Control (for Node.js)
 
-This package is used to collect and expose cache control data in the [Apollo Cache Control format](https://github.com/apollographql/apollo-cache-control).
+This package is used to collect and expose cache control data in the [Apollo Cache Control](https://github.com/apollographql/apollo-cache-control) format.
+
+It relies on instrumenting a GraphQL schema to collect cache control hints, and exposes cache control data for an individual request under `extensions` as part of the GraphQL response.
+
+This data can be consumed by [Apollo Engine](https://www.apollographql.com/engine/) or any other tool to inform caching and visualize the cache policies that are in effect for a particular request.
 
 ## Usage
 
