@@ -13,11 +13,9 @@ import {
     ValidationContext,
 } from 'graphql';
 
-import {
-  TraceCollector,
-  instrumentSchemaForTracing,
-  formatTraceData,
-} from 'apollo-tracing';
+import { enableGraphQLExtensions, GraphQLExtension, GraphQLExtensionStack } from 'graphql-extensions';
+import { TracingExtension } from 'apollo-tracing';
+import { CacheControlExtension } from 'apollo-cache-control';
 
 export interface GraphQLResponse {
   data?: object;
@@ -61,6 +59,7 @@ export interface QueryOptions {
  formatResponse?: Function;
  debug?: boolean;
  tracing?: boolean;
+ cacheControl?: boolean;
 }
 
 const resolvedPromise = Promise.resolve();
@@ -80,13 +79,20 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
     logFunction({action: LogAction.request, step: LogStep.start});
 
     const context = options.context || {};
-
-    let traceCollector: TraceCollector;
+    let extensions = [];
     if (options.tracing) {
-      traceCollector = new TraceCollector();
-      context._traceCollector = traceCollector;
-      traceCollector.requestDidStart();
-      instrumentSchemaForTracing(options.schema);
+      extensions.push(TracingExtension);
+    }
+    if (options.cacheControl) {
+      extensions.push(CacheControlExtension);
+    }
+    const extensionStack = extensions.length > 0 && new GraphQLExtensionStack(extensions);
+
+    if (extensionStack) {
+      context._extensionStack = extensionStack;
+      enableGraphQLExtensions(options.schema);
+
+      extensionStack.requestDidStart();
     }
 
     function format(errors: Array<Error>): Array<Error> {
@@ -140,8 +146,8 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
       return Promise.resolve({ errors: format(validationErrors) });
     }
 
-    if (traceCollector) {
-      traceCollector.executionDidStart();
+    if (extensionStack) {
+      extensionStack.executionDidStart();
     }
 
     try {
@@ -169,11 +175,10 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
                 }
             }
 
-            if (traceCollector) {
-              traceCollector.requestDidEnd();
-              response.extensions = {
-                'tracing': formatTraceData(traceCollector),
-              };
+            if (extensionStack) {
+              extensionStack.executionDidEnd();
+              extensionStack.requestDidEnd();
+              response.extensions = extensionStack.format();
             }
 
             if (options.formatResponse) {
