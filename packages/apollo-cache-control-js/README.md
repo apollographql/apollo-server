@@ -19,7 +19,7 @@ app.use('/graphql', bodyParser.json(), graphqlExpress({
 }));
 ```
 
-> If you are using Express-GraphQL, we recommend you switch to Apollo Server. Both Express-GraphQL and Apollo Server are based on the [`graphql-js`](https://github.com/graphql/graphql-js) reference implementation, and switching should only require changing a few lines of code.
+> If you are using `express-graphql`, we recommend you switch to Apollo Server. Both `express-graphql` and Apollo Server are based on the [`graphql-js`](https://github.com/graphql/graphql-js) reference implementation, and switching should only require changing a few lines of code.
 
 ### Add cache hints to your schema
 
