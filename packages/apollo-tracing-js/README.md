@@ -24,39 +24,4 @@ app.use('/graphql', bodyParser.json(), graphqlExpress({
 }));
 ```
 
-### `express-graphql`
-
-Using Apollo Tracing with `express-graphql` currently requires more manual configuration:
-
-```javascript
-import {
-  TraceCollector,
-  instrumentSchemaForTracing,
-  formatTraceData
-} from 'apollo-tracing'
-
-...
-
-app.use('/graphql', 
-  (req, res, next) => {
-    const traceCollector = new TraceCollector();
-    traceCollector.requestDidStart();
-    req._traceCollector = traceCollector;
-    next(); 
-  }, 
-  graphqlHTTP(request => ({
-    schema: instrumentSchemaForTracing(schema),
-    context: {
-      _traceCollector: request._traceCollector
-    },
-    graphiql: true,
-    extensions: () => {
-      const traceCollector = request._traceCollector;
-      traceCollector.requestDidEnd();
-      return {
-        tracing: formatTraceData(traceCollector)
-      }
-    }
-  }))
-);
-```
+> If you are using `express-graphql`, we recommend you switch to Apollo Server. Both `express-graphql` and Apollo Server are based on the [`graphql-js`](https://github.com/graphql/graphql-js) reference implementation, and switching should only require changing a few lines of code.
