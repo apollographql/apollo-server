@@ -6,6 +6,7 @@ import {
   ResponsePath,
   responsePathAsArray
 } from 'graphql';
+
 import { GraphQLExtension } from 'graphql-extensions';
 
 export interface CacheControlFormat {

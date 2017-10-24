@@ -1,7 +1,7 @@
 {
   "name": "apollo-cache-control",
   "version": "0.0.5",
-  "description": "Collect and expose cache control instructions for GraphQL responses",
+  "description": "A GraphQL extension for cache control",
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",
   "scripts": {
@@ -18,7 +18,7 @@
     "node": ">=4.0"
   },
   "dependencies": {
-    "graphql-extensions": "0.0.3"
+    "graphql-extensions": "0.0.4"
   },
   "peerDependencies": {
     "graphql": "^0.10.0 || ^0.11.0"

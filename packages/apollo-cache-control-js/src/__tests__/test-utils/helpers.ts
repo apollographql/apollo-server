@@ -3,7 +3,7 @@ import {
   graphql
 } from 'graphql';
 
-import { enableGraphQLExtensions } from 'graphql-extensions';
+import { enableGraphQLExtensions, GraphQLExtensionStack } from 'graphql-extensions';
 import { CacheControlExtension, CacheHint } from '../..';
 
 export async function collectCacheControlHints(schema: GraphQLSchema, source: string): Promise<CacheHint[]> {
@@ -15,7 +15,7 @@ export async function collectCacheControlHints(schema: GraphQLSchema, source: st
     schema,
     source,
     contextValue: {
-      _extensions: [cacheControlExtension]
+      _extensionStack: new GraphQLExtensionStack([cacheControlExtension])
     }
   });
 
