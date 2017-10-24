@@ -1,6 +1,6 @@
 {
   "name": "apollo-cache-control",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "A GraphQL extension for cache control",
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",
