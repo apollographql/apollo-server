@@ -1,5 +1,6 @@
 import { GraphQLSchema, ValidationContext, GraphQLFieldResolver } from 'graphql';
 import { LogFunction } from './runQuery';
+import { GraphQLExtension } from 'graphql-extensions';
 
 /*
  * GraphQLServerOptions
@@ -28,6 +29,7 @@ export interface GraphQLServerOptions {
   fieldResolver?: GraphQLFieldResolver<any, any>;
   debug?: boolean;
   tracing?: boolean;
+  cacheControl?: boolean;
 }
 
 export default GraphQLServerOptions;

@@ -40,7 +40,7 @@ apis:
   gtm: GTM-PNFDVBB
 
 logo:
-  nav_mobile: links/logo/logo-apollo-space-left.svg
+  nav_mobile: images/logo-apollo-space-left.svg
   title: Apollo
   url: https://www.apollographql.com/
 

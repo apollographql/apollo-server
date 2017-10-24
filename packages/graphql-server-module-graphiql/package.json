@@ -1,6 +1,6 @@
 {
   "name": "graphql-server-module-graphiql",
-  "version": "1.1.6",
+  "version": "1.2.0",
   "description": "GraphiQL renderer for Apollo GraphQL Server",
   "main": "dist/index.js",
   "scripts": {
@@ -24,7 +24,7 @@
   },
   "homepage": "https://github.com/apollographql/apollo-server#readme",
   "dependencies": {
-    "apollo-server-module-graphiql": "^1.1.6"
+    "apollo-server-module-graphiql": "^1.2.0"
   },
   "typings": "dist/index.d.ts",
   "typescript": {
