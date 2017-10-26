@@ -33,7 +33,7 @@
     "mocha": "4.0.1",
     "npm-check-updates": "2.13.0",
     "remap-istanbul": "0.9.5",
-    "sinon": "4.0.1",
+    "sinon": "4.0.2",
     "supertest": "3.0.0",
     "supertest-as-promised": "4.0.2",
     "tslint": "5.7.0",
