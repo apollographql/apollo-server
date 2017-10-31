@@ -23,7 +23,7 @@
   },
   "devDependencies": {
     "@types/chai": "4.0.4",
-    "@types/mocha": "2.2.43",
+    "@types/mocha": "2.2.44",
     "@types/node": "8.0.47",
     "@types/sinon": "2.3.6",
     "chai": "4.1.2",
