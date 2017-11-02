@@ -1,10 +1,8 @@
 import * as fastify from 'fastify';
 import { GraphQLOptions, HttpQueryError, runHttpQuery } from 'apollo-server-core';
-import * as GraphiQL from 'apollo-server-module-graphiql';
+import { GraphiQLData, resolveGraphiQLString} from 'apollo-server-module-graphiql';
 
-export interface FastifyPlugin {
-  (request: fastify.FastifyRequest, reply: fastify.FastifyReply, done: (err: Error) => void): void;
-}
+export type FastifyMiddlewareCallback = (err?: Error) => void | undefined;
 
 /**
  * To get context and such you can decorate the request.
@@ -37,22 +35,31 @@ export function graphqlFastify(options) {
           }
         }
 
-        if (!err.statusCode) {
-          reply.code(500);
-        } else {
-          reply.code(err.statusCode);
-        }
-
-        reply.type('application/graphql').send(err.message);
+        reply.code(err.statusCode || 500).type('application/graphql').send(err.message);
       }
     );
   };
 }
 
+export function graphiqlFastify(options: GraphiQLData): any {
+  return (request, reply) =>
+    resolveGraphiQLString(request.query, options, request.req).then(
+      function(graphiqlString) {
+        reply
+          .type('text/html')
+          .code(200)
+          .send(graphiqlString);
+      },
+      function(err) {
+        reply.code(500).send(err);
+      }
+    );
+}
+
 export function graphqlFastifyPlugin(
   fastifyInstance: fastify.FastifyInstance,
   options: GraphQLOptions,
-  done: (err?: Error) => void
+  done: FastifyMiddlewareCallback
 ): any {
   if (!options) {
     throw new Error('Apollo server requires options');
@@ -69,27 +76,23 @@ export function graphqlFastifyPlugin(
   return fastifyInstance;
 }
 
-export function graphiqlFastify(options): any {
-  return (request, reply) =>
-    GraphiQL.resolveGraphiQLString(request.query, options, request.req).then(
-      function(graphiqlString) {
-        reply
-          .type('text/html')
-          .code(200)
-          .send(graphiqlString);
-      },
-      function(err) {
-        reply.code(500).send(err);
-      }
-    );
-}
-
-function graphiqlFastifyPlugin(
+export function graphiqlFastifyPlugin(
   fastifyInstance: fastify.FastifyInstance,
-  options: GraphiQL.GraphiQLData,
-  done: (err?: Error) => void
+  options: GraphiQLData,
+  done: FastifyMiddlewareCallback
 ) {
   fastifyInstance.get('/', graphiqlFastify(options));
 
   done();
+}
+
+export interface ApolloFastifyOptions {
+  graphql: GraphQLOptions;
+  graphiql: GraphiQLData
+}
+
+export function apolloFastify(fastify: fastify.FastifyInstance, options: ApolloFastifyOptions, next: FastifyMiddlewareCallback) {
+  fastify.register(graphiqlFastifyPlugin, options.graphiql).register(graphqlFastifyPlugin, options.graphql);
+
+  next();
 }
