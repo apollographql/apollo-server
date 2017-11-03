@@ -44,7 +44,7 @@ function safeSerialize(data) {
 
 export function renderGraphiQL(data: GraphiQLData): string {
   const endpointURL = data.endpointURL;
-  const endpointWs = endpointURL.startsWith('ws://');
+  const endpointWs = endpointURL.startsWith('ws://') || endpointURL.startsWith('wss://');
   const subscriptionsEndpoint = data.subscriptionsEndpoint;
   const usingHttp = !endpointWs;
   const usingWs = endpointWs || !!subscriptionsEndpoint;
