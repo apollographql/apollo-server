@@ -36,7 +36,7 @@
     "sinon": "4.0.2",
     "supertest": "3.0.0",
     "supertest-as-promised": "4.0.2",
-    "tslint": "5.7.0",
+    "tslint": "5.8.0",
     "typescript": "2.6.1"
   }
 }
