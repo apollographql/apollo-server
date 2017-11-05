@@ -52,6 +52,11 @@ const resolvers = {
 }
 ```
 
+If you're using TypeScript, you need the following:
+```javascript
+import 'apollo-cache-control';
+```
+
 If set up correctly, for this query:
 
 ```graphql
