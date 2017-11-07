@@ -4,7 +4,7 @@
 [![Build Status](https://travis-ci.org/apollographql/apollo-server.svg?branch=master)](https://travis-ci.org/apollographql/apollo-server)
 [![Get on Slack](https://img.shields.io/badge/slack-join-orange.svg)](http://www.apollodata.com/#slack)
 
-Apollo Server is a community-maintained open-source GraphQL server. It works with pretty much all Node.js HTTP server frameworks, and we're happy to take PRs for more! It works with any GraphQL schema built with the [`graphql-js` reference implementation](https://github.com/graphql/graphql-js). 
+Apollo Server is a community-maintained open-source GraphQL server. It works with pretty much all Node.js HTTP server frameworks, and we're happy to take PRs for more! It works with any GraphQL schema built with the [`graphql-js` reference implementation](https://github.com/graphql/graphql-js).
 
 ## Principles
 
@@ -18,7 +18,7 @@ Anyone is welcome to contribute to Apollo Server, just read [CONTRIBUTING.md](./
 
 ## Getting started
 
-Apollo Server is super easy to set up. Just `npm install apollo-server-<variant>`, write a GraphQL schema, and then use one of the following snippets to get started. For more info, read the [Apollo Server docs](http://dev.apollodata.com/tools/apollo-server/index.html).
+Apollo Server is super easy to set up. Just `npm install apollo-server-<variant>`, write a GraphQL schema, and then use one of the following snippets to get started. For more info, read the [Apollo Server docs](http://dev.apollodata.com/tools/apollo-server/index.html). To experiment a live example of Apollo Server, create an [Apollo Launchpad](https://launchpad.graphql.com). Downloading the pad will provide you a local Apollo Server project.
 
 ### Installation
 
