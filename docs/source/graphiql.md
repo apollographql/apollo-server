@@ -43,7 +43,7 @@ app.use('/graphiql', graphiqlExpress({
 If you are using Connect, GraphiQL can be configured as follows:
 
 ```js
-import { graphiqlConnect } from 'apollo-server-express';
+import { graphiqlConnect } from 'apollo-server-connect';
 
 app.use('/graphiql', graphiqlConnect({
   endpointURL: '/graphql',
