@@ -5,18 +5,14 @@
   "main": "dist/index.js",
   "scripts": {
     "compile": "tsc",
+    "postcompile": "cross-env NODE_ENV=production webpack",
     "prepublish": "npm run compile"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-module-graphiql"
   },
-  "keywords": [
-    "GraphQL",
-    "GraphiQL",
-    "Apollo",
-    "Javascript"
-  ],
+  "keywords": ["GraphQL", "GraphiQL", "Apollo", "Javascript"],
   "author": "Jonas Helfer <jonas@helfer.email>",
   "license": "MIT",
   "bugs": {
@@ -26,5 +22,34 @@
   "typings": "dist/index.d.ts",
   "typescript": {
     "definition": "dist/index.d.ts"
+  },
+  "devDependencies": {
+    "apollo-link": "^1.0.0",
+    "apollo-link-context": "^1.0.0",
+    "apollo-link-http": "^1.1.0",
+    "apollo-link-ws": "^1.0.0",
+    "apollo-utilities": "^1.0.1",
+    "babel-core": "^6.26.0",
+    "babel-eslint": "^8.0.2",
+    "babel-loader": "^7.1.2",
+    "babel-preset-env": "^1.6.1",
+    "babel-preset-react": "^6.24.1",
+    "cross-env": "^5.1.1",
+    "css-loader": "^0.28.7",
+    "eslint": "^4.10.0",
+    "eslint-plugin-prettier": "^2.3.1",
+    "eslint-plugin-react": "^7.4.0",
+    "extract-text-webpack-plugin": "^3.0.2",
+    "graphiql": "^0.11.10",
+    "graphql-tag": "^2.5.0",
+    "prettier": "^1.8.2",
+    "react": "^16.1.0",
+    "react-dom": "^16.1.0",
+    "style-loader": "^0.19.0",
+    "subscriptions-transport-ws": "^0.9.1",
+    "webpack": "^3.8.1"
+  },
+  "resolutions": {
+    "graphql": "^0.11.7"
   }
 }
