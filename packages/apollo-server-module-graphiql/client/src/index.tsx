@@ -1,9 +1,28 @@
-import React from 'react';
+import * as React from 'react';
 import { render } from 'react-dom';
-import GraphiQL from 'graphiql';
+import * as GraphiQL from 'graphiql';
 import 'graphiql/graphiql.css';
 
 import { createFetcher } from './createFetcher';
+
+declare global {
+  interface Window {
+    __APOLLO_GRAPHIQL_OPTIONS__?: {
+      endpointURL?: string;
+      subscriptionsEndpoint?: string;
+      httpHeaders?: string;
+      websocketConnectionParams?: string;
+      query?: string;
+      result: any;
+      variables: any;
+      operationName: string;
+    };
+  }
+}
+
+if (typeof window.__APOLLO_GRAPHIQL_OPTIONS__ !== 'object') {
+  throw new Error(`Missing global configuration '__APOLLO_GRAPHIQL_OPTIONS__' on window object.`);
+}
 
 const {
   endpointURL,
@@ -14,8 +33,7 @@ const {
   result,
   variables,
   operationName
-} =
-  window.__APOLLO_GRAPHIQL_OPTIONS__ || {};
+} = window.__APOLLO_GRAPHIQL_OPTIONS__;
 
 const fetcher = createFetcher({
   endpointURL,
@@ -23,7 +41,11 @@ const fetcher = createFetcher({
   websocketConnectionParams,
   httpHeaders
 });
-const parameters = {};
+const parameters = {
+  query: undefined,
+  variables: undefined,
+  operationName: undefined
+};
 
 window.location.search
   .substr(1)
@@ -36,7 +58,7 @@ window.location.search
   });
 
 // Produce a Location query string from a parameter object.
-function locationQuery(params, location) {
+function locationQuery(params: any, location?: string) {
   return (
     (location ? location : '') +
     '?' +

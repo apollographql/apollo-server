@@ -1,0 +1,8 @@
+{
+  "compilerOptions": {
+    "rootDir": "./src",
+    "typeRoots": ["node_modules/@types"],
+    "jsx": "react"
+  },
+  "lib": ["dom"]
+}

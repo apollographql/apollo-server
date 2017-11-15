@@ -26,7 +26,7 @@ export function createFetcher({
     httpLink = new HttpLink({ uri: endpointURL });
 
     if (httpHeaders) {
-      const contextLink = setContext(() => Object.assign({}, httpHeaders));
+      const contextLink = setContext(() => (<any>Object).assign({}, httpHeaders));
       httpLink = contextLink.concat(httpLink);
     }
   }
@@ -49,5 +49,5 @@ export function createFetcher({
     throw new Error(`Missing endpointURL`);
   }
 
-  return operation => execute(link, Object.assign({}, operation, { query: gql`${operation.query}` }));
+  return operation => execute(link, (<any>Object).assign({}, operation, { query: gql`${operation.query}` }));
 }
