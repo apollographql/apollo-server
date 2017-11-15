@@ -4,7 +4,7 @@
   "description": "GraphiQL renderer for Apollo GraphQL Server",
   "main": "dist/index.js",
   "scripts": {
-    "compile": "tsc",
+    "compile": "tsc --p package",
     "postcompile": "cross-env NODE_ENV=production yarn build-client",
     "build-client": "webpack --config=client/webpack.config.js",
     "prepublish": "npm run compile"
