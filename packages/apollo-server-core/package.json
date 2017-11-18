@@ -29,7 +29,7 @@
     "@types/graphql": "0.11.5",
     "fibers": "1.0.15",
     "meteor-promise": "0.8.6",
-    "typescript": "^2.5.3"
+    "typescript": "2.6.1"
   },
   "peerDependencies": {
     "graphql": "^0.9.0 || ^0.10.0 || ^0.11.0"
