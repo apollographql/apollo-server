@@ -6,6 +6,7 @@ require('../packages/apollo-server-core/dist/runQuery.test.js');
 require('../packages/apollo-server-module-operation-store/dist/operationStore.test');
 require('../packages/apollo-server-express/dist/expressApollo.test');
 require('../packages/apollo-server-express/dist/connectApollo.test');
+require('../packages/apollo-server-fastify/dist/fastiyApollo.test');
 require('../packages/apollo-server-hapi/dist/hapiApollo.test');
 (NODE_MAJOR_VERSION >= 6) && require('../packages/apollo-server-micro/dist/microApollo.test');
 (NODE_MAJOR_VERSION >= 7) && require('../packages/apollo-server-koa/dist/koaApollo.test');
