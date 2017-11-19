@@ -1,9 +1,9 @@
 import { GraphiQLData, renderGraphiQL } from './renderGraphiQL';
 
 export type GraphiQLParams = {
-  query?: string,
-  variables?: string,
-  operationName?: string,
+  query?: string;
+  variables?: string;
+  operationName?: string;
 };
 
 function isOptionsFunction(arg: GraphiQLData | Function): arg is Function {
@@ -27,7 +27,7 @@ function createGraphiQLParams(query: any): GraphiQLParams {
   return {
     query: queryObject.query || '',
     variables: queryObject.variables,
-    operationName: queryObject.operationName || '',
+    operationName: queryObject.operationName || ''
   };
 }
 
@@ -36,17 +36,22 @@ function createGraphiQLData(params: GraphiQLParams, options: GraphiQLData): Grap
     endpointURL: options.endpointURL,
     subscriptionsEndpoint: options.subscriptionsEndpoint,
     query: params.query || options.query,
-    variables: params.variables && JSON.parse(params.variables) || options.variables,
+    variables: (params.variables && JSON.parse(params.variables)) || options.variables,
     operationName: params.operationName || options.operationName,
     passHeader: options.passHeader,
     editorTheme: options.editorTheme,
-    websocketConnectionParams: options.websocketConnectionParams,
+    websocketConnectionParams: options.websocketConnectionParams
   };
 }
 
-export async function resolveGraphiQLString(query: any = {}, options: GraphiQLData | Function, ...args): Promise<string> {
+export async function resolveGraphiQLString(
+  graphiqlPath: string,
+  query: any = {},
+  options: GraphiQLData | Function,
+  ...args
+): Promise<string> {
   const graphiqlParams = createGraphiQLParams(query);
   const graphiqlOptions = await resolveGraphiQLOptions(options, ...args);
   const graphiqlData = createGraphiQLData(graphiqlParams, graphiqlOptions);
-  return renderGraphiQL(graphiqlData);
+  return renderGraphiQL(graphiqlPath, graphiqlData);
 }

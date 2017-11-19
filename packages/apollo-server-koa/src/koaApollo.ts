@@ -1,4 +1,6 @@
 import * as koa from 'koa';
+import * as send from 'koa-send';
+import * as path from 'path';
 import { GraphQLOptions, HttpQueryError, runHttpQuery } from 'apollo-server-core';
 import * as GraphiQL from 'apollo-server-module-graphiql';
 
@@ -23,24 +25,27 @@ export function graphqlKoa(options: GraphQLOptions | KoaGraphQLOptionsFunction):
     return runHttpQuery([ctx], {
       method: ctx.request.method,
       options: options,
-      query: ctx.request.method === 'POST' ? ctx.request.body : ctx.request.query,
-    }).then((gqlResponse) => {
-      ctx.set('Content-Type', 'application/json');
-      ctx.body = gqlResponse;
-    }, (error: HttpQueryError) => {
-      if ( 'HttpQueryError' !== error.name ) {
-        throw error;
-      }
+      query: ctx.request.method === 'POST' ? ctx.request.body : ctx.request.query
+    }).then(
+      gqlResponse => {
+        ctx.set('Content-Type', 'application/json');
+        ctx.body = gqlResponse;
+      },
+      (error: HttpQueryError) => {
+        if ('HttpQueryError' !== error.name) {
+          throw error;
+        }
 
-      if ( error.headers ) {
-        Object.keys(error.headers).forEach((header) => {
-          ctx.set(header, error.headers[header]);
-        });
-      }
+        if (error.headers) {
+          Object.keys(error.headers).forEach(header => {
+            ctx.set(header, error.headers[header]);
+          });
+        }
 
-      ctx.status = error.statusCode;
-      ctx.body = error.message;
-    });
+        ctx.status = error.statusCode;
+        ctx.body = error.message;
+      }
+    );
   };
 }
 
@@ -49,14 +54,23 @@ export interface KoaGraphiQLOptionsFunction {
 }
 
 export function graphiqlKoa(options: GraphiQL.GraphiQLData | KoaGraphiQLOptionsFunction) {
+  const publicPath = GraphiQL.resolveGraphiQLPublicPath();
+
   return (ctx: koa.Context) => {
+    if (ctx.url.includes(`/assets`)) {
+      return send(ctx, path.basename(ctx.url), { root: publicPath });
+    }
+
     const query = ctx.request.query;
-    return GraphiQL.resolveGraphiQLString(query, options, ctx).then(graphiqlString => {
-      ctx.set('Content-Type', 'text/html');
-      ctx.body = graphiqlString;
-    }, error => {
-      ctx.status = 500;
-      ctx.body = error.message;
-    });
+    return GraphiQL.resolveGraphiQLString(ctx.url, query, options, ctx).then(
+      graphiqlString => {
+        ctx.set('Content-Type', 'text/html');
+        ctx.body = graphiqlString;
+      },
+      error => {
+        ctx.status = 500;
+        ctx.body = error.message;
+      }
+    );
   };
 }

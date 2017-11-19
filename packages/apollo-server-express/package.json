@@ -11,14 +11,7 @@
     "type": "git",
     "url": "https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-express"
   },
-  "keywords": [
-    "GraphQL",
-    "Apollo",
-    "Server",
-    "Express",
-    "Connect",
-    "Javascript"
-  ],
+  "keywords": ["GraphQL", "Apollo", "Server", "Express", "Connect", "Javascript"],
   "author": "Jonas Helfer <jonas@helfer.email>",
   "license": "MIT",
   "bugs": {

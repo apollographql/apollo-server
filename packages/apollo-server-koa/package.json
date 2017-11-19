@@ -26,7 +26,8 @@
   "homepage": "https://github.com/apollographql/apollo-server#readme",
   "dependencies": {
     "apollo-server-core": "^1.2.0",
-    "apollo-server-module-graphiql": "^1.2.0"
+    "apollo-server-module-graphiql": "^1.2.0",
+    "koa-send": "^4.1.1"
   },
   "devDependencies": {
     "@types/graphql": "0.11.5",
@@ -35,8 +36,7 @@
     "@types/koa-router": "7.0.23",
     "apollo-server-integration-testsuite": "^1.2.0",
     "koa": "2.3.0",
-    "koa-bodyparser": "4.2.0",
-    "koa-router": "7.2.1"
+    "koa-bodyparser": "4.2.0"
   },
   "typings": "dist/index.d.ts",
   "typescript": {

@@ -38,3 +38,4 @@ typings
 
 # We don't commit lock files currently
 package-lock.json
+yarn.lock

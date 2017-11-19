@@ -49,7 +49,7 @@ You can also use `apollo-server-koa` for hosting the [GraphiQL](https://github.c
 import { graphiqlKoa } from 'apollo-server-koa';
 
 // Setup the /graphiql route to show the GraphiQL UI
-router.get('/graphiql', graphiqlKoa({
+router.get('/graphiql*', graphiqlKoa({
     endpointURL: '/graphql' // a POST endpoint that GraphiQL will make the actual requests to
 }));
 ```
@@ -60,7 +60,7 @@ For example:
 ```js
 import { graphiqlKoa } from 'apollo-server-koa';
 
-router.get('/graphiql', graphiqlKoa({
+router.get('/graphiql*', graphiqlKoa({
     endpointURL: '/graphql',
     passHeader: `'Authorization': 'Bearer lorem ipsum'`
 }));
