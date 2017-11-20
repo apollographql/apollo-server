@@ -1,0 +1,43 @@
+{
+  "name": "apollo-server-adonis",
+  "version": "1.2.0",
+  "description": "Production-ready Node.js GraphQL server for Adonis Framework",
+  "main": "dist/index.js",
+  "scripts": {
+    "compile": "tsc",
+    "prepublish": "npm run compile"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-adonis"
+  },
+  "keywords": [
+    "GraphQL",
+    "Apollo",
+    "Adonis",
+    "Server",
+    "Javascript"
+  ],
+  "author": "Jonas Helfer <jonas@helfer.email>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/apollographql/apollo-server/issues"
+  },
+  "homepage": "https://github.com/apollographql/apollo-server#readme",
+  "dependencies": {
+    "apollo-server-core": "^1.2.0",
+    "apollo-server-module-graphiql": "^1.2.0"
+  },
+  "devDependencies": {
+    "@types/graphql": "0.11.5",
+    "@adonisjs/bodyparser": "^2.0.0",
+    "@adonisjs/fold": "^4.0.5",
+    "@adonisjs/framework": "^4.0.27",
+    "@adonisjs/sink": "^1.0.13",
+    "apollo-server-integration-testsuite": "^1.2.0"
+  },
+  "typings": "dist/index.d.ts",
+  "typescript": {
+    "definition": "dist/index.d.ts"
+  }
+}
