@@ -10,7 +10,7 @@ import micro, { send } from "micro";
 import { get, post, router } from "microrouter";
 import schema from "./schema";
 
-const graphqlHandler = microGraphql({ schema });
+const graphqlHandler = microGraphql({ schema }, { uploadDir: "/tmp" });
 const graphiqlHandler = microGraphiql({ endpointURL: "/graphql" });
 
 const server = micro(
