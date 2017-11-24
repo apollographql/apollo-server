@@ -20,8 +20,8 @@ export function microGraphql(
     throw new Error('Apollo Server requires options.');
   }
 
-  if (arguments.length > 1) {
-    throw new Error(`Apollo Server expects exactly one argument, got ${arguments.length}`);
+  if (arguments.length > 2) {
+    throw new Error(`Apollo Server expects one or two arguments, got ${arguments.length}`);
   }
 
   return async function (req: IncomingMessage, res: ServerResponse) {
