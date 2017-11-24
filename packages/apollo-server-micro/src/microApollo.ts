@@ -28,8 +28,6 @@ export function microGraphql(
     let query;
     if (req.method === 'POST') {
       try {
-        query = await json(req);
-
         const { headers: {'content-type': contentType }} = req;
 
         // Skip if there are no uploads
