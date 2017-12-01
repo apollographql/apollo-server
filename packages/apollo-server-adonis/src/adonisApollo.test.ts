@@ -1,86 +1,52 @@
+// tslint:disable: variable-name no-var-requires
 import { ioc, registrar, resolver } from '@adonisjs/fold';
-import { setupResolver } from '@adonisjs/sink';
+import { setupResolver, Config } from '@adonisjs/sink';
 import { graphqlAdonis, graphiqlAdonis } from './adonisApollo';
 import { GraphQLOptions } from 'apollo-server-core';
 import { expect } from 'chai';
-import testSuite, { schema as Schema, CreateAppOptions } from 'apollo-server-integration-testsuite';
+import testSuite, { schema, CreateAppOptions } from 'apollo-server-integration-testsuite';
 
-// tslint:disable-next-line
 const RouteStore = require('@adonisjs/framework/src/Route/Store');
 
 function createApp(options: CreateAppOptions = {}) {
   ioc.restore();
   RouteStore.clear();
-  options.graphqlOptions = options.graphqlOptions || { schema: Schema };
+  options.graphqlOptions = options.graphqlOptions || { schema };
   const providers = [
     '@adonisjs/framework/providers/AppProvider',
   ];
   if (!options.excludeParser) {
     providers.push('@adonisjs/bodyparser/providers/BodyParserProvider');
   }
-  ioc.bind('Adonis/Src/Helpers', function () {
-    return {
-      configPath() {
-        return '.';
-      },
-    };
-  });
   setupResolver();
   registrar
     .providers(providers)
     .register();
-  ioc.bind('Adonis/Src/Config', function () {
-    return {
-      get(key) {
-        if (key === 'app.logger.transport') {
-          return 'console';
-        }
-        if (key === 'app.logger.console') {
-          return {
-            driver: 'console',
-          };
-        }
-        if (key === 'bodyParser') {
-          return {
-            json: {
-              limit: '1mb',
-              strict: true,
-              types: [
-                'application/json',
-                'application/json-patch+json',
-                'application/vnd.api+json',
-                'application/csp-report',
-              ],
-            },
-            raw: {
-              types: [
-                'text/*',
-              ],
-            },
-          };
-        }
-        return null;
+  ioc.bind('Adonis/Src/Config', () => {
+    const config = new Config();
+    config.set('app', {
+      logger: {
+        transport: 'console',
+        console: {
+          driver: 'console',
+        },
       },
-      merge(key, defaultValues) {
-        const value = this.get(key, {});
-        return Object.assign(value, defaultValues);
-      },
-    };
+    });
+    return config;
   });
 
-  const Context = ioc.use('Adonis/Src/HttpContext'); // tslint:disable-line
-  const Request = ioc.use('Adonis/Src/Request'); // tslint:disable-line
-  const Response = ioc.use('Adonis/Src/Response'); // tslint:disable-line
-  const Route = ioc.use('Adonis/Src/Route'); // tslint:disable-line
-  const Server = ioc.use('Adonis/Src/Server'); // tslint:disable-line
-  const Config = ioc.use('Adonis/Src/Config'); // tslint:disable-line
+  const Context = ioc.use('Adonis/Src/HttpContext');
+  const Request = ioc.use('Adonis/Src/Request');
+  const Response = ioc.use('Adonis/Src/Response');
+  const Route = ioc.use('Adonis/Src/Route');
+  const Server = ioc.use('Adonis/Src/Server');
 
   Context.getter('request', function () {
-    return new Request(this.req, this.res, Config);
+    return new Request(this.req, this.res, ioc.use('Adonis/Src/Config'));
   }, true);
 
   Context.getter('response', function () {
-    return new Response(this.req, this.res, Config);
+    return new Response(this.req, this.res, ioc.use('Adonis/Src/Config'));
   }, true);
 
   Route.post('/graphql', graphqlAdonis(options.graphqlOptions));

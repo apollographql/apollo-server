@@ -20,10 +20,7 @@ export function graphqlAdonis (options: GraphQLOptions | AdonisGraphQLOptionsFun
   return (ctx: AdonisContext): Promise<void> => {
     const { request, response } = ctx;
     const method = request.method();
-    let query = method === 'POST' ? request._body : request._qs;
-    if (query && typeof query === 'object' && !Array.isArray(query) && !Object.keys(query).length) {
-      query = undefined;
-    }
+    const query = method === 'POST' ? request.post() : request.get();
     return runHttpQuery([ctx], {
       method, options, query,
     }).then(gqlResponse => {
@@ -49,7 +46,7 @@ export interface AdonisGraphiQLOptionsFunction {
 export function graphiqlAdonis (options: GraphiQL.GraphiQLData | AdonisGraphiQLOptionsFunction) {
   return (ctx: AdonisContext): Promise<void> => {
     const { request, response } = ctx;
-    const query = request._qs;
+    const query = request.get();
     return GraphiQL.resolveGraphiQLString(query, options, ctx)
       .then(graphiqlString => {
         response.type('text/html').send(graphiqlString);
