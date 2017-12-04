@@ -1,4 +1,4 @@
-# GraphQL Server for Express, Connect, Hapi, Koa, Restify, Micro, Azure Functions, and AWS Lambda
+# GraphQL Server for Express, Connect, Hapi, Koa, Restify, Micro, Azure Functions, AWS Lambda and Adonis Framework
 
 [![npm version](https://badge.fury.io/js/apollo-server-core.svg)](https://badge.fury.io/js/apollo-server-core)
 [![Build Status](https://travis-ci.org/apollographql/apollo-server.svg?branch=master)](https://travis-ci.org/apollographql/apollo-server)
@@ -32,6 +32,7 @@ where `<variant>` is one of the following:
  - `lambda`
  - `micro`
  - `azure-functions`
+ - `adonis`
 
 ### Express
 
@@ -176,6 +177,18 @@ Requires the [Micro](https://github.com/zeit/micro) module
 const server = require("apollo-server-micro");
 
 module.exports = server.microGraphql({ schema: myGraphQLSchema });
+```
+
+### Adonis Framework
+
+```js
+// start/routes.js
+const { graphqlAdonis } = require('apollo-server-adonis');
+
+const Route = use('Route');
+
+Route.post('/graphql', graphqlAdonis({ schema: myGraphQLSchema }));
+Route.get('/graphql', graphqlAdonis({ schema: myGraphQLSchema }));
 ```
 
 ## Options
