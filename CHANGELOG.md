@@ -3,6 +3,7 @@
 ### vNEXT
 * Added support for the vhost option for Hapi [PR #611](https://github.com/apollographql/apollo-server/pull/611)
 * Include readme for npm packages
+* Update peerDependencies version for micro [PR #671](https://github.com/apollographql/apollo-server/pull/671)
 
 ### v1.1.6
 * Fixes bug where CORS would not allow `Access-Control-Allow-Origin: *` with credential 'include', changed to 'same-origin' [Issue #514](https://github.com/apollographql/apollo-server/issues/514)

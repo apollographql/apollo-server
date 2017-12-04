@@ -36,7 +36,7 @@
     "microrouter": "2.2.3"
   },
   "peerDependencies": {
-    "micro": "^8.0.1"
+    "micro": "^8.0.1 || ^9.0.1"
   },
   "typings": "dist/index.d.ts",
   "typescript": {
