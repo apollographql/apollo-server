@@ -184,7 +184,7 @@ export function renderGraphiQL(data: GraphiQLData): string {
     }
     function updateURL() {
       var cleanParams = Object.keys(parameters).filter(function(v) {
-        return parameters[v] !== undefined;
+        return parameters[v];
       }).reduce(function(old, v) {
         old[v] = parameters[v];
         return old;
