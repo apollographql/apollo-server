@@ -1,10 +1,10 @@
-# GraphQL Server for Express, Connect, Hapi, Koa, Restify, Micro, Azure Functions, and AWS Lambda
+# GraphQL Server for Express, Connect, Hapi, Koa, Restify, Micro, Azure Functions, AWS Lambda and Adonis Framework
 
 [![npm version](https://badge.fury.io/js/apollo-server-core.svg)](https://badge.fury.io/js/apollo-server-core)
 [![Build Status](https://travis-ci.org/apollographql/apollo-server.svg?branch=master)](https://travis-ci.org/apollographql/apollo-server)
 [![Get on Slack](https://img.shields.io/badge/slack-join-orange.svg)](http://www.apollodata.com/#slack)
 
-Apollo Server is a community-maintained open-source GraphQL server. It works with pretty much all Node.js HTTP server frameworks, and we're happy to take PRs for more! It works with any GraphQL schema built with the [`graphql-js` reference implementation](https://github.com/graphql/graphql-js). 
+Apollo Server is a community-maintained open-source GraphQL server. It works with pretty much all Node.js HTTP server frameworks, and we're happy to take PRs for more! It works with any GraphQL schema built with the [`graphql-js` reference implementation](https://github.com/graphql/graphql-js).
 
 ## Principles
 
@@ -18,7 +18,7 @@ Anyone is welcome to contribute to Apollo Server, just read [CONTRIBUTING.md](./
 
 ## Getting started
 
-Apollo Server is super easy to set up. Just `npm install apollo-server-<variant>`, write a GraphQL schema, and then use one of the following snippets to get started. For more info, read the [Apollo Server docs](http://dev.apollodata.com/tools/apollo-server/index.html).
+Apollo Server is super easy to set up. Just `npm install apollo-server-<variant>`, write a GraphQL schema, and then use one of the following snippets to get started. For more info, read the [Apollo Server docs](http://dev.apollodata.com/tools/apollo-server/index.html). To experiment a live example of Apollo Server, create an [Apollo Launchpad](https://launchpad.graphql.com). Downloading the pad will provide you a local Apollo Server project.
 
 ### Installation
 
@@ -32,6 +32,7 @@ where `<variant>` is one of the following:
  - `lambda`
  - `micro`
  - `azure-functions`
+ - `adonis`
 
 ### Express
 
@@ -176,6 +177,18 @@ Requires the [Micro](https://github.com/zeit/micro) module
 const server = require("apollo-server-micro");
 
 module.exports = server.microGraphql({ schema: myGraphQLSchema });
+```
+
+### Adonis Framework
+
+```js
+// start/routes.js
+const { graphqlAdonis } = require('apollo-server-adonis');
+
+const Route = use('Route');
+
+Route.post('/graphql', graphqlAdonis({ schema: myGraphQLSchema }));
+Route.get('/graphql', graphqlAdonis({ schema: myGraphQLSchema }));
 ```
 
 ## Options

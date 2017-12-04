@@ -41,7 +41,7 @@ export async function runHttpQuery(handlerArguments: Array<any>, request: HttpQu
 
   switch ( request.method ) {
     case 'POST':
-      if ( !request.query ) {
+      if ( !request.query || (Object.keys(request.query).length === 0) ) {
         throw new HttpQueryError(500, 'POST body missing. Did you forget use body-parser middleware?');
       }
 
