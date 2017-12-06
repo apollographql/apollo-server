@@ -78,39 +78,41 @@ http.createServer(app).listen(PORT);
 
 Now with the Hapi plugins `graphqlHapi` and `graphiqlHapi` you can pass a route object that includes options to be applied to the route.  The example below enables CORS on the `/graphql` route.
 
-```js
-import hapi from 'hapi';
-import { graphqlHapi } from 'apollo-server-hapi';
+The code below requires Hapi 17 or higher.
 
-const server = new hapi.Server({ debug: { request: "*" } });
+```js
+import Hapi from 'hapi';
+import { graphqlHapi } from 'apollo-server-hapi';
 
 const HOST = 'localhost';
 const PORT = 3000;
 
-server.connection({
-    host: HOST,
-    port: PORT,
-});
+async function StartServer() {
+    const server = new Hapi.server({
+        host: HOST,
+        port: PORT,
+    });
 
-server.register({
-    register: graphqlHapi,
-    options: {
-      path: '/graphql',
-      graphqlOptions: {
-        schema: myGraphQLSchema,
-      },
-      route: {
-        cors: true
-      }
-    },
-});
+    await server.register(graphqlHapi, {
+        path: '/graphql',
+        graphqlOptions: {
+            schema: myGraphQLSchema,
+        },
+        route: {
+            cors: true
+        }
+    });
 
-server.start((err) => {
-    if (err) {
-        throw err;
+    try {
+        await server.start();
+    } catch (err) {
+        console.log(`Error while starting server: ${err.message}`);
     }
+
     console.log(`Server running at: ${server.info.uri}`);
-});
+}
+
+StartServer();
 ```
 
 ### Koa
