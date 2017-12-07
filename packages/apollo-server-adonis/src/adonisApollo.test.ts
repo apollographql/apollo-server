@@ -61,8 +61,10 @@ function createApp(options: CreateAppOptions = {}) {
   return Server.getInstance();
 }
 
-function destroyApp(app) {
-  app.close();
+async function destroyApp(app) {
+  if (app && app.close) {
+    await app.close();
+  }
 }
 
 describe('adonisApollo', () => {
