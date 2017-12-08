@@ -3,9 +3,9 @@
 ## Source: https://github.com/hexojs/hexo/
 
 # Site
-title: Apollo Server Docs
+title: Apollo Server
 propertytitle: Using Apollo Server
-subtitle: Apollo Server Guide
+subtitle: Apollo Server
 description: A guide to using Apollo Server.
 author:
 language:
