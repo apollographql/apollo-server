@@ -123,21 +123,22 @@ export interface CreateAppOptions {
 }
 
 export interface CreateAppFunc {
-    (options?: CreateAppOptions): void;
+    (options?: CreateAppOptions): any | Promise<any>;
 }
 
 export interface DestroyAppFunc {
-  (app: any): void;
+  (app: any): void | Promise<void>;
 }
 
 export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
   describe('apolloServer', () => {
     let app;
 
-    afterEach(() => {
+    afterEach(async () => {
       if (app) {
         if (destroyApp) {
-          destroyApp(app);
+          await destroyApp(app);
+          app = null;
         } else {
           app = null;
         }
@@ -145,8 +146,8 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
     });
 
     describe('graphqlHTTP', () => {
-      it('can be called with an options function', () => {
-          app = createApp({graphqlOptions: (): GraphQLOptions => ({schema})});
+      it('can be called with an options function', async () => {
+          app = await createApp({graphqlOptions: (): GraphQLOptions => ({schema})});
           const expected = {
               testString: 'it works',
           };
@@ -161,8 +162,8 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
       });
 
-      it('can be called with an options function that returns a promise', () => {
-          app = createApp({ graphqlOptions: () => {
+      it('can be called with an options function that returns a promise', async () => {
+          app = await createApp({ graphqlOptions: () => {
               return new Promise(resolve => {
                   resolve({schema});
               });
@@ -181,8 +182,8 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
       });
 
-      it('throws an error if options promise is rejected', () => {
-          app = createApp({ graphqlOptions: () => {
+      it('throws an error if options promise is rejected', async () => {
+          app = await createApp({ graphqlOptions: () => {
             return Promise.reject({}) as any as GraphQLOptions;
           }});
           const expected = 'Invalid options';
@@ -197,8 +198,8 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
       });
 
-      it('rejects the request if the method is not POST or GET', () => {
-          app = createApp({excludeParser: true});
+      it('rejects the request if the method is not POST or GET', async () => {
+          app = await createApp({excludeParser: true});
           const req = request(app)
               .head('/graphql')
               .send();
@@ -208,8 +209,8 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
       });
 
-      it('throws an error if POST body is missing', () => {
-          app = createApp({excludeParser: true});
+      it('throws an error if POST body is missing', async () => {
+          app = await createApp({excludeParser: true});
           const req = request(app)
               .post('/graphql')
               .send();
@@ -219,8 +220,8 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
       });
 
-      it('throws an error if GET query is missing', () => {
-          app = createApp();
+      it('throws an error if GET query is missing', async () => {
+          app = await createApp();
           const req = request(app)
               .get(`/graphql`);
           return req.then((res) => {
@@ -229,8 +230,8 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
       });
 
-      it('can handle a basic GET request', () => {
-          app = createApp();
+      it('can handle a basic GET request', async () => {
+          app = await createApp();
           const expected = {
               testString: 'it works',
           };
@@ -245,8 +246,8 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
       });
 
-      it('can handle a basic implicit GET request', () => {
-          app = createApp();
+      it('can handle a basic implicit GET request', async () => {
+          app = await createApp();
           const expected = {
               testString: 'it works',
           };
@@ -261,8 +262,8 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
       });
 
-      it('throws error if trying to use mutation using GET request', () => {
-          app = createApp();
+      it('throws error if trying to use mutation using GET request', async () => {
+          app = await createApp();
           const query = {
               query: 'mutation test{ testMutation(echo: "ping") }',
           };
@@ -275,8 +276,8 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
       });
 
-      it('throws error if trying to use mutation with fragment using GET request', () => {
-          app = createApp();
+      it('throws error if trying to use mutation with fragment using GET request', async () => {
+          app = await createApp();
           const query = {
             query: `fragment PersonDetails on PersonType {
               firstName
@@ -297,8 +298,8 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
       });
 
-      it('can handle a GET request with variables', () => {
-          app = createApp();
+      it('can handle a GET request with variables', async () => {
+          app = await createApp();
           const query = {
               query: 'query test($echo: String){ testArgument(echo: $echo) }',
               variables: JSON.stringify({ echo: 'world' }),
@@ -314,8 +315,8 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
       });
 
-      it('can handle a basic request', () => {
-          app = createApp();
+      it('can handle a basic request', async () => {
+        app = await createApp();
           const expected = {
               testString: 'it works',
           };
@@ -330,8 +331,8 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
       });
 
-      it('can handle a request with variables', () => {
-          app = createApp();
+      it('can handle a request with variables', async () => {
+          app = await createApp();
           const expected = {
               testArgument: 'hello world',
           };
@@ -347,8 +348,8 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
       });
 
-      it('can handle a request with variables as string', () => {
-          app = createApp();
+      it('can handle a request with variables as string', async () => {
+          app = await createApp();
           const expected = {
               testArgument: 'hello world',
           };
@@ -364,8 +365,8 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
       });
 
-      it('can handle a request with variables as an invalid string', () => {
-          app = createApp();
+      it('can handle a request with variables as an invalid string', async () => {
+          app = await createApp();
           const req = request(app)
               .post('/graphql')
               .send({
@@ -378,8 +379,8 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
       });
 
-      it('can handle a request with operationName', () => {
-          app = createApp();
+      it('can handle a request with operationName', async () => {
+          app = await createApp();
           const expected = {
               testString: 'it works',
           };
@@ -398,8 +399,8 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
       });
 
-      it('can handle introspection request', () => {
-          app = createApp();
+      it('can handle introspection request', async () => {
+          app = await createApp();
           const req = request(app)
               .post('/graphql')
               .send({query: introspectionQuery});
@@ -409,8 +410,8 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
       });
 
-       it('can handle batch requests', () => {
-          app = createApp();
+       it('can handle batch requests', async () => {
+          app = await createApp();
           const expected = [
               {
                   data: {
@@ -444,8 +445,8 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
       });
 
-       it('can handle batch requests', () => {
-          app = createApp();
+       it('can handle batch requests', async () => {
+          app = await createApp();
           const expected = [
               {
                   data: {
@@ -468,13 +469,13 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
       });
 
-       it('can handle batch requests in parallel', function() {
+       it('can handle batch requests in parallel', async function() {
          // this test will fail due to timeout if running serially.
          const parallels = 100;
          const delayPerReq = 40;
          this.timeout(3000);
 
-         app = createApp();
+         app = await createApp();
          const expected = Array(parallels).fill({
            data: { testStringWithDelay: 'it works' },
          });
@@ -491,8 +492,8 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
            });
       });
 
-      it('clones batch context', () => {
-          app = createApp({graphqlOptions: {
+      it('clones batch context', async () => {
+          app = await createApp({graphqlOptions: {
               schema,
               context: {testField: 'expected'},
           }});
@@ -521,8 +522,8 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
       });
 
-      it('can handle a request with a mutation', () => {
-          app = createApp();
+      it('can handle a request with a mutation', async () => {
+          app = await createApp();
           const expected = {
               testMutation: 'not really a mutation, but who cares: world',
           };
@@ -538,8 +539,8 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
       });
 
-      it('applies the formatResponse function', () => {
-          app = createApp({graphqlOptions: {
+      it('applies the formatResponse function', async () => {
+          app = await createApp({graphqlOptions: {
               schema,
               formatResponse(response) {
                   response['extensions'] = { it: 'works' }; return response;
@@ -558,9 +559,9 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
       });
 
-      it('passes the context to the resolver', () => {
+      it('passes the context to the resolver', async () => {
           const expected = 'context works';
-          app = createApp({graphqlOptions: {
+          app = await createApp({graphqlOptions: {
               schema,
               context: {testField: expected},
           }});
@@ -575,9 +576,9 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
       });
 
-      it('passes the rootValue to the resolver', () => {
+      it('passes the rootValue to the resolver', async () => {
           const expected = 'it passes rootValue';
-          app = createApp({graphqlOptions: {
+          app = await createApp({graphqlOptions: {
               schema,
               rootValue: expected,
           }});
@@ -592,9 +593,9 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
       });
 
-      it('returns errors', () => {
+      it('returns errors', async () => {
           const expected = 'Secret error message';
-          app = createApp({graphqlOptions: {
+          app = await createApp({graphqlOptions: {
               schema,
           }});
           const req = request(app)
@@ -608,9 +609,9 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
       });
 
-      it('applies formatError if provided', () => {
+      it('applies formatError if provided', async () => {
           const expected = '--blank--';
-          app = createApp({graphqlOptions: {
+          app = await createApp({graphqlOptions: {
               schema,
               formatError: (err) => ({ message: expected }),
           }});
@@ -625,8 +626,8 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
       });
 
-      it('sends internal server error when formatError fails', () => {
-          app = createApp({graphqlOptions: {
+      it('sends internal server error when formatError fails', async() => {
+          app = await createApp({graphqlOptions: {
               schema,
               formatError: (err) => {
                 throw new Error('I should be caught');
@@ -642,12 +643,12 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
       });
 
-      it('sends stack trace to error if debug mode is set', () => {
+      it('sends stack trace to error if debug mode is set', async () => {
           const expected = /at resolveFieldValueOrError/;
           const stackTrace = [];
           const origError = console.error;
           console.error = (...args) => stackTrace.push(args);
-          app = createApp({graphqlOptions: {
+          app = await createApp({graphqlOptions: {
               schema,
               debug: true,
           }});
@@ -662,10 +663,10 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
       });
 
-      it('sends stack trace to error log if debug mode is set', () => {
+      it('sends stack trace to error log if debug mode is set', async () => {
           const logStub = stub(console, 'error');
           const expected = /at resolveFieldValueOrError/;
-          app = createApp({graphqlOptions: {
+          app = await createApp({graphqlOptions: {
               schema,
               debug: true,
           }});
@@ -681,7 +682,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
       });
 
-      it('applies additional validationRules', () => {
+      it('applies additional validationRules', async () => {
           const expected = 'alwaysInvalidRule was really invalid!';
           const alwaysInvalidRule = function (context) {
               return {
@@ -691,7 +692,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
                   },
               };
           };
-          app = createApp({graphqlOptions: {
+          app = await createApp({graphqlOptions: {
               schema,
               validationRules: [alwaysInvalidRule],
           }});
@@ -709,8 +710,8 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
     });
 
     describe('renderGraphiQL', () => {
-      it('presents GraphiQL when accepting HTML', () => {
-          app = createApp({graphiqlOptions: {
+      it('presents GraphiQL when accepting HTML', async () => {
+          app = await createApp({graphiqlOptions: {
               endpointURL: '/graphql',
           }});
 
@@ -726,8 +727,8 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
       });
 
-      it('allows options to be a function', () => {
-        app = createApp({graphiqlOptions: () => ({
+      it('allows options to be a function', async () => {
+        app = await createApp({graphiqlOptions: () => ({
             endpointURL: '/graphql',
         })});
 
@@ -739,8 +740,8 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
         });
       });
 
-      it('handles options function errors', () => {
-        app = createApp({graphiqlOptions: () => {
+      it('handles options function errors', async () => {
+        app = await createApp({graphiqlOptions: () => {
           throw new Error('I should be caught');
         }});
 
@@ -752,8 +753,8 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
         });
       });
 
-      it('presents options variables', () => {
-        app = createApp({graphiqlOptions: {
+      it('presents options variables', async () => {
+        app = await createApp({graphiqlOptions: {
             endpointURL: '/graphql',
             variables: {key: 'optionsValue'},
         }});
@@ -767,8 +768,8 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
         });
       });
 
-      it('presents query variables over options variables', () => {
-        app = createApp({graphiqlOptions: {
+      it('presents query variables over options variables', async () => {
+        app = await createApp({graphiqlOptions: {
             endpointURL: '/graphql',
             variables: {key: 'optionsValue'},
         }});
@@ -784,10 +785,10 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
     });
 
     describe('stored queries', () => {
-      it('works with formatParams', () => {
+      it('works with formatParams', async () => {
           const store = new OperationStore(schema);
           store.put('query testquery{ testString }');
-          app = createApp({ graphqlOptions: {
+          app = await createApp({ graphqlOptions: {
               schema,
               formatParams(params) {
                   params['query'] = store.get(params.operationName);
@@ -806,10 +807,10 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
       });
 
-      it('can reject non-whitelisted queries', () => {
+      it('can reject non-whitelisted queries', async () => {
           const store = new OperationStore(schema);
           store.put('query testquery{ testString }');
-          app = createApp({ graphqlOptions: {
+          app = await createApp({ graphqlOptions: {
               schema,
               formatParams(params) {
                   if (params.query) {
@@ -844,8 +845,8 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
     });
 
     describe('server setup', () => {
-      it('throws error on 404 routes', () => {
-          app = createApp();
+      it('throws error on 404 routes', async () => {
+          app = await createApp();
 
           const query = {
               query: '{ testString }',

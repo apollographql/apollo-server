@@ -8,7 +8,7 @@ import testSuite, { schema, CreateAppOptions } from 'apollo-server-integration-t
 
 const RouteStore = require('@adonisjs/framework/src/Route/Store');
 
-function createApp(options: CreateAppOptions = {}) {
+async function createApp(options: CreateAppOptions = {}) {
   ioc.restore();
   RouteStore.clear();
   options.graphqlOptions = options.graphqlOptions || { schema };
@@ -57,12 +57,15 @@ function createApp(options: CreateAppOptions = {}) {
   if (!options.excludeParser) {
     Server.registerGlobal(['Adonis/Middleware/BodyParser']);
   }
-  Server.listen();
+  await new Promise((resolve) => Server.listen('localhost', 3333, resolve));
   return Server.getInstance();
 }
 
-function destroyApp(app) {
-  app.close();
+async function destroyApp(app) {
+  if (!app || !app.close) {
+    return;
+  }
+  await new Promise((resolve) => app.close(resolve));
 }
 
 describe('adonisApollo', () => {
