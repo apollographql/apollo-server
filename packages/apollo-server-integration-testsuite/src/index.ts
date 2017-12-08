@@ -123,11 +123,11 @@ export interface CreateAppOptions {
 }
 
 export interface CreateAppFunc {
-    (options?: CreateAppOptions): void;
+    (options?: CreateAppOptions): any | Promise<any>;
 }
 
 export interface DestroyAppFunc {
-  (app: any): void;
+  (app: any): void | Promise<void>;
 }
 
 export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
@@ -138,6 +138,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
       if (app) {
         if (destroyApp) {
           await destroyApp(app);
+          app = null;
         } else {
           app = null;
         }
