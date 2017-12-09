@@ -93,14 +93,17 @@ async function StartServer() {
         port: PORT,
     });
 
-    await server.register(graphqlHapi, {
-        path: '/graphql',
-        graphqlOptions: {
-            schema: myGraphQLSchema,
+    await server.register({
+        plugin: graphqlHapi,
+        options: {
+            path: '/graphql',
+            graphqlOptions: {
+                schema: myGraphQLSchema,
+            },
+            route: {
+                cors: true,
+            },
         },
-        route: {
-            cors: true
-        }
     });
 
     try {
