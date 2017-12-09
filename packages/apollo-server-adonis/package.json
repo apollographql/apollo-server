@@ -30,10 +30,10 @@
   },
   "devDependencies": {
     "@types/graphql": "0.11.5",
-    "@adonisjs/bodyparser": "^2.0.0",
-    "@adonisjs/fold": "^4.0.5",
-    "@adonisjs/framework": "^4.0.27",
-    "@adonisjs/sink": "^1.0.13",
+    "@adonisjs/bodyparser": "2.0.0",
+    "@adonisjs/fold": "4.0.5",
+    "@adonisjs/framework": "4.0.28",
+    "@adonisjs/sink": "1.0.13",
     "apollo-server-integration-testsuite": "^1.2.0"
   },
   "typings": "dist/index.d.ts",
