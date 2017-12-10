@@ -27,7 +27,7 @@ function isQueryOperation(query: DocumentNode, operationName: string) {
   return operationAST.operation === 'query';
 }
 
-export function isFunction(arg: any): arg is Function {
+function isFunction(arg: any): arg is Function {
   return typeof arg === 'function';
 }
 
@@ -101,11 +101,11 @@ export async function runHttpQuery(handlerArguments: Array<any>, request: HttpQu
         }
       }
 
-      let context = optionsObject.context;
+      let context = optionsObject.context || {};
       if (isFunction(context)) {
         context = context();
       } else if (isBatch) {
-        context = Object.assign({}, context || {});
+        context = Object.assign(Object.create(Object.getPrototypeOf(context)), context);
       }
 
       let params = {

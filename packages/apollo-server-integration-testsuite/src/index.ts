@@ -522,9 +522,9 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
       });
 
-       it('executes batch context if it is a function', () => {
+       it('executes batch context if it is a function', async () => {
            let callCount = 0;
-           app = createApp({graphqlOptions: {
+           app = await createApp({graphqlOptions: {
                schema,
                context: () => {
                    callCount++;
