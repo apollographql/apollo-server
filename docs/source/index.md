@@ -6,7 +6,7 @@ description: Flexible, community driven, production-ready HTTP GraphQL middlewar
 
 Apollo Server works with any GraphQL schema built with [GraphQL.js](https://github.com/graphql/graphql-js), so you can build your schema with that directly or with a convenience library such as [graphql-tools](https://www.apollographql.com/docs/graphql-tools/). You can use Apollo Server with all popular JavaScript HTTP servers, including Express, Connect, Hapi, Koa, Restify, and Lambda.
 
-This server can be queried from any popular GraphQL client, such as [Apollo](https://www.apollographql.com/client/) or [Relay](https://facebook.github.io/relay) because it supports all of the common semantics for sending GraphQL over HTTP, as [documented on graphql.org](http://graphql.org/learn/serving-over-http/). Apollo Server also supports some small extensions to the protocol, such as sending multiple GraphQL operations in one request. Read more on the [sending requests](/tools/apollo-server/requests.html) page.
+This server can be queried from any GraphQL client, since it supports all of the common semantics for sending GraphQL over HTTP, as [documented on graphql.org](http://graphql.org/learn/serving-over-http/). Apollo Server also supports some small extensions to the protocol, such as sending multiple GraphQL operations in one request. Read more on the [sending requests](/tools/apollo-server/requests.html) page.
 
 <h2 id="selecting-package">Selecting the right package</h2>
 
