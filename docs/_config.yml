@@ -28,14 +28,19 @@ sidebar_categories:
     - servers/restify
     - servers/azure-functions
     - servers/adonis
-  Migration:
-    - migration-hapi
-    - migration
   Related:
     - title: graphql-tools
       href: https://www.apollographql.com/docs/graphql-tools/
     - title: GraphQL Subscriptions
       href: https://www.apollographql.com/docs/graphql-subscriptions/
+    - title: Apollo Tracing
+      href: https://github.com/apollographql/apollo-tracing-js
+    - title: Apollo Cache Control
+      href: https://github.com/apollographql/apollo-cache-control-js
+  Migration:
+    - migration-one-dot
+    - migration-hapi
+    - migration
 
 github_repo: apollographql/apollo-server
 content_root: docs/source
