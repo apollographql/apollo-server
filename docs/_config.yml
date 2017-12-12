@@ -20,6 +20,12 @@ sidebar_categories:
     - graphiql
     - migration-hapi
     - migration
+  Related:
+    - title: graphql-tools
+      href: https://www.apollographql.com/docs/graphql-tools/
+    - title: GraphQL Subscriptions
+      href: https://www.apollographql.com/docs/graphql-subscriptions/
+
 github_repo: apollographql/apollo-server
 content_root: docs/source
 
