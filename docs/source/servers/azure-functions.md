@@ -1,1 +1,1 @@
-../../../packages/apollo-server-asure-functions/README.md
+../../../packages/apollo-server-azure-functions/README.md
