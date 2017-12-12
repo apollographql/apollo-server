@@ -522,6 +522,41 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
       });
 
+       it('executes batch context if it is a function', async () => {
+           let callCount = 0;
+           app = await createApp({graphqlOptions: {
+               schema,
+               context: () => {
+                   callCount++;
+                   return ({testField: 'expected'});
+               },
+           }});
+           const expected = [
+               {
+                   data: {
+                       testContext: 'expected',
+                   },
+               },
+               {
+                   data: {
+                       testContext: 'expected',
+                   },
+               },
+           ];
+           const req = request(app)
+               .post('/graphql')
+               .send([{
+                   query: 'query test{ testContext }',
+               }, {
+                   query: 'query test{ testContext }',
+               }]);
+           return req.then((res) => {
+               expect(callCount).to.equal(2);
+               expect(res.status).to.equal(200);
+               return expect(res.body).to.deep.equal(expected);
+           });
+       });
+
       it('can handle a request with a mutation', async () => {
           app = await createApp();
           const expected = {
