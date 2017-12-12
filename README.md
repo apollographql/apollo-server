@@ -24,7 +24,7 @@ Anyone is welcome to contribute to Apollo Server, just read [CONTRIBUTING.md](./
 
 ## Getting started
 
-Apollo Server is super easy to set up. Just `npm install apollo-server-<variant>`, write a GraphQL schema, and then use one of the following snippets to get started. For more info, read the [Apollo Server docs](http://dev.apollodata.com/tools/apollo-server/index.html). To experiment a live example of Apollo Server, create an [Apollo Launchpad](https://launchpad.graphql.com). Downloading the pad will provide you a local Apollo Server project.
+Apollo Server is super easy to set up. Just `npm install apollo-server-<variant>`, write a GraphQL schema, and then use one of the following snippets to get started. For more info, read the [Apollo Server docs](https://www.apollographql.com/docs/apollo-server/). To experiment a live example of Apollo Server, create an [Apollo Launchpad](https://launchpad.graphql.com). Downloading the pad will provide you a local Apollo Server project.
 
 ### Installation
 

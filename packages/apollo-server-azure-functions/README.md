@@ -1,6 +1,6 @@
 # graphql-server-lambda
 
-This is the Azure Functions integration for the Apollo community GraphQL Server. [Read the docs.](http://dev.apollodata.com/tools/apollo-server/index.html)
+This is the Azure Functions integration for the Apollo community GraphQL Server. [Read the docs.](https://www.apollographql.com/docs/apollo-server/)
 
 
 ## Example:

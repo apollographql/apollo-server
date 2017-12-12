@@ -18,10 +18,18 @@ sidebar_categories:
     - setup
     - requests
     - graphiql
-    - migration-hapi
-    - migration
   Servers:
     - servers/express
+    - servers/hapi
+    - servers/koa
+    - servers/lambda
+    - servers/micro
+    - servers/restify
+    - servers/azure-functions
+    - servers/adonis
+  Migration:
+    - migration-hapi
+    - migration
   Related:
     - title: graphql-tools
       href: https://www.apollographql.com/docs/graphql-tools/
