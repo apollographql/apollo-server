@@ -1,7 +1,7 @@
 ---
 title: Build a GraphQL server with Node.js
 sidebar_title: Installing
-description: Apollo Server is a flexible, community driven, production-ready HTTP GraphQL middleware for Node.js.
+description: Apollo Server is a flexible, community driven, production-ready HTTP GraphQL middleware for Express, Hapi, Koa, and more.
 ---
 
 Apollo Server is a library that helps you connect a GraphQL schema to an HTTP server in Node. If you want to get started quickly, take a look at the [end-to-end example](./example.html).
