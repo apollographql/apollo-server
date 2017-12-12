@@ -20,6 +20,8 @@ sidebar_categories:
     - graphiql
     - migration-hapi
     - migration
+  Servers:
+    - servers/express
   Related:
     - title: graphql-tools
       href: https://www.apollographql.com/docs/graphql-tools/
