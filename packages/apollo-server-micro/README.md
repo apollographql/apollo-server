@@ -14,7 +14,7 @@ npm install apollo-server-micro
 ## Example
 
 ```js
-import { microGraphiql, microGraphql } from 'graphql-server-micro';
+import { microGraphiql, microGraphql } from 'apollo-server-micro';
 import micro, { send } from 'micro';
 import { get, post, router } from 'microrouter';
 import schema from './schema';
