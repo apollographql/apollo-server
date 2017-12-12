@@ -46,7 +46,7 @@ typescript_api_box:
 social_links:
   github: 'https://github.com/apollographql'
   twitter: '@apollographql'
-  slackInvitePage: 'https://www.apollodata.com/#slack'
+  slackInvitePage: 'https://www.apollographql.com/#slack'
 
 # API keys
 apis:
