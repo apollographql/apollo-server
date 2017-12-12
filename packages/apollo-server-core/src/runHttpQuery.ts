@@ -27,6 +27,10 @@ function isQueryOperation(query: DocumentNode, operationName: string) {
   return operationAST.operation === 'query';
 }
 
+function isFunction(arg: any): arg is Function {
+  return typeof arg === 'function';
+}
+
 export async function runHttpQuery(handlerArguments: Array<any>, request: HttpQueryRequest): Promise<string> {
   let isGetRequest: boolean = false;
   let optionsObject: GraphQLOptions;
@@ -97,19 +101,18 @@ export async function runHttpQuery(handlerArguments: Array<any>, request: HttpQu
         }
       }
 
-      // Shallow clone context for queries in batches. This allows
-      // users to distinguish multiple queries in the batch and to
-      // modify the context object without interfering with each other.
-      let context = optionsObject.context;
-      if (isBatch) {
-        context = Object.assign({},  context || {});
+      let context = optionsObject.context || {};
+      if (isFunction(context)) {
+        context = context();
+      } else if (isBatch) {
+        context = Object.assign(Object.create(Object.getPrototypeOf(context)), context);
       }
 
       let params = {
         schema: optionsObject.schema,
         query: query,
         variables: variables,
-        context: context,
+        context,
         rootValue: optionsObject.rootValue,
         operationName: operationName,
         logFunction: optionsObject.logFunction,
