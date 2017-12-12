@@ -15,6 +15,7 @@ versions:
 sidebar_categories:
   null:
     - index
+    - example
     - setup
     - requests
     - graphiql
