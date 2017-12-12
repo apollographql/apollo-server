@@ -15,9 +15,20 @@ versions:
 sidebar_categories:
   null:
     - index
+    - example
     - setup
     - requests
     - graphiql
+  Servers:
+    - servers/express
+    - servers/hapi
+    - servers/koa
+    - servers/lambda
+    - servers/micro
+    - servers/restify
+    - servers/azure-functions
+    - servers/adonis
+  Migration:
     - migration-hapi
     - migration
   Related:
@@ -35,7 +46,7 @@ typescript_api_box:
 social_links:
   github: 'https://github.com/apollographql'
   twitter: '@apollographql'
-  slackInvitePage: 'https://www.apollodata.com/#slack'
+  slackInvitePage: 'https://www.apollographql.com/#slack'
 
 # API keys
 apis:

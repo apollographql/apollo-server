@@ -1,30 +1,105 @@
 ---
 title: Adding a GraphQL endpoint
-description: How to add a GraphQL endpoint to your server.
+description: Detailed directions about adding a GraphQL endpoint and passing options.
 ---
 
 Apollo Server has a slightly different API depending on which server integration you are using, but all of the packages share the same core implementation and options format.
 
-<h2 id="graphqlOptions">Apollo Server options</h2>
+If you want to get started quickly, check out the [complete starter code snippet](./example.html).
 
-Apollo Server accepts a `GraphQLOptions` object as its single argument. The `GraphQLOptions` object has the following properties:
+<h2 id="options">Passing options</h2>
+
+Apollo Server accepts a `GraphQLOptions` object as its single argument, like so (for Express):
+
+```js
+app.use(
+  '/graphql',
+  bodyParser.json(),
+  graphqlExpress({
+    schema: myGraphQLSchema
+    // other options here
+  })
+);
+```
+
+<h3 id="options-function">Options as a function</h3>
+
+If you need to vary the options on a per-request basis, the options can also be passed as a function, in which case you get the `req` object or similar as an argument:
+
+```js
+app.use(
+  '/graphql',
+  bodyParser.json(),
+  graphqlExpress(req => {
+    return {
+      schema: myGraphQLSchema,
+      context: {
+        value: req.body.something
+      }
+      // other options here
+    };
+  })
+);
+```
+
+This is useful if you need to attach objects to your context on a per-request basis, for example to initialize user data, caching tools like `dataloader`, or set up some API keys.
+
+<h2 id="graphqlOptions">Options API</h2>
+
+The `GraphQLOptions` object has the following properties:
+
+<h3 id="graphqlOptions.schema">schema</h3>
+
+The GraphQL.js schema object that represents your GraphQL schema. You can create this directly using [GraphQL.js](https://github.com/graphql/graphql-js), the reference GraphQL implementation, or you can use graphql-tools, which makes it simple to combine a schema and resolvers. [See en example.](./example.html)
+
+<h3 id="graphqlOptions.context">context</h3>
+
+The context is an object that's accessible in every single resolver as the third argument. This is a great place to pass information that depends on the current request. Read more about resolvers and their arguments in the [graphql-tools docs](https://www.apollographql.com/docs/graphql-tools/resolvers.html#Resolver-function-signature). Here's an example:
+
+```js
+app.use(
+  '/graphql',
+  bodyParser.json(),
+  graphqlExpress(req => {
+    // Some sort of auth function
+    const userForThisRequest = getUserFromRequest(req);
+
+    return {
+      schema: myGraphQLSchema,
+      context: {
+        user: userForThisRequest
+      }
+      // other options here
+    };
+  })
+);
+```
+
+<h3 id="graphqlOptions.rootValue">rootValue</h3>
+
+This is the value passed as the `obj` argument into the root resolvers. Read more about resolvers and their arguments in the [graphql-tools docs](https://www.apollographql.com/docs/graphql-tools/resolvers.html#Resolver-function-signature). Note: This feature is not often used, since in most cases `context` is a better option to pass per-request data into resolvers.
+
+<h3 id="graphqlOptions.formatError">formatError</h3>
+
+A function to format errors before they are returned to the client. GraphQL does some processing on errors by default, and this is a great place to customize that. You can also access the original thrown error on the `.originalError` property:
+
+```js
+formatError: err => {
+  if (err.originalError && err.originalError.error_message) {
+    err.message = err.originalError.error_message;
+  }
+
+  return err;
+};
+```
+
+<h3 id="other">Other options</h3>
+
+The above are the only options you need most of the time. Here are some others that can be useful as workarounds for various situations:
 
 ```js
 // options object
 const GraphQLOptions = {
-  schema: GraphQLSchema,
-
-  // rootValue passed to GraphQL execution
-  rootValue?: any,
-
-  // the context passed to GraphQL execution
-  context?: any,
-
-  // Formatting function applied to all errors before response is sent
-  formatError?: Function,
-
-  // a function called for logging events such as execution times
-  logFunction?: Function,
   // a function applied to the parameters of every invocation of runQuery
   formatParams?: Function,
 
@@ -42,134 +117,17 @@ const GraphQLOptions = {
 }
 ```
 
-<h3 id="options-function">Passing options as a function</h3>
+<a name="graphqlExpress"></a>
+<a name="graphqlConnect"></a>
+<a name="graphqlHapi"></a>
+<a name="graphqlKoa"></a>
 
-Alternatively, Apollo Server can accept a function which takes the request as input and returns a GraphQLOptions object or a promise that resolves to one:
+<h2 id="specific-servers">Docs for specific servers</h2>
 
-```js
-// example options function (for express)
-graphqlExpress(request => ({
-  schema: typeDefinitionArray,
-  context: { user: request.session.user }
-}))
-```
+To see how to use the middleware with your particular JavaScript server, check out the docs for those:
 
-This is useful if you need to attach objects to your context on a per-request basis, for example to initialize user data, caching tools like `dataloader`, or set up some API keys.
+- [Express / Connect](./servers/express.html)
+- [Hapi](./servers/hapi.html)
+- [Koa](./servers/koa.html)
 
-<h2 id="importingESModules">Importing ES6 Modules</h2>
-
-Currently, the ES6 Module import syntax used in these examples is not implemented in Nodejs 6.x,7.x, and earlier versions.  To use these examples, you will need to configure an external tool like [Babel](https://babeljs.io/) that will transpile the import statements into standard require statements.  For example, `import express from 'express';` would become  `var express = require('express');`.  If you don't want to use an external transpiler, you can manually convert the imports to requires using the example format.
-
-<h2 id="graphqlExpress">Using with Express</h2>
-
-The following code snippet shows how to use Apollo Server with Express:
-
-```js
-import express from 'express';
-import bodyParser from 'body-parser';
-import { graphqlExpress } from 'apollo-server-express';
-
-const PORT = 3000;
-
-var app = express();
-
-app.use('/graphql', bodyParser.json(), graphqlExpress({ schema: myGraphQLSchema }));
-
-app.listen(PORT);
-```
-
-<h2 id="graphqlConnect">Using with Connect</h2>
-
-Connect is so similar to Express that the integration is in the same package. The following code snippet shows how to use Apollo Server with Connect:
-
-```js
-import connect from 'connect';
-import bodyParser from 'body-parser';
-import { graphqlConnect } from 'apollo-server-express';
-import http from 'http';
-
-const PORT = 3000;
-
-var app = connect();
-
-app.use('/graphql', bodyParser.json());
-app.use('/graphql', graphqlConnect({ schema: myGraphQLSchema }));
-
-http.createServer(app).listen(PORT);
-```
-
-The arguments passed to `graphqlConnect` are the same as those passed to `graphqlExpress`.
-
-<h2 id="graphqlHapi">Using with Hapi</h2>
-
-The following code snippet shows how to use Apollo Server with Hapi:
-
-```js
-import hapi from 'hapi';
-import { graphqlHapi } from 'apollo-server-hapi';
-
-const server = new hapi.Server();
-
-const HOST = 'localhost';
-const PORT = 3000;
-
-server.connection({
-    host: HOST,
-    port: PORT,
-});
-
-server.register({
-  register: graphqlHapi,
-  options: {
-    path: '/graphql',
-    graphqlOptions: { schema: myGraphQLSchema },
-  },
-});
-```
-
-`graphqlOptions` can also be a callback or a promise:
-
-```js
-server.register({
-  register: graphqlHapi,
-  options: {
-    path: '/graphql',
-    graphqlOptions: (request) => {
-      return { schema: myGraphQLSchema };
-    },
-  },
-});
-```
-
-<h2 id="graphqlKoa">Using with Koa 2</h2>
-
-The following code snippet shows how to use Apollo Server with Koa:
-
-```js
-import koa from 'koa';
-import koaRouter from 'koa-router';
-import koaBody from 'koa-bodyparser';
-import { graphqlKoa } from 'apollo-server-koa';
-
-const app = new koa();
-const router = new koaRouter();
-const PORT = 3000;
-
-app.use(koaBody());
-
-router.post('/graphql', graphqlKoa({ schema: myGraphQLSchema }));
-app.use(router.routes());
-app.use(router.allowedMethods());
-app.listen(PORT);
-```
-
-`graphqlOptions` can also be a callback that returns a GraphQLOptions or returns a promise that resolves to GraphQLOptions. This function takes a koa 2 `ctx` as its input.
-
-```js
-router.post('/graphql', graphqlKoa((ctx) => {
-  return {
-    schema: myGraphQLSchema,
-    context: { userId: ctx.cookies.get('userId') }
-  };
-}));
-```
+And more are being added every day!

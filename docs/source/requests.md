@@ -1,6 +1,6 @@
 ---
-title: Sending requests
-description: How to send requests to Apollo Server
+title: POST and GET format
+description: How to send requests to Apollo Server over HTTP.
 ---
 
 Apollo Server accepts both GET and POST requests.

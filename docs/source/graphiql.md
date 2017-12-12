@@ -1,6 +1,6 @@
 ---
-title: GraphiQL
-description: How to set up GraphiQL with Apollo Server
+title: GraphiQL IDE
+description: How to set up GraphiQL with Apollo Server to explore your API with docs and auto-completion.
 ---
 
 Apollo Server allows you to easily use [GraphiQL](https://github.com/graphql/graphiql). Here's how:
@@ -32,11 +32,13 @@ If you are using Express, GraphiQL can be configured as follows:
 ```js
 import { graphiqlExpress } from 'apollo-server-express';
 
-app.use('/graphiql', graphiqlExpress({
-  endpointURL: '/graphql',
-}));
+app.use(
+  '/graphiql',
+  graphiqlExpress({
+    endpointURL: '/graphql'
+  })
+);
 ```
-
 
 <h2 id="graphiqlConnect">Using with Connect</h2>
 
@@ -45,11 +47,13 @@ If you are using Connect, GraphiQL can be configured as follows:
 ```js
 import { graphiqlConnect } from 'apollo-server-express';
 
-app.use('/graphiql', graphiqlConnect({
-  endpointURL: '/graphql',
-}));
+app.use(
+  '/graphiql',
+  graphiqlConnect({
+    endpointURL: '/graphql'
+  })
+);
 ```
-
 
 <h2 id="graphiqlHapi">Using with Hapi</h2>
 
@@ -63,12 +67,11 @@ server.register({
   options: {
     path: '/graphiql',
     graphiqlOptions: {
-      endpointURL: '/graphql',
-    },
-  },
+      endpointURL: '/graphql'
+    }
+  }
 });
 ```
-
 
 <h2 id="graphiqlKoa">Using with Koa 2</h2>
 
