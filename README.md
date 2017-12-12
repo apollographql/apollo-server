@@ -8,6 +8,10 @@ Also supports: Restify, Micro, Azure Functions, AWS Lambda and Adonis Framework
 
 Apollo Server is a community-maintained open-source GraphQL server. It works with pretty much all Node.js HTTP server frameworks, and we're happy to take PRs for more! It works with any GraphQL schema built with the [`graphql-js` reference implementation](https://github.com/graphql/graphql-js).
 
+## Documentation
+
+[Read the docs!](https://www.apollographql.com/docs/apollo-server/)
+
 ## Principles
 
 Apollo Server is built with the following principles in mind:
