@@ -1,6 +1,6 @@
 {
   "name": "apollo-server-restify",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "Production-ready Node.js GraphQL server for Restify",
   "main": "dist/index.js",
   "scripts": {
@@ -25,13 +25,13 @@
   },
   "homepage": "https://github.com/apollographql/apollo-server#readme",
   "dependencies": {
-    "apollo-server-core": "^1.2.0",
-    "apollo-server-module-graphiql": "^1.2.0"
+    "apollo-server-core": "^1.3.0",
+    "apollo-server-module-graphiql": "^1.3.0"
   },
   "devDependencies": {
     "@types/graphql": "0.11.5",
     "@types/restify": "5.0.6",
-    "apollo-server-integration-testsuite": "^1.2.0",
+    "apollo-server-integration-testsuite": "^1.3.0",
     "restify": "5.2.0"
   },
   "typings": "dist/index.d.ts",
