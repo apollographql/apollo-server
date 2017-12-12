@@ -26,6 +26,8 @@ npm install graphql apollo-server-azure-functions
 npm install graphql apollo-server-adonis
 ```
 
+If you don't see your favorite server there, [file a PR](https://github.com/apollographql/apollo-server)!
+
 <h2 id="features">Features</h2>
 
 At the end of the day, Apollo Server is a simple, production-ready solution without too many features. Here's what you can do with it:
