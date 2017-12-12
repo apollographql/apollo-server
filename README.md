@@ -1,4 +1,6 @@
-# GraphQL Server for Express, Connect, Hapi, Koa, Restify, Micro, Azure Functions, AWS Lambda and Adonis Framework
+# GraphQL Server for Express, Connect, Hapi, Koa, and more
+
+Also supports: Restify, Micro, Azure Functions, AWS Lambda and Adonis Framework
 
 [![npm version](https://badge.fury.io/js/apollo-server-core.svg)](https://badge.fury.io/js/apollo-server-core)
 [![Build Status](https://travis-ci.org/apollographql/apollo-server.svg?branch=master)](https://travis-ci.org/apollographql/apollo-server)
