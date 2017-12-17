@@ -3,6 +3,10 @@ title: End-to-end example
 description: Copy and paste this code to have a GraphQL server running in 30 seconds.
 ---
 
+```
+Note: Currently, this example works for graphql version 11.7.0 and earlier.
+```
+
 Here's a complete example that sets up a GraphQL server with `apollo-server-express` and `graphql-tools`. First, make sure to install the necessary modules:
 
 ```sh
