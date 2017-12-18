@@ -10,7 +10,7 @@ Note: Currently, this example works for graphql version 0.11.7 and earlier.
 Here's a complete example that sets up a GraphQL server with `apollo-server-express` and `graphql-tools`. First, make sure to install the necessary modules:
 
 ```sh
-npm install --save apollo-server-express graphql-tools graphql express body-parser
+npm install --save apollo-server-express graphql-tools graphql@0.11.7 express body-parser
 ```
 
 Then, run this code:
