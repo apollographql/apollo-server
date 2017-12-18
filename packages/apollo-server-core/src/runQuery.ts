@@ -152,7 +152,7 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
 
     try {
         logFunction({action: LogAction.execute, step: LogStep.start});
-        return execute(
+        return Promise.resolve(execute(
             options.schema,
             documentAST,
             options.rootValue,
@@ -160,7 +160,7 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
             options.variables,
             options.operationName,
             options.fieldResolver,
-        ).then(result => {
+        )).then(result => {
             logFunction({action: LogAction.execute, step: LogStep.end});
             logFunction({action: LogAction.request, step: LogStep.end});
 
