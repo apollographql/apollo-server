@@ -14,7 +14,7 @@ This server can be queried from any GraphQL client, since it supports all of the
 
 <h2 id="tutorial">GraphQL server tutorial</h2>
 
-If you're just getting started writing GraphQL servers, check out our recently updated tutorial: [How To Build a GraphQL Server to talk to SQL, MongoDB, and REST](https://dev-blog.apollodata.com/tutorial-building-a-graphql-server-cddaa023c035)
+If you're just getting started writing GraphQL servers, check out our recently updated tutorial which walks you through building a server from start to finish: [How To Build a GraphQL Server to talk to SQL, MongoDB, and REST](https://dev-blog.apollodata.com/tutorial-building-a-graphql-server-cddaa023c035)
 
 <h2 id="selecting-package">Selecting the right package</h2>
 
