@@ -15,7 +15,7 @@
     "hexo-renderer-ejs": "^0.3.0",
     "hexo-renderer-less": "^0.2.0",
     "hexo-renderer-marked": "^0.3.0",
-    "hexo-server": "^0.2.0",
+    "hexo-server": "^0.3.0",
     "lodash": "^4.13.1",
     "showdown": "^1.4.2"
   },
