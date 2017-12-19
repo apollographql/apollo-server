@@ -10,7 +10,7 @@
     "lint":
       "tslint ./packages/**/src/**/*.ts --exclude \"./packages/**/node_modules/**/*.ts\"",
     "lint-fix":
-      "prettier --write \"{packages/*/{src,tests,test,benchmark}/**/*.{j,t}s*,**/*.md}\"",
+      "prettier --write \"{packages/*/{src,tests,test,benchmark}/**/*.{j,t}s*,**/*.md,**/*.json}\"",
     "prebootstrap": "npm install",
     "postinstall": "lerna bootstrap",
     "pretest": "npm run compile",
