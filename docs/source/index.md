@@ -10,6 +10,8 @@ Apollo Server works with any GraphQL schema built with [GraphQL.js](https://gith
 
 This server can be queried from any GraphQL client, since it supports all of the common semantics for sending GraphQL over HTTP, as [documented on graphql.org](http://graphql.org/learn/serving-over-http/). Apollo Server also supports some small extensions to the protocol, such as sending multiple GraphQL operations in one request. Read more on the [sending requests](/tools/apollo-server/requests.html) page.
 
+[Contribute to Apollo Server on GitHub.](https://github.com/apollographql/apollo-server)
+
 <h2 id="selecting-package">Selecting the right package</h2>
 
 Apollo Server is actually a family of npm packages, one for each Node.js HTTP server library.
