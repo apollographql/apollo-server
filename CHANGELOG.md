@@ -2,6 +2,15 @@
 
 ### vNEXT
 
+* ...
+
+### v1.3.2
+
+* Updated peer dependencies and tests to support `graphql@0.12`.
+
+### v1.3.1
+* Fixed execution fatal error with `graphql@0.12`.
+
 ### v1.3.0
 * Added support for the vhost option for Hapi [PR #611](https://github.com/apollographql/apollo-server/pull/611)
 * Include readme for npm packages
