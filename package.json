@@ -10,7 +10,7 @@
     "lint":
       "tslint ./packages/**/src/**/*.ts --exclude \"./packages/**/node_modules/**/*.ts\"",
     "lint-fix":
-      "prettier --trailing-comma all --single-quote --write \"packages/*/{src,tests,test,benchmark}/**/*.{j,t}s*\"",
+      "prettier --write \"packages/*/{src,tests,test,benchmark}/**/*.{j,t}s*\"",
     "prebootstrap": "npm install",
     "postinstall": "lerna bootstrap",
     "pretest": "npm run compile",
@@ -30,16 +30,10 @@
     "precommit": "lint-staged"
   },
   "lint-staged": {
-    "*.ts*": [
-      "prettier --trailing-comma all --single-quote --write",
-      "git add"
-    ],
-    "*.js*": [
-      "prettier --trailing-comma all --single-quote --write",
-      "git add"
-    ],
+    "*.ts*": ["prettier --write", "git add"],
+    "*.js*": ["prettier --write", "git add"],
     "*.json*": ["prettier --write", "git add"],
-    "*.md": ["prettier --trailing-comma all --single-quote --write", "git add"]
+    "*.md": ["prettier --write", "git add"]
   },
   "devDependencies": {
     "@types/chai": "4.0.10",
