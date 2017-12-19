@@ -2,7 +2,14 @@
 
 ### vNEXT
 
-* Fix apollo-server-core runQuery breaks async_hooks tracking [PR #733](https://github.com/apollographql/apollo-server/pull/733)
+* Fix apollo-server-core runQuery breaks `async_hooks` tracking [PR #733](https://github.com/apollographql/apollo-server/pull/733)
+
+### v1.3.2
+
+* Updated peer dependencies and tests to support `graphql@0.12`.
+
+### v1.3.1
+* Fixed execution fatal error with `graphql@0.12`.
 
 ### v1.3.0
 
