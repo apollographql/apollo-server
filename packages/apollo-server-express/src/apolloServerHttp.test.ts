@@ -409,7 +409,7 @@ describe(`GraphQL-HTTP (apolloServer) tests for ${version} express`, () => {
           query: '{custom(foo: 123)}',
         });
 
-      expect(response.status).to.equal(500);
+      expect(response.status).to.equal(400);
     });
 
     it('allows for custom error formatting to sanitize', async () => {
