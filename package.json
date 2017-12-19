@@ -10,7 +10,7 @@
     "lint":
       "tslint ./packages/**/src/**/*.ts --exclude \"./packages/**/node_modules/**/*.ts\"",
     "lint-fix":
-      "prettier --write \"packages/*/{src,tests,test,benchmark}/**/*.{j,t}s*\"",
+      "prettier --write \"{packages/*/{src,tests,test,benchmark}/**/*.{j,t}s*,**/*.md}\"",
     "prebootstrap": "npm install",
     "postinstall": "lerna bootstrap",
     "pretest": "npm run compile",
@@ -33,7 +33,7 @@
     "*.ts*": ["prettier --write", "git add"],
     "*.js*": ["prettier --write", "git add"],
     "*.json*": ["prettier --write", "git add"],
-    "*.md": ["prettier --write", "git add"]
+    "*.md*": ["prettier --write", "git add"]
   },
   "devDependencies": {
     "@types/chai": "4.0.10",
