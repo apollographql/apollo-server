@@ -29,7 +29,6 @@ install:
 
 script:
   # Both test & coverage.
-  - rm package-lock.json
   - npm run travis
 
 after_install:
