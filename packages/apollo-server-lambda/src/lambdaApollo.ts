@@ -11,15 +11,11 @@ export interface LambdaGraphQLOptionsFunction {
 // - simple, fast and secure
 //
 
-export interface LambdaHandler {
-  (event: any, context: lambda.Context, callback: lambda.Callback): void;
-}
-
 export interface IHeaders {
     [header: string]: string | number;
 }
 
-export function graphqlLambda( options: GraphQLOptions | LambdaGraphQLOptionsFunction ): LambdaHandler {
+export function graphqlLambda( options: GraphQLOptions | LambdaGraphQLOptionsFunction ): lambda.ProxyHandler {
   if (!options) {
     throw new Error('Apollo Server requires options.');
   }
@@ -28,7 +24,7 @@ export function graphqlLambda( options: GraphQLOptions | LambdaGraphQLOptionsFun
     throw new Error(`Apollo Server expects exactly one argument, got ${arguments.length}`);
   }
 
-  return async (event, lambdaContext: lambda.Context, callback: lambda.Callback) => {
+  return async (event, lambdaContext, callback) => {
     let query = (event.httpMethod === 'POST') ? event.body : event.queryStringParameters,
       statusCode: number = null,
       gqlResponse = null,
@@ -42,7 +38,7 @@ export function graphqlLambda( options: GraphQLOptions | LambdaGraphQLOptionsFun
       gqlResponse = await runHttpQuery([event, lambdaContext], {
         method: event.httpMethod,
         options: options,
-        query: query,
+        query: JSON.stringify(query),
       });
       headers['Content-Type'] = 'application/json';
       statusCode = 200;
@@ -82,8 +78,8 @@ export interface LambdaGraphiQLOptionsFunction {
  * - (optional) result: the result of the query to pre-fill in the GraphiQL UI
  */
 
-export function graphiqlLambda(options: GraphiQL.GraphiQLData | LambdaGraphiQLOptionsFunction) {
-  return (event, lambdaContext: lambda.Context, callback: lambda.Callback) => {
+export function graphiqlLambda(options: GraphiQL.GraphiQLData | LambdaGraphiQLOptionsFunction): lambda.ProxyHandler {
+  return (event, lambdaContext, callback) => {
     const query = event.queryStringParameters;
     GraphiQL.resolveGraphiQLString(query, options, event, lambdaContext).then(graphiqlString => {
       callback(
