@@ -1,6 +1,7 @@
 # Changelog
 
 ### vNEXT
+* Fix apollo-server-core runQuery breaks async_hooks tracking [PR #733](https://github.com/apollographql/apollo-server/pull/733)
 
 ### v1.3.0
 * Added support for the vhost option for Hapi [PR #611](https://github.com/apollographql/apollo-server/pull/611)

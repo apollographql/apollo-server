@@ -62,11 +62,9 @@ export interface QueryOptions {
  cacheControl?: boolean;
 }
 
-const resolvedPromise = Promise.resolve();
-
 function runQuery(options: QueryOptions): Promise<GraphQLResponse> {
     // Fiber-aware Promises run their .then callbacks in Fibers.
-    return resolvedPromise.then(() => doRunQuery(options));
+    return Promise.resolve().then(() => doRunQuery(options));
 }
 
 function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
