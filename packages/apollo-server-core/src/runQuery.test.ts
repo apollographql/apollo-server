@@ -315,4 +315,48 @@ describe('runQuery', () => {
           },
       });
     });
+
+    describe('async_hooks', () => {
+        let asyncHooks;
+        let asyncHook;
+        const ids: number[] = [];
+
+        try {
+            asyncHooks = require('async_hooks');
+        } catch (err) {
+            return; // async_hooks not present, give up
+        }
+
+        before(() => {
+            asyncHook = asyncHooks.createHook({ init: (asyncId) => ids.push(asyncId) });
+            asyncHook.enable();
+        });
+
+        after(() => {
+            asyncHook.disable();
+        });
+
+        it('does not break async_hook call stack', async () => {
+            const query = `
+              query Q1 {
+                testObject {
+                  testString
+                }
+              }
+            `;
+
+            await runQuery({
+                schema,
+                query: query,
+                operationName: 'Q1',
+            });
+
+            // this is the only async process so we expect the async ids to be a sequence
+            ids.forEach((id, i) => {
+                if (i > 0) {
+                    expect(id).to.equal(ids[i - 1] + 1);
+                }
+            });
+        });
+    });
 });
