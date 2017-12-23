@@ -1,6 +1,7 @@
 import {
   DirectiveNode,
   getNamedType,
+  GraphQLInterfaceType,
   GraphQLObjectType,
   GraphQLResolveInfo,
   ResponsePath,
@@ -46,7 +47,8 @@ export class CacheControlExtension<TContext = any> implements GraphQLExtension<T
     let hint: CacheHint = {};
 
     const targetType = getNamedType(info.returnType);
-    if (targetType instanceof GraphQLObjectType) {
+    if (targetType instanceof GraphQLObjectType
+      || targetType instanceof GraphQLInterfaceType) {
       if (targetType.astNode) {
         hint = mergeHints(hint, cacheHintFromDirectives(targetType.astNode.directives));
       }
