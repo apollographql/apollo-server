@@ -4,7 +4,7 @@ import * as GraphiQL from 'apollo-server-module-graphiql';
 import { GraphQLOptions, runHttpQuery, HttpQueryError } from 'apollo-server-core';
 
 export interface IRegister {
-    (server: Server, options: any): void;
+    (server: Server, options: any, next?: Function): void;
 }
 
 export interface IPlugin {
@@ -12,6 +12,7 @@ export interface IPlugin {
   version?: string;
   register: IRegister;
 }
+
 
 export interface HapiOptionsFunction {
   (req?: Request): GraphQLOptions | Promise<GraphQLOptions>;
@@ -26,7 +27,7 @@ export interface HapiPluginOptions {
 
 const graphqlHapi: IPlugin = {
   name: 'graphql',
-  register: (server: Server, options: HapiPluginOptions) => {
+  register: (server: Server, options: HapiPluginOptions, next?: Function) => {
     if (!options || !options.graphqlOptions) {
       throw new Error('Apollo Server requires options.');
     }
@@ -71,6 +72,10 @@ const graphqlHapi: IPlugin = {
         }
       },
     });
+
+    if (next) {
+      next();
+    }
   },
 };
 
@@ -86,7 +91,7 @@ export interface HapiGraphiQLPluginOptions {
 
 const graphiqlHapi: IPlugin = {
   name: 'graphiql',
-  register: (server: Server, options: HapiGraphiQLPluginOptions) => {
+  register: (server: Server, options: HapiGraphiQLPluginOptions, next?: Function) => {
     if (!options || !options.graphiqlOptions) {
       throw new Error('Apollo Server GraphiQL requires options.');
     }
@@ -103,7 +108,12 @@ const graphiqlHapi: IPlugin = {
         return response;
       },
     });
+
+    if (next) {
+      next();
+    }
   },
 };
 
 export { graphqlHapi, graphiqlHapi };
+
