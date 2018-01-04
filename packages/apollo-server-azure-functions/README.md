@@ -43,12 +43,18 @@ const schema = graphqlTools.makeExecutableSchema({
 module.exports = function run(context, request) {
   if (request.method === "POST") {
     server.graphqlAzureFunctions({
-        endpointURL: '/api/graphql'
+        endpointURL: '/api/graphql',
+        schema: schema
     })(context, request);
   } else if (request.method === "GET") {
     return server.graphiqlAzureFunctions({
-        endpointURL: '/api/graphql'
+        endpointURL: '/api/graphql',
+        schema: schema
     })(context, request);
   }
 };
 ```
+
+## GraphiQL MacOS Note
+
+Local development doesn't work with GraphiQL at this time on MacOS. The issue seems to be releated to https://github.com/Azure/azure-functions-cli/issues/340. The current work around is to deploy the function and then use GraphiQL.
