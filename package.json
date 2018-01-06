@@ -24,7 +24,7 @@
   "devDependencies": {
     "@types/chai": "4.0.10",
     "@types/mocha": "2.2.45",
-    "@types/node": "8.5.2",
+    "@types/node": "8.5.5",
     "@types/sinon": "4.1.2",
     "chai": "4.1.2",
     "graphql": "0.11.7",
