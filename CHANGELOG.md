@@ -4,6 +4,7 @@ All of the packages in the `apollo-server` repo are released with the same versi
 
 ### vNEXT
 
+* `apollo-server-azure-functions`: Fix non-functional Azure Functions implementation and update examples in Azure Functions' `README.md`. [PR #753](https://github.com/apollographql/apollo-server/pull/753) [Issue #684](https://github.com/apollographql/apollo-server/issues/684)
 * `apollo-server-adonis`: The `Content-type` of an operation response will now be correctly set to `application/json`.
 
 ### v1.3.4
