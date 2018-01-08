@@ -7,12 +7,11 @@ description: Setting up Apollo Server with Azure Functions
 
 This is the Azure Functions integration for the Apollo community GraphQL Server. [Read the docs.](https://www.apollographql.com/docs/apollo-server/)
 
-
 ## Example:
 
 ```js
-const server = require("apollo-server-azure-functions");
-const graphqlTools = require("graphql-tools");
+const server = require('apollo-server-azure-functions');
+const graphqlTools = require('graphql-tools');
 
 const typeDefs = `
   type Random {
@@ -26,28 +25,28 @@ const typeDefs = `
   }
 `;
 
-const rands = [{ id: 1, rand: "random" }, { id: 2, rand: "modnar" }];
+const rands = [{ id: 1, rand: 'random' }, { id: 2, rand: 'modnar' }];
 
 const resolvers = {
   Query: {
     rands: () => rands,
-    rand: (_, { id }) => rands.find(rand => rand.id === id)
-  }
+    rand: (_, { id }) => rands.find(rand => rand.id === id),
+  },
 };
 
 const schema = graphqlTools.makeExecutableSchema({
   typeDefs,
-  resolvers
+  resolvers,
 });
 
 module.exports = function run(context, request) {
-  if (request.method === "POST") {
+  if (request.method === 'POST') {
     server.graphqlAzureFunctions({
-        endpointURL: '/api/graphql'
+      endpointURL: '/api/graphql',
     })(context, request);
-  } else if (request.method === "GET") {
+  } else if (request.method === 'GET') {
     return server.graphiqlAzureFunctions({
-        endpointURL: '/api/graphql'
+      endpointURL: '/api/graphql',
     })(context, request);
   }
 };

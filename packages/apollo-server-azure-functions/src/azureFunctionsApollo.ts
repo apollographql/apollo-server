@@ -1,87 +1,87 @@
 import {
-    IHttpContext,
-    IFunctionRequest,
-    HttpStatusCodes,
+  IHttpContext,
+  IFunctionRequest,
+  HttpStatusCodes,
 } from 'azure-functions-typescript';
 import { GraphQLOptions, runHttpQuery } from 'apollo-server-core';
 import * as GraphiQL from 'apollo-server-module-graphiql';
 
 export interface AzureFunctionsGraphQLOptionsFunction {
-    (context: IHttpContext): GraphQLOptions | Promise<GraphQLOptions>;
+  (context: IHttpContext): GraphQLOptions | Promise<GraphQLOptions>;
 }
 
 export interface AzureFunctionsHandler {
-    (context: IHttpContext, request: IFunctionRequest): void;
+  (context: IHttpContext, request: IFunctionRequest): void;
 }
 
 export interface IHeaders {
-    'content-type'?: string;
-    'content-length'?: HttpStatusCodes | number;
-    'content-disposition'?: string;
-    'content-encoding'?: string;
-    'content-language'?: string;
-    'content-range'?: string;
-    'content-location'?: string;
-    'content-md5'?: Buffer;
-    'expires'?: Date;
-    'last-modified'?: Date;
-    [header: string]: any;
+  'content-type'?: string;
+  'content-length'?: HttpStatusCodes | number;
+  'content-disposition'?: string;
+  'content-encoding'?: string;
+  'content-language'?: string;
+  'content-range'?: string;
+  'content-location'?: string;
+  'content-md5'?: Buffer;
+  expires?: Date;
+  'last-modified'?: Date;
+  [header: string]: any;
 }
 
 export interface AzureFunctionsGraphiQLOptionsFunction {
-    (context: IHttpContext, request: IFunctionRequest):
-        | GraphiQL.GraphiQLData
-        | Promise<GraphiQL.GraphiQLData>;
+  (context: IHttpContext, request: IFunctionRequest):
+    | GraphiQL.GraphiQLData
+    | Promise<GraphiQL.GraphiQLData>;
 }
 
 export function graphqlAzureFunctions(
-    options: GraphQLOptions | AzureFunctionsGraphQLOptionsFunction,
+  options: GraphQLOptions | AzureFunctionsGraphQLOptionsFunction,
 ): AzureFunctionsHandler {
-    if (!options) {
-        throw new Error('Apollo Server requires options.');
+  if (!options) {
+    throw new Error('Apollo Server requires options.');
+  }
+
+  if (arguments.length > 1) {
+    throw new Error(
+      `Apollo Server expects exactly one argument, got ${arguments.length}`,
+    );
+  }
+
+  return (httpContext: IHttpContext, request: IFunctionRequest) => {
+    const queryRequest = {
+      method: request.method,
+      options: options,
+      query: request.method === 'POST' ? request.body : request.query,
+    };
+
+    if (queryRequest.query && typeof queryRequest.query === 'string') {
+      queryRequest.query = JSON.parse(queryRequest.query);
     }
 
-    if (arguments.length > 1) {
-        throw new Error(
-            `Apollo Server expects exactly one argument, got ${arguments.length}`,
-        );
-    }
-
-    return (httpContext: IHttpContext, request: IFunctionRequest) => {
-        const queryRequest = {
-            method: request.method,
-            options: options,
-            query: request.method === 'POST' ? request.body : request.query,
+    return runHttpQuery([httpContext, request], queryRequest)
+      .then(gqlResponse => {
+        const result = {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+          body: gqlResponse,
         };
 
-        if (queryRequest.query && typeof queryRequest.query === 'string') {
-            queryRequest.query = JSON.parse(queryRequest.query);
-        }
+        httpContext.res = result;
 
-        return runHttpQuery([httpContext, request], queryRequest)
-            .then(gqlResponse => {
-                const result = {
-                    status: 200,
-                    headers: { 'Content-Type': 'application/json' },
-                    body: gqlResponse,
-                };
+        httpContext.done(null, result);
+      })
+      .catch(error => {
+        const result = {
+          status: error.statusCode,
+          headers: error.headers,
+          body: error.message,
+        };
 
-                httpContext.res = result;
+        httpContext.res = result;
 
-                httpContext.done(null, result);
-            })
-            .catch(error => {
-                const result = {
-                    status: error.statusCode,
-                    headers: error.headers,
-                    body: error.message,
-                };
-
-                httpContext.res = result;
-
-                httpContext.done(null, result);
-            });
-    };
+        httpContext.done(null, result);
+      });
+  };
 }
 
 /* This Azure Functions Handler returns the html for the GraphiQL interactive query UI
@@ -96,31 +96,31 @@ export function graphqlAzureFunctions(
  */
 
 export function graphiqlAzureFunctions(
-    options: GraphiQL.GraphiQLData | AzureFunctionsGraphiQLOptionsFunction,
+  options: GraphiQL.GraphiQLData | AzureFunctionsGraphiQLOptionsFunction,
 ) {
-    return (httpContext: IHttpContext, request: IFunctionRequest) => {
-        const query = request.query;
+  return (httpContext: IHttpContext, request: IFunctionRequest) => {
+    const query = request.query;
 
-        GraphiQL.resolveGraphiQLString(query, options, httpContext, request).then(
-            graphiqlString => {
-                httpContext.res = {
-                    status: 200,
-                    headers: {
-                        'Content-Type': 'text/html',
-                    },
-                    body: graphiqlString,
-                };
+    GraphiQL.resolveGraphiQLString(query, options, httpContext, request).then(
+      graphiqlString => {
+        httpContext.res = {
+          status: 200,
+          headers: {
+            'Content-Type': 'text/html',
+          },
+          body: graphiqlString,
+        };
 
-                httpContext.done(null, httpContext.res);
-            },
-            error => {
-                httpContext.res = {
-                    status: 500,
-                    body: error.message,
-                };
+        httpContext.done(null, httpContext.res);
+      },
+      error => {
+        httpContext.res = {
+          status: 500,
+          body: error.message,
+        };
 
-                httpContext.done(null, httpContext.res);
-            },
-        );
-    };
+        httpContext.done(null, httpContext.res);
+      },
+    );
+  };
 }

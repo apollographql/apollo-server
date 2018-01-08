@@ -16,9 +16,9 @@ app.use(
   '/graphql',
   bodyParser.json(),
   graphqlExpress({
-    schema: myGraphQLSchema
+    schema: myGraphQLSchema,
     // other options here
-  })
+  }),
 );
 ```
 
@@ -34,11 +34,11 @@ app.use(
     return {
       schema: myGraphQLSchema,
       context: {
-        value: req.body.something
-      }
+        value: req.body.something,
+      },
       // other options here
     };
-  })
+  }),
 );
 ```
 
@@ -67,11 +67,11 @@ app.use(
     return {
       schema: myGraphQLSchema,
       context: {
-        user: userForThisRequest
-      }
+        user: userForThisRequest,
+      },
       // other options here
     };
-  })
+  }),
 );
 ```
 
@@ -126,8 +126,8 @@ const GraphQLOptions = {
 
 To see how to use the middleware with your particular JavaScript server, check out the docs for those:
 
-- [Express / Connect](./servers/express.html)
-- [Hapi](./servers/hapi.html)
-- [Koa](./servers/koa.html)
+* [Express / Connect](./servers/express.html)
+* [Hapi](./servers/hapi.html)
+* [Koa](./servers/koa.html)
 
 And more are being added every day!

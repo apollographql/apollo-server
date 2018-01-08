@@ -7,19 +7,33 @@
   },
   "scripts": {
     "compile": "lerna exec -- npm run compile",
-    "lint": "tslint ./packages/**/src/**/*.ts --exclude \"./packages/**/node_modules/**/*.ts\"",
+    "lint":
+      "prettier-check --ignore-path .gitignore \"{docs/{,source/**},.,packages/**,test}/{*.{j,t}s*,*.md,*.json}\"",
+    "lint-fix":
+      "prettier --write --ignore-path .gitignore \"{docs/{,source/**},.,packages/**,test}/{*.{j,t}s*,*.md,*.json}\"",
     "prebootstrap": "npm install",
     "postinstall": "lerna bootstrap",
     "pretest": "npm run compile",
     "test": "npm run testonly --",
     "posttest": "npm run lint",
-    "testonly": "mocha --reporter spec --full-trace --timeout 5000 ./test/tests.js",
-    "coverage": "istanbul cover -x \"*.test.js\" _mocha -- --timeout 5000 --full-trace --reporter dot ./test/tests.js",
+    "testonly":
+      "mocha --reporter spec --full-trace --timeout 5000 ./test/tests.js",
+    "coverage":
+      "istanbul cover -x \"*.test.js\" _mocha -- --timeout 5000 --full-trace --reporter dot ./test/tests.js",
     "pretravis": "npm run compile",
-    "travis": "istanbul cover -x \"*.test.js\" _mocha -- --timeout 5000 --full-trace ./test/tests.js",
+    "travis":
+      "istanbul cover -x \"*.test.js\" _mocha -- --timeout 5000 --full-trace ./test/tests.js",
     "posttravis": "npm run lint",
-    "postcoverage": "remap-istanbul --input coverage/coverage.raw.json --type lcovonly --output coverage/lcov.info",
-    "release": "lerna publish"
+    "postcoverage":
+      "remap-istanbul --input coverage/coverage.raw.json --type lcovonly --output coverage/lcov.info",
+    "release": "lerna publish",
+    "precommit": "lint-staged"
+  },
+  "lint-staged": {
+    "*.ts*": ["prettier --write", "git add"],
+    "*.js*": ["prettier --write", "git add"],
+    "*.json*": ["prettier --write", "git add"],
+    "*.md*": ["prettier --write", "git add"]
   },
   "devDependencies": {
     "@types/chai": "4.1.0",
@@ -28,15 +42,18 @@
     "@types/sinon": "4.1.2",
     "chai": "4.1.2",
     "graphql": "0.11.7",
+    "husky": "^0.14.3",
     "istanbul": "1.1.0-alpha.1",
     "lerna": "2.5.1",
+    "lint-staged": "6.0.0",
     "mocha": "4.1.0",
     "npm-check-updates": "2.14.0",
+    "prettier": "^1.9.2",
+    "prettier-check": "^2.0.0",
     "remap-istanbul": "0.9.5",
     "sinon": "4.1.4",
     "supertest": "3.0.0",
     "supertest-as-promised": "4.0.2",
-    "tslint": "5.7.0",
     "typescript": "2.6.2"
   }
 }

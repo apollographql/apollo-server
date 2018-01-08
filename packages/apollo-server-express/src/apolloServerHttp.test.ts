@@ -36,7 +36,7 @@ import {
   GraphQLString,
   GraphQLScalarType,
   GraphQLError,
-  BREAK
+  BREAK,
 } from 'graphql';
 
 const QueryRootType = new GraphQLObjectType({
@@ -46,14 +46,16 @@ const QueryRootType = new GraphQLObjectType({
       type: GraphQLString,
       args: {
         who: {
-          type: GraphQLString
-        }
+          type: GraphQLString,
+        },
       },
-      resolve: (root, args) => 'Hello ' + (args['who'] || 'World')
+      resolve: (root, args) => 'Hello ' + (args['who'] || 'World'),
     },
     thrower: {
       type: new GraphQLNonNull(GraphQLString),
-      resolve: () => { throw new Error('Throws!'); }
+      resolve: () => {
+        throw new Error('Throws!');
+      },
     },
     custom: {
       type: GraphQLString,
@@ -69,14 +71,14 @@ const QueryRootType = new GraphQLObjectType({
               throw new Error('Something bad happened');
             },
           }),
-        }
-      }
+        },
+      },
     },
     context: {
       type: GraphQLString,
       resolve: (obj, args, context) => context,
-    }
-  }
+    },
+  },
 });
 
 const TestSchema = new GraphQLSchema({
@@ -86,15 +88,15 @@ const TestSchema = new GraphQLSchema({
     fields: {
       writeTest: {
         type: QueryRootType,
-        resolve: () => ({})
-      }
-    }
-  })
+        resolve: () => ({}),
+      },
+    },
+  }),
 });
 
 function catchError(p) {
   return p.then(
-    (res) => {
+    res => {
       // workaround for unknown issues with testing against npm package of express-graphql.
       // the same code works when testing against the source, I'm not sure why.
       if (res && res.error) {
@@ -107,18 +109,17 @@ function catchError(p) {
         throw new Error('Expected error to be instanceof Error.');
       }
       return error;
-    }
+    },
   );
 }
 
 function promiseTo(fn) {
   return new Promise((resolve, reject) => {
-    fn((error, result) => error ? reject(error) : resolve(result));
+    fn((error, result) => (error ? reject(error) : resolve(result)));
   });
 }
 
 describe('test harness', () => {
-
   it('expects to catch errors', async () => {
     let caught;
     try {
@@ -136,7 +137,9 @@ describe('test harness', () => {
     } catch (error) {
       caught = error;
     }
-    expect(caught && caught.message).to.equal('Expected error to be instanceof Error.');
+    expect(caught && caught.message).to.equal(
+      'Expected error to be instanceof Error.',
+    );
   });
 
   it('resolves callback promises', async () => {
@@ -155,26 +158,29 @@ describe('test harness', () => {
     }
     expect(caught).to.equal(rejectError);
   });
-
 });
 
 const express = express4;
 const version = 'modern';
 describe(`GraphQL-HTTP (apolloServer) tests for ${version} express`, () => {
   describe('POST functionality', () => {
-
     it('allows gzipped POST bodies', async () => {
       const app = express();
 
       app.use('/graphql', bodyParser.json());
-      app.use('/graphql', graphqlExpress(() => ({
-        schema: TestSchema
-      })));
+      app.use(
+        '/graphql',
+        graphqlExpress(() => ({
+          schema: TestSchema,
+        })),
+      );
 
       const data = { query: '{ test(who: "World") }' };
       const json = JSON.stringify(data);
       // TODO had to write "as any as Buffer" to make tsc accept it. Does it matter?
-      const gzippedJson = await promiseTo(cb => zlib.gzip(json as any as Buffer, cb));
+      const gzippedJson = await promiseTo(cb =>
+        zlib.gzip((json as any) as Buffer, cb),
+      );
 
       const req = request(app)
         .post('/graphql')
@@ -185,8 +191,8 @@ describe(`GraphQL-HTTP (apolloServer) tests for ${version} express`, () => {
 
       expect(JSON.parse(response.text)).to.deep.equal({
         data: {
-          test: 'Hello World'
-        }
+          test: 'Hello World',
+        },
       });
     });
 
@@ -194,14 +200,19 @@ describe(`GraphQL-HTTP (apolloServer) tests for ${version} express`, () => {
       const app = express();
 
       app.use('/graphql', bodyParser.json());
-      app.use('/graphql', graphqlExpress(() => ({
-        schema: TestSchema
-      })));
+      app.use(
+        '/graphql',
+        graphqlExpress(() => ({
+          schema: TestSchema,
+        })),
+      );
 
       const data = { query: '{ test(who: "World") }' };
       const json = JSON.stringify(data);
       // TODO had to write "as any as Buffer" to make tsc accept it. Does it matter?
-      const deflatedJson = await promiseTo(cb => zlib.deflate(json as any as Buffer, cb));
+      const deflatedJson = await promiseTo(cb =>
+        zlib.deflate((json as any) as Buffer, cb),
+      );
 
       const req = request(app)
         .post('/graphql')
@@ -212,8 +223,8 @@ describe(`GraphQL-HTTP (apolloServer) tests for ${version} express`, () => {
 
       expect(JSON.parse(response.text)).to.deep.equal({
         data: {
-          test: 'Hello World'
-        }
+          test: 'Hello World',
+        },
       });
     });
 
@@ -227,16 +238,16 @@ describe(`GraphQL-HTTP (apolloServer) tests for ${version} express`, () => {
         name: 'UploadedFile',
         fields: {
           originalname: { type: GraphQLString },
-          mimetype: { type: GraphQLString }
-        }
+          mimetype: { type: GraphQLString },
+        },
       });
 
       const TestMutationSchema = new GraphQLSchema({
         query: new GraphQLObjectType({
           name: 'QueryRoot',
           fields: {
-            test: { type: GraphQLString }
-          }
+            test: { type: GraphQLString },
+          },
         }),
         mutation: new GraphQLObjectType({
           name: 'MutationRoot',
@@ -248,10 +259,10 @@ describe(`GraphQL-HTTP (apolloServer) tests for ${version} express`, () => {
                 // file directly, but presumably you might return a Promise
                 // to go store the file somewhere first.
                 return rootValue.request.file;
-              }
-            }
-          }
-        })
+              },
+            },
+          },
+        }),
       });
 
       const app = express();
@@ -262,28 +273,34 @@ describe(`GraphQL-HTTP (apolloServer) tests for ${version} express`, () => {
 
       // Providing the request as part of `rootValue` allows it to
       // be accessible from within Schema resolve functions.
-      app.use('/graphql', graphqlExpress(req => {
-        return {
-          schema: TestMutationSchema,
-          rootValue: { request: req }
-        };
-      }));
+      app.use(
+        '/graphql',
+        graphqlExpress(req => {
+          return {
+            schema: TestMutationSchema,
+            rootValue: { request: req },
+          };
+        }),
+      );
 
       const req = request(app)
         .post('/graphql')
-        .field('query', `mutation TestMutation {
+        .field(
+          'query',
+          `mutation TestMutation {
           uploadFile { originalname, mimetype }
-        }`)
+        }`,
+        )
         .attach('file', __filename);
 
-      return req.then((response) => {
+      return req.then(response => {
         expect(JSON.parse(response.text)).to.deep.equal({
           data: {
             uploadFile: {
               originalname: 'apolloServerHttp.test.js',
-              mimetype: 'application/javascript'
-            }
-          }
+              mimetype: 'application/javascript',
+            },
+          },
         });
       });
     });
@@ -294,9 +311,12 @@ describe(`GraphQL-HTTP (apolloServer) tests for ${version} express`, () => {
       const app = express();
 
       app.use('/graphql', bodyParser.json());
-      app.use('/graphql', graphqlExpress({
-        schema: TestSchema
-      }));
+      app.use(
+        '/graphql',
+        graphqlExpress({
+          schema: TestSchema,
+        }),
+      );
 
       const response = await request(app)
         .post('/graphql')
@@ -308,11 +328,13 @@ describe(`GraphQL-HTTP (apolloServer) tests for ${version} express`, () => {
       expect(response.status).to.equal(200);
       expect(JSON.parse(response.text)).to.deep.equal({
         data: null,
-        errors: [ {
-          message: 'Throws!',
-          locations: [ { line: 1, column: 2 } ],
-          path:["thrower"]
-        } ]
+        errors: [
+          {
+            message: 'Throws!',
+            locations: [{ line: 1, column: 2 }],
+            path: ['thrower'],
+          },
+        ],
       });
     });
 
@@ -320,9 +342,12 @@ describe(`GraphQL-HTTP (apolloServer) tests for ${version} express`, () => {
       const app = express();
 
       app.use('/graphql', bodyParser.json());
-      app.use('/graphql', graphqlExpress({
-        schema: TestSchema
-      }));
+      app.use(
+        '/graphql',
+        graphqlExpress({
+          schema: TestSchema,
+        }),
+      );
 
       const response = await request(app)
         .post('/graphql')
@@ -332,29 +357,38 @@ describe(`GraphQL-HTTP (apolloServer) tests for ${version} express`, () => {
 
       expect(response.status).to.equal(400);
       expect(JSON.parse(response.text)).to.deep.equal({
-        errors: [ {
-          message: 'Cannot query field \"notExists\" on type \"QueryRoot\".',
-          locations: [ { line: 1, column: 2 } ],
-        } ]
+        errors: [
+          {
+            message: 'Cannot query field "notExists" on type "QueryRoot".',
+            locations: [{ line: 1, column: 2 }],
+          },
+        ],
       });
     });
 
     it('handles type validation (GET)', async () => {
       const app = express();
 
-      app.use('/graphql', require('connect-query')(), graphqlExpress({
-        schema: TestSchema
-      }));
+      app.use(
+        '/graphql',
+        require('connect-query')(),
+        graphqlExpress({
+          schema: TestSchema,
+        }),
+      );
 
       const response = await request(app)
-        .get('/graphql').query({ query: '{notExists}' });
+        .get('/graphql')
+        .query({ query: '{notExists}' });
 
       expect(response.status).to.equal(400);
       expect(JSON.parse(response.text)).to.deep.equal({
-        errors: [ {
-          message: 'Cannot query field \"notExists\" on type \"QueryRoot\".',
-          locations: [ { line: 1, column: 2 } ],
-        } ]
+        errors: [
+          {
+            message: 'Cannot query field "notExists" on type "QueryRoot".',
+            locations: [{ line: 1, column: 2 }],
+          },
+        ],
       });
     });
 
@@ -362,9 +396,12 @@ describe(`GraphQL-HTTP (apolloServer) tests for ${version} express`, () => {
       const app = express();
 
       app.use('/graphql', bodyParser.json());
-      app.use('/graphql', graphqlExpress({
-        schema: TestSchema
-      }));
+      app.use(
+        '/graphql',
+        graphqlExpress({
+          schema: TestSchema,
+        }),
+      );
 
       const response = await request(app)
         .post('/graphql')
@@ -379,12 +416,15 @@ describe(`GraphQL-HTTP (apolloServer) tests for ${version} express`, () => {
       const app = express();
 
       app.use('/graphql', bodyParser.json());
-      app.use('/graphql', graphqlExpress({
-        schema: TestSchema,
-        formatError(error) {
-          return { message: 'Custom error format: ' + error.message };
-        }
-      }));
+      app.use(
+        '/graphql',
+        graphqlExpress({
+          schema: TestSchema,
+          formatError(error) {
+            return { message: 'Custom error format: ' + error.message };
+          },
+        }),
+      );
 
       const response = await request(app)
         .post('/graphql')
@@ -395,9 +435,11 @@ describe(`GraphQL-HTTP (apolloServer) tests for ${version} express`, () => {
       expect(response.status).to.equal(200);
       expect(JSON.parse(response.text)).to.deep.equal({
         data: null,
-        errors: [ {
-          message: 'Custom error format: Throws!',
-        } ]
+        errors: [
+          {
+            message: 'Custom error format: Throws!',
+          },
+        ],
       });
     });
 
@@ -405,16 +447,19 @@ describe(`GraphQL-HTTP (apolloServer) tests for ${version} express`, () => {
       const app = express();
 
       app.use('/graphql', bodyParser.json());
-      app.use('/graphql', graphqlExpress({
-        schema: TestSchema,
-        formatError(error) {
-          return {
-            message: error.message,
-            locations: error.locations,
-            stack: 'Stack trace'
-          };
-        }
-      }));
+      app.use(
+        '/graphql',
+        graphqlExpress({
+          schema: TestSchema,
+          formatError(error) {
+            return {
+              message: error.message,
+              locations: error.locations,
+              stack: 'Stack trace',
+            };
+          },
+        }),
+      );
 
       const response = await request(app)
         .post('/graphql')
@@ -425,11 +470,13 @@ describe(`GraphQL-HTTP (apolloServer) tests for ${version} express`, () => {
       expect(response.status).to.equal(200);
       expect(JSON.parse(response.text)).to.deep.equal({
         data: null,
-        errors: [ {
-          message: 'Throws!',
-          locations: [ { line: 1, column: 2 } ],
-          stack: 'Stack trace',
-        } ]
+        errors: [
+          {
+            message: 'Throws!',
+            locations: [{ line: 1, column: 2 }],
+            stack: 'Stack trace',
+          },
+        ],
       });
     });
 
@@ -440,50 +487,55 @@ describe(`GraphQL-HTTP (apolloServer) tests for ${version} express`, () => {
       app.use('/graphql', graphqlExpress({ schema: TestSchema }));
 
       const response = await request(app)
-        .put('/graphql').query({ query: '{test}' });
+        .put('/graphql')
+        .query({ query: '{test}' });
 
       expect(response.status).to.equal(405);
       expect(response.headers.allow).to.equal('GET, POST');
-      return expect(response.text).to.contain('Apollo Server supports only GET/POST requests.');
+      return expect(response.text).to.contain(
+        'Apollo Server supports only GET/POST requests.',
+      );
     });
   });
 
   describe('Custom validation rules', () => {
-      const AlwaysInvalidRule = function (context) {
-        return {
-          enter() {
-            context.reportError(new GraphQLError(
-              'AlwaysInvalidRule was really invalid!'
-            ));
-            return BREAK;
-          }
-        };
+    const AlwaysInvalidRule = function(context) {
+      return {
+        enter() {
+          context.reportError(
+            new GraphQLError('AlwaysInvalidRule was really invalid!'),
+          );
+          return BREAK;
+        },
       };
+    };
 
-      it('Do not execute a query if it do not pass the custom validation.', async() => {
-        const app = express();
+    it('Do not execute a query if it do not pass the custom validation.', async () => {
+      const app = express();
 
-        app.use('/graphql', bodyParser.json());
-        app.use('/graphql', graphqlExpress({
+      app.use('/graphql', bodyParser.json());
+      app.use(
+        '/graphql',
+        graphqlExpress({
           schema: TestSchema,
-          validationRules: [ AlwaysInvalidRule ],
-        }));
+          validationRules: [AlwaysInvalidRule],
+        }),
+      );
 
-        const response = await request(app)
-            .post('/graphql')
-            .send({
-              query: '{thrower}',
-            })
-
-        expect(response.status).to.equal(400);
-        expect(JSON.parse(response.text)).to.deep.equal({
-          errors: [
-            {
-              message: 'AlwaysInvalidRule was really invalid!'
-            },
-          ]
+      const response = await request(app)
+        .post('/graphql')
+        .send({
+          query: '{thrower}',
         });
 
+      expect(response.status).to.equal(400);
+      expect(JSON.parse(response.text)).to.deep.equal({
+        errors: [
+          {
+            message: 'AlwaysInvalidRule was really invalid!',
+          },
+        ],
       });
     });
+  });
 });

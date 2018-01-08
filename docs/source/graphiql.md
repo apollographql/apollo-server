@@ -35,8 +35,8 @@ import { graphiqlExpress } from 'apollo-server-express';
 app.use(
   '/graphiql',
   graphiqlExpress({
-    endpointURL: '/graphql'
-  })
+    endpointURL: '/graphql',
+  }),
 );
 ```
 
@@ -50,8 +50,8 @@ import { graphiqlConnect } from 'apollo-server-express';
 app.use(
   '/graphiql',
   graphiqlConnect({
-    endpointURL: '/graphql'
-  })
+    endpointURL: '/graphql',
+  }),
 );
 ```
 
@@ -67,9 +67,9 @@ server.register({
   options: {
     path: '/graphiql',
     graphiqlOptions: {
-      endpointURL: '/graphql'
-    }
-  }
+      endpointURL: '/graphql',
+    },
+  },
 });
 ```
 

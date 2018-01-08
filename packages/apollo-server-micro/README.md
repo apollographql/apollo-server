@@ -27,8 +27,8 @@ const server = micro(
     get('/graphql', graphqlHandler),
     post('/graphql', graphqlHandler),
     get('/graphiql', graphiqlHandler),
-    (req, res) => send(res, 404, 'not found')
-  )
+    (req, res) => send(res, 404, 'not found'),
+  ),
 );
 
 server.listen(3000);
