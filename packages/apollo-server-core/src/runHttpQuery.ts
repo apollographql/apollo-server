@@ -1,6 +1,15 @@
-import { parse, getOperationAST, DocumentNode, formatError, ExecutionResult } from 'graphql';
+import {
+  parse,
+  getOperationAST,
+  DocumentNode,
+  formatError,
+  ExecutionResult,
+} from 'graphql';
 import { runQuery } from './runQuery';
-import { default as GraphQLOptions, resolveGraphqlOptions } from './graphqlOptions';
+import {
+  default as GraphQLOptions,
+  resolveGraphqlOptions,
+} from './graphqlOptions';
 
 export interface HttpQueryRequest {
   method: string;
@@ -13,7 +22,12 @@ export class HttpQueryError extends Error {
   public isGraphQLError: boolean;
   public headers: { [key: string]: string };
 
-  constructor (statusCode: number, message: string, isGraphQLError: boolean = false, headers?: { [key: string]: string }) {
+  constructor(
+    statusCode: number,
+    message: string,
+    isGraphQLError: boolean = false,
+    headers?: { [key: string]: string },
+  ) {
     super(message);
     this.name = 'HttpQueryError';
     this.statusCode = statusCode;
@@ -31,39 +45,53 @@ function isFunction(arg: any): arg is Function {
   return typeof arg === 'function';
 }
 
-export async function runHttpQuery(handlerArguments: Array<any>, request: HttpQueryRequest): Promise<string> {
+export async function runHttpQuery(
+  handlerArguments: Array<any>,
+  request: HttpQueryRequest,
+): Promise<string> {
   let isGetRequest: boolean = false;
   let optionsObject: GraphQLOptions;
 
   try {
-    optionsObject = await resolveGraphqlOptions(request.options, ...handlerArguments);
+    optionsObject = await resolveGraphqlOptions(
+      request.options,
+      ...handlerArguments,
+    );
   } catch (e) {
     throw new HttpQueryError(500, e.message);
   }
   const formatErrorFn = optionsObject.formatError || formatError;
   let requestPayload;
 
-  switch ( request.method ) {
+  switch (request.method) {
     case 'POST':
-      if ( !request.query || (Object.keys(request.query).length === 0) ) {
-        throw new HttpQueryError(500, 'POST body missing. Did you forget use body-parser middleware?');
+      if (!request.query || Object.keys(request.query).length === 0) {
+        throw new HttpQueryError(
+          500,
+          'POST body missing. Did you forget use body-parser middleware?',
+        );
       }
 
       requestPayload = request.query;
       break;
-   case 'GET':
-     if ( !request.query || (Object.keys(request.query).length === 0) ) {
-       throw new HttpQueryError(400, 'GET query missing.');
-     }
+    case 'GET':
+      if (!request.query || Object.keys(request.query).length === 0) {
+        throw new HttpQueryError(400, 'GET query missing.');
+      }
 
-     isGetRequest = true;
-     requestPayload = request.query;
-     break;
+      isGetRequest = true;
+      requestPayload = request.query;
+      break;
 
-   default:
-     throw new HttpQueryError(405, 'Apollo Server supports only GET/POST requests.', false, {
-       'Allow':  'GET, POST',
-     });
+    default:
+      throw new HttpQueryError(
+        405,
+        'Apollo Server supports only GET/POST requests.',
+        false,
+        {
+          Allow: 'GET, POST',
+        },
+      );
   }
 
   let isBatch = true;
@@ -77,16 +105,21 @@ export async function runHttpQuery(handlerArguments: Array<any>, request: HttpQu
   const requests: Array<ExecutionResult> = requestPayload.map(requestParams => {
     try {
       let query = requestParams.query;
-      if ( isGetRequest ) {
+      if (isGetRequest) {
         if (typeof query === 'string') {
           // preparse the query incase of GET so we can assert the operation.
           query = parse(query);
         }
 
-        if ( ! isQueryOperation(query, requestParams.operationName) ) {
-          throw new HttpQueryError(405, `GET supports only query operation`, false, {
-            'Allow':  'POST',
-          });
+        if (!isQueryOperation(query, requestParams.operationName)) {
+          throw new HttpQueryError(
+            405,
+            `GET supports only query operation`,
+            false,
+            {
+              Allow: 'POST',
+            },
+          );
         }
       }
 
@@ -105,7 +138,10 @@ export async function runHttpQuery(handlerArguments: Array<any>, request: HttpQu
       if (isFunction(context)) {
         context = context();
       } else if (isBatch) {
-        context = Object.assign(Object.create(Object.getPrototypeOf(context)), context);
+        context = Object.assign(
+          Object.create(Object.getPrototypeOf(context)),
+          context,
+        );
       }
 
       let params = {
@@ -133,7 +169,7 @@ export async function runHttpQuery(handlerArguments: Array<any>, request: HttpQu
     } catch (e) {
       // Populate any HttpQueryError to our handler which should
       // convert it to Http Error.
-      if ( e.name === 'HttpQueryError' ) {
+      if (e.name === 'HttpQueryError') {
         return Promise.reject(e);
       }
 
