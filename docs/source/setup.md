@@ -75,6 +75,8 @@ app.use(
 );
 ```
 
+**NOTE:** The value passed to `context` can also be a function. However, [no arguments are passed when it’s called](https://github.com/apollographql/apollo-server/blob/df51fd90dad90c9468a74e2c4ec2a6af69f4188d/packages/apollo-server-core/src/runHttpQuery.ts#L138-L139), so there’s not really any reason to do so.
+
 <h3 id="graphqlOptions.rootValue">rootValue</h3>
 
 This is the value passed as the `obj` argument into the root resolvers. Read more about resolvers and their arguments in the [graphql-tools docs](https://www.apollographql.com/docs/graphql-tools/resolvers.html#Resolver-function-signature). Note: This feature is not often used, since in most cases `context` is a better option to pass per-request data into resolvers.
