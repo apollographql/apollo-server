@@ -75,7 +75,24 @@ app.use(
 );
 ```
 
-**NOTE:** The value passed to `context` can also be a function. However, [no arguments are passed when it’s called](https://github.com/apollographql/apollo-server/blob/df51fd90dad90c9468a74e2c4ec2a6af69f4188d/packages/apollo-server-core/src/runHttpQuery.ts#L138-L139), so there’s not really any reason to do so.
+<h4 id="graphqlOptions.contextFn">Passing context as a function</h4>
+
+The value passed to `context` can also be a function. [No arguments are passed the function](https://github.com/apollographql/apollo-server/blob/df51fd90dad90c9468a74e2c4ec2a6af69f4188d/packages/apollo-server-core/src/runHttpQuery.ts#L138-L139), but this can be useful for constructing a new context on each request (for example, creating a new instance of a class).
+
+```js
+app.use(
+  '/graphql',
+  bodyParser.json(),
+  graphqlExpress({
+    schema: myGraphQLSchema,
+    context: () => ({
+      // Create a new instance of the user class for each request
+      user: new User(),
+    }),
+    // other options here
+  }),
+);
+```
 
 <h3 id="graphqlOptions.rootValue">rootValue</h3>
 
