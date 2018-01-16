@@ -25,13 +25,13 @@
     "source-map-support": "^0.5.0"
   },
   "peerDependencies": {
-    "graphql": "^0.10.0 || ^0.11.0"
+    "graphql": "^0.10.0 || ^0.11.0 || ^0.12.0"
   },
   "devDependencies": {
     "@types/graphql": "^0.11.5",
     "@types/jest": "^21.1.2",
     "@types/node": "^8.0.45",
-    "graphql": "^0.11.7",
+    "graphql": "^0.12.3",
     "jest": "^21.2.1",
     "jest-matcher-utils": "^21.2.1",
     "ts-jest": "^21.1.0",
