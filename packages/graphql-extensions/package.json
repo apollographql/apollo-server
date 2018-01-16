@@ -1,6 +1,6 @@
 {
   "name": "graphql-extensions",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "Add extensions to GraphQL servers",
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",
