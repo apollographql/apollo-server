@@ -1,24 +1,29 @@
 # Changelog
 
 ### vNEXT
+
 * Fix apollo-server-core runQuery breaks async_hooks tracking [PR #733](https://github.com/apollographql/apollo-server/pull/733)
 
 ### v1.3.0
+
 * Added support for the vhost option for Hapi [PR #611](https://github.com/apollographql/apollo-server/pull/611)
 * Include readme for npm packages
 * Update peerDependencies version for micro [PR #671](https://github.com/apollographql/apollo-server/pull/671)
-* Corrected the hapi example both in the README.md [PR #689] [Issue #689]
+* Corrected the hapi example both in the README.md [PR #689][issue #689]
 * Change GraphqlOptions to also accept context as a function [PR #679](https://github.com/apollographql/apollo-server/pull/679)
 
 ### v1.1.6
+
 * Fixes bug where CORS would not allow `Access-Control-Allow-Origin: *` with credential 'include', changed to 'same-origin' [Issue #514](https://github.com/apollographql/apollo-server/issues/514)
 * Update apollo-server-lambda README to reflect new package name.
 * Add support for connectionParams in GraphiQL plugin options [#452](https://github.com/apollographql/apollo-server/issues/452) [PR 548](https://github.com/apollographql/apollo-server/pull/548)
 
 ### v1.1.2
+
 * Fixed bug with no URL query params with GraphiQL on Lambda [Issue #504](https://github.com/apollographql/apollo-server/issues/504) [PR #512](https://github.com/apollographql/apollo-server/pull/503)
 
 ### v1.1.1
+
 * Added support for Azure Functions [#503](https://github.com/apollographql/apollo-server/pull/503)
 
 ### v1.1.0
@@ -36,62 +41,79 @@
   because it's a breaking change that shouldn't have been a patch update.
 
 ### v1.0.2
+
 * Rename packages from graphql-server- to apollo-server- [#465](https://github.com/apollographql/apollo-server/pull/465). We'll continue to publish `graphql-server-` packages that depend on the renamed `apollo-server-` packages for the time being, to ensure backwards compatibility.
 
 ### v1.0.1
+
 * Fix Express package not calling the callback on completion ([@chemdrew](https://github.com/chemdrew)) in [#463](https://github.com/apollographql/graphql-server/pull/463)
 
 ### v1.0.0
+
 * Add package readmes for Express, Hapi, Koa, Restify ([@helfer](https://github.com/helfer)) in [#442](https://github.com/apollographql/graphql-server/pull/442)
 * Updated & fixed typescript typings ([@helfer](https://github.com/helfer)) in [#440](https://github.com/apollographql/graphql-server/pull/440)
 
 ### v0.9.0
+
 * Allow GraphiQLOptions to be a function ([@NeoPhi](https://github.com/NeoPhi)) on [#426](https://github.com/apollographql/graphql-server/pull/426)
 
 ### v0.8.5
+
 * Fix: graphql-server-micro now properly returns response promises [#401](https://github.com/apollographql/graphql-server/pull/401)
 
 ### v0.8.4
+
 ### v0.8.3
+
 ### v0.8.2
+
 * Fix issue with auto-updating dependencies that caused fibers to update accidentally ([@helfer](https://github.com/helfer)) on [#425](https://github.com/apollographql/graphql-server/pull/425)
 
 ### v0.8.1
+
 * **Security Fix** Ensure queries submitted via HTTP GET run through validation ([@DxCx](https://github.com/DxCx)) on [#424](https://github.com/apollographql/graphql-server/pull/424)
 
 ### v0.8.0
+
 * Persist `window.location.hash` on URL updates [#386](https://github.com/apollographql/graphql-server/issues/386)
 * Added support for `graphql-js` > 0.10.0 [#407](https://github.com/apollographql/graphql-server/pull/407)
-* Updated `subscriptions-transport-ws` for GraphiQL with subscriptions  [#407](https://github.com/apollographql/graphql-server/pull/407)
+* Updated `subscriptions-transport-ws` for GraphiQL with subscriptions [#407](https://github.com/apollographql/graphql-server/pull/407)
 
 ### v0.7.2
+
 * Fix include passHeader field that was accidentally removed
 
 ### v0.7.1
+
 * Fix graphiql fetcher to use endpointURL parameter instead of hardcoded URI.[#365](https://github.com/apollographql/graphql-server/issues/356)
 
 ### v0.7.0
+
 * Add Zeit Micro Integration [#324](https://github.com/apollographql/graphql-server/issues/324)
 * add support for subscriptionURL to GraphiQL ([@urigo](https://github.com/urigo) on [#320](https://github.com/apollostack/graphql-server/pull/320)
 * Restify: Fix for calling next() ([@jadkap](https://github.com/jadkap)) on [#285](https://github.com/apollostack/graphql-server/pull/285)
 * **Breaking:** Update all dependencies [#329](https://github.com/apollographql/graphql-server/issues/329)
 
 ### v0.6.0
+
 * Add AWS Lambda Integration [PR #247](https://github.com/apollostack/graphql-server/pull/247)
 * Update GraphiQL to version 0.9.1 ([@ephemer](https://github.com/ephemer)) on [#293](https://github.com/apollostack/graphql-server/pull/293)
 * **Restify integration** ([@joelgriffith](https://github.com/joelgriffith)) on [#189](https://github.com/apollostack/graphql-server/pull/189)
 * run batched requests in parallel ([@DxCx](https://github.com/DxCx)) on [#273](https://github.com/apollostack/graphql-server/pull/273)
 * Fix GraphiQL options variables. Issue #193. ([@alanchristensen](https://github.com/alanchristensen)) on
-[PR #255](https://github.com/apollostack/apollo-server/pull/255)
+  [PR #255](https://github.com/apollostack/apollo-server/pull/255)
 * Allow graphql@0.9.0 as peerDependency ([@Chris-R3](https://github.com/Chris-R3)) on [PR #278](https://github.com/apollostack/graphql-server/pull/278)
 
 ### v0.5.1
+
 * add support for HTTP GET Method ([@DxCx](https://github.com/DxCx)) on [#180](https://github.com/apollostack/graphql-server/pull/180)
 
 ### v0.5.0
+
 * Switch graphql typings for typescript to @types/graphql [#260](https://github.com/apollostack/graphql-server/pull/260)
 
 ### v0.4.4
+
 * Update GraphiQL to version 0.8.0 ([@DxCx](https://github.com/DxCx)) on [#192](https://github.com/apollostack/graphql-server/pull/192)
 * Upgrade to GraphQL-js 0.8.1.
 
@@ -99,12 +121,12 @@
 
 * **Restructure Apollo Server into 6 new packages, and rename to GraphQL Server** ([@DxCx](https://github.com/DxCx)) and ([@stubailo](https://github.com/stubailo)) in [#183](https://github.com/apollostack/graphql-server/pull/183) and [#164](https://github.com/apollostack/graphql-server/pull/183).
 * There are now 6 packages that make up the GraphQL server family:
-    * `graphql-server-core`
-    * `graphql-module-graphiql`
-    * `graphql-module-operation-store`
-    * `graphql-server-express`
-    * `graphql-server-hapi`
-    * `graphql-server-koa`
+  * `graphql-server-core`
+  * `graphql-module-graphiql`
+  * `graphql-module-operation-store`
+  * `graphql-server-express`
+  * `graphql-server-hapi`
+  * `graphql-server-koa`
 * Exports have been renamed. Everything that used to export `apollo*` now exports `graphql*`, for example `apolloExpress` has become `graphqlExpress`.
 * The repository is now managed using [Lerna](https://github.com/lerna/lerna).
 
@@ -118,40 +140,47 @@
 * Clone context object for each query in a batch.
 
 ### v0.3.2
+
 * Added missing exports for hapi integration ([@nnance](https://github.com/nnance)) in [PR #152](https://github.com/apollostack/apollo-server/pull/152)
 
 ### v0.3.1
+
 * Fixed dependency issue with boom package that affected the hapi integration. ([@sammkj](https://github.com/sammkj) in [#150](https://github.com/apollostack/apollo-server/pull/150))
 
 ### v0.3.0
+
 * Refactor Hapi integration to improve the API and make the plugins more idiomatic. ([@nnance](https://github.com/nnance)) in
-[PR #127](https://github.com/apollostack/apollo-server/pull/127)
-* Fixed query batching with Hapi integration.  Issue #123 ([@nnance](https://github.com/nnance)) in
-[PR #127](https://github.com/apollostack/apollo-server/pull/127)
-* Add support for route options in Hapi integration.  Issue #97. ([@nnance](https://github.com/nnance)) in
-[PR #127](https://github.com/apollostack/apollo-server/pull/127)
-* Camelcase Hapi.  Issue #129. ([@nnance](https://github.com/nnance)) in
-[PR #132](https://github.com/apollostack/apollo-server/pull/132)
+  [PR #127](https://github.com/apollostack/apollo-server/pull/127)
+* Fixed query batching with Hapi integration. Issue #123 ([@nnance](https://github.com/nnance)) in
+  [PR #127](https://github.com/apollostack/apollo-server/pull/127)
+* Add support for route options in Hapi integration. Issue #97. ([@nnance](https://github.com/nnance)) in
+  [PR #127](https://github.com/apollostack/apollo-server/pull/127)
+* Camelcase Hapi. Issue #129. ([@nnance](https://github.com/nnance)) in
+  [PR #132](https://github.com/apollostack/apollo-server/pull/132)
 * Fix error handling when parsing variables parameter. Issue #130. ([@nnance](https://github.com/nnance)) in
-[PR #131](https://github.com/apollostack/apollo-server/pull/131)
+  [PR #131](https://github.com/apollostack/apollo-server/pull/131)
 * Improve logging function. Issue #79. ([@nnance](https://github.com/nnance)) in
-[PR #136](https://github.com/apollostack/apollo-server/pull/136)
+  [PR #136](https://github.com/apollostack/apollo-server/pull/136)
 * Output stack trace for errors in debug mode. Issue #111. ([@nnance](https://github.com/nnance)) in
-[PR #137](https://github.com/apollostack/apollo-server/pull/137)
+  [PR #137](https://github.com/apollostack/apollo-server/pull/137)
 * Allow to pass custom headers in GraphiQL ([@nicolaslopezj](https://github.com/nicolaslopezj) in [#133](https://github.com/apollostack/apollo-server/pull/133)).
 
 ### v0.2.6
+
 * Expose the OperationStore as part of the public API. ([@nnance](https://github.com/nnance))
 * Support adding parsed operations to the OperationStore. ([@nnance](https://github.com/nnance))
 * Expose ApolloOptions as part of the public API.
 
 ### v0.2.5
+
 * Made promise compatible with fibers ([@benjamn](https://github.com/benjamn) in [#92](https://github.com/apollostack/apollo-server/pull/92))
 
 ### v0.2.2
+
 * Log server events such as request start etc. with logFunction ([@helfer](https://github.com/helfer) in [#78](https://github.com/apollostack/apollo-server/pull/78))
 
 ### v0.2.1
+
 * Complete refactor of Apollo Server using TypeScript. PR [#41](https://github.com/apollostack/apollo-server/pull/41)
 * Added Hapi integration ([@nnance](https://github.com/nnance) in [#46](https://github.com/apollostack/apollo-server/pull/46))
 * Added Koa integration ([@HriBB](https://github.com/HriBB) in [#59](https://github.com/apollostack/apollo-server/pull/59))
@@ -166,10 +195,10 @@
 * Added `formatRequest` and `formatResponse` functions to apollo options.
 * Removed support for shorthand schema definitions, connectors and mocks (use `graphql-tools` instead)
 
-
 ### v0.1.5
+
 * BUG: Fixed a spelling error with `tracer.submit()` from PR [#26](https://github.com/apollostack/apollo-server/pull/26)
- in PR [#31](https://github.com/apollostack/apollo-server/pull/31)
+  in PR [#31](https://github.com/apollostack/apollo-server/pull/31)
 
 ### v.0.1.4
 

@@ -17,7 +17,9 @@ export class OperationStore {
   }
 
   public put(operation: string | DocumentNode): void {
-    function isOperationDefinition(definition): definition is OperationDefinitionNode {
+    function isOperationDefinition(
+      definition,
+    ): definition is OperationDefinitionNode {
       return definition.kind === Kind.OPERATION_DEFINITION;
     }
 
@@ -25,19 +27,27 @@ export class OperationStore {
       return typeof definition === 'string';
     }
 
-    const ast = isString(operation) ? parse(operation as string) : operation as DocumentNode;
+    const ast = isString(operation)
+      ? parse(operation as string)
+      : (operation as DocumentNode);
 
-    const definitions = ast.definitions.filter(isOperationDefinition) as OperationDefinitionNode[];
+    const definitions = ast.definitions.filter(
+      isOperationDefinition,
+    ) as OperationDefinitionNode[];
     if (definitions.length === 0) {
-      throw new Error('OperationDefinitionNode must contain at least one definition');
+      throw new Error(
+        'OperationDefinitionNode must contain at least one definition',
+      );
     }
     if (definitions.length > 1) {
-      throw new Error('OperationDefinitionNode must contain only one definition');
+      throw new Error(
+        'OperationDefinitionNode must contain only one definition',
+      );
     }
 
     const validationErrors = validate(this.schema, ast);
     if (validationErrors.length > 0) {
-      const messages = validationErrors.map((e) => e.message);
+      const messages = validationErrors.map(e => e.message);
       const err = new Error(`Validation Errors:\n${messages.join('\n')}`);
       err['originalErrors'] = validationErrors;
       throw err;

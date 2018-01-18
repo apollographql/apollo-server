@@ -40,12 +40,12 @@ If you don't see your favorite server there, [file a PR](https://github.com/apol
 
 At the end of the day, Apollo Server is a simple, production-ready solution without too many features. Here's what you can do with it:
 
-- Attach a GraphQL schema to your HTTP server to serve requests
-- Attach GraphQL and GraphiQL via separate middlewares, on different routes
-- Accept queries via GET or POST
-- Support HTTP query batching
-- Support Apollo Tracing to get performance information about your server
-- Support Apollo Cache Control to inform caching gateways such as Apollo Engine
+* Attach a GraphQL schema to your HTTP server to serve requests
+* Attach GraphQL and GraphiQL via separate middlewares, on different routes
+* Accept queries via GET or POST
+* Support HTTP query batching
+* Support Apollo Tracing to get performance information about your server
+* Support Apollo Cache Control to inform caching gateways such as Apollo Engine
 
 <h2 id="principles">Principles</h2>
 

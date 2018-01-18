@@ -10,7 +10,8 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-integration-testsuite"
+    "url":
+      "https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-integration-testsuite"
   },
   "keywords": [],
   "author": "Jonas Helfer <jonas@helfer.email>",

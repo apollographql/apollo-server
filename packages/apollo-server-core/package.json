@@ -10,14 +10,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-core"
+    "url":
+      "https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-core"
   },
-  "keywords": [
-    "GraphQL",
-    "Apollo",
-    "Server",
-    "Javascript"
-  ],
+  "keywords": ["GraphQL", "Apollo", "Server", "Javascript"],
   "author": "Jonas Helfer <jonas@helfer.email>",
   "license": "MIT",
   "bugs": {
