@@ -48,7 +48,6 @@ module.exports = function run(context, request) {
   } else if (request.method === 'GET') {
     return server.graphiqlAzureFunctions({
       endpointURL: '/api/graphql',
-      schema: schema,
     })(context, request);
   }
 };
