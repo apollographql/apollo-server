@@ -42,21 +42,28 @@ You can also use `apollo-server-koa` for hosting the [GraphiQL](https://github.c
 import { graphiqlKoa } from 'apollo-server-koa';
 
 // Setup the /graphiql route to show the GraphiQL UI
-router.get('/graphiql', graphiqlKoa({
-    endpointURL: '/graphql' // a POST endpoint that GraphiQL will make the actual requests to
-}));
+router.get(
+  '/graphiql',
+  graphiqlKoa({
+    endpointURL: '/graphql', // a POST endpoint that GraphiQL will make the actual requests to
+  }),
+);
 ```
 
 In case your GraphQL endpoint is protected via authentication, or if you need to pass other custom headers in the request that GraphiQL makes, you can use the [`passHeader`](https://github.com/apollographql/apollo-server/blob/v1.0.2/packages/apollo-server-module-graphiql/src/renderGraphiQL.ts#L17) option – a string that will be added to the request header object.
 
 For example:
+
 ```js
 import { graphiqlKoa } from 'apollo-server-koa';
 
-router.get('/graphiql', graphiqlKoa({
+router.get(
+  '/graphiql',
+  graphiqlKoa({
     endpointURL: '/graphql',
-    passHeader: `'Authorization': 'Bearer lorem ipsum'`
-}));
+    passHeader: `'Authorization': 'Bearer lorem ipsum'`,
+  }),
+);
 ```
 
 ## Principles
@@ -66,6 +73,5 @@ Apollo Server is built with the following principles in mind:
 * **By the community, for the community**: Apollo Server's development is driven by the needs of developers
 * **Simplicity**: by keeping things simple, Apollo Server is easier to use, easier to contribute to, and more secure
 * **Performance**: Apollo Server is well-tested and production-ready - no modifications needed
-
 
 Anyone is welcome to contribute to Apollo Server, just read [CONTRIBUTING.md](https://github.com/apollographql/apollo-server/blob/master/CONTRIBUTING.md), take a look at the [roadmap](https://github.com/apollographql/apollo-server/blob/master/ROADMAP.md) and make your first PR!

@@ -9,15 +9,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-azure-functions"
+    "url":
+      "https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-azure-functions"
   },
-  "keywords": [
-    "GraphQL",
-    "Apollo",
-    "Server",
-    "Azure",
-    "Functions"
-  ],
+  "keywords": ["GraphQL", "Apollo", "Server", "Azure", "Functions"],
   "author": "Ulrik Strid <ulrik.strid@outlook.com>",
   "license": "MIT",
   "bugs": {

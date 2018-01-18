@@ -21,15 +21,15 @@
  */
 
 export type GraphiQLData = {
-  endpointURL: string,
-  subscriptionsEndpoint?: string,
-  query?: string,
-  variables?: Object,
-  operationName?: string,
-  result?: Object,
-  passHeader?: string,
-  editorTheme?: string,
-  websocketConnectionParams?: Object,
+  endpointURL: string;
+  subscriptionsEndpoint?: string;
+  query?: string;
+  variables?: Object;
+  operationName?: string;
+  result?: Object;
+  passHeader?: string;
+  editorTheme?: string;
+  websocketConnectionParams?: Object;
 };
 
 // Current latest version of GraphiQL.
@@ -44,15 +44,18 @@ function safeSerialize(data) {
 
 export function renderGraphiQL(data: GraphiQLData): string {
   const endpointURL = data.endpointURL;
-  const endpointWs = endpointURL.startsWith('ws://') || endpointURL.startsWith('wss://');
+  const endpointWs =
+    endpointURL.startsWith('ws://') || endpointURL.startsWith('wss://');
   const subscriptionsEndpoint = data.subscriptionsEndpoint;
   const usingHttp = !endpointWs;
   const usingWs = endpointWs || !!subscriptionsEndpoint;
-  const endpointURLWs = usingWs && (endpointWs ? endpointURL : subscriptionsEndpoint);
+  const endpointURLWs =
+    usingWs && (endpointWs ? endpointURL : subscriptionsEndpoint);
 
   const queryString = data.query;
-  const variablesString =
-    data.variables ? JSON.stringify(data.variables, null, 2) : null;
+  const variablesString = data.variables
+    ? JSON.stringify(data.variables, null, 2)
+    : null;
   const resultString = null;
   const operationName = data.operationName;
   const passHeader = data.passHeader ? data.passHeader : '';
@@ -80,18 +83,26 @@ export function renderGraphiQL(data: GraphiQLData): string {
   <script src="//unpkg.com/react@15.6.1/dist/react.min.js"></script>
   <script src="//unpkg.com/react-dom@15.6.1/dist/react-dom.min.js"></script>
   <script src="//unpkg.com/graphiql@${GRAPHIQL_VERSION}/graphiql.min.js"></script>
-  ${usingEditorTheme ?
-    `<link href="//cdn.jsdelivr.net/npm/codemirror@5/theme/${editorTheme}.min.css" rel="stylesheet" />`
-    : ''}
-  ${usingHttp ?
-    `<script src="//cdn.jsdelivr.net/fetch/2.0.1/fetch.min.js"></script>`
-    : ''}
-  ${usingWs ?
-    `<script src="//unpkg.com/subscriptions-transport-ws@${SUBSCRIPTIONS_TRANSPORT_VERSION}/browser/client.js"></script>`
-    : ''}
-  ${usingWs && usingHttp ?
-    '<script src="//unpkg.com/graphiql-subscriptions-fetcher@0.0.2/browser/client.js"></script>'
-    : ''}
+  ${
+    usingEditorTheme
+      ? `<link href="//cdn.jsdelivr.net/npm/codemirror@5/theme/${editorTheme}.min.css" rel="stylesheet" />`
+      : ''
+  }
+  ${
+    usingHttp
+      ? `<script src="//cdn.jsdelivr.net/fetch/2.0.1/fetch.min.js"></script>`
+      : ''
+  }
+  ${
+    usingWs
+      ? `<script src="//unpkg.com/subscriptions-transport-ws@${SUBSCRIPTIONS_TRANSPORT_VERSION}/browser/client.js"></script>`
+      : ''
+  }
+  ${
+    usingWs && usingHttp
+      ? '<script src="//unpkg.com/graphiql-subscriptions-fetcher@0.0.2/browser/client.js"></script>'
+      : ''
+  }
 
 </head>
 <body>
@@ -125,16 +136,26 @@ export function renderGraphiQL(data: GraphiQLData): string {
       }
     }
 
-    ${usingWs ? `
+    ${
+      usingWs
+        ? `
     var subscriptionsClient = new window.SubscriptionsTransportWs.SubscriptionClient('${endpointURLWs}', {
-      reconnect: true${websocketConnectionParams ? `,
-      connectionParams: ${JSON.stringify(websocketConnectionParams)}` : '' }
+      reconnect: true${
+        websocketConnectionParams
+          ? `,
+      connectionParams: ${JSON.stringify(websocketConnectionParams)}`
+          : ''
+      }
     });
 
     var graphQLWSFetcher = subscriptionsClient.request.bind(subscriptionsClient);
-    ` : ''}
+    `
+        : ''
+    }
 
-    ${usingHttp ? `
+    ${
+      usingHttp
+        ? `
       // We don't use safe-serialize for location, because it's not client input.
       var fetchURL = locationQuery(otherParams, '${endpointURL}');
 
@@ -159,14 +180,20 @@ export function renderGraphiQL(data: GraphiQLData): string {
             }
           });
       }
-    ` : ''}
+    `
+        : ''
+    }
 
-    ${usingWs && usingHttp ? `
+    ${
+      usingWs && usingHttp
+        ? `
       var fetcher =
         window.GraphiQLSubscriptionsFetcher.graphQLFetcher(subscriptionsClient, graphQLHttpFetcher);
-    ` : `
-      var fetcher = ${usingWs ? 'graphQLWSFetcher' : 'graphQLHttpFetcher' };
-    `}
+    `
+        : `
+      var fetcher = ${usingWs ? 'graphQLWSFetcher' : 'graphQLHttpFetcher'};
+    `
+    }
 
     // When the query and variables string is edited, update the URL bar so
     // that it can be easily shared.

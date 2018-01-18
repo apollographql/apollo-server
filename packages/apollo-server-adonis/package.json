@@ -9,15 +9,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-adonis"
+    "url":
+      "https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-adonis"
   },
-  "keywords": [
-    "GraphQL",
-    "Apollo",
-    "Adonis",
-    "Server",
-    "Javascript"
-  ],
+  "keywords": ["GraphQL", "Apollo", "Adonis", "Server", "Javascript"],
   "author": "Jonas Helfer <jonas@helfer.email>",
   "license": "MIT",
   "bugs": {

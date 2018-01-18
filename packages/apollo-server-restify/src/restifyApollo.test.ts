@@ -1,7 +1,10 @@
 import 'mocha';
 import * as restify from 'restify';
 import { graphiqlRestify, graphqlRestify } from './restifyApollo';
-import testSuite, { schema, CreateAppOptions } from 'apollo-server-integration-testsuite';
+import testSuite, {
+  schema,
+  CreateAppOptions,
+} from 'apollo-server-integration-testsuite';
 import { expect } from 'chai';
 import { GraphQLOptions } from 'apollo-server-core';
 
@@ -16,8 +19,8 @@ function createApp(options: CreateAppOptions = {}) {
     server.use(restify.plugins.queryParser());
   }
 
-  if (options.graphiqlOptions ) {
-    server.get('/graphiql', graphiqlRestify( options.graphiqlOptions ));
+  if (options.graphiqlOptions) {
+    server.get('/graphiql', graphiqlRestify(options.graphiqlOptions));
   }
 
   server.get('/graphql', graphqlRestify(options.graphqlOptions));
@@ -28,12 +31,15 @@ function createApp(options: CreateAppOptions = {}) {
 
 describe('graphqlRestify', () => {
   it('throws error if called without schema', () => {
-     expect(() => graphqlRestify(undefined as GraphQLOptions)).to.throw('Apollo Server requires options.');
+    expect(() => graphqlRestify(undefined as GraphQLOptions)).to.throw(
+      'Apollo Server requires options.',
+    );
   });
 
   it('throws an error if called with more than one argument', () => {
-     expect(() => (<any>graphqlRestify)({}, 'x')).to.throw(
-       'Apollo Server expects exactly one argument, got 2');
+    expect(() => (<any>graphqlRestify)({}, 'x')).to.throw(
+      'Apollo Server expects exactly one argument, got 2',
+    );
   });
 
   it('generates a function if the options are ok', () => {

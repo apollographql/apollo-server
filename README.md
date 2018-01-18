@@ -31,14 +31,15 @@ Apollo Server is super easy to set up. Just `npm install apollo-server-<variant>
 Just run `npm install --save apollo-server-<variant>` and you're good to go!
 
 where `<variant>` is one of the following:
- - `express`
- - `koa`
- - `hapi`
- - `restify`
- - `lambda`
- - `micro`
- - `azure-functions`
- - `adonis`
+
+* `express`
+* `koa`
+* `hapi`
+* `restify`
+* `lambda`
+* `micro`
+* `azure-functions`
+* `adonis`
 
 ### Express
 
@@ -60,6 +61,7 @@ app.listen(PORT);
 ```
 
 ### Connect
+
 ```js
 import connect from 'connect';
 import bodyParser from 'body-parser';
@@ -82,7 +84,7 @@ http.createServer(app).listen(PORT);
 
 ### Hapi
 
-Now with the Hapi plugins `graphqlHapi` and `graphiqlHapi` you can pass a route object that includes options to be applied to the route.  The example below enables CORS on the `/graphql` route.
+Now with the Hapi plugins `graphqlHapi` and `graphiqlHapi` you can pass a route object that includes options to be applied to the route. The example below enables CORS on the `/graphql` route.
 
 The code below requires Hapi 17 or higher.
 
@@ -94,37 +96,38 @@ const HOST = 'localhost';
 const PORT = 3000;
 
 async function StartServer() {
-    const server = new Hapi.server({
-        host: HOST,
-        port: PORT,
-    });
+  const server = new Hapi.server({
+    host: HOST,
+    port: PORT,
+  });
 
-    await server.register({
-        plugin: graphqlHapi,
-        options: {
-            path: '/graphql',
-            graphqlOptions: {
-                schema: myGraphQLSchema,
-            },
-            route: {
-                cors: true,
-            },
-        },
-    });
+  await server.register({
+    plugin: graphqlHapi,
+    options: {
+      path: '/graphql',
+      graphqlOptions: {
+        schema: myGraphQLSchema,
+      },
+      route: {
+        cors: true,
+      },
+    },
+  });
 
-    try {
-        await server.start();
-    } catch (err) {
-        console.log(`Error while starting server: ${err.message}`);
-    }
+  try {
+    await server.start();
+  } catch (err) {
+    console.log(`Error while starting server: ${err.message}`);
+  }
 
-    console.log(`Server running at: ${server.info.uri}`);
+  console.log(`Server running at: ${server.info.uri}`);
 }
 
 StartServer();
 ```
 
 ### Koa
+
 ```js
 import koa from 'koa'; // koa@2
 import koaRouter from 'koa-router'; // koa-router@next
@@ -147,6 +150,7 @@ app.listen(PORT);
 ```
 
 ### Restify
+
 ```js
 import restify from 'restify';
 import { graphqlRestify, graphiqlRestify } from 'apollo-server-restify';
@@ -154,7 +158,7 @@ import { graphqlRestify, graphiqlRestify } from 'apollo-server-restify';
 const PORT = 3000;
 
 const server = restify.createServer({
-  title: 'Apollo Server'
+  title: 'Apollo Server',
 });
 
 const graphQLOptions = { schema: myGraphQLSchema };
@@ -175,7 +179,7 @@ server.listen(PORT, () => console.log(`Listening on ${PORT}`));
 Lambda function should be run with [Node.js 4.3 or v6.1](https://docs.aws.amazon.com/lambda/latest/dg/nodejs-prog-model-using-old-runtime.html#nodejs-prog-model-runtime-support-policy). Requires an API Gateway with Lambda Proxy Integration.
 
 ```js
-var server = require("apollo-server-lambda");
+var server = require('apollo-server-lambda');
 
 exports.handler = server.graphqlLambda({ schema: myGraphQLSchema });
 ```
@@ -185,7 +189,7 @@ exports.handler = server.graphqlLambda({ schema: myGraphQLSchema });
 Requires the [Micro](https://github.com/zeit/micro) module
 
 ```js
-const server = require("apollo-server-micro");
+const server = require('apollo-server-micro');
 
 module.exports = server.microGraphql({ schema: myGraphQLSchema });
 ```
@@ -225,11 +229,11 @@ The `formatParams` function can be used in combination with the `OperationStore`
 const store = new OperationStore(Schema);
 store.put('query testquery{ testString }');
 graphqlOptions = {
-    schema: Schema,
-    formatParams(params) {
-        params['query'] = store.get(params.operationName);
-        return params;
-    },
+  schema: Schema,
+  formatParams(params) {
+    params['query'] = store.get(params.operationName);
+    return params;
+  },
 };
 ```
 

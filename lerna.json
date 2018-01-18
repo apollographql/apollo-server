@@ -12,7 +12,5 @@
       "tag: internal": ":house: Internal"
     }
   },
-  "packages": [
-    "packages/*"
-  ]
+  "packages": ["packages/*"]
 }
