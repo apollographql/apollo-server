@@ -50,7 +50,7 @@
     "npm-check-updates": "2.14.0",
     "prettier": "1.10.2",
     "prettier-check": "2.0.0",
-    "remap-istanbul": "0.9.5",
+    "remap-istanbul": "0.10.0",
     "sinon": "4.1.4",
     "supertest": "3.0.0",
     "supertest-as-promised": "4.0.2",
