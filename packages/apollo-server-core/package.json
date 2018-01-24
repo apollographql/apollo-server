@@ -28,7 +28,7 @@
     "typescript": "2.6.2"
   },
   "peerDependencies": {
-    "graphql": "^0.9.0 || ^0.10.0 || ^0.11.0"
+    "graphql": "0.11.7"
   },
   "typings": "dist/index.d.ts",
   "typescript": {
