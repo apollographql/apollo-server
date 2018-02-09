@@ -25,7 +25,7 @@
   },
   "devDependencies": {
     "@adonisjs/bodyparser": "2.0.2",
-    "@adonisjs/fold": "4.0.5",
+    "@adonisjs/fold": "4.0.7",
     "@adonisjs/framework": "4.0.31",
     "@adonisjs/sink": "1.0.15",
     "@types/graphql": "0.11.7",
