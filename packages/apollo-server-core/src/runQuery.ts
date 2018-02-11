@@ -71,9 +71,29 @@ export interface QueryOptions {
   cacheControl?: boolean;
 }
 
-function runQuery(options: QueryOptions): Promise<GraphQLResponse> {
+export function runQuery(options: QueryOptions): Promise<GraphQLResponse> {
   // Fiber-aware Promises run their .then callbacks in Fibers.
   return Promise.resolve().then(() => doRunQuery(options));
+}
+
+function printStackTrace(error: Error) {
+  console.error(error.stack);
+}
+
+function format(errors: Array<Error>, formatter?: Function): Array<Error> {
+  return errors.map(error => {
+    if (formatter !== undefined) {
+      try {
+        return formatter(error);
+      } catch (err) {
+        console.error('Error in formatError function:', err);
+        const newError = new Error('Internal server error');
+        return formatError(newError);
+      }
+    } else {
+      return formatError(error);
+    }
+  }) as Array<Error>;
 }
 
 function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
@@ -86,8 +106,7 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
     };
   const debugDefault =
     process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test';
-  const debug =
-    typeof options.debug !== 'undefined' ? options.debug : debugDefault;
+  const debug = options.debug !== undefined ? options.debug : debugDefault;
 
   logFunction({ action: LogAction.request, step: LogStep.start });
 
@@ -107,26 +126,6 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
     enableGraphQLExtensions(options.schema);
 
     extensionStack.requestDidStart();
-  }
-
-  function format(errors: Array<Error>): Array<Error> {
-    return errors.map(error => {
-      if (options.formatError) {
-        try {
-          return options.formatError(error);
-        } catch (err) {
-          console.error('Error in formatError function:', err);
-          const newError = new Error('Internal server error');
-          return formatError(newError);
-        }
-      } else {
-        return formatError(error);
-      }
-    }) as Array<Error>;
-  }
-
-  function printStackTrace(error: Error) {
-    console.error(error.stack);
   }
 
   const qry =
@@ -159,7 +158,9 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
       logFunction({ action: LogAction.parse, step: LogStep.end });
     } catch (syntaxError) {
       logFunction({ action: LogAction.parse, step: LogStep.end });
-      return Promise.resolve({ errors: format([syntaxError]) });
+      return Promise.resolve({
+        errors: format([syntaxError], options.formatError),
+      });
     }
   } else {
     documentAST = options.query as DocumentNode;
@@ -173,7 +174,9 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
   const validationErrors = validate(options.schema, documentAST, rules);
   logFunction({ action: LogAction.validation, step: LogStep.end });
   if (validationErrors.length) {
-    return Promise.resolve({ errors: format(validationErrors) });
+    return Promise.resolve({
+      errors: format(validationErrors, options.formatError),
+    });
   }
 
   if (extensionStack) {
@@ -201,7 +204,7 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
       };
 
       if (result.errors) {
-        response.errors = format(result.errors);
+        response.errors = format(result.errors, options.formatError);
         if (debug) {
           result.errors.map(printStackTrace);
         }
@@ -222,8 +225,8 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
   } catch (executionError) {
     logFunction({ action: LogAction.execute, step: LogStep.end });
     logFunction({ action: LogAction.request, step: LogStep.end });
-    return Promise.resolve({ errors: format([executionError]) });
+    return Promise.resolve({
+      errors: format([executionError], options.formatError),
+    });
   }
 }
-
-export { runQuery };
