@@ -51,7 +51,7 @@
     "prettier": "1.10.2",
     "prettier-check": "2.0.0",
     "remap-istanbul": "0.10.1",
-    "sinon": "4.2.3",
+    "sinon": "4.3.0",
     "supertest": "3.0.0",
     "supertest-as-promised": "4.0.2",
     "typescript": "2.7.1"
