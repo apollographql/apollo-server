@@ -36,7 +36,7 @@ export function graphqlExpress(
     );
   }
 
-  return (req: express.Request, res: express.Response, next): void => {
+  return function graphql(req: express.Request, res: express.Response, next): void {
     runHttpQuery([req, res], {
       method: req.method,
       options: options,
