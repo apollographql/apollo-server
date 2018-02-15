@@ -13,7 +13,7 @@ import {
 
 export interface HttpQueryRequest {
   method: string;
-  query: string;
+  query: Record<string, any>;
   options: GraphQLOptions | Function;
 }
 
