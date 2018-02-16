@@ -174,12 +174,12 @@ function whenResultIsFinished(result: any, callback: () => void) {
       if (value && typeof value.then === 'function') {
         promises.push(value);
       }
-      if (promises.length > 0) {
-        Promise.all(promises).then(callback, callback);
-      } else {
-        callback();
-      }
     });
+    if (promises.length > 0) {
+      Promise.all(promises).then(callback, callback);
+    } else {
+      callback();
+    }
   } else {
     callback();
   }
