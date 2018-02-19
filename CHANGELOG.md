@@ -4,6 +4,8 @@ All of the packages in the `apollo-server` repo are released with the same versi
 
 ### vNEXT
 
+* Don't validate if query is already an AST. [PR #839](https://github.com/apollographql/apollo-server/pull/839)
+
 ### v1.3.6
 
 * Recognize requests with Apollo Persisted Queries and return `PersistedQueryNotSupported` to the client instead of a confusing error. [PR #982](https://github.com/apollographql/apollo-server/pull/982)
