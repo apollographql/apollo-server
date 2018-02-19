@@ -4,7 +4,7 @@ All of the packages in the `apollo-server` repo are released with the same versi
 
 ### vNEXT
 
-* Don't validate if query is already an AST. [PR #839](https://github.com/apollographql/apollo-server/pull/839)
+* Add skipValidation option [PR #839](https://github.com/apollographql/apollo-server/pull/839)
 
 ### v1.3.6
 

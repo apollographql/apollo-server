@@ -37,9 +37,7 @@ import {
   GraphQLScalarType,
   GraphQLError,
   BREAK,
-  parse,
 } from 'graphql';
-import { LogAction } from 'apollo-server-core';
 
 const QueryRootType = new GraphQLObjectType({
   name: 'QueryRoot',
@@ -538,42 +536,6 @@ describe(`GraphQL-HTTP (apolloServer) tests for ${version} express`, () => {
           },
         ],
       });
-    });
-  });
-
-  describe('Query is an AST', () => {
-    it('Do not validate if query is already an AST.', async () => {
-      const app = express();
-      let validationCalled = false;
-
-      app.use('/graphql', bodyParser.json());
-      app.use('/graphql', (req, res, next) => {
-        req.body.query = parse(req.body.query);
-
-        next();
-      });
-      app.use(
-        '/graphql',
-        graphqlExpress({
-          schema: TestSchema,
-          logFunction: ({ action }) => {
-            if (action == LogAction.validation) {
-              validationCalled = true;
-            }
-          },
-        }),
-      );
-
-      const response = await request(app)
-        .post('/graphql')
-        .send({
-          query: '{ test(who: "World") }',
-        });
-
-      expect(
-        validationCalled,
-        'Validation should not be called if query is already an AST',
-      ).to.equal(false);
     });
   });
 });

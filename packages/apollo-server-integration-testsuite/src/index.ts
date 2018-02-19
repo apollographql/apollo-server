@@ -19,6 +19,7 @@ const request = require('supertest');
 import { GraphQLOptions } from 'apollo-server-core';
 import * as GraphiQL from 'apollo-server-module-graphiql';
 import { OperationStore } from 'apollo-server-module-operation-store';
+import { LogAction } from '../../apollo-server-core/dist';
 
 const personType = new GraphQLObjectType({
   name: 'PersonType',
@@ -1052,6 +1053,38 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
         return req.then(res => {
           expect(res.status).to.equal(200);
           expect(res.body).to.deep.equal(expected);
+        });
+      });
+
+      it('do not validate if query is already an AST', async () => {
+        const store = new OperationStore(schema);
+        let validationCalled = false;
+        store.put('query testquery{ testString }');
+        app = await createApp({
+          graphqlOptions: {
+            schema,
+            formatParams(params) {
+              params['query'] = store.get(params.operationName);
+              params['skipValidation'] = true;
+              return params;
+            },
+            logFunction: ({ action }) => {
+              if (action == LogAction.validation) {
+                validationCalled = true;
+              }
+            },
+          },
+        });
+        const req = request(app)
+          .post('/graphql')
+          .send({
+            operationName: 'testquery',
+          });
+        return req.then(res => {
+          return expect(
+            validationCalled,
+            'Validation should not be called if skipValidation option provided',
+          ).to.equal(false);
         });
       });
     });

@@ -72,7 +72,7 @@ export interface QueryOptions {
   debug?: boolean;
   tracing?: boolean;
   cacheControl?: boolean | CacheControlExtensionOptions;
-  isQueryString?: boolean;
+  skipValidation?: boolean;
 }
 
 export function runQuery(options: QueryOptions): Promise<GraphQLResponse> {
@@ -172,7 +172,7 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
     documentAST = options.query as DocumentNode;
   }
 
-  if (options.isQueryString !== false) {
+  if (options.skipValidation !== true) {
     let rules = specifiedRules;
     if (options.validationRules) {
       rules = rules.concat(options.validationRules);

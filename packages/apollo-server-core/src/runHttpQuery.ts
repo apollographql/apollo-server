@@ -102,7 +102,6 @@ export async function runHttpQuery(
     try {
       let query = requestParams.query;
       let extensions = requestParams.extensions;
-      const isQueryString = typeof query === 'string';
 
       if (isGetRequest && extensions) {
         // For GET requests, we have to JSON-parse extensions. (For POST
@@ -139,7 +138,7 @@ export async function runHttpQuery(
       }
 
       if (isGetRequest) {
-        if (isQueryString) {
+        if (typeof query === 'string') {
           // preparse the query incase of GET so we can assert the operation.
           // XXX This makes the type of 'query' in this function confused
           //     which has led to us accidentally supporting GraphQL AST over
@@ -194,7 +193,6 @@ export async function runHttpQuery(
         query: query,
         variables: variables,
         context,
-        isQueryString,
         rootValue: optionsObject.rootValue,
         operationName: operationName,
         logFunction: optionsObject.logFunction,
