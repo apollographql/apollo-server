@@ -2,6 +2,7 @@
 
 ### vNEXT
 
+* Adonisjs set Content_Type to application/json on response [PR #842](https://github.com/apollographql/apollo-server/pull/842)
 * Fix apollo-server-core runQuery breaks async_hooks tracking [PR #733](https://github.com/apollographql/apollo-server/pull/733)
 
 ### v1.3.0
