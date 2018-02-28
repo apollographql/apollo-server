@@ -47,7 +47,7 @@
     "lerna": "2.9.0",
     "lint-staged": "6.1.1",
     "mocha": "4.1.0",
-    "npm-check-updates": "2.14.0",
+    "npm-check-updates": "2.14.1",
     "prettier": "1.10.2",
     "prettier-check": "2.0.0",
     "remap-istanbul": "0.10.1",
