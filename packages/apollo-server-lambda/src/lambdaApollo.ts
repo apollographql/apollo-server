@@ -55,6 +55,12 @@ export function graphqlLambda(
         options: options,
         query: query,
       });
+      try{
+        // try to parse the response to object so the response in the client is a valid json
+        gqlResponse = JSON.parse(gqlResponse);
+      } catch (error){
+        //do nothing
+      }
       headers['Content-Type'] = 'application/json';
       statusCode = 200;
     } catch (error) {
