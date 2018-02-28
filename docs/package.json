@@ -3,19 +3,19 @@
   "version": "0.0.0",
   "private": true,
   "hexo": {
-    "version": "3.4.0"
+    "version": "3.6.0"
   },
   "dependencies": {
     "handlebars": "^4.0.5",
     "hexo": "3.6.0",
-    "hexo-generator-archive": "^0.1.2",
+    "hexo-generator-archive": "0.1.5",
     "hexo-generator-category": "^0.1.2",
-    "hexo-generator-index": "^0.2.0",
-    "hexo-generator-tag": "^0.2.0",
-    "hexo-renderer-ejs": "^0.3.0",
+    "hexo-generator-index": "0.2.1",
+    "hexo-generator-tag": "0.2.0",
+    "hexo-renderer-ejs": "0.3.1",
     "hexo-renderer-less": "^0.2.0",
-    "hexo-renderer-marked": "^0.3.0",
-    "hexo-server": "^0.3.0",
+    "hexo-renderer-marked": "0.3.2",
+    "hexo-server": "0.3.1",
     "lodash": "^4.13.1",
     "showdown": "^1.4.2"
   },
@@ -23,6 +23,8 @@
     "start": "hexo serve",
     "build": "hexo generate",
     "develop-theme":
-      "nodemon -x 'rm db.json; hexo serve' -w assets/ -w code/ -w source/ -w themes/ -w scripts/"
+      "nodemon -x 'rm db.json; hexo serve' -w assets/ -w code/ -w source/ -w themes/ -w scripts/",
+    "clean": "hexo clean",
+    "test": "npm run clean; npm run build"
   }
 }
