@@ -76,7 +76,7 @@ await server.register({
 
 register()
   .then(()=>{console.log(`plugin is added`)})
-  .catch(()=>.{console.log(`error while registering the plugin`)})
+  .catch(()=>{console.log(`error while registering the plugin`)})
 ```
 
 <h2 id="graphiqlKoa">Using with Koa 2</h2>
