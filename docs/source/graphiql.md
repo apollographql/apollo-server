@@ -62,8 +62,8 @@ If you are using Hapi, GraphiQL can be configured as follows:
 ```js
 import { graphiqlHapi } from 'apollo-server-hapi';
 
-server.register({
-  register: graphiqlHapi,
+await server.register({
+  plugin: graphiqlHapi,
   options: {
     path: '/graphiql',
     graphiqlOptions: {
