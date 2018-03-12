@@ -221,7 +221,7 @@ Apollo Server can be configured with an options object with the following fields
 * **logFunction**: a function called for logging events such as execution times
 * **fieldResolver**: a custom default field resolver
 * **debug**: a boolean that will print additional debug logging if execution errors occur
-* **cacheControl**: when set to true, enable built-in support for Apollo Cache Control 
+* **cacheControl**: when set to true, enable built-in support for Apollo Cache Control
 
 All options except for `schema` are optional.
 
