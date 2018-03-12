@@ -5,26 +5,33 @@
   "hexo": {
     "version": "3.6.0"
   },
-  "dependencies": {
+  "devDependencies": {
+    "apollo-hexo-config": "^1.0.2",
+    "chexo": "^1.0.4",
     "handlebars": "^4.0.5",
     "hexo": "3.6.0",
     "hexo-generator-archive": "0.1.5",
-    "hexo-generator-category": "^0.1.2",
+    "hexo-generator-category": "0.1.3",
     "hexo-generator-index": "0.2.1",
     "hexo-generator-tag": "0.2.0",
     "hexo-renderer-ejs": "0.3.1",
-    "hexo-renderer-less": "^0.2.0",
+    "hexo-renderer-less": "0.2.0",
     "hexo-renderer-marked": "0.3.2",
     "hexo-server": "0.3.1",
     "lodash": "^4.13.1",
+    "meteor-theme-hexo": "1.0.1",
+    "nodemon": "^1.14.12",
     "showdown": "^1.4.2"
   },
   "scripts": {
-    "start": "hexo serve",
-    "build": "hexo generate",
+    "start": "npm run build && chexo apollo-hexo-config -- server",
+    "build": "chexo apollo-hexo-config -- generate",
     "develop-theme":
       "nodemon -x 'rm db.json; hexo serve' -w assets/ -w code/ -w source/ -w themes/ -w scripts/",
     "clean": "hexo clean",
     "test": "npm run clean; npm run build"
+  },
+  "renovate": {
+    "extends": ["apollo-docs"]
   }
 }
