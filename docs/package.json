@@ -5,7 +5,7 @@
   "hexo": {
     "version": "3.6.0"
   },
-  "dependencies": {
+  "devDependencies": {
     "handlebars": "^4.0.5",
     "hexo": "3.6.0",
     "hexo-generator-archive": "0.1.5",
@@ -17,6 +17,7 @@
     "hexo-renderer-marked": "0.3.2",
     "hexo-server": "0.3.1",
     "lodash": "^4.13.1",
+    "nodemon": "^1.14.12",
     "showdown": "^1.4.2"
   },
   "scripts": {
