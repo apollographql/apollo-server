@@ -62,8 +62,10 @@ If you are using Hapi, GraphiQL can be configured as follows:
 ```js
 import { graphiqlHapi } from 'apollo-server-hapi';
 
-server.register({
-  register: graphiqlHapi,
+async function register(){
+
+await server.register({
+  plugin: graphiqlHapi,
   options: {
     path: '/graphiql',
     graphiqlOptions: {
@@ -71,6 +73,10 @@ server.register({
     },
   },
 });
+
+register()
+  .then(()=>{console.log(`plugin is added`)})
+  .catch(()=>{console.log(`error while registering the plugin`)})
 ```
 
 <h2 id="graphiqlKoa">Using with Koa 2</h2>
