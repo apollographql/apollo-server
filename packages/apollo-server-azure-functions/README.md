@@ -52,7 +52,3 @@ module.exports = function run(context, request) {
   }
 };
 ```
-
-## GraphiQL MacOS Note
-
-Local development doesn't work with GraphiQL at this time on MacOS. The issue seems to be releated to https://github.com/Azure/azure-functions-cli/issues/340. The current work around is to deploy the function and then use GraphiQL.
