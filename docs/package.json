@@ -6,6 +6,8 @@
     "version": "3.6.0"
   },
   "devDependencies": {
+    "apollo-hexo-config": "^1.0.2",
+    "chexo": "^1.0.4",
     "handlebars": "^4.0.5",
     "hexo": "3.6.0",
     "hexo-generator-archive": "0.1.5",
@@ -21,8 +23,8 @@
     "showdown": "^1.4.2"
   },
   "scripts": {
-    "start": "hexo serve",
-    "build": "hexo generate",
+    "start": "npm run build && chexo apollo-hexo-config -- server",
+    "build": "chexo apollo-hexo-config -- generate",
     "develop-theme":
       "nodemon -x 'rm db.json; hexo serve' -w assets/ -w code/ -w source/ -w themes/ -w scripts/",
     "clean": "hexo clean",
