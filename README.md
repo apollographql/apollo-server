@@ -218,6 +218,10 @@ Apollo Server can be configured with an options object with the following fields
 * **formatParams**: a function applied for each query in a batch to format parameters before execution
 * **formatResponse**: a function applied to each response after execution
 * **tracing**: when set to true, collect and expose trace data in the [Apollo Tracing format](https://github.com/apollographql/apollo-tracing)
+* **logFunction**: a function called for logging events such as execution times
+* **fieldResolver**: a custom default field resolver
+* **debug**: a boolean that will print additional debug logging if execution errors occur
+* **cacheControl**: when set to true, enable built-in support for Apollo Cache Control 
 
 All options except for `schema` are optional.
 
