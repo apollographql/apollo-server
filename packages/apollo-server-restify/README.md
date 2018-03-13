@@ -20,7 +20,7 @@ import { graphqlRestify, graphiqlRestify } from 'apollo-server-restify';
 const PORT = 3000;
 
 const server = restify.createServer({
-  title: 'Apollo Server'
+  title: 'Apollo Server',
 });
 
 const graphQLOptions = { schema: myGraphQLSchema };

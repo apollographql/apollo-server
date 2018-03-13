@@ -9,14 +9,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/apollographql/apollo-server/tree/master/packages/graphql-server-module-operation-store"
+    "url":
+      "https://github.com/apollographql/apollo-server/tree/master/packages/graphql-server-module-operation-store"
   },
-  "keywords": [
-    "GraphQL",
-    "Apollo",
-    "Operation Store",
-    "Javascript"
-  ],
+  "keywords": ["GraphQL", "Apollo", "Operation Store", "Javascript"],
   "author": "Jonas Helfer <jonas@helfer.email>",
   "license": "MIT",
   "bugs": {

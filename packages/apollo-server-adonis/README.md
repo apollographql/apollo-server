@@ -41,8 +41,8 @@ const Route = use('Route');
 Route.get(
   '/graphiql',
   graphiqlAdonis({
-    endpointURL: '/graphql' // a POST endpoint that GraphiQL will make the actual requests to
-  })
+    endpointURL: '/graphql', // a POST endpoint that GraphiQL will make the actual requests to
+  }),
 );
 ```
 
@@ -62,8 +62,8 @@ Route.get(
   '/graphiql',
   graphiqlAdonis({
     endpointURL: '/graphql',
-    passHeader: `'Authorization': 'Bearer lorem ipsum'`
-  })
+    passHeader: `'Authorization': 'Bearer lorem ipsum'`,
+  }),
 );
 ```
 

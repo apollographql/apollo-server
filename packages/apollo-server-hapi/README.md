@@ -13,7 +13,7 @@ npm install apollo-server-hapi
 
 ## Usage
 
-With the Hapi plugins `graphqlHapi` and `graphiqlHapi` you can pass a route object that includes options to be applied to the route.  The example below enables CORS on the `/graphql` route.
+With the Hapi plugins `graphqlHapi` and `graphiqlHapi` you can pass a route object that includes options to be applied to the route. The example below enables CORS on the `/graphql` route.
 
 The code below requires Hapi 17 or higher.
 
@@ -25,31 +25,31 @@ const HOST = 'localhost';
 const PORT = 3000;
 
 async function StartServer() {
-    const server = new Hapi.server({
-        host: HOST,
-        port: PORT,
-    });
+  const server = new Hapi.server({
+    host: HOST,
+    port: PORT,
+  });
 
-    await server.register({
-        plugin: graphqlHapi,
-        options: {
-            path: '/graphql',
-            graphqlOptions: {
-                schema: myGraphQLSchema,
-            },
-            route: {
-                cors: true,
-            },
-        },
-    });
+  await server.register({
+    plugin: graphqlHapi,
+    options: {
+      path: '/graphql',
+      graphqlOptions: {
+        schema: myGraphQLSchema,
+      },
+      route: {
+        cors: true,
+      },
+    },
+  });
 
-    try {
-        await server.start();
-    } catch (err) {
-        console.log(`Error while starting server: ${err.message}`);
-    }
+  try {
+    await server.start();
+  } catch (err) {
+    console.log(`Error while starting server: ${err.message}`);
+  }
 
-    console.log(`Server running at: ${server.info.uri}`);
+  console.log(`Server running at: ${server.info.uri}`);
 }
 
 StartServer();
@@ -62,6 +62,5 @@ Apollo Server is built with the following principles in mind:
 * **By the community, for the community**: Apollo Server's development is driven by the needs of developers
 * **Simplicity**: by keeping things simple, Apollo Server is easier to use, easier to contribute to, and more secure
 * **Performance**: Apollo Server is well-tested and production-ready - no modifications needed
-
 
 Anyone is welcome to contribute to Apollo Server, just read [CONTRIBUTING.md](https://github.com/apollographql/apollo-server/blob/master/CONTRIBUTING.md), take a look at the [roadmap](https://github.com/apollographql/apollo-server/blob/master/ROADMAP.md) and make your first PR!

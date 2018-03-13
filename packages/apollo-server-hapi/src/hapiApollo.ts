@@ -1,10 +1,14 @@
 import * as Boom from 'boom';
 import { Server, Response, Request, ReplyNoContinue } from 'hapi';
 import * as GraphiQL from 'apollo-server-module-graphiql';
-import { GraphQLOptions, runHttpQuery, HttpQueryError } from 'apollo-server-core';
+import {
+  GraphQLOptions,
+  runHttpQuery,
+  HttpQueryError,
+} from 'apollo-server-core';
 
 export interface IRegister {
-    (server: Server, options: any): void;
+  (server: Server, options: any): void;
 }
 
 export interface IPlugin {
@@ -48,20 +52,20 @@ const graphqlHapi: IPlugin = {
           response.type('application/json');
           return response;
         } catch (error) {
-          if ( 'HttpQueryError' !== error.name ) {
+          if ('HttpQueryError' !== error.name) {
             throw Boom.boomify(error);
           }
 
-          if ( true === error.isGraphQLError ) {
+          if (true === error.isGraphQLError) {
             const response = h.response(error.message);
             response.code(error.statusCode);
             response.type('application/json');
             return response;
           }
 
-          const err = new Boom(error.message, {statusCode: error.statusCode});
-          if ( error.headers ) {
-            Object.keys(error.headers).forEach((header) => {
+          const err = new Boom(error.message, { statusCode: error.statusCode });
+          if (error.headers) {
+            Object.keys(error.headers).forEach(header => {
               err.output.headers[header] = error.headers[header];
             });
           }
@@ -96,7 +100,11 @@ const graphiqlHapi: IPlugin = {
       path: options.path || '/graphiql',
       config: options.route || {},
       handler: async (request, h) => {
-        const graphiqlString = await GraphiQL.resolveGraphiQLString(request.query, options.graphiqlOptions, request);
+        const graphiqlString = await GraphiQL.resolveGraphiQLString(
+          request.query,
+          options.graphiqlOptions,
+          request,
+        );
 
         const response = h.response(graphiqlString);
         response.type('text/html');

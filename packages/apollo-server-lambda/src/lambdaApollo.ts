@@ -3,7 +3,9 @@ import { GraphQLOptions, runHttpQuery } from 'apollo-server-core';
 import * as GraphiQL from 'apollo-server-module-graphiql';
 
 export interface LambdaGraphQLOptionsFunction {
-  (event: any, context: lambda.Context): GraphQLOptions | Promise<GraphQLOptions>;
+  (event: any, context: lambda.Context):
+    | GraphQLOptions
+    | Promise<GraphQLOptions>;
 }
 
 // Design principles:
@@ -12,23 +14,32 @@ export interface LambdaGraphQLOptionsFunction {
 //
 
 export interface IHeaders {
-    [header: string]: string | number;
+  [header: string]: string | number;
 }
 
-export function graphqlLambda( options: GraphQLOptions | LambdaGraphQLOptionsFunction ): lambda.ProxyHandler {
+export function graphqlLambda(
+  options: GraphQLOptions | LambdaGraphQLOptionsFunction,
+): lambda.ProxyHandler {
   if (!options) {
     throw new Error('Apollo Server requires options.');
   }
 
   if (arguments.length > 1) {
-    throw new Error(`Apollo Server expects exactly one argument, got ${arguments.length}`);
+    throw new Error(
+      `Apollo Server expects exactly one argument, got ${arguments.length}`,
+    );
   }
 
-  return async (event, lambdaContext, callback) => {
-    let query = (event.httpMethod === 'POST') ? event.body : event.queryStringParameters,
+  return async (
+    event,
+    lambdaContext: lambda.Context,
+    callback: lambda.Callback,
+  ) => {
+    let query =
+        event.httpMethod === 'POST' ? event.body : event.queryStringParameters,
       statusCode: number = null,
       gqlResponse = null,
-      headers: {[headerName: string]: string} = {};
+      headers: { [headerName: string]: string } = {};
 
     if (query && typeof query === 'string') {
       query = JSON.parse(query);
@@ -43,7 +54,7 @@ export function graphqlLambda( options: GraphQLOptions | LambdaGraphQLOptionsFun
       headers['Content-Type'] = 'application/json';
       statusCode = 200;
     } catch (error) {
-      if ( 'HttpQueryError' !== error.name ) {
+      if ('HttpQueryError' !== error.name) {
         throw error;
       }
 
@@ -51,20 +62,19 @@ export function graphqlLambda( options: GraphQLOptions | LambdaGraphQLOptionsFun
       statusCode = error.statusCode;
       gqlResponse = error.message;
     } finally {
-      callback(
-        null,
-        {
-          'statusCode': statusCode,
-          'headers': headers,
-          'body': gqlResponse,
-        },
-      );
+      callback(null, {
+        statusCode: statusCode,
+        headers: headers,
+        body: gqlResponse,
+      });
     }
   };
 }
 
 export interface LambdaGraphiQLOptionsFunction {
-  (event: any, context: lambda.Context): GraphiQL.GraphiQLData | Promise<GraphiQL.GraphiQLData>;
+  (event: any, context: lambda.Context):
+    | GraphiQL.GraphiQLData
+    | Promise<GraphiQL.GraphiQLData>;
 }
 
 /* This Lambda Function Handler returns the html for the GraphiQL interactive query UI
@@ -78,25 +88,27 @@ export interface LambdaGraphiQLOptionsFunction {
  * - (optional) result: the result of the query to pre-fill in the GraphiQL UI
  */
 
-export function graphiqlLambda(options: GraphiQL.GraphiQLData | LambdaGraphiQLOptionsFunction): lambda.ProxyHandler {
-  return (event, lambdaContext, callback) => {
+export function graphiqlLambda(
+  options: GraphiQL.GraphiQLData | LambdaGraphiQLOptionsFunction,
+): lambda.ProxyHandler {
+  return (event, lambdaContext: lambda.Context, callback: lambda.Callback) => {
     const query = event.queryStringParameters;
-    GraphiQL.resolveGraphiQLString(query, options, event, lambdaContext).then(graphiqlString => {
-      callback(
-        null,
-        {
-          'statusCode': 200,
-          'headers': {
+    GraphiQL.resolveGraphiQLString(query, options, event, lambdaContext).then(
+      graphiqlString => {
+        callback(null, {
+          statusCode: 200,
+          headers: {
             'Content-Type': 'text/html',
           },
-          'body': graphiqlString,
-        },
-      );
-    }, error => {
-      callback(null, {
-        statusCode: 500,
-        body: error.message,
-      });
-    });
+          body: graphiqlString,
+        });
+      },
+      error => {
+        callback(null, {
+          statusCode: 500,
+          body: error.message,
+        });
+      },
+    );
   };
 }

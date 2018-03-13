@@ -10,7 +10,6 @@ GraphQL Server consists of three parts:
 
 At the core of GraphQL Server is a function called `runQuery`, which handles parsing, validating and executing queries. Its interface is generic in order to allow for integrations with different Node.js server frameworks. Extensions provide useful functionality that can be shared between different integrations.
 
-
 ### Core
 
 The main goals of GraphQL Server are (in order of priority):
@@ -23,16 +22,17 @@ The main goals of GraphQL Server are (in order of priority):
 
 GraphQL Server should come with a set of integrations for different Node.js server frameworks:
 
-- Express
-- Hapi
-- Connect
-- Koa
-- Restify
-- ...
+* Express
+* Hapi
+* Connect
+* Koa
+* Restify
+* ...
 
-Framework integrations take care of parsing requests, submitting them to GraphQL Server’s core runQuery  function, and sending the response back to the client. These integrations should accept requests over HTTP, websockets or other means, then invoke `runQuery` as appropriate, and return the result. They should be written in such a way that makes it easy to add features, such as batched queries, subscriptions etc.
+Framework integrations take care of parsing requests, submitting them to GraphQL Server’s core runQuery function, and sending the response back to the client. These integrations should accept requests over HTTP, websockets or other means, then invoke `runQuery` as appropriate, and return the result. They should be written in such a way that makes it easy to add features, such as batched queries, subscriptions etc.
 
 Framework integrations should hide all transport-specific (eg. setting headers) and framework-specific things (eg. registering a route) from the core functions.
 
 ### Modules
+
 Things that are not part of runQuery’s tasks, but are GraphQL specific (such as providing a bundle for the GraphiQL UI, generating a schema, storing prepared queries, etc.) should be implemented in another core module of GraphQL Server that lives alongside runQuery, or be imported from graphql-tools or other related packages.

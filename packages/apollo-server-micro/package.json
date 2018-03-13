@@ -9,15 +9,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-micro"
+    "url":
+      "https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-micro"
   },
-  "keywords": [
-    "GraphQL",
-    "Apollo",
-    "Micro",
-    "Server",
-    "Javascript"
-  ],
+  "keywords": ["GraphQL", "Apollo", "Micro", "Server", "Javascript"],
   "author": "Nick Nance <nance.nick@gmail.email>",
   "license": "MIT",
   "bugs": {

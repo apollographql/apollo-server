@@ -56,5 +56,4 @@ GraphQL Server is built with the following principles in mind:
 * **Simplicity**: by keeping things simple, GraphQL Server is easier to use, easier to contribute to, and more secure
 * **Performance**: GraphQL Server is well-tested and production-ready - no modifications needed
 
-
 Anyone is welcome to contribute to GraphQL Server, just read [CONTRIBUTING.md](https://github.com/apollographql/apollo-server/blob/master/CONTRIBUTING.md), take a look at the [roadmap](https://github.com/apollographql/apollo-server/blob/master/ROADMAP.md) and make your first PR!
