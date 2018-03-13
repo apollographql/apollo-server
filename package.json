@@ -23,7 +23,6 @@
     "pretravis": "npm run compile",
     "travis":
       "istanbul cover -x \"*.test.js\" _mocha -- --timeout 5000 --full-trace ./test/tests.js",
-    "posttravis": "npm run lint",
     "postcoverage":
       "remap-istanbul --input coverage/coverage.raw.json --type lcovonly --output coverage/lcov.info",
     "release": "lerna publish",
@@ -38,22 +37,22 @@
   "devDependencies": {
     "@types/chai": "4.1.2",
     "@types/mocha": "2.2.48",
-    "@types/node": "8.9.2",
-    "@types/sinon": "4.1.3",
+    "@types/node": "9.4.7",
+    "@types/sinon": "4.3.0",
     "chai": "4.1.2",
     "graphql": "0.11.7",
     "husky": "0.14.3",
     "istanbul": "1.1.0-alpha.1",
-    "lerna": "2.8.0",
-    "lint-staged": "6.1.0",
-    "mocha": "4.1.0",
-    "npm-check-updates": "2.14.0",
-    "prettier": "1.10.2",
+    "lerna": "2.9.0",
+    "lint-staged": "6.1.1",
+    "mocha": "5.0.4",
+    "npm-check-updates": "2.14.1",
+    "prettier": "1.11.1",
     "prettier-check": "2.0.0",
     "remap-istanbul": "0.10.1",
-    "sinon": "4.2.3",
+    "sinon": "4.4.4",
     "supertest": "3.0.0",
     "supertest-as-promised": "4.0.2",
-    "typescript": "2.7.1"
+    "typescript": "2.7.2"
   }
 }
