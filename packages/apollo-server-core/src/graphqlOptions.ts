@@ -42,7 +42,7 @@ export async function resolveGraphqlOptions(
   options: GraphQLServerOptions | Function,
   ...args
 ): Promise<GraphQLServerOptions> {
-  if (isOptionsFunction(options)) {
+  if (typeof options === 'function') {
     try {
       return await options(...args);
     } catch (e) {
@@ -51,10 +51,4 @@ export async function resolveGraphqlOptions(
   } else {
     return options;
   }
-}
-
-export function isOptionsFunction(
-  arg: GraphQLServerOptions | Function,
-): arg is Function {
-  return typeof arg === 'function';
 }

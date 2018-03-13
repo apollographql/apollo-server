@@ -106,7 +106,7 @@ describe('runQuery', () => {
 
   it('returns a syntax error if the query string contains one', () => {
     const query = `query { test `;
-    const expected = /Syntax Error GraphQL/;
+    const expected = /Syntax Error/;
     return runQuery({
       schema,
       query: query,

@@ -41,10 +41,6 @@ function isQueryOperation(query: DocumentNode, operationName: string) {
   return operationAST.operation === 'query';
 }
 
-function isFunction(arg: any): arg is Function {
-  return typeof arg === 'function';
-}
-
 export async function runHttpQuery(
   handlerArguments: Array<any>,
   request: HttpQueryRequest,
@@ -135,7 +131,7 @@ export async function runHttpQuery(
       }
 
       let context = optionsObject.context || {};
-      if (isFunction(context)) {
+      if (typeof context === 'function') {
         context = context();
       } else if (isBatch) {
         context = Object.assign(
