@@ -20,10 +20,10 @@
   },
   "homepage": "https://github.com/apollographql/apollo-server#readme",
   "devDependencies": {
-    "@types/graphql": "0.11.7"
+    "@types/graphql": "0.12.4"
   },
   "peerDependencies": {
-    "graphql": "^0.9.0 || ^0.10.1 || ^0.11.0 || ^0.12.0"
+    "graphql": "^0.9.0 || ^0.10.1 || ^0.11.0 || ^0.12.0 || ^0.13.0"
   },
   "typings": "dist/index.d.ts",
   "typescript": {
