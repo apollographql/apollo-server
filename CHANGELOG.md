@@ -3,6 +3,7 @@
 ### vNEXT
 
 * Fix apollo-server-core runQuery breaks async_hooks tracking [PR #733](https://github.com/apollographql/apollo-server/pull/733)
+* Optimize one-time functions [PR# 821](https://github.com/apollographql/apollo-server/pull/821)
 
 ### v1.3.0
 
