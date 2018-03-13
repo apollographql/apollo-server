@@ -1,24 +1,23 @@
 import { graphqlLambda, graphiqlLambda } from './lambdaApollo';
-import testSuite, { schema as Schema, CreateAppOptions } from 'apollo-server-integration-testsuite';
+import testSuite, {
+  schema as Schema,
+  CreateAppOptions,
+} from 'apollo-server-integration-testsuite';
 import { expect } from 'chai';
 import { GraphQLOptions } from 'apollo-server-core';
 import 'mocha';
 import * as url from 'url';
 
 function createLambda(options: CreateAppOptions = {}) {
-  let route,
-    handler,
-    callback,
-    event,
-    context;
+  let route, handler, callback, event, context;
 
   options.graphqlOptions = options.graphqlOptions || { schema: Schema };
-  if (options.graphiqlOptions ) {
+  if (options.graphiqlOptions) {
     route = '/graphiql';
-    handler = graphiqlLambda( options.graphiqlOptions );
+    handler = graphiqlLambda(options.graphiqlOptions);
   } else {
     route = '/graphql';
-    handler = graphqlLambda( options.graphqlOptions );
+    handler = graphqlLambda(options.graphqlOptions);
   }
 
   return function(req, res) {
@@ -29,7 +28,7 @@ function createLambda(options: CreateAppOptions = {}) {
     }
 
     let body = '';
-    req.on('data', function (chunk) {
+    req.on('data', function(chunk) {
       body += chunk;
     });
     req.on('end', function() {
@@ -58,13 +57,16 @@ function createLambda(options: CreateAppOptions = {}) {
 }
 
 describe('lambdaApollo', () => {
-  it('throws error if called without schema', function(){
-    expect(() => graphqlLambda(undefined as GraphQLOptions)).to.throw('Apollo Server requires options.');
+  it('throws error if called without schema', function() {
+    expect(() => graphqlLambda(undefined as GraphQLOptions)).to.throw(
+      'Apollo Server requires options.',
+    );
   });
 
-  it('throws an error if called with more than one argument', function(){
+  it('throws an error if called with more than one argument', function() {
     expect(() => (<any>graphqlLambda)({}, {})).to.throw(
-       'Apollo Server expects exactly one argument, got 2');
+      'Apollo Server expects exactly one argument, got 2',
+    );
   });
 });
 

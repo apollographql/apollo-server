@@ -1,10 +1,16 @@
-# GraphQL Server for Express, Connect, Hapi, Koa, Restify, Micro, Azure Functions, and AWS Lambda
+# GraphQL Server for Express, Connect, Hapi, Koa, and more
+
+Also supports: Restify, Micro, Azure Functions, AWS Lambda and Adonis Framework
 
 [![npm version](https://badge.fury.io/js/apollo-server-core.svg)](https://badge.fury.io/js/apollo-server-core)
 [![Build Status](https://travis-ci.org/apollographql/apollo-server.svg?branch=master)](https://travis-ci.org/apollographql/apollo-server)
-[![Get on Slack](https://img.shields.io/badge/slack-join-orange.svg)](http://www.apollodata.com/#slack)
+[![Get on Slack](https://img.shields.io/badge/slack-join-orange.svg)](https://www.apollographql.com/#slack)
 
-Apollo Server is a community-maintained open-source GraphQL server. It works with pretty much all Node.js HTTP server frameworks, and we're happy to take PRs for more! It works with any GraphQL schema built with the [`graphql-js` reference implementation](https://github.com/graphql/graphql-js).
+Apollo Server is a community-maintained open-source GraphQL server. It works with pretty much all Node.js HTTP server frameworks, and we're happy to take PRs for more! Apollo Server works with any GraphQL schema built with [GraphQL.js](https://github.com/graphql/graphql-js), so you can build your schema with that directly or with a convenience library such as [graphql-tools](https://www.apollographql.com/docs/graphql-tools/).
+
+## Documentation
+
+[Read the docs!](https://www.apollographql.com/docs/apollo-server/)
 
 ## Principles
 
@@ -18,20 +24,22 @@ Anyone is welcome to contribute to Apollo Server, just read [CONTRIBUTING.md](./
 
 ## Getting started
 
-Apollo Server is super easy to set up. Just `npm install apollo-server-<variant>`, write a GraphQL schema, and then use one of the following snippets to get started. For more info, read the [Apollo Server docs](http://dev.apollodata.com/tools/apollo-server/index.html). To experiment a live example of Apollo Server, create an [Apollo Launchpad](https://launchpad.graphql.com). Downloading the pad will provide you a local Apollo Server project.
+Apollo Server is super easy to set up. Just `npm install apollo-server-<variant>`, write a GraphQL schema, and then use one of the following snippets to get started. For more info, read the [Apollo Server docs](https://www.apollographql.com/docs/apollo-server/). To experiment a live example of Apollo Server, create an [Apollo Launchpad](https://launchpad.graphql.com). Downloading the pad will provide you a local Apollo Server project.
 
 ### Installation
 
 Just run `npm install --save apollo-server-<variant>` and you're good to go!
 
 where `<variant>` is one of the following:
- - `express`
- - `koa`
- - `hapi`
- - `restify`
- - `lambda`
- - `micro`
- - `azure-functions`
+
+* `express`
+* `koa`
+* `hapi`
+* `restify`
+* `lambda`
+* `micro`
+* `azure-functions`
+* `adonis`
 
 ### Express
 
@@ -53,6 +61,7 @@ app.listen(PORT);
 ```
 
 ### Connect
+
 ```js
 import connect from 'connect';
 import bodyParser from 'body-parser';
@@ -75,44 +84,50 @@ http.createServer(app).listen(PORT);
 
 ### Hapi
 
-Now with the Hapi plugins `graphqlHapi` and `graphiqlHapi` you can pass a route object that includes options to be applied to the route.  The example below enables CORS on the `/graphql` route.
+Now with the Hapi plugins `graphqlHapi` and `graphiqlHapi` you can pass a route object that includes options to be applied to the route. The example below enables CORS on the `/graphql` route.
+
+The code below requires Hapi 17 or higher.
 
 ```js
-import hapi from 'hapi';
+import Hapi from 'hapi';
 import { graphqlHapi } from 'apollo-server-hapi';
-
-const server = new hapi.Server({ debug: { request: "*" } });
 
 const HOST = 'localhost';
 const PORT = 3000;
 
-server.connection({
+async function StartServer() {
+  const server = new Hapi.server({
     host: HOST,
     port: PORT,
-});
+  });
 
-server.register({
-    register: graphqlHapi,
+  await server.register({
+    plugin: graphqlHapi,
     options: {
       path: '/graphql',
       graphqlOptions: {
         schema: myGraphQLSchema,
       },
       route: {
-        cors: true
-      }
+        cors: true,
+      },
     },
-});
+  });
 
-server.start((err) => {
-    if (err) {
-        throw err;
-    }
-    console.log(`Server running at: ${server.info.uri}`);
-});
+  try {
+    await server.start();
+  } catch (err) {
+    console.log(`Error while starting server: ${err.message}`);
+  }
+
+  console.log(`Server running at: ${server.info.uri}`);
+}
+
+StartServer();
 ```
 
 ### Koa
+
 ```js
 import koa from 'koa'; // koa@2
 import koaRouter from 'koa-router'; // koa-router@next
@@ -135,6 +150,7 @@ app.listen(PORT);
 ```
 
 ### Restify
+
 ```js
 import restify from 'restify';
 import { graphqlRestify, graphiqlRestify } from 'apollo-server-restify';
@@ -142,7 +158,7 @@ import { graphqlRestify, graphiqlRestify } from 'apollo-server-restify';
 const PORT = 3000;
 
 const server = restify.createServer({
-  title: 'Apollo Server'
+  title: 'Apollo Server',
 });
 
 const graphQLOptions = { schema: myGraphQLSchema };
@@ -163,7 +179,7 @@ server.listen(PORT, () => console.log(`Listening on ${PORT}`));
 Lambda function should be run with [Node.js 4.3 or v6.1](https://docs.aws.amazon.com/lambda/latest/dg/nodejs-prog-model-using-old-runtime.html#nodejs-prog-model-runtime-support-policy). Requires an API Gateway with Lambda Proxy Integration.
 
 ```js
-var server = require("apollo-server-lambda");
+var server = require('apollo-server-lambda');
 
 exports.handler = server.graphqlLambda({ schema: myGraphQLSchema });
 ```
@@ -173,9 +189,21 @@ exports.handler = server.graphqlLambda({ schema: myGraphQLSchema });
 Requires the [Micro](https://github.com/zeit/micro) module
 
 ```js
-const server = require("apollo-server-micro");
+const server = require('apollo-server-micro');
 
 module.exports = server.microGraphql({ schema: myGraphQLSchema });
+```
+
+### Adonis Framework
+
+```js
+// start/routes.js
+const { graphqlAdonis } = require('apollo-server-adonis');
+
+const Route = use('Route');
+
+Route.post('/graphql', graphqlAdonis({ schema: myGraphQLSchema }));
+Route.get('/graphql', graphqlAdonis({ schema: myGraphQLSchema }));
 ```
 
 ## Options
@@ -190,6 +218,10 @@ Apollo Server can be configured with an options object with the following fields
 * **formatParams**: a function applied for each query in a batch to format parameters before execution
 * **formatResponse**: a function applied to each response after execution
 * **tracing**: when set to true, collect and expose trace data in the [Apollo Tracing format](https://github.com/apollographql/apollo-tracing)
+* **logFunction**: a function called for logging events such as execution times
+* **fieldResolver**: a custom default field resolver
+* **debug**: a boolean that will print additional debug logging if execution errors occur
+* **cacheControl**: when set to true, enable built-in support for Apollo Cache Control
 
 All options except for `schema` are optional.
 
@@ -201,11 +233,11 @@ The `formatParams` function can be used in combination with the `OperationStore`
 const store = new OperationStore(Schema);
 store.put('query testquery{ testString }');
 graphqlOptions = {
-    schema: Schema,
-    formatParams(params) {
-        params['query'] = store.get(params.operationName);
-        return params;
-    },
+  schema: Schema,
+  formatParams(params) {
+    params['query'] = store.get(params.operationName);
+    return params;
+  },
 };
 ```
 

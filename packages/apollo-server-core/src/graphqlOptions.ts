@@ -1,4 +1,8 @@
-import { GraphQLSchema, ValidationContext, GraphQLFieldResolver } from 'graphql';
+import {
+  GraphQLSchema,
+  ValidationContext,
+  GraphQLFieldResolver,
+} from 'graphql';
 import { LogFunction } from './runQuery';
 import { GraphQLExtension } from 'graphql-extensions';
 
@@ -34,8 +38,11 @@ export interface GraphQLServerOptions {
 
 export default GraphQLServerOptions;
 
-export async function resolveGraphqlOptions(options: GraphQLServerOptions | Function, ...args): Promise<GraphQLServerOptions> {
-  if (isOptionsFunction(options)) {
+export async function resolveGraphqlOptions(
+  options: GraphQLServerOptions | Function,
+  ...args
+): Promise<GraphQLServerOptions> {
+  if (typeof options === 'function') {
     try {
       return await options(...args);
     } catch (e) {
@@ -44,8 +51,4 @@ export async function resolveGraphqlOptions(options: GraphQLServerOptions | Func
   } else {
     return options;
   }
-}
-
-export function isOptionsFunction(arg: GraphQLServerOptions | Function): arg is Function {
-  return typeof arg === 'function';
 }

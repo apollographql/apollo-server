@@ -6,7 +6,4 @@ export {
   graphiqlExpress,
 } from './expressApollo';
 
-export {
-  graphqlConnect,
-  graphiqlConnect,
-} from './connectApollo';
+export { graphqlConnect, graphiqlConnect } from './connectApollo';

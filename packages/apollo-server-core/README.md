@@ -1,3 +1,3 @@
-# graphql-server-core
+# apollo-server-core
 
-This is the core module of the Apollo community GraphQL Server. [Read the docs.](http://dev.apollodata.com/tools/apollo-server/index.html)
+This is the core module of the Apollo community GraphQL Server. [Read the docs.](https://www.apollographql.com/docs/apollo-server/)
