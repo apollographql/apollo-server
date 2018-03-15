@@ -1,5 +1,5 @@
 ---
-title: End-to-end example
+title: Quick start
 description: Copy and paste this code to have a GraphQL server running in 30 seconds.
 ---
 
