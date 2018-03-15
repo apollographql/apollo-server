@@ -7,8 +7,6 @@ import {
 } from 'apollo-server-core';
 import * as GraphiQL from 'apollo-server-module-graphiql';
 
-export type GraphQLOptions = GraphQLOptions;
-
 export interface ExpressGraphQLOptionsFunction {
   (req?: express.Request, res?: express.Response):
     | GraphQLOptions
