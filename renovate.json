@@ -7,5 +7,11 @@
   "rebaseStalePrs": true,
   "prCreation": "not-pending",
   "automerge": "minor",
-  "labels": ["tooling", "dependencies"]
+  "labels": ["tooling", "dependencies"],
+  "packageRules": [
+    {
+      "packageNames": ["lint-staged"],
+      "allowedVersions": "<7"
+    }
+  ]
 }
