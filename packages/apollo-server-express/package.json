@@ -1,7 +1,8 @@
 {
   "name": "apollo-server-express",
   "version": "1.3.2",
-  "description": "Production-ready Node.js GraphQL server for Express and Connect",
+  "description":
+    "Production-ready Node.js GraphQL server for Express and Connect",
   "main": "dist/index.js",
   "scripts": {
     "compile": "tsc",
