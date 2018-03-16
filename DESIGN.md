@@ -4,9 +4,9 @@ The goal of this project is to build a GraphQL server for Node.js that is simple
 
 GraphQL Server consists of three parts:
 
-1. Core
-2. Integrations
-3. Modules
+1.  Core
+2.  Integrations
+3.  Modules
 
 At the core of GraphQL Server is a function called `runQuery`, which handles parsing, validating and executing queries. Its interface is generic in order to allow for integrations with different Node.js server frameworks. Extensions provide useful functionality that can be shared between different integrations.
 
@@ -14,9 +14,9 @@ At the core of GraphQL Server is a function called `runQuery`, which handles par
 
 The main goals of GraphQL Server are (in order of priority):
 
-1. Simplicity: GraphQL Server’s core API is very straight forward. It’s one function that does one thing really well (parsing, validating and executing GraphQL queries), and doesn’t do anything else.
-2. Flexibility: The core of GraphQL Server should be transport-agnostic (e.g. it doesn’t deal with HTTP or Websockets directly. This is will be handled in the wrappers for Express, Hapi, etc.)
-3. Performance: GraphQL server should be be tunable to make it fast in production. One example of this is that it should be able to take pre-stored queries to skip parsing and validation. It should also allow easy integration of profiling tools like Apollo Optics that help with debugging and optimizing server performance.
+1.  Simplicity: GraphQL Server’s core API is very straight forward. It’s one function that does one thing really well (parsing, validating and executing GraphQL queries), and doesn’t do anything else.
+2.  Flexibility: The core of GraphQL Server should be transport-agnostic (e.g. it doesn’t deal with HTTP or Websockets directly. This is will be handled in the wrappers for Express, Hapi, etc.)
+3.  Performance: GraphQL server should be be tunable to make it fast in production. One example of this is that it should be able to take pre-stored queries to skip parsing and validation. It should also allow easy integration of profiling tools like Apollo Optics that help with debugging and optimizing server performance.
 
 ### Integrations
 
