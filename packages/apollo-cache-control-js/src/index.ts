@@ -29,6 +29,7 @@ declare module 'graphql/type/definition' {
   interface GraphQLResolveInfo {
     cacheControl: {
       setCacheHint: (hint: CacheHint) => void
+      cacheHint: CacheHint;
     };
   }
 }
@@ -73,7 +74,8 @@ export class CacheControlExtension<TContext = any> implements GraphQLExtension<T
     info.cacheControl = {
       setCacheHint: (hint: CacheHint) => {
         this.addHint(info.path, hint);
-      }
+      },
+      cacheHint: hint
     }
   }
 
