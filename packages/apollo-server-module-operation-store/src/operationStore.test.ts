@@ -86,7 +86,7 @@ describe('operationStore', () => {
     const query = `query testquery{ testString`;
 
     const store = new OperationStore(schema);
-    return expect(() => store.put(query)).to.throw(/Syntax Error GraphQL/);
+    return expect(() => store.put(query)).to.throw(/Syntax Error/);
   });
 
   it('throws a validation error if the query is invalid', () => {
