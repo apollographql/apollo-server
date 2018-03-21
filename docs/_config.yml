@@ -26,14 +26,14 @@ sidebar_categories:
     - servers/azure-functions
     - servers/adonis
   Related:
+    - title: Monitoring and caching
+      href: https://www.apollographql.com/docs/engine/setup-node.html
     - title: graphql-tools
       href: https://www.apollographql.com/docs/graphql-tools/
     - title: GraphQL Subscriptions
       href: https://www.apollographql.com/docs/graphql-subscriptions/
-    - title: Apollo Tracing
-      href: https://github.com/apollographql/apollo-tracing-js
-    - title: Apollo Cache Control
-      href: https://github.com/apollographql/apollo-cache-control-js
+    - title: Production deployment
+      href: https://dev-blog.apollodata.com/graphql-over-rest-with-node-heroku-and-apollo-engine-fb8581f8d77f
   Migration:
     - migration-one-dot
     - migration-hapi
