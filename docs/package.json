@@ -15,14 +15,11 @@
     "hexo-renderer-marked": "0.3.2",
     "hexo-server": "0.3.1",
     "lodash": "4.17.5",
-    "meteor-theme-hexo": "1.0.3",
-    "nodemon": "1.17.2"
+    "meteor-theme-hexo": "1.0.3"
   },
   "scripts": {
     "start": "npm run build && chexo apollo-hexo-config -- server",
     "build": "chexo apollo-hexo-config -- generate",
-    "develop-theme":
-      "nodemon -x 'rm db.json; hexo serve' -w assets/ -w code/ -w source/ -w themes/ -w scripts/",
     "clean": "hexo clean",
     "test": "npm run clean; npm run build"
   },
