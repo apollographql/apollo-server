@@ -45,12 +45,6 @@ content_root: docs/source
 typescript_api_box:
   data_file: docs.json
 
-# API keys
-apis:
-  docsearch:
-    apiKey: 768e823959d35bbd51e4b2439be13fb7
-    indexName: apollodata
-
 url: https://www.apollographql.com/docs/apollo-server/
 root: /docs/apollo-server/
 
