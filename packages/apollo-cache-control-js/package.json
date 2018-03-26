@@ -28,7 +28,7 @@
     "@types/jest": "^22.2.2",
     "@types/node": "^9.6.0",
     "@types/zen-observable": "^0.5.3",
-    "graphql": "^0.12.3",
+    "graphql": "^0.13.2",
     "graphql-tools": "^2.18.0",
     "jest": "^22.4.3",
     "jest-matcher-utils": "^22.4.3",
