@@ -1,7 +1,7 @@
 {
   "name": "apollo-server-integration-testsuite",
   "private": true,
-  "version": "1.3.2",
+  "version": "1.3.3",
   "description": "Apollo Server Integrations testsuite",
   "main": "dist/index.js",
   "scripts": {
@@ -10,8 +10,7 @@
   },
   "repository": {
     "type": "git",
-    "url":
-      "https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-integration-testsuite"
+    "url": "https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-integration-testsuite"
   },
   "keywords": [],
   "author": "Jonas Helfer <jonas@helfer.email>",
@@ -21,9 +20,9 @@
   },
   "homepage": "https://github.com/apollographql/apollo-server#readme",
   "dependencies": {
-    "apollo-server-core": "^1.3.2",
-    "apollo-server-module-graphiql": "^1.3.2",
-    "apollo-server-module-operation-store": "^1.3.2",
+    "apollo-server-core": "^1.3.3",
+    "apollo-server-module-graphiql": "^1.3.3",
+    "apollo-server-module-operation-store": "^1.3.3",
     "supertest": "^3.0.0"
   },
   "devDependencies": {
