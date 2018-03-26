@@ -1,11 +1,12 @@
 # Changelog
 
-### vNEXT
+### v1.3.3
 
+* Update peer dependencies to support `graphql@0.13.x`.
 * Fix issue where `apollo-server-core`'s `runQuery` method broke `async_hooks` call stack. [PR #733](https://github.com/apollographql/apollo-server/pull/733)
-* Optimize one-time functions [PR# 821](https://github.com/apollographql/apollo-server/pull/821)
+* Hoist declarations of rarely used functions out of `doRunQuery` to improve performance. [PR# 821](https://github.com/apollographql/apollo-server/pull/821)
 * The `GraphQLOptions` type is now exported from `apollo-server-express` in order to facilitate type checking when utilizing `graphqlExpress`, `graphiqlExpress`, `graphqlConnect` or `graphiqlConnect`. [PR #871](https://github.com/apollographql/apollo-server/pull/871)
-* Update GRAPHIQL_VERSION 0.11.2 → 0.11.11
+* Update GraphiQL version to 0.11.11. [PR #914](https://github.com/apollographql/apollo-server/pull/914)
 
 ### v1.3.2
 
