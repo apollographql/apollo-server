@@ -24,6 +24,9 @@
     "@types/graphql": "^0.11.8",
     "@types/jest": "^22.0.1",
     "@types/node": "^9.3.0",
+    "jest": "^22.4.3",
+    "jest-matcher-utils": "^22.4.3",
+    "ts-jest": "^22.4.2",
     "typescript": "^2.7.2"
   },
   "dependencies": {
