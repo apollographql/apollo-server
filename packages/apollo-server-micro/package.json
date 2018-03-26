@@ -21,7 +21,8 @@
   "homepage": "https://github.com/apollographql/apollo-server#readme",
   "dependencies": {
     "apollo-server-core": "^1.3.2",
-    "apollo-server-module-graphiql": "^1.3.2"
+    "apollo-server-module-graphiql": "^1.3.2",
+    "apollo-upload-server": "^3.0.0"
   },
   "devDependencies": {
     "@types/graphql": "0.12.6",

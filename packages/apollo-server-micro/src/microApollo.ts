@@ -4,6 +4,7 @@ import {
   runHttpQuery,
 } from 'apollo-server-core';
 import * as GraphiQL from 'apollo-server-module-graphiql';
+import { processRequest } from 'apollo-upload-server';
 import { createError, json, RequestHandler } from 'micro';
 import * as url from 'url';
 import { IncomingMessage, ServerResponse } from 'http';
@@ -12,16 +13,21 @@ export interface MicroGraphQLOptionsFunction {
   (req?: IncomingMessage): GraphQLOptions | Promise<GraphQLOptions>;
 }
 
+export interface MicroGraphQLUploadOptions {
+  uploadDir: string;
+}
+
 export function microGraphql(
   options: GraphQLOptions | MicroGraphQLOptionsFunction,
+  uploadOptions: MicroGraphQLUploadOptions = null,
 ): RequestHandler {
   if (!options) {
     throw new Error('Apollo Server requires options.');
   }
 
-  if (arguments.length > 1) {
+  if (arguments.length > 2) {
     throw new Error(
-      `Apollo Server expects exactly one argument, got ${arguments.length}`,
+      `Apollo Server expects one or two arguments, got ${arguments.length}`,
     );
   }
 
@@ -29,7 +35,14 @@ export function microGraphql(
     let query;
     if (req.method === 'POST') {
       try {
-        query = await json(req);
+        const { headers: {'content-type': contentType }} = req;
+
+        // Skip if there are no uploads
+        if (!contentType || contentType.indexOf('multipart/form-data') === -1) {
+          query = await json(req);
+        } else {
+          query = await processRequest(req, uploadOptions);
+        }
       } catch (err) {
         query = undefined;
       }
