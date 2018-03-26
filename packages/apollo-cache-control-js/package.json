@@ -30,9 +30,9 @@
     "@types/zen-observable": "^0.5.3",
     "graphql": "^0.12.3",
     "graphql-tools": "^2.18.0",
-    "jest": "^22.1.1",
-    "jest-matcher-utils": "^22.1.0",
-    "ts-jest": "^22.0.1",
+    "jest": "^22.4.3",
+    "jest-matcher-utils": "^22.4.3",
+    "ts-jest": "^22.4.2",
     "typescript": "^2.7.2"
   },
   "jest": {
