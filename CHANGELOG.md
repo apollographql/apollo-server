@@ -1,34 +1,54 @@
 # Changelog
 
+All of the packages in the `apollo-server` repo are released with the same version numbers, so a new version of a particular package might not represent an actual change to that package. We generally try to mark changes that affect only one web server integration package with that package name, and don't specify package names for changes that affect most of the packages or which affect shared core packages.
+
 ### v1.3.3
 
-* Update peer dependencies to support `graphql@0.13.x`.
-* Fix issue where `apollo-server-core`'s `runQuery` method broke `async_hooks` call stack. [PR #733](https://github.com/apollographql/apollo-server/pull/733)
-* Hoist declarations of rarely used functions out of `doRunQuery` to improve performance. [PR# 821](https://github.com/apollographql/apollo-server/pull/821)
-* The `GraphQLOptions` type is now exported from `apollo-server-express` in order to facilitate type checking when utilizing `graphqlExpress`, `graphiqlExpress`, `graphqlConnect` or `graphiqlConnect`. [PR #871](https://github.com/apollographql/apollo-server/pull/871)
+* Updated peer dependencies to support `graphql@0.13.x`.
+* `apollo-server-express`: The `GraphQLOptions` type is now exported from `apollo-server-express` in order to facilitate type checking when utilizing `graphqlExpress`, `graphiqlExpress`, `graphqlConnect` and `graphiqlConnect`. [PR #871](https://github.com/apollographql/apollo-server/pull/871)
 * Update GraphiQL version to 0.11.11. [PR #914](https://github.com/apollographql/apollo-server/pull/914)
 
 ### v1.3.2
 
 * Updated peer dependencies and tests to support `graphql@0.12`.
+* Fix issue where the core `runQuery` method broke the ability to use the Node `async_hooks` feature's call stack. [PR #733](https://github.com/apollographql/apollo-server/pull/733)
+* Hoist declarations of rarely used functions out of `doRunQuery` to improve performance. [PR# 821](https://github.com/apollographql/apollo-server/pull/821)
 
 ### v1.3.1
 
-* Fixed execution fatal error with `graphql@0.12`.
+* Fixed a fatal execution error with the new `graphql@0.12`.
 
 ### v1.3.0
 
+* **Breaking:** `apollo-server-hapi`: now supports Hapi v17, and no longer supports Hapi v16. (We intend to release a new `apollo-server-hapi16` for users still on Hapi v16.)
+* **New package**: `apollo-server-adonis` supporting the Adonis framework!
+* The `graphqlOptions` parameter to server GraphQL integration functions now accepts context as a function and as an object with a prototype. [PR #679](https://github.com/apollographql/apollo-server/pull/679)
+* `apollo-server-express`: Send Content-Length header.
+* `apollo-server-micro`: Allow Micro 9 in `peerDependencies`. [PR #671](https://github.com/apollographql/apollo-server/pull/671)
+* GraphiQL integration:
+  * Recognize Websocket endpoints with secure `wss://` URLs.
+  * Only include truthy values in GraphiQL URL.
+
+### v1.2.0
+
+* **New feature**: Add support for Apollo Cache Control. Enable `apollo-cache-control` by passing `cacheControl: true` to your server's GraphQL integration function.
+* Include README.md in published npm packages.
+
+### v1.1.7
+
 * Added support for the vhost option for Hapi [PR #611](https://github.com/apollographql/apollo-server/pull/611)
-* Include readme for npm packages
-* Update peerDependencies version for micro [PR #671](https://github.com/apollographql/apollo-server/pull/671)
-* Corrected the hapi example both in the README.md [PR #689][issue #689]
-* Change GraphqlOptions to also accept context as a function [PR #679](https://github.com/apollographql/apollo-server/pull/679)
+* Fix dependency on `apollo-tracing` to be less strict.
 
 ### v1.1.6
 
-* Fixes bug where CORS would not allow `Access-Control-Allow-Origin: *` with credential 'include', changed to 'same-origin' [Issue #514](https://github.com/apollographql/apollo-server/issues/514)
-* Update apollo-server-lambda README to reflect new package name.
-* Add support for connectionParams in GraphiQL plugin options [#452](https://github.com/apollographql/apollo-server/issues/452) [PR 548](https://github.com/apollographql/apollo-server/pull/548)
+* GraphiQL integration: add support for `websocketConnectionParams` for subscriptions. [#452](https://github.com/apollographql/apollo-server/issues/452) [PR 548](https://github.com/apollographql/apollo-server/pull/548)
+
+(v1.1.4 had a major bug and was immediately unpublished. v1.1.5 was identical to v1.1.6.)
+
+### v1.1.3
+
+* GraphiQL integration: Fixes bug where CORS would not allow `Access-Control-Allow-Origin: *` with credential 'include', changed to 'same-origin' [Issue #514](https://github.com/apollographql/apollo-server/issues/514)
+* Updated peer dependencies to support `graphql@0.11`.
 
 ### v1.1.2
 
