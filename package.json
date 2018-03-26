@@ -29,10 +29,9 @@
     "precommit": "lint-staged"
   },
   "lint-staged": {
-    "*.ts*": ["prettier --write", "git add"],
-    "*.js*": ["prettier --write", "git add"],
-    "*.json*": ["prettier --write", "git add"],
-    "*.md*": ["prettier --write", "git add"]
+    "*.ts": ["prettier --write", "git add"],
+    "*.js": ["prettier --write", "git add"],
+    "*.md": ["prettier --write", "git add"]
   },
   "devDependencies": {
     "@types/chai": "4.1.2",
