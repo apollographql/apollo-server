@@ -21,7 +21,7 @@
     "graphql-extensions": "^0.0.x"
   },
   "peerDependencies": {
-    "graphql": "^0.10.0 || ^0.11.0 || ^0.12.0"
+    "graphql": "0.10.x - 0.13.x"
   },
   "devDependencies": {
     "@types/graphql": "^0.11.8",
