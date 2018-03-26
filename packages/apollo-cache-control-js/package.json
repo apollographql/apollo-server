@@ -33,7 +33,7 @@
     "jest": "^22.1.1",
     "jest-matcher-utils": "^22.1.0",
     "ts-jest": "^22.0.1",
-    "typescript": "^2.6.2"
+    "typescript": "^2.7.2"
   },
   "jest": {
     "testEnvironment": "node",
