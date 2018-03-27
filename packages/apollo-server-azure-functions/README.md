@@ -52,3 +52,5 @@ module.exports = function run(context, request) {
   }
 };
 ```
+
+[Read the CHANGELOG.](https://github.com/apollographql/apollo-server/blob/master/CHANGELOG.md)
