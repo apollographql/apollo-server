@@ -28,14 +28,14 @@
     "graphql": "0.10.x - 0.13.x"
   },
   "devDependencies": {
-    "@types/graphql": "^0.11.8",
-    "@types/jest": "^22.0.1",
-    "@types/node": "^9.3.0",
-    "graphql": "^0.13.1",
-    "jest": "^22.1.1",
-    "jest-matcher-utils": "^22.1.0",
-    "ts-jest": "^22.0.1",
-    "typescript": "^2.6.2"
+    "@types/graphql": "^0.12.6",
+    "@types/jest": "^22.2.2",
+    "@types/node": "^9.6.0",
+    "graphql": "^0.13.2",
+    "jest": "^22.4.3",
+    "jest-matcher-utils": "^22.4.3",
+    "ts-jest": "^22.4.2",
+    "typescript": "^2.7.2"
   },
   "jest": {
     "testEnvironment": "node",
