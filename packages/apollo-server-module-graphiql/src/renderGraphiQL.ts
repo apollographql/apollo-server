@@ -33,7 +33,7 @@ export type GraphiQLData = {
 };
 
 // Current latest version of GraphiQL.
-const GRAPHIQL_VERSION = '0.11.2';
+const GRAPHIQL_VERSION = '0.11.11';
 const SUBSCRIPTIONS_TRANSPORT_VERSION = '0.8.2';
 
 // Ensures string values are safe to be used within a <script> tag.
