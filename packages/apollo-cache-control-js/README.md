@@ -98,3 +98,18 @@ You should receive cache control data in the `extensions` field of your response
   ]
 }
 ```
+
+### Setting a default maxAge
+
+The power of cache hints comes from being able to set them precisely to different values on different types and fields based on your understanding of your implementation's semantics. But when getting started with Apollo Cache Control, you might just want to apply the same `maxAge` to most of your resolvers. You can specify a default max age when you set up `cacheControl` in your server. This max age will be applied to all resolvers which don't explicitly set `maxAge` via schema hints (including schema hints on the type that they return) or the programmatic API. You can override this for a particular resolver or type by setting `@cacheControl(maxAge: 0)`. For example, for Express:
+
+```javascript
+app.use('/graphql', bodyParser.json(), graphqlExpress({
+  schema,
+  context: {},
+  tracing: true,
+  cacheControl: {
+    defaultMaxAge: 5,
+  },
+}));
+```

@@ -32,6 +32,33 @@ describe('@cacheControl directives', () => {
     expect(hints).toContainEqual({ path: ['droid'], maxAge: 0 });
   });
 
+  it('should set maxAge to the default and no scope for a field without cache hints', async () => {
+    const schema = buildSchema(`
+      type Query {
+        droid(id: ID!): Droid
+      }
+
+      type Droid {
+        id: ID!
+        name: String!
+      }
+    `);
+
+    const hints = await collectCacheControlHints(
+      schema,
+      `
+        query {
+          droid(id: 2001) {
+            name
+          }
+        }
+      `,
+      { defaultMaxAge: 10 },
+    );
+
+    expect(hints).toContainEqual({ path: ['droid'], maxAge: 10 });
+  });
+
   it('should set the specified maxAge from a cache hint on the field', async () => {
     const schema = buildSchema(`
       type Query {
@@ -52,7 +79,8 @@ describe('@cacheControl directives', () => {
             name
           }
         }
-      `
+      `,
+      { defaultMaxAge: 10 },
     );
 
     expect(hints).toContainEqual({ path: ['droid'], maxAge: 60 });
@@ -78,7 +106,8 @@ describe('@cacheControl directives', () => {
             name
           }
         }
-      `
+      `,
+      { defaultMaxAge: 10 },
     );
 
     expect(hints).toContainEqual({ path: ['droid'], maxAge: 60 });
@@ -104,7 +133,8 @@ describe('@cacheControl directives', () => {
             name
           }
         }
-      `
+      `,
+      { defaultMaxAge: 10 },
     );
 
     expect(hints).toContainEqual({ path: ['droid'], maxAge: 120 });
@@ -130,7 +160,8 @@ describe('@cacheControl directives', () => {
             name
           }
         }
-      `
+      `,
+      { defaultMaxAge: 10 },
     );
 
     expect(hints).toContainEqual({ path: ['droid'], maxAge: 120, scope: CacheScope.Private });
@@ -156,7 +187,8 @@ describe('@cacheControl directives', () => {
             name
           }
         }
-      `
+      `,
+      { defaultMaxAge: 10 },
     );
 
     expect(hints).toContainEqual({ path: ['droid'], maxAge: 60, scope: CacheScope.Private });

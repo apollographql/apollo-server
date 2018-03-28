@@ -4,12 +4,12 @@ import {
 } from 'graphql';
 
 import { enableGraphQLExtensions, GraphQLExtensionStack } from 'graphql-extensions';
-import { CacheControlExtension, CacheHint } from '../..';
+import { CacheControlExtension, CacheHint, CacheControlExtensionOptions } from '../..';
 
-export async function collectCacheControlHints(schema: GraphQLSchema, source: string): Promise<CacheHint[]> {
+export async function collectCacheControlHints(schema: GraphQLSchema, source: string, options?: CacheControlExtensionOptions): Promise<CacheHint[]> {
   enableGraphQLExtensions(schema);
 
-  const cacheControlExtension = new CacheControlExtension();
+  const cacheControlExtension = new CacheControlExtension(options);
 
   const response = await graphql({
     schema,

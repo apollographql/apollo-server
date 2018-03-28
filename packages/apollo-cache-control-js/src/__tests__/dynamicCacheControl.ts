@@ -59,7 +59,8 @@ describe('dynamic cache control', () => {
             name
           }
         }
-      `
+      `,
+      { defaultMaxAge: 10 },
     );
 
     expect(hints).toContainEqual({ path: ['droid'], maxAge: 60 });
@@ -99,7 +100,8 @@ describe('dynamic cache control', () => {
             name
           }
         }
-      `
+      `,
+      { defaultMaxAge: 10 },
     );
 
     expect(hints).toContainEqual({ path: ['droid'], maxAge: 60, scope: CacheScope.Private });
@@ -139,7 +141,8 @@ describe('dynamic cache control', () => {
             name
           }
         }
-      `
+      `,
+      { defaultMaxAge: 10 },
     );
 
     expect(hints).toContainEqual({ path: ['droid'], maxAge: 120 });

@@ -25,6 +25,10 @@ export enum CacheScope {
   Private = 'PRIVATE'
 }
 
+export interface CacheControlExtensionOptions {
+  defaultMaxAge?: number;
+}
+
 declare module 'graphql/type/definition' {
   interface GraphQLResolveInfo {
     cacheControl: {
@@ -35,7 +39,11 @@ declare module 'graphql/type/definition' {
 }
 
 export class CacheControlExtension<TContext = any> implements GraphQLExtension<TContext> {
-  constructor() {}
+  private defaultMaxAge: number;
+
+  constructor(options: CacheControlExtensionOptions = {}) {
+    this.defaultMaxAge = options.defaultMaxAge || 0;
+  }
 
   private hints: Map<ResponsePath, CacheHint> = new Map();
 
@@ -47,6 +55,8 @@ export class CacheControlExtension<TContext = any> implements GraphQLExtension<T
   ) {
     let hint: CacheHint = {};
 
+    // If this field's resolver returns an object or interface, look for hints
+    // on that return type.
     const targetType = getNamedType(info.returnType);
     if (targetType instanceof GraphQLObjectType
       || targetType instanceof GraphQLInterfaceType) {
@@ -55,6 +65,8 @@ export class CacheControlExtension<TContext = any> implements GraphQLExtension<T
       }
     }
 
+    // If this field is a field on an object, look for hints on the field
+    // itself, taking precedence over previously calculated hints.
     const parentType = info.parentType;
     if (parentType instanceof GraphQLObjectType) {
       const fieldDef = parentType.getFields()[info.fieldName];
@@ -63,8 +75,12 @@ export class CacheControlExtension<TContext = any> implements GraphQLExtension<T
       }
     }
 
+    // If this resolver returns an object and we haven't seen an explicit maxAge
+    // hint, set the maxAge to 0 (uncached) or the default if specified in the
+    // constructor.  (Non-object fields by default are assumed to inherit their
+    // cacheability from their parents.)
     if (targetType instanceof GraphQLObjectType && hint.maxAge === undefined) {
-      hint.maxAge = 0;
+      hint.maxAge = this.defaultMaxAge;
     }
 
     if (hint.maxAge !== undefined || hint.scope !== undefined) {
