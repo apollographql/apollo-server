@@ -35,10 +35,10 @@ interface ResolverCall {
 
 export class TracingExtension<TContext = any>
   implements GraphQLExtension<TContext> {
-  private startWallTime: Date;
-  private endWallTime: Date;
-  private startHrTime: HighResolutionTime;
-  private duration: HighResolutionTime;
+  private startWallTime?: Date;
+  private endWallTime?: Date;
+  private startHrTime?: HighResolutionTime;
+  private duration?: HighResolutionTime;
 
   private resolverCalls: ResolverCall[] = [];
 
@@ -82,7 +82,19 @@ export class TracingExtension<TContext = any>
     this.endWallTime = new Date();
   }
 
-  format(): [string, TracingFormat] {
+  format(): [string, TracingFormat] | undefined {
+    // In the event that we are called prior to the initialization of critical
+    // date metrics, we'll return undefined to signal that the extension did not
+    // format properly.  Any undefined extension results are simply purged by
+    // the graphql-extensions module.
+    if (
+      typeof this.startWallTime === "undefined" ||
+      typeof this.endWallTime === "undefined" ||
+      typeof this.duration === "undefined"
+    ) {
+      return;
+    }
+
     return [
       "tracing",
       {
