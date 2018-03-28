@@ -20,6 +20,18 @@ import { GraphQLOptions } from 'apollo-server-core';
 import * as GraphiQL from 'apollo-server-module-graphiql';
 import { OperationStore } from 'apollo-server-module-operation-store';
 
+const personType = new GraphQLObjectType({
+  name: 'PersonType',
+  fields: {
+    firstName: {
+      type: GraphQLString,
+    },
+    lastName: {
+      type: GraphQLString,
+    },
+  },
+});
+
 const queryType = new GraphQLObjectType({
   name: 'QueryType',
   fields: {
@@ -27,6 +39,12 @@ const queryType = new GraphQLObjectType({
       type: GraphQLString,
       resolve() {
         return 'it works';
+      },
+    },
+    testPerson: {
+      type: personType,
+      resolve() {
+        return { firstName: 'Jane', lastName: 'Doe' };
       },
     },
     testStringWithDelay: {
@@ -68,18 +86,6 @@ const queryType = new GraphQLObjectType({
       resolve() {
         throw new Error('Secret error message');
       },
-    },
-  },
-});
-
-const personType = new GraphQLObjectType({
-  name: 'PersonType',
-  fields: {
-    firstName: {
-      type: GraphQLString,
-    },
-    lastName: {
-      type: GraphQLString,
     },
   },
 });
@@ -346,6 +352,54 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
         return req.then(res => {
           expect(res.status).to.equal(200);
           return expect(res.body.data).to.deep.equal(expected);
+        });
+      });
+
+      it('can handle a basic request with cacheControl', async () => {
+        app = await createApp({
+          graphqlOptions: { schema, cacheControl: true },
+        });
+        const expected = {
+          testPerson: { firstName: 'Jane' },
+        };
+        const req = request(app)
+          .post('/graphql')
+          .send({
+            query: 'query test{ testPerson { firstName } }',
+          });
+        return req.then(res => {
+          expect(res.status).to.equal(200);
+          expect(res.body.data).to.deep.equal(expected);
+          return expect(res.body.extensions).to.deep.equal({
+            cacheControl: {
+              version: 1,
+              hints: [{ maxAge: 0, path: ['testPerson'] }],
+            },
+          });
+        });
+      });
+
+      it('can handle a basic request with cacheControl and defaultMaxAge', async () => {
+        app = await createApp({
+          graphqlOptions: { schema, cacheControl: { defaultMaxAge: 5 } },
+        });
+        const expected = {
+          testPerson: { firstName: 'Jane' },
+        };
+        const req = request(app)
+          .post('/graphql')
+          .send({
+            query: 'query test{ testPerson { firstName } }',
+          });
+        return req.then(res => {
+          expect(res.status).to.equal(200);
+          expect(res.body.data).to.deep.equal(expected);
+          return expect(res.body.extensions).to.deep.equal({
+            cacheControl: {
+              version: 1,
+              hints: [{ maxAge: 5, path: ['testPerson'] }],
+            },
+          });
         });
       });
 
