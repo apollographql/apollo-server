@@ -28,7 +28,7 @@ export class GraphQLExtension<TContext = any> {
 
   requestDidEnd?(): void;
 
-  format?(): [string, any];
+  format?(): [string, any] | undefined;
 }
 
 export class GraphQLExtensionStack<TContext = any> {
