@@ -7,31 +7,34 @@
   },
   "scripts": {
     "compile": "lerna exec -- npm run compile",
-    "lint":
-      "prettier-check --ignore-path .gitignore \"{docs/{,source/**},.,packages/**,test}/{*.js,*.ts,*.md}\"",
-    "lint-fix":
-      "prettier --write --ignore-path .gitignore \"{docs/{,source/**},.,packages/**,test}/{*.js,*.ts,*.md}\"",
+    "lint": "prettier-check --ignore-path .gitignore \"{docs/{,source/**},.,packages/**,test}/{*.js,*.ts,*.md}\"",
+    "lint-fix": "prettier --write --ignore-path .gitignore \"{docs/{,source/**},.,packages/**,test}/{*.js,*.ts,*.md}\"",
     "prebootstrap": "npm install",
     "postinstall": "lerna bootstrap",
     "pretest": "npm run compile",
     "test": "npm run testonly --",
     "posttest": "npm run lint",
-    "testonly":
-      "mocha --reporter spec --full-trace --timeout 5000 ./test/tests.js",
-    "coverage":
-      "istanbul cover -x \"*.test.js\" _mocha -- --timeout 5000 --full-trace --reporter dot ./test/tests.js",
+    "testonly": "mocha --reporter spec --full-trace --timeout 5000 ./test/tests.js",
+    "coverage": "istanbul cover -x \"*.test.js\" _mocha -- --timeout 5000 --full-trace --reporter dot ./test/tests.js",
     "pretravis": "npm run compile",
-    "travis":
-      "istanbul cover -x \"*.test.js\" _mocha -- --timeout 5000 --full-trace ./test/tests.js",
-    "postcoverage":
-      "remap-istanbul --input coverage/coverage.raw.json --type lcovonly --output coverage/lcov.info",
+    "travis": "istanbul cover -x \"*.test.js\" _mocha -- --timeout 5000 --full-trace ./test/tests.js",
+    "postcoverage": "remap-istanbul --input coverage/coverage.raw.json --type lcovonly --output coverage/lcov.info",
     "release": "lerna publish",
     "precommit": "lint-staged"
   },
   "lint-staged": {
-    "*.ts": ["prettier --write", "git add"],
-    "*.js": ["prettier --write", "git add"],
-    "*.md": ["prettier --write", "git add"]
+    "*.ts": [
+      "prettier --write",
+      "git add"
+    ],
+    "*.js": [
+      "prettier --write",
+      "git add"
+    ],
+    "*.md": [
+      "prettier --write",
+      "git add"
+    ]
   },
   "devDependencies": {
     "@types/chai": "4.1.2",
