@@ -1,6 +1,6 @@
 {
   "name": "apollo-server-core",
-  "version": "1.3.3",
+  "version": "1.3.4",
   "description": "Core engine for Apollo GraphQL server",
   "main": "dist/index.js",
   "scripts": {
@@ -39,7 +39,7 @@
     "definition": "dist/index.d.ts"
   },
   "dependencies": {
-    "apollo-cache-control": "^0.0.x",
+    "apollo-cache-control": "^0.1.0",
     "apollo-tracing": "^0.1.0",
     "graphql-extensions": "^0.0.x"
   }
