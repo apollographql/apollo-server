@@ -16,6 +16,8 @@ export class GraphQLExtension<TContext = any> {
   validationDidStart?(): void;
   validationDidEnd?(): void;
 
+  executionDidStart?(): void;
+
   willResolveField?(
     source: any,
     args: { [argName: string]: any },
@@ -23,7 +25,6 @@ export class GraphQLExtension<TContext = any> {
     info: GraphQLResolveInfo
   ): ((result: any) => void) | void;
 
-  executionDidStart?(): void;
   executionDidEnd?(): void;
 
   requestDidEnd?(): void;
@@ -50,32 +51,40 @@ export class GraphQLExtensionStack<TContext = any> {
 
   parsingDidStart() {
     for (const extension of this.extensions) {
-      if (extension.requestDidStart) {
-        extension.requestDidStart();
+      if (extension.parsingDidStart) {
+        extension.parsingDidStart();
       }
     }
   }
 
   parsingDidEnd() {
     for (const extension of this.extensions) {
-      if (extension.requestDidStart) {
-        extension.requestDidStart();
+      if (extension.parsingDidEnd) {
+        extension.parsingDidEnd();
       }
     }
   }
 
   validationDidStart() {
     for (const extension of this.extensions) {
-      if (extension.requestDidStart) {
-        extension.requestDidStart();
+      if (extension.validationDidStart) {
+        extension.validationDidStart();
       }
     }
   }
 
   validationDidEnd() {
     for (const extension of this.extensions) {
-      if (extension.requestDidStart) {
-        extension.requestDidStart();
+      if (extension.validationDidEnd) {
+        extension.validationDidEnd();
+      }
+    }
+  }
+
+  executionDidStart() {
+    for (const extension of this.extensions) {
+      if (extension.executionDidStart) {
+        extension.executionDidStart();
       }
     }
   }
@@ -93,14 +102,6 @@ export class GraphQLExtensionStack<TContext = any> {
     return (result: any) => {
       for (const handler of handlers) {
         handler(result);
-      }
-    }
-  }
-
-  executionDidStart() {
-    for (const extension of this.extensions) {
-      if (extension.requestDidStart) {
-        extension.requestDidStart();
       }
     }
   }
