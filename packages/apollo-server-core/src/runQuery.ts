@@ -64,6 +64,7 @@ export interface QueryOptions {
   // cacheControl?: boolean | CacheControlExtensionOptions;
   cacheControl?: boolean | any;
   request: Request;
+  extensions?: Array<typeof GraphQLExtension | GraphQLExtension>;
 }
 
 function isQueryOperation(query: DocumentNode, operationName: string) {
@@ -98,7 +99,7 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
   logFunction({ action: LogAction.request, step: LogStep.start });
 
   const context = options.context || {};
-  let extensions = [];
+  let extensions = options.extensions !== undefined ? options.extensions : [];
   if (options.tracing) {
     extensions.push(TracingExtension);
   }
