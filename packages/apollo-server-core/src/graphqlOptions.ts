@@ -20,6 +20,7 @@ import { CacheControlExtensionOptions } from 'apollo-cache-control';
  * - (optional) formatResponse: a function applied to each graphQL execution result
  * - (optional) fieldResolver: a custom default field resolver
  * - (optional) debug: a boolean that will print additional debug logging if execution errors occur
+ * - (optional) extensions: an array of GraphQLExtension
  *
  */
 export interface GraphQLServerOptions {
@@ -35,6 +36,7 @@ export interface GraphQLServerOptions {
   debug?: boolean;
   tracing?: boolean;
   cacheControl?: boolean | CacheControlExtensionOptions;
+  extensions?: Array<typeof GraphQLExtension | GraphQLExtension>;
 }
 
 export default GraphQLServerOptions;

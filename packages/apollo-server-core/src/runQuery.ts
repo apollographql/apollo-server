@@ -72,6 +72,7 @@ export interface QueryOptions {
   debug?: boolean;
   tracing?: boolean;
   cacheControl?: boolean | CacheControlExtensionOptions;
+  extensions?: Array<typeof GraphQLExtension | GraphQLExtension>;
 }
 
 export function runQuery(options: QueryOptions): Promise<GraphQLResponse> {
@@ -114,7 +115,7 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
   logFunction({ action: LogAction.request, step: LogStep.start });
 
   const context = options.context || {};
-  let extensions = [];
+  let extensions = options.extensions !== undefined ? options.extensions : [];
   if (options.tracing) {
     extensions.push(TracingExtension);
   }
