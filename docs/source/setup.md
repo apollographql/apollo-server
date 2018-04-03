@@ -107,13 +107,16 @@ const GraphQLOptions = {
   validationRules?: Array<ValidationRule>,
 
   // a function applied to each graphQL execution result
-  formatResponse?: Function
+  formatResponse?: Function,
 
   // a custom default field resolver
-  fieldResolver?: Function
+  fieldResolver?: Function,
 
   // a boolean that will print additional debug logging if execution errors occur
-  debug?: boolean
+  debug?: boolean,
+
+  // (optional) extra GraphQL extensions from graphql-extensions
+  extensions?: Array<GraphQLExtension>
 }
 ```
 

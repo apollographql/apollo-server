@@ -48,6 +48,7 @@ At the end of the day, Apollo Server is a simple, production-ready solution with
 * Support HTTP query batching
 * Support Apollo Tracing to get performance information about your server
 * Support Apollo Cache Control to inform caching gateways such as Apollo Engine
+* Support additional [graphql-extensions](https://github.com/apollographql/graphql-extensions) (other than Apollo Tracing or Cache Control)
 
 <h2 id="principles">Principles</h2>
 
