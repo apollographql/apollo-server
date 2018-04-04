@@ -50,7 +50,10 @@ export function graphqlAzureFunctions(
     );
   }
 
-  return (httpContext: IHttpContext, request: IFunctionRequest) => {
+  const graphqlHandler = (
+    httpContext: IHttpContext,
+    request: IFunctionRequest,
+  ) => {
     const queryRequest = {
       method: request.method,
       options: options,
@@ -85,6 +88,8 @@ export function graphqlAzureFunctions(
         httpContext.done(null, result);
       });
   };
+
+  return graphqlHandler;
 }
 
 /* This Azure Functions Handler returns the html for the GraphiQL interactive query UI
@@ -101,7 +106,10 @@ export function graphqlAzureFunctions(
 export function graphiqlAzureFunctions(
   options: GraphiQLData | AzureFunctionsGraphiQLOptionsFunction,
 ) {
-  return (httpContext: IHttpContext, request: IFunctionRequest) => {
+  const graphiqlHandler = (
+    httpContext: IHttpContext,
+    request: IFunctionRequest,
+  ) => {
     const query = request.query;
 
     resolveGraphiQLString(query, options, httpContext, request).then(
@@ -127,4 +135,6 @@ export function graphiqlAzureFunctions(
       },
     );
   };
+
+  return graphiqlHandler;
 }
