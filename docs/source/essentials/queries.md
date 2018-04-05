@@ -1,5 +1,5 @@
 ---
-title: Loading your data
+title: Queries
 description: Turning queries into data
 ---
 
