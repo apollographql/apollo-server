@@ -3,19 +3,16 @@ title: Quick start
 description: Copy and paste this code to have a GraphQL server running in 30 seconds.
 ---
 
-Here's a complete example that sets up a GraphQL server with `apollo-server-express` and `graphql-tools`. First, make sure to install the necessary modules:
+Here's a complete example that sets up a GraphQL server with `apollo-server-express`. First, make sure to install the necessary modules:
 
 ```sh
-npm install --save apollo-server-express graphql-tools graphql express body-parser
+npm install apollo-server-express graphql
 ```
 
-Then, run this code:
+Then, write this code in a file called index.js with the following contents:
 
 ```js
-const express = require('express');
-const bodyParser = require('body-parser');
-const { graphqlExpress, graphiqlExpress } = require('apollo-server-express');
-const { makeExecutableSchema } = require('graphql-tools');
+const { ApolloServer } = require('apollo-server-express');
 
 // Some fake data
 const books = [
@@ -29,36 +26,30 @@ const books = [
   },
 ];
 
-// The GraphQL schema in string form
+// The GraphQL schema
 const typeDefs = `
   type Query { books: [Book] }
   type Book { title: String, author: String }
 `;
 
-// The resolvers
+// The resolvers to load data
 const resolvers = {
   Query: { books: () => books },
 };
 
-// Put together a schema
-const schema = makeExecutableSchema({
-  typeDefs,
-  resolvers,
-});
+// build the server
+const server = new ApolloServer({ typeDefs, resolvers });
 
-// Initialize the app
-const app = express();
-
-// The GraphQL endpoint
-app.use('/graphql', bodyParser.json(), graphqlExpress({ schema }));
-
-// GraphiQL, a visual editor for queries
-app.use('/graphiql', graphiqlExpress({ endpointURL: '/graphql' }));
-
-// Start the server
-app.listen(3000, () => {
-  console.log('Go to http://localhost:3000/graphiql to run queries!');
-});
+// run the server!
+server.listen(({ url }) =>
+  console.log(`Go to ${url}/graphiql to run some queries!`),
+);
 ```
 
-To understand the example, read the docs about Apollo Server here, and also learn how to make a GraphQL schema in the [graphql-tools docs](https://www.apollographql.com/docs/graphql-tools/).
+Now you can start up your brand new Apollo Server by running this command:
+
+```sh
+node index.js
+```
+
+This is a simple example but it shows the power of Apollo Server already. Instead of writing middleware, managing the request and response, setting up routing, and handling errors, you can focus on what your data looks like and how to load it.

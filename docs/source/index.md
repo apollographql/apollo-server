@@ -1,60 +1,33 @@
 ---
-title: Build a GraphQL server with Node.js
-sidebar_title: Installing
-description: Apollo Server is a flexible, community driven, production-ready HTTP GraphQL middleware for Express, Hapi, Koa, and more.
+title: Introduction
+description: What is Apollo Server and what does it do?
 ---
 
-Apollo Server is a library that helps you connect a GraphQL schema to an HTTP server in Node. Apollo Server works with any GraphQL schema built with [GraphQL.js](https://github.com/graphql/graphql-js), so you can build your schema with that directly or with a convenience library such as [graphql-tools](https://www.apollographql.com/docs/graphql-tools/). You can use Apollo Server with all popular JavaScript HTTP servers, including Express, Connect, Hapi, Koa, Restify, and Lambda.
+Apollo Server is the best way to build a production ready GraphQL server. It is designed from day one to make it easy to connect data from your backend(s) to a well designed schema ready for clients to use! Apollo Server is designed to work with every major Node HTTP servers such as Express, Hapi, and Koa, as well as serverless environments like AWS Lambda.
 
-This server can be queried from any GraphQL client, since it supports all of the common semantics for sending GraphQL over HTTP, as [documented on graphql.org](http://graphql.org/learn/serving-over-http/). Apollo Server also supports some small extensions to the protocol, such as sending multiple GraphQL operations in one request. Read more on the [sending requests](./requests.html) page.
+Apollo Server supports the entire GraphQL Spec and can be queried from any GraphQL client. Its':
 
-[Contribute to Apollo Server on GitHub.](https://github.com/apollographql/apollo-server)
+1.  **Incrementally adoptable**, so you can drop it into an existing app today.
+2.  **Universally compatible**, so that Apollo works with any build setup, any GraphQL client, and any data source.
+3.  **Simple to get started with**, so you can start loading data right away and learn about advanced features later.
+4.  **Production ready**, so you don't have to change what you do to go live.
+5.  **Community driven**, because Apollo is driven by the community and serves a variety of use cases.
 
-<h2 id="get-started">Quick start</h2>
+These docs will help you go from getting started with Apollo to becoming an expert in no time!
 
-If you want to get started quickly, take a look at the [quick start code snippet](./example.html). This will get you started with a Node.js GraphQL server in about 10 seconds.
+<h2 id="get-started">Getting Started</h2>
 
-<h2 id="tutorial">End-to-end GraphQL server tutorial</h2>
+The docs for Apollo Server are mainly written using the [Express integration](./XXX-link-me), but most of the examples work no matter what server library you use. The docs are broken into six distinct sections to make it easy to find your way around:
 
-If you're looking to learn about how to connect to different data sources, check out our recently updated tutorial which walks you through building a server from start to finish: [How To Build a GraphQL Server to talk to SQL, MongoDB, and REST](https://dev-blog.apollodata.com/tutorial-building-a-graphql-server-cddaa023c035)
+1.  **Essentials**, which oultines everything you know in order to get started quickly
+2.  **Schema Development**, which goes over just what a GraphQL schema is, and how to write one
+3.  **Running a Server**, which explains the mechanics of exposing your schema to clients
+4.  **Best Practices**, to explain the best possible way to build a GraphQL service
+5.  **Working with Backends**, so you can work with the data you have right away
+6.  **API**, to act as an entry point to find API details for key server libraries
 
-<h2 id="selecting-package">Selecting the right package</h2>
+Getting started is as simple as installing a few libraries from [npm](./XXX-link-me)! The [setup](./XXX-link-me) is a good place to start your adventure with Apollo Server!
 
-Apollo Server is actually a family of npm packages, one for each Node.js HTTP server library.
+<h2 id="productive-development">Productive GraphQL API Development</h2>
 
-Pick the one below that suits your needs:
-
-```bash
-# Pick the one that matches your server framework
-npm install graphql apollo-server-express  # for Express or Connect
-npm install graphql apollo-server-hapi
-npm install graphql apollo-server-koa
-npm install graphql apollo-server-restify
-npm install graphql apollo-server-lambda
-npm install graphql apollo-server-micro
-npm install graphql apollo-server-azure-functions
-npm install graphql apollo-server-adonis
-```
-
-If you don't see your favorite server there, [file a PR](https://github.com/apollographql/apollo-server)!
-
-<h2 id="features">Features</h2>
-
-At the end of the day, Apollo Server is a simple, production-ready solution without too many features. Here's what you can do with it:
-
-* Attach a GraphQL schema to your HTTP server to serve requests
-* Attach GraphQL and GraphiQL via separate middlewares, on different routes
-* Accept queries via GET or POST
-* Support HTTP query batching
-* Support Apollo Tracing to get performance information about your server
-* Support Apollo Cache Control to inform caching gateways such as Apollo Engine
-
-<h2 id="principles">Principles</h2>
-
-Apollo Server is built with the following principles in mind:
-
-* **By the community, for the community**: Apollo Server's development is driven by the needs of developers using the library.
-* **Simplicity**: Keeping things simple, for example supporting a limited set of transports, makes Apollo Server easier to use, easier to contribute to, and more secure.
-* **Performance**: Apollo Server is well-tested and production-ready.
-
-Anyone is welcome to contribute to Apollo Server, just read [CONTRIBUTING.md](https://github.com/apollographql/apollo-server/blob/master/CONTRIBUTING.md), take a look at the [issues](https://github.com/apollographql/apollo-server/issues) and make your first PR!
+Apollo Server, and the rest of the Apollo ecosystem, give you a powerful set of tools to rapidly stand up a GraphQL API on top of your exsiting, or new, backends. It does this by focusing on a schema-first approach where you build your schema with a concise, declarative syntax, and fill in the logic with data fetching resolver functions. It is easy to get started with [one-step mocking](./XXX-link-here) while you fill out your data and build your UI. With powerful tools like [schema directives](./XXX-link-here), [tracing and cache control](./XXX-link-here), and [schema stitching](./XXX-link-here), you can build the service of your dreams without writing a line of code more than you need.
