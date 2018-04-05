@@ -13,17 +13,13 @@ export interface LambdaGraphQLOptionsFunction {
 // - simple, fast and secure
 //
 
-export interface LambdaHandler {
-  (event: any, context: lambda.Context, callback: lambda.Callback): void;
-}
-
 export interface IHeaders {
   [header: string]: string | number;
 }
 
 export function graphqlLambda(
   options: GraphQLOptions | LambdaGraphQLOptionsFunction,
-): LambdaHandler {
+): lambda.ProxyHandler {
   if (!options) {
     throw new Error('Apollo Server requires options.');
   }
@@ -53,7 +49,7 @@ export function graphqlLambda(
       gqlResponse = await runHttpQuery([event, lambdaContext], {
         method: event.httpMethod,
         options: options,
-        query: query,
+        query: JSON.stringify(query),
       });
       headers['Content-Type'] = 'application/json';
       statusCode = 200;
@@ -94,7 +90,7 @@ export interface LambdaGraphiQLOptionsFunction {
 
 export function graphiqlLambda(
   options: GraphiQL.GraphiQLData | LambdaGraphiQLOptionsFunction,
-) {
+): lambda.ProxyHandler {
   return (event, lambdaContext: lambda.Context, callback: lambda.Callback) => {
     const query = event.queryStringParameters;
     GraphiQL.resolveGraphiQLString(query, options, event, lambdaContext).then(
