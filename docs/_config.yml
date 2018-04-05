@@ -8,13 +8,12 @@ sidebar_categories:
   null:
     - index
     - why-apollo
-    - example
+    - getting-started
     - whats-new
   Essentials:
-    - essentials/basics 
-    - essentials/getting-started
     - essentials/building-schema
-    - essentials/loading-data
+    - essentials/queries
+    - essentials/mutations
   Schema Development:
     - schemas/types
     - schemas/resolvers
@@ -27,7 +26,6 @@ sidebar_categories:
     - server/engine
     - server/secrets
   Best Practices:
-    - best-practices/architecture
     - best-practices/authentication
     - best-practices/schema-design
     - best-practices/subscriptions
@@ -36,6 +34,7 @@ sidebar_categories:
     - best-practices/monitoring
     - best-practices/versioning
     - best-practices/schema-stitching
+    - best-practices/infrastructure
     - best-practices/deploying
   Working with Backends:
     - backends/general
@@ -47,59 +46,6 @@ sidebar_categories:
     - api/apollo-server
     - api/graphql-subscriptions
     - api/apollo-engine
-
-# 1. Start here
-#     1. Introduction
-#     2. Hello world server
-#     3. Main concepts
-#         1. Writing your first resolver
-#         2. Passing context
-#         3. Deploying your server
-#     4. GraphQL server tutorial (maybe similar/same to the blog one)
-# 2. Overview
-#     1. GraphQL basics
-#         1. Anatomy of a GraphQL query
-#         2. Anatomy of a GraphQL schema
-#     2. What a GraphQL server does (serves queries over HTTP, runs against a schema)
-#     3. GraphQL server libraries (what is apollo server, graphql-tools, etc)
-# 3. Schema development
-#     1. GraphQL types
-#     2. Resolvers
-#     3. Context
-#     4. Connecting to a backend
-#     5. Organizing your code
-# 4. Running a GraphQL server
-#     1. GraphQL middleware
-#     2. Running queries
-#     3. Apollo Engine
-#     4. Passing secrets
-# 5. Guides
-#     1. Architecture
-#     2. Authentication
-#     3. Permissions
-#     4. Testing
-#     5. Schema design
-#         1. Mutations
-#         2. Unique IDs
-#         3. Pagination
-#     6. GraphQL subscriptions
-#     7. Performance
-#     8. Caching
-#     9. Monitoring
-#     10. Versioning
-#     11. Schema stitching (?)
-# 6. Working with backends
-#     1. General tips
-#     2. SQL
-#     3. MongoDB
-#     4. REST APIs
-#     5. Prisma
-# 7. API reference
-#     1. Apollo Server
-#     2. graphql-tools
-#     3. graphql-subscriptions
-#     4. subscriptions-transport-ws
-#     5. apollo-engine
 
 github_repo: apollographql/apollo-server
 content_root: docs/source
