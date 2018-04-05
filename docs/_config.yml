@@ -19,7 +19,6 @@ sidebar_categories:
     - schemas/types
     - schemas/resolvers
     - schemas/context
-    - schemas/connecting-data
     - schemas/organizing-code
   Running a Server:
     - server/index
@@ -37,6 +36,7 @@ sidebar_categories:
     - best-practices/monitoring
     - best-practices/versioning
     - best-practices/schema-stitching
+    - best-practices/deploying
   Working with Backends:
     - backends/general
     - backends/sql
