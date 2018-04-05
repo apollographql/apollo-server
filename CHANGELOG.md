@@ -2,6 +2,10 @@
 
 All of the packages in the `apollo-server` repo are released with the same version numbers, so a new version of a particular package might not represent an actual change to that package. We generally try to mark changes that affect only one web server integration package with that package name, and don't specify package names for changes that affect most of the packages or which affect shared core packages.
 
+### vNEXT
+
+* `apollo-server-adonis`: The `Content-type` of an operation response will now be correctly set to `application/json`.
+
 ### v1.3.4
 
 * Upgrade to `apollo-cache-control@0.1.0` and allow you to specify options to it (such as the new `defaultMaxAge`) by passing `cacheControl: {defaultMaxAge: 5}` instead of `cacheControl: true`.
