@@ -36,8 +36,12 @@ export function graphqlExpress(
     );
   }
 
-  return (req: express.Request, res: express.Response, next): void => {
-    runHttpQuery([req, res], {
+  return async (
+    req: express.Request,
+    res: express.Response,
+    next,
+  ): Promise<void> => {
+    await runHttpQuery([req, res], {
       method: req.method,
       options: options,
       query: req.method === 'POST' ? req.body : req.query,
