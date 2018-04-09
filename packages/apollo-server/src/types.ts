@@ -5,7 +5,6 @@ import {
   GraphQLIsTypeOfFn,
   GraphQLTypeResolver,
 } from 'graphql';
-import * as express from 'express';
 import { CorsOptions } from 'cors';
 import {
   SchemaDirectiveVisitor,
@@ -14,31 +13,44 @@ import {
   IResolvers,
 } from 'graphql-tools';
 
-import { Node } from './node';
-import { Connector } from './connector';
+export type Context<T = any> = T;
+export type ContextFunction<T = any> = (
+  context: Context<T>,
+) => Promise<Context<T>>;
 
-export interface Context {
-  request?: express.Request;
-  connectors?: Record<string, Connector<any>>;
-  Node?: Node;
+export interface SubscriptionServerOptions {
+  path?: string;
+  onConnect?: Function;
+  onDisconnect?: Function;
+  keepAlive?: number;
 }
 
-export type ContextFunction = (context: Context) => Promise<Context>;
-
-export interface Config {
-  app?: express.Application;
+export interface Config<Server, ContextShape = any> {
+  app?: Server;
   typeDefs?: string | [string];
   resolvers?: IResolvers;
+  schema?: GraphQLSchema;
   schemaDirectives: Record<string, typeof SchemaDirectiveVisitor>;
-  engineApiKey?: string;
-  context?: Context | ContextFunction;
+  context?: Context<ContextShape> | ContextFunction<ContextShape>;
+  engine?: Boolean | string | Object;
+  cors?: CorsOptions;
+  subscriptions?: SubscriptionServerOptions | string | false;
 }
 
 export interface ListenOptions {
-  port?: number;
+  port?: string | number;
+}
+
+export interface MiddlewareOptions {
   endpoint?: string;
+  graphiql?: boolean | string | Object;
+}
+
+export interface MiddlewareRegistrationOptions<Server, Request>
+  extends MiddlewareOptions {
   cors?: CorsOptions;
-  devTools?: string;
+  app: Server;
+  request: (request: Request) => any;
 }
 
 export interface ServerInfo {
