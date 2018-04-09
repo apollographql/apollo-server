@@ -1,8 +1,8 @@
-import micro, { send } from 'micro';
+import * as express from 'express';
 import * as cors from 'cors';
+import { json } from 'body-parser';
 
-import { microGraphiql, microGraphql } from 'apollo-server-micro';
-import { get, post, router } from 'microrouter';
+import { graphqlExpress, graphiqlExpress } from 'apollo-server-express';
 
 import { Server as HttpServer } from 'http';
 
@@ -11,36 +11,12 @@ import { ListenOptions, ServerInfo } from './types';
 
 export * from './exports';
 
-const applyMiddleware = (middleware, req, res) =>
-  new Promise(s => middleware(req, res, s));
+import { ApolloServer as ExpressServer } from './express';
 
-export class ApolloServer extends ApolloServerBase<HttpServer> {
+export class ApolloServer extends ExpressServer {
   constructor(opts) {
+    opts.app = express();
     super(opts);
-  }
-
-  createApp(): HttpServer {
-    const graphql = microGraphql(this.request.bind(this));
-    const graphiql = (req, res) =>
-      microGraphiql({
-        endpointURL: '/graphql',
-        subscriptionsEndpoint: `ws://${req.headers.host}/graphql`,
-      })(req, res);
-    return micro(async (req, res) => {
-      // cors
-      await applyMiddleware(cors(), req, res);
-
-      // execute queries and serve graphiql
-      return router(
-        get('/graphql', graphql),
-        post('/graphql', graphql),
-        get('/graphiql', graphiql),
-        // XXX lets make a nice 404 page here
-      )(req, res);
-    });
-  }
-
-  getHttpServer(app) {
-    return app;
+    super.applyMiddleware();
   }
 }
