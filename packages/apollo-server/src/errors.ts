@@ -1,8 +1,3 @@
-// import * as stacks from 'stackman';
-
-// // register in depth error logs
-// const stackman = stacks();
-
 export interface ExceptionDetails {
   type?: string;
   code?: string;

@@ -1,154 +1,46 @@
-import * as express from 'express';
+import micro, { send } from 'micro';
 import * as cors from 'cors';
-import * as bodyparser from 'body-parser';
-import { graphqlExpress } from 'apollo-server-express';
-import { makeExecutableSchema, mergeSchemas } from 'graphql-tools';
-import { createServer, Server as HttpServer } from 'http';
-import expressPlayground from 'graphql-playground-middleware-express';
-import { ApolloEngine } from 'apollo-engine';
-import * as merge from 'lodash.merge';
 
-import { GraphQLSchema } from 'graphql';
-import {
-  Config,
-  ListenOptions,
-  ServerInfo,
-  Context,
-  ContextFunction,
-} from './types';
+import { microGraphiql, microGraphql } from 'apollo-server-micro';
+import { get, post, router } from 'microrouter';
 
-import {
-  Node,
-  NodeDirective,
-  UniqueDirective,
-  resolvers as nodeResolvers,
-  typeDefs as nodeTypeDefs,
-} from './node';
+import { Server as HttpServer } from 'http';
 
-import {
-  MutationResponseDirective,
-  typeDefs as mutationResponseTypeDefs,
-} from './mutationResponse';
+import { ApolloServerBase } from './ApolloServer';
+import { ListenOptions, ServerInfo } from './types';
 
-import { formatError } from './errors';
+export * from './exports';
 
-export class ApolloServer {
-  app: express.Application;
-  server?: HttpServer;
-  private engine?: ApolloEngine;
-  schema: GraphQLSchema;
-  context?: Context | ContextFunction;
+const applyMiddleware = (middleware, req, res) =>
+  new Promise(s => middleware(req, res, s));
 
-  constructor(config: Config) {
-    const {
-      typeDefs,
-      resolvers,
-      schemaDirectives,
-      context,
-      app,
-      engineApiKey,
-    } = config;
-    this.app = app ? app : express();
+export class ApolloServer extends ApolloServerBase<HttpServer> {
+  constructor(opts) {
+    super(opts);
+  }
 
-    const apiKey = engineApiKey || process.env.ENGINE_API_KEY;
-    this.engine = new ApolloEngine({
-      apiKey,
-      reporting: { disabled: !apiKey },
-    });
+  createApp(): HttpServer {
+    const graphql = microGraphql(this.request.bind(this));
+    const graphiql = (req, res) =>
+      microGraphiql({
+        endpointURL: '/graphql',
+        subscriptionsEndpoint: `ws://${req.headers.host}/graphql`,
+      })(req, res);
+    return micro(async (req, res) => {
+      // cors
+      await applyMiddleware(cors(), req, res);
 
-    this.context = context;
-
-    const localDefs = nodeTypeDefs + '\n' + mutationResponseTypeDefs;
-    this.schema = makeExecutableSchema({
-      resolvers: merge(nodeResolvers, resolvers),
-      typeDefs: Array.isArray(typeDefs)
-        ? typeDefs.reduce((prev, next) => prev + '\n' + next, localDefs)
-        : localDefs + '\n' + typeDefs,
-      schemaDirectives: merge(
-        {
-          node: NodeDirective,
-          unique: UniqueDirective,
-          mutationResponse: MutationResponseDirective,
-        },
-        schemaDirectives,
-      ),
+      // execute queries and serve graphiql
+      return router(
+        get('/graphql', graphql),
+        post('/graphql', graphql),
+        get('/graphiql', graphiql),
+        // XXX lets make a nice 404 page here
+      )(req, res);
     });
   }
 
-  private defaultListenCallback({ url }: { url: string }) {
-    console.log(`ApolloServer is listening at ${url}`);
-  }
-
-  public listen(opts: ListenOptions, listenCallback?: (ServerInfo) => void) {
-    if (!opts) {
-      opts = {};
-      listenCallback = this.defaultListenCallback;
-    }
-    if (typeof opts === 'function') {
-      listenCallback = opts;
-      opts = {};
-    }
-
-    if (!listenCallback) listenCallback = this.defaultListenCallback;
-    const options = {
-      port: process.env.PORT || 4000,
-      endpoint: '/graphql',
-      devTools: '/graphiql',
-      ...opts,
-    };
-    // setup cors
-    const corsConfig = options.cors ? cors(options.cors) : cors();
-    this.app.use(corsConfig);
-
-    this.app.use(
-      options.endpoint,
-      bodyparser.json(),
-      graphqlExpress(async request => {
-        let context: Context = { request };
-
-        try {
-          context =
-            typeof this.context === 'function'
-              ? await this.context({ request })
-              : context;
-        } catch (e) {
-          console.error(e);
-          throw e;
-        }
-
-        context.Node = new Node(context);
-
-        return {
-          schema: this.schema,
-          tracing: true,
-          cacheControl: true,
-          logFunction: this.logger,
-          formatError,
-          context,
-        };
-      }),
-    );
-
-    if (options.devTools) {
-      this.app.get(
-        options.devTools,
-        expressPlayground({ endpoint: options.endpoint }),
-      );
-    }
-
-    this.engine.listen({ port: options.port, expressApp: this.app }, () => {
-      listenCallback(this.engine.engineListeningAddress);
-    });
-  }
-
-  public async stop() {
-    if (this.engine) await this.engine.stop();
-    if (this.server) this.server.close();
-  }
-
-  private logger(...args) {
-    // console.log(...args);
+  getHttpServer(app) {
+    return app;
   }
 }
-
-export const gql = String.raw;
