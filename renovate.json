@@ -1,5 +1,5 @@
 {
-  "pinVersions": true,
+  "extends": [":pinAllExceptPeerDependencies"],
   "semanticCommits": true,
   "depTypes": [{ "depType": "dependencies", "pinVersions": false }],
   "timezone": "America/Los_Angeles",
