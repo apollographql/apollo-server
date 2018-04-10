@@ -27,7 +27,7 @@
   "dependencies": {
     "apollo-server-core": "^1.3.4",
     "apollo-server-module-graphiql": "^1.3.4",
-    "boom": "^7.1.0"
+    "boom": "7.2.0"
   },
   "devDependencies": {
     "@types/graphql": "0.12.7",

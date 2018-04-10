@@ -39,8 +39,8 @@
     "definition": "dist/index.d.ts"
   },
   "dependencies": {
-    "apollo-cache-control": "^0.1.0",
-    "apollo-tracing": "^0.1.0",
-    "graphql-extensions": "^0.0.x"
+    "apollo-cache-control": "0.1.0",
+    "apollo-tracing": "0.1.4",
+    "graphql-extensions": "0.0.10"
   }
 }
