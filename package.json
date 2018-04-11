@@ -7,8 +7,8 @@
   },
   "scripts": {
     "compile": "lerna exec -- npm run compile",
-    "lint": "prettier-check --ignore-path .gitignore \"{docs/{,source/**},.,packages/**,test}/{*.js,*.ts,*.md}\"",
-    "lint-fix": "prettier --write --ignore-path .gitignore \"{docs/{,source/**},.,packages/**,test}/{*.js,*.ts,*.md}\"",
+    "lint": "prettier-check --ignore-path .gitignore \"{docs/{,source/**},.,packages/**,test}/{*.js,*.ts}\"",
+    "lint-fix": "prettier --write --ignore-path .gitignore \"{docs/{,source/**},.,packages/**,test}/{*.js,*.ts}\"",
     "prebootstrap": "npm install",
     "postinstall": "lerna bootstrap",
     "pretest": "npm run compile",
@@ -28,10 +28,6 @@
       "git add"
     ],
     "*.js": [
-      "prettier --write",
-      "git add"
-    ],
-    "*.md": [
       "prettier --write",
       "git add"
     ]
