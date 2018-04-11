@@ -15,7 +15,7 @@ import {
 
 export type Context<T = any> = T;
 export type ContextFunction<T = any> = (
-  context: Context<T>,
+  context: Context<T>
 ) => Promise<Context<T>>;
 
 export interface SubscriptionServerOptions {
@@ -32,13 +32,24 @@ export interface Config<Server, ContextShape = any> {
   schema?: GraphQLSchema;
   schemaDirectives: Record<string, typeof SchemaDirectiveVisitor>;
   context?: Context<ContextShape> | ContextFunction<ContextShape>;
-  engine?: Boolean | string | Object;
+  engine?: boolean | Object;
   cors?: CorsOptions;
   subscriptions?: SubscriptionServerOptions | string | false;
+  devTool?: boolean;
+}
+
+export interface EngineConfig {
+  startupTimeout?: number;
+  proxyStdoutStream?: NodeJS.WritableStream;
+  proxyStderrStream?: NodeJS.WritableStream;
+  extraArgs?: string[];
+  processCleanupEvents?: string[];
 }
 
 export interface ListenOptions {
   port?: string | number;
+  host?: string;
+  engine?: EngineConfig;
 }
 
 export interface MiddlewareOptions {

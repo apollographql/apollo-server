@@ -6,10 +6,10 @@ import { graphqlExpress, graphiqlExpress } from 'apollo-server-express';
 
 import { Server as HttpServer } from 'http';
 
-import { ApolloServerBase } from './ApolloServer';
-import { ListenOptions, ServerInfo } from './types';
+import { ApolloServerBase } from './utils/ApolloServer';
+import { ListenOptions, ServerInfo } from './utils/types';
 
-export * from './exports';
+export * from './utils/exports';
 
 import { ApolloServer as ExpressServer } from './express';
 
