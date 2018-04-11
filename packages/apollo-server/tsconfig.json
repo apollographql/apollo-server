@@ -3,10 +3,13 @@
   "compilerOptions": {
     "rootDir": "./src",
     "outDir": "./dist",
+    "target": "es6",
     "lib": [
       "dom", "es2017", "esnext.asynciterable"
-    ]
+    ],
+    "jsx": "react",
+    "jsxFactory": "h"
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "types/**"],
   "exclude": ["node_modules", "dist"]
 }

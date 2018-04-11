@@ -10,6 +10,7 @@ import {
 } from 'graphql';
 import { ApolloEngine as Engine } from 'apollo-engine';
 import { SubscriptionServer } from 'subscriptions-transport-ws';
+import * as mitt from 'mitt';
 
 import { CorsOptions } from 'cors';
 import {
@@ -24,9 +25,18 @@ import {
 
 import { formatError } from './errors';
 
-// this makes it easy to get inline formatting and highlighting without
-// actually doing any work
-export const gql = String.raw;
+import { mount } from '../gui';
+
+const env = process.env.NODE_ENV;
+const IS_DEV = !process.env.CI && (env !== 'production' && env !== 'test');
+
+// taken from engine
+export function joinHostPort(host: string, port: number) {
+  if (host.includes(':')) {
+    host = `[${host}]`;
+  }
+  return `${host}:${port}`;
+}
 
 export class ApolloServerBase<Server = HttpServer, Request = any> {
   app?: Server;
@@ -39,6 +49,9 @@ export class ApolloServerBase<Server = HttpServer, Request = any> {
   private subscriptions?: any;
   private graphqlEndpoint: string = '/graphql';
   private cors?: CorsOptions;
+  private unmount?: Function;
+  private emitter: mitt.Emitter = new mitt();
+  private devTools: boolean;
 
   constructor(config: Config<Server>) {
     const {
@@ -51,8 +64,10 @@ export class ApolloServerBase<Server = HttpServer, Request = any> {
       engine,
       subscriptions,
       cors,
+      devTool,
     } = config;
 
+    this.devTools = (IS_DEV && devTool !== false) || devTool === true;
     this.context = context;
     this.schema = schema
       ? schema
@@ -79,28 +94,14 @@ export class ApolloServerBase<Server = HttpServer, Request = any> {
     const shouldLoadEngine = ENGINE_API_KEY || ENGINE_CONFIG;
     if (engine === false && shouldLoadEngine) {
       console.warn(
-        'engine is set to false when creating ApolloServer but either ENGINE_CONFIG or ENGINE_API_KEY were found in the environment',
+        'engine is set to false when creating ApolloServer but either ENGINE_CONFIG or ENGINE_API_KEY were found in the environment'
       );
     }
+    let ApolloEngine;
     if (engine !== false) {
       // detect engine, and possibly load it
       try {
-        const { ApolloEngine } = require('apollo-engine');
-        let engineConfig: any = {};
-        if (typeof engine === 'string') engineConfig.apiKey = engine;
-        // XXX this can be removed if / when engine does this automatically
-        if (typeof engine === 'boolean' || typeof engine === 'undefined') {
-          if (ENGINE_API_KEY) engineConfig.apiKey = ENGINE_API_KEY;
-          if (!ENGINE_API_KEY) {
-            engineConfig.apiKey = 'engine:local:01';
-            engineConfig.reporting = { disabled: true };
-          }
-        }
-        // yeah this isn't great, should replace with real check maybe?
-        if (typeof engine === 'object') {
-          engineConfig = { ...engine };
-        }
-        this.engine = new ApolloEngine(engineConfig);
+        ApolloEngine = require('apollo-engine').ApolloEngine;
       } catch (e) {
         if (shouldLoadEngine) {
           console.warn(`ApolloServer was unable to load Apollo Engine and found environment variables that seem like you want it to be running? To fix this, run the following command:
@@ -109,6 +110,15 @@ export class ApolloServerBase<Server = HttpServer, Request = any> {
 `);
         }
       }
+
+      if (!shouldLoadEngine && !engine) {
+        throw new Error(`
+
+ApolloServer was unable to load the configuration for Apollo Engine. Please verify that you are either passing in an engine config to the new ApolloServer call, or have set ENGINE_CONFIG or ENGINE_API_KEY in your environment
+
+          `);
+      }
+      this.engine = new ApolloEngine(engine);
     }
   }
 
@@ -154,7 +164,7 @@ export class ApolloServerBase<Server = HttpServer, Request = any> {
   server.applyMiddleware();
 
   server.listen();
-`,
+`
       );
     }
     if (!opts) {
@@ -173,6 +183,7 @@ export class ApolloServerBase<Server = HttpServer, Request = any> {
     };
 
     this.http = this.getHttpServer(this.app);
+    let subscriptionsConfig = {} as any;
     if (this.subscriptions !== false) {
       const config =
         this.subscriptions === true || typeof this.subscriptions === 'undefined'
@@ -183,14 +194,55 @@ export class ApolloServerBase<Server = HttpServer, Request = any> {
       this.createSubscriptionServer(this.http, config);
     }
 
+    // start GUI
+    this.gui();
+
     if (this.engine) {
-      this.engine.listen({ port: options.port, httpServer: this.http }, () => {
-        listenCallback(this.engine.engineListeningAddress);
-      });
+      this.engine.listen(
+        Object.assign({}, options.engine, {
+          graphqlPaths: [this.graphqlEndpoint],
+          port: options.port,
+          httpServer: this.http,
+        }),
+        () => {
+          listenCallback(this.engine.engineListeningAddress);
+          this.log('start', this.engine.engineListeningAddress);
+        }
+      );
       return;
     }
 
-    this.http.listen(options.port, listenCallback);
+    this.http.listen(options.port, () => {
+      listenCallback({ port: options.port });
+      const la: any = this.http.address();
+      // Convert IPs which mean "any address" (IPv4 or IPv6) into localhost
+      // corresponding loopback ip. Note that the url field we're setting is
+      // primarily for consumption by our test suite. If this heuristic is
+      // wrong for your use case, explicitly specify a frontend host (in the
+      // `frontends.host` field in your engine config, or in the `host`
+      // option to ApolloEngine.listen).
+      let hostForUrl = la.address;
+      if (la.address === '' || la.address === '::') {
+        hostForUrl = 'localhost';
+      }
+      la.url = `http://${joinHostPort(hostForUrl, la.port)}`;
+      this.log('start', la);
+    });
+  }
+
+  private gui() {
+    if (this.devTools) {
+      this.unmount = mount({
+        server: this.emitter,
+        schema: this.schema,
+        engineEnabled: Boolean(this.engine),
+      });
+    }
+  }
+
+  private log(message: string, payload?: any) {
+    if (!this.devTools) return;
+    this.emitter.emit(message, payload);
   }
 
   public async stop() {
@@ -233,7 +285,7 @@ export class ApolloServerBase<Server = HttpServer, Request = any> {
       {
         server,
         path: path || this.graphqlEndpoint,
-      },
+      }
     );
   }
 
@@ -245,6 +297,7 @@ when calling this.request, either call it using an error function, or bind it li
   this.request.bind(this);
 `);
     }
+    this.log('operation', {});
     let context: Context = this.context ? this.context : { request };
 
     try {
@@ -271,11 +324,7 @@ when calling this.request, either call it using an error function, or bind it li
     // console.log(...args);
   }
 
-  private defaultListenCallback({ url }: { url?: string } = {}) {
-    console.log(
-      `ApolloServer is listening at ${url || 'http://localhost:4000'}`,
-    );
-  }
+  private defaultListenCallback() {}
 
   /* region: vanilla ApolloServer */
   createApp(): Server {
@@ -295,7 +344,7 @@ when calling this.request, either call it using an error function, or bind it li
   /* region: variant ApolloServer */
 
   registerMiddleware(
-    config: MiddlewareRegistrationOptions<Server, Request>,
+    config: MiddlewareRegistrationOptions<Server, Request>
   ): Server | void {
     throw new Error(`It looks like you called server.addMiddleware on an ApolloServer that is missing a server! Make sure you pass in an app when creating a server:
       
@@ -309,7 +358,7 @@ when calling this.request, either call it using an error function, or bind it li
 
   getHttpServer(app: Server): HttpServer {
     throw new Error(
-      `It looks like you are trying to use subscriptions with ApolloServer but we couldn't find an http server from your framework. To fix this, please open an issue for you variant at the apollographql/apollo-server repo`,
+      `It looks like you are trying to use subscriptions with ApolloServer but we couldn't find an http server from your framework. To fix this, please open an issue for you variant at the apollographql/apollo-server repo`
     );
   }
 
