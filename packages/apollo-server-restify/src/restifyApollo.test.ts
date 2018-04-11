@@ -30,6 +30,10 @@ function createApp(options: CreateAppOptions = {}) {
 }
 
 describe('graphqlRestify', () => {
+  // As was reported in https://github.com/apollographql/apollo-server/pull/921,
+  // Restify monkey-patches Node internals, which can have adverse affects on
+  // other environmental participants like Express.  Therefore, restify is being
+  // dynamically loaded, rather than imported at top-level.
   before(async () => {
     const restifyApollo = await import('./restifyApollo');
 
