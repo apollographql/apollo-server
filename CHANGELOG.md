@@ -5,6 +5,7 @@ All of the packages in the `apollo-server` repo are released with the same versi
 ### vNEXT
 
 * `apollo-server-adonis`: The `Content-type` of an operation response will now be correctly set to `application/json`.
+* `apollo-server-core`: Fix `TypeError` on GET requests with missing `query` parameter
 
 ### v1.3.4
 
