@@ -34,9 +34,9 @@ async function StartServer() {
     plugin: graphqlHapi,
     options: {
       path: '/graphql',
-      graphqlOptions: (request) => ({
+      graphqlOptions: request => ({
         schema: myGraphQLSchema,
-        context: request
+        context: request,
       }),
       route: {
         cors: true,
