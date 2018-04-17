@@ -63,7 +63,7 @@ export function graphqlAzureFunctions(
         const result = {
           status: 200,
           headers: { 'Content-Type': 'application/json' },
-          body: gqlResponse,
+          body: JSON.parse(gqlResponse),
         };
 
         httpContext.res = result;
