@@ -5,6 +5,7 @@ All of the packages in the `apollo-server` repo are released with the same versi
 ### vNEXT
 
 * `apollo-server-adonis`: The `Content-type` of an operation response will now be correctly set to `application/json`.
+* Return a promise from the `graphqlExpress` middleware function to allow consumers to wrap the function, resolve the promise and call `next()` if they wish to run post-execution middlewares. [PR #945](https://github.com/apollographql/apollo-server/pull/945)
 
 ### v1.3.4
 
