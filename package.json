@@ -45,7 +45,7 @@
     "graphql": "0.13.2",
     "husky": "0.14.3",
     "istanbul": "1.1.0-alpha.1",
-    "lerna": "2.10.1",
+    "lerna": "2.10.2",
     "lint-staged": "6.1.1",
     "mocha": "5.0.4",
     "npm-check-updates": "2.14.1",
