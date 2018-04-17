@@ -1,5 +1,9 @@
 # Changelog
 
+### v0.1.1
+
+* Fix `defaultMaxAge` feature (introduced in 0.1.0) so that `maxAge: 0` overrides the default, as previously documented.
+
 ### v0.1.0
 
 * **New feature**: New `defaultMaxAge` constructor option. (`apollo-server-*` will be updated to allow you to pass constructor options to the extension.)
