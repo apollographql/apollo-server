@@ -2,9 +2,10 @@
 
 All of the packages in the `apollo-server` repo are released with the same version numbers, so a new version of a particular package might not represent an actual change to that package. We generally try to mark changes that affect only one web server integration package with that package name, and don't specify package names for changes that affect most of the packages or which affect shared core packages.
 
-### v1.3.5
+### vNEXT
 
-* Return a promise from the graphqlExpress middleware function to allow consumers to wrap the function, resolve the promise and call `next()` if they wish to run post-execution middlewares. See https://github.com/apollographql/apollo-server/issues/462
+* `apollo-server-adonis`: The `Content-type` of an operation response will now be correctly set to `application/json`.
+* Return a promise from the `graphqlExpress` middleware function to allow consumers to wrap the function, resolve the promise and call `next()` if they wish to run post-execution middlewares. [PR #945](https://github.com/apollographql/apollo-server/pull/945)
 
 ### v1.3.4
 
