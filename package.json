@@ -49,7 +49,7 @@
     "lint-staged": "6.1.1",
     "mocha": "5.0.4",
     "npm-check-updates": "2.14.1",
-    "prettier": "1.12.0",
+    "prettier": "1.12.1",
     "prettier-check": "2.0.0",
     "remap-istanbul": "0.11.0",
     "sinon": "4.5.0",
