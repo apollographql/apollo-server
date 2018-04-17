@@ -63,8 +63,16 @@ export function graphqlAzureFunctions(
 
     return runHttpQuery([httpContext, request], queryRequest)
       .then(gqlResponse => {
-        httpContext.res.setHeader('Content-Type', 'application/json');
-        httpContext.res.raw(gqlResponse);
+        const result = {
+          status: HttpStatusCodes.OK,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: gqlResponse,
+          isRaw: true,
+        };
+        httpContext.res = result;
+        httpContext.done(null, result);
       })
       .catch(error => {
         const result = {
@@ -98,8 +106,16 @@ export function graphiqlAzureFunctions(
 
     resolveGraphiQLString(query, options, httpContext, request).then(
       graphiqlString => {
-        httpContext.res.setHeader('Content-Type', 'text/html; charset-utf-8');
-        httpContext.res.raw(graphiqlString);
+        const result = {
+          status: HttpStatusCodes.OK,
+          headers: {
+            'Content-Type': 'text/html',
+          },
+          body: graphiqlString,
+          isRaw: true,
+        };
+        httpContext.res = result;
+        httpContext.done(null, result);
       },
       error => {
         httpContext.res = {
