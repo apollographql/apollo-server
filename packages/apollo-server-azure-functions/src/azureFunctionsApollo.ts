@@ -4,7 +4,10 @@ import {
   HttpStatusCodes,
 } from 'azure-functions-typescript';
 import { GraphQLOptions, runHttpQuery } from 'apollo-server-core';
-import * as GraphiQL from 'apollo-server-module-graphiql';
+import {
+  GraphiQLData,
+  resolveGraphiQLString,
+} from 'apollo-server-module-graphiql';
 
 export interface AzureFunctionsGraphQLOptionsFunction {
   (context: IHttpContext): GraphQLOptions | Promise<GraphQLOptions>;
@@ -30,8 +33,8 @@ export interface IHeaders {
 
 export interface AzureFunctionsGraphiQLOptionsFunction {
   (context: IHttpContext, request: IFunctionRequest):
-    | GraphiQL.GraphiQLData
-    | Promise<GraphiQL.GraphiQLData>;
+    | GraphiQLData
+    | Promise<GraphiQLData>;
 }
 
 export function graphqlAzureFunctions(
@@ -61,13 +64,14 @@ export function graphqlAzureFunctions(
     return runHttpQuery([httpContext, request], queryRequest)
       .then(gqlResponse => {
         const result = {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' },
+          status: HttpStatusCodes.OK,
+          headers: {
+            'Content-Type': 'application/json',
+          },
           body: gqlResponse,
+          isRaw: true,
         };
-
         httpContext.res = result;
-
         httpContext.done(null, result);
       })
       .catch(error => {
@@ -78,7 +82,6 @@ export function graphqlAzureFunctions(
         };
 
         httpContext.res = result;
-
         httpContext.done(null, result);
       });
   };
@@ -96,22 +99,23 @@ export function graphqlAzureFunctions(
  */
 
 export function graphiqlAzureFunctions(
-  options: GraphiQL.GraphiQLData | AzureFunctionsGraphiQLOptionsFunction,
+  options: GraphiQLData | AzureFunctionsGraphiQLOptionsFunction,
 ) {
   return (httpContext: IHttpContext, request: IFunctionRequest) => {
     const query = request.query;
 
-    GraphiQL.resolveGraphiQLString(query, options, httpContext, request).then(
+    resolveGraphiQLString(query, options, httpContext, request).then(
       graphiqlString => {
-        httpContext.res = {
-          status: 200,
+        const result = {
+          status: HttpStatusCodes.OK,
           headers: {
             'Content-Type': 'text/html',
           },
           body: graphiqlString,
+          isRaw: true,
         };
-
-        httpContext.done(null, httpContext.res);
+        httpContext.res = result;
+        httpContext.done(null, result);
       },
       error => {
         httpContext.res = {
