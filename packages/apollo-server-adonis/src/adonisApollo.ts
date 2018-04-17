@@ -36,7 +36,7 @@ export function graphqlAdonis(
     }).then(
       gqlResponse => {
         response.type('application/json');
-        response.send(gqlResponse);
+        response.json(gqlResponse);
       },
       (error: HttpQueryError) => {
         if ('HttpQueryError' !== error.name) {
