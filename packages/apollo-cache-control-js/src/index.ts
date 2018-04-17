@@ -146,7 +146,7 @@ function mergeHints(hint: CacheHint, otherHint: CacheHint | undefined): CacheHin
   if (!otherHint) return hint;
 
   return {
-    maxAge: otherHint.maxAge || hint.maxAge,
+    maxAge: otherHint.maxAge !== undefined ? otherHint.maxAge : hint.maxAge,
     scope: otherHint.scope || hint.scope
   };
 }
