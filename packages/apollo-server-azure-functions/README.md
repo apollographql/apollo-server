@@ -41,9 +41,9 @@ const schema = makeExecutableSchema({
   resolvers,
 });
 
-export function run(context, request) {
+module.exports = function run(context, request) {
   graphqlAzureFunctions({ schema })(context, request);
-}
+};
 ```
 
 ### GraphiQL
