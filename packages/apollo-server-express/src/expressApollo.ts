@@ -44,7 +44,10 @@ export function graphqlExpress(
     }).then(
       gqlResponse => {
         res.setHeader('Content-Type', 'application/json');
-        res.setHeader('Content-Length', Buffer.byteLength(gqlResponse, 'utf8'));
+        res.setHeader(
+          'Content-Length',
+          Buffer.byteLength(gqlResponse, 'utf8').toString(),
+        );
         res.write(gqlResponse);
         res.end();
       },
