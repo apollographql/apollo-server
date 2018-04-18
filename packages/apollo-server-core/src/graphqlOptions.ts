@@ -22,16 +22,16 @@ import { CacheControlExtensionOptions } from 'apollo-cache-control';
  * - (optional) debug: a boolean that will print additional debug logging if execution errors occur
  *
  */
-export interface GraphQLServerOptions {
+ export interface GraphQLServerOptions<TContext = any> {
   schema: GraphQLSchema;
   formatError?: Function;
   rootValue?: any;
-  context?: any;
+  context?: TContext;
   logFunction?: LogFunction;
   formatParams?: Function;
   validationRules?: Array<(context: ValidationContext) => any>;
   formatResponse?: Function;
-  fieldResolver?: GraphQLFieldResolver<any, any>;
+  fieldResolver?: GraphQLFieldResolver<any, TContext>;
   debug?: boolean;
   tracing?: boolean;
   cacheControl?: boolean | CacheControlExtensionOptions;
