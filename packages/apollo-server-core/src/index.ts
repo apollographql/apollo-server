@@ -16,4 +16,5 @@ export {
   ParseError,
   ValidationError,
   AuthenticationError,
+  formatError,
 } from './errors';

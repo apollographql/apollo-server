@@ -1,7 +1,13 @@
 import { makeExecutableSchema } from 'graphql-tools';
 import { Server as HttpServer } from 'http';
-
-import { execute, GraphQLSchema, subscribe, ExecutionResult } from 'graphql';
+import {
+  execute,
+  GraphQLSchema,
+  subscribe,
+  ExecutionResult,
+  GraphQLError,
+} from 'graphql';
+import { formatError } from 'apollo-server-core';
 import { ApolloEngine as Engine } from 'apollo-engine';
 import {
   SubscriptionServer,
@@ -18,8 +24,6 @@ import {
   Context,
   ContextFunction,
 } from './types';
-
-import { formatError } from './errors';
 
 // taken from engine
 export function joinHostPort(host: string, port: number) {
@@ -43,6 +47,7 @@ export class ApolloServerBase<
   private graphqlEndpoint: string = '/graphql';
   private cors?: Cors;
   private engineEnabled: boolean = false;
+  private debug?: boolean;
 
   constructor(config: Config<Server, Request, Cors>) {
     const {
@@ -56,8 +61,10 @@ export class ApolloServerBase<
       engineInRequestPath,
       subscriptions,
       cors,
+      debug,
     } = config;
 
+    this.debug = debug;
     this.context = context;
     // XXX should we move this to the `start` call? This would make hot
     // reloading eaiser but may not be worth it?
@@ -236,7 +243,7 @@ ApolloServer was unable to load the configuration for Apollo Engine. Please veri
         onOperation: async (_: string, connection: ExecutionParams) => {
           connection.formatResponse = (value: ExecutionResult) => ({
             ...value,
-            errors: value.errors && value.errors.map(formatError),
+            errors: value.errors && value.errors.map(err => formatError(err)),
           });
           let context: Context = this.context ? this.context : { connection };
 
@@ -285,7 +292,8 @@ when calling this.request, either call it using an error function, or bind it li
       schema: this.schema,
       tracing: Boolean(this.engineEnabled),
       cacheControl: Boolean(this.engineEnabled),
-      // formatError,
+      formatError: (e: GraphQLError) => formatError(e, Boolean(this.debug)),
+      debug: Boolean(this.debug),
       context,
     };
   }
