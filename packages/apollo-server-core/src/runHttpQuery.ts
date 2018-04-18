@@ -1,15 +1,10 @@
-import {
-  parse,
-  getOperationAST,
-  DocumentNode,
-  formatError,
-  ExecutionResult,
-} from 'graphql';
+import { parse, getOperationAST, DocumentNode, ExecutionResult } from 'graphql';
 import { runQuery } from './runQuery';
 import {
   default as GraphQLOptions,
   resolveGraphqlOptions,
 } from './graphqlOptions';
+import { formatError } from './errors';
 
 export interface HttpQueryRequest {
   method: string;
@@ -56,7 +51,12 @@ export async function runHttpQuery(
   } catch (e) {
     throw new HttpQueryError(500, e.message);
   }
-  const formatErrorFn = optionsObject.formatError || formatError;
+  const formatErrorFn = error =>
+    optionsObject.formatError(formatError(error)) || formatError;
+  const debugDefault =
+    process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test';
+  const debug =
+    optionsObject.debug !== undefined ? optionsObject.debug : debugDefault;
   let requestPayload;
 
   switch (request.method) {
@@ -151,7 +151,7 @@ export async function runHttpQuery(
         operationName: operationName,
         logFunction: optionsObject.logFunction,
         validationRules: optionsObject.validationRules,
-        formatError: formatErrorFn,
+        formatError: optionsObject.formatError,
         formatResponse: optionsObject.formatResponse,
         fieldResolver: optionsObject.fieldResolver,
         debug: optionsObject.debug,
@@ -178,6 +178,8 @@ export async function runHttpQuery(
 
   if (!isBatch) {
     const gqlResponse = responses[0];
+    //This code is run on parse/validation errors and any other error that
+    //doesn't reach GraphQL execution
     if (gqlResponse.errors && typeof gqlResponse.data === 'undefined') {
       throw new HttpQueryError(400, JSON.stringify(gqlResponse), true, {
         'Content-Type': 'application/json',
