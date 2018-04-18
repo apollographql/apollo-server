@@ -10,6 +10,6 @@
     "noUnusedLocals": true,
     "noImplicitAny": true
   },
-  "include": ["src/**/*", "types/**"],
+  "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
 }
