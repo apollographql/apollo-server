@@ -34,7 +34,7 @@ export function graphqlLambda(
     );
   }
 
-  return async (
+  const graphqlHandler = async (
     event,
     lambdaContext: lambda.Context,
     callback: lambda.Callback,
@@ -73,6 +73,8 @@ export function graphqlLambda(
       });
     }
   };
+
+  return graphqlHandler;
 }
 
 export interface LambdaGraphiQLOptionsFunction {
@@ -95,7 +97,11 @@ export interface LambdaGraphiQLOptionsFunction {
 export function graphiqlLambda(
   options: GraphiQL.GraphiQLData | LambdaGraphiQLOptionsFunction,
 ) {
-  return (event, lambdaContext: lambda.Context, callback: lambda.Callback) => {
+  const graphiqlHandler = (
+    event,
+    lambdaContext: lambda.Context,
+    callback: lambda.Callback,
+  ) => {
     const query = event.queryStringParameters;
     GraphiQL.resolveGraphiQLString(query, options, event, lambdaContext).then(
       graphiqlString => {
@@ -115,4 +121,6 @@ export function graphiqlLambda(
       },
     );
   };
+
+  return graphiqlHandler;
 }

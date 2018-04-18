@@ -1,6 +1,6 @@
 {
   "name": "apollo-server-core",
-  "version": "1.3.3",
+  "version": "1.3.4",
   "description": "Core engine for Apollo GraphQL server",
   "main": "dist/index.js",
   "scripts": {
@@ -26,10 +26,10 @@
   "homepage": "https://github.com/apollographql/apollo-server#readme",
   "devDependencies": {
     "@types/fibers": "0.0.30",
-    "@types/graphql": "0.12.6",
+    "@types/graphql": "0.12.7",
     "fibers": "1.0.15",
     "meteor-promise": "0.8.6",
-    "typescript": "2.7.2"
+    "typescript": "2.8.1"
   },
   "peerDependencies": {
     "graphql": "^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0"
@@ -39,7 +39,7 @@
     "definition": "dist/index.d.ts"
   },
   "dependencies": {
-    "apollo-cache-control": "^0.0.x",
+    "apollo-cache-control": "^0.1.0",
     "apollo-tracing": "^0.1.0",
     "graphql-extensions": "^0.0.x"
   }
