@@ -117,7 +117,9 @@ ApolloServer was unable to load the configuration for Apollo Engine. Please veri
 
           `);
       }
-      this.engine = new ApolloEngine(engine);
+      this.engine = new ApolloEngine(
+        typeof engine === 'boolean' ? undefined : engine,
+      );
     }
 
     // XXX should this allow for header overrides from graphql-playground?
