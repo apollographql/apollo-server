@@ -7,8 +7,8 @@
     "lib": [
       "dom", "es2017", "esnext.asynciterable"
     ],
-    "jsx": "react",
-    "jsxFactory": "h"
+    "noUnusedLocals": true,
+    "noImplicitAny": true
   },
   "include": ["src/**/*", "types/**"],
   "exclude": ["node_modules", "dist"]
