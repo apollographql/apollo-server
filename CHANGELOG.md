@@ -6,6 +6,7 @@ All of the packages in the `apollo-server` repo are released with the same versi
 
 * `apollo-server-adonis`: The `Content-type` of an operation response will now be correctly set to `application/json`. [PR #842](https://github.com/apollographql/apollo-server/pull/842) [PR #910](https://github.com/apollographql/apollo-server/pull/910)
 * `apollo-server-azure-functions`: Fix non-functional Azure Functions implementation and update examples in Azure Functions' `README.md`. [PR #753](https://github.com/apollographql/apollo-server/pull/753) [Issue #684](https://github.com/apollographql/apollo-server/issues/684)
+* `apollo-server-core`: Fix `TypeError` on GET requests with missing `query` parameter
 
 ### v1.3.4
 
