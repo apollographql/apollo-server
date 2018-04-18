@@ -105,6 +105,8 @@ export async function runHttpQuery(
         if (typeof query === 'string') {
           // preparse the query incase of GET so we can assert the operation.
           query = parse(query);
+        } else if (!query) {
+          throw new HttpQueryError(400, 'Must provide query string.');
         }
 
         if (!isQueryOperation(query, requestParams.operationName)) {

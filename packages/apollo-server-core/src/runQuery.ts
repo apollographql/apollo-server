@@ -19,7 +19,10 @@ import {
   GraphQLExtensionStack,
 } from 'graphql-extensions';
 import { TracingExtension } from 'apollo-tracing';
-import { CacheControlExtension } from 'apollo-cache-control';
+import {
+  CacheControlExtension,
+  CacheControlExtensionOptions,
+} from 'apollo-cache-control';
 
 export interface GraphQLResponse {
   data?: object;
@@ -68,7 +71,7 @@ export interface QueryOptions {
   formatResponse?: Function;
   debug?: boolean;
   tracing?: boolean;
-  cacheControl?: boolean;
+  cacheControl?: boolean | CacheControlExtensionOptions;
 }
 
 export function runQuery(options: QueryOptions): Promise<GraphQLResponse> {
@@ -115,8 +118,10 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
   if (options.tracing) {
     extensions.push(TracingExtension);
   }
-  if (options.cacheControl) {
+  if (options.cacheControl === true) {
     extensions.push(CacheControlExtension);
+  } else if (options.cacheControl) {
+    extensions.push(new CacheControlExtension(options.cacheControl));
   }
   const extensionStack =
     extensions.length > 0 && new GraphQLExtensionStack(extensions);

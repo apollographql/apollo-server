@@ -36,7 +36,11 @@ export function graphqlExpress(
     );
   }
 
-  return (req: express.Request, res: express.Response, next): void => {
+  const graphqlHandler = (
+    req: express.Request,
+    res: express.Response,
+    next,
+  ): void => {
     runHttpQuery([req, res], {
       method: req.method,
       options: options,
@@ -44,7 +48,10 @@ export function graphqlExpress(
     }).then(
       gqlResponse => {
         res.setHeader('Content-Type', 'application/json');
-        res.setHeader('Content-Length', Buffer.byteLength(gqlResponse, 'utf8'));
+        res.setHeader(
+          'Content-Length',
+          Buffer.byteLength(gqlResponse, 'utf8').toString(),
+        );
         res.write(gqlResponse);
         res.end();
       },
@@ -65,6 +72,8 @@ export function graphqlExpress(
       },
     );
   };
+
+  return graphqlHandler;
 }
 
 export interface ExpressGraphiQLOptionsFunction {
@@ -87,7 +96,11 @@ export interface ExpressGraphiQLOptionsFunction {
 export function graphiqlExpress(
   options: GraphiQL.GraphiQLData | ExpressGraphiQLOptionsFunction,
 ) {
-  return (req: express.Request, res: express.Response, next) => {
+  const graphiqlHandler = (
+    req: express.Request,
+    res: express.Response,
+    next,
+  ) => {
     const query = req.url && url.parse(req.url, true).query;
     GraphiQL.resolveGraphiQLString(query, options, req).then(
       graphiqlString => {
@@ -98,4 +111,6 @@ export function graphiqlExpress(
       error => next(error),
     );
   };
+
+  return graphiqlHandler;
 }

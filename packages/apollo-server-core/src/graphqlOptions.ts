@@ -5,6 +5,7 @@ import {
 } from 'graphql';
 import { LogFunction } from './runQuery';
 import { GraphQLExtension } from 'graphql-extensions';
+import { CacheControlExtensionOptions } from 'apollo-cache-control';
 
 /*
  * GraphQLServerOptions
@@ -21,19 +22,19 @@ import { GraphQLExtension } from 'graphql-extensions';
  * - (optional) debug: a boolean that will print additional debug logging if execution errors occur
  *
  */
-export interface GraphQLServerOptions {
+export interface GraphQLServerOptions<TContext = any> {
   schema: GraphQLSchema;
   formatError?: Function;
   rootValue?: any;
-  context?: any;
+  context?: TContext;
   logFunction?: LogFunction;
   formatParams?: Function;
   validationRules?: Array<(context: ValidationContext) => any>;
   formatResponse?: Function;
-  fieldResolver?: GraphQLFieldResolver<any, any>;
+  fieldResolver?: GraphQLFieldResolver<any, TContext>;
   debug?: boolean;
   tracing?: boolean;
-  cacheControl?: boolean;
+  cacheControl?: boolean | CacheControlExtensionOptions;
 }
 
 export default GraphQLServerOptions;

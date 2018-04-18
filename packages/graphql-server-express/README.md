@@ -1,0 +1,1 @@
+The `graphql-server-express` package is now called [`apollo-server-express`](https://www.npmjs.com/package/apollo-server-express). We are continuing to release matching versions of the package under the old name, but we recommend you switch to using the new name. The API is identical.

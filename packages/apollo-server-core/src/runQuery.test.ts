@@ -92,7 +92,7 @@ describe('runQuery', () => {
     const query = `{ testString }`;
     const expected = { testString: 'it works' };
     return runQuery({ schema, query: query }).then(res => {
-      return expect(res.data).to.deep.equal(expected);
+      expect(res.data).to.deep.equal(expected);
     });
   });
 
@@ -100,7 +100,7 @@ describe('runQuery', () => {
     const query = parse(`{ testString }`);
     const expected = { testString: 'it works' };
     return runQuery({ schema, query: query }).then(res => {
-      return expect(res.data).to.deep.equal(expected);
+      expect(res.data).to.deep.equal(expected);
     });
   });
 
@@ -114,7 +114,7 @@ describe('runQuery', () => {
     }).then(res => {
       expect(res.data).to.be.undefined;
       expect(res.errors.length).to.equal(1);
-      return expect(res.errors[0].message).to.match(expected);
+      expect(res.errors[0].message).to.match(expected);
     });
   });
 
@@ -129,7 +129,7 @@ describe('runQuery', () => {
     }).then(res => {
       logStub.restore();
       expect(logStub.callCount).to.equal(1);
-      return expect(logStub.getCall(0).args[0]).to.match(expected);
+      expect(logStub.getCall(0).args[0]).to.match(expected);
     });
   });
 
@@ -142,7 +142,7 @@ describe('runQuery', () => {
       debug: false,
     }).then(res => {
       logStub.restore();
-      return expect(logStub.callCount).to.equal(0);
+      expect(logStub.callCount).to.equal(0);
     });
   });
 
@@ -157,7 +157,7 @@ describe('runQuery', () => {
     }).then(res => {
       expect(res.data).to.be.undefined;
       expect(res.errors.length).to.equal(1);
-      return expect(res.errors[0].message).to.deep.equal(expected);
+      expect(res.errors[0].message).to.deep.equal(expected);
     });
   });
 
@@ -166,7 +166,7 @@ describe('runQuery', () => {
     const expected = { testRootValue: 'it also works' };
     return runQuery({ schema, query: query, rootValue: 'it also' }).then(
       res => {
-        return expect(res.data).to.deep.equal(expected);
+        expect(res.data).to.deep.equal(expected);
       },
     );
   });
@@ -175,7 +175,7 @@ describe('runQuery', () => {
     const query = `{ testContextValue }`;
     const expected = { testContextValue: 'it still works' };
     return runQuery({ schema, query: query, context: 'it still' }).then(res => {
-      return expect(res.data).to.deep.equal(expected);
+      expect(res.data).to.deep.equal(expected);
     });
   });
 
@@ -192,7 +192,7 @@ describe('runQuery', () => {
       },
     }).then(res => {
       expect(res.data).to.deep.equal(expected);
-      return expect(res['extensions']).to.equal('it still');
+      expect(res['extensions']).to.equal('it still');
     });
   });
 
@@ -204,7 +204,7 @@ describe('runQuery', () => {
       query: query,
       variables: { base: 1 },
     }).then(res => {
-      return expect(res.data).to.deep.equal(expected);
+      expect(res.data).to.deep.equal(expected);
     });
   });
 
@@ -216,7 +216,7 @@ describe('runQuery', () => {
       schema,
       query: query,
     }).then(res => {
-      return expect(res.errors[0].message).to.deep.equal(expected);
+      expect(res.errors[0].message).to.deep.equal(expected);
     });
   });
 
@@ -243,7 +243,7 @@ describe('runQuery', () => {
       testString: 'it works',
     };
     return runQuery({ schema, query: query, operationName: 'Q1' }).then(res => {
-      return expect(res.data).to.deep.equal(expected);
+      expect(res.data).to.deep.equal(expected);
     });
   });
 

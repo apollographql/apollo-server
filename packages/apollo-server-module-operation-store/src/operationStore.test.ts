@@ -59,7 +59,7 @@ describe('operationStore', () => {
     const store = new OperationStore(schema);
     store.put(query);
 
-    return expect(print(store.get('testquery'))).to.deep.equal(expected);
+    expect(print(store.get('testquery'))).to.deep.equal(expected);
   });
 
   it('can store a Document and return its ast', () => {
@@ -69,7 +69,7 @@ describe('operationStore', () => {
     const store = new OperationStore(schema);
     store.put(parse(query));
 
-    return expect(print(store.get('testquery'))).to.deep.equal(expected);
+    expect(print(store.get('testquery'))).to.deep.equal(expected);
   });
 
   it('can store queries and return them with getMap', () => {
@@ -79,21 +79,21 @@ describe('operationStore', () => {
     const store = new OperationStore(schema);
     store.put(query);
     store.put(query2);
-    return expect(store.getMap().size).to.equal(2);
+    expect(store.getMap().size).to.equal(2);
   });
 
   it('throws a parse error if the query is invalid', () => {
     const query = `query testquery{ testString`;
 
     const store = new OperationStore(schema);
-    return expect(() => store.put(query)).to.throw(/Syntax Error/);
+    expect(() => store.put(query)).to.throw(/Syntax Error/);
   });
 
   it('throws a validation error if the query is invalid', () => {
     const query = `query testquery { testStrin }`;
 
     const store = new OperationStore(schema);
-    return expect(() => store.put(query)).to.throw(/Cannot query field/);
+    expect(() => store.put(query)).to.throw(/Cannot query field/);
   });
 
   it('throws an error if there is more than one query or mutation', () => {
@@ -103,7 +103,7 @@ describe('operationStore', () => {
       `;
 
     const store = new OperationStore(schema);
-    return expect(() => store.put(query)).to.throw(
+    expect(() => store.put(query)).to.throw(
       /OperationDefinitionNode must contain only one definition/,
     );
   });
@@ -117,7 +117,7 @@ describe('operationStore', () => {
 
     const store = new OperationStore(schema);
 
-    return expect(() => store.put(query)).to.throw(/must contain at least/);
+    expect(() => store.put(query)).to.throw(/must contain at least/);
   });
 
   it('can delete stored operations', () => {
@@ -127,6 +127,6 @@ describe('operationStore', () => {
     store.put(query);
     store.delete('testquery');
 
-    return expect(store.get('testquery')).to.be.undefined;
+    expect(store.get('testquery')).to.be.undefined;
   });
 });

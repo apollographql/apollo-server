@@ -4,17 +4,19 @@ sidebar_title: Installing
 description: Apollo Server is a flexible, community driven, production-ready HTTP GraphQL middleware for Express, Hapi, Koa, and more.
 ---
 
-Apollo Server is a library that helps you connect a GraphQL schema to an HTTP server in Node. If you want to get started quickly, take a look at the [end-to-end example](./example.html).
-
-Apollo Server works with any GraphQL schema built with [GraphQL.js](https://github.com/graphql/graphql-js), so you can build your schema with that directly or with a convenience library such as [graphql-tools](https://www.apollographql.com/docs/graphql-tools/). You can use Apollo Server with all popular JavaScript HTTP servers, including Express, Connect, Hapi, Koa, Restify, and Lambda.
+Apollo Server is a library that helps you connect a GraphQL schema to an HTTP server in Node. Apollo Server works with any GraphQL schema built with [GraphQL.js](https://github.com/graphql/graphql-js), so you can build your schema with that directly or with a convenience library such as [graphql-tools](https://www.apollographql.com/docs/graphql-tools/). You can use Apollo Server with all popular JavaScript HTTP servers, including Express, Connect, Hapi, Koa, Restify, and Lambda.
 
 This server can be queried from any GraphQL client, since it supports all of the common semantics for sending GraphQL over HTTP, as [documented on graphql.org](http://graphql.org/learn/serving-over-http/). Apollo Server also supports some small extensions to the protocol, such as sending multiple GraphQL operations in one request. Read more on the [sending requests](./requests.html) page.
 
 [Contribute to Apollo Server on GitHub.](https://github.com/apollographql/apollo-server)
 
-<h2 id="tutorial">GraphQL server tutorial</h2>
+<h2 id="get-started">Quick start</h2>
 
-If you're just getting started writing GraphQL servers, check out our recently updated tutorial which walks you through building a server from start to finish: [How To Build a GraphQL Server to talk to SQL, MongoDB, and REST](https://dev-blog.apollodata.com/tutorial-building-a-graphql-server-cddaa023c035)
+If you want to get started quickly, take a look at the [quick start code snippet](./example.html). This will get you started with a Node.js GraphQL server in about 10 seconds.
+
+<h2 id="tutorial">End-to-end GraphQL server tutorial</h2>
+
+If you're looking to learn about how to connect to different data sources, check out our recently updated tutorial which walks you through building a server from start to finish: [How To Build a GraphQL Server to talk to SQL, MongoDB, and REST](https://dev-blog.apollodata.com/tutorial-building-a-graphql-server-cddaa023c035)
 
 <h2 id="selecting-package">Selecting the right package</h2>
 

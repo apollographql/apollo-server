@@ -1,12 +1,12 @@
 import 'mocha';
-import * as restify from 'restify';
-import { graphiqlRestify, graphqlRestify } from './restifyApollo';
 import testSuite, {
   schema,
   CreateAppOptions,
 } from 'apollo-server-integration-testsuite';
 import { expect } from 'chai';
 import { GraphQLOptions } from 'apollo-server-core';
+
+let restify, graphiqlRestify, graphqlRestify;
 
 function createApp(options: CreateAppOptions = {}) {
   const server = restify.createServer({
@@ -30,6 +30,19 @@ function createApp(options: CreateAppOptions = {}) {
 }
 
 describe('graphqlRestify', () => {
+  // As was reported in https://github.com/apollographql/apollo-server/pull/921,
+  // Restify monkey-patches Node internals, which can have adverse affects on
+  // other environmental participants like Express.  Therefore, restify is being
+  // dynamically loaded, rather than imported at top-level.
+  before(async () => {
+    const restifyApollo = await import('./restifyApollo');
+
+    restify = await import('restify');
+
+    graphqlRestify = restifyApollo.graphqlRestify;
+    graphiqlRestify = restifyApollo.graphiqlRestify;
+  });
+
   it('throws error if called without schema', () => {
     expect(() => graphqlRestify(undefined as GraphQLOptions)).to.throw(
       'Apollo Server requires options.',
