@@ -100,7 +100,7 @@ function format(
         console.error('Error in formatError function:', err);
         const newError: GraphQLError = fromGraphQLError(
           new GraphQLError('Internal server error'),
-          'INTERNAL_ERROR',
+          'INTERNAL_SERVER_ERROR',
         );
         return formatError(newError, debug);
       }
