@@ -14,7 +14,8 @@ export function formatError(error: GraphQLError, debug: boolean = false) {
     ...error,
     extensions: {
       ...error.extensions,
-      code: (error.extensions && error.extensions.code) || 'INTERNAL_ERROR',
+      code:
+        (error.extensions && error.extensions.code) || 'INTERNAL_SERVER_ERROR',
       exception: {
         ...(error.extensions && error.extensions.exception),
         ...(error.originalError as any),
@@ -44,7 +45,7 @@ export function formatError(error: GraphQLError, debug: boolean = false) {
 
 export function toApolloError(
   error: Error,
-  code: string = 'INTERNAL_ERROR',
+  code: string = 'INTERNAL_SERVER_ERROR',
 ): Error & { extensions: Record<string, any> } {
   let err: GraphQLError = error;
   if (err.extensions) {
@@ -57,7 +58,7 @@ export function toApolloError(
 
 export function fromGraphQLError(
   error: GraphQLError,
-  code: string = 'INTERNAL_ERROR',
+  code: string = 'INTERNAL_SERVER_ERROR',
 ) {
   const copy: GraphQLError = {
     ...error,
