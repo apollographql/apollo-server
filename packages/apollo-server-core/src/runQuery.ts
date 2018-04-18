@@ -8,7 +8,6 @@ import {
   validate,
   execute,
   GraphQLError,
-  formatError,
   specifiedRules,
   ValidationContext,
 } from 'graphql';
@@ -23,6 +22,8 @@ import {
   CacheControlExtension,
   CacheControlExtensionOptions,
 } from 'apollo-cache-control';
+
+import { fromGraphQLError, formatError } from './errors';
 
 export interface GraphQLResponse {
   data?: object;
@@ -83,18 +84,28 @@ function printStackTrace(error: Error) {
   console.error(error.stack);
 }
 
-function format(errors: Array<Error>, formatter?: Function): Array<Error> {
-  return errors.map(error => {
+function format(
+  errors: Array<Error>,
+  options?: {
+    formatter?: Function;
+    debug?: boolean;
+  },
+): Array<Error> {
+  const { formatter, debug } = options;
+  return errors.map(error => formatError(error, debug)).map(error => {
     if (formatter !== undefined) {
       try {
         return formatter(error);
       } catch (err) {
         console.error('Error in formatError function:', err);
-        const newError = new Error('Internal server error');
-        return formatError(newError);
+        const newError: GraphQLError = fromGraphQLError(
+          new GraphQLError('Internal server error'),
+          'INTERNAL_ERROR',
+        );
+        return formatError(newError, debug);
       }
     } else {
-      return formatError(error);
+      return error;
     }
   }) as Array<Error>;
 }
@@ -164,7 +175,10 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
     } catch (syntaxError) {
       logFunction({ action: LogAction.parse, step: LogStep.end });
       return Promise.resolve({
-        errors: format([syntaxError], options.formatError),
+        errors: format([fromGraphQLError(syntaxError, 'MALFORMED_QUERY')], {
+          formatter: options.formatError,
+          debug,
+        }),
       });
     }
   } else {
@@ -178,9 +192,18 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
   logFunction({ action: LogAction.validation, step: LogStep.start });
   const validationErrors = validate(options.schema, documentAST, rules);
   logFunction({ action: LogAction.validation, step: LogStep.end });
+
   if (validationErrors.length) {
     return Promise.resolve({
-      errors: format(validationErrors, options.formatError),
+      errors: format(
+        validationErrors.map(err =>
+          fromGraphQLError(err, 'QUERY_VALIDATION_FAILED'),
+        ),
+        {
+          formatter: options.formatError,
+          debug,
+        },
+      ),
     });
   }
 
@@ -209,7 +232,10 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
       };
 
       if (result.errors) {
-        response.errors = format(result.errors, options.formatError);
+        response.errors = format(result.errors, {
+          formatter: options.formatError,
+          debug,
+        });
         if (debug) {
           result.errors.map(printStackTrace);
         }
@@ -231,7 +257,10 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
     logFunction({ action: LogAction.execute, step: LogStep.end });
     logFunction({ action: LogAction.request, step: LogStep.end });
     return Promise.resolve({
-      errors: format([executionError], options.formatError),
+      errors: format([fromGraphQLError(executionError, 'EXECUTION_ERROR')], {
+        formatter: options.formatError,
+        debug,
+      }),
     });
   }
 }
