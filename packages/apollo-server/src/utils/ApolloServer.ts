@@ -1,16 +1,12 @@
-import { makeExecutableSchema, mergeSchemas } from 'graphql-tools';
+import { makeExecutableSchema } from 'graphql-tools';
 import { Server as HttpServer } from 'http';
 
-import {
-  execute,
-  GraphQLSchema,
-  subscribe,
-  DocumentNode,
-  print,
-} from 'graphql';
+import { execute, GraphQLSchema, subscribe, ExecutionResult } from 'graphql';
 import { ApolloEngine as Engine } from 'apollo-engine';
-import { SubscriptionServer } from 'subscriptions-transport-ws';
-import * as mitt from 'mitt';
+import {
+  SubscriptionServer,
+  ExecutionParams,
+} from 'subscriptions-transport-ws';
 
 import { CorsOptions } from 'cors';
 import {
@@ -25,20 +21,17 @@ import {
 
 import { formatError } from './errors';
 
-import { mount } from '../gui';
-
-const env = process.env.NODE_ENV;
-const IS_DEV = !process.env.CI && (env !== 'production' && env !== 'test');
-
 // taken from engine
 export function joinHostPort(host: string, port: number) {
-  if (host.includes(':')) {
-    host = `[${host}]`;
-  }
+  if (host.includes(':')) host = `[${host}]`;
   return `${host}:${port}`;
 }
 
-export class ApolloServerBase<Server = HttpServer, Request = any> {
+export class ApolloServerBase<
+  Server = HttpServer,
+  Request = any,
+  Cors = CorsOptions
+> {
   app?: Server;
   schema: GraphQLSchema;
   private context?: Context | ContextFunction;
@@ -48,12 +41,10 @@ export class ApolloServerBase<Server = HttpServer, Request = any> {
   private http?: HttpServer;
   private subscriptions?: any;
   private graphqlEndpoint: string = '/graphql';
-  private cors?: CorsOptions;
-  private unmount?: Function;
-  private emitter: mitt.Emitter = new mitt();
-  private devTools: boolean;
+  private cors?: Cors;
+  private engineEnabled: boolean = false;
 
-  constructor(config: Config<Server>) {
+  constructor(config: Config<Server, Request, Cors>) {
     const {
       typeDefs,
       resolvers,
@@ -62,13 +53,14 @@ export class ApolloServerBase<Server = HttpServer, Request = any> {
       context,
       app,
       engine,
+      engineInRequestPath,
       subscriptions,
       cors,
-      devTool,
     } = config;
 
-    this.devTools = (IS_DEV && devTool !== false) || devTool === true;
     this.context = context;
+    // XXX should we move this to the `start` call? This would make hot
+    // reloading eaiser but may not be worth it?
     this.schema = schema
       ? schema
       : makeExecutableSchema({
@@ -91,27 +83,27 @@ export class ApolloServerBase<Server = HttpServer, Request = any> {
 
     // only access this onces as its slower on node
     const { ENGINE_API_KEY, ENGINE_CONFIG } = process.env;
-    const shouldLoadEngine = ENGINE_API_KEY || ENGINE_CONFIG;
+    const shouldLoadEngine = ENGINE_API_KEY || ENGINE_CONFIG || engine;
     if (engine === false && shouldLoadEngine) {
       console.warn(
-        'engine is set to false when creating ApolloServer but either ENGINE_CONFIG or ENGINE_API_KEY were found in the environment'
+        'engine is set to false when creating ApolloServer but either ENGINE_CONFIG or ENGINE_API_KEY were found in the environment',
       );
     }
     let ApolloEngine;
-    if (engine !== false) {
-      // detect engine, and possibly load it
+    if (engine) {
+      // detect engine if it is set to true or has a config, and possibly load it
       try {
         ApolloEngine = require('apollo-engine').ApolloEngine;
       } catch (e) {
         if (shouldLoadEngine) {
-          console.warn(`ApolloServer was unable to load Apollo Engine and found environment variables that seem like you want it to be running? To fix this, run the following command:
+          console.warn(`ApolloServer was unable to load Apollo Engine and found either environment variables that seem like you want it to be running or engine was configured on the options when creating this ApolloServer? To fix this, run the following command:
 
   npm install apollo-engine --save
 `);
         }
       }
 
-      if (!shouldLoadEngine && !engine) {
+      if (!shouldLoadEngine) {
         throw new Error(`
 
 ApolloServer was unable to load the configuration for Apollo Engine. Please verify that you are either passing in an engine config to the new ApolloServer call, or have set ENGINE_CONFIG or ENGINE_API_KEY in your environment
@@ -120,6 +112,9 @@ ApolloServer was unable to load the configuration for Apollo Engine. Please veri
       }
       this.engine = new ApolloEngine(engine);
     }
+
+    // XXX should this allow for header overrides from graphql-playground?
+    if (this.engine || engineInRequestPath) this.engineEnabled = true;
   }
 
   public applyMiddleware(opts: MiddlewareOptions = {}) {
@@ -136,14 +131,22 @@ ApolloServer was unable to load the configuration for Apollo Engine. Please veri
     server.listen()
 `);
     }
-    const registerOptions: MiddlewareRegistrationOptions<Server, Request> = {
+
+    const registerOptions: MiddlewareRegistrationOptions<
+      Server,
+      Request,
+      Cors
+    > = {
       endpoint: this.graphqlEndpoint,
-      graphiql: '/graphiql',
       cors: this.cors,
+      subscriptions: true,
       ...opts,
+      graphiql:
+        opts.graphiql === false ? null : `${opts.graphiql || '/graphiql'}`,
       app: this.app,
       request: this.request.bind(this),
     };
+
     this.graphqlEndpoint = registerOptions.endpoint;
     // this function can either mutate the app (normal)
     // or some frameworks maj need to return a new one
@@ -152,7 +155,7 @@ ApolloServer was unable to load the configuration for Apollo Engine. Please veri
     if (possiblyNewServer) this.app = possiblyNewServer;
   }
 
-  public listen(opts: ListenOptions, listenCallback?: (ServerInfo) => void) {
+  public listen(opts: ListenOptions = {}): Promise<ServerInfo> {
     if (!this.appCreated && !this.middlewareRegistered) {
       throw new Error(
         `It looks like you are trying to run ApolloServer without applying the middleware. This error is thrown when using a variant of ApolloServer (i.e. require('apollo-server/variant')) and passing in a custom app. To fix this, before you call server.listen, you need to call server.applyMiddleware():
@@ -164,26 +167,16 @@ ApolloServer was unable to load the configuration for Apollo Engine. Please veri
   server.applyMiddleware();
 
   server.listen();
-`
+`,
       );
     }
-    if (!opts) {
-      opts = {};
-      listenCallback = this.defaultListenCallback;
-    }
-    if (typeof opts === 'function') {
-      listenCallback = opts;
-      opts = {};
-    }
 
-    if (!listenCallback) listenCallback = this.defaultListenCallback;
     const options = {
       port: process.env.PORT || 4000,
       ...opts,
     };
 
     this.http = this.getHttpServer(this.app);
-    let subscriptionsConfig = {} as any;
     if (this.subscriptions !== false) {
       const config =
         this.subscriptions === true || typeof this.subscriptions === 'undefined'
@@ -194,55 +187,34 @@ ApolloServer was unable to load the configuration for Apollo Engine. Please veri
       this.createSubscriptionServer(this.http, config);
     }
 
-    // start GUI
-    this.gui();
-
-    if (this.engine) {
-      this.engine.listen(
-        Object.assign({}, options.engine, {
-          graphqlPaths: [this.graphqlEndpoint],
-          port: options.port,
-          httpServer: this.http,
-        }),
-        () => {
-          listenCallback(this.engine.engineListeningAddress);
-          this.log('start', this.engine.engineListeningAddress);
-        }
-      );
-      return;
-    }
-
-    this.http.listen(options.port, () => {
-      listenCallback({ port: options.port });
-      const la: any = this.http.address();
-      // Convert IPs which mean "any address" (IPv4 or IPv6) into localhost
-      // corresponding loopback ip. Note that the url field we're setting is
-      // primarily for consumption by our test suite. If this heuristic is
-      // wrong for your use case, explicitly specify a frontend host (in the
-      // `frontends.host` field in your engine config, or in the `host`
-      // option to ApolloEngine.listen).
-      let hostForUrl = la.address;
-      if (la.address === '' || la.address === '::') {
-        hostForUrl = 'localhost';
+    return new Promise((s, f) => {
+      if (this.engine) {
+        this.engine.listen(
+          Object.assign({}, options.engine, {
+            graphqlPaths: [this.graphqlEndpoint],
+            port: options.port,
+            httpServer: this.http,
+          }),
+          () => s(this.engine.engineListeningAddress),
+        );
+        this.engine.on('error', f);
+        return;
       }
-      la.url = `http://${joinHostPort(hostForUrl, la.port)}`;
-      this.log('start', la);
-    });
-  }
 
-  private gui() {
-    if (this.devTools) {
-      this.unmount = mount({
-        server: this.emitter,
-        schema: this.schema,
-        engineEnabled: Boolean(this.engine),
+      this.http.listen(options.port, () => {
+        const la: any = this.http.address();
+        // Convert IPs which mean "any address" (IPv4 or IPv6) into localhost
+        // corresponding loopback ip. Note that the url field we're setting is
+        // primarily for consumption by our test suite. If this heuristic is
+        // wrong for your use case, explicitly specify a frontend host (in the
+        // `frontends.host` field in your engine config, or in the `host`
+        // option to ApolloEngine.listen).
+        let hostForUrl = la.address;
+        if (la.address === '' || la.address === '::') hostForUrl = 'localhost';
+        la.url = `http://${joinHostPort(hostForUrl, la.port)}`;
+        s(la);
       });
-    }
-  }
-
-  private log(message: string, payload?: any) {
-    if (!this.devTools) return;
-    this.emitter.emit(message, payload);
+    });
   }
 
   public async stop() {
@@ -250,8 +222,8 @@ ApolloServer was unable to load the configuration for Apollo Engine. Please veri
     if (this.http) await new Promise(s => this.http.close(s));
   }
 
-  private createSubscriptionServer(server: HttpServer, config) {
-    const { onDisconnect, onOperation, onConnect, keepAlive, path } = config;
+  private createSubscriptionServer(server: HttpServer, config: ListenOptions) {
+    const { onDisconnect, onConnect, keepAlive } = config;
     SubscriptionServer.create(
       {
         schema: this.schema,
@@ -259,10 +231,10 @@ ApolloServer was unable to load the configuration for Apollo Engine. Please veri
         subscribe,
         onConnect: onConnect
           ? onConnect
-          : (connectionParams, webSocket) => ({ ...connectionParams }),
+          : (connectionParams: Object) => ({ ...connectionParams }),
         onDisconnect: onDisconnect,
-        onOperation: async (message, connection, webSocket) => {
-          connection.formatResponse = value => ({
+        onOperation: async (_: string, connection: ExecutionParams) => {
+          connection.formatResponse = (value: ExecutionResult) => ({
             ...value,
             errors: value.errors && value.errors.map(formatError),
           });
@@ -284,8 +256,8 @@ ApolloServer was unable to load the configuration for Apollo Engine. Please veri
       },
       {
         server,
-        path: path || this.graphqlEndpoint,
-      }
+        path: this.graphqlEndpoint,
+      },
     );
   }
 
@@ -297,7 +269,6 @@ when calling this.request, either call it using an error function, or bind it li
   this.request.bind(this);
 `);
     }
-    this.log('operation', {});
     let context: Context = this.context ? this.context : { request };
 
     try {
@@ -312,19 +283,12 @@ when calling this.request, either call it using an error function, or bind it li
 
     return {
       schema: this.schema,
-      tracing: Boolean(this.engine),
-      cacheControl: Boolean(this.engine),
-      logFunction: this.logger,
-      formatError,
+      tracing: Boolean(this.engineEnabled),
+      cacheControl: Boolean(this.engineEnabled),
+      // formatError,
       context,
     };
   }
-
-  private logger(...args) {
-    // console.log(...args);
-  }
-
-  private defaultListenCallback() {}
 
   /* region: vanilla ApolloServer */
   createApp(): Server {
@@ -344,7 +308,7 @@ when calling this.request, either call it using an error function, or bind it li
   /* region: variant ApolloServer */
 
   registerMiddleware(
-    config: MiddlewareRegistrationOptions<Server, Request>
+    config: MiddlewareRegistrationOptions<Server, Request, Cors>,
   ): Server | void {
     throw new Error(`It looks like you called server.addMiddleware on an ApolloServer that is missing a server! Make sure you pass in an app when creating a server:
       
@@ -358,7 +322,7 @@ when calling this.request, either call it using an error function, or bind it li
 
   getHttpServer(app: Server): HttpServer {
     throw new Error(
-      `It looks like you are trying to use subscriptions with ApolloServer but we couldn't find an http server from your framework. To fix this, please open an issue for you variant at the apollographql/apollo-server repo`
+      `It looks like you are trying to use subscriptions with ApolloServer but we couldn't find an http server from your framework. To fix this, please open an issue for you variant at the apollographql/apollo-server repo`,
     );
   }
 

@@ -1,3 +1,4 @@
+import { GraphQLError } from 'graphql';
 export interface ExceptionDetails {
   type?: string;
   code?: string;
@@ -13,21 +14,21 @@ export class ApolloServerError extends Error {
   extensions: ErrorInfo;
   locations: any;
   path: any;
-  constructor(message, code) {
-    super(message);
-    this.locations = message.locations;
-    this.path = message.path;
+  constructor(err: GraphQLError, code: string) {
+    super(err.message);
+    this.locations = err.locations;
+    this.path = err.path;
     this.extensions = { code, stack: this.stack };
   }
 }
 
 export class MalformedQuery extends ApolloServerError {
-  constructor(message) {
-    super(message, 'MALFORMED_QUERY');
+  constructor(err: GraphQLError) {
+    super(err, 'MALFORMED_QUERY');
   }
 }
 
-export const formatError = err => {
+export const formatError = (err: GraphQLError) => {
   let errorType = err;
   if (err.path === undefined) {
     return new MalformedQuery(err);
