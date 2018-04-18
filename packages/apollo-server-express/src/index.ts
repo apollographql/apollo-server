@@ -1,5 +1,12 @@
 // Expose types which can be used by both middleware flavors.
 export { GraphQLOptions } from 'apollo-server-core';
+export {
+  toApolloError,
+  ApolloError,
+  AuthenticationError,
+  ParseError,
+  ValidationError,
+} from 'apollo-server-core';
 
 // Express Middleware
 export {
