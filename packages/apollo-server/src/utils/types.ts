@@ -26,6 +26,7 @@ export interface Config<Server, ContextShape = any, Cors = CorsOptions> {
   subscriptions?: SubscriptionServerOptions | string | false;
   engineInRequestPath?: boolean;
   engine?: boolean | Object;
+  debug?: boolean;
 }
 
 export interface EngineConfig {

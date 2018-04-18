@@ -16,6 +16,7 @@ export function formatError(error: GraphQLError, debug: boolean = false) {
       ...error.extensions,
       code: (error.extensions && error.extensions.code) || 'INTERNAL_ERROR',
       exception: {
+        ...(error.extensions && error.extensions.exception),
         ...(error.originalError as any),
       },
     },
@@ -25,7 +26,7 @@ export function formatError(error: GraphQLError, debug: boolean = false) {
   //graphql-js ensures that the originalError's extensions are hoisted
   //https://github.com/graphql/graphql-js/blob/0bb47b2/src/error/GraphQLError.js#L138
   delete expanded.extensions.exception.extensions;
-  if (debug) {
+  if (debug && !expanded.extensions.exception.stacktrace) {
     expanded.extensions.exception.stacktrace =
       (error.originalError &&
         error.originalError.stack &&
@@ -35,7 +36,7 @@ export function formatError(error: GraphQLError, debug: boolean = false) {
 
   if (Object.keys(expanded.extensions.exception).length === 0) {
     //remove from printing an empty object
-    expanded.extensions.exception = undefined;
+    delete expanded.extensions.exception;
   }
 
   return expanded;
