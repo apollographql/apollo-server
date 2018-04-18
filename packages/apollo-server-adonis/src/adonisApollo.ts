@@ -25,7 +25,8 @@ export function graphqlAdonis(
       `Apollo Server expects exactly one argument, got ${arguments.length}`,
     );
   }
-  return (ctx: AdonisContext): Promise<void> => {
+
+  const graphqlHandler = (ctx: AdonisContext): Promise<void> => {
     const { request, response } = ctx;
     const method = request.method();
     const query = method === 'POST' ? request.post() : request.get();
@@ -51,6 +52,8 @@ export function graphqlAdonis(
       },
     );
   };
+
+  return graphqlHandler;
 }
 
 export interface AdonisGraphiQLOptionsFunction {
@@ -60,7 +63,7 @@ export interface AdonisGraphiQLOptionsFunction {
 export function graphiqlAdonis(
   options: GraphiQL.GraphiQLData | AdonisGraphiQLOptionsFunction,
 ) {
-  return (ctx: AdonisContext): Promise<void> => {
+  const graphiqlHandler = (ctx: AdonisContext): Promise<void> => {
     const { request, response } = ctx;
     const query = request.get();
     return GraphiQL.resolveGraphiQLString(query, options, ctx).then(
@@ -72,4 +75,6 @@ export function graphiqlAdonis(
       },
     );
   };
+
+  return graphiqlHandler;
 }
