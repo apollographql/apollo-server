@@ -5,10 +5,6 @@ description: Deploying your new Apollo Server into the world
 
 Deploying your Apollo Server is super easy with a lot of modern tools. Though you may need to customize it to your infrastructure, there are some tools to make it reliable and secure.
 
-<h2 id="aws">AWS</h2>
+## TODO
 
-<h2 id="heroku">Heroku</h2>
-
-<h2 id="now">Now</h2>
-
-<h2 id="serverless">Serverless</h2>
+> (Jesse) I'm of the belief that these deployment techniques will look much better, index better in our (and Google) search, and generally be more helpful if they are on separate pages.  I feel like this page will be just too long otherwise.  And likely too hard to digest.

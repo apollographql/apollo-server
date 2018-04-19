@@ -1,11 +1,10 @@
 ---
-
 title: ApolloServer
 description: All of the things you need with no config needed!
-
 ---
 
 ## Overview
+
 Apollo Server provides an easy way for a brand new application to get up and running quickly by providing an integrated web-server with minimal configuration.
 
 > Running a dedicated GraphQL server is a great choice for many deployments, however, if you're looking to add Apollo Server functionality to an **existing webserver**, follow the [Middleware](./middleware.html) installation instructions instead.
@@ -31,14 +30,14 @@ To install, run:
 ### Importing
 
 Start by importing the `ApolloServer` class:
-  
+
 ```js
 const { ApolloServer } = require('apollo-server');
 ```
 
 ### Import your type definitions
 
-We recommend keeping your type definitions in a separate file.  In this example, we'll import them from a file called `schema` which lives alongside the server.
+For this example, we'll import type definitions and resolvers from a file called `schema` which lives alongside the main server code.
 
 ```js
 // Make sure you've created this file and defined type
@@ -57,7 +56,7 @@ const server = new ApolloServer({
 });
 ```
 
-> See the [API Reference]() for additional options which can be passed to the `ApolloServer` constructor.
+> See the [API Reference]() for additional options which can be passed to the `ApolloServer` constructor and instructions for creating the options based on the incoming request.
 
 ### Listening for requests
 
@@ -67,16 +66,13 @@ Finally, when you're ready to start accepting connections, call the `listen` met
 server.listen({ port: 3000 });
 ```
 
-> If the `port` is omitted, port 3000 will be used.  The [API reference]() explains additional functionality of the `listen` method.
+> If the `port` is omitted, port 4000 will be used.  For additional options available on the `listen` method, see the [API reference]().
 
 ## Next steps
 
-Once you have a GraphQL server up and running, there are a number of configurable options you might consider.  Some great resources for additional information are:
+Once you have a GraphQL server up and running, there are a number of configurable options worth considering.  Some great resources for additional information are:
 
 * [API documentation]()
+* [Schema design]()
 * [Schema directives]()
 * [Deploying]()
-<!--stackedit_data:
-eyJoaXN0b3J5IjpbMTA5NjI4MjM1NywxMDQxMzQzNzI0LDM4Nj
-k2NTIxOCwtMTUyOTQzODMwNl19
--->

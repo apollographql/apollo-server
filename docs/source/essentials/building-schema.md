@@ -3,10 +3,35 @@ title: Building a schema
 description: The why, what, and how of building a schema
 ---
 
-The schema is the core of your GraphQL service. It validates operations, routes queries to data, powers next generation develoment tools, and is the contract between clients and your service. With Apollo Server, building a schema is as easy ad describing your schema and joining it with some simple functions to return the data.
+## Prerequisites
 
-<h2 id="type-definitions">Type Definitions</h2>
+* `TODO` Types? (Query = type, so might be better)
 
-<h2 id="resolvers">Resolvers</h2>
+## Overview
 
-<h2 id="viewing">Viewing your schema</h2>
+Every Apollo Server has a GraphQL schema, which describes the data and actions that are accessible by the client. It contains types, which correspond to tangible items or category, such as an `Author` or a `Book`. To define those types, the schema  provides relationships. By defining relationships between entities, a GraphQL schema describes the structure of data without providing the actual data, just like the menu at a cafeteria, which describes the food without the deliciousness.
+
+## Schema Definition Language (SDL)
+
+A GraphQL schema is written in a human-readable Schema Definition Language (or SDL for short) that defines the common language between the client and server. The SDL mirrors JSON and JavaScript's syntax, providing the ability to define membership, such as a `Book` needs a title an `Author` has a name. These memberships can be mutual, since an `Author` writes mutliple `Book`s and a `Book` has one primary author. A schema to describe the previously mentioned releationships could look something like this:
+
+```
+type Book {
+  title: String
+  author: Author
+}
+
+type Author {
+  books: [Book]
+}
+```
+
+Take not that the schema is based upon the real world relationships between objects rather than the underlying data store. This real world basis provides the most intuitive interaction for the frontend. In addition, it ensures that the server understands what data will be retreived together and can stay perfomrant.
+
+Wether designing a new application or creating a GraphQL layer over your existing backend, this basis in logical connections is the most important consideration is to define your schema. It is tempting to define a schema based on the current layout of your database, microservices, or REST endpoints. Your GraphQL schema is going to be used across your entire organization and should faciliate the organization of your backend services as well as enable frontend developers to easily discover what data can and should be retreived together.
+
+> Often times mature architectures have been battle tested and optimized for certain views. There is a temptation to translate this data directly into the SDL. This can be an effective migration path provided there is a way to add new GraphQL schema types for new use cases. Often times, since these are newer features with less critical performance garuntees, it is acceptable to retreive a portion of fields for  agiven field from the optized backend
+
+## Execution Instructions (resolvers)
+
+In addition to the SDL describing the interface and types, a complete schema includes functions that provide the implementation of how the SDL is executed on the server.

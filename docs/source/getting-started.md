@@ -1,10 +1,9 @@
 ---
-
 title: Getting started
-
 ---
 
 ## Overview
+
 > Estimated time: About 10 minutes.
 
 In this guide, we'll walk you through the process of creating a GraphQL server in JavaScript.  By the end of the guide you should expect to:
@@ -122,8 +121,8 @@ The example code will utilize a static collection of two books.  In a more compl
 
   // This `listen` method launches a web-server.  Existing apps
   // can utilize middleware options, which we'll discuss later.
-  server.listen(({ url }) => {
-    console.log(`Visit ${url}/graphiql to run queries!`);
+  server.listen().then(({ url }) => {
+    console.log(`Visit ${url} to run queries!`);
   });
   ```
 
@@ -157,7 +156,7 @@ At this point, you'll be able to start sending queries to the GraphQL server usi
 
 Since we're trying to obtain books...
 
-> WIP / TODO ^
+> TODO ^
 
 ## Next steps
 
@@ -172,12 +171,3 @@ This application should be a great starting point for any GraphQL server, but th
 ### GitHub Repository
 
 The code from the above examples can be accessed in our [getting started example repository](.) on GitHub, which also includes instructions on how to get started in its [readme](.).
-<!--stackedit_data:
-eyJoaXN0b3J5IjpbMTQxMDEwMDk1NiwtMjU0NDk1NjAwLC00MD
-E0OTg0ODIsLTY1MTY5NDU5LC02OTM1MTk2NzQsLTE2ODY0NTMx
-NzEsLTMwNjE4OTAzNCwxMDQ0ODgzMzQxLDM2NDc5MTY3NCwtNz
-A0OTQ1ODQ4LC0xMjI3OTAzMjE5LDE1NDc5MTY3MjAsMTUwMDkx
-NDM2OSwxODg3NDYyMjIyLC04ODc3MTkxNTksMTE2OTA0NDU1MS
-wxNjE5MDI3NDQyLDE5OTc5NTU4NzEsMTgyMDI4NDk1OCwtMTk1
-Mjc0NDExXX0=
--->
