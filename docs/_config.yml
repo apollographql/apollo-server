@@ -15,10 +15,11 @@ sidebar_categories:
     - essentials/queries
     - essentials/mutations
   Schema Development:
+    - schemas/organization
     - schemas/types
+    - schemas/directives
     - schemas/resolvers
     - schemas/context
-    - schemas/organizing-code
   Running a Server:
     - server/index
     - server/middleware
@@ -27,9 +28,11 @@ sidebar_categories:
     - server/secrets
   Best Practices:
     - best-practices/authentication
+    - best-practices/permissions
     - best-practices/schema-design
     - best-practices/subscriptions
     - best-practices/performance
+    - best-practices/security
     - best-practices/caching
     - best-practices/monitoring
     - best-practices/versioning
@@ -42,6 +45,8 @@ sidebar_categories:
     - backends/mongodb
     - backends/rest
     - backends/prisma
+  Advanced:
+    - advanced/query-mechanics
   API Reference:
     - api/apollo-server
     - api/graphql-subscriptions

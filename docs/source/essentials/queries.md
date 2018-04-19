@@ -3,10 +3,30 @@ title: Queries
 description: Turning queries into data
 ---
 
-Once you have a working schema, you need to load some actual data for your app! Using resolvers you can fetch data from your backend, select and rename the results from your data sources, and link different information together. Learn how flexible GraphQL is in how it can translate requests into data with resolvers.
+## Prerequisites
 
-<h2 id="fetching">Fetching data</h2>
+* A basic understanding of a GraphQL schema ([Schema]())
 
-<h2 id="shaping">Shaping results</h2>
+## Overview
 
-<h2 id="linking">Linking data sources</h2>
+A GraphQL query is for reading data.  The schema defines the types of queries which are available to the clients connecting to your server.
+
+## Material
+
+* GraphQL query defines the shape of data that will be returned by a particular request
+  * This is what an author + books query looks like coming from the client
+  * make sure it has arguments
+* This query is then checked agains the server's schema
+  * looks like this:
+* "root" level queries define the main entry points
+* Each of those root queries returns a type
+
+**Actually writing resolvers for your queries is found in server/queries**
+
+> TODO: The below headings were left over from the other document.  Do we want to remove them?
+
+## Fetching data
+
+## Shaping results
+
+## Linking data sources
