@@ -2,7 +2,7 @@
 title: What's new?
 ---
 
-This section of the ApolloServer docs is an annoucement page where it is easy to find and share big changes to the ApolloServer package, or the Apollo server side ecosystem. For a more detailed list of changes, check out the [Changelog]().
+This section of the ApolloServer docs is an announcement page where it is easy to find and share big changes to the ApolloServer package, or the Apollo server side ecosystem. For a more detailed list of changes, check out the [Changelog]().
 
 ## 2.0
 

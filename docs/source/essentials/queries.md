@@ -16,7 +16,7 @@ A GraphQL query is for reading data.  The schema defines the types of queries wh
 * GraphQL query defines the shape of data that will be returned by a particular request
   * This is what an author + books query looks like coming from the client
   * make sure it has arguments
-* This query is then checked agains the server's schema
+* This query is then checked again the server's schema
   * looks like this:
 * "root" level queries define the main entry points
 * Each of those root queries returns a type

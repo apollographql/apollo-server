@@ -55,4 +55,4 @@ new ApolloServer({ typeDefs, resolvers, context: { req } })
 ## Material to include
 
 * This section ties all of the information in the prereqs to show you how to implement Queries with the Apollo Server
-  * esentially copy and paste code that you can then add onto
+  * essentially copy and paste code that you can then add onto

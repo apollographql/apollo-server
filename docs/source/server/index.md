@@ -1,6 +1,6 @@
 ---
 title: ApolloServer
-description: All of the things you need with no config needed!
+description: All of the things you need with no configuration needed!
 ---
 
 ## Overview
@@ -41,7 +41,7 @@ For this example, we'll import type definitions and resolvers from a file called
 
 ```js
 // Make sure you've created this file and defined type
-// defintions along with their resolvers!
+// definitions along with their resolvers!
 const { typeDefs, resolvers } = require('./schema');
 ```
 

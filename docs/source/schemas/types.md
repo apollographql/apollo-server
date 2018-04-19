@@ -22,7 +22,7 @@ The default, scalar types which GraphQL offers are:
 * `Boolean`
 * `ID` (a special type of `String`)
 
-These primative types
+These primitive types
 
 ## Object types
 
@@ -70,7 +70,7 @@ The `Query` type is a special object type used to organize other fields.
 
 * special type to define operations to change server data
 * backed by a resolver that performs the backend modification
-* look at essenitals/mutations for mutation shape from client and appearance on server
+* look at essentials/mutations for mutation shape from client and appearance on server
 * server/mutations for implementation information
 
 ## `Subscription` type

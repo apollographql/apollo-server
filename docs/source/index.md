@@ -31,7 +31,7 @@ The documentation is organized with basic concepts and design decisions first an
     * Queries
     * Mutations
     * advanced subscriptions
-  * how a gql server defines an api and creates reponses to those requests
+  * how a gql server defines an api and creates responses to those requests
   * best practices for designing server
     * auth
     * schema design, etc
@@ -40,7 +40,7 @@ The documentation is organized with basic concepts and design decisions first an
 
 The docs for Apollo Server are mainly written using the [Express integration](), but most of the examples work no matter what server library you use. The docs are broken into six distinct sections to make it easy to find your way around:
 
-1.  **Essentials**, which oultines everything you know in order to get started quickly
+1.  **Essentials**, which outlines everything you know in order to get started quickly
 2.  **Schema Development**, which goes over just what a GraphQL schema is, and how to write one
 3.  **Running a Server**, which explains the mechanics of exposing your schema to clients
 4.  **Best Practices**, to explain the best possible way to build a GraphQL service
@@ -51,4 +51,4 @@ Getting started is as simple as installing a few libraries from [npm](./XXX-link
 
 ## Productive GraphQL Development
 
-Apollo Server, and the rest of the Apollo ecosystem, give you a powerful set of tools to rapidly stand up a GraphQL API on top of your exsiting, or new, backends. It does this by focusing on a schema-first approach where you build your schema with a concise, declarative syntax, and fill in the logic with data fetching resolver functions. It is easy to get started with [one-step mocking]() while you fill out your data and build your UI. With powerful tools like [schema directives](), [tracing and cache control](), and [schema stitching](), you can build the service of your dreams without writing a line of code more than you need.
+Apollo Server, and the rest of the Apollo ecosystem, give you a powerful set of tools to rapidly stand up a GraphQL API on top of your existing, or new, backends. It does this by focusing on a schema-first approach where you build your schema with a concise, declarative syntax, and fill in the logic with data fetching resolver functions. It is easy to get started with [one-step mocking]() while you fill out your data and build your UI. With powerful tools like [schema directives](), [tracing and cache control](), and [schema stitching](), you can build the service of your dreams without writing a line of code more than you need.
