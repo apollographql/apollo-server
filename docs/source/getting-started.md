@@ -24,7 +24,15 @@ If you want to skip walking through the steps, the "More information" section at
 
 If you don't meet any of the prerequisites above, we recommend following the links we've provided  aside each item and returning to this guide once you're ready.
 
-## Step 1: Project initialization
+## Tinker Online
+
+<div class="glitch-embed-wrap" style="height: 593px; width: 100%;">
+  <iframe src="https://glitch.com/embed/#!/embed/apollo-server-2-dot-ohhhhhh?path=server.js&previewSize=49&attributionHidden=true&sidebarCollapsed=true" alt="apollo-server-2-dot-ohhhhhh on glitch" style="height: 100%; width: 100%; border: 0;"></iframe>
+</div>
+
+## Build it yourself
+
+### Step 1: Project initialization
 
 In this step, we'll use your terminal (e.g. Terminal, iTerm, PowerShell) to create a directory called `graphql-server-example` along with a basic Node.js configuration for a simple application.  We'll work within this directory for the rest of the steps, though we will switch back and forth between your IDE (editor)
 
@@ -44,7 +52,7 @@ In this step, we'll use your terminal (e.g. Terminal, iTerm, PowerShell) to crea
 
 If the above steps all completed successfully, there should be a new `package.json` file in the directory.  You can verify this by running `ls` (list files).
 
-## Step 2: Install dependencies
+### Step 2: Install dependencies
 
 Next, we'll install the two core dependencies which are necessary for responding to GraphQL requests:
 
@@ -60,7 +68,7 @@ Run the following command to install both of these dependencies and save them in
 
 In the next step, we'll use these dependencies to create a server which processes and responds to incoming GraphQL requests.
 
-## Step 3: Create the server
+### Step 3: Create the server
 
 In this step, we'll provide a code block which sets up `apollo-server` to respond to an incoming GraphQL request.  In order to move along quickly, we'll have you copy and paste the code into an `index.js` file in your project.  When looking at the code, we hope you'll find the comments helpful in understanding the core GraphQL concepts.  Don't worry if there is something which needs more explanation; we'll point you to the right places for more details at the end of this guide.
 
@@ -128,7 +136,7 @@ The example code will utilize a static collection of two books.  In a more compl
 
 The code above includes everything that is necessary to get this basic GraphQL server running.  In the next step, we'll start the server so it's ready to respond to requests!
 
-## Step 4: Start the server
+### Step 4: Start the server
 
 For this step, we'll return to the terminal/console and start the server we defined in the previous steps.
 
@@ -158,7 +166,7 @@ Since we're trying to obtain books...
 
 > TODO ^
 
-## Next steps
+### Next steps
 
 This application should be a great starting point for any GraphQL server, but the following resources are a great next step in building a GraphQL server:
 
