@@ -47,7 +47,7 @@ The docs for Apollo Server are mainly written using the [Express integration](),
 5.  **Working with Backends**, so you can work with the data you have right away
 6.  **API**, to act as an entry point to find API details for key server libraries
 
-Getting started is as simple as installing a few libraries from [npm](./XXX-link-me)! The [setup](./XXX-link-me) is a good place to start your adventure with Apollo Server!
+Getting started is as simple as installing a few libraries from [npm]()! The [setup]() is a good place to start your adventure with Apollo Server!
 
 ## Productive GraphQL Development
 
