@@ -6,7 +6,7 @@ Building APIs shouldn't have to be so tricky. If you are concerned about perform
 
 ## Schema first design
 
-We think GraphQL's greatest asset is the schema. Think of it like the rosetta stone of the data your app needs. Schema's represent the toch point of your frontends with the data that powers them. We recommend using the schema definition language, also called the SDL, to easily write out the data and relationships that your app needs to be succesful. Unlike REST APIs, GraphQL schemas shouldn't be a one to one mapping of your database, but rather a representation of how your app works with the data it needs. Let's see what this looks like in practice with Apollo Server:
+We think GraphQL's greatest asset is the schema. Think of it like the Rosetta stone of the data your app needs. Schemas represent the toch point of your frontends with the data that powers them. We recommend using the schema definition language, also called the SDL, to easily write out the data and relationships that your app needs to be successful. Unlike REST APIs, GraphQL schemas shouldn't be a one to one mapping of your database, but rather a representation of how your app works with the data it needs. Let's see what this looks like in practice with Apollo Server:
 
 ```js
 const { ApolloServer } = require('apollo-server-express');
@@ -45,7 +45,7 @@ Unlike ad-hoc REST endpoints or complex middleware, Apollo Server will make it e
 
 ## Works with your data
 
-Learning and implementing a new way to manage your data can be scary and risky. Instead of waiting on a brand new project or rewritting your app from scratch, Apollo Server makes is simple to get started immediately. Whether you have a REST API you want to build on top of, existing database to connect to, or third party data sources to wrangle, Apollo works with your data from day one. You can easily start a new server, or integrate it with your current app in a couple lines of code without sacrificing any of the amazing benefits it can provide. Apollo Server is the fastest way to bring GraphQL to your products out there.
+Learning and implementing a new way to manage your data can be scary and risky. Instead of waiting on a brand new project or rewriting your app from scratch, Apollo Server makes is simple to get started immediately. Whether you have a REST API you want to build on top of, existing database to connect to, or third party data sources to wrangle, Apollo works with your data from day one. You can easily start a new server, or integrate it with your current app in a couple lines of code without sacrificing any of the amazing benefits it can provide. Apollo Server is the fastest way to bring GraphQL to your products out there.
 
 ## Case Studies
 

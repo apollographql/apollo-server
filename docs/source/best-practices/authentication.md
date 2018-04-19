@@ -5,7 +5,7 @@ description: Securing your app and serving your users
 
 Intro note about authentication vs authorization and how you don't need to throw everything out
 
-## Autenticating users
+## Authenticating users
 
 ## Authorizing mutations
 

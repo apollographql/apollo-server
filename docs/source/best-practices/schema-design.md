@@ -7,19 +7,19 @@ GraphQL schemas are at their best when they are designed around the need of the 
 
 ## Naming
 
-One of the classic problems in computer science, how to name types and fields is a common question for teams getting started with GraphQL. While there is a ton of flexiblity, by design, with the specification, here are a few recommendations that have proven themselves in production applications:
+One of the classic problems in computer science, how to name types and fields is a common question for teams getting started with GraphQL. While there is a ton of flexibility, by design, with the specification, here are a few recommendations that have proven themselves in production applications:
 
 - field names should be camelCase since the majority of consumers will be in client applications written in JavaScript
 - type names should be PascalCase
 - enums should be PascalCase and their values should be `ALL_CAPS` to denote a special value
 
 
-Into note about schema's being for products, not for databases
+Into note about schemas being for products, not for databases
 
 ## Node interface
 
 ## Mutation Response
 
-## Pagignation
+## Pagination
 
 ## Field naming / CRUD

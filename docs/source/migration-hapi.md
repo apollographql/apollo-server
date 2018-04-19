@@ -9,7 +9,7 @@ Version 0.3.0 of Apollo Server contains a couple of breaking changes in the Hapi
 The most notable changes are:
 
 * the plugin class has been replaced as a function to be more idiomatic
-* the plugin name has been renamed to use camelcase
+* the plugin name has been renamed to use camel-case
 * the options object has been extended to support additional routing options
 
 The following code snippet for Hapi Apollo 0.2.x

@@ -15,8 +15,8 @@ Mutations are operations sent to the server to create, update or delete data.  T
 * Here is what one looks like coming from the client
 * Here is the corresponding server schema
 * A mutation can contain arguments and fields
-* Input types are passed to Apollo Server and inform it how to make the updata
-* The fields describe the object that is retuned by a mutation, often times the object that was created or the entire collection that was modified. Or a confirmation of deletion
+* Input types are passed to Apollo Server and inform it how to make the update
+* The fields describe the object that is returned by a mutation, often times the object that was created or the entire collection that was modified. Or a confirmation of deletion
   * Here is what the return looks like from the previous mutation call
 
 **Actually writing resolvers for your mutations is found in server/mutations**

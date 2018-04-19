@@ -2,4 +2,4 @@
 title: Infrastructure
 ---
 
-TODO In short, small horiztonal apps, scaled as needed, setup caching and CDN support
+TODO In short, small horizontal apps, scaled as needed, setup caching and CDN support

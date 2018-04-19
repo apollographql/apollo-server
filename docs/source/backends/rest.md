@@ -1,8 +1,8 @@
 ---
 title: REST
-description: Ship new features without waiting on backend changes
+description: Ship new features without waiting on back-end changes
 ---
 
-* graphql + rest is great
+* GraphQL + rest is great
 * fetching from remote endpoints
 * example project/code

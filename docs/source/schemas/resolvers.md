@@ -1,9 +1,9 @@
 ---
 title: Resolvers
-description: How to fetch data, select fom the results, and join types together
+description: How to fetch data, select from the results, and join types together
 ---
 
-> (Evans) If we decide that schema/types should be api reference, then this should be in the essentials section.
+> (Evans) If we decide that schema/types should be API reference, then this should be in the essentials section.
 
 ## Prerequisites
 
@@ -14,7 +14,7 @@ description: How to fetch data, select fom the results, and join types together
 
 ## Servicing Requests
 
-Now that we understand the structure of Queries and Mutations, we need to undestand how to service those requests.  Queries and mutations define the data they require, so the servicing of the operations uses this structure to organize the servers work. Every field in a GraphQL schema has a corresponding resolver. When a query or mutation requests a field, then the fields resolver is called and the returned value is placed under the field in the server response.
+Now that we understand the structure of Queries and Mutations, we need to understand how to service those requests.  Queries and mutations define the data they require, so the servicing of the operations uses this structure to organize the servers work. Every field in a GraphQL schema has a corresponding resolver. When a query or mutation requests a field, then the fields resolver is called and the returned value is placed under the field in the server response.
 
 ### Basic Resolver
 
@@ -38,7 +38,7 @@ resolvers = {
 
 ### Nested Types and Resolvers
 
-In addition to returning scalar types, such as Strings, Queries can request nested objects with different typese. An example of a nested query would be:
+In addition to returning scalar types, such as Strings, Queries can request nested objects with different types. An example of a nested query would be:
 
 ```graphql
 query {
@@ -57,7 +57,7 @@ type Query {
 }
 ```
 
-Followng the previous example, a first implementation of these resolvers might be:
+Following the previous example, a first implementation of these resolvers might be:
 
 https://launchpad.graphql.com/lk308wpxnq
 ```js
@@ -72,7 +72,7 @@ resolvers = {
 }
 ```
 
-These resolvers can be simplified taking advantage of two features: parameters provided to every resolver and the implicit resolvers implemted by all GraphQL frameworks. The first parameter to each resolver is the result of their parent resolver, following the query's structure. In this case, `child`'s resolver will receive the result of `parent`'s resolver. In addition, when no resolver is provided, the default function returns the field name's value from the parent resolver's result.
+These resolvers can be simplified taking advantage of two features: parameters provided to every resolver and the implicit resolvers implemented by all GraphQL frameworks. The first parameter to each resolver is the result of their parent resolver, following the query's structure. In this case, `child`'s resolver will receive the result of `parent`'s resolver. In addition, when no resolver is provided, the default function returns the field name's value from the parent resolver's result.
 
 ```js
 resolvers = {
@@ -87,17 +87,17 @@ resolvers = {
 }
 ```
 
-You'll notice how this implementation makes your resolvers more simple. In practice, you should fetch data in parent resolvers when retreival is cheap. For more complicated cases where some fields are more expensive to request, read [this section on performance]() to learn how to optimize your data fetching.
+You'll notice how this implementation makes your resolvers more simple. In practice, you should fetch data in parent resolvers when retrieval is cheap. For more complicated cases where some fields are more expensive to request, read [this section on performance]() to learn how to optimize your data fetching.
 
 ### Resolver Signature
 
-In addition to the parent resolvers value, resolvers receive a couple more arguments. The full resolver function signature contains four positional arguments: `(parent, args, context, info)` and can return an object or [Promise](https://codeburst.io/javascript-learn-promises-f1eaa00c5461). Once a promise resolves, then the childern resolvers will continue executing. This is usefull for fetching data from a [backend]().
+In addition to the parent resolvers' value, resolvers receive a couple more arguments. The full resolver function signature contains four positional arguments: `(parent, args, context, info)` and can return an object or [Promise](https://codeburst.io/javascript-learn-promises-f1eaa00c5461). Once a promise resolves, then the children resolvers will continue executing. This is useful for fetching data from a [backend]().
 
 The resolver parameters generally follow this naming convention and are described in detail:
 
 1. `parent`: The object that contains the result returned from the resolver on the parent field, or, in the case of a top-level `Query` field, the `rootValue` passed from the [server configuration](/docs/apollo-server/setup.html). This argument enables the nested nature of GraphQL queries.
 2. `args`: An object with the arguments passed into the field in the query. For example, if the field was called with `query{ key(arg: "you meant") }`, the `args` object would be: `{ "arg": "you meant" }`.
-3. `context`: This is an object shared by all resolvers in a particular query, and is used to contain per-request state, including authentication information, dataloader instances, and anything else that should be taken into account when resolving the query. Read [this section]() for an explaination of when and how to use context.
+3. `context`: This is an object shared by all resolvers in a particular query, and is used to contain per-request state, including authentication information, dataloader instances, and anything else that should be taken into account when resolving the query. Read [this section]() for an explanation of when and how to use context.
 4. `info`: This argument should only be used in advanced cases, but it contains information about the execution state of the query, including the field name, path to the field from the root, and more. It's only documented in the [GraphQL.js source code](https://github.com/graphql/graphql-js/blob/c82ff68f52722c20f10da69c9e50a030a1f218ae/src/type/definition.js#L489-L500).
 
 In addition to returning GraphQL defined [scalars](), you can return [custom scalars]() for special use cases, such as JSON or big integers.
