@@ -3,104 +3,118 @@ title: Resolvers
 description: How to fetch data, select from the results, and join types together
 ---
 
-> (Evans) If we decide that schema/types should be API reference, then this should be in the essentials section.
-
 ## Prerequisites
 
-* understand Query and Mutation types
-* what query/mutation looks like coming from the client
-  * selection set? > understand it means the data requested by a client query/mutation
-*
+* Understanding of the essentials for [building a schema]()
 
-## Servicing Requests
+## Resolvers
 
-Now that we understand the structure of Queries and Mutations, we need to understand how to service those requests.  Queries and mutations define the data they require, so the servicing of the operations uses this structure to organize the servers work. Every field in a GraphQL schema has a corresponding resolver. When a query or mutation requests a field, then the fields resolver is called and the returned value is placed under the field in the server response.
+Resolvers provide the instructions for turning a GraphQL operation into data. Resolvers are organized into a one to one mapping to the fields in a GraphQL schema. This section describes resolvers' organization, every field's default resolver, and their signature.
 
-### Basic Resolver
+### Resolver map
 
-With the following schema, a client could request `query { key }`.
-
-```graphql
-type Query {
-  key: String
-}
-```
-
-In order to service this request, we would provide the following resolvers, which enable to server to respond with `{ data: { key: 'major' } }`.
+In order to respond to queries, a schema needs to have resolve functions for all fields. This collection of functions is called the "resolver map". This map relates the schema fields and types to a function.
 
 ```js
-resolvers = {
-  Query: {
-    key:() => 'major'
-  }
-}
-```
-
-### Nested Types and Resolvers
-
-In addition to returning scalar types, such as Strings, Queries can request nested objects with different types. An example of a nested query would be:
-
-```graphql
-query {
-  parent {
-    child
-  }
+const schema = `
+type Book {
+  title: String
+  author: Author
 }
 
-//Start schema
-type Parent {
-  child: String
+type Author {
+  books: [Book]
 }
 
 type Query {
-  parent: Parent
+  author: Author
 }
-```
+`;
 
-Following the previous example, a first implementation of these resolvers might be:
-
-https://launchpad.graphql.com/lk308wpxnq
-```js
-resolvers = {
+const resolvers = {
   Query: {
-    parent: () => ({})
-  }
+    author(root, args, context, info) {
+      return find(authors, { id: args.id });
+    },
+  },
+  Author: {
+    books(author) {
+      return filter(books, { author: author.name });
+    },
+  },
+};
+```
 
-  Parent: {
-    child: () => 'son'
-  }
+Note that you don't have to put all of your resolvers in one object. Refer to the ["modularizing the schema"](/docs/graphql-tools/generate-schema.html#modularizing) section to learn how to combine multiple resolver maps into one.
+
+### Default resolver
+
+Explicit resolvers are not needed for every type, since Apollo Server provides a [default](https://github.com/graphql/graphql-js/blob/69d90c601ad5a6f49c06b4ebbc8c73d51ef03566/src/execution/execute.js#L1264-L1278) that can perform two actions depending on the contents of `parent`:
+
+1. Return the property from `parent` with the relevant field name
+2. Calls a function on `parent` with the relevant field name and provide the remaining resolver parameters as arguments
+
+For the following schema, the `title` field of `Book` would not need a resolver if the result of the `books` resolver provided a list of objects that already contained a `title` field.
+
+```graphql
+type Book {
+  title: String
+}
+
+type Author {
+  books: [Book]
 }
 ```
 
-These resolvers can be simplified taking advantage of two features: parameters provided to every resolver and the implicit resolvers implemented by all GraphQL frameworks. The first parameter to each resolver is the result of their parent resolver, following the query's structure. In this case, `child`'s resolver will receive the result of `parent`'s resolver. In addition, when no resolver is provided, the default function returns the field name's value from the parent resolvers' result.
-
-```js
-resolvers = {
-  Query: {
-    parent: () => ({child: 'son'})
-  }
-
-  // Implicitly provided by the framework:
-  // Parent: {
-  //   child: (parent) => parent.child
-  // }
-}
-```
-
-You'll notice how this implementation makes your resolvers more simple. In practice, you should fetch data in parent resolvers when retrieval is cheap. For more complicated cases where some fields are more expensive to request, read [this section on performance]() to learn how to optimize your data fetching.
-
-### Resolver Signature
+## Resolver Signature
 
 In addition to the parent resolvers' value, resolvers receive a couple more arguments. The full resolver function signature contains four positional arguments: `(parent, args, context, info)` and can return an object or [Promise](https://codeburst.io/javascript-learn-promises-f1eaa00c5461). Once a promise resolves, then the children resolvers will continue executing. This is useful for fetching data from a [backend]().
 
 The resolver parameters generally follow this naming convention and are described in detail:
 
-1. `parent`: The object that contains the result returned from the resolver on the parent field, or, in the case of a top-level `Query` field, the `rootValue` passed from the [server configuration](/docs/apollo-server/setup.html). This argument enables the nested nature of GraphQL queries.
+1. `parent`: The object that contains the result returned from the resolver on the parent field, or, in the case of a top-level `Query` field, the `rootValue` passed from the [server configuration](). This argument enables the nested nature of GraphQL queries.
 2. `args`: An object with the arguments passed into the field in the query. For example, if the field was called with `query{ key(arg: "you meant") }`, the `args` object would be: `{ "arg": "you meant" }`.
 3. `context`: This is an object shared by all resolvers in a particular query, and is used to contain per-request state, including authentication information, dataloader instances, and anything else that should be taken into account when resolving the query. Read [this section]() for an explanation of when and how to use context.
 4. `info`: This argument should only be used in advanced cases, but it contains information about the execution state of the query, including the field name, path to the field from the root, and more. It's only documented in the [GraphQL.js source code](https://github.com/graphql/graphql-js/blob/c82ff68f52722c20f10da69c9e50a030a1f218ae/src/type/definition.js#L489-L500).
 
 In addition to returning GraphQL defined [scalars](), you can return [custom scalars]() for special use cases, such as JSON or big integers.
+
+
+### `parent` argument
+
+The first argument to every resolver, `parent`, can be a bit confusing at first, but it makes sense when you consider what a GraphQL query looks like:
+
+```graphql
+query {
+  getAuthor(id: 5){
+    name
+    posts {
+      title
+      author {
+        name # this will be the same as the name above
+      }
+    }
+  }
+}
+```
+
+Every GraphQL query is a tree of function calls in the server. So the `obj` contains the result of parent resolver, in this case:
+
+1. `parent` in `Query.getAuthor` will be whatever the server configuration passed for `rootValue`.
+2. `parent` in `Author.name` and `Author.posts` will be the result from `getAuthor`, likely an Author object from the backend.
+3. `parent` in `Post.title` and `Post.author` will be one item from the `posts` result array.
+4. `parent` in `Author.name` is the result from the above `Post.author` call.
+
+Every resolver function is called according to the nesting of the query. To understand this transition from query to resolvers from another perspective, read this [blog post](https://dev-blog.apollodata.com/graphql-explained-5844742f195e#.fq5jjdw7t).
+
+### Result format
+
+Resolvers in GraphQL can return different kinds of results which are treated differently:
+
+1. `null` or `undefined` - this indicates the object could not be found. If your schema says that field is _nullable_, then the result will have a `null` value at that position. If the field is `non-null`, the result will "bubble up" to the nearest nullable field and that result will be set to `null`. This is to ensure that the API consumer never gets a `null` value when they were expecting a result.
+2. An array - this is only valid if the schema indicates that the result of a field should be a list. The sub-selection of the query will run once for every item in this array.
+3. A promise - resolvers often do asynchronous actions like fetching from a database or backend API, so they can return promises. This can be combined with arrays, so a resolver can return a promise that resolves to an array, or an array of promises, and both are handled correctly.
+4. A scalar or object value - a resolver can also return any other kind of value, which doesn't have any special meaning but is simply passed down into any nested resolvers, as described in the next section.
 
 ## Material Summary
 
@@ -113,7 +127,7 @@ In addition to returning GraphQL defined [scalars](), you can return [custom sca
 
 * resolver on user defined type
   * resolver for parent is needed since the default would return null
-  * this indicates the best practice for resolvers to al
+  * this indicates the best practice for resolvers to always stay simple and use the default if possible
 
 * The resolver function signature is `(parent, args, context, info)`
   * parent contains the data returned by parent field's resolver
