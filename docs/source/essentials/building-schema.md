@@ -15,7 +15,7 @@ Every Apollo Server has a GraphQL schema, which describes the data and actions t
 
 A GraphQL schema is written in a human-readable Schema Definition Language (or SDL for short) that defines the common language between the client and server. The SDL mirrors JSON and JavaScript's syntax, providing the ability to define membership, such as a `Book` needs a title an `Author` has a name. These memberships can be mutual, since an `Author` writes multiple `Book`s and a `Book` has one primary author. A schema to describe the previously mentioned relationships could look something like this:
 
-```
+```graphql
 type Book {
   title: String
   author: Author
