@@ -1,6 +1,5 @@
 ---
 title: Building a schema
-description: The why, what, and how of building a schema
 ---
 
 ## Prerequisites
@@ -61,8 +60,6 @@ A GraphQL query is for reading data.  The schema defines the types of queries wh
 * It's how you fetch data
 
 **Actually writing resolvers for your queries is found in server/queries**
-
-> TODO: The below headings were left over from the other document.  Do we want to remove them?
 
 ## Implementing Queries in Apollo Server
 
