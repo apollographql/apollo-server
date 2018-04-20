@@ -22,7 +22,6 @@ sidebar_categories:
     - schemas/context
   Best Practices:
     - best-practices/authentication
-    - best-practices/permissions
     - best-practices/schema-design
     - best-practices/performance
     - best-practices/security
