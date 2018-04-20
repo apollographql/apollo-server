@@ -38,13 +38,15 @@ sidebar_categories:
     - best-practices/versioning
     - best-practices/schema-stitching
     - best-practices/infrastructure
-    - best-practices/deploying
   Working with Backends:
     - backends/general
     - backends/sql
     - backends/mongodb
     - backends/rest
     - backends/prisma
+  Deploy Apollo Server:
+    - deploy/best-practices
+    - deploy/heroku
   Advanced:
     - advanced/query-mechanics
   API Reference:
