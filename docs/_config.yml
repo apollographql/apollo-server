@@ -20,8 +20,6 @@ sidebar_categories:
     - schemas/directives
     - schemas/resolvers
     - schemas/context
-  TODO:
-    - server/engine
   Best Practices:
     - best-practices/authentication
     - best-practices/permissions
