@@ -10,7 +10,7 @@ description: How to write your types, expose your data, and keep it all working 
 
 GraphQL is a strongly typed language and the concept of "types" is a fundamental part of GraphQL.  Types define the capabilities of a GraphQL server and allow GraphQL operations to be easily validated.
 
-While in the most basic sence, you could have a GraphQL server return a single, scalar type, combining these types provides the ability to build GraphQL servers of varying complexities.
+While in the most basic sense, you could have a GraphQL server return a single, scalar type, combining these types provides the ability to build GraphQL servers of varying complexities.
 
 ## Core scalar types
 
@@ -69,7 +69,7 @@ The `Query` type is a special object type used to organize other fields.
 ## `Mutation` type
 
 * special type to define operations to change server data
-* backed by a resolver that performs the backend modification
+* backed by a resolver that performs the back-end modification
 * look at essentials/mutations for mutation shape from client and appearance on server
 * server/mutations for implementation information
 

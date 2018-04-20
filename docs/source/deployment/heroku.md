@@ -42,7 +42,7 @@ Send a query to your GraphQL service at your Heroku Application at `<HEROKU_APP_
 
 <h3 id="env-vars" title="Environment variables">3. Configure environment variables</h3>
 
-In order to enable the production mode of Apollo Server, you will need to set the `NODE_ENV` variable to production. To ensure you have visability into your GraphQL performance in Apollo Server, you'll want to add the `ENGINE_API_KEY` environment variable to Heroku. For the api key, log into the [Engine UI](https://engine.apollographql.com) and navigate to your service or create a new one.
+In order to enable the production mode of Apollo Server, you will need to set the `NODE_ENV` variable to production. To ensure you have visibility into your GraphQL performance in Apollo Server, you'll want to add the `ENGINE_API_KEY` environment variable to Heroku. For the API key, log into the [Engine UI](https://engine.apollographql.com) and navigate to your service or create a new one.
 
 Then under the “Settings” tab, click “Reveal Config Vars". Next set `NODE_ENV` to `production` and copy your key from the [Engine UI](http://engine.apollographql.com/) as the value for `ENGINE_API_KEY`.
 

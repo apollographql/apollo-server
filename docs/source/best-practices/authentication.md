@@ -17,11 +17,11 @@ GraphQL offers similar authentication and authorization mechanics as REST and ot
 
 ## Authenticating users
 
-All of the approaches require that users be authenticated with the server. If you system already has login method setup to authenticate users and provide credentials that can be used in subsequent requests, you can use this same system to authenticate GraphQL requests. With that said, if you are creating a new infrastructure for user authentication, you can follow the existing best practice to authenticate users for REST endpoints, treating your /grpahql endpoint as a rest endpoint. For a full example of authentication, follow [this example](), which uses passport.js.
+All of the approaches require that users be authenticated with the server. If you system already has login method setup to authenticate users and provide credentials that can be used in subsequent requests, you can use this same system to authenticate GraphQL requests. With that said, if you are creating a new infrastructure for user authentication, you can follow the existing best practice to authenticate users for REST endpoints, treating your /graphql endpoint as a rest endpoint. For a full example of authentication, follow [this example](), which uses passport.js.
 
 ## Whole Query Authentication
 
-Whole query authentication is useful for GraphQL endpoints that require known users and allow access to all fields inside of a GraphQL endpoint. This approach is useful for internal applications, which are used by a group that is known and generally trusted. Additionally it's common to have separate GraphQL services for different features or products that entirely available to users, meaning if a user is authenticated, they are authorized to access all the data. Since whole query authentication does not need to be aware of the GraphQL layer, your server can add a middleware in front of the GrpahQL layer to ensure authentication. With the authentication example, the implementation of whole query caching would appear as follows:
+Whole query authentication is useful for GraphQL endpoints that require known users and allow access to all fields inside of a GraphQL endpoint. This approach is useful for internal applications, which are used by a group that is known and generally trusted. Additionally it's common to have separate GraphQL services for different features or products that entirely available to users, meaning if a user is authenticated, they are authorized to access all the data. Since whole query authentication does not need to be aware of the GraphQL layer, your server can add a middleware in front of the GraphQL layer to ensure authentication. With the authentication example, the implementation of whole query caching would appear as follows:
 
 ```js
 //authenticate all routes
@@ -36,7 +36,7 @@ app.use((req, res, next) => {
   }
 });
 
-new ApolloServer({ typedefs, resolvers, app }).listen().then(({ url }) => {
+new ApolloServer({ typeDefs, resolvers, app }).listen().then(({ url }) => {
   console.log(`Go to ${url} to run queries!`);
 });
 ```
@@ -47,7 +47,7 @@ Currently this server will allow any authenticated user to request all fields in
 import { DB } from './schema/db.js';
 
 new ApolloServer(req => ({
-  typedefs,
+  typeDefs,
   resolvers,
   context: async () => ({
     user_id: req.user.id,
@@ -87,7 +87,7 @@ const resolvers = {
 }
 ```
 
-> Note: the actual database implementation is factored out into another file. This follow the DRY mantra, since the same fetch can occur in multiple places.It provides an interface into the data, so the backend can change. Additionally the interface limits resolvers complexity from needing to make calls such as:`sql.raw("SELECT * FROM todos WHERE owner_id is NULL or owner_id = %s", context.user_id);`.
+> Note: the actual database implementation is factored out into another file. This follow the DRY mantra, since the same fetch can occur in multiple places.It provides an interface into the data, so the back-end can change. Additionally the interface limits resolvers complexity from needing to make calls such as:`sql.raw("SELECT * FROM todos WHERE owner_id is NULL or owner_id = %s", context.user_id);`.
 
 The major downside to whole query authentication is that all requests must be authenticated, which prevents unauthenticated requests to access information that should be publicly accessible, such as a home page. The next approach, partial query authentication enables a portion of the schema to be unauthenticated and authorize portions of the schema to authenticated users.
 
@@ -96,7 +96,7 @@ The major downside to whole query authentication is that all requests must be au
 Partial query authentication removes the catch all middleware that throws an unauthenticated error, moving the authentication check within resolvers. The instantiation of the server becomes:
 
 ```js
-new ApolloServer({ typedefs, resolvers, app }).listen().then(({ url }) => {
+new ApolloServer({ typeDefs, resolvers, app }).listen().then(({ url }) => {
   console.log(`Go to ${url} to run queries!`);
 });
 ```
@@ -104,7 +104,7 @@ new ApolloServer({ typedefs, resolvers, app }).listen().then(({ url }) => {
 The model for checking authorization mirrors the whole query checks for
 authorization scope, making a check for some form of authentication for fields
 that require it. In this example, the errors thrown on authentication failures
-vs forbidden accesses are different, since the client will take two distinct actions depending on the error, either reauthenticate in the case of an authentication failure or hide the result.
+vs forbidden accesses are different, since the client will take two distinct actions depending on the error, either re-authenticate in the case of an authentication failure or hide the result.
 
 ```js
 import { ForbiddenError, AuthenticationError } from 'apollo-server';

@@ -72,7 +72,7 @@ resolvers = {
 }
 ```
 
-These resolvers can be simplified taking advantage of two features: parameters provided to every resolver and the implicit resolvers implemented by all GraphQL frameworks. The first parameter to each resolver is the result of their parent resolver, following the query's structure. In this case, `child`'s resolver will receive the result of `parent`'s resolver. In addition, when no resolver is provided, the default function returns the field name's value from the parent resolver's result.
+These resolvers can be simplified taking advantage of two features: parameters provided to every resolver and the implicit resolvers implemented by all GraphQL frameworks. The first parameter to each resolver is the result of their parent resolver, following the query's structure. In this case, `child`'s resolver will receive the result of `parent`'s resolver. In addition, when no resolver is provided, the default function returns the field name's value from the parent resolvers' result.
 
 ```js
 resolvers = {
@@ -117,7 +117,7 @@ In addition to returning GraphQL defined [scalars](), you can return [custom sca
 
 * The resolver function signature is `(parent, args, context, info)`
   * parent contains the data returned by parent field's resolver
-  * client query with parent and child labelled
+  * client query with parent and child labeled
   * default resolver returns parent['field-name']
     * for fields of the Query type, parent is null
   * args come from the query arguments access them, like so:
