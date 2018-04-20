@@ -32,6 +32,10 @@ Whether designing a new application or creating a GraphQL layer over your existi
 
 > Often times mature architectures have been battle tested and optimized for certain views. There is a temptation to translate this data directly into the SDL. This can be an effective migration path provided there is a way to add new GraphQL schema types for new use cases. Often times, since these are newer features with less critical performance guarantees, it is acceptable to retrieve a portion of fields for  a given field from the optimized backing
 
+## Introspection
+
+Introspection is an automatic benefit built into the GraphQL specification which allows users to ask a server what operations it supports.  This facilitates SDL-generation since GraphiQL and other tools will can provide you specific insight into the fields available at each level of a GraphQL operation.  Protecting data exposed by a GraphQL schema is important and more information on security can be found in [security best practices]().
+
 ## Execution Instructions (resolvers)
 
 In addition to the SDL describing the interface and types, a complete schema includes functions that provide the implementation of how the SDL is executed on the server.
