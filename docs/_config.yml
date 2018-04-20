@@ -17,9 +17,8 @@ sidebar_categories:
   Schema Development:
     - schemas/organization
     - schemas/types
-    - schemas/directives
     - schemas/resolvers
-    - schemas/context
+    - schemas/directives
   Best Practices:
     - best-practices/authentication
     - best-practices/schema-design
