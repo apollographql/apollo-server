@@ -76,3 +76,10 @@ Once you have a GraphQL server up and running, there are a number of configurabl
 * [Schema design]()
 * [Schema directives]()
 * [Deploying]()
+
+
+### TODO
+
+* Evans thinks this should go into advanced/as an anti pattern
+  * best practice dictates that you should have your GraphQL server separate from other services and have a single endpoint
+  * the advanced section could talk about this in the case that you are doing something special, such as SSR
