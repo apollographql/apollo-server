@@ -2,10 +2,6 @@
 title: Building a schema
 ---
 
-## Prerequisites
-
-* `TODO` Types? (Query = type, so might be better)
-
 ## Overview
 
 Every Apollo Server has a GraphQL schema, which describes the data and actions that are accessible by the client. It contains types, which correspond to tangible items or category, such as an `Author` or a `Book`. To define those types, the schema  provides relationships. By defining relationships between entities, a GraphQL schema describes the structure of data without providing the actual data, just like the menu at a cafeteria, which describes the food without the deliciousness.
@@ -31,91 +27,24 @@ Whether designing a new application or creating a GraphQL layer over your existi
 
 > Often times mature architectures have been battle tested and optimized for certain views. There is a temptation to translate this data directly into the SDL. This can be an effective migration path provided there is a way to add new GraphQL schema types for new use cases. Often times, since these are newer features with less critical performance guarantees, it is acceptable to retrieve a portion of fields for  a given field from the optimized backing
 
-## Introspection
-
-Introspection is an automatic benefit built into the GraphQL specification which allows users to ask a server what operations it supports.  This facilitates SDL-generation since GraphiQL and other tools will can provide you specific insight into the fields available at each level of a GraphQL operation.  Protecting data exposed by a GraphQL schema is important and more information on security can be found in [security best practices]().
-
-# Queries
-
-## Prerequisites
-
-* A basic understanding of a GraphQL schema ([Schema]())
-## Prerequisites
-
-## Overview
+## Queries
 
 A GraphQL query is for reading data.  The schema defines the types of queries which are available to the clients connecting to your server.
 
-## Material
+> ## Material
+>
+> * GraphQL query defines the shape of data that will be returned by a particular request
+>   * This is what an author + books query looks like coming from the client
+>   * make sure it has arguments
+> * This query is then checked again the server's schema
+>   * looks like this:
+> * "root" level queries define the main entry points
+> * Each of those root queries returns a type
+> * You have to have a query
+> * It's an entry point like all rest endpoints
+> * It's how you fetch data
 
-* GraphQL query defines the shape of data that will be returned by a particular request
-  * This is what an author + books query looks like coming from the client
-  * make sure it has arguments
-* This query is then checked again the server's schema
-  * looks like this:
-* "root" level queries define the main entry points
-* Each of those root queries returns a type
-* You have to have a query
-* It's an entry point like all rest endpoints
-* It's how you fetch data
-
-**Actually writing resolvers for your queries is found in server/queries**
-
-## Implementing Queries in Apollo Server
-
-> (Evans) this section feels very similar to resolvers
-
-Now that we understand the Query type, GraphQL types, and resolvers, we can explain the following code to define our schema and resolvers. This example shows the
-
-```js
-const { ApolloServer } = require('apollo-server');
-
-const typeDefs = `
-  type Process {
-    params: [String]
-    program: String
-  }
-
-  type Query {
-    process: Process
-    argv: [String]
-  }
-`;
-
-// Resolvers define the technique for fetching the types in the
-// schema.  We'll retrieve books from the "books" array above.
-const resolvers = {
-  Process: {
-    params: (parent) => parent.argv.slice(1)
-    program: (parent) => parent.argv[0]
-    url: (_,_,context) => context.req.baseUrl
-  }
-
-  Query: {
-    process: () => process
-    argv: () => process.argv
-  },
-};
-
-new ApolloServer({ typeDefs, resolvers, context: { req } })
-  .listen()
-  .then(({ url }) => {
-    console.log(`Visit ${url} to run queries!`);
-  });
-```
-
-## Material to include
-
-* This section ties all of the information in the prereqs to show you how to implement Queries with the Apollo Server
-  * essentially copy and paste code that you can then add onto
-
-# Mutations
-
-## Prerequisites
-
-* A basic understanding of a GraphQL schema ([Schema]())
-
-## Overview
+## Mutations
 
 Mutations are operations sent to the server to create, update or delete data.  Those familiar with REST-based communication verbs would associate these with the `PUT`, `POST`, `PATCH` and `DELETE` methods.
 
@@ -127,9 +56,15 @@ Mutations are operations sent to the server to create, update or delete data.  T
 * The fields describe the object that is returned by a mutation, often times the object that was created or the entire collection that was modified. Or a confirmation of deletion
   * Here is what the return looks like from the previous mutation call
 
-**Actually writing resolvers for your mutations is found in server/mutations**
+## Introspection
 
-## Why mutations exist?
+Introspection is an automatic benefit built into the GraphQL specification which allows users to ask a server what operations it supports.  This facilitates SDL-generation since GraphiQL and other tools will can provide you specific insight into the fields available at each level of a GraphQL operation.  Protecting data exposed by a GraphQL schema is important and more information on security can be found in [security best practices]().
+
+
+## SCRATCHPAD
+
+* This section ties all of the information in the prereqs to show you how to implement Queries with the Apollo Server
+  * essentially copy and paste code that you can then add onto
 
 * Mutations exist because they have special argument types called Input types
 * Input types only contain scalar types and cannot have any other input types

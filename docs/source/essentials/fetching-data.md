@@ -6,7 +6,7 @@ GraphQL is the best way to work with data from **any** back-end that your produc
 
 ## Context
 
-> TODO: Shorten this up.
+> TODO: Shorten this up, a lot.
 
 ### What is?
 
@@ -50,6 +50,47 @@ context: async () => ({
 (parent, _, context) => {
   return context.db.query('SELECT * FROM table_name');
 }
+```
+
+## Implementing Queries in Apollo Server
+
+Now that we understand the Query type, GraphQL types, and resolvers, we can explain the following code to define our schema and resolvers. This example shows the
+
+```js
+const { ApolloServer } = require('apollo-server');
+
+const typeDefs = `
+  type Process {
+    params: [String]
+    program: String
+  }
+
+  type Query {
+    process: Process
+    argv: [String]
+  }
+`;
+
+// Resolvers define the technique for fetching the types in the
+// schema.  We'll retrieve books from the "books" array above.
+const resolvers = {
+  Process: {
+    params: (parent) => parent.argv.slice(1)
+    program: (parent) => parent.argv[0]
+    url: (_,_,context) => context.req.baseUrl
+  }
+
+  Query: {
+    process: () => process
+    argv: () => process.argv
+  },
+};
+
+new ApolloServer({ typeDefs, resolvers, context: { req } })
+  .listen()
+  .then(({ url }) => {
+    console.log(`Visit ${url} to run queries!`);
+  });
 ```
 
 ## Material Summary
