@@ -30,7 +30,6 @@ sidebar_categories:
     - best-practices/monitoring
     - best-practices/versioning
     - best-practices/testing
-    - best-practices/secrets
   Deployment:
     - deployment/index
     - deployment/heroku
