@@ -1,6 +1,7 @@
 ---
-title: Apollo Server on Heroku
-description: How to configure and deploy your GraphQL server
+title: Deploying with Heroku
+sidebar_title: Heroku
+description: Deploying your GraphQL server to Heroku
 ---
 
 Heroku is a common Platform as a Service that allows you to deploy your Apollo Server and have a functional GraphQL endpoint.
