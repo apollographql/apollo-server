@@ -150,7 +150,7 @@ TODO
 
 If you are new setting up new infrastructure or would like to understand an example of how to adapt your existing login system, you can follow this example using passport.js. We will use this example of authentication in the subsequent sections. To skip this section, jump down to the
 
-```bash
+```shell
 npm install --save express passport body-parser express-session node-uuid passport-local
 ```
 

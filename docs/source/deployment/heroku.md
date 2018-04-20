@@ -26,7 +26,7 @@ Name your app and hit “Create app”
 
 Install the [Heroku Cli](https://devcenter.heroku.com/articles/heroku-cli), then inside of your project, run:
 
-```bash
+```shell
 $ git init #existing git repositories can skip this
 $ heroku git:remote -a <HEROKU_APP_NAME>
 

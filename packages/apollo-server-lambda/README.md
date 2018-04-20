@@ -32,7 +32,7 @@ exports.graphiqlHandler = server.graphiqlLambda({
 
 The bucket name name must be universally unique.
 
-```bash
+```shell
 aws s3 mb s3://<bucket name>
 ```
 
