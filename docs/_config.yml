@@ -7,7 +7,7 @@ versions:
 sidebar_categories:
   null:
     - index
-    - why-apollo
+    - why-apollo-server
     - getting-started
     - whats-new
   Essentials:

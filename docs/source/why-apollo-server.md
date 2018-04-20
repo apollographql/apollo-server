@@ -1,5 +1,5 @@
 ---
-title: Why Apollo?
+title: Why Apollo Server?
 ---
 
 Building APIs shouldn't have to be so tricky. If you are concerned about performance, security, or just building a service that will make your product easier to build and maintain, you've found the right place! Through practical examples inspired by real world uses, you'll learn how Apollo Server's schema first design and declarative approach to data loading can help you ship faster while writing less code. Lets build the API of your dreams! 🚀
