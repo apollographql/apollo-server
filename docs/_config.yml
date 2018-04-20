@@ -29,7 +29,6 @@ sidebar_categories:
     - best-practices/caching
     - best-practices/monitoring
     - best-practices/versioning
-    - best-practices/infrastructure
     - best-practices/testing
     - best-practices/secrets
   Deploy Apollo Server:
