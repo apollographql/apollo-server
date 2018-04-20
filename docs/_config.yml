@@ -12,20 +12,16 @@ sidebar_categories:
     - whats-new
   Essentials:
     - essentials/building-schema
-    - essentials/queries
-    - essentials/mutations
+    - essentials/running-a-server
+    - essentials/fetching-data
   Schema Development:
     - schemas/organization
     - schemas/types
     - schemas/directives
     - schemas/resolvers
     - schemas/context
-  Running a Server:
-    - server/index
-    - server/middleware
-    - server/queries
+  TODO:
     - server/engine
-    - server/secrets
   Best Practices:
     - best-practices/authentication
     - best-practices/permissions
@@ -38,6 +34,8 @@ sidebar_categories:
     - best-practices/versioning
     - best-practices/schema-stitching
     - best-practices/infrastructure
+    - best-practices/testing
+    - best-practices/secrets
   Working with Backends:
     - backends/general
     - backends/sql
