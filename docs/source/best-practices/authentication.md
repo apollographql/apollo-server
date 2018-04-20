@@ -9,11 +9,15 @@ Intro note about authentication vs authorization and how you don't need to throw
 
 Authentication describes process that a user proves their identity, meaning they are who the server understands them to be. In most systems, a user and server share a handshake and token that uniquely pairs them together, ensuring both sides know they are communicating with their intended target.
 
-Once an entity or user is authenticated, the server generally defines a scope of access for that user, such as admin(ex: editor) or user(ex: reader). This scope defines what an entity is authorized to do.
+Authentication defines what a user, such as admin(ex: editor) or user(ex: reader), is allowed to do. Generally a server will authenticate users and provide them an authentication role that permits the user to perform a subset of all possible operations, such as read and not write.
 
 ## Authentication and Authorization in GraphQL
 
-GraphQL offers similar authentication and authorization mechanics as REST and other data fetching solutions with the possibility to control more fine grain access within a single request. There are two common approaches: whole query authentication and partial query authentication. Whole query authentication follows a similar guidance to REST, where the entire request and response is checked for an authenticated user and authorized to access the servers data. A partial query approach takes advantage of the flexibility of GraphQL to provide public portions of the schema that don't require any authentication and private portions that require authentication and authorization.
+GraphQL offers similar authentication and authorization mechanics as REST and other data fetching solutions with the possibility to control more fine grain access within a single request. There are two common approaches: whole query authentication and partial query authentication.
+
+**Whole query authentication** follows a similar guidance to REST, where the entire request and response is checked for an authenticated user and authorized to access the servers data.
+
+**Partial query authentication** takes advantage of the flexibility of GraphQL to provide public portions of the schema that don't require any authentication and private portions that require authentication and authorization.
 
 ## Authenticating users
 
@@ -36,35 +40,37 @@ app.use((req, res, next) => {
   }
 });
 
-new ApolloServer({ typeDefs, resolvers, app }).listen().then(({ url }) => {
-  console.log(`Go to ${url} to run queries!`);
+const server = new ApolloServer({ typeDefs, resolvers, app });
+
+server.listen().then(({ url }) => {
+  console.log(`🚀 Server ready at ${url}`)
 });
 ```
 
 Currently this server will allow any authenticated user to request all fields in the schema, which means that authorization is all or nothing. While some applications provide a shared view of the data to all users, many use cases require scoping authorizations and limiting what some users can see. The authentication scope is shared across all resolvers, so this code adds the user id and scope to the context.
 
 ```js
-import { DB } from './schema/db.js';
+const { DB } = require('./schema/db.js');
 
-new ApolloServer(req => ({
+const server = new ApolloServer(req => ({
   typeDefs,
   resolvers,
-  context: async () => ({
+  context: () => ({
     user_id: req.user.id,
-    scope: await DB.Users.getScopeById(req.user.id),
+    scope: DB.Users.getScopeById(req.user.id),
   }),
   app,
 }))
-  .listen()
-  .then(({ url }) => {
-    console.log(`Go to ${url} to run queries!`);
-  });
+
+server.listen().then(({ url }) => {
+  console.log(`🚀 Server ready at ${url}`)
+});
 ```
 
 Now with in a resolver, we are able to check the user's scope. If the user is not an administrator and `allTodos` are requested, a GraphQL specific forbidden error is thrown. Apollo Server will handle associate the error with the particular path and return it along with any other data successfully requested, such as `myTodos`, to the client.
 
 ```js
-import { ForbiddenError } from 'apollo-server';
+const { ForbiddenError } = require('apollo-server');
 
 const typeDefs = `
   type Query {
@@ -107,7 +113,7 @@ that require it. In this example, the errors thrown on authentication failures
 vs forbidden accesses are different, since the client will take two distinct actions depending on the error, either re-authenticate in the case of an authentication failure or hide the result.
 
 ```js
-import { ForbiddenError, AuthenticationError } from 'apollo-server';
+const { ForbiddenError, AuthenticationError } = require('apollo-server');
 
 const typeDefs = `
   type Query {
@@ -140,11 +146,34 @@ const resolvers = {
 
 ## Authorizing mutations
 
-TODO
+Mutations can be authorized in the same manner as queries or permissions can be checked with a call to the your permissions store inside a resolver. A simple scope permission check might appear similar to the following code:
+
+```js
+const { ForbiddenError, AuthenticationError } = require('apollo-server');
+
+resolvers = {
+	Mutation: {
+    addTodoList: (root, args, context) => {
+			if(!context.scope)
+        throw new AuthenticationError('Must Authenticate');
+
+      // This check could be a database call checking context.user_id
+			if(context.scope !== ADMIN)
+				throw new ForbiddenError('Must be admin to add todo list');
+
+      const newTodoList = { todos: args.todos };
+      DB.Todos.addNewListForUser(newTodoList, context.user_id);
+      return newTodoList;
+    },
+  },
+};
+```
 
 ## Should I send a password in a mutation?
 
-TODO
+Since GraphQL queries are sent to a server in the same manner as REST requests, the same policies apply to sending sensitive data over the wire. The current best practice is to provide an encrypted connection over https or wss if you are using websockets. Provided you setup this layer, passwords and other sensitive information should be secure.
+
+While you may send passwords in mutations to authenticate users, common practice is to
 
 ## Authentication Example
 
@@ -155,18 +184,18 @@ npm install --save express passport body-parser express-session node-uuid passpo
 ```
 
 ```js
-import bodyParser from 'body-parser';
-import express from 'express';
-import passport from 'passport';
-import session from 'express-session';
-import uuid from 'node-uuid';
+const bodyParser = require('body-parser');
+const express = require('express');
+const passport = require('passport');
+const session = require('express-session');
+const uuid = require('node-uuid');
 ```
 
 After installing and importing the necessary packages, this code checks the user's password and attaches their id to the request.
 
 ```js
 let LocalStrategy = require('passport-local').Strategy;
-import { DB } from './schema/db.js';
+const { DB } = require('./schema/db.js');
 
 passport.use(
   'local',
@@ -212,7 +241,7 @@ app.use(passport.session());
 Finally we provide the login route and start Apollo Server.
 
 ```js
-import { typeDefs, resolvers } from './schema';
+const { typeDefs, resolvers } = require('./schema');
 
 //login route for passport
 app.use('/login', bodyParser.urlencoded({ extended: true }));
@@ -225,7 +254,12 @@ app.post(
   }),
 );
 
-new ApolloServer({ typeDefs, resolvers, app }).listen().then(({ url }) => {
-  console.log(`Go to ${url} to run queries!`);
+//Depending on the authentication model you choose, whole or partial query, you may include some extra middleware here before you instantiate the server
+
+//Create and start your apollo server
+const server = new ApolloServer({ typeDefs, resolvers, app });
+
+server.listen().then(({ url }) => {
+  console.log(`🚀 Server ready at ${url}`)
 });
 ```
