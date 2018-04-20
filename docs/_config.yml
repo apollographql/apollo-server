@@ -31,9 +31,10 @@ sidebar_categories:
     - best-practices/versioning
     - best-practices/testing
     - best-practices/secrets
-  Deploy Apollo Server:
-    - deploy/best-practices
-    - deploy/heroku
+  Deployment:
+    - deployment/index
+    - deployment/heroku
+    - deployment/lambda
   Advanced:
     - advanced/query-mechanics
   API Reference:
