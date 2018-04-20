@@ -36,6 +36,104 @@ Whether designing a new application or creating a GraphQL layer over your existi
 
 Introspection is an automatic benefit built into the GraphQL specification which allows users to ask a server what operations it supports.  This facilitates SDL-generation since GraphiQL and other tools will can provide you specific insight into the fields available at each level of a GraphQL operation.  Protecting data exposed by a GraphQL schema is important and more information on security can be found in [security best practices]().
 
-## Execution Instructions (resolvers)
+# Queries
 
-In addition to the SDL describing the interface and types, a complete schema includes functions that provide the implementation of how the SDL is executed on the server.
+## Prerequisites
+
+* A basic understanding of a GraphQL schema ([Schema]())
+## Prerequisites
+
+## Overview
+
+A GraphQL query is for reading data.  The schema defines the types of queries which are available to the clients connecting to your server.
+
+## Material
+
+* GraphQL query defines the shape of data that will be returned by a particular request
+  * This is what an author + books query looks like coming from the client
+  * make sure it has arguments
+* This query is then checked again the server's schema
+  * looks like this:
+* "root" level queries define the main entry points
+* Each of those root queries returns a type
+* You have to have a query
+* It's an entry point like all rest endpoints
+* It's how you fetch data
+
+**Actually writing resolvers for your queries is found in server/queries**
+
+> TODO: The below headings were left over from the other document.  Do we want to remove them?
+
+## Implementing Queries in Apollo Server
+
+> (Evans) this section feels very similar to resolvers
+
+Now that we understand the Query type, GraphQL types, and resolvers, we can explain the following code to define our schema and resolvers. This example shows the
+
+```js
+const { ApolloServer } = require('apollo-server');
+
+const typeDefs = `
+  type Process {
+    params: [String]
+    program: String
+  }
+
+  type Query {
+    process: Process
+    argv: [String]
+  }
+`;
+
+// Resolvers define the technique for fetching the types in the
+// schema.  We'll retrieve books from the "books" array above.
+const resolvers = {
+  Process: {
+    params: (parent) => parent.argv.slice(1)
+    program: (parent) => parent.argv[0]
+    url: (_,_,context) => context.req.baseUrl
+  }
+
+  Query: {
+    process: () => process
+    argv: () => process.argv
+  },
+};
+
+new ApolloServer({ typeDefs, resolvers, context: { req } })
+  .listen()
+  .then(({ url }) => {
+    console.log(`Visit ${url} to run queries!`);
+  });
+```
+
+## Material to include
+
+* This section ties all of the information in the prereqs to show you how to implement Queries with the Apollo Server
+  * essentially copy and paste code that you can then add onto
+
+# Mutations
+
+## Prerequisites
+
+* A basic understanding of a GraphQL schema ([Schema]())
+
+## Overview
+
+Mutations are operations sent to the server to create, update or delete data.  Those familiar with REST-based communication verbs would associate these with the `PUT`, `POST`, `PATCH` and `DELETE` methods.
+
+* Mutations are the main entry point to make updates to the data backing Queries
+* Here is what one looks like coming from the client
+* Here is the corresponding server schema
+* A mutation can contain arguments and fields
+* Input types are passed to Apollo Server and inform it how to make the update
+* The fields describe the object that is returned by a mutation, often times the object that was created or the entire collection that was modified. Or a confirmation of deletion
+  * Here is what the return looks like from the previous mutation call
+
+**Actually writing resolvers for your mutations is found in server/mutations**
+
+## Why mutations exist?
+
+* Mutations exist because they have special argument types called Input types
+* Input types only contain scalar types and cannot have any other input types
+  * ensures that data from the client is always serializable and we don't lose any information, since circular references don't survive network call
