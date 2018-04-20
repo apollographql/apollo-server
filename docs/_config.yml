@@ -32,12 +32,6 @@ sidebar_categories:
     - best-practices/infrastructure
     - best-practices/testing
     - best-practices/secrets
-  Working with Backends:
-    - backends/general
-    - backends/sql
-    - backends/mongodb
-    - backends/rest
-    - backends/prisma
   Deploy Apollo Server:
     - deploy/best-practices
     - deploy/heroku
