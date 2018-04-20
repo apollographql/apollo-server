@@ -26,7 +26,6 @@ sidebar_categories:
     - best-practices/authentication
     - best-practices/permissions
     - best-practices/schema-design
-    - best-practices/subscriptions
     - best-practices/performance
     - best-practices/security
     - best-practices/caching
