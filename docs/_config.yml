@@ -7,7 +7,7 @@ versions:
 sidebar_categories:
   null:
     - index
-    - why-apollo
+    - why-apollo-server
     - getting-started
     - whats-new
   Essentials:
@@ -17,32 +17,21 @@ sidebar_categories:
   Schema Development:
     - schemas/organization
     - schemas/types
-    - schemas/directives
     - schemas/resolvers
-    - schemas/context
-  TODO:
-    - server/engine
+    - schemas/directives
   Best Practices:
     - best-practices/authentication
-    - best-practices/permissions
     - best-practices/schema-design
     - best-practices/performance
     - best-practices/security
     - best-practices/caching
     - best-practices/monitoring
     - best-practices/versioning
-    - best-practices/infrastructure
     - best-practices/testing
-    - best-practices/secrets
-  Working with Backends:
-    - backends/general
-    - backends/sql
-    - backends/mongodb
-    - backends/rest
-    - backends/prisma
-  Deploy Apollo Server:
-    - deploy/best-practices
-    - deploy/heroku
+  Deployment:
+    - deployment/index
+    - deployment/heroku
+    - deployment/lambda
   Advanced:
     - advanced/query-mechanics
   API Reference:

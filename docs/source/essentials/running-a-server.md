@@ -1,5 +1,5 @@
 ---
-title: ApolloServer
+title: Running a server
 description: All of the things you need with no configuration needed!
 ---
 
