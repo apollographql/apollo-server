@@ -26,8 +26,6 @@ sidebar_categories:
     - best-practices/security
     - best-practices/caching
     - best-practices/monitoring
-    - best-practices/versioning
-    - best-practices/testing
   Deployment:
     - deployment/index
     - deployment/heroku
