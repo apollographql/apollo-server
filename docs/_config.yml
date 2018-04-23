@@ -11,9 +11,9 @@ sidebar_categories:
     - getting-started
     - whats-new
   Essentials:
-    - essentials/building-schema
-    - essentials/running-a-server
-    - essentials/fetching-data
+    - essentials/schema
+    - essentials/server
+    - essentials/data
   Schema Development:
     - schemas/organization
     - schemas/types
