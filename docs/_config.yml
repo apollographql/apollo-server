@@ -34,6 +34,7 @@ sidebar_categories:
     - deployment/lambda
   Advanced:
     - advanced/query-mechanics
+    - advanced/scalars-enums
   API Reference:
     - api/apollo-server
     - api/graphql-subscriptions
