@@ -23,7 +23,12 @@ import {
   CacheControlExtensionOptions,
 } from 'apollo-cache-control';
 
-import { fromGraphQLError, formatError } from './errors';
+import {
+  fromGraphQLError,
+  formatError,
+  ValidationError,
+  SyntaxError,
+} from './errors';
 
 export interface GraphQLResponse {
   data?: object;
@@ -100,7 +105,6 @@ function format(
         console.error('Error in formatError function:', err);
         const newError: GraphQLError = fromGraphQLError(
           new GraphQLError('Internal server error'),
-          'INTERNAL_SERVER_ERROR',
         );
         return formatError(newError, debug);
       }
@@ -175,10 +179,17 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
     } catch (syntaxError) {
       logFunction({ action: LogAction.parse, step: LogStep.end });
       return Promise.resolve({
-        errors: format([fromGraphQLError(syntaxError, 'MALFORMED_QUERY')], {
-          formatter: options.formatError,
-          debug,
-        }),
+        errors: format(
+          [
+            fromGraphQLError(syntaxError, {
+              errorClass: SyntaxError,
+            }),
+          ],
+          {
+            formatter: options.formatError,
+            debug,
+          },
+        ),
       });
     }
   } else {
@@ -197,7 +208,7 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
     return Promise.resolve({
       errors: format(
         validationErrors.map(err =>
-          fromGraphQLError(err, 'QUERY_VALIDATION_FAILED'),
+          fromGraphQLError(err, { errorClass: ValidationError }),
         ),
         {
           formatter: options.formatError,
@@ -257,7 +268,13 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
     logFunction({ action: LogAction.execute, step: LogStep.end });
     logFunction({ action: LogAction.request, step: LogStep.end });
     return Promise.resolve({
-      errors: format([fromGraphQLError(executionError, 'EXECUTION_ERROR')], {
+      //TODO accurate code for this error, which describes this error, which
+      // can occur when:
+      // * variables incorrectly typed/null when nonnullable
+      // * unknown operation/operation name invalid
+      // * operation type is unsupported
+      // Options: PREPROCESSING_FAILED, GRAPHQL_RUNTIME_CHECK_FAILED
+      errors: format([fromGraphQLError(executionError)], {
         formatter: options.formatError,
         debug,
       }),

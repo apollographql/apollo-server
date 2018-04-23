@@ -3,6 +3,7 @@ import * as express from 'express';
 import { Config } from './utils/types';
 
 export * from './utils/exports';
+export * from './utils/errors';
 
 import { ApolloServer as ExpressServer } from './express';
 

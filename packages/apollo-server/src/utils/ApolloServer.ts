@@ -207,7 +207,7 @@ ApolloServer was unable to load the configuration for Apollo Engine. Please veri
     if (!this.appCreated && !this.middlewareRegistered) {
       throw new Error(
         `It looks like you are trying to run ApolloServer without applying the middleware. This error is thrown when using a variant of ApolloServer (i.e. require('apollo-server/variant')) and passing in a custom app. To fix this, before you call server.listen, you need to call server.applyMiddleware():
-  
+
   const app = express();
   const server = new ApolloServer({ app, resolvers, typeDefs });
 
@@ -348,9 +348,9 @@ when calling this.request, either call it using an error function, or bind it li
     const { ApolloServer } = require('apollo-server');
     // or
     const { ApolloServer } = require('apollo-server/express');
-    
+
     To see all supported servers, check the docs at https://apollographql.com/docs/server
-      
+
 `);
   }
 
@@ -362,10 +362,10 @@ when calling this.request, either call it using an error function, or bind it li
     config: MiddlewareRegistrationOptions<Server, Request, Cors>,
   ): Server | void {
     throw new Error(`It looks like you called server.addMiddleware on an ApolloServer that is missing a server! Make sure you pass in an app when creating a server:
-      
+
       const { ApolloServer } = require('apollo-server/express');
       const express = require('express');
-      
+
       const app = express();
       const server = new ApolloServer({ app, typeDefs, resolvers });
 `);
