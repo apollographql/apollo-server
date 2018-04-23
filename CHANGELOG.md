@@ -2,6 +2,19 @@
 
 All of the packages in the `apollo-server` repo are released with the same version numbers, so a new version of a particular package might not represent an actual change to that package. We generally try to mark changes that affect only one web server integration package with that package name, and don't specify package names for changes that affect most of the packages or which affect shared core packages.
 
+### vNEXT
+
+### v1.3.5
+
+* `apollo-server-adonis`: The `Content-type` of an operation response will now be correctly set to `application/json`. [PR #842](https://github.com/apollographql/apollo-server/pull/842) [PR #910](https://github.com/apollographql/apollo-server/pull/910)
+* `apollo-server-azure-functions`: Fix non-functional Azure Functions implementation and update examples in Azure Functions' `README.md`. [PR #753](https://github.com/apollographql/apollo-server/pull/753) [Issue #684](https://github.com/apollographql/apollo-server/issues/684)
+* Fix `TypeError` on GET requests with missing `query` parameter. [PR #964](https://github.com/apollographql/apollo-server/pull/964)
+* The typing on the context of `GraphQLServerOptions` now matches the equivilent type used by `graphql-tools`. [PR #919](https://github.com/apollographql/apollo-server/pull/919)
+* Middleware handlers now used named (rather than anonymous) functions to enable easier identification during debugging/profiling. [PR #827](https://github.com/apollographql/apollo-server/pull/827)
+* The `npm-check-updates` package has been removed as a "dev dependency" which was resulting in an _older_ version of `npm` being used during testing. [PR #959](https://github.com/apollographql/apollo-server/pull/959)
+* The typing on `HttpQueryRequest`'s `query` attribute now enforces that its object properties' keys be `String`s. [PR #834](https://github.com/apollographql/apollo-server/pull/834)
+* TypeScript types have been updated via updates to `@types/node`, `@types/connect`, `@types/koa` and `@types/aws-lambda`.
+
 ### v1.3.4
 
 * Upgrade to `apollo-cache-control@0.1.0` and allow you to specify options to it (such as the new `defaultMaxAge`) by passing `cacheControl: {defaultMaxAge: 5}` instead of `cacheControl: true`.

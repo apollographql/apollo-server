@@ -27,7 +27,7 @@ export function graphqlKoa(
     );
   }
 
-  return (ctx: koa.Context): Promise<void> => {
+  const graphqlHandler = (ctx: koa.Context): Promise<void> => {
     return runHttpQuery([ctx], {
       method: ctx.request.method,
       options: options,
@@ -54,6 +54,8 @@ export function graphqlKoa(
       },
     );
   };
+
+  return graphqlHandler;
 }
 
 export interface KoaGraphiQLOptionsFunction {
@@ -63,7 +65,7 @@ export interface KoaGraphiQLOptionsFunction {
 export function graphiqlKoa(
   options: GraphiQL.GraphiQLData | KoaGraphiQLOptionsFunction,
 ) {
-  return (ctx: koa.Context) => {
+  const graphiqlHandler = (ctx: koa.Context) => {
     const query = ctx.request.query;
     return GraphiQL.resolveGraphiQLString(query, options, ctx).then(
       graphiqlString => {
@@ -76,4 +78,6 @@ export function graphiqlKoa(
       },
     );
   };
+
+  return graphiqlHandler;
 }
