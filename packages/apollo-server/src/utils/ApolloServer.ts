@@ -6,8 +6,12 @@ import {
   subscribe,
   ExecutionResult,
   GraphQLError,
+  GraphQLResolveInfo,
+  ValidationContext,
+  FieldDefinitionNode,
 } from 'graphql';
-import { formatError } from 'apollo-server-core';
+import { CacheControlExtensionOptions } from 'apollo-cache-control';
+import { formatError, GraphQLOptions, LogFunction } from 'apollo-server-core';
 import { ApolloEngine as Engine } from 'apollo-engine';
 import {
   SubscriptionServer,
@@ -25,11 +29,34 @@ import {
   ContextFunction,
 } from './types';
 
+export {
+  LogFunction,
+  ValidationContext,
+  CacheControlExtensionOptions,
+  GraphQLResolveInfo,
+};
+
 // taken from engine
 export function joinHostPort(host: string, port: number) {
   if (host.includes(':')) host = `[${host}]`;
   return `${host}:${port}`;
 }
+
+const env = process.env.NODE_ENV;
+const isDev = env !== 'production' && env !== 'test';
+
+const NoIntrospection = (context: ValidationContext) => ({
+  Field(node: FieldDefinitionNode) {
+    if (node.name.value === '__schema' || node.name.value === '__type') {
+      context.reportError(
+        new GraphQLError(
+          'GraphQL introspection is not allowed by Apollo Server, but the query containted __schema or __type. To enable introspection, pass introspection: true to ApolloServer in production',
+          [node],
+        ),
+      );
+    }
+  },
+});
 
 export class ApolloServerBase<
   Server = HttpServer,
@@ -47,24 +74,34 @@ export class ApolloServerBase<
   private graphqlEndpoint: string = '/graphql';
   private cors?: Cors;
   private engineEnabled: boolean = false;
-  private debug?: boolean;
+  private requestOptions: Partial<GraphQLOptions<any>>;
+  private disableTools: boolean = !isDev;
 
   constructor(config: Config<Server, Request, Cors>) {
     const {
-      typeDefs,
-      resolvers,
-      schemaDirectives,
-      schema,
-      context,
       app,
+      context,
+      cors,
       engine,
       engineInRequestPath,
+      resolvers,
+      schema,
+      schemaDirectives,
       subscriptions,
-      cors,
-      debug,
+      typeDefs,
+      introspection,
+      ...requestOptions
     } = config;
 
-    this.debug = debug;
+    if (introspection === false || !isDev) {
+      this.disableTools = true;
+      const noIntro = [NoIntrospection];
+      requestOptions.validationRules = requestOptions.validationRules
+        ? requestOptions.validationRules.concat(noIntro)
+        : noIntro;
+    }
+
+    this.requestOptions = requestOptions;
     this.context = context;
     // XXX should we move this to the `start` call? This would make hot
     // reloading eaiser but may not be worth it?
@@ -151,7 +188,9 @@ ApolloServer was unable to load the configuration for Apollo Engine. Please veri
       subscriptions: true,
       ...opts,
       graphiql:
-        opts.graphiql === false ? null : `${opts.graphiql || '/graphiql'}`,
+        opts.graphiql === false || this.disableTools
+          ? null
+          : `${opts.graphiql || '/graphiql'}`,
       app: this.app,
       request: this.request.bind(this),
     };
@@ -294,9 +333,11 @@ when calling this.request, either call it using an error function, or bind it li
       schema: this.schema,
       tracing: Boolean(this.engineEnabled),
       cacheControl: Boolean(this.engineEnabled),
-      formatError: (e: GraphQLError) => formatError(e, Boolean(this.debug)),
-      debug: Boolean(this.debug),
+      formatError: (e: GraphQLError) =>
+        formatError(e, this.requestOptions.debug),
       context,
+      // allow overrides from options
+      ...this.requestOptions,
     };
   }
 

@@ -2,6 +2,7 @@ import { GraphQLSchema } from 'graphql';
 import { CorsOptions } from 'cors';
 import { SchemaDirectiveVisitor, IResolvers } from 'graphql-tools';
 import { ConnectionContext } from 'subscriptions-transport-ws';
+import { GraphQLOptions } from 'apollo-server-core';
 
 export type Context<T = any> = T;
 export type ContextFunction<T = any> = (
@@ -15,7 +16,21 @@ export interface SubscriptionServerOptions {
   keepAlive?: number;
 }
 
-export interface Config<Server, ContextShape = any, Cors = CorsOptions> {
+export interface Config<Server, ContextShape = any, Cors = CorsOptions>
+  extends Pick<
+      GraphQLOptions<Context<ContextShape>>,
+      | 'formatError'
+      | 'debug'
+      | 'rootValue'
+      | 'logFunction'
+      | 'formatParams'
+      | 'validationRules'
+      | 'formatResponse'
+      | 'fieldResolver'
+      | 'debug'
+      | 'cacheControl'
+      | 'tracing'
+    > {
   app?: Server;
   typeDefs?: string | [string];
   resolvers?: IResolvers;
@@ -26,7 +41,7 @@ export interface Config<Server, ContextShape = any, Cors = CorsOptions> {
   subscriptions?: SubscriptionServerOptions | string | false;
   engineInRequestPath?: boolean;
   engine?: boolean | Object;
-  debug?: boolean;
+  introspection?: boolean;
 }
 
 export interface EngineConfig {
