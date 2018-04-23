@@ -10,7 +10,11 @@ description: Scaling your Apollo Server from a single file to your entire team
 
 ## Overview
 
-The schema contains the information to define all requests that the client can request from an instance of Apollo Server along with the resolvers necessary to route the requests to retrieve data. For most applications, the schema can be placed in a single file along side the resolvers. Many production servers contain a typeDefs string of over a thousand lines. For applications with multiple teams or product domains, this section describes an example application and methods for organizing types and resolvers to make a large instance more modular. The separation between types should follow real-world domains, for example movies vs books, rather than the backend organization. To facilitate this ability to organize by real-world domain, common practice is to create a data model layer that enables resolvers across domains to request data from a common interface. Additionally many domains can share types, such as a user profile. In addition to breaking large schemas apart, GraphQL enables schemas to include documentation inline that is viewable in GraphiQL.
+The schema contains the information to define all requests that the client can request from an instance of Apollo Server along with the resolvers necessary to route the requests to retrieve data. For most applications, the schema type definitions are be placed in a single file along side the resolvers. Placing reolvers in the same file as their accompanying type definitions is the best way to organize the code, since it enables developers to locate and modify the two inter-dependent portions.
+
+Sometimes production servers contain a typeDefs string of over a thousand lines, which makes it difficult to maintain a file containing the resolvers as well. For applications with multiple teams or product domains, this section describes an example application and methods for organizing types and resolvers to make a large instance more modular. The separation between types should follow real-world domains, for example movies vs books, rather than the backend organization. To facilitate this organization, common practice is to create a data model layer that enables resolvers across domains to request data from a common interface. A data layer further enables the different schema domains to share data, such as a user profile.
+
+Along with modularizing large schemas, GraphQL enables schemas to include documentation inline that is viewable in GraphiQL.
 
 ## Example Application
 
@@ -56,7 +60,7 @@ const typeDefs = `
 
 ### Resolvers
 
-The resolvers as a nested object that maps type and field names to resolver functions:
+In the same file as the type defintinos, the resolvers are organized as a nested object that maps type and field names to functions:
 
 ```js
 const { find, filter } = require('lodash');
@@ -124,7 +128,7 @@ When schemas get large, we can start to define types in different files and impo
 
 ```js
 // comment.js
-const Comment = `
+const typeDefs = `
   type Comment {
     id: Int!
     message: String
@@ -132,14 +136,14 @@ const Comment = `
   }
 `;
 
-export default Comment;
+export typeDefs;
 ```
 
 ```js
 // post.js
 const Comment = require('./comment');
 
-const Post = `
+const typeDefs = [`
   type Post {
     id: Int!
     title: String
@@ -147,12 +151,12 @@ const Post = `
     author: String
     comments: [Comment]
   }
-`;
+`].concat(Comment.typeDefs);
 
 // we export Post and all types it depends on
 // in order to make sure we don't forget to include
 // a dependency
-export default [Post, Comment];
+export typeDefs;
 ```
 
 ```js
@@ -173,7 +177,52 @@ const SchemaDefinition = `
 
 const server = new ApolloServer({
   //we may destructure Post if supported by our Node version
-  typeDefs: [SchemaDefinition, RootQuery].concat(Post),
+  typeDefs: [SchemaDefinition, RootQuery].concat(Post.typeDefs),
+  resolvers,
+});
+
+server.listen().then(({ url }) => {
+  console.log(`🚀 Server ready at ${url}`)
+});
+```
+
+<h2 id="modularizing-resolvers">Modularizing resolvers</h2>
+
+We can accomplish the same modularity with resolvers by passing around multiple resolver objects and combining them together with Lodash's `merge` or other equivalent:
+
+```js
+// comment.js
+const resolvers = {
+  Comment: { ... }
+}
+
+export resolvers;
+```
+
+```js
+// post.js
+const { merge } = require('lodash');
+
+const Comment = require('./comment');
+const resolvers = merge({
+  Post: { ... }
+}, Comment.resolvers);
+
+export resolvers;
+```
+
+```js
+// schema.js
+const { merge } = require('lodash');
+const Post = require('./post.js');
+
+// Merge all of the resolver objects together
+const resolvers = merge({
+  Query: { ... }
+}, Post.resolvers);
+
+const server = new ApolloServer({
+  typeDefs,
   resolvers,
 });
 
@@ -203,7 +252,7 @@ const Author = `
 // in order to make sure we don't forget to include
 // a dependency and we wrap it in a function
 // to avoid strings deduplication
-export default () => [Author, Book];
+export const typeDefs = () => [Author, Book];
 ```
 
 ```js
@@ -217,7 +266,7 @@ const Book = `
   }
 `;
 
-export default () => [Book, Author];
+export const typeDefs = () => [Book, Author.typeDefs];
 ```
 
 ```js
@@ -238,29 +287,13 @@ const SchemaDefinition = `
 
 const server = new ApolloServer({
   //we may destructure Post if supported by our Node version
-  typeDefs: [SchemaDefinition, RootQuery].concat(Post),
+  typeDefs: [SchemaDefinition, RootQuery, Author.typeDefs],
   resolvers,
 });
 
 server.listen().then(({ url }) => {
   console.log(`🚀 Server ready at ${url}`)
 });
-```
-
-<h2 id="modularizing-resolvers">Modularizing resolvers</h2>
-
-We can accomplish the same modularity with resolvers by passing around multiple resolver objects and combining them together with Lodash's `merge` or other equivalent:
-
-```js
-const { merge } = require('lodash');
-
-const gitHubResolvers = require('./github/schema').resolvers;
-const sqlResolvers = require('./sql/schema').resolvers;
-
-const rootResolvers = { ... };
-
-// Merge all of the resolver objects together
-const resolvers = merge(rootResolvers, gitHubResolvers, sqlResolvers);
 ```
 
 <h2 id="extend-types">Extending Types</h2>
