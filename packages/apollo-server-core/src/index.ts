@@ -17,5 +17,5 @@ export {
   ValidationError,
   AuthenticationError,
   ForbiddenError,
-  formatError,
+  internalFormatError,
 } from './errors';
