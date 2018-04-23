@@ -25,7 +25,7 @@ import {
 
 import {
   fromGraphQLError,
-  formatError,
+  internalFormatError,
   ValidationError,
   SyntaxError,
 } from './errors';
@@ -97,7 +97,7 @@ function format(
   },
 ): Array<Error> {
   const { formatter, debug } = options;
-  return errors.map(error => formatError(error, debug)).map(error => {
+  return errors.map(error => internalFormatError(error, debug)).map(error => {
     if (formatter !== undefined) {
       try {
         return formatter(error);
@@ -106,7 +106,7 @@ function format(
         const newError: GraphQLError = fromGraphQLError(
           new GraphQLError('Internal server error'),
         );
-        return formatError(newError, debug);
+        return internalFormatError(newError, debug);
       }
     } else {
       return error;

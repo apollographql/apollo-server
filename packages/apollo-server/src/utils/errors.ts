@@ -5,5 +5,4 @@ export {
   ValidationError,
   AuthenticationError,
   ForbiddenError,
-  formatError,
 } from 'apollo-server-core';

@@ -11,7 +11,11 @@ import {
   FieldDefinitionNode,
 } from 'graphql';
 import { CacheControlExtensionOptions } from 'apollo-cache-control';
-import { formatError, GraphQLOptions, LogFunction } from 'apollo-server-core';
+import {
+  internalFormatError,
+  GraphQLOptions,
+  LogFunction,
+} from 'apollo-server-core';
 import { ApolloEngine as Engine } from 'apollo-engine';
 import {
   SubscriptionServer,
@@ -284,7 +288,8 @@ ApolloServer was unable to load the configuration for Apollo Engine. Please veri
         onOperation: async (_: string, connection: ExecutionParams) => {
           connection.formatResponse = (value: ExecutionResult) => ({
             ...value,
-            errors: value.errors && value.errors.map(err => formatError(err)),
+            errors:
+              value.errors && value.errors.map(err => internalFormatError(err)),
           });
           let context: Context = this.context ? this.context : { connection };
 
@@ -334,7 +339,7 @@ when calling this.request, either call it using an error function, or bind it li
       tracing: Boolean(this.engineEnabled),
       cacheControl: Boolean(this.engineEnabled),
       formatError: (e: GraphQLError) =>
-        formatError(e, this.requestOptions.debug),
+        internalFormatError(e, this.requestOptions.debug),
       context,
       // allow overrides from options
       ...this.requestOptions,

@@ -12,7 +12,10 @@ export class ApolloError extends Error {
   }
 }
 
-export function formatError(error: GraphQLError, debug: boolean = false) {
+export function internalFormatError(
+  error: GraphQLError,
+  debug: boolean = false,
+) {
   const expanded: GraphQLError = {
     ...error,
     extensions: {
@@ -65,11 +68,10 @@ export interface ErrorOptions {
 }
 
 export function fromGraphQLError(error: GraphQLError, options?: ErrorOptions) {
-  const { code, errorClass } = options;
-
-  const copy: GraphQLError = errorClass
-    ? new errorClass(error.message)
-    : new ApolloError(error.message);
+  const copy: GraphQLError =
+    options && options.errorClass
+      ? new options.errorClass(error.message)
+      : new ApolloError(error.message);
 
   //copy enumerable keys
   Object.keys(error).forEach(key => {
@@ -84,7 +86,7 @@ export function fromGraphQLError(error: GraphQLError, options?: ErrorOptions) {
 
   //Fallback on default for code
   if (!copy.extensions.code) {
-    copy.extensions.code = code || 'INTERNAL_SERVER_ERROR';
+    copy.extensions.code = (options && options.code) || 'INTERNAL_SERVER_ERROR';
   }
 
   //copy the original error, while keeping all values non-enumerable, so they
@@ -98,28 +100,32 @@ export function fromGraphQLError(error: GraphQLError, options?: ErrorOptions) {
 }
 
 export class SyntaxError extends ApolloError {
-  name = 'SyntaxError';
+  // TODO make the name nonenumerable
+  // name = 'SyntaxError';
   constructor(message: string) {
     super(message, 'GRAPHQL_PARSE_FAILED');
   }
 }
 
 export class ValidationError extends ApolloError {
-  name = 'ValidationError';
+  // TODO make the name nonenumerable
+  // name = 'ValidationError';
   constructor(message: string) {
     super(message, 'GRAPHQL_VALIDATION_FAILED');
   }
 }
 
 export class AuthenticationError extends ApolloError {
-  name = 'AuthenticationError';
+  // TODO make the name nonenumerable
+  // name = 'AuthenticationError';
   constructor(message: string) {
     super(message, 'UNAUTHENTICATED');
   }
 }
 
 export class ForbiddenError extends ApolloError {
-  name = 'ForbiddenError';
+  // TODO make the name nonenumerable
+  // name = 'ForbiddenError';
   constructor(message: string) {
     super(message, 'FORBIDDEN');
   }
