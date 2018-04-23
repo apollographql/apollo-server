@@ -203,9 +203,25 @@ type Query {
 
 This makes SDL-generation even easier since many GraphQL tools auto-complete the field names (along with descriptions, when available) at each level of a GraphQL operation.
 
-## Variables
+## Operation names
 
+When sending the queries and mutations in the above examples, we've used either `query { ... }` or `mutation { ... }` respectively.  While this is fine, and particularly convenient when running queries by hand, it makes sense to name the operation in order to quickly identify operations during debugging or to aggregate similar operations together for application performance metrics, for example, when using [Apollo Engine]() to monitor an API.
 
+Operations can be named by placing a name after the `query` or `operation` keyword, as in:
+
+```graphql
+query HomepageBookListing {
+  getBooks {
+    title
+  }
+}
+
+mutation HomepageQuickAddBook {
+  addBook(title: "Fox in Socks", author: "Dr. Seuss") {
+    title
+  }
+}
+```
 
 ## SCRATCHPAD
 
