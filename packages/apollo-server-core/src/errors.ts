@@ -1,9 +1,12 @@
 import { GraphQLError } from 'graphql';
-export interface IApolloError {}
 
 export class ApolloError extends Error {
   public extensions;
-  constructor(message: string, code: string, properties?: Record<string, any>) {
+  constructor(
+    message: string,
+    code?: string,
+    properties?: Record<string, any>,
+  ) {
     super(message);
     this.extensions = { ...properties, code };
   }
@@ -56,17 +59,33 @@ export function toApolloError(
   return err as Error & { extensions: Record<string, any> };
 }
 
-export function fromGraphQLError(
-  error: GraphQLError,
-  code: string = 'INTERNAL_SERVER_ERROR',
-) {
-  const copy: GraphQLError = {
-    ...error,
-  };
+export interface ErrorOptions {
+  code?: string;
+  errorClass?: typeof ApolloError;
+}
+
+export function fromGraphQLError(error: GraphQLError, options?: ErrorOptions) {
+  const { code, errorClass } = options;
+
+  const copy: GraphQLError = errorClass
+    ? new errorClass(error.message)
+    : new ApolloError(error.message);
+
+  //copy enumerable keys
+  Object.keys(error).forEach(key => {
+    copy[key] = error[key];
+  });
+
+  //extensions are non enumerable, so copy them directly
   copy.extensions = {
     ...copy.extensions,
-    code,
+    ...error.extensions,
   };
+
+  //Fallback on default for code
+  if (!copy.extensions.code) {
+    copy.extensions.code = code || 'INTERNAL_SERVER_ERROR';
+  }
 
   //copy the original error, while keeping all values non-enumerable, so they
   //are not printed unless directly referenced
@@ -78,23 +97,30 @@ export function fromGraphQLError(
   return copy;
 }
 
-export class ParseError extends ApolloError {
-  name = 'MalformedQueryError';
+export class SyntaxError extends ApolloError {
+  name = 'SyntaxError';
   constructor(message: string) {
-    super(message, 'MALFORMED_QUERY');
+    super(message, 'GRAPHQL_PARSE_FAILED');
   }
 }
 
 export class ValidationError extends ApolloError {
   name = 'ValidationError';
   constructor(message: string) {
-    super(message, 'QUERY_VALIDATION_FAILED');
+    super(message, 'GRAPHQL_VALIDATION_FAILED');
   }
 }
 
 export class AuthenticationError extends ApolloError {
-  name = 'UnauthorizedError';
+  name = 'AuthenticationError';
   constructor(message: string) {
-    super(message, 'UNAUTHORIZED');
+    super(message, 'UNAUTHENTICATED');
+  }
+}
+
+export class ForbiddenError extends ApolloError {
+  name = 'ForbiddenError';
+  constructor(message: string) {
+    super(message, 'FORBIDDEN');
   }
 }

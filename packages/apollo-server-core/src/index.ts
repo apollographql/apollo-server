@@ -13,8 +13,9 @@ export {
 export {
   ApolloError,
   toApolloError,
-  ParseError,
+  SyntaxError,
   ValidationError,
   AuthenticationError,
+  ForbiddenError,
   formatError,
 } from './errors';
