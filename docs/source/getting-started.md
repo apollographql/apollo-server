@@ -138,17 +138,17 @@ For this step, we'll return to the terminal/console and start the server we defi
 
 * You should see the following output from the above command:
 
-      Visit http://localhost:3000/graphiql to run queries!
+      Visit http://localhost:4000/ to run queries!
 * Open the address provided in your web browser.
-* If everything is working, you should see the GraphiQL explorer tool, which we will use in the next step.
+* If everything is working, you should see the GraphQL Playground explorer tool, which we will use in the next step.
 
 > TODO: Image here.
 
-In the next step, we'll use the GraphiQL tool to send queries to the GraphQL server.
+In the next step, we'll use the GraphQL Playground tool to send queries to the GraphQL server.
 
 ## Step 5: Running your first query
 
-At this point, you'll be able to start sending queries to the GraphQL server using the GraphiQL explorer, which is split into a few parts:
+At this point, you'll be able to start sending queries to the GraphQL server using GraphQL Playground, which is split into a few parts:
 
 * The request (on the left)
 * The response (on the right)

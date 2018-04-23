@@ -9,7 +9,7 @@ Building APIs shouldn't have to be so tricky. If you are concerned about perform
 We think GraphQL's greatest asset is the schema. Think of it like the Rosetta stone of the data your app needs. Schemas represent the toch point of your frontends with the data that powers them. We recommend using the schema definition language, also called the SDL, to easily write out the data and relationships that your app needs to be successful. Unlike REST APIs, GraphQL schemas shouldn't be a one to one mapping of your database, but rather a representation of how your app works with the data it needs. Let's see what this looks like in practice with Apollo Server:
 
 ```js
-const { ApolloServer } = require('apollo-server-express');
+const { ApolloServer } = require('apollo-server');
 
 const typeDefs = `
   type Author {
@@ -34,7 +34,10 @@ const resolvers = {
 };
 
 const server = new ApolloServer({ typesDefs, resolvers });
-server.listen().then(({ url }) => console.log(`Apollo Server is ready at ${url}`));
+
+server.listen().then(({ url }) => {
+  console.log(`Apollo Server is ready at ${url}`)
+});
 ```
 
 In the example above, we are describing the shapes of our data, how they relate to each other, and how to fetch what our client needs from our data source. Apollo Server uses simple functions called [resolvers]() to bring to live the schema described in SDL type definitions. When a request comes in to `/graphql`, Apollo Server will translate that request into what it takes to execute the query, will run the resolvers for you to load your data, and return the result in JSON so your app can render it out easily!
