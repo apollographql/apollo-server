@@ -187,6 +187,9 @@ Multiple mutations may be sent in the same request, however they will be execute
 
 Introspection is an automatic benefit built into the GraphQL specification which allows users to ask a server what operations it supports.  This facilitates SDL-generation since GraphiQL and other tools will can provide you specific insight into the fields available at each level of a GraphQL operation.  Protecting data exposed by a GraphQL schema is important and more information on security can be found in [security best practices]().
 
+## Variables
+
+
 
 ## SCRATCHPAD
 
