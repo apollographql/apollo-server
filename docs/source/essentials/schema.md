@@ -183,9 +183,25 @@ The result of this mutation would be:
 
 Multiple mutations may be sent in the same request, however they will be executed in the order they are provided (in series), in order to avoid race-conditions within the operation.
 
-## Introspection
+## Introspection and documentation
 
-Introspection is an automatic benefit built into the GraphQL specification which allows users to ask a server what operations it supports.  This facilitates SDL-generation since GraphiQL and other tools will can provide you specific insight into the fields available at each level of a GraphQL operation.  Protecting data exposed by a GraphQL schema is important and more information on security can be found in [security best practices]().
+Introspection is an optional feature, enabled by default during development, which allows clients to explore the types a GraphQL.
+
+Furthermore, by using (optional) string literals within the schema, it's possible to explain exactly what a field does:
+
+```graphql
+type Book {
+  "Returns the title of the book, as listed in the card catalog."
+  title: String
+}
+
+type Query {
+  "Fetch a list of our extensive book collection!"
+  getBooks: [Book]
+}
+```
+
+This makes SDL-generation even easier since many GraphQL tools auto-complete the field names (along with descriptions, when available) at each level of a GraphQL operation.
 
 ## Variables
 
