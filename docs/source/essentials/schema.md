@@ -137,15 +137,51 @@ And, without additional effort on its part, the client would receive the informa
 
 ## Mutations
 
-Mutations are operations sent to the server to create, update or delete data.  Those familiar with REST-based communication verbs would associate these with the `PUT`, `POST`, `PATCH` and `DELETE` methods.
+Mutations are operations sent to the server to create, update or delete data.  These are comparable to the `PUT`, `POST`, `PATCH` and `DELETE` verbs on REST-based APIs.
 
-* Mutations are the main entry point to make updates to the data backing Queries
-* Here is what one looks like coming from the client
-* Here is the corresponding server schema
-* A mutation can contain arguments and fields
-* Input types are passed to Apollo Server and inform it how to make the update
-* The fields describe the object that is returned by a mutation, often times the object that was created or the entire collection that was modified. Or a confirmation of deletion
-  * Here is what the return looks like from the previous mutation call
+Much like how the `Query` type defines the entry-points for data-fetching operations on a GraphQL server, the root-level `Mutation` type specifies the entry points for data-manipulation operations.
+
+For example, when imagining a situation where the API supported adding a new `Book`, the SDL might implement the following `Mutation` type:
+
+```graphql
+type Mutation {
+  addBook(title: String, author: String): Book
+}
+```
+
+This implements a single `addBook` mutation which accepts a `title` attribute (a `String`) and returns the newly-created `Book` object.
+
+The new `Book` object matches the previously-created `Book` type and, much like the `Query` type, the fields we desire to receive back from the operation are specified when sending the `mutation`:
+
+```graphql
+mutation {
+  addBook(title: "Fox in Socks", author: "Dr. Seuss") {
+    title
+    author {
+      name
+    }
+  }
+}
+```
+
+The result of this mutation would be:
+
+```json
+{
+  "data": {
+    "addBook": {
+      {
+        "title": "Fox in Socks",
+        "author": {
+          "name": "Dr. Seuss"
+        }
+      }
+    }
+  }
+}
+```
+
+Multiple mutations may be sent in the same request, however they will be executed in the order they are provided (in series), in order to avoid race-conditions within the operation.
 
 ## Introspection
 
