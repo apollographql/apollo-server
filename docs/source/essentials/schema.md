@@ -13,7 +13,7 @@ The core building block within a schema is the "type".  Types provide a wide-ran
 
 * Create relationships between types (e.g. between a `Book` and an `Author`).
 * Define which data-fetching (querying) and data-manipulation (mutating) operations can be executed by the client.
-* Self-explain what capabilities are available to the client (via introspection).
+* If desired, self-explain what capabilities are available to the client (via introspection).
 
 By the end of this page, we hope to have explained the power of types and how they relate to a GraphQL server.
 
@@ -37,7 +37,7 @@ type Author {
 
 It's important to note that these declarations express the relationships and the shape of the data to return, not where the data comes from or how it might be stored - which will be covered outside the SDL.
 
-By drawing these logical connections in the schema, we allow the client (which is often a human developer, designing a front-end) to see what data is available and request it in a single optimized query.
+By drawing these logical connections in the schema, we can allow the client (which is often a human developer, designing a front-end) to see what data is available and request it in a single optimized query.
 
 ## Queries
 
