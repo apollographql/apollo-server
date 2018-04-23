@@ -33,7 +33,6 @@ sidebar_categories:
     - deployment/heroku
     - deployment/lambda
   Advanced:
-    - advanced/query-mechanics
     - advanced/scalars-enums
   API Reference:
     - api/apollo-server
