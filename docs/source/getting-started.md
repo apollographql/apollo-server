@@ -12,7 +12,7 @@ In this guide, we'll walk you through the process of creating a GraphQL server i
 * Have a basic understanding of the fundamental GraphQL principles.
 * Be able to send a query to the new GraphQL server and see the response using the GraphiQL user interface.
 
-If you want to skip walking through the steps, the "More information" section at the bottom has a link to a GitHub repository which can be cloned and ran locally.
+If you want to skip walking through the steps, the "More information" section at the bottom has a link to a GitHub repository which can be cloned and run locally.
 
 ## Prerequisites
 
@@ -142,7 +142,7 @@ For this step, we'll return to the terminal/console and start the server we defi
 * Open the address provided in your web browser.
 * If everything is working, you should see the GraphQL Playground explorer tool, which we will use in the next step.
 
-> TODO: Image here.
+![GraphQL Playground](./images/getting-started/graphql-playground.png)
 
 In the next step, we'll use the GraphQL Playground tool to send queries to the GraphQL server.
 
@@ -152,19 +152,30 @@ At this point, you'll be able to start sending queries to the GraphQL server usi
 
 * The request (on the left)
 * The response (on the right)
-* The documentation (available using the "Docs" link in the top-right corner.
+* The documentation (available using the green "SCHEMA" button on the far right side)
 
-Since we're trying to obtain books...
+Since we're trying to obtain books, we can enter the following query on the left side of the window. This query asks for a list of books, including the title and author for each book.
 
-> TODO ^
+```
+{
+  books {
+    title
+    author
+  }
+}
+```
+
+If we press the play button in the middle, we should see a response on the right that looks something like this:
+
+![The response from our server shows title and author!](./images/getting-started/graphql-playground-response.png)
 
 ## Next steps
 
 This application should be a great starting point for any GraphQL server, but the following resources are a great next step in building a GraphQL server:
 
 * [Adding Apollo Server to an existing app]()
-* [Schema design]()
-* [Deployment]()
+* [Schema design](./essentials/schema.html)
+* [Deployment](./deployment/index.html)
 
 ## More information
 
