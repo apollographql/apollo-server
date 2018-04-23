@@ -4,7 +4,7 @@ import {
   default as GraphQLOptions,
   resolveGraphqlOptions,
 } from './graphqlOptions';
-import { formatError } from './errors';
+import { internalFormatError } from './errors';
 
 export interface HttpQueryRequest {
   method: string;
@@ -51,8 +51,9 @@ export async function runHttpQuery(
   } catch (e) {
     throw new HttpQueryError(500, e.message);
   }
-  const formatErrorFn = error =>
-    optionsObject.formatError(formatError(error)) || formatError;
+  const formatErrorFn = optionsObject.formatError
+    ? error => optionsObject.formatError(internalFormatError(error))
+    : internalFormatError;
   const debugDefault =
     process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test';
   const debug =
@@ -197,7 +198,7 @@ export async function runHttpQuery(
         operationName: operationName,
         logFunction: optionsObject.logFunction,
         validationRules: optionsObject.validationRules,
-        formatError: optionsObject.formatError,
+        formatError: formatErrorFn,
         formatResponse: optionsObject.formatResponse,
         fieldResolver: optionsObject.fieldResolver,
         debug: optionsObject.debug,
