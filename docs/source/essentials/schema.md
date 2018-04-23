@@ -223,6 +223,10 @@ mutation HomepageQuickAddBook {
 }
 ```
 
+## Passing arguments as variables
+
+TODO
+
 ## SCRATCHPAD
 
 ### Query
