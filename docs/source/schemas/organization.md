@@ -252,7 +252,7 @@ const Author = `
 // in order to make sure we don't forget to include
 // a dependency and we wrap it in a function
 // to avoid strings deduplication
-export const typeDefs = () => [Author, Book];
+export const typeDefs = () => [Author].concat(Book.typeDefs);
 ```
 
 ```js
@@ -266,7 +266,7 @@ const Book = `
   }
 `;
 
-export const typeDefs = () => [Book, Author.typeDefs];
+export const typeDefs = () => [Book].concat(Author.typeDefs);
 ```
 
 ```js
@@ -287,7 +287,7 @@ const SchemaDefinition = `
 
 const server = new ApolloServer({
   //we may destructure Post if supported by our Node version
-  typeDefs: [SchemaDefinition, RootQuery, Author.typeDefs],
+  typeDefs: [SchemaDefinition, RootQuery].concat(Author.typeDefs),
   resolvers,
 });
 
@@ -302,22 +302,23 @@ The `extend` keyword provides the ability to add fields to existing types. Using
 
 ```js
 const barTypeDefs = `
+"Query can and must be defined once per schema to be extended"
 type Query {
-  bars: [Bar]!
+  bars: [Bar]
 }
 
 type Bar {
-  id
+  id: String
 }
 `;
 
 const fooTypeDefs = `
 type Foo {
-  id: String!
+  id: String
 }
 
 extend type Query {
-  foos: [Foo]!
+  foos: [Foo]
 }
 `
 
