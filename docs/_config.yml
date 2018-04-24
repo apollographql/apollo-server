@@ -36,6 +36,8 @@ sidebar_categories:
     - api/apollo-server
     - api/graphql-subscriptions
     - api/apollo-engine
+    - title: graphql-tools
+      url: https://www.apollographql.com/docs/graphql-tools
 
 github_repo: apollographql/apollo-server
 content_root: docs/source
