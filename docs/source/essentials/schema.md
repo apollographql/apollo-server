@@ -39,6 +39,8 @@ It's important to note that these declarations express the relationships and the
 
 By drawing these logical connections in the schema, we can allow the client (which is often a human developer, designing a front-end) to see what data is available and request it in a single optimized query.
 
+GraphQL clients (such as [Apollo Client](/docs/react)) benefit from the precision of GraphQL operations, especially when compared to traditional REST-based approaches, since they can avoid over-fetching and stitching data, which are particularly costly on slow devices or networks.
+
 ## Queries
 
 A GraphQL query is for _reading_ data and comparable to the `GET` verb in REST-based APIs.
