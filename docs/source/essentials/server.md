@@ -1,85 +1,150 @@
 ---
 title: Running a server
-description: All of the things you need with no configuration needed!
 ---
 
 ## Overview
 
-Apollo Server provides an easy way for a brand new application to get up and running quickly by providing an integrated web-server with minimal configuration.
+> Estimated time: About 8 minutes.
 
-> Running a dedicated GraphQL server is a great choice for many deployments, however, if you're looking to add Apollo Server functionality to an **existing webserver**, follow the [Middleware](./middleware.html) installation instructions instead.
+Apollo Server provides an easy way for new, or existing, applications to get running quickly.  Existing applications can take advantage of middleware and new applications can utilize an integrated web-server.  Both of these servers can be configured with minimal configuration and follow industry best-practices.
 
 ## Prerequisites
 
-* You have designed type definitions. ([Type definitions]())
-* You have _resolvers_ for your type definitions. ([Resolvers]())
+* The basic steps to creating a GraphQL schema, including the concept of "types". ([Building a schema](./schema.html));
 
-If you don't meet or don't understand all of these prerequisites, we recommend you start at the [Getting Started]() page for a more complete example.  Alternatively, visit the links to the right of the prerequisites above to find out more information.
+> If you don't understand these prerequisites, we recommend starting at the [Getting Started](../getting-started.html) page for a simplified example.  Alternatively, visit the links to the right of the prerequisites above for more information.
 
 ## Installation
 
-There are two packages which must be installed for Apollo Server to function:
+We need to install two packages for Apollo Server:
 
-* [`apollo-server`](//npm.im/apollo-server): The actual Apollo Server package.
-* [`graphql`](//npm.im/graphql): The supporting GraphQL JavaScript library which is a peer dependency of `apollo-server` and shared amongst the various GraphQL-related components in your project.  We won't use this package directly, but a single copy of it must be installed in the application.
+* [`apollo-server`](//npm.im/apollo-server): The Apollo Server package, which provides most of the functionality.
+* [`graphql`](//npm.im/graphql): A GraphQL support library, provided by Facebook.  While we won't use it explicitly in these examples, it is required component and shared amongst all GraphQL libraries in the project.
 
 To install, run:
 
     npm install --save apollo-server graphql
 
-### Importing
+## Importing
 
-Start by importing the `ApolloServer` class:
+Depending on whether we are creating a new application or an existing application, the method of importing `apollo-server` will vary slightly since Apollo Server must adapt to the semantics of existing servers (e.g. Express, Hapi, etc.)
+
+Both import methods will use the `apollo-server` module we installed in the previous step and import an `ApolloServer` class.  But existing applications will specify the desired middleware as a path-specific import (e.g. `apollo-server/<variant>`).
+
+### New applications
+
+For new applications, it's not necessary to use a middleware variant and Apollo Server comes ready to run.  In this case, we'll **add this line** to the top of an application's main entry-point then skip ahead to "Import type definitions" below:
 
 ```js
 const { ApolloServer } = require('apollo-server');
 ```
 
-### Import your type definitions
+### Existing applications (Middleware)
 
-For this example, we'll import type definitions and resolvers from a file called `schema` which lives alongside the main server code.
+Existing applications generally already have existing middleware in place and Apollo Server works with those existing middleware options.  But in order to play along, we need to import the `ApolloServer which corresponds to the type of server which is already in use.
+
+For example, if the application is already using an Express server, it is important to use the `apollo-server/express` import.
+
+It will also be necessary to have access to the existing "app" in order to add the additional Apollo Server middleware.  In many applications (especially Express) this is usually called `app`.
+
+#### Express
 
 ```js
-// Make sure you've created this file and defined type
-// definitions along with their resolvers!
-const { typeDefs, resolvers } = require('./schema');
+const { ApolloServer } = require('apollo-server/express')
 ```
 
-### Instantiating
+#### Koa
 
-Now, using the `ApolloServer` class, pass in the type definitions (`typeDefs`) and resolvers (`resolvers`), which were imported in the previous section, to the `ApolloServer` constructor:
+```js
+const { ApolloServer } = require('apollo-server/koa')
+```
+
+#### Other (AWS Lambda, Azure Functions)
+
+Apollo Server works great in so-called "serverless" environments such as Amazon Lambda and Microsoft Azure Functions.  These implementations have some extra considerations which won't be covered in this guide, but more information is provided in [Server-less]().
+
+## Import type definitions
+
+Before we can use the `ApolloServer` we've imported above, we'll need create an empty starting point for type definitions.  We'll also create an empty "resolver map", but we won't discuss it further until the next page of this guide.
+
+Add the following code to the same file you added the `apollo-server` import above:
+
+```js
+// This is a string of the SDL.
+const typeDefs = `
+  type Query {
+    "A simple type for getting started!"
+    hello: String
+  }
+`;
+
+// We'll fill these in on the next page!
+const resolvers = {};
+```
+
+## Instantiating
+
+Using the `ApolloServer` class, we'll instantiate a server by passing the type definitions (`typeDefs`) and our empty resolvers (`resolvers`) map.
+
+For existing applications, we'll also pass the existing application into the constructor as `app`.  New applications should not pass `app`.
 
 ```js
 const server = new ApolloServer({
+  app, // Only pass this for existing applications!
   typeDefs,
   resolvers,
 });
 ```
 
-> See the [API Reference]() for additional options which can be passed to the `ApolloServer` constructor and instructions for creating the options based on the incoming request.
+> See the [API Reference](../api/apollo-server.html) for additional options which can be passed to the `ApolloServer` constructor.
 
 ### Listening for requests
 
-Finally, when you're ready to start accepting connections, call the `listen` method on the instance of `ApolloServer` which was created in the previous step:
+At this point, we're ready to start accepting connections to the server.  This is done by calling the `listen` method on the instance of `ApolloServer` which was created in the previous step:
 
 ```js
-server.listen({ port: 3000 });
+server.listen().then(({ url }) => {
+  console.log(`🚀 Server ready at ${url}`)
+});
 ```
 
-> If the `port` is omitted, port 4000 will be used.  For additional options available on the `listen` method, see the [API reference]().
+> By default, Apollo Server listens on port 4000.  See the [API reference](../api/apollo-server.html) for additional `listen` options, including how to configure the port.
+
+### Run the application
+
+With the above configuration complete, we can now start the Node application, with Apollo Server, for the first time.  This varies, but assuming a standard `index.js` configuration, might be as simple as `node index.js`.
+
+After you start the server it should print a message to the console indicating that it's ready:
+
+```shell
+$ node index.js
+🚀 Server ready at http://localhost:4000/graphiql
+```
+
+At this point, if the message isn't printed to the console, it's possible that something went wrong.  Double-check the previous steps in this guide, and try comparing the configuration to our [pre-configured example on Glitch]().
+
+## Explore
+
+To explore the newly created GraphQL server, open a browser to the link shown in the console, http://localhost:4000/graphiql.
+
+Next, type in following query and then press the "▶️" button:
+
+```graphql
+query {
+  hello
+}
+```
+
+And the server should return a simple response:
+
+```json
+{
+  "data": {
+    "hello": null
+  }
+}
+```
 
 ## Next steps
 
-Once you have a GraphQL server up and running, there are a number of configurable options worth considering.  Some great resources for additional information are:
-
-* [API documentation]()
-* [Schema design]()
-* [Schema directives]()
-* [Deploying]()
-
-
-### TODO
-
-* Evans thinks this should go into advanced/as an anti pattern
-  * best practice dictates that you should have your GraphQL server separate from other services and have a single endpoint
-  * the advanced section could talk about this in the case that you are doing something special, such as SSR
+Now that the GraphQL server is running, it's time to start exploring how we'll fetch data for our types.  We'll get started on that in the [next step](./data.html).
