@@ -10,3 +10,12 @@ export {
   default as GraphQLOptions,
   resolveGraphqlOptions,
 } from './graphqlOptions';
+export {
+  ApolloError,
+  toApolloError,
+  SyntaxError,
+  ValidationError,
+  AuthenticationError,
+  ForbiddenError,
+  internalFormatError,
+} from './errors';
