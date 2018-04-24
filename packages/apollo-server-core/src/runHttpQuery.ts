@@ -101,11 +101,54 @@ export async function runHttpQuery(
   const requests: Array<ExecutionResult> = requestPayload.map(requestParams => {
     try {
       let query = requestParams.query;
+      let extensions = requestParams.extensions;
+
+      if (isGetRequest && extensions) {
+        // For GET requests, we have to JSON-parse extensions. (For POST
+        // requests they get parsed as part of parsing the larger body they're
+        // inside.)
+        try {
+          extensions = JSON.parse(extensions);
+        } catch (error) {
+          throw new HttpQueryError(400, 'Extensions are invalid JSON.');
+        }
+      }
+
+      if (query === undefined && extensions && extensions.persistedQuery) {
+        // It looks like we've received an Apollo Persisted Query. Apollo Server
+        // does not support persisted queries out of the box, so we should fail
+        // fast with a clear error saying that we don't support APQs. (A future
+        // version of Apollo Server may support APQs directly.)
+        throw new HttpQueryError(
+          // Return 200 to simplify processing: we want this to be intepreted by
+          // the client as data worth interpreting, not an error.
+          200,
+          JSON.stringify({
+            errors: [
+              {
+                message: 'PersistedQueryNotSupported',
+              },
+            ],
+          }),
+          true,
+          {
+            'Content-Type': 'application/json',
+          },
+        );
+      }
+
       if (isGetRequest) {
         if (typeof query === 'string') {
           // preparse the query incase of GET so we can assert the operation.
+          // XXX This makes the type of 'query' in this function confused
+          //     which has led to us accidentally supporting GraphQL AST over
+          //     the wire as a valid query, which confuses users. Refactor to
+          //     not do this. Also, for a GET request, query really shouldn't
+          //     ever be anything other than a string or undefined, so this
+          //     set of conditionals doesn't quite make sense.
           query = parse(query);
         } else if (!query) {
+          // Note that we've already thrown a different error if it looks like APQ.
           throw new HttpQueryError(400, 'Must provide query string.');
         }
 
@@ -122,10 +165,13 @@ export async function runHttpQuery(
       }
 
       const operationName = requestParams.operationName;
-      let variables = requestParams.variables;
 
+      let variables = requestParams.variables;
       if (typeof variables === 'string') {
         try {
+          // XXX Really we should only do this for GET requests, but for
+          // compatibility reasons we'll keep doing this at least for now for
+          // broken clients that ship variables in a string for no good reason.
           variables = JSON.parse(variables);
         } catch (error) {
           throw new HttpQueryError(400, 'Variables are invalid JSON.');
