@@ -242,15 +242,3 @@ GraphQL clients, like [Apollo Client](https://www.apollographql.com/docs/react/)
 
 This functionality is also supported by tools like GraphQL Playground and GraphiQL.
 
-## SCRATCHPAD
-
-### Query
-  * GraphQL query defines the shape of data that will be returned by a particular request
-    * make sure it has arguments
-  * This query is then checked again the server's schema
-    * looks like this:
-
-### Mutation
-  * Mutations exist because they have special argument types called Input types
-  * Input types only contain scalar types and cannot have any other input types
-    * ensures that data from the client is always serializable and we don't lose any information, since circular references don't survive network call
