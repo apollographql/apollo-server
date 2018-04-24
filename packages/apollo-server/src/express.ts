@@ -21,7 +21,7 @@ export class ApolloServer extends ApolloServerBase<
     app.use(config.path, cors(config.cors), json(), graphqlExpress(request));
 
     if (config.graphiql) {
-      app.get(
+      app.use(
         config.graphiql,
         cors(config.cors),
         graphiql({
