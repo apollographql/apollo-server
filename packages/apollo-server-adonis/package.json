@@ -1,6 +1,6 @@
 {
   "name": "apollo-server-adonis",
-  "version": "1.3.5",
+  "version": "1.3.6",
   "description": "Production-ready Node.js GraphQL server for Adonis Framework",
   "main": "dist/index.js",
   "scripts": {
@@ -25,7 +25,7 @@
   },
   "homepage": "https://github.com/apollographql/apollo-server#readme",
   "dependencies": {
-    "apollo-server-core": "^1.3.5",
+    "apollo-server-core": "^1.3.6",
     "apollo-server-module-graphiql": "^1.3.4"
   },
   "devDependencies": {
@@ -34,7 +34,7 @@
     "@adonisjs/framework": "4.0.31",
     "@adonisjs/sink": "1.0.16",
     "@types/graphql": "0.12.7",
-    "apollo-server-integration-testsuite": "^1.3.5"
+    "apollo-server-integration-testsuite": "^1.3.6"
   },
   "typings": "dist/index.d.ts",
   "typescript": {
