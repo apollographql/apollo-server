@@ -187,9 +187,9 @@ Multiple mutations may be sent in the same request, however they will be execute
 
 ## Introspection and documentation
 
-Introspection is an optional feature, enabled by default during development, which allows clients to explore the types a GraphQL.
+Introspection is an **optional** feature, enabled by default during development, which allows clients to automatically discover the types implemented within a GraphQL schema.
 
-Furthermore, by using (optional) string literals within the schema, it's possible to explain exactly what a field does:
+The type declarations can be further extended with optional string literals to provide descriptions of a field's purpose to the client:
 
 ```graphql
 type Book {
@@ -203,7 +203,7 @@ type Query {
 }
 ```
 
-This makes SDL-generation even easier since many GraphQL tools auto-complete the field names (along with descriptions, when available) at each level of a GraphQL operation.
+This makes SDL-generation even easier since many GraphQL tools auto-complete field names, along with the descriptions, when available.
 
 ## Operation names
 
