@@ -403,6 +403,48 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
         });
       });
 
+      it('returns PersistedQueryNotSupported to a GET request', async () => {
+        app = await createApp();
+        const req = request(app)
+          .get('/graphql')
+          .query({
+            extensions: JSON.stringify({
+              persistedQuery: {
+                version: 1,
+                sha256Hash:
+                  'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+              },
+            }),
+          });
+        return req.then(res => {
+          expect(res.status).to.equal(200);
+          expect(res.body).to.deep.equal({
+            errors: [{ message: 'PersistedQueryNotSupported' }],
+          });
+        });
+      });
+
+      it('returns PersistedQueryNotSupported to a POST request', async () => {
+        app = await createApp();
+        const req = request(app)
+          .post('/graphql')
+          .send({
+            extensions: {
+              persistedQuery: {
+                version: 1,
+                sha256Hash:
+                  'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+              },
+            },
+          });
+        return req.then(res => {
+          expect(res.status).to.equal(200);
+          expect(res.body).to.deep.equal({
+            errors: [{ message: 'PersistedQueryNotSupported' }],
+          });
+        });
+      });
+
       it('can handle a request with variables', async () => {
         app = await createApp();
         const expected = {
