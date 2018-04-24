@@ -8,7 +8,7 @@
   "scripts": {
     "compile": "rimraf dist && tsc",
     "deploy": "cd npm && npm publish --tag=beta",
-    "postcompile": "rimraf npm && mkdir npm && mv dist/* npm/. && ./scripts/prepare-package.sh",
+    "postcompile": "rimraf npm && mkdir npm && cp -r dist/* npm/. && ./scripts/prepare-package.sh",
     "predeploy": "npm run compile",
     "publish": "echo '\n\nPlease use npm run deploy to publish apollo-server\n\n' && exit 1",
     "watch": "tsc -w"
