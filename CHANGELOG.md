@@ -4,6 +4,10 @@ All of the packages in the `apollo-server` repo are released with the same versi
 
 ### vNEXT
 
+### v1.3.6
+
+* Recognize requests with Apollo Persisted Queries and return `PersistedQueryNotSupported` to the client instead of a confusing error. [PR #982](https://github.com/apollographql/apollo-server/pull/982)
+
 ### v1.3.5
 
 * `apollo-server-adonis`: The `Content-type` of an operation response will now be correctly set to `application/json`. [PR #842](https://github.com/apollographql/apollo-server/pull/842) [PR #910](https://github.com/apollographql/apollo-server/pull/910)
