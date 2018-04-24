@@ -133,10 +133,6 @@ And, without additional effort on its part, the client would receive the informa
 }
 ```
 
-### Query arguments
-
-> TODO? Should this section exist here?
-
 ## Mutations
 
 Mutations are operations sent to the server to create, update or delete data.  These are comparable to the `PUT`, `POST`, `PATCH` and `DELETE` verbs on REST-based APIs.
@@ -151,7 +147,7 @@ type Mutation {
 }
 ```
 
-This implements a single `addBook` mutation which accepts a `title` and `author` argument (both `String` types).  We'll talk more about the arguments soon, but the important thing to note here is that this mutation will return the newly-created `Book` object.
+This implements a single `addBook` mutation which accepts `title` and `author` as arguments (both `String` types).  We'll go further into arguments (also known as "input types") in [types](../schemas/types.html), but the important thing to note here is that this mutation will return the newly-created `Book` object.
 
 The `Book` object will match the previously-created `Book` type (from above) and, much like the `Query` type, we specify the fields to include in the return object when sending the `mutation`:
 
@@ -218,16 +214,32 @@ query HomepageBookListing {
   }
 }
 
-mutation HomepageQuickAddBook {
-  addBook(title: "Fox in Socks", author: "Dr. Seuss") {
+## Variables
+
+In the examples above, we've used static strings as values for both queries and mutations.  This is a great shortcut when running "one-off" operations, but GraphQL also provides the ability to pass variables as arguments and avoid the need for clients to dynamically manipulate operations at run-time.
+
+By defining a map of variables on the root `query` or `mutation` operation, which are sent from the client, variables can be used (and re-used) within the types and fields themselves.
+
+For example, with a slight change to the mutation we used in the previous step, we enable the client to pass `title` and `author` variables alongside the operation itself.  We can also provide defaults for those variables for when they aren't explicitly set:
+
+```graphql
+mutation HomeQuickAddBook($title: String, $author: String = "Anonymous") {
+  addBook(title: $title, author: $author) {
     title
   }
 }
 ```
 
-## Passing arguments as variables
+GraphQL clients, like [Apollo Client](https://www.apollographql.com/docs/react/), take care of sending the variables to the server separate from the operation itself:
 
-TODO
+```json
+{
+  "query": "...",
+  "variables": { "title": "Green Eggs and Ham", "author": "Dr. Seuss" }
+}
+```
+
+This functionality is also supported by tools like GraphQL Playground and GraphiQL.
 
 ## SCRATCHPAD
 
