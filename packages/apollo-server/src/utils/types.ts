@@ -3,6 +3,7 @@ import { CorsOptions } from 'cors';
 import { SchemaDirectiveVisitor, IResolvers } from 'graphql-tools';
 import { ConnectionContext } from 'subscriptions-transport-ws';
 import { GraphQLOptions } from 'apollo-server-core';
+export { CacheControlExtensionOptions } from 'apollo-cache-control';
 
 export type Context<T = any> = T;
 export type ContextFunction<T = any> = (
@@ -41,10 +42,11 @@ export interface Config<Server, ContextShape = any, Cors = CorsOptions>
   subscriptions?: SubscriptionServerOptions | string | false;
   engineInRequestPath?: boolean;
   engine?: boolean | Object;
-  introspection?: boolean;
+  enableIntrospection?: boolean;
 }
 
-export interface EngineConfig {
+// XXX export these directly from apollo-engine-js
+export interface EngineLauncherOptions {
   startupTimeout?: number;
   proxyStdoutStream?: NodeJS.WritableStream;
   proxyStderrStream?: NodeJS.WritableStream;
@@ -53,9 +55,16 @@ export interface EngineConfig {
 }
 
 export interface ListenOptions {
+  // node http listen options
+  // https://nodejs.org/api/net.html#net_server_listen_options_callback
   port?: string | number;
   host?: string;
-  engine?: EngineConfig;
+  path?: string;
+  backlog?: number;
+  exclusive?: boolean;
+  // engine launcher options
+  engineLauncherOptions?: EngineLauncherOptions;
+  // WebSocket options
   keepAlive?: number;
   onConnect?: (
     connectionParams: Object,
@@ -66,7 +75,7 @@ export interface ListenOptions {
 }
 
 export interface MiddlewareOptions {
-  endpoint?: string;
+  path?: string;
   graphiql?: boolean | string;
   subscriptions?: boolean;
 }
@@ -76,7 +85,7 @@ export interface MiddlewareRegistrationOptions<
   Request,
   Cors = CorsOptions
 > {
-  endpoint?: string;
+  path?: string;
   graphiql?: string;
   subscriptions?: boolean;
   cors?: Cors;

@@ -23,18 +23,18 @@ export class ApolloServer extends ApolloServerBase<
     const { app, request } = config;
     const router = new koaRouter();
 
-    router.use(config.endpoint, cors(config.cors));
-    router.use(config.endpoint, koaBody());
-    router.get(config.endpoint, graphqlKoa(request));
-    router.post(config.endpoint, graphqlKoa(request));
+    router.use(config.path, cors(config.cors));
+    router.use(config.path, koaBody());
+    router.get(config.path, graphqlKoa(request));
+    router.post(config.path, graphqlKoa(request));
 
     if (config.graphiql) {
       router.use(config.graphiql, cors(config.cors));
       router.get(
         config.graphiql,
         graphiql({
-          endpoint: config.endpoint,
-          subscriptionsEndpoint: config.subscriptions && config.endpoint,
+          endpoint: config.path,
+          subscriptionsEndpoint: config.subscriptions && config.path,
         }),
       );
     }

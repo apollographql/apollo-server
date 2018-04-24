@@ -13,7 +13,7 @@ export class ApolloServer<Context> extends ExpressServer {
     super(opts);
     // when using ApolloServer without another application passed in,
     // we can assume the only thing it will be doing is serving GraphQL
-    // because of that, GraphiQL should be the root path
+    // because of that, GraphiQL should be the root path.
     super.applyMiddleware({ graphiql: '/' });
   }
 }
