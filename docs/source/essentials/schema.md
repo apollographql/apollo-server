@@ -242,3 +242,8 @@ GraphQL clients, like [Apollo Client](https://www.apollographql.com/docs/react/)
 
 This functionality is also supported by tools like GraphQL Playground and GraphiQL.
 
+## Next steps
+
+At this point, we hope to have explained the basic information necessary to understand a GraphQL schema.
+
+In the [next step](./server.html), we'll show how to start implementing a simple GraphQL server.
