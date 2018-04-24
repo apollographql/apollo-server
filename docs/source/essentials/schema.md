@@ -208,11 +208,12 @@ When sending the queries and mutations in the above examples, we've used either 
 Operations can be named by placing an identifier after the `query` or `operation` keyword, as in:
 
 ```graphql
-query HomepageBookListing {
+query HomeBookListing {
   getBooks {
     title
   }
 }
+```
 
 ## Variables
 
