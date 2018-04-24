@@ -18,20 +18,15 @@ export class ApolloServer extends ApolloServerBase<
     config: MiddlewareRegistrationOptions<express.Application, express.Request>,
   ) {
     const { app, request } = config;
-    app.use(
-      config.endpoint,
-      cors(config.cors),
-      json(),
-      graphqlExpress(request),
-    );
+    app.use(config.path, cors(config.cors), json(), graphqlExpress(request));
 
     if (config.graphiql) {
       app.get(
         config.graphiql,
         cors(config.cors),
         graphiql({
-          endpoint: config.endpoint,
-          subscriptionsEndpoint: config.subscriptions && config.endpoint,
+          endpoint: config.path,
+          subscriptionsEndpoint: config.subscriptions && config.path,
         }),
       );
     }
