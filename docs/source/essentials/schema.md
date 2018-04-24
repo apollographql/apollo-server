@@ -151,9 +151,9 @@ type Mutation {
 }
 ```
 
-This implements a single `addBook` mutation which accepts a `title` attribute (a `String`) and returns the newly-created `Book` object.
+This implements a single `addBook` mutation which accepts a `title` and `author` argument (both `String` types).  We'll talk more about the arguments soon, but the important thing to note here is that this mutation will return the newly-created `Book` object.
 
-The new `Book` object matches the previously-created `Book` type and, much like the `Query` type, the fields we desire to receive back from the operation are specified when sending the `mutation`:
+The `Book` object will match the previously-created `Book` type (from above) and, much like the `Query` type, we specify the fields to include in the return object when sending the `mutation`:
 
 ```graphql
 mutation {
@@ -166,7 +166,7 @@ mutation {
 }
 ```
 
-The result of this mutation would be:
+In the above example, we've requested the book's `title` along with the `name` of the `author`.  The result returned from this mutation would be:
 
 ```json
 {
