@@ -161,15 +161,19 @@ export class ApolloServerBase<
   public applyMiddleware(opts: MiddlewareOptions = {}) {
     if (this.appCreated) {
       throw new Error(`It looks like server.applyMiddleware was called when "app" was not passed into ApolloServer. To use middleware, you need to create an ApolloServer from a variant package and pass in your app:
-    const { ApolloServer } = require('apollo-server/express');
-    const express = require('express');
 
-    const app = express();
-    const server = new ApolloServer({ app, resolvers, typeDefs });
-    // then when you want to add the middleware
-    server.applyMiddleware();
-    // then start the server
-    server.listen();
+  const { ApolloServer } = require('apollo-server/express');
+  const express = require('express');
+
+  const app = express();
+  const server = new ApolloServer({ app, resolvers, typeDefs });
+  // then when you want to add the middleware
+  server.applyMiddleware();
+  // then start the server, changing the start url to include /graphiql
+  server.listen().then(({ url }) => {
+      console.log(\`🚀 Server ready at \${url}/graphiql\`);
+  });
+
 `);
     }
 
@@ -209,7 +213,10 @@ export class ApolloServerBase<
   // XXX this part is missing currently!
   server.applyMiddleware();
 
-  server.listen();
+  server.listen().then(({ url }) => {
+      console.log(\`🚀 Server ready at \${url}/graphiql\`);
+  });
+
 `,
       );
     }
@@ -345,13 +352,14 @@ when calling this.request, either call it using an error function, or bind it li
   }
 
   createApp(): Server {
+    //TODO add some comparison between variant and non-variant styles
     throw new Error(`It looks tried to create on an ApolloServer that is missing a server! This means that either you need to pass an external server when creating an ApolloServer, or use an ApolloServer variant that supports a default server:
 
     const { ApolloServer } = require('apollo-server');
-    // or
+    // or for advanced use cases:
     const { ApolloServer } = require('apollo-server/express');
 
-    To see all supported servers, check the docs at https://apollographql.com/docs/server
+    To see all supported servers and differences, check the docs at https://apollographql.com/docs/server
 
 `);
   }
