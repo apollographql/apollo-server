@@ -51,7 +51,9 @@ Existing applications generally already have existing middleware in place and Ap
 
 For example, if the application is already using an Express server, it is important to use the `apollo-server/express` import.
 
-It will also be necessary to have access to the existing "app" in order to add the additional Apollo Server middleware.  In many applications (especially Express) this is usually called `app`.
+It will also be necessary to access the instance of the existing "app" to add the new Apollo Server middleware.  Be sure to add this new import where your existing application is available.
+
+> The existing application is frequently named `app`, especially when using Express.
 
 #### Express
 
@@ -94,9 +96,14 @@ Using the `ApolloServer` class, we'll instantiate a server by passing the type d
 
 For existing applications, we'll also pass the existing application into the constructor as `app`.  New applications should not pass `app`.
 
+> The existing application is frequently already named `app`, especially when using Express.  If the application is identified by a different variable, pass the existing app in as `app`.
+
 ```js
 const server = new ApolloServer({
-  app, // Only pass this for existing applications!
+  // Important: Only set `app` for existing applications!
+  app: app,
+
+  // These will be defined for both new or existing servers
   typeDefs,
   resolvers,
 });
