@@ -169,9 +169,9 @@ export class ApolloServerBase<
   const server = new ApolloServer({ app, resolvers, typeDefs });
   // then when you want to add the middleware
   server.applyMiddleware();
-  // then start the server, changing the start url to include /graphiql
+  // then start the server
   server.listen().then(({ url }) => {
-      console.log(\`🚀 Server ready at \${url}/graphiql\`);
+      console.log(\`🚀 Server ready at \${url}\`);
   });
 
 `);
@@ -186,10 +186,7 @@ export class ApolloServerBase<
       cors: this.cors,
       subscriptions: true,
       ...opts,
-      graphiql:
-        opts.graphiql === false || this.disableTools
-          ? null
-          : `${opts.graphiql || '/graphiql'}`,
+      graphiql: opts.graphiql && !this.disableTools,
       app: this.app,
       request: this.request.bind(this),
     };
@@ -214,7 +211,7 @@ export class ApolloServerBase<
   server.applyMiddleware();
 
   server.listen().then(({ url }) => {
-      console.log(\`🚀 Server ready at \${url}/graphiql\`);
+      console.log(\`🚀 Server ready at \${url}\`);
   });
 
 `,
@@ -245,7 +242,16 @@ export class ApolloServerBase<
             port: options.port,
             httpServer: this.http,
           }),
-          () => success(this.engine.engineListeningAddress),
+          () => {
+            this.engine.engineListeningAddress.url = `${
+              this.engine.engineListeningAddress.url
+            }/${
+              this.graphqlPath.substring(0, 1) === '/'
+                ? this.graphqlPath.substring(1)
+                : this.graphqlPath
+            }`;
+            success(this.engine.engineListeningAddress);
+          },
         );
         this.engine.on('error', fail);
         return;
@@ -272,7 +278,11 @@ export class ApolloServerBase<
           let hostForUrl = la.address;
           if (la.address === '' || la.address === '::')
             hostForUrl = 'localhost';
-          la.url = `http://${joinHostPort(hostForUrl, la.port)}`;
+          la.url = `http://${joinHostPort(hostForUrl, la.port)}/${
+            this.graphqlPath.substring(0, 1) === '/'
+              ? this.graphqlPath.substring(1)
+              : this.graphqlPath
+          }`;
           success(la);
         },
       );
