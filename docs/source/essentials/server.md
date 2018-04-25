@@ -29,7 +29,7 @@ To install, run:
 
 Depending on whether we are creating a new application or an existing application, the method of importing `apollo-server` will vary slightly since Apollo Server must adapt to the semantics of existing servers (e.g. Express, Hapi, etc.)
 
-Both import methods will use the `apollo-server` module we installed in the previous step and import an `ApolloServer` class.  But existing applications will specify the desired middleware as a path-specific import (e.g. `apollo-server/<variant>`).
+Both import methods will use the `apollo-server` module we installed in the previous step, but existing applications will append the desired middleware as a path-based import (e.g. `apollo-server/<variant>`, where `<variant>` would be `express`, `koa`, etc.).
 
 In the below examples, we'll import two things from `apollo-server`:
 
