@@ -19,8 +19,9 @@ export class ApolloServer extends ApolloServerBase<
     config: MiddlewareRegistrationOptions<express.Application, express.Request>,
   ) {
     const { app, request } = config;
+    const path = config.path || '/graphql';
 
-    app.use(config.path, cors(config.cors), json(), (req, res, next) => {
+    app.use(path, cors(config.cors), json(), (req, res, next) => {
       // only show graphiql if we want html for a GET
       const accept = accepts(req);
       const types = accept.types() as string[];
@@ -33,8 +34,8 @@ export class ApolloServer extends ApolloServerBase<
       // change opts.graphiql type to be boolean
       if (config.graphiql !== false && req.method === 'GET' && isHTML) {
         return graphiql({
-          endpoint: config.path,
-          subscriptionsEndpoint: config.subscriptions && config.path,
+          endpoint: path,
+          subscriptionsEndpoint: config.subscriptions && path,
         })(req, res, next);
       }
       return graphqlExpress(request)(req, res, next);

@@ -182,7 +182,7 @@ export class ApolloServerBase<
       Request,
       Cors
     > = {
-      path: opts.path,
+      path: opts.path || this.graphqlPath, //user provided or default to /graphql
       cors: this.cors,
       subscriptions: true,
       ...opts,
