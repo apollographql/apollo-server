@@ -111,7 +111,7 @@ const resolvers = {
 At the end, Apollo server accepts the schema and resolvers:
 
 ```js
-const { ApolloServer } = require('apollo-server');
+const { ApolloServer, gql } = require('apollo-server');
 
 const server = new ApolloServer({ typeDefs, resolvers });
 
@@ -128,7 +128,7 @@ When schemas get large, we can start to define types in different files and impo
 
 ```js
 // comment.js
-const typeDefs = `
+const typeDefs = gql`
   type Comment {
     id: Int!
     message: String

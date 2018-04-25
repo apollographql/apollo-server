@@ -72,7 +72,7 @@ The example code will utilize a static collection of two books.  In a more compl
 * "Copy" the following code block, "Paste" it into the `index.js` file you created in the previous step, then "Save" the file:
 
   ```js
-  const { ApolloServer } = require('apollo-server');
+  const { ApolloServer, gql } = require('apollo-server');
 
   // This is a (sample) collection of books we'll be able to query
   // the GraphQL server for.  A more complete example might fetch
@@ -90,7 +90,7 @@ The example code will utilize a static collection of two books.  In a more compl
 
   // Type definitions define the "shape" of your data and specify
   // which ways the data can be fetched from the GraphQL server.
-  const typeDefs = `
+  const typeDefs = gql`
     # Comments in GraphQL are defined with the hash (#) symbol.
 
     # This "Book" type can be used in other type declarations.

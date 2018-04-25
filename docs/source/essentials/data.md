@@ -57,9 +57,9 @@ context: async () => ({
 Now that we understand the Query type, GraphQL types, and resolvers, we can explain the following code to define our schema and resolvers. This example shows the
 
 ```js
-const { ApolloServer } = require('apollo-server');
+const { ApolloServer, gql } = require('apollo-server');
 
-const typeDefs = `
+const typeDefs = gql`
   type Process {
     params: [String]
     program: String

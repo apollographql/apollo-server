@@ -31,12 +31,18 @@ Depending on whether we are creating a new application or an existing applicatio
 
 Both import methods will use the `apollo-server` module we installed in the previous step and import an `ApolloServer` class.  But existing applications will specify the desired middleware as a path-specific import (e.g. `apollo-server/<variant>`).
 
+In the below examples, we'll import two things from `apollo-server`:
+
+* The `ApolloServer` class, which we'll use to instantiate and start the server.
+* The `gql` template literal tag, used for writing GraphQL within JavaScript code.
+
+These imports will be explained in the next sections.
 ### New applications
 
 For new applications, it's not necessary to use a middleware variant and Apollo Server comes ready to run.  In this case, we'll **add this line** to the top of an application's main entry-point then skip ahead to "Import type definitions" below:
 
 ```js
-const { ApolloServer } = require('apollo-server');
+const { ApolloServer, gql } = require('apollo-server');
 ```
 
 ### Existing applications (Middleware)
@@ -50,13 +56,13 @@ It will also be necessary to have access to the existing "app" in order to add t
 #### Express
 
 ```js
-const { ApolloServer } = require('apollo-server/express')
+const { ApolloServer, gql } = require('apollo-server/express')
 ```
 
 #### Koa
 
 ```js
-const { ApolloServer } = require('apollo-server/koa')
+const { ApolloServer, gql } = require('apollo-server/koa')
 ```
 
 #### Other (AWS Lambda, Azure Functions)
@@ -71,7 +77,7 @@ Add the following code to the same file you added the `apollo-server` import abo
 
 ```js
 // This is a string of the SDL.
-const typeDefs = `
+const typeDefs = gql`
   type Query {
     "A simple type for getting started!"
     hello: String

@@ -87,7 +87,7 @@ enum Genre {
 In Apollo server, a resolver that returns an enum can use the direct string representation.
 
 ```js
-const schema = `
+const schema = gql`
 type Query {
   genre: Genre
 }
@@ -105,7 +105,7 @@ const resolvers = {
 Lists are defined with as type modifier that wraps object types, scalars, and enums. This signals to Apollo server that the resolver should return an array of the wrapped type. In this example `todos` is expected to return a list of strings.
 
 ```js
-const schema = `
+const schema = gql`
 type Query {
   todos: [String]
 }
