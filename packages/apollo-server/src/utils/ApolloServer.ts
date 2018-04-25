@@ -92,7 +92,7 @@ export class ApolloServerBase<
       ...requestOptions
     } = config;
 
-    // if this is local dev, we want graphiql and introspection to be turned on
+    // if this is local dev, we want graphql gui and introspection to be turned on
     // in production, you can manually turn these on by passing { enableIntrospection: true }
     // to the constructor of ApolloServer
     // we use this.disableTools to track this internally for later use when
@@ -186,7 +186,7 @@ export class ApolloServerBase<
       cors: this.cors,
       subscriptions: true,
       ...opts,
-      graphiql: opts.graphiql && !this.disableTools,
+      gui: opts.gui && !this.disableTools,
       app: this.app,
       request: this.request.bind(this),
     };
