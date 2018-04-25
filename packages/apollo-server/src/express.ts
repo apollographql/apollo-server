@@ -4,6 +4,7 @@ import { json } from 'body-parser';
 import { createServer, Server as HttpServer } from 'http';
 import { graphqlExpress } from 'apollo-server-express';
 import graphiql from 'graphql-playground-middleware-express';
+import * as accepts from 'accepts';
 
 import { ApolloServerBase } from './utils/ApolloServer';
 import { MiddlewareRegistrationOptions } from './utils/types';
@@ -20,16 +21,17 @@ export class ApolloServer extends ApolloServerBase<
     const { app, request } = config;
 
     app.use(config.path, cors(config.cors), json(), (req, res, next) => {
+      // only show graphiql if we want html for a GET
+      const accept = accepts(req);
+      const types = accept.types() as string[];
+      const isHTML =
+        types.find(
+          (x: string) => x === 'text/html' || x === 'application/json',
+        ) === 'text/html';
+
       // make sure we check to see if graphiql should be on
       // change opts.graphiql type to be boolean
-      if (
-        config.graphiql &&
-        req.method === 'GET' &&
-        req.headers['content-type'] !== 'application/json' &&
-        req.params &&
-        !req.params.query
-      ) {
-        // want to return graphiql
+      if (config.graphiql !== false && req.method === 'GET' && isHTML) {
         return graphiql({
           endpoint: config.path,
           subscriptionsEndpoint: config.subscriptions && config.path,
