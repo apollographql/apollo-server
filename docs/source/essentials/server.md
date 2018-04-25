@@ -109,6 +109,12 @@ const server = new ApolloServer({
 });
 ```
 
+When adding Apollo Server to an existing server, it's necessary to indicate, relative where to activate the middleware relative to other middlewares already in the app.  To do this, add the following line along with your other middleware, preferably before any of the others:
+
+```js
+server.applyMiddleware();
+```
+
 > See the [API Reference](../api/apollo-server.html) for additional options which can be passed to the `ApolloServer` constructor.
 
 ### Listening for requests
