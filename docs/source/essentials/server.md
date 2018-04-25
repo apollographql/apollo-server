@@ -19,7 +19,7 @@ Apollo Server provides an easy way for new, or existing, applications to get run
 We need to install two packages for Apollo Server:
 
 * [`apollo-server`](//npm.im/apollo-server): The Apollo Server package, which provides most of the functionality.
-* [`graphql`](//npm.im/graphql): A GraphQL support library, provided by Facebook.  While we won't use it explicitly in these examples, it is required component and shared amongst all GraphQL libraries in the project.
+* [`graphql`](//npm.im/graphql): A support library, provided by Facebook.  It won't be explicitly used in these examples, but is a required module and shared amongst all GraphQL libraries in the project.
 
 To install, run:
 
