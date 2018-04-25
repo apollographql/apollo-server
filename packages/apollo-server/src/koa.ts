@@ -2,6 +2,7 @@ import * as koa from 'koa';
 import * as cors from '@koa/cors';
 import * as koaRouter from 'koa-router';
 import * as koaBody from 'koa-bodyparser';
+import * as accepts from 'accepts';
 
 import { createServer, Server as HttpServer } from 'http';
 import { graphqlKoa } from 'apollo-server-koa';
@@ -21,23 +22,29 @@ export class ApolloServer extends ApolloServerBase<
     config: MiddlewareRegistrationOptions<koa, koa.Context, cors.Options>,
   ) {
     const { app, request } = config;
+    const path = config.path || '/graphql';
     const router = new koaRouter();
 
-    router.use(config.path, cors(config.cors));
-    router.use(config.path, koaBody());
-    router.get(config.path, graphqlKoa(request));
-    router.post(config.path, graphqlKoa(request));
+    router.use(path, cors(config.cors));
+    router.use(path, koaBody());
+    router.all(path, async (ctx, next) => {
+      const accept = accepts(ctx.req);
+      const types = accept.types() as string[];
+      const isHTML =
+        types.find(
+          (x: string) => x === 'text/html' || x === 'application/json',
+        ) === 'text/html';
 
-    if (config.graphiql) {
-      router.use(config.graphiql, cors(config.cors));
-      router.get(
-        config.graphiql,
-        graphiql({
-          endpoint: config.path,
-          subscriptionsEndpoint: config.subscriptions && config.path,
-        }),
-      );
-    }
+      // make sure we check to see if graphiql should be on
+      // change opts.graphiql type to be boolean
+      if (config.graphiql !== false && ctx.req.method === 'GET' && isHTML) {
+        return graphiql({
+          endpoint: path,
+          subscriptionsEndpoint: config.subscriptions && path,
+        })(ctx, next);
+      }
+      return graphqlKoa(request)(ctx, next);
+    });
 
     app.use(router.routes());
     app.use(router.allowedMethods());
