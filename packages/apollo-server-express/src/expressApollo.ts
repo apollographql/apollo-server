@@ -41,10 +41,6 @@ export function graphqlExpress(
     res: express.Response,
     next,
   ): void => {
-    if (!req.is('application/json')) {
-      return next();
-    }
-
     runHttpQuery([req, res], {
       method: req.method,
       options: options,
