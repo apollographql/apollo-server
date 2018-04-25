@@ -47,7 +47,7 @@ const { ApolloServer, gql } = require('apollo-server');
 
 ### Existing applications (Middleware)
 
-Existing applications generally already have existing middleware in place and Apollo Server works with those existing middleware options.  But in order to play along, we need to import the `ApolloServer which corresponds to the type of server which is already in use.
+Existing applications generally already have existing middleware in place and Apollo Server works with those existing middleware options.  But in order to play along, we need to import the `ApolloServer` which corresponds to the type of server which is already in use.
 
 For example, if the application is already using an Express server, it is important to use the `apollo-server/express` import.
 
