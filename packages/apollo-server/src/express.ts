@@ -18,18 +18,25 @@ export class ApolloServer extends ApolloServerBase<
     config: MiddlewareRegistrationOptions<express.Application, express.Request>,
   ) {
     const { app, request } = config;
-    app.use(config.path, cors(config.cors), json(), graphqlExpress(request));
 
-    if (config.graphiql) {
-      app.use(
-        config.graphiql,
-        cors(config.cors),
-        graphiql({
+    app.use(config.path, cors(config.cors), json(), (req, res, next) => {
+      // make sure we check to see if graphiql should be on
+      // change opts.graphiql type to be boolean
+      if (
+        config.graphiql &&
+        req.method === 'GET' &&
+        req.headers['content-type'] !== 'application/json' &&
+        req.params &&
+        !req.params.query
+      ) {
+        // want to return graphiql
+        return graphiql({
           endpoint: config.path,
           subscriptionsEndpoint: config.subscriptions && config.path,
-        }),
-      );
-    }
+        })(req, res, next);
+      }
+      return graphqlExpress(request)(req, res, next);
+    });
   }
 
   getHttpServer(app: express.Application): HttpServer {
