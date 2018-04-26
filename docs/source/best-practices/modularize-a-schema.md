@@ -77,7 +77,7 @@ server.listen().then(({ url }) => {
 
 <h2 id="modularizing-resolvers">Modularizing resolvers</h2>
 
-For the schema above, we can accomplish the same modularity with resolvers by passing around multiple resolver objects and combining them together with Lodash's `merge` or other equivalent:
+For the type definitions above, we can accomplish the same modularity with resolvers by passing around multiple resolver objects and combining them together with Lodash's `merge` or other equivalent. The [end of this page]() contains a complete view of the resolver map.
 
 ```js
 // comment.js
@@ -137,7 +137,9 @@ server.listen().then(({ url }) => {
 
 <h3 id="sharing-modular-types">Sharing types across domains</h3>
 
-Schemas often contain circular dependencies or a shared type that has been hoisted to be referenced in separate files. When exporting type definitions with circular dependencies, the result should be wrapped in a function. The Apollo Server will only include each type definition once, even if it is imported multiple times by different types. Preventing duplication of type definitions means that domains can be self contained and fully functional regardless of how they are combined. Resolvers are safely combined with a `merge`, since they are namespaced by the schema types.
+Schemas often contain circular dependencies or a shared type that is referenced in separate files. When exporting type definitions, the result should be wrapped in a function. Apollo Server will only include each type definition once, even if it is imported multiple times by different types. Preventing duplication of type definitions means that domains can be self contained and fully functional regardless of how they are combined. Conversely, resolvers are safely combined with a `merge`, since they are namespaced by the schema types.
+
+In this example, `Author` depends on `Book`.
 
 ```js
 // author.js
@@ -161,6 +163,8 @@ export const resolvers = merge({
 }, Book.resolvers);
 ```
 
+In turn, `Book` depends on `Author`.
+
 ```js
 // book.js
 const { merge } = require('lodash');
@@ -179,6 +183,8 @@ export const resolvers = merge({
   Book: { ... }
 }, Author.resolvers);
 ```
+
+Finally, the schema combines the Author type definitions and resolvers with the root Query.
 
 ```js
 // schema.js
@@ -204,6 +210,8 @@ server.listen().then(({ url }) => {
   console.log(`🚀 Server ready at ${url}`)
 });
 ```
+
+Type definitions wrapped in functions can be combined with raw type definition strings.
 
 <h2 id="extend-types">Extending Types</h2>
 
