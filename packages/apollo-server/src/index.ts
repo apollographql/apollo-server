@@ -37,10 +37,10 @@ export class ApolloServer<Context> extends ExpressServer {
     opts.app = express();
     super(opts);
 
-    //uses same path as engine
     if (!opts.disableHealthCheck) {
+      //uses same path as engine
       opts.app.use('/.well-known/apollo/server-health', (req, res, next) => {
-        //Response follow https://tools.ietf.org/html/draft-inadarei-api-health-check-01
+        //Response follows https://tools.ietf.org/html/draft-inadarei-api-health-check-01
         res.type('application/health+json');
 
         if (opts.onHealthCheck) {
