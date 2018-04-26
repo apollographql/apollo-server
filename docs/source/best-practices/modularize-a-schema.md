@@ -15,7 +15,7 @@ For schema with simple dependencies, combining type definitions directly in an a
 
 > Note: This schema separation should be done by product or real-world domain, which create natural boundaries that are easier to reason about.
 
-<h2 id="modularizing-types">Modularizing the schema types</h2>
+<h2 id="organizing-types">Organizing schema types</h2>
 
 When schemas get large, we can start to define types in different files and import them to create the complete schema. We accomplish this by importing and exporting schema strings, combining them into arrays as necessary. The following example demonstrates separating the type definitions of [the schema]() at the end of this page.
 
@@ -75,7 +75,7 @@ server.listen().then(({ url }) => {
 });
 ```
 
-<h2 id="modularizing-resolvers">Modularizing resolvers</h2>
+<h2 id="organizing-resolvers">Organizing resolvers</h2>
 
 For the type definitions above, we can accomplish the same modularity with resolvers by passing around multiple resolver objects and combining them together with Lodash's `merge` or other equivalent. The [end of this page]() contains a complete view of the resolver map.
 
@@ -213,7 +213,7 @@ server.listen().then(({ url }) => {
 
 Type definitions wrapped in functions can be combined with raw type definition strings.
 
-<h2 id="extend-types">Extending Types</h2>
+<h2 id="extend-types">Extending types</h2>
 
 The `extend` keyword provides the ability to add fields to existing types. Using `extend` is particularly useful in avoiding a large list of fields on root Queries and Mutations.
 
@@ -249,9 +249,9 @@ Apollo Server pass `typeDefs` and `resolvers` to the `graphql-tools`'s
 
 TODO point at graphql-tools `makeExecutableSchema` api
 
-## First Example Application Details
+<h2 id="example-app">Example Application Details</h2>
 
-### Schema
+<h3 id="example-schema">Schema</h3>
 
 The application contains a schema, resolvers with fake data, and the Apollo Server start code.
 
@@ -276,7 +276,9 @@ type Query {
 }
 ```
 
-### Resolvers
+<h3 id="example-resolvers">Resolvers</h3>
+
+The full resolver map for the first example:
 
 ```js
 const CommentModel = require('./models/comment');

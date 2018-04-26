@@ -15,7 +15,7 @@ The GraphQL schema defines the api for Apollo Server, providing the single sourc
 
 After explaining the self documenting nature of type definitions, this section will describe the strategies for organizing your schema. For many servers, keeping a single file of with the type definitions along with the server instantiation is sufficient. When a server becomes more complicated, it can be necessary to split out the schema into a separate file and export the schema. Extremely large schema may necessitate breaking up domains into separate files that can be combined together, a technique explained in the [advanced/modularize-a-schema]().
 
-<h2 id="descriptions">Documenting your Schema</h2>
+<h2 id="descriptions">Documenting a Schema</h2>
 
 Documentation within the SDL enables the schema to be effective as the single source of truth between client and server. To enable that end, gui's to explore GraphQL have built-in support for displaying docstrings with markdown syntax. This schema example includes docstrings for types, fields and arguments.
 
