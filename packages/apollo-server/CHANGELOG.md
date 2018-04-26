@@ -2,4 +2,4 @@
 
 ### vNEXT
 
-* `apollo-server`: add `/.health-check` endpoint with async callback for additional checks, ie database poke
+* `apollo-server`: add `/.well-known/apollo/server-health` endpoint with async callback for additional checks, ie database poke
