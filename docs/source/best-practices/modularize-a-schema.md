@@ -135,7 +135,7 @@ server.listen().then(({ url }) => {
 });
 ```
 
-<h3 id="sharing-modular-types">Sharing circular types across domains</h3>
+<h2 id="sharing-modular-types">Sharing circular types across domains</h2>
 
 Schemas often contain circular dependencies or a shared type that is referenced in separate files. When exporting type definitions, the result should be wrapped in a function. Apollo Server will only include each type definition once, even if it is imported multiple times by different types. Preventing duplication of type definitions means that domains can be self contained and fully functional regardless of how they are combined. Conversely, resolvers are safely combined with a `merge`, since they are namespaced by the schema types.
 
@@ -211,7 +211,7 @@ server.listen().then(({ url }) => {
 });
 ```
 
-Type definitions wrapped in functions can be combined with raw type definition strings.
+> Note: Type definitions wrapped in functions can be combined with raw type definition strings.
 
 <h2 id="extend-types">Extending types</h2>
 
