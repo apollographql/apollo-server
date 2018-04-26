@@ -9,15 +9,15 @@ description: Scaling your Apollo Server from a single file to your entire team
 
 ## Overview
 
-Most application are able collocate the server's type definitions and resolvers in a single file, which enables developers to make atomic modification to the schema. Sometime a large schema requires multiple files. To maintain developer experience, the following examples show how to effectively separate a schema into multiple files.
+Most server are can keep all type definitions and resolvers in a single file, which enables atomic schema modification. Sometimes a schema grows to require  multiple files. The following examples show how to separate a schema into multiple files to maintain developer experience.
 
-For schema with simple dependencies, combining type definitions directly in an array is sufficient. In more complicated situations with circular dependencies, type definitions can be returned as functions. Using functions allows Apollo Server to store a single copy of the duplicate type definitions to conserve memory and maintain performance. Throughout all the examples, the resolvers delegate to a data model, as explained in [this section]().
+For schemas with simple dependencies, type definitions are combined in an array and resolvers are merged together. In more complicated situations with circular dependencies, type definitions can be returned as functions. This allows Apollo Server to store a single copy of duplicate type definitions to conserve memory and maintain performance. Throughout all the examples, the resolvers delegate to a data model, as explained in [this section]().
 
 > Note: This schema separation should be done by product or real-world domain, which create natural boundaries that are easier to reason about.
 
 <h2 id="organizing-types">Organizing schema types</h2>
 
-When schemas get large, we can start to define types in different files and import them to create the complete schema. We accomplish this by importing and exporting schema strings, combining them into arrays as necessary. The following example demonstrates separating the type definitions of [the schema](#first-example-schema) at the end of this page.
+With large schema, defining types in different files and merge them to create the complete schema may become necessary. We accomplish this by importing and exporting schema strings, combining them into arrays as necessary. The following example demonstrates separating the type definitions of [this schema](#first-example-schema) found at the end of the page.
 
 ```js
 // comment.js
@@ -38,7 +38,7 @@ The `Post` includes a reference to `Comment`, which is added to the array of typ
 // post.js
 const Comment = require('./comment');
 
-// concat allows the comment typeDefs to be a value or an array
+// concat allows the comment typeDefs to be a string or an array
 const typeDefs = [`
   type Post {
     id: ID!
@@ -77,7 +77,7 @@ server.listen().then(({ url }) => {
 
 <h2 id="organizing-resolvers">Organizing resolvers</h2>
 
-For the type definitions above, we can accomplish the same modularity with resolvers by passing around multiple resolver objects and combining them together with Lodash's `merge` or other equivalent. The [end of this page](#first-example-resolvers) contains a complete view of the resolver map.
+For the type definitions above, we can accomplish the same modularity with resolvers by combining each type's resolvers together with Lodash's `merge` or another equivalent. The [end of this page](#first-example-resolvers) contains a complete view of the resolver map.
 
 ```js
 // comment.js
@@ -87,7 +87,7 @@ const resolvers = {
   Comment: {
     votes: (parent) => CommentModel.getVotesById(parent.id)
   }
-}
+};
 
 export resolvers;
 ```
