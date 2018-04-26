@@ -17,7 +17,7 @@ For schema with simple dependencies, combining type definitions directly in an a
 
 <h2 id="organizing-types">Organizing schema types</h2>
 
-When schemas get large, we can start to define types in different files and import them to create the complete schema. We accomplish this by importing and exporting schema strings, combining them into arrays as necessary. The following example demonstrates separating the type definitions of [the schema]() at the end of this page.
+When schemas get large, we can start to define types in different files and import them to create the complete schema. We accomplish this by importing and exporting schema strings, combining them into arrays as necessary. The following example demonstrates separating the type definitions of [the schema](#first-example-schema) at the end of this page.
 
 ```js
 // comment.js
@@ -77,7 +77,7 @@ server.listen().then(({ url }) => {
 
 <h2 id="organizing-resolvers">Organizing resolvers</h2>
 
-For the type definitions above, we can accomplish the same modularity with resolvers by passing around multiple resolver objects and combining them together with Lodash's `merge` or other equivalent. The [end of this page]() contains a complete view of the resolver map.
+For the type definitions above, we can accomplish the same modularity with resolvers by passing around multiple resolver objects and combining them together with Lodash's `merge` or other equivalent. The [end of this page](#first-example-resolvers) contains a complete view of the resolver map.
 
 ```js
 // comment.js
@@ -135,11 +135,11 @@ server.listen().then(({ url }) => {
 });
 ```
 
-<h3 id="sharing-modular-types">Sharing types across domains</h3>
+<h3 id="sharing-modular-types">Sharing circular types across domains</h3>
 
 Schemas often contain circular dependencies or a shared type that is referenced in separate files. When exporting type definitions, the result should be wrapped in a function. Apollo Server will only include each type definition once, even if it is imported multiple times by different types. Preventing duplication of type definitions means that domains can be self contained and fully functional regardless of how they are combined. Conversely, resolvers are safely combined with a `merge`, since they are namespaced by the schema types.
 
-In this example, `Author` depends on `Book`.
+The next example uses [a schema](#example-circular) with a circular reference between `Author` and `Book`. The first file contains all information to support the `Author` type, which depends on `Book`.
 
 ```js
 // author.js
@@ -163,7 +163,7 @@ export const resolvers = merge({
 }, Book.resolvers);
 ```
 
-In turn, `Book` depends on `Author`.
+In turn, this file wholly contains `Book` and its dependency on `Author`.
 
 ```js
 // book.js
@@ -184,7 +184,7 @@ export const resolvers = merge({
 }, Author.resolvers);
 ```
 
-Finally, the schema combines the Author type definitions and resolvers with the root Query.
+Finally, the `Author` type definitions and resolvers are combine with the root `Query`.
 
 ```js
 // schema.js
@@ -253,7 +253,7 @@ TODO point at graphql-tools `makeExecutableSchema` api
 
 <h3 id="example-schema">Schema</h3>
 
-The application contains a schema, resolvers with fake data, and the Apollo Server start code.
+The full type definitions for the first example:
 
 ```graphql
 type Comment {
@@ -296,3 +296,25 @@ const resolvers = {
   }
 }
 ```
+
+<h3 id="example-circular">Schema with circular reference</h3>
+
+The type definitions for the second example, which contains dependencies between `Author` and `Book`.
+
+```graphql
+type Author {
+  id: ID!
+  name: String
+  books: [Book]
+}
+
+type Book {
+  title: String
+  author: Author
+}
+
+type Query {
+  author(id: ID!): Author
+}
+```
+
