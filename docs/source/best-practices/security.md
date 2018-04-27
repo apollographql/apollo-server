@@ -8,11 +8,13 @@ Apollo Server is a safer way to build applications thanks to GraphQL's strong ty
 
 <h2 id="introspection">Introspection in production</h2>
 
-Introspection is a powerful tool to build exploration and amazing tool support into our API service. In development it powers GraphiQL, codegeneration tooling, and even editor integrations. However, in production we recommend turning off the ability to run introspection queries. By turning off introspection, it becomes harder for attackers to see what the shape of our schema is and plan potentially expensive attacks. By default, introspection is turned off in production with ApolloServer (i.e. if `NODE_ENV === "production"`). If we wanted to force it on, we could do so by setting `introspection: true` in our config:
+Introspection is a powerful tool to have enabled during development and allows developers to get real-time in-sight into the capabilities of the GraphQL implementation.
 
-```js
-const server = new ApolloServer({ typeDefs, resolvers, introspection: true });
-```
+In production, such visibility might be less desireable unless the server is intended to be a "public" API.
+
+Therefore, Apollo Server introspection is automatically disabled when the `NODE_ENV` is set to `production` in order to reduce visibility into the API.
+
+Of course, no system should rely solely on so-called "security through obscurity" and this practice should be combined with other security techniques like open security and security by design.
 
 <h2 id="injection">Injection prevention</h2>
 
