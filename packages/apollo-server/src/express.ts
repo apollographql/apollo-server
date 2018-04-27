@@ -8,6 +8,7 @@ import * as accepts from 'accepts';
 
 import { ApolloServerBase } from './utils/ApolloServer';
 import { MiddlewareRegistrationOptions } from './utils/types';
+import { launchGui } from './utils/launchGui';
 
 export * from './utils/exports';
 
@@ -19,24 +20,11 @@ export class ApolloServer extends ApolloServerBase<
     config: MiddlewareRegistrationOptions<express.Application, express.Request>,
   ) {
     const { app, request } = config;
-    const path = config.path || '/graphql';
+    config.path = config.path || '/graphql';
 
-    app.use(path, cors(config.cors), json(), (req, res, next) => {
-      if (config.gui !== false && req.method === 'GET') {
-        //perform more expensive content-type check only if necessary
-        const accept = accepts(req);
-        const types = accept.types() as string[];
-        const prefersHTML =
-          types.find(
-            (x: string) => x === 'text/html' || x === 'application/json',
-          ) === 'text/html';
-
-        if (prefersHTML) {
-          return gui({
-            endpoint: path,
-            subscriptionsEndpoint: config.subscriptions && path,
-          })(req, res, next);
-        }
+    app.use(config.path, cors(config.cors), json(), (req, res, next) => {
+      if (launchGui(config, req, gui, req, res, next)) {
+        return;
       }
       return graphqlExpress(request)(req, res, next);
     });
