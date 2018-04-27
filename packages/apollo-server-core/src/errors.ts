@@ -17,6 +17,9 @@ export function internalFormatError(
   debug: boolean = false,
 ) {
   const expanded: GraphQLError = {
+    message: error.message,
+    path: error.path,
+    locations: error.locations,
     ...error,
     extensions: {
       ...error.extensions,
