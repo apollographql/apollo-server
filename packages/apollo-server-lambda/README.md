@@ -30,7 +30,7 @@ exports.graphiqlHandler = server.graphiqlLambda({
 
 #### 2. Create an S3 bucket
 
-The bucket name name must be universally unique.
+The bucket name must be universally unique.
 
 ```bash
 aws s3 mb s3://<bucket name>
