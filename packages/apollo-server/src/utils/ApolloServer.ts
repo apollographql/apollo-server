@@ -70,7 +70,7 @@ export class ApolloServerBase<
   private middlewareRegistered: boolean = false;
   private http?: HttpServer;
   private subscriptions?: any;
-  private graphqlPath: string = '/graphql';
+  private graphqlPath: string; //set in applyMiddleware
   private cors?: Cors;
   private engineEnabled: boolean = false;
   private requestOptions: Partial<GraphQLOptions<any>>;
@@ -92,7 +92,7 @@ export class ApolloServerBase<
       ...requestOptions
     } = config;
 
-    // if this is local dev, we want graphiql and introspection to be turned on
+    // if this is local dev, we want graphql gui and introspection to be turned on
     // in production, you can manually turn these on by passing { enableIntrospection: true }
     // to the constructor of ApolloServer
     // we use this.disableTools to track this internally for later use when
@@ -169,9 +169,9 @@ export class ApolloServerBase<
   const server = new ApolloServer({ app, resolvers, typeDefs });
   // then when you want to add the middleware
   server.applyMiddleware();
-  // then start the server, changing the start url to include /graphiql
+  // then start the server
   server.listen().then(({ url }) => {
-      console.log(\`🚀 Server ready at \${url}/graphiql\`);
+      console.log(\`🚀 Server ready at \${url}\`);
   });
 
 `);
@@ -182,14 +182,11 @@ export class ApolloServerBase<
       Request,
       Cors
     > = {
-      path: this.graphqlPath,
+      path: opts.path || '/graphql',
       cors: this.cors,
       subscriptions: true,
       ...opts,
-      graphiql:
-        opts.graphiql === false || this.disableTools
-          ? null
-          : `${opts.graphiql || '/graphiql'}`,
+      gui: opts.gui && !this.disableTools,
       app: this.app,
       request: this.request.bind(this),
     };
@@ -214,7 +211,7 @@ export class ApolloServerBase<
   server.applyMiddleware();
 
   server.listen().then(({ url }) => {
-      console.log(\`🚀 Server ready at \${url}/graphiql\`);
+      console.log(\`🚀 Server ready at \${url}\`);
   });
 
 `,
@@ -245,7 +242,13 @@ export class ApolloServerBase<
             port: options.port,
             httpServer: this.http,
           }),
-          () => success(this.engine.engineListeningAddress),
+          () => {
+            this.engine.engineListeningAddress.url = require('url').resolve(
+              this.engine.engineListeningAddress.url,
+              this.graphqlPath,
+            );
+            success(this.engine.engineListeningAddress);
+          },
         );
         this.engine.on('error', fail);
         return;
@@ -272,7 +275,14 @@ export class ApolloServerBase<
           let hostForUrl = la.address;
           if (la.address === '' || la.address === '::')
             hostForUrl = 'localhost';
-          la.url = `http://${joinHostPort(hostForUrl, la.port)}`;
+
+          la.url = require('url').format({
+            protocol: 'http',
+            hostname: hostForUrl,
+            port: la.port,
+            pathname: this.graphqlPath,
+          });
+
           success(la);
         },
       );

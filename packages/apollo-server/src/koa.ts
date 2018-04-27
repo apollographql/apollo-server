@@ -2,13 +2,15 @@ import * as koa from 'koa';
 import * as cors from '@koa/cors';
 import * as koaRouter from 'koa-router';
 import * as koaBody from 'koa-bodyparser';
+import * as accepts from 'accepts';
 
 import { createServer, Server as HttpServer } from 'http';
 import { graphqlKoa } from 'apollo-server-koa';
-import graphiql from 'graphql-playground-middleware-koa';
+import gui from 'graphql-playground-middleware-koa';
 
 import { ApolloServerBase } from './utils/ApolloServer';
 import { MiddlewareRegistrationOptions } from './utils/types';
+import { launchGui } from './utils/launchGui';
 
 export * from './utils/exports';
 
@@ -21,23 +23,18 @@ export class ApolloServer extends ApolloServerBase<
     config: MiddlewareRegistrationOptions<koa, koa.Context, cors.Options>,
   ) {
     const { app, request } = config;
+    config.path = config.path || '/graphql';
     const router = new koaRouter();
 
     router.use(config.path, cors(config.cors));
     router.use(config.path, koaBody());
-    router.get(config.path, graphqlKoa(request));
-    router.post(config.path, graphqlKoa(request));
+    router.all(config.path, async (ctx, next) => {
+      if (launchGui(config, ctx.req, gui, ctx, next)) {
+        return;
+      }
 
-    if (config.graphiql) {
-      router.use(config.graphiql, cors(config.cors));
-      router.get(
-        config.graphiql,
-        graphiql({
-          endpoint: config.path,
-          subscriptionsEndpoint: config.subscriptions && config.path,
-        }),
-      );
-    }
+      return graphqlKoa(request)(ctx, next);
+    });
 
     app.use(router.routes());
     app.use(router.allowedMethods());

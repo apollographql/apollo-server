@@ -26,9 +26,9 @@ export class ApolloServer<Context> extends ExpressServer {
   const server = new ApolloServer({ app, resolvers, typeDefs });
   // then when you want to add the apollo server middleware
   server.applyMiddleware();
-  // then start the server, changing the start url to include /graphiql
+  // then start the server
   server.listen().then(({ url }) => {
-      console.log(\`🚀 Server ready at \${url}/graphiql\`);
+      console.log(\`🚀 Server ready at \${url}\`);
   });
 
 `);
@@ -58,9 +58,9 @@ export class ApolloServer<Context> extends ExpressServer {
       });
     }
 
-    // when using ApolloServer without another application passed in,
-    // we can assume the only thing it will be doing is serving GraphQL
-    // because of that, GraphiQL should be the root path.
-    super.applyMiddleware({ graphiql: '/' });
+    // when using ApolloServer without a server app passed in, we can assume it
+    // will be only serving GraphQL, which can be provided at the root path to
+    // support page refreshes well
+    super.applyMiddleware({ path: '/' });
   }
 }

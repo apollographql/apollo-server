@@ -76,7 +76,7 @@ export interface ListenOptions {
 
 export interface MiddlewareOptions {
   path?: string;
-  graphiql?: boolean | string;
+  gui?: boolean;
   subscriptions?: boolean;
 }
 
@@ -86,7 +86,7 @@ export interface MiddlewareRegistrationOptions<
   Cors = CorsOptions
 > {
   path?: string;
-  graphiql?: string;
+  gui?: boolean;
   subscriptions?: boolean;
   cors?: Cors;
   app: Server;
