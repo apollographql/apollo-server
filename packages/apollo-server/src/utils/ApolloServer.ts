@@ -243,13 +243,10 @@ export class ApolloServerBase<
             httpServer: this.http,
           }),
           () => {
-            this.engine.engineListeningAddress.url = `${
-              this.engine.engineListeningAddress.url
-            }/${
-              this.graphqlPath.substring(0, 1) === '/'
-                ? this.graphqlPath.substring(1)
-                : this.graphqlPath
-            }`;
+            this.engine.engineListeningAddress.url = require('url').resolve(
+              this.engine.engineListeningAddress.url,
+              this.graphqlPath,
+            );
             success(this.engine.engineListeningAddress);
           },
         );
@@ -278,11 +275,14 @@ export class ApolloServerBase<
           let hostForUrl = la.address;
           if (la.address === '' || la.address === '::')
             hostForUrl = 'localhost';
-          la.url = `http://${joinHostPort(hostForUrl, la.port)}/${
-            this.graphqlPath.substring(0, 1) === '/'
-              ? this.graphqlPath.substring(1)
-              : this.graphqlPath
-          }`;
+
+          la.url = require('url').format({
+            protocol: 'http',
+            hostname: hostForUrl,
+            port: la.port,
+            pathname: this.graphqlPath,
+          });
+
           success(la);
         },
       );
