@@ -76,13 +76,19 @@ The core of an Apollo Server implementation.  For a complete example, see the [R
 
 ## `gql`
 
-The `gql` is a [template literal tag](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#Tagged_templates).  Template literal tags exist to provide special functionality for what would otherwise be a template literal.  Template literals were introduced in recent versions of ECMAScript to provide embedded expressions (i.e. `` `A string with interpolated ${variables}` ``.)
+The `gql` is a [template literal tag](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#Tagged_templates).  Template literals were introduced in recent versions of ECMAScript to provide embedded expressions (i.e. `` `A string with interpolated ${variables}` ``) and template literal tags exist to provide additional functionality for what would otherwise be a normal template literal.
 
 In the case of GraphQL, the `gql` tag is used to surround GraphQL operation and schema language (which are represented as `String`s), and makes it easier to differentiate from ordinary strings.  This is particularly useful when performing static analysis on GraphQL language (e.g. to enable syntax highlighting, code generation, etc.) and avoids need for tools to "guess" if a string contains GraphQL language.
 
 ### Usage
 
-Place graphQL schema definitions (SDL), queries or other operations into the `gql` template literal tag.  Keep in mind that template literals use the grave accent (`` ` ``) and not normal quotation marks (e.g. not `"` or `'`):
+Import the `gql` template literal tag into the current context from the `apollo-server` module:
+
+```js
+const { gql } = require('apollo-server');
+```
+
+Then, place GraphQL schema definitions (SDL), queries or other operations into the `gql` template literal tag.  Keep in mind that template literals use the grave accent (`` ` ``) and not normal quotation marks (e.g. not `"` or `'`):
 
 ```js
 const typeDefs = gql`
