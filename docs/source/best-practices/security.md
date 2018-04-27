@@ -2,7 +2,9 @@
 title: Security
 ---
 
-Apollo Server is a safe way to build applications thanks to GraphQL's strongly typed requirements and the conversion of the raw operation into a known AST. Instead of opening the door for SQL style injections, every operation is validated to ensure it is valid GraphQL and only that. There are a few practices that can make our application more secure and prevent operations that may shut down our servers.
+Apollo Server is a safer way to build applications thanks to GraphQL's strong typing and the conversion of raw operations into a trusted syntax tree.  By validating each part of an operation, GraphQL is mostly exempt from injection-attacks which are of concern in other data-driven applications.
+
+ This guide will discuss additional security measures which further harden the excellent foundation which GraphQL is already built upon.  While Apollo Server will enable some additional protections automatically, others require attention on the part of the developer.
 
 <h2 id="introspection-in-production">Introspection in production</h2>
 
