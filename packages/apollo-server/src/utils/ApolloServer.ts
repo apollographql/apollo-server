@@ -70,7 +70,7 @@ export class ApolloServerBase<
   private middlewareRegistered: boolean = false;
   private http?: HttpServer;
   private subscriptions?: any;
-  private graphqlPath: string = '/graphql';
+  private graphqlPath: string; //set in applyMiddleware
   private cors?: Cors;
   private engineEnabled: boolean = false;
   private requestOptions: Partial<GraphQLOptions<any>>;
@@ -182,7 +182,7 @@ export class ApolloServerBase<
       Request,
       Cors
     > = {
-      path: opts.path || this.graphqlPath, //user provided or default to /graphql
+      path: opts.path || '/graphql',
       cors: this.cors,
       subscriptions: true,
       ...opts,
