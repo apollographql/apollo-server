@@ -10,6 +10,7 @@ import gui from 'graphql-playground-middleware-koa';
 
 import { ApolloServerBase } from './utils/ApolloServer';
 import { MiddlewareRegistrationOptions } from './utils/types';
+import { launchGui } from './utils/launchGui';
 
 export * from './utils/exports';
 
@@ -22,29 +23,16 @@ export class ApolloServer extends ApolloServerBase<
     config: MiddlewareRegistrationOptions<koa, koa.Context, cors.Options>,
   ) {
     const { app, request } = config;
-    const path = config.path || '/graphql';
+    config.path = config.path || '/graphql';
     const router = new koaRouter();
 
-    router.use(path, cors(config.cors));
-    router.use(path, koaBody());
-    router.all(path, async (ctx, next) => {
-      // make sure we check to see if graphql gui should be on
-      if (config.gui !== false && ctx.req.method === 'GET') {
-        //perform more expensive content-type check only if necessary
-        const accept = accepts(ctx.req);
-        const types = accept.types() as string[];
-        const prefersHTML =
-          types.find(
-            (x: string) => x === 'text/html' || x === 'application/json',
-          ) === 'text/html';
-
-        if (prefersHTML) {
-          return gui({
-            endpoint: path,
-            subscriptionsEndpoint: config.subscriptions && path,
-          })(ctx, next);
-        }
+    router.use(config.path, cors(config.cors));
+    router.use(config.path, koaBody());
+    router.all(config.path, async (ctx, next) => {
+      if (launchGui(config, ctx.req, gui, ctx, next)) {
+        return;
       }
+
       return graphqlKoa(request)(ctx, next);
     });
 
