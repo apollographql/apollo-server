@@ -33,6 +33,11 @@ sidebar_categories:
     - deployment/lambda
   Advanced:
     - advanced/scalars-enums
+  Schema Stitching:
+    - schema-stitching/introduction
+    - schema-stitching/remote-schemas
+    - schema-stitching/schema-delegation
+    - schema-stitching/schema-transforms
   API Reference:
     - api/apollo-server
     - api/graphql-subscriptions
