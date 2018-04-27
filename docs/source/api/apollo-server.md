@@ -1,16 +1,15 @@
 ---
-title: apollo-server
+title: "API Reference: `apollo-server`"
+sidebar_title: apollo-server
 ---
 
 This API reference documents the exports from the `apollo-server`, and `apollo-server/{variant}` packages (e.g. `apollo-server/express`).  Both the root module and the module sub-paths export the same functionality.
 
 ## `ApolloServer`
 
-The `ApolloServer` class is used to create an instance of Apollo Server.  An instance of Apollo Server will only be available when `listen` is called.
+The core of an Apollo Server implementation.  For a complete example, see the [Running a server](../essentials/server) section within "Essentials".
 
-If using Apollo Server as middleware in an existing project, it is also necessary to call `applyMiddleware`.
-
-### `new ApolloServer(options)`: <`ApolloServer`>
+### `constructor(options)`: <`ApolloServer`>
 
 #### Parameters
 
@@ -29,7 +28,7 @@ If using Apollo Server as middleware in an existing project, it is also necessar
 
 `ApolloServer`
 
-### `ApolloServer.prototype.listen(options)`: `Promise`
+### `listen(options)`: `Promise`
 
 #### Parameters
 
@@ -55,9 +54,9 @@ If using Apollo Server as middleware in an existing project, it is also necessar
 
 #### Returns
 
-Type `Promise`
+`Promise`
 
-### `ApolloServer.prototype.applyMiddleware(app, options)`: `Promise`
+### `applyMiddleware(app, options)`: `void`
 
 * `app`: <`HttpServer`> _(Required)_
 
