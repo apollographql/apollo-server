@@ -1,5 +1,5 @@
 ---
-title: "API Reference: `apollo-server`"
+title: "API Reference: apollo-server"
 sidebar_title: apollo-server
 ---
 
