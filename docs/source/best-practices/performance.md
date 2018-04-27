@@ -3,7 +3,7 @@ title: Performance
 description: Reduce requests and speeding up applications
 ---
 
-GraphQL brings incredible performance benefits to all kinds of applications. It can reduce round-trips when fetching data, lower the amount of data we are sending back, and make it easier to batch data lookups. Since GraphQL is often built as a stateless request-response pattern, scaling our app horizontally becomes much easier. In this section, we will dive into some benefits that Apollo Server brings to our app, and some patterns for speeding up our service.
+GraphQL offers performance benefits for most applications. By reducing round-trips when fetching data, lower the amount of data we are sending back, and make it easier to batch data lookups. Since GraphQL is often built as a stateless request-response pattern, scaling our app horizontally becomes much easier. In this section, we will dive into some benefits that Apollo Server brings to our app, and some patterns for speeding up our service.
 
 ## Prevent over-fetching
 
