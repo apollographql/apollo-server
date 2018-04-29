@@ -69,6 +69,8 @@ There are two common techniques to mitigate CDoS risks, and can be enabled toget
 
 2. **Complexity limits**
 
-    Complexity limits, which limit the depth of an operation can be implemented using community packages like [graphql-depth-limit](https://github.com/stems/graphql-depth-limit) and [graphql-validation-complexity](https://github.com/4Catalyzer/graphql-validation-complexity).  These can be used to avoid situations where a query is sent which, for example, requests a list of books, the authors of _those_ books, the books of _those_ authors, and so on.  By limiting operations to an application-defined depth of "_n_", these can be easily prevented.
+    These can be used to limit the use of queries which, for example, request a list of books including the authors of each book, plus the books of those authors, and _their_ authors, and so on.  By limiting operations to an application-defined depth of "_n_", these can be easily prevented.
+
+    We suggest implementing complexity limits using community-provided packages like [graphql-depth-limit](https://github.com/stems/graphql-depth-limit) and [graphql-validation-complexity](https://github.com/4Catalyzer/graphql-validation-complexity).
 
 > For additional information on securing a GraphQL server deployment, check out [Securing your GraphQL API from malicious queries](https://dev-blog.apollodata.com/securing-your-graphql-api-from-malicious-queries-16130a324a6b) by Spectrum co-founder, Max Stoiber.
