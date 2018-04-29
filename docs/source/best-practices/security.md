@@ -8,9 +8,9 @@ Apollo Server is a safer way to build applications thanks to GraphQL's strong ty
 
 <h2 id="introspection">Introspection in production</h2>
 
-Introspection is a powerful tool to have enabled during development and allows developers to get real-time in-sight into the capabilities of the GraphQL implementation.
+Introspection is a powerful tool to have enabled during development and allows developers to get real-time visibility of a GraphQL server's capabilities.
 
-In production, such visibility might be less desireable unless the server is intended to be a "public" API.
+In production, such insight might be less desireable unless the server is intended to be a "public" API.
 
 Therefore, Apollo Server introspection is automatically disabled when the `NODE_ENV` is set to `production` in order to reduce visibility into the API.
 
