@@ -5,13 +5,13 @@ description: The best way to fetch data, update it, and keep things running for 
 
 GraphQL schemas are at their best when they are designed around the need of client applications, instead of the shape of how the data is stored. Often times teams will create schemas that are literal mappings on top of their collections or tables with CRUD like root fields. While this may be a fast way to get up and running, a strong long term GraphQL schema is built around the products usage.
 
-## Naming
+## Style conventions
 
-One of the classic problems in computer science, how to name types and fields is a common question for teams getting started with GraphQL. While there is a ton of flexibility, by design, with the specification, here are a few recommendations that have proven themselves in production applications:
+The GraphQL specification is flexible in the style that it dictates and doesn't impose specific naming guidelines.  In order to facilitate development and continuity across GraphQL deployments, we suggest the following style conventions :
 
-- **Fields** should be camelCase since the majority of consumers will be in client applications written in JavaScript
-- **Types** should be PascalCase
-- **Enums** should be PascalCase and their values should be `ALL_CAPS` to denote a special value
+- **Fields**: are recommended to be written in `camelCase`, since the majority of consumers will be client applications written in JavaScript.
+- **Types**: should be `PascalCase`.
+- **Enums**: should have their name in `PascalCase` and their values in `ALL_CAPS` to denote their special meaning.
 
 ## Using interfaces
 
