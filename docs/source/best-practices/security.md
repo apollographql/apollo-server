@@ -53,14 +53,22 @@ type Mutation {
 
 The fix for both of these attack vectors is to create more detailed arguments and let the validation step of Apollo Server filter out bad values as well as **never** pass raw values from a client into our datasource.
 
-<h2 id="ddos">DDOS Protection</h2>
+<h2 id="dos">Denial-of-Service (DoS) Protection</h2>
 
-Since Apollo Server is a standard node app, best practices for prevent DDOS requests still apply. Howerver with GraphQL there is often concerns of a CDOS (Complexity Denial of Service) attack where a bad actor could create dangerously expensive operations locking up our data resources. There are two common ways to prevent this, and they work well in practice with each other.
+Apollo Server is a Node.js application and standard precautions should be taken in order to avoid Denial-of-Service (DoS) attacks.
 
-- **Whitelist** operations to only allow approved operations from work with our server
-- Implement **complexity** limits on our schema to prevent malicious operations from being executed.
+Since GraphQL involves the traversal of a graph in which circular relationships of arbitrary depths might be accessible, some additional precautions can be taken to limit the risks of Complexity Denial-of-Service (CDoS) attacks, where a bad actor could craft expensive operations and lock up resources indefinitely.
 
+There are two common techniques to mitigate CDoS risks, and can be enabled together:
 
-Whitelisting can be done by hashing all of the operations that our client app will use, sending them to the server (or a shared data store), and on every request, see if the operation that is being sent matches the ones that we have approved previously. If it doesn't match, we error out and don't attempt to execute the request.
+1. **Operation white-listing**
 
-Complexity limits can be implemented using community packages such as [graphql-depth-limit](https://github.com/stems/graphql-depth-limit) and [graphql-validation-complexity](https://github.com/4Catalyzer/graphql-validation-complexity). For more information about securing your Apollo Server, check out this [incredible post](https://dev-blog.apollodata.com/securing-your-graphql-api-from-malicious-queries-16130a324a6b) by Spectrum co-founder Max Stoiber.
+    By hashing the potential operations a client might send (e.g. based on field names) and storing these "permitted" hashes on the server (or a shared cache), it becomes possible to check incoming operations against the permitted hashes and skip execution if the hash is not allowed.
+
+    Since many consumers of non-public APIs have their operations statically defined within their source code, this technique is often sufficient and is best implemented as an automated deployment step.
+
+2. **Complexity limits**
+
+    Complexity limits, which limit the depth of an operation can be implemented using community packages like [graphql-depth-limit](https://github.com/stems/graphql-depth-limit) and [graphql-validation-complexity](https://github.com/4Catalyzer/graphql-validation-complexity).  These can be used to avoid situations where a query is sent which, for example, requests a list of books, the authors of _those_ books, the books of _those_ authors, and so on.  By limiting operations to an application-defined depth of "_n_", these can be easily prevented.
+
+> For additional information on securing a GraphQL server deployment, check out [Securing your GraphQL API from malicious queries](https://dev-blog.apollodata.com/securing-your-graphql-api-from-malicious-queries-16130a324a6b) by Spectrum co-founder, Max Stoiber.
