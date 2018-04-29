@@ -83,11 +83,13 @@ query GetBooks {
 
 To see an interface in practice, check out this [example]()
 
-## Node interface
+## A `Node` interface
 
-Given the power of interfaces, one pattern that can add a safe layer of flexibility to our schema is the `Node` interface pattern. We really recommend all schemas to follow this pattern if possible! The `Node` interface provides a way to fetch potentially any type in our schema with just an `id` field. We will explain how it works though a common example:
+A so-called "`Node` interface" is an implementation of a generic interface, on which other types can be built on, which enables the ability to fetch other _types_ in a schema by only providing an `id`.  This interface isn't provided automatically by GraphQL (not does it _have_ to be called `Node`), but we highly recommend schemas consider implementing one.
 
-Say we have a database with two different tables; `Author` and `Post`. Each of these tables have an `id` column that is unique for that table. To use the `Node` interface we would add the following to our schema:
+To understand its value, we'll present an example with two collections: _authors_ and _posts_, though the usefulness of such an interface grows as more collections are introduced.  As is common with most database collections, each of these collections have unique `id` columns which uniquely represent the individual documents within the collection.
+
+To implement a so-called "`Node` interface", we'll add a `Node` interface to the schema, as follows:
 
 ```graphql
 interface Node {
@@ -95,7 +97,9 @@ interface Node {
 }
 ```
 
-This is the actual `Node` interface. It has only one field which is an `ID!`, meaning it is a schema unique string that is required to exist. To use the `Node` interface in our example, we would write our types like so:
+This `interface` declaration has the only field it will ever need: an `ID!` field, which is required to be non-null in all operations (as indicated by the `!`).
+
+To take advantage of this new interface, we can use as the underlying implementation for the other types that our schema will define.  For our example, this means we'll use it to build `Post` and `Author` object types:
 
 ```graphql
 type Post implements Node {
@@ -111,7 +115,7 @@ type Author implements Node {
 }
 ```
 
-By implementing the `Node` interface, we know that anytime we have an `id` field from either `Author` or `Post`, we can send it back to our server and retreive that exact piece of data back! But earlier we said our database has ids that are unique only to each table, so how is this possible? 
+By implementing the `Node` interface as the foundation for `Post` and `Author`, we know that anytime a client has obtained an `id` (from either type), we can send it back to the server and retrieve that exact piece of data back!
 
 <h3 id="global-ids">Global Ids</h3>
 
