@@ -15,7 +15,9 @@ The GraphQL specification is flexible in the style that it dictates and doesn't 
 
 ## Using interfaces
 
-**Interfaces** are a powerful way to build and use GraphQL schemas. A GraphQL Interface is an abstract type (meaning it can't be used directly in the schema as an Object type) which describes required fields that implementing types must include. A simple example would look like this:
+Interfaces are a powerful way to build and use GraphQL schemas through the use of _abstract types_.  Abstract types can't be used directly in schema, but can be used as building blocks for creating explicit types.
+
+Consider an example where different types of books share a common set of attributes, such as _text books_ and _coloring books_.  A simple foundation for these books might be represented as the following `interface`:
 
 ```graphql
 interface Book {
@@ -24,7 +26,7 @@ interface Book {
 }
 ```
 
-This interface describes what all books in our schema will look like. At this point, we can't actually query for a `Book`, but we can use the interface to create concrete types. For example, we may have a screen in our app that wants to display `TextBooks` and `ColoringBooks` no matter what they actually are. To create something like this, we can do something like this:
+We won't be able to directly use this interface to query for a book, but we can use it to implement concrete types.  Imagine a screen within an application which needs to display a feed of all books, without regard to their (more specific) type.  To create such functionality, we could define the following:
 
 ```graphql
 type TextBook implements Book {
@@ -44,7 +46,9 @@ type Query {
 }
 ```
 
-Since we return `Book` for the field `schoolBooks`, when writing a query we don't need to worry about what kind of `Book` we actually return. This is really helpful for feeds of common content, user role systems, and more! Here is what a query would look like for the above schema:
+In this example, we've used the `Book` interface as the foundation for the  `TextBook` and `ColoringBook` types.  Then, a `schoolBooks` field simply expresses that it returns a list of books (i.e. `[Book]`).
+
+Implementing the book feed example is now simplified since we've removed the need to worry about what kind of `Book`s will be returned.  A query against this schema, which could return _text books_ and _coloring_ books, might look like:
 
 ```graphql
 query GetBooks {
@@ -55,7 +59,9 @@ query GetBooks {
 }
 ```
 
-If we wanted to return specific data for `TextBook`s or `ColoringBook`s, we could include and inline fragment specificying what concrete type we want to select fields on. For example:
+This is really helpful for feeds of common content, user role systems, and more!
+
+Furthermore, if we need to return fields which are only provided by either `TextBook`s or `ColoringBook`s (not both) we can request fragments from the abstract types in the query.  Those fragments will be filled in only as appropriate; in the case of the example, only coloring books will be returned with `colors`, and only text books will have `classes`:
 
 ```graphql
 query GetBooks {
@@ -75,7 +81,7 @@ query GetBooks {
 }
 ```
 
-The amazing thing about interfaces is that if the first book was a `TextBook`, it wouldn't have a field called `colors` in the response, but if it was a `ColoringBook` it would! To see an interface in practice, check out this [example]()
+To see an interface in practice, check out this [example]()
 
 ## Node interface
 
