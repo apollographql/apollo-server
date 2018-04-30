@@ -68,7 +68,8 @@ export class CacheControlExtension<TContext = any> implements GraphQLExtension<T
     // If this field is a field on an object, look for hints on the field
     // itself, taking precedence over previously calculated hints.
     const parentType = info.parentType;
-    if (parentType instanceof GraphQLObjectType) {
+    if (parentType instanceof GraphQLObjectType
+      || parentType instanceof GraphQLInterfaceType) {
       const fieldDef = parentType.getFields()[info.fieldName];
       if (fieldDef.astNode) {
         hint = mergeHints(hint, cacheHintFromDirectives(fieldDef.astNode.directives));
@@ -79,7 +80,8 @@ export class CacheControlExtension<TContext = any> implements GraphQLExtension<T
     // hint, set the maxAge to 0 (uncached) or the default if specified in the
     // constructor.  (Non-object fields by default are assumed to inherit their
     // cacheability from their parents.)
-    if (targetType instanceof GraphQLObjectType && hint.maxAge === undefined) {
+    if ((targetType instanceof GraphQLObjectType || targetType instanceof GraphQLInterfaceType)
+      && hint.maxAge === undefined) {
       hint.maxAge = this.defaultMaxAge;
     }
 
