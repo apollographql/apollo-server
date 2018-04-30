@@ -13,6 +13,9 @@
     }
   },
   "packages": [
-    "packages/*"
+    "packages/apollo-server-core",
+    "packages/apollo-server-integration-testsuite",
+    "packages/apollo-server-module-graphiql",
+    "packages/apollo-server-fastify"
   ]
 }
