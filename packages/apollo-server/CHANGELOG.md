@@ -2,5 +2,6 @@
 
 ### vNEXT
 
+* `apollo-server`: add `mocks` paramter to the base constructor(applies to all variants) [PR#1006](https://github.com/apollographql/apollo-server/pull/1006)
 * `apollo-server`: add `/.well-known/apollo/server-health` endpoint with async callback for additional checks, ie database poke [PR#992](https://github.com/apollographql/apollo-server/pull/992)
 * `apollo-server`: collocate graphql gui with endpoint and provide gui when accessed from browser [PR#987](https://github.com/apollographql/apollo-server/pull/987)
