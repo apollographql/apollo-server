@@ -20,17 +20,19 @@ In this example we'll stitch together two very simple schemas. It doesn't matter
 In this case, we're dealing with two schemas that implement a system with users and "chirps"&mdash;small snippets of text that users can post.
 
 ```js
-import {
+const {
   makeExecutableSchema,
   addMockFunctionsToSchema,
   mergeSchemas,
-} from 'graphql-tools';
+  ApolloServer,
+  gql,
+} = require('apollo-server');
 
 // Mocked chirp schema
 // We don't worry about the schema implementation right now since we're just
 // demonstrating schema stitching.
 const chirpSchema = makeExecutableSchema({
-  typeDefs: `
+  typeDefs: gql`
     type Chirp {
       id: ID!
       text: String
@@ -48,7 +50,7 @@ addMockFunctionsToSchema({ schema: chirpSchema });
 
 // Mocked author schema
 const authorSchema = makeExecutableSchema({
-  typeDefs: `
+  typeDefs: gql`
     type User {
       id: ID!
       email: String
@@ -62,15 +64,12 @@ const authorSchema = makeExecutableSchema({
 
 addMockFunctionsToSchema({ schema: authorSchema });
 
-export const schema = mergeSchemas({
-  schemas: [
-    chirpSchema,
-    authorSchema,
-  ],
+const server = new ApolloServer({ schema });
+
+server.listen().then(({ url }) => {
+  console.log(`🚀 Server ready at ${url}`)
 });
 ```
-
-[Run the above example on Launchpad.](https://launchpad.graphql.com/1nkk8vqj9)
 
 This gives us a new schema with the root fields on `Query` from both schemas (along with the `User` and `Chirp` types):
 
@@ -91,7 +90,7 @@ Combining existing root fields is a great start, but in practice we will often w
 To add this ability to navigate between types, we need to _extend_ existing types with new fields that translate between the types:
 
 ```js
-const linkTypeDefs = `
+const linkTypeDefs = gql`
   extend type User {
     chirps: [Chirp]
   }
@@ -170,8 +169,6 @@ const mergedSchema = mergeSchemas({
 });
 ```
 
-[Run the above example on Launchpad.](https://launchpad.graphql.com/8r11mk9jq)
-
 <h2 id="using-with-transforms">Using with Transforms</h2>
 
 Often, when creating a GraphQL gateway that combines multiple existing schemas, we might want to modify one of the schemas. The most common tasks include renaming some of the types, and filtering the root fields. By using [transforms](./schema-transforms) with schema stitching, we can easily tweak the subschemas before merging them together.
@@ -180,8 +177,8 @@ Before, when we were simply merging schemas without first transforming them, we 
 
 For example, suppose we transform the `chirpSchema` by removing the `chirpsByAuthorId` field and add a `Chirp_` prefix to all types and field names, in order to make it very clear which types and fields came from `chirpSchema`:
 
-```ts
-import {
+```js
+const {
   makeExecutableSchema,
   addMockFunctionsToSchema,
   mergeSchemas,
@@ -189,13 +186,13 @@ import {
   FilterRootFields,
   RenameTypes,
   RenameRootFields,
-} from 'graphql-tools';
+} = require('apollo-server');
 
 // Mocked chirp schema; we don't want to worry about the schema
 // implementation right now since we're just demonstrating
 // schema stitching
 const chirpSchema = makeExecutableSchema({
-  typeDefs: `
+  typeDefs: gql`
     type Chirp {
       id: ID!
       text: String
@@ -270,6 +267,12 @@ const mergedSchema = mergeSchemas({
       },
     },
   },
+});
+
+const server = new ApolloServer({ schema: mergedSchema });
+
+server.listen().then(({ url }) => {
+  console.log(`🚀 Server ready at ${url}`)
 });
 ```
 
