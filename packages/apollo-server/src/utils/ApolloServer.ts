@@ -1,4 +1,4 @@
-import { makeExecutableSchema } from 'graphql-tools';
+import { makeExecutableSchema, addMockFunctionsToSchema } from 'graphql-tools';
 import { Server as HttpServer } from 'http';
 import {
   execute,
@@ -89,6 +89,7 @@ export class ApolloServerBase<
       subscriptions,
       typeDefs,
       enableIntrospection,
+      mocks,
       ...requestOptions
     } = config;
 
@@ -119,6 +120,14 @@ export class ApolloServerBase<
           schemaDirectives,
           resolvers,
         });
+
+    if (mocks) {
+      addMockFunctionsToSchema({
+        schema: this.schema,
+        preserveResolvers: true,
+        mocks: typeof mocks === 'boolean' ? {} : mocks,
+      });
+    }
 
     this.subscriptions = subscriptions;
     this.cors = cors;
