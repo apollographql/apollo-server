@@ -1,5 +1,5 @@
 ---
-title: Fetching data
+title: Fetching data with resolvers
 ---
 
 ## Overview

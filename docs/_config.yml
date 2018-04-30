@@ -8,25 +8,13 @@ versions:
 sidebar_categories:
   null:
     - index
-    - why-apollo-server
     - getting-started
     - whats-new
   Essentials:
     - essentials/schema
     - essentials/server
     - essentials/data
-  Schema:
-    - schemas/organization
-    - schemas/types
-    - schemas/resolvers
-    - schemas/directives
-  Best Practices:
-    - best-practices/authentication
-    - best-practices/schema-design
-    - best-practices/performance
-    - best-practices/security
-    - best-practices/caching
-    - best-practices/monitoring
+    - essentials/querying
   Deployment:
     - deployment/index
     - deployment/heroku
