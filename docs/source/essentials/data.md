@@ -2,51 +2,50 @@
 title: Fetching data
 ---
 
-GraphQL is the best way to work with data from **any** back-end that your product needs. It is not a mapping of your database, but rather a graph of the data sources and shapes your product is made of. Works with multiple data sources (first party or third)
+## Overview
+
+GraphQL is the best way to work with data from **any** back-end that your product needs. It is not a mapping of your database, but rather a graph of the data sources and shapes your product is made of. Resolvers are the key to this graph. Each resolver represents a single field, and can be used to fetch data from any source(s) you may have.
 
 ## Context
 
-> TODO: Shorten this up, a lot.
+The context is how you access your shared connections and fetchers in resolvers to get data.
 
-### What is?
+The `context` is the third argument passed to every resolver. It is useful for passing things that any resolver may need, like [authentication scope](), database connections([mongo](), [postgres](), etc), and custom fetch functions. Additionally, if you're using [dataloaders to batch requests](../best-practices/performance.html#Batching-data-lookups)  across resolvers, you can attach them to the `context` as well.
 
-The `context` is the third positional argument passed to every resolver. `context` references the same object across all resolvers, so no resolver should modify the contents. Additionally, it is best to ensure that the contents of `context` does not change depending on the particular query or mutation.
-
-The common uses of the `context` are storing [authentication scope](), database connections([mongo](), [postgres](), etc), and custom fetch functions. Additionally when batching requests across different resolvers to avoid the n+1 problem, you will attach your instances of [dataloader](best-practice) to the `context`.
-
+As a best practice, `context` should be the same for all resolvers, no matter the particular query or mutation, and resolvers should never modify it. This ensures consistency across resolvers, and helps increase development velocity.
 
 > (Evans) not sure if this idea of a constant context is completely true/a best-practice, expecially if making a connection is costly, so you only start the operation if certain fields are requested
 
-### todo: talk about state?
+### How to use it
 
-## How to use?
+To provide a `context` to your resolvers, add a `context` object to the Apollo Server constructor. This constructor gets called with every request, so you can set the context based off the details of the request (like HTTP headers).
 
-To provide a `context` to your resolvers, add an object to the Apollo Server constructor. For specific examples, follow the [backend/]() instructions.
+For specific examples, follow the [backend]() instructions.
 
 ```
-  const server = new ApolloServer(req => ({
-    typeDefs,
-    resolvers,
-    context: {
-      authScope: getScope(req)
-    }
-  }));
-
-  //resolver
-  (parent, _, context) => {
-    if(context.authScope !== ADMIN) throw AuthenticationError('not admin');
-    ...
+const server = new ApolloServer(req => ({
+  typeDefs,
+  resolvers,
+  context: {
+    authScope: getScope(req.headers.authorization)
   }
+}));
+
+// resolver
+(parent, _, context) => {
+  if(context.authScope !== ADMIN) throw AuthenticationError('not admin');
+  ...
+}
 ```
 
-The context can also be created asynchronous, allowing database connections and other operations to complete.
+The context can also be created asynchronously, allowing database connections and other operations to complete.
 
 ```
 context: async () => ({
   db: await client.connect(),
 })
 
-//resolver
+// resolver
 (parent, _, context) => {
   return context.db.query('SELECT * FROM table_name');
 }
@@ -95,15 +94,15 @@ new ApolloServer({ typeDefs, resolvers, context: { req } })
 
 ## Material Summary
 
-* The context is shared by all resolvers during a single query or mutation
-* setup the context on every request
-* Great place to store authentication (but this will be covered in authentication)
-* database connections
-  * mongo
-  * postgress
-  * fetch functions
-* N+1 problem
-  * A consideration for dataloader.
-* Here's how you add it to Apollo Server
-* State
-* BEST practice: keep your context code the same regardless of query/mutation that is coming in
+- [x] The context is shared by all resolvers during a single query or mutation
+- [x] setup the context on every request
+- [x] Great place to store authentication (but this will be covered in authentication)
+- [ ] database connections
+  - [ ] mongo
+  - [ ] postgress
+  - [ ] fetch functions
+- [x] N+1 problem
+  - [x] A consideration for dataloader.
+- [x] Here's how you add it to Apollo Server
+- [ ] State
+- [x] BEST practice: keep your context code the same regardless of query/mutation that is coming in
