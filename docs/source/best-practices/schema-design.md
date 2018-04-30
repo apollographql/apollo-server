@@ -5,17 +5,19 @@ description: The best way to fetch data, update it, and keep things running for 
 
 GraphQL schemas are at their best when they are designed around the need of client applications, instead of the shape of how the data is stored. Often times teams will create schemas that are literal mappings on top of their collections or tables with CRUD like root fields. While this may be a fast way to get up and running, a strong long term GraphQL schema is built around the products usage.
 
-## Naming
+## Style conventions
 
-One of the classic problems in computer science, how to name types and fields is a common question for teams getting started with GraphQL. While there is a ton of flexibility, by design, with the specification, here are a few recommendations that have proven themselves in production applications:
+The GraphQL specification is flexible in the style that it dictates and doesn't impose specific naming guidelines.  In order to facilitate development and continuity across GraphQL deployments, we suggest the following style conventions :
 
-- **Fields** should be camelCase since the majority of consumers will be in client applications written in JavaScript
-- **Types** should be PascalCase
-- **Enums** should be PascalCase and their values should be `ALL_CAPS` to denote a special value
+- **Fields**: are recommended to be written in `camelCase`, since the majority of consumers will be client applications written in JavaScript.
+- **Types**: should be `PascalCase`.
+- **Enums**: should have their name in `PascalCase` and their values in `ALL_CAPS` to denote their special meaning.
 
 ## Using interfaces
 
-**Interfaces** are a powerful way to build and use GraphQL schemas. A GraphQL Interface is an abstract type (meaning it can't be used directly in the schema as an Object type) which describes required fields that implementing types must include. A simple example would look like this:
+Interfaces are a powerful way to build and use GraphQL schemas through the use of _abstract types_.  Abstract types can't be used directly in schema, but can be used as building blocks for creating explicit types.
+
+Consider an example where different types of books share a common set of attributes, such as _text books_ and _coloring books_.  A simple foundation for these books might be represented as the following `interface`:
 
 ```graphql
 interface Book {
@@ -24,7 +26,7 @@ interface Book {
 }
 ```
 
-This interface describes what all books in our schema will look like. At this point, we can't actually query for a `Book`, but we can use the interface to create concrete types. For example, we may have a screen in our app that wants to display `TextBooks` and `ColoringBooks` no matter what they actually are. To create something like this, we can do something like this:
+We won't be able to directly use this interface to query for a book, but we can use it to implement concrete types.  Imagine a screen within an application which needs to display a feed of all books, without regard to their (more specific) type.  To create such functionality, we could define the following:
 
 ```graphql
 type TextBook implements Book {
@@ -44,7 +46,9 @@ type Query {
 }
 ```
 
-Since we return `Book` for the field `schoolBooks`, when writing a query we don't need to worry about what kind of `Book` we actually return. This is really helpful for feeds of common content, user role systems, and more! Here is what a query would look like for the above schema:
+In this example, we've used the `Book` interface as the foundation for the  `TextBook` and `ColoringBook` types.  Then, a `schoolBooks` field simply expresses that it returns a list of books (i.e. `[Book]`).
+
+Implementing the book feed example is now simplified since we've removed the need to worry about what kind of `Book`s will be returned.  A query against this schema, which could return _text books_ and _coloring_ books, might look like:
 
 ```graphql
 query GetBooks {
@@ -55,7 +59,9 @@ query GetBooks {
 }
 ```
 
-If we wanted to return specific data for `TextBook`s or `ColoringBook`s, we could include and inline fragment specificying what concrete type we want to select fields on. For example:
+This is really helpful for feeds of common content, user role systems, and more!
+
+Furthermore, if we need to return fields which are only provided by either `TextBook`s or `ColoringBook`s (not both) we can request fragments from the abstract types in the query.  Those fragments will be filled in only as appropriate; in the case of the example, only coloring books will be returned with `colors`, and only text books will have `classes`:
 
 ```graphql
 query GetBooks {
@@ -75,13 +81,15 @@ query GetBooks {
 }
 ```
 
-The amazing thing about interfaces is that if the first book was a `TextBook`, it wouldn't have a field called `colors` in the response, but if it was a `ColoringBook` it would! To see an interface in practice, check out this [example]()
+To see an interface in practice, check out this [example]()
 
-## Node interface
+## A `Node` interface
 
-Given the power of interfaces, one pattern that can add a safe layer of flexibility to our schema is the `Node` interface pattern. We really recommend all schemas to follow this pattern if possible! The `Node` interface provides a way to fetch potentially any type in our schema with just an `id` field. We will explain how it works though a common example:
+A so-called "`Node` interface" is an implementation of a generic interface, on which other types can be built on, which enables the ability to fetch other _types_ in a schema by only providing an `id`.  This interface isn't provided automatically by GraphQL (not does it _have_ to be called `Node`), but we highly recommend schemas consider implementing one.
 
-Say we have a database with two different tables; `Author` and `Post`. Each of these tables have an `id` column that is unique for that table. To use the `Node` interface we would add the following to our schema:
+To understand its value, we'll present an example with two collections: _authors_ and _posts_, though the usefulness of such an interface grows as more collections are introduced.  As is common with most database collections, each of these collections have unique `id` columns which uniquely represent the individual documents within the collection.
+
+To implement a so-called "`Node` interface", we'll add a `Node` interface to the schema, as follows:
 
 ```graphql
 interface Node {
@@ -89,7 +97,9 @@ interface Node {
 }
 ```
 
-This is the actual `Node` interface. It has only one field which is an `ID!`, meaning it is a schema unique string that is required to exist. To use the `Node` interface in our example, we would write our types like so:
+This `interface` declaration has the only field it will ever need: an `ID!` field, which is required to be non-null in all operations (as indicated by the `!`).
+
+To take advantage of this new interface, we can use as the underlying implementation for the other types that our schema will define.  For our example, this means we'll use it to build `Post` and `Author` object types:
 
 ```graphql
 type Post implements Node {
@@ -105,7 +115,7 @@ type Author implements Node {
 }
 ```
 
-By implementing the `Node` interface, we know that anytime we have an `id` field from either `Author` or `Post`, we can send it back to our server and retreive that exact piece of data back! But earlier we said our database has ids that are unique only to each table, so how is this possible? 
+By implementing the `Node` interface as the foundation for `Post` and `Author`, we know that anytime a client has obtained an `id` (from either type), we can send it back to the server and retrieve that exact piece of data back!
 
 <h3 id="global-ids">Global Ids</h3>
 

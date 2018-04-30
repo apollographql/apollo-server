@@ -19,9 +19,11 @@ By the end of this page, we hope to have explained the power of types and how th
 
 ## Schema Definition Language (SDL)
 
-To make it easy to understand the capabilities of a server, GraphQL implements a human-readable schema syntax known as its Schema Definition Language, or "SDL".  This GraphQL-specific syntax is encoded as a `String` type.
+To make it easy to understand the capabilities of a server, GraphQL implements a human-readable schema syntax known as its Schema Definition Language, or "SDL".  The SDL is used to express the _types_ available within a schema and how those types relate to each other.
 
-The SDL is used to express the "types" available within a schema and how those types relate to each other.  In a simple example involving books and authors, the SDL might declare:
+At first glance the SDL may appear to be similar to JavaScript, but this GraphQL-specific syntax must be stored as a `String`.  Right now, we'll focus on explaining SDL and then go into examples of using it within JavaScript later on.
+
+In a simple example involving books and authors, the SDL might declare:
 
 ```graphql
 type Book {
@@ -35,21 +37,19 @@ type Author {
 }
 ```
 
-It's important to note that these declarations express the relationships and the shape of the data to return, not where the data comes from or how it might be stored - which will be covered outside the SDL.
+It's important to note that these declarations express the _relationships_ and the _shape_ of the data to return, not where the data comes from or how it might be stored - which will be covered outside the SDL.
 
-By drawing these logical connections in the schema, we can allow the client (which is often a human developer, designing a front-end) to see what data is available and request it in a single optimized query.
+By drawing these logical connections in the schema definition, we can allow the client (which is often a human developer, designing a front-end) to see what data is available and request it in a single optimized query.
 
 GraphQL clients (such as [Apollo Client](/docs/react)) benefit from the precision of GraphQL operations, especially when compared to traditional REST-based approaches, since they can avoid over-fetching and stitching data, which are particularly costly on slow devices or networks.
 
 ## Queries
 
-A GraphQL query is for _reading_ data and comparable to the `GET` verb in REST-based APIs.
+A GraphQL query is for _fetching_ data and compares to the `GET` verb in REST-based APIs.
 
-Thanks to the relationships which have been defined in the SDL, the client can expect that the shape of the data returned will match the shape of the query it sends.
+In order to define what queries are possible on a server, the `Query` type is used within the SDL.  The `Query` type is one of many root-level types which defines functionality (it doesn't actually trigger a query) for clients and acts as an entry-point to other more specific types within the schema.
 
-In order to define what queries are possible on a server, a special `Query` type is defined within the SDL.  The `Query` type is one of many root-level types, but the `Query` type specializes in fetching data and acts as the entry-point to other types within the schema.
-
-Using the books and author example we created in the SDL example above, we can define _multiple_ queries which are available on a server:
+Using the books and author example we created in the SDL example of the last section, we can define multiple independent queries which are available on a server:
 
 ```graphql
 type Query {
@@ -65,7 +65,9 @@ In this `Query` type, we define two types of queries which are available on this
 
 Those familiar with REST-based APIs would normally find these located on separate end-points (e.g. `/api/books` and `/api/authors`), but GraphQL allows them to be queried at the same time and returned at once.
 
-Using this query, a client could request a list of all books _and_ a separate list of all authors by sending a single `query` with exactly the types it wishes to receive in return:
+As mentioned in the previous section, the structure in which types are organized in the SDL is important because of the relationships it creates.  When a client makes a query to the server, the server will return results in a shape that matches that of the query.
+
+Based on the SDL defined above, a client could request a list of all books _and_ a separate list of all authors by sending a single `query` with exactly what it wishes to receive in return:
 
 ```graphql
 query {
@@ -79,7 +81,7 @@ query {
 }
 ```
 
-The data returned from this `query` would look like:
+Which would return data to the client as:
 
 ```json
 {
@@ -100,9 +102,9 @@ The data returned from this `query` would look like:
 }
 ```
 
-Of course, when displaying this data on the client, it might be desirable for the `Author` to be within the `Book` that the author wrote.
+While having two separate lists&mdash;a list of books and a list of authors&mdash;might be useful for some purposes, a separate desire might be to display a single list of books which includes the author for each book.
 
-Thanks to the relationship between `Book` and `Author`, which is defined in the SDL above, this `query` would look like:
+Thanks to the relationship between `Book` and `Author`, which is defined in the SDL above, such a `query` could be expressed as:
 
 ```graphql
 query {
