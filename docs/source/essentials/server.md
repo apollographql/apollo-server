@@ -1,5 +1,5 @@
 ---
-title: Running a server
+title: Building a server
 ---
 
 ## Overview
