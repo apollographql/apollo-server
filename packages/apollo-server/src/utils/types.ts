@@ -1,6 +1,6 @@
 import { GraphQLSchema } from 'graphql';
 import { CorsOptions } from 'cors';
-import { SchemaDirectiveVisitor, IResolvers } from 'graphql-tools';
+import { SchemaDirectiveVisitor, IResolvers, IMocks } from 'graphql-tools';
 import { ConnectionContext } from 'subscriptions-transport-ws';
 import { GraphQLOptions } from 'apollo-server-core';
 export { CacheControlExtensionOptions } from 'apollo-cache-control';
@@ -43,6 +43,7 @@ export interface Config<Server, ContextShape = any, Cors = CorsOptions>
   engineInRequestPath?: boolean;
   engine?: boolean | Object;
   enableIntrospection?: boolean;
+  mocks?: boolean | IMocks;
 }
 
 // XXX export these directly from apollo-engine-js
