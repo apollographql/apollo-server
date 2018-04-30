@@ -1,14 +1,27 @@
 ---
-title: Building a schema
+title: Building a GraphQL schema
+sidebar_title: Building a schema
 ---
 
 ## Overview
 
-Every Apollo Server has a GraphQL schema, which describes the data and actions that are accessible by the client. It contains types, which correspond to tangible items or category, such as an `Author` or a `Book`. To define those types, the schema  provides relationships. By defining relationships between entities, a GraphQL schema describes the structure of data without providing the actual data, just like the menu at a cafeteria, which describes the food without the deliciousness.
+> Estimated time: About 6 minutes.
+
+A GraphQL schema is at the center of any GraphQL server implementation and describes the functionality available to the clients which connect to it.
+
+The core building block within a schema is the "type".  Types provide a wide-range of functionality within a schema, including the ability to:
+
+* Create relationships between types (e.g. between a `Book` and an `Author`).
+* Define which data-fetching (querying) and data-manipulation (mutating) operations can be executed by the client.
+* If desired, self-explain what capabilities are available to the client (via introspection).
+
+By the end of this page, we hope to have explained the power of types and how they relate to a GraphQL server.
 
 ## Schema Definition Language (SDL)
 
-A GraphQL schema is written in a human-readable Schema Definition Language (or SDL for short) that defines the common language between the client and server. The SDL mirrors JSON and JavaScript's syntax, providing the ability to define membership, such as a `Book` needs a title an `Author` has a name. These memberships can be mutual, since an `Author` writes multiple `Book`s and a `Book` has one primary author. A schema to describe the previously mentioned relationships could look something like this:
+To make it easy to understand the capabilities of a server, GraphQL implements a human-readable schema syntax known as its Schema Definition Language, or "SDL".  This GraphQL-specific syntax is encoded as a `String` type.
+
+The SDL is used to express the "types" available within a schema and how those types relate to each other.  In a simple example involving books and authors, the SDL might declare:
 
 ```graphql
 type Book {
@@ -17,55 +30,220 @@ type Book {
 }
 
 type Author {
+  name: String
   books: [Book]
 }
 ```
 
-Take not that the schema is based upon the real world relationships between objects rather than the underlying data store. This real world basis provides the most intuitive interaction for the front-end. In addition, it ensures that the server understands what data will be retrieved together and can stay performant.
+It's important to note that these declarations express the relationships and the shape of the data to return, not where the data comes from or how it might be stored - which will be covered outside the SDL.
 
-Whether designing a new application or creating a GraphQL layer over your existing back-end, this basis in logical connections is the most important consideration is to define your schema. It is tempting to define a schema based on the current layout of your database, micro-services, or REST endpoints. Your GraphQL schema is going to be used across your entire organization and should facilitate the organization of your back-end services as well as enable front-end developers to easily discover what data can and should be retrieved together.
+By drawing these logical connections in the schema, we can allow the client (which is often a human developer, designing a front-end) to see what data is available and request it in a single optimized query.
 
-> Often times mature architectures have been battle tested and optimized for certain views. There is a temptation to translate this data directly into the SDL. This can be an effective migration path provided there is a way to add new GraphQL schema types for new use cases. Often times, since these are newer features with less critical performance guarantees, it is acceptable to retrieve a portion of fields for  a given field from the optimized backing
+GraphQL clients (such as [Apollo Client](/docs/react)) benefit from the precision of GraphQL operations, especially when compared to traditional REST-based approaches, since they can avoid over-fetching and stitching data, which are particularly costly on slow devices or networks.
 
 ## Queries
 
-A GraphQL query is for reading data.  The schema defines the types of queries which are available to the clients connecting to your server.
+A GraphQL query is for _reading_ data and comparable to the `GET` verb in REST-based APIs.
 
-> ## Material
->
-> * GraphQL query defines the shape of data that will be returned by a particular request
->   * This is what an author + books query looks like coming from the client
->   * make sure it has arguments
-> * This query is then checked again the server's schema
->   * looks like this:
-> * "root" level queries define the main entry points
-> * Each of those root queries returns a type
-> * You have to have a query
-> * It's an entry point like all rest endpoints
-> * It's how you fetch data
+Thanks to the relationships which have been defined in the SDL, the client can expect that the shape of the data returned will match the shape of the query it sends.
+
+In order to define what queries are possible on a server, a special `Query` type is defined within the SDL.  The `Query` type is one of many root-level types, but the `Query` type specializes in fetching data and acts as the entry-point to other types within the schema.
+
+Using the books and author example we created in the SDL example above, we can define _multiple_ queries which are available on a server:
+
+```graphql
+type Query {
+  getBooks: [Book]
+  getAuthors: [Author]
+}
+```
+
+In this `Query` type, we define two types of queries which are available on this GraphQL server:
+
+* `getBooks`: which returns a list of `Book` objects.
+* `getAuthors`: which returns a list of `Author` objects.
+
+Those familiar with REST-based APIs would normally find these located on separate end-points (e.g. `/api/books` and `/api/authors`), but GraphQL allows them to be queried at the same time and returned at once.
+
+Using this query, a client could request a list of all books _and_ a separate list of all authors by sending a single `query` with exactly the types it wishes to receive in return:
+
+```graphql
+query {
+  getBooks {
+    title
+  }
+
+  getAuthors {
+    name
+  }
+}
+```
+
+The data returned from this `query` would look like:
+
+```json
+{
+  "data": {
+    "getBooks": [
+      {
+        "title": "..."
+      },
+      ...
+    ],
+    "getAuthors": [
+      {
+        "name": "..."
+      },
+      ...
+    ]
+  }
+}
+```
+
+Of course, when displaying this data on the client, it might be desirable for the `Author` to be within the `Book` that the author wrote.
+
+Thanks to the relationship between `Book` and `Author`, which is defined in the SDL above, this `query` would look like:
+
+```graphql
+query {
+  getBooks {
+    title
+    author {
+      name
+    }
+  }
+}
+```
+
+And, without additional effort on its part, the client would receive the information in the same shape as the request:
+
+```json
+{
+  "data": {
+    "getBooks": [
+      {
+        "title": "..."
+        "author": {
+          "name": "..."
+        }
+      },
+      ...
+    ]
+  }
+}
+```
 
 ## Mutations
 
-Mutations are operations sent to the server to create, update or delete data.  Those familiar with REST-based communication verbs would associate these with the `PUT`, `POST`, `PATCH` and `DELETE` methods.
+Mutations are operations sent to the server to create, update or delete data.  These are comparable to the `PUT`, `POST`, `PATCH` and `DELETE` verbs on REST-based APIs.
 
-* Mutations are the main entry point to make updates to the data backing Queries
-* Here is what one looks like coming from the client
-* Here is the corresponding server schema
-* A mutation can contain arguments and fields
-* Input types are passed to Apollo Server and inform it how to make the update
-* The fields describe the object that is returned by a mutation, often times the object that was created or the entire collection that was modified. Or a confirmation of deletion
-  * Here is what the return looks like from the previous mutation call
+Much like how the `Query` type defines the entry-points for data-fetching operations on a GraphQL server, the root-level `Mutation` type specifies the entry points for data-manipulation operations.
 
-## Introspection
+For example, when imagining a situation where the API supported adding a new `Book`, the SDL might implement the following `Mutation` type:
 
-Introspection is an automatic benefit built into the GraphQL specification which allows users to ask a server what operations it supports.  This facilitates SDL-generation since GraphiQL and other tools will can provide you specific insight into the fields available at each level of a GraphQL operation.  Protecting data exposed by a GraphQL schema is important and more information on security can be found in [security best practices]().
+```graphql
+type Mutation {
+  addBook(title: String, author: String): Book
+}
+```
 
+This implements a single `addBook` mutation which accepts `title` and `author` as arguments (both `String` types).  We'll go further into arguments (also known as "input types") in [types](../schemas/types.html), but the important thing to note here is that this mutation will return the newly-created `Book` object.
 
-## SCRATCHPAD
+The `Book` object will match the previously-created `Book` type (from above) and, much like the `Query` type, we specify the fields to include in the return object when sending the `mutation`:
 
-* This section ties all of the information in the prereqs to show you how to implement Queries with the Apollo Server
-  * essentially copy and paste code that you can then add onto
+```graphql
+mutation {
+  addBook(title: "Fox in Socks", author: "Dr. Seuss") {
+    title
+    author {
+      name
+    }
+  }
+}
+```
 
-* Mutations exist because they have special argument types called Input types
-* Input types only contain scalar types and cannot have any other input types
-  * ensures that data from the client is always serializable and we don't lose any information, since circular references don't survive network call
+In the above example, we've requested the book's `title` along with the `name` of the `author`.  The result returned from this mutation would be:
+
+```json
+{
+  "data": {
+    "addBook": {
+      {
+        "title": "Fox in Socks",
+        "author": {
+          "name": "Dr. Seuss"
+        }
+      }
+    }
+  }
+}
+```
+
+Multiple mutations may be sent in the same request, however they will be executed in the order they are provided (in series), in order to avoid race-conditions within the operation.
+
+## Introspection and documentation
+
+Introspection is an **optional** feature, enabled by default during development, which allows clients to automatically discover the types implemented within a GraphQL schema.
+
+The type declarations can be further extended with optional string literals to provide descriptions of a field's purpose to the client:
+
+```graphql
+type Book {
+  "Returns the title of the book, as listed in the card catalog."
+  title: String
+}
+
+type Query {
+  "Fetch a list of our extensive book collection!"
+  getBooks: [Book]
+}
+```
+
+This makes SDL-generation even easier since many GraphQL tools auto-complete field names, along with the descriptions, when available.
+
+## Operation names
+
+When sending the queries and mutations in the above examples, we've used either `query { ... }` or `mutation { ... }` respectively.  While this is fine, and particularly convenient when running queries by hand, it makes sense to name the operation in order to quickly identify operations during debugging or to aggregate similar operations together for application performance metrics, for example, when using [Apollo Engine]() to monitor an API.
+
+Operations can be named by placing an identifier after the `query` or `mutation` keyword, as we've done with `HomeBookListing` here:
+
+```graphql
+query HomeBookListing {
+  getBooks {
+    title
+  }
+}
+```
+
+## Variables
+
+In the examples above, we've used static strings as values for both queries and mutations.  This is a great shortcut when running "one-off" operations, but GraphQL also provides the ability to pass variables as arguments and avoid the need for clients to dynamically manipulate operations at run-time.
+
+By defining a map of variables on the root `query` or `mutation` operation, which are sent from the client, variables can be used (and re-used) within the types and fields themselves.
+
+For example, with a slight change to the mutation we used in the previous step, we enable the client to pass `title` and `author` variables alongside the operation itself.  We can also provide defaults for those variables for when they aren't explicitly set:
+
+```graphql
+mutation HomeQuickAddBook($title: String, $author: String = "Anonymous") {
+  addBook(title: $title, author: $author) {
+    title
+  }
+}
+```
+
+GraphQL clients, like [Apollo Client](https://www.apollographql.com/docs/react/), take care of sending the variables to the server separate from the operation itself:
+
+```json
+{
+  "query": "...",
+  "variables": { "title": "Green Eggs and Ham", "author": "Dr. Seuss" }
+}
+```
+
+This functionality is also supported by tools like GraphQL Playground and GraphiQL.
+
+## Next steps
+
+At this point, we hope to have explained the basic information necessary to understand a GraphQL schema.
+
+In the [next step](./server.html), we'll show how to start implementing a simple GraphQL server.

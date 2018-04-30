@@ -4,6 +4,7 @@ subtitle: Apollo Server
 description: A guide to using Apollo Server.
 versions:
   - '1'
+  - '2'
 sidebar_categories:
   null:
     - index
@@ -14,7 +15,7 @@ sidebar_categories:
     - essentials/schema
     - essentials/server
     - essentials/data
-  Schema Development:
+  Schema:
     - schemas/organization
     - schemas/types
     - schemas/resolvers
