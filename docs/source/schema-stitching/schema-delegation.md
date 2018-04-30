@@ -15,10 +15,9 @@ Delegation is performed by one function, `delegateToSchema`, called from within 
 
 <h2 id="example">Motivational example</h2>
 
-Let's consider two schemas, a subschema and a parent schema that reuses parts of a subschema. While the parent schema reuses the *definitions* of the subschema, we want to keep the implementations separate, so that the subschema can be tested independently, or even used as a remote service.
+Let's consider two schemas, a subschema and a parent schema that reuses parts of a subschema. In this example the parent schema reuses the *definitions* of the subschema. However the implementations separate should be kept separate, so that the subschema can be tested independently or retrieved from a remote service. The subschema:
 
 ```graphql
-# Subschema
 type Repository {
   id: ID!
   url: String
@@ -36,8 +35,11 @@ type Query {
   repositoryById(id: ID!): Repository
   repositoriesByUserId(id: ID!): [Repository]
 }
+```
 
-# Parent schema
+Parent Schema:
+
+```graphql
 type Repository {
   id: ID!
   url: String
@@ -99,39 +101,10 @@ query($id: ID!) {
 
 Delegation also removes the fields that don't exist on the subschema, such as `user`. This field would be retrieved from the parent schema using normal GraphQL resolvers.
 
-<h2 id="api">API</h2>
-
-<h3 id="delegateToSchema">delegateToSchema</h3>
+<h2 id="delegateToSchema">Example</h2>
 
 The `delegateToSchema` method can be found on the `info.mergeInfo` object within any resolver function, and should be called with the following named options:
 
-```
-delegateToSchema(options: {
-  schema: GraphQLSchema;
-  operation: 'query' | 'mutation' | 'subscription';
-  fieldName: string;
-  args?: { [key: string]: any };
-  context: { [key: string]: any };
-  info: GraphQLResolveInfo;
-  transforms?: Array<Transform>;
-}): Promise<any>
-```
-
-#### schema: GraphQLSchema
-
-A subschema to delegate to.
-
-#### operation: 'query' | 'mutation' | 'subscription'
-
-The operation type to use during the delegation.
-
-#### fieldName: string
-
-A root field in a subschema from which the query should start.
-
-#### args: { [key: string]: any }
-
-Additional arguments to be passed to the field. Arguments passed to the field that is being resolved will be preserved if the subschema expects them, so you don't have to pass existing arguments explicitly, though you could use the additional arguments to override the existing ones. For example:
 
 ```graphql
 # Subschema
@@ -161,7 +134,7 @@ If we delegate at `User.bookings` to `Query.bookingsByUser`, we want to preserve
 ```js
 const resolvers = {
   User: {
-    bookings(parent, args, context, info) {
+    bookings: (parent, args, context, info) => {
       return info.mergeInfo.delegateToSchema({
         schema: subschema,
         operation: 'query',
@@ -171,30 +144,18 @@ const resolvers = {
         },
         context,
         info,
-      );
+      });
     },
-    ...
   },
-  ...
 };
 ```
-
-#### context: { [key: string]: any }
-
-GraphQL context that is going to be past to subschema execution or subsciption call.
-
-#### info: GraphQLResolveInfo
-
-GraphQL resolve info of the current resolver. Provides access to the subquery that starts at the current resolver.
-
-Also provides the `info.mergeInfo.delegateToSchema` function discussed above.
-
-#### transforms: Array<Transform>
-
-[Transforms](./schema-transforms.html) to apply to the query and results. Should be the same transforms that were used to transform the schema, if any. After transformation, `transformedSchema.transforms` contains the transforms that were applied.
 
 <h2 id="considerations">Additional considerations</h2>
 
 ### Aliases
 
 Delegation preserves aliases that are passed from the parent query. However that presents problems, because default GraphQL resolvers retrieve field from parent based on their name, not aliases. This way results with aliases will be missing from the delegated result. `mergeSchemas` and `transformSchemas` go around that by using `src/stitching/defaultMergedResolver` for all fields without explicit resolver. When building new libraries around delegation, one should consider how the aliases will be handled.
+
+## API
+
+TODO point to the `delegateToSchema` api reference
