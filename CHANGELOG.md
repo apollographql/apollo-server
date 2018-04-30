@@ -4,6 +4,10 @@ All of the packages in the `apollo-server` repo are released with the same versi
 
 ### vNEXT
 
+### v1.3.7
+
+* [Issue #626] Integrate apollo-fastify plugin. [PR #1013](https://github.com/apollographql/apollo-server/pull/1013)
+
 ### v1.3.6
 
 * Recognize requests with Apollo Persisted Queries and return `PersistedQueryNotSupported` to the client instead of a confusing error. [PR #982](https://github.com/apollographql/apollo-server/pull/982)
