@@ -3,13 +3,7 @@ title: Resolvers
 description: How to fetch data, select from the results, and join types together
 ---
 
-## Prerequisites
-
-* Understanding of the essential [schema concepts](../essentials/schema.html)
-
-## Resolvers
-
-Resolvers provide the instructions for turning a GraphQL operation into data. Resolvers are organized into a one to one mapping to the fields in a GraphQL schema. This section describes resolvers' organization, every field's default resolver, and their signature.
+Resolvers tell GraphQL execution how to fill in data for each field in your query. Resolvers are organized into a one to one mapping to the fields in your GraphQL schema. This section describes how resolvers are written and organized, the default resolver that applies to every field, and the arguments available to resolvers.
 
 ### Resolver map
 

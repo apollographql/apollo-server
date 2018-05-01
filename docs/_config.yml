@@ -14,18 +14,22 @@ sidebar_categories:
     - essentials/schema
     - essentials/server
     - essentials/data
+  Features:
+    - features/resolvers
+    - features/mocking
+    - features/scalars-enums
+    - features/unions-interfaces
+    - features/directives
+    - features/creating-directives
+  Schema stitching:
+    - features/schema-stitching
+    - features/remote-schemas
+    - features/schema-delegation
+    - features/schema-transforms
   Deployment:
     - deployment/index
     - deployment/heroku
     - deployment/lambda
-  Advanced:
-    - advanced/scalars-enums
-  Features:
-    - schemas/organization
-    - features/introduction
-    - features/remote-schemas
-    - features/schema-delegation
-    - features/schema-transforms
   API Reference:
     - api/apollo-server
     - api/graphql-subscriptions
