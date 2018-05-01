@@ -83,10 +83,6 @@ export function runQuery(options: QueryOptions): Promise<GraphQLResponse> {
   return Promise.resolve().then(() => doRunQuery(options));
 }
 
-function printStackTrace(error: Error) {
-  console.error(error.stack);
-}
-
 function format(
   errors: Array<Error>,
   options?: {
