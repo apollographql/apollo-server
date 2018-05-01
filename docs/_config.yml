@@ -21,6 +21,11 @@ sidebar_categories:
     - deployment/lambda
   Advanced:
     - advanced/scalars-enums
+  Features:
+    - features/introduction
+    - features/remote-schemas
+    - features/schema-delegation
+    - features/schema-transforms
   API Reference:
     - api/apollo-server
     - api/graphql-subscriptions
