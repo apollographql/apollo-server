@@ -22,8 +22,13 @@ export const registerServer = async ({
   path,
   cors,
 }: ServerRegistration) => {
+  if (!path) path = '/graphql';
+
   // XXX multiple paths?
-  server.use({ path, getHttp: () => createServer(app) });
+  server.use({
+    path,
+    getHttp: () => createServer(app),
+  });
 
   app.use(path, corsMiddleware(cors), json(), (req, res, next) => {
     // make sure we check to see if graphql gui should be on
