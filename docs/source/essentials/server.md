@@ -10,7 +10,7 @@ Apollo Server provides an easy way for new, or existing, applications to get run
 
 ## Prerequisites
 
-* The basic steps to creating a GraphQL schema, including the concept of "types". ([Building a schema](./schema.html));
+* The basic steps to creating a GraphQL schema, including the concept of "types". (See [schema concepts](./schema.html))
 
 > If you don't understand these prerequisites, we recommend starting at the [Getting Started](../getting-started.html) page for a simplified example.  Alternatively, visit the links to the right of the prerequisites above for more information.
 

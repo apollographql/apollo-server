@@ -5,7 +5,7 @@ description: How to fetch data, select from the results, and join types together
 
 ## Prerequisites
 
-* Understanding of the essentials for [building a schema]()
+* Understanding of the essential [schema concepts](../essentials/schema.html)
 
 ## Resolvers
 
