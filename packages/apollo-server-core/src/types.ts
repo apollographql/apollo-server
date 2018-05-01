@@ -1,5 +1,5 @@
 import { GraphQLSchema } from 'graphql';
-import { SchemaDirectiveVisitor, IResolvers } from 'graphql-tools';
+import { SchemaDirectiveVisitor, IResolvers, IMocks } from 'graphql-tools';
 import { ConnectionContext } from 'subscriptions-transport-ws';
 import { Server as HttpServer } from 'http';
 
@@ -7,7 +7,7 @@ import { GraphQLServerOptions as GraphQLOptions } from './graphqlOptions';
 
 export type Context<T = any> = T;
 export type ContextFunction<T = any> = (
-  context: Context<T>
+  context: Context<T>,
 ) => Promise<Context<T>>;
 
 export interface SubscriptionServerOptions {
@@ -39,6 +39,7 @@ export interface Config<Server>
   context?: Context<any> | ContextFunction<any>;
   subscriptions?: SubscriptionServerOptions | string | false;
   enableIntrospection?: boolean;
+  mocks?: boolean | IMocks;
 }
 
 // XXX export these directly from apollo-engine-js
@@ -68,7 +69,7 @@ export interface ListenOptions {
   onConnect?: (
     connectionParams: Object,
     websocket: WebSocket,
-    context: ConnectionContext
+    context: ConnectionContext,
   ) => any;
   onDisconnect?: (websocket: WebSocket, context: ConnectionContext) => any;
 }
