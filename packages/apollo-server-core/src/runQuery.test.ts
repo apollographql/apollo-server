@@ -118,9 +118,8 @@ describe('runQuery', () => {
     });
   });
 
-  it('sends stack trace to error if in an error occurs and debug mode is set', () => {
+  it('does not call console.error if in an error occurs and debug mode is set', () => {
     const query = `query { testError }`;
-    const expected = /at resolveFieldValueOrError/;
     const logStub = stub(console, 'error');
     return runQuery({
       schema,
@@ -128,12 +127,11 @@ describe('runQuery', () => {
       debug: true,
     }).then(res => {
       logStub.restore();
-      expect(logStub.callCount).to.equal(1);
-      expect(logStub.getCall(0).args[0]).to.match(expected);
+      expect(logStub.callCount).to.equal(0);
     });
   });
 
-  it('does not send stack trace if in an error occurs and not in debug mode', () => {
+  it('does not call console.error if in an error occurs and not in debug mode', () => {
     const query = `query { testError }`;
     const logStub = stub(console, 'error');
     return runQuery({
@@ -291,6 +289,10 @@ describe('runQuery', () => {
       expect(logs[10]).to.deep.equals({
         action: LogAction.request,
         step: LogStep.end,
+        key: 'response',
+        data: {
+          data: expected,
+        },
       });
     });
   });
