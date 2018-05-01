@@ -5,132 +5,27 @@ description: Scaling your Apollo Server from a single file to your entire team
 
 ## Prerequisites
 
-* Understanding of GraphQL types
-* Resolvers
+* essentials/schema for connection between:
+  * GraphQL Types
+  * Resolvers
 
 ## Overview
 
-The schema contains the information to define all requests that the client can request from an instance of Apollo Server along with the resolvers necessary to route the requests to retrieve data. For most applications, the schema type definitions are be placed in a single file along side the resolvers. Placing reolvers in the same file as their accompanying type definitions is the best way to organize the code, since it enables developers to locate and modify the two inter-dependent portions.
+The GraphQL schema defines the api for Apollo Server, providing the single source of truth between client and server. A complete schema contains type definitions and resolvers. Type definitions are written and documented in the [Schema Definition Language(SDL)]() to define the valid server entry points. Corresponding to one to one with type definition fields, resolvers are functions that retrieve the data described by the type definitions.
 
-Sometimes production servers contain a typeDefs string of over a thousand lines, which makes it difficult to maintain a file containing the resolvers as well. For applications with multiple teams or product domains, this section describes an example application and methods for organizing types and resolvers to make a large instance more modular. The separation between types should follow real-world domains, for example movies vs books, rather than the backend organization. To facilitate this organization, common practice is to create a data model layer that enables resolvers across domains to request data from a common interface. A data layer further enables the different schema domains to share data, such as a user profile.
+To accommodate this tight coupling, type definitions and resolvers should be kept together in the same file. This collocation allows developers to modify fields and resolvers with atomic schema changes without unexpected consequences. At the end to build a complete schema, the type definitions are combined in an array and resolvers are merged together. Throughout all the examples, the resolvers delegate to a data model, as explained in [this section]().
 
-Along with modularizing large schemas, GraphQL enables schemas to include documentation inline that is viewable in GraphiQL.
+> Note: This schema separation should be done by product or real-world domain, which create natural boundaries that are easier to reason about.
 
-## Example Application
+<h2 id="organizing-types">Organizing schema types</h2>
 
-The application contains a schema, resolvers with fake data, and the Apollo Server start code.
-
-### Types
-
-When using `apollo-server`, the schema is defined as a string in the [GraphQL SDL]().
-
-```js
-const typeDefs = `
-  type Author {
-    id: Int!
-    firstName: String
-    lastName: String
-    """
-    the list of Posts by this author
-    """
-    posts: [Post]
-  }
-
-  type Post {
-    id: Int!
-    title: String
-    author: Author
-    votes: Int
-  }
-
-  # the schema allows the following query:
-  type Query {
-    posts: [Post]
-    author(id: Int!): Author
-  }
-
-  # this schema allows the following mutation:
-  type Mutation {
-    upvotePost (
-      postId: Int!
-    ): Post
-  }
-`;
-```
-
-### Resolvers
-
-In the same file as the type defintinos, the resolvers are organized as a nested object that maps type and field names to functions:
-
-```js
-const { find, filter } = require('lodash');
-
-// example data
-const authors = [
-  { id: 1, firstName: 'Tom', lastName: 'Coleman' },
-  { id: 2, firstName: 'Sashko', lastName: 'Stubailo' },
-  { id: 3, firstName: 'Mikhail', lastName: 'Novikov' },
-];
-
-const posts = [
-  { id: 1, authorId: 1, title: 'Introduction to GraphQL', votes: 2 },
-  { id: 2, authorId: 2, title: 'Welcome to Meteor', votes: 3 },
-  { id: 3, authorId: 2, title: 'Advanced GraphQL', votes: 1 },
-  { id: 4, authorId: 3, title: 'Launchpad is Cool', votes: 7 },
-];
-
-const resolvers = {
-  Query: {
-    posts: () => posts,
-    author: (_, { id }) => find(authors, { id }),
-  },
-
-  Mutation: {
-    upvotePost: (_, { postId }) => {
-      const post = find(posts, { id: postId });
-      if (!post) {
-        throw new Error(`Couldn't find post with id ${postId}`);
-      }
-      post.votes += 1;
-      return post;
-    },
-  },
-
-  Author: {
-    posts: author => filter(posts, { authorId: author.id }),
-  },
-
-  Post: {
-    author: post => find(authors, { id: post.authorId }),
-  },
-};
-```
-
-### Server Instantiation
-
-At the end, Apollo server accepts the schema and resolvers:
-
-```js
-const { ApolloServer, gql } = require('apollo-server');
-
-const server = new ApolloServer({ typeDefs, resolvers });
-
-server.listen().then(({ url }) => {
-  console.log(`🚀 Server ready at ${url}`)
-});
-```
-
-For small to medium applications, collocating all type definition in one string and resolvers in one object is ideal, since central storage reduces complexity. Eventually for larger applications and teams, defining types and resolvers in separate files and combining them is ideal. The next section describes how Apollo Server enables this separation.
-
-<h2 id="modularizing-types">Modularizing the schema types</h2>
-
-When schemas get large, we can start to define types in different files and import them to create the complete schema. We accomplish this by importing and exporting schema strings, combining them into arrays as necessary.
+With large schema, defining types in different files and merge them to create the complete schema may become necessary. We accomplish this by importing and exporting schema strings, combining them into arrays as necessary. The following example demonstrates separating the type definitions of [this schema](#first-example-schema) found at the end of the page.
 
 ```js
 // comment.js
 const typeDefs = gql`
   type Comment {
-    id: Int!
+    id: ID!
     message: String
     author: String
   }
@@ -139,46 +34,40 @@ const typeDefs = gql`
 export typeDefs;
 ```
 
+The `Post` includes a reference to `Comment`, which is added to the array of type definitions and exported:
+
 ```js
 // post.js
-const Comment = require('./comment');
-
-const typeDefs = [`
+const typeDefs = `
   type Post {
-    id: Int!
+    id: ID!
     title: String
     content: String
     author: String
     comments: [Comment]
   }
-`].concat(Comment.typeDefs);
+`;
 
-// we export Post and all types it depends on
-// in order to make sure we don't forget to include
-// a dependency
+// Export Post and all dependent types
 export typeDefs;
 ```
 
+Finally the root Query type, which uses Post, is created and passed to the server instantiation:
+
 ```js
 // schema.js
-const Post = require('./post.js');
+const Comment = require('./comment');
+const Post = require('./post');
 
 const RootQuery = `
-  type RootQuery {
-    post(id: Int!): Post
-  }
-`;
-
-const SchemaDefinition = `
-  schema {
-    query: RootQuery
+  type Query {
+    post(id: ID!): Post
   }
 `;
 
 const server = new ApolloServer({
-  //we may destructure Post if supported by our Node version
-  typeDefs: [SchemaDefinition, RootQuery].concat(Post.typeDefs),
-  resolvers,
+  typeDefs: [RootQuery, Post.typeDefs, Comment.typeDefs],
+  resolvers, //defined in next section
 });
 
 server.listen().then(({ url }) => {
@@ -186,43 +75,57 @@ server.listen().then(({ url }) => {
 });
 ```
 
-<h2 id="modularizing-resolvers">Modularizing resolvers</h2>
+<h2 id="organizing-resolvers">Organizing resolvers</h2>
 
-We can accomplish the same modularity with resolvers by passing around multiple resolver objects and combining them together with Lodash's `merge` or other equivalent:
+For the type definitions above, we can accomplish the same modularity with resolvers by combining each type's resolvers together with Lodash's `merge` or another equivalent. The [end of this page](#first-example-resolvers) contains a complete view of the resolver map.
 
 ```js
 // comment.js
+const CommentModel = require('./models/comment');
+
 const resolvers = {
-  Comment: { ... }
-}
+  Comment: {
+    votes: (parent) => CommentModel.getVotesById(parent.id)
+  }
+};
 
 export resolvers;
 ```
+
+The `Post` type:
 
 ```js
 // post.js
-const { merge } = require('lodash');
+const PostModel = jequire('./models/post');
 
-const Comment = require('./comment');
-const resolvers = merge({
-  Post: { ... }
-}, Comment.resolvers);
+const resolvers = {
+  Post: {
+    comments: (parent) => PostModel.getCommentsById(parent.id)
+  }
+};
 
 export resolvers;
 ```
 
+Finally, the Query type's resolvers are merged and the result is passed to the server instantiation:
+
 ```js
 // schema.js
 const { merge } = require('lodash');
-const Post = require('./post.js');
+const Post = require('./post');
+const Comment = require('./comment');
+
+const PostModel = require('./models/post');
 
 // Merge all of the resolver objects together
 const resolvers = merge({
-  Query: { ... }
-}, Post.resolvers);
+  Query: {
+    post: (_, args) => PostModel.getPostById(args.id)
+  }
+}, Post.resolvers, Comment.resolvers);
 
 const server = new ApolloServer({
-  typeDefs,
+  typeDefs, //defined in previous section
   resolvers,
 });
 
@@ -231,103 +134,59 @@ server.listen().then(({ url }) => {
 });
 ```
 
-<h3 id="sharing-modular-types">Sharing types across domains</h3>
-
-Schemas often contain circular dependencies or a shared type that has been hoisted to be referenced in separate files. When exporting array of schema strings with circular dependencies, the array can be wrapped in a function. The Apollo Server will only include each type definition once, even if it is imported multiple times by different types.Preventing deduplication of type definitions means that domains can be self contained and fully functional regardless of how they are combined.
-
-```js
-// author.js
-const Book = require('./book');
-
-const Author = `
-  type Author {
-    id: Int!
-    firstName: String
-    lastName: String
-    books: [Book]
-  }
-`;
-
-// we export Author and all types it depends on
-// in order to make sure we don't forget to include
-// a dependency and we wrap it in a function
-// to avoid strings deduplication
-export const typeDefs = () => [Author].concat(Book.typeDefs);
-```
-
-```js
-// book.js
-const Author = require('./author');
-
-const Book = `
-  type Book {
-    title: String
-    author: Author
-  }
-`;
-
-export const typeDefs = () => [Book].concat(Author.typeDefs);
-```
-
-```js
-// schema.js
-const Author = require('./author.js');
-
-const RootQuery = `
-  type RootQuery {
-    author(id: Int!): Author
-  }
-`;
-
-const SchemaDefinition = `
-  schema {
-    query: RootQuery
-  }
-`;
-
-const server = new ApolloServer({
-  //we may destructure Post if supported by our Node version
-  typeDefs: [SchemaDefinition, RootQuery].concat(Author.typeDefs),
-  resolvers,
-});
-
-server.listen().then(({ url }) => {
-  console.log(`🚀 Server ready at ${url}`)
-});
-```
-
-<h2 id="extend-types">Extending Types</h2>
+<h2 id="extend-types">Extending types</h2>
 
 The `extend` keyword provides the ability to add fields to existing types. Using `extend` is particularly useful in avoiding a large list of fields on root Queries and Mutations.
 
 ```js
-const barTypeDefs = `
-"Query can and must be defined once per schema to be extended"
-type Query {
-  bars: [Bar]
+//schema.js
+const bookTypeDefs = `
+extend type Query {
+  books: [Bar]
 }
 
-type Bar {
-  id: String
+type Book {
+  id: ID!
 }
 `;
 
-const fooTypeDefs = `
-type Foo {
-  id: String
-}
-
+// These type definitions are often in a separate file
+const authorTypeDefs = `
 extend type Query {
-  foos: [Foo]
+  authors: [Author]
 }
-`
 
-const typeDefs = [barTypeDefs, fooTypeDefs]
+type Author {
+  id: ID
+}
+`;
+export const typeDefs = [bookTypeDefs, authorTypeDefs]
 ```
 
-<h2 id="descriptions">Documenting your Schema</h2>
+```js
+const {typeDefs, resolvers} = require('./schema');
 
-GraphiQL has built-in support for displaying docstrings with markdown syntax. This schema includes docstrings for types, fields and arguments.
+const rootQuery = `
+"Query can and must be defined once per schema to be extended"
+type Query {
+  _empty: String
+}`;
+
+const server = new ApolloServer({
+  typeDefs: [RootQuery].concat(typeDefs),
+  resolvers,
+});
+
+server.listen().then(({ url }) => {
+  console.log(`🚀 Server ready at ${url}`)
+});
+```
+
+> Note: In the current version of GraphQL, you can’t have an empty type even if you intend to extend it later. So we need to make sure the Query type has at least one field — in this case we can add a fake `_empty` field. Hopefully in future versions it will be possible to have an empty type to be extended later.
+
+<h2 id="descriptions">Documenting a Schema</h2>
+
+In addition to modularization, documentation within the SDL enables the schema to be effective as the single source of truth between client and server. Graphql gui's have built-in support for displaying docstrings with markdown syntax, such as those found in the following schema.
 
 ```graphql
 """
@@ -351,4 +210,54 @@ type MyObjectType {
 
 <h2 id="api">API</h2>
 
+Apollo Server pass `typeDefs` and `resolvers` to the `graphql-tools`'s `makeExecutableSchema`.
+
 TODO point at graphql-tools `makeExecutableSchema` api
+
+<h2 id="example-app">Example Application Details</h2>
+
+<h3 id="example-schema">Schema</h3>
+
+The full type definitions for the first example:
+
+```graphql
+type Comment {
+  id: ID!
+  message: String
+  author: String
+  votes: Int
+}
+
+type Post {
+  id: ID!
+  title: String
+  content: String
+  author: String
+  comments: [Comment]
+}
+
+type Query {
+  post(id: ID!): Post
+}
+```
+
+<h3 id="example-resolvers">Resolvers</h3>
+
+The full resolver map for the first example:
+
+```js
+const CommentModel = require('./models/comment');
+const PostModel = require('./models/post');
+
+const resolvers = {
+  Comment: {
+    votes: (parent) => CommentModel.getVotesById(parent.id)
+  }
+  Post: {
+    comments: (parent) => PostModel.getCommentsById(parent.id)
+  }
+  Query: {
+    post: (_, args) => PostModel.getPostById(args.id)
+  }
+}
+```

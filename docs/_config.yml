@@ -14,7 +14,6 @@ sidebar_categories:
     - essentials/schema
     - essentials/server
     - essentials/data
-    - essentials/querying
   Deployment:
     - deployment/index
     - deployment/heroku
@@ -22,6 +21,7 @@ sidebar_categories:
   Advanced:
     - advanced/scalars-enums
   Features:
+    - schemas/organization
     - features/introduction
     - features/remote-schemas
     - features/schema-delegation
