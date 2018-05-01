@@ -1,6 +1,6 @@
 ---
-title: Directives
-description: Using directives to transform schema types, fields, and arguments
+title: Using schema directives
+description: Using schema directives to transform schema types, fields, and arguments
 ---
 
 A _directive_ is an identifier preceded by a `@` character, optionally followed by a list of named arguments, which can appear after almost any form of syntax in the GraphQL query or schema languages. Here's an example from the [GraphQL draft specification](http://facebook.github.io/graphql/draft/#sec-Type-System.Directives) that illustrates several of these possibilities:

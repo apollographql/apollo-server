@@ -1,6 +1,6 @@
 ---
-title: Schema directives
-description: Using and implementing custom directives to transform schema types, fields, and arguments
+title: Implementing directives
+description: Implementing custom directives to transform schema types, fields, and arguments
 ---
 
 Before learning how to implement schema directives, [this section]() will provide the necessary background on schema directives and their use.
