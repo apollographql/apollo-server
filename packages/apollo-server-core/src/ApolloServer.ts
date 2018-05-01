@@ -1,4 +1,4 @@
-import { makeExecutableSchema } from 'graphql-tools';
+import { makeExecutableSchema, addMockFunctionsToSchema } from 'graphql-tools';
 import { Server as HttpServer } from 'http';
 import {
   execute,
@@ -40,8 +40,8 @@ const NoIntrospection = (context: ValidationContext) => ({
       context.reportError(
         new GraphQLError(
           'GraphQL introspection is not allowed by Apollo Server, but the query containted __schema or __type. To enable introspection, pass introspection: true to ApolloServer in production',
-          [node]
-        )
+          [node],
+        ),
       );
     }
   },
@@ -70,6 +70,7 @@ export class ApolloServerBase<Request = RequestInit> {
       subscriptions,
       typeDefs,
       enableIntrospection,
+      mocks,
       ...requestOptions
     } = config;
 
@@ -99,6 +100,14 @@ export class ApolloServerBase<Request = RequestInit> {
           schemaDirectives,
           resolvers,
         });
+
+    if (mocks) {
+      addMockFunctionsToSchema({
+        schema: this.schema,
+        preserveResolvers: true,
+        mocks: typeof mocks === 'boolean' ? {} : mocks,
+      });
+    }
 
     this.subscriptions = subscriptions;
   }
@@ -140,10 +149,10 @@ export class ApolloServerBase<Request = RequestInit> {
           () => {
             this.engine.engineListeningAddress.url = require('url').resolve(
               this.engine.engineListeningAddress.url,
-              this.graphqlPath
+              this.graphqlPath,
             );
             success(this.engine.engineListeningAddress);
-          }
+          },
         );
         this.engine.on('error', fail);
         return;
@@ -179,7 +188,7 @@ export class ApolloServerBase<Request = RequestInit> {
           });
 
           success(la);
-        }
+        },
       );
     });
   }
@@ -225,7 +234,7 @@ export class ApolloServerBase<Request = RequestInit> {
       {
         server,
         path: this.graphqlPath,
-      }
+      },
     );
   }
 
@@ -234,7 +243,7 @@ export class ApolloServerBase<Request = RequestInit> {
     const { ENGINE_API_KEY, ENGINE_CONFIG } = process.env;
     if (engine === false && (ENGINE_API_KEY || ENGINE_CONFIG)) {
       console.warn(
-        'engine is set to false when creating ApolloServer but either ENGINE_CONFIG or ENGINE_API_KEY was found in the environment'
+        'engine is set to false when creating ApolloServer but either ENGINE_CONFIG or ENGINE_API_KEY was found in the environment',
       );
     }
     let ApolloEngine;
@@ -250,7 +259,7 @@ export class ApolloServerBase<Request = RequestInit> {
       }
 
       this.engine = new ApolloEngine(
-        typeof engine === 'boolean' ? undefined : engine
+        typeof engine === 'boolean' ? undefined : engine,
       );
     }
 
