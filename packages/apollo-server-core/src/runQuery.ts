@@ -50,7 +50,7 @@ export interface LogMessage {
   action: LogAction;
   step: LogStep;
   key?: string;
-  data?: Object;
+  data?: any;
 }
 
 export interface LogFunction {
@@ -234,7 +234,6 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
       ),
     ).then(result => {
       logFunction({ action: LogAction.execute, step: LogStep.end });
-      logFunction({ action: LogAction.request, step: LogStep.end });
 
       let response: GraphQLResponse = {
         data: result.data,
@@ -245,9 +244,6 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
           formatter: options.formatError,
           debug,
         });
-        if (debug) {
-          result.errors.map(printStackTrace);
-        }
       }
 
       if (extensionStack) {
@@ -259,6 +255,13 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
       if (options.formatResponse) {
         response = options.formatResponse(response, options);
       }
+
+      logFunction({
+        action: LogAction.request,
+        step: LogStep.end,
+        key: 'response',
+        data: response,
+      });
 
       return response;
     });
