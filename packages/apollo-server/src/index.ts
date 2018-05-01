@@ -1,66 +1,63 @@
 import * as express from 'express';
+import { registerServer } from 'apollo-server-express';
 
-import { Config } from './utils/types';
+import {
+  ApolloServerBase,
+  ListenOptions,
+  Config,
+  ServerInfo,
+} from 'apollo-server-core';
 
-export * from './utils/exports';
-export * from './utils/errors';
+export * from './exports';
 
-import { ApolloServer as ExpressServer } from './express';
+export class ApolloServer extends ApolloServerBase<express.Request> {
+  private disableHealthCheck: boolean = false;
+  private onHealthCheck: (req: express.Request) => Promise<any>;
 
-export class ApolloServer<Context> extends ExpressServer {
-  constructor(
-    opts: Config<express.Application, express.Request, Context> & {
-      onHealthCheck: (req: express.Request) => Promise<any>;
-      disableHealthCheck: boolean;
-    },
-  ) {
-    if (opts.app) {
-      throw new Error(`It looks like "app" was passed into ApolloServer. To use a server with middleware, you need to create an ApolloServer from a variant package and pass in your app. This example uses express:
-
-  const { ApolloServer } = require('apollo-server/express');
-  const express = require('express');
-
-  const app = express();
-  // add your middleware
-
-  const server = new ApolloServer({ app, resolvers, typeDefs });
-  // then when you want to add the apollo server middleware
-  server.applyMiddleware();
-  // then start the server
-  server.listen().then(({ url }) => {
-      console.log(\`🚀 Server ready at \${url}\`);
-  });
-
-`);
-    }
-
-    opts.app = express();
+  constructor({
+    disableHealthCheck,
+    onHealthCheck,
+    ...opts
+  }: Config<express.Request> & {
+    onHealthCheck: (req: express.Request) => Promise<any>;
+    disableHealthCheck: boolean;
+  }) {
     super(opts);
+    if (disableHealthCheck) this.disableHealthCheck = true;
+    this.onHealthCheck = onHealthCheck;
+  }
 
-    if (!opts.disableHealthCheck) {
-      //uses same path as engine
-      opts.app.use('/.well-known/apollo/server-health', (req, res, next) => {
-        //Response follows https://tools.ietf.org/html/draft-inadarei-api-health-check-01
-        res.type('application/health+json');
+  // here we overwrite the underlying listen to configure
+  // the fallback / default server implementation
+  async listen(opts: ListenOptions = {}): Promise<ServerInfo> {
+    // we haven't configured a server yet so lets build the default one
+    // using express
+    if (!this.getHttp) {
+      const app = express();
 
-        if (opts.onHealthCheck) {
-          opts
-            .onHealthCheck(req)
-            .then(() => {
-              res.json({ status: 'pass' });
-            })
-            .catch(() => {
-              res.status(503).json({ status: 'fail' });
-            });
-        } else {
-          res.json({ status: 'pass' });
-        }
-      });
+      if (!this.disableHealthCheck) {
+        //uses same path as engine
+        app.use('/.well-known/apollo/server-health', (req, res, next) => {
+          //Response follows https://tools.ietf.org/html/draft-inadarei-api-health-check-01
+          res.type('application/health+json');
+
+          if (this.onHealthCheck) {
+            this.onHealthCheck(req)
+              .then(() => {
+                res.json({ status: 'pass' });
+              })
+              .catch(() => {
+                res.status(503).json({ status: 'fail' });
+              });
+          } else {
+            res.json({ status: 'pass' });
+          }
+        });
+
+        await registerServer({ app, path: '/', server: this });
+      }
     }
 
-    // when using ApolloServer without a server app passed in, we can assume it
-    // will be only serving GraphQL, which can be provided at the root path to
-    // support page refreshes well
-    super.applyMiddleware({ path: '/' });
+    return super.listen(opts);
   }
 }

@@ -1,13 +1,13 @@
 import { GraphQLSchema } from 'graphql';
-import { CorsOptions } from 'cors';
 import { SchemaDirectiveVisitor, IResolvers } from 'graphql-tools';
 import { ConnectionContext } from 'subscriptions-transport-ws';
-import { GraphQLOptions } from 'apollo-server-core';
-export { CacheControlExtensionOptions } from 'apollo-cache-control';
+import { Server as HttpServer } from 'http';
+
+import { GraphQLServerOptions as GraphQLOptions } from './graphqlOptions';
 
 export type Context<T = any> = T;
 export type ContextFunction<T = any> = (
-  context: Context<T>,
+  context: Context<T>
 ) => Promise<Context<T>>;
 
 export interface SubscriptionServerOptions {
@@ -17,9 +17,9 @@ export interface SubscriptionServerOptions {
   keepAlive?: number;
 }
 
-export interface Config<Server, ContextShape = any, Cors = CorsOptions>
+export interface Config<Server>
   extends Pick<
-      GraphQLOptions<Context<ContextShape>>,
+      GraphQLOptions<Context<any>>,
       | 'formatError'
       | 'debug'
       | 'rootValue'
@@ -32,16 +32,12 @@ export interface Config<Server, ContextShape = any, Cors = CorsOptions>
       | 'cacheControl'
       | 'tracing'
     > {
-  app?: Server;
   typeDefs?: string | [string];
   resolvers?: IResolvers;
   schema?: GraphQLSchema;
   schemaDirectives: Record<string, typeof SchemaDirectiveVisitor>;
-  context?: Context<ContextShape> | ContextFunction<ContextShape>;
-  cors?: Cors;
+  context?: Context<any> | ContextFunction<any>;
   subscriptions?: SubscriptionServerOptions | string | false;
-  engineInRequestPath?: boolean;
-  engine?: boolean | Object;
   enableIntrospection?: boolean;
 }
 
@@ -62,6 +58,9 @@ export interface ListenOptions {
   path?: string;
   backlog?: number;
   exclusive?: boolean;
+  // XXX clean this up
+  engineInRequestPath?: boolean;
+  engine?: boolean | Object;
   // engine launcher options
   engineLauncherOptions?: EngineLauncherOptions;
   // WebSocket options
@@ -69,7 +68,7 @@ export interface ListenOptions {
   onConnect?: (
     connectionParams: Object,
     websocket: WebSocket,
-    context: ConnectionContext,
+    context: ConnectionContext
   ) => any;
   onDisconnect?: (websocket: WebSocket, context: ConnectionContext) => any;
 }
@@ -80,17 +79,10 @@ export interface MiddlewareOptions {
   subscriptions?: boolean;
 }
 
-export interface MiddlewareRegistrationOptions<
-  Server,
-  Request,
-  Cors = CorsOptions
-> {
-  path?: string;
-  gui?: boolean;
-  subscriptions?: boolean;
-  cors?: Cors;
-  app: Server;
-  request: (request: Request) => any;
+export interface RegistrationOptions {
+  path: string;
+  // subscriptions?: boolean;
+  getHttp: () => HttpServer;
 }
 
 export interface ServerInfo {
