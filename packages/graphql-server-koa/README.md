@@ -1,1 +1,0 @@
-The `graphql-server-koa` package is now called [`apollo-server-koa`](https://www.npmjs.com/package/apollo-server-koa). We are continuing to release matching versions of the package under the old name, but we recommend you switch to using the new name. The API is identical.

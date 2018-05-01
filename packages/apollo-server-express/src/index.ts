@@ -20,3 +20,6 @@ export {
 
 // Connect Middleware
 export { graphqlConnect, graphiqlConnect } from './connectApollo';
+
+// ApolloServer integration
+export { registerServer } from './ApolloServer';

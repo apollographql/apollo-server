@@ -19,3 +19,7 @@ export {
   ForbiddenError,
   internalFormatError,
 } from './errors';
+
+// ApolloServer Base class
+export { ApolloServerBase } from './ApolloServer';
+export * from './types';
