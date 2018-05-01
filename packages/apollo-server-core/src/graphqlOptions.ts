@@ -5,7 +5,6 @@ import {
 } from 'graphql';
 import { LogFunction } from './runQuery';
 import { GraphQLExtension } from 'graphql-extensions';
-import { CacheControlExtensionOptions } from 'apollo-cache-control';
 
 /*
  * GraphQLServerOptions
@@ -34,7 +33,8 @@ export interface GraphQLServerOptions<TContext = any> {
   fieldResolver?: GraphQLFieldResolver<any, TContext>;
   debug?: boolean;
   tracing?: boolean;
-  cacheControl?: boolean | CacheControlExtensionOptions;
+  // cacheControl?: boolean | CacheControlExtensionOptions;
+  cacheControl?: boolean | any;
 }
 
 export default GraphQLServerOptions;
