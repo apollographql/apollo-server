@@ -11,11 +11,11 @@ This is the Fastify integration of GraphQL Server. Apollo Server is a community-
 npm install apollo-server-fastify
 ```
 
-## Express
+## Fastify
 
 ```js
 import fastify from 'fastify';
-import bodyParser from 'body-parser';
+import jsonParser from 'fast-json-body';
 import { graphqlFastify } from 'apollo-server-fastify';
 
 const myGraphQLSchema = // ... define or import your schema here!
@@ -23,10 +23,20 @@ const PORT = 3000;
 
 const app = fastify();
 
-// bodyParser is needed just for POST.
-fastify.get('/graphql', bodyParser.json(), graphqlFastify({ schema: myGraphQLSchema }));
+// jsonParser is needed for POST.
+app.addContentTypeParser('application/json', function(req, done) {
+  jsonParser(req, function(err, body) {
+    done(err, body);
+  });
+});
+app.register(graphqlFastify, { schema: myGraphQLSchema });
 
-fastify.listen(PORT);
+try {
+  await app.listen(3007);
+} catch (err) {
+  app.log.error(err);
+  process.exit(1);
+}
 ```
 
 ## Principles

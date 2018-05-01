@@ -34,6 +34,7 @@ where `<variant>` is one of the following:
 
 * `express`
 * `koa`
+* `fastify`
 * `hapi`
 * `restify`
 * `lambda`
@@ -80,6 +81,34 @@ app.use('/graphql', query());
 app.use('/graphql', graphqlConnect({ schema: myGraphQLSchema }));
 
 http.createServer(app).listen(PORT);
+```
+
+### Fastify
+
+```javascript
+import fastify from 'fastify';
+import jsonParser from 'fast-json-body';
+import { graphqlFastify } from 'apollo-server-fastify';
+
+const myGraphQLSchema = // ... define or import your schema here!
+const PORT = 3000;
+
+const app = fastify();
+
+// jsonParser is needed for POST.
+app.addContentTypeParser('application/json', function(req, done) {
+  jsonParser(req, function(err, body) {
+    done(err, body);
+  });
+});
+app.register(graphqlFastify, { schema: myGraphQLSchema });
+
+try {
+  await app.listen(3007);
+} catch (err) {
+  app.log.error(err);
+  process.exit(1);
+}
 ```
 
 ### Hapi
