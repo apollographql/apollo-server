@@ -42,7 +42,7 @@ type ColoringBook implements Book {
 }
 
 type Query {
-  schoolBooks: [Book]  
+  schoolBooks: [Book]
 }
 ```
 
@@ -163,7 +163,7 @@ query GetLikedContent($id: ID!){
     ... on Post {
       pageTitle: title
     }
-  } 
+  }
 }
 ```
 
@@ -209,5 +209,163 @@ Lets break this down by field:
 - **post** is added by the implementing type `AddPostMutationResponse` to return back the newly created post for the client to use!
 
 Following this pattern for mutations provides detailed information about the data that has changed and how the operation to change it went! Client developers can easily react to failures and fetch the information they need to update their local cache.
+
+<h2 id="organization">Organizing your schema</h2>
+
+When schemas get large, we can start to define types in different files and import them to create the complete schema. We accomplish this by importing and exporting schema strings, combining them into arrays as necessary.
+
+```js
+// comment.js
+const typeDefs = gql`
+  type Comment {
+    id: Int!
+    message: String
+    author: String
+  }
+`;
+
+export typeDefs;
+```
+
+```js
+// post.js
+const Comment = require('./comment');
+
+const typeDefs = [`
+  type Post {
+    id: Int!
+    title: String
+    content: String
+    author: String
+    comments: [Comment]
+  }
+`].concat(Comment.typeDefs);
+
+// we export Post and all types it depends on
+// in order to make sure we don't forget to include
+// a dependency
+export typeDefs;
+```
+
+```js
+// schema.js
+const Post = require('./post.js');
+
+const RootQuery = `
+  type RootQuery {
+    post(id: Int!): Post
+  }
+`;
+
+const SchemaDefinition = `
+  schema {
+    query: RootQuery
+  }
+`;
+
+const server = new ApolloServer({
+  //we may destructure Post if supported by our Node version
+  typeDefs: [SchemaDefinition, RootQuery].concat(Post.typeDefs),
+  resolvers,
+});
+
+server.listen().then(({ url }) => {
+  console.log(`🚀 Server ready at ${url}`)
+});
+```
+
+<h3 id="extend-types">Extending types</h3>
+
+The `extend` keyword provides the ability to add fields to existing types. Using `extend` is particularly useful in avoiding a large list of fields on root Queries and Mutations.
+
+```js
+const barTypeDefs = `
+"Query can and must be defined once per schema to be extended"
+type Query {
+  bars: [Bar]
+}
+
+type Bar {
+  id: String
+}
+`;
+
+const fooTypeDefs = `
+type Foo {
+  id: String
+}
+
+extend type Query {
+  foos: [Foo]
+}
+`
+
+const typeDefs = [barTypeDefs, fooTypeDefs]
+```
+
+<h3 id="share-types">Sharing types</h3>
+
+Schemas often contain circular dependencies or a shared type that has been hoisted to be referenced in separate files. When exporting array of schema strings with circular dependencies, the array can be wrapped in a function. The Apollo Server will only include each type definition once, even if it is imported multiple times by different types. Preventing deduplication of type definitions means that domains can be self contained and fully functional regardless of how they are combined.
+
+```js
+// author.js
+const Book = require('./book');
+
+const Author = `
+  type Author {
+    id: Int!
+    firstName: String
+    lastName: String
+    books: [Book]
+  }
+`;
+
+// we export Author and all types it depends on
+// in order to make sure we don't forget to include
+// a dependency and we wrap it in a function
+// to avoid strings deduplication
+export const typeDefs = () => [Author].concat(Book.typeDefs);
+```
+
+```js
+// book.js
+const Author = require('./author');
+
+const Book = `
+  type Book {
+    title: String
+    author: Author
+  }
+`;
+
+export const typeDefs = () => [Book].concat(Author.typeDefs);
+```
+
+```js
+// schema.js
+const Author = require('./author.js');
+
+const RootQuery = `
+  type RootQuery {
+    author(id: Int!): Author
+  }
+`;
+
+const SchemaDefinition = `
+  schema {
+    query: RootQuery
+  }
+`;
+
+const server = new ApolloServer({
+  //we may destructure Post if supported by our Node version
+  typeDefs: [SchemaDefinition, RootQuery].concat(Author.typeDefs),
+  resolvers,
+});
+
+server.listen().then(({ url }) => {
+  console.log(`🚀 Server ready at ${url}`)
+});
+```
 
 

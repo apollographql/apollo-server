@@ -138,3 +138,19 @@ Resolvers in GraphQL can return different kinds of results which are treated dif
   * child resolvers will not run until parent is resolved
 * Mention that resolvers can also be custom scalar implementations.
   * point at advanced/custom-scalars
+
+
+  ## Material Summary
+
+- [x] The context is shared by all resolvers during a single query or mutation
+- [x] setup the context on every request
+- [x] Great place to store authentication (but this will be covered in authentication)
+- [ ] database connections
+  - [ ] mongo
+  - [ ] postgress
+  - [ ] fetch functions
+- [x] N+1 problem
+  - [x] A consideration for dataloader.
+- [x] Here's how you add it to Apollo Server
+- [ ] State
+- [x] BEST practice: keep your context code the same regardless of query/mutation that is coming in
