@@ -13,9 +13,7 @@ description: Scaling your Apollo Server from a single file to your entire team
 
 The GraphQL schema defines the api for Apollo Server, providing the single source of truth between client and server. A complete schema contains type definitions and resolvers. Type definitions are written and documented in the [Schema Definition Language(SDL)]() to define the valid server entry points. Corresponding to one to one with type definition fields, resolvers are functions that retrieve the data described by the type definitions.
 
-To accommodate this tight coupling, type definitions and resolvers should be kept together in the same file. This collocation allows developers to modify fields and resolvers with atomic schema changes without unexpected consequences.
-
-For schemas with simple dependencies, type definitions are combined in an array and resolvers are merged together. In more complicated situations with circular dependencies, type definitions can be returned as functions. This allows Apollo Server to store a single copy of duplicate type definitions to conserve memory and maintain performance. Throughout all the examples, the resolvers delegate to a data model, as explained in [this section]().
+To accommodate this tight coupling, type definitions and resolvers should be kept together in the same file. This collocation allows developers to modify fields and resolvers with atomic schema changes without unexpected consequences. At the end to build a complete schema, the type definitions are combined in an array and resolvers are merged together. Throughout all the examples, the resolvers delegate to a data model, as explained in [this section]().
 
 > Note: This schema separation should be done by product or real-world domain, which create natural boundaries that are easier to reason about.
 
@@ -40,10 +38,7 @@ The `Post` includes a reference to `Comment`, which is added to the array of typ
 
 ```js
 // post.js
-const Comment = require('./comment');
-
-// concat allows the comment typeDefs to be a string or an array
-const typeDefs = [`
+const typeDefs = `
   type Post {
     id: ID!
     title: String
@@ -51,7 +46,7 @@ const typeDefs = [`
     author: String
     comments: [Comment]
   }
-`].concat(Comment.typeDefs);
+`;
 
 // Export Post and all dependent types
 export typeDefs;
@@ -61,6 +56,7 @@ Finally the root Query type, which uses Post, is created and passed to the serve
 
 ```js
 // schema.js
+const Comment = require('./comment');
 const Post = require('./post');
 
 const RootQuery = `
@@ -70,7 +66,7 @@ const RootQuery = `
 `;
 
 const server = new ApolloServer({
-  typeDefs: [RootQuery].concat(Post.typeDefs),
+  typeDefs: [RootQuery, Post.typeDefs, Comment.typeDefs],
   resolvers, //defined in next section
 });
 
@@ -96,19 +92,17 @@ const resolvers = {
 export resolvers;
 ```
 
-The post type contains a reference to `Comment`, so we must include the `Comment` resolvers:
+The `Post` type:
 
 ```js
 // post.js
-const { merge } = require('lodash');
-const Comment = require('./comment');
-const PostModel = require('./models/post');
+const PostModel = jequire('./models/post');
 
-const resolvers = merge({
+const resolvers = {
   Post: {
     comments: (parent) => PostModel.getCommentsById(parent.id)
   }
-}, Comment.resolvers);
+};
 
 export resolvers;
 ```
@@ -119,6 +113,7 @@ Finally, the Query type's resolvers are merged and the result is passed to the s
 // schema.js
 const { merge } = require('lodash');
 const Post = require('./post');
+const Comment = require('./comment');
 
 const PostModel = require('./models/post');
 
@@ -127,7 +122,7 @@ const resolvers = merge({
   Query: {
     post: (_, args) => PostModel.getPostById(args.id)
   }
-}, Post.resolvers);
+}, Post.resolvers, Comment.resolvers);
 
 const server = new ApolloServer({
   typeDefs, //defined in previous section
@@ -138,84 +133,6 @@ server.listen().then(({ url }) => {
   console.log(`🚀 Server ready at ${url}`)
 });
 ```
-
-<h2 id="sharing-modular-types">Sharing circular types across domains</h2>
-
-Schemas often contain circular dependencies or a shared type that is referenced in separate files. When exporting type definitions, the result should be wrapped in a function. Apollo Server will only include each type definition once, even if it is imported multiple times by different types. Preventing duplication of type definitions means that domains can be self contained and fully functional regardless of how they are combined. Conversely, resolvers are safely combined with a `merge`, since they are namespaced by the schema types.
-
-The next example uses [a schema](#example-circular) with a circular reference between `Author` and `Book`. The first file contains all information to support the `Author` type, which depends on `Book`.
-
-```js
-// author.js
-const { merge } = require('lodash');
-const Book = require('./book');
-
-const Author = `
-  type Author {
-    id: ID!
-    name: String
-    books: [Book]
-  }
-`;
-
-// export Author and all dependent types wrapped
-// in a function to avoid string duplication
-export const typeDefs = () => [Author].concat(Book.typeDefs);
-
-export const resolvers = merge({
-  Author: { ... }
-}, Book.resolvers);
-```
-
-In turn, this file wholly contains `Book` and its dependency on `Author`.
-
-```js
-// book.js
-const { merge } = require('lodash');
-const Author = require('./author');
-
-const Book = `
-  type Book {
-    title: String
-    author: Author
-  }
-`;
-
-export const typeDefs = () => [Book].concat(Author.typeDefs);
-
-export const resolvers = merge({
-  Book: { ... }
-}, Author.resolvers);
-```
-
-Finally, the `Author` type definitions and resolvers are combine with the root `Query`.
-
-```js
-// schema.js
-const { merge } = require('lodash');
-const Author = require('./author');
-
-const resolvers = merge({
-  Query: { ... }
-}, Author.resolvers);
-
-const RootQuery = `
-  type Query {
-    author(id: ID!): Author
-  }
-`;
-
-const server = new ApolloServer({
-  typeDefs: [RootQuery].concat(Author.typeDefs),
-  resolvers,
-});
-
-server.listen().then(({ url }) => {
-  console.log(`🚀 Server ready at ${url}`)
-});
-```
-
-> Note: Type definitions wrapped in functions can be combined with raw type definition strings.
 
 <h2 id="extend-types">Extending types</h2>
 
@@ -344,25 +261,3 @@ const resolvers = {
   }
 }
 ```
-
-<h3 id="example-circular">Schema with circular reference</h3>
-
-The type definitions for the second example, which contains dependencies between `Author` and `Book`.
-
-```graphql
-type Author {
-  id: ID!
-  name: String
-  books: [Book]
-}
-
-type Book {
-  title: String
-  author: Author
-}
-
-type Query {
-  author(id: ID!): Author
-}
-```
-
