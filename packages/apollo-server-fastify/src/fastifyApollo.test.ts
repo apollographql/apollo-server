@@ -1,6 +1,6 @@
 import * as fastify from 'fastify';
 import { FastifyInstance } from 'fastify';
-import jsonParser from 'fast-json-body';
+const jsonParser = require('fast-json-body');
 import { graphqlFastify, graphiqlFastify } from './fastifyApollo';
 import testSuite, {
   schema,
