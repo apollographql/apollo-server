@@ -1,17 +1,78 @@
 ---
-title: Introduction
+title: Schema stitching
 description: Combining multiple GraphQL APIs into one
 ---
 
 Schema stitching is the process of creating a single GraphQL schema from multiple underlying GraphQL APIs.
 
-One of the main benefits of GraphQL is that we can query all of our data as part of one schema, and get everything we need in one request. But as the schema grows, it might become cumbersome to manage it all as one codebase, and it starts to make sense to split it into different modules. We may also want to decompose your schema into separate microservices, which can be developed and deployed independently.
+One of the main benefits of GraphQL is that we can query all of our data as part of one schema, and get everything we need in one request. But as the schema grows, it might become cumbersome to manage it all as one codebase and deploy everything at once. At that point, you may want to decompose your schema into separate microservices, which can be developed and deployed independently.
 
-In both cases, we use `mergeSchemas` to combine multiple GraphQL schemas together and produce a merged schema that knows how to delegate parts of the query to the relevant subschemas. These subschemas can be either local to the server, or running on a remote server. They can even be services offered by 3rd parties, allowing us to connect to external data and create mashups.
+That's exactly what schema stitching is for. We can create references to all of the remote GraphQL APIs we want to use, and pass them into the  `mergeSchemas` function to create a single API.
 
 <h2 id="remote-schemas" title="Remote schemas">Working with remote schemas</h2>
 
-In order to merge with a remote schema, we first call [makeRemoteExecutableSchema](./remote-schemas.html) to create a local proxy for the schema that knows how to call the remote endpoint. We then merge that local proxy schema the same way we would merge any other locally implemented schema.
+While you can use stitching to combine local schema objects, schema stitching is most useful when you use it to combine multiple GraphQL APIs that run as separate services. To do this, we first need to make a GraphQL schema object for each remote API we want to stitch together.
+
+There are three steps to create a remote schema:
+
+1. Create an [Apollo Link](#link) that can retrieve results from that schema
+2. Use [`introspectSchema`](#introspectSchema) to get the schema of the remote server
+3. Use [`makeRemoteExecutableSchema`](#makeRemoteExecutableSchema) to create a schema that uses the link to delegate requests to the underlying service
+
+We’ve chosen to split this functionality up to give you the flexibility to choose when to do the introspection step. For example, you might already have the remote schema information, allowing you to skip the `introspectSchema` step entirely. Here’s a complete example:
+
+```js
+const { HttpLink } = require('apollo-link-http');
+const fetch = require('node-fetch');
+const { introspectSchema, makeRemoteExecutableSchema } = require('apollo-server');
+
+const link = new HttpLink({ uri: 'http://api.githunt.com/graphql', fetch });
+
+const schema = await introspectSchema(link);
+
+const executableSchema = makeRemoteExecutableSchema({
+  schema,
+  link,
+});
+```
+
+Now, let's break down some of the details.
+
+<h3 id="create-link" title="Creating a link">
+  Creating a Link
+</h3>
+
+A Link is a function capable of retrieving GraphQL results. It's the same network layer that Apollo Client uses to handle fetching data. Apollo Link brings with it a large feature set for common use cases. For instance, adding error handling to your request is super easy using the `apollo-link-error` package. You can set headers, batch requests, and even configure your app to retry on failed attempts all by including new links into your request chain.
+
+Here's the basic setup:
+
+```js
+const HttpLink = require('apollo-link-http');
+const fetch = require('node-fetch');
+
+const link = new HttpLink({ uri: 'http://api.githunt.com/graphql', fetch });
+```
+
+<h3 id="graphqlContext">GraphQL context</h3>
+
+In GraphQL execution, `context` is often used to pass around information about authentication or other secrets. If you need these inside your Link to call the underlying API, it's easy to pass them through, since they will be included on the `graphqlContext` field.
+
+For example, to add authentication headers, modify the link to include an authentication header:
+
+```js
+const { setContext } = require('apollo-link-context');
+const { HttpLink } = require('apollo-link-http');
+
+const http = new HttpLink({ uri: 'http://api.githunt.com/graphql', fetch });
+
+const link = setContext((request, previousContext) => ({
+  headers: {
+    'Authentication': `Bearer ${previousContext.graphqlContext.authKey}`,
+  }
+})).concat(http);
+```
+
+If you need further details about how to control your requests, read the full details in the [Apollo Link docs](https://www.apollographql.com/docs/link/).
 
 <h2 id="basic-example">Basic example</h2>
 
