@@ -44,7 +44,7 @@ Note that you don't have to put all of your resolvers in one object. Refer to th
 
 <h2 id="type-signature">Resolver type signature</h2>
 
-In addition to the parent resolvers' value, resolvers receive a couple more arguments. The full resolver function signature contains four positional arguments: `(parent, args, context, info)` and can return an object or [Promise](https://codeburst.io/javascript-learn-promises-f1eaa00c5461). Once a promise resolves, then the children resolvers will continue executing. This is useful for fetching data from a backend.
+In addition to the parent resolvers' value, resolvers receive a couple more arguments. The full resolver function signature contains four positional arguments: `(parent, args, context, info)` and can return an object or [Promise](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Using_promises). Once a promise resolves, then the children resolvers will continue executing. This is useful for fetching data from a backend.
 
 The resolver parameters generally follow this naming convention and are described in detail:
 
