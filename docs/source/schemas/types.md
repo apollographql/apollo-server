@@ -19,7 +19,7 @@ Scalar types represent the leaves of an operation and alway resolve to concrete 
 * `Boolean`: true or false
 * `ID` (serialized as `String`): A unique identifier, often used to refetch an object or as the key for a cache. While serialized as a String, ID signifies that it is not intended to be human‐readable
 
-These primitive types cover a majority of use cases. For other use cases, we can create [custom scalar types]().
+These primitive types cover a majority of use cases. For other use cases, we can create [custom scalar types](../features/scalars-enums.html).
 
 ## Object types
 
