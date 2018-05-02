@@ -44,11 +44,7 @@ export async function resolveGraphqlOptions(
   ...args
 ): Promise<GraphQLServerOptions> {
   if (typeof options === 'function') {
-    try {
-      return await options(...args);
-    } catch (e) {
-      throw new Error(`Invalid options provided to ApolloServer: ${e.message}`);
-    }
+    return await options(...args);
   } else {
     return options;
   }
