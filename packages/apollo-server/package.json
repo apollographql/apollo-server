@@ -1,6 +1,6 @@
 {
   "name": "apollo-server",
-  "version": "2.0.0",
+  "version": "2.0.0-beta.1",
   "description": "Production ready GraphQL Server",
   "author": "opensource@apollographql.com",
   "main": "dist/index.js",
@@ -34,8 +34,8 @@
   },
   "typings": "dist/index.d.ts",
   "dependencies": {
-    "apollo-server-core": "2.0.0",
-    "apollo-server-express": "2.0.0",
+    "apollo-server-core": "2.0.0-beta.0",
+    "apollo-server-express": "2.0.0-beta.0",
     "express": "^4.16.3",
     "graphql-subscriptions": "^0.5.8",
     "graphql-tools": "^3.0.0"
