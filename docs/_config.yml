@@ -4,6 +4,7 @@ subtitle: Apollo Server
 description: A guide to using Apollo Server.
 versions:
   - '1'
+  - '2'
 sidebar_categories:
   null:
     - index
@@ -44,3 +45,6 @@ url: https://www.apollographql.com/docs/apollo-server/
 root: /docs/apollo-server/
 
 public_dir: public/docs/apollo-server
+
+versioned-netlify-redirects:
+  netlify_site_id: apollo-server-docs
