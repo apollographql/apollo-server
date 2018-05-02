@@ -1,10 +1,5 @@
-export {
-  runQuery,
-  LogFunction,
-  LogMessage,
-  LogStep,
-  LogAction,
-} from './runQuery';
+export { runQuery } from './runQuery';
+export { LogFunction, LogMessage, LogStep, LogAction } from './logging';
 export { runHttpQuery, HttpQueryRequest, HttpQueryError } from './runHttpQuery';
 export {
   default as GraphQLOptions,

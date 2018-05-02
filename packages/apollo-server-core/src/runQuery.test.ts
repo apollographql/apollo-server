@@ -12,7 +12,8 @@ import {
   parse,
 } from 'graphql';
 
-import { runQuery, LogAction, LogStep } from './runQuery';
+import { runQuery } from './runQuery';
+import { LogAction, LogStep } from './logging';
 
 // Make the global Promise constructor Fiber-aware to simulate a Meteor
 // environment.
