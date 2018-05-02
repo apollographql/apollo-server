@@ -12,18 +12,9 @@ In this guide, we'll walk you through the process of creating a GraphQL server i
 * Have a basic understanding of the fundamental GraphQL principles.
 * Be able to send a query to the new GraphQL server and see the response using the GraphiQL user interface.
 
+To be successful, make sure you already have general JavaScript knowledge, a recent version of Node.js installed (6+).
+
 If you want to skip walking through the steps, the "More information" section at the bottom has a link to a GitHub repository which can be cloned and run locally.
-
-## Prerequisites
-
-* Familiarity with JavaScript. ([Getting started with JavaScript]())
-* Terminal/console access on your computer. ([Popular terminals]())
-* Node.js (`node`) and its package manager (`npm`) installed. ([Node.js]())
-* An editor or interactive developer environment (IDE) to create and modify files. ([Popular IDEs]())
-* The desire to build a GraphQL server. ([Why GraphQL?]())
-
-If you don't meet any of the prerequisites above, we recommend following the links we've provided  aside each item and returning to this guide once you're ready.
-
 ## Step 1: Project initialization
 
 In this step, we'll use your terminal (e.g. Terminal, iTerm, PowerShell) to create a directory called `graphql-server-example` along with a basic Node.js configuration for a simple application.  We'll work within this directory for the rest of the steps, though we will switch back and forth between your IDE (editor)
