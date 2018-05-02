@@ -17,6 +17,7 @@ sidebar_categories:
   Features:
     - features/resolvers
     - features/mocking
+    - features/errors
     - features/scalars-enums
     - features/unions-interfaces
     - features/directives

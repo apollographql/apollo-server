@@ -1,0 +1,127 @@
+---
+title: Error handling
+description: Making errors actionable on the client and server
+---
+
+## Overview
+
+Apollo server provides a couple predefined errors, including `AuthenticationError`, `ForbiddenError`, and a generic `ApolloError`. These errors are designed to enhance errors thrown before and during GraphQL execution. These errors focus on improving the ability to debug a server as well as enabling the client to take specific action based on an error.
+
+When an error occurs in Apollo server both inside and outside of resolvers, each error inside of the `errors` array will contain an object at `extensions` that contains additional information.
+
+## Default information
+
+The first step to improving the usability of a server is providing the error stack trace by default. The following example demonstrates the response returned from Apollo server with a resolver that throws a node [`SystemError`](https://nodejs.org/api/errors.html#errors_system_errors).
+
+```js line=4,15-17
+const {
+  ApolloServer,
+  gql,
+  AuthenticationError,
+} = require('apollo-server');
+
+const typeDefs = gql`
+  type Query {
+    readError: String
+  }
+`;
+
+const resolvers = {
+  Query: {
+    readError: (root, args, context) => {
+      fs.readFileSync('/does/not/exist');
+    },
+  },
+};
+```
+
+The response will return:
+
+![Screenshot demonstrating an error stacktrace and additional](../images/features/error-stacktrace.png)
+
+> To disable stacktraces for production, pass `debug: false` to the Apollo server constructor or set the `NODE_ENV` environment variable to 'production' or 'test'
+
+## Codes
+
+In addition to stacktraces, Apollo Server's exported errors specify a human-readable string in the `code` field of `extensions` that enables the client to perform corrective actions. In addition to improving the client experience, the `code` field allows the server to categorize errors. For example, an `AuthenticationError` sets the code to `UNAUTHENTICATED`, which enables the client to reauthenticate and would generally be ignored as a server anomaly.
+
+```js line=4,15-17
+const {
+  ApolloServer,
+  gql,
+  AuthenticationError,
+} = require('apollo-server');
+
+const typeDefs = gql`
+  type Query {
+    authenticationError: String
+  }
+`;
+
+const resolvers = {
+  Query: {
+    authenticationError: (root, args, context) => {
+      throw AuthenticationError('must authenticate');
+    },
+  },
+};
+```
+
+The response will return:
+
+![Screenshot demonstrating unauthenticated error code](../images/features/error-code.png)
+
+## Augmenting error details
+
+`ApolloError` can be augmented with additional information when the default information requires more context. This information could include a localized message that should be displayed to the user on an error or in the case of bad input a description of the fields that are invalid. The following example demonstrates adding extra information to a user input check.
+
+```js line=15-21
+const {
+  ApolloServer,
+  gql,
+  AuthenticationError,
+} = require('apollo-server');
+
+const typeDefs = gql`
+  type Mutation {
+    userInputError(input: String): String
+  }
+`;
+
+const resolvers = {
+  Mutation: {
+    userInputError: (root, args, context, info) => {
+      if(args.input !== 'expected') {
+        throw ApolloError('Form Arguments invalid', 'BAD_USER_INPUT', {
+          invalidArgs: Object.keys(args),
+        });
+      }
+    },
+  },
+};
+```
+
+The response will return:
+
+![Screenshot demonstrating augmented error](../images/features/error-user-input.png)
+
+## Masking and logging errors
+
+The Apollo server constructor accepts a `formatError` function that is run on each error passed back to the client. This can be used to mask errors as well as logging.
+This example demonstrates masking
+
+
+```js line=4-7
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  formatError: error => {
+    console.log(error);
+    return new Error('Internal server error');
+  },
+});
+
+server.listen().then(({ url }) => {
+  console.log(`🚀 Server ready at ${url}`);
+});
+```
