@@ -68,7 +68,7 @@ The resolver parameters generally follow this naming convention and are describe
 
 1. `parent`: The object that contains the result returned from the resolver on the parent field, or, in the case of a top-level `Query` field, the `rootValue` passed from the [server configuration](). This argument enables the nested nature of GraphQL queries.
 2. `args`: An object with the arguments passed into the field in the query. For example, if the field was called with `query{ key(arg: "you meant") }`, the `args` object would be: `{ "arg": "you meant" }`.
-3. `context`: This is an object shared by all resolvers in a particular query, and is used to contain per-request state, including authentication information, dataloader instances, and anything else that should be taken into account when resolving the query. Read [this section]() for an explanation of when and how to use context.
+3. `context`: This is an object shared by all resolvers in a particular query, and is used to contain per-request state, including authentication information, [dataloader](https://npm.im/dataloader) instances, and anything else that should be taken into account when resolving the query. Read [this section]() for an explanation of when and how to use context.
 4. `info`: This argument should only be used in advanced cases, but it contains information about the execution state of the query, including the field name, path to the field from the root, and more. It's only documented in the [GraphQL.js source code](https://github.com/graphql/graphql-js/blob/c82ff68f52722c20f10da69c9e50a030a1f218ae/src/type/definition.js#L489-L500).
 
 In addition to returning GraphQL defined [scalars](), you can return [custom scalars]() for special use cases, such as JSON or big integers.
