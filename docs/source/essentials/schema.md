@@ -43,7 +43,7 @@ GraphQL clients (such as [Apollo Client](/docs/react)) benefit from the precisio
 
 <h3 id="scalar">Scalar types</h3>
 
-Scalar types represent the leaves of an operation and alway resolve to concrete data. The default, scalar types which GraphQL offers are:
+Scalar types represent the leaves of an operation and always resolve to concrete data. The default scalar types which GraphQL offers are:
 
 * `Int`: Signed 32‐bit integer
 * `Float`: Signed double-precision floating-point value
