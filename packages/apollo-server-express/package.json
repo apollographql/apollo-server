@@ -1,6 +1,6 @@
 {
   "name": "apollo-server-express",
-  "version": "2.0.0",
+  "version": "2.0.0-beta.0",
   "description": "Production-ready Node.js GraphQL server for Express and Connect",
   "main": "dist/index.js",
   "scripts": {
@@ -28,7 +28,7 @@
   "dependencies": {
     "@types/accepts": "^1.3.5",
     "accepts": "^1.3.5",
-    "apollo-server-core": "2.0.0",
+    "apollo-server-core": "2.0.0-beta.0",
     "apollo-server-module-graphiql": "^1.3.4",
     "body-parser": "^1.18.2",
     "cors": "^2.8.4",
