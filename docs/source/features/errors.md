@@ -17,7 +17,6 @@ The first step to improving the usability of a server is providing the error sta
 const {
   ApolloServer,
   gql,
-  AuthenticationError,
 } = require('apollo-server');
 
 const typeDefs = gql`
@@ -79,7 +78,6 @@ The response will return:
 const {
   ApolloServer,
   gql,
-  AuthenticationError,
 } = require('apollo-server');
 
 const typeDefs = gql`
