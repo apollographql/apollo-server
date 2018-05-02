@@ -17,7 +17,7 @@ import {
   ExecutionParams,
 } from 'subscriptions-transport-ws';
 
-import { internalFormatError } from './errors';
+import { formatApolloErrors } from './errors';
 import { GraphQLServerOptions as GraphQLOptions } from './graphqlOptions';
 import { LogFunction } from './logging';
 
@@ -212,8 +212,7 @@ export class ApolloServerBase<Request = RequestInit> {
         onOperation: async (_: string, connection: ExecutionParams) => {
           connection.formatResponse = (value: ExecutionResult) => ({
             ...value,
-            errors:
-              value.errors && value.errors.map(err => internalFormatError(err)),
+            errors: value.errors && formatApolloErrors(value.errors),
           });
           let context: Context = this.context ? this.context : { connection };
 
@@ -279,8 +278,6 @@ export class ApolloServerBase<Request = RequestInit> {
       schema: this.schema,
       tracing: Boolean(this.engineEnabled),
       cacheControl: Boolean(this.engineEnabled),
-      formatError: (e: GraphQLError) =>
-        internalFormatError(e, this.requestOptions.debug),
       context,
       // allow overrides from options
       ...this.requestOptions,
