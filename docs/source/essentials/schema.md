@@ -1,9 +1,7 @@
 ---
 title: Understanding schema concepts
-sidebar_title: Schema concepts
+sidebar_title: Writing a schema
 ---
-
-## Overview
 
 > Estimated time: About 6 minutes.
 
@@ -17,7 +15,7 @@ The core building block within a schema is the "type".  Types provide a wide-ran
 
 By the end of this page, we hope to have explained the power of types and how they relate to a GraphQL server.
 
-## Schema Definition Language (SDL)
+<h2 id="sdl">Schema Definition Language</h2>
 
 To make it easy to understand the capabilities of a server, GraphQL implements a human-readable schema syntax known as its Schema Definition Language, or "SDL".  The SDL is used to express the _types_ available within a schema and how those types relate to each other.
 
@@ -43,7 +41,36 @@ By drawing these logical connections in the schema definition, we can allow the 
 
 GraphQL clients (such as [Apollo Client](/docs/react)) benefit from the precision of GraphQL operations, especially when compared to traditional REST-based approaches, since they can avoid over-fetching and stitching data, which are particularly costly on slow devices or networks.
 
-## Queries
+<h3 id="scalar">Scalar types</h3>
+
+Scalar types represent the leaves of an operation and alway resolve to concrete data. The default, scalar types which GraphQL offers are:
+
+* `Int`: Signed 32‐bit integer
+* `Float`: Signed double-precision floating-point value
+* `String`: UTF‐8 character sequence
+* `Boolean`: true or false
+* `ID` (serialized as `String`): A unique identifier, often used to refetch an object or as the key for a cache. While serialized as a String, ID signifies that it is not intended to be human‐readable
+
+These primitive types cover a majority of use cases. For other use cases, we can create [custom scalar types](../features/scalars-enums.html).
+
+<h3 id="object">Object types</h3>
+
+The object type is the most common type used in a schema and represents a group of fields. Each field inside of an object type maps to another type, allowing nested types and circular references.
+
+```graphql
+type TypeName {
+  fieldA: String
+  fieldB: Boolean
+  fieldC: Int
+  fieldD: CustomType
+}
+
+type CustomType {
+  circular: TypeName
+}
+```
+
+<h3 id="query">The Query type</h3>
 
 A GraphQL query is for _fetching_ data and compares to the `GET` verb in REST-based APIs.
 
@@ -135,7 +162,7 @@ And, without additional effort on its part, the client would receive the informa
 }
 ```
 
-## Mutations
+<h3 id="mutation">The Mutation type</h3>
 
 Mutations are operations sent to the server to create, update or delete data.  These are comparable to the `PUT`, `POST`, `PATCH` and `DELETE` verbs on REST-based APIs.
 
@@ -183,7 +210,29 @@ In the above example, we've requested the book's `title` along with the `name` o
 
 Multiple mutations may be sent in the same request, however they will be executed in the order they are provided (in series), in order to avoid race-conditions within the operation.
 
-## Introspection and documentation
+<h2 id="documentation">Documenting your schema</h2>
+
+<h3 id="comments">Describing types</h3>
+
+GraphiQL has built-in support for displaying docstrings with markdown syntax. This schema includes docstrings for types, fields and arguments.
+
+```graphql
+"Description for the type"
+type MyObjectType {
+  """
+  Description for field
+  Supports multi-line description
+  """
+  myField: String!
+
+  otherField(
+    "Description for argument"
+    arg: Int
+  )
+}
+```
+
+<h3 id="introspection">Introspection</h3>
 
 Introspection is an **optional** feature, enabled by default during development, which allows clients to automatically discover the types implemented within a GraphQL schema.
 
@@ -203,7 +252,7 @@ type Query {
 
 This makes SDL-generation even easier since many GraphQL tools auto-complete field names, along with the descriptions, when available.
 
-## Next steps
+<h2 id="next-steps">Next steps</h2>
 
 At this point, we hope to have explained the basic information necessary to understand a GraphQL schema.
 
