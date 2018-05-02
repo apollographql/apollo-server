@@ -19,7 +19,7 @@ import {
 
 import { internalFormatError } from './errors';
 import { GraphQLServerOptions as GraphQLOptions } from './graphqlOptions';
-import { LogFunction } from './runQuery';
+import { LogFunction } from './logging';
 
 import {
   Config,

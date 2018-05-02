@@ -27,34 +27,12 @@ import {
   SyntaxError,
 } from './errors';
 
+import { LogStep, LogAction, LogMessage, LogFunction } from './logging';
+
 export interface GraphQLResponse {
   data?: object;
   errors?: Array<GraphQLError & object>;
   extensions?: object;
-}
-
-export enum LogAction {
-  request,
-  parse,
-  validation,
-  execute,
-}
-
-export enum LogStep {
-  start,
-  end,
-  status,
-}
-
-export interface LogMessage {
-  action: LogAction;
-  step: LogStep;
-  key?: string;
-  data?: any;
-}
-
-export interface LogFunction {
-  (message: LogMessage);
 }
 
 export interface QueryOptions {

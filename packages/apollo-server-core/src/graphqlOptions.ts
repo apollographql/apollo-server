@@ -3,7 +3,7 @@ import {
   ValidationContext,
   GraphQLFieldResolver,
 } from 'graphql';
-import { LogFunction } from './runQuery';
+import { LogFunction } from './logging';
 import { GraphQLExtension } from 'graphql-extensions';
 
 /*
