@@ -13,7 +13,7 @@ When an error occurs in Apollo server both inside and outside of resolvers, each
 
 The first step to improving the usability of a server is providing the error stack trace by default. The following example demonstrates the response returned from Apollo server with a resolver that throws a node [`SystemError`](https://nodejs.org/api/errors.html#errors_system_errors).
 
-```js line=4,15-17
+```js line=14-16
 const {
   ApolloServer,
   gql,
@@ -74,7 +74,7 @@ The response will return:
 
 `ApolloError` can be augmented with additional information when the default information requires more context. This information could include a localized message that should be displayed to the user on an error or in the case of bad input a description of the fields that are invalid. The following example demonstrates adding extra information to a user input check.
 
-```js line=15-21
+```js line=14-20
 const {
   ApolloServer,
   gql,
