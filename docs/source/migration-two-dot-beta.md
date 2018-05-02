@@ -38,7 +38,7 @@ Check out the following changes for Apollo Server 2.0 beta with express.
 
 ### Apollo Server 1
 
-An example of using Apollo Server 1 with express:
+An example of using Apollo Server 1 with Express:
 
 ```js
 const express = require('express');
