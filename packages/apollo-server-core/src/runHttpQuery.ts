@@ -42,6 +42,8 @@ export async function runHttpQuery(
 ): Promise<string> {
   let isGetRequest: boolean = false;
   let optionsObject: GraphQLOptions;
+  const debugDefault =
+    process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test';
 
   try {
     optionsObject = await resolveGraphqlOptions(
@@ -49,13 +51,22 @@ export async function runHttpQuery(
       ...handlerArguments,
     );
   } catch (e) {
-    throw new HttpQueryError(500, e.message);
+    // The options can be generated asynchronously, so we don't have access to
+    // the normal options provided by the user, such as: formatError,
+    // logFunction, debug. Therefore, we need to do some unnatural things, such
+    // as use NODE_ENV to determine the debug settings
+    e.message = `Invalid options provided to ApolloServer: ${e.message}`;
+    throw new HttpQueryError(
+      500,
+      JSON.stringify({
+        errors: formatApolloErrors([e], { debug: debugDefault }),
+      }),
+      true,
+      {
+        'Content-Type': 'application/json',
+      },
+    );
   }
-  const formatErrorFn = optionsObject.formatError
-    ? error => optionsObject.formatError(internalFormatError(error))
-    : internalFormatError;
-  const debugDefault =
-    process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test';
   const debug =
     optionsObject.debug !== undefined ? optionsObject.debug : debugDefault;
   let requestPayload;
