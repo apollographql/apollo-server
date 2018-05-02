@@ -13,10 +13,7 @@ export class ApolloError extends Error {
   }
 }
 
-export function internalFormatError(
-  error: GraphQLError,
-  debug: boolean = false,
-) {
+export function enrichError(error: GraphQLError, debug: boolean = false) {
   const expanded: GraphQLError = {
     message: error.message,
     path: error.path,
@@ -133,4 +130,41 @@ export class ForbiddenError extends ApolloError {
   constructor(message: string) {
     super(message, 'FORBIDDEN');
   }
+}
+
+export function formatApolloErrors(
+  errors: Array<Error>,
+  options?: {
+    formatter?: Function;
+    logFunction?: LogFunction;
+    debug?: boolean;
+  },
+): Array<Error> {
+  const { formatter, debug, logFunction } = options;
+  return errors.map(error => enrichError(error, debug)).map(error => {
+    if (formatter !== undefined) {
+      try {
+        return formatter(error);
+      } catch (err) {
+        logFunction({
+          action: LogAction.cleanup,
+          step: LogStep.status,
+          data: err,
+          key: 'error',
+        });
+
+        if (debug) {
+          return enrichError(err, debug);
+        } else {
+          //obscure error
+          const newError: GraphQLError = fromGraphQLError(
+            new GraphQLError('Internal server error'),
+          );
+          return enrichError(newError, debug);
+        }
+      }
+    } else {
+      return error;
+    }
+  }) as Array<Error>;
 }

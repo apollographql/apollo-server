@@ -12,7 +12,7 @@ export {
   ValidationError,
   AuthenticationError,
   ForbiddenError,
-  internalFormatError,
+  formatApolloErrors,
 } from './errors';
 
 // ApolloServer Base class

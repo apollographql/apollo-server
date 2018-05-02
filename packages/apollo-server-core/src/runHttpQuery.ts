@@ -4,7 +4,7 @@ import {
   default as GraphQLOptions,
   resolveGraphqlOptions,
 } from './graphqlOptions';
-import { internalFormatError } from './errors';
+import { formatApolloErrors } from './errors';
 
 export interface HttpQueryRequest {
   method: string;
@@ -198,7 +198,7 @@ export async function runHttpQuery(
         operationName: operationName,
         logFunction: optionsObject.logFunction,
         validationRules: optionsObject.validationRules,
-        formatError: formatErrorFn,
+        formatError: optionsObject.formatError,
         formatResponse: optionsObject.formatResponse,
         fieldResolver: optionsObject.fieldResolver,
         debug: optionsObject.debug,
@@ -218,7 +218,13 @@ export async function runHttpQuery(
         return Promise.reject(e);
       }
 
-      return Promise.resolve({ errors: [formatErrorFn(e)] });
+      return Promise.resolve({
+        errors: formatApolloErrors([e], {
+          formatter: optionsObject.formatError,
+          debug,
+          logFunction: optionsObject.logFunction,
+        }),
+      });
     }
   });
   const responses = await Promise.all(requests);

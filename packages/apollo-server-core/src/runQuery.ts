@@ -22,7 +22,7 @@ import { CacheControlExtension } from 'apollo-cache-control';
 
 import {
   fromGraphQLError,
-  internalFormatError,
+  formatApolloErrors,
   ValidationError,
   SyntaxError,
 } from './errors';
@@ -59,31 +59,6 @@ export interface QueryOptions {
 export function runQuery(options: QueryOptions): Promise<GraphQLResponse> {
   // Fiber-aware Promises run their .then callbacks in Fibers.
   return Promise.resolve().then(() => doRunQuery(options));
-}
-
-function format(
-  errors: Array<Error>,
-  options?: {
-    formatter?: Function;
-    debug?: boolean;
-  },
-): Array<Error> {
-  const { formatter, debug } = options;
-  return errors.map(error => internalFormatError(error, debug)).map(error => {
-    if (formatter !== undefined) {
-      try {
-        return formatter(error);
-      } catch (err) {
-        console.error('Error in formatError function:', err);
-        const newError: GraphQLError = fromGraphQLError(
-          new GraphQLError('Internal server error'),
-        );
-        return internalFormatError(newError, debug);
-      }
-    } else {
-      return error;
-    }
-  }) as Array<Error>;
 }
 
 function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
@@ -151,7 +126,7 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
     } catch (syntaxError) {
       logFunction({ action: LogAction.parse, step: LogStep.end });
       return Promise.resolve({
-        errors: format(
+        errors: formatApolloErrors(
           [
             fromGraphQLError(syntaxError, {
               errorClass: SyntaxError,
@@ -178,12 +153,13 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
 
   if (validationErrors.length) {
     return Promise.resolve({
-      errors: format(
+      errors: formatApolloErrors(
         validationErrors.map(err =>
           fromGraphQLError(err, { errorClass: ValidationError }),
         ),
         {
           formatter: options.formatError,
+          logFunction,
           debug,
         },
       ),
@@ -214,8 +190,9 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
       };
 
       if (result.errors) {
-        response.errors = format(result.errors, {
+        response.errors = formatApolloErrors(result.errors, {
           formatter: options.formatError,
+          logFunction,
           debug,
         });
       }
@@ -249,7 +226,7 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
       // * unknown operation/operation name invalid
       // * operation type is unsupported
       // Options: PREPROCESSING_FAILED, GRAPHQL_RUNTIME_CHECK_FAILED
-      errors: format([fromGraphQLError(executionError)], {
+      errors: formatApolloErrors([fromGraphQLError(executionError)], {
         formatter: options.formatError,
         debug,
       }),
