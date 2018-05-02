@@ -27,7 +27,7 @@ type Query {
 
 const resolvers = {
   Query: {
-    author(root, args, context, info) {
+    author(parent, args, context, info) {
       return find(authors, { id: args.id });
     },
   },
