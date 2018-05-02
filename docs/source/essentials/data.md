@@ -44,16 +44,16 @@ Note that you don't have to put all of your resolvers in one object. Refer to th
 
 <h2 id="type-signature">Resolver type signature</h2>
 
-In addition to the parent resolvers' value, resolvers receive a couple more arguments. The full resolver function signature contains four positional arguments: `(parent, args, context, info)` and can return an object or [Promise](https://codeburst.io/javascript-learn-promises-f1eaa00c5461). Once a promise resolves, then the children resolvers will continue executing. This is useful for fetching data from a [backend]().
+In addition to the parent resolvers' value, resolvers receive a couple more arguments. The full resolver function signature contains four positional arguments: `(parent, args, context, info)` and can return an object or [Promise](https://codeburst.io/javascript-learn-promises-f1eaa00c5461). Once a promise resolves, then the children resolvers will continue executing. This is useful for fetching data from a backend.
 
 The resolver parameters generally follow this naming convention and are described in detail:
 
-1. `parent`: The object that contains the result returned from the resolver on the parent field, or, in the case of a top-level `Query` field, the `rootValue` passed from the [server configuration](). This argument enables the nested nature of GraphQL queries.
+1. `parent`: The object that contains the result returned from the resolver on the parent field, or, in the case of a top-level `Query` field, the `rootValue` passed from the [server configuration](./server.html). This argument enables the nested nature of GraphQL queries.
 2. `args`: An object with the arguments passed into the field in the query. For example, if the field was called with `query{ key(arg: "you meant") }`, the `args` object would be: `{ "arg": "you meant" }`.
-3. `context`: This is an object shared by all resolvers in a particular query, and is used to contain per-request state, including authentication information, dataloader instances, and anything else that should be taken into account when resolving the query. Read [this section]() for an explanation of when and how to use context.
+3. `context`: This is an object shared by all resolvers in a particular query, and is used to contain per-request state, including authentication information, dataloader instances, and anything else that should be taken into account when resolving the query. Read [this section](#context) for an explanation of when and how to use context.
 4. `info`: This argument should only be used in advanced cases, but it contains information about the execution state of the query, including the field name, path to the field from the root, and more. It's only documented in the [GraphQL.js source code](https://github.com/graphql/graphql-js/blob/c82ff68f52722c20f10da69c9e50a030a1f218ae/src/type/definition.js#L489-L500).
 
-In addition to returning GraphQL defined [scalars](), you can return [custom scalars]() for special use cases, such as JSON or big integers.
+In addition to returning GraphQL defined [scalars](./schema.html#scalar), you can return [custom scalars](../features/scalars-enums.html) for special use cases, such as JSON or big integers.
 
 <h3 id="result">Resolver results</h3>
 
@@ -151,13 +151,58 @@ type Author {
 }
 ```
 
+<h2 id="modularizing-resolvers">Modularizing resolvers</h2>
+
+We can accomplish the same modularity with resolvers by passing around multiple resolver objects and combining them together with Lodash's `merge` or other equivalent:
+
+```js
+// comment.js
+const resolvers = {
+  Comment: { ... }
+}
+
+export resolvers;
+```
+
+```js
+// post.js
+const { merge } = require('lodash');
+
+const Comment = require('./comment');
+const resolvers = merge({
+  Post: { ... }
+}, Comment.resolvers);
+
+export resolvers;
+```
+
+```js
+// schema.js
+const { merge } = require('lodash');
+const Post = require('./post.js');
+
+// Merge all of the resolver objects together
+const resolvers = merge({
+  Query: { ... }
+}, Post.resolvers);
+
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+});
+
+server.listen().then(({ url }) => {
+  console.log(`🚀 Server ready at ${url}`)
+});
+```
+
 <h2 id="querying">Sending queries</h2>
 
 Once your resolver map is complete, it's time to start testing out your queries in GraphQL Playground.
 
 <h3 id="operation">Naming operations</h3>
 
-When sending the queries and mutations in the above examples, we've used either `query { ... }` or `mutation { ... }` respectively.  While this is fine, and particularly convenient when running queries by hand, it makes sense to name the operation in order to quickly identify operations during debugging or to aggregate similar operations together for application performance metrics, for example, when using [Apollo Engine]() to monitor an API.
+When sending the queries and mutations in the above examples, we've used either `query { ... }` or `mutation { ... }` respectively.  While this is fine, and particularly convenient when running queries by hand, it makes sense to name the operation in order to quickly identify operations during debugging or to aggregate similar operations together for application performance metrics, for example, when using [Apollo Engine](https://engine.apollographql.com/) to monitor an API.
 
 Operations can be named by placing an identifier after the `query` or `mutation` keyword, as we've done with `HomeBookListing` here:
 

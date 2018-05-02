@@ -80,7 +80,7 @@ At this point, if the message isn't printed to the console, it's possible that s
 
 <h3 id="running">GraphQL Playground</h3>
 
-To explore the newly created GraphQL server, open a browser to the link shown in the console, http://localhost:4000/graphql. Apollo Server sets up GraphQL Playground for you so you can immediately start running queries and exploring your schema.
+To explore the newly created GraphQL server, open a browser to the link shown in the console, http://localhost:4000/graphql. Apollo Server sets up GraphQL Playground for you so that you can start running queries and exploring schemas quickly.
 
 To run a query, copy the following query and then press the "▶️" button:
 
@@ -110,7 +110,7 @@ Both import methods will use the `apollo-server` module we installed in the prev
 
 <h3 id="middleware">Middleware</h3>
 
-Existing applications generally already have existing middleware in place and Apollo Server works with those existing middleware options.  But in order to play along, we need to import the `ApolloServer` which corresponds to the type of server which is already in use.
+Existing applications generally already have middleware in place and Apollo Server works with those middleware options.  To integrate Apollo Server with our existing server, we need to import the `ApolloServer` which corresponds to the type of server which is already in use.
 
 For example, if the application is already using an Express server, it is important to use the `apollo-server/express` import.
 
@@ -134,7 +134,7 @@ const server = new ApolloServer({
 });
 ```
 
-When adding Apollo Server to an existing server, it's necessary to indicate, relative where to activate the middleware relative to other middlewares already in the app.  To do this, add the following line along with your other middleware, preferably before any of the others:
+When adding Apollo Server to an existing server, it's necessary to indicate where to activate the middleware relative to other middlewares already in the app.  To do this, add the following line along with your other middleware, preferably before any of the others:
 
 ```js
 server.applyMiddleware();
