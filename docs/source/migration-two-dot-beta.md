@@ -123,7 +123,7 @@ const typeDefs = gql`
 const resolvers = {
   Query: {
     annoucement: () =>
-      `Say hello to the new ApolloServer! A production ready GraphQL server with an incredible getting started experience`
+      `Say hello to the new ApolloServer! A production ready GraphQL server with an incredible getting started experience.`
   }
 };
 
