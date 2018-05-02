@@ -30,20 +30,45 @@ server.listen().then(({ url }) => {
 });
 ```
 
-> Note: If `typeDefs` has custom scalar types, `resolvers` must still contain a definition for the `serialize`, `parseValue`, and `parseLiteral` functions
+> Note: If `typeDefs` has custom scalar types, `resolvers` must still contain the `serialize`, `parseValue`, and `parseLiteral` functions
 
 Mocking logic simply looks at the type definitions and returns a string where a string is expected, a number for a number, etc. This provides the right shape of result. For more sophisticated testing, mocks can be customized them to a particular data model.
 
 ## Customizing mocks
 
-In addition to a boolean, `mocks` can be an object that describes custom mocking logic. This is similar to the `resolvers` with a few extra features aimed at mocking. Namely `mocks` accepts functions for specific types in the schema that are called when that type is expected, for example:
+In addition to a boolean, `mocks` can be an object that describes custom mocking logic, which is structured similarly to `resolvers` with a few extra features aimed at mocking. Namely `mocks` accepts functions for specific types in the schema that are called when that type is expected. The functions in `mocks` would be used when no resolver in `resolvers` is specified. In this example `hello` will return `'Hello'` and `resolved` will return `'Resolved'`.
 
-```js
+```js line=16-20
+const { ApolloServer } = require('apollo-server');
+
+const typeDefs = `
+type Query {
+  hello: String
+  resolved: String
+}
+`;
+
+const resolvers = {
+  Query: {
+    resovled: () => 'Resolved',
+  },
+};
+
 const mocks = {
   Int: () => 6,
   Float: () => 22.1,
   String: () => 'Hello',
 };
+
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  mocks,
+});
+
+server.listen().then(({ url }) => {
+  console.log(`🚀 Server ready at ${url}`)
+});
 ```
 
 Similarly to `resolvers`, `mocks` allows the description of object types with the fields. Take note that the value corresponding to `Person` is a function that returns an object that contains fields pointing at more functions:
@@ -59,7 +84,7 @@ const mocks = {
 
 The previous example uses [casual](https://github.com/boo1ean/casual), a fake data generator for JavaScript, which returns a different result every time the field is called. In other scenarios, such as testing, a collection of fake objects or a generator that always uses a consistent seed are often necessary to provide consistent data.
 
-### Using MockList in resolvers
+### Using `MockList` in resolvers
 
 To automate mocking a list, return an instance of `MockList`:
 
