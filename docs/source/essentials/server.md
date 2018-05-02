@@ -142,7 +142,7 @@ server.applyMiddleware();
 
 <h3 id="serverless">Serverless</h3>
 
-Apollo Server works great in so-called "serverless" environments such as Amazon Lambda and Microsoft Azure Functions.  These implementations have some extra considerations which won't be covered in this guide, but more information is provided in [Server-less]().
+Apollo Server works great in "serverless" environments such as Amazon Lambda and Microsoft Azure Functions.  These implementations have some extra considerations which won't be covered in this guide.
 
 ## Next steps
 
