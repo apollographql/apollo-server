@@ -34,11 +34,11 @@ sidebar_categories:
   API Reference:
     - api/apollo-server
     - title: graphql-subscriptions 
-      url: https://www.apollographql.com/docs/graphql-subscriptions
+      href: https://www.apollographql.com/docs/graphql-subscriptions
     - title: apollo-engine
-      url: https://www.apollographql.com/docs/engine
+      href: https://www.apollographql.com/docs/engine
     - title: graphql-tools
-      url: https://www.apollographql.com/docs/graphql-tools
+      href: https://www.apollographql.com/docs/graphql-tools
   Migration:
     - migration-two-dot
 
