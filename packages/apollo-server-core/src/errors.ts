@@ -10,9 +10,12 @@ export class ApolloError extends Error {
   ) {
     super(message);
 
-    Object.keys(properties).forEach(key => {
-      this[key] = properties[key];
-    });
+    if (properties) {
+      Object.keys(properties).forEach(key => {
+        this[key] = properties[key];
+      });
+    }
+
     //extensions are flattened to be included in the root of GraphQLError's, so
     //don't add properties to extensions
     this.extensions = { code };
