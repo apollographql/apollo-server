@@ -7,7 +7,7 @@ This API reference documents the exports from the `apollo-server`, and `apollo-s
 
 ## `ApolloServer`
 
-The core of an Apollo Server implementation.  For a complete example, see the [Running a server](../essentials/server) section within "Essentials".
+The core of an Apollo Server implementation.  For a complete example, see the [Building a server](../essentials/server) section within "Essentials".
 
 ### `constructor(options)`: <`ApolloServer`>
 
@@ -17,6 +17,7 @@ The core of an Apollo Server implementation.  For a complete example, see the [R
   * `typeDefs`: <`String` inside [`gql`](#gql) tag> _(required)_
 
     This is a string representation of your GraphQL Schema Definition Language (SDL).
+
 
   * `resolvers`: <`Object`> _(required)_
 
@@ -34,45 +35,53 @@ The core of an Apollo Server implementation.  For a complete example, see the [R
 
 * `options`: <`Object`>
 
-  The `options` supports all Node.js
+  Most parameters which are supported by Node.js' [`net.Server.listen`](https://nodejs.org/api/net.html#net_server_listen_options_callback) method are supported, including:
 
   * `port`: <`String`> | <`Number`>
   * `path`: <`String`>
   * `backlog`: <`Number`>
   * `exclusive`: <`Boolean`>
 
-  // engine launcher options
-  engineLauncherOptions?: EngineLauncherOptions;
+  // Engine launcher options
+  `engineLauncherOptions?: EngineLauncherOptions;`
+
   // WebSocket options
-  keepAlive?: number;
-  onConnect?: (
+  `keepAlive?: number;`
+  `onConnect?: (
     connectionParams: Object,
     websocket: WebSocket,
     context: ConnectionContext,
   ) => any;
-  onDisconnect?: (websocket: WebSocket, context: ConnectionContext) => any;
+  onDisconnect?: (websocket: WebSocket, context: ConnectionContext) => any;`
 
 #### Returns
 
 `Promise`
 
-### `applyMiddleware(app, options)`: `void`
+## registerServer
 
-* `app`: <`HttpServer`> _(Required)_
+The `registerServer` method is from `apollo-server-express`. Middleware registration has been greatly simplified with this new method.
+
+### Parameters
 
 * `options`: <`Object`>
+  * `app`: <`HttpServer`> _(required)_
+      
+      Pass the handle to your nexpress server here.
 
-  * `path`: <`String`>
+  * `server`: <`ApolloServer`> _(required)_
 
-    Default: `/`
+      Pass the instance of Apollo Server
 
-    The path which the middleware will be mounted on.
+  * `path` : <`String`>
 
-  * `subscriptions`: <`Boolean`>
+      Specify a custom path. It defaults to `/graphql` if no path is specified.
 
-    Default: `false`
+  * `cors`: <`Object`>
 
-    When set to `true`, WebSockets will be enabled to allow for subscription support.
+      Pass the cors options.
+
+
 
 ## `gql`
 
@@ -99,6 +108,21 @@ const typeDefs = gql`
 ```
 
 ## `makeExecutableSchema`
+
+The `makeExecutableSchema` method is re-exported from apollo-server as a convenience. 
+
+### Parameters
+
+* `options` : <`Object`>
+  * `typeDefs`: <`GraphQLSchema`> _(required)_
+  * `resolvers` : <`Object`> 
+  * `logger` : <`Object`> 
+  * `allowUndefinedInResolve` = false
+  * `resolverValidationOptions` = {}
+  * `directiveResolvers` = null
+  * `schemaDirectives` =  null
+  * `parseOptions` = {}
+  * `inheritResolversFromInterfaces` = false
 
 ## `addMockFunctionsToSchema(options)`
 
