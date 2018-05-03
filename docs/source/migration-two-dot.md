@@ -3,7 +3,7 @@ title: Migrating to v2.0 Beta
 description: How to migrate to Apollo Server 2.0 beta
 ---
 
-Migrating from Apollo Server 1 to Apollo Server 2.0 beta is a walk in the park.
+The Apollo Server 2.0 beta dramatically simplifies the API for building a GraphQL server without compromising on features. It's also completely backward compatible, so you don't have to worry about breaking changes when upgrading. We do recommend upgrading to the new API as soon as possible to take advantage of all the latest Apollo Server features. To learn how to migrate to the 2.0 beta from version 1.0, please read the following guide.
 
 ### Node.js
 
@@ -11,13 +11,13 @@ Apollo Server 2.0 beta requires Node.js v6 and higher.
 
 ### Apollo Server Dependency in your App
 
-Update the `apollo-server` dependency to `2.0.0-beta.1` in your `package.json` file. Another alternative is to use the `@beta` tag from your terminal: `npm install apollo-server@beta`. 
+Update the `apollo-server` dependency to `2.0.0-beta.1` in your `package.json` file. Another alternative is to use the `@beta` tag from your terminal: `npm install apollo-server@beta`.
 
 Once updated, your existing code should work as intended. No errors!
 
 ### The `gql` tag
 
-Apollo Server 2.0 ships with the `gql` tag. You don't need to require `graphl-tags` anymore. It's not necessary to use the `gql` tag on the server. However, we recommend it for editor syntax highlighting and also to enable future functionality including statically analyzing GraphQL queries.
+Apollo Server 2.0 ships with the `gql` tag for editor syntax highlighting and auto-formatting with Prettier. In the future, we will be using it for statically analyzing GraphQL queries, so we recommend wrapping your schema with `gql` today. Unlike the `gql` tag on the client, it does not parse the query string into an AST.
 
 ```js
 const { ApolloServer, gql } = require('apollo-server');
