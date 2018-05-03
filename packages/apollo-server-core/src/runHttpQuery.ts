@@ -110,7 +110,7 @@ export async function runHttpQuery(
     requestPayload = [requestPayload];
   }
 
-  const requests: Array<ExecutionResult> = requestPayload.map(requestParams => {
+  const requests = requestPayload.map(async requestParams => {
     try {
       let query = requestParams.query;
       let extensions = requestParams.extensions;
@@ -190,9 +190,12 @@ export async function runHttpQuery(
         }
       }
 
-      let context = optionsObject.context || {};
-      if (typeof context === 'function') {
-        context = context();
+      let context = optionsObject.context;
+      if (!context) {
+        //appease typescript compiler, otherwise could use || {}
+        context = {};
+      } else if (typeof context === 'function') {
+        context = await context();
       } else if (isBatch) {
         context = Object.assign(
           Object.create(Object.getPrototypeOf(context)),
@@ -237,7 +240,8 @@ export async function runHttpQuery(
         }),
       });
     }
-  });
+  }) as Array<Promise<ExecutionResult>>;
+
   const responses = await Promise.all(requests);
 
   if (!isBatch) {

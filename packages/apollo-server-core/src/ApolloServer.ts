@@ -278,9 +278,10 @@ export class ApolloServerBase<Request = RequestInit> {
   async request(request: Request) {
     let context: Context = this.context ? this.context : { request };
 
+    //Differ context resolution to inside of runQuery
     context =
       typeof this.context === 'function'
-        ? await this.context({ req: request })
+        ? async () => this.context({ req: request })
         : context;
 
     return {
