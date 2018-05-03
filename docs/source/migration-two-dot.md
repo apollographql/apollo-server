@@ -136,7 +136,7 @@ For these cases, it's possible to remove the existing `apollo-server-{variant}` 
 An implementation with this pattern would look like:
 
 ```js
-const { ApolloServer, gql } = require("apollo-server");
+const { ApolloServer, gql } = require('apollo-server');
 
 // Construct a schema, using GraphQL schema language
 const typeDefs = gql`
