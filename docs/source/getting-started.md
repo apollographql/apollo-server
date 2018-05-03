@@ -2,8 +2,6 @@
 title: Getting started
 ---
 
-## Overview
-
 > Estimated time: About 10 minutes.
 
 In this guide, we'll walk you through the process of creating a GraphQL server in JavaScript.  By the end of the guide you should expect to:

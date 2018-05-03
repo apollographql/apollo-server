@@ -3,8 +3,6 @@ title: Schema Types
 description: How to write your types, expose your data, and keep it all working great
 ---
 
-## Overview
-
 GraphQL is a strongly typed language and the concept of "types" is a fundamental part of GraphQL.  Types define the capabilities of a GraphQL server and allow GraphQL operations to be validated.
 
 While in the most basic sense, you could have a GraphQL server return a single, scalar type, combining these types provides the ability to build GraphQL servers of varying complexities.

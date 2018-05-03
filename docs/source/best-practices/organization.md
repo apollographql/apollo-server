@@ -3,19 +3,17 @@ title: Organizing your code
 description: Scaling your Apollo Server from a single file to your entire team
 ---
 
-## Prerequisites
-
-* essentials/schema for connection between:
-  * GraphQL Types
-  * Resolvers
-
-## Overview
-
 The GraphQL schema defines the api for Apollo Server, providing the single source of truth between client and server. A complete schema contains type definitions and resolvers. Type definitions are written and documented in the [Schema Definition Language(SDL)]() to define the valid server entry points. Corresponding to one to one with type definition fields, resolvers are functions that retrieve the data described by the type definitions.
 
 To accommodate this tight coupling, type definitions and resolvers should be kept together in the same file. This collocation allows developers to modify fields and resolvers with atomic schema changes without unexpected consequences. At the end to build a complete schema, the type definitions are combined in an array and resolvers are merged together. Throughout all the examples, the resolvers delegate to a data model, as explained in [this section]().
 
 > Note: This schema separation should be done by product or real-world domain, which create natural boundaries that are easier to reason about.
+
+## Prerequisites
+
+* essentials/schema for connection between:
+  * GraphQL Types
+  * Resolvers
 
 <h2 id="organizing-types">Organizing schema types</h2>
 

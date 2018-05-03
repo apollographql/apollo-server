@@ -3,8 +3,6 @@ title: Error handling
 description: Making errors actionable on the client and server
 ---
 
-## Overview
-
 Apollo server provides a couple predefined errors, including `AuthenticationError`, `ForbiddenError`, and a generic `ApolloError`. These errors are designed to enhance errors thrown before and during GraphQL execution. The provided errors focus on debugging a Apollo server as well as enabling the client to take specific action based on an error.
 
 When an error occurs in Apollo server both inside and outside of resolvers, each error inside of the `errors` array will contain an object at `extensions` that contains the information added by Apollo server.
