@@ -44,8 +44,8 @@ jobs:
     docker: [ { image: 'circleci/node:8' } ]
     <<: *common_test_steps
 
-  Node.js 9:
-    docker: [ { image: 'circleci/node:9' } ]
+  Node.js 10:
+    docker: [ { image: 'circleci/node:10' } ]
     <<: *common_test_steps
 
   # Other tests, unrelated to typical code tests.
@@ -71,6 +71,6 @@ workflows:
     jobs:
       - Node.js 6
       - Node.js 8
-      - Node.js 9
+      - Node.js 10
       - Linting
       - Docs
