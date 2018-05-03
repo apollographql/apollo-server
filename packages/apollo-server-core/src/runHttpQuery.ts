@@ -195,7 +195,25 @@ export async function runHttpQuery(
         //appease typescript compiler, otherwise could use || {}
         context = {};
       } else if (typeof context === 'function') {
-        context = await context();
+        try {
+          context = await context();
+        } catch (e) {
+          e.message = `Context creation failed: ${e.message}`;
+          throw new HttpQueryError(
+            500,
+            JSON.stringify({
+              errors: formatApolloErrors([e], {
+                formatter: optionsObject.formatError,
+                debug,
+                logFunction: optionsObject.logFunction,
+              }),
+            }),
+            true,
+            {
+              'Content-Type': 'application/json',
+            },
+          );
+        }
       } else if (isBatch) {
         context = Object.assign(
           Object.create(Object.getPrototypeOf(context)),
