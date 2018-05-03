@@ -38,7 +38,7 @@ sidebar_categories:
     - title: graphql-tools
       url: https://www.apollographql.com/docs/graphql-tools
   Migration:
-    - migration-two-dot-beta
+    - migration-two-dot
 
 github_repo: apollographql/apollo-server
 content_root: docs/source
