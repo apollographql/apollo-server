@@ -34,7 +34,7 @@ Check out the following changes for Apollo Server 2.0 beta with express.
 * You no longer need to import `body-parser` to set up `apollo-server-exress`.
 * You no longer need to import `makeExecutableSchema` from `graphql-tools`.
 * You no longer need to import `graphqlExpress` and `graphiqlExpress` from `apollo-server-express`.
-* The Apollo Server constructor can simply take in the `typeDefs` and resolvers as parameters.
+* You should pass in `typeDefs` and resolvers as parameters to an instance of Apollo Server.
 
 ### Apollo Server 1
 
