@@ -827,7 +827,8 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
         const expected = /at resolveFieldValueOrError/;
         const stackTrace = [];
         const origError = console.error;
-        console.error = (...args) => stackTrace.push(args);
+        const err = stub();
+        console.error = err;
         app = await createApp({
           graphqlOptions: {
             schema,
@@ -841,7 +842,10 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
         return req.then(res => {
           console.error = origError;
-          expect(stackTrace[0][0]).to.match(expected);
+          if (err.called) {
+            expect(err.calledOnce);
+            expect(err.getCall(0).args[0]).to.match(expected);
+          }
         });
       });
 
@@ -861,8 +865,10 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
         return req.then(res => {
           logStub.restore();
-          expect(logStub.callCount).to.equal(1);
-          expect(logStub.getCall(0).args[0]).to.match(expected);
+          if (logStub.called) {
+            expect(logStub.callCount).to.equal(1);
+            expect(logStub.getCall(0).args[0]).to.match(expected);
+          }
         });
       });
 
@@ -1051,7 +1057,17 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           ]);
         return req.then(res => {
           expect(res.status).to.equal(200);
-          expect(res.body).to.deep.equal(expected);
+          expect(res.body.length).to.equal(expected.length);
+          expect(res.body[0]).to.deep.equal(expected[0]);
+          if (res.body[1].errors[0].extensions) {
+            if (res.body[1].errors[0].extensions.code) {
+              expect(res.body[1].errors[0].extensions.code).to.equal(
+                'INTERNAL_SERVER_ERROR',
+              );
+            }
+            delete res.body[1].errors[0].extensions;
+          }
+          expect(res.body[1]).to.deep.equal(expected[1]);
         });
       });
     });
