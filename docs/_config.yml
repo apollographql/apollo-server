@@ -22,15 +22,15 @@ sidebar_categories:
     - features/unions-interfaces
     - features/directives
     - features/creating-directives
-  Schema stitching:
-    - features/schema-stitching
-    - features/remote-schemas
-    - features/schema-delegation
-    - features/schema-transforms
+  # Schema stitching:
+  #   - features/schema-stitching
+  #   - features/remote-schemas
+  #   - features/schema-delegation
+  #   - features/schema-transforms
   Deployment:
-    - deployment/index
+    # - deployment/index
     - deployment/heroku
-    - deployment/lambda
+    # - deployment/lambda
   API Reference:
     - api/apollo-server
     - api/graphql-subscriptions
