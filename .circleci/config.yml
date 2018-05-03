@@ -69,13 +69,24 @@ jobs:
       # (speed) Ignore scripts to skip the Lerna build stuff for linting.
       - run: npm install-test --prefix ./docs
 
+ignore_doc_branches: &ignore_doc_branches
+  filters:
+    branches:
+      # If 'docs' is found, with word boundaries on either side, skip.
+      ignore: /.*?\bdocs\b.*/
+
 workflows:
   version: 2
   Build and Test:
     jobs:
-      - Node.js 4
-      - Node.js 6
-      - Node.js 8
-      - Node.js 9
-      - Linting
+      - Node.js 4:
+          <<: *ignore_doc_branches
+      - Node.js 6:
+          <<: *ignore_doc_branches
+      - Node.js 8:
+          <<: *ignore_doc_branches
+      - Node.js 9:
+          <<: *ignore_doc_branches
+      - Linting:
+          <<: *ignore_doc_branches
       - Docs
