@@ -45,7 +45,9 @@ While you could write all of the necessary code yourself, these two dependencies
 
 Run the following command to install both of these dependencies and save them in the project:
 
-    npm install --save apollo-server graphql
+    npm install --save apollo-server@beta graphql
+
+> Important: While `apollo-server` is in beta, its necessary to install from the `beta` tag.
 
 In the next step, we'll use these dependencies to create a server which processes and responds to incoming GraphQL requests.
 
@@ -55,10 +57,9 @@ In this step, we'll provide a code block which sets up `apollo-server` to respon
 
 The example code will utilize a static collection of two books.  In a more complicated example, the books might be fetched from a web resource (e.g. Amazon or a local library's website) or a database (e.g. MySQL or MongoDB).
 
-* Using the IDE/editor you've chosen (e.g. Visual Studio Code), open the `graphql-server-example` directory which we created in the first step.
-  > In most editors, you can open a directory by selecting the "File" menu and then "Open".
-* Create a new, blank file called `index.js` in the root of the project directory.
-* "Copy" the following code block, "Paste" it into the `index.js` file you created in the previous step, then "Save" the file:
+1. Using an IDE/editor, open the `graphql-server-example` directory which we created in the first step.
+2. Create a new, blank file called `index.js` in the root of the project directory.
+3. "Copy" the following code block, "Paste" it into the `index.js` file you created in the previous step, then "Save" the file:
 
   ```js
   const { ApolloServer, gql } = require('apollo-server');
@@ -111,7 +112,7 @@ The example code will utilize a static collection of two books.  In a more compl
   // This `listen` method launches a web-server.  Existing apps
   // can utilize middleware options, which we'll discuss later.
   server.listen().then(({ url }) => {
-    console.log(`Visit ${url} to run queries!`);
+    console.log(`🚀  Server ready at ${url}`);
   });
   ```
 
@@ -127,7 +128,8 @@ For this step, we'll return to the terminal/console and start the server we defi
 
 * You should see the following output from the above command:
 
-      Visit http://localhost:4000/ to run queries!
+      🚀 Server ready at http://localhost:4000/
+
 * Open the address provided in your web browser.
 * If everything is working, you should see the GraphQL Playground explorer tool, which we will use in the next step.
 
