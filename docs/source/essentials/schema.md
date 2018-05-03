@@ -214,14 +214,16 @@ Multiple mutations may be sent in the same request, however they will be execute
 
 <h3 id="comments">Describing types</h3>
 
-GraphiQL has built-in support for displaying docstrings with markdown syntax. This schema includes docstrings for types, fields and arguments.
+GraphQL supports providing markdown-enabled descriptions within the schema, which makes it easy for consumers of the API to discover a field and how to use it.
+
+For example, the following type definition shows how to use both single-line string literals, as well as multi-line blocks.
 
 ```graphql
 "Description for the type"
 type MyObjectType {
   """
   Description for field
-  Supports multi-line description
+  Supports **multi-line** description for your [API](http://example.com)!
   """
   myField: String!
 
@@ -232,25 +234,13 @@ type MyObjectType {
 }
 ```
 
+This makes SDL-generation even easier since many GraphQL tools (like GraphQL Playground and GraphiQL) auto-complete field names, along with the descriptions, when available.
+
 <h3 id="introspection">Introspection</h3>
 
-Introspection is an **optional** feature, enabled by default during development, which allows clients to automatically discover the types implemented within a GraphQL schema.
+Introspection is an **optional** feature, enabled by default during development, which allows clients (which are frequently developers, building an application) to automatically discover the types implemented within a GraphQL schema.
 
-The type declarations can be further extended with optional string literals to provide descriptions of a field's purpose to the client:
-
-```graphql
-type Book {
-  "Returns the title of the book, as listed in the card catalog."
-  title: String
-}
-
-type Query {
-  "Fetch a list of our extensive book collection!"
-  getBooks: [Book]
-}
-```
-
-This makes SDL-generation even easier since many GraphQL tools auto-complete field names, along with the descriptions, when available.
+By allowing the consumer of the API to see the full possibilities that an API can, developers can easily add new fields to existing queries.
 
 <h2 id="next-steps">Next steps</h2>
 
