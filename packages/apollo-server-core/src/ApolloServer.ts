@@ -19,7 +19,7 @@ import {
 
 import { formatApolloErrors } from './errors';
 import { GraphQLServerOptions as GraphQLOptions } from './graphqlOptions';
-import { LogFunction } from './logging';
+import { LogFunction, LogAction, LogStep } from './logging';
 
 import {
   Config,
@@ -212,7 +212,13 @@ export class ApolloServerBase<Request = RequestInit> {
         onOperation: async (_: string, connection: ExecutionParams) => {
           connection.formatResponse = (value: ExecutionResult) => ({
             ...value,
-            errors: value.errors && formatApolloErrors(value.errors),
+            errors:
+              value.errors &&
+              formatApolloErrors(value.errors, {
+                formatter: this.requestOptions.formatError,
+                debug: this.requestOptions.debug,
+                logFunction: this.requestOptions.logFunction,
+              }),
           });
           let context: Context = this.context ? this.context : { connection };
 
@@ -222,8 +228,11 @@ export class ApolloServerBase<Request = RequestInit> {
                 ? await this.context({ connection })
                 : context;
           } catch (e) {
-            console.error(e);
-            throw e;
+            throw formatApolloErrors([e], {
+              formatter: this.requestOptions.formatError,
+              debug: this.requestOptions.debug,
+              logFunction: this.requestOptions.logFunction,
+            })[0];
           }
 
           return { ...connection, context };
