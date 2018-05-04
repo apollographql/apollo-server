@@ -102,7 +102,7 @@ export function fromGraphQLError(error: GraphQLError, options?: ErrorOptions) {
   //copy the original error, while keeping all values non-enumerable, so they
   //are not printed unless directly referenced
   Object.defineProperty(copy, 'originalError', { value: {} });
-  Reflect.ownKeys(error).forEach(key => {
+  Object.getOwnPropertyNames(error).forEach(key => {
     Object.defineProperty(copy.originalError, key, { value: error[key] });
   });
 
