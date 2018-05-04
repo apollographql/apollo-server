@@ -123,13 +123,13 @@ To integrate Apollo Server with an existing server, we will need to import `regi
 const { registerServer } = require('apollo-server-express');
 ```
 
+For existing applications, we'll pass it into the `registerServer` method as `app`.
 
-For existing applications, we'll also pass the existing application into the constructor as `app`.  New applications should not pass `app`.
-
-> The existing application is frequently already named `app`, especially when using Express.  If the application is identified by a different variable, pass the existing app in as `app`.
+> The existing application is frequently already named `app`, especially when using Express.  If the application is identified by a different variable, pass the existing variable in place of `app`.
 
 ```js
-const { ApolloServer, gql } = require('apollo-server-express');
+const { ApolloServer } = require('apollo-server');
+const { registerServer } = require('apollo-server-express');
 const { typeDefs, resolvers } = require('./schema');
 
 const server = new ApolloServer({
@@ -137,12 +137,8 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
 });
-```
 
-When adding Apollo Server to an existing server, it's necessary to indicate where to activate the middleware relative to other middlewares already in the application. To do this, add the following line along with your other middleware, preferably before any of the others:
-
-```js
-registerServer({ server, app });
+registerServer({ server, app }); // app is from an existing express app
 ```
 
 
