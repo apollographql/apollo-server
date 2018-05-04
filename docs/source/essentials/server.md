@@ -8,14 +8,20 @@ Apollo Server provides an easy way for new, or existing, applications to get run
 
 <h2 id="installation">Installation</h2>
 
-We need to install two packages to use Apollo Server:
+We need to install two packages to use Apollo Server, and a third package when using Apollo Server as middleware in an existing application:
 
 * [`apollo-server`](//npm.im/apollo-server): The Apollo Server package, which provides most of the functionality.
 * [`graphql`](//npm.im/graphql): A support library, provided by Facebook.  It won't be explicitly used in these examples, but is a required module and shared amongst all GraphQL libraries in the project.
 
 To install, run:
 
-    npm install --save apollo-server graphql
+    npm install --save apollo-server@beta graphql
+
+When adding Apollo Server to an existing application, a corresponding HTTP server support package needs to be installed as well.  For example, for Express this is:
+
+    npm install --save apollo-server-express@beta
+
+> Note: During the beta, it's necessary to use the `beta` npm package, as shown in the above commands.
 
 <h2 id="creating">Creating a server</h2>
 
@@ -29,7 +35,7 @@ In the following examples, we'll import two things from `apollo-server`:
 ```js
 const { ApolloServer, gql } = require('apollo-server');
 
-// Your GraphQL schema
+// The GraphQL schema
 const typeDefs = gql`
   type Query {
     "A simple type for getting started!"
@@ -37,7 +43,7 @@ const typeDefs = gql`
   }
 `;
 
-// Your resolver map
+// A map of functions which return data for the schema.
 const resolvers = {
   Query: {
     hello: () => 'world'
@@ -45,7 +51,6 @@ const resolvers = {
 };
 
 const server = new ApolloServer({
-  // Both of these properties are required to create an Apollo Server
   typeDefs,
   resolvers,
 });
@@ -104,41 +109,42 @@ Your server itself is hosted at http://localhost:4000/graphql. This would be the
 
 <h2 id="integrations">Server integrations</h2>
 
-Depending on whether we are creating a new application or an existing application, the method of importing `apollo-server` will vary slightly since Apollo Server must adapt to the semantics of existing servers (e.g. Express, Hapi, etc.)
+Depending on whether we are creating a new application or an existing application, the steps will vary slightly since Apollo Server must adapt to the semantics of existing servers (e.g. Express, Hapi, etc.)
 
-Both import methods will use the `apollo-server` module we installed in the previous step, but existing applications will append the desired middleware as a path-based import (e.g. `apollo-server/<variant>`, where `<variant>` would be `express`, `koa`, etc.).
+Both import methods will use the `apollo-server` module we installed in the previous step, but existing applications will also install a middleware package which corresponds to the desired HTTP server.
 
 <h3 id="middleware">Middleware</h3>
 
-Existing applications generally already have middleware in place and Apollo Server works with those middleware options.  To integrate Apollo Server with our existing server, we need to import the `ApolloServer` which corresponds to the type of server which is already in use.
+Existing applications generally already have middleware in place and Apollo Server works along with those middleware.
 
-For example, if the application is already using an Express server, it is important to use the `apollo-server/express` import.
+To integrate Apollo Server with an existing server, we will need to import `registerServer` from the appropriate support package.  For example, if the application is already using an Express server, this would import `registerServer` from the `apollo-server-express` module:
 
-It will also be necessary to access the instance of the existing "app" to add the new Apollo Server middleware.  Be sure to add this new import where your existing application is available.
+```js
+const { registerServer } = require('apollo-server-express');
+```
+
 
 For existing applications, we'll also pass the existing application into the constructor as `app`.  New applications should not pass `app`.
 
 > The existing application is frequently already named `app`, especially when using Express.  If the application is identified by a different variable, pass the existing app in as `app`.
 
 ```js
-const { ApolloServer, gql } = require('apollo-server/express');
+const { ApolloServer, gql } = require('apollo-server-express');
 const { typeDefs, resolvers } = require('./schema');
 
 const server = new ApolloServer({
-  // Important: Only set `app` for existing applications!
-  app: app,
-
   // These will be defined for both new or existing servers
   typeDefs,
   resolvers,
 });
 ```
 
-When adding Apollo Server to an existing server, it's necessary to indicate where to activate the middleware relative to other middlewares already in the app.  To do this, add the following line along with your other middleware, preferably before any of the others:
+When adding Apollo Server to an existing server, it's necessary to indicate where to activate the middleware relative to other middlewares already in the application. To do this, add the following line along with your other middleware, preferably before any of the others:
 
 ```js
-server.applyMiddleware();
+registerServer({ server, app });
 ```
+
 
 <h3 id="serverless">Serverless</h3>
 
