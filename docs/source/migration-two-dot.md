@@ -27,13 +27,13 @@ const typeDefs = gql`
 
 ### Changes to app dependencies
 
-> Apollo Server 2.0 beta requires Node.js v6 and higher since Node.js 4 is no longer supported by the Node.js Foundation.
+> Apollo Server 2.0 beta requires Node.js v6 and higher.
 
-Apollo Server 2.0 simplifies implementing a GraphQL server.  Apollo Server 1.0 revolved around providing middleware-based solutions, which had to added to an application which already existed.  These middleware implementations were tied to the HTTP server in use (e.g. `apollo-server-express` for Express implementations, `apollo-server-koa` for Koa, etc.).
+Apollo Server 2.0 simplifies implementing a GraphQL server.  Apollo Server 1.0 revolved around providing middleware-based solutions, which had to be added to an application which already existed.  These middleware implementations were tied to the HTTP server in use (e.g. `apollo-server-express` for Express implementations, `apollo-server-koa` for Koa, etc.).
 
 There is a consideration to be made when following the rest of the guide:
 
-* [**Middleware option**](#Middleware): If the application being migrated implements Apollo Server alongside other middleware, there are some packages which can be removed, but adding the `apollo-server` package server and switching to using the new `registerServer` API should still simplify the setup.  In this case, check the [Middleware](#Middleware) section.
+* [**Middleware option**](#Middleware): If the application being migrated implements Apollo Server alongside other middleware, there are some packages which can be removed, but adding the `apollo-server` package and switching to using the new `registerServer` API should still simplify the setup.  In this case, check the [Middleware](#Middleware) section.
 * [**Stand-alone option**](#Stand-alone): If the application being migrated is only used as a GraphQL server, Apollo Server 2.0 _eliminates the need to run a separate HTTP server_ and allows some dependencies to be removed.  In these cases, the [Stand-alone](#Stand-alone) option will reduce the amount of code necessary for running a GraphQL server.
 
 ### Simplified usage
