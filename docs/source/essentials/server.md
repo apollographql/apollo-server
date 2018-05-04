@@ -139,11 +139,12 @@ const server = new ApolloServer({
 });
 ```
 
-When adding Apollo Server to an existing server, it's necessary to indicate where to activate the middleware relative to other middlewares already in the app.  To do this, add the following line along with your other middleware, preferably before any of the others:
+When adding Apollo Server to an existing server, it's necessary to indicate where to activate the middleware relative to other middlewares already in the application. To do this, add the following line along with your other middleware, preferably before any of the others:
 
 ```js
-server.registerServer({ server, app });
+registerServer({ server, app });
 ```
+
 
 <h3 id="serverless">Serverless</h3>
 
