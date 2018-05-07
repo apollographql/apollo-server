@@ -18,6 +18,7 @@ const options = {
   result?: Object, // optional result to pre-populate the GraphiQL UI with
   passHeader?: String, // a string that will be added to the outgoing request header object (e.g "'Authorization': 'Bearer lorem ipsum'")
   editorTheme?: String, // optional CodeMirror theme to be applied to the GraphiQL UI
+  rewriteURL?: Boolean, // optionally turn off url rewriting when editing queries
 }
 ```
 
