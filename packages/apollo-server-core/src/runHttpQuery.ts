@@ -56,6 +56,9 @@ export async function runHttpQuery(
     // logFunction, debug. Therefore, we need to do some unnatural things, such
     // as use NODE_ENV to determine the debug settings
     e.message = `Invalid options provided to ApolloServer: ${e.message}`;
+    if (!debugDefault) {
+      e.warning = `To remove the stacktrace, set the NODE_ENV environment variable to production if the options creation can fail`;
+    }
     throw new HttpQueryError(
       500,
       JSON.stringify({
