@@ -250,16 +250,17 @@ export async function runHttpQuery(
       // Populate any HttpQueryError to our handler which should
       // convert it to Http Error.
       if (e.name === 'HttpQueryError') {
-        return Promise.reject(e);
+        //async function wraps this in a Promise
+        throw e;
       }
 
-      return Promise.resolve({
+      return {
         errors: formatApolloErrors([e], {
           formatter: optionsObject.formatError,
           debug,
           logFunction: optionsObject.logFunction,
         }),
-      });
+      };
     }
   }) as Array<Promise<ExecutionResult>>;
 
