@@ -275,13 +275,13 @@ export class ApolloServerBase<Request = RequestInit> {
     if (this.engine || engineInRequestPath) this.engineEnabled = true;
   }
 
-  async request(request: Request) {
+  request(request: Request) {
     let context: Context = this.context ? this.context : { request };
 
-    //Differ context resolution to inside of runQuery
+    //Defer context resolution to inside of runQuery
     context =
       typeof this.context === 'function'
-        ? async () => this.context({ req: request })
+        ? () => this.context({ req: request })
         : context;
 
     return {
