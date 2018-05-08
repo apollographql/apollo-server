@@ -40,7 +40,6 @@ export interface Config<Server>
   subscriptions?: SubscriptionServerOptions | string | false;
   enableIntrospection?: boolean;
   mocks?: boolean | IMocks;
-  engineProxy?: boolean | EngineLauncherOptions;
 }
 
 // XXX export these directly from apollo-engine-js
@@ -60,6 +59,7 @@ export interface ListenOptions {
   path?: string;
   backlog?: number;
   exclusive?: boolean;
+  engineProxy?: boolean | EngineLauncherOptions;
   // WebSocket options
   keepAlive?: number;
   onConnect?: (
