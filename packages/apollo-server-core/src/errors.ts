@@ -1,4 +1,5 @@
 import { GraphQLError } from 'graphql';
+import { LogStep, LogAction, LogMessage, LogFunction } from './logging';
 
 export class ApolloError extends Error {
   public extensions;
@@ -8,14 +9,20 @@ export class ApolloError extends Error {
     properties?: Record<string, any>,
   ) {
     super(message);
-    this.extensions = { ...properties, code };
+
+    if (properties) {
+      Object.keys(properties).forEach(key => {
+        this[key] = properties[key];
+      });
+    }
+
+    //extensions are flattened to be included in the root of GraphQLError's, so
+    //don't add properties to extensions
+    this.extensions = { code };
   }
 }
 
-export function internalFormatError(
-  error: GraphQLError,
-  debug: boolean = false,
-) {
+function enrichError(error: GraphQLError, debug: boolean = false) {
   const expanded: GraphQLError = {
     message: error.message,
     path: error.path,
@@ -95,7 +102,7 @@ export function fromGraphQLError(error: GraphQLError, options?: ErrorOptions) {
   //copy the original error, while keeping all values non-enumerable, so they
   //are not printed unless directly referenced
   Object.defineProperty(copy, 'originalError', { value: {} });
-  Reflect.ownKeys(error).forEach(key => {
+  Object.getOwnPropertyNames(error).forEach(key => {
     Object.defineProperty(copy.originalError, key, { value: error[key] });
   });
 
@@ -132,4 +139,44 @@ export class ForbiddenError extends ApolloError {
   constructor(message: string) {
     super(message, 'FORBIDDEN');
   }
+}
+
+export function formatApolloErrors(
+  errors: Array<Error>,
+  options?: {
+    formatter?: Function;
+    logFunction?: LogFunction;
+    debug?: boolean;
+  },
+): Array<Error> {
+  const { formatter, debug, logFunction } = options;
+
+  const enrichedErrors = errors.map(error => enrichError(error, debug));
+
+  if (!formatter) {
+    return enrichedErrors;
+  }
+
+  return enrichedErrors.map(error => {
+    try {
+      return formatter(error);
+    } catch (err) {
+      logFunction({
+        action: LogAction.cleanup,
+        step: LogStep.status,
+        data: err,
+        key: 'error',
+      });
+
+      if (debug) {
+        return enrichError(err, debug);
+      } else {
+        //obscure error
+        const newError: GraphQLError = fromGraphQLError(
+          new GraphQLError('Internal server error'),
+        );
+        return enrichError(newError, debug);
+      }
+    }
+  }) as Array<Error>;
 }

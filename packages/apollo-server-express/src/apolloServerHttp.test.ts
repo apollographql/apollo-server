@@ -330,6 +330,9 @@ describe(`GraphQL-HTTP (apolloServer) tests for ${version} express`, () => {
         data: null,
         errors: [
           {
+            extensions: {
+              code: 'INTERNAL_SERVER_ERROR',
+            },
             message: 'Throws!',
             locations: [{ line: 1, column: 2 }],
             path: ['thrower'],
@@ -359,6 +362,9 @@ describe(`GraphQL-HTTP (apolloServer) tests for ${version} express`, () => {
       expect(JSON.parse(response.text)).to.deep.equal({
         errors: [
           {
+            extensions: {
+              code: 'GRAPHQL_VALIDATION_FAILED',
+            },
             message: 'Cannot query field "notExists" on type "QueryRoot".',
             locations: [{ line: 1, column: 2 }],
           },
@@ -385,6 +391,9 @@ describe(`GraphQL-HTTP (apolloServer) tests for ${version} express`, () => {
       expect(JSON.parse(response.text)).to.deep.equal({
         errors: [
           {
+            extensions: {
+              code: 'GRAPHQL_VALIDATION_FAILED',
+            },
             message: 'Cannot query field "notExists" on type "QueryRoot".',
             locations: [{ line: 1, column: 2 }],
           },
@@ -532,6 +541,9 @@ describe(`GraphQL-HTTP (apolloServer) tests for ${version} express`, () => {
       expect(JSON.parse(response.text)).to.deep.equal({
         errors: [
           {
+            extensions: {
+              code: 'GRAPHQL_VALIDATION_FAILED',
+            },
             message: 'AlwaysInvalidRule was really invalid!',
           },
         ],

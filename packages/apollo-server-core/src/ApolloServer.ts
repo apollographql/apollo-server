@@ -17,9 +17,9 @@ import {
   ExecutionParams,
 } from 'subscriptions-transport-ws';
 
-import { internalFormatError } from './errors';
+import { formatApolloErrors } from './errors';
 import { GraphQLServerOptions as GraphQLOptions } from './graphqlOptions';
-import { LogFunction } from './runQuery';
+import { LogFunction, LogAction, LogStep } from './logging';
 
 import {
   Config,
@@ -213,7 +213,12 @@ export class ApolloServerBase<Request = RequestInit> {
           connection.formatResponse = (value: ExecutionResult) => ({
             ...value,
             errors:
-              value.errors && value.errors.map(err => internalFormatError(err)),
+              value.errors &&
+              formatApolloErrors(value.errors, {
+                formatter: this.requestOptions.formatError,
+                debug: this.requestOptions.debug,
+                logFunction: this.requestOptions.logFunction,
+              }),
           });
           let context: Context = this.context ? this.context : { connection };
 
@@ -223,8 +228,11 @@ export class ApolloServerBase<Request = RequestInit> {
                 ? await this.context({ connection })
                 : context;
           } catch (e) {
-            console.error(e);
-            throw e;
+            throw formatApolloErrors([e], {
+              formatter: this.requestOptions.formatError,
+              debug: this.requestOptions.debug,
+              logFunction: this.requestOptions.logFunction,
+            })[0];
           }
 
           return { ...connection, context };
@@ -267,20 +275,19 @@ export class ApolloServerBase<Request = RequestInit> {
     if (this.engine || engineInRequestPath) this.engineEnabled = true;
   }
 
-  async request(request: Request) {
+  request(request: Request) {
     let context: Context = this.context ? this.context : { request };
 
+    //Defer context resolution to inside of runQuery
     context =
       typeof this.context === 'function'
-        ? await this.context({ req: request })
+        ? () => this.context({ req: request })
         : context;
 
     return {
       schema: this.schema,
       tracing: Boolean(this.engineEnabled),
       cacheControl: Boolean(this.engineEnabled),
-      formatError: (e: GraphQLError) =>
-        internalFormatError(e, this.requestOptions.debug),
       context,
       // allow overrides from options
       ...this.requestOptions,

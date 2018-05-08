@@ -4,12 +4,12 @@ import {
   default as GraphQLOptions,
   resolveGraphqlOptions,
 } from './graphqlOptions';
-import { internalFormatError } from './errors';
+import { formatApolloErrors } from './errors';
 
 export interface HttpQueryRequest {
   method: string;
-  query: Record<string, any>;
-  options: GraphQLOptions | Function;
+  query: Record<string, any> | Array<Record<string, any>>;
+  options: GraphQLOptions | (() => Promise<GraphQLOptions> | GraphQLOptions);
 }
 
 export class HttpQueryError extends Error {
@@ -42,6 +42,8 @@ export async function runHttpQuery(
 ): Promise<string> {
   let isGetRequest: boolean = false;
   let optionsObject: GraphQLOptions;
+  const debugDefault =
+    process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test';
 
   try {
     optionsObject = await resolveGraphqlOptions(
@@ -49,13 +51,25 @@ export async function runHttpQuery(
       ...handlerArguments,
     );
   } catch (e) {
-    throw new HttpQueryError(500, e.message);
+    // The options can be generated asynchronously, so we don't have access to
+    // the normal options provided by the user, such as: formatError,
+    // logFunction, debug. Therefore, we need to do some unnatural things, such
+    // as use NODE_ENV to determine the debug settings
+    e.message = `Invalid options provided to ApolloServer: ${e.message}`;
+    if (!debugDefault) {
+      e.warning = `To remove the stacktrace, set the NODE_ENV environment variable to production if the options creation can fail`;
+    }
+    throw new HttpQueryError(
+      500,
+      JSON.stringify({
+        errors: formatApolloErrors([e], { debug: debugDefault }),
+      }),
+      true,
+      {
+        'Content-Type': 'application/json',
+      },
+    );
   }
-  const formatErrorFn = optionsObject.formatError
-    ? error => optionsObject.formatError(internalFormatError(error))
-    : internalFormatError;
-  const debugDefault =
-    process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test';
   const debug =
     optionsObject.debug !== undefined ? optionsObject.debug : debugDefault;
   let requestPayload;
@@ -99,7 +113,7 @@ export async function runHttpQuery(
     requestPayload = [requestPayload];
   }
 
-  const requests: Array<ExecutionResult> = requestPayload.map(requestParams => {
+  const requests = requestPayload.map(async requestParams => {
     try {
       let query = requestParams.query;
       let extensions = requestParams.extensions;
@@ -179,9 +193,30 @@ export async function runHttpQuery(
         }
       }
 
-      let context = optionsObject.context || {};
-      if (typeof context === 'function') {
-        context = context();
+      let context = optionsObject.context;
+      if (!context) {
+        //appease typescript compiler, otherwise could use || {}
+        context = {};
+      } else if (typeof context === 'function') {
+        try {
+          context = await context();
+        } catch (e) {
+          e.message = `Context creation failed: ${e.message}`;
+          throw new HttpQueryError(
+            500,
+            JSON.stringify({
+              errors: formatApolloErrors([e], {
+                formatter: optionsObject.formatError,
+                debug,
+                logFunction: optionsObject.logFunction,
+              }),
+            }),
+            true,
+            {
+              'Content-Type': 'application/json',
+            },
+          );
+        }
       } else if (isBatch) {
         context = Object.assign(
           Object.create(Object.getPrototypeOf(context)),
@@ -198,7 +233,7 @@ export async function runHttpQuery(
         operationName: operationName,
         logFunction: optionsObject.logFunction,
         validationRules: optionsObject.validationRules,
-        formatError: formatErrorFn,
+        formatError: optionsObject.formatError,
         formatResponse: optionsObject.formatResponse,
         fieldResolver: optionsObject.fieldResolver,
         debug: optionsObject.debug,
@@ -215,12 +250,20 @@ export async function runHttpQuery(
       // Populate any HttpQueryError to our handler which should
       // convert it to Http Error.
       if (e.name === 'HttpQueryError') {
-        return Promise.reject(e);
+        //async function wraps this in a Promise
+        throw e;
       }
 
-      return Promise.resolve({ errors: [formatErrorFn(e)] });
+      return {
+        errors: formatApolloErrors([e], {
+          formatter: optionsObject.formatError,
+          debug,
+          logFunction: optionsObject.logFunction,
+        }),
+      };
     }
-  });
+  }) as Array<Promise<ExecutionResult>>;
+
   const responses = await Promise.all(requests);
 
   if (!isBatch) {
