@@ -71,6 +71,7 @@ export class ApolloServerBase<Request = RequestInit> {
       typeDefs,
       enableIntrospection,
       mocks,
+      engineProxy,
       ...requestOptions
     } = config;
 
@@ -110,6 +111,8 @@ export class ApolloServerBase<Request = RequestInit> {
     }
 
     this.subscriptions = subscriptions;
+
+    if (engineProxy) this.createEngine(opts);
   }
 
   public use({ getHttp, path }: RegistrationOptions) {
@@ -135,8 +138,6 @@ export class ApolloServerBase<Request = RequestInit> {
           : this.subscriptions;
       this.createSubscriptionServer(this.http, config);
     }
-
-    if (opts.engine || opts.engineInRequestPath) this.createEngine(opts);
 
     return new Promise((success, fail) => {
       if (this.engine) {
@@ -246,16 +247,16 @@ export class ApolloServerBase<Request = RequestInit> {
     );
   }
 
-  private createEngine({ engineInRequestPath, engine }: ListenOptions) {
+  private createEngine(engineProxy: boolean | EngineLauncherOptions) {
     // only access this onces as its slower on node
     const { ENGINE_API_KEY, ENGINE_CONFIG } = process.env;
-    if (engine === false && (ENGINE_API_KEY || ENGINE_CONFIG)) {
+    if (engineProxy === false && (ENGINE_API_KEY || ENGINE_CONFIG)) {
       console.warn(
         'engine is set to false when creating ApolloServer but either ENGINE_CONFIG or ENGINE_API_KEY was found in the environment',
       );
     }
     let ApolloEngine;
-    if (engine) {
+    if (typeof engineProxy !== 'boolean') {
       // detect engine if it is set to true or has a config, and possibly load it
       try {
         ApolloEngine = require('apollo-engine').ApolloEngine;
@@ -266,13 +267,13 @@ export class ApolloServerBase<Request = RequestInit> {
 `);
       }
 
-      this.engine = new ApolloEngine(
-        typeof engine === 'boolean' ? undefined : engine,
-      );
+      this.engine = new ApolloEngine(engineProxy);
+      // XXX should this allow for header overrides from graphql-playground?
+      if (this.engine) this.engineEnabled = true;
+    } else {
+      //engine is already in the request path
+      this.engineEnabled = true;
     }
-
-    // XXX should this allow for header overrides from graphql-playground?
-    if (this.engine || engineInRequestPath) this.engineEnabled = true;
   }
 
   request(request: Request) {

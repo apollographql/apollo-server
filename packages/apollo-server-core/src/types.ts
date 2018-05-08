@@ -35,11 +35,12 @@ export interface Config<Server>
   typeDefs?: string | [string];
   resolvers?: IResolvers;
   schema?: GraphQLSchema;
-  schemaDirectives: Record<string, typeof SchemaDirectiveVisitor>;
+  schemaDirectives?: Record<string, typeof SchemaDirectiveVisitor>;
   context?: Context<any> | ContextFunction<any>;
   subscriptions?: SubscriptionServerOptions | string | false;
   enableIntrospection?: boolean;
   mocks?: boolean | IMocks;
+  engineProxy?: boolean | EngineLauncherOptions;
 }
 
 // XXX export these directly from apollo-engine-js
@@ -59,11 +60,6 @@ export interface ListenOptions {
   path?: string;
   backlog?: number;
   exclusive?: boolean;
-  // XXX clean this up
-  engineInRequestPath?: boolean;
-  engine?: boolean | Object;
-  // engine launcher options
-  engineLauncherOptions?: EngineLauncherOptions;
   // WebSocket options
   keepAlive?: number;
   onConnect?: (
