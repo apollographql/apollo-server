@@ -19,8 +19,8 @@ export class ApolloServer extends ApolloServerBase<express.Request> {
     onHealthCheck,
     ...opts
   }: Config<express.Request> & {
-    onHealthCheck: (req: express.Request) => Promise<any>;
-    disableHealthCheck: boolean;
+    onHealthCheck?: (req: express.Request) => Promise<any>;
+    disableHealthCheck?: boolean;
   }) {
     super(opts);
     if (disableHealthCheck) this.disableHealthCheck = true;
