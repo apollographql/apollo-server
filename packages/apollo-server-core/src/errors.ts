@@ -22,7 +22,7 @@ export class ApolloError extends Error {
   }
 }
 
-export function enrichError(error: GraphQLError, debug: boolean = false) {
+function enrichError(error: GraphQLError, debug: boolean = false) {
   const expanded: GraphQLError = {
     message: error.message,
     path: error.path,
@@ -150,30 +150,33 @@ export function formatApolloErrors(
   },
 ): Array<Error> {
   const { formatter, debug, logFunction } = options;
-  return errors.map(error => enrichError(error, debug)).map(error => {
-    if (formatter !== undefined) {
-      try {
-        return formatter(error);
-      } catch (err) {
-        logFunction({
-          action: LogAction.cleanup,
-          step: LogStep.status,
-          data: err,
-          key: 'error',
-        });
 
-        if (debug) {
-          return enrichError(err, debug);
-        } else {
-          //obscure error
-          const newError: GraphQLError = fromGraphQLError(
-            new GraphQLError('Internal server error'),
-          );
-          return enrichError(newError, debug);
-        }
+  const enrichedErrors = errors.map(error => enrichError(error, debug));
+
+  if (!formatter) {
+    return enrichedErrors;
+  }
+
+  return enrichedErrors.map(error => {
+    try {
+      return formatter(error);
+    } catch (err) {
+      logFunction({
+        action: LogAction.cleanup,
+        step: LogStep.status,
+        data: err,
+        key: 'error',
+      });
+
+      if (debug) {
+        return enrichError(err, debug);
+      } else {
+        //obscure error
+        const newError: GraphQLError = fromGraphQLError(
+          new GraphQLError('Internal server error'),
+        );
+        return enrichError(newError, debug);
       }
-    } else {
-      return error;
     }
   }) as Array<Error>;
 }
