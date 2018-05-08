@@ -50,7 +50,7 @@ type Query {
 
 const resolvers = {
   Query: {
-    resovled: () => 'Resolved',
+    resolved: () => 'Resolved',
   },
 };
 
