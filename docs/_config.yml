@@ -33,12 +33,11 @@ sidebar_categories:
     # - deployment/lambda
   API Reference:
     - api/apollo-server
-    - title: graphql-subscriptions 
+    - title: graphql-subscriptions
       href: https://www.apollographql.com/docs/graphql-subscriptions
     - title: apollo-engine
-      href: https://www.apollographql.com/docs/engine
-    - title: graphql-tools
-      href: https://www.apollographql.com/docs/graphql-tools
+      href: https://www.apollographql.com/docs/engine/setup-node.html#api
+    - api/graphql-tools
   Migration:
     - migration-two-dot
 
