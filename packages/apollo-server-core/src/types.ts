@@ -59,7 +59,11 @@ export interface ListenOptions {
   path?: string;
   backlog?: number;
   exclusive?: boolean;
-  engineProxy?: boolean | EngineLauncherOptions;
+  // XXX clean this up
+  engineInRequestPath?: boolean;
+  engineProxy?: boolean | Record<string, any>;
+  // engine launcher options
+  engineLauncherOptions?: EngineLauncherOptions;
   // WebSocket options
   keepAlive?: number;
   onConnect?: (

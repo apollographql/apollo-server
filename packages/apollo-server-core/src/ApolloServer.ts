@@ -29,7 +29,6 @@ import {
   ServerInfo,
   Context,
   ContextFunction,
-  EngineLauncherOptions,
 } from './types';
 
 const env = process.env.NODE_ENV;
@@ -137,18 +136,18 @@ export class ApolloServerBase<Request = RequestInit> {
       this.createSubscriptionServer(this.http, config);
     }
 
-    if (options.engineProxy) this.createEngine(options.engineProxy);
+    if (opts.engineProxy || opts.engineInRequestPath) this.createEngine(opts);
 
     return new Promise((success, fail) => {
       if (this.engineProxy) {
         this.engineProxy.listen(
           Object.assign(
             {},
-            typeof options.engineProxy !== 'boolean' ? options.engineProxy : {},
             {
               graphqlPaths: [this.graphqlPath],
               port: options.port,
               httpServer: this.http,
+              launcherOptions: options.engineLauncherOptions,
             },
           ),
           () => {
@@ -251,7 +250,7 @@ export class ApolloServerBase<Request = RequestInit> {
     );
   }
 
-  private createEngine(engineProxy: boolean | EngineLauncherOptions) {
+  private createEngine({ engineInRequestPath, engineProxy }: ListenOptions) {
     // only access this onces as its slower on node
     const { ENGINE_API_KEY, ENGINE_CONFIG } = process.env;
     if (engineProxy === false && (ENGINE_API_KEY || ENGINE_CONFIG)) {
@@ -260,7 +259,7 @@ export class ApolloServerBase<Request = RequestInit> {
       );
     }
     let ApolloEngine;
-    if (typeof engineProxy !== 'boolean') {
+    if (engineProxy) {
       // detect engine if it is set to true or has a config, and possibly load it
       try {
         ApolloEngine = require('apollo-engine').ApolloEngine;
@@ -271,13 +270,13 @@ export class ApolloServerBase<Request = RequestInit> {
 `);
       }
 
-      this.engineProxy = new ApolloEngine(engineProxy);
-      // XXX should this allow for header overrides from graphql-playground?
-      if (this.engineProxy) this.engineEnabled = true;
-    } else {
-      //engine is already in the request path
-      this.engineEnabled = true;
+      this.engineProxy = new ApolloEngine(
+        typeof engineProxy === 'boolean' ? undefined : engineProxy,
+      );
     }
+
+    // XXX should this allow for header overrides from graphql-playground?
+    if (this.engineProxy || engineInRequestPath) this.engineEnabled = true;
   }
 
   request(request: Request) {
