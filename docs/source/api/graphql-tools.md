@@ -1,15 +1,50 @@
 ---
-title: API Reference: apollo-server
-sidebar_title: apollo-server
+title: "API Reference: graphql-tools"
+sidebar_title: graphql-tools
 ---
 
+The graphql-tools library enables the creation and manipulation of GraphQL schema. Apollo Server is able to accept a `schema` that has been enabled by `graphql-tools`. Apollo server directly exports all the function from `graphql-tools`, enabling a migration path for more complicated use cases.
+
+```js
+const { makeExecutableSchema } = require('apollo-server');
+
+const typeDefs = gql`
+  type Query {
+    hello: String
+  }
+`;
+
+const resolvers = {
+  Query: {
+    hello: () => 'Hello world!'
+  },
+};
+
+const schema = makeExecutableSchema({
+  typeDefs,
+  resolvers,
+});
+
+const rootResolveFunction = (root, args, context, info) => {
+  //perform action before any other resolvers
+};
+
+addSchemaLevelResolveFunction(schema, rootResolveFunction)
+
+const server = new ApolloServer({ schema });
+
+// normal ApolloServer listen call but url will contain /graphql
+server.listen().then(({ url }) => {
+  console.log(`🚀 Server ready at ${url}`)
+});
+```
 
 <h2 id="makeExecutableSchema" title="makeExecutableSchema">makeExecutableSchema(options)</h2>
 
 `makeExecutableSchema` takes a single argument: an object of options. Only the `typeDefs` option is required.
 
 ```
-import { makeExecutableSchema } from 'graphql-tools';
+const { makeExecutableSchema } = require('apollo-server');
 
 const jsSchema = makeExecutableSchema({
   typeDefs,
@@ -50,7 +85,7 @@ const jsSchema = makeExecutableSchema({
 <h2 id="addMockFunctionsToSchema" title="addMockFunctionToSchema">addMockFunctionToSchema(options)</h2>
 
 ```js
-import { addMockFunctionsToSchema } from 'graphql-tools';
+const { addMockFunctionsToSchema } = require('apollo-server');
 
 addMockFunctionsToSchema({
   schema,
@@ -64,7 +99,7 @@ Given an instance of GraphQLSchema and a mock object, `addMockFunctionsToSchema`
 <h2 id="MockList" title="MockList">MockList(list, mockFunction)</h2>
 
 ```js
-import { MockList } from 'graphql-tools';
+const { MockList } = require('apollo-server');
 
 new MockList(length: number | number[], mockFunction: Function);
 ```
@@ -79,7 +114,7 @@ This is an object you can return from your mock resolvers which calls the `mockF
 
 
 ```js
-import { addResolveFunctionsToSchema } from 'graphql-tools';
+const { addResolveFunctionsToSchema } = require('apollo-server');
 
 const resolvers = {
   RootQuery: {
