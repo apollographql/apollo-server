@@ -1,1 +1,0 @@
-import protobuf from 'protobufjs';

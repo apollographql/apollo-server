@@ -1,11 +1,12 @@
 {
-  "name": "apollo-engine-report-proto",
+  "name": "apollo-engine-reporting-protobuf",
   "version": "0.0.0-beta.0",
   "description": "Core engine for Apollo GraphQL server",
   "main": "dist/index.js",
   "scripts": {
-    "compile": "tsc",
-    "watch": "tsc -w",
+    "compile": "npm run pbjs && npm run pbts",
+    "pbjs": "bash -c 'pbjs --target static-module --out dist/index.js --wrap commonjs <(grep -v \"package mdg.engine.proto\" reports.proto)'",
+    "pbts": "pbts -o dist/index.d.ts dist/index.js",
     "prepublish": "npm run compile"
   },
   "repository": {
@@ -18,15 +19,14 @@
     "Server",
     "Javascript"
   ],
-  "author": "Jonas Helfer <jonas@helfer.email>",
+  "author": "Apollo <community@apollographql.com>",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/apollographql/apollo-server/issues"
   },
   "homepage": "https://github.com/apollographql/apollo-server#readme",
   "devDependencies": {
-    "protobufjs": "^6.8.6",
-    "typescript": "2.8.3"
+    "protobufjs": "~6.8.6"
   },
   "typings": "dist/index.d.ts",
   "typescript": {
