@@ -1,0 +1,37 @@
+{
+  "name": "apollo-engine-report-proto",
+  "version": "0.0.0-beta.0",
+  "description": "Core engine for Apollo GraphQL server",
+  "main": "dist/index.js",
+  "scripts": {
+    "compile": "tsc",
+    "watch": "tsc -w",
+    "prepublish": "npm run compile"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-core"
+  },
+  "keywords": [
+    "GraphQL",
+    "Apollo",
+    "Server",
+    "Javascript"
+  ],
+  "author": "Jonas Helfer <jonas@helfer.email>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/apollographql/apollo-server/issues"
+  },
+  "homepage": "https://github.com/apollographql/apollo-server#readme",
+  "devDependencies": {
+    "protobufjs": "^6.8.6",
+    "typescript": "2.8.3"
+  },
+  "typings": "dist/index.d.ts",
+  "typescript": {
+    "definition": "dist/index.d.ts"
+  },
+  "dependencies": {
+  }
+}
