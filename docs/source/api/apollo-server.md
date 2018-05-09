@@ -66,7 +66,7 @@ The `registerServer` method is from `apollo-server-express`. Middleware registra
 
 * `options`: <`Object`>
   * `app`: <`HttpServer`> _(required)_
-      
+
       Pass the handle to your nexpress server here.
 
   * `server`: <`ApolloServer`> _(required)_
@@ -109,14 +109,14 @@ const typeDefs = gql`
 
 ## `makeExecutableSchema`
 
-The `makeExecutableSchema` method is re-exported from apollo-server as a convenience. 
+The `makeExecutableSchema` method is re-exported from apollo-server as a convenience.
 
 ### Parameters
 
 * `options` : <`Object`>
   * `typeDefs`: <`GraphQLSchema`> _(required)_
-  * `resolvers` : <`Object`> 
-  * `logger` : <`Object`> 
+  * `resolvers` : <`Object`>
+  * `logger` : <`Object`>
   * `allowUndefinedInResolve` = false
   * `resolverValidationOptions` = {}
   * `directiveResolvers` = null
