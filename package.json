@@ -44,7 +44,7 @@
     "@types/sinon": "5.0.1",
 =======
     "@types/mocha": "5.2.0",
-    "@types/node": "9.6.12",
+    "@types/node": "9.6.14",
     "@types/sinon": "4.3.0",
 >>>>>>> chore(deps): update dependency @types/node to v9.6.11
     "chai": "4.1.2",
