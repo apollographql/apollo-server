@@ -35,7 +35,7 @@ export interface Config<Server>
   typeDefs?: string | [string];
   resolvers?: IResolvers;
   schema?: GraphQLSchema;
-  schemaDirectives: Record<string, typeof SchemaDirectiveVisitor>;
+  schemaDirectives?: Record<string, typeof SchemaDirectiveVisitor>;
   context?: Context<any> | ContextFunction<any>;
   subscriptions?: SubscriptionServerOptions | string | false;
   enableIntrospection?: boolean;
@@ -61,7 +61,7 @@ export interface ListenOptions {
   exclusive?: boolean;
   // XXX clean this up
   engineInRequestPath?: boolean;
-  engine?: boolean | Object;
+  engineProxy?: boolean | Record<string, any>;
   // engine launcher options
   engineLauncherOptions?: EngineLauncherOptions;
   // WebSocket options

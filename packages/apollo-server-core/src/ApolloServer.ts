@@ -55,7 +55,7 @@ export class ApolloServerBase<Request = RequestInit> {
   private context?: Context | ContextFunction;
   private requestOptions: Partial<GraphQLOptions<any>>;
   private graphqlPath: string = '/graphql';
-  private engine: ApolloEngine;
+  private engineProxy: ApolloEngine;
   private engineEnabled: boolean = false;
 
   private http?: HttpServer;
@@ -136,25 +136,29 @@ export class ApolloServerBase<Request = RequestInit> {
       this.createSubscriptionServer(this.http, config);
     }
 
-    if (opts.engine || opts.engineInRequestPath) this.createEngine(opts);
+    if (opts.engineProxy || opts.engineInRequestPath) this.createEngine(opts);
 
     return new Promise((success, fail) => {
-      if (this.engine) {
-        this.engine.listen(
-          Object.assign({}, options.engineLauncherOptions, {
-            graphqlPaths: [this.graphqlPath],
-            port: options.port,
-            httpServer: this.http,
-          }),
+      if (this.engineProxy) {
+        this.engineProxy.listen(
+          Object.assign(
+            {},
+            {
+              graphqlPaths: [this.graphqlPath],
+              port: options.port,
+              httpServer: this.http,
+              launcherOptions: options.engineLauncherOptions,
+            },
+          ),
           () => {
-            this.engine.engineListeningAddress.url = require('url').resolve(
-              this.engine.engineListeningAddress.url,
+            this.engineProxy.engineListeningAddress.url = require('url').resolve(
+              this.engineProxy.engineListeningAddress.url,
               this.graphqlPath,
             );
-            success(this.engine.engineListeningAddress);
+            success(this.engineProxy.engineListeningAddress);
           },
         );
-        this.engine.on('error', fail);
+        this.engineProxy.on('error', fail);
         return;
       }
 
@@ -194,7 +198,7 @@ export class ApolloServerBase<Request = RequestInit> {
   }
 
   public async stop() {
-    if (this.engine) await this.engine.stop();
+    if (this.engineProxy) await this.engineProxy.stop();
     if (this.http) await new Promise(s => this.http.close(s));
   }
 
@@ -246,16 +250,16 @@ export class ApolloServerBase<Request = RequestInit> {
     );
   }
 
-  private createEngine({ engineInRequestPath, engine }: ListenOptions) {
+  private createEngine({ engineInRequestPath, engineProxy }: ListenOptions) {
     // only access this onces as its slower on node
     const { ENGINE_API_KEY, ENGINE_CONFIG } = process.env;
-    if (engine === false && (ENGINE_API_KEY || ENGINE_CONFIG)) {
+    if (engineProxy === false && (ENGINE_API_KEY || ENGINE_CONFIG)) {
       console.warn(
         'engine is set to false when creating ApolloServer but either ENGINE_CONFIG or ENGINE_API_KEY was found in the environment',
       );
     }
     let ApolloEngine;
-    if (engine) {
+    if (engineProxy) {
       // detect engine if it is set to true or has a config, and possibly load it
       try {
         ApolloEngine = require('apollo-engine').ApolloEngine;
@@ -266,13 +270,13 @@ export class ApolloServerBase<Request = RequestInit> {
 `);
       }
 
-      this.engine = new ApolloEngine(
-        typeof engine === 'boolean' ? undefined : engine,
+      this.engineProxy = new ApolloEngine(
+        typeof engineProxy === 'boolean' ? undefined : engineProxy,
       );
     }
 
     // XXX should this allow for header overrides from graphql-playground?
-    if (this.engine || engineInRequestPath) this.engineEnabled = true;
+    if (this.engineProxy || engineInRequestPath) this.engineEnabled = true;
   }
 
   request(request: Request) {
