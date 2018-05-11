@@ -8,7 +8,6 @@ import {
   validate,
   execute,
   GraphQLError,
-  formatError,
   specifiedRules,
   ValidationContext,
 } from 'graphql';
@@ -19,39 +18,21 @@ import {
   GraphQLExtensionStack,
 } from 'graphql-extensions';
 import { TracingExtension } from 'apollo-tracing';
+import { CacheControlExtension } from 'apollo-cache-control';
+
 import {
-  CacheControlExtension,
-  CacheControlExtensionOptions,
-} from 'apollo-cache-control';
+  fromGraphQLError,
+  formatApolloErrors,
+  ValidationError,
+  SyntaxError,
+} from './errors';
+
+import { LogStep, LogAction, LogMessage, LogFunction } from './logging';
 
 export interface GraphQLResponse {
   data?: object;
   errors?: Array<GraphQLError & object>;
   extensions?: object;
-}
-
-export enum LogAction {
-  request,
-  parse,
-  validation,
-  execute,
-}
-
-export enum LogStep {
-  start,
-  end,
-  status,
-}
-
-export interface LogMessage {
-  action: LogAction;
-  step: LogStep;
-  key?: string;
-  data?: Object;
-}
-
-export interface LogFunction {
-  (message: LogMessage);
 }
 
 export interface QueryOptions {
@@ -71,32 +52,13 @@ export interface QueryOptions {
   formatResponse?: Function;
   debug?: boolean;
   tracing?: boolean;
-  cacheControl?: boolean | CacheControlExtensionOptions;
+  // cacheControl?: boolean | CacheControlExtensionOptions;
+  cacheControl?: boolean | any;
 }
 
 export function runQuery(options: QueryOptions): Promise<GraphQLResponse> {
   // Fiber-aware Promises run their .then callbacks in Fibers.
   return Promise.resolve().then(() => doRunQuery(options));
-}
-
-function printStackTrace(error: Error) {
-  console.error(error.stack);
-}
-
-function format(errors: Array<Error>, formatter?: Function): Array<Error> {
-  return errors.map(error => {
-    if (formatter !== undefined) {
-      try {
-        return formatter(error);
-      } catch (err) {
-        console.error('Error in formatError function:', err);
-        const newError = new Error('Internal server error');
-        return formatError(newError);
-      }
-    } else {
-      return formatError(error);
-    }
-  }) as Array<Error>;
 }
 
 function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
@@ -164,7 +126,17 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
     } catch (syntaxError) {
       logFunction({ action: LogAction.parse, step: LogStep.end });
       return Promise.resolve({
-        errors: format([syntaxError], options.formatError),
+        errors: formatApolloErrors(
+          [
+            fromGraphQLError(syntaxError, {
+              errorClass: SyntaxError,
+            }),
+          ],
+          {
+            formatter: options.formatError,
+            debug,
+          },
+        ),
       });
     }
   } else {
@@ -178,9 +150,19 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
   logFunction({ action: LogAction.validation, step: LogStep.start });
   const validationErrors = validate(options.schema, documentAST, rules);
   logFunction({ action: LogAction.validation, step: LogStep.end });
+
   if (validationErrors.length) {
     return Promise.resolve({
-      errors: format(validationErrors, options.formatError),
+      errors: formatApolloErrors(
+        validationErrors.map(err =>
+          fromGraphQLError(err, { errorClass: ValidationError }),
+        ),
+        {
+          formatter: options.formatError,
+          logFunction,
+          debug,
+        },
+      ),
     });
   }
 
@@ -202,17 +184,17 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
       ),
     ).then(result => {
       logFunction({ action: LogAction.execute, step: LogStep.end });
-      logFunction({ action: LogAction.request, step: LogStep.end });
 
       let response: GraphQLResponse = {
         data: result.data,
       };
 
       if (result.errors) {
-        response.errors = format(result.errors, options.formatError);
-        if (debug) {
-          result.errors.map(printStackTrace);
-        }
+        response.errors = formatApolloErrors(result.errors, {
+          formatter: options.formatError,
+          logFunction,
+          debug,
+        });
       }
 
       if (extensionStack) {
@@ -225,13 +207,29 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
         response = options.formatResponse(response, options);
       }
 
+      logFunction({
+        action: LogAction.request,
+        step: LogStep.end,
+        key: 'response',
+        data: response,
+      });
+
       return response;
     });
   } catch (executionError) {
     logFunction({ action: LogAction.execute, step: LogStep.end });
     logFunction({ action: LogAction.request, step: LogStep.end });
     return Promise.resolve({
-      errors: format([executionError], options.formatError),
+      //TODO accurate code for this error, which describes this error, which
+      // can occur when:
+      // * variables incorrectly typed/null when nonnullable
+      // * unknown operation/operation name invalid
+      // * operation type is unsupported
+      // Options: PREPROCESSING_FAILED, GRAPHQL_RUNTIME_CHECK_FAILED
+      errors: formatApolloErrors([fromGraphQLError(executionError)], {
+        formatter: options.formatError,
+        debug,
+      }),
     });
   }
 }

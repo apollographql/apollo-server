@@ -3,9 +3,8 @@ import {
   ValidationContext,
   GraphQLFieldResolver,
 } from 'graphql';
-import { LogFunction } from './runQuery';
+import { LogFunction } from './logging';
 import { GraphQLExtension } from 'graphql-extensions';
-import { CacheControlExtensionOptions } from 'apollo-cache-control';
 
 /*
  * GraphQLServerOptions
@@ -22,7 +21,11 @@ import { CacheControlExtensionOptions } from 'apollo-cache-control';
  * - (optional) debug: a boolean that will print additional debug logging if execution errors occur
  *
  */
-export interface GraphQLServerOptions<TContext = any> {
+export interface GraphQLServerOptions<
+  TContext =
+    | (() => Promise<Record<string, any>> | Record<string, any>)
+    | Record<string, any>
+> {
   schema: GraphQLSchema;
   formatError?: Function;
   rootValue?: any;
@@ -34,21 +37,22 @@ export interface GraphQLServerOptions<TContext = any> {
   fieldResolver?: GraphQLFieldResolver<any, TContext>;
   debug?: boolean;
   tracing?: boolean;
-  cacheControl?: boolean | CacheControlExtensionOptions;
+  // cacheControl?: boolean | CacheControlExtensionOptions;
+  cacheControl?: boolean | any;
 }
 
 export default GraphQLServerOptions;
 
 export async function resolveGraphqlOptions(
-  options: GraphQLServerOptions | Function,
-  ...args
+  options:
+    | GraphQLServerOptions
+    | ((
+        ...args: Array<any>
+      ) => Promise<GraphQLServerOptions> | GraphQLServerOptions),
+  ...args: Array<any>
 ): Promise<GraphQLServerOptions> {
   if (typeof options === 'function') {
-    try {
-      return await options(...args);
-    } catch (e) {
-      throw new Error(`Invalid options provided to ApolloServer: ${e.message}`);
-    }
+    return await options(...args);
   } else {
     return options;
   }
