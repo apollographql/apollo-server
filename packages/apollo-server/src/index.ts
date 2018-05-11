@@ -53,9 +53,9 @@ export class ApolloServer extends ApolloServerBase<express.Request> {
             res.json({ status: 'pass' });
           }
         });
-
-        await registerServer({ app, path: '/', server: this });
       }
+
+      await registerServer({ app, path: '/', server: this });
     }
 
     return super.listen(opts);
