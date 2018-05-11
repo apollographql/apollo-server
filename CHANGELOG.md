@@ -4,9 +4,8 @@ All of the packages in the `apollo-server` repo are released with the same versi
 
 ### vNEXT
 
-### v1.3.7
-
 * [Issue #626] Integrate apollo-fastify plugin. [PR #1013](https://github.com/apollographql/apollo-server/pull/1013)
+* Upgrade `subscription-transport-ws` to 0.9.9 for Graphiql
 
 ### v1.3.6
 
