@@ -35,9 +35,10 @@ export const registerServer = async ({
       if (request.path !== path) {
         return h.continue;
       }
+
       if (!server.disableTools && request.method === 'get') {
         //perform more expensive content-type check only if necessary
-        const accept = parseAll(request.app);
+        const accept = parseAll(request.headers);
         const types = accept.mediaTypes as string[];
         const prefersHTML =
           types.find(
@@ -50,10 +51,11 @@ export const registerServer = async ({
               renderPlaygroundPage({
                 subscriptionsEndpoint: server.subscriptions && path,
                 endpoint: path,
-                version: '',
+                version: '1.4.0',
               }),
             )
-            .type('text/html');
+            .type('text/html')
+            .takeover();
         }
       }
       return h.continue;
@@ -73,11 +75,27 @@ export const registerServer = async ({
 
   server.use({ path, getHttp: () => app.listener });
 
-  const listen = server.listen;
+  const listen = server.listen.bind(server);
   server.listen = async options => {
     //requires that autoListen is false, so that
     //hapi sets up app.listener without start
     await app.start();
+
+    //While this is not strictly necessary, it ensures that apollo server calls
+    //listen first, setting the port. Otherwise the hapi server constructor
+    //sets the port
+    if (app.listener.listening) {
+      throw Error(
+        `
+Ensure that constructor of Hapi server sets autoListen to false, as follows:
+
+const app = Hapi.server({
+  autoListen: false,
+  //other parameters
+});
+        `,
+      );
+    }
 
     //starts the hapi listener at a random port when engine proxy used,
     //otherwise will start the server at the provided port
