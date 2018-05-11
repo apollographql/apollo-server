@@ -37,7 +37,6 @@ export interface Config<Server>
   schema?: GraphQLSchema;
   schemaDirectives?: Record<string, typeof SchemaDirectiveVisitor>;
   context?: Context<any> | ContextFunction<any>;
-  subscriptions?: SubscriptionServerOptions | string | false;
   enableIntrospection?: boolean;
   mocks?: boolean | IMocks;
 }
@@ -66,6 +65,7 @@ export interface ListenOptions {
   engineLauncherOptions?: EngineLauncherOptions;
   // WebSocket options
   keepAlive?: number;
+  subscriptions?: SubscriptionServerOptions | string | false;
   onConnect?: (
     connectionParams: Object,
     websocket: WebSocket,
@@ -82,7 +82,6 @@ export interface MiddlewareOptions {
 
 export interface RegistrationOptions {
   path: string;
-  // subscriptions?: boolean;
   getHttp: () => HttpServer;
 }
 
