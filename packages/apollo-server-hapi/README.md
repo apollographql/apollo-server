@@ -13,46 +13,37 @@ npm install apollo-server-hapi
 
 ## Usage
 
-With the Hapi plugins `graphqlHapi` and `graphiqlHapi` you can pass a route object that includes options to be applied to the route. The example below enables CORS on the `/graphql` route.
+After constructing Apollo server, a hapi server can be enabled with a call to `registerServer`. Ensure that `autoListen` is set to false in the `Hapi.server` constructor.
 
 The code below requires Hapi 17 or higher.
 
 ```js
-import Hapi from 'hapi';
-import { graphqlHapi } from 'apollo-server-hapi';
+const Hapi = require('hapi');
+const { ApolloServer } = require('apollo-server');
+const { registerServer } = require('apollo-server-hapi');
 
 const HOST = 'localhost';
-const PORT = 3000;
 
 async function StartServer() {
-  const server = new Hapi.server({
+  const server = new ApolloServer({ typeDefs, resolvers });
+
+  //Note: autoListen is required, since Apollo Server will start the listener
+  const app = new Hapi.server({
+    autoListen: false,
     host: HOST,
-    port: PORT,
   });
 
-  await server.register({
-    plugin: graphqlHapi,
-    options: {
-      path: '/graphql',
-      graphqlOptions: {
-        schema: myGraphQLSchema,
-      },
-      route: {
-        cors: true,
-      },
-    },
+  //apply other plugins
+
+  await registerServer({ server, app });
+
+  //port is optional and defaults to 4000
+  server.listen({ port: 4000 }).then(({ url }) => {
+    console.log(`🚀  Server ready at ${url}`);
   });
-
-  try {
-    await server.start();
-  } catch (err) {
-    console.log(`Error while starting server: ${err.message}`);
-  }
-
-  console.log(`Server running at: ${server.info.uri}`);
 }
 
-StartServer();
+StartServer().catch(error => console.log(e));
 ```
 
 ## Principles
