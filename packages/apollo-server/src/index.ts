@@ -1,5 +1,6 @@
 import * as express from 'express';
 import { registerServer } from 'apollo-server-express';
+import { OptionsJson } from 'body-parser';
 
 import {
   ApolloServerBase,
@@ -17,6 +18,7 @@ export class ApolloServer extends ApolloServerBase<express.Request> {
     opts: ListenOptions & {
       onHealthCheck?: (req: express.Request) => Promise<any>;
       disableHealthCheck?: boolean;
+      bodyParserConfig?: OptionsJson;
     } = {},
   ): Promise<ServerInfo> {
     //defensive copy
