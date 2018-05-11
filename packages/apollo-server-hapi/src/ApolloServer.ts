@@ -10,7 +10,6 @@ export interface ServerRegistration {
   app: hapi.Server;
   server: ApolloServerBase<hapi.Request>;
   path?: string;
-  subscriptions?: boolean;
 }
 
 export interface HapiListenOptions {
@@ -49,7 +48,7 @@ export const registerServer = async ({
           return h
             .response(
               renderPlaygroundPage({
-                subscriptionsEndpoint: server.subscriptions && path,
+                subscriptionsEndpoint: server.subscriptionsEnabled && path,
                 endpoint: path,
                 version: '1.4.0',
               }),
