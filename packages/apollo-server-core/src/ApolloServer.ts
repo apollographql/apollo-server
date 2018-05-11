@@ -141,15 +141,12 @@ export class ApolloServerBase<Request = RequestInit> {
     return new Promise((success, fail) => {
       if (this.engineProxy) {
         this.engineProxy.listen(
-          Object.assign(
-            {},
-            {
-              graphqlPaths: [this.graphqlPath],
-              port: options.port,
-              httpServer: this.http,
-              launcherOptions: options.engineLauncherOptions,
-            },
-          ),
+          {
+            graphqlPaths: [this.graphqlPath],
+            port: options.port,
+            httpServer: this.http,
+            launcherOptions: options.engineLauncherOptions,
+          },
           () => {
             this.engineProxy.engineListeningAddress.url = require('url').resolve(
               this.engineProxy.engineListeningAddress.url,
