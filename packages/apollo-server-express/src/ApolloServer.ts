@@ -12,7 +12,6 @@ export interface ServerRegistration {
   app: express.Application;
   server: ApolloServerBase<express.Request>;
   path?: string;
-  subscriptions?: boolean;
   cors?: corsMiddleware.CorsOptions;
   bodyParserConfig?: OptionsJson;
 }
@@ -50,7 +49,7 @@ export const registerServer = async ({
         if (prefersHTML) {
           return gui({
             endpoint: path,
-            subscriptionsEndpoint: server.subscriptions && path,
+            subscriptionsEndpoint: server.subscriptionsEnabled && path,
           })(req, res, next);
         }
       }

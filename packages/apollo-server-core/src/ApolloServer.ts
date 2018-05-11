@@ -48,8 +48,8 @@ const NoIntrospection = (context: ValidationContext) => ({
 });
 
 export class ApolloServerBase<Request = RequestInit> {
-  public subscriptions: Config<Request>['subscriptions'];
   public disableTools: boolean = !isDev;
+  public subscriptionsEnabled: boolean = false;
 
   private schema: GraphQLSchema;
   private context?: Context | ContextFunction;
@@ -67,7 +67,6 @@ export class ApolloServerBase<Request = RequestInit> {
       resolvers,
       schema,
       schemaDirectives,
-      subscriptions,
       typeDefs,
       enableIntrospection,
       mocks,
@@ -108,8 +107,6 @@ export class ApolloServerBase<Request = RequestInit> {
         mocks: typeof mocks === 'boolean' ? {} : mocks,
       });
     }
-
-    this.subscriptions = subscriptions;
   }
 
   public use({ getHttp, path }: RegistrationOptions) {
@@ -121,18 +118,20 @@ export class ApolloServerBase<Request = RequestInit> {
 
   public listen(opts: ListenOptions = {}): Promise<ServerInfo> {
     this.http = this.getHttp();
+
     const options = {
       port: process.env.PORT || 4000,
       ...opts,
     };
 
-    if (this.subscriptions !== false) {
+    if (opts.subscriptions !== false) {
       const config: any =
-        this.subscriptions === true || typeof this.subscriptions === 'undefined'
+        opts.subscriptions === true || typeof opts.subscriptions === 'undefined'
           ? {
               path: this.graphqlPath,
             }
-          : this.subscriptions;
+          : opts.subscriptions;
+      this.subscriptionsEnabled = true;
       this.createSubscriptionServer(this.http, config);
     }
 
