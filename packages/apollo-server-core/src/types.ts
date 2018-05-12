@@ -2,6 +2,7 @@ import { GraphQLSchema } from 'graphql';
 import { SchemaDirectiveVisitor, IResolvers, IMocks } from 'graphql-tools';
 import { ConnectionContext } from 'subscriptions-transport-ws';
 import { Server as HttpServer } from 'http';
+import { ListenOptions as HttpListenOptions } from 'net';
 
 import { GraphQLServerOptions as GraphQLOptions } from './graphqlOptions';
 
@@ -11,10 +12,14 @@ export type ContextFunction<T = any> = (
 ) => Promise<Context<T>>;
 
 export interface SubscriptionServerOptions {
-  path?: string;
-  onConnect?: Function;
-  onDisconnect?: Function;
+  path: string;
   keepAlive?: number;
+  onConnect?: (
+    connectionParams: Object,
+    websocket: WebSocket,
+    context: ConnectionContext,
+  ) => any;
+  onDisconnect?: (websocket: WebSocket, context: ConnectionContext) => any;
 }
 
 export interface Config<Server>
@@ -65,14 +70,7 @@ export interface ListenOptions {
   // engine launcher options
   engineLauncherOptions?: EngineLauncherOptions;
   // WebSocket options
-  keepAlive?: number;
-  subscriptions?: SubscriptionServerOptions | string | false;
-  onConnect?: (
-    connectionParams: Object,
-    websocket: WebSocket,
-    context: ConnectionContext,
-  ) => any;
-  onDisconnect?: (websocket: WebSocket, context: ConnectionContext) => any;
+  subscriptions?: Partial<SubscriptionServerOptions> | string | false;
 }
 
 export interface MiddlewareOptions {

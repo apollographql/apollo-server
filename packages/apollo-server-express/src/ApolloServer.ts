@@ -49,7 +49,7 @@ export const registerServer = async ({
         if (prefersHTML) {
           return gui({
             endpoint: path,
-            subscriptionsEndpoint: server.subscriptionsEnabled && path,
+            subscriptionsEndpoint: server.subscriptionsPath,
           })(req, res, next);
         }
       }

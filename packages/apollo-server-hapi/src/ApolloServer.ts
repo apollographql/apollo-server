@@ -48,7 +48,7 @@ export const registerServer = async ({
           return h
             .response(
               renderPlaygroundPage({
-                subscriptionsEndpoint: server.subscriptionsEnabled && path,
+                subscriptionsEndpoint: server.subscriptionsPath,
                 endpoint: path,
                 version: '1.4.0',
               }),

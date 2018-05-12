@@ -29,6 +29,7 @@ import {
   ServerInfo,
   Context,
   ContextFunction,
+  SubscriptionServerOptions,
 } from './types';
 
 const env = process.env.NODE_ENV;
@@ -49,7 +50,8 @@ const NoIntrospection = (context: ValidationContext) => ({
 
 export class ApolloServerBase<Request = RequestInit> {
   public disableTools: boolean = !isDev;
-  public subscriptionsEnabled: boolean = false;
+  // set in the listen function if subscriptions are enabled
+  public subscriptionsPath: string;
 
   private schema: GraphQLSchema;
   private context?: Context | ContextFunction;
@@ -123,13 +125,21 @@ export class ApolloServerBase<Request = RequestInit> {
     };
 
     if (opts.subscriptions !== false) {
-      const config: any =
-        opts.subscriptions === true || typeof opts.subscriptions === 'undefined'
-          ? {
-              path: this.graphqlPath,
-            }
-          : opts.subscriptions;
-      this.subscriptionsEnabled = true;
+      let config: SubscriptionServerOptions;
+      if (
+        opts.subscriptions === true ||
+        typeof opts.subscriptions === 'undefined'
+      ) {
+        config = {
+          path: this.graphqlPath,
+        };
+      } else if (typeof opts.subscriptions === 'string') {
+        config = { path: opts.subscriptions };
+      } else {
+        config = { path: this.graphqlPath, ...opts.subscriptions };
+      }
+
+      this.subscriptionsPath = config.path;
       this.createSubscriptionServer(this.http, config);
     }
 
@@ -201,8 +211,11 @@ export class ApolloServerBase<Request = RequestInit> {
     if (this.http) await new Promise(s => this.http.close(s));
   }
 
-  private createSubscriptionServer(server: HttpServer, config: ListenOptions) {
-    const { onDisconnect, onConnect, keepAlive } = config;
+  private createSubscriptionServer(
+    server: HttpServer,
+    config: SubscriptionServerOptions,
+  ) {
+    const { onDisconnect, onConnect, keepAlive, path } = config;
     SubscriptionServer.create(
       {
         schema: this.schema,
@@ -244,7 +257,7 @@ export class ApolloServerBase<Request = RequestInit> {
       },
       {
         server,
-        path: this.graphqlPath,
+        path: path,
       },
     );
   }
