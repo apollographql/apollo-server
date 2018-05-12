@@ -39,7 +39,7 @@ const NoIntrospection = (context: ValidationContext) => ({
     if (node.name.value === '__schema' || node.name.value === '__type') {
       context.reportError(
         new GraphQLError(
-          'GraphQL introspection is not allowed by Apollo Server, but the query containted __schema or __type. To enable introspection, pass introspection: true to ApolloServer in production',
+          'GraphQL introspection is not allowed by Apollo Server, but the query contained __schema or __type. To enable introspection, pass introspection: true to ApolloServer in production',
           [node],
         ),
       );
@@ -93,9 +93,7 @@ export class ApolloServerBase<Request = RequestInit> {
     this.schema = schema
       ? schema
       : makeExecutableSchema({
-          typeDefs: Array.isArray(typeDefs)
-            ? typeDefs.reduce((prev, next) => prev + '\n' + next)
-            : typeDefs,
+          typeDefs: Array.isArray(typeDefs) ? typeDefs.join('\n') : typeDefs,
           schemaDirectives,
           resolvers,
         });
@@ -137,7 +135,7 @@ export class ApolloServerBase<Request = RequestInit> {
 
     if (opts.engineProxy || opts.engineInRequestPath) this.createEngine(opts);
 
-    return new Promise((success, fail) => {
+    return new Promise((resolve, reject) => {
       if (this.engineProxy) {
         this.engineProxy.listen(
           {
@@ -151,15 +149,17 @@ export class ApolloServerBase<Request = RequestInit> {
               this.engineProxy.engineListeningAddress.url,
               this.graphqlPath,
             );
-            success(this.engineProxy.engineListeningAddress);
+            resolve(this.engineProxy.engineListeningAddress);
           },
         );
-        this.engineProxy.on('error', fail);
+        this.engineProxy.on('error', reject);
         return;
       }
 
       // all options for http listeners
       // https://nodejs.org/api/net.html#net_server_listen_options_callback
+      // https://github.com/apollographql/apollo-server/pull/979/files/33ea0c92a1e4e76c8915ff08806f15dae391e1f0#discussion_r184470435
+      // https://github.com/apollographql/apollo-server/pull/979#discussion_r184471445
       this.http.listen(
         {
           port: options.port,
@@ -169,25 +169,28 @@ export class ApolloServerBase<Request = RequestInit> {
           exclusive: options.exclusive,
         },
         () => {
-          const la: any = this.http.address();
+          const listeningAddress: any = this.http.address();
           // Convert IPs which mean "any address" (IPv4 or IPv6) into localhost
           // corresponding loopback ip. Note that the url field we're setting is
           // primarily for consumption by our test suite. If this heuristic is
           // wrong for your use case, explicitly specify a frontend host (in the
           // `frontends.host` field in your engine config, or in the `host`
           // option to ApolloServer.listen).
-          let hostForUrl = la.address;
-          if (la.address === '' || la.address === '::')
+          let hostForUrl = listeningAddress.address;
+          if (
+            listeningAddress.address === '' ||
+            listeningAddress.address === '::'
+          )
             hostForUrl = 'localhost';
 
-          la.url = require('url').format({
+          listeningAddress.url = require('url').format({
             protocol: 'http',
             hostname: hostForUrl,
-            port: la.port,
+            port: listeningAddress.port,
             pathname: this.graphqlPath,
           });
 
-          success(la);
+          resolve(listeningAddress);
         },
       );
     });
@@ -286,8 +289,8 @@ export class ApolloServerBase<Request = RequestInit> {
 
     return {
       schema: this.schema,
-      tracing: Boolean(this.engineEnabled),
-      cacheControl: Boolean(this.engineEnabled),
+      tracing: this.engineEnabled,
+      cacheControl: this.engineEnabled,
       context,
       // allow overrides from options
       ...this.requestOptions,

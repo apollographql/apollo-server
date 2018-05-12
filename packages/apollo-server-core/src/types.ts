@@ -37,7 +37,7 @@ export interface Config<Server>
   schema?: GraphQLSchema;
   schemaDirectives?: Record<string, typeof SchemaDirectiveVisitor>;
   context?: Context<any> | ContextFunction<any>;
-  enableIntrospection?: boolean;
+  introspection?: boolean;
   mocks?: boolean | IMocks;
 }
 
@@ -53,6 +53,7 @@ export interface EngineLauncherOptions {
 export interface ListenOptions {
   // node http listen options
   // https://nodejs.org/api/net.html#net_server_listen_options_callback
+  // https://github.com/apollographql/apollo-server/pull/979#discussion_r184483094
   port?: string | number;
   host?: string;
   path?: string;
