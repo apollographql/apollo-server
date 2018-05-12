@@ -70,17 +70,17 @@ export class ApolloServerBase<Request = RequestInit> {
       schema,
       schemaDirectives,
       typeDefs,
-      enableIntrospection,
+      introspection,
       mocks,
       ...requestOptions
     } = config;
 
     // if this is local dev, we want graphql gui and introspection to be turned on
-    // in production, you can manually turn these on by passing { enableIntrospection: true }
+    // in production, you can manually turn these on by passing { introspection: true }
     // to the constructor of ApolloServer
     // we use this.disableTools to track this internally for later use when
     // constructing middleware by frameworks
-    if (enableIntrospection || isDev) this.disableTools = false;
+    if (introspection || isDev) this.disableTools = false;
 
     if (this.disableTools) {
       const noIntro = [NoIntrospection];
@@ -257,7 +257,7 @@ export class ApolloServerBase<Request = RequestInit> {
       },
       {
         server,
-        path: path,
+        path,
       },
     );
   }
