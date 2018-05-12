@@ -47,6 +47,7 @@
   "dependencies": {
     "apollo-cache-control": "^0.1.1",
     "apollo-tracing": "^0.1.0",
+    "apollo-upload-server": "^5.0.0",
     "graphql-extensions": "^0.0.x",
     "graphql-subscriptions": "^0.5.8",
     "graphql-tools": "^3.0.2",
