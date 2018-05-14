@@ -51,11 +51,11 @@ export class ApolloServerBase<Request = RequestInit> {
   public disableTools: boolean;
   // set in the listen function if subscriptions are enabled
   public subscriptionsPath: string;
-  private fileUploadConfig: boolean | Record<string, any>;
+  public fileUploadConfig: boolean | Record<string, any>;
+  public requestOptions: Partial<GraphQLOptions<any>>;
 
   private schema: GraphQLSchema;
   private context?: Context | ContextFunction;
-  private requestOptions: Partial<GraphQLOptions<any>>;
   private graphqlPath: string = '/graphql';
   private engineProxy: ApolloEngine;
   private engineEnabled: boolean = false;
