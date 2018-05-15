@@ -7,16 +7,17 @@ import {
   GraphQLResolveInfo,
 } from 'graphql';
 
+export type EndHandler = () => void;
+type StartHandler = () => EndHandler | void;
+type HandlerSelector<TContext = any> = (
+  ext: GraphQLExtension<TContext>,
+) => StartHandler | void;
+
 export class GraphQLExtension<TContext = any> {
-  public requestDidStart?(): void;
-
-  public parsingDidStart?(): void;
-  public parsingDidEnd?(): void;
-
-  public validationDidStart?(): void;
-  public validationDidEnd?(): void;
-
-  public executionDidStart?(): void;
+  public requestDidStart?(): EndHandler | void;
+  public parsingDidStart?(): EndHandler | void;
+  public validationDidStart?(): EndHandler | void;
+  public executionDidStart?(): EndHandler | void;
 
   public willResolveField?(
     source: any,
@@ -25,66 +26,27 @@ export class GraphQLExtension<TContext = any> {
     info: GraphQLResolveInfo,
   ): ((result: any) => void) | void;
 
-  public executionDidEnd?(): void;
-
-  public requestDidEnd?(): void;
-
   public format?(): [string, any] | undefined;
 }
 
 export class GraphQLExtensionStack<TContext = any> {
-  private extensions: GraphQLExtension[];
+  private extensions: GraphQLExtension<TContext>[];
 
-  constructor(extensions: GraphQLExtension[]) {
+  constructor(extensions: GraphQLExtension<TContext>[]) {
     this.extensions = extensions;
   }
 
-  public requestDidStart(): void {
-    for (const extension of this.extensions) {
-      if (extension.requestDidStart) {
-        extension.requestDidStart();
-      }
-    }
+  public requestDidStart(): (() => void) {
+    return this.handleDidStart(ext => ext.requestDidStart);
   }
-
-  public parsingDidStart() {
-    for (const extension of this.extensions) {
-      if (extension.parsingDidStart) {
-        extension.parsingDidStart();
-      }
-    }
+  public parsingDidStart(): (() => void) {
+    return this.handleDidStart(ext => ext.parsingDidStart);
   }
-
-  public parsingDidEnd() {
-    for (const extension of this.extensions) {
-      if (extension.parsingDidEnd) {
-        extension.parsingDidEnd();
-      }
-    }
+  public validationDidStart(): (() => void) {
+    return this.handleDidStart(ext => ext.validationDidStart);
   }
-
-  public validationDidStart() {
-    for (const extension of this.extensions) {
-      if (extension.validationDidStart) {
-        extension.validationDidStart();
-      }
-    }
-  }
-
-  public validationDidEnd() {
-    for (const extension of this.extensions) {
-      if (extension.validationDidEnd) {
-        extension.validationDidEnd();
-      }
-    }
-  }
-
-  public executionDidStart() {
-    for (const extension of this.extensions) {
-      if (extension.executionDidStart) {
-        extension.executionDidStart();
-      }
-    }
+  public executionDidStart(): (() => void) {
+    return this.handleDidStart(ext => ext.executionDidStart);
   }
 
   public willResolveField(
@@ -108,22 +70,6 @@ export class GraphQLExtensionStack<TContext = any> {
     };
   }
 
-  public executionDidEnd() {
-    for (const extension of this.extensions) {
-      if (extension.executionDidEnd) {
-        extension.executionDidEnd();
-      }
-    }
-  }
-
-  public requestDidEnd() {
-    for (const extension of this.extensions) {
-      if (extension.requestDidEnd) {
-        extension.requestDidEnd();
-      }
-    }
-  }
-
   public format() {
     return (this.extensions
       .map(extension => extension.format && extension.format())
@@ -131,6 +77,26 @@ export class GraphQLExtensionStack<TContext = any> {
       (extensions, [key, value]) => Object.assign(extensions, { [key]: value }),
       {},
     );
+  }
+
+  private handleDidStart(selectHandler: HandlerSelector): EndHandler {
+    const endHandlers: EndHandler[] = [];
+    this.extensions.forEach(extension => {
+      const startHandler = selectHandler(extension);
+      if (startHandler) {
+        const endHandler = startHandler();
+        if (endHandler) {
+          endHandlers.push(endHandler);
+        }
+      }
+    });
+    return () => {
+      // We run end handlers in reverse order of start handlers. That way, the
+      // first handler in the stack "surrounds" the entire event's process
+      // (helpful for tracing/reporting!)
+      endHandlers.reverse();
+      endHandlers.forEach(endHandler => endHandler());
+    };
   }
 }
 
