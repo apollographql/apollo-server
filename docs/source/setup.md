@@ -50,7 +50,7 @@ The `GraphQLOptions` object has the following properties:
 
 <h3 id="graphqlOptions.schema">schema</h3>
 
-The GraphQL.js schema object that represents your GraphQL schema. You can create this directly using [GraphQL.js](https://github.com/graphql/graphql-js), the reference GraphQL implementation, or you can use graphql-tools, which makes it simple to combine a schema and resolvers. [See en example.](./example.html)
+The GraphQL.js schema object that represents your GraphQL schema. You can create this directly using [GraphQL.js](https://github.com/graphql/graphql-js), the reference GraphQL implementation, or you can use graphql-tools, which makes it simple to combine a schema and resolvers. [See an example.](./example.html)
 
 <h3 id="graphqlOptions.context">context</h3>
 
@@ -106,7 +106,7 @@ const GraphQLOptions = {
   // * - (optional) validationRules: extra validation rules applied to requests
   validationRules?: Array<ValidationRule>,
 
-  // a function applied to each graphQL execution result
+  // a function applied to each GraphQL execution result
   formatResponse?: Function
 
   // a custom default field resolver
