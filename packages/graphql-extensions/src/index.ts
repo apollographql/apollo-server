@@ -35,10 +35,8 @@ export class GraphQLExtension<TContext = any> {
 export class GraphQLExtensionStack<TContext = any> {
   private extensions: GraphQLExtension[];
 
-  constructor(extensions: (typeof GraphQLExtension | GraphQLExtension)[]) {
-    this.extensions = extensions.map(extension => {
-      return typeof extension === 'function' ? new extension() : extension;
-    });
+  constructor(extensions: GraphQLExtension[]) {
+    this.extensions = extensions;
   }
 
   public requestDidStart(): void {
