@@ -4,32 +4,32 @@ import {
   getNamedType,
   GraphQLField,
   defaultFieldResolver,
-  GraphQLResolveInfo
+  GraphQLResolveInfo,
 } from 'graphql';
 
 export class GraphQLExtension<TContext = any> {
-  requestDidStart?(): void;
+  public requestDidStart?(): void;
 
-  parsingDidStart?(): void;
-  parsingDidEnd?(): void;
+  public parsingDidStart?(): void;
+  public parsingDidEnd?(): void;
 
-  validationDidStart?(): void;
-  validationDidEnd?(): void;
+  public validationDidStart?(): void;
+  public validationDidEnd?(): void;
 
-  executionDidStart?(): void;
+  public executionDidStart?(): void;
 
-  willResolveField?(
+  public willResolveField?(
     source: any,
     args: { [argName: string]: any },
     context: TContext,
-    info: GraphQLResolveInfo
+    info: GraphQLResolveInfo,
   ): ((result: any) => void) | void;
 
-  executionDidEnd?(): void;
+  public executionDidEnd?(): void;
 
-  requestDidEnd?(): void;
+  public requestDidEnd?(): void;
 
-  format?(): [string, any] | undefined;
+  public format?(): [string, any] | undefined;
 }
 
 export class GraphQLExtensionStack<TContext = any> {
@@ -41,7 +41,7 @@ export class GraphQLExtensionStack<TContext = any> {
     });
   }
 
-  requestDidStart(): void {
+  public requestDidStart(): void {
     for (const extension of this.extensions) {
       if (extension.requestDidStart) {
         extension.requestDidStart();
@@ -49,7 +49,7 @@ export class GraphQLExtensionStack<TContext = any> {
     }
   }
 
-  parsingDidStart() {
+  public parsingDidStart() {
     for (const extension of this.extensions) {
       if (extension.parsingDidStart) {
         extension.parsingDidStart();
@@ -57,7 +57,7 @@ export class GraphQLExtensionStack<TContext = any> {
     }
   }
 
-  parsingDidEnd() {
+  public parsingDidEnd() {
     for (const extension of this.extensions) {
       if (extension.parsingDidEnd) {
         extension.parsingDidEnd();
@@ -65,7 +65,7 @@ export class GraphQLExtensionStack<TContext = any> {
     }
   }
 
-  validationDidStart() {
+  public validationDidStart() {
     for (const extension of this.extensions) {
       if (extension.validationDidStart) {
         extension.validationDidStart();
@@ -73,7 +73,7 @@ export class GraphQLExtensionStack<TContext = any> {
     }
   }
 
-  validationDidEnd() {
+  public validationDidEnd() {
     for (const extension of this.extensions) {
       if (extension.validationDidEnd) {
         extension.validationDidEnd();
@@ -81,7 +81,7 @@ export class GraphQLExtensionStack<TContext = any> {
     }
   }
 
-  executionDidStart() {
+  public executionDidStart() {
     for (const extension of this.extensions) {
       if (extension.executionDidStart) {
         extension.executionDidStart();
@@ -89,24 +89,28 @@ export class GraphQLExtensionStack<TContext = any> {
     }
   }
 
-  willResolveField(
+  public willResolveField(
     source: any,
     args: { [argName: string]: any },
     context: TContext,
-    info: GraphQLResolveInfo
+    info: GraphQLResolveInfo,
   ) {
     const handlers = this.extensions
-      .map(extension => extension.willResolveField && extension.willResolveField(source, args, context, info))
+      .map(
+        extension =>
+          extension.willResolveField &&
+          extension.willResolveField(source, args, context, info),
+      )
       .filter(x => x) as ((result: any) => void)[];
 
     return (result: any) => {
       for (const handler of handlers) {
         handler(result);
       }
-    }
+    };
   }
 
-  executionDidEnd() {
+  public executionDidEnd() {
     for (const extension of this.extensions) {
       if (extension.executionDidEnd) {
         extension.executionDidEnd();
@@ -114,7 +118,7 @@ export class GraphQLExtensionStack<TContext = any> {
     }
   }
 
-  requestDidEnd() {
+  public requestDidEnd() {
     for (const extension of this.extensions) {
       if (extension.requestDidEnd) {
         extension.requestDidEnd();
@@ -122,15 +126,19 @@ export class GraphQLExtensionStack<TContext = any> {
     }
   }
 
-  format() {
-    return (this.extensions.map(extension => extension.format && extension.format()).filter(x => x) as [
-      string,
-      any
-    ][]).reduce((extensions, [key, value]) => Object.assign(extensions, { [key]: value }), {});
+  public format() {
+    return (this.extensions
+      .map(extension => extension.format && extension.format())
+      .filter(x => x) as [string, any][]).reduce(
+      (extensions, [key, value]) => Object.assign(extensions, { [key]: value }),
+      {},
+    );
   }
 }
 
-export function enableGraphQLExtensions(schema: GraphQLSchema & { _extensionsEnabled?: boolean }) {
+export function enableGraphQLExtensions(
+  schema: GraphQLSchema & { _extensionsEnabled?: boolean },
+) {
   if (schema._extensionsEnabled) {
     return schema;
   }
@@ -146,19 +154,26 @@ function wrapField(field: GraphQLField<any, any>): void {
 
   field.resolve = (source, args, context, info) => {
     const extensionStack = context && context._extensionStack;
-    const handler = extensionStack && extensionStack.willResolveField(source, args, context, info);
+    const handler =
+      extensionStack &&
+      extensionStack.willResolveField(source, args, context, info);
 
     // If no resolver has been defined for a field, use the default field resolver
     // (which matches the behavior of graphql-js when there is no explicit resolve function defined).
     // TODO: Find a way to respect custom field resolvers, see https://github.com/graphql/graphql-js/pull/865
     try {
-      const result = (fieldResolver || defaultFieldResolver)(source, args, context, info);
+      const result = (fieldResolver || defaultFieldResolver)(
+        source,
+        args,
+        context,
+        info,
+      );
       whenResultIsFinished(result, () => {
-        handler && handler(result);
+        if (handler) handler(result);
       });
       return result;
     } catch (error) {
-      handler && handler();
+      if (handler) handler();
       throw error;
     }
   };
@@ -191,7 +206,10 @@ function forEachField(schema: GraphQLSchema, fn: FieldIteratorFn): void {
   Object.keys(typeMap).forEach(typeName => {
     const type = typeMap[typeName];
 
-    if (!getNamedType(type).name.startsWith('__') && type instanceof GraphQLObjectType) {
+    if (
+      !getNamedType(type).name.startsWith('__') &&
+      type instanceof GraphQLObjectType
+    ) {
       const fields = type.getFields();
       Object.keys(fields).forEach(fieldName => {
         const field = fields[fieldName];
@@ -201,4 +219,8 @@ function forEachField(schema: GraphQLSchema, fn: FieldIteratorFn): void {
   });
 }
 
-export type FieldIteratorFn = (fieldDef: GraphQLField<any, any>, typeName: string, fieldName: string) => void;
+export type FieldIteratorFn = (
+  fieldDef: GraphQLField<any, any>,
+  typeName: string,
+  fieldName: string,
+) => void;
