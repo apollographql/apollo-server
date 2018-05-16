@@ -38,11 +38,7 @@ jobs:
   # at https://hub.docker.com/r/circleci/node/.
   Node.js 4:
     docker: [ { image: 'circleci/node:4' } ]
-    steps:
-    - checkout
-    - run: npm --version
-    - run: npm install
-    - run: npm run travis
+    <<: *common_test_steps
 
   Node.js 6:
     docker: [ { image: 'circleci/node:6' } ]
