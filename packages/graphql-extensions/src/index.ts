@@ -5,6 +5,7 @@ import {
   GraphQLField,
   defaultFieldResolver,
   GraphQLResolveInfo,
+  ExecutionArgs,
 } from 'graphql';
 
 export type EndHandler = () => void;
@@ -12,6 +13,11 @@ type StartHandler = () => EndHandler | void;
 type HandlerSelector<TContext = any> = (
   ext: GraphQLExtension<TContext>,
 ) => StartHandler | void;
+
+export interface GraphQLExtensionOptions {
+  executionArgs: ExecutionArgs;
+  // XXX Will add a W3C-style Request here later
+}
 
 export class GraphQLExtension<TContext = any> {
   public requestDidStart?(): EndHandler | void;
@@ -32,8 +38,18 @@ export class GraphQLExtension<TContext = any> {
 export class GraphQLExtensionStack<TContext = any> {
   private extensions: GraphQLExtension<TContext>[];
 
-  constructor(extensions: GraphQLExtension<TContext>[]) {
-    this.extensions = extensions;
+  constructor(
+    extensions: (
+      | ((o: GraphQLExtensionOptions) => GraphQLExtension<TContext>)
+      | GraphQLExtension<TContext>)[],
+    options: GraphQLExtensionOptions,
+  ) {
+    this.extensions = extensions.map(
+      extensionOrFactory =>
+        typeof extensionOrFactory === 'function'
+          ? extensionOrFactory(options)
+          : extensionOrFactory,
+    );
   }
 
   public requestDidStart(): (() => void) {
