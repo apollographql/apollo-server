@@ -151,6 +151,9 @@ export function formatApolloErrors(
     debug?: boolean;
   },
 ): Array<ApolloError> {
+  if (!options) {
+    return errors.map(error => enrichError(error));
+  }
   const { formatter, debug, logFunction } = options;
 
   const enrichedErrors = errors.map(error => enrichError(error, debug));
