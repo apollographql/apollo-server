@@ -13,7 +13,6 @@
     "postinstall": "lerna bootstrap",
     "pretest": "npm run compile",
     "test": "npm run testonly --",
-    "tdd": "npm run compile && mocha --full-trace --timeout 5000 ./test/tests.js",
     "posttest": "npm run lint",
     "testonly": "mocha --reporter spec --full-trace --timeout 5000 ./test/tests.js",
     "coverage": "istanbul cover -x \"*.test.js\" _mocha -- --timeout 5000 --full-trace --reporter dot ./test/tests.js",

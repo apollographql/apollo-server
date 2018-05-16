@@ -1,1 +1,0 @@
-The `graphql-server-fastify` package is now called [`apollo-server-fastify`](https://www.npmjs.com/package/apollo-server-fastify). We are continuing to release matching versions of the package under the old name, but we recommend you switch to using the new name. The API is identical.
