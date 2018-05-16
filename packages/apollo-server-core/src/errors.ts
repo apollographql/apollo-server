@@ -3,6 +3,8 @@ import { LogStep, LogAction, LogMessage, LogFunction } from './logging';
 
 export class ApolloError extends Error {
   public extensions;
+  [key: string]: any;
+
   constructor(
     message: string,
     code?: string,
@@ -23,7 +25,7 @@ export class ApolloError extends Error {
 }
 
 function enrichError(error: GraphQLError, debug: boolean = false) {
-  const expanded: GraphQLError = {
+  const expanded: ApolloError = {
     message: error.message,
     path: error.path,
     locations: error.locations,
@@ -148,7 +150,7 @@ export function formatApolloErrors(
     logFunction?: LogFunction;
     debug?: boolean;
   },
-): Array<Error> {
+): Array<ApolloError> {
   const { formatter, debug, logFunction } = options;
 
   const enrichedErrors = errors.map(error => enrichError(error, debug));
@@ -178,5 +180,5 @@ export function formatApolloErrors(
         return enrichError(newError, debug);
       }
     }
-  }) as Array<Error>;
+  }) as Array<ApolloError>;
 }
