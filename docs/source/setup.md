@@ -116,7 +116,7 @@ const GraphQLOptions = {
   debug?: boolean,
 
   // (optional) extra GraphQL extensions from graphql-extensions
-  extensions?: Array<GraphQLExtension>
+  extensions?: Array<() => GraphQLExtension>
 }
 ```
 

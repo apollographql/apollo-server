@@ -3,6 +3,7 @@ import { SchemaDirectiveVisitor, IResolvers, IMocks } from 'graphql-tools';
 import { ConnectionContext } from 'subscriptions-transport-ws';
 import { Server as HttpServer } from 'http';
 import { ListenOptions as HttpListenOptions } from 'net';
+import { GraphQLExtension } from 'graphql-extensions';
 
 import { GraphQLServerOptions as GraphQLOptions } from './graphqlOptions';
 
@@ -44,6 +45,7 @@ export interface Config<Server>
   context?: Context<any> | ContextFunction<any>;
   introspection?: boolean;
   mocks?: boolean | IMocks;
+  extensions?: Array<() => GraphQLExtension>;
 }
 
 // XXX export these directly from apollo-engine-js

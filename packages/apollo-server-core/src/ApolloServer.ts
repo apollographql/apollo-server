@@ -15,6 +15,9 @@ import {
   ValidationContext,
   FieldDefinitionNode,
 } from 'graphql';
+import { GraphQLExtension } from 'graphql-extensions';
+import { TracingExtension } from 'apollo-tracing';
+import { CacheControlExtension } from 'apollo-cache-control';
 
 import { ApolloEngine } from 'apollo-engine';
 import {
@@ -60,7 +63,7 @@ export class ApolloServerBase<Request = RequestInit> {
   private context?: Context | ContextFunction;
   private graphqlPath: string = '/graphql';
   private engineProxy: ApolloEngine;
-  private engineEnabled: boolean = false;
+  private extensions: Array<() => GraphQLExtension>;
 
   private http?: HttpServer;
   private subscriptionServer?: SubscriptionServer;
@@ -75,6 +78,7 @@ export class ApolloServerBase<Request = RequestInit> {
       typeDefs,
       introspection,
       mocks,
+      extensions,
       ...requestOptions
     } = config;
 
@@ -122,6 +126,10 @@ export class ApolloServerBase<Request = RequestInit> {
         mocks: typeof mocks === 'boolean' ? {} : mocks,
       });
     }
+
+    // Note: if we're using engineproxy (directly or indirectly), we will extend
+    // this when we listen.
+    this.extensions = [...(extensions || [])];
   }
 
   public use({ getHttp, path }: RegistrationOptions) {
@@ -324,7 +332,12 @@ export class ApolloServerBase<Request = RequestInit> {
     }
 
     // XXX should this allow for header overrides from graphql-playground?
-    if (this.engineProxy || engineInRequestPath) this.engineEnabled = true;
+    if (this.engineProxy || engineInRequestPath) {
+      this.extensions.push(() => new TracingExtension());
+      // XXX provide a way to pass options to CacheControlExtension (eg
+      // defaultMaxAge)
+      this.extensions.push(() => new CacheControlExtension());
+    }
   }
 
   request(request: Request) {
@@ -344,8 +357,7 @@ export class ApolloServerBase<Request = RequestInit> {
 
     return {
       schema: this.schema,
-      tracing: this.engineEnabled,
-      cacheControl: this.engineEnabled,
+      extensions: this.extensions,
       context,
       // allow overrides from options
       ...this.requestOptions,

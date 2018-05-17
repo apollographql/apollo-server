@@ -375,9 +375,9 @@ describe('runQuery', () => {
     }
 
     it('creates the extension stack', async () => {
-      const query = `{ testString }`;
+      const queryString = `{ testString }`;
       const expected = { testString: 'it works' };
-      const extensions = [CustomExtension];
+      const extensions = [() => new CustomExtension()];
       return runQuery({
         schema: new GraphQLSchema({
           query: new GraphQLObjectType({
@@ -397,16 +397,22 @@ describe('runQuery', () => {
             },
           }),
         }),
-        query,
+        queryString,
         extensions,
+        request: new MockReq(),
       });
     });
 
     it('runs format response from extensions', async () => {
-      const query = `{ testString }`;
+      const queryString = `{ testString }`;
       const expected = { testString: 'it works' };
-      const extensions = [CustomExtension];
-      return runQuery({ schema, query: query, extensions }).then(res => {
+      const extensions = [() => new CustomExtension()];
+      return runQuery({
+        schema,
+        queryString,
+        extensions,
+        request: new MockReq(),
+      }).then(res => {
         return expect(res.extensions).to.deep.equal({
           customExtension: { foo: 'bar' },
         });
