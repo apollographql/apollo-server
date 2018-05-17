@@ -1,4 +1,4 @@
-import { parse, getOperationAST, DocumentNode, ExecutionResult } from 'graphql';
+import { parse, DocumentNode, ExecutionResult } from 'graphql';
 import { runQuery } from './runQuery';
 import {
   default as GraphQLOptions,
@@ -8,6 +8,11 @@ import { formatApolloErrors } from './errors';
 
 export interface HttpQueryRequest {
   method: string;
+  // query is either the POST body or the GET query string map.  In the GET
+  // case, all values are strings and need to be parsed as JSON; in the POST
+  // case they should already be parsed. query has keys like 'query' (whose
+  // value should always be a string), 'variables', 'operationName',
+  // 'extensions', etc.
   query: Record<string, any> | Array<Record<string, any>>;
   options:
     | GraphQLOptions
@@ -31,13 +36,6 @@ export class HttpQueryError extends Error {
     this.isGraphQLError = isGraphQLError;
     this.headers = headers;
   }
-}
-
-function isQueryOperation(query: DocumentNode, operationName: string) {
-  const operationAST = getOperationAST(query, operationName);
-  return (
-    Boolean(operationAST) && operationAST && operationAST.operation === 'query'
-  );
 }
 
 export async function runHttpQuery(
@@ -119,7 +117,7 @@ export async function runHttpQuery(
 
   const requests = requestPayload.map(async requestParams => {
     try {
-      let query = requestParams.query;
+      const queryString: string | undefined = requestParams.query;
       let extensions = requestParams.extensions;
 
       if (isGetRequest && extensions) {
@@ -133,7 +131,11 @@ export async function runHttpQuery(
         }
       }
 
-      if (query === undefined && extensions && extensions.persistedQuery) {
+      if (
+        queryString === undefined &&
+        extensions &&
+        extensions.persistedQuery
+      ) {
         // It looks like we've received an Apollo Persisted Query. Apollo Server
         // does not support persisted queries out of the box, so we should fail
         // fast with a clear error saying that we don't support APQs. (A future
@@ -156,31 +158,40 @@ export async function runHttpQuery(
         );
       }
 
-      if (isGetRequest) {
-        if (typeof query === 'string') {
-          // preparse the query incase of GET so we can assert the operation.
-          // XXX This makes the type of 'query' in this function confused
-          //     which has led to us accidentally supporting GraphQL AST over
-          //     the wire as a valid query, which confuses users. Refactor to
-          //     not do this. Also, for a GET request, query really shouldn't
-          //     ever be anything other than a string or undefined, so this
-          //     set of conditionals doesn't quite make sense.
-          query = parse(query);
-        } else if (!query) {
+      if (typeof queryString !== 'string') {
+        if (!queryString) {
           // Note that we've already thrown a different error if it looks like APQ.
           throw new HttpQueryError(400, 'Must provide query string.');
         }
-
-        if (!isQueryOperation(query, requestParams.operationName)) {
+        // Check for a common error first.
+        if (queryString && (queryString as any).kind === 'Document') {
           throw new HttpQueryError(
-            405,
-            `GET supports only query operation`,
-            false,
-            {
-              Allow: 'POST',
-            },
+            400,
+            "GraphQL queries must be strings. It looks like you're sending the " +
+              'internal graphql-js representation of a parsed query in your ' +
+              'request instead of a request in the GraphQL query language. You ' +
+              'can convert an AST to a string using the `print` function from ' +
+              '`graphql`, or use a client like `apollo-client` which converts ' +
+              'the internal representation to a string for you.',
           );
         }
+        throw new HttpQueryError(400, 'GraphQL queries must be strings.');
+      }
+
+      // GET operations should only be queries (not mutations). We want to throw
+      // a particular HTTP error in that case, but we don't actually parse the
+      // query until we're in runQuery, so we declare the error we want to throw
+      // here and pass it into runQuery.
+      let nonQueryError;
+      if (isGetRequest) {
+        nonQueryError = new HttpQueryError(
+          405,
+          `GET supports only query operation`,
+          false,
+          {
+            Allow: 'POST',
+          },
+        );
       }
 
       const operationName = requestParams.operationName;
@@ -230,7 +241,8 @@ export async function runHttpQuery(
 
       let params = {
         schema: optionsObject.schema,
-        query: query,
+        queryString,
+        nonQueryError,
         variables: variables,
         context,
         rootValue: optionsObject.rootValue,

@@ -998,7 +998,8 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           graphqlOptions: {
             schema,
             formatParams(params) {
-              params['query'] = store.get(params.operationName);
+              params['parsedQuery'] = store.get(params.operationName);
+              delete params['queryString'];
               return params;
             },
           },
@@ -1022,10 +1023,10 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           graphqlOptions: {
             schema,
             formatParams(params) {
-              if (params.query) {
+              if (params.queryString) {
                 throw new Error('Must not provide query, only operationName');
               }
-              params['query'] = store.get(params.operationName);
+              params['parsedQuery'] = store.get(params.operationName);
               return params;
             },
           },

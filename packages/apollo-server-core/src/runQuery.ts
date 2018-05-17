@@ -7,6 +7,7 @@ import {
   print,
   validate,
   execute,
+  getOperationAST,
   GraphQLError,
   specifiedRules,
   ValidationContext,
@@ -37,7 +38,15 @@ export interface GraphQLResponse {
 
 export interface QueryOptions {
   schema: GraphQLSchema;
-  query: string | DocumentNode;
+  // Specify exactly one of these. parsedQuery is primarily for use by
+  // OperationStore.
+  queryString?: string;
+  parsedQuery?: DocumentNode;
+
+  // If this is specified and the given GraphQL query is not a "query" (eg, it's
+  // a mutation), throw this error.
+  nonQueryError?: Error;
+
   rootValue?: any;
   context?: any;
   variables?: { [key: string]: any };
@@ -56,6 +65,11 @@ export interface QueryOptions {
   cacheControl?: boolean | any;
 }
 
+function isQueryOperation(query: DocumentNode, operationName: string) {
+  const operationAST = getOperationAST(query, operationName);
+  return operationAST.operation === 'query';
+}
+
 export function runQuery(options: QueryOptions): Promise<GraphQLResponse> {
   // Fiber-aware Promises run their .then callbacks in Fibers.
   return Promise.resolve().then(() => doRunQuery(options));
@@ -63,6 +77,13 @@ export function runQuery(options: QueryOptions): Promise<GraphQLResponse> {
 
 function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
   let documentAST: DocumentNode;
+
+  if (options.queryString && options.parsedQuery) {
+    throw new Error('Only supply one of queryString and parsedQuery');
+  }
+  if (!(options.queryString || options.parsedQuery)) {
+    throw new Error('Must supply one of queryString and parsedQuery');
+  }
 
   const logFunction =
     options.logFunction ||
@@ -95,13 +116,12 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
     extensionStack.requestDidStart();
   }
 
-  const qry =
-    typeof options.query === 'string' ? options.query : print(options.query);
+  const loggedQuery = options.queryString || print(options.parsedQuery);
   logFunction({
     action: LogAction.request,
     step: LogStep.status,
     key: 'query',
-    data: qry,
+    data: loggedQuery,
   });
   logFunction({
     action: LogAction.request,
@@ -116,12 +136,12 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
     data: options.operationName,
   });
 
-  // if query is already an AST, don't parse or validate
-  // XXX: This refers the operations-store flow.
-  if (typeof options.query === 'string') {
+  // Parse and validate the query, unless it is already an AST (eg, if using
+  // OperationStore with formatParams).
+  if (options.queryString) {
     try {
       logFunction({ action: LogAction.parse, step: LogStep.start });
-      documentAST = parse(options.query as string);
+      documentAST = parse(options.queryString);
       logFunction({ action: LogAction.parse, step: LogStep.end });
     } catch (syntaxError) {
       logFunction({ action: LogAction.parse, step: LogStep.end });
@@ -140,7 +160,14 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
       });
     }
   } else {
-    documentAST = options.query as DocumentNode;
+    documentAST = options.parsedQuery;
+  }
+
+  if (
+    options.nonQueryError &&
+    !isQueryOperation(documentAST, options.operationName)
+  ) {
+    throw options.nonQueryError;
   }
 
   let rules = specifiedRules;
