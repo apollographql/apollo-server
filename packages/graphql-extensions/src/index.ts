@@ -19,6 +19,13 @@ export interface GraphQLExtensionOptions {
   // XXX Will add a W3C-style Request here later
 }
 
+export type GraphQLExtensionFactory<TContext = any> = ((
+  o: GraphQLExtensionOptions,
+) => GraphQLExtension<TContext>);
+export type GraphQLExtensionOrFactory<TContext = any> =
+  | GraphQLExtension<TContext>
+  | GraphQLExtensionFactory<TContext>;
+
 export class GraphQLExtension<TContext = any> {
   public requestDidStart?(): EndHandler | void;
   public parsingDidStart?(): EndHandler | void;
@@ -39,9 +46,7 @@ export class GraphQLExtensionStack<TContext = any> {
   private extensions: GraphQLExtension<TContext>[];
 
   constructor(
-    extensions: (
-      | ((o: GraphQLExtensionOptions) => GraphQLExtension<TContext>)
-      | GraphQLExtension<TContext>)[],
+    extensions: GraphQLExtensionOrFactory<TContext>[],
     options: GraphQLExtensionOptions,
   ) {
     this.extensions = extensions.map(
