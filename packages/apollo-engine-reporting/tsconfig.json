@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "target": "es5",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "declaration": true,
+    "sourceMap": true,
+    "outDir": "lib",
+    "lib": ["es2017"],
+    "strict": true,
+    "strictPropertyInitialization": false
+  },
+  "include" : [
+    "src/**/*"
+  ]
+}

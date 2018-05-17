@@ -1,0 +1,3 @@
+test('nothing', () => {
+  /* nothing */
+});
