@@ -1,0 +1,37 @@
+{
+  "name": "apollo-engine-reporting-protobuf",
+  "version": "0.0.0-beta.1",
+  "description": "Protobuf format for Apollo Engine",
+  "main": "dist/index.js",
+  "scripts": {
+    "prepare": "npm run pbjs && npm run pbts",
+    "pbjs": "bash -c 'pbjs --target static-module --out dist/index.js --wrap commonjs <(grep -v \"package mdg.engine.proto\" reports.proto)'",
+    "pbts": "pbts -o dist/index.d.ts dist/index.js",
+    "circle": "npm run prepare"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/apollographql/apollo-engine-reporting/tree/master/packages/apollo-engine-reporting-protobuf"
+  },
+  "keywords": [
+    "GraphQL",
+    "Apollo",
+    "Engine",
+    "Server",
+    "Javascript"
+  ],
+  "author": "Apollo <community@apollographql.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/apollographql/apollo-engine-reporting/issues"
+  },
+  "homepage": "https://github.com/apollographql/apollo-engine-reporting#readme",
+  "devDependencies": {
+    "protobufjs": "~6.8.6"
+  },
+  "typings": "dist/index.d.ts",
+  "typescript": {
+    "definition": "dist/index.d.ts"
+  },
+  "dependencies": {}
+}

@@ -1,0 +1,235 @@
+syntax = "proto3";
+
+package mdg.engine.proto;
+
+import "google/protobuf/timestamp.proto";
+
+option optimize_for = SPEED;
+
+message Trace {
+	message CachePolicy {
+		enum Scope {
+			UNKNOWN = 0;
+			PUBLIC = 1;
+			PRIVATE = 2;
+		}
+
+		Scope scope = 1;
+		int64 max_age_ns = 2; // use 0 for absent, -1 for 0
+	}
+
+	message Details {
+		map<string, bytes> variables = 1;
+		string raw_query = 2;
+		string operation_name = 3;
+	}
+
+	message Error {
+		string message = 1; // required
+		repeated Location location = 2;
+		uint64 time_ns = 3;
+		string json = 4;
+	}
+
+	message HTTP {
+		message Values {
+			repeated string value = 1;
+		}
+
+		enum Method {
+			UNKNOWN = 0;
+			OPTIONS = 1;
+			GET = 2;
+			HEAD = 3;
+			POST = 4;
+			PUT = 5;
+			DELETE = 6;
+			TRACE = 7;
+			CONNECT = 8;
+			PATCH = 9;
+		}
+		Method method = 1;
+		string host = 2;
+		string path = 3;
+
+		// Should exclude manual blacklist ("Auth" by default)
+		map<string, Values> request_headers = 4;
+		map<string, Values> response_headers = 5;
+
+		uint32 status_code = 6;
+
+		bool secure = 8; // TLS was used
+		string protocol = 9; // by convention "HTTP/1.0", "HTTP/1.1", "HTTP/2" or "h2"
+	}
+
+	message Location {
+		uint32 line = 1;
+		uint32 column = 2;
+	}
+
+	message Node {
+		oneof id {
+			string field_name = 1;
+			uint32 index = 2;
+		}
+
+		string type = 3;
+
+		CachePolicy cache_policy = 5;
+
+		// relative to the trace's start_time, in ns
+		uint64 start_time = 8; // required
+		uint64 end_time = 9;
+
+		repeated Error error = 11;
+		repeated Node child = 12; // required
+
+		reserved 4;
+	}
+
+	google.protobuf.Timestamp start_time = 4; // required
+	google.protobuf.Timestamp end_time = 3; // required
+	uint64 duration_ns = 11; // required
+
+	google.protobuf.Timestamp origin_reported_start_time = 15;
+	google.protobuf.Timestamp origin_reported_end_time = 16;
+	uint64 origin_reported_duration_ns = 17;
+
+	// Parsed, filtered for op (incl. fragments), reserialized
+	string signature = 5; // required; see docs/signatures.md
+
+	Details details = 6;
+
+	string client_name = 7; // required
+	string client_version = 8; // required
+	string client_address = 9; // required
+
+	HTTP http = 10;
+
+	CachePolicy cache_policy = 18;
+
+	Node root = 14; // required
+
+	// removed: Node parse = 12; Node validate = 13;
+	//          Id128 server_id = 1; Id128 client_id = 2;
+	reserved 12, 13, 1, 2;
+}
+
+message ReportHeader {
+	string service = 3;
+	// eg "host-01.example.com"
+	string hostname = 5;
+
+	// eg "engineproxy 0.1.0"
+	string agent_version = 6; // required
+	// eg "prod-4279-20160804T065423Z-5-g3cf0aa8" (taken from `git describe --tags`)
+	string service_version = 7;
+	// eg "node v4.6.0"
+	string runtime_version = 8;
+	// eg "Linux box 4.6.5-1-ec2 #1 SMP Mon Aug 1 02:31:38 PDT 2016 x86_64 GNU/Linux"
+	string uname = 9;
+}
+
+message PathErrorStats {
+	map<string, PathErrorStats> children = 1;
+	uint64 errors_count = 4;
+	uint64 requests_with_errors_count = 5;
+}
+
+message ClientNameStats {
+	repeated int64 latency_count = 1; // Duration histogram; see docs/histograms.md
+	reserved 2; // removed: repeated uint64 error_count = 2;
+	map<string, uint64> requests_count_per_version = 3; // required
+	map<string, uint64> cache_hits_per_version = 4;
+	map<string, uint64> persisted_query_hits_per_version = 10;
+	map<string, uint64> persisted_query_misses_per_version = 11;
+	repeated int64 cache_latency_count = 5; // Duration histogram; see docs/histograms.md
+	PathErrorStats root_error_stats = 6;
+	uint64 requests_with_errors_count = 7;
+	repeated int64 public_cache_ttl_count = 8; // Duration histogram for the query-wide cache TTL; see docs/histograms.md
+	repeated int64 private_cache_ttl_count = 9; // Duration histogram for the query-wide cache TTL; see docs/histograms.md
+}
+
+message FieldStat {
+	string name = 2; // deprecated; only set when stored in TypeStat.field
+	string return_type = 3; // required; eg "String!" for User.email:String!
+	uint64 errors_count = 4;
+	uint64 count = 5;
+	uint64 requests_with_errors_count = 6;
+	repeated int64 latency_count = 8; // Duration histogram; see docs/histograms.md
+}
+
+message TypeStat {
+	string name = 1; // deprecated; only set when stored in QueryStats.per_type
+	repeated FieldStat field = 2;  // deprecated; use per_field_stat instead
+	// Key is (eg) "email" for User.email:String!
+	map<string, FieldStat> per_field_stat = 3;
+}
+
+message QueryStats {
+	map<string, ClientNameStats> per_client_name = 1; // required
+	repeated TypeStat per_type = 2; // deprecated; use per_type_stat instead
+	// Key is (eg) "User" for User.email:String!
+	map<string, TypeStat> per_type_stat = 3;
+}
+
+// Top-level message type for the server-side traces endpoint
+message TracesReport {
+	ReportHeader header = 1; // required
+	repeated Trace trace = 2; // required
+}
+
+message Field {
+	string name = 2; // required; eg "email" for User.email:String!
+	string return_type = 3; // required; eg "String!" for User.email:String!
+}
+
+message Type {
+	string name = 1; // required; eg "User" for User.email:String!
+	repeated Field field = 2;
+}
+
+message MemStats {
+	uint64 total_bytes = 1; // MemStats.Sys
+	uint64 stack_bytes = 2; // MemStats.StackSys
+	uint64 heap_bytes = 3; // MemStats.HeapSys
+	uint64 heap_released_bytes = 13; // MemStats.HeapReleased
+	uint64 gc_overhead_bytes = 4; // MemStats.GCSys
+
+	uint64 stack_used_bytes = 5; // MemStats.StackInuse
+	uint64 heap_allocated_bytes = 6; // MemStats.HeapAlloc
+	uint64 heap_allocated_objects = 7; // MemStats.HeapObjects
+
+	uint64 heap_allocated_bytes_delta = 8; // MemStats.TotalAlloc delta
+	uint64 heap_allocated_objects_delta = 9; // MemStats.Mallocs delta
+	uint64 heap_freed_objects_delta = 10; // MemStats.Frees delta
+
+	uint64 gc_stw_ns_delta = 11; // MemStats.PauseTotalNs delta
+	uint64 gc_count_delta = 12; // MemStats.NumGC delta
+}
+
+message TimeStats {
+	uint64 uptime_ns = 1;
+	uint64 real_ns_delta = 2;
+	uint64 user_ns_delta = 3;
+	uint64 sys_ns_delta = 4;
+}
+
+// Top-level message type for the server-side stats endpoint
+message StatsReport {
+	ReportHeader header = 1; // required
+
+	MemStats mem_stats = 2;
+	TimeStats time_stats = 3;
+
+	google.protobuf.Timestamp start_time = 8; // required
+	google.protobuf.Timestamp end_time = 9; // required
+	uint64 realtime_duration = 10;
+
+	map<string, QueryStats> per_query = 12; // required
+
+	// Deprecated: it was useful in Optics where we had access to the whole schema
+	// but has not been ever used in Engine.  apollo-engine-reporting will not
+	// send it.
+	repeated Type type = 13;
+}
