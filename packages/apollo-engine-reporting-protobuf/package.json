@@ -26,12 +26,11 @@
     "url": "https://github.com/apollographql/apollo-engine-reporting/issues"
   },
   "homepage": "https://github.com/apollographql/apollo-engine-reporting#readme",
-  "devDependencies": {
-    "protobufjs": "~6.8.6"
+  "dependencies": {
+    "protobufjs": "^6.8.6"
   },
   "typings": "dist/index.d.ts",
   "typescript": {
     "definition": "dist/index.d.ts"
-  },
-  "dependencies": {}
+  }
 }
