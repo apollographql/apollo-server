@@ -105,7 +105,7 @@ export class GraphQLExtensionStack<TContext = any> {
     this.extensions.forEach(extension => {
       const startHandler = selectHandler(extension);
       if (startHandler) {
-        const endHandler = startHandler();
+        const endHandler = startHandler.call(extension);
         if (endHandler) {
           endHandlers.push(endHandler);
         }
