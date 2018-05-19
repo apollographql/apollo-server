@@ -50,9 +50,11 @@
     "prettier": "^1.12.1",
     "ts-jest": "^22.4.6",
     "tslint": "^5.10.0",
-    "typescript": "^2.8.3"
+    "typescript": "^2.8.3",
+    "@types/lodash": "^4.14.109"
   },
   "dependencies": {
-    "apollo-engine-reporting-protobuf": "0.0.0-beta.2"
+    "apollo-engine-reporting-protobuf": "0.0.0-beta.2",
+    "lodash": "^4.17.10"
   }
 }
