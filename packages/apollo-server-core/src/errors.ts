@@ -12,6 +12,10 @@ export class ApolloError extends Error {
   ) {
     super(message);
 
+    // Set the prototype explicitly.
+    // https://stackoverflow.com/a/41102306
+    Object.setPrototypeOf(this, ApolloError.prototype);
+
     if (properties) {
       Object.keys(properties).forEach(key => {
         this[key] = properties[key];
@@ -112,34 +116,46 @@ export function fromGraphQLError(error: GraphQLError, options?: ErrorOptions) {
 }
 
 export class SyntaxError extends ApolloError {
-  // TODO make the name nonenumerable
-  // name = 'SyntaxError';
   constructor(message: string) {
     super(message, 'GRAPHQL_PARSE_FAILED');
+
+    // Set the prototype explicitly.
+    // https://stackoverflow.com/a/41102306
+    Object.setPrototypeOf(this, SyntaxError.prototype);
+    Object.defineProperty(this, 'name', { value: 'SyntaxError' });
   }
 }
 
 export class ValidationError extends ApolloError {
-  // TODO make the name nonenumerable
-  // name = 'ValidationError';
   constructor(message: string) {
     super(message, 'GRAPHQL_VALIDATION_FAILED');
+
+    // Set the prototype explicitly.
+    // https://stackoverflow.com/a/41102306
+    Object.setPrototypeOf(this, ValidationError.prototype);
+    Object.defineProperty(this, 'name', { value: 'ValidationError' });
   }
 }
 
 export class AuthenticationError extends ApolloError {
-  // TODO make the name nonenumerable
-  // name = 'AuthenticationError';
   constructor(message: string) {
     super(message, 'UNAUTHENTICATED');
+
+    // Set the prototype explicitly.
+    // https://stackoverflow.com/a/41102306
+    Object.setPrototypeOf(this, AuthenticationError.prototype);
+    Object.defineProperty(this, 'name', { value: 'AuthenticationError' });
   }
 }
 
 export class ForbiddenError extends ApolloError {
-  // TODO make the name nonenumerable
-  // name = 'ForbiddenError';
   constructor(message: string) {
     super(message, 'FORBIDDEN');
+
+    // Set the prototype explicitly.
+    // https://stackoverflow.com/a/41102306
+    Object.setPrototypeOf(this, ForbiddenError.prototype);
+    Object.defineProperty(this, 'name', { value: 'ForbiddenError' });
   }
 }
 
