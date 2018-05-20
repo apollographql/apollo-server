@@ -58,6 +58,7 @@ export class ApolloServerBase<Request = RequestInit> {
   private engineEnabled: boolean = false;
 
   private http?: HttpServer;
+  private subscriptionServer?: SubscriptionServer;
   protected getHttp: () => HttpServer;
 
   constructor(config: Config<Request>) {
@@ -146,7 +147,10 @@ export class ApolloServerBase<Request = RequestInit> {
       }
 
       this.subscriptionsPath = config.path;
-      this.createSubscriptionServer(this.http, config);
+      this.subscriptionServer = this.createSubscriptionServer(
+        this.http,
+        config,
+      );
     }
 
     if (opts.engineProxy || opts.engineInRequestPath) this.createEngine(opts);
@@ -214,6 +218,7 @@ export class ApolloServerBase<Request = RequestInit> {
 
   public async stop() {
     if (this.engineProxy) await this.engineProxy.stop();
+    if (this.subscriptionServer) await this.subscriptionServer.close();
     if (this.http) await new Promise(s => this.http.close(s));
   }
 
@@ -222,7 +227,8 @@ export class ApolloServerBase<Request = RequestInit> {
     config: SubscriptionServerOptions,
   ) {
     const { onDisconnect, onConnect, keepAlive, path } = config;
-    SubscriptionServer.create(
+
+    return SubscriptionServer.create(
       {
         schema: this.schema,
         execute,
