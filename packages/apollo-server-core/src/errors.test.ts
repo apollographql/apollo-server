@@ -137,6 +137,7 @@ describe('Errors', () => {
       expect(error.message).to.equal(message);
       expect(error.key).to.equal(key);
       expect(error.extensions.code).to.equal(code);
+      expect(error instanceof ApolloError).true;
       expect(logFunction.calledOnce);
     });
     it('calls formatter after exposing the code and stacktrace', () => {
@@ -149,27 +150,48 @@ describe('Errors', () => {
       expect(error.message).to.equal(message);
       expect(error.key).to.equal(key);
       expect(error.extensions.code).to.equal(code);
+      expect(error instanceof ApolloError).true;
       expect(formatter.calledOnce);
     });
   });
   describe('Named Errors', () => {
     const message = 'message';
-    function verifyError(error, code) {
+    function verifyError(error, { code, errorClass, name }) {
       expect(error.message).to.equal(message);
       expect(error.extensions.code).to.equal(code);
+      expect(error.name).equals(name);
+      expect(error instanceof ApolloError).true;
+      expect(error instanceof errorClass).true;
     }
 
     it('provides an authentication error', () => {
-      verifyError(new AuthenticationError(message), 'UNAUTHENTICATED');
+      verifyError(new AuthenticationError(message), {
+        code: 'UNAUTHENTICATED',
+        errorClass: AuthenticationError,
+        name: 'AuthenticationError',
+      });
     });
     it('provides a forbidden error', () => {
-      verifyError(new ForbiddenError(message), 'FORBIDDEN');
+      debugger;
+      verifyError(new ForbiddenError(message), {
+        code: 'FORBIDDEN',
+        errorClass: ForbiddenError,
+        name: 'ForbiddenError',
+      });
     });
     it('provides a syntax error', () => {
-      verifyError(new SyntaxError(message), 'GRAPHQL_PARSE_FAILED');
+      verifyError(new SyntaxError(message), {
+        code: 'GRAPHQL_PARSE_FAILED',
+        errorClass: SyntaxError,
+        name: 'SyntaxError',
+      });
     });
     it('provides a validation error', () => {
-      verifyError(new ValidationError(message), 'GRAPHQL_VALIDATION_FAILED');
+      verifyError(new ValidationError(message), {
+        code: 'GRAPHQL_VALIDATION_FAILED',
+        errorClass: ValidationError,
+        name: 'ValidationError',
+      });
     });
   });
 });
