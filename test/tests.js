@@ -3,10 +3,16 @@ const NODE_MAJOR_VERSION = parseInt(NODE_VERSION[0].replace(/^v/, ''));
 const NODE_MAJOR_REVISION = parseInt(NODE_VERSION[1]);
 process.env.NODE_ENV = 'test';
 
+process.on('unhandledRejection', reason => {
+  console.log('Reason: ' + reason);
+  console.log('Reason: ' + reason.stack);
+});
+
 //apollo-server-core
 require('../packages/apollo-server-core/dist/runQuery.test.js');
 require('../packages/apollo-server-core/dist/runHttpQuery.test.js');
 require('../packages/apollo-server-core/dist/errors.test.js');
+require('../packages/apollo-server-core/dist/ApolloServer.test.js');
 
 require('../packages/apollo-server-module-operation-store/dist/operationStore.test');
 

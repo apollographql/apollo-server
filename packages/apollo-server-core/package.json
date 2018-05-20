@@ -30,7 +30,9 @@
     "@types/node": "^9.6.1",
     "@types/ws": "^4.0.2",
     "apollo-engine": "^1.0.6",
+    "apollo-fetch": "^0.7.0",
     "fibers": "1.0.15",
+    "graphql-tag": "^2.9.2",
     "meteor-promise": "0.8.6",
     "typescript": "2.8.3"
   },
