@@ -133,12 +133,12 @@ describe('ApolloServerBase', () => {
         expect(result.data, 'data should not exist').not.to.exist;
         expect(result.errors, 'errors should exist').to.exist;
 
-        return server.stop();
+        await server.stop();
       });
 
       it('allows introspection by default', async () => {
-        //re-require apollo server so that the environment vars get re-calculated
-        const { ApolloServerBase } = require('./ApolloServer');
+        const nodeEnv = process.env.NODE_ENV;
+        delete process.env.NODE_ENV;
 
         const server = new ApolloServerBase({
           schema,
@@ -156,7 +156,8 @@ describe('ApolloServerBase', () => {
         expect(result.data, 'data should not exist').to.exist;
         expect(result.errors, 'errors should exist').not.to.exist;
 
-        return server.stop();
+        process.env.NODE_ENV = nodeEnv;
+        await server.stop();
       });
 
       it('prevents introspection by default during production', async () => {
@@ -184,14 +185,12 @@ describe('ApolloServerBase', () => {
         );
 
         process.env.NODE_ENV = nodeEnv;
-        return server.stop();
+        await server.stop();
       });
 
       it('allows introspection to be enabled explicitly', async () => {
         const nodeEnv = process.env.NODE_ENV;
         process.env.NODE_ENV = 'production';
-        //re-require apollo server so that the environment vars get re-calculated
-        const { ApolloServerBase } = require('./ApolloServer');
 
         const server = new ApolloServerBase({
           schema,
@@ -211,7 +210,7 @@ describe('ApolloServerBase', () => {
         expect(result.errors, 'errors should exist').not.to.exist;
 
         process.env.NODE_ENV = nodeEnv;
-        return server.stop();
+        await server.stop();
       });
     });
 
@@ -240,7 +239,7 @@ describe('ApolloServerBase', () => {
 
         expect(result.data).to.deep.equal({ hello: 'hi' });
         expect(result.errors, 'errors should exist').not.to.exist;
-        return server.stop();
+        await server.stop();
       });
       it('uses schema over resolvers + typeDefs', async () => {
         const typeDefs = gql`
@@ -271,7 +270,7 @@ describe('ApolloServerBase', () => {
         const result = await apolloFetch({ query: '{testString}' });
         expect(result.data).to.deep.equal({ testString: 'test string' });
         expect(result.errors, 'errors should exist').not.to.exist;
-        return server.stop();
+        await server.stop();
       });
       it('allows mocks as boolean', async () => {
         const typeDefs = gql`
@@ -295,7 +294,7 @@ describe('ApolloServerBase', () => {
         const result = await apolloFetch({ query: '{hello}' });
         expect(result.data).to.deep.equal({ hello: 'Hello World' });
         expect(result.errors, 'errors should exist').not.to.exist;
-        return server.stop();
+        await server.stop();
       });
 
       it('allows mocks as an object', async () => {
@@ -321,7 +320,7 @@ describe('ApolloServerBase', () => {
 
         expect(result.data).to.deep.equal({ hello: 'mock city' });
         expect(result.errors, 'errors should exist').not.to.exist;
-        return server.stop();
+        await server.stop();
       });
     });
   });
@@ -363,7 +362,7 @@ describe('ApolloServerBase', () => {
       expect(spy.calledOnce).true;
       await apolloFetch({ query: '{hello}' });
       expect(spy.calledTwice).true;
-      return server.stop();
+      await server.stop();
     });
   });
 
