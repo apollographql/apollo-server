@@ -27,9 +27,8 @@
   "devDependencies": {
     "@types/fibers": "0.0.30",
     "@types/graphql": "0.12.7",
-    "@types/node": "^9.6.1",
     "@types/ws": "^4.0.2",
-    "apollo-engine": "^1.0.6",
+    "apollo-engine": "^1.1.1",
     "apollo-fetch": "^0.7.0",
     "fibers": "1.0.15",
     "graphql-tag": "^2.9.2",
@@ -49,7 +48,7 @@
     "graphql-extensions": "^0.0.x",
     "graphql-subscriptions": "^0.5.8",
     "graphql-tools": "^2.23.1",
-    "subscriptions-transport-ws": "^0.9.7",
+    "subscriptions-transport-ws": "^0.9.9",
     "ws": "^5.1.1"
   }
 }
