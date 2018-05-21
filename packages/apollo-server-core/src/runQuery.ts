@@ -190,7 +190,7 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
       };
 
       if (result.errors) {
-        response.errors = formatApolloErrors(result.errors, {
+        response.errors = formatApolloErrors([...result.errors], {
           formatter: options.formatError,
           logFunction,
           debug,

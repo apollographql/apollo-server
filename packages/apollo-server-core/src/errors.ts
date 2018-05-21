@@ -1,8 +1,16 @@
 import { GraphQLError } from 'graphql';
 import { LogStep, LogAction, LogMessage, LogFunction } from './logging';
 
-export class ApolloError extends Error {
-  public extensions;
+export class ApolloError extends Error implements GraphQLError {
+  public extensions: Record<string, any>;
+  readonly name = 'ApolloError';
+  readonly locations;
+  readonly path;
+  readonly source;
+  readonly positions;
+  readonly nodes;
+  public originalError;
+
   [key: string]: any;
 
   constructor(
@@ -11,7 +19,6 @@ export class ApolloError extends Error {
     properties?: Record<string, any>,
   ) {
     super(message);
-
     // Set the prototype explicitly.
     // https://stackoverflow.com/a/41102306
     Object.setPrototypeOf(this, ApolloError.prototype);
@@ -28,20 +35,46 @@ export class ApolloError extends Error {
   }
 }
 
-function enrichError(error: GraphQLError, debug: boolean = false) {
-  const expanded: ApolloError = {
-    message: error.message,
-    path: error.path,
-    locations: error.locations,
-    ...error,
-    extensions: {
-      ...error.extensions,
-      code:
-        (error.extensions && error.extensions.code) || 'INTERNAL_SERVER_ERROR',
-      exception: {
-        ...(error.extensions && error.extensions.exception),
-        ...(error.originalError as any),
-      },
+function enrichError(error: Partial<GraphQLError>, debug: boolean = false) {
+  const expanded = {} as any;
+  Object.defineProperties(expanded, {
+    name: {
+      value: error.name,
+    },
+    message: {
+      value: error.message,
+      enumerable: true,
+      writable: true,
+    },
+    locations: {
+      value: error.locations || undefined,
+      enumerable: true,
+    },
+    path: {
+      value: error.path || undefined,
+      enumerable: true,
+    },
+    nodes: {
+      value: error.nodes || undefined,
+    },
+    source: {
+      value: error.source || undefined,
+    },
+    positions: {
+      value: error.positions || undefined,
+    },
+    originalError: {
+      value: error.originalError,
+    },
+  });
+
+  expanded.extensions = {
+    ...error.extensions,
+    code:
+      (error.extensions && error.extensions.code) || 'INTERNAL_SERVER_ERROR',
+    exception: {
+      ...(error.extensions && error.extensions.exception),
+      ...(error.originalError as any),
     },
   };
 
@@ -62,14 +95,14 @@ function enrichError(error: GraphQLError, debug: boolean = false) {
     delete expanded.extensions.exception;
   }
 
-  return expanded;
+  return expanded as ApolloError;
 }
 
 export function toApolloError(
-  error: Error,
+  error: Error & { extensions?: Record<string, any> },
   code: string = 'INTERNAL_SERVER_ERROR',
 ): Error & { extensions: Record<string, any> } {
-  let err: GraphQLError = error;
+  let err = error;
   if (err.extensions) {
     err.extensions.code = code;
   } else {
@@ -84,7 +117,7 @@ export interface ErrorOptions {
 }
 
 export function fromGraphQLError(error: GraphQLError, options?: ErrorOptions) {
-  const copy: GraphQLError =
+  const copy: ApolloError =
     options && options.errorClass
       ? new options.errorClass(error.message)
       : new ApolloError(error.message);
@@ -193,7 +226,7 @@ export function formatApolloErrors(
         return enrichError(err, debug);
       } else {
         //obscure error
-        const newError: GraphQLError = fromGraphQLError(
+        const newError = fromGraphQLError(
           new GraphQLError('Internal server error'),
         );
         return enrichError(newError, debug);

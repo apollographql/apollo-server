@@ -242,7 +242,7 @@ export class ApolloServerBase<Request = RequestInit> {
             ...value,
             errors:
               value.errors &&
-              formatApolloErrors(value.errors, {
+              formatApolloErrors([...value.errors], {
                 formatter: this.requestOptions.formatError,
                 debug: this.requestOptions.debug,
                 logFunction: this.requestOptions.logFunction,
