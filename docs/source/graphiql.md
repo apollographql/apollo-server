@@ -63,7 +63,7 @@ If you are using Hapi, GraphiQL can be configured as follows:
 import { graphiqlHapi } from 'apollo-server-hapi';
 
 server.register({
-  register: graphiqlHapi,
+  plugin: graphiqlHapi,
   options: {
     path: '/graphiql',
     graphiqlOptions: {
