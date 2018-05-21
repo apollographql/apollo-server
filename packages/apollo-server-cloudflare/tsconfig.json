@@ -2,9 +2,7 @@
   "extends": "../../tsconfig",
   "compilerOptions": {
     "rootDir": "./src",
-    "outDir": "./dist",
-    "lib": ["es6", "esnext.asynciterable", "dom"],
-    "types": ["@types/node"]
+    "outDir": "./dist"
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]

@@ -9,8 +9,6 @@
     "allowSyntheticDefaultImports": false,
     "pretty": true,
     "removeComments": true,
-    "lib": ["dom", "es6", "esnext.asynciterable"],
-    "skipLibCheck": true,
-    "types": ["@types/node"]
+    "lib": ["dom", "es6", "esnext.asynciterable"]
   }
 }
