@@ -3,7 +3,9 @@
   "compilerOptions": {
     "rootDir": "./src",
     "outDir": "./dist",
-    "lib": ["es6", "esnext.asynciterable", "dom"]
+    "lib": ["es6", "esnext.asynciterable", "dom"],
+    "types": ["@types/node"]
   },
+  "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
 }

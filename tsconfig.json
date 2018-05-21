@@ -10,6 +10,6 @@
     "pretty": true,
     "removeComments": true,
     "lib": ["dom", "es6", "esnext.asynciterable"],
-    "types": ["node"]
+    "types": ["@types/node"]
   }
 }
