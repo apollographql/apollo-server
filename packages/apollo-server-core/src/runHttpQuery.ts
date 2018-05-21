@@ -33,7 +33,9 @@ export class HttpQueryError extends Error {
 
 function isQueryOperation(query: DocumentNode, operationName: string) {
   const operationAST = getOperationAST(query, operationName);
-  return operationAST.operation === 'query';
+  return (
+    Boolean(operationAST) && operationAST && operationAST.operation === 'query'
+  );
 }
 
 export async function runHttpQuery(
