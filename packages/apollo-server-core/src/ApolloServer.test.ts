@@ -367,7 +367,60 @@ describe('ApolloServerBase', () => {
   });
 
   describe('engine', () => {
-    it('creates ApolloEngine instance when api key is present', () => {});
+    it('creates ApolloEngine instance when api key is present', async () => {
+      const typeDefs = gql`
+        type Query {
+          hello: String
+        }
+      `;
+      const resolvers = {
+        Query: {
+          hello: () => 'hi',
+        },
+      };
+      const server = new ApolloServerBase({
+        typeDefs,
+        resolvers,
+      });
+      const httpServer = createHttpServer(server);
+      server.use({
+        getHttp: () => httpServer,
+        path: '/',
+      });
+
+      const { url: engineUri, port: enginePort } = await server.listen({
+        engineProxy: {
+          apiKey: 'service:apollographql-6872:D6HRzC5ykWElYO3A2od1uA',
+          logging: {
+            level: 'ERROR',
+          },
+        },
+        port: 4000,
+      });
+      expect(enginePort).to.equal(4000);
+
+      //Check engine responding
+      const engineApolloFetch = createApolloFetch({ uri: engineUri });
+      const engineResult = await engineApolloFetch({ query: '{hello}' });
+      expect(engineResult.data).to.deep.equal({ hello: 'hi' });
+      expect(engineResult.errors, 'errors should not exist').not.to.exist;
+      expect(engineResult.extensions, 'extensions should exist').not.to.exist;
+
+      const { address, port } = httpServer.address();
+      expect(enginePort).not.to.equal(port);
+      const uri = `http://${address}:${port}/`;
+
+      //Check origin server responding and includes extensions
+      const apolloFetch = createApolloFetch({ uri });
+      const result = await apolloFetch({ query: '{hello}' });
+      expect(result.data).to.deep.equal({ hello: 'hi' });
+      expect(result.errors, 'errors should not exist').not.to.exist;
+      expect(result.extensions, 'extensions should exist').to.exist;
+
+      await server.stop();
+
+      expect(httpServer.listening).false;
+    });
   });
 
   describe('subscritptions', () => {
