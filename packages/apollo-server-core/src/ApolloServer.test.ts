@@ -2,6 +2,7 @@
 import { expect } from 'chai';
 import { stub } from 'sinon';
 import * as http from 'http';
+import * as net from 'net';
 import 'mocha';
 
 import {
@@ -406,7 +407,8 @@ describe('ApolloServerBase', () => {
       expect(engineResult.errors, 'errors should not exist').not.to.exist;
       expect(engineResult.extensions, 'extensions should exist').not.to.exist;
 
-      const { address, port } = httpServer.address();
+      //only windows returns a string https://github.com/nodejs/node/issues/12895
+      const { address, port } = httpServer.address() as net.AddressInfo;
       expect(enginePort).not.to.equal(port);
       const uri = `http://${address}:${port}/`;
 
