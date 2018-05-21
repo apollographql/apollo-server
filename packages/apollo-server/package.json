@@ -27,7 +27,6 @@
   "devDependencies": {
     "@types/body-parser": "^1.17.0",
     "@types/express": "^4.11.1",
-    "@types/graphql": "^0.13.1",
     "typescript": "2.8.1"
   },
   "peerDependencies": {

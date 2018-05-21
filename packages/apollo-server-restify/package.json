@@ -29,7 +29,6 @@
     "apollo-server-module-graphiql": "^1.3.4"
   },
   "devDependencies": {
-    "@types/graphql": "0.12.7",
     "@types/restify": "5.0.7",
     "apollo-server-integration-testsuite": "^1.3.6",
     "restify": "5.2.1"

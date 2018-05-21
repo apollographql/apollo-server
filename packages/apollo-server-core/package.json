@@ -26,8 +26,8 @@
   "homepage": "https://github.com/apollographql/apollo-server#readme",
   "devDependencies": {
     "@types/fibers": "0.0.30",
-    "@types/graphql": "0.12.7",
-    "@types/node": "^8.10.17",
+    "@types/graphql": "^0.13.1",
+    "@types/node": "^10.1.2",
     "@types/ws": "^4.0.2",
     "apollo-engine": "^1.1.1",
     "apollo-fetch": "^0.7.0",
