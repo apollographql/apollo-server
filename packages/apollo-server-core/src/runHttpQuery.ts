@@ -9,7 +9,9 @@ import { formatApolloErrors } from './errors';
 export interface HttpQueryRequest {
   method: string;
   query: Record<string, any> | Array<Record<string, any>>;
-  options: GraphQLOptions | (() => Promise<GraphQLOptions> | GraphQLOptions);
+  options:
+    | GraphQLOptions
+    | ((...args: Array<any>) => Promise<GraphQLOptions> | GraphQLOptions);
 }
 
 export class HttpQueryError extends Error {
@@ -33,7 +35,9 @@ export class HttpQueryError extends Error {
 
 function isQueryOperation(query: DocumentNode, operationName: string) {
   const operationAST = getOperationAST(query, operationName);
-  return operationAST.operation === 'query';
+  return (
+    Boolean(operationAST) && operationAST && operationAST.operation === 'query'
+  );
 }
 
 export async function runHttpQuery(

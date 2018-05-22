@@ -2,6 +2,7 @@
 
 ### vNEXT
 
+* `apollo-server-core`: custom errors allow instanceof checks [PR#1074](https://github.com/apollographql/apollo-server/pull/1074)
 * `apollo-server-core`: move subscriptions options into listen [PR#1059](https://github.com/apollographql/apollo-server/pull/1059)
 * `apollo-server-core`: Replace console.error with logFunction for opt-in logging [PR #1024](https://github.com/apollographql/apollo-server/pull/1024)
 * `apollo-server-core`: context creation can be async and errors are formatted to include error code [PR #1024](https://github.com/apollographql/apollo-server/pull/1024)

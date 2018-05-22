@@ -26,11 +26,13 @@
   "homepage": "https://github.com/apollographql/apollo-server#readme",
   "devDependencies": {
     "@types/fibers": "0.0.30",
-    "@types/graphql": "0.12.7",
-    "@types/node": "^9.6.1",
+    "@types/graphql": "^0.13.1",
+    "@types/node": "^10.1.2",
     "@types/ws": "^4.0.2",
-    "apollo-engine": "^1.0.6",
+    "apollo-engine": "^1.1.1",
+    "apollo-fetch": "^0.7.0",
     "fibers": "1.0.15",
+    "graphql-tag": "^2.9.2",
     "meteor-promise": "0.8.6",
     "typescript": "2.8.3"
   },
@@ -46,8 +48,8 @@
     "apollo-tracing": "^0.1.0",
     "graphql-extensions": "^0.0.x",
     "graphql-subscriptions": "^0.5.8",
-    "graphql-tools": "^2.23.1",
-    "subscriptions-transport-ws": "^0.9.7",
+    "graphql-tools": "^3.0.2",
+    "subscriptions-transport-ws": "^0.9.9",
     "ws": "^5.1.1"
   }
 }

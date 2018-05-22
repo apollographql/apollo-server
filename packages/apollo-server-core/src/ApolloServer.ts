@@ -32,9 +32,6 @@ import {
   SubscriptionServerOptions,
 } from './types';
 
-const env = process.env.NODE_ENV;
-const isDev = env !== 'production' && env !== 'test';
-
 const NoIntrospection = (context: ValidationContext) => ({
   Field(node: FieldDefinitionNode) {
     if (node.name.value === '__schema' || node.name.value === '__type') {
@@ -49,7 +46,7 @@ const NoIntrospection = (context: ValidationContext) => ({
 });
 
 export class ApolloServerBase<Request = RequestInit> {
-  public disableTools: boolean = !isDev;
+  public disableTools: boolean;
   // set in the listen function if subscriptions are enabled
   public subscriptionsPath: string;
 
@@ -61,6 +58,7 @@ export class ApolloServerBase<Request = RequestInit> {
   private engineEnabled: boolean = false;
 
   private http?: HttpServer;
+  private subscriptionServer?: SubscriptionServer;
   protected getHttp: () => HttpServer;
 
   constructor(config: Config<Request>) {
@@ -75,12 +73,21 @@ export class ApolloServerBase<Request = RequestInit> {
       ...requestOptions
     } = config;
 
+    //While reading process.env is slow, a server should only be constructed
+    //once per run, so we place the env check inside the constructor. If env
+    //should be used outside of the constructor context, place it as a private
+    //or protected field of the class instead of a global. Keeping the read in
+    //the contructor enables testing of different environments
+    const env = process.env.NODE_ENV;
+    const isDev = env !== 'production' && env !== 'test';
+
     // if this is local dev, we want graphql gui and introspection to be turned on
     // in production, you can manually turn these on by passing { introspection: true }
     // to the constructor of ApolloServer
     // we use this.disableTools to track this internally for later use when
     // constructing middleware by frameworks
-    if (introspection || isDev) this.disableTools = false;
+    if (typeof introspection === 'boolean') this.disableTools = !introspection;
+    else this.disableTools = !isDev;
 
     if (this.disableTools) {
       const noIntro = [NoIntrospection];
@@ -140,7 +147,10 @@ export class ApolloServerBase<Request = RequestInit> {
       }
 
       this.subscriptionsPath = config.path;
-      this.createSubscriptionServer(this.http, config);
+      this.subscriptionServer = this.createSubscriptionServer(
+        this.http,
+        config,
+      );
     }
 
     if (opts.engineProxy || opts.engineInRequestPath) this.createEngine(opts);
@@ -208,6 +218,7 @@ export class ApolloServerBase<Request = RequestInit> {
 
   public async stop() {
     if (this.engineProxy) await this.engineProxy.stop();
+    if (this.subscriptionServer) await this.subscriptionServer.close();
     if (this.http) await new Promise(s => this.http.close(s));
   }
 
@@ -216,7 +227,8 @@ export class ApolloServerBase<Request = RequestInit> {
     config: SubscriptionServerOptions,
   ) {
     const { onDisconnect, onConnect, keepAlive, path } = config;
-    SubscriptionServer.create(
+
+    return SubscriptionServer.create(
       {
         schema: this.schema,
         execute,
@@ -230,7 +242,7 @@ export class ApolloServerBase<Request = RequestInit> {
             ...value,
             errors:
               value.errors &&
-              formatApolloErrors(value.errors, {
+              formatApolloErrors([...value.errors], {
                 formatter: this.requestOptions.formatError,
                 debug: this.requestOptions.debug,
                 logFunction: this.requestOptions.logFunction,
