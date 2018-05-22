@@ -52,7 +52,7 @@
     "prettier-check": "2.0.0",
     "remap-istanbul": "0.11.1",
     "sinon": "5.0.7",
-    "supertest": "3.0.0",
+    "supertest": "3.1.0",
     "supertest-as-promised": "4.0.2",
     "typescript": "2.8.3"
   }
