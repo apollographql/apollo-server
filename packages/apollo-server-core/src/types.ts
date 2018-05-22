@@ -59,11 +59,7 @@ export interface ListenOptions {
   // node http listen options
   // https://nodejs.org/api/net.html#net_server_listen_options_callback
   // https://github.com/apollographql/apollo-server/pull/979#discussion_r184483094
-  port?: string | number;
-  host?: string;
-  path?: string;
-  backlog?: number;
-  exclusive?: boolean;
+  http?: HttpListenOptions | any | { handle: any; backlog?: number };
   // XXX clean this up
   engineInRequestPath?: boolean;
   engineProxy?: boolean | Record<string, any>;

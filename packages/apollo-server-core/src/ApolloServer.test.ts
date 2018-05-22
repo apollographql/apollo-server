@@ -396,9 +396,11 @@ describe('ApolloServerBase', () => {
             level: 'ERROR',
           },
         },
-        port: 4000,
+        http: {
+          port: 4242,
+        },
       });
-      expect(enginePort).to.equal(4000);
+      expect(enginePort).to.equal(4242);
 
       //Check engine responding
       const engineApolloFetch = createApolloFetch({ uri: engineUri });
