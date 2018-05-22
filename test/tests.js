@@ -5,7 +5,7 @@ process.env.NODE_ENV = 'test';
 
 process.on('unhandledRejection', reason => {
   console.log('Reason: ' + reason);
-  console.log('Reason: ' + reason.stack);
+  console.log('Stack: ' + reason.stack);
 });
 
 //apollo-server-core
