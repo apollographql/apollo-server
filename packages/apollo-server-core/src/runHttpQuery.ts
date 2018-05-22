@@ -9,7 +9,9 @@ import { formatApolloErrors } from './errors';
 export interface HttpQueryRequest {
   method: string;
   query: Record<string, any> | Array<Record<string, any>>;
-  options: GraphQLOptions | (() => Promise<GraphQLOptions> | GraphQLOptions);
+  options:
+    | GraphQLOptions
+    | ((...args: Array<any>) => Promise<GraphQLOptions> | GraphQLOptions);
 }
 
 export class HttpQueryError extends Error {
