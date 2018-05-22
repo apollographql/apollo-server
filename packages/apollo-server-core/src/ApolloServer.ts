@@ -127,8 +127,11 @@ export class ApolloServerBase<Request = RequestInit> {
     this.http = this.getHttp();
 
     const options = {
-      port: process.env.PORT || 4000,
       ...opts,
+      http: {
+        port: process.env.PORT || 4000,
+        ...opts.http,
+      },
     };
 
     if (opts.subscriptions !== false) {
@@ -160,7 +163,7 @@ export class ApolloServerBase<Request = RequestInit> {
         this.engineProxy.listen(
           {
             graphqlPaths: [this.graphqlPath],
-            port: options.port,
+            port: options.http.port,
             httpServer: this.http,
             launcherOptions: options.engineLauncherOptions,
           },
@@ -180,39 +183,40 @@ export class ApolloServerBase<Request = RequestInit> {
       // https://nodejs.org/api/net.html#net_server_listen_options_callback
       // https://github.com/apollographql/apollo-server/pull/979/files/33ea0c92a1e4e76c8915ff08806f15dae391e1f0#discussion_r184470435
       // https://github.com/apollographql/apollo-server/pull/979#discussion_r184471445
-      this.http.listen(
-        {
-          port: options.port,
-          host: options.host,
-          path: options.path,
-          backlog: options.backlog,
-          exclusive: options.exclusive,
-        },
-        () => {
-          const listeningAddress: any = this.http.address();
-          // Convert IPs which mean "any address" (IPv4 or IPv6) into localhost
-          // corresponding loopback ip. Note that the url field we're setting is
-          // primarily for consumption by our test suite. If this heuristic is
-          // wrong for your use case, explicitly specify a frontend host (in the
-          // `frontends.host` field in your engine config, or in the `host`
-          // option to ApolloServer.listen).
-          let hostForUrl = listeningAddress.address;
-          if (
-            listeningAddress.address === '' ||
-            listeningAddress.address === '::'
-          )
-            hostForUrl = 'localhost';
+      function listenCallback() {
+        const listeningAddress: any = this.http.address();
+        // Convert IPs which mean "any address" (IPv4 or IPv6) into localhost
+        // corresponding loopback ip. Note that the url field we're setting is
+        // primarily for consumption by our test suite. If this heuristic is
+        // wrong for your use case, explicitly specify a frontend host (in the
+        // `frontends.host` field in your engine config, or in the `host`
+        // option to ApolloServer.listen).
+        let hostForUrl = listeningAddress.address;
+        if (
+          listeningAddress.address === '' ||
+          listeningAddress.address === '::'
+        )
+          hostForUrl = 'localhost';
 
-          listeningAddress.url = require('url').format({
-            protocol: 'http',
-            hostname: hostForUrl,
-            port: listeningAddress.port,
-            pathname: this.graphqlPath,
-          });
+        listeningAddress.url = require('url').format({
+          protocol: 'http',
+          hostname: hostForUrl,
+          port: listeningAddress.port,
+          pathname: this.graphqlPath,
+        });
 
-          resolve(listeningAddress);
-        },
-      );
+        resolve(listeningAddress);
+      }
+
+      if (options.http.handle) {
+        this.http.listen(
+          options.http.handle,
+          options.http.backlog,
+          listenCallback.bind(this),
+        );
+      } else {
+        this.http.listen(options.http, listenCallback.bind(this));
+      }
     });
   }
 
