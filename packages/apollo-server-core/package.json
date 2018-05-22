@@ -48,7 +48,7 @@
     "apollo-tracing": "^0.1.0",
     "graphql-extensions": "^0.0.x",
     "graphql-subscriptions": "^0.5.8",
-    "graphql-tools": "^2.23.1",
+    "graphql-tools": "^3.0.2",
     "subscriptions-transport-ws": "^0.9.9",
     "ws": "^5.1.1"
   }
