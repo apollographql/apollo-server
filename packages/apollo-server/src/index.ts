@@ -44,6 +44,7 @@ export class ApolloServer extends ApolloServerBase<Request> {
         disableHealthCheck,
         bodyParserConfig,
         onHealthCheck,
+        cors,
       });
     }
 
