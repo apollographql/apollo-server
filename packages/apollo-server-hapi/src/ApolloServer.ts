@@ -12,6 +12,7 @@ export interface ServerRegistration {
   options?: hapi.ServerOptions;
   server: ApolloServerBase<hapi.Request>;
   path?: string;
+  cors?: boolean;
 }
 
 export interface HapiListenOptions {
@@ -27,6 +28,7 @@ export const registerServer = async ({
   app,
   options,
   server,
+  cors,
   path,
 }: ServerRegistration) => {
   if (!path) path = '/graphql';
@@ -96,7 +98,7 @@ server.listen({ http: { port: YOUR_PORT_HERE } });
       path: path,
       graphqlOptions: server.request.bind(server),
       route: {
-        cors: true,
+        cors: typeof cors === 'boolean' ? cors : true,
       },
     },
   });
