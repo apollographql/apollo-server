@@ -13,6 +13,8 @@ export interface ServerRegistration {
   server: ApolloServerBase<hapi.Request>;
   path?: string;
   cors?: boolean;
+  onHealthCheck?: (req: hapi.Request) => Promise<any>;
+  disableHealthCheck?: boolean;
 }
 
 export interface HapiListenOptions {
@@ -30,6 +32,8 @@ export const registerServer = async ({
   server,
   cors,
   path,
+  disableHealthCheck,
+  onHealthCheck,
 }: ServerRegistration) => {
   if (!path) path = '/graphql';
 
@@ -91,6 +95,31 @@ server.listen({ http: { port: YOUR_PORT_HERE } });
       return h.continue;
     },
   });
+
+  if (!disableHealthCheck) {
+    await hapiApp.route({
+      method: '*',
+      path: '/.well-known/apollo/server-health',
+      options: {
+        cors: typeof cors === 'boolean' ? cors : true,
+      },
+      handler: async function(request, h) {
+        if (onHealthCheck) {
+          try {
+            await onHealthCheck(request);
+          } catch {
+            const response = h.response({ status: 'fail' });
+            response.code(503);
+            response.type('application/health+json');
+            return response;
+          }
+        }
+        const response = h.response({ status: 'pass' });
+        response.type('application/health+json');
+        return response;
+      },
+    });
+  }
 
   await hapiApp.register({
     plugin: graphqlHapi,

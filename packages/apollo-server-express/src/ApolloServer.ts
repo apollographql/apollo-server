@@ -14,6 +14,8 @@ export interface ServerRegistration {
   path?: string;
   cors?: corsMiddleware.CorsOptions;
   bodyParserConfig?: OptionsJson;
+  onHealthCheck?: (req: express.Request) => Promise<any>;
+  disableHealthCheck?: boolean;
 }
 
 export const registerServer = async ({
@@ -22,8 +24,30 @@ export const registerServer = async ({
   path,
   cors,
   bodyParserConfig,
+  disableHealthCheck,
+  onHealthCheck,
 }: ServerRegistration) => {
   if (!path) path = '/graphql';
+
+  if (!disableHealthCheck) {
+    //uses same path as engine
+    app.use('/.well-known/apollo/server-health', (req, res, next) => {
+      //Response follows https://tools.ietf.org/html/draft-inadarei-api-health-check-01
+      res.type('application/health+json');
+
+      if (onHealthCheck) {
+        onHealthCheck(req)
+          .then(() => {
+            res.json({ status: 'pass' });
+          })
+          .catch(() => {
+            res.status(503).json({ status: 'fail' });
+          });
+      } else {
+        res.json({ status: 'pass' });
+      }
+    });
+  }
 
   // XXX multiple paths?
   server.use({
