@@ -16,14 +16,47 @@ The core of an Apollo Server implementation.  For a complete example, see the [B
 * `options`: <`Object`>
   * `typeDefs`: <`String` inside [`gql`](#gql) tag> _(required)_
 
-    This is a string representation of your GraphQL Schema Definition Language (SDL).
-
+    String representation of GraphQL schema in the Schema Definition Language (SDL).
 
   * `resolvers`: <`Object`> _(required)_
 
-    Type: `Object`
+    A map of resolvers for the types defined in `typeDefs`.  The key should be the type name and the value should be a `Function` to be executed for that type.
 
-    This should be a map of resolvers for the types defined in `typeDefs`.  The key should be the type name and the value should be a `Function` to be executed for that type.
+  * `context`: <`Object`> | <`Fucntion`>
+
+    An object or function called with the current request that creates the context shared across all resolvers
+
+  * `mocks`: <`Object`> | <`Boolean`>
+
+    A boolean enabling the default mocks or object that contains definitions
+
+  * `schemaDirectives`: <`Object`>
+
+    Contains definition of schema directives used in the `typeDefs`
+
+  * `introspection`: <`Boolean`>
+
+    Enables and disables schema introspection
+
+  * `debug`: <`Boolean`>
+
+    Enables and disables development mode helpers. Defaults to `true`
+
+  * `validationRules`: <`Object`>
+
+    Schema validation rules
+
+  * `tracing`, `cacheControl`: <`Boolean`>
+
+    Add tracing or cacheControl meta data to the GraphQL response
+
+  * `formatError`, `formatResponse`, `formatParams`: <`Function`>
+
+    Functions to format the errors and response returned from the server, as well as the parameters to graphql execution(`runQuery`)
+
+  * `schema`: <`Object`>
+
+    An executable GraphQL schema that will override the `typeDefs` and `resolvers` provided
 
 #### Returns
 
@@ -35,24 +68,35 @@ The core of an Apollo Server implementation.  For a complete example, see the [B
 
 * `options`: <`Object`>
 
-  Most parameters which are supported by Node.js' [`net.Server.listen`](https://nodejs.org/api/net.html#net_server_listen_options_callback) method are supported, including:
+  * `http`: <`Object`>
 
-  * `port`: <`String`> | <`Number`>
-  * `path`: <`String`>
-  * `backlog`: <`Number`>
-  * `exclusive`: <`Boolean`>
+    All parameters which are supported by Node.js' [`net.Server.listen`](https://nodejs.org/api/net.html#net_server_listen_options_callback) method are supported, including:
 
-  // Engine launcher options
-  `engineLauncherOptions?: EngineLauncherOptions;`
+    * `port`: <`String`> | <`Number`>
+    * `path`: <`String`>
+    * `backlog`: <`Number`>
+    * `exclusive`: <`Boolean`>
 
-  // WebSocket options
-  `keepAlive?: number;`
-  `onConnect?: (
-    connectionParams: Object,
-    websocket: WebSocket,
-    context: ConnectionContext,
-  ) => any;
-  onDisconnect?: (websocket: WebSocket, context: ConnectionContext) => any;`
+    or
+
+    * `handler`: <`Object`>
+    * `backlog`: <`Number`>
+
+  Engine launcher options
+
+  * `engineLauncherOptions` : [<`Object`>](https://www.apollographql.com/docs/engine/setup-node.html#api-engine.listen)
+  * `engineProxy`: [<`Object`>](https://www.apollographql.com/docs/engine/proxy-config.html)
+
+  WebSocket options
+
+  * `subscriptions`: <`Object`> | <`String`> | false
+
+    String defining the path for subscriptions or an Object to customize the subscriptions server. Set to false to disable subscriptions
+
+    * `path`: <`String`>
+    * `keepAlive`: <`Number`>
+    * `onConnect`: <`Function`>
+    * `onDisconnect`: <`Function`>
 
 #### Returns
 
@@ -80,8 +124,6 @@ The `registerServer` method is from `apollo-server-express`. Middleware registra
   * `cors`: <`Object`>
 
       Pass the cors options.
-
-
 
 ## `gql`
 
