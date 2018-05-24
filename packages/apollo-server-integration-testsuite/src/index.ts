@@ -19,6 +19,7 @@ const request = require('supertest');
 import { GraphQLOptions } from 'apollo-server-core';
 import * as GraphiQL from 'apollo-server-module-graphiql';
 import { OperationStore } from 'apollo-server-module-operation-store';
+import gql from 'graphql-tag';
 
 const personType = new GraphQLObjectType({
   name: 'PersonType',
@@ -526,6 +527,26 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
         });
       });
 
+      it('does not accept a query AST', async () => {
+        app = await createApp();
+        const expected = {
+          testString: 'it works',
+        };
+        const req = request(app)
+          .post('/graphql')
+          .send({
+            query: gql`
+              query test {
+                testString
+              }
+            `,
+          });
+        return req.then(res => {
+          expect(res.status).to.equal(400);
+          expect(res.text).to.contain('GraphQL queries must be strings');
+        });
+      });
+
       it('can handle batch requests', async () => {
         app = await createApp();
         const expected = [
@@ -998,7 +1019,8 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           graphqlOptions: {
             schema,
             formatParams(params) {
-              params['query'] = store.get(params.operationName);
+              params['parsedQuery'] = store.get(params.operationName);
+              delete params['queryString'];
               return params;
             },
           },
@@ -1022,10 +1044,10 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           graphqlOptions: {
             schema,
             formatParams(params) {
-              if (params.query) {
+              if (params.queryString) {
                 throw new Error('Must not provide query, only operationName');
               }
-              params['query'] = store.get(params.operationName);
+              params['parsedQuery'] = store.get(params.operationName);
               return params;
             },
           },

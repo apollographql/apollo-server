@@ -92,7 +92,7 @@ describe('runQuery', () => {
   it('returns the right result when query is a string', () => {
     const query = `{ testString }`;
     const expected = { testString: 'it works' };
-    return runQuery({ schema, query: query }).then(res => {
+    return runQuery({ schema, queryString: query }).then(res => {
       expect(res.data).to.deep.equal(expected);
     });
   });
@@ -100,7 +100,7 @@ describe('runQuery', () => {
   it('returns the right result when query is a document', () => {
     const query = parse(`{ testString }`);
     const expected = { testString: 'it works' };
-    return runQuery({ schema, query: query }).then(res => {
+    return runQuery({ schema, parsedQuery: query }).then(res => {
       expect(res.data).to.deep.equal(expected);
     });
   });
@@ -110,7 +110,7 @@ describe('runQuery', () => {
     const expected = /Syntax Error/;
     return runQuery({
       schema,
-      query: query,
+      queryString: query,
       variables: { base: 1 },
     }).then(res => {
       expect(res.data).to.be.undefined;
@@ -124,7 +124,7 @@ describe('runQuery', () => {
     const logStub = stub(console, 'error');
     return runQuery({
       schema,
-      query: query,
+      queryString: query,
       debug: true,
     }).then(res => {
       logStub.restore();
@@ -137,7 +137,7 @@ describe('runQuery', () => {
     const logStub = stub(console, 'error');
     return runQuery({
       schema,
-      query: query,
+      queryString: query,
       debug: false,
     }).then(res => {
       logStub.restore();
@@ -151,7 +151,7 @@ describe('runQuery', () => {
       'Variable "$base" of type "String" used in position expecting type "Int!".';
     return runQuery({
       schema,
-      query: query,
+      queryString: query,
       variables: { base: 1 },
     }).then(res => {
       expect(res.data).to.be.undefined;
@@ -163,7 +163,7 @@ describe('runQuery', () => {
   it('correctly passes in the rootValue', () => {
     const query = `{ testRootValue }`;
     const expected = { testRootValue: 'it also works' };
-    return runQuery({ schema, query: query, rootValue: 'it also' }).then(
+    return runQuery({ schema, queryString: query, rootValue: 'it also' }).then(
       res => {
         expect(res.data).to.deep.equal(expected);
       },
@@ -173,9 +173,11 @@ describe('runQuery', () => {
   it('correctly passes in the context', () => {
     const query = `{ testContextValue }`;
     const expected = { testContextValue: 'it still works' };
-    return runQuery({ schema, query: query, context: 'it still' }).then(res => {
-      expect(res.data).to.deep.equal(expected);
-    });
+    return runQuery({ schema, queryString: query, context: 'it still' }).then(
+      res => {
+        expect(res.data).to.deep.equal(expected);
+      },
+    );
   });
 
   it('passes the options to formatResponse', () => {
@@ -183,7 +185,7 @@ describe('runQuery', () => {
     const expected = { testContextValue: 'it still works' };
     return runQuery({
       schema,
-      query: query,
+      queryString: query,
       context: 'it still',
       formatResponse: (response, { context }) => {
         response['extensions'] = context;
@@ -200,7 +202,7 @@ describe('runQuery', () => {
     const expected = { testArgumentValue: 6 };
     return runQuery({
       schema,
-      query: query,
+      queryString: query,
       variables: { base: 1 },
     }).then(res => {
       expect(res.data).to.deep.equal(expected);
@@ -213,7 +215,7 @@ describe('runQuery', () => {
       'Variable "$base" of required type "Int!" was not provided.';
     return runQuery({
       schema,
-      query: query,
+      queryString: query,
     }).then(res => {
       expect(res.errors[0].message).to.deep.equal(expected);
     });
@@ -222,7 +224,7 @@ describe('runQuery', () => {
   it('supports yielding resolver functions', () => {
     return runQuery({
       schema,
-      query: `{ testAwaitedValue }`,
+      queryString: `{ testAwaitedValue }`,
     }).then(res => {
       expect(res.data).to.deep.equal({
         testAwaitedValue: 'it works',
@@ -241,9 +243,11 @@ describe('runQuery', () => {
     const expected = {
       testString: 'it works',
     };
-    return runQuery({ schema, query: query, operationName: 'Q1' }).then(res => {
-      expect(res.data).to.deep.equal(expected);
-    });
+    return runQuery({ schema, queryString: query, operationName: 'Q1' }).then(
+      res => {
+        expect(res.data).to.deep.equal(expected);
+      },
+    );
   });
 
   it('calls logFunction', () => {
@@ -258,7 +262,7 @@ describe('runQuery', () => {
     };
     return runQuery({
       schema,
-      query: query,
+      queryString: query,
       operationName: 'Q1',
       variables: { test: 123 },
       logFunction: logFn,
@@ -309,7 +313,7 @@ describe('runQuery', () => {
 
     const result1 = await runQuery({
       schema,
-      query: query,
+      queryString: query,
       operationName: 'Q1',
     });
 
@@ -321,7 +325,7 @@ describe('runQuery', () => {
 
     const result2 = await runQuery({
       schema,
-      query: query,
+      queryString: query,
       operationName: 'Q1',
       fieldResolver: () => 'a very testful field resolver string',
     });
@@ -364,7 +368,7 @@ describe('runQuery', () => {
 
       await runQuery({
         schema,
-        query: query,
+        queryString: query,
         operationName: 'Q1',
       });
 

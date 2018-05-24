@@ -235,7 +235,8 @@ store.put('query testquery{ testString }');
 graphqlOptions = {
   schema: Schema,
   formatParams(params) {
-    params['query'] = store.get(params.operationName);
+    params['parsedQuery'] = store.get(params.operationName);
+    delete params['queryString'];  // Or throw if this is provided.
     return params;
   },
 };
