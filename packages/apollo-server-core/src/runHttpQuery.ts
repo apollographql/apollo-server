@@ -179,6 +179,7 @@ export async function runHttpQuery(
       // a particular HTTP error in that case, but we don't actually parse the
       // query until we're in runQuery, so we declare the error we want to throw
       // here and pass it into runQuery.
+      // TODO this could/should be added as a validation rule rather than an ad hoc error
       let nonQueryError;
       if (isGetRequest) {
         nonQueryError = new HttpQueryError(
