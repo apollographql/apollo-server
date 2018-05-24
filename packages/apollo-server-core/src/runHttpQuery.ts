@@ -1,5 +1,5 @@
 import { parse, DocumentNode, ExecutionResult } from 'graphql';
-import { runQuery } from './runQuery';
+import { runQuery, QueryOptions } from './runQuery';
 import {
   default as GraphQLOptions,
   resolveGraphqlOptions,
@@ -158,11 +158,8 @@ export async function runHttpQuery(
         );
       }
 
-      if (typeof queryString !== 'string') {
-        if (!queryString) {
-          // Note that we've already thrown a different error if it looks like APQ.
-          throw new HttpQueryError(400, 'Must provide query string.');
-        }
+      //We ensure that there is a queryString or parsedQuery after formatParams
+      if (queryString && typeof queryString !== 'string') {
         // Check for a common error first.
         if (queryString && (queryString as any).kind === 'Document') {
           throw new HttpQueryError(
@@ -239,7 +236,7 @@ export async function runHttpQuery(
         );
       }
 
-      let params = {
+      let params: QueryOptions = {
         schema: optionsObject.schema,
         queryString,
         nonQueryError,
@@ -259,6 +256,11 @@ export async function runHttpQuery(
 
       if (optionsObject.formatParams) {
         params = optionsObject.formatParams(params);
+      }
+
+      if (!params.queryString && !params.parsedQuery) {
+        // Note that we've already thrown a different error if it looks like APQ.
+        throw new HttpQueryError(400, 'Must provide query string.');
       }
 
       return runQuery(params);
