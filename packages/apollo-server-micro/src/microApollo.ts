@@ -42,6 +42,7 @@ export function microGraphql(
         method: req.method,
         options: options,
         query: query,
+        request: req,
       });
 
       res.setHeader('Content-Type', 'application/json');

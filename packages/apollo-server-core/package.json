@@ -34,6 +34,7 @@
     "fibers": "1.0.15",
     "graphql-tag": "^2.9.2",
     "meteor-promise": "0.8.6",
+    "mock-req": "^0.2.0",
     "typescript": "2.8.3"
   },
   "peerDependencies": {

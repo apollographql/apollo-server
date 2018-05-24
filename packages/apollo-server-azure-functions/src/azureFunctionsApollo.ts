@@ -58,6 +58,7 @@ export function graphqlAzureFunctions(
       method: request.method,
       options: options,
       query: request.method === 'POST' ? request.body : request.query,
+      request,
     };
 
     if (queryRequest.query && typeof queryRequest.query === 'string') {

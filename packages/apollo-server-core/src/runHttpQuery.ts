@@ -5,6 +5,7 @@ import {
   resolveGraphqlOptions,
 } from './graphqlOptions';
 import { formatApolloErrors } from './errors';
+import { IncomingMessage } from 'http';
 
 export interface HttpQueryRequest {
   method: string;
@@ -12,6 +13,7 @@ export interface HttpQueryRequest {
   options:
     | GraphQLOptions
     | ((...args: Array<any>) => Promise<GraphQLOptions> | GraphQLOptions);
+  request: IncomingMessage | Request;
 }
 
 export class HttpQueryError extends Error {

@@ -38,6 +38,7 @@ export function graphqlCloudflare(options: GraphQLOptions) {
       method: req.method,
       options: options,
       query,
+      request: req as Request,
     }).then(
       gqlResponse =>
         new Response(gqlResponse, {

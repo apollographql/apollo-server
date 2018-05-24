@@ -54,6 +54,7 @@ export function graphqlLambda(
         method: event.httpMethod,
         options: options,
         query: query,
+        request: event,
       });
       headers['Content-Type'] = 'application/json';
       statusCode = 200;
