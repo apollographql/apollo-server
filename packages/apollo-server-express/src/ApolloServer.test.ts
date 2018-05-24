@@ -6,9 +6,10 @@ import * as express from 'express';
 import * as request from 'request';
 import { createApolloFetch } from 'apollo-fetch';
 
-//to remove the circular dependency, we reference it directly
-import { gql, ApolloServer } from '../../apollo-server/dist/index';
+import { ApolloServerBase } from 'apollo-server-core';
 import { registerServer } from './ApolloServer';
+
+const gql = String.raw;
 
 const typeDefs = gql`
   type Query {
@@ -23,6 +24,9 @@ const resolvers = {
 };
 
 describe('apollo-server-express', () => {
+  //to remove the circular dependency, we reference it directly
+  const ApolloServer = require('../../apollo-server/dist/index').ApolloServer;
+
   describe('', () => {
     it('accepts typeDefs and resolvers', () => {
       const app = express();
@@ -38,7 +42,7 @@ describe('apollo-server-express', () => {
   });
 
   describe('registerServer', () => {
-    let server: ApolloServer;
+    let server: ApolloServerBase<express.Request>;
     let app: express.Application;
     afterEach(async () => {
       await server.stop();
@@ -146,7 +150,7 @@ describe('apollo-server-express', () => {
     });
 
     describe('healthchecks', () => {
-      let server: ApolloServer;
+      let server: ApolloServerBase<express.Request>;
 
       afterEach(async () => {
         await server.stop();
