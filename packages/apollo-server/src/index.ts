@@ -16,38 +16,24 @@ export * from './exports';
 export class ApolloServer extends ApolloServerBase<Request> {
   // here we overwrite the underlying listen to configure
   // the fallback / default server implementation
-  async listen(
-    opts: ListenOptions & {
-      onHealthCheck?: (req: Request) => Promise<any>;
-      disableHealthCheck?: boolean;
-      bodyParserConfig?: OptionsJson;
-      cors?: CorsOptions;
-    } = {},
-  ): Promise<ServerInfo> {
-    const {
-      disableHealthCheck,
-      bodyParserConfig,
-      onHealthCheck,
-      cors,
-      ...listenOpts
-    } = opts;
-
+  async listen(opts: ListenOptions = {}): Promise<ServerInfo> {
     // we haven't configured a server yet so lets build the default one
     // using express
     if (!this.getHttp) {
       const app = express();
 
+      //provide generous values for the getting started experience
       await registerServer({
         app,
         path: '/',
         server: this,
-        disableHealthCheck,
-        bodyParserConfig,
-        onHealthCheck,
-        cors,
+        bodyParserConfig: { limit: '50mb' },
+        cors: {
+          origin: '*',
+        },
       });
     }
 
-    return super.listen(listenOpts);
+    return super.listen(opts);
   }
 }
