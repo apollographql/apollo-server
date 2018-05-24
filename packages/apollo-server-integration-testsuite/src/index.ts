@@ -19,6 +19,7 @@ const request = require('supertest');
 import { GraphQLOptions } from 'apollo-server-core';
 import * as GraphiQL from 'apollo-server-module-graphiql';
 import { OperationStore } from 'apollo-server-module-operation-store';
+import gql from 'graphql-tag';
 
 const personType = new GraphQLObjectType({
   name: 'PersonType',
@@ -523,6 +524,26 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           expect(res.body.data.__schema.types[0].fields[0].name).to.equal(
             'testString',
           );
+        });
+      });
+
+      it('does not accept a query AST', async () => {
+        app = await createApp();
+        const expected = {
+          testString: 'it works',
+        };
+        const req = request(app)
+          .post('/graphql')
+          .send({
+            query: gql`
+              query test {
+                testString
+              }
+            `,
+          });
+        return req.then(res => {
+          expect(res.status).to.equal(400);
+          expect(res.text).to.contain('GraphQL queries must be strings');
         });
       });
 

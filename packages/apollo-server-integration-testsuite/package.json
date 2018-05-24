@@ -30,6 +30,7 @@
     "definition": "dist/index.d.ts"
   },
   "devDependencies": {
-    "@types/node": "^10.1.2"
+    "@types/node": "^10.1.2",
+    "graphql-tag": "^2.9.2"
   }
 }
