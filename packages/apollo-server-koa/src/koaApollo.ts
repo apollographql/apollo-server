@@ -33,6 +33,7 @@ export function graphqlKoa(
       options: options,
       query:
         ctx.request.method === 'POST' ? ctx.request.body : ctx.request.query,
+      request: ctx.req,
     }).then(
       gqlResponse => {
         ctx.set('Content-Type', 'application/json');

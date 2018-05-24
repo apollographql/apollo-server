@@ -2,6 +2,7 @@
 import { expect } from 'chai';
 import { stub } from 'sinon';
 import 'mocha';
+import * as MockReq from 'mock-req';
 
 import {
   GraphQLSchema,
@@ -38,6 +39,7 @@ describe('runHttpQuery', () => {
       options: {
         schema,
       },
+      request: new MockReq(),
     };
 
     it('raises a 400 error if the query is missing', () => {

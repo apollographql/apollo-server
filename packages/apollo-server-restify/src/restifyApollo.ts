@@ -44,6 +44,7 @@ export function graphqlRestify(
       method: req.method,
       options: options,
       query: req.method === 'POST' ? req.body : req.query,
+      request: req,
     }).then(
       gqlResponse => {
         res.setHeader('Content-Type', 'application/json');

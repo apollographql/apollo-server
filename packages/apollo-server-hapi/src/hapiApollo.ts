@@ -6,6 +6,7 @@ import {
   runHttpQuery,
   HttpQueryError,
 } from 'apollo-server-core';
+import { IncomingMessage } from 'http';
 
 export interface IRegister {
   (server: Server, options: any): void;
@@ -50,6 +51,7 @@ const graphqlHapi: IPlugin = {
                 ? //TODO type payload as string or Record
                   (request.payload as any)
                 : request.query,
+            request: request.raw.req,
           });
 
           const response = h.response(gqlResponse);

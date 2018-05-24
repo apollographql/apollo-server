@@ -78,6 +78,7 @@ function createHttpServer(server) {
           method: req.method,
           options: server.request(req as any),
           query: JSON.parse(body),
+          request: req,
         })
           .then(gqlResponse => {
             res.setHeader('Content-Type', 'application/json');
