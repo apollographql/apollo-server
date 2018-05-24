@@ -6,7 +6,8 @@ import * as express from 'express';
 import * as request from 'request';
 import { createApolloFetch } from 'apollo-fetch';
 
-import { gql, ApolloServer } from 'apollo-server';
+//to remove the circular dependency, we reference it directly
+import { gql, ApolloServer } from '../../apollo-server/dist/index';
 import { registerServer } from './ApolloServer';
 
 const typeDefs = gql`
