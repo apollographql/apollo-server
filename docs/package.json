@@ -23,6 +23,6 @@
     "test": "npm run clean; npm run build"
   },
   "dependencies": {
-    "hexo-versioned-netlify-redirects": "^1.0.7"
+    "hexo-versioned-netlify-redirects": "1.0.7"
   }
 }
