@@ -8,7 +8,7 @@ import {
   ExecutionArgs,
 } from 'graphql';
 
-export type EndHandler = (err: Error | null) => void;
+export type EndHandler = (...errors: Array<Error>) => void;
 type StartHandler = () => EndHandler | void;
 // A StartHandlerInvoker is a function that, given a specific GraphQLExtension,
 // finds a specific StartHandler on that extension and calls it with appropriate
@@ -102,12 +102,12 @@ export class GraphQLExtensionStack<TContext = any> {
         endHandlers.push(endHandler);
       }
     });
-    return (err: Error | null) => {
+    return (...errors: Array<Error>) => {
       // We run end handlers in reverse order of start handlers. That way, the
       // first handler in the stack "surrounds" the entire event's process
       // (helpful for tracing/reporting!)
       endHandlers.reverse();
-      endHandlers.forEach(endHandler => endHandler(err));
+      endHandlers.forEach(endHandler => endHandler(...errors));
     };
   }
 }
