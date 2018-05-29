@@ -18,5 +18,3 @@ export {
 // ApolloServer Base class
 export { ApolloServerBase } from './ApolloServer';
 export * from './types';
-
-export { processRequest as processFileUploads } from 'apollo-upload-server';

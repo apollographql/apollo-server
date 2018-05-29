@@ -1,4 +1,9 @@
-import { makeExecutableSchema, addMockFunctionsToSchema } from 'graphql-tools';
+import {
+  makeExecutableSchema,
+  addMockFunctionsToSchema,
+  IResolvers,
+  mergeSchemas,
+} from 'graphql-tools';
 import { Server as HttpServer } from 'http';
 import {
   execute,
@@ -16,8 +21,6 @@ import {
   SubscriptionServer,
   ExecutionParams,
 } from 'subscriptions-transport-ws';
-
-import { GraphQLUpload } from 'apollo-upload-server';
 
 import { formatApolloErrors } from './errors';
 import { GraphQLServerOptions as GraphQLOptions } from './graphqlOptions';
@@ -51,7 +54,6 @@ export class ApolloServerBase<Request = RequestInit> {
   public disableTools: boolean;
   // set in the listen function if subscriptions are enabled
   public subscriptionsPath: string;
-  public fileUploadConfig: boolean | Record<string, any>;
   public requestOptions: Partial<GraphQLOptions<any>>;
 
   private schema: GraphQLSchema;
@@ -73,7 +75,6 @@ export class ApolloServerBase<Request = RequestInit> {
       typeDefs,
       introspection,
       mocks,
-      uploads = true,
       ...requestOptions
     } = config;
 
@@ -100,28 +101,15 @@ export class ApolloServerBase<Request = RequestInit> {
         : noIntro;
     }
 
-    this.fileUploadConfig = uploads;
-
     this.requestOptions = requestOptions;
     this.context = context;
-
-    const typeDefinitions = Array.isArray(typeDefs)
-      ? typeDefs.join('\n')
-      : typeDefs;
 
     this.schema = schema
       ? schema
       : makeExecutableSchema({
-          typeDefs: uploads
-            ? typeDefinitions.concat(`scalar Upload`)
-            : typeDefinitions,
+          typeDefs: Array.isArray(typeDefs) ? typeDefs.join('\n') : typeDefs,
           schemaDirectives,
-          resolvers: uploads
-            ? {
-                Upload: GraphQLUpload,
-                ...resolvers,
-              }
-            : resolvers,
+          resolvers: resolvers,
         });
 
     if (mocks) {
@@ -138,6 +126,18 @@ export class ApolloServerBase<Request = RequestInit> {
     // until we move into the listen function
     this.getHttp = getHttp;
     this.graphqlPath = path;
+  }
+
+  public enhanceSchema(
+    schema: GraphQLSchema | { typeDefs: string; resolvers: IResolvers },
+  ) {
+    this.schema = mergeSchemas({
+      schemas: [
+        this.schema,
+        'typeDefs' in schema ? schema['typeDefs'] : schema,
+      ],
+      resolvers: 'resolvers' in schema ? [, schema['resolvers']] : {},
+    });
   }
 
   public listen(opts: ListenOptions = {}): Promise<ServerInfo> {

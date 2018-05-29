@@ -43,8 +43,6 @@ export interface Config<Server>
   schemaDirectives?: Record<string, typeof SchemaDirectiveVisitor>;
   context?: Context<any> | ContextFunction<any>;
   introspection?: boolean;
-  //https://github.com/jaydenseric/apollo-upload-server#options
-  uploads?: boolean | Record<string, any>;
   mocks?: boolean | IMocks;
 }
 
