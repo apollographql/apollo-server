@@ -104,12 +104,15 @@ export class ApolloServerBase<Request = RequestInit> {
     this.requestOptions = requestOptions;
     this.context = context;
 
+    const enhancedTypeDefs = Array.isArray(typeDefs) ? typeDefs : [typeDefs];
+    enhancedTypeDefs.push(`scalar Upload`);
+
     this.schema = schema
       ? schema
       : makeExecutableSchema({
-          typeDefs: Array.isArray(typeDefs) ? typeDefs.join('\n') : typeDefs,
+          typeDefs: enhancedTypeDefs.join('\n'),
           schemaDirectives,
-          resolvers: resolvers,
+          resolvers,
         });
 
     if (mocks) {

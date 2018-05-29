@@ -260,8 +260,6 @@ describe('apollo-server-express', () => {
       it('enabled uploads', async () => {
         server = new ApolloServer({
           typeDefs: gql`
-            scalar Upload
-
             type File {
               filename: String!
               mimetype: String!
