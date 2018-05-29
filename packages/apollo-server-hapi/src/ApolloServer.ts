@@ -1,14 +1,16 @@
 import * as hapi from 'hapi';
 import { createServer, Server as HttpServer } from 'http';
-import {
-  ApolloServerBase,
-  EngineLauncherOptions,
-  processFileUploads,
-} from 'apollo-server-core';
+import { ApolloServerBase, EngineLauncherOptions } from 'apollo-server-core';
 import { parseAll } from 'accept';
 import { renderPlaygroundPage } from 'graphql-playground-html';
+import {
+  processRequest as processFileUploads,
+  GraphQLUpload,
+} from 'apollo-upload-server';
 
 import { graphqlHapi } from './hapiApollo';
+
+const gql = String.raw;
 
 export interface ServerRegistration {
   app?: hapi.Server;
@@ -19,6 +21,7 @@ export interface ServerRegistration {
   cors?: boolean;
   onHealthCheck?: (req: hapi.Request) => Promise<any>;
   disableHealthCheck?: boolean;
+  uploads?: boolean | Record<string, any>;
 }
 
 export interface HapiListenOptions {
@@ -30,19 +33,15 @@ export interface HapiListenOptions {
   launcherOptions?: EngineLauncherOptions;
 }
 
-const handleFileUploads = (server: ApolloServerBase<hapi.Request>) => async (
-  req: hapi.Request,
-  h: hapi.ResponseToolkit,
-) => {
-  if (server.fileUploadConfig) {
-    const config =
-      typeof this.fileUploadConfig !== 'boolean' ? this.fileUploadConfig : {};
-    if (req.mime === 'multipart/form-data') {
-      Object.defineProperty(req, 'payload', {
-        value: await processFileUploads(req, config),
-        writable: false,
-      });
-    }
+const handleFileUploads = (
+  uploadsConfig: Record<string, any>,
+  server: ApolloServerBase<hapi.Request>,
+) => async (req: hapi.Request, h: hapi.ResponseToolkit) => {
+  if (req.mime === 'multipart/form-data') {
+    Object.defineProperty(req, 'payload', {
+      value: await processFileUploads(req, uploadsConfig),
+      writable: false,
+    });
   }
 };
 
@@ -54,6 +53,7 @@ export const registerServer = async ({
   path,
   disableHealthCheck,
   onHealthCheck,
+  uploads,
 }: ServerRegistration) => {
   if (!path) path = '/graphql';
 
@@ -83,6 +83,15 @@ server.listen({ http: { port: YOUR_PORT_HERE } });
     hapiApp = new hapi.Server({ autoListen: false });
   }
 
+  if (uploads !== false) {
+    server.enhanceSchema({
+      typeDefs: gql`
+        scalar Upload
+      `,
+      resolvers: { Upload: GraphQLUpload },
+    });
+  }
+
   await hapiApp.ext({
     type: 'onRequest',
     method: async function(request, h) {
@@ -90,7 +99,12 @@ server.listen({ http: { port: YOUR_PORT_HERE } });
         return h.continue;
       }
 
-      await handleFileUploads(server)(request, h);
+      if (uploads !== false) {
+        await handleFileUploads(
+          typeof uploads !== 'boolean' ? uploads : {},
+          server,
+        )(request, h);
+      }
 
       if (!server.disableTools && request.method === 'get') {
         //perform more expensive content-type check only if necessary
