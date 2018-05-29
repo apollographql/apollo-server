@@ -1,4 +1,9 @@
-import { makeExecutableSchema, addMockFunctionsToSchema } from 'graphql-tools';
+import {
+  makeExecutableSchema,
+  addMockFunctionsToSchema,
+  IResolvers,
+  mergeSchemas,
+} from 'graphql-tools';
 import { Server as HttpServer } from 'http';
 import {
   execute,
@@ -49,10 +54,10 @@ export class ApolloServerBase<Request = RequestInit> {
   public disableTools: boolean;
   // set in the listen function if subscriptions are enabled
   public subscriptionsPath: string;
+  public requestOptions: Partial<GraphQLOptions<any>>;
 
   private schema: GraphQLSchema;
   private context?: Context | ContextFunction;
-  private requestOptions: Partial<GraphQLOptions<any>>;
   private graphqlPath: string = '/graphql';
   private engineProxy: ApolloEngine;
   private engineEnabled: boolean = false;
@@ -99,10 +104,13 @@ export class ApolloServerBase<Request = RequestInit> {
     this.requestOptions = requestOptions;
     this.context = context;
 
+    const enhancedTypeDefs = Array.isArray(typeDefs) ? typeDefs : [typeDefs];
+    enhancedTypeDefs.push(`scalar Upload`);
+
     this.schema = schema
       ? schema
       : makeExecutableSchema({
-          typeDefs: Array.isArray(typeDefs) ? typeDefs.join('\n') : typeDefs,
+          typeDefs: enhancedTypeDefs.join('\n'),
           schemaDirectives,
           resolvers,
         });
@@ -121,6 +129,18 @@ export class ApolloServerBase<Request = RequestInit> {
     // until we move into the listen function
     this.getHttp = getHttp;
     this.graphqlPath = path;
+  }
+
+  public enhanceSchema(
+    schema: GraphQLSchema | { typeDefs: string; resolvers: IResolvers },
+  ) {
+    this.schema = mergeSchemas({
+      schemas: [
+        this.schema,
+        'typeDefs' in schema ? schema['typeDefs'] : schema,
+      ],
+      resolvers: 'resolvers' in schema ? [, schema['resolvers']] : {},
+    });
   }
 
   public listen(opts: ListenOptions = {}): Promise<ServerInfo> {

@@ -4,6 +4,9 @@ import 'mocha';
 import * as express from 'express';
 
 import * as request from 'request';
+import * as FormData from 'form-data';
+import * as fs from 'fs';
+import * as fetch from 'node-fetch';
 import { createApolloFetch } from 'apollo-fetch';
 
 import { ApolloServerBase } from 'apollo-server-core';
@@ -251,6 +254,86 @@ describe('apollo-server-express', () => {
             },
           );
         });
+      });
+    });
+    describe('file uploads', () => {
+      it('enabled uploads', async () => {
+        server = new ApolloServer({
+          typeDefs: gql`
+            type File {
+              filename: String!
+              mimetype: String!
+              encoding: String!
+            }
+
+            type Query {
+              uploads: [File]
+            }
+
+            type Mutation {
+              singleUpload(file: Upload!): File!
+            }
+          `,
+          resolvers: {
+            Query: {
+              uploads: (parent, args) => {},
+            },
+            Mutation: {
+              singleUpload: async (parent, args) => {
+                expect((await args.file).stream).to.exist;
+                return args.file;
+              },
+            },
+          },
+        });
+        app = express();
+        registerServer({
+          app,
+          server,
+        });
+
+        const { port } = await server.listen({});
+
+        const body = new FormData();
+
+        body.append(
+          'operations',
+          JSON.stringify({
+            query: gql`
+              mutation($file: Upload!) {
+                singleUpload(file: $file) {
+                  filename
+                  encoding
+                  mimetype
+                }
+              }
+            `,
+            variables: {
+              file: null,
+            },
+          }),
+        );
+
+        body.append('map', JSON.stringify({ 1: ['variables.file'] }));
+        body.append('1', fs.createReadStream('package.json'));
+
+        try {
+          const resolved = await fetch(`http://localhost:${port}/graphql`, {
+            method: 'POST',
+            body,
+          });
+          const response = await resolved.json();
+
+          expect(response.data.singleUpload).to.deep.equal({
+            filename: 'package.json',
+            encoding: '7bit',
+            mimetype: 'application/json',
+          });
+        } catch (error) {
+          // This error began appearing randomly and seems to be a dev dependency bug.
+          // https://github.com/jaydenseric/apollo-upload-server/blob/18ecdbc7a1f8b69ad51b4affbd986400033303d4/test.js#L39-L42
+          if (error.code !== 'EPIPE') throw error;
+        }
       });
     });
   });
