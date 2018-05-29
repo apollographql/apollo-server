@@ -6,7 +6,7 @@
     "declaration": true,
     "sourceMap": true,
     "outDir": "lib",
-    "lib": ["es2017", "esnext.asynciterable"],
+    "lib": ["dom", "es2017", "esnext.asynciterable"],
     "types": ["jest", "node"],
     "strict": true
   },

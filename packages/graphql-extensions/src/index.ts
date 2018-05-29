@@ -10,27 +10,18 @@ import {
 
 export type EndHandler = () => void;
 type StartHandler = () => EndHandler | void;
-type HandlerSelector<TContext = any> = (
+// A StartHandlerInvoker is a function that, given a specific GraphQLExtension,
+// finds a specific StartHandler on that extension and calls it with appropriate
+// arguments.
+type StartHandlerInvoker<TContext = any> = (
   ext: GraphQLExtension<TContext>,
-) => StartHandler | void;
-
-export interface GraphQLExtensionOptions {
-  executionArgs: ExecutionArgs;
-  // XXX Will add a W3C-style Request here later
-}
-
-export type GraphQLExtensionFactory<TContext = any> = ((
-  o: GraphQLExtensionOptions,
-) => GraphQLExtension<TContext>);
-export type GraphQLExtensionOrFactory<TContext = any> =
-  | GraphQLExtension<TContext>
-  | GraphQLExtensionFactory<TContext>;
+) => EndHandler | void;
 
 export class GraphQLExtension<TContext = any> {
-  public requestDidStart?(): EndHandler | void;
+  public requestDidStart?(o: {request: Request}): EndHandler | void;
   public parsingDidStart?(): EndHandler | void;
   public validationDidStart?(): EndHandler | void;
-  public executionDidStart?(): EndHandler | void;
+  public executionDidStart?(o: {executionArgs: ExecutionArgs}): EndHandler | void;
 
   public willResolveField?(
     source: any,
@@ -45,29 +36,21 @@ export class GraphQLExtension<TContext = any> {
 export class GraphQLExtensionStack<TContext = any> {
   private extensions: GraphQLExtension<TContext>[];
 
-  constructor(
-    extensions: GraphQLExtensionOrFactory<TContext>[],
-    options: GraphQLExtensionOptions,
-  ) {
-    this.extensions = extensions.map(
-      extensionOrFactory =>
-        typeof extensionOrFactory === 'function'
-          ? extensionOrFactory(options)
-          : extensionOrFactory,
-    );
+  constructor(extensions: GraphQLExtension<TContext>[]) {
+    this.extensions = extensions;
   }
 
-  public requestDidStart(): (() => void) {
-    return this.handleDidStart(ext => ext.requestDidStart);
+  public requestDidStart(o: {request: Request}): EndHandler {
+    return this.handleDidStart(ext => ext.requestDidStart && ext.requestDidStart(o));
   }
-  public parsingDidStart(): (() => void) {
-    return this.handleDidStart(ext => ext.parsingDidStart);
+  public parsingDidStart(): EndHandler {
+    return this.handleDidStart(ext => ext.parsingDidStart && ext.parsingDidStart());
   }
-  public validationDidStart(): (() => void) {
-    return this.handleDidStart(ext => ext.validationDidStart);
+  public validationDidStart(): EndHandler {
+    return this.handleDidStart(ext => ext.validationDidStart && ext.validationDidStart());
   }
-  public executionDidStart(): (() => void) {
-    return this.handleDidStart(ext => ext.executionDidStart);
+  public executionDidStart(o: {executionArgs: ExecutionArgs}): EndHandler {
+    return this.handleDidStart(ext => ext.executionDidStart && ext.executionDidStart(o));
   }
 
   public willResolveField(
@@ -100,15 +83,13 @@ export class GraphQLExtensionStack<TContext = any> {
     );
   }
 
-  private handleDidStart(selectHandler: HandlerSelector): EndHandler {
+  private handleDidStart(startInvoker: StartHandlerInvoker): EndHandler {
     const endHandlers: EndHandler[] = [];
     this.extensions.forEach(extension => {
-      const startHandler = selectHandler(extension);
-      if (startHandler) {
-        const endHandler = startHandler.call(extension);
-        if (endHandler) {
-          endHandlers.push(endHandler);
-        }
+      // Invoke the start handler, which may return an end handler.
+      const endHandler = startInvoker(extension);
+      if (endHandler) {
+        endHandlers.push(endHandler);
       }
     });
     return () => {
