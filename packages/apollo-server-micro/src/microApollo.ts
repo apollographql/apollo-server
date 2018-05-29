@@ -2,6 +2,7 @@ import {
   GraphQLOptions,
   HttpQueryError,
   runHttpQuery,
+  convertHttpMessageToRequest,
 } from 'apollo-server-core';
 import * as GraphiQL from 'apollo-server-module-graphiql';
 import { createError, json, RequestHandler } from 'micro';
@@ -42,7 +43,7 @@ export function microGraphql(
         method: req.method,
         options: options,
         query: query,
-        request: req,
+        request: convertHttpMessageToRequest(req),
       });
 
       res.setHeader('Content-Type', 'application/json');

@@ -1,6 +1,7 @@
 /* tslint:disable:no-unused-expression */
 import { expect } from 'chai';
 import { stub } from 'sinon';
+import * as MockReq from 'mock-req';
 import 'mocha';
 
 import {
@@ -92,7 +93,11 @@ describe('runQuery', () => {
   it('returns the right result when query is a string', () => {
     const query = `{ testString }`;
     const expected = { testString: 'it works' };
-    return runQuery({ schema, queryString: query }).then(res => {
+    return runQuery({
+      schema,
+      queryString: query,
+      request: new MockReq(),
+    }).then(res => {
       expect(res.data).to.deep.equal(expected);
     });
   });
@@ -100,7 +105,11 @@ describe('runQuery', () => {
   it('returns the right result when query is a document', () => {
     const query = parse(`{ testString }`);
     const expected = { testString: 'it works' };
-    return runQuery({ schema, parsedQuery: query }).then(res => {
+    return runQuery({
+      schema,
+      parsedQuery: query,
+      request: new MockReq(),
+    }).then(res => {
       expect(res.data).to.deep.equal(expected);
     });
   });
@@ -112,6 +121,7 @@ describe('runQuery', () => {
       schema,
       queryString: query,
       variables: { base: 1 },
+      request: new MockReq(),
     }).then(res => {
       expect(res.data).to.be.undefined;
       expect(res.errors.length).to.equal(1);
@@ -126,6 +136,7 @@ describe('runQuery', () => {
       schema,
       queryString: query,
       debug: true,
+      request: new MockReq(),
     }).then(res => {
       logStub.restore();
       expect(logStub.callCount).to.equal(0);
@@ -139,6 +150,7 @@ describe('runQuery', () => {
       schema,
       queryString: query,
       debug: false,
+      request: new MockReq(),
     }).then(res => {
       logStub.restore();
       expect(logStub.callCount).to.equal(0);
@@ -153,6 +165,7 @@ describe('runQuery', () => {
       schema,
       queryString: query,
       variables: { base: 1 },
+      request: new MockReq(),
     }).then(res => {
       expect(res.data).to.be.undefined;
       expect(res.errors.length).to.equal(1);
@@ -163,21 +176,27 @@ describe('runQuery', () => {
   it('correctly passes in the rootValue', () => {
     const query = `{ testRootValue }`;
     const expected = { testRootValue: 'it also works' };
-    return runQuery({ schema, queryString: query, rootValue: 'it also' }).then(
-      res => {
-        expect(res.data).to.deep.equal(expected);
-      },
-    );
+    return runQuery({
+      schema,
+      queryString: query,
+      rootValue: 'it also',
+      request: new MockReq(),
+    }).then(res => {
+      expect(res.data).to.deep.equal(expected);
+    });
   });
 
   it('correctly passes in the context', () => {
     const query = `{ testContextValue }`;
     const expected = { testContextValue: 'it still works' };
-    return runQuery({ schema, queryString: query, context: 'it still' }).then(
-      res => {
-        expect(res.data).to.deep.equal(expected);
-      },
-    );
+    return runQuery({
+      schema,
+      queryString: query,
+      context: 'it still',
+      request: new MockReq(),
+    }).then(res => {
+      expect(res.data).to.deep.equal(expected);
+    });
   });
 
   it('passes the options to formatResponse', () => {
@@ -191,6 +210,7 @@ describe('runQuery', () => {
         response['extensions'] = context;
         return response;
       },
+      request: new MockReq(),
     }).then(res => {
       expect(res.data).to.deep.equal(expected);
       expect(res['extensions']).to.equal('it still');
@@ -204,6 +224,7 @@ describe('runQuery', () => {
       schema,
       queryString: query,
       variables: { base: 1 },
+      request: new MockReq(),
     }).then(res => {
       expect(res.data).to.deep.equal(expected);
     });
@@ -216,6 +237,7 @@ describe('runQuery', () => {
     return runQuery({
       schema,
       queryString: query,
+      request: new MockReq(),
     }).then(res => {
       expect(res.errors[0].message).to.deep.equal(expected);
     });
@@ -225,6 +247,7 @@ describe('runQuery', () => {
     return runQuery({
       schema,
       queryString: `{ testAwaitedValue }`,
+      request: new MockReq(),
     }).then(res => {
       expect(res.data).to.deep.equal({
         testAwaitedValue: 'it works',
@@ -243,11 +266,14 @@ describe('runQuery', () => {
     const expected = {
       testString: 'it works',
     };
-    return runQuery({ schema, queryString: query, operationName: 'Q1' }).then(
-      res => {
-        expect(res.data).to.deep.equal(expected);
-      },
-    );
+    return runQuery({
+      schema,
+      queryString: query,
+      operationName: 'Q1',
+      request: new MockReq(),
+    }).then(res => {
+      expect(res.data).to.deep.equal(expected);
+    });
   });
 
   it('calls logFunction', () => {
@@ -266,6 +292,7 @@ describe('runQuery', () => {
       operationName: 'Q1',
       variables: { test: 123 },
       logFunction: logFn,
+      request: new MockReq(),
     }).then(res => {
       expect(res.data).to.deep.equal(expected);
       expect(logs.length).to.equals(11);
@@ -315,6 +342,7 @@ describe('runQuery', () => {
       schema,
       queryString: query,
       operationName: 'Q1',
+      request: new MockReq(),
     });
 
     expect(result1.data).to.deep.equal({
@@ -328,6 +356,7 @@ describe('runQuery', () => {
       queryString: query,
       operationName: 'Q1',
       fieldResolver: () => 'a very testful field resolver string',
+      request: new MockReq(),
     });
 
     expect(result2.data).to.deep.equal({
@@ -370,6 +399,7 @@ describe('runQuery', () => {
         schema,
         queryString: query,
         operationName: 'Q1',
+        request: new MockReq(),
       });
 
       // this is the only async process so we expect the async ids to be a sequence

@@ -4,6 +4,7 @@ import {
   GraphQLOptions,
   HttpQueryError,
   runHttpQuery,
+  convertHttpMessageToRequest,
 } from 'apollo-server-core';
 import * as GraphiQL from 'apollo-server-module-graphiql';
 
@@ -44,7 +45,7 @@ export function graphqlRestify(
       method: req.method,
       options: options,
       query: req.method === 'POST' ? req.body : req.query,
-      request: req,
+      request: convertHttpMessageToRequest(req),
     }).then(
       gqlResponse => {
         res.setHeader('Content-Type', 'application/json');

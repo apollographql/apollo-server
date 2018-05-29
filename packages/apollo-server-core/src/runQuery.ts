@@ -63,6 +63,7 @@ export interface QueryOptions {
   tracing?: boolean;
   // cacheControl?: boolean | CacheControlExtensionOptions;
   cacheControl?: boolean | any;
+  request: Request;
 }
 
 function isQueryOperation(query: DocumentNode, operationName: string) {
