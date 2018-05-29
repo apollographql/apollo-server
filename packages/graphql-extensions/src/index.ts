@@ -8,7 +8,7 @@ import {
   ExecutionArgs,
 } from 'graphql';
 
-export type EndHandler = () => void;
+export type EndHandler = (err: Error | null) => void;
 type StartHandler = () => EndHandler | void;
 // A StartHandlerInvoker is a function that, given a specific GraphQLExtension,
 // finds a specific StartHandler on that extension and calls it with appropriate
@@ -18,10 +18,12 @@ type StartHandlerInvoker<TContext = any> = (
 ) => EndHandler | void;
 
 export class GraphQLExtension<TContext = any> {
-  public requestDidStart?(o: {request: Request}): EndHandler | void;
-  public parsingDidStart?(): EndHandler | void;
+  public requestDidStart?(o: { request: Request }): EndHandler | void;
+  public parsingDidStart?(o: { queryString: string }): EndHandler | void;
   public validationDidStart?(): EndHandler | void;
-  public executionDidStart?(o: {executionArgs: ExecutionArgs}): EndHandler | void;
+  public executionDidStart?(o: {
+    executionArgs: ExecutionArgs;
+  }): EndHandler | void;
 
   public willResolveField?(
     source: any,
@@ -40,17 +42,25 @@ export class GraphQLExtensionStack<TContext = any> {
     this.extensions = extensions;
   }
 
-  public requestDidStart(o: {request: Request}): EndHandler {
-    return this.handleDidStart(ext => ext.requestDidStart && ext.requestDidStart(o));
+  public requestDidStart(o: { request: Request }): EndHandler {
+    return this.handleDidStart(
+      ext => ext.requestDidStart && ext.requestDidStart(o),
+    );
   }
-  public parsingDidStart(): EndHandler {
-    return this.handleDidStart(ext => ext.parsingDidStart && ext.parsingDidStart());
+  public parsingDidStart(o: { queryString: string }): EndHandler {
+    return this.handleDidStart(
+      ext => ext.parsingDidStart && ext.parsingDidStart(o),
+    );
   }
   public validationDidStart(): EndHandler {
-    return this.handleDidStart(ext => ext.validationDidStart && ext.validationDidStart());
+    return this.handleDidStart(
+      ext => ext.validationDidStart && ext.validationDidStart(),
+    );
   }
-  public executionDidStart(o: {executionArgs: ExecutionArgs}): EndHandler {
-    return this.handleDidStart(ext => ext.executionDidStart && ext.executionDidStart(o));
+  public executionDidStart(o: { executionArgs: ExecutionArgs }): EndHandler {
+    return this.handleDidStart(
+      ext => ext.executionDidStart && ext.executionDidStart(o),
+    );
   }
 
   public willResolveField(
@@ -92,12 +102,12 @@ export class GraphQLExtensionStack<TContext = any> {
         endHandlers.push(endHandler);
       }
     });
-    return () => {
+    return (err: Error | null) => {
       // We run end handlers in reverse order of start handlers. That way, the
       // first handler in the stack "surrounds" the entire event's process
       // (helpful for tracing/reporting!)
       endHandlers.reverse();
-      endHandlers.forEach(endHandler => endHandler());
+      endHandlers.forEach(endHandler => endHandler(err));
     };
   }
 }
