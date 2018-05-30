@@ -25,6 +25,7 @@ Object.assign(global, {
 
 import { createApolloFetch } from 'apollo-fetch';
 import { ApolloServerBase } from './ApolloServer';
+import { AuthenticationError } from './errors';
 import { runHttpQuery } from './runHttpQuery';
 import gqlTag from 'graphql-tag';
 
@@ -367,6 +368,47 @@ describe('ApolloServerBase', () => {
       expect(spy.calledTwice).true;
       await server.stop();
     });
+
+    it('returns thrown context error as a valid graphql result', async () => {
+      const typeDefs = gql`
+        type Query {
+          hello: String
+        }
+      `;
+      const resolvers = {
+        Query: {
+          hello: (parent, args, context) => {
+            throw Error('never get here');
+          },
+        },
+      };
+      const server = new ApolloServerBase({
+        typeDefs,
+        resolvers,
+        context: ({ req }) => {
+          throw new AuthenticationError('valid result');
+        },
+      });
+      const httpServer = createHttpServer(server);
+      server.use({
+        getHttp: () => httpServer,
+        path: '/',
+      });
+
+      const { url: uri } = await server.listen();
+      const apolloFetch = createApolloFetch({ uri });
+
+      const result = await apolloFetch({ query: '{hello}' });
+      expect(result.errors.length).to.equal(1);
+      expect(result.data).not.to.exist;
+
+      const e = result.errors[0];
+      expect(e.message).to.contain('valid result');
+      expect(e.extensions).to.exist;
+      expect(e.extensions.code).to.equal('UNAUTHENTICATED');
+      expect(e.extensions.exception.stacktrace).to.exist;
+      await server.stop();
+    });
   });
 
   describe('engine', () => {
@@ -429,7 +471,7 @@ describe('ApolloServerBase', () => {
     });
   });
 
-  describe('subscritptions', () => {
+  describe('subscriptions', () => {
     const SOMETHING_CHANGED_TOPIC = 'something_changed';
     const pubsub = new PubSub();
     let server: ApolloServerBase;
