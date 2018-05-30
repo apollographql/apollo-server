@@ -3,13 +3,7 @@ import { expect } from 'chai';
 import { stub, spy } from 'sinon';
 import 'mocha';
 
-import {
-  GraphQLSchema,
-  GraphQLObjectType,
-  GraphQLString,
-  GraphQLInt,
-  GraphQLError,
-} from 'graphql';
+import { GraphQLError } from 'graphql';
 
 import {
   ApolloError,
@@ -19,22 +13,6 @@ import {
   ValidationError,
   SyntaxError,
 } from './errors';
-
-const queryType = new GraphQLObjectType({
-  name: 'QueryType',
-  fields: {
-    testString: {
-      type: GraphQLString,
-      resolve() {
-        return 'it works';
-      },
-    },
-  },
-});
-
-const schema = new GraphQLSchema({
-  query: queryType,
-});
 
 describe('Errors', () => {
   describe('ApolloError', () => {
@@ -172,7 +150,6 @@ describe('Errors', () => {
       });
     });
     it('provides a forbidden error', () => {
-      debugger;
       verifyError(new ForbiddenError(message), {
         code: 'FORBIDDEN',
         errorClass: ForbiddenError,

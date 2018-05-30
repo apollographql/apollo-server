@@ -3,7 +3,7 @@ import { LogStep, LogAction, LogMessage, LogFunction } from './logging';
 
 export class ApolloError extends Error implements GraphQLError {
   public extensions: Record<string, any>;
-  readonly name = 'ApolloError';
+  readonly name;
   readonly locations;
   readonly path;
   readonly source;
@@ -27,6 +27,11 @@ export class ApolloError extends Error implements GraphQLError {
       Object.keys(properties).forEach(key => {
         this[key] = properties[key];
       });
+    }
+
+    //if no name provided, use the default. defineProperty ensures that it stays non-enumerable
+    if (!this.name) {
+      Object.defineProperty(this, 'name', { value: 'ApolloError' });
     }
 
     //extensions are flattened to be included in the root of GraphQLError's, so
