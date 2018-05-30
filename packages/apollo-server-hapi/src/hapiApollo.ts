@@ -5,7 +5,7 @@ import {
   GraphQLOptions,
   runHttpQuery,
   HttpQueryError,
-  convertHttpMessageToRequest,
+  convertNodeHttpToRequest,
 } from 'apollo-server-core';
 import { IncomingMessage } from 'http';
 
@@ -52,7 +52,7 @@ const graphqlHapi: IPlugin = {
                 ? //TODO type payload as string or Record
                   (request.payload as any)
                 : request.query,
-            request: convertHttpMessageToRequest(request.raw.req),
+            request: convertNodeHttpToRequest(request.raw.req),
           });
 
           const response = h.response(gqlResponse);

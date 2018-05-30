@@ -3,7 +3,7 @@ import {
   GraphQLOptions,
   HttpQueryError,
   runHttpQuery,
-  convertHttpMessageToRequest,
+  convertNodeHttpToRequest,
 } from 'apollo-server-core';
 import * as GraphiQL from 'apollo-server-module-graphiql';
 
@@ -34,7 +34,7 @@ export function graphqlKoa(
       options: options,
       query:
         ctx.request.method === 'POST' ? ctx.request.body : ctx.request.query,
-      request: convertHttpMessageToRequest(ctx.req),
+      request: convertNodeHttpToRequest(ctx.req),
     }).then(
       gqlResponse => {
         ctx.set('Content-Type', 'application/json');

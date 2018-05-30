@@ -1,6 +1,6 @@
 import { IncomingMessage } from 'http';
 
-export function convertHttpMessageToRequest(req: IncomingMessage): Request {
+export function convertNodeHttpToRequest(req: IncomingMessage): Request {
   const headers = new Headers();
   Object.keys(req.headers).forEach(key => {
     const values = req.headers[key];

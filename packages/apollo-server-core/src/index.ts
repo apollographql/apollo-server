@@ -15,7 +15,7 @@ export {
   formatApolloErrors,
 } from './errors';
 
-export { convertHttpMessageToRequest } from './nodeHttpToRequest';
+export { convertNodeHttpToRequest } from './nodeHttpToRequest';
 
 // ApolloServer Base class
 export { ApolloServerBase } from './ApolloServer';
