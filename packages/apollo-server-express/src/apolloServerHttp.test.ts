@@ -324,7 +324,6 @@ describe(`GraphQL-HTTP (apolloServer) tests for ${version} express`, () => {
           query: '{thrower}',
         });
 
-      // console.log(response.text);
       expect(response.status).to.equal(200);
       expect(JSON.parse(response.text)).to.deep.equal({
         data: null,

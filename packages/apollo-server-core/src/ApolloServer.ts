@@ -330,11 +330,17 @@ export class ApolloServerBase<Request = RequestInit> {
   request(request: Request) {
     let context: Context = this.context ? this.context : { request };
 
-    //Defer context resolution to inside of runQuery
-    context =
-      typeof this.context === 'function'
-        ? () => this.context({ req: request })
-        : context;
+    try {
+      context =
+        typeof this.context === 'function'
+          ? this.context({ req: request })
+          : context;
+    } catch (error) {
+      //Defer context error resolution to inside of runQuery
+      context = () => {
+        throw error;
+      };
+    }
 
     return {
       schema: this.schema,
