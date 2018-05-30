@@ -1,3 +1,12 @@
+export {
+  hideLiterals,
+  dropUnusedDefinitions,
+  sortAST,
+  removeAliases,
+  printWithReducedWhitespace,
+  defaultSignature,
+} from './signature';
+
 import { GraphQLResolveInfo, responsePathAsArray, ResponsePath } from 'graphql';
 import { GraphQLExtension, EndHandler } from 'graphql-extensions';
 import { StatsReport, Trace, google } from 'apollo-engine-reporting-protobuf';
@@ -114,25 +123,4 @@ export class EngineReportingExtension<TContext = any>
     // path.prev isn't undefined.
     return this.newNode(path.prev!);
   }
-}
-
-class StatsAggregator {
-  private report: StatsReport;
-  private startHrTime: [number, number];
-
-  public constructor() {
-    this.startReport();
-  }
-
-  public startReport() {
-    this.report = new StatsReport({
-      startTime: dateToTimestamp(new Date()),
-    });
-    this.startHrTime = process.hrtime();
-    // XXX memory and CPU stats
-    // XXX report header
-    // XXX end time, duration
-  }
-
-  public aggregateTrace(trace: Trace) {}
 }
