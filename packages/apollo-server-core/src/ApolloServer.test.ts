@@ -370,6 +370,8 @@ describe('ApolloServerBase', () => {
     });
 
     it('returns thrown context error as a valid graphql result', async () => {
+      const nodeEnv = process.env.NODE_ENV;
+      delete process.env.NODE_ENV;
       const typeDefs = gql`
         type Query {
           hello: String
@@ -407,6 +409,87 @@ describe('ApolloServerBase', () => {
       expect(e.extensions).to.exist;
       expect(e.extensions.code).to.equal('UNAUTHENTICATED');
       expect(e.extensions.exception.stacktrace).to.exist;
+
+      process.env.NODE_ENV = nodeEnv;
+      await server.stop();
+    });
+
+    it('propogates error codes in production', async () => {
+      const nodeEnv = process.env.NODE_ENV;
+      process.env.NODE_ENV = 'production';
+
+      const server = new ApolloServerBase({
+        typeDefs: gql`
+          type Query {
+            error: String
+          }
+        `,
+        resolvers: {
+          Query: {
+            error: () => {
+              throw new AuthenticationError('we the best music');
+            },
+          },
+        },
+      });
+      const httpServer = createHttpServer(server);
+
+      server.use({
+        getHttp: () => httpServer,
+        path: '/graphql',
+      });
+      const { url: uri } = await server.listen();
+      const apolloFetch = createApolloFetch({ uri });
+
+      const result = await apolloFetch({ query: `{error}` });
+      expect(result.data).to.exist;
+      expect(result.data).to.deep.equal({ error: null });
+
+      expect(result.errors, 'errors should exist').to.exist;
+      expect(result.errors.length).to.equal(1);
+      expect(result.errors[0].extensions.code).to.equal('UNAUTHENTICATED');
+      expect(result.errors[0].extensions.exception).not.to.exist;
+
+      process.env.NODE_ENV = nodeEnv;
+      await server.stop();
+    });
+
+    it('propogates error codes with null response in production', async () => {
+      const nodeEnv = process.env.NODE_ENV;
+      process.env.NODE_ENV = 'production';
+
+      const server = new ApolloServerBase({
+        typeDefs: gql`
+          type Query {
+            error: String!
+          }
+        `,
+        resolvers: {
+          Query: {
+            error: () => {
+              throw new AuthenticationError('we the best music');
+            },
+          },
+        },
+      });
+      const httpServer = createHttpServer(server);
+
+      server.use({
+        getHttp: () => httpServer,
+        path: '/graphql',
+      });
+      const { url: uri } = await server.listen();
+      const apolloFetch = createApolloFetch({ uri });
+
+      const result = await apolloFetch({ query: `{error}` });
+      expect(result.data).null;
+
+      expect(result.errors, 'errors should exist').to.exist;
+      expect(result.errors.length).to.equal(1);
+      expect(result.errors[0].extensions.code).to.equal('UNAUTHENTICATED');
+      expect(result.errors[0].extensions.exception).not.to.exist;
+
+      process.env.NODE_ENV = nodeEnv;
       await server.stop();
     });
   });
@@ -471,7 +554,7 @@ describe('ApolloServerBase', () => {
     });
   });
 
-  describe('subscriptions', () => {
+  describe('subscritptions', () => {
     const SOMETHING_CHANGED_TOPIC = 'something_changed';
     const pubsub = new PubSub();
     let server: ApolloServerBase;
