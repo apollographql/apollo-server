@@ -9,7 +9,7 @@ interface FetchEvent extends Event {
 
 export class ApolloServer extends ApolloServerBase {
   public async listen() {
-    const graphql = this.request.bind(this);
+    const graphql = this.graphQLServerOptionsForRequest.bind(this);
     addEventListener('fetch', (event: FetchEvent) => {
       event.respondWith(graphqlCloudflare(graphql)(event.request));
     });

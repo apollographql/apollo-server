@@ -161,7 +161,7 @@ server.listen({ http: { port: YOUR_PORT_HERE } });
     plugin: graphqlHapi,
     options: {
       path: path,
-      graphqlOptions: server.request.bind(server),
+      graphqlOptions: server.graphQLServerOptionsForRequest.bind(server),
       route: {
         cors: typeof cors === 'boolean' ? cors : true,
       },

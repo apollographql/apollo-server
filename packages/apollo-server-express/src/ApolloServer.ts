@@ -133,7 +133,11 @@ export const registerServer = async ({
           })(req, res, next);
         }
       }
-      return graphqlExpress(server.request.bind(server))(req, res, next);
+      return graphqlExpress(server.graphQLServerOptionsForRequest.bind(server))(
+        req,
+        res,
+        next,
+      );
     },
   );
 };

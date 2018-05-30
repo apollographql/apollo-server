@@ -340,7 +340,7 @@ export class ApolloServerBase<Request = RequestInit> {
     }
   }
 
-  request(request: Request) {
+  graphQLServerOptionsForRequest(request: Request) {
     let context: Context = this.context ? this.context : { request };
 
     try {
