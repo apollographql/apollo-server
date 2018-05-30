@@ -7,7 +7,7 @@ The Apollo Server 2.0 beta dramatically simplifies the API for building a GraphQ
 
 While it's possible to migrate an existing server to the 2.0 beta without any changes, we recommend changing to new patterns we're suggesting in order to take advantage of all the latest Apollo Server features, reduce the boilerplate, and enable future flexibility.  To learn how to migrate to the 2.0 beta from version 1.0, please read the following guide.
 
-> **Note:** In the beta of Apollo Server 2.0 only Express is supported.  Additional middleware variants will be implemented in the official 2.0 release.
+> **Note:** In the beta of Apollo Server 2.0 only Express and Hapi are supported.  Additional middleware integrations will be implemented in the official 2.0 release.
 
 ### Recommending the `gql` tag
 
@@ -127,7 +127,7 @@ server.listen().then(({ url }) => {
 
 If you are simply focused on running a production-ready GraphQL server quickly, Apollo Server 2.0 ships with a built-in server and starting your own server (e.g. Express, Koa, etc.) is no longer necessary.
 
-For these cases, it's possible to remove the existing `apollo-server-{variant}` package and add the new `apollo-server` beta.  If using Express, this can be done by running:
+For these cases, it's possible to remove the existing `apollo-server-{integrations}` package and add the new `apollo-server` beta.  If using Express, this can be done by running:
 
     npm uninstall --save apollo-server-express
 

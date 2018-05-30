@@ -3,7 +3,7 @@ title: "API Reference: apollo-server"
 sidebar_title: apollo-server
 ---
 
-This API reference documents the exports from the `apollo-server`, and `apollo-server/{variant}` packages (e.g. `apollo-server/express`). Both the root module and the module sub-paths export the same functionality.
+This API reference documents the exports from the `apollo-server`.
 
 ## `ApolloServer`
 
