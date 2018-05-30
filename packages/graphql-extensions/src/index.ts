@@ -75,9 +75,11 @@ export class GraphQLExtensionStack<TContext = any> {
     );
   }
 
-  public willSendResponse(o: {graphqlResponse: GraphQLResponse }): void {
+  public willSendResponse(o: { graphqlResponse: GraphQLResponse }): void {
     this.extensions.forEach(extension => {
-      extension.willSendResponse && extension.willSendResponse(o);
+      if (extension.willSendResponse) {
+        extension.willSendResponse(o);
+      }
     });
   }
 
