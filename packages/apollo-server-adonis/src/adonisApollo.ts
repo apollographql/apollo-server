@@ -35,7 +35,7 @@ export function graphqlAdonis(
       method,
       options,
       query,
-      request: convertHttpMessageToRequest(request),
+      request: convertHttpMessageToRequest(request.request),
     }).then(
       gqlResponse => {
         response.type('application/json');
