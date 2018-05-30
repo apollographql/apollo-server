@@ -8,44 +8,69 @@ description: Setting up Apollo Server with Express.js or Connect
 This is the Express and Connect integration of GraphQL Server. Apollo Server is a community-maintained open-source GraphQL server that works with all Node.js HTTP server frameworks: Express, Connect, Hapi, Koa and Restify. [Read the docs](https://www.apollographql.com/docs/apollo-server/). [Read the CHANGELOG.](https://github.com/apollographql/apollo-server/blob/master/CHANGELOG.md)
 
 ```sh
-npm install apollo-server-express
+npm install apollo-server@beta apollo-server-express@beta
 ```
 
 ## Express
 
 ```js
-import express from 'express';
-import bodyParser from 'body-parser';
-import { graphqlExpress } from 'apollo-server-express';
+const express = require('express');
+const { registerServer } = require('apollo-server-express');
+const { ApolloServer, gql } = require('apollo-server');
 
-const myGraphQLSchema = // ... define or import your schema here!
-const PORT = 3000;
+// Construct a schema, using GraphQL schema language
+const typeDefs = gql`
+  type Query {
+    hello: String
+  }
+`;
+
+// Provide resolver functions for your schema fields
+const resolvers = {
+  Query: {
+    hello: () => 'Hello world!',
+  },
+};
+
+const server = new ApolloServer({ typeDefs, resolvers });
 
 const app = express();
+registerServer({ server, app });
 
-// bodyParser is needed just for POST.
-app.use('/graphql', bodyParser.json(), graphqlExpress({ schema: myGraphQLSchema }));
-
-app.listen(PORT);
+server.listen().then(({ url }) => {
+  console.log(`🚀 Server ready at ${url}`);
+});
 ```
 
 ## Connect
 
 ```js
 import connect from 'connect';
-import bodyParser from 'body-parser';
-import { graphqlConnect } from 'apollo-server-express';
-import http from 'http';
+const { registerServer } = require('apollo-server-express');
+const { ApolloServer, gql } = require('apollo-server');
 
-const PORT = 3000;
+// Construct a schema, using GraphQL schema language
+const typeDefs = gql`
+  type Query {
+    hello: String
+  }
+`;
+
+// Provide resolver functions for your schema fields
+const resolvers = {
+  Query: {
+    hello: () => 'Hello world!',
+  },
+};
+
+const server = new ApolloServer({ typeDefs, resolvers });
 
 const app = connect();
+registerServer({ server, app });
 
-// bodyParser is needed just for POST.
-app.use('/graphql', bodyParser.json());
-app.use('/graphql', graphqlConnect({ schema: myGraphQLSchema }));
-
-http.createServer(app).listen(PORT);
+server.listen().then(({ url }) => {
+  console.log(`🚀 Server ready at ${url}`);
+});
 ```
 
 ## Principles
