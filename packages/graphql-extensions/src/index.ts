@@ -95,7 +95,9 @@ export class GraphQLExtensionStack<TContext = any> {
           extension.willResolveField &&
           extension.willResolveField(source, args, context, info),
       )
-      .filter(x => x) as ((result: any) => void)[];
+      .filter(x => x)
+      // Reverse list so that handlers "nest", like in handleDidStart.
+      .reverse() as ((result: any) => void)[];
 
     return (result: any) => {
       for (const handler of handlers) {
