@@ -3,6 +3,7 @@ import { expect } from 'chai';
 import { stub } from 'sinon';
 import * as http from 'http';
 import * as net from 'net';
+import * as MockReq from 'mock-req';
 import 'mocha';
 
 import {
@@ -78,7 +79,7 @@ function createHttpServer(server) {
           method: req.method,
           options: server.request(req as any),
           query: JSON.parse(body),
-          request: req,
+          request: new MockReq(),
         })
           .then(gqlResponse => {
             res.setHeader('Content-Type', 'application/json');

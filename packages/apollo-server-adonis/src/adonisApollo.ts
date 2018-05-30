@@ -3,6 +3,7 @@ import {
   GraphQLOptions,
   HttpQueryError,
   runHttpQuery,
+  convertNodeHttpToRequest,
 } from 'apollo-server-core';
 import * as GraphiQL from 'apollo-server-module-graphiql';
 
@@ -34,7 +35,7 @@ export function graphqlAdonis(
       method,
       options,
       query,
-      request,
+      request: convertNodeHttpToRequest(request.request),
     }).then(
       gqlResponse => {
         response.type('application/json');
