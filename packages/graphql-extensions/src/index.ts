@@ -1,5 +1,6 @@
 import {
   GraphQLSchema,
+  GraphQLError,
   GraphQLObjectType,
   getNamedType,
   GraphQLField,
@@ -17,6 +18,15 @@ type StartHandlerInvoker<TContext = any> = (
   ext: GraphQLExtension<TContext>,
 ) => EndHandler | void;
 
+// Copied from runQuery in apollo-server-core.
+// XXX Will this work properly if it's an identical interface of the
+// same name?
+export interface GraphQLResponse {
+  data?: object;
+  errors?: Array<GraphQLError & object>;
+  extensions?: object;
+}
+
 export class GraphQLExtension<TContext = any> {
   public requestDidStart?(o: { request: Request }): EndHandler | void;
   public parsingDidStart?(o: { queryString: string }): EndHandler | void;
@@ -24,6 +34,8 @@ export class GraphQLExtension<TContext = any> {
   public executionDidStart?(o: {
     executionArgs: ExecutionArgs;
   }): EndHandler | void;
+
+  public willSendResponse?(o: { graphqlResponse: GraphQLResponse }): void;
 
   public willResolveField?(
     source: any,
@@ -61,6 +73,12 @@ export class GraphQLExtensionStack<TContext = any> {
     return this.handleDidStart(
       ext => ext.executionDidStart && ext.executionDidStart(o),
     );
+  }
+
+  public willSendResponse(o: {graphqlResponse: GraphQLResponse }): void {
+    this.extensions.forEach(extension => {
+      extension.willSendResponse && extension.willSendResponse(o);
+    });
   }
 
   public willResolveField(
