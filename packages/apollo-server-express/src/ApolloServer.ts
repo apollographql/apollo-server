@@ -114,7 +114,7 @@ export const registerServer = async ({
     path,
     corsMiddleware(cors),
     json(bodyParserConfig),
-    uploadsMiddleware,
+    uploadsMiddleware ? uploadsMiddleware : (req, res, next) => next(),
     (req, res, next) => {
       // make sure we check to see if graphql gui should be on
       if (!server.disableTools && req.method === 'GET') {
