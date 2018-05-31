@@ -231,9 +231,17 @@ export class EngineReportingExtension<TContext = any>
       path: u.path,
     });
     o.request.headers.forEach((value: string, key: string) => {
-      this.trace.http!.requestHeaders![key] = new Trace.HTTP.Values({
-        value: [value],
-      });
+      // XXX Implement privateHeaders
+      switch (key) {
+        case "authorization":
+        case "cookie":
+        case "set-cookie":
+          break;
+        default:
+          this.trace.http!.requestHeaders![key] = new Trace.HTTP.Values({
+            value: [value],
+          });
+      }
     });
 
     return () => {
