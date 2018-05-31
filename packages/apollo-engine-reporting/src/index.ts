@@ -151,7 +151,7 @@ export class EngineReportingAgent<TContext = any> {
 
     // note: retryrequest has built-in Promise support, unlike the base'request'.
     console.log(await request({
-      url: this.endpointUrl + '/ingress/traces',
+      url: this.endpointUrl + '/api/ingress/traces',
       method: 'POST',
       headers: {
         'user-agent': 'apollo-engine-reporting',
