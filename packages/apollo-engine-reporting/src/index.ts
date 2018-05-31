@@ -150,7 +150,7 @@ export class EngineReportingAgent<TContext = any> {
     const message = FullTracesReport.encode(report).finish();
 
     // note: retryrequest has built-in Promise support, unlike the base'request'.
-    await request({
+    console.log(await request({
       url: this.endpointUrl + '/ingress/traces',
       method: 'POST',
       headers: {
@@ -162,7 +162,7 @@ export class EngineReportingAgent<TContext = any> {
       maxAttempts: 5,
       retryDelay: 100,
       // XXX support corp proxies, or does request do that for us now?
-    });
+    }));  // FIXME remove log
   }
 
   // XXX flush on exit/SIGINT/etc?
