@@ -9,7 +9,7 @@ import * as fs from 'fs';
 import fetch from 'node-fetch';
 import { createApolloFetch } from 'apollo-fetch';
 
-import { ApolloServerBase } from 'apollo-server-core';
+import { ApolloServerBase, AuthenticationError } from 'apollo-server-core';
 import { registerServer } from './ApolloServer';
 
 const gql = String.raw;
@@ -334,6 +334,165 @@ describe('apollo-server-express', () => {
           // https://github.com/jaydenseric/apollo-upload-server/blob/18ecdbc7a1f8b69ad51b4affbd986400033303d4/test.js#L39-L42
           if (error.code !== 'EPIPE') throw error;
         }
+      });
+    });
+
+    describe('errors', () => {
+      it('returns thrown context error as a valid graphql result', async () => {
+        const nodeEnv = process.env.NODE_ENV;
+        delete process.env.NODE_ENV;
+        const typeDefs = gql`
+          type Query {
+            hello: String
+          }
+        `;
+        const resolvers = {
+          Query: {
+            hello: (parent, args, context) => {
+              throw Error('never get here');
+            },
+          },
+        };
+        server = new ApolloServer({
+          typeDefs,
+          resolvers,
+          context: ({ req }) => {
+            throw new AuthenticationError('valid result');
+          },
+        });
+
+        app = express();
+        registerServer({ app, server });
+
+        const { url: uri } = await server.listen();
+        const apolloFetch = createApolloFetch({ uri });
+
+        const result = await apolloFetch({ query: '{hello}' });
+        expect(result.errors.length).to.equal(1);
+        expect(result.data).not.to.exist;
+
+        const e = result.errors[0];
+        expect(e.message).to.contain('valid result');
+        expect(e.extensions).to.exist;
+        expect(e.extensions.code).to.equal('UNAUTHENTICATED');
+        expect(e.extensions.exception.stacktrace).to.exist;
+
+        process.env.NODE_ENV = nodeEnv;
+        await server.stop();
+      });
+
+      it('propogates error codes in dev mode', async () => {
+        const nodeEnv = process.env.NODE_ENV;
+        delete process.env.NODE_ENV;
+
+        const server = new ApolloServer({
+          typeDefs: gql`
+            type Query {
+              error: String
+            }
+          `,
+          resolvers: {
+            Query: {
+              error: () => {
+                throw new AuthenticationError('we the best music');
+              },
+            },
+          },
+        });
+
+        app = express();
+        registerServer({ app, server });
+
+        const { url: uri } = await server.listen();
+        const apolloFetch = createApolloFetch({ uri });
+
+        const result = await apolloFetch({ query: `{error}` });
+        expect(result.data).to.exist;
+        expect(result.data).to.deep.equal({ error: null });
+
+        expect(result.errors, 'errors should exist').to.exist;
+        expect(result.errors.length).to.equal(1);
+        expect(result.errors[0].extensions.code).to.equal('UNAUTHENTICATED');
+        expect(result.errors[0].extensions.exception).to.exist;
+        expect(result.errors[0].extensions.exception.stacktrace).to.exist;
+
+        process.env.NODE_ENV = nodeEnv;
+        await server.stop();
+      });
+
+      it('propogates error codes in production', async () => {
+        const nodeEnv = process.env.NODE_ENV;
+        process.env.NODE_ENV = 'production';
+
+        server = new ApolloServer({
+          typeDefs: gql`
+            type Query {
+              error: String
+            }
+          `,
+          resolvers: {
+            Query: {
+              error: () => {
+                throw new AuthenticationError('we the best music');
+              },
+            },
+          },
+        });
+
+        app = express();
+        registerServer({ app, server });
+
+        const { url: uri } = await server.listen();
+        const apolloFetch = createApolloFetch({ uri });
+
+        const result = await apolloFetch({ query: `{error}` });
+        expect(result.data).to.exist;
+        expect(result.data).to.deep.equal({ error: null });
+
+        expect(result.errors, 'errors should exist').to.exist;
+        expect(result.errors.length).to.equal(1);
+        expect(result.errors[0].extensions.code).to.equal('UNAUTHENTICATED');
+        expect(result.errors[0].extensions.exception).not.to.exist;
+
+        process.env.NODE_ENV = nodeEnv;
+        await server.stop();
+      });
+
+      it('propogates error codes with null response in production', async () => {
+        const nodeEnv = process.env.NODE_ENV;
+        process.env.NODE_ENV = 'production';
+
+        const server = new ApolloServer({
+          typeDefs: gql`
+            type Query {
+              error: String!
+            }
+          `,
+          resolvers: {
+            Query: {
+              error: () => {
+                throw new AuthenticationError('we the best music');
+              },
+            },
+          },
+        });
+
+        app = express();
+        registerServer({ app, server });
+
+        const { url: uri } = await server.listen();
+        const apolloFetch = createApolloFetch({ uri });
+
+        const result = await apolloFetch({ query: `{error}` });
+        expect(result.data).null;
+
+        expect(result.errors, 'errors should exist').to.exist;
+        expect(result.errors.length).to.equal(1);
+        expect(result.errors[0].extensions.code).to.equal('UNAUTHENTICATED');
+        expect(result.errors[0].extensions.exception).not.to.exist;
+
+        process.env.NODE_ENV = nodeEnv;
+        await server.stop();
       });
     });
   });
