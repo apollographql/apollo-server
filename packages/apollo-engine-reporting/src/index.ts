@@ -233,9 +233,9 @@ export class EngineReportingExtension<TContext = any>
     o.request.headers.forEach((value: string, key: string) => {
       // XXX Implement privateHeaders
       switch (key) {
-        case "authorization":
-        case "cookie":
-        case "set-cookie":
+        case 'authorization':
+        case 'cookie':
+        case 'set-cookie':
           break;
         default:
           this.trace.http!.requestHeaders![key] = new Trace.HTTP.Values({

@@ -211,7 +211,7 @@ describe('aggressive signature', () => {
         'fragment Bar on User{age@skip(if:$a)...Nested}fragment Nested on User{blah}',
     },
   ];
-  cases.forEach(({name, operationName, input, output}) => {
+  cases.forEach(({ name, operationName, input, output }) => {
     test(name, () => {
       expect(aggressive(input, operationName)).toEqual(output);
     });
