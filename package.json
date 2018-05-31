@@ -54,6 +54,6 @@
     "sinon": "5.0.10",
     "supertest": "3.1.0",
     "supertest-as-promised": "4.0.2",
-    "typescript": "2.8.3"
+    "typescript": "2.8.4"
   }
 }
