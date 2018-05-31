@@ -7,6 +7,8 @@ export {
   defaultSignature,
 } from './signature';
 
+import * as request from 'requestretry';
+
 import {
   GraphQLResolveInfo,
   responsePathAsArray,
@@ -70,6 +72,7 @@ export interface EngineReportingOptions {
   signature?: (ast: DocumentNode, operationName: string) => string;
   reportIntervalMs?: number;
   endpointUrl?: string;
+  debugPrintReports?: boolean;
 }
 
 export class EngineReportingAgent<TContext = any> {
@@ -81,7 +84,8 @@ export class EngineReportingAgent<TContext = any> {
   private endpointUrl: string = 'https://engine-report.apollodata.com';
   private header: ReportHeader;
   private report: FullTracesReport;
-  private reportTimer: NodeJS.Timer | null;
+  private reportTimer: any;  // timer typing is weird and node-specific
+  private debugPrintReports: boolean = false;
 
   public constructor(options: EngineReportingOptions = {}) {
     this.apiKey = options.apiKey || process.env.ENGINE_API_KEY || '';
@@ -93,11 +97,11 @@ export class EngineReportingAgent<TContext = any> {
     if (options.signature) {
       this.signature = options.signature;
     }
-    if (options.reportIntervalMs) {
-      this.reportIntervalMs = options.reportIntervalMs;
-    }
     if (options.endpointUrl) {
       this.endpointUrl = options.endpointUrl;
+    }
+    if (options.debugPrintReports) {
+      this.debugPrintReports = options.debugPrintReports;
     }
 
     // XXX put stuff in the header
@@ -112,7 +116,7 @@ export class EngineReportingAgent<TContext = any> {
   }
 
   public newExtension(): EngineReportingExtension<TContext> {
-    const extension = new EngineReportingExtension<TContext>(
+    return new EngineReportingExtension<TContext>(
       this.signature,
       this.addTrace.bind(this),
     );
@@ -123,7 +127,7 @@ export class EngineReportingAgent<TContext = any> {
     if (!this.report.tracesPerQuery.hasOwnProperty(statsReportKey)) {
       this.report.tracesPerQuery[statsReportKey] = new Traces();
     }
-    this.report.tracePerQuery[statsReportKey].trace.push(trace);
+    this.report.tracesPerQuery[statsReportKey].trace!!.push(trace);
   }
 
   public async sendReport() {
@@ -134,9 +138,34 @@ export class EngineReportingAgent<TContext = any> {
       return;
     }
 
-    console.log("sending report", report.toJSON());
+    if (this.debugPrintReports) {
+      // tslint:disable-next-line no-console
+      console.log("Engine sending report:", report.toJSON());
+    }
+
+    const protobufError = FullTracesReport.verify(report);
+    if (protobufError) {
+      throw new Error(`Error encoding report: ${protobufError}`);
+    }
+    const message = FullTracesReport.encode(report).finish();
+
+    // note: retryrequest has built-in Promise support, unlike the base'request'.
+    await request({
+      url: this.endpointUrl + '/ingress/traces',
+      method: 'POST',
+      headers: {
+        'user-agent': 'apollo-engine-reporting',
+        'x-api-key': this.apiKey,
+      },
+      body: message,
+      // XXX allow these constants to be tweaked
+      maxAttempts: 5,
+      retryDelay: 100,
+      // XXX support corp proxies, or does request do that for us now?
+    });
   }
 
+  // XXX flush on exit/SIGINT/etc?
   public async flush() {
     this.stop();
     await this.sendReport();
@@ -144,7 +173,7 @@ export class EngineReportingAgent<TContext = any> {
 
   public stop() {
     clearInterval(this.reportTimer);
-    this.reportTimer = null;
+    this.reportTimer = undefined;
   }
 }
 
@@ -171,7 +200,7 @@ export class EngineReportingExtension<TContext = any>
   public constructor(
     calculateSignature: (ast: DocumentNode, operationName: string) => string,
     addTrace: (
-      documentAST: DocumentNode,
+      signature: string,
       operationName: string,
       trace: Trace,
     ) => void,
@@ -217,7 +246,7 @@ export class EngineReportingExtension<TContext = any>
         signature = 'query unknown { unknown }';
       }
 
-      this.addTrace(signature, operationName, trace);
+      this.addTrace(signature, operationName, this.trace);
     };
   }
 

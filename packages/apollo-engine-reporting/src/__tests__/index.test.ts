@@ -3,8 +3,10 @@ import {
   GraphQLExtensionStack,
   enableGraphQLExtensions,
 } from 'graphql-extensions';
+import { Trace } from 'apollo-engine-reporting-protobuf';
 import { graphql } from 'graphql';
 import { EngineReportingExtension } from '..';
+import { defaultSignature } from '../signature';
 
 test('trace construction', async () => {
   const typeDefs = `
@@ -46,15 +48,21 @@ test('trace construction', async () => {
   addMockFunctionsToSchema({ schema });
   enableGraphQLExtensions(schema);
 
-  const reportingExtension = new EngineReportingExtension();
-  const stack = new GraphQLExtensionStack([reportingExtension], null as any);
-  const requestDidEnd = stack.requestDidStart();
+  const traces: Array<any> = [];
+  function addTrace(signature: string, operationName: string, trace: Trace) {
+    traces.push({ signature, operationName, trace });
+  }
+  const reportingExtension = new EngineReportingExtension(
+    defaultSignature,
+    addTrace,
+  );
+  const stack = new GraphQLExtensionStack([reportingExtension]);
+  const requestDidEnd = stack.requestDidStart({request: null as any});
   const result = await graphql({
     schema,
     source: query,
     contextValue: { _extensionStack: stack },
   });
   requestDidEnd();
-  console.log(JSON.stringify(result, null, 2));
-  console.log(JSON.stringify(reportingExtension.trace, null, 2));
+  // XXX actually write some tests
 });

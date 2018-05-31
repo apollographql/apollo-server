@@ -44,6 +44,7 @@
     "@types/graphql": "^0.13.1",
     "@types/jest": "^22.2.3",
     "@types/lodash": "^4.14.109",
+    "@types/requestretry": "^1.12.3",
     "graphql": "^0.13.2",
     "graphql-extensions": "0.1.0-beta.7",
     "graphql-tag": "^2.9.2",
@@ -56,6 +57,7 @@
   },
   "dependencies": {
     "apollo-engine-reporting-protobuf": "0.0.0-beta.3",
-    "lodash": "^4.17.10"
+    "lodash": "^4.17.10",
+    "requestretry": "^1.13.0"
   }
 }
