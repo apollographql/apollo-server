@@ -17,7 +17,7 @@ export interface HttpQueryRequest {
   options:
     | GraphQLOptions
     | ((...args: Array<any>) => Promise<GraphQLOptions> | GraphQLOptions);
-  request: Request;
+  request: Pick<Request, 'url' | 'method' | 'headers'>;
 }
 
 export class HttpQueryError extends Error {

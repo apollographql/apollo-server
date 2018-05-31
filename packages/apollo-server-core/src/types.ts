@@ -4,6 +4,7 @@ import { ConnectionContext } from 'subscriptions-transport-ws';
 import { Server as HttpServer } from 'http';
 import { ListenOptions as HttpListenOptions } from 'net';
 import { GraphQLExtension } from 'graphql-extensions';
+import { EngineReportingOptions } from 'apollo-engine-reporting';
 
 import { GraphQLServerOptions as GraphQLOptions } from './graphqlOptions';
 
@@ -45,6 +46,7 @@ export interface Config<Server>
   context?: Context<any> | ContextFunction<any>;
   introspection?: boolean;
   mocks?: boolean | IMocks;
+  engine?: boolean | EngineReportingOptions;
   extensions?: Array<() => GraphQLExtension>;
 }
 

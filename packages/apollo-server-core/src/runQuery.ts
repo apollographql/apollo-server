@@ -66,7 +66,7 @@ export interface QueryOptions {
   tracing?: boolean;
   // cacheControl?: boolean | CacheControlExtensionOptions;
   cacheControl?: boolean | any;
-  request: Request;
+  request: Pick<Request, 'url' | 'method' | 'headers'>;
   extensions?: Array<() => GraphQLExtension>;
 }
 
@@ -126,7 +126,11 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
   }
 
   const requestDidEnd = extensionStack.requestDidStart({
-    request: options.request,
+    // Since the Request interfacess are not the same between node-fetch and
+    // typescript's lib dom, we should limit the fields that need to be passed
+    // into requestDidStart to only the ones we need, currently just the
+    // headers, method, and url
+    request: options.request as any,
   });
   return Promise.resolve()
     .then(() => {
