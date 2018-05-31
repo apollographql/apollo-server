@@ -43,7 +43,7 @@
     "graphql-tag": "^2.9.2",
     "js-sha256": "^0.9.0",
     "meteor-promise": "0.8.6",
-    "mock-req": "^0.2.0"
+    "typescript": "2.8.4"
   },
   "peerDependencies": {
     "graphql": "^0.12.0 || ^0.13.0 || ^14.0.0"
