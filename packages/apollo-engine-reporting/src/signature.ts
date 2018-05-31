@@ -50,7 +50,9 @@ export function dropUnusedDefinitions(
 ): DocumentNode {
   const separated = separateOperations(ast)[operationName];
   if (!separated) {
-    throw new Error(`Operation '${operationName}' not found`);
+    // If the given operationName isn't found, just make this whole transform a
+    // no-op instead of crashing.
+    return ast;
   }
   return separated;
 }
@@ -160,6 +162,8 @@ export function printWithReducedWhitespace(ast: DocumentNode): string {
   );
 }
 
+// XXX doc
+// XXX consider caching somehow
 export function defaultSignature(
   ast: DocumentNode,
   operationName: string,
