@@ -5,6 +5,7 @@ import {
 } from 'graphql-extensions';
 import { Trace } from 'apollo-engine-reporting-protobuf';
 import { graphql } from 'graphql';
+import { Request } from 'node-fetch';
 import { EngineReportingExtension } from '..';
 import { defaultSignature } from '../signature';
 
@@ -57,7 +58,9 @@ test('trace construction', async () => {
     addTrace,
   );
   const stack = new GraphQLExtensionStack([reportingExtension]);
-  const requestDidEnd = stack.requestDidStart({request: null as any});
+  const requestDidEnd = stack.requestDidStart({
+    request: new Request('http://localhost:123/foo') as any,
+  });
   const result = await graphql({
     schema,
     source: query,

@@ -8,6 +8,7 @@ export {
 } from './signature';
 
 import * as request from 'requestretry';
+import { parse as urlParse } from 'url'; // XXX use W3C URL instead?
 
 import {
   GraphQLResolveInfo,
@@ -63,7 +64,6 @@ function durationHrTimeToNanos(hrtime: [number, number]) {
 
 // XXX Implement details (variables, raw_query).
 // XXX Implement client_*
-// XXX Implement http request fields (requires access to Request)
 // XXX Implement http response fields if feasible
 // XXX Implement error tracking
 
@@ -84,7 +84,7 @@ export class EngineReportingAgent<TContext = any> {
   private endpointUrl: string = 'https://engine-report.apollodata.com';
   private header: ReportHeader;
   private report: FullTracesReport;
-  private reportTimer: any;  // timer typing is weird and node-specific
+  private reportTimer: any; // timer typing is weird and node-specific
   private debugPrintReports: boolean = false;
 
   public constructor(options: EngineReportingOptions = {}) {
@@ -132,7 +132,7 @@ export class EngineReportingAgent<TContext = any> {
 
   public async sendReport() {
     const report = this.report;
-    this.report = new FullTracesReport({header:this.header});
+    this.report = new FullTracesReport({ header: this.header });
 
     if (Object.keys(report.tracesPerQuery).length === 0) {
       return;
@@ -140,7 +140,7 @@ export class EngineReportingAgent<TContext = any> {
 
     if (this.debugPrintReports) {
       // tslint:disable-next-line no-console
-      console.log("Engine sending report:", report.toJSON());
+      console.log(`Engine sending report: ${JSON.stringify(report.toJSON())}`);
     }
 
     const protobufError = FullTracesReport.verify(report);
@@ -150,7 +150,7 @@ export class EngineReportingAgent<TContext = any> {
     const message = FullTracesReport.encode(report).finish();
 
     // note: retryrequest has built-in Promise support, unlike the base'request'.
-    console.log(await request({
+    const response = (await request({
       url: this.endpointUrl + '/api/ingress/traces',
       method: 'POST',
       headers: {
@@ -162,7 +162,12 @@ export class EngineReportingAgent<TContext = any> {
       maxAttempts: 5,
       retryDelay: 100,
       // XXX support corp proxies, or does request do that for us now?
-    }));  // FIXME remove log
+    })) as any; // @types/requestretry doesn't understand its promise API
+
+    if (this.debugPrintReports) {
+      // tslint:disable-next-line no-console
+      console.log(`Engine report: status ${response.statusCode}`);
+    }
   }
 
   // XXX flush on exit/SIGINT/etc?
@@ -199,11 +204,7 @@ export class EngineReportingExtension<TContext = any>
 
   public constructor(
     calculateSignature: (ast: DocumentNode, operationName: string) => string,
-    addTrace: (
-      signature: string,
-      operationName: string,
-      trace: Trace,
-    ) => void,
+    addTrace: (signature: string, operationName: string, trace: Trace) => void,
   ) {
     this.calculateSignature = calculateSignature;
     this.addTrace = addTrace;
@@ -219,6 +220,22 @@ export class EngineReportingExtension<TContext = any>
   public requestDidStart(o: { request: Request }): EndHandler {
     this.trace.startTime = dateToTimestamp(new Date());
     this.startHrTime = process.hrtime();
+
+    const u = urlParse(o.request.url);
+
+    this.trace.http = new Trace.HTTP({
+      method:
+        Trace.HTTP.Method[o.request.method as keyof typeof Trace.HTTP.Method] ||
+        Trace.HTTP.Method.UNKNOWN,
+      host: u.hostname, // XXX Includes port; is this right?
+      path: u.path,
+    });
+    o.request.headers.forEach((value: string, key: string) => {
+      this.trace.http!.requestHeaders![key] = new Trace.HTTP.Values({
+        value: [value],
+      });
+    });
+
     return () => {
       this.trace.durationNs = durationHrTimeToNanos(
         process.hrtime(this.startHrTime),
