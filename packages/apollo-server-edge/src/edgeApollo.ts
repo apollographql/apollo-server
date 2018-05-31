@@ -1,4 +1,3 @@
-import * as url from 'url';
 import {
   GraphQLOptions,
   HttpQueryError,
@@ -22,7 +21,7 @@ export function graphqlEdge(options: GraphQLOptions) {
     );
   }
 
-  const graphqlHandler = async (req: RequestInit): Promise<Response> => {
+  const graphqlHandler = async (req: Request): Promise<Response> => {
     if (req.method === 'OPTIONS') {
       return Promise.resolve(
         new Response('', {
@@ -37,10 +36,10 @@ export function graphqlEdge(options: GraphQLOptions) {
         }),
       );
     }
-    const url = new URL((req as Request).url);
+    const url = new URL(req.url);
     const query =
       req.method === 'POST'
-        ? await (req as Request).json()
+        ? await req.json()
         : {
             query: url.searchParams.get('query'),
             variables: url.searchParams.get('variables'),

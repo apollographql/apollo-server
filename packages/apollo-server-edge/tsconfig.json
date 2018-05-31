@@ -1,9 +1,10 @@
 {
   "extends": "../../tsconfig",
   "compilerOptions": {
+    "target": "es2017",
     "rootDir": "./src",
     "outDir": "./dist",
-    "lib": ["es6", "esnext.asynciterable", "dom"],
+    "lib": ["es2017", "esnext.asynciterable", "webworker"],
     "types": ["@types/node"]
   },
   "exclude": ["node_modules", "dist"]
