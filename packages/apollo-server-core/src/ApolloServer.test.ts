@@ -367,6 +367,44 @@ describe('ApolloServerBase', () => {
       await server.stop();
     });
 
+    it('allows context to be async function', async () => {
+      const uniqueContext = { key: 'major' };
+      const spy = stub().returns('hi');
+      const typeDefs = gql`
+        type Query {
+          hello: String
+        }
+      `;
+      const resolvers = {
+        Query: {
+          hello: (_parent, _args, context) => {
+            expect(context).to.equal(uniqueContext);
+            return spy();
+          },
+        },
+      };
+      const server = new ApolloServerBase({
+        typeDefs,
+        resolvers,
+        context: async () => uniqueContext,
+      });
+      const httpServer = createHttpServer(server);
+      server.use({
+        getHttp: () => httpServer,
+        path: '/',
+      });
+
+      const { url: uri } = await server.listen();
+      const apolloFetch = createApolloFetch({ uri });
+
+      expect(spy.notCalled).true;
+      const result = await apolloFetch({ query: '{hello}' });
+      expect(spy.calledOnce).true;
+      expect(result.data).to.deep.equal({ hello: 'hi' });
+      expect(result.errors).not.to.exist;
+      await server.stop();
+    });
+
     it('returns thrown context error as a valid graphql result', async () => {
       const nodeEnv = process.env.NODE_ENV;
       delete process.env.NODE_ENV;
