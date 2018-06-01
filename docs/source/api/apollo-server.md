@@ -137,6 +137,24 @@ The `registerServer` method is from `apollo-server-express`. Middleware registra
 
     Pass the cors options.
 
+### Usage
+
+The `registerServer` method from `apollo-server-express` allows you to easily register your middleware as shown in the example below:
+
+```js
+const { ApolloServer } = require('apollo-server');
+const { registerServer } = require('apollo-server-express');
+const { typeDefs, resolvers } = require('./schema');
+
+const server = new ApolloServer({
+  // These will be defined for both new or existing servers
+  typeDefs,
+  resolvers,
+});
+
+registerServer({ server, app }); // app is from an existing express app. Mount middleware here.
+```
+
 ## `gql`
 
 The `gql` is a [template literal tag](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#Tagged_templates). Template literals were introduced in recent versions of ECMAScript to provide embedded expressions (i.e. `` `A string with interpolated ${variables}` ``) and template literal tags exist to provide additional functionality for what would otherwise be a normal template literal.
