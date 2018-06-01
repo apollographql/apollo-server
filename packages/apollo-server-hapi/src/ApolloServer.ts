@@ -119,7 +119,7 @@ server.listen({ http: { port: YOUR_PORT_HERE } });
           return h
             .response(
               renderPlaygroundPage({
-                subscriptionsEndpoint: server.subscriptionsPath,
+                subscriptionEndpoint: server.subscriptionsPath,
                 endpoint: path,
                 version: '1.4.0',
               }),
