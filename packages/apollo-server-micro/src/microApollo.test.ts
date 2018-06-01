@@ -44,7 +44,7 @@ function createApp(options: CreateAppOptions) {
       head('/graphiql', graphiqlHandler),
       opts('/graphiql', graphiqlHandler),
 
-      (req, res) => send(res, 404, 'not found'),
+      (_, res) => send(res, 404, 'not found'),
     ),
   );
 }

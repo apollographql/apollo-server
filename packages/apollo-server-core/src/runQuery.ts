@@ -18,7 +18,6 @@ import {
   enableGraphQLExtensions,
   GraphQLExtension,
   GraphQLExtensionStack,
-  EndHandler,
 } from 'graphql-extensions';
 import { TracingExtension } from 'apollo-tracing';
 import { CacheControlExtension } from 'apollo-cache-control';
@@ -30,8 +29,7 @@ import {
   SyntaxError,
 } from './errors';
 
-import { LogStep, LogAction, LogMessage, LogFunction } from './logging';
-import { GraphQLRequest } from 'apollo-fetch';
+import { LogStep, LogAction, LogFunction } from './logging';
 
 export interface GraphQLResponse {
   data?: object;

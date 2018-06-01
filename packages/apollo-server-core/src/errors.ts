@@ -1,5 +1,5 @@
 import { GraphQLError } from 'graphql';
-import { LogStep, LogAction, LogMessage, LogFunction } from './logging';
+import { LogStep, LogAction, LogFunction } from './logging';
 
 export class ApolloError extends Error implements GraphQLError {
   public extensions: Record<string, any>;

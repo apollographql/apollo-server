@@ -1,5 +1,4 @@
 import { expect } from 'chai';
-import { stub } from 'sinon';
 import 'mocha';
 import * as express from 'express';
 
@@ -244,7 +243,7 @@ describe('apollo-server-express', () => {
               url: `http://localhost:${port}/.well-known/apollo/server-health`,
               method: 'GET',
             },
-            (error, response, body) => {
+            (error, response) => {
               if (error) {
                 reject(error);
               } else {
@@ -276,10 +275,10 @@ describe('apollo-server-express', () => {
           `,
           resolvers: {
             Query: {
-              uploads: (parent, args) => {},
+              uploads: () => {},
             },
             Mutation: {
-              singleUpload: async (parent, args) => {
+              singleUpload: async (_, args) => {
                 expect((await args.file).stream).to.exist;
                 return args.file;
               },
@@ -348,7 +347,7 @@ describe('apollo-server-express', () => {
         `;
         const resolvers = {
           Query: {
-            hello: (parent, args, context) => {
+            hello: () => {
               throw Error('never get here');
             },
           },
@@ -356,7 +355,7 @@ describe('apollo-server-express', () => {
         server = new ApolloServer({
           typeDefs,
           resolvers,
-          context: ({ req }) => {
+          context: () => {
             throw new AuthenticationError('valid result');
           },
         });

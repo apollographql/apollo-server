@@ -13,7 +13,7 @@ import 'mocha';
 import * as url from 'url';
 
 function createFunction(options: CreateAppOptions = {}) {
-  let route, callback, context;
+  let route, context;
   let handler: AzureFunctionsHandler;
 
   options.graphqlOptions = options.graphqlOptions || { schema: Schema };

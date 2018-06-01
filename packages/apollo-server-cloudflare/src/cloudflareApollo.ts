@@ -1,4 +1,3 @@
-import * as url from 'url';
 import {
   GraphQLOptions,
   HttpQueryError,

@@ -1,5 +1,4 @@
 import * as hapi from 'hapi';
-import { createServer, Server as HttpServer } from 'http';
 import { ApolloServerBase, EngineLauncherOptions } from 'apollo-server-core';
 import { parseAll } from 'accept';
 import { renderPlaygroundPage } from 'graphql-playground-html';
@@ -33,10 +32,9 @@ export interface HapiListenOptions {
   launcherOptions?: EngineLauncherOptions;
 }
 
-const handleFileUploads = (
-  uploadsConfig: Record<string, any>,
-  server: ApolloServerBase<hapi.Request>,
-) => async (req: hapi.Request, h: hapi.ResponseToolkit) => {
+const handleFileUploads = (uploadsConfig: Record<string, any>) => async (
+  req: hapi.Request,
+) => {
   if (req.mime === 'multipart/form-data') {
     Object.defineProperty(req, 'payload', {
       value: await processFileUploads(req, uploadsConfig),
@@ -100,10 +98,9 @@ server.listen({ http: { port: YOUR_PORT_HERE } });
       }
 
       if (uploads !== false) {
-        await handleFileUploads(
-          typeof uploads !== 'boolean' ? uploads : {},
-          server,
-        )(request, h);
+        await handleFileUploads(typeof uploads !== 'boolean' ? uploads : {})(
+          request,
+        );
       }
 
       if (!server.disableTools && request.method === 'get') {
