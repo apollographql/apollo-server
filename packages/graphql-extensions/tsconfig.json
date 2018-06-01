@@ -8,6 +8,8 @@
     "outDir": "lib",
     "lib": ["dom", "es2017", "esnext.asynciterable"],
     "types": ["jest", "node"],
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
     "strict": true
   },
   "include" : [

@@ -7,16 +7,16 @@ import {
   defaultFieldResolver,
   GraphQLResolveInfo,
   ExecutionArgs,
+  DocumentNode,
 } from 'graphql';
 
 export type EndHandler = (...errors: Array<Error>) => void;
-type StartHandler = () => EndHandler | void;
 // A StartHandlerInvoker is a function that, given a specific GraphQLExtension,
 // finds a specific StartHandler on that extension and calls it with appropriate
 // arguments.
 type StartHandlerInvoker<TContext = any> = (
   ext: GraphQLExtension<TContext>,
-) => EndHandler | void;
+) => void;
 
 // Copied from runQuery in apollo-server-core.
 // XXX Will this work properly if it's an identical interface of the
@@ -28,7 +28,13 @@ export interface GraphQLResponse {
 }
 
 export class GraphQLExtension<TContext = any> {
-  public requestDidStart?(o: { request: Request }): EndHandler | void;
+  public requestDidStart?(o: {
+    request: Request;
+    queryString?: string;
+    parsedQuery?: DocumentNode;
+    operationName?: string;
+    variables?: { [key: string]: any };
+  }): EndHandler | void;
   public parsingDidStart?(o: { queryString: string }): EndHandler | void;
   public validationDidStart?(): EndHandler | void;
   public executionDidStart?(o: {
@@ -54,7 +60,13 @@ export class GraphQLExtensionStack<TContext = any> {
     this.extensions = extensions;
   }
 
-  public requestDidStart(o: { request: Request }): EndHandler {
+  public requestDidStart(o: {
+    request: Request;
+    queryString?: string;
+    parsedQuery?: DocumentNode;
+    operationName?: string;
+    variables?: { [key: string]: any };
+  }): EndHandler {
     return this.handleDidStart(
       ext => ext.requestDidStart && ext.requestDidStart(o),
     );
