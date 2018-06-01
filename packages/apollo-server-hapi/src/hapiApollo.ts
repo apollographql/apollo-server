@@ -1,11 +1,13 @@
 import * as Boom from 'boom';
-import { Server, Response, Request, ReplyNoContinue } from 'hapi';
+import { Server, Request } from 'hapi';
 import * as GraphiQL from 'apollo-server-module-graphiql';
 import {
   GraphQLOptions,
   runHttpQuery,
   HttpQueryError,
+  convertNodeHttpToRequest,
 } from 'apollo-server-core';
+import { IncomingMessage } from 'http';
 
 export interface IRegister {
   (server: Server, options: any): void;
@@ -39,13 +41,18 @@ const graphqlHapi: IPlugin = {
       method: ['GET', 'POST'],
       path: options.path || '/graphql',
       vhost: options.vhost || undefined,
-      config: options.route || {},
+      options: options.route || {},
       handler: async (request, h) => {
         try {
           const gqlResponse = await runHttpQuery([request], {
             method: request.method.toUpperCase(),
             options: options.graphqlOptions,
-            query: request.method === 'post' ? request.payload : request.query,
+            query:
+              request.method === 'post'
+                ? //TODO type payload as string or Record
+                  (request.payload as any)
+                : request.query,
+            request: convertNodeHttpToRequest(request.raw.req),
           });
 
           const response = h.response(gqlResponse);
@@ -98,7 +105,7 @@ const graphiqlHapi: IPlugin = {
     server.route({
       method: 'GET',
       path: options.path || '/graphiql',
-      config: options.route || {},
+      options: options.route || {},
       handler: async (request, h) => {
         const graphiqlString = await GraphiQL.resolveGraphiQLString(
           request.query,

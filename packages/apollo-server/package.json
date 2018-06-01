@@ -1,0 +1,45 @@
+{
+  "name": "apollo-server",
+  "version": "2.0.0-beta.3",
+  "description": "Production ready GraphQL Server",
+  "author": "opensource@apollographql.com",
+  "main": "dist/index.js",
+  "scripts": {
+    "compile": "tsc",
+    "prepublish": "npm run compile",
+    "watch": "tsc -w"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server"
+  },
+  "keywords": [
+    "GraphQL",
+    "Apollo",
+    "Server",
+    "Javascript"
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/apollographql/apollo-server/issues"
+  },
+  "homepage": "https://github.com/apollographql/apollo-server#readme",
+  "devDependencies": {
+    "@types/body-parser": "^1.17.0",
+    "@types/express": "^4.11.1",
+    "@types/request": "^2.47.0",
+    "request": "^2.87.0",
+    "typescript": "2.8.1"
+  },
+  "peerDependencies": {
+    "graphql": "^0.12.0 || ^0.13.0 || ^14.0.0"
+  },
+  "typings": "dist/index.d.ts",
+  "dependencies": {
+    "apollo-server-core": "2.0.0-beta.2",
+    "apollo-server-express": "2.0.0-beta.2",
+    "express": "^4.16.3",
+    "graphql-subscriptions": "^0.5.8",
+    "graphql-tools": "^3.0.1"
+  }
+}

@@ -8,51 +8,79 @@ description: Setting up Apollo Server with Hapi
 This is the Hapi integration of Apollo Server. Apollo Server is a community-maintained open-source Apollo Server that works with all Node.js HTTP server frameworks: Express, Connect, Hapi, Koa and Restify. [Read the docs](https://www.apollographql.com/docs/apollo-server/). [Read the CHANGELOG.](https://github.com/apollographql/apollo-server/blob/master/CHANGELOG.md)
 
 ```sh
-npm install apollo-server-hapi
+npm install apollo-server@beta apollo-server-hapi@beta
 ```
 
 ## Usage
 
-With the Hapi plugins `graphqlHapi` and `graphiqlHapi` you can pass a route object that includes options to be applied to the route. The example below enables CORS on the `/graphql` route.
+After constructing Apollo server, a hapi server can be enabled with a call to `registerServer`. Ensure that `autoListen` is set to false in the `Hapi.server` constructor.
 
 The code below requires Hapi 17 or higher.
 
 ```js
-import Hapi from 'hapi';
-import { graphqlHapi } from 'apollo-server-hapi';
+const { ApolloServer, gql } = require('apollo-server');
+const { registerServer } = require('apollo-server-hapi');
 
 const HOST = 'localhost';
-const PORT = 3000;
+
+const typeDefs = gql`
+  type Query {
+    hello: String
+  }
+`;
+
+const resolvers = {
+  Query: {
+    hello: () => 'hello',
+  },
+}
 
 async function StartServer() {
-  const server = new Hapi.server({
-    host: HOST,
-    port: PORT,
-  });
+  const server = new ApolloServer({ typeDefs, resolvers });
 
-  await server.register({
-    plugin: graphqlHapi,
+  await registerServer({
+    server,
+    //Hapi Server constructor options
     options: {
-      path: '/graphql',
-      graphqlOptions: {
-        schema: myGraphQLSchema,
-      },
-      route: {
-        cors: true,
-      },
+      host: HOST,
     },
   });
 
-  try {
-    await server.start();
-  } catch (err) {
-    console.log(`Error while starting server: ${err.message}`);
-  }
-
-  console.log(`Server running at: ${server.info.uri}`);
+  server.listen().then(({ url }) => {
+    console.log(`🚀  Server ready at ${url}`);
+  });
 }
 
-StartServer();
+StartServer().catch(error => console.log(error));
+```
+
+For more advanced use cases or migrating from 1.x, a Hapi server can be constructed and passed into `registerServer`.
+
+```js
+const { ApolloServer, gql } = require('apollo-server');
+const { registerServer } = require('apollo-server-hapi');
+const Hapi = require('hapi');
+
+async function StartServer() {
+  const server = new ApolloServer({ typeDefs, resolvers });
+
+  const app = new Hapi.server({
+    //autoListen must be set to false, since Apollo Server will setup the listener
+    autoListen: false,
+    host: HOST,
+  });
+
+  await registerServer({
+    server,
+    app,
+  });
+
+  server.listen().then(({ url }) => {
+    console.log(`🚀  Server ready at ${url}`);
+  });
+}
+
+StartServer().catch(error => console.log(error));
 ```
 
 ## Principles

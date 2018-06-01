@@ -19,6 +19,7 @@ const request = require('supertest');
 import { GraphQLOptions } from 'apollo-server-core';
 import * as GraphiQL from 'apollo-server-module-graphiql';
 import { OperationStore } from 'apollo-server-module-operation-store';
+import gql from 'graphql-tag';
 
 const personType = new GraphQLObjectType({
   name: 'PersonType',
@@ -526,6 +527,26 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
         });
       });
 
+      it('does not accept a query AST', async () => {
+        app = await createApp();
+        const expected = {
+          testString: 'it works',
+        };
+        const req = request(app)
+          .post('/graphql')
+          .send({
+            query: gql`
+              query test {
+                testString
+              }
+            `,
+          });
+        return req.then(res => {
+          expect(res.status).to.equal(400);
+          expect(res.text).to.contain('GraphQL queries must be strings');
+        });
+      });
+
       it('can handle batch requests', async () => {
         app = await createApp();
         const expected = [
@@ -827,7 +848,8 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
         const expected = /at resolveFieldValueOrError/;
         const stackTrace = [];
         const origError = console.error;
-        console.error = (...args) => stackTrace.push(args);
+        const err = stub();
+        console.error = err;
         app = await createApp({
           graphqlOptions: {
             schema,
@@ -841,7 +863,10 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
         return req.then(res => {
           console.error = origError;
-          expect(stackTrace[0][0]).to.match(expected);
+          if (err.called) {
+            expect(err.calledOnce);
+            expect(err.getCall(0).args[0]).to.match(expected);
+          }
         });
       });
 
@@ -861,8 +886,10 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
         return req.then(res => {
           logStub.restore();
-          expect(logStub.callCount).to.equal(1);
-          expect(logStub.getCall(0).args[0]).to.match(expected);
+          if (logStub.called) {
+            expect(logStub.callCount).to.equal(1);
+            expect(logStub.getCall(0).args[0]).to.match(expected);
+          }
         });
       });
 
@@ -992,7 +1019,8 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           graphqlOptions: {
             schema,
             formatParams(params) {
-              params['query'] = store.get(params.operationName);
+              params['parsedQuery'] = store.get(params.operationName);
+              delete params['queryString'];
               return params;
             },
           },
@@ -1016,10 +1044,10 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           graphqlOptions: {
             schema,
             formatParams(params) {
-              if (params.query) {
+              if (params.queryString) {
                 throw new Error('Must not provide query, only operationName');
               }
-              params['query'] = store.get(params.operationName);
+              params['parsedQuery'] = store.get(params.operationName);
               return params;
             },
           },
@@ -1051,7 +1079,17 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           ]);
         return req.then(res => {
           expect(res.status).to.equal(200);
-          expect(res.body).to.deep.equal(expected);
+          expect(res.body.length).to.equal(expected.length);
+          expect(res.body[0]).to.deep.equal(expected[0]);
+          if (res.body[1].errors[0].extensions) {
+            if (res.body[1].errors[0].extensions.code) {
+              expect(res.body[1].errors[0].extensions.code).to.equal(
+                'INTERNAL_SERVER_ERROR',
+              );
+            }
+            delete res.body[1].errors[0].extensions;
+          }
+          expect(res.body[1]).to.deep.equal(expected[1]);
         });
       });
     });
