@@ -1,5 +1,57 @@
 // XXX maybe this should just be its own graphql-signature package
 
+// In Engine, we want to group requests making the same query together, and
+// treat different queries distinctly. But what does it mean for two queries to
+// be "the same"?  And what if you don't want to send the full text of the query
+// to Apollo Engine's servers, either because it contains sensitive data or
+// because it contains extraneous operations or fragments?
+//
+// To solve these problems, EngineReportingAgent has the concept of
+// "signatures". We don't (by default) send the full query string of queries to
+// the Engine servers. Instead, each trace has its query string's "signature".
+//
+// The default signature implementation drops unused operations and fragments
+// from the query document and formats it as a GraphQL query with all extraneous
+// whitespace removed.
+//
+// However, you can specify any function mapping a GraphQL query AST
+// (DocumentNode) to string as your signature algorithm by providing it as the
+// 'signature' option to the EngineReportingAgent constructor. Ideally, your
+// signature should be a valid GraphQL query, though as of now the Engine
+// servers do not re-parse your signature and do not expect it to match the
+// execution tree in the trace.
+//
+// In addition to providing the defaultSignature function, this file also
+// provides several useful building blocks for writing your own signature
+// function. This includes:
+//
+// - dropUnusedDefinitions, which removes operations and fragments that
+//   aren't going to be used in execution (part of defaultSignature)
+// - printWithReducedWhitespace, a variant on graphql-js's 'print'
+//   which gets rid of unneeded whitespace (part of defaultSignature)
+// - hideLiterals, which replaces all numeric and string literals as well
+//   as list and object input values with "empty" values
+// - sortAST, which sorts the children of most multi-child nodes
+//   consistently
+// - removeAliases, which removes field aliasing from the query
+//
+// Historical note: the default signature algorithm of the Go engineproxy
+// performed all of the above operations, and the Engine servers then re-ran a
+// mostly identical signature implementation on received traces. This was
+// primarily to deal with edge cases where some users used literal interpolation
+// instead of GraphQL variables, included randomized alias names, etc. In
+// addition, the servers relied on the fact that dropUnusedDefinitions had been
+// called in order (and that the signature could be parsed as GraphQL) to
+// extract the name of the operation for display. This caused confusion, as the
+// query document shown in the Engine UI wasn't the same as the one actually
+// sent. apollo-engine-reporting uses a new reporting API which requires it to
+// explicitly include the operation name with each signature; this means that
+// the server no longer needs to parse the signature or run its own signature
+// algorithm on it, and the details of the signature algorithm are now up to the
+// reporting agent. We decided to make the default signature algorithm be less
+// invasive than in engineproxy, and to allow users with special needs to add
+// the other building blocks in when necessary.
+
 import { sortBy, ListIteratee } from 'lodash';
 
 import {
@@ -21,7 +73,12 @@ import {
   separateOperations,
 } from 'graphql';
 
-// XXX doc
+// Replace numeric, string, list, and object literals with "empty"
+// values. Leaves enums alone (since there's no consistent "zero" enum). This
+// can help combine similar queries if you substitute values directly into
+// queries rather than use GraphQL variables, and can hide sensitive data in
+// your query (say, a hardcoded API key) from Engine servers, but in general
+// avoiding those situations is better than working around them.
 export function hideLiterals(ast: DocumentNode): DocumentNode {
   return visit(ast, {
     IntValue(node: IntValueNode): IntValueNode {
@@ -42,7 +99,11 @@ export function hideLiterals(ast: DocumentNode): DocumentNode {
   });
 }
 
-// XXX doc
+// A GraphQL query may contain multiple named operations, with the operation to
+// use specified separately by the client. This transformation drops unused
+// operations from the query, as well as any fragment definitions that are not
+// referenced.  (In general we recommend that unused definitions are dropped on
+// the client before sending to the server to save bandwidth and parsing time.)
 export function dropUnusedDefinitions(
   ast: DocumentNode,
   operationName: string,
@@ -56,18 +117,23 @@ export function dropUnusedDefinitions(
   return separated;
 }
 
+// Like lodash's sortBy, but sorted(undefined) === undefined rather than []. It
+// is a stable non-in-place sort.
 function sorted<T>(
   items: ReadonlyArray<T> | undefined,
   ...iteratees: Array<ListIteratee<T>>
 ): Array<T> | undefined {
   if (items) {
-    // This is a *stable* non-in-place sort.
     return sortBy(items, ...iteratees);
   }
   return undefined;
 }
 
-// XXX doc
+// sortAST sorts most multi-child nodes alphabetically. Using this as part of
+// your signature calculation function may make it easier to tell the difference
+// between queries that are similar to each other, and if for some reason your
+// GraphQL client generates query strings with elements in nondeterministic
+// order, it can make sure the queries are treated as identical.
 export function sortAST(ast: DocumentNode): DocumentNode {
   return visit(ast, {
     OperationDefinition(
@@ -119,7 +185,10 @@ export function sortAST(ast: DocumentNode): DocumentNode {
   });
 }
 
-// XXX doc
+// removeAliases gets rid of GraphQL aliases, a feature by which you can tell a
+// server to return a field's data under a different name from the field
+// name. Maybe this is useful if somebody somewhere inserts random aliases into
+// their queries.
 export function removeAliases(ast: DocumentNode): DocumentNode {
   return visit(ast, {
     Field(node: FieldNode): FieldNode {
@@ -131,7 +200,10 @@ export function removeAliases(ast: DocumentNode): DocumentNode {
   });
 }
 
-// XXX doc
+// Like the graphql-js print function, but deleting whitespace wherever
+// feasible. Specifically, all whitespace (outside of string literals) is
+// reduced to at most one space, and even that space is removed anywhere except
+// for between two alphanumerics.
 export function printWithReducedWhitespace(ast: DocumentNode): string {
   // In a GraphQL AST (which notably does not contain comments), the only place
   // where meaningful whitespace (or double quotes) can exist is in
@@ -161,7 +233,8 @@ export function printWithReducedWhitespace(ast: DocumentNode): string {
   );
 }
 
-// XXX doc
+// The default signature function consists of removing unused definitions
+// and whitespace.
 // XXX consider caching somehow
 export function defaultSignature(
   ast: DocumentNode,

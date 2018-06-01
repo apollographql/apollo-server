@@ -19,6 +19,9 @@ export interface EngineReportingOptions {
   debugPrintReports?: boolean;
 }
 
+// EngineReportingAgent is a persistent object which creates
+// EngineReportingExtensions for each request and sends batches of trace reports
+// to the Engine server.
 export class EngineReportingAgent<TContext = any> {
   private apiKey: string;
   private signature: (
@@ -72,6 +75,8 @@ export class EngineReportingAgent<TContext = any> {
       this.report.tracesPerQuery[statsReportKey] = new Traces();
     }
     this.report.tracesPerQuery[statsReportKey].trace!!.push(trace);
+
+    // XXX trace report size and send when big
   }
 
   public async sendReport() {

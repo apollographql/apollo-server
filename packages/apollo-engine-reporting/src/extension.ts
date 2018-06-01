@@ -1,4 +1,4 @@
-import { parse as urlParse } from 'url'; // XXX use W3C URL instead?
+import { parse as urlParse } from 'url'; // XXX use W3C URL instead for CloudFlare?
 
 import {
   GraphQLResolveInfo,
@@ -10,46 +10,19 @@ import {
 import { GraphQLExtension, EndHandler } from 'graphql-extensions';
 import { Trace, google } from 'apollo-engine-reporting-protobuf';
 
-function responsePathAsString(p: ResponsePath | undefined) {
-  if (p === undefined) {
-    return '';
-  }
-  return responsePathAsArray(p).join('.');
-}
-
-// Converts a JS Date into a Timestamp.
-function dateToTimestamp(date: Date): google.protobuf.Timestamp {
-  const totalMillis = +date;
-  const millis = totalMillis % 1000;
-  return new google.protobuf.Timestamp({
-    seconds: (totalMillis - millis) / 1000,
-    nanos: millis * 1e6,
-  });
-}
-
-// Converts an hrtime array (as returned from process.hrtime) to nanoseconds.
-//
-// ONLY CALL THIS ON VALUES REPRESENTING DELTAS, NOT ON THE RAW RETURN VALUE
-// FROM process.hrtime() WITH NO ARGUMENTS.
-//
-// The entire point of the hrtime data structure is that the JavaScript Number
-// type can't represent all int64 values without loss of precision:
-// Number.MAX_SAFE_INTEGER nanoseconds is about 104 days. Calling this function
-// on a duration that represents a value less than 104 days is fine. Calling
-// this function on an absolute time (which is generally roughly time since
-// system boot) is not a good idea.
-//
-// XXX We should probably use google.protobuf.Duration on the wire instead of
-// ever trying to store durations in a single number.
-function durationHrTimeToNanos(hrtime: [number, number]) {
-  return hrtime[0] * 1e9 + hrtime[1];
-}
 
 // XXX Implement details (variables, raw_query).
 // XXX Implement client_*
+// XXX Implement privateHeaders
 // XXX Implement http response fields if feasible
 // XXX Implement error tracking
 
+// EngineReportingExtension is the per-request GraphQLExtension which creates a
+// trace (in protobuf Trace format) for a single request. When the request is
+// done, it passes the Trace back to its associated EngineReportingAgent via the
+// addTrace callback in its constructor. This class isn't for direct use; its
+// constructor is a private API for communicating with EngineReportingAgent.
+// Its public methods all implement the GraphQLExtension interface.
 export class EngineReportingExtension<TContext = any>
   implements GraphQLExtension<TContext> {
   public trace = new Trace();
@@ -97,7 +70,6 @@ export class EngineReportingExtension<TContext = any>
       path: u.path,
     });
     o.request.headers.forEach((value: string, key: string) => {
-      // XXX Implement privateHeaders
       switch (key) {
         case 'authorization':
         case 'cookie':
@@ -126,7 +98,8 @@ export class EngineReportingExtension<TContext = any>
         //
         // XXX This does mean that even if you use a calculateSignature which
         //     hides literals, you might end up sending literals for queries
-        //     that fail to execute. Provide some way to mask them anyway?
+        //     that fail parsing or validation. Provide some way to mask them
+        //     anyway?
         signature = this.queryString;
       } else {
         // This probably only happens if you're using an OperationStore and you
@@ -204,4 +177,44 @@ export class EngineReportingExtension<TContext = any>
     // path.prev isn't undefined.
     return this.newNode(path.prev!);
   }
+}
+
+
+// Helpers for producing traces.
+
+// Convert from the linked-list ResponsePath format to a dot-joined
+// string. Includes the full path (field names and array indices).
+function responsePathAsString(p: ResponsePath | undefined) {
+  if (p === undefined) {
+    return '';
+  }
+  return responsePathAsArray(p).join('.');
+}
+
+// Converts a JS Date into a Timestamp.
+function dateToTimestamp(date: Date): google.protobuf.Timestamp {
+  const totalMillis = +date;
+  const millis = totalMillis % 1000;
+  return new google.protobuf.Timestamp({
+    seconds: (totalMillis - millis) / 1000,
+    nanos: millis * 1e6,
+  });
+}
+
+// Converts an hrtime array (as returned from process.hrtime) to nanoseconds.
+//
+// ONLY CALL THIS ON VALUES REPRESENTING DELTAS, NOT ON THE RAW RETURN VALUE
+// FROM process.hrtime() WITH NO ARGUMENTS.
+//
+// The entire point of the hrtime data structure is that the JavaScript Number
+// type can't represent all int64 values without loss of precision:
+// Number.MAX_SAFE_INTEGER nanoseconds is about 104 days. Calling this function
+// on a duration that represents a value less than 104 days is fine. Calling
+// this function on an absolute time (which is generally roughly time since
+// system boot) is not a good idea.
+//
+// XXX We should probably use google.protobuf.Duration on the wire instead of
+// ever trying to store durations in a single number.
+function durationHrTimeToNanos(hrtime: [number, number]) {
+  return hrtime[0] * 1e9 + hrtime[1];
 }
