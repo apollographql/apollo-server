@@ -7,7 +7,6 @@ import {
   dropUnusedDefinitions,
   sortAST,
   removeAliases,
-  defaultSignature,
 } from '../signature';
 
 // The gql duplicate fragment warning feature really is just warnings; nothing

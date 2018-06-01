@@ -6,7 +6,7 @@ import {
 import { Trace } from 'apollo-engine-reporting-protobuf';
 import { graphql } from 'graphql';
 import { Request } from 'node-fetch';
-import { EngineReportingExtension } from '..';
+import { EngineReportingExtension } from '../extension';
 import { defaultSignature } from '../signature';
 
 test('trace construction', async () => {
@@ -61,7 +61,7 @@ test('trace construction', async () => {
   const requestDidEnd = stack.requestDidStart({
     request: new Request('http://localhost:123/foo') as any,
   });
-  const result = await graphql({
+  await graphql({
     schema,
     source: query,
     contextValue: { _extensionStack: stack },

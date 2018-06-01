@@ -8,7 +8,6 @@ import {
   DocumentNode,
   OperationDefinitionNode,
   SelectionSetNode,
-  SelectionNode,
   FieldNode,
   FragmentSpreadNode,
   InlineFragmentNode,
