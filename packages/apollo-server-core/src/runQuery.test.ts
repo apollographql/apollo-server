@@ -20,6 +20,7 @@ import { LogAction, LogStep } from './logging';
 // environment.
 import { makeCompatible } from 'meteor-promise';
 import Fiber = require('fibers');
+import { GraphQLExtensionStack, GraphQLExtension } from 'graphql-extensions';
 makeCompatible(Promise, Fiber);
 
 const queryType = new GraphQLObjectType({
@@ -363,6 +364,59 @@ describe('runQuery', () => {
       testObject: {
         testString: 'a very testful field resolver string',
       },
+    });
+  });
+
+  describe('graphql extensions', () => {
+    class CustomExtension implements GraphQLExtension<any> {
+      format(): [string, any] {
+        return ['customExtension', { foo: 'bar' }];
+      }
+    }
+
+    it('creates the extension stack', async () => {
+      const queryString = `{ testString }`;
+      const expected = { testString: 'it works' };
+      const extensions = [() => new CustomExtension()];
+      return runQuery({
+        schema: new GraphQLSchema({
+          query: new GraphQLObjectType({
+            name: 'QueryType',
+            fields: {
+              testString: {
+                type: GraphQLString,
+                resolve(root, args, context) {
+                  expect(context._extensionStack).to.be.instanceof(
+                    GraphQLExtensionStack,
+                  );
+                  expect(
+                    context._extensionStack.extensions[0],
+                  ).to.be.instanceof(CustomExtension);
+                },
+              },
+            },
+          }),
+        }),
+        queryString,
+        extensions,
+        request: new MockReq(),
+      });
+    });
+
+    it('runs format response from extensions', async () => {
+      const queryString = `{ testString }`;
+      const expected = { testString: 'it works' };
+      const extensions = [() => new CustomExtension()];
+      return runQuery({
+        schema,
+        queryString,
+        extensions,
+        request: new MockReq(),
+      }).then(res => {
+        return expect(res.extensions).to.deep.equal({
+          customExtension: { foo: 'bar' },
+        });
+      });
     });
   });
 

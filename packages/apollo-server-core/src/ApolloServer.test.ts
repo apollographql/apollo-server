@@ -78,7 +78,7 @@ function createHttpServer(server) {
 
         runHttpQuery([req, res], {
           method: req.method,
-          options: server.request(req as any),
+          options: server.graphQLServerOptionsForRequest(req as any),
           query: JSON.parse(body),
           request: new MockReq(),
         })

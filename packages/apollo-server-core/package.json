@@ -1,6 +1,6 @@
 {
   "name": "apollo-server-core",
-  "version": "2.0.0-beta.1",
+  "version": "2.0.0-beta.2",
   "description": "Core engine for Apollo GraphQL server",
   "main": "dist/index.js",
   "scripts": {
@@ -47,10 +47,12 @@
   },
   "dependencies": {
     "apollo-cache-control": "^0.1.1",
-    "apollo-tracing": "^0.1.0",
-    "graphql-extensions": "^0.0.x",
+    "apollo-engine-reporting": "0.0.0-beta.8",
+    "apollo-tracing": "^0.2.0-beta.0",
+    "graphql-extensions": "0.1.0-beta.7",
     "graphql-subscriptions": "^0.5.8",
     "graphql-tools": "^3.0.2",
+    "node-fetch": "^2.1.2",
     "subscriptions-transport-ws": "^0.9.9",
     "ws": "^5.1.1"
   }

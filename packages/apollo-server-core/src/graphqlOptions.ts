@@ -19,6 +19,7 @@ import { GraphQLExtension } from 'graphql-extensions';
  * - (optional) formatResponse: a function applied to each graphQL execution result
  * - (optional) fieldResolver: a custom default field resolver
  * - (optional) debug: a boolean that will print additional debug logging if execution errors occur
+ * - (optional) extensions: an array of functions which create GraphQLExtensions (each GraphQLExtension object is used for one request)
  *
  */
 export interface GraphQLServerOptions<
@@ -39,6 +40,7 @@ export interface GraphQLServerOptions<
   tracing?: boolean;
   // cacheControl?: boolean | CacheControlExtensionOptions;
   cacheControl?: boolean | any;
+  extensions?: Array<() => GraphQLExtension>;
 }
 
 export default GraphQLServerOptions;

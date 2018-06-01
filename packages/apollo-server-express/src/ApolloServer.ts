@@ -129,11 +129,15 @@ export const registerServer = async ({
         if (prefersHTML) {
           return gui({
             endpoint: path,
-            subscriptionsEndpoint: server.subscriptionsPath,
+            subscriptionEndpoint: server.subscriptionsPath,
           })(req, res, next);
         }
       }
-      return graphqlExpress(server.request.bind(server))(req, res, next);
+      return graphqlExpress(server.graphQLServerOptionsForRequest.bind(server))(
+        req,
+        res,
+        next,
+      );
     },
   );
 };

@@ -17,7 +17,7 @@ export interface HttpQueryRequest {
   options:
     | GraphQLOptions
     | ((...args: Array<any>) => Promise<GraphQLOptions> | GraphQLOptions);
-  request: Request;
+  request: Pick<Request, 'url' | 'method' | 'headers'>;
 }
 
 export class HttpQueryError extends Error {
@@ -255,6 +255,7 @@ export async function runHttpQuery(
         tracing: optionsObject.tracing,
         cacheControl: optionsObject.cacheControl,
         request: request.request,
+        extensions: optionsObject.extensions,
       };
 
       if (optionsObject.formatParams) {
