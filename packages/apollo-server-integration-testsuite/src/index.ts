@@ -53,15 +53,15 @@ const queryType = new GraphQLObjectType({
       args: {
         delay: { type: new GraphQLNonNull(GraphQLInt) },
       },
-      resolve(root, args) {
-        return new Promise((resolve, reject) => {
+      resolve(_, args) {
+        return new Promise(resolve => {
           setTimeout(() => resolve('it works'), args['delay']);
         });
       },
     },
     testContext: {
       type: GraphQLString,
-      resolve(_, args, context) {
+      resolve(_root, _args, context) {
         if (context.otherField) {
           return 'unexpected';
         }
@@ -78,7 +78,7 @@ const queryType = new GraphQLObjectType({
     testArgument: {
       type: GraphQLString,
       args: { echo: { type: GraphQLString } },
-      resolve(root, { echo }) {
+      resolve(_, { echo }) {
         return `hello ${echo}`;
       },
     },
@@ -97,7 +97,7 @@ const mutationType = new GraphQLObjectType({
     testMutation: {
       type: GraphQLString,
       args: { echo: { type: GraphQLString } },
-      resolve(root, { echo }) {
+      resolve(_, { echo }) {
         return `not really a mutation, but who cares: ${echo}`;
       },
     },
@@ -111,7 +111,7 @@ const mutationType = new GraphQLObjectType({
           type: new GraphQLNonNull(GraphQLString),
         },
       },
-      resolve(root, args) {
+      resolve(_, args) {
         return args;
       },
     },
@@ -529,9 +529,6 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
 
       it('does not accept a query AST', async () => {
         app = await createApp();
-        const expected = {
-          testString: 'it works',
-        };
         const req = request(app)
           .post('/graphql')
           .send({
@@ -811,7 +808,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
         app = await createApp({
           graphqlOptions: {
             schema,
-            formatError: err => ({ message: expected }),
+            formatError: () => ({ message: expected }),
           },
         });
         const req = request(app)
@@ -829,7 +826,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
         app = await createApp({
           graphqlOptions: {
             schema,
-            formatError: err => {
+            formatError: () => {
               throw new Error('I should be caught');
             },
           },
@@ -846,7 +843,6 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
 
       it('sends stack trace to error if debug mode is set', async () => {
         const expected = /at resolveFieldValueOrError/;
-        const stackTrace = [];
         const origError = console.error;
         const err = stub();
         console.error = err;
@@ -861,7 +857,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           .send({
             query: 'query test{ testError }',
           });
-        return req.then(res => {
+        return req.then(() => {
           console.error = origError;
           if (err.called) {
             expect(err.calledOnce);
@@ -884,7 +880,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           .send({
             query: 'query test{ testError }',
           });
-        return req.then(res => {
+        return req.then(() => {
           logStub.restore();
           if (logStub.called) {
             expect(logStub.callCount).to.equal(1);

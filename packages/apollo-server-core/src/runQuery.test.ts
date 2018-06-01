@@ -55,13 +55,13 @@ const queryType = new GraphQLObjectType({
     },
     testContextValue: {
       type: GraphQLString,
-      resolve(root, args, context) {
+      resolve(_root, _args, context) {
         return context + ' works';
       },
     },
     testArgumentValue: {
       type: GraphQLInt,
-      resolve(root, args, context) {
+      resolve(_root, args) {
         return args['base'] + 5;
       },
       args: {
@@ -70,7 +70,7 @@ const queryType = new GraphQLObjectType({
     },
     testAwaitedValue: {
       type: GraphQLString,
-      resolve(root) {
+      resolve() {
         // Calling Promise.await is legal here even though this is
         // not an async function, because we are guaranteed to be
         // running in a Fiber.
@@ -138,7 +138,7 @@ describe('runQuery', () => {
       queryString: query,
       debug: true,
       request: new MockReq(),
-    }).then(res => {
+    }).then(() => {
       logStub.restore();
       expect(logStub.callCount).to.equal(0);
     });
@@ -152,7 +152,7 @@ describe('runQuery', () => {
       queryString: query,
       debug: false,
       request: new MockReq(),
-    }).then(res => {
+    }).then(() => {
       logStub.restore();
       expect(logStub.callCount).to.equal(0);
     });
@@ -376,7 +376,6 @@ describe('runQuery', () => {
 
     it('creates the extension stack', async () => {
       const queryString = `{ testString }`;
-      const expected = { testString: 'it works' };
       const extensions = [() => new CustomExtension()];
       return runQuery({
         schema: new GraphQLSchema({
@@ -385,7 +384,7 @@ describe('runQuery', () => {
             fields: {
               testString: {
                 type: GraphQLString,
-                resolve(root, args, context) {
+                resolve(_root, _args, context) {
                   expect(context._extensionStack).to.be.instanceof(
                     GraphQLExtensionStack,
                   );
@@ -413,7 +412,8 @@ describe('runQuery', () => {
         extensions,
         request: new MockReq(),
       }).then(res => {
-        return expect(res.extensions).to.deep.equal({
+        expect(res.data).to.deep.equal(expected);
+        expect(res.extensions).to.deep.equal({
           customExtension: { foo: 'bar' },
         });
       });

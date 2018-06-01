@@ -1,5 +1,5 @@
 // tslint:disable: variable-name no-var-requires
-import { ioc, registrar, resolver } from '@adonisjs/fold';
+import { ioc, registrar } from '@adonisjs/fold';
 import { setupResolver, Config } from '@adonisjs/sink';
 import { graphqlAdonis, graphiqlAdonis } from './adonisApollo';
 import { GraphQLOptions } from 'apollo-server-core';

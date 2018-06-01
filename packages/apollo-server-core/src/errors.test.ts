@@ -1,6 +1,6 @@
 /* tslint:disable:no-unused-expression */
 import { expect } from 'chai';
-import { stub, spy } from 'sinon';
+import { stub } from 'sinon';
 import 'mocha';
 
 import { GraphQLError } from 'graphql';
@@ -108,7 +108,7 @@ describe('Errors', () => {
     it('calls logFunction with each error', () => {
       const error = new ApolloError(message, code, { key });
       const logFunction = stub();
-      const formattedError = formatApolloErrors([error], {
+      formatApolloErrors([error], {
         logFunction,
         debug: true,
       });
@@ -121,7 +121,7 @@ describe('Errors', () => {
     it('calls formatter after exposing the code and stacktrace', () => {
       const error = new ApolloError(message, code, { key });
       const formatter = stub();
-      const formattedError = formatApolloErrors([error], {
+      formatApolloErrors([error], {
         formatter,
         debug: true,
       });

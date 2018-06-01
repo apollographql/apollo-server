@@ -1,4 +1,4 @@
-import { parse, DocumentNode, ExecutionResult } from 'graphql';
+import { ExecutionResult } from 'graphql';
 import { runQuery, QueryOptions } from './runQuery';
 import {
   default as GraphQLOptions,

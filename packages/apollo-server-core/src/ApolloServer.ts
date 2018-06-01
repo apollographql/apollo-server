@@ -11,7 +11,7 @@ import {
   subscribe,
   ExecutionResult,
   GraphQLError,
-  GraphQLResolveInfo,
+  GraphQLFieldResolver,
   ValidationContext,
   FieldDefinitionNode,
 } from 'graphql';
@@ -28,12 +28,11 @@ import {
 
 import { formatApolloErrors } from './errors';
 import { GraphQLServerOptions as GraphQLOptions } from './graphqlOptions';
-import { LogFunction, LogAction, LogStep } from './logging';
+import { LogFunction } from './logging';
 
 import {
   Config,
   ListenOptions,
-  MiddlewareOptions,
   RegistrationOptions,
   ServerInfo,
   Context,
@@ -71,7 +70,7 @@ export class ApolloServerBase<Request = RequestInit> {
   private subscriptionServer?: SubscriptionServer;
   protected getHttp: () => HttpServer;
 
-  constructor(config: Config<Request>) {
+  constructor(config: Config) {
     const {
       context,
       resolvers,
@@ -374,7 +373,14 @@ export class ApolloServerBase<Request = RequestInit> {
       schema: this.schema,
       extensions: this.extensions,
       context,
-      // allow overrides from options
+      // Allow overrides from options. Be explicit about a couple of them to
+      // avoid a bad side effect of the otherwise useful noUnusedLocals option
+      // (https://github.com/Microsoft/TypeScript/issues/21673).
+      logFunction: this.requestOptions.logFunction as LogFunction,
+      fieldResolver: this.requestOptions.fieldResolver as GraphQLFieldResolver<
+        any,
+        any
+      >,
       ...this.requestOptions,
     };
   }

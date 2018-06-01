@@ -24,7 +24,7 @@ export interface SubscriptionServerOptions {
   onDisconnect?: (websocket: WebSocket, context: ConnectionContext) => any;
 }
 
-export interface Config<Server>
+export interface Config
   extends Pick<
       GraphQLOptions<Context<any>>,
       | 'formatError'
