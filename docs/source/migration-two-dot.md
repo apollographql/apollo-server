@@ -11,7 +11,10 @@ While it's possible to migrate an existing server to the 2.0 beta without any ch
 
 ### Recommending the `gql` tag
 
-Apollo Server 2.0 ships with the `gql` tag for editor syntax highlighting and auto-formatting with Prettier.  In the future, we will be using it for statically analyzing GraphQL queries, so we recommend wrapping your schema with `gql` today. Unlike the `gql` tag on the client, it does not parse the query string into an AST.
+Apollo Server 2.0 ships with the `gql` tag for **editor syntax highlighting** and **auto-formatting** with Prettier.  In the future, we will be using it for statically analyzing GraphQL queries, so we recommend wrapping your schema with `gql` today. Unlike the `gql` tag on the client, it does not parse the query string into an AST.
+
+
+> **Note:** The `gql` tag is very optional in this case. If you require parsing the query string into an AST on the server, then you should `import { gql } from graphql-tag` .
 
 The `gql` tag is now exported from the new `apollo-server` package.
 
