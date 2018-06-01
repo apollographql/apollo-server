@@ -75,6 +75,7 @@ The response will return:
 ```js line=14-20
 const {
   ApolloServer,
+  ApolloError,
   gql,
 } = require('apollo-server');
 
