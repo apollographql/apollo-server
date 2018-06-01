@@ -95,21 +95,19 @@ Every resolver function is called according to the nesting of the query. To unde
 
 The context is how you access your shared connections and fetchers in resolvers to get data.
 
-The `context` is the third argument passed to every resolver. It is useful for passing things that any resolver may need, like [authentication scope](), database connections([mongo](), [postgres](), etc), and custom fetch functions. Additionally, if you're using [dataloaders to batch requests](../best-practices/performance.html#Batching-data-lookups)  across resolvers, you can attach them to the `context` as well.
+The `context` is the third argument passed to every resolver. It is useful for passing things that any resolver may need, like [authentication scope](https://dev-blog.apollodata.com/authorization-in-graphql-452b1c402a9), database connections, and custom fetch functions. Additionally, if you're using [dataloaders to batch requests](../best-practices/performance.html#Batching-data-lookups)  across resolvers, you can attach them to the `context` as well.
 
 As a best practice, `context` should be the same for all resolvers, no matter the particular query or mutation, and resolvers should never modify it. This ensures consistency across resolvers, and helps increase development velocity.
 
 To provide a `context` to your resolvers, add a `context` object to the Apollo Server constructor. This constructor gets called with every request, so you can set the context based off the details of the request (like HTTP headers).
 
-For specific examples, follow the [backend]() instructions.
-
 ```
-const server = new ApolloServer(req => ({
+const server = new ApolloServer({
   typeDefs,
   resolvers,
-  context: {
+  context: ({ req }) => ({
     authScope: getScope(req.headers.authorization)
-  }
+  })
 }));
 
 // resolver

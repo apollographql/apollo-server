@@ -9,7 +9,7 @@ The `graphql-tools` package provides several related tools for managing schema d
 
 * [Remote schemas](./remote-schemas.html) - turning a remote GraphQL endpoint into a local schema
 * [Schema transforms](./schema-transforms.html) - modifying existing schemas to make delegation easier
-* [Schema stitching](./schema-stitching) - merging multiple schemas into one
+* [Schema stitching](./schema-stitching.html) - merging multiple schemas into one
 
 Delegation is performed by one function, `delegateToSchema`, called from within a resolver function of the parent schema. The `delegateToSchema` function sends the query subtree received by the parent resolver to a subschema that knows how to execute it, then returns the result as if the parent resolver had executed the query.
 
@@ -158,4 +158,4 @@ Delegation preserves aliases that are passed from the parent query. However that
 
 ## API
 
-Under the hood, Apollo server uses the `graphql-tools` library, which includes [`delegateToSchema`](../api/graphql-tools#delegateToSchema) by default.
+Under the hood, Apollo server uses the `graphql-tools` library, which includes [`delegateToSchema`](../api/graphql-tools.html#delegateToSchema) by default.

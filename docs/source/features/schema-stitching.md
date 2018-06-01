@@ -232,7 +232,7 @@ const mergedSchema = mergeSchemas({
 
 <h2 id="using-with-transforms">Using with Transforms</h2>
 
-Often, when creating a GraphQL gateway that combines multiple existing schemas, we might want to modify one of the schemas. The most common tasks include renaming some of the types, and filtering the root fields. By using [transforms](./schema-transforms) with schema stitching, we can easily tweak the subschemas before merging them together.
+Often, when creating a GraphQL gateway that combines multiple existing schemas, we might want to modify one of the schemas. The most common tasks include renaming some of the types, and filtering the root fields. By using [transforms](./schema-transforms.html) with schema stitching, we can easily tweak the subschemas before merging them together.
 
 Before, when we were simply merging schemas without first transforming them, we would typically delegate directly to one of the merged schemas. Once we add transforms to the mix, there are times when we want to delegate to fields of the new, transformed schemas, and other times when we want to delegate to the original, untransformed schemas.
 

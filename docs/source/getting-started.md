@@ -30,7 +30,7 @@ In this step, we'll use your terminal (e.g. Terminal, iTerm, PowerShell) to crea
 
       npm init --yes
 
-  >  We use `npm`, the default package manager which ships with Node.js.  Other package managers, such as [Yarn](//yarnpkg.com), offer similar functionality, but will not be covered in this guide.
+  >  We use `npm`, the default package manager which ships with Node.js.  Other package managers, such as [Yarn](http://yarnpkg.com), offer similar functionality, but will not be covered in this guide.
 
 If the above steps all completed successfully, there should be a new `package.json` file in the directory.  You can verify this by running `ls` (list files).
 
