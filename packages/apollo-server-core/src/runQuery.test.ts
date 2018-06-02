@@ -56,7 +56,7 @@ const queryType = new GraphQLObjectType({
     testContextValue: {
       type: GraphQLString,
       resolve(_root, _args, context) {
-        return context + ' works';
+        return context.s + ' works';
       },
     },
     testArgumentValue: {
@@ -193,7 +193,7 @@ describe('runQuery', () => {
     return runQuery({
       schema,
       queryString: query,
-      context: 'it still',
+      context: { s: 'it still' },
       request: new MockReq(),
     }).then(res => {
       expect(res.data).to.deep.equal(expected);
@@ -206,9 +206,9 @@ describe('runQuery', () => {
     return runQuery({
       schema,
       queryString: query,
-      context: 'it still',
+      context: { s: 'it still' },
       formatResponse: (response, { context }) => {
-        response['extensions'] = context;
+        response['extensions'] = context.s;
         return response;
       },
       request: new MockReq(),
