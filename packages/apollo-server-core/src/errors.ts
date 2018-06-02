@@ -245,12 +245,13 @@ export function formatApolloErrors(
     try {
       return formatter(error);
     } catch (err) {
-      logFunction({
-        action: LogAction.cleanup,
-        step: LogStep.status,
-        data: err,
-        key: 'error',
-      });
+      logFunction &&
+        logFunction({
+          action: LogAction.cleanup,
+          step: LogStep.status,
+          data: err,
+          key: 'error',
+        });
 
       if (debug) {
         return enrichError(err, debug);

@@ -4,7 +4,6 @@ import {
   ExecutionResult,
   DocumentNode,
   parse,
-  print,
   validate,
   execute,
   ExecutionArgs,
@@ -29,7 +28,7 @@ import {
   SyntaxError,
 } from './errors';
 
-import { LogStep, LogAction, LogFunction } from './logging';
+import { LogFunction, LogFunctionExtension } from './logging';
 
 export interface GraphQLResponse {
   data?: object;
@@ -86,20 +85,14 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
     throw new Error('Must supply one of queryString and parsedQuery');
   }
 
-  const logFunction =
-    options.logFunction ||
-    function() {
-      return null;
-    };
   const debugDefault =
     process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test';
   const debug = options.debug !== undefined ? options.debug : debugDefault;
 
-  logFunction({ action: LogAction.request, step: LogStep.start });
-
   const context = options.context || {};
 
-  // If custom extension factories were provided, create per-request extension objects.
+  // If custom extension factories were provided, create per-request extension
+  // objects.
   const extensions = options.extensions ? options.extensions.map(f => f()) : [];
 
   // Legacy hard-coded extension factories. The ApolloServer class doesn't use
@@ -112,16 +105,23 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
   } else if (options.cacheControl) {
     extensions.push(new CacheControlExtension(options.cacheControl));
   }
+  if (options.logFunction) {
+    extensions.push(new LogFunctionExtension(options.logFunction));
+  }
 
   const extensionStack = new GraphQLExtensionStack(extensions);
 
-  // We unconditionally create an extensionStack (so that we don't have to
-  // litter the rest of this function with `if (extensionStack)`, but we don't
-  // instrument the schema unless there actually are extensions.
+  // We unconditionally create an extensionStack, even if there are no
+  // extensions (so that we don't have to litter the rest of this function with
+  // `if (extensionStack)`, but we don't instrument the schema unless there
+  // actually are extensions.  We do unconditionally put the stack on the
+  // context, because if some other call had extensions and the schema is
+  // already instrumented, that's the only way to get a custom fieldResolver to
+  // work.
   if (extensions.length > 0) {
-    context._extensionStack = extensionStack;
     enableGraphQLExtensions(options.schema);
   }
+  context._extensionStack = extensionStack;
 
   const requestDidEnd = extensionStack.requestDidStart({
     // Since the Request interfacess are not the same between node-fetch and
@@ -129,29 +129,13 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
     // into requestDidStart to only the ones we need, currently just the
     // headers, method, and url
     request: options.request as any,
+    queryString: options.queryString,
+    parsedQuery: options.parsedQuery,
+    operationName: options.operationName,
+    variables: options.variables,
   });
   return Promise.resolve()
     .then(() => {
-      const loggedQuery = options.queryString || print(options.parsedQuery);
-      logFunction({
-        action: LogAction.request,
-        step: LogStep.status,
-        key: 'query',
-        data: loggedQuery,
-      });
-      logFunction({
-        action: LogAction.request,
-        step: LogStep.status,
-        key: 'variables',
-        data: options.variables,
-      });
-      logFunction({
-        action: LogAction.request,
-        step: LogStep.status,
-        key: 'operationName',
-        data: options.operationName,
-      });
-
       // Parse the document.
       let documentAST: DocumentNode;
       if (options.parsedQuery) {
@@ -159,7 +143,6 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
       } else if (!options.queryString) {
         throw new Error('Must supply one of queryString and parsedQuery');
       } else {
-        logFunction({ action: LogAction.parse, step: LogStep.start });
         const parsingDidEnd = extensionStack.parsingDidStart({
           queryString: options.queryString,
         });
@@ -180,7 +163,6 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
           );
         } finally {
           parsingDidEnd(...(graphqlParseErrors || []));
-          logFunction({ action: LogAction.parse, step: LogStep.end });
           if (graphqlParseErrors) {
             return Promise.resolve({ errors: graphqlParseErrors });
           }
@@ -200,7 +182,6 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
       if (options.validationRules) {
         rules = rules.concat(options.validationRules);
       }
-      logFunction({ action: LogAction.validation, step: LogStep.start });
       const validationDidEnd = extensionStack.validationDidStart();
       let validationErrors;
       try {
@@ -217,14 +198,13 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
               ),
               {
                 formatter: options.formatError,
-                logFunction,
+                logFunction: options.logFunction,
                 debug,
               },
             );
           }
         } finally {
           validationDidEnd(...(validationErrors || []));
-          logFunction({ action: LogAction.validation, step: LogStep.end });
 
           if (validationErrors && validationErrors.length) {
             return Promise.resolve({
@@ -243,7 +223,6 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
         operationName: options.operationName,
         fieldResolver: options.fieldResolver,
       };
-      logFunction({ action: LogAction.execute, step: LogStep.start });
       const executionDidEnd = extensionStack.executionDidStart({
         executionArgs,
       });
@@ -271,13 +250,12 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
           if (result.errors) {
             response.errors = formatApolloErrors([...result.errors], {
               formatter: options.formatError,
-              logFunction,
+              logFunction: options.logFunction,
               debug,
             });
           }
 
           executionDidEnd(...result.errors);
-          logFunction({ action: LogAction.execute, step: LogStep.end });
 
           const formattedExtensions = extensionStack.format();
           if (Object.keys(formattedExtensions).length > 0) {
@@ -296,18 +274,11 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
       // we're not returning a GraphQL response so we don't call
       // willSendResponse.
       requestDidEnd(err);
-      logFunction({ action: LogAction.request, step: LogStep.end });
       throw err;
     })
     .then(graphqlResponse => {
       extensionStack.willSendResponse({ graphqlResponse });
       requestDidEnd();
-      logFunction({
-        action: LogAction.request,
-        step: LogStep.end,
-        key: 'response',
-        data: graphqlResponse,
-      });
       return graphqlResponse;
     });
 }
