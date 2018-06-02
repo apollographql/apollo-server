@@ -63,10 +63,6 @@ export class GraphQLExtensionStack<TContext = any> {
     this.extensions = extensions;
   }
 
-  public setFieldResolver(fieldResolver: GraphQLFieldResolver<any, any>): void {
-    this.fieldResolver = fieldResolver;
-  }
-
   public requestDidStart(o: {
     request: Request;
     queryString?: string;
@@ -89,6 +85,9 @@ export class GraphQLExtensionStack<TContext = any> {
     );
   }
   public executionDidStart(o: { executionArgs: ExecutionArgs }): EndHandler {
+    if (o.executionArgs.fieldResolver) {
+      this.fieldResolver = o.executionArgs.fieldResolver;
+    }
     return this.handleDidStart(
       ext => ext.executionDidStart && ext.executionDidStart(o),
     );
