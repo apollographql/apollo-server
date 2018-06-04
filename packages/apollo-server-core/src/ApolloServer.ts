@@ -268,6 +268,14 @@ export class ApolloServerBase<Request = RequestInit> {
     if (this.http) await new Promise(s => this.http.close(s));
   }
 
+  public getSubscriptionServer() {
+    return this.subscriptionServer;
+  }
+
+  public getHttpServer() {
+    return this.http;
+  }
+
   private createSubscriptionServer(
     server: HttpServer,
     config: SubscriptionServerOptions,
