@@ -28,6 +28,12 @@ const resolvers = {
 describe('apollo-server-express', () => {
   //to remove the circular dependency, we reference it directly
   const ApolloServer = require('../../apollo-server/dist/index').ApolloServer;
+  let server: ApolloServerBase<express.Request>;
+  let app: express.Application;
+
+  afterEach(async () => {
+    if (server) await server.stop();
+  });
 
   describe('', () => {
     it('accepts typeDefs and resolvers', () => {
@@ -44,12 +50,6 @@ describe('apollo-server-express', () => {
   });
 
   describe('registerServer', () => {
-    let server: ApolloServerBase<express.Request>;
-    let app: express.Application;
-    afterEach(async () => {
-      await server.stop();
-    });
-
     it('can be queried', async () => {
       server = new ApolloServer({
         typeDefs,
@@ -377,14 +377,13 @@ describe('apollo-server-express', () => {
         expect(e.extensions.exception.stacktrace).to.exist;
 
         process.env.NODE_ENV = nodeEnv;
-        await server.stop();
       });
 
       it('propogates error codes in dev mode', async () => {
         const nodeEnv = process.env.NODE_ENV;
         delete process.env.NODE_ENV;
 
-        const server = new ApolloServer({
+        server = new ApolloServer({
           typeDefs: gql`
             type Query {
               error: String
@@ -416,7 +415,6 @@ describe('apollo-server-express', () => {
         expect(result.errors[0].extensions.exception.stacktrace).to.exist;
 
         process.env.NODE_ENV = nodeEnv;
-        await server.stop();
       });
 
       it('propogates error codes in production', async () => {
@@ -454,14 +452,13 @@ describe('apollo-server-express', () => {
         expect(result.errors[0].extensions.exception).not.to.exist;
 
         process.env.NODE_ENV = nodeEnv;
-        await server.stop();
       });
 
       it('propogates error codes with null response in production', async () => {
         const nodeEnv = process.env.NODE_ENV;
         process.env.NODE_ENV = 'production';
 
-        const server = new ApolloServer({
+        server = new ApolloServer({
           typeDefs: gql`
             type Query {
               error: String!
@@ -491,7 +488,6 @@ describe('apollo-server-express', () => {
         expect(result.errors[0].extensions.exception).not.to.exist;
 
         process.env.NODE_ENV = nodeEnv;
-        await server.stop();
       });
     });
   });

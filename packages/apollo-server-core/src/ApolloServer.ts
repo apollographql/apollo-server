@@ -354,13 +354,13 @@ export class ApolloServerBase<Request = RequestInit> {
     }
   }
 
-  graphQLServerOptionsForRequest(request: Request) {
+  async graphQLServerOptionsForRequest(request: Request) {
     let context: Context = this.context ? this.context : { request };
 
     try {
       context =
         typeof this.context === 'function'
-          ? this.context({ req: request })
+          ? await this.context({ req: request })
           : context;
     } catch (error) {
       //Defer context error resolution to inside of runQuery
