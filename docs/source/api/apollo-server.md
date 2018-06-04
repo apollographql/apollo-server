@@ -152,9 +152,10 @@ const server = new ApolloServer({
   resolvers,
 });
 
-app.use(jwtCheck, requireAuth, checkScope); // you can mount several middleware at this point to run before Apollo.
+// Additional middleware can be mounted at this point to run before Apollo.
+app.use('*', jwtCheck, requireAuth, checkScope);
 
-registerServer({ server, app, path: '/specialUrl' }); // app is from an existing express app. Mount Apollo middleware here. If no path is specified, it defaults to `/graphql`. 
+registerServer({ server, app, path: '/specialUrl' }); // app is from an existing express app. Mount Apollo middleware here. If no path is specified, it defaults to `/graphql`.
 ```
 
 ## `gql`
