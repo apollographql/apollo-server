@@ -41,7 +41,7 @@ const graphqlHapi: IPlugin = {
       options: options.route || {},
       handler: async (request, h) => {
         try {
-          const gqlResponse = await runHttpQuery([request], {
+          const { gqlResponse, responseInit } = await runHttpQuery([request], {
             method: request.method.toUpperCase(),
             options: options.graphqlOptions,
             query:
@@ -53,7 +53,13 @@ const graphqlHapi: IPlugin = {
           });
 
           const response = h.response(gqlResponse);
-          response.type('application/json');
+          Object.keys(responseInit.headers).forEach(key =>
+            response.header(key, responseInit.headers[key]),
+          );
+          response.header(
+            'Content-Length',
+            Buffer.byteLength(gqlResponse, 'utf8').toString(),
+          );
           return response;
         } catch (error) {
           if ('HttpQueryError' !== error.name) {

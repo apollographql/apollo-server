@@ -32,6 +32,11 @@ function prettyJSONStringify(toStringfy) {
   return JSON.stringify(toStringfy) + '\n';
 }
 
+export interface HttpQueryResponse {
+  gqlResponse: string;
+  responseInit: ResponseInit;
+}
+
 export class HttpQueryError extends Error {
   public statusCode: number;
   public isGraphQLError: boolean;
@@ -75,7 +80,7 @@ function throwHttpGraphQLError(
 export async function runHttpQuery(
   handlerArguments: Array<any>,
   request: HttpQueryRequest,
-): Promise<string> {
+): Promise<HttpQueryResponse> {
   let isGetRequest: boolean = false;
   let optionsObject: GraphQLOptions;
   const debugDefault =
@@ -334,17 +339,28 @@ export async function runHttpQuery(
 
   const responses = await Promise.all(requests);
 
+  const responseInit: ResponseInit = {
+    status: 200,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  };
+
   if (!isBatch) {
     const gqlResponse = responses[0];
     //This code is run on parse/validation errors and any other error that
     //doesn't reach GraphQL execution
     if (gqlResponse.errors && typeof gqlResponse.data === 'undefined') {
-      throw new HttpQueryError(400, prettyJSONStringify(gqlResponse), true, {
-        'Content-Type': 'application/json',
-      });
+      throwHttpGraphQLError(400, gqlResponse.errors as any, optionsObject);
     }
-    return prettyJSONStringify(gqlResponse);
+    return {
+      gqlResponse: prettyJSONStringify(gqlResponse),
+      responseInit,
+    };
   }
 
-  return prettyJSONStringify(responses);
+  return {
+    gqlResponse: prettyJSONStringify(responses),
+    responseInit,
+  };
 }

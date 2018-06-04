@@ -46,8 +46,10 @@ export function graphqlExpress(
       query: req.method === 'POST' ? req.body : req.query,
       request: convertNodeHttpToRequest(req),
     }).then(
-      gqlResponse => {
-        res.setHeader('Content-Type', 'application/json');
+      ({ gqlResponse, responseInit }) => {
+        Object.keys(responseInit.headers).forEach(key =>
+          res.setHeader(key, responseInit.headers[key]),
+        );
         res.setHeader(
           'Content-Length',
           Buffer.byteLength(gqlResponse, 'utf8').toString(),
