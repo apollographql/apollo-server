@@ -81,7 +81,7 @@ $ node index.js
 🚀 Server ready at http://localhost:4000/
 ```
 
-At this point, if the message isn't printed to the console, it's possible that something went wrong.  Double-check the previous steps in this guide, and try comparing the configuration to our [pre-configured example on Glitch]().
+At this point, if the message isn't printed to the console, it's possible that something went wrong.  Double-check the previous steps in this guide, and try comparing the configuration to our [pre-configured example on Glitch](https://glitch.com/edit/#!/apollo-launchpad?path=server.js).
 
 <h3 id="running">GraphQL Playground</h3>
 
@@ -128,7 +128,7 @@ For existing applications, we'll pass it into the `registerServer` method as `ap
 > The existing application is frequently already named `app`, especially when using Express.  If the application is identified by a different variable, pass the existing variable in place of `app`.
 
 ```js
-const { ApolloServer } = require('apollo-server');
+const { ApolloServer, gql } = require('apollo-server');
 const { registerServer } = require('apollo-server-express');
 const { typeDefs, resolvers } = require('./schema');
 

@@ -9,14 +9,11 @@ While it's possible to migrate an existing server to the 2.0 beta without any ch
 
 > **Note:** In the beta of Apollo Server 2.0 only Express and Hapi are supported.  Additional middleware integrations will be implemented in the official 2.0 release.
 
-### Recommending the `gql` tag
+### The `gql` tag
 
-Apollo Server 2.0 ships with the `gql` tag for **editor syntax highlighting** and **auto-formatting** with Prettier.  In the future, we will be using it for statically analyzing GraphQL queries, so we recommend wrapping your schema with `gql` today. Unlike the `gql` tag on the client, it does not parse the query string into an AST.
+Apollo Server 2.0 ships with the `gql` tag for **editor syntax highlighting** and **auto-formatting** with Prettier.  In the future, we will be using it for statically analyzing GraphQL queries, so Apollo Servers requires wrapping your schema with `gql`.
 
-
-> **Note:** The `gql` tag is very optional in this case. If you require parsing the query string into an AST on the server, then you should `import { gql } from graphql-tag` .
-
-The `gql` tag is now exported from the new `apollo-server` package.
+The `gql` tag parses the query string into an AST  and is now exported from the new `apollo-server` package.
 
 ```js line=1,3
 const { ApolloServer, gql } = require('apollo-server');
@@ -26,6 +23,12 @@ const typeDefs = gql`
     hello: String
   }
 `;
+
+//Some projects use schemas imported from external files
+const typeDefs = gql`${IMPORT_FUNCTION('./schema-file')}`;
+
+//gql can also be used as regular function to convert a string to an AST
+const typeDefs = gql(IMPORT_FUNCTION('./schema-file'))
 ```
 
 ### Changes to app dependencies

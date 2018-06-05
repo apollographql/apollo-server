@@ -3,7 +3,7 @@ title: Implementing directives
 description: Implementing custom directives to transform schema types, fields, and arguments
 ---
 
-Before learning how to implement schema directives, [this section]() will provide the necessary background on schema directives and their use.
+Before learning how to implement schema directives, [this section](./directives.html) will provide the necessary background on schema directives and their use.
 
 ## Implementing schema directives
 
@@ -31,8 +31,8 @@ These method names correspond to all possible [locations](https://github.com/gra
 
 Here is one possible implementation of the `@deprecated` directive we saw above:
 
-```typescript
-const { SchemaDirectiveVisitor } = require("graphql-tools");
+```js
+const { SchemaDirectiveVisitor } = require("apollo-server");
 
 class DeprecatedDirective extends SchemaDirectiveVisitor {
   public visitFieldDefinition(field: GraphQLField<any, any>) {
@@ -47,28 +47,32 @@ class DeprecatedDirective extends SchemaDirectiveVisitor {
 }
 ```
 
-In order to apply this implementation to a schema that contains `@deprecated` directives, simply pass the `DeprecatedDirective` class to the `makeExecutableSchema` function via the `schemaDirectives` option:
+In order to apply this implementation to a schema that contains `@deprecated` directives, simply pass the `DeprecatedDirective` class to Apollo Server's constructor via the `schemaDirectives` option:
 
-```typescript
-const { makeExecutableSchema } = require("graphql-tools");
+```js
+const { ApolloServer, gql } = require("apollo-server");
 
-const typeDefs = `
+const typeDefs = gql`
 type ExampleType {
   newField: String
   oldField: String @deprecated(reason: "Use \`newField\`.")
 }`;
 
-const schema = makeExecutableSchema({
+const server = new ApolloServer({
   typeDefs,
   schemaDirectives: {
     deprecated: DeprecatedDirective
   }
 });
+
+server.listen().then(({ url }) => {
+  console.log(`🚀 Server ready at ${url}`);
+});
 ```
 
 Alternatively, if you want to modify an existing schema object, you can use the `SchemaDirectiveVisitor.visitSchemaDirectives` interface directly:
 
-```typescript
+```js
 SchemaDirectiveVisitor.visitSchemaDirectives(schema, {
   deprecated: DeprecatedDirective
 });
@@ -76,7 +80,7 @@ SchemaDirectiveVisitor.visitSchemaDirectives(schema, {
 
 Note that a subclass of `SchemaDirectiveVisitor` may be instantiated multiple times to visit multiple different occurrences of the `@deprecated` directive. That's why you provide a class rather than an instance of that class.
 
-If for some reason you have a schema that uses another name for the `@deprecated` directive, but you want to use the same implementation, you can! The same `DeprecatedDirective` class can be passed with a different name, simply by changing its key in the `schemaDirectives` object passed to `makeExecutableSchema`. In other words, `SchemaDirectiveVisitor` implementations are effectively anonymous, so it's up to whoever uses them to assign names to them.
+If for some reason you have a schema that uses another name for the `@deprecated` directive, but you want to use the same implementation, you can! The same `DeprecatedDirective` class can be passed with a different name, simply by changing its key in the `schemaDirectives` object passed to the Apollo Server constructor. In other words, `SchemaDirectiveVisitor` implementations are effectively anonymous, so it's up to whoever uses them to assign names to them.
 
 ## Examples
 
@@ -87,9 +91,10 @@ To appreciate the range of possibilities enabled by `SchemaDirectiveVisitor`, le
 Suppose you want to ensure a string-valued field is converted to uppercase. Though this use case is simple, it's a good example of a directive implementation that works by wrapping a field's `resolve` function:
 
 ```js
+const { ApolloServer, gql, SchemaDirectiveVisitor } = require("apollo-server");
 const { defaultFieldResolver } = require("graphql");
 
-const typeDefs = `
+const typeDefs = gql`
 directive @upper on FIELD_DEFINITION
 
 type Query {
@@ -109,12 +114,16 @@ class UpperCaseDirective extends SchemaDirectiveVisitor {
   }
 }
 
-const schema = makeExecutableSchema({
+const server = new ApolloServer({
   typeDefs,
   schemaDirectives: {
     upper: UpperCaseDirective,
     upperCase: UpperCaseDirective
   }
+});
+
+server.listen().then(({ url }) => {
+  console.log(`🚀 Server ready at ${url}`);
 });
 ```
 
@@ -125,7 +134,9 @@ Notice how easy it is to handle both `@upper` and `@upperCase` with the same `Up
 Suppose you've defined an object type that corresponds to a [REST](https://en.wikipedia.org/wiki/Representational_state_transfer) resource, and you want to avoid implementing resolver functions for every field:
 
 ```js
-const typeDefs = `
+const { ApolloServer, gql, SchemaDirectiveVisitor } = require("apollo-server");
+
+const typeDefs = gql`
 directive @rest(url: String) on FIELD_DEFINITION
 
 type Query {
@@ -139,11 +150,15 @@ class RestDirective extends SchemaDirectiveVisitor {
   }
 }
 
-const schema = makeExecutableSchema({
+const server = new ApolloServer({
   typeDefs,
   schemaDirectives: {
     rest: RestDirective
   }
+});
+
+server.listen().then(({ url }) => {
+  console.log(`🚀 Server ready at ${url}`);
 });
 ```
 
@@ -154,7 +169,9 @@ There are many more issues to consider when implementing a real GraphQL wrapper 
 Suppose your resolver returns a `Date` object but you want to return a formatted string to the client:
 
 ```js
-const typeDefs = `
+const { ApolloServer, gql, SchemaDirectiveVisitor } = require("apollo-server");
+
+const typeDefs = gql`
 directive @date(format: String) on FIELD_DEFINITION
 
 scalar Date
@@ -176,21 +193,26 @@ class DateFormatDirective extends SchemaDirectiveVisitor {
   }
 }
 
-const schema = makeExecutableSchema({
+const server = new ApolloServer({
   typeDefs,
   schemaDirectives: {
     date: DateFormatDirective
   }
+});
+
+server.listen().then(({ url }) => {
+  console.log(`🚀 Server ready at ${url}`);
 });
 ```
 
 Of course, it would be even better if the schema author did not have decide on a specific `Date` format, but could instead leave that decision to the client. To make this work, the directive just needs to add an additional argument to the field:
 
 ```js
+const { ApolloServer, gql, SchemaDirectiveVisitor } = require("apollo-server");
 const formatDate = require("dateformat");
 const { defaultFieldResolver, GraphQLString } = require("graphql");
 
-const typeDefs = `
+const typeDefs = gql`
 directive @date(
   defaultFormat: String = "mmmm d, yyyy"
 ) on FIELD_DEFINITION
@@ -227,30 +249,36 @@ class FormattableDateDirective extends SchemaDirectiveVisitor {
   }
 }
 
-const schema = makeExecutableSchema({
+const server = new ApolloServer({
   typeDefs,
   schemaDirectives: {
     date: FormattableDateDirective
   }
+});
+
+server.listen().then(({ url }) => {
+  console.log(`🚀 Server ready at ${url}`);
 });
 ```
 
 Now the client can specify a desired `format` argument when requesting the `Query.today` field, or omit the argument to use the `defaultFormat` string specified in the schema:
 
 ```js
-const { graphql } = require("graphql");
+const { request } = require("graphql-request");
 
-graphql(schema, `query { today }`).then(result => {
-  // Logs with the default "mmmm d, yyyy" format:
-  console.log(result.data.today);
-});
+server.listen().then(({ url }) => {
+  request(url, `query { today }`).then(result => {
+    // Logs with the default "mmmm d, yyyy" format:
+    console.log(result.data.today);
+  });
 
-graphql(schema, `query {
-  today(format: "d mmm yyyy")
-}`).then(result => {
-  // Logs with the requested "d mmm yyyy" format:
-  console.log(result.data.today);
-});
+  request(url, `query {
+    today(format: "d mmm yyyy")
+  }`).then(result => {
+    // Logs with the requested "d mmm yyyy" format:
+    console.log(result.data.today);
+  });
+})
 ```
 
 ### Marking strings for internationalization
@@ -260,7 +288,9 @@ Suppose you have a function called `translate` that takes a string, a path ident
 Here's how you might make sure `translate` is used to localize the `greeting` field of a `Query` type:
 
 ```js
-const typeDefs = `
+const { ApolloServer, gql, SchemaDirectiveVisitor } = require("apollo-server");
+
+const typeDefs = gql`
 directive @intl on FIELD_DEFINITION
 
 type Query {
@@ -280,11 +310,15 @@ class IntlDirective extends SchemaDirectiveVisitor {
   }
 }
 
-const schema = makeExecutableSchema({
+const server = new ApolloServer({
   typeDefs,
   schemaDirectives: {
     intl: IntlDirective
   }
+});
+
+server.listen().then(({ url }) => {
+  console.log(`🚀 Server ready at ${url}`);
 });
 ```
 
@@ -316,6 +350,8 @@ type User @auth(requires: USER) {
 What makes this example tricky is that the `OBJECT` version of the directive needs to wrap all fields of the object, even though some of those fields may be individually wrapped by `@auth` directives at the `FIELD_DEFINITION` level, and we would prefer not to rewrap resolvers if we can help it:
 
 ```js
+const { ApolloServer, gql, SchemaDirectiveVisitor } = require("apollo-server");
+
 class AuthDirective extends SchemaDirectiveVisitor {
   visitObject(type) {
     this.ensureFieldsWrapped(type);
@@ -362,13 +398,17 @@ class AuthDirective extends SchemaDirectiveVisitor {
   }
 }
 
-const schema = makeExecutableSchema({
+const server = new ApolloServer({
   typeDefs,
   schemaDirectives: {
     auth: AuthDirective,
     authorized: AuthDirective,
     authenticated: AuthDirective
   }
+});
+
+server.listen().then(({ url }) => {
+  console.log(`🚀 Server ready at ${url}`);
 });
 ```
 
@@ -379,7 +419,9 @@ One drawback of this approach is that it does not guarantee fields will be wrapp
 Suppose you want to enforce a maximum length for a string-valued field:
 
 ```js
-const typeDefs = `
+const { ApolloServer, gql, SchemaDirectiveVisitor } = require("apollo-server");
+
+const typeDefs = gql`
 directive @length(max: Int) on FIELD_DEFINITION | INPUT_FIELD_DEFINITION
 
 type Query {
@@ -448,11 +490,15 @@ class LimitedLengthType extends GraphQLScalarType {
   }
 }
 
-const schema = makeExecutableSchema({
+const server = new ApolloServer({
   typeDefs,
   schemaDirectives: {
     length: LengthDirective
   }
+});
+
+server.listen().then(({ url }) => {
+  console.log(`🚀 Server ready at ${url}`);
 });
 ```
 
@@ -461,10 +507,11 @@ const schema = makeExecutableSchema({
 Suppose your database uses incrementing IDs for each resource type, so IDs are not unique across all resource types. Here’s how you might synthesize a field called `uid` that combines the object type with various field values to produce an ID that’s unique across your schema:
 
 ```js
+const { ApolloServer, gql, SchemaDirectiveVisitor } = require("apollo-server");
 const { GraphQLID } = require("graphql");
 const { createHash } = require("crypto");
 
-const typeDefs = `
+const typeDefs = gql`
 directive @uniqueID(
   # The name of the new ID field, "uid" by default:
   name: String = "uid"
@@ -511,11 +558,15 @@ class UniqueIdDirective extends SchemaDirectiveVisitor {
   }
 }
 
-const schema = makeExecutableSchema({
+const server = new ApolloServer({
   typeDefs,
   schemaDirectives: {
     uniqueID: UniqueIdDirective
   }
+});
+
+server.listen().then(({ url }) => {
+  console.log(`🚀 Server ready at ${url}`);
 });
 ```
 
@@ -548,7 +599,8 @@ Enforcing the requirements of the declaration is something a `SchemaDirectiveVis
 
 However, if you're implementing a reusable `SchemaDirectiveVisitor` for public consumption, you will probably not be the person writing the SDL syntax, so you may not have control over which directives the schema author decides to declare, and how. That's why a well-implemented, reusable `SchemaDirectiveVisitor` should consider overriding the `getDirectiveDeclaration` method:
 
-```typescript
+```js
+const { ApolloServer, gql, SchemaDirectiveVisitor } = require("apollo-server");
 const { DirectiveLocation, GraphQLDirective, GraphQLEnumType } = require("graphql");
 
 class AuthDirective extends SchemaDirectiveVisitor {
@@ -611,6 +663,6 @@ Since the `getDirectiveDeclaration` method receives not only the name of the dir
 
 As its name suggests, the `SchemaDirectiveVisitor` abstraction is specifically designed to enable transforming GraphQL schemas based on directives that appear in your SDL text.
 
-While directive syntax can also appear in GraphQL queries sent from the client, implementing query directives would require runtime transformation of query documents. We have deliberately restricted this implementation to transformations that take place when you call the `makeExecutableSchema` function&mdash;that is, at schema construction time.
+While directive syntax can also appear in GraphQL queries sent from the client, implementing query directives would require runtime transformation of query documents. We have deliberately restricted this implementation to transformations that take place at server construction time.
 
 We believe confining this logic to your schema is more sustainable than burdening your clients with it, though you can probably imagine a similar sort of abstraction for implementing query directives. If that possibility becomes a desire that becomes a need for you, let us know, and we may consider supporting query directives in a future version of these tools.
