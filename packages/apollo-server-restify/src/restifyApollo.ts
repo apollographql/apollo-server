@@ -47,7 +47,7 @@ export function graphqlRestify(
     }).then(
       gqlResponse => {
         res.setHeader('Content-Type', 'application/json');
-        res.write(gqlResponse);
+        res.write(JSON.stringify(gqlResponse));
         res.end();
         next();
       },

@@ -36,7 +36,7 @@ export function graphqlKoa(
     }).then(
       gqlResponse => {
         ctx.set('Content-Type', 'application/json');
-        ctx.body = gqlResponse;
+        ctx.body = JSON.stringify(gqlResponse);
       },
       (error: HttpQueryError) => {
         if ('HttpQueryError' !== error.name) {

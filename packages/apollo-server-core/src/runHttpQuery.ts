@@ -11,6 +11,9 @@ import {
   resolveGraphqlOptions,
 } from './graphqlOptions';
 
+export type Dict<T> = { [key: string]: T };
+export type QueryResult = Dict<any> | Dict<any>[];
+
 export interface HttpQueryRequest {
   method: string;
   query: Record<string, any>;
@@ -44,7 +47,7 @@ function isQueryOperation(query: DocumentNode, operationName: string) {
 export async function runHttpQuery(
   handlerArguments: Array<any>,
   request: HttpQueryRequest,
-): Promise<string> {
+): Promise<QueryResult> {
   let isGetRequest: boolean = false;
   let optionsObject: GraphQLOptions;
 
@@ -229,8 +232,8 @@ export async function runHttpQuery(
         'Content-Type': 'application/json',
       });
     }
-    return JSON.stringify(gqlResponse);
+    return gqlResponse;
   }
 
-  return JSON.stringify(responses);
+  return responses;
 }
