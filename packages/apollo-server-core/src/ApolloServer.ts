@@ -7,6 +7,7 @@ import {
 import { Server as HttpServer } from 'http';
 import {
   execute,
+  print,
   GraphQLSchema,
   subscribe,
   ExecutionResult,
@@ -110,7 +111,23 @@ export class ApolloServerBase<Request = RequestInit> {
     this.requestOptions = requestOptions;
     this.context = context;
 
-    const enhancedTypeDefs = Array.isArray(typeDefs) ? typeDefs : [typeDefs];
+    if (
+      typeof typeDefs === 'string' ||
+      (Array.isArray(typeDefs) && typeDefs.find(d => typeof d === 'string'))
+    ) {
+      throw new Error(`typeDefs must be tagged with the gql exported from apollo-server:
+
+const { gql } = require('apollo-server');
+
+const typeDefs = gql\`${(typeof typeDefs === 'string' && typeDefs) ||
+        (Array.isArray(typeDefs) &&
+          typeDefs.find(d => typeof d === 'string'))}\`
+`);
+    }
+
+    const enhancedTypeDefs = Array.isArray(typeDefs)
+      ? typeDefs.map(print)
+      : [print(typeDefs)];
     enhancedTypeDefs.push(`scalar Upload`);
 
     this.schema = schema

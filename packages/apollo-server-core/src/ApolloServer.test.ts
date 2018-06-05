@@ -24,13 +24,11 @@ Object.assign(global, {
 import { createApolloFetch } from 'apollo-fetch';
 import { ApolloServerBase } from './ApolloServer';
 import { AuthenticationError } from './errors';
+import { gql } from './index';
 import { convertNodeHttpToRequest } from './nodeHttpToRequest';
 import { runHttpQuery } from './runHttpQuery';
-import gqlTag from 'graphql-tag';
 
-let gql = String.raw;
-
-const INTROSPECTION_QUERY = gql`
+const INTROSPECTION_QUERY = `
   {
     __schema {
       directives {
@@ -40,7 +38,7 @@ const INTROSPECTION_QUERY = gql`
   }
 `;
 
-const TEST_STRING_QUERY = gql`
+const TEST_STRING_QUERY = `
   {
     testString
   }
@@ -242,6 +240,22 @@ describe('ApolloServerBase', () => {
         expect(result.data).to.deep.equal({ hello: 'hi' });
         expect(result.errors, 'errors should exist').not.to.exist;
         await server.stop();
+      });
+      it('throws if typeDefs are a string', async () => {
+        const typeDefs: any = `
+          type Query {
+            hello: String
+          }
+        `;
+        const resolvers = { Query: { hello: () => 'hi' } };
+
+        expect(
+          () =>
+            new ApolloServerBase({
+              typeDefs,
+              resolvers,
+            }),
+        ).to.throw(/apollo-server/);
       });
       it('uses schema over resolvers + typeDefs', async () => {
         const typeDefs = gql`
@@ -588,7 +602,7 @@ describe('ApolloServerBase', () => {
     });
   });
 
-  describe('subscritptions', () => {
+  describe('subscriptions', () => {
     const SOMETHING_CHANGED_TOPIC = 'something_changed';
     const pubsub = new PubSub();
     let server: ApolloServerBase;
@@ -630,11 +644,11 @@ describe('ApolloServerBase', () => {
         }
       `;
 
-      const query = gqlTag(gql`
+      const query = `
         subscription {
           num
         }
-      `);
+      `;
 
       const resolvers = {
         Query: {
@@ -703,11 +717,11 @@ describe('ApolloServerBase', () => {
         }
       `;
 
-      const query = gqlTag(gql`
+      const query = `
         subscription {
           num
         }
-      `);
+      `;
 
       const resolvers = {
         Query: {
@@ -783,11 +797,11 @@ describe('ApolloServerBase', () => {
         }
       `;
 
-      const query = gqlTag(gql`
+      const query = `
         subscription {
           num
         }
-      `);
+      `;
 
       const resolvers = {
         Query: {

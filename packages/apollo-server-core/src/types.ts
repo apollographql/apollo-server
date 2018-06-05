@@ -1,4 +1,4 @@
-import { GraphQLSchema } from 'graphql';
+import { GraphQLSchema, DocumentNode } from 'graphql';
 import { SchemaDirectiveVisitor, IResolvers, IMocks } from 'graphql-tools';
 import { ConnectionContext } from 'subscriptions-transport-ws';
 import { Server as HttpServer } from 'http';
@@ -39,7 +39,7 @@ export interface Config
       | 'cacheControl'
       | 'tracing'
     > {
-  typeDefs?: string | [string];
+  typeDefs?: DocumentNode | [DocumentNode];
   resolvers?: IResolvers;
   schema?: GraphQLSchema;
   schemaDirectives?: Record<string, typeof SchemaDirectiveVisitor>;
