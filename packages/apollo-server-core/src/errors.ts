@@ -199,6 +199,28 @@ export class ForbiddenError extends ApolloError {
   }
 }
 
+export class BadUserInputError extends ApolloError {
+  constructor(message: string, properties?: Record<string, any>) {
+    super(message, 'BAD_USER_INPUT', properties);
+
+    // Set the prototype explicitly.
+    // https://stackoverflow.com/a/41102306
+    Object.setPrototypeOf(this, BadUserInputError.prototype);
+    Object.defineProperty(this, 'name', { value: 'BadUserInputError' });
+  }
+}
+
+export class TransientError extends ApolloError {
+  constructor(message: string, retryAfter: number) {
+    super(message, 'TRANSIENT', { retryAfter });
+
+    // Set the prototype explicitly.
+    // https://stackoverflow.com/a/41102306
+    Object.setPrototypeOf(this, TransientError.prototype);
+    Object.defineProperty(this, 'name', { value: 'TransientError' });
+  }
+}
+
 export function formatApolloErrors(
   errors: Array<Error>,
   options?: {

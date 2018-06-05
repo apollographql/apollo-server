@@ -11,6 +11,8 @@ import {
   AuthenticationError,
   ForbiddenError,
   ValidationError,
+  BadUserInputError,
+  TransientError,
   SyntaxError,
 } from './errors';
 
@@ -169,6 +171,29 @@ describe('Errors', () => {
         errorClass: ValidationError,
         name: 'ValidationError',
       });
+    });
+    it('provides a BadUserInput error', () => {
+      const error = new BadUserInputError(message, {
+        field1: 'property1',
+        field2: 'property2',
+      });
+      verifyError(error, {
+        code: 'BAD_USER_INPUT',
+        errorClass: BadUserInputError,
+        name: 'BadUserInputError',
+      });
+      console.log(`error: ${JSON.stringify(error, null, 2)}`);
+      expect(error.field1).to.equal('property1');
+      expect(error.field2).to.equal('property2');
+    });
+    it('provides a transient error', () => {
+      const error = new TransientError(message, 1000);
+      verifyError(error, {
+        code: 'TRANSIENT',
+        errorClass: TransientError,
+        name: 'TransientError',
+      });
+      expect(error.retryAfter).to.equal(1000);
     });
   });
 });
