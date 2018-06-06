@@ -129,31 +129,6 @@ server.listen().then(({ url }) => {
 });
 ```
 
-#### Adding Additional Middleware (Apollo Server 2)
-
-For middleware that is collocated with the GraphQL endpoint, Apollo Server 2 allows middleware mounted on the same path before `registerServer` is called. For example, this server runs an authentication middleware before GraphQL execution.
-
-```js
-const express = require('express');
-const { ApolloServer, gql } = require('apollo-server');
-const { registerServer } = require('apollo-server-express');
-
-const app = express();
-const path = '/graphql';
-
-const server = new ApolloServer({ typeDefs, resolvers });
-
-//Mount a jwt or other authentication middleware that is run before the GraphQL execution
-app.use(path, jwtCheck);
-
-registerServer({ server, app, path });
-
-// normal ApolloServer listen call but url will contain /graphql
-server.listen().then(({ url }) => {
-  console.log(`🚀 Server ready at ${url}`)
-});
-```
-
 ### Stand-alone
 
 If you are simply focused on running a production-ready GraphQL server quickly, Apollo Server 2.0 ships with a built-in server and starting your own server (e.g. Express, Koa, etc.) is no longer necessary.
@@ -185,6 +160,62 @@ const resolvers = {
 };
 
 const server = new ApolloServer({ typeDefs, resolvers });
+
+server.listen().then(({ url }) => {
+  console.log(`🚀 Server ready at ${url}`);
+});
+```
+
+### Adding Additional Middleware to Apollo Server 2
+
+For middleware that is collocated with the GraphQL endpoint, Apollo Server 2 allows middleware mounted on the same path before `registerServer` is called. For example, this server runs an authentication middleware before GraphQL execution.
+
+```js
+const express = require('express');
+const { ApolloServer, gql } = require('apollo-server');
+const { registerServer } = require('apollo-server-express');
+
+const app = express();
+const path = '/graphql';
+
+const server = new ApolloServer({ typeDefs, resolvers });
+
+//Mount a jwt or other authentication middleware that is run before the GraphQL execution
+app.use(path, jwtCheck);
+
+registerServer({ server, app, path });
+
+// normal ApolloServer listen call but url will contain /graphql
+server.listen().then(({ url }) => {
+  console.log(`🚀 Server ready at ${url}`)
+});
+```
+
+### Using an Existing Schema
+
+For many existing instances of Apollo Server, the schema is created at runtime before server startup, using `makeExecutableSchema` or `mergeSchemas`. Apollo Server 2 stays backwards compatible with these more complex schemas, accepting it as the `schema` field in the server constructor options. Additionally, Apollo Server 2 exports all of `graphql-tools`, so `makeExecutableSchema` and other functions can be imported directly from Apollo Server.
+
+> Note: the string to create these schema will not use th `gql` tag exported from apollo-server.
+```js
+const { ApolloServer, makeExecutableSchema } = require('apollo-server');
+
+//For developer tooling, such as autoformatting, use the following workaround
+const gql = String.raw;
+
+const typeDefs = gql`
+  type Query {
+    hello: String
+  }
+`;
+
+const schema = makeExecutableSchema({
+  typeDefs,
+  resolvers,
+});
+//mergeSchemas is imported from apollo-server
+//const schema = mergeSchemas(...);
+
+const server = new ApolloServer({ schema });
 
 server.listen().then(({ url }) => {
   console.log(`🚀 Server ready at ${url}`);
