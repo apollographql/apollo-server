@@ -181,9 +181,8 @@ describe('Errors', () => {
         errorClass: BadUserInputError,
         name: 'BadUserInputError',
       });
-      console.log(`error: ${JSON.stringify(error, null, 2)}`);
-      expect(error.field1).to.equal('property1');
-      expect(error.field2).to.equal('property2');
+      expect(error.extensions.exception.field1).to.equal('property1');
+      expect(error.extensions.exception.field2).to.equal('property2');
     });
   });
 });
