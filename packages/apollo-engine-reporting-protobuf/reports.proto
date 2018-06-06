@@ -22,7 +22,7 @@ message Trace {
 		// The variables associated with this query (unless the reporting agent is
 		// configured to keep them all private). Values are JSON: ie, strings are
 		// enclosed in double quotes, etc.  The value of a private variable is
-		// '(redacted)' with no quotes.
+		// the empty string.
 		map<string, string> variables_json = 4;
 		// Deprecated. Engineproxy did not encode variable values as JSON, so you
 		// couldn't tell numbers from numeric strings. Send variables_json instead.
