@@ -7,7 +7,6 @@ import { Trace } from 'apollo-engine-reporting-protobuf';
 import { graphql } from 'graphql';
 import { Request } from 'node-fetch';
 import { EngineReportingExtension } from '../extension';
-import { defaultSignature } from '../signature';
 
 test('trace construction', async () => {
   const typeDefs = `
@@ -53,10 +52,7 @@ test('trace construction', async () => {
   function addTrace(signature: string, operationName: string, trace: Trace) {
     traces.push({ signature, operationName, trace });
   }
-  const reportingExtension = new EngineReportingExtension(
-    defaultSignature,
-    addTrace,
-  );
+  const reportingExtension = new EngineReportingExtension({}, addTrace);
   const stack = new GraphQLExtensionStack([reportingExtension]);
   const requestDidEnd = stack.requestDidStart({
     request: new Request('http://localhost:123/foo') as any,

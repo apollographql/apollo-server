@@ -58,7 +58,7 @@
     "typescript": "^2.8.3"
   },
   "dependencies": {
-    "apollo-engine-reporting-protobuf": "0.0.0-beta.5",
+    "apollo-engine-reporting-protobuf": "0.0.0-beta.7",
     "lodash": "^4.17.10",
     "requestretry": "^1.13.0"
   }

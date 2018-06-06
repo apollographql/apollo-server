@@ -9,7 +9,6 @@ import {
 } from 'apollo-engine-reporting-protobuf';
 
 import { EngineReportingExtension } from './extension';
-import { defaultSignature } from './signature';
 
 export interface EngineReportingOptions {
   // API key for the service. Get this from
@@ -37,6 +36,11 @@ export interface EngineReportingOptions {
   maxAttempts?: number;
   // Minimum backoff for retries. Defaults to 100ms.
   minimumRetryDelayMs?: number;
+  // A case-sensitive list of names of variables whose values should not be sent
+  // to Apollo servers, or 'true' to leave out all variables. In the former
+  // case, the value '(redacted)' is sent for each private variable; in the
+  // latter case, no variables are sent at all.
+  privateVariables?: Array<String> | boolean;
 }
 
 const REPORT_HEADER = new ReportHeader({
@@ -55,6 +59,7 @@ const REPORT_HEADER = new ReportHeader({
 // to the Engine server.
 export class EngineReportingAgent<TContext = any> {
   private options: EngineReportingOptions;
+  private apiKey: string;
   private report: FullTracesReport;
   private traceCount: number;
   private reportTimer: any; // timer typing is weird and node-specific
@@ -65,11 +70,9 @@ export class EngineReportingAgent<TContext = any> {
   private averageTraceSize = 8096;
 
   public constructor(options: EngineReportingOptions = {}) {
-    this.options = { ...options };
-    if (!options.apiKey) {
-      options.apiKey = process.env.ENGINE_API_KEY;
-    }
-    if (!options.apiKey) {
+    this.options = options;
+    this.apiKey = options.apiKey || process.env.ENGINE_API_KEY || '';
+    if (!this.apiKey) {
       throw new Error(
         'To use EngineReportingAgent, you must specify an API key via the apiKey option or the ENGINE_API_KEY environment variable.',
       );
@@ -85,12 +88,17 @@ export class EngineReportingAgent<TContext = any> {
 
   public newExtension(): EngineReportingExtension<TContext> {
     return new EngineReportingExtension<TContext>(
-      this.options.calculateSignature || defaultSignature,
+      this.options,
       this.addTrace.bind(this),
     );
   }
 
   public addTrace(signature: string, operationName: string, trace: Trace) {
+    // Ignore traces that come in after stop().
+    if (!this.reportTimer) {
+      return;
+    }
+
     const statsReportKey = `# ${operationName || '-'}\n${signature}`;
     if (!this.report.tracesPerQuery.hasOwnProperty(statsReportKey)) {
       this.report.tracesPerQuery[statsReportKey] = new Traces();
@@ -107,77 +115,84 @@ export class EngineReportingAgent<TContext = any> {
     }
   }
 
-  public async sendReport() {
+  public sendReport(): Promise<void> {
     const report = this.report;
     const traceCount = this.traceCount;
     this.resetReport();
 
     if (Object.keys(report.tracesPerQuery).length === 0) {
-      return;
+      return Promise.resolve();
     }
 
-    if (this.options.debugPrintReports) {
-      // tslint:disable-next-line no-console
-      console.log(`Engine sending report: ${JSON.stringify(report.toJSON())}`);
-    }
+    // Send traces asynchronously, so that (eg) addTrace inside a resolver
+    // doesn't block on it.
+    return Promise.resolve()
+      .then(async () => {
+        if (this.options.debugPrintReports) {
+          // tslint:disable-next-line no-console
+          console.log(
+            `Engine sending report: ${JSON.stringify(report.toJSON())}`,
+          );
+        }
 
-    const protobufError = FullTracesReport.verify(report);
-    if (protobufError) {
-      throw new Error(`Error encoding report: ${protobufError}`);
-    }
-    const message = FullTracesReport.encode(report).finish();
-    const averageTraceSizeThisReport = message.length / traceCount;
-    // Update our estimate of the average trace size
-    // (https://en.wikipedia.org/wiki/Moving_average#Exponential_moving_average).
-    // Note that this ignores the fact that signatures are shared across
-    // multiple traces, so it underestimates the size of unique traces.
-    const alpha = 0.9;
-    this.averageTraceSize =
-      alpha * averageTraceSizeThisReport + (1 - alpha) * this.averageTraceSize;
+        const protobufError = FullTracesReport.verify(report);
+        if (protobufError) {
+          throw new Error(`Error encoding report: ${protobufError}`);
+        }
+        const message = FullTracesReport.encode(report).finish();
+        const averageTraceSizeThisReport = message.length / traceCount;
+        // Update our estimate of the average trace size
+        // (https://en.wikipedia.org/wiki/Moving_average#Exponential_moving_average).
+        // Note that this ignores the fact that signatures are shared across
+        // multiple traces, so it underestimates the size of unique traces.
+        const alpha = 0.9;
+        this.averageTraceSize =
+          alpha * averageTraceSizeThisReport +
+          (1 - alpha) * this.averageTraceSize;
 
-    // Grab this here because the delayStrategy function has a different 'this'.
-    const minimumRetryDelayMs = this.options.minimumRetryDelayMs || 100;
+        // Grab this here because the delayStrategy function has a different 'this'.
+        const minimumRetryDelayMs = this.options.minimumRetryDelayMs || 100;
 
-    // note: retryrequest has built-in Promise support, unlike the base 'request'.
-    const response = (await request({
-      url:
-        (this.options.endpointUrl || 'https://engine-report.apollodata.com') +
-        '/api/ingress/traces',
-      method: 'POST',
-      headers: {
-        'user-agent': 'apollo-engine-reporting',
-        'x-api-key': this.options.apiKey,
-      },
-      body: message,
-      maxAttempts: this.options.maxAttempts || 5,
-      // Note: use a non-array function as this API gives us useful information
-      // on 'this', and use an 'as any' because the type definitions don't know
-      // about the function version of this parameter.
-      delayStrategy: function() {
-        return minimumRetryDelayMs * 2 ** this.attempts;
-      },
-      // XXX Back in Optics, we had an explicit proxyUrl option for corporate
-      //     proxies. I was never clear on why `request`'s handling of the
-      //     standard env vars wasn't good enough (see
-      //     https://github.com/apollographql/optics-agent-js/pull/70#discussion_r89374066).
-      //     We may have to add it here.
+        // note: retryrequest has built-in Promise support, unlike the base 'request'.
+        return request({
+          url:
+            (this.options.endpointUrl ||
+              'https://engine-report.apollodata.com') + '/api/ingress/traces',
+          method: 'POST',
+          headers: {
+            'user-agent': 'apollo-engine-reporting',
+            'x-api-key': this.apiKey,
+          },
+          body: message,
+          maxAttempts: this.options.maxAttempts || 5,
+          // Note: use a non-array function as this API gives us useful information
+          // on 'this', and use an 'as any' because the type definitions don't know
+          // about the function version of this parameter.
+          delayStrategy: function() {
+            return minimumRetryDelayMs * 2 ** this.attempts;
+          },
+          // XXX Back in Optics, we had an explicit proxyUrl option for corporate
+          //     proxies. I was never clear on why `request`'s handling of the
+          //     standard env vars wasn't good enough (see
+          //     https://github.com/apollographql/optics-agent-js/pull/70#discussion_r89374066).
+          //     We may have to add it here.
 
-      // Include 'as any's because @types/requestretry doesn't understand the
-      // promise API or delayStrategy.
-    } as any)) as any;
-
-    if (this.options.debugPrintReports) {
-      // tslint:disable-next-line no-console
-      console.log(`Engine report: status ${response.statusCode}`);
-    }
+          // Include 'as any's because @types/requestretry doesn't understand the
+          // promise API or delayStrategy.
+        } as any) as any;
+      })
+      .then(response => {
+        if (this.options.debugPrintReports) {
+          // tslint:disable-next-line no-console
+          console.log(`Engine report: status ${response.statusCode}`);
+        }
+      });
   }
 
-  // XXX flush on exit/SIGINT/etc?
-  public async flush() {
-    this.stop();
-    await this.sendReport();
-  }
-
+  // Stop prevents reports from being sent automatically due to time or buffer
+  // size, and stop buffering new traces. You may still manually send a last
+  // report by calling sendReport().
+  // XXX get apollo-server to stop/flush on exit/signal
   public stop() {
     clearInterval(this.reportTimer);
     this.reportTimer = undefined;

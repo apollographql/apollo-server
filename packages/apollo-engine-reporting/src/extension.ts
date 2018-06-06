@@ -10,11 +10,11 @@ import {
 import { GraphQLExtension, EndHandler } from 'graphql-extensions';
 import { Trace, google } from 'apollo-engine-reporting-protobuf';
 
+import { EngineReportingOptions } from './agent';
+import { defaultSignature } from './signature';
 
-// XXX Implement details (variables, raw_query).
 // XXX Implement client_*
 // XXX Implement privateHeaders
-// XXX Implement http response fields if feasible
 // XXX Implement error tracking
 
 // EngineReportingExtension is the per-request GraphQLExtension which creates a
@@ -31,10 +31,7 @@ export class EngineReportingExtension<TContext = any>
   private operationName: string;
   private queryString: string;
   private documentAST: DocumentNode;
-  private calculateSignature: (
-    ast: DocumentNode,
-    operationName: string,
-  ) => string;
+  private options: EngineReportingOptions;
   private addTrace: (
     signature: string,
     operationName: string,
@@ -42,10 +39,10 @@ export class EngineReportingExtension<TContext = any>
   ) => void;
 
   public constructor(
-    calculateSignature: (ast: DocumentNode, operationName: string) => string,
+    options: EngineReportingOptions,
     addTrace: (signature: string, operationName: string, trace: Trace) => void,
   ) {
-    this.calculateSignature = calculateSignature;
+    this.options = options;
     this.addTrace = addTrace;
     const root = new Trace.Node();
     this.trace.root = root;
@@ -56,7 +53,10 @@ export class EngineReportingExtension<TContext = any>
     this.queryString = o.queryString;
   }
 
-  public requestDidStart(o: { request: Request }): EndHandler {
+  public requestDidStart(o: {
+    request: Request;
+    variables: Record<string, any>;
+  }): EndHandler {
     this.trace.startTime = dateToTimestamp(new Date());
     this.startHrTime = process.hrtime();
 
@@ -82,6 +82,34 @@ export class EngineReportingExtension<TContext = any>
       }
     });
 
+    if (this.options.privateVariables !== true && o.variables) {
+      // Note: we explicitly do *not* include the details.rawQuery field. The
+      // Engine web app currently does nothing with this other than store it in
+      // the database and offer it up via its GraphQL API, and sending it means
+      // that using calculateSignature to hide sensitive data in the query
+      // string is ineffective.
+      this.trace.details = new Trace.Details();
+      Object.keys(o.variables).forEach(name => {
+        if (
+          this.options.privateVariables &&
+          typeof this.options.privateVariables === 'object' &&
+          // We assume that most users will have only a few private variables,
+          // or will just set privateVariables to true; we can change this
+          // linear-time operation if it causes real performance issues.
+          this.options.privateVariables.includes(name)
+        ) {
+          // Special case for private variables. Note that this is a different
+          // representation from a variable containing the empty string, as that
+          // will be sent as '""'.
+          this.trace.details!.variablesJson![name] = '';
+        } else {
+          this.trace.details!.variablesJson![name] = JSON.stringify(
+            o.variables[name],
+          );
+        }
+      });
+    }
+
     return () => {
       this.trace.durationNs = durationHrTimeToNanos(
         process.hrtime(this.startHrTime),
@@ -91,7 +119,9 @@ export class EngineReportingExtension<TContext = any>
       const operationName = this.operationName || '';
       let signature;
       if (this.documentAST) {
-        signature = this.calculateSignature(this.documentAST, operationName);
+        const calculateSignature =
+          this.options.calculateSignature || defaultSignature;
+        signature = calculateSignature(this.documentAST, operationName);
       } else if (this.queryString) {
         // We didn't get an AST, possibly because of a parse failure. Let's just
         // use the full query string.
@@ -178,7 +208,6 @@ export class EngineReportingExtension<TContext = any>
     return this.newNode(path.prev!);
   }
 }
-
 
 // Helpers for producing traces.
 
