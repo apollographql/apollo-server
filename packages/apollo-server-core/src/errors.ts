@@ -210,17 +210,6 @@ export class BadUserInputError extends ApolloError {
   }
 }
 
-export class TransientError extends ApolloError {
-  constructor(message: string, retryAfter: number) {
-    super(message, 'TRANSIENT', { retryAfter });
-
-    // Set the prototype explicitly.
-    // https://stackoverflow.com/a/41102306
-    Object.setPrototypeOf(this, TransientError.prototype);
-    Object.defineProperty(this, 'name', { value: 'TransientError' });
-  }
-}
-
 export function formatApolloErrors(
   errors: Array<Error>,
   options?: {
