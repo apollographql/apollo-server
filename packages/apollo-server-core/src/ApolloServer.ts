@@ -115,13 +115,16 @@ export class ApolloServerBase<Request = RequestInit> {
       typeof typeDefs === 'string' ||
       (Array.isArray(typeDefs) && typeDefs.find(d => typeof d === 'string'))
     ) {
+      const startSchema =
+        (typeof typeDefs === 'string' &&
+          (typeDefs as string).substring(0, 200)) ||
+        (Array.isArray(typeDefs) &&
+          (typeDefs.find(d => typeof d === 'string') as any).substring(0, 200));
       throw new Error(`typeDefs must be tagged with the gql exported from apollo-server:
 
 const { gql } = require('apollo-server');
 
-const typeDefs = gql\`${(typeof typeDefs === 'string' && typeDefs) ||
-        (Array.isArray(typeDefs) &&
-          typeDefs.find(d => typeof d === 'string'))}\`
+const typeDefs = gql\`${startSchema}\`
 `);
     }
 
