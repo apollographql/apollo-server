@@ -49,7 +49,7 @@ export class GraphQLExtension<TContext = any> {
     args: { [argName: string]: any },
     context: TContext,
     info: GraphQLResolveInfo,
-  ): ((result: any) => void) | void;
+  ): ((error: Error | null, result?: any) => void) | void;
 
   public format?(): [string, any] | undefined;
 }
@@ -115,11 +115,11 @@ export class GraphQLExtensionStack<TContext = any> {
       )
       .filter(x => x)
       // Reverse list so that handlers "nest", like in handleDidStart.
-      .reverse() as ((result: any) => void)[];
+      .reverse() as ((error: Error | null, result?: any) => void)[];
 
-    return (result: any) => {
+    return (error: Error | null, result?: any) => {
       for (const handler of handlers) {
-        handler(result);
+        handler(error, result);
       }
     };
   }
@@ -171,8 +171,11 @@ function wrapField(field: GraphQLField<any, any>): void {
   field.resolve = (source, args, context, info) => {
     const extensionStack = context && context._extensionStack;
     const handler =
-      extensionStack &&
-      extensionStack.willResolveField(source, args, context, info);
+      (extensionStack &&
+        extensionStack.willResolveField(source, args, context, info)) ||
+      ((_err: Error | null, _result?: any) => {
+        /* do nothing */
+      });
 
     // If no resolver has been defined for a field, use the default field resolver
     // (which matches the behavior of graphql-js when there is no explicit resolve function defined).
@@ -180,36 +183,45 @@ function wrapField(field: GraphQLField<any, any>): void {
       const result = (fieldResolver ||
         (extensionStack && extensionStack.fieldResolver) ||
         defaultFieldResolver)(source, args, context, info);
-      whenResultIsFinished(result, () => {
-        if (handler) handler(result);
-      });
+      // Call the stack's handlers either immediately (if result is not a
+      // Promise) or once the Promise is done. Then return that same
+      // maybe-Promise value.
+      whenResultIsFinished(result, handler);
       return result;
     } catch (error) {
-      if (handler) handler();
+      // Normally it's a bad sign to see an error both handled and
+      // re-thrown. But it is useful to allow extensions to track errors while
+      // still handling them in the normal GraphQL way.
+      handler(error);
       throw error;
     }
   };
 }
 
-function whenResultIsFinished(result: any, callback: () => void) {
-  if (result === null || typeof result === 'undefined') {
-    callback();
-  } else if (typeof result.then === 'function') {
-    result.then(callback, callback);
+function isPromise(x: any): boolean {
+  return x && typeof x.then === 'function';
+}
+
+// Given result (which may be a Promise or an array some of whose elements are
+// promises) Promises, set up 'callback' to be invoked when result is fully
+// resolved.
+function whenResultIsFinished(
+  result: any,
+  callback: (err: Error | null, result?: any) => void,
+) {
+  if (isPromise(result)) {
+    result.then((r: any) => callback(null, r), (err: Error) => callback(err));
   } else if (Array.isArray(result)) {
-    const promises: Promise<any>[] = [];
-    result.forEach(value => {
-      if (value && typeof value.then === 'function') {
-        promises.push(value);
-      }
-    });
-    if (promises.length > 0) {
-      Promise.all(promises).then(callback, callback);
+    if (result.some(isPromise)) {
+      Promise.all(result).then(
+        (r: any) => callback(null, r),
+        (err: Error) => callback(err),
+      );
     } else {
-      callback();
+      callback(null, result);
     }
   } else {
-    callback();
+    callback(null, result);
   }
 }
 
