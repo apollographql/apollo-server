@@ -11,7 +11,8 @@ import { createApolloFetch } from 'apollo-fetch';
 import { ApolloServerBase, AuthenticationError } from 'apollo-server-core';
 import { registerServer } from './ApolloServer';
 
-const gql = String.raw;
+//to remove the circular dependency, we reference it directly
+const gql = require('../../apollo-server/dist/index').gql;
 
 const typeDefs = gql`
   type Query {
@@ -298,7 +299,7 @@ describe('apollo-server-express', () => {
         body.append(
           'operations',
           JSON.stringify({
-            query: gql`
+            query: `
               mutation($file: Upload!) {
                 singleUpload(file: $file) {
                   filename

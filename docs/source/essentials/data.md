@@ -11,7 +11,9 @@ Resolvers provide the instructions for turning a GraphQL operation into data. Re
 In order to respond to queries, a schema needs to have resolve functions for all fields. This collection of functions is called the "resolver map". This map relates the schema fields and types to a function.
 
 ```js
-const schema = `
+const { gql } = require('apollo-server');
+
+const schema = gql`
 type Book {
   title: String
   author: Author

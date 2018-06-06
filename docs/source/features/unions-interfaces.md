@@ -10,7 +10,9 @@ Unions and interfaces are great when you have fields that are in common between 
 The `Union` type indicates that a field can return more than one object type, but doesn't define specific fields itself.  Unions are useful for returning disjoint data types from a single field. The type definitions appear as follows:
 
 ```js
-const typeDefs = `
+const { gql } = require('apollo-server');
+
+const typeDefs = gql`
 union Result = Book | Author
 
 type Book {

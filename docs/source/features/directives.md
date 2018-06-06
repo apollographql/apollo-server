@@ -31,10 +31,10 @@ GraphQL provides several default directives: [`@deprecated`](http://facebook.git
 Import the implementation of the directive, then pass it to Apollo server via the `schemaDirectives` argument, which is an object that maps directive names to directive implementations:
 
 ```js
-const { makeExecutableSchema } = require('graphql-tools');
+const { ApolloServer, gql } = require('apollo-server');
 const { RenameDirective } = require('rename-directive-package');
 
-const typeDefs = `
+const typeDefs = gql`
 type Person @rename(to: "Human") {
   name: String!
   currentDateMinusDateOfBirth: Int @rename(to: "age")
@@ -55,4 +55,4 @@ server.listen().then(({ url }) => {
 });
 ```
 
-The implementation of `RenameDirective` takes care of changing the resolver and modifying the schema if necessary. To learn how to implement your own schema directives, read through [this section]().
+The implementation of `RenameDirective` takes care of changing the resolver and modifying the schema if necessary. To learn how to implement your own schema directives, read through [this section](./creating-directives.html).
