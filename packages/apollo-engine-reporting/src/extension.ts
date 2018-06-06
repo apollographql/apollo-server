@@ -6,16 +6,17 @@ import {
   ResponsePath,
   DocumentNode,
   ExecutionArgs,
+  GraphQLError,
 } from 'graphql';
-import { GraphQLExtension, EndHandler } from 'graphql-extensions';
+import {
+  GraphQLExtension,
+  GraphQLResponse,
+  EndHandler,
+} from 'graphql-extensions';
 import { Trace, google } from 'apollo-engine-reporting-protobuf';
 
 import { EngineReportingOptions } from './agent';
 import { defaultSignature } from './signature';
-
-// XXX Implement client_*
-// XXX Implement privateHeaders
-// XXX Implement error tracking
 
 // EngineReportingExtension is the per-request GraphQLExtension which creates a
 // trace (in protobuf Trace format) for a single request. When the request is
@@ -28,9 +29,9 @@ export class EngineReportingExtension<TContext = any>
   public trace = new Trace();
   private nodes = new Map<string, Trace.Node>();
   private startHrTime: [number, number];
-  private operationName: string;
-  private queryString: string;
-  private documentAST: DocumentNode;
+  private operationName?: string;
+  private queryString?: string;
+  private documentAST?: DocumentNode;
   private options: EngineReportingOptions;
   private addTrace: (
     signature: string,
@@ -49,16 +50,20 @@ export class EngineReportingExtension<TContext = any>
     this.nodes.set(responsePathAsString(undefined), root);
   }
 
-  public parsingDidStart(o: { queryString: string }) {
-    this.queryString = o.queryString;
-  }
-
   public requestDidStart(o: {
     request: Request;
+    queryString?: string;
+    parsedQuery?: DocumentNode;
     variables: Record<string, any>;
   }): EndHandler {
     this.trace.startTime = dateToTimestamp(new Date());
     this.startHrTime = process.hrtime();
+
+    // Generally, we'll get queryString here and not parsedQuery; we only get
+    // parsedQuery if you're using an OperationStore. In normal cases we'll get
+    // our documentAST in the execution callback after it is parsed.
+    this.queryString = o.queryString;
+    this.documentAST = o.parsedQuery;
 
     const u = urlParse(o.request.url);
 
@@ -69,18 +74,31 @@ export class EngineReportingExtension<TContext = any>
       host: u.hostname, // XXX Includes port; is this right?
       path: u.path,
     });
-    o.request.headers.forEach((value: string, key: string) => {
-      switch (key) {
-        case 'authorization':
-        case 'cookie':
-        case 'set-cookie':
-          break;
-        default:
-          this.trace.http!.requestHeaders![key] = new Trace.HTTP.Values({
-            value: [value],
-          });
-      }
-    });
+    if (this.options.privateHeaders !== true) {
+      o.request.headers.forEach((value: string, key: string) => {
+        if (
+          this.options.privateHeaders &&
+          typeof this.options.privateHeaders === 'object' &&
+          // We assume that most users only have a few private headers, or will
+          // just set privateHeaders to true; we can change this linear-time
+          // operation if it causes real performance issues.
+          this.options.privateHeaders.includes(key.toLowerCase())
+        ) {
+          return;
+        }
+
+        switch (key) {
+          case 'authorization':
+          case 'cookie':
+          case 'set-cookie':
+            break;
+          default:
+            this.trace.http!.requestHeaders![key] = new Trace.HTTP.Values({
+              value: [value],
+            });
+        }
+      });
+    }
 
     if (this.options.privateVariables !== true && o.variables) {
       // Note: we explicitly do *not* include the details.rawQuery field. The
@@ -132,12 +150,8 @@ export class EngineReportingExtension<TContext = any>
         //     anyway?
         signature = this.queryString;
       } else {
-        // This probably only happens if you're using an OperationStore and you
-        // put something that doesn't pass validation in it.
-        //
-        // XXX We could add more hooks to apollo-server to get the documentAST
-        //     in that case but this feels pretty marginal.
-        signature = 'query unknown { unknown }';
+        // This shouldn't happen: one of those options must be passed to runQuery.
+        throw new Error('No queryString or parsedQuery?');
       }
 
       this.addTrace(signature, operationName, this.trace);
@@ -161,12 +175,12 @@ export class EngineReportingExtension<TContext = any>
     this.documentAST = o.executionArgs.document;
   }
 
-  public willResolveField?(
+  public willResolveField(
     _source: any,
     _args: { [argName: string]: any },
     _context: TContext,
     info: GraphQLResolveInfo,
-  ): ((result: any) => void) | void {
+  ): ((error: Error | null, result: any) => void) | void {
     if (this.operationName === undefined) {
       this.operationName =
         (info.operation.name && info.operation.name.value) || '';
@@ -180,7 +194,34 @@ export class EngineReportingExtension<TContext = any>
 
     return () => {
       node.endTime = durationHrTimeToNanos(process.hrtime(this.startHrTime));
+      // We could save the error into the trace here, but it won't have all
+      // the information that graphql-js adds to it later, like 'locations'.
     };
+  }
+
+  public willSendResponse(o: { graphqlResponse: GraphQLResponse }) {
+    const { errors } = o.graphqlResponse;
+    if (errors) {
+      errors.forEach((error: GraphQLError) => {
+        // By default, put errors on the root node.
+        let node = this.nodes.get('');
+        if (error.path) {
+          const specificNode = this.nodes.get(error.path.join('.'));
+          if (specificNode) {
+            node = specificNode;
+          }
+        }
+        node!.error!.push(
+          new Trace.Error({
+            message: error.message,
+            location: (error.locations || []).map(
+              ({ line, column }) => new Trace.Location({ line, column }),
+            ),
+            json: JSON.stringify(error),
+          }),
+        );
+      });
+    }
   }
 
   private newNode(path: ResponsePath): Trace.Node {

@@ -38,9 +38,17 @@ export interface EngineReportingOptions {
   minimumRetryDelayMs?: number;
   // A case-sensitive list of names of variables whose values should not be sent
   // to Apollo servers, or 'true' to leave out all variables. In the former
-  // case, the value '(redacted)' is sent for each private variable; in the
-  // latter case, no variables are sent at all.
+  // case, the report will indicate that each private variable was redacted; in
+  // the latter case, no variables are sent at all.
   privateVariables?: Array<String> | boolean;
+  // A case-insensitive list of names of HTTP headers whose values should not be
+  // sent to Apollo servers, or 'true' to leave out all HTTP headers. Unlike
+  // with privateVariables, names of dropped headers are not reported.
+  privateHeaders?: Array<String> | boolean;
+
+  // XXX Provide a way to set client_name, client_version, client_address,
+  // service, and service_version fields. They are currently not revealed in the
+  // Engine frontend app.
 }
 
 const REPORT_HEADER = new ReportHeader({
@@ -50,8 +58,6 @@ const REPORT_HEADER = new ReportHeader({
   runtimeVersion: `node ${process.version}`,
   // XXX not actually uname, but what node has easily.
   uname: `${os.platform()}, ${os.type()}, ${os.release()}, ${os.arch()})`,
-  // XXX Consider setting 'service' (extract from API key?), 'service_version'
-  // (allow user to specify?)
 });
 
 // EngineReportingAgent is a persistent object which creates
