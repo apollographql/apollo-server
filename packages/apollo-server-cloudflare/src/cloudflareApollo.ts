@@ -38,8 +38,8 @@ export function graphqlCloudflare(options: GraphQLOptions) {
       query,
       request: req as Request,
     }).then(
-      ({ gqlResponse, responseInit }) =>
-        new Response(gqlResponse, responseInit),
+      ({ graphqlResponse, responseInit }) =>
+        new Response(graphqlResponse, responseInit),
       (error: HttpQueryError) => {
         if ('HttpQueryError' !== error.name) throw error;
 

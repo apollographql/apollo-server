@@ -32,9 +32,16 @@ function prettyJSONStringify(toStringfy) {
   return JSON.stringify(toStringfy) + '\n';
 }
 
+export interface ApolloServerHttpResponse {
+  headers?: Record<string, string>;
+  // ResponseInit contains the follow, which we do not use
+  // status?: number;
+  // statusText?: string;
+}
+
 export interface HttpQueryResponse {
-  gqlResponse: string;
-  responseInit: ResponseInit;
+  graphqlResponse: string;
+  responseInit: ApolloServerHttpResponse;
 }
 
 export class HttpQueryError extends Error {
@@ -339,28 +346,41 @@ export async function runHttpQuery(
 
   const responses = await Promise.all(requests);
 
-  const responseInit: ResponseInit = {
-    status: 200,
+  const responseInit: ApolloServerHttpResponse = {
     headers: {
       'Content-Type': 'application/json',
     },
   };
 
   if (!isBatch) {
-    const gqlResponse = responses[0];
+    const graphqlResponse = responses[0];
     //This code is run on parse/validation errors and any other error that
     //doesn't reach GraphQL execution
-    if (gqlResponse.errors && typeof gqlResponse.data === 'undefined') {
-      throwHttpGraphQLError(400, gqlResponse.errors as any, optionsObject);
+    if (graphqlResponse.errors && typeof graphqlResponse.data === 'undefined') {
+      throwHttpGraphQLError(400, graphqlResponse.errors as any, optionsObject);
     }
+    const stringified = prettyJSONStringify(graphqlResponse);
+
+    responseInit['Content-Length'] = Buffer.byteLength(
+      stringified,
+      'utf8',
+    ).toString();
+
     return {
-      gqlResponse: prettyJSONStringify(gqlResponse),
+      graphqlResponse: stringified,
       responseInit,
     };
   }
 
+  const stringified = prettyJSONStringify(responses);
+
+  responseInit['Content-Length'] = Buffer.byteLength(
+    stringified,
+    'utf8',
+  ).toString();
+
   return {
-    gqlResponse: prettyJSONStringify(responses),
+    graphqlResponse: stringified,
     responseInit,
   };
 }

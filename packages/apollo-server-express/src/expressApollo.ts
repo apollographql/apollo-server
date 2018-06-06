@@ -46,15 +46,11 @@ export function graphqlExpress(
       query: req.method === 'POST' ? req.body : req.query,
       request: convertNodeHttpToRequest(req),
     }).then(
-      ({ gqlResponse, responseInit }) => {
+      ({ graphqlResponse, responseInit }) => {
         Object.keys(responseInit.headers).forEach(key =>
           res.setHeader(key, responseInit.headers[key]),
         );
-        res.setHeader(
-          'Content-Length',
-          Buffer.byteLength(gqlResponse, 'utf8').toString(),
-        );
-        res.write(gqlResponse);
+        res.write(graphqlResponse);
         res.end();
       },
       (error: HttpQueryError) => {
