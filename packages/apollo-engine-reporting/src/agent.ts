@@ -1,4 +1,5 @@
 import * as os from 'os';
+import { gzip } from 'zlib';
 import * as request from 'requestretry';
 import { DocumentNode } from 'graphql';
 import {
@@ -45,6 +46,12 @@ export interface EngineReportingOptions {
   // sent to Apollo servers, or 'true' to leave out all HTTP headers. Unlike
   // with privateVariables, names of dropped headers are not reported.
   privateHeaders?: Array<String> | boolean;
+  // By default, EngineReportingAgent listens for the 'SIGINT' and 'SIGTERM'
+  // signals, stops, sends a final report, and re-sends the signal to
+  // itself. Set this to false to disable. You can manually invoke 'stop()' and
+  // 'sendReport()' on other signals if you'd like. Note that 'sendReport()'
+  // does not run synchronously so it cannot work usefully in an 'exit' handler.
+  handleSignals?: boolean;
 
   // XXX Provide a way to set client_name, client_version, client_address,
   // service, and service_version fields. They are currently not revealed in the
@@ -90,6 +97,17 @@ export class EngineReportingAgent<TContext = any> {
       () => this.sendReport(),
       this.options.reportIntervalMs || 10 * 1000,
     );
+
+    if (this.options.handleSignals !== false) {
+      const signals: NodeJS.Signals[] = ['SIGINT', 'SIGTERM'];
+      signals.forEach(signal => {
+        process.once(signal, async () => {
+          this.stop();
+          await this.sendReport();
+          process.kill(process.pid, signal);
+        });
+      });
+    }
   }
 
   public newExtension(): EngineReportingExtension<TContext> {
@@ -133,7 +151,7 @@ export class EngineReportingAgent<TContext = any> {
     // Send traces asynchronously, so that (eg) addTrace inside a resolver
     // doesn't block on it.
     return Promise.resolve()
-      .then(async () => {
+      .then(() => {
         if (this.options.debugPrintReports) {
           // tslint:disable-next-line no-console
           console.log(
@@ -156,6 +174,25 @@ export class EngineReportingAgent<TContext = any> {
           alpha * averageTraceSizeThisReport +
           (1 - alpha) * this.averageTraceSize;
 
+        return new Promise((resolve, reject) => {
+          // The protobuf library gives us a Uint8Array. Node 8's zlib lets us
+          // pass it directly; convert for the sake of Node 6. (No support right
+          // now for Node 4, which lacks Buffer.from.)
+          const messageBuffer = Buffer.from(
+            message.buffer as ArrayBuffer,
+            message.byteOffset,
+            message.byteLength,
+          );
+          gzip(messageBuffer, (err, compressed) => {
+            if (err) {
+              reject(err);
+            } else {
+              resolve(compressed);
+            }
+          });
+        });
+      })
+      .then(compressed => {
         // Grab this here because the delayStrategy function has a different 'this'.
         const minimumRetryDelayMs = this.options.minimumRetryDelayMs || 100;
 
@@ -168,8 +205,9 @@ export class EngineReportingAgent<TContext = any> {
           headers: {
             'user-agent': 'apollo-engine-reporting',
             'x-api-key': this.apiKey,
+            'content-encoding': 'gzip',
           },
-          body: message,
+          body: compressed,
           maxAttempts: this.options.maxAttempts || 5,
           // Note: use a non-array function as this API gives us useful information
           // on 'this', and use an 'as any' because the type definitions don't know
@@ -198,10 +236,11 @@ export class EngineReportingAgent<TContext = any> {
   // Stop prevents reports from being sent automatically due to time or buffer
   // size, and stop buffering new traces. You may still manually send a last
   // report by calling sendReport().
-  // XXX get apollo-server to stop/flush on exit/signal
   public stop() {
-    clearInterval(this.reportTimer);
-    this.reportTimer = undefined;
+    if (this.reportTimer) {
+      clearInterval(this.reportTimer);
+      this.reportTimer = undefined;
+    }
   }
 
   private resetReport() {
