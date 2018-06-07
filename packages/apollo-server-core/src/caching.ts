@@ -1,4 +1,4 @@
-export interface ApolloCache {
+export interface KeyValueCache {
   set(
     key: string,
     data: string,

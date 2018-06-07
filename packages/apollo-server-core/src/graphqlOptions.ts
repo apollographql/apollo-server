@@ -4,7 +4,7 @@ import {
   GraphQLFieldResolver,
 } from 'graphql';
 import { LogFunction } from './logging';
-import { ApolloCache } from './caching';
+import { KeyValueCache } from './caching';
 import { GraphQLExtension } from 'graphql-extensions';
 
 /*
@@ -42,7 +42,7 @@ export interface GraphQLServerOptions<
   // cacheControl?: boolean | CacheControlExtensionOptions;
   cacheControl?: boolean | any;
   extensions?: Array<() => GraphQLExtension>;
-  cache?: ApolloCache;
+  cache?: KeyValueCache;
 }
 
 export default GraphQLServerOptions;

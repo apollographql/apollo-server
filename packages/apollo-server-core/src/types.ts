@@ -7,7 +7,7 @@ import { GraphQLExtension } from 'graphql-extensions';
 import { EngineReportingOptions } from 'apollo-engine-reporting';
 
 import { GraphQLServerOptions as GraphQLOptions } from './graphqlOptions';
-import { ApolloCache } from './caching';
+import { KeyValueCache } from './caching';
 
 export type Context<T = any> = T;
 export type ContextFunction<T = any> = (
@@ -83,7 +83,7 @@ export interface MiddlewareOptions {
 export interface RegistrationOptions {
   path: string;
   getHttp: () => HttpServer;
-  cache?: ApolloCache;
+  cache?: KeyValueCache;
 }
 
 export interface ServerInfo {
