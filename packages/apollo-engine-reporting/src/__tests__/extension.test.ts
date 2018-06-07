@@ -56,6 +56,7 @@ test('trace construction', async () => {
   const stack = new GraphQLExtensionStack([reportingExtension]);
   const requestDidEnd = stack.requestDidStart({
     request: new Request('http://localhost:123/foo') as any,
+    queryString: query,
   });
   await graphql({
     schema,
