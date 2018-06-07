@@ -1,5 +1,5 @@
 import { ExecutionResult } from 'graphql';
-import sha256 from 'hash.js/lib/hash/sha/256';
+import * as sha256 from 'hash.js/lib/hash/sha/256';
 
 import { runQuery, QueryOptions } from './runQuery';
 import {
@@ -149,7 +149,11 @@ export async function runHttpQuery(
             // the client as data worth interpreting, not an error.
             200,
             JSON.stringify({
-              errors: [new PersistedQueryNotFoundError()],
+              errors: formatApolloErrors([new PersistedQueryNotFoundError()], {
+                formatter: optionsObject.formatError,
+                debug,
+                logFunction: optionsObject.logFunction,
+              }),
             }),
             true,
             {
