@@ -1,10 +1,12 @@
 import { ExecutionResult } from 'graphql';
+import sha256 from 'hash.js/lib/hash/sha/256';
+
 import { runQuery, QueryOptions } from './runQuery';
 import {
   default as GraphQLOptions,
   resolveGraphqlOptions,
 } from './graphqlOptions';
-import { formatApolloErrors } from './errors';
+import { formatApolloErrors, PersistedQueryNotFoundError } from './errors';
 
 export interface HttpQueryRequest {
   method: string;
@@ -118,7 +120,7 @@ export async function runHttpQuery(
 
   const requests = requestPayload.map(async requestParams => {
     try {
-      const queryString: string | undefined = requestParams.query;
+      let queryString: string | undefined = requestParams.query;
       let extensions = requestParams.extensions;
 
       if (isGetRequest && extensions) {
@@ -137,26 +139,33 @@ export async function runHttpQuery(
         extensions &&
         extensions.persistedQuery
       ) {
-        // It looks like we've received an Apollo Persisted Query. Apollo Server
-        // does not support persisted queries out of the box, so we should fail
-        // fast with a clear error saying that we don't support APQs. (A future
-        // version of Apollo Server may support APQs directly.)
-        throw new HttpQueryError(
-          // Return 200 to simplify processing: we want this to be intepreted by
-          // the client as data worth interpreting, not an error.
-          200,
-          JSON.stringify({
-            errors: [
-              {
-                message: 'PersistedQueryNotSupported',
-              },
-            ],
-          }),
-          true,
-          {
-            'Content-Type': 'application/json',
-          },
-        );
+        // It looks like we've received an Apollo Persisted Query.
+        const sha = extensions.persistedQuery.sha256Hash;
+
+        queryString = await optionsObject.cache.get(sha);
+        if (!queryString) {
+          throw new HttpQueryError(
+            // Return 200 to simplify processing: we want this to be intepreted by
+            // the client as data worth interpreting, not an error.
+            200,
+            JSON.stringify({
+              errors: [new PersistedQueryNotFoundError()],
+            }),
+            true,
+            {
+              'Content-Type': 'application/json',
+            },
+          );
+        }
+      } else if (extensions && extensions.persistedQuery) {
+        const sha = extensions.persistedQuery.sha256Hash;
+        const calculatedSha = sha256()
+          .update(queryString)
+          .digest('hex');
+        if (sha !== calculatedSha) {
+          throw new HttpQueryError(400, `provided sha does not match query`);
+        }
+        await optionsObject.cache.set(sha, queryString);
       }
 
       //We ensure that there is a queryString or parsedQuery after formatParams

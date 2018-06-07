@@ -199,6 +199,19 @@ export class ForbiddenError extends ApolloError {
   }
 }
 
+export class PersistedQueryNotFoundError extends ApolloError {
+  constructor() {
+    super('PersistedQueryNotFound', 'PERSISTED_QUERY_NOT_FOUND');
+
+    // Set the prototype explicitly.
+    // https://stackoverflow.com/a/41102306
+    Object.setPrototypeOf(this, PersistedQueryNotFoundError.prototype);
+    Object.defineProperty(this, 'name', {
+      value: 'PersistedQueryNotFoundError',
+    });
+  }
+}
+
 export function formatApolloErrors(
   errors: Array<Error>,
   options?: {
