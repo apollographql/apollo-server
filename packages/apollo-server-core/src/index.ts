@@ -21,7 +21,8 @@ export { convertNodeHttpToRequest } from './nodeHttpToRequest';
 export { ApolloServerBase } from './ApolloServer';
 export * from './types';
 
-// this makes it easy to get inline formatting and highlighting without
+//This currently provides the ability to have syntax highlighting as well as
+//consistency between client and server gql tags
 import { DocumentNode } from 'graphql';
 import gqlTag from 'graphql-tag';
 export const gql: (
