@@ -97,6 +97,13 @@ function createHttpServer(server) {
             res.end();
           })
           .catch(error => {
+            if (error.headers) {
+              Object.keys(error.headers).forEach(header => {
+                res.setHeader(header, error.headers[header]);
+              });
+            }
+
+            res.statusCode = error.statusCode;
             res.write(error.message);
             res.end();
           });
@@ -879,10 +886,7 @@ describe('ApolloServerBase', () => {
     });
 
     describe('Persisted Queries', () => {
-      const server = new ApolloServerBase({
-        schema,
-        introspection: false,
-      });
+      let server;
       const query = gql`
         ${TEST_STRING_QUERY}
       `;
@@ -890,9 +894,20 @@ describe('ApolloServerBase', () => {
         .create()
         .update(TEST_STRING_QUERY)
         .hex();
+      const extensions = {
+        persistedQuery: {
+          version: VERSION,
+          sha256Hash: hash,
+        },
+      };
       let uri: string;
 
       beforeEach(async () => {
+        server = new ApolloServerBase({
+          schema,
+          introspection: false,
+        });
+
         const httpServer = createHttpServer(server);
 
         server.use({
@@ -907,65 +922,85 @@ describe('ApolloServerBase', () => {
         await server.stop();
       });
 
-      describe('happy path', () => {
-        it('returns PersistedQueryNotFound on the first try', async () => {
-          const apolloFetch = createApolloFetch({ uri });
+      it('returns PersistedQueryNotFound on the first try', async () => {
+        const apolloFetch = createApolloFetch({ uri });
 
-          const result = await apolloFetch({
-            extensions: {
-              persistedQuery: {
-                version: VERSION,
-                sha256Hash: hash,
-              },
-            },
-          } as any);
+        const result = await apolloFetch({
+          extensions,
+        } as any);
 
-          expect(result.data).not.to.exist;
-          expect(result.errors.length).to.equal(1);
-          expect(result.errors[0].message).to.equal('PersistedQueryNotFound');
-          expect(result.errors[0].extensions.code).to.equal(
-            'PERSISTED_QUERY_NOT_FOUND',
-          );
-        });
-        it('returns result on the second try', async () => {
-          const apolloFetch = createApolloFetch({ uri });
+        expect(result.data).not.to.exist;
+        expect(result.errors.length).to.equal(1);
+        expect(result.errors[0].message).to.equal('PersistedQueryNotFound');
+        expect(result.errors[0].extensions.code).to.equal(
+          'PERSISTED_QUERY_NOT_FOUND',
+        );
+      });
+      it('returns result on the second try', async () => {
+        const apolloFetch = createApolloFetch({ uri });
 
+        await apolloFetch({
+          extensions,
+        } as any);
+        const result = await apolloFetch({
+          extensions,
+          query: TEST_STRING_QUERY,
+        } as any);
+
+        expect(result.data).to.deep.equal({ testString: 'test string' });
+        expect(result.errors).not.to.exist;
+      });
+
+      it('returns result on the persisted query', async () => {
+        const apolloFetch = createApolloFetch({ uri });
+
+        await apolloFetch({
+          extensions,
+        } as any);
+        await apolloFetch({
+          extensions,
+          query: TEST_STRING_QUERY,
+        } as any);
+        const result = await apolloFetch({
+          extensions,
+        } as any);
+
+        expect(result.data).to.deep.equal({ testString: 'test string' });
+        expect(result.errors).not.to.exist;
+      });
+
+      it('returns error when hash does not match', async () => {
+        const apolloFetch = createApolloFetch({ uri });
+
+        try {
           await apolloFetch({
             extensions: {
               persistedQuery: {
                 version: VERSION,
-                sha256Hash: hash,
-              },
-            },
-          } as any);
-          const result = await apolloFetch({
-            extensions: {
-              persistedQuery: {
-                version: VERSION,
-                sha256Hash: hash,
+                sha:
+                  'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
               },
             },
             query: TEST_STRING_QUERY,
           } as any);
-
-          expect(result.data).to.deep.equal({ testString: 'test string' });
-          expect(result.errors).not.to.exist;
-        });
-
-        it('returns correct result for persisted query link', done => {
-          const variables = { id: 1 };
-          const link = createPersistedQuery().concat(
-            createHttpLink({ uri, fetch } as any),
-          );
-
-          execute(link, { query, variables } as any).subscribe(result => {
-            expect(result.data).to.deep.equal({ testString: 'test string' });
-            done();
-          }, done);
-        });
+          expect.fail();
+        } catch (e) {
+          expect(e.response.status).to.equal(400);
+          expect(e.response.raw).to.match(/does not match query/);
+        }
       });
 
-      describe('error path', () => {});
+      it('returns correct result for persisted query link', done => {
+        const variables = { id: 1 };
+        const link = createPersistedQuery().concat(
+          createHttpLink({ uri, fetch } as any),
+        );
+
+        execute(link, { query, variables } as any).subscribe(result => {
+          expect(result.data).to.deep.equal({ testString: 'test string' });
+          done();
+        }, done);
+      });
     });
   });
 });
