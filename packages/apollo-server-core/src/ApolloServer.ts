@@ -166,11 +166,12 @@ const typeDefs = gql\`${startSchema}\`
     }
   }
 
-  public use({ getHttp, path }: RegistrationOptions) {
+  public use({ getHttp, path, cache }: RegistrationOptions) {
     // we need to delay when we actually get the http server
     // until we move into the listen function
     this.getHttp = getHttp;
     this.graphqlPath = path;
+    this.requestOptions.cache = cache || this.requestOptions.cache;
   }
 
   public enhanceSchema(
@@ -380,7 +381,10 @@ const typeDefs = gql\`${startSchema}\`
     try {
       context =
         typeof this.context === 'function'
-          ? await this.context({ req: request })
+          ? await this.context({
+              req: request,
+              cache: this.requestOptions.cache,
+            })
           : context;
     } catch (error) {
       //Defer context error resolution to inside of runQuery

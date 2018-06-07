@@ -7,6 +7,7 @@ import { GraphQLExtension } from 'graphql-extensions';
 import { EngineReportingOptions } from 'apollo-engine-reporting';
 
 import { GraphQLServerOptions as GraphQLOptions } from './graphqlOptions';
+import { ApolloCache } from './caching';
 
 export type Context<T = any> = T;
 export type ContextFunction<T = any> = (
@@ -35,9 +36,9 @@ export interface Config
       | 'validationRules'
       | 'formatResponse'
       | 'fieldResolver'
-      | 'debug'
       | 'cacheControl'
       | 'tracing'
+      | 'cache'
     > {
   typeDefs?: DocumentNode | [DocumentNode];
   resolvers?: IResolvers;
@@ -82,6 +83,7 @@ export interface MiddlewareOptions {
 export interface RegistrationOptions {
   path: string;
   getHttp: () => HttpServer;
+  cache?: ApolloCache;
 }
 
 export interface ServerInfo {
