@@ -30,5 +30,6 @@
   "typings": "dist/index.d.ts",
   "typescript": {
     "definition": "dist/index.d.ts"
-  }
+  },
+  "private": true
 }
