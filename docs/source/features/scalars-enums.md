@@ -32,8 +32,8 @@ $ npm install --save graphql-type-json
 In code, require the type defined by in the npm package and use it :
 
 ```js
-import { ApolloServer, gql } from 'apollo-server';
-import GraphQLJSON from 'graphql-type-json';
+const { ApolloServer, gql } = require('apollo-server');
+const GraphQLJSON = require('graphql-type-json');
 
 const schemaString = gql`
 
@@ -67,8 +67,8 @@ Remark : `GraphQLJSON` is a [`GraphQLScalarType`](http://graphql.org/graphql-js/
 Defining a [GraphQLScalarType](http://graphql.org/graphql-js/type/#graphqlscalartype) instance provides more control over the custom scalar and can be added to Apollo server in the following way:
 
 ```js
-import { ApolloServer, gql } from 'apollo-server';
-import { GraphQLScalarType, Kind } from 'graphql';
+const { ApolloServer, gql } = require('apollo-server');
+const { GraphQLScalarType, Kind } = require('graphql');
 
 const myCustomScalarType = new GraphQLScalarType({
   name: 'MyCustomScalar',
@@ -138,8 +138,8 @@ type MyType {
 Next, the resolver:
 
 ```js
-import { GraphQLScalarType } from 'graphql';
-import { Kind } from 'graphql/language';
+const { GraphQLScalarType } = require('graphql');
+const { Kind } = require('graphql/language');
 
 const resolvers = {
   Date: new GraphQLScalarType({
@@ -183,9 +183,9 @@ type MyType {
 Next, the resolver:
 
 ```js
-import { ApolloServer, gql } from 'apollo-server';
-import { GraphQLScalarType } from 'graphql';
-import { Kind } from 'graphql/language';
+const { ApolloServer, gql } = require('apollo-server');
+const { GraphQLScalarType } = require('graphql');
+const { Kind } = require('graphql/language');
 
 function oddValue(value) {
   return value % 2 === 1 ? value : null;
@@ -261,7 +261,7 @@ query MyAvatar($color: AllowedColor) {
 Putting it all together:
 
 ```js
-import { ApolloServer, gql } from 'apollo-server';
+const { ApolloServer, gql } = require('apollo-server');
 
 const typeDefs = gql`
   enum AllowedColor {
