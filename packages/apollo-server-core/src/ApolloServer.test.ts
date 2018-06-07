@@ -4,6 +4,8 @@ import { stub } from 'sinon';
 import * as http from 'http';
 import * as net from 'net';
 import 'mocha';
+import * as fetch from 'node-fetch';
+import { sha256 } from 'js-sha256';
 
 import {
   GraphQLSchema,
@@ -20,6 +22,13 @@ import * as WebSocket from 'ws';
 Object.assign(global, {
   WebSocket: WebSocket,
 });
+
+import { execute } from 'apollo-link';
+import { createHttpLink } from 'apollo-link-http';
+import {
+  createPersistedQueryLink as createPersistedQuery,
+  VERSION,
+} from 'apollo-link-persisted-queries';
 
 import { createApolloFetch } from 'apollo-fetch';
 import { ApolloServerBase } from './ApolloServer';
@@ -867,6 +876,96 @@ describe('ApolloServerBase', () => {
           });
         })
         .catch(done);
+    });
+
+    describe('Persisted Queries', () => {
+      const server = new ApolloServerBase({
+        schema,
+        introspection: false,
+      });
+      const query = gql`
+        ${TEST_STRING_QUERY}
+      `;
+      const hash = sha256
+        .create()
+        .update(TEST_STRING_QUERY)
+        .hex();
+      let uri: string;
+
+      beforeEach(async () => {
+        const httpServer = createHttpServer(server);
+
+        server.use({
+          getHttp: () => httpServer,
+          path: '/graphql',
+          cache: new Map<string, string>() as any,
+        });
+        uri = (await server.listen()).url;
+      });
+
+      afterEach(async () => {
+        await server.stop();
+      });
+
+      describe('happy path', () => {
+        it('returns PersistedQueryNotFound on the first try', async () => {
+          const apolloFetch = createApolloFetch({ uri });
+
+          const result = await apolloFetch({
+            extensions: {
+              persistedQuery: {
+                version: VERSION,
+                sha256Hash: hash,
+              },
+            },
+          } as any);
+
+          expect(result.data).not.to.exist;
+          expect(result.errors.length).to.equal(1);
+          expect(result.errors[0].message).to.equal('PersistedQueryNotFound');
+          expect(result.errors[0].extensions.code).to.equal(
+            'PERSISTED_QUERY_NOT_FOUND',
+          );
+        });
+        it('returns result on the second try', async () => {
+          const apolloFetch = createApolloFetch({ uri });
+
+          await apolloFetch({
+            extensions: {
+              persistedQuery: {
+                version: VERSION,
+                sha256Hash: hash,
+              },
+            },
+          } as any);
+          const result = await apolloFetch({
+            extensions: {
+              persistedQuery: {
+                version: VERSION,
+                sha256Hash: hash,
+              },
+            },
+            query: TEST_STRING_QUERY,
+          } as any);
+
+          expect(result.data).to.deep.equal({ testString: 'test string' });
+          expect(result.errors).not.to.exist;
+        });
+
+        it('returns correct result for persisted query link', done => {
+          const variables = { id: 1 };
+          const link = createPersistedQuery().concat(
+            createHttpLink({ uri, fetch } as any),
+          );
+
+          execute(link, { query, variables } as any).subscribe(result => {
+            expect(result.data).to.deep.equal({ testString: 'test string' });
+            done();
+          }, done);
+        });
+      });
+
+      describe('error path', () => {});
     });
   });
 });
