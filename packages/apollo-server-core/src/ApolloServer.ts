@@ -41,6 +41,8 @@ import {
   SubscriptionServerOptions,
 } from './types';
 
+import { ApolloCache } from './caching';
+
 const NoIntrospection = (context: ValidationContext) => ({
   Field(node: FieldDefinitionNode) {
     if (node.name.value === '__schema' || node.name.value === '__type') {
@@ -383,7 +385,7 @@ const typeDefs = gql\`${startSchema}\`
         typeof this.context === 'function'
           ? await this.context({
               req: request,
-              cache: this.requestOptions.cache,
+              cache: this.requestOptions.cache as ApolloCache,
             })
           : context;
     } catch (error) {
