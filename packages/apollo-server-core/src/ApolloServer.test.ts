@@ -3,6 +3,7 @@ import { expect } from 'chai';
 import { stub } from 'sinon';
 import * as http from 'http';
 import * as net from 'net';
+import * as url from 'url';
 import 'mocha';
 import * as fetch from 'node-fetch';
 import { sha256 } from 'js-sha256';
@@ -80,11 +81,13 @@ function createHttpServer(server) {
         body = Buffer.concat(body).toString();
         // At this point, we have the headers, method, url and body, and can now
         // do whatever we need to in order to respond to this request.
-
         runHttpQuery([req, res], {
           method: req.method,
           options: server.graphQLServerOptionsForRequest(req as any),
-          query: JSON.parse(body),
+          query:
+            req.method.toUpperCase() === 'GET'
+              ? url.parse(req.url, true)
+              : JSON.parse(body),
           request: convertNodeHttpToRequest(req),
         })
           .then(gqlResponse => {
@@ -995,6 +998,18 @@ describe('ApolloServerBase', () => {
         const link = createPersistedQuery().concat(
           createHttpLink({ uri, fetch } as any),
         );
+
+        execute(link, { query, variables } as any).subscribe(result => {
+          expect(result.data).to.deep.equal({ testString: 'test string' });
+          done();
+        }, done);
+      });
+
+      it('returns correct result for persisted query link using get request', done => {
+        const variables = { id: 1 };
+        const link = createPersistedQuery({
+          useGETForHashedQueries: true,
+        }).concat(createHttpLink({ uri, fetch } as any));
 
         execute(link, { query, variables } as any).subscribe(result => {
           expect(result.data).to.deep.equal({ testString: 'test string' });
