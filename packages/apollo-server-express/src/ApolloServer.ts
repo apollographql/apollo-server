@@ -1,7 +1,7 @@
 import * as express from 'express';
 import * as corsMiddleware from 'cors';
 import { json, OptionsJson } from 'body-parser';
-import { createServer, Server as HttpServer } from 'http';
+import { createServer } from 'http';
 import gui from 'graphql-playground-middleware-express';
 import { ApolloServerBase, formatApolloErrors } from 'apollo-server-core';
 import * as accepts from 'accepts';
@@ -71,7 +71,7 @@ export const registerServer = async ({
 
   if (!disableHealthCheck) {
     //uses same path as engine
-    app.use('/.well-known/apollo/server-health', (req, res, next) => {
+    app.use('/.well-known/apollo/server-health', (req, res) => {
       //Response follows https://tools.ietf.org/html/draft-inadarei-api-health-check-01
       res.type('application/health+json');
 
@@ -114,7 +114,7 @@ export const registerServer = async ({
     path,
     corsMiddleware(cors),
     json(bodyParserConfig),
-    uploadsMiddleware ? uploadsMiddleware : (req, res, next) => next(),
+    uploadsMiddleware ? uploadsMiddleware : (_req, _res, next) => next(),
     (req, res, next) => {
       // make sure we check to see if graphql gui should be on
       if (!server.disableTools && req.method === 'GET') {

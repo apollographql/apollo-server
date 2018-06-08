@@ -27,8 +27,6 @@ import * as multer from 'multer';
 import * as bodyParser from 'body-parser';
 const request = require('supertest');
 const express4 = require('express'); // modern
-//import express3 from 'express3'; // old but commonly still used
-const express3 = express4;
 import {
   GraphQLSchema,
   GraphQLObjectType,
@@ -49,7 +47,7 @@ const QueryRootType = new GraphQLObjectType({
           type: GraphQLString,
         },
       },
-      resolve: (root, args) => 'Hello ' + (args['who'] || 'World'),
+      resolve: (_, args) => 'Hello ' + (args['who'] || 'World'),
     },
     thrower: {
       type: new GraphQLNonNull(GraphQLString),
@@ -76,7 +74,7 @@ const QueryRootType = new GraphQLObjectType({
     },
     context: {
       type: GraphQLString,
-      resolve: (obj, args, context) => context,
+      resolve: (_obj, _args, context) => context,
     },
   },
 });

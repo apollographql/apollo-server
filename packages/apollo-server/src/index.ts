@@ -1,13 +1,10 @@
 import * as express from 'express';
-import { Application, Request } from 'express';
+import { Request } from 'express';
 import { registerServer } from 'apollo-server-express';
-import { OptionsJson } from 'body-parser';
-import { CorsOptions } from 'cors';
 
 import {
   ApolloServerBase,
   ListenOptions,
-  Config,
   ServerInfo,
 } from 'apollo-server-core';
 

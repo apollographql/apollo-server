@@ -1,17 +1,11 @@
 /* tslint:disable:no-unused-expression */
 import { expect } from 'chai';
-import { stub } from 'sinon';
 import 'mocha';
 import * as MockReq from 'mock-req';
 
-import {
-  GraphQLSchema,
-  GraphQLObjectType,
-  GraphQLString,
-  GraphQLInt,
-} from 'graphql';
+import { GraphQLSchema, GraphQLObjectType, GraphQLString } from 'graphql';
 
-import { runHttpQuery, HttpQueryError } from './runHttpQuery';
+import { runHttpQuery } from './runHttpQuery';
 
 const queryType = new GraphQLObjectType({
   name: 'QueryType',

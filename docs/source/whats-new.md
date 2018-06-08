@@ -82,9 +82,9 @@ const resolvers = {
 Apollo Server 2 allows mocking of a schema with the `mocks` parameter in the constructor. The `mocks` parameter can be a boolean to enable the default mocking functions or an object to define custom mock functions by type.
 
 ```js
-const { ApolloServer } = require('apollo-server');
+const { ApolloServer, gql } = require('apollo-server');
 
-const typeDefs = `
+const typeDefs = gql`
 type Query {
   hello: String
   resolved: String
@@ -233,7 +233,7 @@ const { ApolloServer, gql, PubSub } = require('apollo-server');
 const pubsub = new PubSub();
 const SOMETHING_CHANGED_TOPIC = 'something_changed';
 
-const typeDefs = `
+const typeDefs = gql`
   type Query {
     hello: String
   }

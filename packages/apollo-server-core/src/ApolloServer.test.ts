@@ -3,14 +3,12 @@ import { expect } from 'chai';
 import { stub } from 'sinon';
 import * as http from 'http';
 import * as net from 'net';
-import * as MockReq from 'mock-req';
 import 'mocha';
 
 import {
   GraphQLSchema,
   GraphQLObjectType,
   GraphQLString,
-  GraphQLInt,
   GraphQLError,
   ValidationContext,
   FieldDefinitionNode,
@@ -26,12 +24,11 @@ Object.assign(global, {
 import { createApolloFetch } from 'apollo-fetch';
 import { ApolloServerBase } from './ApolloServer';
 import { AuthenticationError } from './errors';
+import { gql } from './index';
+import { convertNodeHttpToRequest } from './nodeHttpToRequest';
 import { runHttpQuery } from './runHttpQuery';
-import gqlTag from 'graphql-tag';
 
-let gql = String.raw;
-
-const INTROSPECTION_QUERY = gql`
+const INTROSPECTION_QUERY = `
   {
     __schema {
       directives {
@@ -41,7 +38,7 @@ const INTROSPECTION_QUERY = gql`
   }
 `;
 
-const TEST_STRING_QUERY = gql`
+const TEST_STRING_QUERY = `
   {
     testString
   }
@@ -65,7 +62,6 @@ const schema = new GraphQLSchema({
 
 function createHttpServer(server) {
   return http.createServer(async (req, res) => {
-    const result = {};
     let body: any = [];
     req
       .on('data', chunk => {
@@ -80,7 +76,7 @@ function createHttpServer(server) {
           method: req.method,
           options: server.graphQLServerOptionsForRequest(req as any),
           query: JSON.parse(body),
-          request: new MockReq(),
+          request: convertNodeHttpToRequest(req),
         })
           .then(gqlResponse => {
             res.setHeader('Content-Type', 'application/json');
@@ -245,6 +241,22 @@ describe('ApolloServerBase', () => {
         expect(result.errors, 'errors should exist').not.to.exist;
         await server.stop();
       });
+      it('throws if typeDefs are a string', async () => {
+        const typeDefs: any = `
+          type Query {
+            hello: String
+          }
+        `;
+        const resolvers = { Query: { hello: () => 'hi' } };
+
+        expect(
+          () =>
+            new ApolloServerBase({
+              typeDefs,
+              resolvers,
+            }),
+        ).to.throw(/apollo-server/);
+      });
       it('uses schema over resolvers + typeDefs', async () => {
         const typeDefs = gql`
           type Query {
@@ -339,7 +351,7 @@ describe('ApolloServerBase', () => {
       `;
       const resolvers = {
         Query: {
-          hello: (parent, args, context) => {
+          hello: (_parent, _args, context) => {
             expect(context).to.equal(Promise.resolve(uniqueContext));
             return 'hi';
           },
@@ -369,6 +381,42 @@ describe('ApolloServerBase', () => {
       await server.stop();
     });
 
+    it('allows context to be async function', async () => {
+      const uniqueContext = { key: 'major' };
+      const spy = stub().returns('hi');
+      const typeDefs = gql`
+        type Query {
+          hello: String
+        }
+      `;
+      const resolvers = {
+        Query: {
+          hello: (_parent, _args, context) => {
+            expect(context).to.equal(uniqueContext);
+            return spy();
+          },
+        },
+      };
+      const server = new ApolloServerBase({
+        typeDefs,
+        resolvers,
+        context: async () => uniqueContext,
+      });
+      const httpServer = createHttpServer(server);
+      server.use({
+        getHttp: () => httpServer,
+        path: '/',
+      });
+
+      const { url: uri } = await server.listen();
+      const apolloFetch = createApolloFetch({ uri });
+
+      expect(spy.notCalled).true;
+      await apolloFetch({ query: '{hello}' });
+      expect(spy.calledOnce).true;
+      await server.stop();
+    });
+
     it('returns thrown context error as a valid graphql result', async () => {
       const nodeEnv = process.env.NODE_ENV;
       delete process.env.NODE_ENV;
@@ -379,7 +427,7 @@ describe('ApolloServerBase', () => {
       `;
       const resolvers = {
         Query: {
-          hello: (parent, args, context) => {
+          hello: () => {
             throw Error('never get here');
           },
         },
@@ -387,7 +435,7 @@ describe('ApolloServerBase', () => {
       const server = new ApolloServerBase({
         typeDefs,
         resolvers,
-        context: ({ req }) => {
+        context: () => {
           throw new AuthenticationError('valid result');
         },
       });
@@ -554,7 +602,7 @@ describe('ApolloServerBase', () => {
     });
   });
 
-  describe('subscritptions', () => {
+  describe('subscriptions', () => {
     const SOMETHING_CHANGED_TOPIC = 'something_changed';
     const pubsub = new PubSub();
     let server: ApolloServerBase;
@@ -596,11 +644,11 @@ describe('ApolloServerBase', () => {
         }
       `;
 
-      const query = gqlTag(gql`
+      const query = `
         subscription {
           num
         }
-      `);
+      `;
 
       const resolvers = {
         Query: {
@@ -628,7 +676,7 @@ describe('ApolloServerBase', () => {
         getHttp: () => httpServer,
         path: '/graphql',
       });
-      server.listen({}).then(({ url: uri, port }) => {
+      server.listen({}).then(({ port }) => {
         const client = new SubscriptionClient(
           `ws://localhost:${port}${server.subscriptionsPath}`,
           {},
@@ -669,11 +717,11 @@ describe('ApolloServerBase', () => {
         }
       `;
 
-      const query = gqlTag(gql`
+      const query = `
         subscription {
           num
         }
-      `);
+      `;
 
       const resolvers = {
         Query: {
@@ -703,7 +751,7 @@ describe('ApolloServerBase', () => {
         .listen({
           subscriptions: false,
         })
-        .then(({ url: uri, port }) => {
+        .then(({ port }) => {
           const client = new SubscriptionClient(
             `ws://localhost:${port}${server.subscriptionsPath}`,
             {},
@@ -712,7 +760,6 @@ describe('ApolloServerBase', () => {
 
           const observable = client.request({ query });
 
-          let i = 1;
           subscription = observable.subscribe({
             next: () => {
               done(new Error('should not call next'));
@@ -731,7 +778,7 @@ describe('ApolloServerBase', () => {
           //the behavior with an option in the client constructor. If you're
           //available to make a PR to the following please do!
           //https://github.com/apollographql/subscriptions-transport-ws/blob/master/src/client.ts
-          client.onError((err: Error) => {
+          client.onError((_: Error) => {
             done();
           });
         });
@@ -750,11 +797,11 @@ describe('ApolloServerBase', () => {
         }
       `;
 
-      const query = gqlTag(gql`
+      const query = `
         subscription {
           num
         }
-      `);
+      `;
 
       const resolvers = {
         Query: {
@@ -787,7 +834,7 @@ describe('ApolloServerBase', () => {
         .listen({
           subscriptions: { onConnect, path },
         })
-        .then(({ url: uri, port }) => {
+        .then(({ port }) => {
           expect(onConnect.notCalled).true;
 
           expect(server.subscriptionsPath).to.equal(path);

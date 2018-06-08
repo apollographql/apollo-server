@@ -7,11 +7,12 @@ import {
 import { Server as HttpServer } from 'http';
 import {
   execute,
+  print,
   GraphQLSchema,
   subscribe,
   ExecutionResult,
   GraphQLError,
-  GraphQLResolveInfo,
+  GraphQLFieldResolver,
   ValidationContext,
   FieldDefinitionNode,
 } from 'graphql';
@@ -28,12 +29,11 @@ import {
 
 import { formatApolloErrors } from './errors';
 import { GraphQLServerOptions as GraphQLOptions } from './graphqlOptions';
-import { LogFunction, LogAction, LogStep } from './logging';
+import { LogFunction } from './logging';
 
 import {
   Config,
   ListenOptions,
-  MiddlewareOptions,
   RegistrationOptions,
   ServerInfo,
   Context,
@@ -71,7 +71,7 @@ export class ApolloServerBase<Request = RequestInit> {
   private subscriptionServer?: SubscriptionServer;
   protected getHttp: () => HttpServer;
 
-  constructor(config: Config<Request>) {
+  constructor(config: Config) {
     const {
       context,
       resolvers,
@@ -111,7 +111,26 @@ export class ApolloServerBase<Request = RequestInit> {
     this.requestOptions = requestOptions;
     this.context = context;
 
-    const enhancedTypeDefs = Array.isArray(typeDefs) ? typeDefs : [typeDefs];
+    if (
+      typeof typeDefs === 'string' ||
+      (Array.isArray(typeDefs) && typeDefs.find(d => typeof d === 'string'))
+    ) {
+      const startSchema =
+        (typeof typeDefs === 'string' &&
+          (typeDefs as string).substring(0, 200)) ||
+        (Array.isArray(typeDefs) &&
+          (typeDefs.find(d => typeof d === 'string') as any).substring(0, 200));
+      throw new Error(`typeDefs must be tagged with the gql exported from apollo-server:
+
+const { gql } = require('apollo-server');
+
+const typeDefs = gql\`${startSchema}\`
+`);
+    }
+
+    const enhancedTypeDefs = Array.isArray(typeDefs)
+      ? typeDefs.map(print)
+      : [print(typeDefs)];
     enhancedTypeDefs.push(`scalar Upload`);
 
     this.schema = schema
@@ -355,13 +374,13 @@ export class ApolloServerBase<Request = RequestInit> {
     }
   }
 
-  graphQLServerOptionsForRequest(request: Request) {
+  async graphQLServerOptionsForRequest(request: Request) {
     let context: Context = this.context ? this.context : { request };
 
     try {
       context =
         typeof this.context === 'function'
-          ? this.context({ req: request })
+          ? await this.context({ req: request })
           : context;
     } catch (error) {
       //Defer context error resolution to inside of runQuery
@@ -374,7 +393,14 @@ export class ApolloServerBase<Request = RequestInit> {
       schema: this.schema,
       extensions: this.extensions,
       context,
-      // allow overrides from options
+      // Allow overrides from options. Be explicit about a couple of them to
+      // avoid a bad side effect of the otherwise useful noUnusedLocals option
+      // (https://github.com/Microsoft/TypeScript/issues/21673).
+      logFunction: this.requestOptions.logFunction as LogFunction,
+      fieldResolver: this.requestOptions.fieldResolver as GraphQLFieldResolver<
+        any,
+        any
+      >,
       ...this.requestOptions,
     };
   }

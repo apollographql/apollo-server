@@ -32,10 +32,10 @@ $ npm install --save graphql-type-json
 In code, require the type defined by in the npm package and use it :
 
 ```js
-import { ApolloServer } from 'apollo-server';
-import GraphQLJSON from 'graphql-type-json';
+const { ApolloServer, gql } = require('apollo-server');
+const GraphQLJSON = require('graphql-type-json');
 
-const schemaString = `
+const schemaString = gql`
 
 scalar JSON
 
@@ -67,8 +67,8 @@ Remark : `GraphQLJSON` is a [`GraphQLScalarType`](http://graphql.org/graphql-js/
 Defining a [GraphQLScalarType](http://graphql.org/graphql-js/type/#graphqlscalartype) instance provides more control over the custom scalar and can be added to Apollo server in the following way:
 
 ```js
-import { ApolloServer } from 'apollo-server';
-import { GraphQLScalarType, Kind } from 'graphql';
+const { ApolloServer, gql } = require('apollo-server');
+const { GraphQLScalarType, Kind } = require('graphql');
 
 const myCustomScalarType = new GraphQLScalarType({
   name: 'MyCustomScalar',
@@ -91,7 +91,7 @@ const myCustomScalarType = new GraphQLScalarType({
   }
 });
 
-const schemaString = `
+const schemaString = gql`
 
 scalar MyCustomScalar
 
@@ -127,7 +127,7 @@ The goal is to define a `Date` data type for returning `Date` values from the da
 The following is the implementation of the `Date` data type. First, the schema:
 
 ```js
-const typeDefs = `scalar Date
+const typeDefs = gql`scalar Date
 
 type MyType {
    created: Date
@@ -138,8 +138,8 @@ type MyType {
 Next, the resolver:
 
 ```js
-import { GraphQLScalarType } from 'graphql';
-import { Kind } from 'graphql/language';
+const { GraphQLScalarType } = require('graphql');
+const { Kind } = require('graphql/language');
 
 const resolvers = {
   Date: new GraphQLScalarType({
@@ -172,7 +172,7 @@ server.listen().then(({ url }) => {
 In this example, we follow the [official GraphQL documentation](http://graphql.org/docs/api-reference-type-system/) for the scalar datatype, which demonstrates how to validate a database field that should only contain odd numbers in GraphQL. First, the schema:
 
 ```js
-const typeDefs = `scalar Odd
+const typeDefs = gql`scalar Odd
 
 type MyType {
     oddValue: Odd
@@ -183,9 +183,9 @@ type MyType {
 Next, the resolver:
 
 ```js
-import { ApolloServer } from 'apollo-server';
-import { GraphQLScalarType } from 'graphql';
-import { Kind } from 'graphql/language';
+const { ApolloServer, gql } = require('apollo-server');
+const { GraphQLScalarType } = require('graphql');
+const { Kind } = require('graphql/language');
 
 function oddValue(value) {
   return value % 2 === 1 ? value : null;
@@ -261,9 +261,9 @@ query MyAvatar($color: AllowedColor) {
 Putting it all together:
 
 ```js
-import { ApolloServer } from 'apollo-server';
+const { ApolloServer, gql } = require('apollo-server');
 
-const typeDefs = `
+const typeDefs = gql`
   enum AllowedColor {
     RED
     GREEN
