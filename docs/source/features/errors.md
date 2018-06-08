@@ -77,7 +77,7 @@ like a localized message for each field or argument that was invalid. The
 following example demonstrates how you can use `BadUserInputError` to augment
 your error messages with additional details.
 
-```js line=14-20
+```js line=15-21
 const { 
   ApolloServer,
   BadUserInputError,
