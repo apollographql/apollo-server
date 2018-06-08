@@ -11,4 +11,5 @@ export {
   ValidationError,
   AuthenticationError,
   ForbiddenError,
+  BadUserInputError,
 } from 'apollo-server-core';
