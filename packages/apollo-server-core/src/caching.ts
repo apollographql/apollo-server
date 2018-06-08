@@ -8,5 +8,5 @@ export interface KeyValueCache {
     },
   ): Promise<void>;
   get(key: string): Promise<string>;
-  invalidate(tags: string[]): Promise<void>;
+  invalidateTags(tags: string[]): Promise<void>;
 }
