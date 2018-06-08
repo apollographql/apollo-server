@@ -1,4 +1,4 @@
-import { GraphQLSchema } from 'graphql';
+import { GraphQLSchema, DocumentNode } from 'graphql';
 import { SchemaDirectiveVisitor, IResolvers, IMocks } from 'graphql-tools';
 import { ConnectionContext } from 'subscriptions-transport-ws';
 import { Server as HttpServer } from 'http';
@@ -24,7 +24,7 @@ export interface SubscriptionServerOptions {
   onDisconnect?: (websocket: WebSocket, context: ConnectionContext) => any;
 }
 
-export interface Config<Server>
+export interface Config
   extends Pick<
       GraphQLOptions<Context<any>>,
       | 'formatError'
@@ -39,7 +39,7 @@ export interface Config<Server>
       | 'cacheControl'
       | 'tracing'
     > {
-  typeDefs?: string | [string];
+  typeDefs?: DocumentNode | [DocumentNode];
   resolvers?: IResolvers;
   schema?: GraphQLSchema;
   schemaDirectives?: Record<string, typeof SchemaDirectiveVisitor>;

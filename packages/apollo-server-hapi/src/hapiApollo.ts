@@ -4,10 +4,8 @@ import * as GraphiQL from 'apollo-server-module-graphiql';
 import {
   GraphQLOptions,
   runHttpQuery,
-  HttpQueryError,
   convertNodeHttpToRequest,
 } from 'apollo-server-core';
-import { IncomingMessage } from 'http';
 
 export interface IRegister {
   (server: Server, options: any): void;

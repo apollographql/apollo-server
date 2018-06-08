@@ -80,7 +80,8 @@ your error messages with additional details.
 ```js line=14-20
 const { 
   ApolloServer,
-  gql, 
+  BadUserInputError,
+  gql,
 } = require('apollo-server');
 
 const typeDefs = gql`

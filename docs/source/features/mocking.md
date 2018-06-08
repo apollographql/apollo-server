@@ -12,9 +12,9 @@ Even when the UI is already built, it can let you test your UI without waiting o
 This example demonstrates mocking a GraphQL schema with just one line of code, using `apollo-server`'s default mocking logic.
 
 ```js
-const { ApolloServer } = require('apollo-server');
+const { ApolloServer, gql } = require('apollo-server');
 
-const typeDefs = `
+const typeDefs = gql`
 type Query {
   hello: String
 }
@@ -41,7 +41,7 @@ In addition to a boolean, `mocks` can be an object that describes custom mocking
 ```js line=16-20
 const { ApolloServer } = require('apollo-server');
 
-const typeDefs = `
+const typeDefs = gql`
 type Query {
   hello: String
   resolved: String

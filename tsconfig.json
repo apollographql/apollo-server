@@ -9,6 +9,8 @@
     "allowSyntheticDefaultImports": false,
     "pretty": true,
     "removeComments": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
     "lib": ["dom", "es6", "esnext.asynciterable"]
   }
 }

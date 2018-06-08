@@ -9,11 +9,11 @@ While it's possible to migrate an existing server to the 2.0 beta without any ch
 
 > **Note:** In the beta of Apollo Server 2.0 only Express and Hapi are supported.  Additional middleware integrations will be implemented in the official 2.0 release.
 
-### Recommending the `gql` tag
+<h2 id="gql-tag">The `gql` tag</h2>
 
-Apollo Server 2.0 ships with the `gql` tag for editor syntax highlighting and auto-formatting with Prettier.  In the future, we will be using it for statically analyzing GraphQL queries, so we recommend wrapping your schema with `gql` today. Unlike the `gql` tag on the client, it does not parse the query string into an AST.
+Apollo Server 2.0 ships with the `gql` tag for **editor syntax highlighting** and **auto-formatting** with Prettier.  In the future, we will be using it for statically analyzing GraphQL queries, so Apollo Servers requires wrapping your schema with `gql`.
 
-The `gql` tag is now exported from the new `apollo-server` package.
+The `gql` tag parses the query string into an AST  and is now exported from the new `apollo-server` package.
 
 ```js line=1,3
 const { ApolloServer, gql } = require('apollo-server');
@@ -23,9 +23,15 @@ const typeDefs = gql`
     hello: String
   }
 `;
+
+//Some projects use schemas imported from external files
+const typeDefs = gql`${IMPORT_FUNCTION('./schema-file')}`;
+
+//gql can also be used as regular function to convert a string to an AST
+const typeDefs = gql(IMPORT_FUNCTION('./schema-file'))
 ```
 
-### Changes to app dependencies
+<h2 id="app-deps">Changes to app dependencies</h2>
 
 > Apollo Server 2.0 beta requires Node.js v6 and higher.
 
@@ -36,7 +42,7 @@ There is a consideration to be made when following the rest of the guide:
 * [**Middleware option**](#Middleware): If the application being migrated implements Apollo Server alongside other middleware, there are some packages which can be removed, but adding the `apollo-server` package and switching to using the new `registerServer` API should still simplify the setup.  In this case, check the [Middleware](#Middleware) section.
 * [**Stand-alone option**](#Stand-alone): If the application being migrated is only used as a GraphQL server, Apollo Server 2.0 _eliminates the need to run a separate HTTP server_ and allows some dependencies to be removed.  In these cases, the [Stand-alone](#Stand-alone) option will reduce the amount of code necessary for running a GraphQL server.
 
-### Simplified usage
+<h2 id="simple-use">Simplified usage</h2>
 
 Check out the following changes for Apollo Server 2.0 beta.
 
@@ -46,7 +52,7 @@ Check out the following changes for Apollo Server 2.0 beta.
 * You should pass in `typeDefs` and resolvers as parameters to an instance of Apollo Server.
 * If the server is only functioning as a GraphQL server, it's no longer necessary to run your own HTTP server (like `express`).
 
-### Middleware
+<h2 id="Middleware">Middleware</h2>
 
 With the middleware option used by Apollo Server 1.0 users, it is necessary to install the beta version of `apollo-server-express` and also add the new `apollo-server` beta.  To do this, use the `beta` tag when installing:
 
@@ -54,7 +60,7 @@ With the middleware option used by Apollo Server 1.0 users, it is necessary to i
 
 The changes are best shown by comparing the before and after of the application.
 
-#### Apollo Server 1 (old pattern)
+<h3 id="apollo-server-1">Apollo Server 1 (old pattern)</h3>
 
 An example of using Apollo Server 1 with the Express framework:
 
@@ -91,7 +97,7 @@ app.use('/graphql', bodyParser.json(), graphqlExpress({ schema: myGraphQLSchema 
 app.listen(PORT);
 ```
 
-#### Apollo Server 2 (new pattern)
+<h3 id="apollo-server-2">Apollo Server 2 (new pattern)</h3>
 
 Now, you can just do this instead:
 
@@ -123,7 +129,7 @@ server.listen().then(({ url }) => {
 });
 ```
 
-### Stand-alone
+<h2 id="Stand-alone">Stand-alone</h2>
 
 If you are simply focused on running a production-ready GraphQL server quickly, Apollo Server 2.0 ships with a built-in server and starting your own server (e.g. Express, Koa, etc.) is no longer necessary.
 
@@ -154,6 +160,62 @@ const resolvers = {
 };
 
 const server = new ApolloServer({ typeDefs, resolvers });
+
+server.listen().then(({ url }) => {
+  console.log(`🚀 Server ready at ${url}`);
+});
+```
+
+<h2 id="add-middleware">Adding Additional Middleware to Apollo Server 2</h2>
+
+For middleware that is collocated with the GraphQL endpoint, Apollo Server 2 allows middleware mounted on the same path before `registerServer` is called. For example, this server runs an authentication middleware before GraphQL execution.
+
+```js
+const express = require('express');
+const { ApolloServer, gql } = require('apollo-server');
+const { registerServer } = require('apollo-server-express');
+
+const app = express();
+const path = '/graphql';
+
+const server = new ApolloServer({ typeDefs, resolvers });
+
+//Mount a jwt or other authentication middleware that is run before the GraphQL execution
+app.use(path, jwtCheck);
+
+registerServer({ server, app, path });
+
+// normal ApolloServer listen call but url will contain /graphql
+server.listen().then(({ url }) => {
+  console.log(`🚀 Server ready at ${url}`)
+});
+```
+
+<h2 id="existing-schema">Using an Existing Schema</h2>
+
+For many existing instances of Apollo Server, the schema is created at runtime before server startup, using `makeExecutableSchema` or `mergeSchemas`. Apollo Server 2 stays backwards compatible with these more complex schemas, accepting it as the `schema` field in the server constructor options. Additionally, Apollo Server 2 exports all of `graphql-tools`, so `makeExecutableSchema` and other functions can be imported directly from Apollo Server.
+
+> Note: the string to create these schema will not use th `gql` tag exported from apollo-server.
+```js
+const { ApolloServer, makeExecutableSchema } = require('apollo-server');
+
+//For developer tooling, such as autoformatting, use the following workaround
+const gql = String.raw;
+
+const typeDefs = gql`
+  type Query {
+    hello: String
+  }
+`;
+
+const schema = makeExecutableSchema({
+  typeDefs,
+  resolvers,
+});
+//mergeSchemas is imported from apollo-server
+//const schema = mergeSchemas(...);
+
+const server = new ApolloServer({ schema });
 
 server.listen().then(({ url }) => {
   console.log(`🚀 Server ready at ${url}`);

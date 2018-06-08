@@ -40,7 +40,7 @@ function createLambda(options: CreateAppOptions = {}) {
         queryStringParameters: urlObject.query,
       };
       context = {};
-      callback = function(error, result) {
+      callback = function(_, result) {
         res.statusCode = result.statusCode;
         for (let key in result.headers) {
           if (result.headers.hasOwnProperty(key)) {

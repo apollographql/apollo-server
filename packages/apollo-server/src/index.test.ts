@@ -1,5 +1,4 @@
 import { expect } from 'chai';
-import { stub } from 'sinon';
 import 'mocha';
 
 import * as request from 'request';
