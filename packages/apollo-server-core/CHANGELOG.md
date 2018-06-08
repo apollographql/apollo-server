@@ -2,6 +2,7 @@
 
 ### vNEXT
 
+* `apollo-server-core`: Add persisted queries [PR#1149](https://github.com/apollographql/apollo-server/pull/1149)
 * `apollo-server-core`: **breaking** gql is exported from gql-tag and ApolloServer requires a DocumentNode [PR#1146](https://github.com/apollographql/apollo-server/pull/1146)
 * `apollo-server-core`: accept `Request` object in `runQuery` [PR#1108](https://github.com/apollographql/apollo-server/pull/1108)
 * `apollo-server-core`: move query parse into runQuery and no longer accept GraphQL AST over the wire [PR#1097](https://github.com/apollographql/apollo-server/pull/1097)
