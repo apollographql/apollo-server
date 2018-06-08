@@ -8,5 +8,6 @@ export {
   ValidationError,
   AuthenticationError,
   ForbiddenError,
+  BadUserInputError,
   gql,
 } from 'apollo-server-core';

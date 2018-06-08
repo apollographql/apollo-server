@@ -11,6 +11,7 @@ import {
   AuthenticationError,
   ForbiddenError,
   ValidationError,
+  BadUserInputError,
   SyntaxError,
 } from './errors';
 
@@ -169,6 +170,31 @@ describe('Errors', () => {
         errorClass: ValidationError,
         name: 'ValidationError',
       });
+    });
+    it('provides a BadUserInput error', () => {
+      const error = new BadUserInputError(message, {
+        field1: 'property1',
+        field2: 'property2',
+      });
+      verifyError(error, {
+        code: 'BAD_USER_INPUT',
+        errorClass: BadUserInputError,
+        name: 'BadUserInputError',
+      });
+
+      const formattedError = formatApolloErrors([
+        new GraphQLError(
+          error.message,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          error,
+        ),
+      ])[0];
+
+      expect(formattedError.extensions.exception.field1).to.equal('property1');
+      expect(formattedError.extensions.exception.field2).to.equal('property2');
     });
   });
 });
