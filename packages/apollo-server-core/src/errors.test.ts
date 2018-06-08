@@ -181,8 +181,20 @@ describe('Errors', () => {
         errorClass: BadUserInputError,
         name: 'BadUserInputError',
       });
-      expect(error.extensions.exception.field1).to.equal('property1');
-      expect(error.extensions.exception.field2).to.equal('property2');
+
+      const formattedError = formatApolloErrors([
+        new GraphQLError(
+          error.message,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          error,
+        ),
+      ])[0];
+
+      expect(formattedError.extensions.exception.field1).to.equal('property1');
+      expect(formattedError.extensions.exception.field2).to.equal('property2');
     });
   });
 });
