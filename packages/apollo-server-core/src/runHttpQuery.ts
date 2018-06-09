@@ -331,12 +331,12 @@ export async function runHttpQuery(
     //This code is run on parse/validation errors and any other error that
     //doesn't reach GraphQL execution
     if (gqlResponse.errors && typeof gqlResponse.data === 'undefined') {
-      throw new HttpQueryError(400, JSON.stringify(gqlResponse), true, {
+      throw new HttpQueryError(400, prettyJSONStringify(gqlResponse), true, {
         'Content-Type': 'application/json',
       });
     }
-    return JSON.stringify(gqlResponse);
+    return prettyJSONStringify(gqlResponse);
   }
 
-  return JSON.stringify(responses);
+  return prettyJSONStringify(responses);
 }
