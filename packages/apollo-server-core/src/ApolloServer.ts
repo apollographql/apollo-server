@@ -27,8 +27,14 @@ import {
   ExecutionParams,
 } from 'subscriptions-transport-ws';
 
+//use as default persisted query store
+import Keyv = require('keyv');
+
 import { formatApolloErrors } from './errors';
-import { GraphQLServerOptions as GraphQLOptions } from './graphqlOptions';
+import {
+  GraphQLServerOptions as GraphQLOptions,
+  PersistedQueryOptions,
+} from './graphqlOptions';
 import { LogFunction } from './logging';
 
 import {
@@ -40,8 +46,6 @@ import {
   ContextFunction,
   SubscriptionServerOptions,
 } from './types';
-
-import { KeyValueCache } from './caching';
 
 const NoIntrospection = (context: ValidationContext) => ({
   Field(node: FieldDefinitionNode) {
@@ -110,7 +114,18 @@ export class ApolloServerBase<Request = RequestInit> {
         : noIntro;
     }
 
-    this.requestOptions = requestOptions;
+    if (requestOptions.persistedQueries !== false) {
+      if (!requestOptions.persistedQueries) {
+        requestOptions.persistedQueries = {
+          cache: new Keyv(),
+        };
+      }
+    } else {
+      //the user does not want to use persisted queries, so we remove the field
+      delete requestOptions.persistedQueries;
+    }
+
+    this.requestOptions = requestOptions as GraphQLOptions;
     this.context = context;
 
     if (
@@ -168,12 +183,11 @@ const typeDefs = gql\`${startSchema}\`
     }
   }
 
-  public use({ getHttp, path, cache }: RegistrationOptions) {
+  public use({ getHttp, path }: RegistrationOptions) {
     // we need to delay when we actually get the http server
     // until we move into the listen function
     this.getHttp = getHttp;
     this.graphqlPath = path;
-    this.requestOptions.cache = cache || this.requestOptions.cache;
   }
 
   public enhanceSchema(
@@ -385,7 +399,8 @@ const typeDefs = gql\`${startSchema}\`
         typeof this.context === 'function'
           ? await this.context({
               req: request,
-              cache: this.requestOptions.cache as KeyValueCache,
+              //This cache should be the full response cache
+              //cache: this.requestOptions.cache as KeyValueCache,
             })
           : context;
     } catch (error) {
@@ -403,6 +418,8 @@ const typeDefs = gql\`${startSchema}\`
       // avoid a bad side effect of the otherwise useful noUnusedLocals option
       // (https://github.com/Microsoft/TypeScript/issues/21673).
       logFunction: this.requestOptions.logFunction as LogFunction,
+      persistedQueries: this.requestOptions
+        .persistedQueries as PersistedQueryOptions,
       fieldResolver: this.requestOptions.fieldResolver as GraphQLFieldResolver<
         any,
         any

@@ -1083,10 +1083,19 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
       };
 
       beforeEach(async () => {
+        const map = new Map<string, string>();
+        const cache = {
+          set: async (key, val) => {
+            await map.set(key, val);
+          },
+          get: async key => map.get(key),
+        };
         app = await createApp({
           graphqlOptions: {
             schema,
-            cache: new Map<string, string>() as any,
+            persistedQueries: {
+              cache,
+            },
           },
         });
       });

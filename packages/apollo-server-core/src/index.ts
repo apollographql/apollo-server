@@ -4,6 +4,7 @@ export { runHttpQuery, HttpQueryRequest, HttpQueryError } from './runHttpQuery';
 export {
   default as GraphQLOptions,
   resolveGraphqlOptions,
+  PersistedQueryOptions,
 } from './graphqlOptions';
 export {
   ApolloError,

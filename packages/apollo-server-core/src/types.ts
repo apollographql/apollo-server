@@ -6,8 +6,10 @@ import { ListenOptions as HttpListenOptions } from 'net';
 import { GraphQLExtension } from 'graphql-extensions';
 import { EngineReportingOptions } from 'apollo-engine-reporting';
 
-import { GraphQLServerOptions as GraphQLOptions } from './graphqlOptions';
-import { KeyValueCache } from './caching';
+import {
+  GraphQLServerOptions as GraphQLOptions,
+  PersistedQueryOptions,
+} from './graphqlOptions';
 
 export type Context<T = any> = T;
 export type ContextFunction<T = any> = (
@@ -38,7 +40,6 @@ export interface Config
       | 'fieldResolver'
       | 'cacheControl'
       | 'tracing'
-      | 'cache'
     > {
   typeDefs?: DocumentNode | [DocumentNode];
   resolvers?: IResolvers;
@@ -49,6 +50,7 @@ export interface Config
   mocks?: boolean | IMocks;
   engine?: boolean | EngineReportingOptions;
   extensions?: Array<() => GraphQLExtension>;
+  persistedQueries?: PersistedQueryOptions | false;
 }
 
 // XXX export these directly from apollo-engine-js
@@ -83,7 +85,6 @@ export interface MiddlewareOptions {
 export interface RegistrationOptions {
   path: string;
   getHttp: () => HttpServer;
-  cache?: KeyValueCache;
 }
 
 export interface ServerInfo {
