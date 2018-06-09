@@ -3,9 +3,9 @@ title: Automatic Persisted Queries
 description: Reduce the size of GraphQL requests over the wire
 ---
 
-The size of individual GraphQL query strings can be a major pain point. Apollo Server allows implements Automatic Persisted Queries (APQ), a technique that greatly improves network performance for GraphQL with zero build-time configuration. A persisted query is a ID or hash that can be sent to the server instead of the entire GraphQL query string. This smaller signature reduces bandwidth utilization and speeds up client loading times.
+The size of individual GraphQL query strings can be a major pain point. Apollo Server allows implements Automatic Persisted Queries (APQ), a technique that greatly improves network performance for GraphQL with zero build-time configuration. A persisted query is a ID or hash that can be sent to the server instead of the entire GraphQL query string. This smaller signature reduces bandwidth utilization and speeds up client loading times. Persisted queries are especially nice paired with GET requests, enabling the browser cache and [integration with a CDN](#get).
 
-To accommodate this new query representation, Apollo Server contains a cache that stores the mapping between hash and query string, efficiently retrieving the corresponding query. Previously, the generation of mapping would require a complex build step. Paired with Apollo Client, Apollo Server provides the ability to generate this mapping automatically.
+To accommodate the new query representation, Apollo Server contains a cache that stores the mapping between hash and query string. Previously, the generation of mapping would require a complex build step. Apollo Server paired with Apollo Client provides the ability to generate the mapping automatically.
 
 <h2 id="setup">Setup</h2>
 
@@ -38,15 +38,15 @@ This example persists a dummy query of `{__typename}`, using its sha256 hash: `e
 1. Request a persisted query:
 
 ```bash
-curl "http://localhost:4000/?extensions=\{\"persistedQuery\":\{\"version\":1,\"sha256Hash\":\"ecf4edb46db40b5132295c0291d62fb65d6759a9eedfa4d5d612dd5ec54a6b38\"\}\}"
+curl -g 'http://localhost:4000/?extensions={"persistedQuery":{"version":1,"sha256Hash":"ecf4edb46db40b5132295c0291d62fb65d6759a9eedfa4d5d612dd5ec54a6b38"}}'
 ```
 
-   Expect a response of: `{"errors": [{"message": "PersistedQueryNotFound"}]}`.
+   Expect a response of: `{"errors": [{"message": "PersistedQueryNotFound", "extensions": {...}}]}`.
 
 2. Store the query to the cache:
 
 ```bash
-curl "http://localhost:4000/?query=\{__typename\}&extensions=\{\"persistedQuery\":\{\"version\":1,\"sha256Hash\":\"ecf4edb46db40b5132295c0291d62fb65d6759a9eedfa4d5d612dd5ec54a6b38\"\}\}"
+curl -g 'http://localhost:4000/?query={__typename}&extensions={"persistedQuery":{"version":1,"sha256Hash":"ecf4edb46db40b5132295c0291d62fb65d6759a9eedfa4d5d612dd5ec54a6b38"}}'
 ```
 
    Expect a response of `{"data": {"__typename": "Query"}}"`.
@@ -54,7 +54,7 @@ curl "http://localhost:4000/?query=\{__typename\}&extensions=\{\"persistedQuery\
 3. Request the persisted query again:
 
 ```bash
-curl "http://localhost:4000/?extensions=\{\"persistedQuery\":\{\"version\":1,\"sha256Hash\":\"ecf4edb46db40b5132295c0291d62fb65d6759a9eedfa4d5d612dd5ec54a6b38\"\}\}"
+curl -g 'http://localhost:4000/?extensions={"persistedQuery":{"version":1,"sha256Hash":"ecf4edb46db40b5132295c0291d62fb65d6759a9eedfa4d5d612dd5ec54a6b38"}}'
 ```
 
    Expect a response of `{"data": {"__typename": "Query"}}"`, as the query string is loaded from the cache.
