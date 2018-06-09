@@ -29,6 +29,7 @@ import {
 
 //use as default persisted query store
 import Keyv = require('keyv');
+import QuickLru = require('quick-lru');
 
 import { formatApolloErrors } from './errors';
 import {
@@ -116,8 +117,12 @@ export class ApolloServerBase<Request = RequestInit> {
 
     if (requestOptions.persistedQueries !== false) {
       if (!requestOptions.persistedQueries) {
+        //maxSize is the number of elements that can be stored inside of the cache
+        //https://github.com/withspectrum/spectrum has about 200 instances of gql`
+        //300 queries seems reasonable
+        const lru = new QuickLru({ maxSize: 300 });
         requestOptions.persistedQueries = {
-          cache: new Keyv(),
+          cache: new Keyv({ store: lru }),
         };
       }
     } else {

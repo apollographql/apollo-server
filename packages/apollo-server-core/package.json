@@ -30,6 +30,7 @@
     "@types/keyv": "^3.0.1",
     "@types/node": "^10.1.2",
     "@types/node-fetch": "^1.6.9",
+    "@types/quick-lru": "^1.1.0",
     "@types/ws": "^4.0.2",
     "apollo-engine": "^1.1.1",
     "apollo-fetch": "^0.7.0",
@@ -60,6 +61,7 @@
     "hash.js": "^1.1.3",
     "keyv": "^3.0.0",
     "node-fetch": "^2.1.2",
+    "quick-lru": "^1.1.0",
     "subscriptions-transport-ws": "^0.9.9",
     "ws": "^5.1.1"
   }
