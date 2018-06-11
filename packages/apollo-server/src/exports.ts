@@ -8,6 +8,6 @@ export {
   ValidationError,
   AuthenticationError,
   ForbiddenError,
-  // this makes it easy to get inline formatting and highlighting without
+  BadUserInputError,
   gql,
 } from 'apollo-server-core';

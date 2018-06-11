@@ -1,11 +1,10 @@
 /* tslint:disable:no-unused-expression */
 import { expect } from 'chai';
 import { stub } from 'sinon';
-import * as http from 'http';
-import * as net from 'net';
-import * as url from 'url';
+import http from 'http';
+import net from 'net';
+import url from 'url';
 import 'mocha';
-import * as fetch from 'node-fetch';
 import { sha256 } from 'js-sha256';
 
 import {
@@ -19,10 +18,7 @@ import {
 
 import { PubSub } from 'graphql-subscriptions';
 import { SubscriptionClient } from 'subscriptions-transport-ws';
-import * as WebSocket from 'ws';
-Object.assign(global, {
-  WebSocket: WebSocket,
-});
+import WebSocket from 'ws';
 
 import { execute } from 'apollo-link';
 import { createHttpLink } from 'apollo-link-http';

@@ -1,4 +1,4 @@
-import * as hapi from 'hapi';
+import hapi from 'hapi';
 import { graphqlHapi, graphiqlHapi } from './hapiApollo';
 import 'mocha';
 

@@ -1,4 +1,4 @@
-import * as Boom from 'boom';
+import Boom from 'boom';
 import { Server, Request } from 'hapi';
 import * as GraphiQL from 'apollo-server-module-graphiql';
 import {

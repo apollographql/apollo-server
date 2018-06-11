@@ -1,5 +1,5 @@
-import * as connect from 'connect';
-import * as bodyParser from 'body-parser';
+import connect from 'connect';
+import bodyParser from 'body-parser';
 import { graphqlConnect, graphiqlConnect } from './connectApollo';
 import 'mocha';
 

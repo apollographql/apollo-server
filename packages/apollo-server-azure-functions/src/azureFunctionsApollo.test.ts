@@ -10,7 +10,7 @@ import testSuite, {
 import { expect } from 'chai';
 import { GraphQLOptions } from 'apollo-server-core';
 import 'mocha';
-import * as url from 'url';
+import url from 'url';
 
 function createFunction(options: CreateAppOptions = {}) {
   let route, context;
@@ -65,7 +65,7 @@ function createFunction(options: CreateAppOptions = {}) {
         },
       };
 
-      handler(context, request);
+      handler(context, request as any);
     });
   };
 }

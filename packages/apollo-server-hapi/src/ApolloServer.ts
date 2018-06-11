@@ -1,4 +1,4 @@
-import * as hapi from 'hapi';
+import hapi from 'hapi';
 import { ApolloServerBase, EngineLauncherOptions } from 'apollo-server-core';
 import { parseAll } from 'accept';
 import { renderPlaygroundPage } from 'graphql-playground-html';

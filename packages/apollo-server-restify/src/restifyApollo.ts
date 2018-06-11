@@ -1,5 +1,5 @@
-import * as restify from 'restify';
-import * as url from 'url';
+import restify from 'restify';
+import url from 'url';
 import {
   GraphQLOptions,
   HttpQueryError,
