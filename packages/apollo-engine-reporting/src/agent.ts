@@ -255,7 +255,7 @@ export class EngineReportingAgent<TContext = any> {
         if (this.options.reportErrorFunction) {
           this.options.reportErrorFunction(err);
         } else {
-          console.error(err);
+          console.error(err.message);
         }
       });
   }
