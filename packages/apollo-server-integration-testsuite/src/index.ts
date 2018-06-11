@@ -2,6 +2,10 @@ import { expect } from 'chai';
 import { stub } from 'sinon';
 import 'mocha';
 
+//persisted query tests
+import { sha256 } from 'js-sha256';
+import { VERSION } from 'apollo-link-persisted-queries';
+
 import {
   GraphQLSchema,
   GraphQLObjectType,
@@ -419,9 +423,11 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
         return req.then(res => {
           expect(res.status).to.equal(200);
-          expect(res.body).to.deep.equal({
-            errors: [{ message: 'PersistedQueryNotSupported' }],
-          });
+          expect(res.body.errors).to.exist;
+          expect(res.body.errors.length).to.equal(1);
+          expect(res.body.errors[0].message).to.equal(
+            'PersistedQueryNotSupported',
+          );
         });
       });
 
@@ -440,9 +446,11 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
         return req.then(res => {
           expect(res.status).to.equal(200);
-          expect(res.body).to.deep.equal({
-            errors: [{ message: 'PersistedQueryNotSupported' }],
-          });
+          expect(res.body.errors).to.exist;
+          expect(res.body.errors.length).to.equal(1);
+          expect(res.body.errors[0].message).to.equal(
+            'PersistedQueryNotSupported',
+          );
         });
       });
 
@@ -1103,6 +1111,126 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
         return req.then(res => {
           expect(res.status).to.equal(404);
         });
+      });
+    });
+
+    describe('Persisted Queries', () => {
+      const query = '{testString}';
+
+      const hash = sha256
+        .create()
+        .update(query)
+        .hex();
+      const extensions = {
+        persistedQuery: {
+          version: VERSION,
+          sha256Hash: hash,
+        },
+      };
+
+      beforeEach(async () => {
+        const map = new Map<string, string>();
+        const cache = {
+          set: async (key, val) => {
+            await map.set(key, val);
+          },
+          get: async key => map.get(key),
+        };
+        app = await createApp({
+          graphqlOptions: {
+            schema,
+            persistedQueries: {
+              cache,
+            },
+          },
+        });
+      });
+
+      it('returns PersistedQueryNotFound on the first try', async () => {
+        const result = await request(app)
+          .post('/graphql')
+          .send({
+            extensions,
+          });
+
+        expect(result.body.data).not.to.exist;
+        expect(result.body.errors.length).to.equal(1);
+        expect(result.body.errors[0].message).to.equal(
+          'PersistedQueryNotFound',
+        );
+        expect(result.body.errors[0].extensions.code).to.equal(
+          'PERSISTED_QUERY_NOT_FOUND',
+        );
+      });
+      it('returns result on the second try', async () => {
+        await request(app)
+          .post('/graphql')
+          .send({
+            extensions,
+          });
+        const result = await request(app)
+          .post('/graphql')
+          .send({
+            extensions,
+            query,
+          });
+
+        expect(result.body.data).to.deep.equal({ testString: 'it works' });
+        expect(result.body.errors).not.to.exist;
+      });
+
+      it('returns result on the persisted query', async () => {
+        await request(app)
+          .post('/graphql')
+          .send({
+            extensions,
+          });
+        await request(app)
+          .post('/graphql')
+          .send({
+            extensions,
+            query,
+          });
+        const result = await request(app)
+          .post('/graphql')
+          .send({
+            extensions,
+          });
+
+        expect(result.body.data).to.deep.equal({ testString: 'it works' });
+        expect(result.body.errors).not.to.exist;
+      });
+
+      it('returns error when hash does not match', async () => {
+        const response = await request(app)
+          .post('/graphql')
+          .send({
+            extensions: {
+              persistedQuery: {
+                version: VERSION,
+                sha:
+                  'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+              },
+            },
+            query,
+          });
+        expect(response.status).to.equal(400);
+        expect(response.error.text).to.match(/does not match query/);
+      });
+
+      it('returns correct result using get request', async () => {
+        await request(app)
+          .post('/graphql')
+          .send({
+            extensions,
+            query,
+          });
+        const result = await request(app)
+          .get('/graphql')
+          .query({
+            extensions: JSON.stringify(extensions),
+          });
+        expect(result.body.data).to.deep.equal({ testString: 'it works' });
       });
     });
   });

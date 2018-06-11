@@ -4,6 +4,7 @@ import {
   GraphQLFieldResolver,
 } from 'graphql';
 import { LogFunction } from './logging';
+import { PersistedQueryCache } from './caching';
 import { GraphQLExtension } from 'graphql-extensions';
 
 /*
@@ -41,6 +42,11 @@ export interface GraphQLServerOptions<
   // cacheControl?: boolean | CacheControlExtensionOptions;
   cacheControl?: boolean | any;
   extensions?: Array<() => GraphQLExtension>;
+  persistedQueries?: PersistedQueryOptions;
+}
+
+export interface PersistedQueryOptions {
+  cache: PersistedQueryCache;
 }
 
 export default GraphQLServerOptions;

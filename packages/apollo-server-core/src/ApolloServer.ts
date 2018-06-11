@@ -27,8 +27,15 @@ import {
   ExecutionParams,
 } from 'subscriptions-transport-ws';
 
+//use as default persisted query store
+import Keyv = require('keyv');
+import QuickLru = require('quick-lru');
+
 import { formatApolloErrors } from './errors';
-import { GraphQLServerOptions as GraphQLOptions } from './graphqlOptions';
+import {
+  GraphQLServerOptions as GraphQLOptions,
+  PersistedQueryOptions,
+} from './graphqlOptions';
 import { LogFunction } from './logging';
 
 import {
@@ -108,7 +115,22 @@ export class ApolloServerBase<Request = RequestInit> {
         : noIntro;
     }
 
-    this.requestOptions = requestOptions;
+    if (requestOptions.persistedQueries !== false) {
+      if (!requestOptions.persistedQueries) {
+        //maxSize is the number of elements that can be stored inside of the cache
+        //https://github.com/withspectrum/spectrum has about 200 instances of gql`
+        //300 queries seems reasonable
+        const lru = new QuickLru({ maxSize: 300 });
+        requestOptions.persistedQueries = {
+          cache: new Keyv({ store: lru }),
+        };
+      }
+    } else {
+      //the user does not want to use persisted queries, so we remove the field
+      delete requestOptions.persistedQueries;
+    }
+
+    this.requestOptions = requestOptions as GraphQLOptions;
     this.context = context;
 
     if (
@@ -380,7 +402,9 @@ const typeDefs = gql\`${startSchema}\`
     try {
       context =
         typeof this.context === 'function'
-          ? await this.context({ req: request })
+          ? await this.context({
+              req: request,
+            })
           : context;
     } catch (error) {
       //Defer context error resolution to inside of runQuery
@@ -397,6 +421,8 @@ const typeDefs = gql\`${startSchema}\`
       // avoid a bad side effect of the otherwise useful noUnusedLocals option
       // (https://github.com/Microsoft/TypeScript/issues/21673).
       logFunction: this.requestOptions.logFunction as LogFunction,
+      persistedQueries: this.requestOptions
+        .persistedQueries as PersistedQueryOptions,
       fieldResolver: this.requestOptions.fieldResolver as GraphQLFieldResolver<
         any,
         any

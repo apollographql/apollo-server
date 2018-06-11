@@ -3,7 +3,9 @@ import { expect } from 'chai';
 import { stub } from 'sinon';
 import http from 'http';
 import net from 'net';
+import url from 'url';
 import 'mocha';
+import { sha256 } from 'js-sha256';
 
 import {
   GraphQLSchema,
@@ -17,6 +19,13 @@ import {
 import { PubSub } from 'graphql-subscriptions';
 import { SubscriptionClient } from 'subscriptions-transport-ws';
 import WebSocket from 'ws';
+
+import { execute } from 'apollo-link';
+import { createHttpLink } from 'apollo-link-http';
+import {
+  createPersistedQueryLink as createPersistedQuery,
+  VERSION,
+} from 'apollo-link-persisted-queries';
 
 import { createApolloFetch } from 'apollo-fetch';
 import { ApolloServerBase } from './ApolloServer';
@@ -68,11 +77,13 @@ function createHttpServer(server) {
         body = Buffer.concat(body).toString();
         // At this point, we have the headers, method, url and body, and can now
         // do whatever we need to in order to respond to this request.
-
         runHttpQuery([req, res], {
           method: req.method,
           options: server.graphQLServerOptionsForRequest(req as any),
-          query: JSON.parse(body),
+          query:
+            req.method.toUpperCase() === 'GET'
+              ? url.parse(req.url, true)
+              : JSON.parse(body),
           request: convertNodeHttpToRequest(req),
         })
           .then(gqlResponse => {
@@ -85,6 +96,13 @@ function createHttpServer(server) {
             res.end();
           })
           .catch(error => {
+            if (error.headers) {
+              Object.keys(error.headers).forEach(header => {
+                res.setHeader(header, error.headers[header]);
+              });
+            }
+
+            res.statusCode = error.statusCode;
             res.write(error.message);
             res.end();
           });
@@ -864,6 +882,137 @@ describe('ApolloServerBase', () => {
           });
         })
         .catch(done);
+    });
+  });
+  describe('Persisted Queries', () => {
+    let server;
+    const query = gql`
+      ${TEST_STRING_QUERY}
+    `;
+    const hash = sha256
+      .create()
+      .update(TEST_STRING_QUERY)
+      .hex();
+    const extensions = {
+      persistedQuery: {
+        version: VERSION,
+        sha256Hash: hash,
+      },
+    };
+    let uri: string;
+
+    beforeEach(async () => {
+      server = new ApolloServerBase({
+        schema,
+        introspection: false,
+        persistedQueries: {
+          cache: new Map<string, string>() as any,
+        },
+      });
+
+      const httpServer = createHttpServer(server);
+
+      server.use({
+        getHttp: () => httpServer,
+        path: '/graphql',
+      });
+      uri = (await server.listen()).url;
+    });
+
+    afterEach(async () => {
+      await server.stop();
+    });
+
+    it('returns PersistedQueryNotFound on the first try', async () => {
+      const apolloFetch = createApolloFetch({ uri });
+
+      const result = await apolloFetch({
+        extensions,
+      } as any);
+
+      expect(result.data).not.to.exist;
+      expect(result.errors.length).to.equal(1);
+      expect(result.errors[0].message).to.equal('PersistedQueryNotFound');
+      expect(result.errors[0].extensions.code).to.equal(
+        'PERSISTED_QUERY_NOT_FOUND',
+      );
+    });
+    it('returns result on the second try', async () => {
+      const apolloFetch = createApolloFetch({ uri });
+
+      await apolloFetch({
+        extensions,
+      } as any);
+      const result = await apolloFetch({
+        extensions,
+        query: TEST_STRING_QUERY,
+      } as any);
+
+      expect(result.data).to.deep.equal({ testString: 'test string' });
+      expect(result.errors).not.to.exist;
+    });
+
+    it('returns result on the persisted query', async () => {
+      const apolloFetch = createApolloFetch({ uri });
+
+      await apolloFetch({
+        extensions,
+      } as any);
+      await apolloFetch({
+        extensions,
+        query: TEST_STRING_QUERY,
+      } as any);
+      const result = await apolloFetch({
+        extensions,
+      } as any);
+
+      expect(result.data).to.deep.equal({ testString: 'test string' });
+      expect(result.errors).not.to.exist;
+    });
+
+    it('returns error when hash does not match', async () => {
+      const apolloFetch = createApolloFetch({ uri });
+
+      try {
+        await apolloFetch({
+          extensions: {
+            persistedQuery: {
+              version: VERSION,
+              sha:
+                'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+            },
+          },
+          query: TEST_STRING_QUERY,
+        } as any);
+        expect.fail();
+      } catch (e) {
+        expect(e.response.status).to.equal(400);
+        expect(e.response.raw).to.match(/does not match query/);
+      }
+    });
+
+    it('returns correct result for persisted query link', done => {
+      const variables = { id: 1 };
+      const link = createPersistedQuery().concat(
+        createHttpLink({ uri, fetch } as any),
+      );
+
+      execute(link, { query, variables } as any).subscribe(result => {
+        expect(result.data).to.deep.equal({ testString: 'test string' });
+        done();
+      }, done);
+    });
+
+    it('returns correct result for persisted query link using get request', done => {
+      const variables = { id: 1 };
+      const link = createPersistedQuery({
+        useGETForHashedQueries: true,
+      }).concat(createHttpLink({ uri, fetch } as any));
+
+      execute(link, { query, variables } as any).subscribe(result => {
+        expect(result.data).to.deep.equal({ testString: 'test string' });
+        done();
+      }, done);
     });
   });
 });

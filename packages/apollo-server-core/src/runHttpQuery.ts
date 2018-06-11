@@ -1,10 +1,17 @@
 import { ExecutionResult } from 'graphql';
+import sha256 from 'hash.js/lib/hash/sha/256';
+
 import { runQuery, QueryOptions } from './runQuery';
 import {
   default as GraphQLOptions,
   resolveGraphqlOptions,
 } from './graphqlOptions';
-import { formatApolloErrors } from './errors';
+import {
+  formatApolloErrors,
+  PersistedQueryNotSupportedError,
+  PersistedQueryNotFoundError,
+} from './errors';
+import { LogAction, LogStep } from './logging';
 
 export interface HttpQueryRequest {
   method: string;
@@ -18,6 +25,11 @@ export interface HttpQueryRequest {
     | GraphQLOptions
     | ((...args: Array<any>) => Promise<GraphQLOptions> | GraphQLOptions);
   request: Pick<Request, 'url' | 'method' | 'headers'>;
+}
+
+//The result of a curl does not appear well in the terminal, so we add an extra new line
+function prettyJSONStringify(toStringfy) {
+  return JSON.stringify(toStringfy) + '\n';
 }
 
 export class HttpQueryError extends Error {
@@ -37,6 +49,27 @@ export class HttpQueryError extends Error {
     this.isGraphQLError = isGraphQLError;
     this.headers = headers;
   }
+}
+
+function throwHttpGraphQLError(
+  statusCode,
+  errors: Array<Error>,
+  optionsObject,
+) {
+  throw new HttpQueryError(
+    statusCode,
+    prettyJSONStringify({
+      errors: formatApolloErrors(errors, {
+        debug: optionsObject.debug,
+        formatter: optionsObject.formatError,
+        logFunction: optionsObject.logFunction,
+      }),
+    }),
+    true,
+    {
+      'Content-Type': 'application/json',
+    },
+  );
 }
 
 export async function runHttpQuery(
@@ -62,19 +95,11 @@ export async function runHttpQuery(
     if (!debugDefault) {
       e.warning = `To remove the stacktrace, set the NODE_ENV environment variable to production if the options creation can fail`;
     }
-    throw new HttpQueryError(
-      500,
-      JSON.stringify({
-        errors: formatApolloErrors([e], { debug: debugDefault }),
-      }),
-      true,
-      {
-        'Content-Type': 'application/json',
-      },
-    );
+    throwHttpGraphQLError(500, [e], { debug: debugDefault });
   }
-  const debug =
-    optionsObject.debug !== undefined ? optionsObject.debug : debugDefault;
+  if (optionsObject.debug === undefined) {
+    optionsObject.debug = debugDefault;
+  }
   let requestPayload;
 
   switch (request.method) {
@@ -118,7 +143,7 @@ export async function runHttpQuery(
 
   const requests = requestPayload.map(async requestParams => {
     try {
-      const queryString: string | undefined = requestParams.query;
+      let queryString: string | undefined = requestParams.query;
       let extensions = requestParams.extensions;
 
       if (isGetRequest && extensions) {
@@ -132,31 +157,65 @@ export async function runHttpQuery(
         }
       }
 
-      if (
-        queryString === undefined &&
-        extensions &&
-        extensions.persistedQuery
-      ) {
-        // It looks like we've received an Apollo Persisted Query. Apollo Server
-        // does not support persisted queries out of the box, so we should fail
-        // fast with a clear error saying that we don't support APQs. (A future
-        // version of Apollo Server may support APQs directly.)
-        throw new HttpQueryError(
+      if (extensions && extensions.persistedQuery) {
+        // It looks like we've received an Apollo Persisted Query. Check if we
+        // support them. In an ideal world, we always would, however since the
+        // middleware options are created every request, it does not make sense
+        // to create a default cache here and save a referrence to use across
+        // requests
+        if (
+          !optionsObject.persistedQueries ||
+          !optionsObject.persistedQueries.cache
+        ) {
           // Return 200 to simplify processing: we want this to be intepreted by
           // the client as data worth interpreting, not an error.
-          200,
-          JSON.stringify({
-            errors: [
-              {
-                message: 'PersistedQueryNotSupported',
-              },
-            ],
-          }),
-          true,
-          {
-            'Content-Type': 'application/json',
-          },
-        );
+          throwHttpGraphQLError(
+            200,
+            [new PersistedQueryNotSupportedError()],
+            optionsObject,
+          );
+        } else if (extensions.persistedQuery.version !== 1) {
+          throw new HttpQueryError(400, 'Unsupported persisted query version');
+        }
+
+        const sha = extensions.persistedQuery.sha256Hash;
+
+        if (queryString === undefined) {
+          queryString = await optionsObject.persistedQueries.cache.get(sha);
+          if (!queryString) {
+            throwHttpGraphQLError(
+              200,
+              [new PersistedQueryNotFoundError()],
+              optionsObject,
+            );
+          }
+        } else {
+          const calculatedSha = sha256()
+            .update(queryString)
+            .digest('hex');
+          if (sha !== calculatedSha) {
+            throw new HttpQueryError(400, 'provided sha does not match query');
+          }
+
+          //Do the store completely asynchronously
+          Promise.resolve()
+            .then(() => {
+              //We do not wait on the cache storage to complete
+              return optionsObject.persistedQueries.cache.set(sha, queryString);
+            })
+            .catch(error => {
+              if (optionsObject.logFunction) {
+                optionsObject.logFunction({
+                  action: LogAction.setup,
+                  step: LogStep.status,
+                  key: 'error',
+                  data: error,
+                });
+              } else {
+                console.warn(error);
+              }
+            });
+        }
       }
 
       //We ensure that there is a queryString or parsedQuery after formatParams
@@ -216,20 +275,7 @@ export async function runHttpQuery(
           context = await context();
         } catch (e) {
           e.message = `Context creation failed: ${e.message}`;
-          throw new HttpQueryError(
-            500,
-            JSON.stringify({
-              errors: formatApolloErrors([e], {
-                formatter: optionsObject.formatError,
-                debug,
-                logFunction: optionsObject.logFunction,
-              }),
-            }),
-            true,
-            {
-              'Content-Type': 'application/json',
-            },
-          );
+          throwHttpGraphQLError(500, [e], optionsObject);
         }
       } else if (isBatch) {
         context = Object.assign(
@@ -279,7 +325,7 @@ export async function runHttpQuery(
       return {
         errors: formatApolloErrors([e], {
           formatter: optionsObject.formatError,
-          debug,
+          debug: optionsObject.debug,
           logFunction: optionsObject.logFunction,
         }),
       };
@@ -293,12 +339,12 @@ export async function runHttpQuery(
     //This code is run on parse/validation errors and any other error that
     //doesn't reach GraphQL execution
     if (gqlResponse.errors && typeof gqlResponse.data === 'undefined') {
-      throw new HttpQueryError(400, JSON.stringify(gqlResponse), true, {
+      throw new HttpQueryError(400, prettyJSONStringify(gqlResponse), true, {
         'Content-Type': 'application/json',
       });
     }
-    return JSON.stringify(gqlResponse);
+    return prettyJSONStringify(gqlResponse);
   }
 
-  return JSON.stringify(responses);
+  return prettyJSONStringify(responses);
 }
