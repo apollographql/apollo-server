@@ -1,21 +1,5 @@
 version: 2
 
-#
-# Reusable Snippets!
-#
-# These are re-used by the various tests below, to avoid repetition.
-#
-run_install_desired_npm: &run_install_desired_npm
-  run:
-    # Due to a bug, npm upgrades from the version of npm that ships with
-    # Node.js 6 (npm v3.10.10) go poorly and generally causes other problems
-    # with the environment.  Since yarn is already available here we can just
-    # use that to work-around the issue.  It's possible that npm cleanup might
-    # prevent this from being necessary, but this can be removed once Node 6 is
-    # no longer being built below.
-    name: Install npm@5, but with yarn.
-    command: sudo yarn global add npm@5
-
 # These are the steps used for each version of Node which we're testing
 # against.  Thanks to YAMLs inability to merge arrays (though it is able
 # to merge objects), every version of Node must use the exact same steps,
@@ -36,16 +20,12 @@ jobs:
   # Platform tests, each with the same tests but different platform or version.
   # The docker tag represents the Node.js version and the full list is available
   # at https://hub.docker.com/r/circleci/node/.
-  Node.js 6:
-    docker: [ { image: 'circleci/node:6' } ]
-    <<: *common_test_steps
-
   Node.js 8:
     docker: [ { image: 'circleci/node:8' } ]
     <<: *common_test_steps
 
-  Node.js 9:
-    docker: [ { image: 'circleci/node:9' } ]
+  Node.js 10:
+    docker: [ { image: 'circleci/node:10' } ]
     <<: *common_test_steps
 
   # Other tests, unrelated to typical code tests.
@@ -75,11 +55,9 @@ workflows:
   version: 2
   Build and Test:
     jobs:
-      - Node.js 6:
-          <<: *ignore_doc_branches
       - Node.js 8:
           <<: *ignore_doc_branches
-      - Node.js 9:
+      - Node.js 10:
           <<: *ignore_doc_branches
       - Linting:
           <<: *ignore_doc_branches
