@@ -257,7 +257,7 @@ describe('apollo-server-express', () => {
       });
     });
     describe('file uploads', () => {
-      it('enabled uploads', async () => {
+      xit('enabled uploads', async () => {
         server = new ApolloServer({
           typeDefs: gql`
             type File {
