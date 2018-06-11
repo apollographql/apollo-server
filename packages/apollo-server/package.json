@@ -25,11 +25,8 @@
   },
   "homepage": "https://github.com/apollographql/apollo-server#readme",
   "devDependencies": {
-    "@types/body-parser": "^1.17.0",
-    "@types/express": "4.16.0",
     "@types/request": "^2.47.0",
-    "request": "^2.87.0",
-    "typescript": "2.8.1"
+    "request": "^2.87.0"
   },
   "peerDependencies": {
     "graphql": "^0.12.0 || ^0.13.0 || ^14.0.0"
@@ -38,8 +35,6 @@
   "dependencies": {
     "apollo-server-core": "^2.0.0-beta.5",
     "apollo-server-express": "^2.0.0-beta.5",
-    "express": "^4.16.3",
-    "graphql-subscriptions": "^0.5.8",
-    "graphql-tools": "^3.0.1"
+    "graphql-subscriptions": "^0.5.8"
   }
 }
