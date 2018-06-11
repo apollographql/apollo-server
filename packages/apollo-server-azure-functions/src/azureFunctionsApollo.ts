@@ -1,5 +1,5 @@
 import {
-  IHttpContext,
+  HttpContext,
   IFunctionRequest,
   HttpStatusCodes,
 } from 'azure-functions-typescript';
@@ -10,11 +10,11 @@ import {
 } from 'apollo-server-module-graphiql';
 
 export interface AzureFunctionsGraphQLOptionsFunction {
-  (context: IHttpContext): GraphQLOptions | Promise<GraphQLOptions>;
+  (context: HttpContext): GraphQLOptions | Promise<GraphQLOptions>;
 }
 
 export interface AzureFunctionsHandler {
-  (context: IHttpContext, request: IFunctionRequest): void;
+  (context: HttpContext, request: IFunctionRequest): void;
 }
 
 export interface IHeaders {
@@ -32,7 +32,7 @@ export interface IHeaders {
 }
 
 export interface AzureFunctionsGraphiQLOptionsFunction {
-  (context: IHttpContext, request: IFunctionRequest):
+  (context: HttpContext, request: IFunctionRequest):
     | GraphiQLData
     | Promise<GraphiQLData>;
 }
@@ -51,7 +51,7 @@ export function graphqlAzureFunctions(
   }
 
   const graphqlHandler = (
-    httpContext: IHttpContext,
+    httpContext: HttpContext,
     request: IFunctionRequest,
   ) => {
     const queryRequest = {
@@ -65,7 +65,7 @@ export function graphqlAzureFunctions(
       queryRequest.query = JSON.parse(queryRequest.query);
     }
 
-    return runHttpQuery([httpContext, request], queryRequest)
+    return runHttpQuery([httpContext, request], queryRequest as any)
       .then(gqlResponse => {
         const result = {
           status: HttpStatusCodes.OK,
@@ -108,7 +108,7 @@ export function graphiqlAzureFunctions(
   options: GraphiQLData | AzureFunctionsGraphiQLOptionsFunction,
 ) {
   const graphiqlHandler = (
-    httpContext: IHttpContext,
+    httpContext: HttpContext,
     request: IFunctionRequest,
   ) => {
     const query = request.query;

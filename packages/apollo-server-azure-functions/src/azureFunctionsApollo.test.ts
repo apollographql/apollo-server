@@ -65,7 +65,7 @@ function createFunction(options: CreateAppOptions = {}) {
         },
       };
 
-      handler(context, request);
+      handler(context, request as any);
     });
   };
 }

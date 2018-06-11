@@ -27,12 +27,11 @@
   "devDependencies": {
     "@types/fibers": "0.0.30",
     "@types/graphql": "^0.13.1",
-    "@types/node": "^10.1.2",
-    "@types/node-fetch": "^1.6.9",
-    "@types/ws": "^4.0.2",
-    "apollo-engine": "^1.1.1",
+    "@types/node-fetch": "^2.1.1",
+    "@types/ws": "^5.1.2",
+    "apollo-engine": "^1.1.2",
     "apollo-fetch": "^0.7.0",
-    "fibers": "1.0.15",
+    "fibers": "2.0.2",
     "graphql-tag": "^2.9.2",
     "meteor-promise": "0.8.6",
     "mock-req": "^0.2.0"
@@ -53,6 +52,6 @@
     "graphql-tools": "^3.0.2",
     "node-fetch": "^2.1.2",
     "subscriptions-transport-ws": "^0.9.9",
-    "ws": "^5.1.1"
+    "ws": "^5.2.0"
   }
 }

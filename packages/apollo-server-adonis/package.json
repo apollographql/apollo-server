@@ -33,7 +33,6 @@
     "@adonisjs/fold": "4.0.8",
     "@adonisjs/framework": "4.0.31",
     "@adonisjs/sink": "1.0.16",
-    "@types/node": "^10.1.2",
     "apollo-server-integration-testsuite": "^2.0.0-beta.5"
   },
   "typings": "dist/index.d.ts",
