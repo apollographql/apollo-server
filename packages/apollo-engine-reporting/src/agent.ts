@@ -37,6 +37,10 @@ export interface EngineReportingOptions {
   maxAttempts?: number;
   // Minimum backoff for retries. Defaults to 100ms.
   minimumRetryDelayMs?: number;
+  // By default, errors sending reports to Engine servers will be logged
+  // to standard error. Specify this function to process errors in a different
+  // way.
+  reportErrorFunction?: (err: Error) => void;
   // A case-sensitive list of names of variables whose values should not be sent
   // to Apollo servers, or 'true' to leave out all variables. In the former
   // case, the report will indicate that each private variable was redacted; in
@@ -197,7 +201,7 @@ export class EngineReportingAgent<TContext = any> {
         const minimumRetryDelayMs = this.options.minimumRetryDelayMs || 100;
 
         // note: retryrequest has built-in Promise support, unlike the base 'request'.
-        return request({
+        return (request({
           url:
             (this.options.endpointUrl ||
               'https://engine-report.apollodata.com') + '/api/ingress/traces',
@@ -208,8 +212,10 @@ export class EngineReportingAgent<TContext = any> {
             'content-encoding': 'gzip',
           },
           body: compressed,
+          // By default, retryrequest will retry on network errors and 5xx HTTP
+          // responses.
           maxAttempts: this.options.maxAttempts || 5,
-          // Note: use a non-array function as this API gives us useful information
+          // Note: use a non-arrow function as this API gives us useful information
           // on 'this', and use an 'as any' because the type definitions don't know
           // about the function version of this parameter.
           delayStrategy: function() {
@@ -223,12 +229,33 @@ export class EngineReportingAgent<TContext = any> {
 
           // Include 'as any's because @types/requestretry doesn't understand the
           // promise API or delayStrategy.
-        } as any) as any;
+        } as any) as any).catch((err: Error) => {
+          throw new Error(`Error sending report to Engine servers: ${err}`);
+        });
       })
       .then(response => {
+        if (response.statusCode < 200 || response.statusCode >= 300) {
+          // Note that we don't expect to see a 3xx here because request follows
+          // redirects.
+          throw new Error(
+            `Error sending report to Engine servers (HTTP status ${
+              response.statusCode
+            }): ${response.body}`,
+          );
+        }
         if (this.options.debugPrintReports) {
           // tslint:disable-next-line no-console
           console.log(`Engine report: status ${response.statusCode}`);
+        }
+      })
+      .catch(err => {
+        // This catch block is primarily intended to catch network errors from
+        // the retried request itself, which include network errors and non-2xx
+        // HTTP errors.
+        if (this.options.reportErrorFunction) {
+          this.options.reportErrorFunction(err);
+        } else {
+          console.error(err);
         }
       });
   }
