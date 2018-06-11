@@ -1,10 +1,10 @@
-import * as express from 'express';
-import * as corsMiddleware from 'cors';
+import express from 'express';
+import corsMiddleware from 'cors';
 import { json, OptionsJson } from 'body-parser';
 import { createServer } from 'http';
 import gui from 'graphql-playground-middleware-express';
 import { ApolloServerBase, formatApolloErrors } from 'apollo-server-core';
-import * as accepts from 'accepts';
+import accepts from 'accepts';
 
 import { graphqlExpress } from './expressApollo';
 

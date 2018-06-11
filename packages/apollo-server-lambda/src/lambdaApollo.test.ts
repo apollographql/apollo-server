@@ -6,7 +6,7 @@ import testSuite, {
 import { expect } from 'chai';
 import { GraphQLOptions } from 'apollo-server-core';
 import 'mocha';
-import * as url from 'url';
+import url from 'url';
 
 function createLambda(options: CreateAppOptions = {}) {
   let route, handler, callback, event, context;

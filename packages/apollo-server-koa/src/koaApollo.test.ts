@@ -1,10 +1,10 @@
-import * as koa from 'koa';
-import * as koaRouter from 'koa-router';
-import * as koaBody from 'koa-bodyparser';
+import koa from 'koa';
+import koaRouter from 'koa-router';
+import koaBody from 'koa-bodyparser';
 import { graphqlKoa, graphiqlKoa } from './koaApollo';
 import { GraphQLOptions } from 'apollo-server-core';
 import { expect } from 'chai';
-import * as http from 'http';
+import http from 'http';
 
 import testSuite, {
   schema as Schema,

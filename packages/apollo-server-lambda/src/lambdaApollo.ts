@@ -1,4 +1,4 @@
-import * as lambda from 'aws-lambda';
+import lambda from 'aws-lambda';
 import { GraphQLOptions, runHttpQuery } from 'apollo-server-core';
 import * as GraphiQL from 'apollo-server-module-graphiql';
 

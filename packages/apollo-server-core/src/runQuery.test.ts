@@ -1,7 +1,7 @@
 /* tslint:disable:no-unused-expression */
 import { expect } from 'chai';
 import { stub } from 'sinon';
-import * as MockReq from 'mock-req';
+import MockReq from 'mock-req';
 import 'mocha';
 
 import {

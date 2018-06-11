@@ -1,5 +1,5 @@
-import * as express from 'express';
-import * as url from 'url';
+import express from 'express';
+import url from 'url';
 import {
   GraphQLOptions,
   HttpQueryError,

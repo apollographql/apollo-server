@@ -5,7 +5,7 @@ import {
 } from 'apollo-server-core';
 import * as GraphiQL from 'apollo-server-module-graphiql';
 import { json, RequestHandler } from 'micro';
-import * as url from 'url';
+import url from 'url';
 import { IncomingMessage, ServerResponse } from 'http';
 
 export interface MicroGraphQLOptionsFunction {

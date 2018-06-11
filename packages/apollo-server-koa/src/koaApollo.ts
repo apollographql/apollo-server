@@ -1,4 +1,4 @@
-import * as koa from 'koa';
+import koa from 'koa';
 import {
   GraphQLOptions,
   HttpQueryError,

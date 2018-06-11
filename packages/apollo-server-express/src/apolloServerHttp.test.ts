@@ -22,9 +22,9 @@ import { graphqlExpress } from './expressApollo';
  */
 
 import { expect } from 'chai';
-import * as zlib from 'zlib';
-import * as multer from 'multer';
-import * as bodyParser from 'body-parser';
+import zlib from 'zlib';
+import multer from 'multer';
+import bodyParser from 'body-parser';
 const request = require('supertest');
 const express4 = require('express'); // modern
 import {

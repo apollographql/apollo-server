@@ -1,8 +1,8 @@
 /* tslint:disable:no-unused-expression */
 import { expect } from 'chai';
 import { stub } from 'sinon';
-import * as http from 'http';
-import * as net from 'net';
+import http from 'http';
+import net from 'net';
 import 'mocha';
 
 import {
@@ -16,7 +16,7 @@ import {
 
 import { PubSub } from 'graphql-subscriptions';
 import { SubscriptionClient } from 'subscriptions-transport-ws';
-import * as WebSocket from 'ws';
+import WebSocket from 'ws';
 
 import { createApolloFetch } from 'apollo-fetch';
 import { ApolloServerBase } from './ApolloServer';
