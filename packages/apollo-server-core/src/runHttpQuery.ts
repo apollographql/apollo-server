@@ -1,5 +1,5 @@
 import { ExecutionResult } from 'graphql';
-import * as sha256 from 'hash.js/lib/hash/sha/256';
+import sha256 from 'hash.js/lib/hash/sha/256';
 
 import { runQuery, QueryOptions } from './runQuery';
 import {
@@ -198,21 +198,22 @@ export async function runHttpQuery(
           }
 
           //Do the store completely asynchronously
-          Promise.resolve().then(() => {
-            //We do not wait on the cache storage to complete
-            optionsObject.persistedQueries.cache
-              .set(sha, queryString)
-              .catch(error => {
-                if (optionsObject.logFunction) {
-                  optionsObject.logFunction({
-                    action: LogAction.setup,
-                    step: LogStep.status,
-                    key: 'error',
-                    data: error,
-                  });
-                }
-              });
-          });
+          Promise.resolve()
+            .then(() => {
+              //We do not wait on the cache storage to complete
+              return optionsObject.persistedQueries.cache.set(sha, queryString);
+            })
+            .catch(error => {
+              console.log(error);
+              if (optionsObject.logFunction) {
+                optionsObject.logFunction({
+                  action: LogAction.setup,
+                  step: LogStep.status,
+                  key: 'error',
+                  data: error,
+                });
+              }
+            });
         }
       }
 

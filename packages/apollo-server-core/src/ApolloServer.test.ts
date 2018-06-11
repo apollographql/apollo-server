@@ -905,6 +905,9 @@ describe('ApolloServerBase', () => {
       server = new ApolloServerBase({
         schema,
         introspection: false,
+        persistedQueries: {
+          cache: new Map<string, string>() as any,
+        },
       });
 
       const httpServer = createHttpServer(server);
@@ -912,7 +915,6 @@ describe('ApolloServerBase', () => {
       server.use({
         getHttp: () => httpServer,
         path: '/graphql',
-        cache: new Map<string, string>() as any,
       });
       uri = (await server.listen()).url;
     });
