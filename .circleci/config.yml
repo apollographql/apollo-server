@@ -7,7 +7,6 @@ version: 2
 # something different.  Probably best to avoid that, out of principle, though.
 common_test_steps: &common_test_steps
   steps:
-    - *run_install_desired_npm
     - checkout
     - run: npm --version
     - run: npm install
