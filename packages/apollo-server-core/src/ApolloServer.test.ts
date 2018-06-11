@@ -17,9 +17,6 @@ import {
 import { PubSub } from 'graphql-subscriptions';
 import { SubscriptionClient } from 'subscriptions-transport-ws';
 import * as WebSocket from 'ws';
-Object.assign(global, {
-  WebSocket: WebSocket,
-});
 
 import { createApolloFetch } from 'apollo-fetch';
 import { ApolloServerBase } from './ApolloServer';

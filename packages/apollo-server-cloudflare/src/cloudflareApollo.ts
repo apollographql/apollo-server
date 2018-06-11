@@ -21,11 +21,11 @@ export function graphqlCloudflare(options: GraphQLOptions) {
     );
   }
 
-  const graphqlHandler = async (req: RequestInit): Promise<Response> => {
-    const url = new URL((req as Request).url);
+  const graphqlHandler = async (req: Request): Promise<Response> => {
+    const url = new URL(req.url);
     const query =
       req.method === 'POST'
-        ? await (req as Request).json()
+        ? await req.json()
         : {
             query: url.searchParams.get('query'),
             variables: url.searchParams.get('variables'),

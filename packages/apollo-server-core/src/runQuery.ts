@@ -255,7 +255,7 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
             });
           }
 
-          executionDidEnd(...result.errors);
+          executionDidEnd(...(result.errors || []));
 
           const formattedExtensions = extensionStack.format();
           if (Object.keys(formattedExtensions).length > 0) {
