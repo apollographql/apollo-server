@@ -1,5 +1,14 @@
 version: 2
 
+# Reusable Snippets!
+#
+# These are re-used by the various tests below, to avoid repetition.
+#
+run_install_desired_npm: &run_install_desired_npm
+  run:
+    name: Install npm@6
+    command: sudo npm install -g npm@6
+
 # These are the steps used for each version of Node which we're testing
 # against.  Thanks to YAMLs inability to merge arrays (though it is able
 # to merge objects), every version of Node must use the exact same steps,
@@ -7,6 +16,7 @@ version: 2
 # something different.  Probably best to avoid that, out of principle, though.
 common_test_steps: &common_test_steps
   steps:
+    - *run_install_desired_npm
     - checkout
     - run: npm --version
     - run: npm install
