@@ -404,8 +404,6 @@ const typeDefs = gql\`${startSchema}\`
         typeof this.context === 'function'
           ? await this.context({
               req: request,
-              //This cache should be the full response cache
-              //cache: this.requestOptions.cache as KeyValueCache,
             })
           : context;
     } catch (error) {
