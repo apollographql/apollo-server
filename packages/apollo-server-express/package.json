@@ -25,6 +25,9 @@
     "url": "https://github.com/apollographql/apollo-server/issues"
   },
   "homepage": "https://github.com/apollographql/apollo-server#readme",
+  "engines": {
+    "node": ">=8"
+  },
   "dependencies": {
     "@types/accepts": "^1.3.5",
     "accepts": "^1.3.5",

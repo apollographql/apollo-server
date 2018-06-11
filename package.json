@@ -32,6 +32,9 @@
       "git add"
     ]
   },
+  "engines": {
+    "node": ">=8"
+  },
   "devDependencies": {
     "@types/chai": "4.1.3",
     "@types/graphql": "^0.13.1",
