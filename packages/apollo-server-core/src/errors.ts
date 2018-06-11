@@ -19,9 +19,6 @@ export class ApolloError extends Error implements GraphQLError {
     properties?: Record<string, any>,
   ) {
     super(message);
-    // Set the prototype explicitly.
-    // https://stackoverflow.com/a/41102306
-    Object.setPrototypeOf(this, ApolloError.prototype);
 
     if (properties) {
       Object.keys(properties).forEach(key => {
@@ -159,9 +156,6 @@ export class SyntaxError extends ApolloError {
   constructor(message: string) {
     super(message, 'GRAPHQL_PARSE_FAILED');
 
-    // Set the prototype explicitly.
-    // https://stackoverflow.com/a/41102306
-    Object.setPrototypeOf(this, SyntaxError.prototype);
     Object.defineProperty(this, 'name', { value: 'SyntaxError' });
   }
 }
@@ -170,9 +164,6 @@ export class ValidationError extends ApolloError {
   constructor(message: string) {
     super(message, 'GRAPHQL_VALIDATION_FAILED');
 
-    // Set the prototype explicitly.
-    // https://stackoverflow.com/a/41102306
-    Object.setPrototypeOf(this, ValidationError.prototype);
     Object.defineProperty(this, 'name', { value: 'ValidationError' });
   }
 }
@@ -181,9 +172,6 @@ export class AuthenticationError extends ApolloError {
   constructor(message: string) {
     super(message, 'UNAUTHENTICATED');
 
-    // Set the prototype explicitly.
-    // https://stackoverflow.com/a/41102306
-    Object.setPrototypeOf(this, AuthenticationError.prototype);
     Object.defineProperty(this, 'name', { value: 'AuthenticationError' });
   }
 }
@@ -192,9 +180,6 @@ export class ForbiddenError extends ApolloError {
   constructor(message: string) {
     super(message, 'FORBIDDEN');
 
-    // Set the prototype explicitly.
-    // https://stackoverflow.com/a/41102306
-    Object.setPrototypeOf(this, ForbiddenError.prototype);
     Object.defineProperty(this, 'name', { value: 'ForbiddenError' });
   }
 }
@@ -203,9 +188,6 @@ export class BadUserInputError extends ApolloError {
   constructor(message: string, properties?: Record<string, any>) {
     super(message, 'BAD_USER_INPUT', properties);
 
-    // Set the prototype explicitly.
-    // https://stackoverflow.com/a/41102306
-    Object.setPrototypeOf(this, BadUserInputError.prototype);
     Object.defineProperty(this, 'name', { value: 'BadUserInputError' });
   }
 }
