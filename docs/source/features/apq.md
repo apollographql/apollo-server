@@ -5,7 +5,7 @@ description: Reduce the size of GraphQL requests over the wire
 
 The size of individual GraphQL query strings can be a major pain point. Apollo Server allows implements Automatic Persisted Queries (APQ), a technique that greatly improves network performance for GraphQL with zero build-time configuration. A persisted query is a ID or hash that can be sent to the server instead of the entire GraphQL query string. This smaller signature reduces bandwidth utilization and speeds up client loading times. Persisted queries are especially nice paired with GET requests, enabling the browser cache and [integration with a CDN](#get).
 
-To accommodate the new query representation, Apollo Server contains a cache that stores the mapping between hash and query string. Previously, the generation of mapping would require a complex build step. Apollo Server paired with Apollo Client provides the ability to generate the mapping automatically.
+With Apollo Persisted Queries, the ID is a deterministic hash of the input query, so we don't need a complex build step to share the ID between clients and servers. If a server doesn't know about a given hash, the client can expand the query for it; Apollo Server caches that mapping.
 
 <h2 id="setup">Setup</h2>
 
@@ -27,7 +27,7 @@ const client = new ApolloClient({
 
 > Note: using `apollo-link-persisted-query` requires migrating from [apollo-boost](https://www.apollographql.com/docs/react/advanced/boost-migration.html):
 
-Inside Apollo Server, the query registry is stored in a user-configurable cache. By default, Apollo Server uses a in-memory cache (shared with other caching features). Read more here about [how to configure caching](caching.html).
+Inside Apollo Server, the query registry is stored in a user-configurable cache. By default, Apollo Server uses a in-memory cache.
 
 <h2 id="verify">Verify</h2>
 

@@ -204,7 +204,6 @@ export async function runHttpQuery(
               return optionsObject.persistedQueries.cache.set(sha, queryString);
             })
             .catch(error => {
-              console.log(error);
               if (optionsObject.logFunction) {
                 optionsObject.logFunction({
                   action: LogAction.setup,
@@ -212,6 +211,8 @@ export async function runHttpQuery(
                   key: 'error',
                   data: error,
                 });
+              } else {
+                console.warn(error);
               }
             });
         }
