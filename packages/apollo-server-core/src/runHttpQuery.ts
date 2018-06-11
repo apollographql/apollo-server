@@ -175,7 +175,7 @@ export async function runHttpQuery(
             optionsObject,
           );
         } else if (extensions.persistedQuery.version !== 1) {
-          throw new HttpQueryError(400, 'Unsuported persited query version');
+          throw new HttpQueryError(400, 'Unsupported persisted query version');
         }
 
         const sha = extensions.persistedQuery.sha256Hash;
@@ -197,16 +197,22 @@ export async function runHttpQuery(
             throw new HttpQueryError(400, 'provided sha does not match query');
           }
 
-          optionsObject.persistedQueries.cache
-            .set(sha, queryString)
-            .catch(error => {
-              optionsObject.logFunction({
-                action: LogAction.setup,
-                step: LogStep.status,
-                key: 'error',
-                data: error,
+          //Do the store completely asynchronously
+          Promise.resolve().then(() => {
+            //We do not wait on the cache storage to complete
+            optionsObject.persistedQueries.cache
+              .set(sha, queryString)
+              .catch(error => {
+                if (optionsObject.logFunction) {
+                  optionsObject.logFunction({
+                    action: LogAction.setup,
+                    step: LogStep.status,
+                    key: 'error',
+                    data: error,
+                  });
+                }
               });
-            });
+          });
         }
       }
 
