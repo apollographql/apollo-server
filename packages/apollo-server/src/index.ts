@@ -15,7 +15,7 @@ import {
   ServerInfo,
 } from 'apollo-server-core';
 
-export { GraphQLOptions, GraphQLExtension } from 'apollo-server-core';
+export { GraphQLOptions, GraphQLExtension, gql } from 'apollo-server-core';
 import { GraphQLOptions } from 'apollo-server-core';
 
 export * from './exports';
