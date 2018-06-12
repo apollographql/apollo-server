@@ -3,7 +3,9 @@ title: Introduction
 description: What is Apollo Server and what does it do?
 ---
 
-Apollo Server is the best way to quickly build a production-ready, self-documenting API for GraphQL clients, using data from any source.
+> This is the documentation for the 1.x version of Apollo Server. For new projects, we recommend using [Apollo Server 2](/docs/apollo-server/v2/)
+
+Apollo Server is a library that helps you connect a GraphQL schema to an HTTP server in Node. Apollo Server works with any GraphQL schema built with [GraphQL.js](https://github.com/graphql/graphql-js), so you can build your schema with that directly or with a convenience library such as [graphql-tools](https://www.apollographql.com/docs/graphql-tools/). You can use Apollo Server with all popular JavaScript HTTP servers, including Express, Connect, Hapi, Koa, Restify, and Lambda.
 
 It's open-source and works great as a stand-alone server, an addon to an existing Node.js HTTP server, or in "serverless" environments.
 
