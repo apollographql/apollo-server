@@ -21,7 +21,7 @@ describe('HTTPCache', () => {
         return store.get(key);
       },
       async set(key: string, value: string) {
-        await store.set(key, value);
+        store.set(key, value);
       },
     });
   });
@@ -90,13 +90,6 @@ describe('HTTPCache', () => {
     await httpCache.fetch('https://api.example.com/people/1');
 
     expect(store.size).toEqual(0);
-
-    fetch.mockJSONResponseOnce({ name: 'Ada Lovelace' });
-
-    const response = await httpCache.fetch('https://api.example.com/people/1');
-
-    expect(fetch.mock.calls.length).toEqual(2);
-    expect(await response.json()).toEqual({ name: 'Ada Lovelace' });
   });
 
   it('does not store a response without Cache-Control header', async () => {
@@ -105,13 +98,6 @@ describe('HTTPCache', () => {
     await httpCache.fetch('https://api.example.com/people/1');
 
     expect(store.size).toEqual(0);
-
-    fetch.mockJSONResponseOnce({ name: 'Alan Turing' });
-
-    const response = await httpCache.fetch('https://api.example.com/people/1');
-
-    expect(fetch.mock.calls.length).toEqual(2);
-    expect(await response.json()).toEqual({ name: 'Alan Turing' });
   });
 
   it('does not store a private response', async () => {
@@ -123,16 +109,6 @@ describe('HTTPCache', () => {
     await httpCache.fetch('https://api.example.com/me');
 
     expect(store.size).toEqual(0);
-
-    fetch.mockJSONResponseOnce(
-      { name: 'Alan Turing' },
-      { 'Cache-Control': 'private' },
-    );
-
-    const response = await httpCache.fetch('https://api.example.com/me');
-
-    expect(fetch.mock.calls.length).toEqual(2);
-    expect(await response.json()).toEqual({ name: 'Alan Turing' });
   });
 
   it('returns a cached response when Vary header fields match', async () => {
