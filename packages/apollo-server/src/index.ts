@@ -4,10 +4,6 @@
 // you're not using express or your version doesn't quite match up.
 import express from 'express';
 import { registerServer } from 'apollo-server-express';
-export {
-  registerServer as registerExpressServer,
-  ServerRegistration,
-} from 'apollo-server-express';
 
 import {
   ApolloServerBase,
