@@ -2,7 +2,7 @@
 title: Adding Subscriptions To Schema
 ---
 
-Adding GraphQL subscriptions to your graphQL schema is simple. since Subscription Subscriptions are enabled by default in Apollo 2.0 and you dont' need to install anymore any extra packages.
+Adding GraphQL subscriptions to your graphQL schema is simple. since Subscriptions are enabled by default in Apollo 2.0 and you dont' need to install anymore any extra packages.
 As example we want to display to display a list of post that contains author and comment (Query) and we want to add a post to them (Mutation).
 
 Our schema will be:
