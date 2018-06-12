@@ -128,8 +128,7 @@ For existing applications, we'll pass it into the `registerServer` method as `ap
 > The existing application is frequently already named `app`, especially when using Express.  If the application is identified by a different variable, pass the existing variable in place of `app`.
 
 ```js
-const { ApolloServer, gql } = require('apollo-server');
-const { registerServer } = require('apollo-server-express');
+const { ApolloServer, gql, registerServer } = require('apollo-server-express');
 const { typeDefs, resolvers } = require('./schema');
 
 const server = new ApolloServer({

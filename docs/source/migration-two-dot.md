@@ -103,8 +103,7 @@ Now, you can just do this instead:
 
 ```js
 const express = require('express');
-const { ApolloServer, gql } = require('apollo-server');
-const { registerServer } = require('apollo-server-express');
+const { ApolloServer, gql, registerServer } = require('apollo-server-express');
 
 const app = express();
 
@@ -131,7 +130,7 @@ server.listen().then(({ url }) => {
 
 <h2 id="Stand-alone">Stand-alone</h2>
 
-If you are simply focused on running a production-ready GraphQL server quickly, Apollo Server 2.0 ships with a built-in server and starting your own server (e.g. Express, Koa, etc.) is no longer necessary.
+For starting a production-ready GraphQL server quickly, Apollo Server 2.0 ships with a built-in server, so starting a server (e.g. Express, Koa, etc.) is no longer necessary.
 
 For these cases, it's possible to remove the existing `apollo-server-{integrations}` package and add the new `apollo-server` beta.  If using Express, this can be done by running:
 
@@ -166,14 +165,14 @@ server.listen().then(({ url }) => {
 });
 ```
 
+
 <h2 id="add-middleware">Adding Additional Middleware to Apollo Server 2</h2>
 
 For middleware that is collocated with the GraphQL endpoint, Apollo Server 2 allows middleware mounted on the same path before `registerServer` is called. For example, this server runs an authentication middleware before GraphQL execution.
 
 ```js
 const express = require('express');
-const { ApolloServer, gql } = require('apollo-server');
-const { registerServer } = require('apollo-server-express');
+const { ApolloServer, gql, registerServer } = require('apollo-server-express');
 
 const app = express();
 const path = '/graphql';
