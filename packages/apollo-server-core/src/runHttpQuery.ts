@@ -12,6 +12,7 @@ import {
   PersistedQueryNotFoundError,
 } from './errors';
 import { LogAction, LogStep } from './logging';
+import { calcualteCacheControlHeaders } from './caching';
 
 export interface HttpQueryRequest {
   method: string;
@@ -349,6 +350,7 @@ export async function runHttpQuery(
   const responseInit: ApolloServerHttpResponse = {
     headers: {
       'Content-Type': 'application/json',
+      ...calcualteCacheControlHeaders(responses),
     },
   };
 
