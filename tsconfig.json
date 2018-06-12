@@ -6,6 +6,7 @@
     "esModuleInterop": true,
     "sourceMap": true,
     "declaration": true,
+    "declarationMap": true,
     "noImplicitAny": false,
     "removeComments": true,
     "noUnusedLocals": true,
