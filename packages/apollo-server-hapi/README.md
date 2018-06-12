@@ -83,13 +83,13 @@ StartServer().catch(error => console.log(error));
 
 ### Context
 
-The context is created for each request. The following code snippet shows the creation of a context. The arguments are the `req`, the request, and `h`, the response toolkit.
+The context is created for each request. The following code snippet shows the creation of a context. The arguments are the `request`, the request, and `h`, the response toolkit.
 
 ```js
 new ApolloServer({
   typeDefs,
   resolvers,
-  context: async ({ req, h }) => {
+  context: async ({ request, h }) => {
     return { ... };
   },
 })

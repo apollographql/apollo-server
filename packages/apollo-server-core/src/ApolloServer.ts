@@ -401,6 +401,9 @@ const typeDefs = gql\`${startSchema}\`
     }
   }
 
+  //This function is used by the integrations to generate the graphQLOptions
+  //from an object containing the request and other integration specific
+  //options
   protected async graphQLServerOptions(
     integrationContextArgument?: Record<string, any>,
   ) {

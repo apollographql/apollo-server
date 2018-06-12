@@ -15,11 +15,14 @@ import { GraphQLOptions } from 'apollo-server-core';
 const gql = String.raw;
 
 export class ApolloServer extends ApolloServerBase {
+  //This translates the arguments from the middleware into graphQL options It
+  //provides typings for the integration specific behavior, ideally this would
+  //be propagated with a generic to the super class
   async createGraphQLServerOptions(
-    req: hapi.Request,
+    request: hapi.Request,
     h: hapi.ResponseToolkit,
   ): Promise<GraphQLOptions> {
-    return super.graphQLServerOptions({ req, h });
+    return super.graphQLServerOptions({ request, h });
   }
 }
 
@@ -30,7 +33,7 @@ export interface ServerRegistration {
   server: ApolloServer;
   path?: string;
   cors?: boolean;
-  onHealthCheck?: (req: hapi.Request) => Promise<any>;
+  onHealthCheck?: (request: hapi.Request) => Promise<any>;
   disableHealthCheck?: boolean;
   uploads?: boolean | Record<string, any>;
 }
@@ -45,11 +48,11 @@ export interface HapiListenOptions {
 }
 
 const handleFileUploads = (uploadsConfig: Record<string, any>) => async (
-  req: hapi.Request,
+  request: hapi.Request,
 ) => {
-  if (req.mime === 'multipart/form-data') {
-    Object.defineProperty(req, 'payload', {
-      value: await processFileUploads(req, uploadsConfig),
+  if (request.mime === 'multipart/form-data') {
+    Object.defineProperty(request, 'payload', {
+      value: await processFileUploads(request, uploadsConfig),
       writable: false,
     });
   }
