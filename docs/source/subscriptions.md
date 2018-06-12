@@ -96,8 +96,12 @@ In our server we don't need to make any big changes:
 ```js
 export const pubsub = new PubSub();
 ```
-2. In case you defined a context remember to add an extra check related to `req.headers`:
+2. In case you defined a context remember to add an extra check related to `req.headers` because context will pass the connection in the form of:
 
+```js
+context: ({ connection }) => { ... }`
+```
+A good workaround to this problem is to return in case `req` or `req.headers` are not defined:
 ```js
 const server = new ApolloServer({
 	schema,
