@@ -1,6 +1,7 @@
 import { GraphQLSchema, DocumentNode } from 'graphql';
 import { SchemaDirectiveVisitor, IResolvers, IMocks } from 'graphql-tools';
 import { ConnectionContext } from 'subscriptions-transport-ws';
+import WebSocket from 'ws';
 import { Server as HttpServer } from 'http';
 import { ListenOptions as HttpListenOptions } from 'net';
 import { GraphQLExtension } from 'graphql-extensions';

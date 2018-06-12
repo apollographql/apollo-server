@@ -5,6 +5,7 @@
   "files.trimTrailingWhitespace": true,
   "files.insertFinalNewline": true,
   "editor.wordWrapColumn": 110,
+  "editor.formatOnSave": true,
   "prettier.singleQuote": true,
   "prettier.printWidth": 110,
   "files.exclude": {
