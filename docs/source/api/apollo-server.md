@@ -115,7 +115,7 @@ new ApolloServer({
 
 ## registerServer
 
-The `registerServer` method is from `apollo-server-express`. Middleware registration has been greatly simplified with this new method.
+The `registerServer` method providec by all integrations. Middleware registration has been greatly simplified with this new method.
 
 ### Parameters
 
@@ -133,9 +133,13 @@ The `registerServer` method is from `apollo-server-express`. Middleware registra
 
     Specify a custom path. It defaults to `/graphql` if no path is specified.
 
-  * `cors`: <`Object`>
+  * `cors`: <`Object`> (express, hapi)
 
-    Pass the cors options.
+    Pass the integration specific cors options.
+
+  * `bodyParser`: <`Object`> (express)
+
+    Pass the body parser options.
 
 ### Usage
 
