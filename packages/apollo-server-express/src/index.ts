@@ -22,4 +22,4 @@ export {
 export { graphqlConnect, graphiqlConnect } from './connectApollo';
 
 // ApolloServer integration
-export { registerServer } from './ApolloServer';
+export { registerServer, ServerRegistration } from './ApolloServer';

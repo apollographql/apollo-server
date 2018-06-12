@@ -29,7 +29,12 @@ const resolvers = {
 describe('apollo-server-express', () => {
   //to remove the circular dependency, we reference it directly
   const ApolloServer = require('../../apollo-server/dist/index').ApolloServer;
-  let server: ApolloServerBase<express.Request>;
+  let server: ApolloServerBase & {
+    createGraphQLServerOptions: (
+      req: express.Request,
+      res: express.Response,
+    ) => any;
+  };
   let app: express.Application;
 
   afterEach(async () => {
@@ -153,8 +158,6 @@ describe('apollo-server-express', () => {
     });
 
     describe('healthchecks', () => {
-      let server: ApolloServerBase<express.Request>;
-
       afterEach(async () => {
         await server.stop();
       });

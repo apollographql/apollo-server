@@ -9,13 +9,25 @@ import {
 
 import { graphqlHapi } from './hapiApollo';
 
+export { GraphQLOptions, GraphQLExtension } from 'apollo-server-core';
+import { GraphQLOptions } from 'apollo-server-core';
+
 const gql = String.raw;
+
+export class ApolloServer extends ApolloServerBase {
+  async createGraphQLServerOptions(
+    req: hapi.Request,
+    h: hapi.ResponseToolkit,
+  ): Promise<GraphQLOptions> {
+    return super.graphQLServerOptions({ req, h });
+  }
+}
 
 export interface ServerRegistration {
   app?: hapi.Server;
   //The options type should exclude port
   options?: hapi.ServerOptions;
-  server: ApolloServerBase<hapi.Request>;
+  server: ApolloServer;
   path?: string;
   cors?: boolean;
   onHealthCheck?: (req: hapi.Request) => Promise<any>;
@@ -158,7 +170,7 @@ server.listen({ http: { port: YOUR_PORT_HERE } });
     plugin: graphqlHapi,
     options: {
       path: path,
-      graphqlOptions: server.graphQLServerOptionsForRequest.bind(server),
+      graphqlOptions: server.createGraphQLServerOptions.bind(server),
       route: {
         cors: typeof cors === 'boolean' ? cors : true,
       },

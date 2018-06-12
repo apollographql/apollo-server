@@ -3,8 +3,11 @@
 // use with express). The dependency is unused otherwise, so don't worry if
 // you're not using express or your version doesn't quite match up.
 import express from 'express';
-import { Request } from 'express';
 import { registerServer } from 'apollo-server-express';
+export {
+  registerServer as registerExpressServer,
+  ServerRegistration,
+} from 'apollo-server-express';
 
 import {
   ApolloServerBase,
@@ -12,9 +15,19 @@ import {
   ServerInfo,
 } from 'apollo-server-core';
 
+export { GraphQLOptions, GraphQLExtension } from 'apollo-server-core';
+import { GraphQLOptions } from 'apollo-server-core';
+
 export * from './exports';
 
-export class ApolloServer extends ApolloServerBase<Request> {
+export class ApolloServer extends ApolloServerBase {
+  async createGraphQLServerOptions(
+    req: express.Request,
+    res: express.Response,
+  ): Promise<GraphQLOptions> {
+    return super.graphQLServerOptions({ req, res });
+  }
+
   // here we overwrite the underlying listen to configure
   // the fallback / default server implementation
   async listen(opts: ListenOptions = {}): Promise<ServerInfo> {

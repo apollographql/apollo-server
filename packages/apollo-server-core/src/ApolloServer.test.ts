@@ -66,7 +66,7 @@ const schema = new GraphQLSchema({
   query: queryType,
 });
 
-function createHttpServer(server) {
+function createHttpServer(server: ApolloServerBase) {
   return http.createServer(async (req, res) => {
     let body: any = [];
     req
@@ -79,7 +79,7 @@ function createHttpServer(server) {
         // do whatever we need to in order to respond to this request.
         runHttpQuery([req, res], {
           method: req.method,
-          options: server.graphQLServerOptionsForRequest(req as any),
+          options: (server as any).graphQLServerOptions({ req, res }),
           query:
             req.method.toUpperCase() === 'GET'
               ? url.parse(req.url, true)
