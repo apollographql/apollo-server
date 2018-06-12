@@ -15,7 +15,14 @@ export function calcualteCacheControlHeaders(
     const cacheControl: {
       version: number;
       hints: Array<{ scope: string; maxAge: number }>;
-    } = (responses[i] as Record<string, any>).extensions.cacheControl;
+    } =
+      (responses[i] as Record<string, any>).extensions &&
+      (responses[i] as Record<string, any>).extensions.cacheControl;
+
+    if (!cacheControl) {
+      return {};
+    }
+
     for (let y = 0; y < cacheControl.hints.length; y++) {
       if (cacheControl.hints[y].scope === 'PRIVATE') {
         publicOrPrivate = 'private';
