@@ -98,7 +98,7 @@ export class EngineReportingAgent<TContext = any> {
     this.resetReport();
 
     this.reportTimer = setInterval(
-      () => this.sendReport(),
+      () => this.sendReportAndReportErrors(),
       this.options.reportIntervalMs || 10 * 1000,
     );
 
@@ -107,7 +107,7 @@ export class EngineReportingAgent<TContext = any> {
       signals.forEach(signal => {
         process.once(signal, async () => {
           this.stop();
-          await this.sendReport();
+          await this.sendReportAndReportErrors();
           process.kill(process.pid, signal);
         });
       });
@@ -139,7 +139,7 @@ export class EngineReportingAgent<TContext = any> {
       this.traceCount * this.averageTraceSize >=
       (this.options.uncompressedReportSizeTarget || 4 * 1024 * 1024)
     ) {
-      this.sendReport();
+      this.sendReportAndReportErrors();
     }
   }
 
@@ -247,16 +247,6 @@ export class EngineReportingAgent<TContext = any> {
           // tslint:disable-next-line no-console
           console.log(`Engine report: status ${response.statusCode}`);
         }
-      })
-      .catch(err => {
-        // This catch block is primarily intended to catch network errors from
-        // the retried request itself, which include network errors and non-2xx
-        // HTTP errors.
-        if (this.options.reportErrorFunction) {
-          this.options.reportErrorFunction(err);
-        } else {
-          console.error(err.message);
-        }
       });
   }
 
@@ -268,6 +258,19 @@ export class EngineReportingAgent<TContext = any> {
       clearInterval(this.reportTimer);
       this.reportTimer = undefined;
     }
+  }
+
+  private sendReportAndReportErrors(): Promise<void> {
+    return this.sendReport().catch(err => {
+      // This catch block is primarily intended to catch network errors from
+      // the retried request itself, which include network errors and non-2xx
+      // HTTP errors.
+      if (this.options.reportErrorFunction) {
+        this.options.reportErrorFunction(err);
+      } else {
+        console.error(err.message);
+      }
+    });
   }
 
   private resetReport() {
