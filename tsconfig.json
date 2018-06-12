@@ -11,6 +11,8 @@
     "removeComments": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "lib": ["es2017", "esnext.asynciterable", "webworker"],
+    "lib": ["es2017", "esnext.asynciterable"],
+    "types": ["node", "fetch", "url", "mocha"],
+    "typeRoots": ["./node_modules/@types", "./types"]
   }
 }
