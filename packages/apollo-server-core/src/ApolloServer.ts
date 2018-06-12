@@ -308,6 +308,10 @@ const typeDefs = gql\`${startSchema}\`
     if (this.engineProxy) await this.engineProxy.stop();
     if (this.subscriptionServer) await this.subscriptionServer.close();
     if (this.http) await new Promise(s => this.http.close(s));
+    if (this.engineReportingAgent) {
+      this.engineReportingAgent.stop();
+      await this.engineReportingAgent.sendReport();
+    }
   }
 
   private createSubscriptionServer(

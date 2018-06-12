@@ -35,6 +35,7 @@
   "dependencies": {
     "apollo-server-core": "^2.0.0-beta.6",
     "apollo-server-express": "^2.0.0-beta.6",
+    "express": "^4.0.0",
     "graphql-subscriptions": "^0.5.8"
   }
 }
