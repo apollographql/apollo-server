@@ -2,18 +2,10 @@
 title: Adding Subscriptions To Schema
 ---
 
-Adding GraphQL subscriptions to your graphQL schema is simple. since since Subscription is just another GraphQL operation type like Query and Mutation.
+Adding GraphQL subscriptions to your graphQL schema is simple. since Subscription Subscriptions are enabled by default in Apollo 2.0 and you dont' need to install anymore any extra packages.
+As example we want to display to display a list of post that contains author and comment (Query) and we want to add a post to them (Mutation).
 
-To enable subscription you need to install 2 packages: graphql-subscriptions and subscriptions-transport-ws:
-
-```
-    npm install --save graphql-subscriptions subscriptions-transport-ws
-```
-
-When the installation is complete we need to make few changes to our existing schema, controller and server.
-Our initial application was able to display the list of the posts and to add a new one:
-
-Our schema was something like that:
+Our schema will be:
 
 ```
     type Query {
@@ -28,7 +20,7 @@ Our schema was something like that:
     }
 ```
 
-Our resolver instead:
+Our resolver:
 ```js
 
 const postResolver = {
@@ -49,9 +41,9 @@ export default postResolver;
 
 ```
 
-To enable subscription we need to make a couple of small changes:
+To enable subscription we need to apply just few changes:
 
-- In the schema:
+- In our schema:
 
 ```
     type Query {
@@ -69,7 +61,7 @@ To enable subscription we need to make a couple of small changes:
     }
 ```
 
-We just added `type Subscription` to our existing schema
+We just added `type Subscription`,
 
 - In the resolver:
 ```js
@@ -96,16 +88,15 @@ const postResolver = {
 
 export default postResolver;
 ```
-We changes a couple of things:
 1. we added in the mutation `pubsub.publish`
 2. we added the Subscription `postAdded`
 
 In our server we don't need to make any big changes:
-1. we need to export 
+1. we need to export
 ```js
 export const pubsub = new PubSub();
 ```
-2. In case you defined a context remember to exclude return in case you don't pass any header:
+2. In case you defined a context remember to add an extra check related to `req.headers`:
 
 ```js
 const server = new ApolloServer({
