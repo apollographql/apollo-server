@@ -75,12 +75,12 @@ The mechanism is based on a lightweight protocol extension between Apollo Client
 <h3 id="Optimized-Path">**Optimized Path**</h3>
 </div>
 
-![Optimized path](../img/persistedQueries.optPath.png)
+![Optimized path](../images/persistedQueries.optPath.png)
 
 <div align="center">
 <h3 id="New-Query-Path">**New Query Path**</h3>
 </div>
 
-![New query path](../img/persistedQueries.newPath.png)
+![New query path](../images/persistedQueries.newPath.png)
 
 
