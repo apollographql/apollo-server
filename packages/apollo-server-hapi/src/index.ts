@@ -20,4 +20,4 @@ export {
 } from './hapiApollo';
 
 // ApolloServer integration
-export { registerServer } from './ApolloServer';
+export { ApolloServer, registerServer } from './ApolloServer';
