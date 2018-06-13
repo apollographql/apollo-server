@@ -8,7 +8,7 @@ description: Setting up Apollo Server with Hapi
 This is the Hapi integration of Apollo Server. Apollo Server is a community-maintained open-source Apollo Server that works with all Node.js HTTP server frameworks: Express, Connect, Hapi, Koa and Restify. [Read the docs](https://www.apollographql.com/docs/apollo-server/). [Read the CHANGELOG.](https://github.com/apollographql/apollo-server/blob/master/CHANGELOG.md)
 
 ```sh
-npm install apollo-server@beta apollo-server-hapi@beta
+npm install apollo-server-hapi@beta
 ```
 
 ## Usage
@@ -18,8 +18,7 @@ After constructing Apollo server, a hapi server can be enabled with a call to `r
 The code below requires Hapi 17 or higher.
 
 ```js
-const { ApolloServer, gql } = require('apollo-server');
-const { registerServer } = require('apollo-server-hapi');
+const { registerServer, ApolloServer, gql } = require('apollo-server-hapi');
 
 const HOST = 'localhost';
 
@@ -57,8 +56,7 @@ StartServer().catch(error => console.log(error));
 For more advanced use cases or migrating from 1.x, a Hapi server can be constructed and passed into `registerServer`.
 
 ```js
-const { ApolloServer, gql } = require('apollo-server');
-const { registerServer } = require('apollo-server-hapi');
+const { ApolloServer, gql, registerServer } = require('apollo-server-hapi');
 const Hapi = require('hapi');
 
 async function StartServer() {
@@ -81,6 +79,20 @@ async function StartServer() {
 }
 
 StartServer().catch(error => console.log(error));
+```
+
+### Context
+
+The context is created for each request. The following code snippet shows the creation of a context. The arguments are the `request`, the request, and `h`, the response toolkit.
+
+```js
+new ApolloServer({
+  typeDefs,
+  resolvers,
+  context: async ({ request, h }) => {
+    return { ... };
+  },
+})
 ```
 
 ## Principles

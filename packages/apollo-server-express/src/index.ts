@@ -1,5 +1,5 @@
 // Expose types which can be used by both middleware flavors.
-export { GraphQLOptions } from 'apollo-server-core';
+export { GraphQLOptions, gql } from 'apollo-server-core';
 export {
   ApolloError,
   toApolloError,
@@ -22,4 +22,4 @@ export {
 export { graphqlConnect, graphiqlConnect } from './connectApollo';
 
 // ApolloServer integration
-export { registerServer } from './ApolloServer';
+export { registerServer, ServerRegistration } from './ApolloServer';

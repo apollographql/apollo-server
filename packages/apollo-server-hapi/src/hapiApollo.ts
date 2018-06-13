@@ -18,7 +18,7 @@ export interface IPlugin {
 }
 
 export interface HapiOptionsFunction {
-  (req?: Request): GraphQLOptions | Promise<GraphQLOptions>;
+  (request?: Request): GraphQLOptions | Promise<GraphQLOptions>;
 }
 
 export interface HapiPluginOptions {
@@ -84,7 +84,7 @@ const graphqlHapi: IPlugin = {
 };
 
 export interface HapiGraphiQLOptionsFunction {
-  (req?: Request): GraphiQL.GraphiQLData | Promise<GraphiQL.GraphiQLData>;
+  (request?: Request): GraphiQL.GraphiQLData | Promise<GraphiQL.GraphiQLData>;
 }
 
 export interface HapiGraphiQLPluginOptions {

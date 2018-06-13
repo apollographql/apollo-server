@@ -61,7 +61,7 @@ const NoIntrospection = (context: ValidationContext) => ({
   },
 });
 
-export class ApolloServerBase<Request = RequestInit> {
+export class ApolloServerBase {
   public disableTools: boolean;
   // set in the listen function if subscriptions are enabled
   public subscriptionsPath: string;
@@ -78,6 +78,7 @@ export class ApolloServerBase<Request = RequestInit> {
   private subscriptionServer?: SubscriptionServer;
   protected getHttp: () => HttpServer;
 
+  //The constructor should be universal across all environments. All environment specific behavior should be set in an exported registerServer or in by overriding listen
   constructor(config: Config) {
     const {
       context,
@@ -400,15 +401,18 @@ const typeDefs = gql\`${startSchema}\`
     }
   }
 
-  async graphQLServerOptionsForRequest(request: Request) {
-    let context: Context = this.context ? this.context : { request };
+  //This function is used by the integrations to generate the graphQLOptions
+  //from an object containing the request and other integration specific
+  //options
+  protected async graphQLServerOptions(
+    integrationContextArgument?: Record<string, any>,
+  ) {
+    let context: Context = this.context ? this.context : {};
 
     try {
       context =
         typeof this.context === 'function'
-          ? await this.context({
-              req: request,
-            })
+          ? await this.context(integrationContextArgument || {})
           : context;
     } catch (error) {
       //Defer context error resolution to inside of runQuery
@@ -432,6 +436,6 @@ const typeDefs = gql\`${startSchema}\`
         any
       >,
       ...this.requestOptions,
-    };
+    } as GraphQLOptions;
   }
 }

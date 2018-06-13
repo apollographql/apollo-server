@@ -9,16 +9,31 @@ import {
 
 import { graphqlHapi } from './hapiApollo';
 
+export { GraphQLOptions, GraphQLExtension } from 'apollo-server-core';
+import { GraphQLOptions } from 'apollo-server-core';
+
 const gql = String.raw;
+
+export class ApolloServer extends ApolloServerBase {
+  //This translates the arguments from the middleware into graphQL options It
+  //provides typings for the integration specific behavior, ideally this would
+  //be propagated with a generic to the super class
+  async createGraphQLServerOptions(
+    request: hapi.Request,
+    h: hapi.ResponseToolkit,
+  ): Promise<GraphQLOptions> {
+    return super.graphQLServerOptions({ request, h });
+  }
+}
 
 export interface ServerRegistration {
   app?: hapi.Server;
   //The options type should exclude port
   options?: hapi.ServerOptions;
-  server: ApolloServerBase<hapi.Request>;
+  server: ApolloServer;
   path?: string;
   cors?: boolean;
-  onHealthCheck?: (req: hapi.Request) => Promise<any>;
+  onHealthCheck?: (request: hapi.Request) => Promise<any>;
   disableHealthCheck?: boolean;
   uploads?: boolean | Record<string, any>;
 }
@@ -33,11 +48,11 @@ export interface HapiListenOptions {
 }
 
 const handleFileUploads = (uploadsConfig: Record<string, any>) => async (
-  req: hapi.Request,
+  request: hapi.Request,
 ) => {
-  if (req.mime === 'multipart/form-data') {
-    Object.defineProperty(req, 'payload', {
-      value: await processFileUploads(req, uploadsConfig),
+  if (request.mime === 'multipart/form-data') {
+    Object.defineProperty(request, 'payload', {
+      value: await processFileUploads(request, uploadsConfig),
       writable: false,
     });
   }
@@ -158,7 +173,7 @@ server.listen({ http: { port: YOUR_PORT_HERE } });
     plugin: graphqlHapi,
     options: {
       path: path,
-      graphqlOptions: server.graphQLServerOptionsForRequest.bind(server),
+      graphqlOptions: server.createGraphQLServerOptions.bind(server),
       route: {
         cors: typeof cors === 'boolean' ? cors : true,
       },

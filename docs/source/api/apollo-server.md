@@ -115,7 +115,7 @@ new ApolloServer({
 
 ## registerServer
 
-The `registerServer` method is from `apollo-server-express`. Middleware registration has been greatly simplified with this new method.
+The `registerServer` method is provided by all the `apollo-server-{integration}` packages. This function connects ApolloServer to a specific framework. Use it instead of the `listen` method to customize the app's web behavior.
 
 ### Parameters
 
@@ -123,7 +123,7 @@ The `registerServer` method is from `apollo-server-express`. Middleware registra
 
   * `app`: <`HttpServer`> _(required)_
 
-    Pass the handle to your nexpress server here.
+    Pass an instance of the server integration here.
 
   * `server`: <`ApolloServer`> _(required)_
 
@@ -133,13 +133,16 @@ The `registerServer` method is from `apollo-server-express`. Middleware registra
 
     Specify a custom path. It defaults to `/graphql` if no path is specified.
 
-  * `cors`: <`Object`>
+  * `cors`: <`Object`> ([express](https://github.com/expressjs/cors#cors), [hapi](https://hapijs.com/api#-routeoptionscors))
+    Pass the integration-specific cors options.
 
-    Pass the cors options.
+  * `bodyParser`: <`Object`> ([express](https://github.com/expressjs/body-parser#body-parser))
+
+    Pass the body-parser options.
 
 ### Usage
 
-The `registerServer` method from `apollo-server-express` allows you to easily register your middleware as shown in the example below:
+The `registerServer` method from `apollo-server-express` registration of middleware as shown in the example below:
 
 ```js
 const { ApolloServer } = require('apollo-server');
@@ -166,7 +169,7 @@ In the case of GraphQL, the `gql` tag is used to surround GraphQL operation and 
 
 ### Usage
 
-Import the `gql` template literal tag into the current context from the `apollo-server` module:
+Import the `gql` template literal tag into the current context from the `apollo-server` or `apollo-server-{integration}` modules:
 
 ```js
 const { gql } = require('apollo-server');

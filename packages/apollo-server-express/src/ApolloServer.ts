@@ -13,11 +13,26 @@ import {
   GraphQLUpload,
 } from 'apollo-upload-server';
 
+export { GraphQLOptions, GraphQLExtension } from 'apollo-server-core';
+import { GraphQLOptions } from 'apollo-server-core';
+
 const gql = String.raw;
+
+export class ApolloServer extends ApolloServerBase {
+  //This translates the arguments from the middleware into graphQL options It
+  //provides typings for the integration specific behavior, ideally this would
+  //be propagated with a generic to the super class
+  async createGraphQLServerOptions(
+    req: express.Request,
+    res: express.Response,
+  ): Promise<GraphQLOptions> {
+    return super.graphQLServerOptions({ req, res });
+  }
+}
 
 export interface ServerRegistration {
   app: express.Application;
-  server: ApolloServerBase<express.Request>;
+  server: ApolloServer;
   path?: string;
   cors?: corsMiddleware.CorsOptions;
   bodyParserConfig?: OptionsJson;
@@ -29,7 +44,7 @@ export interface ServerRegistration {
 
 const fileUploadMiddleware = (
   uploadsConfig: Record<string, any>,
-  server: ApolloServerBase<express.Request>,
+  server: ApolloServerBase,
 ) => (
   req: express.Request,
   res: express.Response,
@@ -133,7 +148,7 @@ export const registerServer = async ({
           })(req, res, next);
         }
       }
-      return graphqlExpress(server.graphQLServerOptionsForRequest.bind(server))(
+      return graphqlExpress(server.createGraphQLServerOptions.bind(server))(
         req,
         res,
         next,

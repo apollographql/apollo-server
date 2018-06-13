@@ -5,6 +5,7 @@ import { Server as HttpServer } from 'http';
 import { ListenOptions as HttpListenOptions } from 'net';
 import { GraphQLExtension } from 'graphql-extensions';
 import { EngineReportingOptions } from 'apollo-engine-reporting';
+export { GraphQLExtension } from 'graphql-extensions';
 
 import {
   GraphQLServerOptions as GraphQLOptions,
