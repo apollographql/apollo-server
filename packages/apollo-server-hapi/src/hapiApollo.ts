@@ -1,6 +1,5 @@
 import Boom from 'boom';
 import { Server, Request } from 'hapi';
-import * as GraphiQL from 'apollo-server-module-graphiql';
 import {
   GraphQLOptions,
   runHttpQuery,
@@ -83,40 +82,4 @@ const graphqlHapi: IPlugin = {
   },
 };
 
-export interface HapiGraphiQLOptionsFunction {
-  (request?: Request): GraphiQL.GraphiQLData | Promise<GraphiQL.GraphiQLData>;
-}
-
-export interface HapiGraphiQLPluginOptions {
-  path: string;
-  route?: any;
-  graphiqlOptions: GraphiQL.GraphiQLData | HapiGraphiQLOptionsFunction;
-}
-
-const graphiqlHapi: IPlugin = {
-  name: 'graphiql',
-  register: (server: Server, options: HapiGraphiQLPluginOptions) => {
-    if (!options || !options.graphiqlOptions) {
-      throw new Error('Apollo Server GraphiQL requires options.');
-    }
-
-    server.route({
-      method: 'GET',
-      path: options.path || '/graphiql',
-      options: options.route || {},
-      handler: async (request, h) => {
-        const graphiqlString = await GraphiQL.resolveGraphiQLString(
-          request.query,
-          options.graphiqlOptions,
-          request,
-        );
-
-        const response = h.response(graphiqlString);
-        response.type('text/html');
-        return response;
-      },
-    });
-  },
-};
-
-export { graphqlHapi, graphiqlHapi };
+export { graphqlHapi };

@@ -1,4 +1,3 @@
-import { graphqlExpress, graphiqlExpress } from './expressApollo';
+import { graphqlExpress } from './expressApollo';
 
 export const graphqlConnect = graphqlExpress;
-export const graphiqlConnect = graphiqlExpress;

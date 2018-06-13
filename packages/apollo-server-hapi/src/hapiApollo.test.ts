@@ -1,5 +1,5 @@
 import hapi from 'hapi';
-import { graphqlHapi, graphiqlHapi } from './hapiApollo';
+import { graphqlHapi } from './hapiApollo';
 import 'mocha';
 
 import testSuite, {
@@ -18,16 +18,6 @@ async function createApp(options: CreateAppOptions) {
     options: {
       graphqlOptions: (options && options.graphqlOptions) || { schema: Schema },
       path: '/graphql',
-    },
-  });
-
-  await server.register({
-    plugin: graphiqlHapi,
-    options: {
-      path: '/graphiql',
-      graphiqlOptions: (options && options.graphiqlOptions) || {
-        endpointURL: '/graphql',
-      },
     },
   });
 

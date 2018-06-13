@@ -1,6 +1,6 @@
 import express from 'express';
 import bodyParser from 'body-parser';
-import { graphqlExpress, graphiqlExpress } from './expressApollo';
+import { graphqlExpress } from './expressApollo';
 import testSuite, {
   schema as Schema,
   CreateAppOptions,
@@ -15,9 +15,6 @@ function createApp(options: CreateAppOptions = {}) {
   options.graphqlOptions = options.graphqlOptions || { schema: Schema };
   if (!options.excludeParser) {
     app.use('/graphql', bodyParser.json());
-  }
-  if (options.graphiqlOptions) {
-    app.use('/graphiql', graphiqlExpress(options.graphiqlOptions));
   }
   app.use('/graphql', require('connect-query')());
   app.use('/graphql', graphqlExpress(options.graphqlOptions));

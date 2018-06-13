@@ -3,7 +3,6 @@ import {
   HttpQueryError,
   runHttpQuery,
 } from 'apollo-server-core';
-// import * as GraphiQL from 'apollo-server-module-graphiql';
 
 // Design principles:
 // - You can issue a GET or POST with your query.

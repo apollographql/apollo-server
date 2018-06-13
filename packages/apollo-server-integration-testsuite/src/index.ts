@@ -21,7 +21,6 @@ import {
 const request = require('supertest');
 
 import { GraphQLOptions } from 'apollo-server-core';
-import * as GraphiQL from 'apollo-server-module-graphiql';
 import { OperationStore } from 'apollo-server-module-operation-store';
 import gql from 'graphql-tag';
 
@@ -132,9 +131,6 @@ export interface CreateAppOptions {
   graphqlOptions?:
     | GraphQLOptions
     | { (): GraphQLOptions | Promise<GraphQLOptions> };
-  graphiqlOptions?:
-    | GraphiQL.GraphiQLData
-    | { (): GraphiQL.GraphiQLData | Promise<GraphiQL.GraphiQLData> };
 }
 
 export interface CreateAppFunc {
@@ -921,96 +917,6 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
         return req.then(res => {
           expect(res.status).to.equal(400);
           expect(res.body.errors[0].message).to.equal(expected);
-        });
-      });
-    });
-
-    describe('renderGraphiQL', () => {
-      it('presents GraphiQL when accepting HTML', async () => {
-        app = await createApp({
-          graphiqlOptions: {
-            endpointURL: '/graphql',
-          },
-        });
-
-        const req = request(app)
-          .get('/graphiql')
-          .query('query={test}')
-          .set('Accept', 'text/html');
-        return req.then(response => {
-          expect(response.status).to.equal(200);
-          expect(response.type).to.equal('text/html');
-          expect(response.text).to.include('{test}');
-          expect(response.text).to.include('/graphql');
-          expect(response.text).to.include('graphiql.min.js');
-        });
-      });
-
-      it('allows options to be a function', async () => {
-        app = await createApp({
-          graphiqlOptions: () => ({
-            endpointURL: '/graphql',
-          }),
-        });
-
-        const req = request(app)
-          .get('/graphiql')
-          .set('Accept', 'text/html');
-        return req.then(response => {
-          expect(response.status).to.equal(200);
-        });
-      });
-
-      it('handles options function errors', async () => {
-        app = await createApp({
-          graphiqlOptions: () => {
-            throw new Error('I should be caught');
-          },
-        });
-
-        const req = request(app)
-          .get('/graphiql')
-          .set('Accept', 'text/html');
-        return req.then(response => {
-          expect(response.status).to.equal(500);
-        });
-      });
-
-      it('presents options variables', async () => {
-        app = await createApp({
-          graphiqlOptions: {
-            endpointURL: '/graphql',
-            variables: { key: 'optionsValue' },
-          },
-        });
-
-        const req = request(app)
-          .get('/graphiql')
-          .set('Accept', 'text/html');
-        return req.then(response => {
-          expect(response.status).to.equal(200);
-          expect(response.text.replace(/\s/g, '')).to.include(
-            'variables:"{\\n\\"key\\":\\"optionsValue\\"\\n}"',
-          );
-        });
-      });
-
-      it('presents query variables over options variables', async () => {
-        app = await createApp({
-          graphiqlOptions: {
-            endpointURL: '/graphql',
-            variables: { key: 'optionsValue' },
-          },
-        });
-
-        const req = request(app)
-          .get('/graphiql?variables={"key":"queryValue"}')
-          .set('Accept', 'text/html');
-        return req.then(response => {
-          expect(response.status).to.equal(200);
-          expect(response.text.replace(/\s/g, '')).to.include(
-            'variables:"{\\n\\"key\\":\\"queryValue\\"\\n}"',
-          );
         });
       });
     });

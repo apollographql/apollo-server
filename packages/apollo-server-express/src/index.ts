@@ -14,13 +14,11 @@ export {
 export {
   ExpressGraphQLOptionsFunction,
   ExpressHandler,
-  ExpressGraphiQLOptionsFunction,
   graphqlExpress,
-  graphiqlExpress,
 } from './expressApollo';
 
 // Connect Middleware
-export { graphqlConnect, graphiqlConnect } from './connectApollo';
+export { graphqlConnect } from './connectApollo';
 
 // ApolloServer integration
 export {
