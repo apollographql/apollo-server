@@ -5,6 +5,7 @@ import { createServer } from 'http';
 import gui from 'graphql-playground-middleware-express';
 import { ApolloServerBase, formatApolloErrors } from 'apollo-server-core';
 import accepts from 'accepts';
+import typeis from 'type-is';
 
 import { graphqlExpress } from './expressApollo';
 
@@ -31,11 +32,17 @@ export class ApolloServer extends ApolloServerBase {
 }
 
 export interface ServerRegistration {
+  // Note: You can also pass a connect.Server here. If we changed this field to
+  // `express.Application | connect.Server`, it would be very hard to get the
+  // app.use calls to typecheck even though they do work properly. Our
+  // assumption is that very few people use connect with TypeScript (and in fact
+  // we suspect the only connect users left writing GraphQL apps are Meteor
+  // users).
   app: express.Application;
   server: ApolloServer;
   path?: string;
-  cors?: corsMiddleware.CorsOptions;
-  bodyParserConfig?: OptionsJson;
+  cors?: corsMiddleware.CorsOptions | boolean;
+  bodyParserConfig?: OptionsJson | boolean;
   onHealthCheck?: (req: express.Request) => Promise<any>;
   disableHealthCheck?: boolean;
   enableGUI?: boolean;
@@ -51,7 +58,8 @@ const fileUploadMiddleware = (
   res: express.Response,
   next: express.NextFunction,
 ) => {
-  if (req.is('multipart/form-data')) {
+  // Note: we use typeis directly instead of via req.is for connect support.
+  if (typeis(req, ['multipart/form-data'])) {
     processFileUploads(req, uploadsConfig)
       .then(body => {
         req.body = body;
@@ -127,38 +135,50 @@ export const registerServer = async ({
     getHttp: () => createServer(app),
   });
 
-  app.use(
-    path,
-    corsMiddleware(cors),
-    json(bodyParserConfig),
-    uploadsMiddleware ? uploadsMiddleware : (_req, _res, next) => next(),
-    (req, res, next) => {
-      // make sure we check to see if graphql gui should be on
-      // enableGUI takes precedence over the server tools setting
-      if (
-        (enableGUI || (enableGUI === undefined && !server.disableTools)) &&
-        req.method === 'GET'
-      ) {
-        //perform more expensive content-type check only if necessary
-        const accept = accepts(req);
-        const types = accept.types() as string[];
-        const prefersHTML =
-          types.find(
-            (x: string) => x === 'text/html' || x === 'application/json',
-          ) === 'text/html';
+  // Note that we don't just pass all of these handlers to a single app.use call
+  // for 'connect' compatibility.
+  if (cors === true) {
+    app.use(path, corsMiddleware());
+  } else if (cors !== false) {
+    app.use(path, corsMiddleware(cors));
+  }
 
-        if (prefersHTML) {
-          return gui({
-            endpoint: path,
-            subscriptionEndpoint: server.subscriptionsPath,
-          })(req, res, next);
-        }
+  if (bodyParserConfig === true) {
+    app.use(path, json());
+  } else if (bodyParserConfig !== false) {
+    app.use(path, json(bodyParserConfig));
+  }
+
+  if (uploadsMiddleware) {
+    app.use(path, uploadsMiddleware);
+  }
+
+  app.use(path, (req, res, next) => {
+    // make sure we check to see if graphql gui should be on
+    // enableGUI takes precedence over the server tools setting
+    if (
+      (enableGUI || (enableGUI === undefined && !server.disableTools)) &&
+      req.method === 'GET'
+    ) {
+      //perform more expensive content-type check only if necessary
+      const accept = accepts(req);
+      const types = accept.types() as string[];
+      const prefersHTML =
+        types.find(
+          (x: string) => x === 'text/html' || x === 'application/json',
+        ) === 'text/html';
+
+      if (prefersHTML) {
+        return gui({
+          endpoint: path,
+          subscriptionEndpoint: server.subscriptionsPath,
+        })(req, res, next);
       }
-      return graphqlExpress(server.createGraphQLServerOptions.bind(server))(
-        req,
-        res,
-        next,
-      );
-    },
-  );
+    }
+    return graphqlExpress(server.createGraphQLServerOptions.bind(server))(
+      req,
+      res,
+      next,
+    );
+  });
 };

@@ -374,7 +374,6 @@ describe(`GraphQL-HTTP (apolloServer) tests for ${version} express`, () => {
 
       app.use(
         '/graphql',
-        require('connect-query')(),
         graphqlExpress({
           schema: TestSchema,
         }),

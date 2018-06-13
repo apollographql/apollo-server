@@ -76,6 +76,7 @@ export class ApolloServerBase {
 
   //The constructor should be universal across all environments. All environment specific behavior should be set in an exported registerServer or in by overriding listen
   constructor(config: Config) {
+    if (!config) throw new Error('ApolloServer requires options.');
     const {
       context,
       resolvers,
@@ -94,8 +95,7 @@ export class ApolloServerBase {
     //should be used outside of the constructor context, place it as a private
     //or protected field of the class instead of a global. Keeping the read in
     //the contructor enables testing of different environments
-    const env = process.env.NODE_ENV;
-    const isDev = env !== 'production' && env !== 'test';
+    const isDev = process.env.NODE_ENV !== 'production';
 
     // we use this.disableTools to track this internally for later use when
     // constructing middleware by frameworks to disable graphql playground
