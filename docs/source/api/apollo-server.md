@@ -93,11 +93,6 @@ new ApolloServer({
     * `handler`: <`Object`>
     * `backlog`: <`Number`>
 
-  Engine launcher options
-
-  * `engineLauncherOptions` : [<`Object`>](https://www.apollographql.com/docs/engine/setup-node.html#api-engine.listen)
-  * `engineProxy`: [<`Object`>](https://www.apollographql.com/docs/engine/proxy-config.html)
-
   WebSocket options
 
   * `subscriptions`: <`Object`> | <`String`> | false

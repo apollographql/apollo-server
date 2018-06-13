@@ -54,25 +54,11 @@ export interface Config
   persistedQueries?: PersistedQueryOptions | false;
 }
 
-// XXX export these directly from apollo-engine-js
-export interface EngineLauncherOptions {
-  startupTimeout?: number;
-  proxyStdoutStream?: NodeJS.WritableStream;
-  proxyStderrStream?: NodeJS.WritableStream;
-  extraArgs?: string[];
-  processCleanupEvents?: string[];
-}
-
 export interface ListenOptions {
   // node http listen options
   // https://nodejs.org/api/net.html#net_server_listen_options_callback
   // https://github.com/apollographql/apollo-server/pull/979#discussion_r184483094
   http?: HttpListenOptions | any | { handle: any; backlog?: number };
-  // XXX clean this up
-  engineInRequestPath?: boolean;
-  engineProxy?: boolean | Record<string, any>;
-  // engine launcher options
-  engineLauncherOptions?: EngineLauncherOptions;
   // WebSocket options
   subscriptions?: Partial<SubscriptionServerOptions> | string | false;
 }

@@ -34,7 +34,6 @@
     "@types/node-fetch": "^2.1.1",
     "@types/quick-lru": "^1.1.0",
     "@types/ws": "^5.1.2",
-    "apollo-engine": "^1.1.2",
     "apollo-fetch": "^0.7.0",
     "apollo-link": "^1.2.2",
     "apollo-link-http": "^1.5.4",

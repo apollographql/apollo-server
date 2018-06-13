@@ -95,8 +95,8 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
   // objects.
   const extensions = options.extensions ? options.extensions.map(f => f()) : [];
 
-  // Legacy hard-coded extension factories. The ApolloServer class doesn't use
-  // this code path, but older APIs did.
+  // If you're running behind an engineproxy, set these options to turn on
+  // tracing and cache-control extensions.
   if (options.tracing) {
     extensions.push(new TracingExtension());
   }

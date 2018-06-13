@@ -87,7 +87,7 @@ export const registerServer = async ({
   if (!path) path = '/graphql';
 
   if (!disableHealthCheck) {
-    //uses same path as engine
+    //uses same path as engine proxy, but is generally useful.
     app.use('/.well-known/apollo/server-health', (req, res) => {
       //Response follows https://tools.ietf.org/html/draft-inadarei-api-health-check-01
       res.type('application/health+json');

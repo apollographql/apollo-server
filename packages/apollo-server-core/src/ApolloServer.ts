@@ -17,11 +17,8 @@ import {
   FieldDefinitionNode,
 } from 'graphql';
 import { GraphQLExtension } from 'graphql-extensions';
-import { TracingExtension } from 'apollo-tracing';
-import { CacheControlExtension } from 'apollo-cache-control';
 import { EngineReportingAgent } from 'apollo-engine-reporting';
 
-import { ApolloEngine } from 'apollo-engine';
 import {
   SubscriptionServer,
   ExecutionParams,
@@ -71,7 +68,6 @@ export class ApolloServerBase {
   private context?: Context | ContextFunction;
   private graphqlPath: string = '/graphql';
   private engineReportingAgent?: EngineReportingAgent;
-  private engineProxy: ApolloEngine;
   private extensions: Array<() => GraphQLExtension>;
 
   private http?: HttpServer;
@@ -174,8 +170,8 @@ const typeDefs = gql\`${startSchema}\`
       });
     }
 
-    // Note: if we're using engineproxy (directly or indirectly), we will extend
-    // this when we listen.
+    // Note: doRunQuery will add its own extensions if you set tracing,
+    // cacheControl, or logFunction.
     this.extensions = [];
 
     if (engine || (engine !== false && process.env.ENGINE_API_KEY)) {
@@ -243,29 +239,7 @@ const typeDefs = gql\`${startSchema}\`
       );
     }
 
-    if (opts.engineProxy || opts.engineInRequestPath) this.createEngine(opts);
-
-    return new Promise((resolve, reject) => {
-      if (this.engineProxy) {
-        this.engineProxy.listen(
-          {
-            graphqlPaths: [this.graphqlPath],
-            port: options.http.port,
-            httpServer: this.http,
-            launcherOptions: options.engineLauncherOptions,
-          },
-          () => {
-            this.engineProxy.engineListeningAddress.url = require('url').resolve(
-              this.engineProxy.engineListeningAddress.url,
-              this.graphqlPath,
-            );
-            resolve(this.engineProxy.engineListeningAddress);
-          },
-        );
-        this.engineProxy.on('error', reject);
-        return;
-      }
-
+    return new Promise(resolve => {
       // all options for http listeners
       // https://nodejs.org/api/net.html#net_server_listen_options_callback
       // https://github.com/apollographql/apollo-server/pull/979/files/33ea0c92a1e4e76c8915ff08806f15dae391e1f0#discussion_r184470435
@@ -308,7 +282,6 @@ const typeDefs = gql\`${startSchema}\`
   }
 
   public async stop() {
-    if (this.engineProxy) await this.engineProxy.stop();
     if (this.subscriptionServer) await this.subscriptionServer.close();
     if (this.http) await new Promise(s => this.http.close(s));
     if (this.engineReportingAgent) {
@@ -367,40 +340,6 @@ const typeDefs = gql\`${startSchema}\`
         path,
       },
     );
-  }
-
-  private createEngine({ engineInRequestPath, engineProxy }: ListenOptions) {
-    // only access this onces as its slower on node
-    const { ENGINE_API_KEY, ENGINE_CONFIG } = process.env;
-    if (engineProxy === false && (ENGINE_API_KEY || ENGINE_CONFIG)) {
-      console.warn(
-        'engine is set to false when creating ApolloServer but either ENGINE_CONFIG or ENGINE_API_KEY was found in the environment',
-      );
-    }
-    let ApolloEngine;
-    if (engineProxy) {
-      // detect engine if it is set to true or has a config, and possibly load it
-      try {
-        ApolloEngine = require('apollo-engine').ApolloEngine;
-      } catch (e) {
-        console.warn(`ApolloServer was unable to load Apollo Engine yet engine was configured in the options when creating this ApolloServer? To fix this, run the following command:
-
-  npm install apollo-engine --save
-`);
-      }
-
-      this.engineProxy = new ApolloEngine(
-        typeof engineProxy === 'boolean' ? undefined : engineProxy,
-      );
-    }
-
-    // XXX should this allow for header overrides from graphql-playground?
-    if (this.engineProxy || engineInRequestPath) {
-      this.extensions.push(() => new TracingExtension());
-      // XXX provide a way to pass options to CacheControlExtension (eg
-      // defaultMaxAge)
-      this.extensions.push(() => new CacheControlExtension());
-    }
   }
 
   //This function is used by the integrations to generate the graphQLOptions

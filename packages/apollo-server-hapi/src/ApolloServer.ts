@@ -1,5 +1,5 @@
 import hapi from 'hapi';
-import { ApolloServerBase, EngineLauncherOptions } from 'apollo-server-core';
+import { ApolloServerBase } from 'apollo-server-core';
 import { parseAll } from 'accept';
 import { renderPlaygroundPage } from 'graphql-playground-html';
 import {
@@ -41,11 +41,10 @@ export interface ServerRegistration {
 
 export interface HapiListenOptions {
   port?: number | string;
-  host?: string; // default: ''. This is where engineproxy listens.
+  host?: string; // default: ''
   pipePath?: string;
   graphqlPaths?: string[]; // default: ['/graphql']
   innerHost?: string; // default: '127.0.0.1'. This is where Node listens.
-  launcherOptions?: EngineLauncherOptions;
 }
 
 const handleFileUploads = (uploadsConfig: Record<string, any>) => async (
@@ -210,8 +209,6 @@ const app = Hapi.server({
       );
     }
 
-    //starts the hapi listener at a random port when engine proxy used,
-    //otherwise will start the server at the provided port
     return listen({ ...options });
   };
 };

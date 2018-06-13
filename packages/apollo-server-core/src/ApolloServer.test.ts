@@ -2,7 +2,6 @@
 import { expect } from 'chai';
 import { stub } from 'sinon';
 import http from 'http';
-import net from 'net';
 import url from 'url';
 import 'mocha';
 import { sha256 } from 'js-sha256';
@@ -554,66 +553,6 @@ describe('ApolloServerBase', () => {
 
       process.env.NODE_ENV = nodeEnv;
       await server.stop();
-    });
-  });
-
-  describe('engine', () => {
-    it('creates ApolloEngine instance when api key is present', async () => {
-      const typeDefs = gql`
-        type Query {
-          hello: String
-        }
-      `;
-      const resolvers = {
-        Query: {
-          hello: () => 'hi',
-        },
-      };
-      const server = new ApolloServerBase({
-        typeDefs,
-        resolvers,
-      });
-      const httpServer = createHttpServer(server);
-      server.use({
-        getHttp: () => httpServer,
-        path: '/',
-      });
-
-      const { url: engineUri, port: enginePort } = await server.listen({
-        engineProxy: {
-          apiKey: 'service:apollographql-6872:D6HRzC5ykWElYO3A2od1uA',
-          logging: {
-            level: 'ERROR',
-          },
-        },
-        http: {
-          port: 4242,
-        },
-      });
-      expect(enginePort).to.equal(4242);
-
-      //Check engine responding
-      const engineApolloFetch = createApolloFetch({ uri: engineUri });
-      const engineResult = await engineApolloFetch({ query: '{hello}' });
-      expect(engineResult.data).to.deep.equal({ hello: 'hi' });
-      expect(engineResult.errors, 'errors should not exist').not.to.exist;
-      expect(engineResult.extensions, 'extensions should exist').not.to.exist;
-
-      //only windows returns a string https://github.com/nodejs/node/issues/12895
-      const { address, port } = httpServer.address() as net.AddressInfo;
-      expect(enginePort).not.to.equal(port);
-      const uri = `http://${address}:${port}/`;
-
-      //Check origin server responding and includes extensions
-      const apolloFetch = createApolloFetch({ uri });
-      const result = await apolloFetch({ query: '{hello}' });
-      expect(result.data).to.deep.equal({ hello: 'hi' });
-      expect(result.errors, 'errors should not exist').not.to.exist;
-      expect(result.extensions, 'extensions should exist').to.exist;
-
-      await server.stop();
-
-      expect(httpServer.listening).false;
     });
   });
 
