@@ -1,7 +1,7 @@
 {
   "name": "apollo-server-integration-testsuite",
   "private": true,
-  "version": "2.0.0-beta.7",
+  "version": "2.0.0-beta.8",
   "description": "Apollo Server Integrations testsuite",
   "main": "dist/index.js",
   "scripts": {
@@ -24,8 +24,8 @@
   },
   "dependencies": {
     "apollo-server-core": "^2.0.0-beta.7",
-    "apollo-server-module-graphiql": "^2.0.0-beta.6",
-    "apollo-server-module-operation-store": "^2.0.0-beta.6"
+    "apollo-server-module-graphiql": "^2.0.0-beta.8",
+    "apollo-server-module-operation-store": "^2.0.0-beta.8"
   },
   "typings": "dist/index.d.ts",
   "typescript": {
