@@ -20,18 +20,6 @@ import { GraphQLOptions } from 'apollo-server-core';
 
 const gql = String.raw;
 
-export class ApolloServer extends ApolloServerBase {
-  //This translates the arguments from the middleware into graphQL options It
-  //provides typings for the integration specific behavior, ideally this would
-  //be propagated with a generic to the super class
-  async createGraphQLServerOptions(
-    req: express.Request,
-    res: express.Response,
-  ): Promise<GraphQLOptions> {
-    return super.graphQLServerOptions({ req, res });
-  }
-}
-
 export interface ServerRegistration {
   // Note: You can also pass a connect.Server here. If we changed this field to
   // `express.Application | connect.Server`, it would be very hard to get the
@@ -81,6 +69,22 @@ const fileUploadMiddleware = (
     next();
   }
 };
+
+export class ApolloServer extends ApolloServerBase {
+  //This translates the arguments from the middleware into graphQL options It
+  //provides typings for the integration specific behavior, ideally this would
+  //be propagated with a generic to the super class
+  async createGraphQLServerOptions(
+    req: express.Request,
+    res: express.Response,
+  ): Promise<GraphQLOptions> {
+    return super.graphQLServerOptions({ req, res });
+  }
+
+  protected supportsSubscriptions(): boolean {
+    return true;
+  }
+}
 
 export const registerServer = async ({
   app,

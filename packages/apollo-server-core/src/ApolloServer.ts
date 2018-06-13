@@ -37,9 +37,7 @@ import { LogFunction } from './logging';
 
 import {
   Config,
-  ListenOptions,
   RegistrationOptions,
-  ServerInfo,
   Context,
   ContextFunction,
   SubscriptionServerOptions,
@@ -69,6 +67,7 @@ export class ApolloServerBase {
   private graphqlPath: string = '/graphql';
   private engineReportingAgent?: EngineReportingAgent;
   private extensions: Array<() => GraphQLExtension>;
+  protected subscriptionServerOptions?: SubscriptionServerOptions;
 
   private http?: HttpServer;
   private subscriptionServer?: SubscriptionServer;
@@ -87,6 +86,7 @@ export class ApolloServerBase {
       mocks,
       extensions,
       engine,
+      subscriptions,
       ...requestOptions
     } = config;
 
@@ -185,13 +185,29 @@ const typeDefs = gql\`${startSchema}\`
     if (extensions) {
       this.extensions = [...this.extensions, ...extensions];
     }
-  }
 
-  public use({ getHttp, path }: RegistrationOptions) {
-    // we need to delay when we actually get the http server
-    // until we move into the listen function
-    this.getHttp = getHttp;
-    this.graphqlPath = path;
+    if (subscriptions !== false) {
+      if (this.supportsSubscriptions()) {
+        if (subscriptions === true || typeof subscriptions === 'undefined') {
+          this.subscriptionServerOptions = {
+            path: this.graphqlPath,
+          };
+        } else if (typeof subscriptions === 'string') {
+          this.subscriptionServerOptions = { path: subscriptions };
+        } else {
+          this.subscriptionServerOptions = {
+            path: this.graphqlPath,
+            ...subscriptions,
+          };
+        }
+        // This is part of the public API.
+        this.subscriptionsPath = this.subscriptionServerOptions.path;
+      } else if (subscriptions) {
+        throw new Error(
+          'This implementation of ApolloServer does not support GraphQL subscriptions.',
+        );
+      }
+    }
   }
 
   public enhanceSchema(
@@ -206,81 +222,6 @@ const typeDefs = gql\`${startSchema}\`
     });
   }
 
-  public listen(opts: ListenOptions = {}): Promise<ServerInfo> {
-    this.http = this.getHttp();
-
-    const options = {
-      ...opts,
-      http: {
-        port: process.env.PORT || 4000,
-        ...opts.http,
-      },
-    };
-
-    if (opts.subscriptions !== false) {
-      let config: SubscriptionServerOptions;
-      if (
-        opts.subscriptions === true ||
-        typeof opts.subscriptions === 'undefined'
-      ) {
-        config = {
-          path: this.graphqlPath,
-        };
-      } else if (typeof opts.subscriptions === 'string') {
-        config = { path: opts.subscriptions };
-      } else {
-        config = { path: this.graphqlPath, ...opts.subscriptions };
-      }
-
-      this.subscriptionsPath = config.path;
-      this.subscriptionServer = this.createSubscriptionServer(
-        this.http,
-        config,
-      );
-    }
-
-    return new Promise(resolve => {
-      // all options for http listeners
-      // https://nodejs.org/api/net.html#net_server_listen_options_callback
-      // https://github.com/apollographql/apollo-server/pull/979/files/33ea0c92a1e4e76c8915ff08806f15dae391e1f0#discussion_r184470435
-      // https://github.com/apollographql/apollo-server/pull/979#discussion_r184471445
-      function listenCallback() {
-        const listeningAddress: any = this.http.address();
-        // Convert IPs which mean "any address" (IPv4 or IPv6) into localhost
-        // corresponding loopback ip. Note that the url field we're setting is
-        // primarily for consumption by our test suite. If this heuristic is
-        // wrong for your use case, explicitly specify a frontend host (in the
-        // `frontends.host` field in your engine config, or in the `host`
-        // option to ApolloServer.listen).
-        let hostForUrl = listeningAddress.address;
-        if (
-          listeningAddress.address === '' ||
-          listeningAddress.address === '::'
-        )
-          hostForUrl = 'localhost';
-
-        listeningAddress.url = require('url').format({
-          protocol: 'http',
-          hostname: hostForUrl,
-          port: listeningAddress.port,
-          pathname: this.graphqlPath,
-        });
-
-        resolve(listeningAddress);
-      }
-
-      if (options.http.handle) {
-        this.http.listen(
-          options.http.handle,
-          options.http.backlog,
-          listenCallback.bind(this),
-        );
-      } else {
-        this.http.listen(options.http, listenCallback.bind(this));
-      }
-    });
-  }
-
   public async stop() {
     if (this.subscriptionServer) await this.subscriptionServer.close();
     if (this.http) await new Promise(s => this.http.close(s));
@@ -290,13 +231,15 @@ const typeDefs = gql\`${startSchema}\`
     }
   }
 
-  private createSubscriptionServer(
-    server: HttpServer,
-    config: SubscriptionServerOptions,
-  ) {
-    const { onDisconnect, onConnect, keepAlive, path } = config;
+  protected createSubscriptionServer(server: HttpServer) {
+    const {
+      onDisconnect,
+      onConnect,
+      keepAlive,
+      path,
+    } = this.subscriptionServerOptions;
 
-    return SubscriptionServer.create(
+    this.subscriptionServer = SubscriptionServer.create(
       {
         schema: this.schema,
         execute,
@@ -340,6 +283,10 @@ const typeDefs = gql\`${startSchema}\`
         path,
       },
     );
+  }
+
+  protected supportsSubscriptions(): boolean {
+    return false;
   }
 
   //This function is used by the integrations to generate the graphQLOptions

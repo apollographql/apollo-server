@@ -52,14 +52,6 @@ export interface Config
   engine?: boolean | EngineReportingOptions;
   extensions?: Array<() => GraphQLExtension>;
   persistedQueries?: PersistedQueryOptions | false;
-}
-
-export interface ListenOptions {
-  // node http listen options
-  // https://nodejs.org/api/net.html#net_server_listen_options_callback
-  // https://github.com/apollographql/apollo-server/pull/979#discussion_r184483094
-  http?: HttpListenOptions | any | { handle: any; backlog?: number };
-  // WebSocket options
   subscriptions?: Partial<SubscriptionServerOptions> | string | false;
 }
 
@@ -72,9 +64,4 @@ export interface MiddlewareOptions {
 export interface RegistrationOptions {
   path: string;
   getHttp: () => HttpServer;
-}
-
-export interface ServerInfo {
-  url: string;
-  port: number | string;
 }
