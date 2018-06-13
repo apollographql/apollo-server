@@ -10,16 +10,6 @@ export {
   ForbiddenError,
 } from 'apollo-server-core';
 
-// Express Middleware
-export {
-  ExpressGraphQLOptionsFunction,
-  ExpressHandler,
-  graphqlExpress,
-} from './expressApollo';
-
-// Connect Middleware
-export { graphqlConnect } from './connectApollo';
-
 // ApolloServer integration
 export {
   ApolloServer,

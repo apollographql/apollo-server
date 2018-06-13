@@ -9,12 +9,9 @@ export {
   ForbiddenError,
 } from 'apollo-server-core';
 
-export {
-  IRegister,
-  HapiOptionsFunction,
-  HapiPluginOptions,
-  graphqlHapi,
-} from './hapiApollo';
-
 // ApolloServer integration
-export { ApolloServer, registerServer } from './ApolloServer';
+export {
+  ApolloServer,
+  registerServer,
+  ServerRegistration,
+} from './ApolloServer';

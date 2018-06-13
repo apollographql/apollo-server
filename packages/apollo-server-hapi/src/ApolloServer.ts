@@ -39,14 +39,6 @@ export interface ServerRegistration {
   uploads?: boolean | Record<string, any>;
 }
 
-export interface HapiListenOptions {
-  port?: number | string;
-  host?: string; // default: ''
-  pipePath?: string;
-  graphqlPaths?: string[]; // default: ['/graphql']
-  innerHost?: string; // default: '127.0.0.1'. This is where Node listens.
-}
-
 const handleFileUploads = (uploadsConfig: Record<string, any>) => async (
   request: hapi.Request,
 ) => {
