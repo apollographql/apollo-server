@@ -7,7 +7,9 @@ version: 2
 run_install_desired_npm: &run_install_desired_npm
   run:
     name: Install npm@6
-    command: sudo npm install -g npm@6
+    # we use yarn, since Node 6 does not support the latest npm by default, so
+    # use 5
+    command: sudo yarn global add npm@5
 
 # These are the steps used for each version of Node which we're testing
 # against.  Thanks to YAMLs inability to merge arrays (though it is able
@@ -29,6 +31,10 @@ jobs:
   # Platform tests, each with the same tests but different platform or version.
   # The docker tag represents the Node.js version and the full list is available
   # at https://hub.docker.com/r/circleci/node/.
+  Node.js 6:
+    docker: [ { image: 'circleci/node:6' } ]
+    <<: *common_test_steps
+
   Node.js 8:
     docker: [ { image: 'circleci/node:8' } ]
     <<: *common_test_steps
@@ -64,6 +70,8 @@ workflows:
   version: 2
   Build and Test:
     jobs:
+      - Node.js 6:
+          <<: *ignore_doc_branches
       - Node.js 8:
           <<: *ignore_doc_branches
       - Node.js 10:

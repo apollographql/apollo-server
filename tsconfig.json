@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "es2017",
+    "target": "es2016",
     "module": "commonjs",
     "moduleResolution": "node",
     "esModuleInterop": true,
@@ -10,6 +10,6 @@
     "removeComments": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "lib": ["es2017", "esnext.asynciterable", "webworker"],
+    "lib": ["es2016", "esnext.asynciterable", "webworker"]
   }
 }
