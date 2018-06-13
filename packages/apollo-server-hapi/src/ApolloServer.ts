@@ -35,6 +35,7 @@ export interface ServerRegistration {
   cors?: boolean;
   onHealthCheck?: (request: hapi.Request) => Promise<any>;
   disableHealthCheck?: boolean;
+  enableGUI?: boolean;
   uploads?: boolean | Record<string, any>;
 }
 
@@ -65,6 +66,7 @@ export const registerServer = async ({
   cors,
   path,
   disableHealthCheck,
+  enableGUI,
   onHealthCheck,
   uploads,
 }: ServerRegistration) => {
@@ -118,7 +120,11 @@ server.listen({ http: { port: YOUR_PORT_HERE } });
         );
       }
 
-      if (!server.disableTools && request.method === 'get') {
+      // enableGUI takes precedence over the server tools setting
+      if (
+        (enableGUI || (enableGUI === undefined && !server.disableTools)) &&
+        request.method === 'get'
+      ) {
         //perform more expensive content-type check only if necessary
         const accept = parseAll(request.headers);
         const types = accept.mediaTypes as string[];

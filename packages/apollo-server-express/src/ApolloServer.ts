@@ -38,6 +38,7 @@ export interface ServerRegistration {
   bodyParserConfig?: OptionsJson;
   onHealthCheck?: (req: express.Request) => Promise<any>;
   disableHealthCheck?: boolean;
+  enableGUI?: boolean;
   //https://github.com/jaydenseric/apollo-upload-server#options
   uploads?: boolean | Record<string, any>;
 }
@@ -79,6 +80,7 @@ export const registerServer = async ({
   cors,
   bodyParserConfig,
   disableHealthCheck,
+  enableGUI,
   onHealthCheck,
   uploads,
 }: ServerRegistration) => {
@@ -132,7 +134,11 @@ export const registerServer = async ({
     uploadsMiddleware ? uploadsMiddleware : (_req, _res, next) => next(),
     (req, res, next) => {
       // make sure we check to see if graphql gui should be on
-      if (!server.disableTools && req.method === 'GET') {
+      // enableGUI takes precedence over the server tools setting
+      if (
+        (enableGUI || (enableGUI === undefined && !server.disableTools)) &&
+        req.method === 'GET'
+      ) {
         //perform more expensive content-type check only if necessary
         const accept = accepts(req);
         const types = accept.types() as string[];

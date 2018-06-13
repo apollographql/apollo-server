@@ -101,15 +101,17 @@ export class ApolloServerBase {
     const env = process.env.NODE_ENV;
     const isDev = env !== 'production' && env !== 'test';
 
-    // if this is local dev, we want graphql gui and introspection to be turned on
-    // in production, you can manually turn these on by passing { introspection: true }
-    // to the constructor of ApolloServer
     // we use this.disableTools to track this internally for later use when
-    // constructing middleware by frameworks
-    if (typeof introspection === 'boolean') this.disableTools = !introspection;
-    else this.disableTools = !isDev;
+    // constructing middleware by frameworks to disable graphql playground
+    this.disableTools = !isDev;
 
-    if (this.disableTools) {
+    // if this is local dev, introspection should turned on
+    // in production, we can manually turn introspection on by passing {
+    // introspection: true } to the constructor of ApolloServer
+    if (
+      (typeof introspection === 'boolean' && !introspection) ||
+      (introspection === undefined && !isDev)
+    ) {
       const noIntro = [NoIntrospection];
       requestOptions.validationRules = requestOptions.validationRules
         ? requestOptions.validationRules.concat(noIntro)

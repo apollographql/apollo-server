@@ -73,6 +73,60 @@ describe('apollo-server-express', () => {
       expect(result.errors, 'errors should exist').not.to.exist;
     });
 
+    it('can enable gui separately from instrospection during production', async () => {
+      const INTROSPECTION_QUERY = `
+  {
+    __schema {
+      directives {
+        name
+      }
+    }
+  }
+`;
+      const nodeEnv = process.env.NODE_ENV;
+      process.env.NODE_ENV = 'production';
+
+      server = new ApolloServer({
+        typeDefs,
+        resolvers,
+      });
+      app = express();
+
+      registerServer({ app, server, enableGUI: true });
+
+      const { url } = await server.listen();
+      const apolloFetch = createApolloFetch({ uri: url });
+      const result = await apolloFetch({ query: INTROSPECTION_QUERY });
+
+      expect(result.errors.length).to.equal(1);
+      expect(result.errors[0].extensions.code).to.equal(
+        'GRAPHQL_VALIDATION_FAILED',
+      );
+
+      return new Promise((resolve, reject) => {
+        request(
+          {
+            url,
+            method: 'GET',
+            headers: {
+              accept:
+                'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+            },
+          },
+          (error, response, body) => {
+            process.env.NODE_ENV = nodeEnv;
+            if (error) {
+              reject(error);
+            } else {
+              expect(body).to.contain('GraphQLPlayground');
+              expect(response.statusCode).to.equal(200);
+              resolve();
+            }
+          },
+        );
+      });
+    });
+
     it('renders GraphQL playground when browser requests', async () => {
       const nodeEnv = process.env.NODE_ENV;
       delete process.env.NODE_ENV;
@@ -172,6 +226,7 @@ describe('apollo-server-express', () => {
         registerServer({ app, server, bodyParserConfig: { limit: 0 } });
 
         const { port } = await server.listen();
+
         return new Promise((resolve, reject) => {
           request(
             {
