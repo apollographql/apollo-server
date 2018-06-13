@@ -73,7 +73,10 @@ describe('apollo-server-express', () => {
       expect(result.errors, 'errors should exist').not.to.exist;
     });
 
-    it('can enable gui separately from instrospection during production', async () => {
+    // XXX Unclear why this would be something somebody would want (vs enabling
+    // introspection without graphql-playground, which seems reasonable, eg you
+    // have your own graphql-playground setup with a custom link)
+    it('can enable gui separately from introspection during production', async () => {
       const INTROSPECTION_QUERY = `
   {
     __schema {
@@ -83,16 +86,15 @@ describe('apollo-server-express', () => {
     }
   }
 `;
-      const nodeEnv = process.env.NODE_ENV;
-      process.env.NODE_ENV = 'production';
 
       server = new ApolloServer({
         typeDefs,
         resolvers,
+        introspection: false,
       });
       app = express();
 
-      registerServer({ app, server, enableGUI: true });
+      registerServer({ app, server, gui: true });
 
       const { url } = await server.listen();
       const apolloFetch = createApolloFetch({ uri: url });
@@ -114,7 +116,6 @@ describe('apollo-server-express', () => {
             },
           },
           (error, response, body) => {
-            process.env.NODE_ENV = nodeEnv;
             if (error) {
               reject(error);
             } else {

@@ -1,7 +1,10 @@
 import hapi from 'hapi';
 import { ApolloServerBase } from 'apollo-server-core';
 import { parseAll } from 'accept';
-import { renderPlaygroundPage } from 'graphql-playground-html';
+import {
+  renderPlaygroundPage,
+  MiddlewareOptions as PlaygroundMiddlewareOptions,
+} from 'graphql-playground-html';
 import {
   processRequest as processFileUploads,
   GraphQLUpload,
@@ -35,7 +38,7 @@ export interface ServerRegistration {
   cors?: boolean;
   onHealthCheck?: (request: hapi.Request) => Promise<any>;
   disableHealthCheck?: boolean;
-  enableGUI?: boolean;
+  gui?: boolean | PlaygroundMiddlewareOptions;
   uploads?: boolean | Record<string, any>;
 }
 
@@ -57,7 +60,7 @@ export const registerServer = async ({
   cors,
   path,
   disableHealthCheck,
-  enableGUI,
+  gui,
   onHealthCheck,
   uploads,
 }: ServerRegistration) => {
@@ -111,11 +114,15 @@ server.listen({ http: { port: YOUR_PORT_HERE } });
         );
       }
 
+      // Note: if you enable a gui in production and expect to be able to see your
+      // schema, you'll need to manually specify `introspection: true` in the
+      // ApolloServer constructor; by default, the introspection query is only
+      // enabled in dev.
+      const guiEnabled =
+        !!gui || (gui === undefined && process.env.NODE_ENV !== 'production');
+
       // enableGUI takes precedence over the server tools setting
-      if (
-        (enableGUI || (enableGUI === undefined && !server.disableTools)) &&
-        request.method === 'get'
-      ) {
+      if (guiEnabled && request.method === 'get') {
         //perform more expensive content-type check only if necessary
         const accept = parseAll(request.headers);
         const types = accept.mediaTypes as string[];
@@ -125,14 +132,15 @@ server.listen({ http: { port: YOUR_PORT_HERE } });
           ) === 'text/html';
 
         if (prefersHTML) {
+          const middlewareOptions = {
+            endpoint: path,
+            subscriptionEndpoint: server.subscriptionsPath,
+            version: '1.4.0',
+            ...(typeof gui === 'boolean' ? {} : gui),
+          };
+
           return h
-            .response(
-              renderPlaygroundPage({
-                subscriptionEndpoint: server.subscriptionsPath,
-                endpoint: path,
-                version: '1.4.0',
-              }),
-            )
+            .response(renderPlaygroundPage(middlewareOptions))
             .type('text/html')
             .takeover();
         }

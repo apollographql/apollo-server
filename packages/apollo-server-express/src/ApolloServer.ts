@@ -2,7 +2,8 @@ import express from 'express';
 import corsMiddleware from 'cors';
 import { json, OptionsJson } from 'body-parser';
 import { createServer } from 'http';
-import gui from 'graphql-playground-middleware-express';
+import playgroundMiddleware from 'graphql-playground-middleware-express';
+import { MiddlewareOptions as PlaygroundMiddlewareOptions } from 'graphql-playground-html';
 import { ApolloServerBase, formatApolloErrors } from 'apollo-server-core';
 import accepts from 'accepts';
 import typeis from 'type-is';
@@ -45,7 +46,7 @@ export interface ServerRegistration {
   bodyParserConfig?: OptionsJson | boolean;
   onHealthCheck?: (req: express.Request) => Promise<any>;
   disableHealthCheck?: boolean;
-  enableGUI?: boolean;
+  gui?: boolean | PlaygroundMiddlewareOptions;
   //https://github.com/jaydenseric/apollo-upload-server#options
   uploads?: boolean | Record<string, any>;
 }
@@ -88,7 +89,7 @@ export const registerServer = async ({
   cors,
   bodyParserConfig,
   disableHealthCheck,
-  enableGUI,
+  gui,
   onHealthCheck,
   uploads,
 }: ServerRegistration) => {
@@ -153,13 +154,15 @@ export const registerServer = async ({
     app.use(path, uploadsMiddleware);
   }
 
+  // Note: if you enable a gui in production and expect to be able to see your
+  // schema, you'll need to manually specify `introspection: true` in the
+  // ApolloServer constructor; by default, the introspection query is only
+  // enabled in dev.
+  const guiEnabled =
+    !!gui || (gui === undefined && process.env.NODE_ENV !== 'production');
+
   app.use(path, (req, res, next) => {
-    // make sure we check to see if graphql gui should be on
-    // enableGUI takes precedence over the server tools setting
-    if (
-      (enableGUI || (enableGUI === undefined && !server.disableTools)) &&
-      req.method === 'GET'
-    ) {
+    if (guiEnabled && req.method === 'GET') {
       //perform more expensive content-type check only if necessary
       const accept = accepts(req);
       const types = accept.types() as string[];
@@ -169,10 +172,12 @@ export const registerServer = async ({
         ) === 'text/html';
 
       if (prefersHTML) {
-        return gui({
+        const middlewareOptions = {
           endpoint: path,
           subscriptionEndpoint: server.subscriptionsPath,
-        })(req, res, next);
+          ...(typeof gui === 'boolean' ? {} : gui),
+        };
+        return playgroundMiddleware(middlewareOptions)(req, res, next);
       }
     }
     return graphqlExpress(server.createGraphQLServerOptions.bind(server))(
