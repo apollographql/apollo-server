@@ -123,7 +123,7 @@ The `registerServer` method is provided by all the `apollo-server-{integration}`
 
   * `app`: <`HttpServer`> _(required)_
 
-    Pass an instance of an integrationed server here.
+    Pass an instance of the server integration here.
 
   * `server`: <`ApolloServer`> _(required)_
 
