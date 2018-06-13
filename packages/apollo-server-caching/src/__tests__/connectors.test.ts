@@ -1,3 +1,4 @@
+import {} from 'jest';
 import { servers, delay } from '../__mocks__/common';
 import MemcachedKeyValueCache from '../connectors/memcached';
 import RedisKeyValueCache from '../connectors/redis';
@@ -5,9 +6,9 @@ import each from 'jest-each';
 
 // run test suite against each implementation of KeyValueCache
 each([
-  [new MemcachedKeyValueCache(servers.memcachedHost)],
-  [new RedisKeyValueCache({ host: servers.redisHost })],
-]).describe('%s', keyValueCache => {
+  ['Memcached Connector', new MemcachedKeyValueCache(servers.memcachedHost)],
+  ['Redis Connector', new RedisKeyValueCache({ host: servers.redisHost })],
+]).describe('%s', (description, keyValueCache) => {
   beforeEach(() => {
     keyValueCache.flush();
   });
