@@ -56,7 +56,7 @@ Check out the following changes for Apollo Server 2.0 beta.
 
 With the middleware option used by Apollo Server 1.0 users, it is necessary to install the beta version of `apollo-server-express` and also add the new `apollo-server` beta.  To do this, use the `beta` tag when installing:
 
-    npm install --save apollo-server-express@beta apollo-server@beta
+    npm install --save apollo-server-express@beta
 
 The changes are best shown by comparing the before and after of the application.
 

@@ -215,7 +215,7 @@ server.listen().then(({ url }) => {
 
 <h2 id="enums">Enums</h2>
 
-An Enum is similar to a scalar type, but it can only be one of several values defined in the schema. Enums are most useful in a situation where the user must pick from a prescribed list of options. Additionally enums improve development velocity, since they will auto-complete in tools like GraphiQL.
+An Enum is similar to a scalar type, but it can only be one of several values defined in the schema. Enums are most useful in a situation where the user must pick from a prescribed list of options. Additionally enums improve development velocity, since they will auto-complete in tools like GraphQL Playground.
 
 In the schema language, an enum looks like this:
 

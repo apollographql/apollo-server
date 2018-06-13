@@ -7,7 +7,7 @@ The schema contains the information to define all requests that the client can r
 
 Sometimes production servers contain a typeDefs string of over a thousand lines, which makes it difficult to maintain a file containing the resolvers as well. For applications with multiple teams or product domains, this section describes an example application and methods for organizing types and resolvers to make a large instance more modular. The separation between types should follow real-world domains, for example movies vs books, rather than the backend organization. To facilitate this organization, common practice is to create a data model layer that enables resolvers across domains to request data from a common interface. A data layer further enables the different schema domains to share data, such as a user profile.
 
-Along with modularizing large schemas, GraphQL enables schemas to include documentation inline that is viewable in GraphiQL.
+Along with modularizing large schemas, GraphQL enables schemas to include documentation inline that is viewable in GraphQL Playground.
 
 ## Prerequisites
 
@@ -325,7 +325,7 @@ const typeDefs = [barTypeDefs, fooTypeDefs]
 
 <h2 id="descriptions">Documenting your Schema</h2>
 
-GraphiQL has built-in support for displaying docstrings with markdown syntax. This schema includes docstrings for types, fields and arguments.
+GraphQL Playground has built-in support for displaying docstrings with markdown syntax. This schema includes docstrings for types, fields and arguments.
 
 ```graphql
 """
