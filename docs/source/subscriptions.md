@@ -3,7 +3,7 @@ title: Adding Subscriptions To Schema
 ---
 
 Apollo Server 2.0 supports GraphQL subscriptions without additional configuration.
-As example we want to display to display a list of post that contains author and comment (Query) and we want to add a post to them (Mutation).
+As example we want to display a list of post that contains author and comment (Query) and we want to add a post to them (Mutation).
 
 Our schema will be:
 
