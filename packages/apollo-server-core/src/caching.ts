@@ -6,7 +6,7 @@ export interface PersistedQueryCache {
 }
 
 export function calcualteCacheControlHeaders(
-  responses: Array<ExecutionResult>,
+  responses: Array<ExecutionResult & { extensions?: Record<string, any> }>,
 ) {
   let maxAge = Number.MAX_VALUE;
   let publicOrPrivate = 'public';
@@ -16,8 +16,7 @@ export function calcualteCacheControlHeaders(
       version: number;
       hints: Array<{ scope: string; maxAge: number }>;
     } =
-      (responses[i] as Record<string, any>).extensions &&
-      (responses[i] as Record<string, any>).extensions.cacheControl;
+      responses[i].extensions && responses[i].extensions.cacheControl;
 
     if (!cacheControl) {
       return {};

@@ -312,7 +312,9 @@ export async function runHttpQuery(
         fieldResolver: optionsObject.fieldResolver,
         debug: optionsObject.debug,
         tracing: optionsObject.tracing,
-        cacheControl: optionsObject.cacheControl,
+        //we always want cacheControl to either set the CDN headers or for the
+        //engine proxy
+        cacheControl: true,
         request: request.request,
         extensions: optionsObject.extensions,
       };
@@ -343,16 +345,37 @@ export async function runHttpQuery(
         }),
       };
     }
-  }) as Array<Promise<ExecutionResult>>;
+  }) as Array<Promise<ExecutionResult & { extensions?: Record<string, any> }>>;
 
   const responses = await Promise.all(requests);
 
   const responseInit: ApolloServerHttpResponse = {
     headers: {
       'Content-Type': 'application/json',
-      ...calcualteCacheControlHeaders(responses),
     },
   };
+
+  //enabling cacheControl means that the user would like the cache-control
+  //extensions we are running the proxy, so we should not strip out the cache
+  //control extension.
+  if (!optionsObject.cacheControl) {
+    responseInit.headers = {
+      ...responseInit.headers,
+      ...calcualteCacheControlHeaders(responses),
+    };
+
+    //remove cacheControl headers. This could be done in production only,
+    //however most users should not need to debug cacheControl headers, so they
+    //would only be a distraction
+    responses.forEach(response => {
+      if (response.extensions) {
+        delete response.extensions.cacheControl;
+        if (Object.keys(response.extensions).length === 0) {
+          delete response.extensions;
+        }
+      }
+    });
+  }
 
   if (!isBatch) {
     const graphqlResponse = responses[0];
