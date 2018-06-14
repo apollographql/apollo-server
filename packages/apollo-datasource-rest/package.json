@@ -14,7 +14,7 @@
   "scripts": {
     "clean": "rm -rf lib",
     "compile": "tsc",
-    "prepare": "npm run clean && npm run compile",
+    "prepublish": "npm run clean && npm run compile",
     "test": "jest --verbose"
   },
   "main": "dist/index.js",
