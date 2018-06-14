@@ -126,4 +126,4 @@ const server = new ApolloServer({
 ```
 
 As you can see Apollo Server 2.0 allows realtime data without invasive changes to existing code.
-For a full working example please have a look to this repro provided by [Daniele Zurico](https://github.com/daniele-zurico/apollo2-subscriptions-how-to)
+For a full working example please have a look to this repo provided by [Daniele Zurico](https://github.com/daniele-zurico/apollo2-subscriptions-how-to)
