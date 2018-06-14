@@ -1,6 +1,7 @@
 import CachePolicy from 'http-cache-semantics';
 
-import { KeyValueCache, InMemoryKeyValueCache } from './keyValueCaching';
+import { KeyValueCache } from './KeyValueCache';
+import { InMemoryKeyValueCache } from './InMemoryKeyValueCache';
 
 export class HTTPCache {
   constructor(
