@@ -12,7 +12,6 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "lib": ["es2016", "esnext.asynciterable"],
-    "types": ["node", "fetch", "url", "mocha"],
-    "typeRoots": ["./node_modules/@types", "./types"]
+    "types": ["node", "mocha"]
   }
 }

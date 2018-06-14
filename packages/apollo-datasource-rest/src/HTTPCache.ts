@@ -1,12 +1,15 @@
 import CachePolicy from 'http-cache-semantics';
 
-import { KeyValueCache } from './keyValueCache';
+import { KeyValueCache, InMemoryKeyValueCache } from './keyValueCaching';
 
 export class HTTPCache {
-  constructor(private keyValueCache: KeyValueCache) {}
+  constructor(
+    private keyValueCache: KeyValueCache = new InMemoryKeyValueCache(),
+  ) {}
 
   async fetch(input: RequestInfo, init?: RequestInit): Promise<Response> {
     const request = new Request(input, init);
+
     const cacheKey = cacheKeyFor(request);
 
     const entry = await this.keyValueCache.get(cacheKey);
@@ -55,7 +58,7 @@ export class HTTPCache {
     }
   }
 
-  protected async storeResponseAndReturnClone(
+  private async storeResponseAndReturnClone(
     request: Request,
     response: Response,
     policy: CachePolicy,
@@ -84,6 +87,8 @@ export class HTTPCache {
 
 function cacheKeyFor(request: Request): string {
   // FIXME: Find a way to take Vary header fields into account when computing a cache key
+  // Although we do validate header fields and don't serve responses from cache when they don't match,
+  // new reponses overwrite old ones with different vary header fields.
   // (I think we have similar heuristics in the Engine proxy)
   return `httpcache:${request.url}`;
 }

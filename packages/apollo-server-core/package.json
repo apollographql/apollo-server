@@ -53,6 +53,8 @@
   "dependencies": {
     "apollo-cache-control": "^0.1.1",
     "apollo-engine-reporting": "0.0.0-beta.12",
+    "apollo-datasource-rest": "^2.0.0-beta.7",
+    "apollo-server-env": "2.0.0-beta.7",
     "apollo-tracing": "^0.2.0-beta.1",
     "graphql-extensions": "0.1.0-beta.13",
     "graphql-subscriptions": "^0.5.8",

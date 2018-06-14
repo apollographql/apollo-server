@@ -42,6 +42,7 @@ export interface Config
       | 'fieldResolver'
       | 'cacheControl'
       | 'tracing'
+      | 'dataSources'
     > {
   typeDefs?: DocumentNode | [DocumentNode];
   resolvers?: IResolvers;

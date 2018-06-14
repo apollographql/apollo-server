@@ -13,7 +13,5 @@
     }
   },
   "hoist": true,
-  "packages": [
-    "packages/*"
-  ]
+  "packages": ["packages/*"]
 }
