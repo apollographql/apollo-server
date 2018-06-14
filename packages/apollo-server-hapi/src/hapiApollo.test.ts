@@ -1,5 +1,5 @@
 import hapi from 'hapi';
-import { registerServer, ApolloServer } from './ApolloServer';
+import { ApolloServer } from './ApolloServer';
 import { Config } from 'apollo-server-core';
 import 'mocha';
 
@@ -17,8 +17,7 @@ async function createApp(options: CreateAppOptions = {}) {
   const server = new ApolloServer(
     (options.graphqlOptions as Config) || { schema: Schema },
   );
-  await registerServer({
-    server,
+  await server.applyMiddleware({
     app,
   });
 

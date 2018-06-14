@@ -38,6 +38,7 @@ sidebar_categories:
     - api/graphql-tools
   Migration:
     - migration-two-dot
+    - migration-engine
 
 github_repo: apollographql/apollo-server
 content_root: docs/source

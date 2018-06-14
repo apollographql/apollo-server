@@ -1,5 +1,5 @@
 import express from 'express';
-import { ApolloServer, registerServer } from './ApolloServer';
+import { ApolloServer } from './ApolloServer';
 import testSuite, {
   schema as Schema,
   CreateAppOptions,
@@ -14,7 +14,7 @@ function createApp(options: CreateAppOptions = {}) {
   const server = new ApolloServer(
     (options.graphqlOptions as Config) || { schema: Schema },
   );
-  registerServer({ app, server });
+  server.applyMiddleware({ app });
   return app;
 }
 

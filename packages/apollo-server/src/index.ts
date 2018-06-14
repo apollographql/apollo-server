@@ -3,50 +3,94 @@
 // use with express). The dependency is unused otherwise, so don't worry if
 // you're not using express or your version doesn't quite match up.
 import express from 'express';
-import { registerServer } from 'apollo-server-express';
-
-import {
-  ApolloServerBase,
-  ListenOptions,
-  ServerInfo,
-} from 'apollo-server-core';
+import http from 'http';
+import net from 'net';
+import { ApolloServer as ApolloServerBase } from 'apollo-server-express';
 
 export { GraphQLOptions, GraphQLExtension, gql } from 'apollo-server-core';
-import { GraphQLOptions } from 'apollo-server-core';
 
 export * from './exports';
 
+export interface ServerInfo {
+  address: string;
+  family: string;
+  url: string;
+  port: number | string;
+  subscriptionsPath: string;
+  server: http.Server;
+}
+
 export class ApolloServer extends ApolloServerBase {
-  //This translates the arguments from the middleware into graphQL options It
-  //provides typings for the integration specific behavior, ideally this would
-  //be propagated with a generic to the super class
-  async createGraphQLServerOptions(
-    req: express.Request,
-    res: express.Response,
-  ): Promise<GraphQLOptions> {
-    return super.graphQLServerOptions({ req, res });
+  private httpServer: http.Server;
+
+  private createServerInfo(
+    server: http.Server,
+    subscriptionsPath?: string,
+  ): ServerInfo {
+    const serverInfo: any = {
+      ...(server.address() as net.AddressInfo),
+      server,
+      subscriptionsPath,
+    };
+
+    // Convert IPs which mean "any address" (IPv4 or IPv6) into localhost
+    // corresponding loopback ip. Note that the url field we're setting is
+    // primarily for consumption by our test suite. If this heuristic is
+    // wrong for your use case, explicitly specify a frontend host (in the
+    // `frontends.host` field in your engine config, or in the `host`
+    // option to ApolloServer.listen).
+    let hostForUrl = serverInfo.address;
+    if (serverInfo.address === '' || serverInfo.address === '::')
+      hostForUrl = 'localhost';
+
+    serverInfo.url = require('url').format({
+      protocol: 'http',
+      hostname: hostForUrl,
+      port: serverInfo.port,
+      pathname: this.graphqlPath,
+    });
+
+    return serverInfo;
   }
 
-  // here we overwrite the underlying listen to configure
-  // the fallback / default server implementation
-  async listen(opts: ListenOptions = {}): Promise<ServerInfo> {
-    // we haven't configured a server yet so lets build the default one
-    // using express
-    if (!this.getHttp) {
-      const app = express();
+  // Listen takes the same arguments as http.Server.listen.
+  public async listen(...opts: Array<any>): Promise<ServerInfo> {
+    // This class is the easy mode for people who don't create their own express
+    // object, so we have to create it.
+    const app = express();
 
-      //provide generous values for the getting started experience
-      await registerServer({
-        app,
-        path: '/',
-        server: this,
-        bodyParserConfig: { limit: '50mb' },
-        cors: {
-          origin: '*',
-        },
-      });
+    //provide generous values for the getting started experience
+    this.applyMiddleware({
+      app,
+      path: '/',
+      bodyParserConfig: { limit: '50mb' },
+      cors: {
+        origin: '*',
+      },
+    });
+
+    this.httpServer = http.createServer(app);
+
+    if (this.subscriptionServerOptions) {
+      this.installSubscriptionHandlers(this.httpServer);
     }
 
-    return super.listen(opts);
+    await new Promise(resolve => {
+      this.httpServer.once('listening', resolve);
+      // If the user passed a callback to listen, it'll get called in addition
+      // to our resolver. They won't have the ability to get the ServerInfo
+      // object unless they use our Promise, though.
+      this.httpServer.listen(...(opts.length ? opts : [{ port: 4000 }]));
+    });
+
+    return this.createServerInfo(this.httpServer, this.subscriptionsPath);
+  }
+
+  public async stop() {
+    if (this.httpServer) {
+      await new Promise(resolve => this.httpServer.close(resolve));
+      this.httpServer = null;
+    }
+    await super.stop();
   }
 }
