@@ -290,6 +290,14 @@ const typeDefs = gql\`${startSchema}\`
     }
   }
 
+  public getSubscriptionServer() {
+    return this.subscriptionServer;
+  }
+
+  public getHttpServer() {
+    return this.http;
+  }
+
   private createSubscriptionServer(
     server: HttpServer,
     config: SubscriptionServerOptions,
