@@ -149,7 +149,7 @@ server.createSubscriptionServer(httpServer);
 httpServer.listen(PORT, () => console.log(`🚀 Server ready at http://localhost:${PORT}${server.graphqlPath}`))
 ```
 
-the only line that we added in our existing code is:
+the only line we added in our existing code is:
 
 ```js
 server.createSubscriptionServer(httpServer);
