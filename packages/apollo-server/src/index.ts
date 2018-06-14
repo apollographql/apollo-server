@@ -21,6 +21,8 @@ export interface ServerInfo {
 }
 
 export class ApolloServer extends ApolloServerBase {
+  private httpServer: http.Server;
+
   private createServerInfo(
     server: http.Server,
     subscriptionsPath?: string,
@@ -52,7 +54,7 @@ export class ApolloServer extends ApolloServerBase {
   }
 
   // Listen takes the same arguments as http.Server.listen.
-  async listen(...opts: Array<any>): Promise<ServerInfo> {
+  public async listen(...opts: Array<any>): Promise<ServerInfo> {
     // This class is the easy mode for people who don't create their own express
     // object, so we have to create it.
     const app = express();
@@ -67,18 +69,28 @@ export class ApolloServer extends ApolloServerBase {
       },
     });
 
-    const server = http.createServer(app);
+    this.httpServer = http.createServer(app);
 
-    this.createSubscriptionServer(server);
+    if (this.subscriptionServerOptions) {
+      this.installSubscriptionHandlers(this.httpServer);
+    }
 
     await new Promise(resolve => {
-      server.once('listening', resolve);
+      this.httpServer.once('listening', resolve);
       // If the user passed a callback to listen, it'll get called in addition
       // to our resolver. They won't have the ability to get the ServerInfo
       // object unless they use our Promise, though.
-      server.listen(...(opts.length ? opts : [{ port: 4000 }]));
+      this.httpServer.listen(...(opts.length ? opts : [{ port: 4000 }]));
     });
 
-    return this.createServerInfo(server, this.subscriptionsPath);
+    return this.createServerInfo(this.httpServer, this.subscriptionsPath);
+  }
+
+  public async stop() {
+    if (this.httpServer) {
+      await new Promise(resolve => this.httpServer.close(resolve));
+      this.httpServer = null;
+    }
+    await super.stop();
   }
 }

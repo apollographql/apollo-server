@@ -350,7 +350,9 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
       });
 
       it('returns PersistedQueryNotSupported to a GET request if PQs disabled', async () => {
-        app = await createApp({ graphqlOptions: { persistedQueries: false } });
+        app = await createApp({
+          graphqlOptions: { schema, persistedQueries: false },
+        });
         const req = request(app)
           .get('/graphql')
           .query({
@@ -373,7 +375,9 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
       });
 
       it('returns PersistedQueryNotSupported to a POST request if PQs disabled', async () => {
-        app = await createApp({ graphqlOptions: { persistedQueries: false } });
+        app = await createApp({
+          graphqlOptions: { schema, persistedQueries: false },
+        });
         const req = request(app)
           .post('/graphql')
           .send({

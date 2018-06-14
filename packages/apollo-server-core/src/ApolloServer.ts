@@ -1,13 +1,11 @@
 import {
   makeExecutableSchema,
   addMockFunctionsToSchema,
-  IResolvers,
   mergeSchemas,
 } from 'graphql-tools';
 import { Server as HttpServer } from 'http';
 import {
   execute,
-  print,
   GraphQLSchema,
   subscribe,
   ExecutionResult,
@@ -56,8 +54,6 @@ const NoIntrospection = (context: ValidationContext) => ({
 });
 
 export class ApolloServerBase {
-  public disableTools: boolean;
-  // set in createSubscriptionServer function
   public subscriptionsPath: string;
   public graphqlPath: string = '/graphql';
   public requestOptions: Partial<GraphQLOptions<any>>;
@@ -68,9 +64,8 @@ export class ApolloServerBase {
   private extensions: Array<() => GraphQLExtension>;
   protected subscriptionServerOptions?: SubscriptionServerOptions;
 
-  private http?: HttpServer;
+  // set by installSubscriptionHandlers.
   private subscriptionServer?: SubscriptionServer;
-  protected getHttp: () => HttpServer;
 
   //The constructor should be universal across all environments. All environment specific behavior should be set in an exported registerServer or in by overriding listen
   constructor(config: Config) {
@@ -95,10 +90,6 @@ export class ApolloServerBase {
     //or protected field of the class instead of a global. Keeping the read in
     //the contructor enables testing of different environments
     const isDev = process.env.NODE_ENV !== 'production';
-
-    // we use this.disableTools to track this internally for later use when
-    // constructing middleware by frameworks to disable graphql playground
-    this.disableTools = !isDev;
 
     // if this is local dev, introspection should turned on
     // in production, we can manually turn introspection on by passing {
@@ -131,32 +122,10 @@ export class ApolloServerBase {
     this.requestOptions = requestOptions as GraphQLOptions;
     this.context = context;
 
-    if (
-      typeof typeDefs === 'string' ||
-      (Array.isArray(typeDefs) && typeDefs.find(d => typeof d === 'string'))
-    ) {
-      const startSchema =
-        (typeof typeDefs === 'string' &&
-          (typeDefs as string).substring(0, 200)) ||
-        (Array.isArray(typeDefs) &&
-          (typeDefs.find(d => typeof d === 'string') as any).substring(0, 200));
-      throw new Error(`typeDefs must be tagged with the gql exported from apollo-server:
-
-const { gql } = require('apollo-server');
-
-const typeDefs = gql\`${startSchema}\`
-`);
-    }
-
-    const enhancedTypeDefs = Array.isArray(typeDefs)
-      ? typeDefs.map(print)
-      : [print(typeDefs)];
-    enhancedTypeDefs.push(`scalar Upload`);
-
     this.schema = schema
       ? schema
       : makeExecutableSchema({
-          typeDefs: enhancedTypeDefs.join('\n'),
+          typeDefs,
           schemaDirectives,
           resolvers,
         });
@@ -215,28 +184,23 @@ const typeDefs = gql\`${startSchema}\`
     this.graphqlPath = path;
   }
 
-  public enhanceSchema(
-    schema: GraphQLSchema | { typeDefs: string; resolvers: IResolvers },
-  ) {
+  // If this is more generally useful to things other than Upload, we can make
+  // it public.
+  protected enhanceSchema(schema: GraphQLSchema) {
     this.schema = mergeSchemas({
-      schemas: [
-        this.schema,
-        'typeDefs' in schema ? schema['typeDefs'] : schema,
-      ],
-      resolvers: 'resolvers' in schema ? [, schema['resolvers']] : {},
+      schemas: [this.schema, schema],
     });
   }
 
   public async stop() {
     if (this.subscriptionServer) await this.subscriptionServer.close();
-    if (this.http) await new Promise(s => this.http.close(s));
     if (this.engineReportingAgent) {
       this.engineReportingAgent.stop();
       await this.engineReportingAgent.sendReport();
     }
   }
 
-  public createSubscriptionServer(server: HttpServer) {
+  public installSubscriptionHandlers(server: HttpServer) {
     if (!this.subscriptionServerOptions) {
       if (this.supportsSubscriptions()) {
         throw Error(
@@ -256,7 +220,6 @@ const typeDefs = gql\`${startSchema}\`
       path,
     } = this.subscriptionServerOptions;
 
-    this.http = server;
     this.subscriptionServer = SubscriptionServer.create(
       {
         schema: this.schema,

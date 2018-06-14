@@ -13,9 +13,7 @@ import {
 import { graphqlHapi } from './hapiApollo';
 
 export { GraphQLOptions, GraphQLExtension } from 'apollo-server-core';
-import { GraphQLOptions } from 'apollo-server-core';
-
-const gql = String.raw;
+import { GraphQLOptions, gql, makeExecutableSchema } from 'apollo-server-core';
 
 function handleFileUploads(uploadsConfig: Record<string, any>) {
   return async (request: hapi.Request) => {
@@ -55,12 +53,14 @@ export class ApolloServer extends ApolloServerBase {
     if (!path) path = '/graphql';
 
     if (uploads !== false) {
-      this.enhanceSchema({
-        typeDefs: gql`
-          scalar Upload
-        `,
-        resolvers: { Upload: GraphQLUpload },
-      });
+      this.enhanceSchema(
+        makeExecutableSchema({
+          typeDefs: gql`
+            scalar Upload
+          `,
+          resolvers: { Upload: GraphQLUpload },
+        }),
+      );
     }
 
     await app.ext({

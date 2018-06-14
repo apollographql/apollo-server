@@ -229,22 +229,6 @@ export function testApolloServer<AS extends ApolloServerBase>(
           expect(result.data).to.deep.equal({ hello: 'hi' });
           expect(result.errors, 'errors should exist').not.to.exist;
         });
-        it('throws if typeDefs are a string', done => {
-          const typeDefs: any = `
-          type Query {
-            hello: String
-          }
-        `;
-          const resolvers = { Query: { hello: () => 'hi' } };
-
-          createApolloServer({
-            typeDefs,
-            resolvers,
-          })
-            .then(expect.fail)
-            .catch(e => expect(e.message).to.match(/apollo-server/))
-            .then(() => done());
-        });
         it('uses schema over resolvers + typeDefs', async () => {
           const typeDefs = gql`
             type Query {
@@ -532,7 +516,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           typeDefs,
           resolvers,
         }).then(({ port, server, httpServer }) => {
-          server.createSubscriptionServer(httpServer);
+          server.installSubscriptionHandlers(httpServer);
 
           const client = new SubscriptionClient(
             `ws://localhost:${port}${server.subscriptionsPath}`,
@@ -600,7 +584,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           subscriptions: false,
         }).then(({ port, server, httpServer }) => {
           try {
-            server.createSubscriptionServer(httpServer);
+            server.installSubscriptionHandlers(httpServer);
             expect.fail();
           } catch (e) {
             expect(e.message).to.match(/disabled/);
@@ -680,7 +664,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           subscriptions: { onConnect, path },
         })
           .then(({ port, server, httpServer }) => {
-            server.createSubscriptionServer(httpServer);
+            server.installSubscriptionHandlers(httpServer);
             expect(onConnect.notCalled).true;
 
             expect(server.subscriptionsPath).to.equal(path);

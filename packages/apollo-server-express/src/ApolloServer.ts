@@ -15,9 +15,7 @@ import {
 } from 'apollo-upload-server';
 
 export { GraphQLOptions, GraphQLExtension } from 'apollo-server-core';
-import { GraphQLOptions } from 'apollo-server-core';
-
-const gql = String.raw;
+import { GraphQLOptions, gql, makeExecutableSchema } from 'apollo-server-core';
 
 export interface ServerRegistration {
   // Note: You can also pass a connect.Server here. If we changed this field to
@@ -117,12 +115,14 @@ export class ApolloServer extends ApolloServerBase {
 
     let uploadsMiddleware;
     if (uploads !== false) {
-      this.enhanceSchema({
-        typeDefs: gql`
-          scalar Upload
-        `,
-        resolvers: { Upload: GraphQLUpload },
-      });
+      this.enhanceSchema(
+        makeExecutableSchema({
+          typeDefs: gql`
+            scalar Upload
+          `,
+          resolvers: { Upload: GraphQLUpload },
+        }),
+      );
 
       uploadsMiddleware = fileUploadMiddleware(
         typeof uploads !== 'boolean' ? uploads : {},
