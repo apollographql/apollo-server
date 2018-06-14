@@ -651,7 +651,7 @@ describe('apollo-server-express', () => {
       server = new ApolloServer({ typeDefs, resolvers });
       app = express();
 
-      registerServer({ app, server });
+      server.applyMiddleware({ app });
 
       const { url: uri } = await server.listen();
       const apolloFetch = createApolloFetch({ uri }).useAfter(
@@ -673,7 +673,7 @@ describe('apollo-server-express', () => {
       server = new ApolloServer({ typeDefs, resolvers, cacheControl: true });
       app = express();
 
-      registerServer({ app, server });
+      server.applyMiddleware({ app });
 
       const { url: uri } = await server.listen();
       const apolloFetch = createApolloFetch({ uri }).useAfter(
@@ -692,7 +692,7 @@ describe('apollo-server-express', () => {
       server = new ApolloServer({ typeDefs, resolvers });
       app = express();
 
-      registerServer({ app, server });
+      server.applyMiddleware({ app });
 
       const { url: uri } = await server.listen();
       const apolloFetch = createApolloFetch({ uri }).useAfter(
@@ -712,7 +712,7 @@ describe('apollo-server-express', () => {
     //   server = new ApolloServer({ typeDefs, resolvers });
     //   app = express();
 
-    //   registerServer({ app, server });
+    //   server.applyMiddleware({ app });
 
     //   const { url: uri } = await server.listen({ engineInRequestPath: true });
     //   const apolloFetch = createApolloFetch({ uri }).useAfter(

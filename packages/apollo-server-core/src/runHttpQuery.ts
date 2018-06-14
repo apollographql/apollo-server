@@ -314,7 +314,11 @@ export async function runHttpQuery(
         tracing: optionsObject.tracing,
         //we always want cacheControl to either set the CDN headers or for the
         //engine proxy
-        cacheControl: true,
+        cacheControl:
+          optionsObject.cacheControl !== null &&
+          typeof optionsObject.cacheControl === 'object'
+            ? optionsObject.cacheControl
+            : true,
         request: request.request,
         extensions: optionsObject.extensions,
       };
