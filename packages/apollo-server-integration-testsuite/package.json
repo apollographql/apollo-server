@@ -1,7 +1,7 @@
 {
   "name": "apollo-server-integration-testsuite",
   "private": true,
-  "version": "2.0.0-beta.10",
+  "version": "2.0.0-beta.11",
   "description": "Apollo Server Integrations testsuite",
   "main": "dist/index.js",
   "scripts": {
@@ -23,8 +23,8 @@
     "node": ">=6"
   },
   "dependencies": {
-    "apollo-server-core": "^2.0.0-beta.10",
-    "apollo-server-module-operation-store": "^2.0.0-beta.10"
+    "apollo-server-core": "^2.0.0-beta.11",
+    "apollo-server-module-operation-store": "^2.0.0-beta.11"
   },
   "typings": "dist/index.d.ts",
   "typescript": {
