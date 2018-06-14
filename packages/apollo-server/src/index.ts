@@ -51,11 +51,10 @@ export class ApolloServer extends ApolloServerBase {
     return serverInfo;
   }
 
-  // here we overwrite the underlying listen to configure
-  // the fallback / default server implementation
+  // Listen takes the same arguments as http.Server.listen.
   async listen(...opts: Array<any>): Promise<ServerInfo> {
-    // we haven't configured a server yet so lets build the default one
-    // using express
+    // This class is the easy mode for people who don't create their own express
+    // object, so we have to create it.
     const app = express();
 
     //provide generous values for the getting started experience
@@ -72,26 +71,13 @@ export class ApolloServer extends ApolloServerBase {
 
     this.createSubscriptionServer(server);
 
-    if (opts.length > 0) {
-      //When the user passes in their own callback, we should respect it
-      await new Promise<http.Server>(resolve => {
-        if (opts[opts.length - 1] === 'function') {
-          const callback = opts[opts.length - 1];
-          opts[opts.length - 1] = async (server: http.Server) => {
-            resolve(server);
-            callback(server);
-          };
-
-          server.listen(...opts);
-        } else {
-          server.listen(...opts, resolve);
-        }
-      });
-    } else {
-      await new Promise<http.Server>(resolve =>
-        server.listen({ port: 4000 }, resolve),
-      );
-    }
+    await new Promise(resolve => {
+      server.once('listening', resolve);
+      // If the user passed a callback to listen, it'll get called in addition
+      // to our resolver. They won't have the ability to get the ServerInfo
+      // object unless they use our Promise, though.
+      server.listen(...(opts.length ? opts : [{ port: 4000 }]));
+    });
 
     return this.createServerInfo(server, this.subscriptionsPath);
   }
