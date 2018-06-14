@@ -22,7 +22,7 @@ export default class MemcachedKeyValueCache implements KeyValueCache {
     data: string,
     options?: { ttl?: number; tags?: string[] },
   ): Promise<void> {
-    const { ttl, tags } = Object.assign({}, this.defaultSetOptions, options);
+    const { ttl } = Object.assign({}, this.defaultSetOptions, options);
 
     try {
       await this.client.set(key, data, ttl);
@@ -50,8 +50,7 @@ export default class MemcachedKeyValueCache implements KeyValueCache {
     }
   }
 
-  close(): Promise<void> {
+  async close(): Promise<void> {
     this.client.end();
-    return Promise.resolve();
   }
 }

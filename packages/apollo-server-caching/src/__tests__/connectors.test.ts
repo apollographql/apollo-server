@@ -1,19 +1,29 @@
-import {} from 'jest';
-import { servers, delay } from '../__mocks__/common';
+import {} from 'jest'; // makes my editor happy
+
+// use mock implementations for underlying databases
+jest.mock('memcached', () => require('memcached-mock'));
+jest.mock('redis', () => require('redis-mock'));
+jest.useFakeTimers(); // mocks out setTimeout that is used in redis-mock
+
 import MemcachedKeyValueCache from '../connectors/memcached';
 import RedisKeyValueCache from '../connectors/redis';
-import each from 'jest-each';
+import { advanceTimeBy, mockDate, unmockDate } from '../__mocks__/date';
 
 // run test suite against each implementation of KeyValueCache
-each([
-  ['Memcached Connector', new MemcachedKeyValueCache(servers.memcachedHost)],
-  ['Redis Connector', new RedisKeyValueCache({ host: servers.redisHost })],
-]).describe('%s', (description, keyValueCache) => {
+describe.each([
+  ['Memcached Connector', new MemcachedKeyValueCache('mockhostname')],
+  ['Redis Connector', new RedisKeyValueCache({ host: 'mockhostname' })],
+])('%s', (description, keyValueCache) => {
+  beforeAll(() => {
+    mockDate();
+  });
+
   beforeEach(() => {
     keyValueCache.flush();
   });
 
   afterAll(() => {
+    unmockDate();
     keyValueCache.close();
   });
 
@@ -26,7 +36,8 @@ each([
   it('is able to expire keys based on ttl', async () => {
     await keyValueCache.set('short', 's', { ttl: 1 });
     await keyValueCache.set('long', 'l', { ttl: 5 });
-    await delay(1500);
+    advanceTimeBy(1500);
+    jest.advanceTimersByTime(1500);
     expect(await keyValueCache.get('short')).not.toBeDefined();
     expect(await keyValueCache.get('long')).toBe('l');
   });
