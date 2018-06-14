@@ -17,6 +17,17 @@ import { GraphQLOptions } from 'apollo-server-core';
 
 const gql = String.raw;
 
+function handleFileUploads(uploadsConfig: Record<string, any>) {
+  return async (request: hapi.Request) => {
+    if (request.mime === 'multipart/form-data') {
+      Object.defineProperty(request, 'payload', {
+        value: await processFileUploads(request, uploadsConfig),
+        writable: false,
+      });
+    }
+  };
+}
+
 export class ApolloServer extends ApolloServerBase {
   //This translates the arguments from the middleware into graphQL options It
   //provides typings for the integration specific behavior, ideally this would
@@ -31,11 +42,117 @@ export class ApolloServer extends ApolloServerBase {
   protected supportsSubscriptions(): boolean {
     return true;
   }
+
+  public async applyMiddleware({
+    app,
+    cors,
+    path,
+    disableHealthCheck,
+    gui,
+    onHealthCheck,
+    uploads,
+  }: ServerRegistration) {
+    if (!path) path = '/graphql';
+
+    if (uploads !== false) {
+      this.enhanceSchema({
+        typeDefs: gql`
+          scalar Upload
+        `,
+        resolvers: { Upload: GraphQLUpload },
+      });
+    }
+
+    await app.ext({
+      type: 'onRequest',
+      method: async function(request, h) {
+        if (request.path !== path) {
+          return h.continue;
+        }
+
+        if (uploads !== false) {
+          await handleFileUploads(typeof uploads !== 'boolean' ? uploads : {})(
+            request,
+          );
+        }
+
+        // Note: if you enable a gui in production and expect to be able to see your
+        // schema, you'll need to manually specify `introspection: true` in the
+        // ApolloServer constructor; by default, the introspection query is only
+        // enabled in dev.
+        const guiEnabled =
+          !!gui || (gui === undefined && process.env.NODE_ENV !== 'production');
+
+        // enableGUI takes precedence over the server tools setting
+        if (guiEnabled && request.method === 'get') {
+          //perform more expensive content-type check only if necessary
+          const accept = parseAll(request.headers);
+          const types = accept.mediaTypes as string[];
+          const prefersHTML =
+            types.find(
+              (x: string) => x === 'text/html' || x === 'application/json',
+            ) === 'text/html';
+
+          if (prefersHTML) {
+            const middlewareOptions = {
+              endpoint: path,
+              subscriptionEndpoint: this.subscriptionsPath,
+              version: '1.4.0',
+              ...(typeof gui === 'boolean' ? {} : gui),
+            };
+
+            return h
+              .response(renderPlaygroundPage(middlewareOptions))
+              .type('text/html')
+              .takeover();
+          }
+        }
+        return h.continue;
+      },
+    });
+
+    if (!disableHealthCheck) {
+      await app.route({
+        method: '*',
+        path: '/.well-known/apollo/server-health',
+        options: {
+          cors: typeof cors === 'boolean' ? cors : true,
+        },
+        handler: async function(request, h) {
+          if (onHealthCheck) {
+            try {
+              await onHealthCheck(request);
+            } catch {
+              const response = h.response({ status: 'fail' });
+              response.code(503);
+              response.type('application/health+json');
+              return response;
+            }
+          }
+          const response = h.response({ status: 'pass' });
+          response.type('application/health+json');
+          return response;
+        },
+      });
+    }
+
+    await app.register({
+      plugin: graphqlHapi,
+      options: {
+        path: path,
+        graphqlOptions: this.createGraphQLServerOptions.bind(this),
+        route: {
+          cors: typeof cors === 'boolean' ? cors : true,
+        },
+      },
+    });
+
+    this.graphqlPath = path;
+  }
 }
 
 export interface ServerRegistration {
   app?: hapi.Server;
-  server: ApolloServer;
   path?: string;
   cors?: boolean;
   onHealthCheck?: (request: hapi.Request) => Promise<any>;
@@ -44,121 +161,8 @@ export interface ServerRegistration {
   uploads?: boolean | Record<string, any>;
 }
 
-const handleFileUploads = (uploadsConfig: Record<string, any>) => async (
-  request: hapi.Request,
-) => {
-  if (request.mime === 'multipart/form-data') {
-    Object.defineProperty(request, 'payload', {
-      value: await processFileUploads(request, uploadsConfig),
-      writable: false,
-    });
-  }
-};
-
-export const registerServer = async ({
-  app,
-  server,
-  cors,
-  path,
-  disableHealthCheck,
-  gui,
-  onHealthCheck,
-  uploads,
-}: ServerRegistration) => {
-  if (!path) path = '/graphql';
-
-  if (uploads !== false) {
-    server.enhanceSchema({
-      typeDefs: gql`
-        scalar Upload
-      `,
-      resolvers: { Upload: GraphQLUpload },
-    });
-  }
-
-  await app.ext({
-    type: 'onRequest',
-    method: async function(request, h) {
-      if (request.path !== path) {
-        return h.continue;
-      }
-
-      if (uploads !== false) {
-        await handleFileUploads(typeof uploads !== 'boolean' ? uploads : {})(
-          request,
-        );
-      }
-
-      // Note: if you enable a gui in production and expect to be able to see your
-      // schema, you'll need to manually specify `introspection: true` in the
-      // ApolloServer constructor; by default, the introspection query is only
-      // enabled in dev.
-      const guiEnabled =
-        !!gui || (gui === undefined && process.env.NODE_ENV !== 'production');
-
-      // enableGUI takes precedence over the server tools setting
-      if (guiEnabled && request.method === 'get') {
-        //perform more expensive content-type check only if necessary
-        const accept = parseAll(request.headers);
-        const types = accept.mediaTypes as string[];
-        const prefersHTML =
-          types.find(
-            (x: string) => x === 'text/html' || x === 'application/json',
-          ) === 'text/html';
-
-        if (prefersHTML) {
-          const middlewareOptions = {
-            endpoint: path,
-            subscriptionEndpoint: server.subscriptionsPath,
-            version: '1.4.0',
-            ...(typeof gui === 'boolean' ? {} : gui),
-          };
-
-          return h
-            .response(renderPlaygroundPage(middlewareOptions))
-            .type('text/html')
-            .takeover();
-        }
-      }
-      return h.continue;
-    },
-  });
-
-  if (!disableHealthCheck) {
-    await app.route({
-      method: '*',
-      path: '/.well-known/apollo/server-health',
-      options: {
-        cors: typeof cors === 'boolean' ? cors : true,
-      },
-      handler: async function(request, h) {
-        if (onHealthCheck) {
-          try {
-            await onHealthCheck(request);
-          } catch {
-            const response = h.response({ status: 'fail' });
-            response.code(503);
-            response.type('application/health+json');
-            return response;
-          }
-        }
-        const response = h.response({ status: 'pass' });
-        response.type('application/health+json');
-        return response;
-      },
-    });
-  }
-
-  await app.register({
-    plugin: graphqlHapi,
-    options: {
-      path: path,
-      graphqlOptions: server.createGraphQLServerOptions.bind(server),
-      route: {
-        cors: typeof cors === 'boolean' ? cors : true,
-      },
-    },
-  });
-
-  server.setGraphQLPath(path);
+export const registerServer = () => {
+  throw new Error(
+    'Please use server.applyMiddleware instead of registerServer. This warning will be removed in the next release',
+  );
 };

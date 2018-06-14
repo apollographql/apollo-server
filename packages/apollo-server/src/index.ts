@@ -5,12 +5,9 @@
 import express from 'express';
 import http from 'http';
 import net from 'net';
-import { registerServer } from 'apollo-server-express';
-
-import { ApolloServerBase } from 'apollo-server-core';
+import { ApolloServer as ApolloServerBase } from 'apollo-server-express';
 
 export { GraphQLOptions, GraphQLExtension, gql } from 'apollo-server-core';
-import { GraphQLOptions } from 'apollo-server-core';
 
 export * from './exports';
 
@@ -24,20 +21,6 @@ export interface ServerInfo {
 }
 
 export class ApolloServer extends ApolloServerBase {
-  //This translates the arguments from the middleware into graphQL options It
-  //provides typings for the integration specific behavior, ideally this would
-  //be propagated with a generic to the super class
-  async createGraphQLServerOptions(
-    req: express.Request,
-    res: express.Response,
-  ): Promise<GraphQLOptions> {
-    return super.graphQLServerOptions({ req, res });
-  }
-
-  protected supportsSubscriptions(): boolean {
-    return true;
-  }
-
   private createServerInfo(
     server: http.Server,
     subscriptionsPath?: string,
@@ -76,10 +59,9 @@ export class ApolloServer extends ApolloServerBase {
     const app = express();
 
     //provide generous values for the getting started experience
-    await registerServer({
+    this.applyMiddleware({
       app,
       path: '/',
-      server: this as any,
       bodyParserConfig: { limit: '50mb' },
       cors: {
         origin: '*',

@@ -4,7 +4,7 @@ import {
   createServerInfo,
 } from 'apollo-server-integration-testsuite';
 
-import { registerServer, ApolloServer } from './ApolloServer';
+import { ApolloServer } from './ApolloServer';
 
 describe('apollo-server-hapi', () => {
   let server;
@@ -14,7 +14,7 @@ describe('apollo-server-hapi', () => {
     async options => {
       server = new ApolloServer(options);
       app = new Server({ host: 'localhost', port: 4000 });
-      registerServer({ app, server });
+      server.applyMiddleware({ app });
       await app.start();
       const httpServer = app.listener;
       return createServerInfo(server, httpServer);

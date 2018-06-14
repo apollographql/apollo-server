@@ -1,6 +1,6 @@
 import connect from 'connect';
 import query from 'qs-middleware';
-import { ApolloServer, registerServer } from './ApolloServer';
+import { ApolloServer } from './ApolloServer';
 import { Config } from 'apollo-server-core';
 import 'mocha';
 
@@ -21,7 +21,7 @@ function createConnectApp(options: CreateAppOptions = {}) {
     (options.graphqlOptions as Config) || { schema: Schema },
   );
   // See comment on ServerRegistration.app for its typing.
-  registerServer({ app: app as any, server });
+  server.applyMiddleware({ app: app as any });
   return app;
 }
 

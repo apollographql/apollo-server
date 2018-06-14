@@ -12,7 +12,7 @@ import fetch from 'node-fetch';
 import { createApolloFetch } from 'apollo-fetch';
 
 import { ApolloServerBase, AuthenticationError } from 'apollo-server-core';
-import { registerServer, ApolloServer } from './ApolloServer';
+import { ApolloServer } from './ApolloServer';
 
 import {
   testApolloServer,
@@ -44,7 +44,7 @@ describe('apollo-server-express', () => {
     async options => {
       server = new ApolloServer(options);
       const app = express();
-      registerServer({ app, server });
+      server.applyMiddleware({ app });
       httpServer = await new Promise<http.Server>(resolve => {
         const s = app.listen({ port: 4000 }, () => resolve(s));
       });
@@ -74,17 +74,17 @@ describe('apollo-server-express', () => {
     it('accepts typeDefs and resolvers', () => {
       const app = express();
       const server = new ApolloServer({ typeDefs, resolvers });
-      expect(() => registerServer({ app, server })).not.to.throw;
+      expect(() => server.applyMiddleware({ app })).not.to.throw;
     });
 
     it('accepts typeDefs and mocks', () => {
       const app = express();
       const server = new ApolloServer({ typeDefs, resolvers });
-      expect(() => registerServer({ app, server })).not.to.throw;
+      expect(() => server.applyMiddleware({ app })).not.to.throw;
     });
   });
 
-  describe('registerServer', () => {
+  describe('applyMiddleware', () => {
     it('can be queried', async () => {
       server = new ApolloServer({
         typeDefs,
@@ -92,7 +92,7 @@ describe('apollo-server-express', () => {
       });
       app = express();
 
-      registerServer({ app, server });
+      server.applyMiddleware({ app });
 
       httpServer = await new Promise<http.Server>(resolve => {
         const l = app.listen({ port: 4000 }, () => resolve(l));
@@ -125,7 +125,7 @@ describe('apollo-server-express', () => {
       });
       app = express();
 
-      registerServer({ app, server, gui: true });
+      server.applyMiddleware({ app, gui: true });
 
       httpServer = await new Promise<http.Server>(resolve => {
         const l = app.listen({ port: 4000 }, () => resolve(l));
@@ -171,7 +171,7 @@ describe('apollo-server-express', () => {
       });
       app = express();
 
-      registerServer({ app, server });
+      server.applyMiddleware({ app });
 
       httpServer = await new Promise<http.Server>(resolve => {
         const l = app.listen({ port: 4000 }, () => resolve(l));
@@ -207,7 +207,7 @@ describe('apollo-server-express', () => {
       });
       app = express();
 
-      registerServer({ app, server, cors: { origin: 'apollographql.com' } });
+      server.applyMiddleware({ app, cors: { origin: 'apollographql.com' } });
 
       httpServer = await new Promise<http.Server>(resolve => {
         const l = app.listen({ port: 4000 }, () => resolve(l));
@@ -231,7 +231,7 @@ describe('apollo-server-express', () => {
       });
       app = express();
 
-      registerServer({ app, server, bodyParserConfig: { limit: 0 } });
+      server.applyMiddleware({ app, bodyParserConfig: { limit: 0 } });
 
       httpServer = await new Promise<http.Server>(resolve => {
         const l = app.listen({ port: 4000 }, () => resolve(l));
@@ -263,7 +263,7 @@ describe('apollo-server-express', () => {
         });
         app = express();
 
-        registerServer({ app, server, bodyParserConfig: { limit: 0 } });
+        server.applyMiddleware({ app, bodyParserConfig: { limit: 0 } });
 
         httpServer = await new Promise<http.Server>(resolve => {
           const l = app.listen({ port: 4000 }, () => resolve(l));
@@ -296,9 +296,8 @@ describe('apollo-server-express', () => {
         });
         app = express();
 
-        registerServer({
+        server.applyMiddleware({
           app,
-          server,
           onHealthCheck: async () => {
             throw Error("can't connect to DB");
           },
@@ -334,9 +333,8 @@ describe('apollo-server-express', () => {
           resolvers,
         });
         app = express();
-        registerServer({
+        server.applyMiddleware({
           app,
-          server,
           disableHealthCheck: true,
         });
 
@@ -394,9 +392,8 @@ describe('apollo-server-express', () => {
           },
         });
         app = express();
-        registerServer({
+        server.applyMiddleware({
           app,
-          server,
         });
 
         httpServer = await new Promise<http.Server>(resolve => {
@@ -472,7 +469,7 @@ describe('apollo-server-express', () => {
         });
 
         app = express();
-        registerServer({ app, server });
+        server.applyMiddleware({ app });
 
         httpServer = await new Promise<http.Server>(resolve => {
           const l = app.listen({ port: 4000 }, () => resolve(l));
@@ -512,7 +509,7 @@ describe('apollo-server-express', () => {
         });
 
         app = express();
-        registerServer({ app, server });
+        server.applyMiddleware({ app });
 
         httpServer = await new Promise<http.Server>(resolve => {
           const l = app.listen({ port: 4000 }, () => resolve(l));
@@ -552,7 +549,7 @@ describe('apollo-server-express', () => {
         });
 
         app = express();
-        registerServer({ app, server });
+        server.applyMiddleware({ app });
 
         httpServer = await new Promise<http.Server>(resolve => {
           const l = app.listen({ port: 4000 }, () => resolve(l));
@@ -591,7 +588,7 @@ describe('apollo-server-express', () => {
         });
 
         app = express();
-        registerServer({ app, server });
+        server.applyMiddleware({ app });
 
         httpServer = await new Promise<http.Server>(resolve => {
           const l = app.listen({ port: 4000 }, () => resolve(l));
