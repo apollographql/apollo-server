@@ -122,10 +122,9 @@ const resolvers = {
 const server = new ApolloServer({ typeDefs, resolvers });
 server.applyMiddleware({ server });
 
-// normal ApolloServer listen call but url will contain /graphql
-server.listen().then(({ url }) => {
-  console.log(`🚀 Server ready at ${url}`)
-});
+app.listen({ port: 4000 }, () =>
+  console.log(`🚀 Server ready at http://localhost:4000${server.graphqlPath}`)
+)
 ```
 
 <h2 id="Stand-alone">Stand-alone</h2>
@@ -184,10 +183,9 @@ app.use(path, jwtCheck);
 
 server.applyMiddleware({ app, path });
 
-// normal ApolloServer listen call but url will contain /graphql
-server.listen().then(({ url }) => {
-  console.log(`🚀 Server ready at ${url}`)
-});
+app.listen({ port: 4000 }, () =>
+  console.log(`🚀 Server ready at http://localhost:4000${server.graphqlPath}`)
+)
 ```
 
 <h2 id="existing-schema">Using an Existing Schema</h2>
