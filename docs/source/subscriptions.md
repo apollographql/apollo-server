@@ -7,16 +7,16 @@ As example we want to display a list of post that contains author and comment (Q
 
 Our schema will be:
 
-```
+```graphql
 type Query {
-posts: [Post]
+  posts: [Post]
 }
 type Mutation {
-addPost(author: String, comment: String): Post
+  addPost(author: String, comment: String): Post
 }
 type Post {
-author: String
-comment: String
+  author: String
+  comment: String
 }
 ```
 
@@ -44,20 +44,20 @@ To enable subscription we need to apply just few changes:
 
 - In our schema:
 
-```
-    type Query {
-        posts: [Post]
-    }
-    type Mutation {
-        addPost(author: String, comment: String): Post
-    }
-    type Post {
-        author: String
-        comment: String
-    }
-    type Subscription {
-        postAdded: Post
-    }
+```graphql
+type Query {
+  posts: [Post]
+}
+type Mutation {
+  addPost(author: String, comment: String): Post
+}
+type Post {
+  author: String
+  comment: String
+}
+type Subscription {
+  postAdded: Post
+}
 ```
 
 We just added `type Subscription`,
@@ -110,18 +110,18 @@ A good workaround to this problem is to return in case `req` or `req.headers` ar
 
 ```js
 const server = new ApolloServer({
-	schema,
-	context: async ({ req, connection }: any) => {
-		if (connection) {
-            // check your stuff as token etc
-      		return;
-    	} else {
-            // check your stuff from req
-            const token = req.headers.authorization || "";
-		    ....
-		    return checkToken;
-        }
-	},
+  schema,
+  context: async ({ req, connection }: any) => {
+    if (connection) {
+      // check your stuff as token etc
+      return;
+    } else {
+      // check your stuff from req
+      const token = req.headers.authorization || "";
+      ....
+      return checkToken;
+    }
+  },
 });
 ```
 
