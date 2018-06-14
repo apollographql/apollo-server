@@ -24,6 +24,8 @@ import { GraphQLOptions, Config } from 'apollo-server-core';
 import { OperationStore } from 'apollo-server-module-operation-store';
 import gql from 'graphql-tag';
 
+export * from './ApolloServer';
+
 const personType = new GraphQLObjectType({
   name: 'PersonType',
   fields: {
