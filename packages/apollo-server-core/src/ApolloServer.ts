@@ -40,6 +40,8 @@ import {
   SubscriptionServerOptions,
 } from './types';
 
+import { gql } from './index';
+
 const NoIntrospection = (context: ValidationContext) => ({
   Field(node: FieldDefinitionNode) {
     if (node.name.value === '__schema' || node.name.value === '__type') {
@@ -125,7 +127,13 @@ export class ApolloServerBase {
     this.schema = schema
       ? schema
       : makeExecutableSchema({
-          typeDefs,
+          //we add in the upload scalar, so that schemas that don't include it
+          //won't error when we makeExecutableSchema
+          typeDefs: [
+            gql`
+              scalar Upload
+            `,
+          ].concat(typeDefs),
           schemaDirectives,
           resolvers,
         });
