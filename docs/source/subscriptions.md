@@ -127,3 +127,30 @@ const server = new ApolloServer({
 
 As you can see Apollo Server 2.0 allows realtime data without invasive changes to existing code.
 For a full working example please have a look to this repo provided by [Daniele Zurico](https://github.com/daniele-zurico/apollo2-subscriptions-how-to)
+
+<h2 id="express">Express</h2>
+If you already have an existing Express HTTP server (created with `createServer`), you can easily add subscriptions.
+For example: if your server is already running on port 3000 and accepts GraphQL HTTP connections (POST) you can expose the subscriptions:
+
+```js
+const http = require('http');
+const { ApolloServer } = require('apollo-server-express');
+const express = require('express');
+
+const PORT = 3000;
+const app = express();
+const server = new ApolloServer({ typeDefs, resolvers });
+
+server.applyMiddleware({app})
+
+const httpServer = http.createServer(app);
+server.createSubscriptionServer(httpServer);
+
+httpServer.listen(PORT, () => console.log(`🚀 Server ready at http://localhost:${PORT}${server.graphqlPath}`))
+```
+
+the only line that we added in our existing code is:
+
+```js
+server.createSubscriptionServer(httpServer);
+```
