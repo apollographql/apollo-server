@@ -1,14 +1,19 @@
 version: 2
 
+#
 # Reusable Snippets!
 #
 # These are re-used by the various tests below, to avoid repetition.
 #
 run_install_desired_npm: &run_install_desired_npm
   run:
-    name: Install npm@6
-    # we use yarn, since Node 6 does not support the latest npm by default, so
-    # use 5
+    # Due to a bug, npm upgrades from the version of npm that ships with
+    # Node.js 6 (npm v3.10.10) go poorly and generally causes other problems
+    # with the environment.  Since yarn is already available here we can just
+    # use that to work-around the issue.  It's possible that npm cleanup might
+    # prevent this from being necessary, but this installation can be switched
+    # to use `npm` (rather than `yarn`) once Node 6 is no longer tested below.
+    name: Install npm@5, but with yarn.
     command: sudo yarn global add npm@5
 
 # These are the steps used for each version of Node which we're testing
