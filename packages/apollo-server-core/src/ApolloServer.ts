@@ -236,11 +236,17 @@ const typeDefs = gql\`${startSchema}\`
     }
   }
 
-  protected createSubscriptionServer(server: HttpServer) {
+  public createSubscriptionServer(server: HttpServer) {
     if (!this.subscriptionServerOptions) {
-      if (this.subscriptionsSupported())
-        throw Error('Subscriptions are disabled');
-      else throw Error('Subscriptions are not supported');
+      if (this.supportsSubscriptions()) {
+        throw Error(
+          'Subscriptions are disabled, due to subscriptions set to false in the ApolloServer constructor',
+        );
+      } else {
+        throw Error(
+          'Subscriptions are not supported, choose an integration, such as apollo-server-express that allows persistent connections',
+        );
+      }
     }
 
     const {

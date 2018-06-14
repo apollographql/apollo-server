@@ -85,7 +85,7 @@ export class ApolloServer extends ApolloServerBase {
   }
 }
 
-export const registerServer = async ({
+export const registerServer = ({
   app,
   server,
   path,
