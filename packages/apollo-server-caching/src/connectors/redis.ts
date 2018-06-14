@@ -24,43 +24,24 @@ export default class RedisKeyValueCache implements KeyValueCache {
     options?: { ttl?: number; tags?: string[] },
   ): Promise<void> {
     const { ttl } = Object.assign({}, this.defaultSetOptions, options);
-    try {
-      await this.client.set(key, data, 'EX', ttl);
-      return Promise.resolve();
-    } catch (error) {
-      return Promise.reject(error);
-    }
+    await this.client.set(key, data, 'EX', ttl);
   }
 
   async get(key: string): Promise<string | undefined> {
-    try {
-      const reply = await this.client.get(key);
-      // reply is null if key is not found
-      if (reply === null) {
-        return Promise.resolve(undefined);
-      } else {
-        return Promise.resolve(reply);
-      }
-    } catch (error) {
-      return Promise.reject(error);
+    const reply = await this.client.get(key);
+    // reply is null if key is not found
+    if (reply !== null) {
+      return reply;
     }
+    return;
   }
 
   async flush(): Promise<void> {
-    try {
-      await this.client.flushdb();
-      return Promise.resolve();
-    } catch (error) {
-      return Promise.reject(error);
-    }
+    await this.client.flushdb();
   }
 
   async close(): Promise<void> {
-    try {
-      await this.client.quit();
-      return Promise.resolve();
-    } catch (error) {
-      return Promise.reject(error);
-    }
+    await this.client.quit();
+    return;
   }
 }

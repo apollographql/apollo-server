@@ -23,31 +23,15 @@ export default class MemcachedKeyValueCache implements KeyValueCache {
     options?: { ttl?: number; tags?: string[] },
   ): Promise<void> {
     const { ttl } = Object.assign({}, this.defaultSetOptions, options);
-
-    try {
-      await this.client.set(key, data, ttl);
-      return Promise.resolve();
-    } catch (error) {
-      return Promise.reject(error);
-    }
+    await this.client.set(key, data, ttl);
   }
 
   async get(key: string): Promise<string | undefined> {
-    try {
-      const reply = await this.client.get(key);
-      return Promise.resolve(reply);
-    } catch (error) {
-      return Promise.reject(error);
-    }
+    return await this.client.get(key);
   }
 
   async flush(): Promise<void> {
-    try {
-      await this.client.flush();
-      return Promise.resolve();
-    } catch (error) {
-      return Promise.reject(error);
-    }
+    await this.client.flush();
   }
 
   async close(): Promise<void> {
