@@ -27,12 +27,14 @@ export class ApolloServer extends ApolloServerBase {
   ): Promise<GraphQLOptions> {
     return super.graphQLServerOptions({ request, h });
   }
+
+  protected supportsSubscriptions(): boolean {
+    return true;
+  }
 }
 
 export interface ServerRegistration {
   app?: hapi.Server;
-  //The options type should exclude port
-  options?: hapi.ServerOptions;
   server: ApolloServer;
   path?: string;
   cors?: boolean;
@@ -55,7 +57,6 @@ const handleFileUploads = (uploadsConfig: Record<string, any>) => async (
 
 export const registerServer = async ({
   app,
-  options,
   server,
   cors,
   path,
@@ -66,32 +67,6 @@ export const registerServer = async ({
 }: ServerRegistration) => {
   if (!path) path = '/graphql';
 
-  let hapiApp: hapi.Server;
-  if (app) {
-    hapiApp = app;
-    if (options) {
-      console.warn(`A Hapi Server was passed in, so the options are ignored`);
-    }
-  } else if (options) {
-    if ((options as any).port) {
-      throw new Error(`
-The options for registerServer should not include a port, since autoListen is set to false. Please set the port under the http options in listen:
-
-const server = new ApolloServer({ typeDefs, resolvers });
-
-registerServer({
-  server,
-  options,
-});
-
-server.listen({ http: { port: YOUR_PORT_HERE } });
-      `);
-    }
-    hapiApp = new hapi.Server({ ...options, autoListen: false });
-  } else {
-    hapiApp = new hapi.Server({ autoListen: false });
-  }
-
   if (uploads !== false) {
     server.enhanceSchema({
       typeDefs: gql`
@@ -101,7 +76,7 @@ server.listen({ http: { port: YOUR_PORT_HERE } });
     });
   }
 
-  await hapiApp.ext({
+  await app.ext({
     type: 'onRequest',
     method: async function(request, h) {
       if (request.path !== path) {
@@ -150,7 +125,7 @@ server.listen({ http: { port: YOUR_PORT_HERE } });
   });
 
   if (!disableHealthCheck) {
-    await hapiApp.route({
+    await app.route({
       method: '*',
       path: '/.well-known/apollo/server-health',
       options: {
@@ -174,7 +149,7 @@ server.listen({ http: { port: YOUR_PORT_HERE } });
     });
   }
 
-  await hapiApp.register({
+  await app.register({
     plugin: graphqlHapi,
     options: {
       path: path,
@@ -185,30 +160,5 @@ server.listen({ http: { port: YOUR_PORT_HERE } });
     },
   });
 
-  server.use({ path, getHttp: () => hapiApp.listener });
-
-  const listen = server.listen.bind(server);
-  server.listen = async options => {
-    //requires that autoListen is false, so that
-    //hapi sets up app.listener without start
-    await hapiApp.start();
-
-    //While this is not strictly necessary, it ensures that apollo server calls
-    //listen first, setting the port. Otherwise the hapi server constructor
-    //sets the port
-    if (hapiApp.listener.listening) {
-      throw Error(
-        `
-Ensure that constructor of Hapi server sets autoListen to false, as follows:
-
-const app = Hapi.server({
-  autoListen: false,
-  //other parameters
-});
-        `,
-      );
-    }
-
-    return listen({ ...options });
-  };
+  server.setGraphQLPath(path);
 };

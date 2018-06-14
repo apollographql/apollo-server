@@ -1,7 +1,6 @@
 import express from 'express';
 import corsMiddleware from 'cors';
 import { json, OptionsJson } from 'body-parser';
-import { createServer } from 'http';
 import playgroundMiddleware from 'graphql-playground-middleware-express';
 import { MiddlewareOptions as PlaygroundMiddlewareOptions } from 'graphql-playground-html';
 import { ApolloServerBase, formatApolloErrors } from 'apollo-server-core';
@@ -135,10 +134,7 @@ export const registerServer = async ({
   }
 
   // XXX multiple paths?
-  server.use({
-    path,
-    getHttp: () => createServer(app),
-  });
+  server.setGraphQLPath(path);
 
   // Note that we don't just pass all of these handlers to a single app.use call
   // for 'connect' compatibility.

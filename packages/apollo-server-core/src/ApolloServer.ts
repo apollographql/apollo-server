@@ -37,7 +37,6 @@ import { LogFunction } from './logging';
 
 import {
   Config,
-  RegistrationOptions,
   Context,
   ContextFunction,
   SubscriptionServerOptions,
@@ -58,13 +57,13 @@ const NoIntrospection = (context: ValidationContext) => ({
 
 export class ApolloServerBase {
   public disableTools: boolean;
-  // set in the listen function if subscriptions are enabled
+  // set in createSubscriptionServer function
   public subscriptionsPath: string;
+  public graphqlPath: string = '/graphql';
   public requestOptions: Partial<GraphQLOptions<any>>;
 
   private schema: GraphQLSchema;
   private context?: Context | ContextFunction;
-  private graphqlPath: string = '/graphql';
   private engineReportingAgent?: EngineReportingAgent;
   private extensions: Array<() => GraphQLExtension>;
   protected subscriptionServerOptions?: SubscriptionServerOptions;
@@ -210,6 +209,12 @@ const typeDefs = gql\`${startSchema}\`
     }
   }
 
+  //used by integrations to synchronize the path with subscriptions, some
+  //integrations do not have paths, such as lambda
+  public setGraphQLPath(path: string) {
+    this.graphqlPath = path;
+  }
+
   public enhanceSchema(
     schema: GraphQLSchema | { typeDefs: string; resolvers: IResolvers },
   ) {
@@ -232,6 +237,12 @@ const typeDefs = gql\`${startSchema}\`
   }
 
   protected createSubscriptionServer(server: HttpServer) {
+    if (!this.subscriptionServerOptions) {
+      if (this.subscriptionsSupported())
+        throw Error('Subscriptions are disabled');
+      else throw Error('Subscriptions are not supported');
+    }
+
     const {
       onDisconnect,
       onConnect,
@@ -239,6 +250,7 @@ const typeDefs = gql\`${startSchema}\`
       path,
     } = this.subscriptionServerOptions;
 
+    this.http = server;
     this.subscriptionServer = SubscriptionServer.create(
       {
         schema: this.schema,

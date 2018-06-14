@@ -1,8 +1,6 @@
 import { GraphQLSchema, DocumentNode } from 'graphql';
 import { SchemaDirectiveVisitor, IResolvers, IMocks } from 'graphql-tools';
 import { ConnectionContext } from 'subscriptions-transport-ws';
-import { Server as HttpServer } from 'http';
-import { ListenOptions as HttpListenOptions } from 'net';
 import { GraphQLExtension } from 'graphql-extensions';
 import { EngineReportingOptions } from 'apollo-engine-reporting';
 export { GraphQLExtension } from 'graphql-extensions';
@@ -59,9 +57,4 @@ export interface MiddlewareOptions {
   path?: string;
   gui?: boolean;
   subscriptions?: boolean;
-}
-
-export interface RegistrationOptions {
-  path: string;
-  getHttp: () => HttpServer;
 }
