@@ -36,9 +36,15 @@ describe.each([
   it('is able to expire keys based on ttl', async () => {
     await keyValueCache.set('short', 's', { ttl: 1 });
     await keyValueCache.set('long', 'l', { ttl: 5 });
+    expect(await keyValueCache.get('short')).toBe('s');
+    expect(await keyValueCache.get('long')).toBe('l');
     advanceTimeBy(1500);
     jest.advanceTimersByTime(1500);
     expect(await keyValueCache.get('short')).not.toBeDefined();
     expect(await keyValueCache.get('long')).toBe('l');
+    advanceTimeBy(4000);
+    jest.advanceTimersByTime(4000);
+    expect(await keyValueCache.get('short')).not.toBeDefined();
+    expect(await keyValueCache.get('long')).not.toBeDefined();
   });
 });
