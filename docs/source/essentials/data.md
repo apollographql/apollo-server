@@ -239,4 +239,4 @@ GraphQL clients, like [Apollo Client](https://www.apollographql.com/docs/react/)
 }
 ```
 
-This functionality is also supported by tools like GraphQL Playground and GraphiQL.
+This functionality is also supported by tools like GraphQL Playground.

@@ -20,10 +20,11 @@ import {
 // tslint:disable-next-line
 const request = require('supertest');
 
-import { GraphQLOptions } from 'apollo-server-core';
-import * as GraphiQL from 'apollo-server-module-graphiql';
+import { GraphQLOptions, Config } from 'apollo-server-core';
 import { OperationStore } from 'apollo-server-module-operation-store';
 import gql from 'graphql-tag';
+
+export * from './ApolloServer';
 
 const personType = new GraphQLObjectType({
   name: 'PersonType',
@@ -131,10 +132,8 @@ export interface CreateAppOptions {
   excludeParser?: boolean;
   graphqlOptions?:
     | GraphQLOptions
-    | { (): GraphQLOptions | Promise<GraphQLOptions> };
-  graphiqlOptions?:
-    | GraphiQL.GraphiQLData
-    | { (): GraphiQL.GraphiQLData | Promise<GraphiQL.GraphiQLData> };
+    | { (): GraphQLOptions | Promise<GraphQLOptions> }
+    | Config;
 }
 
 export interface CreateAppFunc {
@@ -161,66 +160,8 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
     });
 
     describe('graphqlHTTP', () => {
-      it('can be called with an options function', async () => {
-        app = await createApp({
-          graphqlOptions: (): GraphQLOptions => ({ schema }),
-        });
-        const expected = {
-          testString: 'it works',
-        };
-        const req = request(app)
-          .post('/graphql')
-          .send({
-            query: 'query test{ testString }',
-          });
-        return req.then(res => {
-          expect(res.status).to.equal(200);
-          expect(res.body.data).to.deep.equal(expected);
-        });
-      });
-
-      it('can be called with an options function that returns a promise', async () => {
-        app = await createApp({
-          graphqlOptions: () => {
-            return new Promise(resolve => {
-              resolve({ schema });
-            });
-          },
-        });
-        const expected = {
-          testString: 'it works',
-        };
-        const req = request(app)
-          .post('/graphql')
-          .send({
-            query: 'query test{ testString }',
-          });
-        return req.then(res => {
-          expect(res.status).to.equal(200);
-          expect(res.body.data).to.deep.equal(expected);
-        });
-      });
-
-      it('throws an error if options promise is rejected', async () => {
-        app = await createApp({
-          graphqlOptions: () => {
-            return (Promise.reject({}) as any) as GraphQLOptions;
-          },
-        });
-        const expected = 'Invalid options';
-        const req = request(app)
-          .post('/graphql')
-          .send({
-            query: 'query test{ testString }',
-          });
-        return req.then(res => {
-          expect(res.status).to.equal(500);
-          expect(res.error.text).to.contain(expected);
-        });
-      });
-
       it('rejects the request if the method is not POST or GET', async () => {
-        app = await createApp({ excludeParser: true });
+        app = await createApp();
         const req = request(app)
           .head('/graphql')
           .send();
@@ -231,7 +172,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
       });
 
       it('throws an error if POST body is missing', async () => {
-        app = await createApp({ excludeParser: true });
+        app = await createApp();
         const req = request(app)
           .post('/graphql')
           .send();
@@ -408,8 +349,10 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
         });
       });
 
-      it('returns PersistedQueryNotSupported to a GET request', async () => {
-        app = await createApp();
+      it('returns PersistedQueryNotSupported to a GET request if PQs disabled', async () => {
+        app = await createApp({
+          graphqlOptions: { schema, persistedQueries: false },
+        });
         const req = request(app)
           .get('/graphql')
           .query({
@@ -431,8 +374,10 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
         });
       });
 
-      it('returns PersistedQueryNotSupported to a POST request', async () => {
-        app = await createApp();
+      it('returns PersistedQueryNotSupported to a POST request if PQs disabled', async () => {
+        app = await createApp({
+          graphqlOptions: { schema, persistedQueries: false },
+        });
         const req = request(app)
           .post('/graphql')
           .send({
@@ -451,6 +396,48 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           expect(res.body.errors[0].message).to.equal(
             'PersistedQueryNotSupported',
           );
+        });
+      });
+
+      it('returns PersistedQueryNotFound to a GET request', async () => {
+        app = await createApp();
+        const req = request(app)
+          .get('/graphql')
+          .query({
+            extensions: JSON.stringify({
+              persistedQuery: {
+                version: 1,
+                sha256Hash:
+                  'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+              },
+            }),
+          });
+        return req.then(res => {
+          expect(res.status).to.equal(200);
+          expect(res.body.errors).to.exist;
+          expect(res.body.errors.length).to.equal(1);
+          expect(res.body.errors[0].message).to.equal('PersistedQueryNotFound');
+        });
+      });
+
+      it('returns PersistedQueryNotFound to a POST request', async () => {
+        app = await createApp();
+        const req = request(app)
+          .post('/graphql')
+          .send({
+            extensions: {
+              persistedQuery: {
+                version: 1,
+                sha256Hash:
+                  'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+              },
+            },
+          });
+        return req.then(res => {
+          expect(res.status).to.equal(200);
+          expect(res.body.errors).to.exist;
+          expect(res.body.errors.length).to.equal(1);
+          expect(res.body.errors[0].message).to.equal('PersistedQueryNotFound');
         });
       });
 
@@ -709,7 +696,14 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
             },
           ]);
         return req.then(res => {
-          expect(callCount).to.equal(2);
+          // XXX In AS 1.0 we ran context once per GraphQL operation (so this
+          // was 2) rather than once per HTTP request. Was this actually
+          // helpful? Honestly we're not sure why you'd use a function in the
+          // 1.0 API anyway since the function didn't actually get any useful
+          // arguments. Right now there's some weirdness where a context
+          // function is actually evaluated both inside ApolloServer and in
+          // runHttpQuery.
+          expect(callCount).to.equal(1);
           expect(res.status).to.equal(200);
           expect(res.body).to.deep.equal(expected);
         });
@@ -921,96 +915,6 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
         return req.then(res => {
           expect(res.status).to.equal(400);
           expect(res.body.errors[0].message).to.equal(expected);
-        });
-      });
-    });
-
-    describe('renderGraphiQL', () => {
-      it('presents GraphiQL when accepting HTML', async () => {
-        app = await createApp({
-          graphiqlOptions: {
-            endpointURL: '/graphql',
-          },
-        });
-
-        const req = request(app)
-          .get('/graphiql')
-          .query('query={test}')
-          .set('Accept', 'text/html');
-        return req.then(response => {
-          expect(response.status).to.equal(200);
-          expect(response.type).to.equal('text/html');
-          expect(response.text).to.include('{test}');
-          expect(response.text).to.include('/graphql');
-          expect(response.text).to.include('graphiql.min.js');
-        });
-      });
-
-      it('allows options to be a function', async () => {
-        app = await createApp({
-          graphiqlOptions: () => ({
-            endpointURL: '/graphql',
-          }),
-        });
-
-        const req = request(app)
-          .get('/graphiql')
-          .set('Accept', 'text/html');
-        return req.then(response => {
-          expect(response.status).to.equal(200);
-        });
-      });
-
-      it('handles options function errors', async () => {
-        app = await createApp({
-          graphiqlOptions: () => {
-            throw new Error('I should be caught');
-          },
-        });
-
-        const req = request(app)
-          .get('/graphiql')
-          .set('Accept', 'text/html');
-        return req.then(response => {
-          expect(response.status).to.equal(500);
-        });
-      });
-
-      it('presents options variables', async () => {
-        app = await createApp({
-          graphiqlOptions: {
-            endpointURL: '/graphql',
-            variables: { key: 'optionsValue' },
-          },
-        });
-
-        const req = request(app)
-          .get('/graphiql')
-          .set('Accept', 'text/html');
-        return req.then(response => {
-          expect(response.status).to.equal(200);
-          expect(response.text.replace(/\s/g, '')).to.include(
-            'variables:"{\\n\\"key\\":\\"optionsValue\\"\\n}"',
-          );
-        });
-      });
-
-      it('presents query variables over options variables', async () => {
-        app = await createApp({
-          graphiqlOptions: {
-            endpointURL: '/graphql',
-            variables: { key: 'optionsValue' },
-          },
-        });
-
-        const req = request(app)
-          .get('/graphiql?variables={"key":"queryValue"}')
-          .set('Accept', 'text/html');
-        return req.then(response => {
-          expect(response.status).to.equal(200);
-          expect(response.text.replace(/\s/g, '')).to.include(
-            'variables:"{\\n\\"key\\":\\"queryValue\\"\\n}"',
-          );
         });
       });
     });

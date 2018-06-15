@@ -2,6 +2,9 @@ import { expect } from 'chai';
 import 'mocha';
 import express from 'express';
 
+import net from 'net';
+import http from 'http';
+
 import request from 'request';
 import FormData from 'form-data';
 import fs from 'fs';
@@ -9,7 +12,12 @@ import fetch from 'node-fetch';
 import { createApolloFetch } from 'apollo-fetch';
 
 import { ApolloServerBase, AuthenticationError } from 'apollo-server-core';
-import { registerServer } from './ApolloServer';
+import { ApolloServer } from './ApolloServer';
+
+import {
+  testApolloServer,
+  createServerInfo,
+} from 'apollo-server-integration-testsuite';
 
 //to remove the circular dependency, we reference it directly
 const gql = require('../../apollo-server/dist/index').gql;
@@ -26,31 +34,57 @@ const resolvers = {
   },
 };
 
+const url = 'http://localhost:4000/graphql';
+const uri = url;
+
+describe('apollo-server-express', () => {
+  let server;
+  let httpServer;
+  testApolloServer(
+    async options => {
+      server = new ApolloServer(options);
+      const app = express();
+      server.applyMiddleware({ app });
+      httpServer = await new Promise<http.Server>(resolve => {
+        const s = app.listen({ port: 4000 }, () => resolve(s));
+      });
+      return createServerInfo(server, httpServer);
+    },
+    async () => {
+      if (server) await server.stop();
+      if (httpServer && httpServer.listening) await httpServer.close();
+    },
+  );
+});
+
 describe('apollo-server-express', () => {
   //to remove the circular dependency, we reference it directly
   const ApolloServer = require('../../apollo-server/dist/index').ApolloServer;
-  let server: ApolloServerBase<express.Request>;
+  let server: ApolloServerBase | any;
+
   let app: express.Application;
+  let httpServer: http.Server;
 
   afterEach(async () => {
     if (server) await server.stop();
+    if (httpServer) await httpServer.close();
   });
 
-  describe('', () => {
+  describe('constructor', () => {
     it('accepts typeDefs and resolvers', () => {
       const app = express();
       const server = new ApolloServer({ typeDefs, resolvers });
-      expect(() => registerServer({ app, server })).not.to.throw;
+      expect(() => server.applyMiddleware({ app })).not.to.throw;
     });
 
     it('accepts typeDefs and mocks', () => {
       const app = express();
       const server = new ApolloServer({ typeDefs, resolvers });
-      expect(() => registerServer({ app, server })).not.to.throw;
+      expect(() => server.applyMiddleware({ app })).not.to.throw;
     });
   });
 
-  describe('registerServer', () => {
+  describe('applyMiddleware', () => {
     it('can be queried', async () => {
       server = new ApolloServer({
         typeDefs,
@@ -58,14 +92,73 @@ describe('apollo-server-express', () => {
       });
       app = express();
 
-      registerServer({ app, server });
+      server.applyMiddleware({ app });
 
-      const { url: uri } = await server.listen();
+      httpServer = await new Promise<http.Server>(resolve => {
+        const l = app.listen({ port: 4000 }, () => resolve(l));
+      });
       const apolloFetch = createApolloFetch({ uri });
       const result = await apolloFetch({ query: '{hello}' });
 
       expect(result.data).to.deep.equal({ hello: 'hi' });
       expect(result.errors, 'errors should exist').not.to.exist;
+    });
+
+    // XXX Unclear why this would be something somebody would want (vs enabling
+    // introspection without graphql-playground, which seems reasonable, eg you
+    // have your own graphql-playground setup with a custom link)
+    it('can enable gui separately from introspection during production', async () => {
+      const INTROSPECTION_QUERY = `
+  {
+    __schema {
+      directives {
+        name
+      }
+    }
+  }
+`;
+
+      server = new ApolloServer({
+        typeDefs,
+        resolvers,
+        introspection: false,
+      });
+      app = express();
+
+      server.applyMiddleware({ app, gui: true });
+
+      httpServer = await new Promise<http.Server>(resolve => {
+        const l = app.listen({ port: 4000 }, () => resolve(l));
+      });
+      const apolloFetch = createApolloFetch({ uri: url });
+      const result = await apolloFetch({ query: INTROSPECTION_QUERY });
+
+      expect(result.errors.length).to.equal(1);
+      expect(result.errors[0].extensions.code).to.equal(
+        'GRAPHQL_VALIDATION_FAILED',
+      );
+
+      return new Promise<http.Server>((resolve, reject) => {
+        request(
+          {
+            url,
+            method: 'GET',
+            headers: {
+              accept:
+                'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+            },
+          },
+          (error, response, body) => {
+            if (error) {
+              reject(error);
+            } else {
+              expect(body).to.contain('GraphQLPlayground');
+              expect(response.statusCode).to.equal(200);
+              resolve();
+            }
+          },
+        );
+      });
     });
 
     it('renders GraphQL playground when browser requests', async () => {
@@ -78,10 +171,12 @@ describe('apollo-server-express', () => {
       });
       app = express();
 
-      registerServer({ app, server });
+      server.applyMiddleware({ app });
 
-      const { url } = await server.listen();
-      return new Promise((resolve, reject) => {
+      httpServer = await new Promise<http.Server>(resolve => {
+        const l = app.listen({ port: 4000 }, () => resolve(l));
+      });
+      return new Promise<http.Server>((resolve, reject) => {
         request(
           {
             url,
@@ -112,9 +207,11 @@ describe('apollo-server-express', () => {
       });
       app = express();
 
-      registerServer({ app, server, cors: { origin: 'apollographql.com' } });
+      server.applyMiddleware({ app, cors: { origin: 'apollographql.com' } });
 
-      const { url: uri } = await server.listen({});
+      httpServer = await new Promise<http.Server>(resolve => {
+        const l = app.listen({ port: 4000 }, () => resolve(l));
+      });
 
       const apolloFetch = createApolloFetch({ uri }).useAfter(
         (response, next) => {
@@ -134,9 +231,11 @@ describe('apollo-server-express', () => {
       });
       app = express();
 
-      registerServer({ app, server, bodyParserConfig: { limit: 0 } });
+      server.applyMiddleware({ app, bodyParserConfig: { limit: 0 } });
 
-      const { url: uri } = await server.listen({});
+      httpServer = await new Promise<http.Server>(resolve => {
+        const l = app.listen({ port: 4000 }, () => resolve(l));
+      });
 
       const apolloFetch = createApolloFetch({ uri });
 
@@ -153,8 +252,6 @@ describe('apollo-server-express', () => {
     });
 
     describe('healthchecks', () => {
-      let server: ApolloServerBase<express.Request>;
-
       afterEach(async () => {
         await server.stop();
       });
@@ -166,9 +263,13 @@ describe('apollo-server-express', () => {
         });
         app = express();
 
-        registerServer({ app, server, bodyParserConfig: { limit: 0 } });
+        server.applyMiddleware({ app, bodyParserConfig: { limit: 0 } });
 
-        const { port } = await server.listen();
+        httpServer = await new Promise<http.Server>(resolve => {
+          const l = app.listen({ port: 4000 }, () => resolve(l));
+        });
+        const { port } = httpServer.address() as net.AddressInfo;
+
         return new Promise((resolve, reject) => {
           request(
             {
@@ -195,15 +296,17 @@ describe('apollo-server-express', () => {
         });
         app = express();
 
-        registerServer({
+        server.applyMiddleware({
           app,
-          server,
           onHealthCheck: async () => {
             throw Error("can't connect to DB");
           },
         });
 
-        const { port } = await server.listen({});
+        httpServer = await new Promise<http.Server>(resolve => {
+          const l = app.listen({ port: 4000 }, () => resolve(l));
+        });
+        const { port } = httpServer.address() as net.AddressInfo;
 
         return new Promise((resolve, reject) => {
           request(
@@ -230,13 +333,15 @@ describe('apollo-server-express', () => {
           resolvers,
         });
         app = express();
-        registerServer({
+        server.applyMiddleware({
           app,
-          server,
           disableHealthCheck: true,
         });
 
-        const { port } = await server.listen({});
+        httpServer = await new Promise<http.Server>(resolve => {
+          const l = app.listen({ port: 4000 }, () => resolve(l));
+        });
+        const { port } = httpServer.address() as net.AddressInfo;
 
         return new Promise((resolve, reject) => {
           request(
@@ -287,12 +392,14 @@ describe('apollo-server-express', () => {
           },
         });
         app = express();
-        registerServer({
+        server.applyMiddleware({
           app,
-          server,
         });
 
-        const { port } = await server.listen({});
+        httpServer = await new Promise<http.Server>(resolve => {
+          const l = app.listen({ port: 4000 }, () => resolve(l));
+        });
+        const { port } = httpServer.address() as net.AddressInfo;
 
         const body = new FormData();
 
@@ -362,9 +469,11 @@ describe('apollo-server-express', () => {
         });
 
         app = express();
-        registerServer({ app, server });
+        server.applyMiddleware({ app });
 
-        const { url: uri } = await server.listen();
+        httpServer = await new Promise<http.Server>(resolve => {
+          const l = app.listen({ port: 4000 }, () => resolve(l));
+        });
         const apolloFetch = createApolloFetch({ uri });
 
         const result = await apolloFetch({ query: '{hello}' });
@@ -400,9 +509,11 @@ describe('apollo-server-express', () => {
         });
 
         app = express();
-        registerServer({ app, server });
+        server.applyMiddleware({ app });
 
-        const { url: uri } = await server.listen();
+        httpServer = await new Promise<http.Server>(resolve => {
+          const l = app.listen({ port: 4000 }, () => resolve(l));
+        });
         const apolloFetch = createApolloFetch({ uri });
 
         const result = await apolloFetch({ query: `{error}` });
@@ -438,9 +549,11 @@ describe('apollo-server-express', () => {
         });
 
         app = express();
-        registerServer({ app, server });
+        server.applyMiddleware({ app });
 
-        const { url: uri } = await server.listen();
+        httpServer = await new Promise<http.Server>(resolve => {
+          const l = app.listen({ port: 4000 }, () => resolve(l));
+        });
         const apolloFetch = createApolloFetch({ uri });
 
         const result = await apolloFetch({ query: `{error}` });
@@ -475,9 +588,11 @@ describe('apollo-server-express', () => {
         });
 
         app = express();
-        registerServer({ app, server });
+        server.applyMiddleware({ app });
 
-        const { url: uri } = await server.listen();
+        httpServer = await new Promise<http.Server>(resolve => {
+          const l = app.listen({ port: 4000 }, () => resolve(l));
+        });
         const apolloFetch = createApolloFetch({ uri });
 
         const result = await apolloFetch({ query: `{error}` });

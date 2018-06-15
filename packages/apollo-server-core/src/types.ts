@@ -2,15 +2,16 @@ import { GraphQLSchema, DocumentNode } from 'graphql';
 import { SchemaDirectiveVisitor, IResolvers, IMocks } from 'graphql-tools';
 import { ConnectionContext } from 'subscriptions-transport-ws';
 import WebSocket from 'ws';
-import { Server as HttpServer } from 'http';
-import { ListenOptions as HttpListenOptions } from 'net';
 import { GraphQLExtension } from 'graphql-extensions';
 import { EngineReportingOptions } from 'apollo-engine-reporting';
+export { GraphQLExtension } from 'graphql-extensions';
 
 import {
   GraphQLServerOptions as GraphQLOptions,
   PersistedQueryOptions,
 } from './graphqlOptions';
+
+export { KeyValueCache } from 'apollo-datasource-rest';
 
 export type Context<T = any> = T;
 export type ContextFunction<T = any> = (
@@ -41,6 +42,8 @@ export interface Config
       | 'fieldResolver'
       | 'cacheControl'
       | 'tracing'
+      | 'dataSources'
+      | 'cache'
     > {
   typeDefs?: DocumentNode | [DocumentNode];
   resolvers?: IResolvers;
@@ -52,28 +55,6 @@ export interface Config
   engine?: boolean | EngineReportingOptions;
   extensions?: Array<() => GraphQLExtension>;
   persistedQueries?: PersistedQueryOptions | false;
-}
-
-// XXX export these directly from apollo-engine-js
-export interface EngineLauncherOptions {
-  startupTimeout?: number;
-  proxyStdoutStream?: NodeJS.WritableStream;
-  proxyStderrStream?: NodeJS.WritableStream;
-  extraArgs?: string[];
-  processCleanupEvents?: string[];
-}
-
-export interface ListenOptions {
-  // node http listen options
-  // https://nodejs.org/api/net.html#net_server_listen_options_callback
-  // https://github.com/apollographql/apollo-server/pull/979#discussion_r184483094
-  http?: HttpListenOptions | any | { handle: any; backlog?: number };
-  // XXX clean this up
-  engineInRequestPath?: boolean;
-  engineProxy?: boolean | Record<string, any>;
-  // engine launcher options
-  engineLauncherOptions?: EngineLauncherOptions;
-  // WebSocket options
   subscriptions?: Partial<SubscriptionServerOptions> | string | false;
 }
 
@@ -81,14 +62,4 @@ export interface MiddlewareOptions {
   path?: string;
   gui?: boolean;
   subscriptions?: boolean;
-}
-
-export interface RegistrationOptions {
-  path: string;
-  getHttp: () => HttpServer;
-}
-
-export interface ServerInfo {
-  url: string;
-  port: number | string;
 }

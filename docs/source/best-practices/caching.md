@@ -7,7 +7,7 @@ One of the best ways we can speed up our application is to implement caching int
 
 <h2 id="whole-query">Whole query caching</h2>
 
-GraphQL operations on a client are best when they are statically defined and used in an application. When this is the case, often times there will be operations that could easily be cached as a full result of the the request. We call this *whole query caching* and it is incredibly easy to implement with Apollo Engine. Unlike custom REST endpoints, using Apollo Server allows us to define the cacheability of our resources and dynamically calculate the best possible cache timing for any given operation. If Apollo Server is configured to use Apollo Engine, caching is setup automatically with default configuration.
+GraphQL operations on a client are best when they are statically defined and used in an application. When this is the case, often times there will be operations that could easily be cached as a full result of the the request. We call this *whole query caching* and it is incredibly easy to implement with Apollo Server. Unlike custom REST endpoints, using Apollo Server allows us to define the cacheability of our resources and dynamically calculate the best possible cache timing for any given operation.
 
 - For more information about setting up Apollo Engine with Apollo Server, [read this guide]()
 - For more information about setting up whole query caching with Apollo Engine, [read this guide](https://www.apollographql.com/docs/engine/caching.html)

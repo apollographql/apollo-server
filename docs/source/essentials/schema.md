@@ -234,7 +234,7 @@ type MyObjectType {
 }
 ```
 
-This makes SDL-generation even easier since many GraphQL tools (like GraphQL Playground and GraphiQL) auto-complete field names, along with the descriptions, when available.
+This makes SDL-generation even easier since many GraphQL tools (like GraphQL Playground) auto-complete field names, along with the descriptions, when available.
 
 <h3 id="introspection">Introspection</h3>
 

@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "es2017",
+    "target": "es2016",
     "module": "commonjs",
     "moduleResolution": "node",
     "esModuleInterop": true,
@@ -11,8 +11,7 @@
     "removeComments": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "lib": ["es2017", "esnext.asynciterable"],
-    "types": ["node", "fetch", "url", "mocha"],
-    "typeRoots": ["./node_modules/@types", "./types"]
+    "lib": ["es2016", "esnext.asynciterable"],
+    "types": ["node", "mocha"]
   }
 }

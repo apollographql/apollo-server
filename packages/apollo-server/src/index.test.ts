@@ -89,7 +89,7 @@ describe('apollo-server', () => {
         resolvers,
       });
 
-      const { url: uri } = await server.listen({});
+      const { url: uri } = await server.listen();
 
       const apolloFetch = createApolloFetch({ uri }).useAfter(
         (response, next) => {

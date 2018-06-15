@@ -69,53 +69,37 @@ new ApolloServer({
 
   An executable GraphQL schema that will override the `typeDefs` and `resolvers` provided
 
+
+* `subscriptions`: <`Object`> | <`String`> | false
+
+  String defining the path for subscriptions or an Object to customize the subscriptions server. Set to false to disable subscriptions
+
+  * `path`: <`String`>
+  * `keepAlive`: <`Number`>
+  * `onConnect`: <`Function`>
+  * `onDisconnect`: <`Function`>
+
 #### Returns
 
 `ApolloServer`
 
-### `listen(options)`: `Promise`
+### `ApolloServer.listen(options)`: `Promise`
 
 #### Parameters
 
-* `options`: <`Object`>
-
-  * `http`: <`Object`>
-
-    All parameters which are supported by Node.js' [`net.Server.listen`](https://nodejs.org/api/net.html#net_server_listen_options_callback) method are supported, including:
-
-    * `port`: <`String`> | <`Number`>
-    * `path`: <`String`>
-    * `backlog`: <`Number`>
-    * `exclusive`: <`Boolean`>
-
-    or
-
-    * `handler`: <`Object`>
-    * `backlog`: <`Number`>
-
-  Engine launcher options
-
-  * `engineLauncherOptions` : [<`Object`>](https://www.apollographql.com/docs/engine/setup-node.html#api-engine.listen)
-  * `engineProxy`: [<`Object`>](https://www.apollographql.com/docs/engine/proxy-config.html)
-
-  WebSocket options
-
-  * `subscriptions`: <`Object`> | <`String`> | false
-
-    String defining the path for subscriptions or an Object to customize the subscriptions server. Set to false to disable subscriptions
-
-    * `path`: <`String`>
-    * `keepAlive`: <`Number`>
-    * `onConnect`: <`Function`>
-    * `onDisconnect`: <`Function`>
+In `apollo-server`, the listen call starts the subscription server and passes the arguments directly to an http server Node.js' [`net.Server.listen`](https://nodejs.org/api/net.html#net_server_listen) method are supported.
 
 #### Returns
 
-`Promise`
+`Promise` that resolves to an object that contains:
 
-## registerServer
+  * `url`: <`String`>
+  * `subscriptionsPath`: <`String`>
+  * `server`: <[`http.Server`](https://nodejs.org/api/http.html#http_class_http_server)>
 
-The `registerServer` method is from `apollo-server-express`. Middleware registration has been greatly simplified with this new method.
+## ApolloServer.applyMiddleware
+
+The `applyMiddleware` method is provided by the `apollo-server-{integration}` packages that use middleware, such as hapi and express. This function connects ApolloServer to a specific framework.
 
 ### Parameters
 
@@ -123,7 +107,7 @@ The `registerServer` method is from `apollo-server-express`. Middleware registra
 
   * `app`: <`HttpServer`> _(required)_
 
-    Pass the handle to your nexpress server here.
+    Pass an instance of the server integration here.
 
   * `server`: <`ApolloServer`> _(required)_
 
@@ -133,17 +117,20 @@ The `registerServer` method is from `apollo-server-express`. Middleware registra
 
     Specify a custom path. It defaults to `/graphql` if no path is specified.
 
-  * `cors`: <`Object`>
+  * `cors`: <`Object` | `boolean`> ([express](https://github.com/expressjs/cors#cors), [hapi](https://hapijs.com/api#-routeoptionscors))
 
-    Pass the cors options.
+    Pass the integration-specific cors options. False removes the cors middleware and true uses the defaults.
+
+  * `bodyParser`: <`Object` | `boolean`> ([express](https://github.com/expressjs/body-parser#body-parser))
+
+    Pass the body-parser options. False removes the body parser middleware and true uses the defaults.
 
 ### Usage
 
-The `registerServer` method from `apollo-server-express` allows you to easily register your middleware as shown in the example below:
+The `applyMiddleware` method from `apollo-server-express` registration of middleware as shown in the example below:
 
 ```js
-const { ApolloServer } = require('apollo-server');
-const { registerServer } = require('apollo-server-express');
+const { ApolloServer } = require('apollo-server-express');
 const { typeDefs, resolvers } = require('./schema');
 
 const server = new ApolloServer({
@@ -155,7 +142,7 @@ const server = new ApolloServer({
 // Additional middleware can be mounted at this point to run before Apollo.
 app.use('*', jwtCheck, requireAuth, checkScope);
 
-registerServer({ server, app, path: '/specialUrl' }); // app is from an existing express app. Mount Apollo middleware here. If no path is specified, it defaults to `/graphql`.
+server.applyMiddleware({ app, path: '/specialUrl' }); // app is from an existing express app. Mount Apollo middleware here. If no path is specified, it defaults to `/graphql`.
 ```
 
 ## `gql`
@@ -166,7 +153,7 @@ In the case of GraphQL, the `gql` tag is used to surround GraphQL operation and 
 
 ### Usage
 
-Import the `gql` template literal tag into the current context from the `apollo-server` module:
+Import the `gql` template literal tag into the current context from the `apollo-server` or `apollo-server-{integration}` modules:
 
 ```js
 const { gql } = require('apollo-server');

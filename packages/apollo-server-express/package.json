@@ -1,6 +1,6 @@
 {
   "name": "apollo-server-express",
-  "version": "2.0.0-beta.7",
+  "version": "2.0.0-beta.11",
   "description": "Production-ready Node.js GraphQL server for Express and Connect",
   "main": "dist/index.js",
   "scripts": {
@@ -26,17 +26,17 @@
   },
   "homepage": "https://github.com/apollographql/apollo-server#readme",
   "engines": {
-    "node": ">=8"
+    "node": ">=6"
   },
   "dependencies": {
     "@types/accepts": "^1.3.5",
     "accepts": "^1.3.5",
-    "apollo-server-core": "^2.0.0-beta.7",
-    "apollo-server-module-graphiql": "^2.0.0-beta.6",
+    "apollo-server-core": "^2.0.0-beta.11",
     "apollo-upload-server": "^5.0.0",
     "body-parser": "^1.18.3",
     "cors": "^2.8.4",
-    "graphql-playground-middleware-express": "^1.7.0"
+    "graphql-playground-middleware-express": "^1.7.0",
+    "type-is": "^1.6.16"
   },
   "devDependencies": {
     "@types/body-parser": "1.17.0",
@@ -44,13 +44,15 @@
     "@types/cors": "^2.8.4",
     "@types/express": "4.16.0",
     "@types/multer": "1.3.6",
-    "apollo-server-integration-testsuite": "^2.0.0-beta.7",
+    "apollo-server-integration-testsuite": "^2.0.0-beta.11",
+    "apollo-datasource-rest": "2.0.0-beta.7",
     "connect": "3.6.6",
-    "connect-query": "1.0.0",
     "express": "4.16.3",
     "form-data": "^2.3.2",
+    "graphql-playground-html": "^1.6.0",
     "multer": "1.3.0",
-    "node-fetch": "^2.1.2"
+    "node-fetch": "^2.1.2",
+    "qs-middleware": "^1.0.3"
   },
   "typings": "dist/index.d.ts",
   "typescript": {

@@ -17,6 +17,7 @@ sidebar_categories:
     - features/mocking
     - features/errors
     - features/apq
+    - features/data-sources
     - features/logging
     - features/scalars-enums
     - features/unions-interfaces
@@ -35,11 +36,10 @@ sidebar_categories:
     - api/apollo-server
     - title: graphql-subscriptions
       href: https://www.apollographql.com/docs/graphql-subscriptions
-    - title: apollo-engine
-      href: https://www.apollographql.com/docs/engine/setup-node.html#api
     - api/graphql-tools
   Migration:
     - migration-two-dot
+    - migration-engine
 
 github_repo: apollographql/apollo-server
 content_root: docs/source

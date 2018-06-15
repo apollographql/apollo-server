@@ -1,10 +1,10 @@
-# GraphQL Server for Express, Connect, Hapi, Koa, and more
-
-Also supports: Restify, Micro, Azure Functions, AWS Lambda and Adonis Framework
+# GraphQL Server for Express, Connect, Hapi, Cloudflare workers, and more
 
 [![npm version](https://badge.fury.io/js/apollo-server-core.svg)](https://badge.fury.io/js/apollo-server-core)
 [![Build Status](https://circleci.com/gh/apollographql/apollo-cache-control-js.svg?style=svg)](https://circleci.com/gh/apollographql/apollo-cache-control-js)
 [![Get on Slack](https://img.shields.io/badge/slack-join-orange.svg)](https://www.apollographql.com/#slack)
+
+FIXME update README for 2.x; refer to 1.x branch for currently unsupported web frameworks and encourage community to help port ApolloServer to other frameworks.
 
 Apollo Server is a community-maintained open-source GraphQL server. It works with pretty much all Node.js HTTP server frameworks, and we're happy to take PRs for more! Apollo Server works with any GraphQL schema built with [GraphQL.js](https://github.com/graphql/graphql-js), so you can build your schema with that directly or with a convenience library such as [graphql-tools](https://www.apollographql.com/docs/graphql-tools/).
 

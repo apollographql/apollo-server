@@ -1,5 +1,5 @@
 // Expose types which can be used by both middleware flavors.
-export { GraphQLOptions } from 'apollo-server-core';
+export { GraphQLOptions, gql } from 'apollo-server-core';
 export {
   ApolloError,
   toApolloError,
@@ -9,15 +9,9 @@ export {
   ForbiddenError,
 } from 'apollo-server-core';
 
-export {
-  IRegister,
-  HapiOptionsFunction,
-  HapiPluginOptions,
-  HapiGraphiQLOptionsFunction,
-  HapiGraphiQLPluginOptions,
-  graphqlHapi,
-  graphiqlHapi,
-} from './hapiApollo';
-
 // ApolloServer integration
-export { registerServer } from './ApolloServer';
+export {
+  ApolloServer,
+  registerServer,
+  ServerRegistration,
+} from './ApolloServer';
