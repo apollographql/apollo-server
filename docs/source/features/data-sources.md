@@ -9,9 +9,17 @@ Data sources are components that encapsulate loading data from a particular back
 
 A `RESTDataSource` is responsible for fetching data from a given REST API. It contains data source specific configuration and relies on convenience methods to perform HTTP requests.
 
-You define a data source by extending the `RESTDataSource` class. This code snippet shows a data source for the Star Wars API. Note that these requests will be automatically cached based on the caching headers returned from the API.
+To start, install the release candidate of the REST data source:
+
+```bash
+npm install apollo-datasource-rest@rc
+```
+
+To define a data source, extend the `RESTDataSource` class. This code snippet shows a data source for the Star Wars API. Note that these requests will be automatically cached based on the caching headers returned from the API.
 
 ```js
+const { RESTDataSource } = require('apollo-datasource-rest');
+
 export class StarWarsAPI extends RESTDataSource {
   baseURL = 'https://swapi.co/api/';
 
