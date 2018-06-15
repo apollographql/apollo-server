@@ -93,7 +93,7 @@ export abstract class RESTDataSource<TContext = any> {
       return await fn();
     } finally {
       const duration = Date.now() - startTime;
-      console.log(`${label} (${duration}ms)`);
+      // console.log(`${label} (${duration}ms)`);
     }
   }
 }
