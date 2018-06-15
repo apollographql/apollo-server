@@ -286,13 +286,14 @@ export async function runHttpQuery(
       }
 
       if (optionsObject.dataSources) {
-        const dataSources = optionsObject.dataSources();
+        const dataSources = optionsObject.dataSources() || {};
 
-        const httpCache = new HTTPCache();
+        //we use the cache provided to the request and add the Http semantics on top
+        const httpCache = new HTTPCache(optionsObject.cache);
 
         for (const dataSource of Object.values(dataSources)) {
-          dataSource.httpCache = httpCache;
-          dataSource.context = context;
+          dataSource.willReceiveContext(context);
+          dataSource.willReceiveCache(httpCache);
         }
 
         if ('dataSources' in context) {

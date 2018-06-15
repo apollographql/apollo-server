@@ -16,6 +16,7 @@ import {
 } from 'graphql';
 import { GraphQLExtension } from 'graphql-extensions';
 import { EngineReportingAgent } from 'apollo-engine-reporting';
+import { InMemoryKeyValueCache } from 'apollo-datasource-rest';
 
 import {
   SubscriptionServer,
@@ -119,6 +120,10 @@ export class ApolloServerBase {
     } else {
       //the user does not want to use persisted queries, so we remove the field
       delete requestOptions.persistedQueries;
+    }
+
+    if (!requestOptions.cache) {
+      requestOptions.cache = new InMemoryKeyValueCache();
     }
 
     this.requestOptions = requestOptions as GraphQLOptions;

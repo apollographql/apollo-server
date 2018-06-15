@@ -11,6 +11,8 @@ import {
   PersistedQueryOptions,
 } from './graphqlOptions';
 
+export { KeyValueCache } from 'apollo-datasource-rest';
+
 export type Context<T = any> = T;
 export type ContextFunction<T = any> = (
   context: Context<T>,
@@ -41,6 +43,7 @@ export interface Config
       | 'cacheControl'
       | 'tracing'
       | 'dataSources'
+      | 'cache'
     > {
   typeDefs?: DocumentNode | [DocumentNode];
   resolvers?: IResolvers;
