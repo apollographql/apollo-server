@@ -1,4 +1,4 @@
-import { KeyValueCache } from '../keyValueCache';
+import { KeyValueCache } from '../KeyValueCache';
 import Memcached from 'memcached';
 import { promisify } from 'util';
 

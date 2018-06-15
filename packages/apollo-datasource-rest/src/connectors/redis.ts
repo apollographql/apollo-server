@@ -1,4 +1,4 @@
-import { KeyValueCache } from '../keyValueCache';
+import { KeyValueCache } from '../KeyValueCache';
 import Redis from 'redis';
 import { promisify } from 'util';
 
