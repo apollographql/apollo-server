@@ -12,6 +12,7 @@ import {
   PersistedQueryNotFoundError,
 } from './errors';
 import { LogAction, LogStep } from './logging';
+import { HTTPCache } from 'apollo-datasource-rest';
 
 export interface HttpQueryRequest {
   method: string;
@@ -282,6 +283,26 @@ export async function runHttpQuery(
           Object.create(Object.getPrototypeOf(context)),
           context,
         );
+      }
+
+      if (optionsObject.dataSources) {
+        const dataSources = optionsObject.dataSources() || {};
+
+        //we use the cache provided to the request and add the Http semantics on top
+        const httpCache = new HTTPCache(optionsObject.cache);
+
+        for (const dataSource of Object.values(dataSources)) {
+          dataSource.willReceiveContext(context);
+          dataSource.willReceiveCache(httpCache);
+        }
+
+        if ('dataSources' in context) {
+          throw new Error(
+            'Please use the dataSources config option instead of putting dataSources on the context yourself.',
+          );
+        }
+
+        (context as any).dataSources = dataSources;
       }
 
       let params: QueryOptions = {

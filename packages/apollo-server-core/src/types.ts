@@ -1,6 +1,7 @@
 import { GraphQLSchema, DocumentNode } from 'graphql';
 import { SchemaDirectiveVisitor, IResolvers, IMocks } from 'graphql-tools';
 import { ConnectionContext } from 'subscriptions-transport-ws';
+import WebSocket from 'ws';
 import { GraphQLExtension } from 'graphql-extensions';
 import { EngineReportingOptions } from 'apollo-engine-reporting';
 export { GraphQLExtension } from 'graphql-extensions';
@@ -9,6 +10,8 @@ import {
   GraphQLServerOptions as GraphQLOptions,
   PersistedQueryOptions,
 } from './graphqlOptions';
+
+export { KeyValueCache } from 'apollo-datasource-rest';
 
 export type Context<T = any> = T;
 export type ContextFunction<T = any> = (
@@ -39,6 +42,8 @@ export interface Config
       | 'fieldResolver'
       | 'cacheControl'
       | 'tracing'
+      | 'dataSources'
+      | 'cache'
     > {
   typeDefs?: DocumentNode | [DocumentNode];
   resolvers?: IResolvers;

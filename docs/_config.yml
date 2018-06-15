@@ -17,6 +17,7 @@ sidebar_categories:
     - features/mocking
     - features/errors
     - features/apq
+    - features/data-sources
     - features/logging
     - features/scalars-enums
     - features/unions-interfaces
