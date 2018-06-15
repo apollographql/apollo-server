@@ -9,7 +9,7 @@ Currently the first data source is designed for REST and provides caching for ht
 
 ## REST Data Source
 
-A RESTDataSource encapsulates access to a particular REST data source. It contains data source specific configuration and relies on convenience methods to perform HTTP requests with built-in support for caching, batching, error handling, and tracing. First we define a data model that extends the RESTDataSource. This code snippet demonstrates a data model for the star wars api, which supports entity tags, which means that the data source will cache the data automatically.
+A `RESTDataSource` encapsulates access to a particular REST data source. It contains data source specific configuration and relies on convenience methods to perform HTTP requests with built-in support for caching, batching, error handling, and tracing. First we define a data model that extends the `RESTDataSource`. This code snippet demonstrates a data model for the star wars api, which supports entity tags, which means that the data source will cache the data automatically.
 
 ```js
 export class StarWarsAPI extends RESTDataSource {
@@ -27,7 +27,7 @@ export class StarWarsAPI extends RESTDataSource {
 }
 ```
 
-To create a data source, we provide them to the ApolloServer constructor
+To create a data source, we provide them to the `ApolloServer` constructor
 
 ```js
 const server = new ApolloServer({

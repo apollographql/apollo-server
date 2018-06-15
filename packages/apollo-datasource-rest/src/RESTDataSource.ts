@@ -93,6 +93,9 @@ export abstract class RESTDataSource<TContext = any> {
       return await fn();
     } finally {
       const duration = Date.now() - startTime;
+      //to remove the unused error
+      label;
+      duration;
       // console.log(`${label} (${duration}ms)`);
     }
   }
