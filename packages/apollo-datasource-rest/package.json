@@ -1,6 +1,6 @@
 {
   "name": "apollo-datasource-rest",
-  "version": "2.0.0-beta.7",
+  "version": "2.0.0-rc.0",
   "author": "opensource@apollographql.com",
   "license": "MIT",
   "repository": {
@@ -23,7 +23,7 @@
     "node": ">=6"
   },
   "dependencies": {
-    "apollo-server-env": "2.0.0-beta.7",
+    "apollo-server-env": "^2.0.0-rc.0",
     "http-cache-semantics": "^4.0.0",
     "lru-cache": "^4.1.3"
   },
