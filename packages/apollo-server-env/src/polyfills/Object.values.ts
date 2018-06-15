@@ -7,7 +7,7 @@ interface ObjectConstructor {
 }
 
 if (!global.Object.values) {
-  global.Object.values = function() {
-    return Object.keys(this).map(key => this[key]);
+  global.Object.values = function(o) {
+    return Object.keys(o).map(key => o[key]);
   };
 }
