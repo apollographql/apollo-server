@@ -17,12 +17,10 @@ export class IdAPI extends RESTDataSource {
   baseURL = `http://localhost:${restPort}/`;
 
   async getId(id: string) {
-    console.log(id);
     return this.get(`id/${id}`);
   }
 
   async getStringId(id: string) {
-    console.log(id);
     return this.get(`str/${id}`);
   }
 }
@@ -104,7 +102,6 @@ describe('apollo-server-express', () => {
 
     const apolloFetch = createApolloFetch({ uri });
     const firstResult = await apolloFetch({ query: '{id}' });
-    console.log(firstResult);
 
     expect(firstResult.data).to.deep.equal({ id: 'hi' });
     expect(firstResult.errors, 'errors should exist').not.to.exist;
@@ -139,7 +136,6 @@ describe('apollo-server-express', () => {
 
   //   const apolloFetch = createApolloFetch({ uri });
   //   const firstResult = await apolloFetch({ query: '{stringId}' });
-  //   console.log(firstResult);
 
   //   expect(firstResult.data).to.deep.equal({ id: 'hi' });
   //   expect(firstResult.errors, 'errors should exist').not.to.exist;
