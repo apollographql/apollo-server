@@ -5,4 +5,5 @@ export interface KeyValueCache {
     value: string,
     options?: { ttl?: number; tags?: string[] },
   ): Promise<void>;
+  invalidate(tags: string[]): Promise<void>;
 }

@@ -25,8 +25,7 @@
   "dependencies": {
     "http-cache-semantics": "^4.0.0",
     "memcached": "^2.2.2",
-    "redis": "^2.8.0",
-    "uuid": "^3.2.1"
+    "redis": "^2.8.0"
   },
   "devDependencies": {
     "@types/jest": "^23.0.0",
