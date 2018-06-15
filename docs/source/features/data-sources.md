@@ -3,13 +3,13 @@ title: Data Sources
 description: Caching Partial Query Results
 ---
 
-Data Sources are an extension of data connector that can be extended to create data models. At their core, data sources include functions that can access a type of data source and build in the best practices for caching, deduplication, and batching. By containing the functionality to fetch from a backend, data sources allow server implementation to focus on the core of the project or business, naming the functions that access data and routing where that data comes from. With data sources solving how data is accessed, the server implementation can focus on what and where data is accessed.
-
-Currently the first data source is designed for REST and provides caching for http requests that contain cache control information in the headers. In future releases, this functionality will be expanded to include error handling with automatic retries, enhanced tracing, and batching.
+Data sources are components that encapsulate loading data from a particular backend, like a REST API, with built in best practices for caching, deduplication, batching, and error handling. You write the code that is specific to your backend, and Apollo Server takes care of the rest.
 
 ## REST Data Source
 
-A `RESTDataSource` encapsulates access to a particular REST data source. It contains data source specific configuration and relies on convenience methods to perform HTTP requests with built-in support for caching, batching, error handling, and tracing. First we define a data model that extends the `RESTDataSource`. This code snippet demonstrates a data model for the star wars api, which supports entity tags, which means that the data source will cache the data automatically.
+A `RESTDataSource` is responsible for fetching data from a given REST API. It contains data source specific configuration and relies on convenience methods to perform HTTP requests.
+
+You define a data source by extending the `RESTDataSource` class. This code snippet shows a data source for the Star Wars API. Note that these requests will be automatically cached based on the caching headers returned from the API.
 
 ```js
 export class StarWarsAPI extends RESTDataSource {
@@ -34,35 +34,36 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
   dataSources: () => ({
-    StarWars: new StarWarsAPI(),
+    starWars: new StarWarsAPI(),
   }),
 });
 ```
 
-Then in our resolvers, we can access the data source and return the result. If this request is fetched multiple times during the same request, it will be deduplicated and send a single http request. Provided that the `cache-control` headers are set correctly by the REST api, then the result will be cached across requests for the time specified by the backend.
+Apollo Server will put the data sources on the context, so you can access them from your resolvers. It will also give data sources access to the context, which is why they need to be configured separately.
+
+Then in our resolvers, we can access the data source and return the result:
 
 ```js
 const typeDefs = gql`
-type Query {
-  person: Person
-}
+  type Query {
+    person: Person
+  }
 
-type Person {
-  name: String
-}
-`
+  type Person {
+    name: String
+  }
+`;
 
 const resolvers = {
   Query: {
-    person: (_,_,{ dataSources }) => {
-      return dataSources.StarWars.getPerson('1')
-    }
-  }
-}
-
+    person: (_, id, { dataSources }) => {
+      return dataSources.starWars.getPerson(id);
+    },
+  },
+};
 ```
 
-The raw response from the Star Wars REST api appears as follows:
+The raw response from the Star Wars REST API appears as follows:
 
 ```js
 {
