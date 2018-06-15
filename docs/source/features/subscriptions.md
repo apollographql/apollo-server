@@ -5,7 +5,7 @@ subtitle: Adding subscriptions to Apollo Server
 
 The native Apollo Server 2.0 supports GraphQL subscriptions without additional configuration.
 Subscriptions are GraphQL operations that watch events emitted from Apollo Server.
-All integration that allow http servers, such as express and hapi, contain the ability support GraphQL subscriptions
+All integration that allow http servers, such as express and hapi, contain the ability support GraphQL subscriptions.
 As example we want to display a list of post that contains author and comment (Query) and we want to add a post to them (Mutation).
 
 The following examples use a publish and subscribe primitive to generate the events that notify a subscription.
@@ -89,7 +89,7 @@ For a full working example please have a look to [this repo](https://github.com/
 
 <h2 id="middleware">Subscriptions with Additional Middleware</h2>
 
-With an existing HTTP server (created with `createServer`), wecan easily add subscriptions.
+With an existing HTTP server (created with `createServer`), we can easily add subscriptions.
 For example: with an Express server already running on port 4000 that accepts GraphQL HTTP connections (POST) we can expose the subscriptions:
 
 ```js line=12
