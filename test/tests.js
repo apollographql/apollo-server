@@ -18,8 +18,6 @@ require('../packages/apollo-server-core/dist/errors.test.js');
 //apollo-server
 require('../packages/apollo-server/dist/index.test.js');
 
-require('../packages/apollo-server-module-operation-store/dist/operationStore.test');
-
 require('../packages/apollo-server-express/dist/ApolloServer.test.js');
 require('../packages/apollo-server-express/dist/expressApollo.test');
 require('../packages/apollo-server-express/dist/connectApollo.test');
