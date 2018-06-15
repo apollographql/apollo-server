@@ -11,15 +11,15 @@ import { advanceTimeBy, mockDate, unmockDate } from '../__mocks__/date';
 
 // run test suite against each implementation of KeyValueCache
 describe.each([
-  ['Memcached Connector', new MemcachedKeyValueCache('mockhostname')],
-  ['Redis Connector', new RedisKeyValueCache({ host: 'mockhostname' })],
+  ['Memcached Connector', new MemcachedKeyValueCache('localhost:11211')],
+  ['Redis Connector', new RedisKeyValueCache({ host: 'localhost' })],
 ])('%s', (_, keyValueCache) => {
   beforeAll(() => {
     mockDate();
   });
 
-  beforeEach(() => {
-    keyValueCache.flush();
+  beforeEach(async () => {
+    await keyValueCache.flush();
   });
 
   afterAll(() => {
