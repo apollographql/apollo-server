@@ -37,12 +37,10 @@ const typeDefs = gql`
 
 const resolvers = {
   Query: {
-    id: async (p, _, { dataSources }) => {
-      p = p; //for ts unused locals
+    id: async (_source, _args, { dataSources }) => {
       return (await dataSources.id.getId('hi')).id;
     },
-    stringId: async (p, _, { dataSources }) => {
-      p = p; //for ts unused locals
+    stringId: async (_source, _args, { dataSources }) => {
       return dataSources.id.getStringId('hi');
     },
   },
