@@ -34,7 +34,7 @@ export function graphqlLambda(
       options: options,
       query:
         event.httpMethod === 'POST'
-          ? event.body
+          ? JSON.parse(event.body)
           : (event.queryStringParameters as any),
       request: {
         url: event.path,
