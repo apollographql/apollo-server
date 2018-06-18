@@ -60,7 +60,7 @@ const typeDefs = gql`
 const resolvers = {
   Query: {
     authenticationError: (parent, args, context) => {
-      throw AuthenticationError('must authenticate');
+      throw new AuthenticationError('must authenticate');
     },
   },
 };
@@ -94,7 +94,7 @@ const resolvers = {
   Mutation: {
     userInputError: (parent, args, context, info) => {
       if (args.input !== 'expected') {
-        throw BadUserInputError('Form Arguments invalid', {
+        throw new BadUserInputError('Form Arguments invalid', {
           invalidArgs: Object.keys(args),
         });
       }
