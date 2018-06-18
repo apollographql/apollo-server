@@ -21,7 +21,6 @@ import {
 const request = require('supertest');
 
 import { GraphQLOptions, Config } from 'apollo-server-core';
-import { OperationStore } from 'apollo-server-module-operation-store';
 import gql from 'graphql-tag';
 
 export * from './ApolloServer';
@@ -915,89 +914,6 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
         return req.then(res => {
           expect(res.status).to.equal(400);
           expect(res.body.errors[0].message).to.equal(expected);
-        });
-      });
-    });
-
-    describe('stored queries', () => {
-      it('works with formatParams', async () => {
-        const store = new OperationStore(schema);
-        store.put('query testquery{ testString }');
-        app = await createApp({
-          graphqlOptions: {
-            schema,
-            formatParams(params) {
-              params['parsedQuery'] = store.get(params.operationName);
-              delete params['queryString'];
-              return params;
-            },
-          },
-        });
-        const expected = { testString: 'it works' };
-        const req = request(app)
-          .post('/graphql')
-          .send({
-            operationName: 'testquery',
-          });
-        return req.then(res => {
-          expect(res.status).to.equal(200);
-          expect(res.body.data).to.deep.equal(expected);
-        });
-      });
-
-      it('can reject non-whitelisted queries', async () => {
-        const store = new OperationStore(schema);
-        store.put('query testquery{ testString }');
-        app = await createApp({
-          graphqlOptions: {
-            schema,
-            formatParams(params) {
-              if (params.queryString) {
-                throw new Error('Must not provide query, only operationName');
-              }
-              params['parsedQuery'] = store.get(params.operationName);
-              return params;
-            },
-          },
-        });
-        const expected = [
-          {
-            data: {
-              testString: 'it works',
-            },
-          },
-          {
-            errors: [
-              {
-                message: 'Must not provide query, only operationName',
-              },
-            ],
-          },
-        ];
-
-        const req = request(app)
-          .post('/graphql')
-          .send([
-            {
-              operationName: 'testquery',
-            },
-            {
-              query: '{ testString }',
-            },
-          ]);
-        return req.then(res => {
-          expect(res.status).to.equal(200);
-          expect(res.body.length).to.equal(expected.length);
-          expect(res.body[0]).to.deep.equal(expected[0]);
-          if (res.body[1].errors[0].extensions) {
-            if (res.body[1].errors[0].extensions.code) {
-              expect(res.body[1].errors[0].extensions.code).to.equal(
-                'INTERNAL_SERVER_ERROR',
-              );
-            }
-            delete res.body[1].errors[0].extensions;
-          }
-          expect(res.body[1]).to.deep.equal(expected[1]);
         });
       });
     });

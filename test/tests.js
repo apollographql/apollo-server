@@ -18,11 +18,10 @@ require('../packages/apollo-server-core/dist/errors.test.js');
 //apollo-server
 require('../packages/apollo-server/dist/index.test.js');
 
-require('../packages/apollo-server-module-operation-store/dist/operationStore.test');
-
 require('../packages/apollo-server-express/dist/ApolloServer.test.js');
 require('../packages/apollo-server-express/dist/expressApollo.test');
 require('../packages/apollo-server-express/dist/connectApollo.test');
+require('../packages/apollo-server-express/dist/datasource.test');
 
 (NODE_MAJOR_VERSION >= 9 ||
   (NODE_MAJOR_VERSION >= 8 && NODE_MAJOR_REVISION >= 9)) &&

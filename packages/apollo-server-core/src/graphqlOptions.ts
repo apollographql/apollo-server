@@ -6,6 +6,7 @@ import {
 import { LogFunction } from './logging';
 import { PersistedQueryCache } from './caching';
 import { GraphQLExtension } from 'graphql-extensions';
+import { RESTDataSource, KeyValueCache } from 'apollo-datasource-rest';
 
 /*
  * GraphQLServerOptions
@@ -42,8 +43,12 @@ export interface GraphQLServerOptions<
   // cacheControl?: boolean | CacheControlExtensionOptions;
   cacheControl?: boolean | any;
   extensions?: Array<() => GraphQLExtension>;
+  dataSources?: () => DataSources;
+  cache?: KeyValueCache;
   persistedQueries?: PersistedQueryOptions;
 }
+
+export type DataSources = { [name: string]: RESTDataSource };
 
 export interface PersistedQueryOptions {
   cache: PersistedQueryCache;

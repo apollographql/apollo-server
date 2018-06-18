@@ -46,9 +46,9 @@ While you could write all of the necessary code yourself, these two dependencies
 
 Run the following command to install both of these dependencies and save them in the project:
 
-    npm install --save apollo-server@beta graphql
+    npm install --save apollo-server@rc graphql
 
-> Important: While `apollo-server` is in beta, its necessary to install from the `beta` tag.
+> Important: While `apollo-server` is a release candidate, its necessary to install from the `rc` tag.
 
 In the next step, we'll use these dependencies to create a server which processes and responds to incoming GraphQL requests.
 

@@ -6,10 +6,12 @@
     "esModuleInterop": true,
     "sourceMap": true,
     "declaration": true,
+    "declarationMap": true,
     "noImplicitAny": false,
     "removeComments": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "lib": ["es2016", "esnext.asynciterable", "webworker"]
+    "lib": ["es2016", "esnext.asynciterable"],
+    "types": ["node", "mocha"]
   }
 }

@@ -15,13 +15,13 @@ We need to install two packages to use Apollo Server, and a third package when u
 
 To install, run:
 
-    npm install --save apollo-server@beta graphql
+    npm install --save apollo-server@rc graphql
 
 When adding Apollo Server to an existing application, a corresponding HTTP server support package needs to be installed as well.  For example, for Express this is:
 
-    npm install --save apollo-server-express@beta
+    npm install --save apollo-server-express@rc
 
-> Note: During the beta, it's necessary to use the `beta` npm package, as shown in the above commands.
+> Note: During the release candidate period, it's necessary to use the `rc` npm package, as shown in the above commands.
 
 <h2 id="creating">Creating a server</h2>
 
