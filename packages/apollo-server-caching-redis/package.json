@@ -1,0 +1,53 @@
+{
+  "name": "apollo-server-caching-redis",
+  "version": "2.0.0-rc.0",
+  "author": "opensource@apollographql.com",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-caching-redis"
+  },
+  "homepage": "https://github.com/apollographql/apollo-server#readme",
+  "bugs": {
+    "url": "https://github.com/apollographql/apollo-server/issues"
+  },
+  "scripts": {
+    "clean": "rm -rf lib",
+    "compile": "tsc",
+    "prepublish": "npm run clean && npm run compile",
+    "test": "jest --verbose"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "engines": {
+    "node": ">=6"
+  },
+  "dependencies": {
+    "apollo-server-caching": "^2.0.0-rc.0",
+    "apollo-server-env": "^2.0.0-rc.0",
+    "redis": "^2.8.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^23.0.0",
+    "jest": "^23.1.0",
+    "redis-mock": "^0.27.0",
+    "ts-jest": "^22.4.6"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "transform": {
+      "^.+\\.(ts|js)$": "ts-jest"
+    },
+    "moduleFileExtensions": [
+      "ts",
+      "js",
+      "json"
+    ],
+    "testRegex": "/__tests__/.*$",
+    "globals": {
+      "ts-jest": {
+        "skipBabel": true
+      }
+    }
+  }
+}
