@@ -1,0 +1,38 @@
+{
+  "name": "apollo-server-lambda",
+  "version": "2.0.0-rc.0",
+  "description": "Production-ready Node.js GraphQL server for AWS Lambda",
+  "main": "dist/index.js",
+  "scripts": {
+    "compile": "tsc",
+    "prepublish": "npm run compile"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-lambda"
+  },
+  "keywords": [
+    "GraphQL",
+    "Apollo",
+    "Server",
+    "Lambda",
+    "Javascript"
+  ],
+  "author": "opensource@apollographql.com",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/apollographql/apollo-server/issues"
+  },
+  "homepage": "https://github.com/apollographql/apollo-server#readme",
+  "dependencies": {
+    "apollo-server-core": "^2.0.0-rc.0",
+    "graphql-playground-html": "^1.6.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.6"
+  },
+  "typings": "dist/index.d.ts",
+  "typescript": {
+    "definition": "dist/index.d.ts"
+  }
+}
