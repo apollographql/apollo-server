@@ -23,7 +23,11 @@ export function calculateCacheControlHeaders(
       response.extensions && response.extensions.cacheControl;
 
     //If there are no extensions or hints, then the headers should not be present
-    if (!cacheControl || !cacheControl.hints) {
+    if (
+      !cacheControl ||
+      !cacheControl.hints ||
+      cacheControl.hints.length === 0
+    ) {
       return {};
     }
 
