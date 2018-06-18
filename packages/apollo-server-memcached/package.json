@@ -29,9 +29,10 @@
   },
   "devDependencies": {
     "@types/jest": "^23.0.0",
+    "@types/memcached": "^2.2.5",
     "jest": "^23.1.0",
-    "ts-jest": "^22.4.6",
-    "memcached-mock": "^0.1.0"
+    "memcached-mock": "^0.1.0",
+    "ts-jest": "^22.4.6"
   },
   "jest": {
     "testEnvironment": "node",
