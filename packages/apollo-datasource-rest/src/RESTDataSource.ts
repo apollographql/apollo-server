@@ -47,6 +47,18 @@ export abstract class RESTDataSource<TContext = any> {
     );
   }
 
+  protected async patch<TResponse>(
+    path: string,
+    params?: Params,
+    options?: RequestInit,
+  ): Promise<TResponse> {
+    return this.fetch<TResponse>(
+      path,
+      params,
+      Object.assign({ method: 'PATCH' }, options),
+    );
+  }
+
   protected async put<TResponse>(
     path: string,
     params?: Params,
