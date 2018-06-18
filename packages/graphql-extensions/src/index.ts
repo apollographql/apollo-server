@@ -42,7 +42,10 @@ export class GraphQLExtension<TContext = any> {
     executionArgs: ExecutionArgs;
   }): EndHandler | void;
 
-  public willSendResponse?(o: { graphqlResponse: GraphQLResponse }): void;
+  public willSendResponse?(o: {
+    graphqlResponse: GraphQLResponse;
+    responseInit: ResponseInit;
+  }): { graphqlResponse?: GraphQLResponse; responseInit?: ResponseInit } | void;
 
   public willResolveField?(
     source: any,
@@ -93,12 +96,25 @@ export class GraphQLExtensionStack<TContext = any> {
     );
   }
 
-  public willSendResponse(o: { graphqlResponse: GraphQLResponse }): void {
-    this.extensions.forEach(extension => {
+  public willSendResponse(o: {
+    graphqlResponse: GraphQLResponse;
+    responseInit: ResponseInit;
+  }): { graphqlResponse: GraphQLResponse; responseInit: ResponseInit } {
+    return this.extensions.reduce((prev, extension) => {
       if (extension.willSendResponse) {
-        extension.willSendResponse(o);
+        const result = extension.willSendResponse(o);
+        if (result) {
+          if (result.graphqlResponse) {
+            prev.graphqlResponse = result.graphqlResponse;
+          }
+
+          if (result.responseInit) {
+            prev.responseInit = result.responseInit;
+          }
+        }
       }
-    });
+      return prev;
+    }, o);
   }
 
   public willResolveField(
