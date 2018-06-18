@@ -8,9 +8,9 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "noUnusedParameters": true,
-    "noUnusedLocals": true
+    "noUnusedLocals": true,
+    "types": ["node", "jest"]
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "**/__tests__/*", "**/__mocks__/*"],
-  "types": ["node", "jest"]
+  "exclude": ["node_modules", "**/__tests__/*", "**/__mocks__/*"]
 }

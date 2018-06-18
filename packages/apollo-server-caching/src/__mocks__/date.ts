@@ -22,7 +22,7 @@ const handler = {
       return new target(...args);
     }
   },
-  get(target, propKey, receiver) {
+  get(target, propKey) {
     if (propKey === 'now') {
       return () => now;
     } else {

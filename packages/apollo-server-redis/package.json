@@ -1,11 +1,11 @@
 {
-  "name": "apollo-server-caching-redis",
+  "name": "apollo-server-redis",
   "version": "2.0.0-rc.0",
   "author": "opensource@apollographql.com",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-caching-redis"
+    "url": "https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-redis"
   },
   "homepage": "https://github.com/apollographql/apollo-server#readme",
   "bugs": {
