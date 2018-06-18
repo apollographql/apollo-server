@@ -49,7 +49,7 @@ export function graphqlLambda(
         });
       },
       (error: HttpQueryError) => {
-        if ('HttpQueryError' !== error.name) callback(error);
+        if ('HttpQueryError' !== error.name) return callback(error);
 
         callback(null, {
           body: error.message,

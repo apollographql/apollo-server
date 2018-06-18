@@ -11,7 +11,4 @@ export {
 } from 'apollo-server-core';
 
 // ApolloServer integration
-// export {
-//   ApolloServer,
-//   ServerRegistration,
-// } from './ApolloServer';
+export { ApolloServer, ServerRegistration } from './ApolloServer';
