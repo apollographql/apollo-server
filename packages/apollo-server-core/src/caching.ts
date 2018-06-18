@@ -5,26 +5,37 @@ export interface PersistedQueryCache {
   get(key: string): Promise<string | null>;
 }
 
-export function calcualteCacheControlHeaders(
+export function calculateCacheControlHeaders(
   responses: Array<ExecutionResult & { extensions?: Record<string, any> }>,
 ) {
   let maxAge = Number.MAX_VALUE;
   let publicOrPrivate = 'public';
 
+  //Because of the early exit, we are unable to use forEach. While a reduce
+  //loop might be possible, a for loop is more readable
   for (let i = 0; i < responses.length; i++) {
+    const response = responses[i];
+
     const cacheControl: {
       version: number;
-      hints: Array<{ scope: string; maxAge: number }>;
+      hints: Array<{ scope?: string; maxAge?: number; path: Array<string> }>;
     } =
-      responses[i].extensions && responses[i].extensions.cacheControl;
+      response.extensions && response.extensions.cacheControl;
 
-    if (!cacheControl) {
+    //If there are no extensions or hints, then the headers should not be present
+    if (!cacheControl || !cacheControl.hints) {
       return {};
     }
 
+    const rootHints = new Set<string>();
     for (let y = 0; y < cacheControl.hints.length; y++) {
       if (cacheControl.hints[y].scope === 'PRIVATE') {
         publicOrPrivate = 'private';
+      }
+
+      //If no maxAge is present, then we ignore the hint
+      if (cacheControl.hints[y].maxAge === undefined) {
+        continue;
       }
 
       //if there is a hint with max age of 0, we don't need to process more
@@ -35,6 +46,14 @@ export function calcualteCacheControlHeaders(
       if (cacheControl.hints[y].maxAge < maxAge) {
         maxAge = cacheControl.hints[y].maxAge;
       }
+
+      rootHints.add(cacheControl.hints[y].path[0]);
+    }
+
+    //If a root field inside of data does not have a cache hint, then we do not
+    //cache the response
+    if (Object.keys(response.data).find(rootKey => !rootHints.has(rootKey))) {
+      return {};
     }
   }
 

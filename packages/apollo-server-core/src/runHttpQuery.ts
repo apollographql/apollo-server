@@ -12,7 +12,7 @@ import {
   PersistedQueryNotFoundError,
 } from './errors';
 import { LogAction, LogStep } from './logging';
-import { calcualteCacheControlHeaders } from './caching';
+import { calculateCacheControlHeaders } from './caching';
 import { HTTPCache } from 'apollo-datasource-rest';
 
 export interface HttpQueryRequest {
@@ -386,7 +386,7 @@ export async function runHttpQuery(
   if (!optionsObject.cacheControl) {
     responseInit.headers = {
       ...responseInit.headers,
-      ...calcualteCacheControlHeaders(responses),
+      ...calculateCacheControlHeaders(responses),
     };
 
     //remove cacheControl headers. This could be done in production only,
