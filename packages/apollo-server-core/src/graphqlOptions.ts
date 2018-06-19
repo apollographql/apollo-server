@@ -6,7 +6,8 @@ import {
 import { LogFunction } from './logging';
 import { PersistedQueryCache } from './caching';
 import { GraphQLExtension } from 'graphql-extensions';
-import { RESTDataSource, KeyValueCache } from 'apollo-datasource-rest';
+import { RESTDataSource } from 'apollo-datasource-rest';
+import { KeyValueCache } from 'apollo-server-caching';
 
 /*
  * GraphQLServerOptions
