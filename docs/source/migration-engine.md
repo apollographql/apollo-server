@@ -7,9 +7,7 @@ Apollo Server provides reporting and persisted queries in native javascript by d
 
 ## Stand-alone Apollo Server
 
-With ENGINE_API_KEY set as an environment variable, Apollo Server creates a reporting agent that sends execution traces to the Engine UI. In addition by default, Apollo Server supports [persisted queries](./features/apq.html).
-
-<!-- FIXME add something about CDN headers-->
+Apollo Server 2 is able to completely replace the Engine Proxy. To enable metrics reporting, add `ENGINE_API_KEY` as an environment variable. Apollo Server will then create a reporting agent that sends execution traces to the Engine UI. In addition by default, Apollo Server supports [persisted queries](./features/apq.html) without needing the proxy's cache. Apollo Server also provides cache-control headers for consumption by a [CDN](./features/cdn.html). Integration with a CDN provides a replacement for the full response caching in Engine Proxy.
 
 ```js
 const { ApolloServer } = require('apollo-server');
@@ -24,9 +22,9 @@ server.listen().then(({ url }) => {
 });
 ```
 
-## Starting Engine Proxy
+## Starting Engine Proxy as a Sidecar
 
-The `apollo-engine` package provides integrations with many [node frameworks](/docs/engine/setup-node.html#not-express), including [express](/docs/engine/setup-node.html#setup-guide), that starts the Engine Proxy alongside the framework. The following code demonstrates how to start the proxy with Apollo Server 2, assuming that the `ENGINE_API_KEY` environment variable is set to the api key of the service.
+Some applications require the Engine Proxy for full response caching, so it is necessary to run the proxy as a process alongside Apollo Server. The `apollo-engine` package provides integrations with many [node frameworks](/docs/engine/setup-node.html#not-express), including [express](/docs/engine/setup-node.html#setup-guide), and starts the Engine Proxy alongside Apollo Server. The following code demonstrates how to start the proxy with Apollo Server 2. It assumes that the `ENGINE_API_KEY` environment variable is set to the api key of the service.
 
 ```js
 const { ApolloEngine } = require('apollo-engine');
@@ -56,6 +54,21 @@ engine.listen({
   },
 }, () => {
   console.log('Listening!');
+});
+```
+
+To set the default max age inside of cacheControl, some additional options must be specified:
+
+```js
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  tracing: true,
+  cacheControl: {
+    defaultMaxAge: 5,
+    stripFormattedExtensions: false,
+    calculateCacheControlHeaders: false,
+  },
 });
 ```
 
