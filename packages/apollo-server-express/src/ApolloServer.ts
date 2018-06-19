@@ -31,7 +31,7 @@ export interface ServerRegistration {
   onHealthCheck?: (req: express.Request) => Promise<any>;
   disableHealthCheck?: boolean;
   gui?: boolean | PlaygroundMiddlewareOptions;
-  // https:// github.com/jaydenseric/apollo-upload-server#options
+  // https://github.com/jaydenseric/apollo-upload-server#options
   uploads?: boolean | Record<string, any>;
 }
 
@@ -96,7 +96,7 @@ export class ApolloServer extends ApolloServerBase {
     if (!disableHealthCheck) {
       // uses same path as engine proxy, but is generally useful.
       app.use('/.well-known/apollo/server-health', (req, res) => {
-        // Response follows https:// tools.ietf.org/html/draft-inadarei-api-health-check-01
+        // Response follows https://tools.ietf.org/html/draft-inadarei-api-health-check-01
         res.type('application/health+json');
 
         if (onHealthCheck) {

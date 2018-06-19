@@ -39,7 +39,7 @@ export class ApolloError extends Error implements GraphQLError {
 
 function enrichError(error: Partial<GraphQLError>, debug: boolean = false) {
   const expanded = {} as any;
-  // follows similar structure to https:// github.com/graphql/graphql-js/blob/master/src/error/GraphQLError.js#L145-L193
+  // follows similar structure to https://github.com/graphql/graphql-js/blob/master/src/error/GraphQLError.js#L145-L193
   // with the addition of name
   Object.defineProperties(expanded, {
     name: {
@@ -84,7 +84,7 @@ function enrichError(error: Partial<GraphQLError>, debug: boolean = false) {
 
   // ensure that extensions is not taken from the originalError
   // graphql-js ensures that the originalError's extensions are hoisted
-  // https:// github.com/graphql/graphql-js/blob/0bb47b2/src/error/GraphQLError.js#L138
+  // https://github.com/graphql/graphql-js/blob/0bb47b2/src/error/GraphQLError.js#L138
   delete expanded.extensions.exception.extensions;
   if (debug && !expanded.extensions.exception.stacktrace) {
     expanded.extensions.exception.stacktrace =
@@ -189,7 +189,7 @@ export class PersistedQueryNotFoundError extends ApolloError {
     super('PersistedQueryNotFound', 'PERSISTED_QUERY_NOT_FOUND');
 
     // Set the prototype explicitly.
-    // https:// stackoverflow.com/a/41102306
+    // https://stackoverflow.com/a/41102306
     Object.setPrototypeOf(this, PersistedQueryNotFoundError.prototype);
     Object.defineProperty(this, 'name', {
       value: 'PersistedQueryNotFoundError',
@@ -202,7 +202,7 @@ export class PersistedQueryNotSupportedError extends ApolloError {
     super('PersistedQueryNotSupported', 'PERSISTED_QUERY_NOT_SUPPORTED');
 
     // Set the prototype explicitly.
-    // https:// stackoverflow.com/a/41102306
+    // https://stackoverflow.com/a/41102306
     Object.setPrototypeOf(this, PersistedQueryNotSupportedError.prototype);
     Object.defineProperty(this, 'name', {
       value: 'PersistedQueryNotSupportedError',
@@ -234,12 +234,12 @@ export function formatApolloErrors(
   const flattenedErrors = [];
   errors.forEach(error => {
     // Errors that occur in graphql-tools can contain an errors array that contains the errors thrown in a merged schema
-    // https:// github.com/apollographql/graphql-tools/blob/3d53986ca/src/stitching/errors.ts#L104-L107
+    // https://github.com/apollographql/graphql-tools/blob/3d53986ca/src/stitching/errors.ts#L104-L107
     //
     // They are are wrapped in an extra GraphQL error
-    // https:// github.com/apollographql/graphql-tools/blob/3d53986ca/src/stitching/errors.ts#L109-L113
+    // https://github.com/apollographql/graphql-tools/blob/3d53986ca/src/stitching/errors.ts#L109-L113
     // which calls:
-    // https:// github.com/graphql/graphql-js/blob/0a30b62964/src/error/locatedError.js#L18-L37
+    // https://github.com/graphql/graphql-js/blob/0a30b62964/src/error/locatedError.js#L18-L37
     if (Array.isArray((error as any).errors)) {
       (error as any).errors.forEach(e => flattenedErrors.push(e));
     } else if (

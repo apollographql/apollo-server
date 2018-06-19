@@ -14,7 +14,7 @@ import { createServerInfo } from 'apollo-server-integration-testsuite';
 const restPort = 4001;
 
 export class IdAPI extends RESTDataSource {
-  baseURL = `http:// localhost:${restPort}/`;
+  baseURL = `http://localhost:${restPort}/`;
 
   async getId(id: string) {
     return this.get(`id/${id}`);

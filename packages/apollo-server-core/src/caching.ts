@@ -31,7 +31,7 @@ export function calculateCacheControlHeaders(
       cacheControl.hints.length === 0 ||
       cacheControl.version !== 1
     ) {
-      if (cacheControl.version !== 1) {
+      if (cacheControl && cacheControl.version !== 1) {
         console.warn('Invalid cacheControl version.');
       }
       return {};

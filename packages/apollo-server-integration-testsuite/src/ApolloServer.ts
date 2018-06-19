@@ -141,12 +141,16 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
           const apolloFetch = createApolloFetch({ uri });
 
-          const introspectionResult = await apolloFetch({
-            query: INTROSPECTION_QUERY,
-          });
-          expect(introspectionResult.data, 'data should not exist').not.to
-            .exist;
-          expect(introspectionResult.errors, 'errors should exist').to.exist;
+          try {
+            const introspectionResult = await apolloFetch({
+              query: INTROSPECTION_QUERY,
+            });
+            expect(introspectionResult.data, 'data should not exist').not.to
+              .exist;
+            expect(introspectionResult.errors, 'errors should exist').to.exist;
+          } catch (e) {
+            console.log(e);
+          }
 
           const result = await apolloFetch({ query: TEST_STRING_QUERY });
           expect(result.data, 'data should not exist').not.to.exist;
@@ -519,7 +523,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           server.installSubscriptionHandlers(httpServer);
 
           const client = new SubscriptionClient(
-            `ws:// localhost:${port}${server.subscriptionsPath}`,
+            `ws://localhost:${port}${server.subscriptionsPath}`,
             {},
             WebSocket,
           );
@@ -591,7 +595,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           }
 
           const client = new SubscriptionClient(
-            `ws:// localhost:${port}${server.subscriptionsPath}`,
+            `ws://localhost:${port}${server.subscriptionsPath}`,
             {},
             WebSocket,
           );
@@ -615,7 +619,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           // function that notifies the returned observable and can cursomize
           // the behavior with an option in the client constructor. If you're
           // available to make a PR to the following please do!
-          // https:// github.com/apollographql/subscriptions-transport-ws/blob/master/src/client.ts
+          // https://github.com/apollographql/subscriptions-transport-ws/blob/master/src/client.ts
           client.onError((_: Error) => {
             done();
           });
@@ -669,7 +673,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
             expect(server.subscriptionsPath).to.equal(path);
             const client = new SubscriptionClient(
-              `ws:// localhost:${port}${server.subscriptionsPath}`,
+              `ws://localhost:${port}${server.subscriptionsPath}`,
               {},
               WebSocket,
             );

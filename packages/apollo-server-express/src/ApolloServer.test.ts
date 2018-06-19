@@ -34,7 +34,7 @@ const resolvers = {
   },
 };
 
-const url = 'http:// localhost:4000/graphql';
+const url = 'http://localhost:4000/graphql';
 const uri = url;
 
 describe('apollo-server-express', () => {
@@ -273,7 +273,7 @@ describe('apollo-server-express', () => {
         return new Promise((resolve, reject) => {
           request(
             {
-              url: `http:// localhost:${port}/.well-known/apollo/server-health`,
+              url: `http://localhost:${port}/.well-known/apollo/server-health`,
               method: 'GET',
             },
             (error, response, body) => {
@@ -311,7 +311,7 @@ describe('apollo-server-express', () => {
         return new Promise((resolve, reject) => {
           request(
             {
-              url: `http:// localhost:${port}/.well-known/apollo/server-health`,
+              url: `http://localhost:${port}/.well-known/apollo/server-health`,
               method: 'GET',
             },
             (error, response, body) => {
@@ -346,7 +346,7 @@ describe('apollo-server-express', () => {
         return new Promise((resolve, reject) => {
           request(
             {
-              url: `http:// localhost:${port}/.well-known/apollo/server-health`,
+              url: `http://localhost:${port}/.well-known/apollo/server-health`,
               method: 'GET',
             },
             (error, response) => {
@@ -430,7 +430,7 @@ describe('apollo-server-express', () => {
         body.append('1', fs.createReadStream('package.json'));
 
         try {
-          const resolved = await fetch(`http:// localhost:${port}/graphql`, {
+          const resolved = await fetch(`http://localhost:${port}/graphql`, {
             method: 'POST',
             body,
           });
@@ -443,7 +443,7 @@ describe('apollo-server-express', () => {
           });
         } catch (error) {
           // This error began appearing randomly and seems to be a dev dependency bug.
-          // https:// github.com/jaydenseric/apollo-upload-server/blob/18ecdbc7a1f8b69ad51b4affbd986400033303d4/test.js#L39-L42
+          // https://github.com/jaydenseric/apollo-upload-server/blob/18ecdbc7a1f8b69ad51b4affbd986400033303d4/test.js#L39-L42
           if (error.code !== 'EPIPE') throw error;
         }
       });

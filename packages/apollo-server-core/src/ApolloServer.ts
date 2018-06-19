@@ -110,7 +110,7 @@ export class ApolloServerBase {
     if (requestOptions.persistedQueries !== false) {
       if (!requestOptions.persistedQueries) {
         // maxSize is the number of elements that can be stored inside of the cache
-        // https:// github.com/withspectrum/spectrum has about 200 instances of gql`
+        // https://github.com/withspectrum/spectrum has about 200 instances of gql`
         // 300 queries seems reasonable
         const lru = new QuickLru({ maxSize: 300 });
         requestOptions.persistedQueries = {
@@ -309,7 +309,7 @@ export class ApolloServerBase {
       context,
       // Allow overrides from options. Be explicit about a couple of them to
       // avoid a bad side effect of the otherwise useful noUnusedLocals option
-      // (https:// github.com/Microsoft/TypeScript/issues/21673).
+      // (https://github.com/Microsoft/TypeScript/issues/21673).
       logFunction: this.requestOptions.logFunction as LogFunction,
       persistedQueries: this.requestOptions
         .persistedQueries as PersistedQueryOptions,
