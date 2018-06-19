@@ -1,12 +1,5 @@
 import { HTTPCache } from './HTTPCache';
 
-export type Params =
-  | URLSearchParams
-  | string
-  | { [key: string]: string | string[] | undefined }
-  | Iterable<[string, string]>
-  | Array<[string, string]>;
-
 export abstract class RESTDataSource<TContext = any> {
   abstract baseURL: string;
 
@@ -25,7 +18,7 @@ export abstract class RESTDataSource<TContext = any> {
 
   protected async get<TResponse>(
     path: string,
-    params?: Params,
+    params?: URLSearchParamsInit,
     options?: RequestInit,
   ): Promise<TResponse> {
     return this.fetch<TResponse>(
@@ -37,7 +30,7 @@ export abstract class RESTDataSource<TContext = any> {
 
   protected async post<TResponse>(
     path: string,
-    params?: Params,
+    params?: URLSearchParamsInit,
     options?: RequestInit,
   ): Promise<TResponse> {
     return this.fetch<TResponse>(
@@ -49,7 +42,7 @@ export abstract class RESTDataSource<TContext = any> {
 
   protected async patch<TResponse>(
     path: string,
-    params?: Params,
+    params?: URLSearchParamsInit,
     options?: RequestInit,
   ): Promise<TResponse> {
     return this.fetch<TResponse>(
@@ -61,7 +54,7 @@ export abstract class RESTDataSource<TContext = any> {
 
   protected async put<TResponse>(
     path: string,
-    params?: Params,
+    params?: URLSearchParamsInit,
     options?: RequestInit,
   ): Promise<TResponse> {
     return this.fetch<TResponse>(
@@ -73,7 +66,7 @@ export abstract class RESTDataSource<TContext = any> {
 
   protected async delete<TResponse>(
     path: string,
-    params?: Params,
+    params?: URLSearchParamsInit,
     options?: RequestInit,
   ): Promise<TResponse> {
     return this.fetch<TResponse>(
@@ -85,12 +78,12 @@ export abstract class RESTDataSource<TContext = any> {
 
   private async fetch<TResponse>(
     path: string,
-    params?: Params,
+    params?: URLSearchParamsInit,
     init?: RequestInit,
   ): Promise<TResponse> {
     const url = new URL(path, this.baseURL);
 
-    if (params && Object.keys(params).length > 0) {
+    if (params) {
       // Append params to existing params in the path
       for (const [name, value] of new URLSearchParams(params)) {
         url.searchParams.append(name, value);

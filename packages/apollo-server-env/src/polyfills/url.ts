@@ -22,14 +22,7 @@ declare global {
   }
 
   class URLSearchParams implements Iterable<[string, string]> {
-    constructor(
-      init?:
-        | URLSearchParams
-        | string
-        | { [key: string]: string | string[] | undefined }
-        | Iterable<[string, string]>
-        | Array<[string, string]>,
-    );
+    constructor(init?: URLSearchParamsInit);
     append(name: string, value: string): void;
     delete(name: string): void;
     entries(): IterableIterator<[string, string]>;
@@ -44,4 +37,11 @@ declare global {
     values(): IterableIterator<string>;
     [Symbol.iterator](): IterableIterator<[string, string]>;
   }
+
+  type URLSearchParamsInit =
+    | URLSearchParams
+    | string
+    | { [key: string]: Object | Object[] | undefined }
+    | Iterable<[string, Object]>
+    | Array<[string, Object]>;
 }
