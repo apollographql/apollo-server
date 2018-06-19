@@ -11,7 +11,7 @@ import {
   AuthenticationError,
   ForbiddenError,
   ValidationError,
-  BadUserInputError,
+  UserInputError,
   SyntaxError,
 } from './errors';
 
@@ -171,15 +171,15 @@ describe('Errors', () => {
         name: 'ValidationError',
       });
     });
-    it('provides a BadUserInput error', () => {
-      const error = new BadUserInputError(message, {
+    it('provides a user input error', () => {
+      const error = new UserInputError(message, {
         field1: 'property1',
         field2: 'property2',
       });
       verifyError(error, {
         code: 'BAD_USER_INPUT',
-        errorClass: BadUserInputError,
-        name: 'BadUserInputError',
+        errorClass: UserInputError,
+        name: 'UserInputError',
       });
 
       const formattedError = formatApolloErrors([

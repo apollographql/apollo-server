@@ -14,7 +14,7 @@ export {
   ValidationError,
   AuthenticationError,
   ForbiddenError,
-  BadUserInputError,
+  UserInputError,
   formatApolloErrors,
 } from './errors';
 
