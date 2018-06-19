@@ -1,6 +1,11 @@
 import { HTTPCache } from './HTTPCache';
 
-export type Params = { [name: string]: any };
+export type Params =
+  | URLSearchParams
+  | string
+  | { [key: string]: string | string[] | undefined }
+  | Iterable<[string, string]>
+  | Array<[string, string]>;
 
 export abstract class RESTDataSource<TContext = any> {
   abstract baseURL: string;
@@ -18,47 +23,71 @@ export abstract class RESTDataSource<TContext = any> {
     this.context = context;
   }
 
-  protected async get(
+  protected async get<TResponse>(
     path: string,
     params?: Params,
     options?: RequestInit,
-  ): Promise<any> {
-    return this.fetch(path, params, Object.assign({ method: 'GET' }, options));
+  ): Promise<TResponse> {
+    return this.fetch<TResponse>(
+      path,
+      params,
+      Object.assign({ method: 'GET' }, options),
+    );
   }
 
-  protected async post(
+  protected async post<TResponse>(
     path: string,
     params?: Params,
     options?: RequestInit,
-  ): Promise<any> {
-    return this.fetch(path, params, Object.assign({ method: 'POST' }, options));
+  ): Promise<TResponse> {
+    return this.fetch<TResponse>(
+      path,
+      params,
+      Object.assign({ method: 'POST' }, options),
+    );
   }
 
-  protected async put(
+  protected async patch<TResponse>(
     path: string,
     params?: Params,
     options?: RequestInit,
-  ): Promise<any> {
-    return this.fetch(path, params, Object.assign({ method: 'PUT' }, options));
+  ): Promise<TResponse> {
+    return this.fetch<TResponse>(
+      path,
+      params,
+      Object.assign({ method: 'PATCH' }, options),
+    );
   }
 
-  protected async delete(
+  protected async put<TResponse>(
     path: string,
     params?: Params,
     options?: RequestInit,
-  ): Promise<any> {
-    return this.fetch(
+  ): Promise<TResponse> {
+    return this.fetch<TResponse>(
+      path,
+      params,
+      Object.assign({ method: 'PUT' }, options),
+    );
+  }
+
+  protected async delete<TResponse>(
+    path: string,
+    params?: Params,
+    options?: RequestInit,
+  ): Promise<TResponse> {
+    return this.fetch<TResponse>(
       path,
       params,
       Object.assign({ method: 'DELETE' }, options),
     );
   }
 
-  private async fetch(
+  private async fetch<TResponse>(
     path: string,
     params?: Params,
     init?: RequestInit,
-  ): Promise<any> {
+  ): Promise<TResponse> {
     const url = new URL(path, this.baseURL);
 
     if (params && Object.keys(params).length > 0) {

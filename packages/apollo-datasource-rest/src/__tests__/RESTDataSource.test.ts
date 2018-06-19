@@ -101,7 +101,7 @@ describe('RESTDataSource', () => {
     );
   });
 
-  for (const method of ['GET', 'POST', 'PUT', 'DELETE']) {
+  for (const method of ['GET', 'POST', 'PATCH', 'PUT', 'DELETE']) {
     const dataSource = new class extends RESTDataSource {
       baseURL = 'https://api.example.com';
 
@@ -111,6 +111,10 @@ describe('RESTDataSource', () => {
 
       postFoo() {
         return this.post('foo');
+      }
+
+      patchFoo() {
+        return this.patch('foo');
       }
 
       putFoo() {
