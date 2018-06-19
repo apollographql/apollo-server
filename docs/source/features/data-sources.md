@@ -17,17 +17,17 @@ npm install apollo-datasource-rest@rc
 
 To define a data source, extend the `RESTDataSource` class and implement the data fetching methods that your resolvers require. Your implementation of these methods can call on convenience methods built into the `RESTDataSource` class to perform HTTP requests, while making it easy to build up query parameters, parse JSON results, and handle errors.
 
-```typescript
+```js
 const { RESTDataSource } = require('apollo-datasource-rest');
 
 class MoviesAPI extends RESTDataSource {
   baseURL = 'https://movies-api.example.com';
 
-  async getMovie(id: string) {
+  async getMovie(id) {
     return this.get(`movies/${id}`);
   }
 
-  async getMostViewedMovies(limit: number = 10) {
+  async getMostViewedMovies(limit = 10) {
     const data = await this.get('movies', {
       per_page: limit,
       order_by: 'most_viewed',
@@ -39,11 +39,11 @@ class MoviesAPI extends RESTDataSource {
 
 Data sources allow you to intercept fetches to set headers or make other changes to the outgoing request. This is most often used for authorization. Data sources also get access to the GraphQL execution context, which is a great place to store a user token or other information you need to have available.
 
-```typescript
+```js
 class PersonalizationAPI extends RESTDataSource {
   baseURL = 'https://personalization-api.example.com';
 
-  willSendRequest(request: Request) {
+  willSendRequest(request) {
     request.headers.set('Authorization', this.context.token);
   }
 
@@ -51,7 +51,7 @@ class PersonalizationAPI extends RESTDataSource {
     return this.get('favorites');
   }
 
-  async getProgressFor(movieId: string) {
+  async getProgressFor(movieId) {
     return this.get('progress', {
       id: movieId,
     });
@@ -61,11 +61,11 @@ class PersonalizationAPI extends RESTDataSource {
 
 To give resolvers access to data sources, you pass them as options to the `ApolloServer` constructor:
 
-```typescript
+```js
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  cache: new InMemoryKeyValueCache(maxSize: 1000000),
+  cache: new InMemoryKeyValueCache((maxSize: 1000000)),
   dataSources: () => {
     return {
       moviesAPI: new MoviesAPI(),
@@ -74,10 +74,9 @@ const server = new ApolloServer({
   },
   context: () => {
     return {
-      token:
-        'foo',
+      token: 'foo',
     };
-  }
+  },
 });
 ```
 
@@ -85,7 +84,7 @@ Apollo Server will put the data sources on the context for every request, so you
 
 From our resolvers, we can access the data source and return the result:
 
-```typescript
+```js
  Query: {
     movie: async (_source, { id }, { dataSources }) => {
       return dataSources.moviesAPI.getMovie(id);
@@ -110,24 +109,68 @@ Although DataLoader is great for that use case, it’s less helpful when loading
 Most REST APIs don't support batching, and if they do, using a batched endpoint may actually jeopardize caching. When you fetch data in a batch request, the response you receive is for the exact combination of resources you're requesting. Unless you request that same combination again, future requests for the same resource won't be served from cache.
 Our recommendation is to restrict batching to requests that can't be cached. In those cases, you can actually take advantage of DataLoader as a private implementation detail inside your data source.
 
-```typescript
+```js
 class PersonalizationAPI extends RESTDataSource {
   baseURL = 'https://personalization-api.example.com';
 
-  willSendRequest(request: Request) {
+  willSendRequest(request) {
     request.headers.set('Authorization', this.context.token);
   }
 
-  private progressLoader = new DataLoader(async (ids: string[]) => {
+  private progressLoader = new DataLoader(async (ids) => {
     const progressList = await this.get('progress', {
       ids: ids.join(','),
     });
     return ids.map(id =>
-      progressList.find((progress: any) => progress.id === id),
+      progressList.find((progress) => progress.id === id),
     );
   });
 
-  async getProgressFor(id: string) {
+  async getProgressFor(id) {
     return this.progressLoader.load(id);
   }
 ```
+
+## Using Memcached/Redis as a cache storage backend
+
+By default, data sources use an in-memory LRU cache to store responses from REST calls. When running multiple server instances, you'll want to use a shared cache backend instead. That's why Apollo Server also includes support for using [Memcached](../../../packages/apollo-server-memcached) or [Redis](../../../packages/apollo-server-redis) as your backing store. You can specify which one to use by creating an instance and passing it into the Apollo Server constructor:
+
+```js
+const { MemcachedKeyValueCache } = require('apollo-server-memcached');
+
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  cache: new MemcachedKeyValueCache(
+    ['memcached-server-1', 'memcached-server-2', 'memcached-server-3],
+    { retries: 10, retry: 10000 }, // Options
+  ),
+  dataSources: () => ({
+    moviesAPI: new MoviesAPI(),
+  }),
+});
+```
+
+For documentation of the options you can pass to the underlying Memcached client, look [here](https://github.com/3rd-Eden/memcached).
+
+```js
+const { RedisKeyValueCache } = require('apollo-server-redis');
+
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  cache: new RedisKeyValueCache({
+    host: 'redis-server',
+    // Options are passed through to the Redis client
+  }),
+  dataSources: () => ({
+    moviesAPI: new MoviesAPI(),
+  }),
+});
+```
+
+For documentation of the options you can pass to the underlying Redis client, look [here](https://github.com/NodeRedis/node_redis).
+
+## Implementing your own cache backend
+
+Apollo Server exposes a `KeyValueCache` interface that you can use to implement connectors to other data stores, or to optimize for the query characteristics of your application. More information can be found [here](../../../packages/apollo-server-caching).
