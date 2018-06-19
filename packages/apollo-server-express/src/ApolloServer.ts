@@ -31,7 +31,7 @@ export interface ServerRegistration {
   onHealthCheck?: (req: express.Request) => Promise<any>;
   disableHealthCheck?: boolean;
   gui?: boolean | PlaygroundMiddlewareOptions;
-  //https://github.com/jaydenseric/apollo-upload-server#options
+  // https:// github.com/jaydenseric/apollo-upload-server#options
   uploads?: boolean | Record<string, any>;
 }
 
@@ -67,9 +67,9 @@ const fileUploadMiddleware = (
 };
 
 export class ApolloServer extends ApolloServerBase {
-  //This translates the arguments from the middleware into graphQL options It
-  //provides typings for the integration specific behavior, ideally this would
-  //be propagated with a generic to the super class
+  // This translates the arguments from the middleware into graphQL options It
+  // provides typings for the integration specific behavior, ideally this would
+  // be propagated with a generic to the super class
   async createGraphQLServerOptions(
     req: express.Request,
     res: express.Response,
@@ -94,9 +94,9 @@ export class ApolloServer extends ApolloServerBase {
     if (!path) path = '/graphql';
 
     if (!disableHealthCheck) {
-      //uses same path as engine proxy, but is generally useful.
+      // uses same path as engine proxy, but is generally useful.
       app.use('/.well-known/apollo/server-health', (req, res) => {
-        //Response follows https://tools.ietf.org/html/draft-inadarei-api-health-check-01
+        // Response follows https:// tools.ietf.org/html/draft-inadarei-api-health-check-01
         res.type('application/health+json');
 
         if (onHealthCheck) {
@@ -160,7 +160,7 @@ export class ApolloServer extends ApolloServerBase {
 
     app.use(path, (req, res, next) => {
       if (guiEnabled && req.method === 'GET') {
-        //perform more expensive content-type check only if necessary
+        // perform more expensive content-type check only if necessary
         const accept = accepts(req);
         const types = accept.types() as string[];
         const prefersHTML =

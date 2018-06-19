@@ -76,7 +76,7 @@ export class HTTPCache {
 
     // We have to clone the response before returning it because the
     // body can only be used once.
-    // To avoid https://github.com/bitinn/node-fetch/issues/151, we don't use
+    // To avoid https:// github.com/bitinn/node-fetch/issues/151, we don't use
     // response.clone() but create a new response from the consumed body
     return new Response(body, {
       status: response.status,

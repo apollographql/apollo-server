@@ -29,7 +29,7 @@ export interface HttpQueryRequest {
   request: Pick<Request, 'url' | 'method' | 'headers'>;
 }
 
-//The result of a curl does not appear well in the terminal, so we add an extra new line
+// The result of a curl does not appear well in the terminal, so we add an extra new line
 function prettyJSONStringify(toStringfy) {
   return JSON.stringify(toStringfy) + '\n';
 }
@@ -211,10 +211,10 @@ export async function runHttpQuery(
             throw new HttpQueryError(400, 'provided sha does not match query');
           }
 
-          //Do the store completely asynchronously
+          // Do the store completely asynchronously
           Promise.resolve()
             .then(() => {
-              //We do not wait on the cache storage to complete
+              // We do not wait on the cache storage to complete
               return optionsObject.persistedQueries.cache.set(sha, queryString);
             })
             .catch(error => {
@@ -232,7 +232,7 @@ export async function runHttpQuery(
         }
       }
 
-      //We ensure that there is a queryString or parsedQuery after formatParams
+      // We ensure that there is a queryString or parsedQuery after formatParams
       if (queryString && typeof queryString !== 'string') {
         // Check for a common error first.
         if (queryString && (queryString as any).kind === 'Document') {
@@ -282,7 +282,7 @@ export async function runHttpQuery(
 
       let context = optionsObject.context;
       if (!context) {
-        //appease typescript compiler, otherwise could use || {}
+        // appease typescript compiler, otherwise could use || {}
         context = {};
       } else if (typeof context === 'function') {
         try {
@@ -301,7 +301,7 @@ export async function runHttpQuery(
       if (optionsObject.dataSources) {
         const dataSources = optionsObject.dataSources() || {};
 
-        //we use the cache provided to the request and add the Http semantics on top
+        // we use the cache provided to the request and add the Http semantics on top
         const httpCache = new HTTPCache(optionsObject.cache);
 
         for (const dataSource of Object.values(dataSources)) {
@@ -333,8 +333,8 @@ export async function runHttpQuery(
         fieldResolver: optionsObject.fieldResolver,
         debug: optionsObject.debug,
         tracing: optionsObject.tracing,
-        //we always want cacheControl to either set the CDN headers or for the
-        //engine proxy
+        // we always want cacheControl to either set the CDN headers or for the
+        // engine proxy
         cacheControl:
           optionsObject.cacheControl !== null &&
           typeof optionsObject.cacheControl === 'object'
@@ -358,7 +358,7 @@ export async function runHttpQuery(
       // Populate any HttpQueryError to our handler which should
       // convert it to Http Error.
       if (e.name === 'HttpQueryError') {
-        //async function wraps this in a Promise
+        // async function wraps this in a Promise
         throw e;
       }
 
@@ -380,18 +380,18 @@ export async function runHttpQuery(
     },
   };
 
-  //enabling cacheControl means that the user would like the cache-control
-  //extensions we are running the proxy, so we should not strip out the cache
-  //control extension.
+  // enabling cacheControl means that the user would like the cache-control
+  // extensions we are running the proxy, so we should not strip out the cache
+  // control extension.
   if (!optionsObject.cacheControl) {
     responseInit.headers = {
       ...responseInit.headers,
       ...calculateCacheControlHeaders(responses),
     };
 
-    //remove cacheControl headers. This could be done in production only,
-    //however most users should not need to debug cacheControl headers, so they
-    //would only be a distraction
+    // remove cacheControl headers. This could be done in production only,
+    // however most users should not need to debug cacheControl headers, so they
+    // would only be a distraction
     responses.forEach(response => {
       if (response.extensions) {
         delete response.extensions.cacheControl;
@@ -404,8 +404,8 @@ export async function runHttpQuery(
 
   if (!isBatch) {
     const graphqlResponse = responses[0];
-    //This code is run on parse/validation errors and any other error that
-    //doesn't reach GraphQL execution
+    // This code is run on parse/validation errors and any other error that
+    // doesn't reach GraphQL execution
     if (graphqlResponse.errors && typeof graphqlResponse.data === 'undefined') {
       throwHttpGraphQLError(400, graphqlResponse.errors as any, optionsObject);
     }

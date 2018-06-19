@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import { stub } from 'sinon';
 import 'mocha';
 
-//persisted query tests
+// persisted query tests
 import { sha256 } from 'js-sha256';
 import { VERSION } from 'apollo-link-persisted-queries';
 

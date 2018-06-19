@@ -14,7 +14,7 @@ import { createServerInfo } from 'apollo-server-integration-testsuite';
 const restPort = 4001;
 
 export class IdAPI extends RESTDataSource {
-  baseURL = `http://localhost:${restPort}/`;
+  baseURL = `http:// localhost:${restPort}/`;
 
   async getId(id: string) {
     return this.get(`id/${id}`);
@@ -25,7 +25,7 @@ export class IdAPI extends RESTDataSource {
   }
 }
 
-//to remove the circular dependency, we reference it directly
+// to remove the circular dependency, we reference it directly
 const gql = require('../../apollo-server/dist/index').gql;
 
 const typeDefs = gql`
@@ -38,11 +38,11 @@ const typeDefs = gql`
 const resolvers = {
   Query: {
     id: async (p, _, { dataSources }) => {
-      p = p; //for ts unused locals
+      p = p; // for ts unused locals
       return (await dataSources.id.getId('hi')).id;
     },
     stringId: async (p, _, { dataSources }) => {
-      p = p; //for ts unused locals
+      p = p; // for ts unused locals
       return dataSources.id.getStringId('hi');
     },
   },
@@ -54,12 +54,12 @@ restAPI.use('/id/:id', (req, res) => {
   const id = req.params.id;
   restCalls++;
   res.header('Cache-Control', 'max-age=2000, public');
-  //currently data sources expect that the response be a parsable object
+  // currently data sources expect that the response be a parsable object
   res.write(JSON.stringify({ id }));
   res.end();
 });
 
-//currently data sources expect that the response be an object, so this will fail
+// currently data sources expect that the response be an object, so this will fail
 restAPI.use('/str/:id', (req, res) => {
   const id = req.params.id;
   restCalls++;
@@ -117,7 +117,7 @@ describe('apollo-server-express', () => {
     await httpServer.close();
   });
 
-  //XXX currently this test fails, since data sources parse json
+  // XXX currently this test fails, since data sources parse json
   // it('can cache a string from the backend', async () => {
   //   const server = new ApolloServer({
   //     typeDefs,

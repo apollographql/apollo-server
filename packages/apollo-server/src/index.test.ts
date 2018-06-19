@@ -112,7 +112,7 @@ describe('apollo-server', () => {
       return new Promise((resolve, reject) => {
         request(
           {
-            url: `http://localhost:${port}/.well-known/apollo/server-health`,
+            url: `http:// localhost:${port}/.well-known/apollo/server-health`,
             method: 'GET',
           },
           (error, response, body) => {

@@ -19,7 +19,7 @@ import {
   createServerInfo,
 } from 'apollo-server-integration-testsuite';
 
-//to remove the circular dependency, we reference it directly
+// to remove the circular dependency, we reference it directly
 const gql = require('../../apollo-server/dist/index').gql;
 
 const typeDefs = gql`
@@ -34,7 +34,7 @@ const resolvers = {
   },
 };
 
-const url = 'http://localhost:4000/graphql';
+const url = 'http:// localhost:4000/graphql';
 const uri = url;
 
 describe('apollo-server-express', () => {
@@ -58,7 +58,7 @@ describe('apollo-server-express', () => {
 });
 
 describe('apollo-server-express', () => {
-  //to remove the circular dependency, we reference it directly
+  // to remove the circular dependency, we reference it directly
   const ApolloServer = require('../../apollo-server/dist/index').ApolloServer;
   let server: ApolloServerBase | any;
 
@@ -273,7 +273,7 @@ describe('apollo-server-express', () => {
         return new Promise((resolve, reject) => {
           request(
             {
-              url: `http://localhost:${port}/.well-known/apollo/server-health`,
+              url: `http:// localhost:${port}/.well-known/apollo/server-health`,
               method: 'GET',
             },
             (error, response, body) => {
@@ -311,7 +311,7 @@ describe('apollo-server-express', () => {
         return new Promise((resolve, reject) => {
           request(
             {
-              url: `http://localhost:${port}/.well-known/apollo/server-health`,
+              url: `http:// localhost:${port}/.well-known/apollo/server-health`,
               method: 'GET',
             },
             (error, response, body) => {
@@ -346,7 +346,7 @@ describe('apollo-server-express', () => {
         return new Promise((resolve, reject) => {
           request(
             {
-              url: `http://localhost:${port}/.well-known/apollo/server-health`,
+              url: `http:// localhost:${port}/.well-known/apollo/server-health`,
               method: 'GET',
             },
             (error, response) => {
@@ -363,7 +363,7 @@ describe('apollo-server-express', () => {
     });
     describe('file uploads', () => {
       it('enabled uploads', async () => {
-        //XXX This is currently a failing test for node 10
+        // XXX This is currently a failing test for node 10
         const NODE_VERSION = process.version.split('.');
         const NODE_MAJOR_VERSION = parseInt(NODE_VERSION[0].replace(/^v/, ''));
         if (NODE_MAJOR_VERSION === 10) return;
@@ -430,7 +430,7 @@ describe('apollo-server-express', () => {
         body.append('1', fs.createReadStream('package.json'));
 
         try {
-          const resolved = await fetch(`http://localhost:${port}/graphql`, {
+          const resolved = await fetch(`http:// localhost:${port}/graphql`, {
             method: 'POST',
             body,
           });
@@ -443,7 +443,7 @@ describe('apollo-server-express', () => {
           });
         } catch (error) {
           // This error began appearing randomly and seems to be a dev dependency bug.
-          // https://github.com/jaydenseric/apollo-upload-server/blob/18ecdbc7a1f8b69ad51b4affbd986400033303d4/test.js#L39-L42
+          // https:// github.com/jaydenseric/apollo-upload-server/blob/18ecdbc7a1f8b69ad51b4affbd986400033303d4/test.js#L39-L42
           if (error.code !== 'EPIPE') throw error;
         }
       });
@@ -711,8 +711,8 @@ describe('apollo-server-express', () => {
       expect(result.extensions).not.to.exist;
     });
 
-    //Not sure why this test is failing, the scope that comes back from the
-    //extensions is undefined
+    // Not sure why this test is failing, the scope that comes back from the
+    // extensions is undefined
     // it('contains private cacheControl Headers when scoped', async () => {
     //   server = new ApolloServer({ typeDefs, resolvers });
     //   app = express();

@@ -11,8 +11,8 @@ export function calculateCacheControlHeaders(
   let maxAge = Number.MAX_VALUE;
   let publicOrPrivate = 'public';
 
-  //Because of the early exit, we are unable to use forEach. While a reduce
-  //loop might be possible, a for loop is more readable
+  // Because of the early exit, we are unable to use forEach. While a reduce
+  // loop might be possible, a for loop is more readable
   for (let i = 0; i < responses.length; i++) {
     const response = responses[i];
 
@@ -22,7 +22,7 @@ export function calculateCacheControlHeaders(
     } =
       response.extensions && response.extensions.cacheControl;
 
-    //If there are no extensions or hints, then the headers should not be present
+    // If there are no extensions or hints, then the headers should not be present
     if (
       !cacheControl ||
       !cacheControl.hints ||
@@ -37,12 +37,12 @@ export function calculateCacheControlHeaders(
         publicOrPrivate = 'private';
       }
 
-      //If no maxAge is present, then we ignore the hint
+      // If no maxAge is present, then we ignore the hint
       if (cacheControl.hints[y].maxAge === undefined) {
         continue;
       }
 
-      //if there is a hint with max age of 0, we don't need to process more
+      // if there is a hint with max age of 0, we don't need to process more
       if (cacheControl.hints[y].maxAge === 0) {
         return {};
       }
@@ -54,8 +54,8 @@ export function calculateCacheControlHeaders(
       rootHints.add(cacheControl.hints[y].path[0]);
     }
 
-    //If a root field inside of data does not have a cache hint, then we do not
-    //cache the response
+    // If a root field inside of data does not have a cache hint, then we do not
+    // cache the response
     if (Object.keys(response.data).find(rootKey => !rootHints.has(rootKey))) {
       return {};
     }
