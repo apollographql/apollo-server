@@ -35,7 +35,7 @@ const typeDefs = gql(IMPORT_FUNCTION('./schema-file'))
 
 > Apollo Server 2.0 RC requires Node.js v6 and higher.
 
-Apollo Server 2.0 simplifies implementing a GraphQL server.  Apollo Server 1.0 revolved around providing middleware-based solutions, which had to be added to an application which already existed.  These middleware implementations were tied to the HTTP server in use (e.g. `apollo-server-express` for Express implementations, `apollo-server-koa` for Koa, etc.).
+Apollo Server 2.0 simplifies implementing a GraphQL server.  Apollo Server 1.0 revolved around providing middleware-based solutions, which had to be added to an application which already existed.  These middleware implementations were tied to the HTTP server in use (e.g. `apollo-server-express` for Express implementations, `apollo-server-hapi` for hapi, etc.).
 
 There is a consideration to be made when following the rest of the guide:
 
@@ -54,7 +54,7 @@ Check out the following changes for Apollo Server 2.0 RC.
 
 <h2 id="Middleware">Middleware</h2>
 
-With the middleware option used by Apollo Server 1.0 users, it is necessary to install the release candidate version of `apollo-server-express` and also add the new `apollo-server` release candidate.  To do this, use the `rc` tag when installing:
+With the middleware option used by Apollo Server 1.0 users, it is necessary to install the release candidate version of `apollo-server-express`.  To do this, use the `rc` tag when installing:
 
     npm install --save apollo-server-express@rc
 
