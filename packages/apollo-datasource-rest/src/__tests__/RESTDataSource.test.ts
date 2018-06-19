@@ -30,7 +30,7 @@ describe('RESTDataSource', () => {
     unmockFetch();
   });
 
-  it('returns data as parsed JSON', async () => {
+  it('returns data as parsed JSON when Content-Type is application/json', async () => {
     const dataSource = new class extends RESTDataSource {
       baseURL = 'https://api.example.com';
 
@@ -41,11 +41,50 @@ describe('RESTDataSource', () => {
 
     dataSource.httpCache = httpCache;
 
-    fetch.mockJSONResponseOnce({ foo: 'bar' });
+    fetch.mockJSONResponseOnce(
+      { foo: 'bar' },
+      { 'Content-Type': 'application/json' },
+    );
 
     const data = await dataSource.getFoo();
 
     expect(data).toEqual({ foo: 'bar' });
+  });
+
+  it('returns data as a string when Content-Type is text/plain', async () => {
+    const dataSource = new class extends RESTDataSource {
+      baseURL = 'https://api.example.com';
+
+      getFoo() {
+        return this.get('foo');
+      }
+    }();
+
+    dataSource.httpCache = httpCache;
+
+    fetch.mockResponseOnce('bar', { 'Content-Type': 'text/plain' });
+
+    const data = await dataSource.getFoo();
+
+    expect(data).toEqual('bar');
+  });
+
+  it('attempts to return data as a string when no Content-Type header is returned', async () => {
+    const dataSource = new class extends RESTDataSource {
+      baseURL = 'https://api.example.com';
+
+      getFoo() {
+        return this.get('foo');
+      }
+    }();
+
+    dataSource.httpCache = httpCache;
+
+    fetch.mockResponseOnce('bar');
+
+    const data = await dataSource.getFoo();
+
+    expect(data).toEqual('bar');
   });
 
   it('allows adding query string parameters', async () => {

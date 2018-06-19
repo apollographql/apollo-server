@@ -84,12 +84,20 @@ export abstract class RESTDataSource<TContext = any> {
 
     return this.trace(`${(init && init.method) || 'GET'} ${url}`, async () => {
       const request = new Request(String(url));
+
       if (this.willSendRequest) {
         this.willSendRequest(request);
       }
+
       const response = await this.httpCache.fetch(request, init);
       if (response.ok) {
-        return response.json();
+        const contentType = response.headers.get('Content-Type');
+
+        if (contentType && contentType.startsWith('application/json')) {
+          return response.json();
+        } else {
+          return response.text();
+        }
       } else {
         throw new Error(
           `${response.status} ${response.statusText}: ${await response.text()}`,

@@ -51,16 +51,16 @@ const restAPI = express();
 restAPI.use('/id/:id', (req, res) => {
   const id = req.params.id;
   restCalls++;
+  res.header('Content-Type', 'application/json');
   res.header('Cache-Control', 'max-age=2000, public');
-  //currently data sources expect that the response be a parsable object
   res.write(JSON.stringify({ id }));
   res.end();
 });
 
-//currently data sources expect that the response be an object, so this will fail
 restAPI.use('/str/:id', (req, res) => {
   const id = req.params.id;
   restCalls++;
+  res.header('Content-Type', 'text/plain');
   res.header('Cache-Control', 'max-age=2000, public');
   res.write(id);
   res.end();
@@ -68,6 +68,7 @@ restAPI.use('/str/:id', (req, res) => {
 
 describe('apollo-server-express', () => {
   let restServer;
+
   before(async () => {
     await new Promise(resolve => {
       restServer = restAPI.listen(restPort, resolve);
@@ -78,12 +79,20 @@ describe('apollo-server-express', () => {
     await restServer.close();
   });
 
+  let server: ApolloServer;
+  let httpServer: http.Server;
+
   beforeEach(() => {
     restCalls = 0;
   });
 
+  afterEach(async () => {
+    await server.stop();
+    await httpServer.close();
+  });
+
   it('uses the cache', async () => {
-    const server = new ApolloServer({
+    server = new ApolloServer({
       typeDefs,
       resolvers,
       dataSources: () => ({
@@ -93,59 +102,52 @@ describe('apollo-server-express', () => {
     const app = express();
 
     server.applyMiddleware({ app });
-    const httpServer = await new Promise<http.Server>(resolve => {
+    httpServer = await new Promise<http.Server>(resolve => {
       const s = app.listen({ port: 4000 }, () => resolve(s));
     });
     const { url: uri } = createServerInfo(server, httpServer);
 
     const apolloFetch = createApolloFetch({ uri });
-    const firstResult = await apolloFetch({ query: '{id}' });
+    const firstResult = await apolloFetch({ query: '{ id }' });
 
     expect(firstResult.data).to.deep.equal({ id: 'hi' });
     expect(firstResult.errors, 'errors should exist').not.to.exist;
     expect(restCalls).to.deep.equal(1);
 
-    const secondResult = await apolloFetch({ query: '{id}' });
+    const secondResult = await apolloFetch({ query: '{ id }' });
 
     expect(secondResult.data).to.deep.equal({ id: 'hi' });
     expect(secondResult.errors, 'errors should exist').not.to.exist;
     expect(restCalls).to.deep.equal(1);
-
-    await server.stop();
-    await httpServer.close();
   });
 
-  //XXX currently this test fails, since data sources parse json
-  // it('can cache a string from the backend', async () => {
-  //   const server = new ApolloServer({
-  //     typeDefs,
-  //     resolvers,
-  //     dataSources: () => ({
-  //       id: new IdAPI(),
-  //     }),
-  //   });
-  //   const app = express();
+  it('can cache a string from the backend', async () => {
+    server = new ApolloServer({
+      typeDefs,
+      resolvers,
+      dataSources: () => ({
+        id: new IdAPI(),
+      }),
+    });
+    const app = express();
 
-  //   server.applyMiddleware({ app });
-  //   const httpServer = await new Promise<http.Server>(resolve => {
-  //     const s = app.listen({ port: 4000 }, () => resolve(s));
-  //   });
-  //   const { url: uri } = createServerInfo(server, httpServer);
+    server.applyMiddleware({ app });
+    httpServer = await new Promise<http.Server>(resolve => {
+      const s = app.listen({ port: 4000 }, () => resolve(s));
+    });
+    const { url: uri } = createServerInfo(server, httpServer);
 
-  //   const apolloFetch = createApolloFetch({ uri });
-  //   const firstResult = await apolloFetch({ query: '{stringId}' });
+    const apolloFetch = createApolloFetch({ uri });
+    const firstResult = await apolloFetch({ query: '{ id: stringId }' });
 
-  //   expect(firstResult.data).to.deep.equal({ id: 'hi' });
-  //   expect(firstResult.errors, 'errors should exist').not.to.exist;
-  //   expect(restCalls).to.deep.equal(1);
+    expect(firstResult.data).to.deep.equal({ id: 'hi' });
+    expect(firstResult.errors, 'errors should exist').not.to.exist;
+    expect(restCalls).to.deep.equal(1);
 
-  //   const secondResult = await apolloFetch({ query: '{id}' });
+    const secondResult = await apolloFetch({ query: '{ id: stringId }' });
 
-  //   expect(secondResult.data).to.deep.equal({ id: 'hi' });
-  //   expect(secondResult.errors, 'errors should exist').not.to.exist;
-  //   expect(restCalls).to.deep.equal(1);
-
-  //   await server.stop();
-  //   await httpServer.close();
-  // });
+    expect(secondResult.data).to.deep.equal({ id: 'hi' });
+    expect(secondResult.errors, 'errors should exist').not.to.exist;
+    expect(restCalls).to.deep.equal(1);
+  });
 });
