@@ -326,7 +326,14 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
 
       it('can handle a basic request with cacheControl and defaultMaxAge', async () => {
         app = await createApp({
-          graphqlOptions: { schema, cacheControl: { defaultMaxAge: 5 } },
+          graphqlOptions: {
+            schema,
+            cacheControl: {
+              defaultMaxAge: 5,
+              stripFormattedExtensions: false,
+              calculateCacheControlHeaders: false,
+            },
+          },
         });
         const expected = {
           testPerson: { firstName: 'Jane' },

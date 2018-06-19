@@ -434,7 +434,8 @@ describe('apollo-server-express', () => {
             method: 'POST',
             body,
           });
-          const response = await resolved.json();
+          const text = await resolved.text();
+          const response = JSON.parse(text);
 
           expect(response.data.singleUpload).to.deep.equal({
             filename: 'package.json',
@@ -661,8 +662,6 @@ describe('apollo-server-express', () => {
       const { url: uri } = await server.listen();
       const apolloFetch = createApolloFetch({ uri }).useAfter(
         (response, next) => {
-          console.log(response.response.headers);
-          console.log(response.options);
           expect(response.response.headers.get('cache-control')).to.equal(
             'max-age=200, public',
           );

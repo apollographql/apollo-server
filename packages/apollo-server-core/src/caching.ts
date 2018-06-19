@@ -40,7 +40,7 @@ export function calculateCacheControlHeaders(
     const rootHints = new Set<string>();
     for (let j = 0; j < cacheControl.hints.length; j++) {
       const hint = cacheControl.hints[j];
-      if (hint.scope.toLowerCase() === 'private') {
+      if (hint.scope && hint.scope.toLowerCase() === 'private') {
         publicOrPrivate = 'private';
       }
 
