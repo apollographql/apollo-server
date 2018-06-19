@@ -16,7 +16,7 @@ export abstract class RESTDataSource<TContext = any> {
     this.context = context;
   }
 
-  protected async get<TResponse>(
+  protected async get<TResponse = any>(
     path: string,
     params?: URLSearchParamsInit,
     options?: RequestInit,
@@ -28,7 +28,7 @@ export abstract class RESTDataSource<TContext = any> {
     );
   }
 
-  protected async post<TResponse>(
+  protected async post<TResponse = any>(
     path: string,
     params?: URLSearchParamsInit,
     options?: RequestInit,
@@ -40,7 +40,7 @@ export abstract class RESTDataSource<TContext = any> {
     );
   }
 
-  protected async patch<TResponse>(
+  protected async patch<TResponse = any>(
     path: string,
     params?: URLSearchParamsInit,
     options?: RequestInit,
@@ -52,7 +52,7 @@ export abstract class RESTDataSource<TContext = any> {
     );
   }
 
-  protected async put<TResponse>(
+  protected async put<TResponse = any>(
     path: string,
     params?: URLSearchParamsInit,
     options?: RequestInit,
@@ -64,7 +64,7 @@ export abstract class RESTDataSource<TContext = any> {
     );
   }
 
-  protected async delete<TResponse>(
+  protected async delete<TResponse = any>(
     path: string,
     params?: URLSearchParamsInit,
     options?: RequestInit,
