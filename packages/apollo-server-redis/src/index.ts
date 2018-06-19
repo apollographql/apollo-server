@@ -19,11 +19,17 @@ import { promisify } from 'util';
  * - key->data + tag:version pairs for each tag
  * - tag->version stored for each tag
  */
+
+interface CachePayload {
+  d: string;
+  t: Record<string, number>;
+}
+
 export class RedisCache implements KeyValueCache {
   readonly client;
   readonly defaultSetOptions = {
     ttl: 300,
-    tags: [],
+    tags: [] as string[],
   };
 
   constructor(options: Redis.ClientOpts) {
@@ -40,22 +46,22 @@ export class RedisCache implements KeyValueCache {
   async set(
     key: string,
     data: string,
-    options?: { ttl?: number },
+    options?: { ttl?: number; tags?: string[] },
   ): Promise<void> {
     const { ttl, tags } = Object.assign({}, this.defaultSetOptions, options);
 
     // get current versions for all tags
-    let tagVersions = {} as any;
+    let tagVersions: Record<string, number> = {};
     if (tags.length > 0) {
-      const tagVersionsArr = await this.client.mget(tags);
+      // redis stores numbers as strings
+      const tagVersionsArr: string[] = await this.client.mget(tags);
 
-      const setOperations: any[] = [];
+      const unknownTags: string[] = [];
       for (let i = 0; i < tagVersionsArr.length; i++) {
         let version: number;
         if (tagVersionsArr[i] === null) {
           version = 1;
-          // tag:version does not exist yet, initialize it
-          setOperations.push([tags[i], version]);
+          unknownTags.push(tags[i]);
         } else {
           version = parseInt(tagVersionsArr[i]);
         }
@@ -63,10 +69,10 @@ export class RedisCache implements KeyValueCache {
       }
 
       // wait for all tag versions to initialize
-      await Promise.all(setOperations.map(op => this.client.set(...op)));
+      await Promise.all(unknownTags.map(tag => this.client.set(tag, 1)));
     }
 
-    const payload = {
+    const payload: CachePayload = {
       d: data,
       t: tagVersions,
     };
@@ -79,19 +85,17 @@ export class RedisCache implements KeyValueCache {
     if (data === null) return; // null is returned if key is not found
 
     // deserialize data
-    const payload = JSON.parse(data);
+    const payload: CachePayload = JSON.parse(data);
 
     // compare tag versions of cache entry against current versions
-    const tagVersions = payload.t;
-
-    const tags = Object.keys(tagVersions);
+    const tags = Object.keys(payload.t);
     if (tags.length !== 0) {
       const currentTagVersionsArr = await this.client.mget(tags);
 
       for (let i = 0; i < currentTagVersionsArr.length; i++) {
         if (
           currentTagVersionsArr[i] !== null &&
-          parseInt(currentTagVersionsArr[i]) !== tagVersions[tags[i]]
+          parseInt(currentTagVersionsArr[i]) !== payload.t[tags[i]]
         ) {
           return; // tag has been invalidated, therefore cache entry not valid
         }
@@ -105,13 +109,9 @@ export class RedisCache implements KeyValueCache {
   async invalidate(tags: string[]): Promise<void> {
     // increment version numbers for all the tags to be invalidated
     if (tags.length > 0) {
-      const tagsToIncr: any[] = [];
-      for (const tag of tags) {
-        tagsToIncr.push(tag);
-      }
       // Note: in Redis, if key does not exist, it is set to 0 before performing
       // the incr operation.
-      await Promise.all(tagsToIncr.map(tag => this.client.incr(tag)));
+      await Promise.all(tags.map(tag => this.client.incr(tag)));
     }
   }
 

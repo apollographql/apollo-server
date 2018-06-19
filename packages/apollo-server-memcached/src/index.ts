@@ -19,11 +19,17 @@ import { promisify } from 'util';
  * - key->data + tag:version pairs for each tag
  * - tag->version stored for each tag
  */
+
+interface CachePayload {
+  d: string;
+  t: Record<string, number>;
+}
+
 export class MemcachedCache implements KeyValueCache {
   readonly client;
   readonly defaultSetOptions = {
     ttl: 300,
-    tags: [],
+    tags: [] as string[],
   };
 
   constructor(serverLocation: Memcached.Location, options?: Memcached.options) {
@@ -44,25 +50,24 @@ export class MemcachedCache implements KeyValueCache {
     const { ttl, tags } = Object.assign({}, this.defaultSetOptions, options);
 
     // get current versions for all tags
-    let tagVersions = {};
+    let currentTagVersions: Record<string, number> = {};
     if (tags.length > 0) {
-      tagVersions = await this.client.getMulti(tags);
+      currentTagVersions = await this.client.getMulti(tags);
 
       // initialize tag versions that don't exist yet
-      const setOperations: any[] = [];
-      for (const tag of tags) {
-        if (!tagVersions[tag]) {
-          tagVersions[tag] = 1;
-          setOperations.push([tag, 1, 0]);
-        }
+      const unknownTags: string[] = tags.filter(
+        tag => !currentTagVersions[tag],
+      );
+      await Promise.all(unknownTags.map(tag => this.client.set(tag, 1, 0)));
+
+      for (const tag of unknownTags) {
+        currentTagVersions[tag] = 1;
       }
-      // wait for all tag versions to initialize
-      await Promise.all(setOperations.map(op => this.client.set(...op)));
     }
 
-    const payload = {
+    const payload: CachePayload = {
       d: data,
-      t: tagVersions,
+      t: currentTagVersions,
     };
 
     await this.client.set(key, JSON.stringify(payload), ttl);
@@ -73,7 +78,7 @@ export class MemcachedCache implements KeyValueCache {
     if (!data) return;
 
     // deserialize data
-    const payload = JSON.parse(data);
+    const payload: CachePayload = JSON.parse(data);
 
     // compare tag versions if cache entry against current versions
     const tagVersions = payload.t;
@@ -96,14 +101,10 @@ export class MemcachedCache implements KeyValueCache {
   async invalidate(tags: string[]): Promise<void> {
     // increment version numbers for all the tags to be invalidated
     if (tags.length > 0) {
-      const incrOperations: any[] = [];
-      for (const tag of tags) {
-        incrOperations.push([tag, 1]);
-      }
       // Note: incr operation simply returns false when key is not present
       // No need to increment those tag:versions since nothing depends on that
       // tag yet.
-      await Promise.all(incrOperations.map(op => this.client.incr(...op)));
+      await Promise.all(tags.map(tag => this.client.incr(tag, 1)));
     }
   }
 
