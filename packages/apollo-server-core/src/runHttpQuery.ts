@@ -292,8 +292,8 @@ export async function runHttpQuery(
         const httpCache = new HTTPCache(optionsObject.cache);
 
         for (const dataSource of Object.values(dataSources)) {
-          dataSource.willReceiveContext(context);
-          dataSource.willReceiveCache(httpCache);
+          dataSource.context = context;
+          dataSource.httpCache = httpCache;
         }
 
         if ('dataSources' in context) {

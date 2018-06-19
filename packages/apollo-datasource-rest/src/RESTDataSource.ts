@@ -8,14 +8,6 @@ export abstract class RESTDataSource<TContext = any> {
 
   public willSendRequest?(request: Request): void;
 
-  public willReceiveCache(httpCache: HTTPCache) {
-    this.httpCache = httpCache;
-  }
-
-  public willReceiveContext(context: TContext) {
-    this.context = context;
-  }
-
   protected async get<TResponse = any>(
     path: string,
     params?: URLSearchParamsInit,
