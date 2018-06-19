@@ -1,6 +1,9 @@
 import { ExecutionResult } from 'graphql';
 import sha256 from 'hash.js/lib/hash/sha/256';
 
+import { HTTPCache } from 'apollo-datasource-rest';
+import { CacheControlExtensionOptions } from 'apollo-cache-control';
+
 import { runQuery, QueryOptions } from './runQuery';
 import {
   default as GraphQLOptions,
@@ -12,8 +15,7 @@ import {
   PersistedQueryNotFoundError,
 } from './errors';
 import { LogAction, LogStep } from './logging';
-import { calculateCacheControlHeaders } from './caching';
-import { HTTPCache } from 'apollo-datasource-rest';
+import { calculateCacheControlHeaders, HttpHeaderCalculation } from './caching';
 
 export interface HttpQueryRequest {
   method: string;
@@ -94,6 +96,10 @@ export async function runHttpQuery(
   let optionsObject: GraphQLOptions;
   const debugDefault =
     process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test';
+  let cacheControl: CacheControlExtensionOptions & {
+    calculateHttpHeaders: boolean | HttpHeaderCalculation;
+    stripFormattedExtensions: boolean;
+  };
 
   try {
     optionsObject = await resolveGraphqlOptions(
@@ -318,6 +324,31 @@ export async function runHttpQuery(
         (context as any).dataSources = dataSources;
       }
 
+      if (optionsObject.cacheControl !== false) {
+        if (
+          typeof optionsObject.cacheControl === 'boolean' &&
+          optionsObject.cacheControl === true
+        ) {
+          // cacheControl: true means that the user needs the cache-control
+          // extensions. This means we are running the proxy, so we should not
+          // strip out the cache control extension and not add cache-control headers
+          cacheControl = {
+            stripFormattedExtensions: false,
+            calculateHttpHeaders: false,
+            defaultMaxAge: 0,
+          };
+        } else {
+          // Default behavior is to run default header calculation and return
+          // no cacheControl extensions
+          cacheControl = {
+            stripFormattedExtensions: true,
+            calculateHttpHeaders: true,
+            defaultMaxAge: 0,
+            ...optionsObject.cacheControl,
+          };
+        }
+      }
+
       let params: QueryOptions = {
         schema: optionsObject.schema,
         queryString,
@@ -333,13 +364,9 @@ export async function runHttpQuery(
         fieldResolver: optionsObject.fieldResolver,
         debug: optionsObject.debug,
         tracing: optionsObject.tracing,
-        // we always want cacheControl to either set the CDN headers or for the
-        // engine proxy
-        cacheControl:
-          optionsObject.cacheControl !== null &&
-          typeof optionsObject.cacheControl === 'object'
-            ? optionsObject.cacheControl
-            : true,
+        cacheControl: cacheControl
+          ? { defaultMaxAge: cacheControl.defaultMaxAge }
+          : false,
         request: request.request,
         extensions: optionsObject.extensions,
       };
@@ -380,18 +407,19 @@ export async function runHttpQuery(
     },
   };
 
-  // enabling cacheControl means that the user would like the cache-control
-  // extensions we are running the proxy, so we should not strip out the cache
-  // control extension.
-  if (!optionsObject.cacheControl) {
+  if (cacheControl.calculateHttpHeaders) {
+    const calculatedHeaders =
+      typeof cacheControl.calculateHttpHeaders === 'function'
+        ? cacheControl.calculateHttpHeaders(responses)
+        : calculateCacheControlHeaders(responses);
+
     responseInit.headers = {
       ...responseInit.headers,
-      ...calculateCacheControlHeaders(responses),
+      ...calculatedHeaders,
     };
+  }
 
-    // remove cacheControl headers. This could be done in production only,
-    // however most users should not need to debug cacheControl headers, so they
-    // would only be a distraction
+  if (cacheControl.stripFormattedExtensions) {
     responses.forEach(response => {
       if (response.extensions) {
         delete response.extensions.cacheControl;

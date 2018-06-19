@@ -1,14 +1,19 @@
 import { ExecutionResult } from 'graphql';
+import { CacheControlFormat } from 'apollo-cache-control';
 
 export interface PersistedQueryCache {
   set(key: string, data: string): Promise<any>;
   get(key: string): Promise<string | null>;
 }
 
+export type HttpHeaderCalculation = (
+  responses: Array<ExecutionResult & { extensions?: Record<string, any> }>,
+) => Record<string, string>;
+
 export function calculateCacheControlHeaders(
   responses: Array<ExecutionResult & { extensions?: Record<string, any> }>,
-) {
-  let maxAge = Number.MAX_VALUE;
+): Record<string, string> {
+  let lowestMaxAge = Number.MAX_VALUE;
   let publicOrPrivate = 'public';
 
   // Because of the early exit, we are unable to use forEach. While a reduce
@@ -16,42 +21,47 @@ export function calculateCacheControlHeaders(
   for (let i = 0; i < responses.length; i++) {
     const response = responses[i];
 
-    const cacheControl: {
-      version: number;
-      hints: Array<{ scope?: string; maxAge?: number; path: Array<string> }>;
-    } =
+    const cacheControl: CacheControlFormat =
       response.extensions && response.extensions.cacheControl;
 
     // If there are no extensions or hints, then the headers should not be present
     if (
       !cacheControl ||
       !cacheControl.hints ||
-      cacheControl.hints.length === 0
+      cacheControl.hints.length === 0 ||
+      cacheControl.version !== 1
     ) {
+      if (cacheControl.version !== 1) {
+        console.warn('Invalid cacheControl version.');
+      }
       return {};
     }
 
     const rootHints = new Set<string>();
-    for (let y = 0; y < cacheControl.hints.length; y++) {
-      if (cacheControl.hints[y].scope === 'PRIVATE') {
+    for (let j = 0; j < cacheControl.hints.length; j++) {
+      const hint = cacheControl.hints[j];
+      if (hint.scope.toLowerCase() === 'private') {
         publicOrPrivate = 'private';
       }
 
       // If no maxAge is present, then we ignore the hint
-      if (cacheControl.hints[y].maxAge === undefined) {
+      if (hint.maxAge === undefined) {
         continue;
       }
 
       // if there is a hint with max age of 0, we don't need to process more
-      if (cacheControl.hints[y].maxAge === 0) {
+      if (hint.maxAge === 0) {
         return {};
       }
 
-      if (cacheControl.hints[y].maxAge < maxAge) {
-        maxAge = cacheControl.hints[y].maxAge;
+      if (hint.maxAge < lowestMaxAge) {
+        lowestMaxAge = hint.maxAge;
       }
 
-      rootHints.add(cacheControl.hints[y].path[0]);
+      // If this is a root path, store that the root is cacheable:
+      if (hint.path.length === 1) {
+        rootHints.add(hint.path[0] as string);
+      }
     }
 
     // If a root field inside of data does not have a cache hint, then we do not
@@ -62,6 +72,6 @@ export function calculateCacheControlHeaders(
   }
 
   return {
-    'Cache-control': `max-age=${maxAge}, ${publicOrPrivate}`,
+    'Cache-Control': `max-age=${lowestMaxAge}, ${publicOrPrivate}`,
   };
 }
