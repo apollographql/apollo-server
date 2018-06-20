@@ -1,8 +1,8 @@
 import { expect } from 'chai';
 import 'mocha';
-import express from 'express';
+import * as express from 'express';
 
-import http from 'http';
+import * as http from 'http';
 
 import { RESTDataSource } from 'apollo-datasource-rest';
 

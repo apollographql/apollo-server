@@ -1,11 +1,11 @@
-import express from 'express';
-import corsMiddleware from 'cors';
+import * as express from 'express';
+import * as corsMiddleware from 'cors';
 import { json, OptionsJson } from 'body-parser';
 import playgroundMiddleware from 'graphql-playground-middleware-express';
 import { MiddlewareOptions as PlaygroundMiddlewareOptions } from 'graphql-playground-html';
 import { ApolloServerBase, formatApolloErrors } from 'apollo-server-core';
-import accepts from 'accepts';
-import typeis from 'type-is';
+import * as accepts from 'accepts';
+import * as typeis from 'type-is';
 
 import { graphqlExpress } from './expressApollo';
 

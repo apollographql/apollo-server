@@ -32,6 +32,6 @@ export * from 'graphql-subscriptions';
 import { DocumentNode } from 'graphql';
 import gqlTag from 'graphql-tag';
 export const gql: (
-  template: TemplateStringsArray,
+  template: TemplateStringsArray | string,
   ...substitutions: any[]
 ) => DocumentNode = gqlTag;
