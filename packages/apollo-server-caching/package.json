@@ -42,6 +42,7 @@
       "json"
     ],
     "testRegex": "/__tests__/.*$",
+    "testPathIgnorePatterns": ["testsuite.ts"],
     "globals": {
       "ts-jest": {
         "skipBabel": true

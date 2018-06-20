@@ -3,7 +3,7 @@ import {
   mockDate,
   unmockDate,
 } from '../../../../__mocks__/date';
-import { KeyValueCache } from '../src/KeyValueCache';
+import { KeyValueCache } from '../KeyValueCache';
 
 export function testKeyValueCache(keyValueCache: KeyValueCache) {
   describe('KeyValueCache Test Suite', () => {
