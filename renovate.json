@@ -10,7 +10,11 @@
   "pathRules": [
     {
       "paths": ["docs/package.json"],
-      "extends": ["apollo-docs"]
+      "extends": ["apollo-docs"],
+      "baseBranches": [
+        "master",
+        "version-2"
+      ]
     }
   ],
   "packageRules": [
