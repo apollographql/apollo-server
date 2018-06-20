@@ -51,30 +51,33 @@ export class RedisCache implements KeyValueCache {
     const { ttl, tags } = Object.assign({}, this.defaultSetOptions, options);
 
     // get current versions for all tags
-    let tagVersions: Record<string, number> = {};
+    let currentTagVersions: Record<string, number> = {};
     if (tags.length > 0) {
       // redis stores numbers as strings
       const tagVersionsArr: string[] = await this.client.mget(tags);
 
       const unknownTags: string[] = [];
       for (let i = 0; i < tagVersionsArr.length; i++) {
-        let version: number;
         if (tagVersionsArr[i] === null) {
-          version = 1;
           unknownTags.push(tags[i]);
         } else {
-          version = parseInt(tagVersionsArr[i]);
+          currentTagVersions[tags[i]] = parseInt(tagVersionsArr[i]);
         }
-        tagVersions[tags[i]] = version;
       }
 
-      // wait for all tag versions to initialize
-      await Promise.all(unknownTags.map(tag => this.client.set(tag, 1)));
+      // wait for all unknown tags to initialize
+      const versions = await Promise.all(
+        unknownTags.map(tag => this.client.incr(tag)),
+      );
+
+      unknownTags.forEach((tag, index) => {
+        currentTagVersions[tag] = versions[index];
+      });
     }
 
     const payload: CachePayload = {
       d: data,
-      t: tagVersions,
+      t: currentTagVersions,
     };
 
     await this.client.set(key, JSON.stringify(payload), 'EX', ttl);

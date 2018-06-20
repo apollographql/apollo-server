@@ -36,6 +36,7 @@ export class MemcachedCache implements KeyValueCache {
     this.client = new Memcached(serverLocation, options);
     // promisify client calls for convenience
     this.client.get = promisify(this.client.get).bind(this.client);
+    this.client.add = promisify(this.client.add).bind(this.client);
     this.client.getMulti = promisify(this.client.getMulti).bind(this.client);
     this.client.incr = promisify(this.client.incr).bind(this.client);
     this.client.set = promisify(this.client.set).bind(this.client);
@@ -58,11 +59,17 @@ export class MemcachedCache implements KeyValueCache {
       const unknownTags: string[] = tags.filter(
         tag => !currentTagVersions[tag],
       );
-      await Promise.all(unknownTags.map(tag => this.client.set(tag, 1, 0)));
 
-      for (const tag of unknownTags) {
-        currentTagVersions[tag] = 1;
-      }
+      const versions: number[] = await Promise.all(
+        unknownTags.map(async tag => {
+          await this.client.add(tag, 0, 0);
+          return this.client.incr(tag, 1);
+        }),
+      );
+
+      unknownTags.forEach((tag, index) => {
+        currentTagVersions[tag] = versions[index];
+      });
     }
 
     const payload: CachePayload = {
