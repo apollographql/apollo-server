@@ -74,7 +74,7 @@ const server = new ApolloServer({
 
 ## With a Running Engine Proxy
 
-If the engine proxy is already running in a container in front of Apollo Server, then set `tracing` and `cacheControl` to true. These options will provide the extensions information to the proxy to create traces and ensure caching.
+If the engine proxy is already running in a container in front of Apollo Server, then set `tracing` and `cacheControl` to true. These options will provide the extensions information to the proxy to create traces and ensure caching. We set `engine` to false, so that the new metrics reporting pipeline is not activated.
 
 ```js
 const { ApolloServer } = require('apollo-server');
@@ -83,7 +83,9 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
   tracing: true,
-  cacheControl: true
+  cacheControl: true,
+  // We set `engine` to false, so that the new agent is not used.
+  engine: false,
 });
 
 server.listen().then(({ url }) => {
