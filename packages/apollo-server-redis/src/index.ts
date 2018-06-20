@@ -2,7 +2,7 @@ import { KeyValueCache } from 'apollo-server-caching';
 import Redis from 'redis';
 import { promisify } from 'util';
 
-export class RedisKeyValueCache implements KeyValueCache {
+export class RedisCache implements KeyValueCache {
   readonly client;
   readonly defaultSetOptions = {
     ttl: 300,

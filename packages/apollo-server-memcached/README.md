@@ -1,17 +1,17 @@
-## MemcachedKeyValueCache
+## MemcachedCache
 
 This package exports an implementation of `KeyValueCache` that allows using Memcached as a backing store for resource caching in [Data Sources](https://www.apollographql.com/docs/apollo-server/v2/features/data-sources.html).
 
 ## Usage
 
 ```js
-const { MemcachedKeyValueCache } = require('apollo-server-memcached');
+const { MemcachedCache } = require('apollo-server-memcached');
 
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  cache: new MemcachedKeyValueCache(
-    ['memcached-server-1', 'memcached-server-2', 'memcached-server-3],
+  cache: new MemcachedCache(
+    ['memcached-server-1', 'memcached-server-2', 'memcached-server-3'],
     { retries: 10, retry: 10000 }, // Options
   ),
   dataSources: () => ({
