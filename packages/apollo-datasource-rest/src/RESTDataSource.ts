@@ -110,15 +110,17 @@ export abstract class RESTDataSource<TContext = any> {
     label: string,
     fn: () => Promise<Result>,
   ): Promise<Result> {
-    const startTime = Date.now();
-    try {
-      return await fn();
-    } finally {
-      const duration = Date.now() - startTime;
-      //to remove the unused error
-      label;
-      duration;
-      // console.log(`${label} (${duration}ms)`);
+    if (process && process.env && process.env.NODE_ENV === 'development') {
+      // We're not using console.time because that isn't supported on Cloudflare
+      const startTime = Date.now();
+      try {
+        return await fn();
+      } finally {
+        const duration = Date.now() - startTime;
+        console.log(`${label} (${duration}ms)`);
+      }
+    } else {
+      return fn();
     }
   }
 }
