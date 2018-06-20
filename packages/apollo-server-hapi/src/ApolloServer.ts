@@ -108,7 +108,7 @@ export class ApolloServer extends ApolloServerBase {
           }
         }
         return h.continue;
-      },
+      }.bind(this),
     });
 
     if (!disableHealthCheck) {
@@ -116,7 +116,7 @@ export class ApolloServer extends ApolloServerBase {
         method: '*',
         path: '/.well-known/apollo/server-health',
         options: {
-          cors: typeof cors === 'boolean' ? cors : true,
+          cors: cors !== undefined ? cors : true,
         },
         handler: async function(request, h) {
           if (onHealthCheck) {
@@ -142,7 +142,7 @@ export class ApolloServer extends ApolloServerBase {
         path: path,
         graphqlOptions: this.createGraphQLServerOptions.bind(this),
         route: {
-          cors: typeof cors === 'boolean' ? cors : true,
+          cors: cors !== undefined ? cors : true,
         },
       },
     });
@@ -154,7 +154,7 @@ export class ApolloServer extends ApolloServerBase {
 export interface ServerRegistration {
   app?: hapi.Server;
   path?: string;
-  cors?: boolean;
+  cors?: boolean | hapi.RouteOptionsCors;
   onHealthCheck?: (request: hapi.Request) => Promise<any>;
   disableHealthCheck?: boolean;
   gui?: boolean | PlaygroundMiddlewareOptions;

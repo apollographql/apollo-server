@@ -11,16 +11,13 @@ import * as fs from 'fs';
 import fetch from 'node-fetch';
 import { createApolloFetch } from 'apollo-fetch';
 
-import { ApolloServerBase, AuthenticationError } from 'apollo-server-core';
+import { gql, AuthenticationError } from 'apollo-server-core';
 import { ApolloServer } from './ApolloServer';
 
 import {
   testApolloServer,
   createServerInfo,
 } from 'apollo-server-integration-testsuite';
-
-//to remove the circular dependency, we reference it directly
-const gql = require('../../apollo-server/dist/index').gql;
 
 const typeDefs = gql`
   type Query {
@@ -58,9 +55,7 @@ describe('apollo-server-express', () => {
 });
 
 describe('apollo-server-express', () => {
-  //to remove the circular dependency, we reference it directly
-  const ApolloServer = require('../../apollo-server/dist/index').ApolloServer;
-  let server: ApolloServerBase | any;
+  let server: ApolloServer;
 
   let app: express.Application;
   let httpServer: http.Server;
