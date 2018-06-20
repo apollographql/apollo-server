@@ -172,4 +172,4 @@ For documentation of the options you can pass to the underlying Redis client, lo
 
 ## Implementing your own cache backend
 
-Apollo Server exposes a `KeyValueCache` interface that you can use to implement connectors to other data stores, or to optimize for the query characteristics of your application. More information can be found [here](../../../packages/apollo-server-caching).
+Apollo Server exposes a `KeyValueCache` interface that you can use to implement connectors to other data stores, or to optimize for the query characteristics of your application. More information can be found in the package readme for [apollo-server-caching](https://www.npmjs.com/package/apollo-server-caching).
