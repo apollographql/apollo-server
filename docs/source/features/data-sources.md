@@ -65,7 +65,7 @@ To give resolvers access to data sources, you pass them as options to the `Apoll
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  cache: new InMemoryKeyValueCache((maxSize: 1000000)),
+  cache: new InMemoryKeyValueCache({ maxSize: 1000000 }),
   dataSources: () => {
     return {
       moviesAPI: new MoviesAPI(),
@@ -136,13 +136,13 @@ class PersonalizationAPI extends RESTDataSource {
 By default, data sources use an in-memory LRU cache to store responses from REST calls. When running multiple server instances, you'll want to use a shared cache backend instead. That's why Apollo Server also includes support for using [Memcached](../../../packages/apollo-server-memcached) or [Redis](../../../packages/apollo-server-redis) as your backing store. You can specify which one to use by creating an instance and passing it into the Apollo Server constructor:
 
 ```js
-const { MemcachedKeyValueCache } = require('apollo-server-memcached');
+const { MemcachedCache } = require('apollo-server-memcached');
 
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  cache: new MemcachedKeyValueCache(
-    ['memcached-server-1', 'memcached-server-2', 'memcached-server-3],
+  cache: new MemcachedCache(
+    ['memcached-server-1', 'memcached-server-2', 'memcached-server-3'],
     { retries: 10, retry: 10000 }, // Options
   ),
   dataSources: () => ({
@@ -154,12 +154,12 @@ const server = new ApolloServer({
 For documentation of the options you can pass to the underlying Memcached client, look [here](https://github.com/3rd-Eden/memcached).
 
 ```js
-const { RedisKeyValueCache } = require('apollo-server-redis');
+const { RedisCache } = require('apollo-server-redis');
 
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  cache: new RedisKeyValueCache({
+  cache: new RedisCache({
     host: 'redis-server',
     // Options are passed through to the Redis client
   }),
