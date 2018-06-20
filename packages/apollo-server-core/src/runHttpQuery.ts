@@ -10,7 +10,7 @@ import {
   formatApolloErrors,
   PersistedQueryNotSupportedError,
   PersistedQueryNotFoundError,
-} from './errors';
+} from 'apollo-server-errors';
 import { LogAction, LogStep } from './logging';
 import { HTTPCache } from 'apollo-datasource-rest';
 

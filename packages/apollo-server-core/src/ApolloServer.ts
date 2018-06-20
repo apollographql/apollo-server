@@ -27,7 +27,7 @@ import {
 import Keyv = require('keyv');
 import QuickLru = require('quick-lru');
 
-import { formatApolloErrors } from './errors';
+import { formatApolloErrors } from 'apollo-server-errors';
 import {
   GraphQLServerOptions as GraphQLOptions,
   PersistedQueryOptions,
