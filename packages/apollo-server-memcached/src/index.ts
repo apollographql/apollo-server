@@ -1,5 +1,5 @@
 import { KeyValueCache } from 'apollo-server-caching';
-import Memcached from 'memcached';
+import * as Memcached from 'memcached';
 import { promisify } from 'util';
 
 export class MemcachedCache implements KeyValueCache {
