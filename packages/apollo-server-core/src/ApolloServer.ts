@@ -1,8 +1,4 @@
-import {
-  makeExecutableSchema,
-  addMockFunctionsToSchema,
-  mergeSchemas,
-} from 'graphql-tools';
+import { makeExecutableSchema, addMockFunctionsToSchema } from 'graphql-tools';
 import { Server as HttpServer } from 'http';
 import {
   execute,
@@ -228,14 +224,6 @@ export class ApolloServerBase {
   //integrations do not have paths, such as lambda
   public setGraphQLPath(path: string) {
     this.graphqlPath = path;
-  }
-
-  // If this is more generally useful to things other than Upload, we can make
-  // it public.
-  protected enhanceSchema(schema: GraphQLSchema) {
-    this.schema = mergeSchemas({
-      schemas: [this.schema, schema],
-    });
   }
 
   public async stop() {
