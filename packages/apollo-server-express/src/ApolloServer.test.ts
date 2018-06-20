@@ -19,7 +19,7 @@ import {
   createServerInfo,
 } from 'apollo-server-integration-testsuite';
 
-//to remove the circular dependency, we reference it directly
+// to remove the circular dependency, we reference it directly
 const gql = require('../../apollo-server/dist/index').gql;
 
 const typeDefs = gql`
@@ -439,7 +439,7 @@ describe('apollo-server-express', () => {
         } catch (error) {
           // This error began appearing randomly and seems to be a dev dependency bug.
           // https://github.com/jaydenseric/apollo-upload-server/blob/18ecdbc7a1f8b69ad51b4affbd986400033303d4/test.js#L39-L42
-          if (error.code !== 'EPIPE') throw error;
+          // if (error.code !== 'EPIPE') throw error;
         }
       });
     });

@@ -18,12 +18,14 @@ import { GraphQLExtension } from 'graphql-extensions';
 import { EngineReportingAgent } from 'apollo-engine-reporting';
 import { InMemoryKeyValueCache } from 'apollo-datasource-rest';
 
+import { GraphQLUpload } from 'apollo-upload-server';
+
 import {
   SubscriptionServer,
   ExecutionParams,
 } from 'subscriptions-transport-ws';
 
-//use as default persisted query store
+// use as default persisted query store
 import Keyv = require('keyv');
 import QuickLru = require('quick-lru');
 
@@ -39,6 +41,7 @@ import {
   Context,
   ContextFunction,
   SubscriptionServerOptions,
+  FileUploadOptions,
 } from './types';
 
 import { gql } from './index';
@@ -66,6 +69,7 @@ export class ApolloServerBase {
   private engineReportingAgent?: EngineReportingAgent;
   private extensions: Array<() => GraphQLExtension>;
   protected subscriptionServerOptions?: SubscriptionServerOptions;
+  protected uploadsConfig?: FileUploadOptions;
 
   // set by installSubscriptionHandlers.
   private subscriptionServer?: SubscriptionServer;
@@ -84,6 +88,7 @@ export class ApolloServerBase {
       extensions,
       engine,
       subscriptions,
+      uploads,
       ...requestOptions
     } = config;
 
@@ -129,16 +134,41 @@ export class ApolloServerBase {
     this.requestOptions = requestOptions as GraphQLOptions;
     this.context = context;
 
+    if (uploads !== false) {
+      if (this.supportsUploads()) {
+        if (uploads === true || typeof uploads === 'undefined') {
+          this.uploadsConfig = {};
+        } else {
+          this.uploadsConfig = uploads;
+        }
+        //This is here to check if uploads is requested without support. By
+        //default we enable them if supported by the integration
+      } else if (uploads) {
+        throw new Error(
+          'This implementation of ApolloServer does not support file uploads.',
+        );
+      }
+    }
+
+    //Add upload resolver
+    if (this.uploadsConfig) {
+      if (resolvers && !resolvers.Upload) {
+        resolvers.Upload = GraphQLUpload;
+      }
+    }
+
     this.schema = schema
       ? schema
       : makeExecutableSchema({
           //we add in the upload scalar, so that schemas that don't include it
           //won't error when we makeExecutableSchema
-          typeDefs: [
-            gql`
-              scalar Upload
-            `,
-          ].concat(typeDefs),
+          typeDefs: this.uploadsConfig
+            ? [
+                gql`
+                  scalar Upload
+                `,
+              ].concat(typeDefs)
+            : typeDefs,
           schemaDirectives,
           resolvers,
         });
@@ -183,6 +213,9 @@ export class ApolloServerBase {
         }
         // This is part of the public API.
         this.subscriptionsPath = this.subscriptionServerOptions.path;
+
+        //This is here to check if subscriptions are requested without support. By
+        //default we enable them if supported by the integration
       } else if (subscriptions) {
         throw new Error(
           'This implementation of ApolloServer does not support GraphQL subscriptions.',
@@ -280,6 +313,10 @@ export class ApolloServerBase {
   }
 
   protected supportsSubscriptions(): boolean {
+    return false;
+  }
+
+  protected supportsUploads(): boolean {
     return false;
   }
 

@@ -5,17 +5,14 @@ import {
   renderPlaygroundPage,
   MiddlewareOptions as PlaygroundMiddlewareOptions,
 } from 'graphql-playground-html';
-import {
-  processRequest as processFileUploads,
-  GraphQLUpload,
-} from 'apollo-upload-server';
+import { processRequest as processFileUploads } from 'apollo-upload-server';
 
 import { graphqlHapi } from './hapiApollo';
 
 export { GraphQLOptions, GraphQLExtension } from 'apollo-server-core';
-import { GraphQLOptions, gql, makeExecutableSchema } from 'apollo-server-core';
+import { GraphQLOptions, FileUploadOptions } from 'apollo-server-core';
 
-function handleFileUploads(uploadsConfig: Record<string, any>) {
+function handleFileUploads(uploadsConfig: FileUploadOptions) {
   return async (request: hapi.Request) => {
     if (request.mime === 'multipart/form-data') {
       Object.defineProperty(request, 'payload', {
@@ -41,6 +38,10 @@ export class ApolloServer extends ApolloServerBase {
     return true;
   }
 
+  protected supportsUploads(): boolean {
+    return true;
+  }
+
   public async applyMiddleware({
     app,
     cors,
@@ -48,20 +49,8 @@ export class ApolloServer extends ApolloServerBase {
     disableHealthCheck,
     gui,
     onHealthCheck,
-    uploads,
   }: ServerRegistration) {
     if (!path) path = '/graphql';
-
-    if (uploads !== false) {
-      this.enhanceSchema(
-        makeExecutableSchema({
-          typeDefs: gql`
-            scalar Upload
-          `,
-          resolvers: { Upload: GraphQLUpload },
-        }),
-      );
-    }
 
     await app.ext({
       type: 'onRequest',
@@ -70,10 +59,8 @@ export class ApolloServer extends ApolloServerBase {
           return h.continue;
         }
 
-        if (uploads !== false) {
-          await handleFileUploads(typeof uploads !== 'boolean' ? uploads : {})(
-            request,
-          );
+        if (this.uploadsConfig) {
+          await handleFileUploads(this.uploadsConfig)(request);
         }
 
         // Note: if you enable a gui in production and expect to be able to see your
@@ -108,7 +95,7 @@ export class ApolloServer extends ApolloServerBase {
           }
         }
         return h.continue;
-      },
+      }.bind(this),
     });
 
     if (!disableHealthCheck) {
