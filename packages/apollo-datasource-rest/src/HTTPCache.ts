@@ -1,4 +1,4 @@
-import CachePolicy from 'http-cache-semantics';
+import CachePolicy = require('http-cache-semantics');
 
 import { KeyValueCache, InMemoryLRUCache } from 'apollo-server-caching';
 

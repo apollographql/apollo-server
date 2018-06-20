@@ -1,5 +1,5 @@
 import { ExecutionResult } from 'graphql';
-import sha256 from 'hash.js/lib/hash/sha/256';
+import * as sha256 from 'hash.js/lib/hash/sha/256';
 
 import { runQuery, QueryOptions } from './runQuery';
 import {

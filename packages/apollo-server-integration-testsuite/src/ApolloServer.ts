@@ -1,8 +1,8 @@
 /* tslint:disable:no-unused-expression */
 import { expect } from 'chai';
 import { stub } from 'sinon';
-import http from 'http';
-import net from 'net';
+import * as http from 'http';
+import * as net from 'net';
 import 'mocha';
 import { sha256 } from 'js-sha256';
 
@@ -17,7 +17,7 @@ import {
 
 import { PubSub } from 'graphql-subscriptions';
 import { SubscriptionClient } from 'subscriptions-transport-ws';
-import WebSocket from 'ws';
+import * as WebSocket from 'ws';
 
 import { execute } from 'apollo-link';
 import { createHttpLink } from 'apollo-link-http';

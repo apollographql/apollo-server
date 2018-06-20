@@ -1,4 +1,4 @@
-import LRU from 'lru-cache';
+import * as LRU from 'lru-cache';
 import { KeyValueCache } from './KeyValueCache';
 
 export class InMemoryLRUCache implements KeyValueCache {

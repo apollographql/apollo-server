@@ -1,13 +1,13 @@
 import { expect } from 'chai';
 import 'mocha';
-import express from 'express';
+import * as express from 'express';
 
-import net from 'net';
-import http from 'http';
+import * as net from 'net';
+import * as http from 'http';
 
-import request from 'request';
-import FormData from 'form-data';
-import fs from 'fs';
+import * as request from 'request';
+import * as FormData from 'form-data';
+import * as fs from 'fs';
 import fetch from 'node-fetch';
 import { createApolloFetch } from 'apollo-fetch';
 
