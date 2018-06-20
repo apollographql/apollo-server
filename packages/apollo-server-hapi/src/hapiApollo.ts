@@ -1,5 +1,5 @@
 import * as Boom from 'boom';
-import { Server, Request } from 'hapi';
+import { Server, Request, RouteOptions } from 'hapi';
 import {
   GraphQLOptions,
   runHttpQuery,
@@ -23,7 +23,7 @@ export interface HapiOptionsFunction {
 export interface HapiPluginOptions {
   path: string;
   vhost?: string;
-  route?: any;
+  route?: RouteOptions;
   graphqlOptions: GraphQLOptions | HapiOptionsFunction;
 }
 
@@ -33,7 +33,6 @@ const graphqlHapi: IPlugin = {
     if (!options || !options.graphqlOptions) {
       throw new Error('Apollo Server requires options.');
     }
-
     server.route({
       method: ['GET', 'POST'],
       path: options.path || '/graphql',
