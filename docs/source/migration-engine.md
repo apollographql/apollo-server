@@ -36,7 +36,9 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
   tracing: true,
-  cacheControl: true
+  cacheControl: true,
+  // We set `engine` to false, so that the new agent is not used.
+  engine: false,
 });
 
 server.applyMiddlware({ app });
@@ -69,6 +71,8 @@ const server = new ApolloServer({
     stripFormattedExtensions: false,
     calculateCacheControlHeaders: false,
   },
+  // We set `engine` to false, so that the new agent is not used.
+  engine: false,
 });
 ```
 
