@@ -1,7 +1,7 @@
 /* tslint:disable:no-unused-expression */
 import { expect } from 'chai';
 import 'mocha';
-import MockReq from 'mock-req';
+import * as MockReq from 'mock-req';
 
 import { GraphQLSchema, GraphQLObjectType, GraphQLString } from 'graphql';
 
