@@ -26,7 +26,7 @@ import {
   formatApolloErrors,
   ValidationError,
   SyntaxError,
-} from './errors';
+} from 'apollo-server-errors';
 
 import { LogFunction, LogFunctionExtension } from './logging';
 

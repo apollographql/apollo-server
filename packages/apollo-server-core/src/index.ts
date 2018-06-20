@@ -16,7 +16,7 @@ export {
   ForbiddenError,
   UserInputError,
   formatApolloErrors,
-} from './errors';
+} from 'apollo-server-errors';
 
 export { convertNodeHttpToRequest } from './nodeHttpToRequest';
 

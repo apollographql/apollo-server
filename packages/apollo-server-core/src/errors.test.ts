@@ -13,7 +13,7 @@ import {
   ValidationError,
   UserInputError,
   SyntaxError,
-} from './errors';
+} from 'apollo-server-errors';
 
 describe('Errors', () => {
   describe('ApolloError', () => {
