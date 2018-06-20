@@ -10,48 +10,52 @@ import {
 
 import { graphqlLambda } from './lambdaApollo';
 
-export interface ServerRegistration {
-  event: lambda.APIGatewayProxyEvent;
-  context: lambda.Context;
-  callback: lambda.APIGatewayProxyCallback;
+export interface CreateHandlerOptions {
   gui?: boolean | PlaygroundMiddlewareOptions;
 }
 
 export class ApolloServer extends ApolloServerBase {
-  //This translates the arguments from the middleware into graphQL options It
-  //provides typings for the integration specific behavior, ideally this would
-  //be propagated with a generic to the super class
-  async createGraphQLServerOptions(
+  // This translates the arguments from the middleware into graphQL options It
+  // provides typings for the integration specific behavior, ideally this would
+  // be propagated with a generic to the super class
+  createGraphQLServerOptions(
     event: lambda.APIGatewayProxyEvent,
     context: lambda.Context,
   ): Promise<GraphQLOptions> {
     return super.graphQLServerOptions({ event, context });
   }
 
-  public async handle({ event, context, callback, gui }: ServerRegistration) {
+  // Added "= { gui: undefined }" to fix "module initialization error: TypeError"
+  public createHandler({ gui }: CreateHandlerOptions = { gui: undefined }) {
     const guiEnabled =
       !!gui || (gui === undefined && process.env.NODE_ENV !== 'production');
 
-    if (guiEnabled && event.httpMethod === 'GET') {
-      const playgroundRenderPageOptions: PlaygroundRenderPageOptions = {
-        endpoint: '/',
-        version: '1.7.0',
-        ...(typeof gui === 'boolean' ? {} : gui),
-      };
+    return (
+      event: lambda.APIGatewayProxyEvent,
+      context: lambda.Context,
+      callback: lambda.APIGatewayProxyCallback,
+    ) => {
+      if (guiEnabled && event.httpMethod === 'GET') {
+        const playgroundRenderPageOptions: PlaygroundRenderPageOptions = {
+          endpoint: event.requestContext.path,
+          ...(typeof gui === 'boolean' ? {} : gui),
+          version: '1.7.0',
+        };
 
-      return callback(null, {
-        body: renderPlaygroundPage(playgroundRenderPageOptions),
-        statusCode: 200,
-        headers: {
-          'Content-Type': 'text/html',
-        },
-      });
-    }
+        return callback(null, {
+          body: renderPlaygroundPage(playgroundRenderPageOptions),
+          statusCode: 200,
+          headers: {
+            'Content-Type': 'text/html',
+          },
+        });
+      }
 
-    graphqlLambda(this.createGraphQLServerOptions.bind(this))(
-      event,
-      context,
-      callback,
-    );
+      graphqlLambda(this.createGraphQLServerOptions.bind(this))(
+        event,
+        context,
+        callback,
+      );
+    };
   }
 }
