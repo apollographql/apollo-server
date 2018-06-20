@@ -24,6 +24,7 @@
   },
   "dependencies": {
     "apollo-server-env": "^2.0.0-rc.0",
+    "apollo-server-caching": "^2.0.0-rc.0",
     "http-cache-semantics": "^4.0.0",
     "lru-cache": "^4.1.3"
   },
