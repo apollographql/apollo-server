@@ -7,6 +7,7 @@ export {
   ValidationError,
   AuthenticationError,
   ForbiddenError,
+  UserInputError,
 } from 'apollo-server-core';
 
 // ApolloServer integration
