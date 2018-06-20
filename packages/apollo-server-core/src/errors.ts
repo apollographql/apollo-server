@@ -210,11 +210,11 @@ export class PersistedQueryNotSupportedError extends ApolloError {
   }
 }
 
-export class BadUserInputError extends ApolloError {
+export class UserInputError extends ApolloError {
   constructor(message: string, properties?: Record<string, any>) {
     super(message, 'BAD_USER_INPUT', properties);
 
-    Object.defineProperty(this, 'name', { value: 'BadUserInputError' });
+    Object.defineProperty(this, 'name', { value: 'UserInputError' });
   }
 }
 

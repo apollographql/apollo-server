@@ -1,7 +1,5 @@
 import { HTTPCache } from './HTTPCache';
 
-export type Params = { [name: string]: any };
-
 export abstract class RESTDataSource<TContext = any> {
   abstract baseURL: string;
 
@@ -10,58 +8,74 @@ export abstract class RESTDataSource<TContext = any> {
 
   public willSendRequest?(request: Request): void;
 
-  public willReceiveCache(httpCache: HTTPCache) {
-    this.httpCache = httpCache;
-  }
-
-  public willReceiveContext(context: TContext) {
-    this.context = context;
-  }
-
-  protected async get(
+  protected async get<TResponse = any>(
     path: string,
-    params?: Params,
+    params?: URLSearchParamsInit,
     options?: RequestInit,
-  ): Promise<any> {
-    return this.fetch(path, params, Object.assign({ method: 'GET' }, options));
+  ): Promise<TResponse> {
+    return this.fetch<TResponse>(
+      path,
+      params,
+      Object.assign({ method: 'GET' }, options),
+    );
   }
 
-  protected async post(
+  protected async post<TResponse = any>(
     path: string,
-    params?: Params,
+    params?: URLSearchParamsInit,
     options?: RequestInit,
-  ): Promise<any> {
-    return this.fetch(path, params, Object.assign({ method: 'POST' }, options));
+  ): Promise<TResponse> {
+    return this.fetch<TResponse>(
+      path,
+      params,
+      Object.assign({ method: 'POST' }, options),
+    );
   }
 
-  protected async put(
+  protected async patch<TResponse = any>(
     path: string,
-    params?: Params,
+    params?: URLSearchParamsInit,
     options?: RequestInit,
-  ): Promise<any> {
-    return this.fetch(path, params, Object.assign({ method: 'PUT' }, options));
+  ): Promise<TResponse> {
+    return this.fetch<TResponse>(
+      path,
+      params,
+      Object.assign({ method: 'PATCH' }, options),
+    );
   }
 
-  protected async delete(
+  protected async put<TResponse = any>(
     path: string,
-    params?: Params,
+    params?: URLSearchParamsInit,
     options?: RequestInit,
-  ): Promise<any> {
-    return this.fetch(
+  ): Promise<TResponse> {
+    return this.fetch<TResponse>(
+      path,
+      params,
+      Object.assign({ method: 'PUT' }, options),
+    );
+  }
+
+  protected async delete<TResponse = any>(
+    path: string,
+    params?: URLSearchParamsInit,
+    options?: RequestInit,
+  ): Promise<TResponse> {
+    return this.fetch<TResponse>(
       path,
       params,
       Object.assign({ method: 'DELETE' }, options),
     );
   }
 
-  private async fetch(
+  private async fetch<TResponse>(
     path: string,
-    params?: Params,
+    params?: URLSearchParamsInit,
     init?: RequestInit,
-  ): Promise<any> {
+  ): Promise<TResponse> {
     const url = new URL(path, this.baseURL);
 
-    if (params && Object.keys(params).length > 0) {
+    if (params) {
       // Append params to existing params in the path
       for (const [name, value] of new URLSearchParams(params)) {
         url.searchParams.append(name, value);
@@ -70,12 +84,20 @@ export abstract class RESTDataSource<TContext = any> {
 
     return this.trace(`${(init && init.method) || 'GET'} ${url}`, async () => {
       const request = new Request(String(url));
+
       if (this.willSendRequest) {
         this.willSendRequest(request);
       }
+
       const response = await this.httpCache.fetch(request, init);
       if (response.ok) {
-        return response.json();
+        const contentType = response.headers.get('Content-Type');
+
+        if (contentType && contentType.startsWith('application/json')) {
+          return response.json();
+        } else {
+          return response.text();
+        }
       } else {
         throw new Error(
           `${response.status} ${response.statusText}: ${await response.text()}`,

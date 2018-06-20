@@ -167,7 +167,7 @@ This application should be a great starting point for any GraphQL server, but th
 
 * [Adding Apollo Server to an existing app.](./essentials/server.html#integrations)
 * [Schema design](./essentials/schema.html)
-* [Deployment](./deployment/index.html)
+* [Deploy with Heroku](./deployment/heroku.html)
 
 ## More information
 

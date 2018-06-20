@@ -6,15 +6,15 @@
     "url": "git+https://github.com/apollographql/apollo-server.git"
   },
   "scripts": {
-    "compile": "lerna exec -- npm run compile",
+    "compile": "lerna run -- compile",
     "lint": "prettier-check --ignore-path .gitignore \"{docs/{,source/**},.,packages/**,test}/{*.js,*.ts}\"",
     "lint-fix": "prettier --write --ignore-path .gitignore \"{docs/{,source/**},.,packages/**,test}/{*.js,*.ts}\"",
     "prebootstrap": "npm install",
     "postinstall": "lerna bootstrap",
     "pretest": "npm run compile",
-    "test": "npm run testonly --",
+    "test": "npm run testonly",
     "posttest": "npm run lint",
-    "testonly": "mocha --reporter spec --full-trace --timeout 5000 ./test/tests.js",
+    "testonly": "lerna run -- test && mocha --reporter spec --full-trace --timeout 5000 ./test/tests.js",
     "coverage": "istanbul cover -x \"*.test.js\" _mocha -- --timeout 5000 --full-trace --reporter dot ./test/tests.js",
     "pretravis": "npm run compile",
     "travis": "istanbul cover -x \"*.test.js\" _mocha -- --timeout 5000 --full-trace ./test/tests.js",
