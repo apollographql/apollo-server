@@ -3,6 +3,6 @@ jest.mock('redis', () => require('redis-mock'));
 jest.useFakeTimers(); // mocks out setTimeout that is used in redis-mock
 
 import { RedisCache } from '../src/index';
-import { testKeyValueCache } from 'apollo-server-caching';
+import { testKeyValueCache } from '../../apollo-server-caching/src/__tests__/testsuite';
 
 testKeyValueCache(new RedisCache({ host: 'localhost' }));

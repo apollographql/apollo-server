@@ -1,7 +1,7 @@
 import 'apollo-server-env';
 import { RESTDataSource } from '../RESTDataSource';
 
-import fetch, { mockFetch, unmockFetch } from '../__mocks__/fetch';
+import fetch, { mockFetch, unmockFetch } from '../../../../__mocks__/fetch';
 import { HTTPCache } from '../HTTPCache';
 
 describe('RESTDataSource', () => {
