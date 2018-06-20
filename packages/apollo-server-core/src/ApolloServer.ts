@@ -16,7 +16,7 @@ import {
 } from 'graphql';
 import { GraphQLExtension } from 'graphql-extensions';
 import { EngineReportingAgent } from 'apollo-engine-reporting';
-import { InMemoryKeyValueCache } from 'apollo-datasource-rest';
+import { InMemoryLRUCache } from 'apollo-datasource-rest';
 
 import {
   SubscriptionServer,
@@ -123,7 +123,7 @@ export class ApolloServerBase {
     }
 
     if (!requestOptions.cache) {
-      requestOptions.cache = new InMemoryKeyValueCache();
+      requestOptions.cache = new InMemoryLRUCache();
     }
 
     this.requestOptions = requestOptions as GraphQLOptions;

@@ -1,12 +1,9 @@
 import CachePolicy from 'http-cache-semantics';
 
-import { KeyValueCache } from './KeyValueCache';
-import { InMemoryKeyValueCache } from './InMemoryKeyValueCache';
+import { KeyValueCache, InMemoryLRUCache } from 'apollo-server-caching';
 
 export class HTTPCache {
-  constructor(
-    private keyValueCache: KeyValueCache = new InMemoryKeyValueCache(),
-  ) {}
+  constructor(private keyValueCache: KeyValueCache = new InMemoryLRUCache()) {}
 
   async fetch(input: RequestInfo, init?: RequestInit): Promise<Response> {
     const request = new Request(input, init);
