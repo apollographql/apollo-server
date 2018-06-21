@@ -7,7 +7,7 @@ Apollo Server provides reporting, persisted queries, and cache-control headers i
 
 ## Stand-alone Apollo Server
 
-Apollo Server 2 is able to completely replace the Engine proxy. To enable metrics reporting, add `ENGINE_API_KEY` as an environment variable. Apollo Server will then create a reporting agent that sends execution traces to the Engine UI. In addition by default, Apollo Server supports [persisted queries](./features/apq.html) without needing the proxy's cache. Apollo Server also provides cache-control headers for consumption by a [CDN](./features/cdn.html). Integrating a CDN means that full response caching with Engine proxy is no longer necessary.
+Apollo Server 2 is able to completely replace the Engine proxy. To enable metrics reporting, add `ENGINE_API_KEY` as an environment variable. Apollo Server will then create a reporting agent that sends execution traces to the Engine UI. In addition by default, Apollo Server supports [persisted queries](./features/apq.html) without needing the proxy's cache. Apollo Server also provides cache-control headers for consumption by a [CDN](./features/cdn.html). Integrating a CDN provides an alternative to the full response caching inside of Engine proxy.
 
 ```js
 const { ApolloServer } = require('apollo-server');
