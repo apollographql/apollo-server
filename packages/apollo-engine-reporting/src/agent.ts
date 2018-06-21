@@ -11,6 +11,27 @@ import {
 
 import { EngineReportingExtension } from './extension';
 
+// Override the generated protobuf Traces.encode function so that it will look
+// for Traces that are already encoded to Buffer as well as unencoded
+// Traces. This amortizes the protobuf encoding time over each generated Trace
+// instead of bunching it all up at once at sendReport time. In load tests, this
+// change improved p99 end-to-end HTTP response times by a factor of 11 without
+// a casually noticeable effect on p50 times. This also makes it easier for us
+// to implement maxUncompressedReportSize as we know the encoded size of traces
+// as we go.
+const originalTracesEncode = Traces.encode;
+Traces.encode = function(message, originalWriter) {
+  const writer = originalTracesEncode(message, originalWriter);
+  const encodedTraces = (message as any).encodedTraces;
+  if (encodedTraces != null && encodedTraces.length) {
+    for (let i = 0; i < encodedTraces.length; ++i) {
+      writer.uint32(/* id 1, wireType 2 =*/ 10);
+      writer.bytes(encodedTraces[i]);
+    }
+  }
+  return writer;
+};
+
 export interface EngineReportingOptions {
   // API key for the service. Get this from
   // [Engine](https://engine.apollographql.com) by logging in and creating
@@ -21,13 +42,13 @@ export interface EngineReportingOptions {
   // for details.
   calculateSignature?: (ast: DocumentNode, operationName: string) => string;
   // How often to send reports to the Engine server. We'll also send reports
-  // when the report gets big; see uncompressedReportSizeTarget.
+  // when the report gets big; see maxUncompressedReportSize.
   reportIntervalMs?: number;
-  // We send a report when we think the report size will become bigger than this
-  // size in bytes (default: 512KB).  Because we don't know how a big a report
-  // will be until we serialize it, we use a heuristic to track the expected
-  // size per trace, so we may still send reports larger than this on startup.
-  uncompressedReportSizeTarget?: number;
+  // We send a report when the report size will become bigger than this size in
+  // bytes (default: 4MB).  (This is a rough limit --- we ignore the size of the
+  // report header and some other top level bytes. We just add up the lengths of
+  // the serialized traces and signatures.)
+  maxUncompressedReportSize?: number;
   // The URL of the Engine report ingress server.
   endpointUrl?: string;
   // If set, prints all reports as JSON when they are sent.
@@ -78,13 +99,8 @@ export class EngineReportingAgent<TContext = any> {
   private options: EngineReportingOptions;
   private apiKey: string;
   private report: FullTracesReport;
-  private traceCount: number;
+  private reportSize: number;
   private reportTimer: any; // timer typing is weird and node-specific
-
-  // We track an estimate of the serialized size of a trace so we can guess how
-  // big a report will be before serializing it. This is our initial guess; we
-  // update it with an exponential moving average.
-  private averageTraceSize = 8096;
 
   public constructor(options: EngineReportingOptions = {}) {
     this.options = options;
@@ -127,17 +143,28 @@ export class EngineReportingAgent<TContext = any> {
       return;
     }
 
+    const protobufError = Trace.verify(trace);
+    if (protobufError) {
+      throw new Error(`Error encoding trace: ${protobufError}`);
+    }
+    const encodedTrace = Trace.encode(trace).finish();
+
     const statsReportKey = `# ${operationName || '-'}\n${signature}`;
     if (!this.report.tracesPerQuery.hasOwnProperty(statsReportKey)) {
       this.report.tracesPerQuery[statsReportKey] = new Traces();
+      (this.report.tracesPerQuery[statsReportKey] as any).encodedTraces = [];
     }
-    this.report.tracesPerQuery[statsReportKey].trace!!.push(trace);
-    this.traceCount++;
+    // See comment on our override of Traces.encode to learn more about this
+    // strategy.
+    (this.report.tracesPerQuery[statsReportKey] as any).encodedTraces.push(
+      encodedTrace,
+    );
+    this.reportSize += encodedTrace.length + Buffer.byteLength(statsReportKey);
 
     // If the buffer gets big (according to our estimate), send.
     if (
-      this.traceCount * this.averageTraceSize >=
-      (this.options.uncompressedReportSizeTarget || 512 * 1024)
+      this.reportSize >=
+      (this.options.maxUncompressedReportSize || 4 * 1024 * 1024)
     ) {
       this.sendReportAndReportErrors();
     }
@@ -145,7 +172,6 @@ export class EngineReportingAgent<TContext = any> {
 
   public sendReport(): Promise<void> {
     const report = this.report;
-    const traceCount = this.traceCount;
     this.resetReport();
 
     if (Object.keys(report.tracesPerQuery).length === 0) {
@@ -168,15 +194,6 @@ export class EngineReportingAgent<TContext = any> {
           throw new Error(`Error encoding report: ${protobufError}`);
         }
         const message = FullTracesReport.encode(report).finish();
-        const averageTraceSizeThisReport = message.length / traceCount;
-        // Update our estimate of the average trace size
-        // (https://en.wikipedia.org/wiki/Moving_average#Exponential_moving_average).
-        // Note that this ignores the fact that signatures are shared across
-        // multiple traces, so it underestimates the size of unique traces.
-        const alpha = 0.9;
-        this.averageTraceSize =
-          alpha * averageTraceSizeThisReport +
-          (1 - alpha) * this.averageTraceSize;
 
         return new Promise((resolve, reject) => {
           // The protobuf library gives us a Uint8Array. Node 8's zlib lets us
@@ -275,6 +292,6 @@ export class EngineReportingAgent<TContext = any> {
 
   private resetReport() {
     this.report = new FullTracesReport({ header: REPORT_HEADER });
-    this.traceCount = 0;
+    this.reportSize = 0;
   }
 }
