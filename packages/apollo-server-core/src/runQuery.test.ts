@@ -14,7 +14,6 @@ import {
 } from 'graphql';
 
 import { runQuery } from './runQuery';
-import { LogAction, LogStep } from './logging';
 
 // Make the global Promise constructor Fiber-aware to simulate a Meteor
 // environment.
@@ -274,59 +273,6 @@ describe('runQuery', () => {
       request: new MockReq(),
     }).then(res => {
       expect(res.data).to.deep.equal(expected);
-    });
-  });
-
-  it('calls logFunction', () => {
-    const query = `
-        query Q1 {
-            testString
-        }`;
-    const logs = [];
-    const logFn = obj => logs.push(obj);
-    const expected = {
-      testString: 'it works',
-    };
-    return runQuery({
-      schema,
-      queryString: query,
-      operationName: 'Q1',
-      variables: { test: 123 },
-      logFunction: logFn,
-      request: new MockReq(),
-    }).then(res => {
-      expect(res.data).to.deep.equal(expected);
-      expect(logs.length).to.equals(11);
-      expect(logs[0]).to.deep.equals({
-        action: LogAction.request,
-        step: LogStep.start,
-      });
-      expect(logs[1]).to.deep.equals({
-        action: LogAction.request,
-        step: LogStep.status,
-        key: 'query',
-        data: query,
-      });
-      expect(logs[2]).to.deep.equals({
-        action: LogAction.request,
-        step: LogStep.status,
-        key: 'variables',
-        data: { test: 123 },
-      });
-      expect(logs[3]).to.deep.equals({
-        action: LogAction.request,
-        step: LogStep.status,
-        key: 'operationName',
-        data: 'Q1',
-      });
-      expect(logs[10]).to.deep.equals({
-        action: LogAction.request,
-        step: LogStep.end,
-        key: 'response',
-        data: {
-          data: expected,
-        },
-      });
     });
   });
 

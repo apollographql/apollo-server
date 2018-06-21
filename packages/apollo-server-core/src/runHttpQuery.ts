@@ -15,8 +15,7 @@ import {
   formatApolloErrors,
   PersistedQueryNotSupportedError,
   PersistedQueryNotFoundError,
-} from './errors';
-import { LogAction, LogStep } from './logging';
+} from 'apollo-server-errors';
 import { calculateCacheControlHeaders, HttpHeaderCalculation } from './caching';
 
 export interface HttpQueryRequest {
@@ -80,7 +79,6 @@ function throwHttpGraphQLError(
       errors: formatApolloErrors(errors, {
         debug: optionsObject.debug,
         formatter: optionsObject.formatError,
-        logFunction: optionsObject.logFunction,
       }),
     }),
     true,
@@ -111,7 +109,7 @@ export async function runHttpQuery(
   } catch (e) {
     // The options can be generated asynchronously, so we don't have access to
     // the normal options provided by the user, such as: formatError,
-    // logFunction, debug. Therefore, we need to do some unnatural things, such
+    // debug. Therefore, we need to do some unnatural things, such
     // as use NODE_ENV to determine the debug settings
     e.message = `Invalid options provided to ApolloServer: ${e.message}`;
     if (!debugDefault) {
@@ -226,16 +224,7 @@ export async function runHttpQuery(
               return optionsObject.persistedQueries.cache.set(sha, queryString);
             })
             .catch(error => {
-              if (optionsObject.logFunction) {
-                optionsObject.logFunction({
-                  action: LogAction.setup,
-                  step: LogStep.status,
-                  key: 'error',
-                  data: error,
-                });
-              } else {
-                console.warn(error);
-              }
+              console.warn(error);
             });
         }
       }
@@ -359,7 +348,6 @@ export async function runHttpQuery(
         context,
         rootValue: optionsObject.rootValue,
         operationName: operationName,
-        logFunction: optionsObject.logFunction,
         validationRules: optionsObject.validationRules,
         formatError: optionsObject.formatError,
         formatResponse: optionsObject.formatResponse,
@@ -398,7 +386,6 @@ export async function runHttpQuery(
         errors: formatApolloErrors([e], {
           formatter: optionsObject.formatError,
           debug: optionsObject.debug,
-          logFunction: optionsObject.logFunction,
         }),
       };
     }

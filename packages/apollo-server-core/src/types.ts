@@ -35,7 +35,6 @@ export interface Config
       | 'formatError'
       | 'debug'
       | 'rootValue'
-      | 'logFunction'
       | 'formatParams'
       | 'validationRules'
       | 'formatResponse'

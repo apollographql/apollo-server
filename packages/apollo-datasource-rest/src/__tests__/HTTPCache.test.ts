@@ -21,14 +21,7 @@ describe('HTTPCache', () => {
     fetch.mockReset();
 
     store = new Map();
-    httpCache = new HTTPCache({
-      async get(key: string) {
-        return store.get(key);
-      },
-      async set(key: string, value: string) {
-        store.set(key, value);
-      },
-    });
+    httpCache = new HTTPCache(store as any);
   });
 
   afterAll(() => {
@@ -155,6 +148,36 @@ describe('HTTPCache', () => {
 
     expect(fetch.mock.calls.length).toEqual(2);
     expect(await response.json()).toEqual({ name: 'Alan Turing' });
+  });
+
+  it('sets the TTL as max-age when the response does not contain revalidation headers', async () => {
+    fetch.mockJSONResponseOnce(
+      { name: 'Ada Lovelace' },
+      { 'Cache-Control': 'max-age=30' },
+    );
+
+    const storeSet = jest.spyOn(store, 'set');
+
+    await httpCache.fetch('https://api.example.com/people/1');
+
+    expect(storeSet.mock.calls[0][2]).toEqual({ ttl: 30 });
+
+    storeSet.mockRestore();
+  });
+
+  it('sets the TTL as 2 * max-age when the response contains an ETag header', async () => {
+    fetch.mockJSONResponseOnce(
+      { name: 'Ada Lovelace' },
+      { 'Cache-Control': 'max-age=30', ETag: 'foo' },
+    );
+
+    const storeSet = jest.spyOn(store, 'set');
+
+    await httpCache.fetch('https://api.example.com/people/1');
+
+    expect(storeSet.mock.calls[0][2]).toEqual({ ttl: 60 });
+
+    storeSet.mockRestore();
   });
 
   it('revalidates a cached response when expired and returns the cached response when not modified', async () => {
