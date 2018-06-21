@@ -16,9 +16,9 @@ Apollo Server is a community-maintained open-source GraphQL server. It works wit
 
 Apollo Server is built with the following principles in mind:
 
-* **By the community, for the community**: Apollo Server's development is driven by the needs of developers
-* **Simplicity**: by keeping things simple, Apollo Server is easier to use, easier to contribute to, and more secure
-* **Performance**: Apollo Server is well-tested and production-ready - no modifications needed
+- **By the community, for the community**: Apollo Server's development is driven by the needs of developers
+- **Simplicity**: by keeping things simple, Apollo Server is easier to use, easier to contribute to, and more secure
+- **Performance**: Apollo Server is well-tested and production-ready - no modifications needed
 
 Anyone is welcome to contribute to Apollo Server, just read [CONTRIBUTING.md](./CONTRIBUTING.md), take a look at the [roadmap](./ROADMAP.md) and make your first PR!
 
@@ -32,14 +32,14 @@ Just run `npm install --save apollo-server-<variant>` and you're good to go!
 
 where `<variant>` is one of the following:
 
-* `express`
-* `koa`
-* `hapi`
-* `restify`
-* `lambda`
-* `micro`
-* `azure-functions`
-* `adonis`
+- `express`
+- `koa`
+- `hapi`
+- `restify`
+- `lambda`
+- `micro`
+- `azure-functions`
+- `adonis`
 
 ### Express
 
@@ -210,18 +210,17 @@ Route.get('/graphql', graphqlAdonis({ schema: myGraphQLSchema }));
 
 Apollo Server can be configured with an options object with the following fields:
 
-* **schema**: the GraphQLSchema to be used
-* **context**: the context value passed to resolvers during GraphQL execution
-* **rootValue**: the value passed to the first resolve function
-* **formatError**: a function to apply to every error before sending the response to clients
-* **validationRules**: additional GraphQL validation rules to be applied to client-specified queries
-* **formatParams**: a function applied for each query in a batch to format parameters before execution
-* **formatResponse**: a function applied to each response after execution
-* **tracing**: when set to true, collect and expose trace data in the [Apollo Tracing format](https://github.com/apollographql/apollo-tracing)
-* **logFunction**: a function called for logging events such as execution times
-* **fieldResolver**: a custom default field resolver
-* **debug**: a boolean that will print additional debug logging if execution errors occur
-* **cacheControl**: when set to true, enable built-in support for Apollo Cache Control
+- **schema**: the GraphQLSchema to be used
+- **context**: the context value passed to resolvers during GraphQL execution
+- **rootValue**: the value passed to the first resolve function
+- **formatError**: a function to apply to every error before sending the response to clients
+- **validationRules**: additional GraphQL validation rules to be applied to client-specified queries
+- **formatParams**: a function applied for each query in a batch to format parameters before execution
+- **formatResponse**: a function applied to each response after execution
+- **tracing**: when set to true, collect and expose trace data in the [Apollo Tracing format](https://github.com/apollographql/apollo-tracing)
+- **fieldResolver**: a custom default field resolver
+- **debug**: a boolean that will print additional debug logging if execution errors occur
+- **cacheControl**: when set to true, enable built-in support for Apollo Cache Control
 
 All options except for `schema` are optional.
 
@@ -236,7 +235,7 @@ graphqlOptions = {
   schema: Schema,
   formatParams(params) {
     params['parsedQuery'] = store.get(params.operationName);
-    delete params['queryString'];  // Or throw if this is provided.
+    delete params['queryString']; // Or throw if this is provided.
     return params;
   },
 };
@@ -246,12 +245,12 @@ graphqlOptions = {
 
 Both Apollo Server and [`express-graphql`](https://github.com/graphql/express-graphql) are GraphQL servers for Node.js, built on top of the [`graphql-js` reference implementation](https://github.com/graphql/graphql-js), but there are a few key differences:
 
-* `express-graphql` works with Express and Connect, Apollo Server supports Express, Connect, Hapi, Koa and Restify.
-* Compared to `express-graphql`, Apollo Server has a simpler interface and supports exactly one way of passing queries.
-* Apollo Server separates serving [GraphiQL](https://github.com/graphql/graphiql) (an in-browser IDE for exploring GraphQL) from responding to GraphQL requests.
-* `express-graphql` contains code for parsing HTTP request bodies, Apollo Server leaves that to standard packages like body-parser.
-* Apollo Server includes an `OperationStore` to easily manage whitelisting.
-* Apollo Server is built with TypeScript.
+- `express-graphql` works with Express and Connect, Apollo Server supports Express, Connect, Hapi, Koa and Restify.
+- Compared to `express-graphql`, Apollo Server has a simpler interface and supports exactly one way of passing queries.
+- Apollo Server separates serving [GraphiQL](https://github.com/graphql/graphiql) (an in-browser IDE for exploring GraphQL) from responding to GraphQL requests.
+- `express-graphql` contains code for parsing HTTP request bodies, Apollo Server leaves that to standard packages like body-parser.
+- Apollo Server includes an `OperationStore` to easily manage whitelisting.
+- Apollo Server is built with TypeScript.
 
 ### application/graphql requests
 
@@ -284,9 +283,9 @@ express()
 
 If you want to develop Apollo Server locally you must follow the following instructions:
 
-* Fork this repository
+- Fork this repository
 
-* Install the Apollo Server project in your computer
+- Install the Apollo Server project in your computer
 
 ```
 git clone https://github.com/[your-user]/apollo-server
@@ -296,7 +295,7 @@ cd packages/apollo-server-<variant>/
 npm link
 ```
 
-* Install your local Apollo Server in other App
+- Install your local Apollo Server in other App
 
 ```
 cd ~/myApp

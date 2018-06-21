@@ -3,7 +3,6 @@ import {
   ValidationContext,
   GraphQLFieldResolver,
 } from 'graphql';
-import { LogFunction } from './logging';
 import { PersistedQueryCache } from './caching';
 import { GraphQLExtension } from 'graphql-extensions';
 import { RESTDataSource, KeyValueCache } from 'apollo-datasource-rest';
@@ -15,7 +14,6 @@ import { RESTDataSource, KeyValueCache } from 'apollo-datasource-rest';
  * - (optional) formatError: Formatting function applied to all errors before response is sent
  * - (optional) rootValue: rootValue passed to GraphQL execution
  * - (optional) context: the context passed to GraphQL execution
- * - (optional) logFunction: a function called for logging events such as execution times
  * - (optional) formatParams: a function applied to the parameters of every invocation of runQuery
  * - (optional) validationRules: extra validation rules applied to requests
  * - (optional) formatResponse: a function applied to each graphQL execution result
@@ -33,7 +31,6 @@ export interface GraphQLServerOptions<
   formatError?: Function;
   rootValue?: any;
   context?: TContext;
-  logFunction?: LogFunction;
   formatParams?: Function;
   validationRules?: Array<(context: ValidationContext) => any>;
   formatResponse?: Function;

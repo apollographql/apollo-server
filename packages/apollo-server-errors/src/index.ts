@@ -1,5 +1,4 @@
 import { GraphQLError } from 'graphql';
-// import { LogStep, LogAction, LogFunction } from './logging';
 
 export class ApolloError extends Error implements GraphQLError {
   public extensions: Record<string, any>;
@@ -216,7 +215,6 @@ export function formatApolloErrors(
   errors: Array<Error>,
   options?: {
     formatter?: Function;
-    logFunction?: any; // LogFunction;
     debug?: boolean;
   },
 ): Array<ApolloError> {
@@ -258,14 +256,6 @@ export function formatApolloErrors(
     try {
       return formatter(error);
     } catch (err) {
-      // logFunction &&
-      //   logFunction({
-      //     action: LogAction.cleanup,
-      //     step: LogStep.status,
-      //     data: err,
-      //     key: 'error',
-      //   });
-
       if (debug) {
         return enrichError(err, debug);
       } else {

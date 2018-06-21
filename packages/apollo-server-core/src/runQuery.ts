@@ -28,8 +28,6 @@ import {
   SyntaxError,
 } from 'apollo-server-errors';
 
-import { LogFunction, LogFunctionExtension } from './logging';
-
 export interface GraphQLResponse {
   data?: object;
   errors?: Array<GraphQLError & object>;
@@ -51,7 +49,6 @@ export interface QueryOptions {
   context?: any;
   variables?: { [key: string]: any };
   operationName?: string;
-  logFunction?: LogFunction;
   validationRules?: Array<(context: ValidationContext) => any>;
   fieldResolver?: GraphQLFieldResolver<any, any>;
   // WARNING: these extra validation rules are only applied to queries
@@ -104,9 +101,6 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
     extensions.push(new CacheControlExtension());
   } else if (options.cacheControl) {
     extensions.push(new CacheControlExtension(options.cacheControl));
-  }
-  if (options.logFunction) {
-    extensions.push(new LogFunctionExtension(options.logFunction));
   }
 
   const extensionStack = new GraphQLExtensionStack(extensions);
@@ -198,7 +192,6 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
               ),
               {
                 formatter: options.formatError,
-                logFunction: options.logFunction,
                 debug,
               },
             );
@@ -250,7 +243,6 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
           if (result.errors) {
             response.errors = formatApolloErrors([...result.errors], {
               formatter: options.formatError,
-              logFunction: options.logFunction,
               debug,
             });
           }

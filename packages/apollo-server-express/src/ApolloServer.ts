@@ -57,7 +57,6 @@ const fileUploadMiddleware = (
           formatApolloErrors([error], {
             formatter: server.requestOptions.formatError,
             debug: server.requestOptions.debug,
-            logFunction: server.requestOptions.logFunction,
           }),
         );
       });

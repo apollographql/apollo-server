@@ -32,7 +32,6 @@ import {
   GraphQLServerOptions as GraphQLOptions,
   PersistedQueryOptions,
 } from './graphqlOptions';
-import { LogFunction } from './logging';
 
 import {
   Config,
@@ -152,7 +151,7 @@ export class ApolloServerBase {
     }
 
     // Note: doRunQuery will add its own extensions if you set tracing,
-    // cacheControl, or logFunction.
+    // or cacheControl.
     this.extensions = [];
 
     if (engine || (engine !== false && process.env.ENGINE_API_KEY)) {
@@ -250,7 +249,6 @@ export class ApolloServerBase {
               formatApolloErrors([...value.errors], {
                 formatter: this.requestOptions.formatError,
                 debug: this.requestOptions.debug,
-                logFunction: this.requestOptions.logFunction,
               }),
           });
           let context: Context = this.context ? this.context : { connection };
@@ -264,7 +262,6 @@ export class ApolloServerBase {
             throw formatApolloErrors([e], {
               formatter: this.requestOptions.formatError,
               debug: this.requestOptions.debug,
-              logFunction: this.requestOptions.logFunction,
             })[0];
           }
 
@@ -310,7 +307,6 @@ export class ApolloServerBase {
       // Allow overrides from options. Be explicit about a couple of them to
       // avoid a bad side effect of the otherwise useful noUnusedLocals option
       // (https://github.com/Microsoft/TypeScript/issues/21673).
-      logFunction: this.requestOptions.logFunction as LogFunction,
       persistedQueries: this.requestOptions
         .persistedQueries as PersistedQueryOptions,
       fieldResolver: this.requestOptions.fieldResolver as GraphQLFieldResolver<

@@ -31,21 +31,3 @@ server.listen().then(({ url }) => {
   console.log(`🚀  Server ready at ${url}`);
 });
 ```
-
-## Granular Logs
-
-Apollo Server provides a `logFunction` option that receives the start and completion information for each major phase of GraphQL execution: parse, validate, and execute. Additionally, `logFunction` receives the information that initiates the request and response data. This example uses `console.log`:
-
-```js
-const server = new ApolloServer({
-  typeDefs,
-  resolvers,
-  logFunction: information => {
-    console.log(information)
-  },
-});
-
-server.listen().then(({ url }) => {
-  console.log(`🚀  Server ready at ${url}`);
-});
-```
