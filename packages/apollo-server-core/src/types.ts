@@ -29,6 +29,8 @@ export interface SubscriptionServerOptions {
   onDisconnect?: (websocket: WebSocket, context: ConnectionContext) => any;
 }
 
+// This configuration is shared between all integrations and should include
+// fields that are not specific to a single integration
 export interface Config
   extends Pick<
       GraphQLOptions<Context<any>>,
@@ -55,6 +57,17 @@ export interface Config
   extensions?: Array<() => GraphQLExtension>;
   persistedQueries?: PersistedQueryOptions | false;
   subscriptions?: Partial<SubscriptionServerOptions> | string | false;
+  //https://github.com/jaydenseric/apollo-upload-server#options
+  uploads?: boolean | FileUploadOptions;
+}
+
+export interface FileUploadOptions {
+  //Max allowed non-file multipart form field size in bytes; enough for your queries (default: 1 MB).
+  maxFieldSize?: number;
+  //Max allowed file size in bytes (default: Infinity).
+  maxFileSize?: number;
+  //Max allowed number of files (default: Infinity).
+  maxFiles?: number;
 }
 
 export interface MiddlewareOptions {

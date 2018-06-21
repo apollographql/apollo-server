@@ -9,13 +9,10 @@ import * as typeis from 'type-is';
 
 import { graphqlExpress } from './expressApollo';
 
-import {
-  processRequest as processFileUploads,
-  GraphQLUpload,
-} from 'apollo-upload-server';
+import { processRequest as processFileUploads } from 'apollo-upload-server';
 
 export { GraphQLOptions, GraphQLExtension } from 'apollo-server-core';
-import { GraphQLOptions, gql, makeExecutableSchema } from 'apollo-server-core';
+import { GraphQLOptions, FileUploadOptions } from 'apollo-server-core';
 
 export interface ServerRegistration {
   // Note: You can also pass a connect.Server here. If we changed this field to
@@ -31,12 +28,10 @@ export interface ServerRegistration {
   onHealthCheck?: (req: express.Request) => Promise<any>;
   disableHealthCheck?: boolean;
   gui?: boolean | PlaygroundMiddlewareOptions;
-  //https://github.com/jaydenseric/apollo-upload-server#options
-  uploads?: boolean | Record<string, any>;
 }
 
 const fileUploadMiddleware = (
-  uploadsConfig: Record<string, any>,
+  uploadsConfig: FileUploadOptions,
   server: ApolloServerBase,
 ) => (
   req: express.Request,
@@ -80,6 +75,10 @@ export class ApolloServer extends ApolloServerBase {
     return true;
   }
 
+  protected supportsUploads(): boolean {
+    return true;
+  }
+
   public applyMiddleware({
     app,
     path,
@@ -88,7 +87,6 @@ export class ApolloServer extends ApolloServerBase {
     disableHealthCheck,
     gui,
     onHealthCheck,
-    uploads,
   }: ServerRegistration) {
     if (!path) path = '/graphql';
 
@@ -113,20 +111,8 @@ export class ApolloServer extends ApolloServerBase {
     }
 
     let uploadsMiddleware;
-    if (uploads !== false) {
-      this.enhanceSchema(
-        makeExecutableSchema({
-          typeDefs: gql`
-            scalar Upload
-          `,
-          resolvers: { Upload: GraphQLUpload },
-        }),
-      );
-
-      uploadsMiddleware = fileUploadMiddleware(
-        typeof uploads !== 'boolean' ? uploads : {},
-        this,
-      );
+    if (this.uploadsConfig) {
+      uploadsMiddleware = fileUploadMiddleware(this.uploadsConfig, this);
     }
 
     // XXX multiple paths?
