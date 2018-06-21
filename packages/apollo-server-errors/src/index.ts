@@ -1,5 +1,4 @@
 import { GraphQLError } from 'graphql';
-import { LogStep, LogAction, LogFunction } from './logging';
 
 export class ApolloError extends Error implements GraphQLError {
   public extensions: Record<string, any>;
@@ -216,16 +215,15 @@ export function formatApolloErrors(
   errors: Array<Error>,
   options?: {
     formatter?: Function;
-    logFunction?: LogFunction;
     debug?: boolean;
   },
 ): Array<ApolloError> {
   if (!options) {
     return errors.map(error => enrichError(error));
   }
-  const { formatter, debug, logFunction } = options;
+  const { formatter, debug } = options;
 
-  const flattenedErrors = [];
+  const flattenedErrors: Error[] = [];
   errors.forEach(error => {
     // Errors that occur in graphql-tools can contain an errors array that contains the errors thrown in a merged schema
     // https://github.com/apollographql/graphql-tools/blob/3d53986ca/src/stitching/errors.ts#L104-L107
@@ -258,14 +256,6 @@ export function formatApolloErrors(
     try {
       return formatter(error);
     } catch (err) {
-      logFunction &&
-        logFunction({
-          action: LogAction.cleanup,
-          step: LogStep.status,
-          data: err,
-          key: 'error',
-        });
-
       if (debug) {
         return enrichError(err, debug);
       } else {

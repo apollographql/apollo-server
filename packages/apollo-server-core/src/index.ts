@@ -1,6 +1,5 @@
 import 'apollo-server-env';
 export { runQuery } from './runQuery';
-export { LogFunction, LogMessage, LogStep, LogAction } from './logging';
 export { runHttpQuery, HttpQueryRequest, HttpQueryError } from './runHttpQuery';
 export {
   default as GraphQLOptions,
@@ -16,7 +15,7 @@ export {
   ForbiddenError,
   UserInputError,
   formatApolloErrors,
-} from './errors';
+} from 'apollo-server-errors';
 
 export { convertNodeHttpToRequest } from './nodeHttpToRequest';
 
@@ -32,6 +31,6 @@ export * from 'graphql-subscriptions';
 import { DocumentNode } from 'graphql';
 import gqlTag from 'graphql-tag';
 export const gql: (
-  template: TemplateStringsArray,
+  template: TemplateStringsArray | string,
   ...substitutions: any[]
 ) => DocumentNode = gqlTag;

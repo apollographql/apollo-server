@@ -25,10 +25,11 @@ const typeDefs = gql`
 `;
 
 //Some projects use schemas imported from external files
-const typeDefs = gql`${IMPORT_FUNCTION('./schema-file')}`;
+const fs = require('fs');
+const typeDefs = gql`${fs.readFileSync(__dirname.concat('/schema.graphql'), 'utf8')}`;
 
 //gql can also be used as regular function to convert a string to an AST
-const typeDefs = gql(IMPORT_FUNCTION('./schema-file'))
+const typeDefs = gql(fs.readFileSync(__dirname.concat('/schema.graphql'), 'utf8'))
 ```
 
 <h2 id="app-deps">Changes to app dependencies</h2>

@@ -17,8 +17,7 @@ import {
   BREAK,
 } from 'graphql';
 
-// tslint:disable-next-line
-const request = require('supertest');
+import request = require('supertest');
 
 import { GraphQLOptions, Config } from 'apollo-server-core';
 import gql from 'graphql-tag';
