@@ -21,7 +21,7 @@ sidebar_categories:
     - features/apq
     - features/data-sources
     - features/subscriptions
-    - features/logging
+    - features/metrics
     - features/scalars-enums
     - features/unions-interfaces
     - features/directives
