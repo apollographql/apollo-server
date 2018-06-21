@@ -136,7 +136,7 @@ exports.graphqlHandler = server.createHandler();
 
 ## Modifying the Lambda Response (Enable CORS)
 
-To enable CORS the response HTTP headers need to be modified. To accomplish this pass in a callback filter to the generated handler of graphqlLambda.
+To enable CORS the response HTTP headers need to be modified. To accomplish this use `cors` options.
 
 ```js
 const { ApolloServer, gql } = require('apollo-server-lambda');
@@ -157,15 +157,12 @@ const resolvers = {
 
 const server = new ApolloServer({ typeDefs, resolvers });
 
-exports.graphqlHandler = function(event, context, callback) {
-  const callbackFilter = function(error, output) {
-    output.headers['Access-Control-Allow-Origin'] = '*';
-    callback(error, output);
-  };
-
-  const handler = server.createHandler();
-  return handler(event, context, callbackFilter);
-};
+exports.graphqlHandler = server.createHandler({
+  cors: {
+    origin: '*',
+    credentials: true,
+  },
+});
 ```
 
 To enable CORS response for requests with credentials (cookies, http authentication) the allow origin header must equal the request origin and the allow credential header must be set to true.
@@ -188,21 +185,13 @@ const resolvers = {
 };
 
 const server = new ApolloServer({ typeDefs, resolvers });
-const CORS_ORIGIN = 'https://example.com';
 
-exports.graphqlHandler = function(event, context, callback) {
-  const requestOrigin = event.headers.origin,
-    callbackFilter = function(error, output) {
-      if (requestOrigin === CORS_ORIGIN) {
-        output.headers['Access-Control-Allow-Origin'] = CORS_ORIGIN;
-        output.headers['Access-Control-Allow-Credentials'] = 'true';
-      }
-      callback(error, output);
-    };
-
-  const handler = server.createHandler();
-  return handler(event, context, callbackFilter);
-};
+exports.graphqlHandler = server.createHandler({
+  cors: {
+    origin: true,
+    credentials: true,
+  },
+});
 ```
 
 ## Principles
