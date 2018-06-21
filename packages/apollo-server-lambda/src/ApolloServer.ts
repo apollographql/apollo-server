@@ -12,6 +12,14 @@ import { graphqlLambda } from './lambdaApollo';
 
 export interface CreateHandlerOptions {
   gui?: boolean | PlaygroundMiddlewareOptions;
+  cors?: {
+    origin?: boolean | string | string[];
+    methods?: string | string[];
+    allowedHeaders?: string | string[];
+    exposedHeaders?: string | string[];
+    credentials?: boolean;
+    maxAge?: number;
+  };
 }
 
 export class ApolloServer extends ApolloServerBase {
@@ -26,15 +34,64 @@ export class ApolloServer extends ApolloServerBase {
   }
 
   // Added "= { gui: undefined }" to fix "module initialization error: TypeError"
-  public createHandler({ gui }: CreateHandlerOptions = { gui: undefined }) {
+  public createHandler(
+    { gui, cors }: CreateHandlerOptions = { gui: undefined, cors: undefined },
+  ) {
     const guiEnabled =
       !!gui || (gui === undefined && process.env.NODE_ENV !== 'production');
+
+    const corsHeaders = {};
+
+    if (cors) {
+      if (cors.methods) {
+        if (typeof cors.methods === 'string')
+          corsHeaders['Access-Control-Allow-Methods'] = cors.methods;
+        else if (Array.isArray(cors.methods))
+          corsHeaders['Access-Control-Allow-Methods'] = cors.methods.join(',');
+      }
+
+      if (cors.allowedHeaders) {
+        if (typeof cors.allowedHeaders === 'string')
+          corsHeaders['Access-Control-Allow-Headers'] = cors.allowedHeaders;
+        else if (Array.isArray(cors.allowedHeaders))
+          corsHeaders[
+            'Access-Control-Allow-Headers'
+          ] = cors.allowedHeaders.join(',');
+      }
+
+      if (cors.exposedHeaders) {
+        if (typeof cors.exposedHeaders === 'string')
+          corsHeaders['Access-Control-Expose-Headers'] = cors.exposedHeaders;
+        else if (Array.isArray(cors.exposedHeaders))
+          corsHeaders[
+            'Access-Control-Expose-Headers'
+          ] = cors.exposedHeaders.join(',');
+      }
+
+      if (cors.credentials)
+        corsHeaders['Access-Control-Allow-Credentials'] = 'true';
+      if (cors.maxAge) corsHeaders['Access-Control-Max-Age'] = cors.maxAge;
+    }
 
     return (
       event: lambda.APIGatewayProxyEvent,
       context: lambda.Context,
       callback: lambda.APIGatewayProxyCallback,
     ) => {
+      if (cors && cors.origin) {
+        if (typeof cors.origin === 'string')
+          corsHeaders['Access-Control-Allow-Origin'] = cors.origin;
+        else if (
+          typeof cors.origin === 'boolean' ||
+          (Array.isArray(cors.origin) &&
+            cors.origin.includes(
+              event.headers['Origin'] || event.headers['origin'],
+            ))
+        )
+          corsHeaders['Access-Control-Allow-Origin'] =
+            event.headers['Origin'] || event.headers['origin'];
+      }
+
       if (guiEnabled && event.httpMethod === 'GET') {
         const playgroundRenderPageOptions: PlaygroundRenderPageOptions = {
           endpoint: event.requestContext.path,
@@ -46,15 +103,29 @@ export class ApolloServer extends ApolloServerBase {
           body: renderPlaygroundPage(playgroundRenderPageOptions),
           statusCode: 200,
           headers: {
+            ...corsHeaders,
             'Content-Type': 'text/html',
           },
         });
       }
 
+      const callbackFilter: lambda.APIGatewayProxyCallback = (
+        error,
+        result,
+      ) => {
+        callback(error, {
+          ...result,
+          headers: {
+            ...result.headers,
+            ...corsHeaders,
+          },
+        });
+      };
+
       graphqlLambda(this.createGraphQLServerOptions.bind(this))(
         event,
         context,
-        callback,
+        callbackFilter,
       );
     };
   }
