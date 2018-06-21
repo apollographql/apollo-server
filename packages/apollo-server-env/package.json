@@ -13,7 +13,7 @@
   },
   "scripts": {
     "clean": "rm -rf lib",
-    "compile": "tsc",
+    "compile": "tsc && cp src/*.d.ts dist",
     "prepublish": "npm run clean && npm run compile"
   },
   "main": "dist/index.js",

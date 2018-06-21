@@ -1,3 +1,12 @@
+import {
+  Request,
+  RequestInit,
+  Response,
+  URL,
+  URLSearchParams,
+  URLSearchParamsInit,
+} from 'apollo-server-env';
+
 import { HTTPCache } from './HTTPCache';
 import {
   ApolloError,

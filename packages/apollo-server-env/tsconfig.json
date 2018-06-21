@@ -3,6 +3,9 @@
   "compilerOptions": {
     "rootDir": "./src",
     "outDir": "./dist",
+    "allowJs": true,
+    "declaration": false,
+    "declarationMap": false,
     "removeComments": true,
     "strict": true,
     "noImplicitReturns": true,
