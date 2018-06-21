@@ -48,13 +48,11 @@ export function graphqlLambda(
         headers: event.headers as any,
       },
     }).then(
-      gqlResponse => {
+      ({ graphqlResponse, responseInit }) => {
         callback(null, {
-          body: gqlResponse,
+          body: graphqlResponse,
           statusCode: 200,
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: responseInit.headers,
         });
       },
       (error: HttpQueryError) => {
