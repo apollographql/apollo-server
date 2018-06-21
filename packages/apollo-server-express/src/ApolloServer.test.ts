@@ -8,7 +8,6 @@ import * as http from 'http';
 import * as request from 'request';
 import * as FormData from 'form-data';
 import * as fs from 'fs';
-import fetch from 'node-fetch';
 import { createApolloFetch } from 'apollo-fetch';
 
 import { gql, AuthenticationError } from 'apollo-server-core';
@@ -421,7 +420,7 @@ describe('apollo-server-express', () => {
 
         const resolved = await fetch(`http://localhost:${port}/graphql`, {
           method: 'POST',
-          body,
+          body: body as any,
         });
         const response = await resolved.json();
 
