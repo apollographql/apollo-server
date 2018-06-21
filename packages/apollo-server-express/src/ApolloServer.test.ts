@@ -1,26 +1,23 @@
 import { expect } from 'chai';
 import 'mocha';
-import express from 'express';
+import * as express from 'express';
 
-import net from 'net';
-import http from 'http';
+import * as net from 'net';
+import * as http from 'http';
 
-import request from 'request';
-import FormData from 'form-data';
-import fs from 'fs';
+import * as request from 'request';
+import * as FormData from 'form-data';
+import * as fs from 'fs';
 import fetch from 'node-fetch';
 import { createApolloFetch } from 'apollo-fetch';
 
-import { ApolloServerBase, AuthenticationError } from 'apollo-server-core';
+import { gql, AuthenticationError } from 'apollo-server-core';
 import { ApolloServer } from './ApolloServer';
 
 import {
   testApolloServer,
   createServerInfo,
 } from 'apollo-server-integration-testsuite';
-
-// to remove the circular dependency, we reference it directly
-const gql = require('../../apollo-server/dist/index').gql;
 
 const typeDefs = gql`
   type Query {
@@ -58,9 +55,7 @@ describe('apollo-server-express', () => {
 });
 
 describe('apollo-server-express', () => {
-  //to remove the circular dependency, we reference it directly
-  const ApolloServer = require('../../apollo-server/dist/index').ApolloServer;
-  let server: ApolloServerBase | any;
+  let server: ApolloServer;
 
   let app: express.Application;
   let httpServer: http.Server;

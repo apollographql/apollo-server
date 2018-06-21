@@ -14,7 +14,7 @@ export function advanceTimeBy(ms: number) {
   now += ms;
 }
 
-const handler = {
+const handler: ProxyHandler<any> = {
   construct(target, args) {
     if (args.length === 0) {
       return new Date(now);

@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import 'mocha';
 
-import request from 'request';
+import * as request from 'request';
 import { createApolloFetch } from 'apollo-fetch';
 
 import { gql, ApolloServer } from './index';

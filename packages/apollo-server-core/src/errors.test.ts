@@ -11,9 +11,9 @@ import {
   AuthenticationError,
   ForbiddenError,
   ValidationError,
-  BadUserInputError,
+  UserInputError,
   SyntaxError,
-} from './errors';
+} from 'apollo-server-errors';
 
 describe('Errors', () => {
   describe('ApolloError', () => {
@@ -106,19 +106,6 @@ describe('Errors', () => {
         'stacktrace should exist under exception',
       ).not.to.exist;
     });
-    it('calls logFunction with each error', () => {
-      const error = new ApolloError(message, code, { key });
-      const logFunction = stub();
-      formatApolloErrors([error], {
-        logFunction,
-        debug: true,
-      });
-      expect(error.message).to.equal(message);
-      expect(error.key).to.equal(key);
-      expect(error.extensions.code).to.equal(code);
-      expect(error instanceof ApolloError).true;
-      expect(logFunction.calledOnce);
-    });
     it('calls formatter after exposing the code and stacktrace', () => {
       const error = new ApolloError(message, code, { key });
       const formatter = stub();
@@ -171,15 +158,15 @@ describe('Errors', () => {
         name: 'ValidationError',
       });
     });
-    it('provides a BadUserInput error', () => {
-      const error = new BadUserInputError(message, {
+    it('provides a user input error', () => {
+      const error = new UserInputError(message, {
         field1: 'property1',
         field2: 'property2',
       });
       verifyError(error, {
         code: 'BAD_USER_INPUT',
-        errorClass: BadUserInputError,
-        name: 'BadUserInputError',
+        errorClass: UserInputError,
+        name: 'UserInputError',
       });
 
       const formattedError = formatApolloErrors([

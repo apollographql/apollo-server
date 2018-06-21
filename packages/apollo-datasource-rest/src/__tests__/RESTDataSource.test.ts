@@ -1,7 +1,12 @@
 import 'apollo-server-env';
+import {
+  ApolloError,
+  AuthenticationError,
+  ForbiddenError,
+} from 'apollo-server-errors';
 import { RESTDataSource } from '../RESTDataSource';
 
-import fetch, { mockFetch, unmockFetch } from '../__mocks__/fetch';
+import fetch, { mockFetch, unmockFetch } from '../../../../__mocks__/fetch';
 import { HTTPCache } from '../HTTPCache';
 
 describe('RESTDataSource', () => {
@@ -30,7 +35,7 @@ describe('RESTDataSource', () => {
     unmockFetch();
   });
 
-  it('returns data as parsed JSON', async () => {
+  it('returns data as parsed JSON when Content-Type is application/json', async () => {
     const dataSource = new class extends RESTDataSource {
       baseURL = 'https://api.example.com';
 
@@ -41,11 +46,50 @@ describe('RESTDataSource', () => {
 
     dataSource.httpCache = httpCache;
 
-    fetch.mockJSONResponseOnce({ foo: 'bar' });
+    fetch.mockJSONResponseOnce(
+      { foo: 'bar' },
+      { 'Content-Type': 'application/json' },
+    );
 
     const data = await dataSource.getFoo();
 
     expect(data).toEqual({ foo: 'bar' });
+  });
+
+  it('returns data as a string when Content-Type is text/plain', async () => {
+    const dataSource = new class extends RESTDataSource {
+      baseURL = 'https://api.example.com';
+
+      getFoo() {
+        return this.get('foo');
+      }
+    }();
+
+    dataSource.httpCache = httpCache;
+
+    fetch.mockResponseOnce('bar', { 'Content-Type': 'text/plain' });
+
+    const data = await dataSource.getFoo();
+
+    expect(data).toEqual('bar');
+  });
+
+  it('attempts to return data as a string when no Content-Type header is returned', async () => {
+    const dataSource = new class extends RESTDataSource {
+      baseURL = 'https://api.example.com';
+
+      getFoo() {
+        return this.get('foo');
+      }
+    }();
+
+    dataSource.httpCache = httpCache;
+
+    fetch.mockResponseOnce('bar');
+
+    const data = await dataSource.getFoo();
+
+    expect(data).toEqual('bar');
   });
 
   it('allows adding query string parameters', async () => {
@@ -101,7 +145,7 @@ describe('RESTDataSource', () => {
     );
   });
 
-  for (const method of ['GET', 'POST', 'PUT', 'DELETE']) {
+  for (const method of ['GET', 'POST', 'PATCH', 'PUT', 'DELETE']) {
     const dataSource = new class extends RESTDataSource {
       baseURL = 'https://api.example.com';
 
@@ -111,6 +155,10 @@ describe('RESTDataSource', () => {
 
       postFoo() {
         return this.post('foo');
+      }
+
+      patchFoo() {
+        return this.patch('foo');
       }
 
       putFoo() {
@@ -135,4 +183,52 @@ describe('RESTDataSource', () => {
       expect(fetch.mock.calls[0][0].method).toEqual(method);
     });
   }
+
+  it('throws an AuthenticationError when the response status is 401', async () => {
+    const dataSource = new class extends RESTDataSource {
+      baseURL = 'https://api.example.com';
+
+      getFoo() {
+        return this.get('foo');
+      }
+    }();
+
+    dataSource.httpCache = httpCache;
+
+    fetch.mockResponseOnce('Invalid token', undefined, 401);
+
+    await expect(dataSource.getFoo()).rejects.toThrow(AuthenticationError);
+  });
+
+  it('throws a ForbiddenError when the response status is 403', async () => {
+    const dataSource = new class extends RESTDataSource {
+      baseURL = 'https://api.example.com';
+
+      getFoo() {
+        return this.get('foo');
+      }
+    }();
+
+    dataSource.httpCache = httpCache;
+
+    fetch.mockResponseOnce('No access', undefined, 403);
+
+    await expect(dataSource.getFoo()).rejects.toThrow(ForbiddenError);
+  });
+
+  it('throws an ApolloError when the response status is 500', async () => {
+    const dataSource = new class extends RESTDataSource {
+      baseURL = 'https://api.example.com';
+
+      getFoo() {
+        return this.get('foo');
+      }
+    }();
+
+    dataSource.httpCache = httpCache;
+
+    fetch.mockResponseOnce('Oops', undefined, 500);
+
+    await expect(dataSource.getFoo()).rejects.toThrow(ApolloError);
+  });
 });

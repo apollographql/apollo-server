@@ -1,6 +1,9 @@
 import { HTTPCache } from './HTTPCache';
-
-export type Params = { [name: string]: any };
+import {
+  ApolloError,
+  AuthenticationError,
+  ForbiddenError,
+} from 'apollo-server-errors';
 
 export abstract class RESTDataSource<TContext = any> {
   abstract baseURL: string;
@@ -8,60 +11,92 @@ export abstract class RESTDataSource<TContext = any> {
   httpCache!: HTTPCache;
   context!: TContext;
 
-  public willSendRequest?(request: Request): void;
+  protected willSendRequest?(request: Request): void;
 
-  public willReceiveCache(httpCache: HTTPCache) {
-    this.httpCache = httpCache;
+  protected async didReceiveErrorResponse<TResult = any>(
+    response: Response,
+  ): Promise<TResult> {
+    const message = `${response.status} ${
+      response.statusText
+    }: ${await response.text()}`;
+
+    if (response.status === 401) {
+      throw new AuthenticationError(message);
+    } else if (response.status === 403) {
+      throw new ForbiddenError(message);
+    } else {
+      throw new ApolloError(message);
+    }
   }
 
-  public willReceiveContext(context: TContext) {
-    this.context = context;
-  }
-
-  protected async get(
+  protected async get<TResult = any>(
     path: string,
-    params?: Params,
+    params?: URLSearchParamsInit,
     options?: RequestInit,
-  ): Promise<any> {
-    return this.fetch(path, params, Object.assign({ method: 'GET' }, options));
+  ): Promise<TResult> {
+    return this.fetch<TResult>(
+      path,
+      params,
+      Object.assign({ method: 'GET' }, options),
+    );
   }
 
-  protected async post(
+  protected async post<TResult = any>(
     path: string,
-    params?: Params,
+    params?: URLSearchParamsInit,
     options?: RequestInit,
-  ): Promise<any> {
-    return this.fetch(path, params, Object.assign({ method: 'POST' }, options));
+  ): Promise<TResult> {
+    return this.fetch<TResult>(
+      path,
+      params,
+      Object.assign({ method: 'POST' }, options),
+    );
   }
 
-  protected async put(
+  protected async patch<TResult = any>(
     path: string,
-    params?: Params,
+    params?: URLSearchParamsInit,
     options?: RequestInit,
-  ): Promise<any> {
-    return this.fetch(path, params, Object.assign({ method: 'PUT' }, options));
+  ): Promise<TResult> {
+    return this.fetch<TResult>(
+      path,
+      params,
+      Object.assign({ method: 'PATCH' }, options),
+    );
   }
 
-  protected async delete(
+  protected async put<TResult = any>(
     path: string,
-    params?: Params,
+    params?: URLSearchParamsInit,
     options?: RequestInit,
-  ): Promise<any> {
-    return this.fetch(
+  ): Promise<TResult> {
+    return this.fetch<TResult>(
+      path,
+      params,
+      Object.assign({ method: 'PUT' }, options),
+    );
+  }
+
+  protected async delete<TResult = any>(
+    path: string,
+    params?: URLSearchParamsInit,
+    options?: RequestInit,
+  ): Promise<TResult> {
+    return this.fetch<TResult>(
       path,
       params,
       Object.assign({ method: 'DELETE' }, options),
     );
   }
 
-  private async fetch(
+  private async fetch<TResult>(
     path: string,
-    params?: Params,
+    params?: URLSearchParamsInit,
     init?: RequestInit,
-  ): Promise<any> {
+  ): Promise<TResult> {
     const url = new URL(path, this.baseURL);
 
-    if (params && Object.keys(params).length > 0) {
+    if (params) {
       // Append params to existing params in the path
       for (const [name, value] of new URLSearchParams(params)) {
         url.searchParams.append(name, value);
@@ -70,33 +105,41 @@ export abstract class RESTDataSource<TContext = any> {
 
     return this.trace(`${(init && init.method) || 'GET'} ${url}`, async () => {
       const request = new Request(String(url));
+
       if (this.willSendRequest) {
         this.willSendRequest(request);
       }
+
       const response = await this.httpCache.fetch(request, init);
       if (response.ok) {
-        return response.json();
+        const contentType = response.headers.get('Content-Type');
+
+        if (contentType && contentType.startsWith('application/json')) {
+          return response.json();
+        } else {
+          return response.text();
+        }
       } else {
-        throw new Error(
-          `${response.status} ${response.statusText}: ${await response.text()}`,
-        );
+        return this.didReceiveErrorResponse(response);
       }
     });
   }
 
-  private async trace<Result>(
+  private async trace<TResult>(
     label: string,
-    fn: () => Promise<Result>,
-  ): Promise<Result> {
-    const startTime = Date.now();
-    try {
-      return await fn();
-    } finally {
-      const duration = Date.now() - startTime;
-      //to remove the unused error
-      label;
-      duration;
-      // console.log(`${label} (${duration}ms)`);
+    fn: () => Promise<TResult>,
+  ): Promise<TResult> {
+    if (process && process.env && process.env.NODE_ENV === 'development') {
+      // We're not using console.time because that isn't supported on Cloudflare
+      const startTime = Date.now();
+      try {
+        return await fn();
+      } finally {
+        const duration = Date.now() - startTime;
+        console.log(`${label} (${duration}ms)`);
+      }
+    } else {
+      return fn();
     }
   }
 }

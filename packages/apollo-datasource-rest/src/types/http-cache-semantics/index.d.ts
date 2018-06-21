@@ -20,6 +20,8 @@ declare module 'http-cache-semantics' {
     satisfiesWithoutRevalidation(request: Request): boolean;
     responseHeaders(): Headers;
 
+    timeToLive(): number;
+
     revalidationHeaders(request: Request): Headers;
     revalidatedPolicy(
       request: Request,

@@ -5,7 +5,6 @@
     "outDir": "./dist",
     "removeComments": true,
     "strict": true,
-    "noImplicitAny": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "noUnusedParameters": true,

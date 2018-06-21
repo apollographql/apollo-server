@@ -1,8 +1,8 @@
 import { KeyValueCache } from 'apollo-server-caching';
-import Memcached from 'memcached';
+import * as Memcached from 'memcached';
 import { promisify } from 'util';
 
-export default class MemcachedKeyValueCache implements KeyValueCache {
+export class MemcachedCache implements KeyValueCache {
   readonly client;
   readonly defaultSetOptions = {
     ttl: 300,
