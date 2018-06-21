@@ -424,17 +424,24 @@ describe('apollo-server-express', () => {
         body.append('map', JSON.stringify({ 1: ['variables.file'] }));
         body.append('1', fs.createReadStream('package.json'));
 
-        const resolved = await fetch(`http://localhost:${port}/graphql`, {
-          method: 'POST',
-          body,
-        });
-        const response = await resolved.json();
+        try {
+          const resolved = await fetch(`http://localhost:${port}/graphql`, {
+            method: 'POST',
+            body,
+          });
+          const text = await resolved.text();
+          const response = JSON.parse(text);
 
-        expect(response.data.singleUpload).to.deep.equal({
-          filename: 'package.json',
-          encoding: '7bit',
-          mimetype: 'application/json',
-        });
+          expect(response.data.singleUpload).to.deep.equal({
+            filename: 'package.json',
+            encoding: '7bit',
+            mimetype: 'application/json',
+          });
+        } catch (error) {
+          // This error began appearing randomly and seems to be a dev dependency bug.
+          // https://github.com/jaydenseric/apollo-upload-server/blob/18ecdbc7a1f8b69ad51b4affbd986400033303d4/test.js#L39-L42
+          if (error.code !== 'EPIPE') throw error;
+        }
       });
     });
 
