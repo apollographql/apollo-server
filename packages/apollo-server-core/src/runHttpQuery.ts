@@ -4,6 +4,8 @@ import * as sha256 from 'hash.js/lib/hash/sha/256';
 import { HTTPCache } from 'apollo-datasource-rest';
 import { CacheControlExtensionOptions } from 'apollo-cache-control';
 
+import { omit } from 'lodash';
+
 import { runQuery, QueryOptions } from './runQuery';
 import {
   default as GraphQLOptions,
@@ -365,7 +367,10 @@ export async function runHttpQuery(
         debug: optionsObject.debug,
         tracing: optionsObject.tracing,
         cacheControl: cacheControl
-          ? { defaultMaxAge: cacheControl.defaultMaxAge }
+          ? omit(cacheControl, [
+              'calculateHttpHeaders',
+              'stripFormattedExtensions',
+            ])
           : false,
         request: request.request,
         extensions: optionsObject.extensions,
