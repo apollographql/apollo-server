@@ -34,6 +34,7 @@
     "graphql-playground-html": "^1.6.0"
   },
   "devDependencies": {
-    "@types/aws-lambda": "^8.10.6"
+    "@types/aws-lambda": "^8.10.6",
+    "apollo-server-integration-testsuite": "^2.0.0-rc.0"
   }
 }

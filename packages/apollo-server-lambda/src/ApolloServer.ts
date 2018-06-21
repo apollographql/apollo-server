@@ -44,33 +44,39 @@ export class ApolloServer extends ApolloServerBase {
 
     if (cors) {
       if (cors.methods) {
-        if (typeof cors.methods === 'string')
+        if (typeof cors.methods === 'string') {
           corsHeaders['Access-Control-Allow-Methods'] = cors.methods;
-        else if (Array.isArray(cors.methods))
+        } else if (Array.isArray(cors.methods)) {
           corsHeaders['Access-Control-Allow-Methods'] = cors.methods.join(',');
+        }
       }
 
       if (cors.allowedHeaders) {
-        if (typeof cors.allowedHeaders === 'string')
+        if (typeof cors.allowedHeaders === 'string') {
           corsHeaders['Access-Control-Allow-Headers'] = cors.allowedHeaders;
-        else if (Array.isArray(cors.allowedHeaders))
+        } else if (Array.isArray(cors.allowedHeaders)) {
           corsHeaders[
             'Access-Control-Allow-Headers'
           ] = cors.allowedHeaders.join(',');
+        }
       }
 
       if (cors.exposedHeaders) {
-        if (typeof cors.exposedHeaders === 'string')
+        if (typeof cors.exposedHeaders === 'string') {
           corsHeaders['Access-Control-Expose-Headers'] = cors.exposedHeaders;
-        else if (Array.isArray(cors.exposedHeaders))
+        } else if (Array.isArray(cors.exposedHeaders)) {
           corsHeaders[
             'Access-Control-Expose-Headers'
           ] = cors.exposedHeaders.join(',');
+        }
       }
 
-      if (cors.credentials)
+      if (cors.credentials) {
         corsHeaders['Access-Control-Allow-Credentials'] = 'true';
-      if (cors.maxAge) corsHeaders['Access-Control-Max-Age'] = cors.maxAge;
+      }
+      if (cors.maxAge) {
+        corsHeaders['Access-Control-Max-Age'] = cors.maxAge;
+      }
     }
 
     return (
@@ -79,34 +85,38 @@ export class ApolloServer extends ApolloServerBase {
       callback: lambda.APIGatewayProxyCallback,
     ) => {
       if (cors && cors.origin) {
-        if (typeof cors.origin === 'string')
+        if (typeof cors.origin === 'string') {
           corsHeaders['Access-Control-Allow-Origin'] = cors.origin;
-        else if (
+        } else if (
           typeof cors.origin === 'boolean' ||
           (Array.isArray(cors.origin) &&
             cors.origin.includes(
               event.headers['Origin'] || event.headers['origin'],
             ))
-        )
+        ) {
           corsHeaders['Access-Control-Allow-Origin'] =
             event.headers['Origin'] || event.headers['origin'];
+        }
       }
 
       if (guiEnabled && event.httpMethod === 'GET') {
-        const playgroundRenderPageOptions: PlaygroundRenderPageOptions = {
-          endpoint: event.requestContext.path,
-          ...(typeof gui === 'boolean' ? {} : gui),
-          version: '1.7.0',
-        };
+        const acceptHeader = event.headers['Accept'] || event.headers['accept'];
+        if (acceptHeader && acceptHeader.includes('text/html')) {
+          const playgroundRenderPageOptions: PlaygroundRenderPageOptions = {
+            endpoint: event.requestContext.path,
+            ...(typeof gui === 'boolean' ? {} : gui),
+            version: '1.7.0',
+          };
 
-        return callback(null, {
-          body: renderPlaygroundPage(playgroundRenderPageOptions),
-          statusCode: 200,
-          headers: {
-            ...corsHeaders,
-            'Content-Type': 'text/html',
-          },
-        });
+          return callback(null, {
+            body: renderPlaygroundPage(playgroundRenderPageOptions),
+            statusCode: 200,
+            headers: {
+              'Content-Type': 'text/html',
+              ...corsHeaders,
+            },
+          });
+        }
       }
 
       const callbackFilter: lambda.APIGatewayProxyCallback = (

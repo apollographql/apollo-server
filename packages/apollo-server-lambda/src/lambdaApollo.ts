@@ -29,6 +29,12 @@ export function graphqlLambda(
     context,
     callback,
   ): void => {
+    if (event.httpMethod === 'POST' && !event.body) {
+      return callback(null, {
+        body: 'POST body missing.',
+        statusCode: 500,
+      });
+    }
     runHttpQuery([event, context], {
       method: event.httpMethod,
       options: options,
@@ -46,11 +52,13 @@ export function graphqlLambda(
         callback(null, {
           body: gqlResponse,
           statusCode: 200,
+          headers: {
+            'Content-Type': 'application/json',
+          },
         });
       },
       (error: HttpQueryError) => {
         if ('HttpQueryError' !== error.name) return callback(error);
-
         callback(null, {
           body: error.message,
           statusCode: error.statusCode,
