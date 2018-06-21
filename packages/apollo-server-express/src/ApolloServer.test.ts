@@ -654,7 +654,10 @@ describe('apollo-server-express', () => {
 
       server.applyMiddleware({ app });
 
-      const { url: uri } = await server.listen();
+      httpServer = await new Promise<http.Server>(resolve => {
+        const l = app.listen({ port: 4000 }, () => resolve(l));
+      });
+      const { url: uri } = createServerInfo(server, httpServer);
       const apolloFetch = createApolloFetch({ uri }).useAfter(
         (response, next) => {
           expect(response.response.headers.get('cache-control')).to.equal(
@@ -674,7 +677,10 @@ describe('apollo-server-express', () => {
 
       server.applyMiddleware({ app });
 
-      const { url: uri } = await server.listen();
+      httpServer = await new Promise<http.Server>(resolve => {
+        const l = app.listen({ port: 4000 }, () => resolve(l));
+      });
+      const { url: uri } = createServerInfo(server, httpServer);
       const apolloFetch = createApolloFetch({ uri }).useAfter(
         (response, next) => {
           expect(response.response.headers.get('cache-control')).not.to.exist;
@@ -693,7 +699,10 @@ describe('apollo-server-express', () => {
 
       server.applyMiddleware({ app });
 
-      const { url: uri } = await server.listen();
+      httpServer = await new Promise<http.Server>(resolve => {
+        const l = app.listen({ port: 4000 }, () => resolve(l));
+      });
+      const { url: uri } = createServerInfo(server, httpServer);
       const apolloFetch = createApolloFetch({ uri }).useAfter(
         (response, next) => {
           expect(response.response.headers.get('cache-control')).not.to.exist;
