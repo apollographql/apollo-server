@@ -52,7 +52,7 @@
     "@types/ws": "^5.1.2",
     "apollo-cache-control": "^0.1.1",
     "apollo-datasource-rest": "^2.0.0-rc.1",
-    "apollo-engine-reporting": "0.0.0-beta.13",
+    "apollo-engine-reporting": "0.0.0-beta.14",
     "apollo-server-env": "^2.0.0-rc.1",
     "apollo-server-errors": "^2.0.0-rc.1",
     "apollo-tracing": "^0.2.0-beta.1",
