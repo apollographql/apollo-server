@@ -141,7 +141,7 @@ export class ApolloServerBase {
         //default we enable them if supported by the integration
       } else if (uploads) {
         throw new Error(
-          'This implementation of ApolloServer does not support file uploads.',
+          'This implementation of ApolloServer does not support file uploads because the environmnet cannot accept multi-part forms',
         );
       }
     }

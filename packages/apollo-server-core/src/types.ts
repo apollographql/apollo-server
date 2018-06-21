@@ -29,7 +29,7 @@ export interface SubscriptionServerOptions {
   onDisconnect?: (websocket: WebSocket, context: ConnectionContext) => any;
 }
 
-// This configuration is shared between all intetgrations and should include
+// This configuration is shared between all integrations and should include
 // fields that are not specific to a single integration
 export interface Config
   extends Pick<
