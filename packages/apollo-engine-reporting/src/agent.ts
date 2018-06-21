@@ -24,7 +24,7 @@ export interface EngineReportingOptions {
   // when the report gets big; see uncompressedReportSizeTarget.
   reportIntervalMs?: number;
   // We send a report when we think the report size will become bigger than this
-  // size in bytes (default: 4MB).  Because we don't know how a big a report
+  // size in bytes (default: 512KB).  Because we don't know how a big a report
   // will be until we serialize it, we use a heuristic to track the expected
   // size per trace, so we may still send reports larger than this on startup.
   uncompressedReportSizeTarget?: number;
@@ -137,7 +137,7 @@ export class EngineReportingAgent<TContext = any> {
     // If the buffer gets big (according to our estimate), send.
     if (
       this.traceCount * this.averageTraceSize >=
-      (this.options.uncompressedReportSizeTarget || 4 * 1024 * 1024)
+      (this.options.uncompressedReportSizeTarget || 512 * 1024)
     ) {
       this.sendReportAndReportErrors();
     }
