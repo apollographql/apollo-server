@@ -141,12 +141,16 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
           const apolloFetch = createApolloFetch({ uri });
 
-          const introspectionResult = await apolloFetch({
-            query: INTROSPECTION_QUERY,
-          });
-          expect(introspectionResult.data, 'data should not exist').not.to
-            .exist;
-          expect(introspectionResult.errors, 'errors should exist').to.exist;
+          try {
+            const introspectionResult = await apolloFetch({
+              query: INTROSPECTION_QUERY,
+            });
+            expect(introspectionResult.data, 'data should not exist').not.to
+              .exist;
+            expect(introspectionResult.errors, 'errors should exist').to.exist;
+          } catch (e) {
+            console.log(e);
+          }
 
           const result = await apolloFetch({ query: TEST_STRING_QUERY });
           expect(result.data, 'data should not exist').not.to.exist;
@@ -610,12 +614,12 @@ export function testApolloServer<AS extends ApolloServerBase>(
             },
           });
 
-          //Unfortunately the error connection is not propagated to the
-          //observable. What should happen is we provide a default onError
-          //function that notifies the returned observable and can cursomize
-          //the behavior with an option in the client constructor. If you're
-          //available to make a PR to the following please do!
-          //https://github.com/apollographql/subscriptions-transport-ws/blob/master/src/client.ts
+          // Unfortunately the error connection is not propagated to the
+          // observable. What should happen is we provide a default onError
+          // function that notifies the returned observable and can cursomize
+          // the behavior with an option in the client constructor. If you're
+          // available to make a PR to the following please do!
+          // https://github.com/apollographql/subscriptions-transport-ws/blob/master/src/client.ts
           client.onError((_: Error) => {
             done();
           });
@@ -774,9 +778,9 @@ export function testApolloServer<AS extends ApolloServerBase>(
         expect(result.errors).not.to.exist;
       });
 
-      //Apollo Fetch's result depends on the server implementation, if the
-      //statusText of the error is unparsable, then we'll fall into the catch,
-      //such as with express. If it is parsable, then we'll use the afterware
+      // Apollo Fetch's result depends on the server implementation, if the
+      // statusText of the error is unparsable, then we'll fall into the catch,
+      // such as with express. If it is parsable, then we'll use the afterware
       it('returns error when hash does not match', async () => {
         const apolloFetch = createApolloFetch({ uri }).useAfter((res, next) => {
           expect(res.response.status).to.equal(400);

@@ -59,7 +59,7 @@ export class ApolloServer extends ApolloServerBase {
     // object, so we have to create it.
     const app = express();
 
-    //provide generous values for the getting started experience
+    // provide generous values for the getting started experience
     this.applyMiddleware({
       app,
       path: '/',

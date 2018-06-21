@@ -20,6 +20,7 @@ sidebar_categories:
     - features/errors
     - features/apq
     - features/data-sources
+    - features/cdn
     - features/subscriptions
     - features/logging
     - features/scalars-enums

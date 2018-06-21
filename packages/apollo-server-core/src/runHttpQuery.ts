@@ -1,6 +1,11 @@
 import { ExecutionResult } from 'graphql';
 import * as sha256 from 'hash.js/lib/hash/sha/256';
 
+import { HTTPCache } from 'apollo-datasource-rest';
+import { CacheControlExtensionOptions } from 'apollo-cache-control';
+
+import { omit } from 'lodash';
+
 import { runQuery, QueryOptions } from './runQuery';
 import {
   default as GraphQLOptions,
@@ -11,7 +16,7 @@ import {
   PersistedQueryNotSupportedError,
   PersistedQueryNotFoundError,
 } from 'apollo-server-errors';
-import { HTTPCache } from 'apollo-datasource-rest';
+import { calculateCacheControlHeaders, HttpHeaderCalculation } from './caching';
 
 export interface HttpQueryRequest {
   method: string;
@@ -27,9 +32,21 @@ export interface HttpQueryRequest {
   request: Pick<Request, 'url' | 'method' | 'headers'>;
 }
 
-//The result of a curl does not appear well in the terminal, so we add an extra new line
+// The result of a curl does not appear well in the terminal, so we add an extra new line
 function prettyJSONStringify(toStringfy) {
   return JSON.stringify(toStringfy) + '\n';
+}
+
+export interface ApolloServerHttpResponse {
+  headers?: Record<string, string>;
+  // ResponseInit contains the follow, which we do not use
+  // status?: number;
+  // statusText?: string;
+}
+
+export interface HttpQueryResponse {
+  graphqlResponse: string;
+  responseInit: ApolloServerHttpResponse;
 }
 
 export class HttpQueryError extends Error {
@@ -74,11 +91,15 @@ function throwHttpGraphQLError(
 export async function runHttpQuery(
   handlerArguments: Array<any>,
   request: HttpQueryRequest,
-): Promise<string> {
+): Promise<HttpQueryResponse> {
   let isGetRequest: boolean = false;
   let optionsObject: GraphQLOptions;
   const debugDefault =
     process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test';
+  let cacheControl: CacheControlExtensionOptions & {
+    calculateHttpHeaders: boolean | HttpHeaderCalculation;
+    stripFormattedExtensions: boolean;
+  };
 
   try {
     optionsObject = await resolveGraphqlOptions(
@@ -196,10 +217,10 @@ export async function runHttpQuery(
             throw new HttpQueryError(400, 'provided sha does not match query');
           }
 
-          //Do the store completely asynchronously
+          // Do the store completely asynchronously
           Promise.resolve()
             .then(() => {
-              //We do not wait on the cache storage to complete
+              // We do not wait on the cache storage to complete
               return optionsObject.persistedQueries.cache.set(sha, queryString);
             })
             .catch(error => {
@@ -208,7 +229,7 @@ export async function runHttpQuery(
         }
       }
 
-      //We ensure that there is a queryString or parsedQuery after formatParams
+      // We ensure that there is a queryString or parsedQuery after formatParams
       if (queryString && typeof queryString !== 'string') {
         // Check for a common error first.
         if (queryString && (queryString as any).kind === 'Document') {
@@ -258,7 +279,7 @@ export async function runHttpQuery(
 
       let context = optionsObject.context;
       if (!context) {
-        //appease typescript compiler, otherwise could use || {}
+        // appease typescript compiler, otherwise could use || {}
         context = {};
       } else if (typeof context === 'function') {
         try {
@@ -277,7 +298,7 @@ export async function runHttpQuery(
       if (optionsObject.dataSources) {
         const dataSources = optionsObject.dataSources() || {};
 
-        //we use the cache provided to the request and add the Http semantics on top
+        // we use the cache provided to the request and add the Http semantics on top
         const httpCache = new HTTPCache(optionsObject.cache);
 
         for (const dataSource of Object.values(dataSources)) {
@@ -294,6 +315,31 @@ export async function runHttpQuery(
         (context as any).dataSources = dataSources;
       }
 
+      if (optionsObject.cacheControl !== false) {
+        if (
+          typeof optionsObject.cacheControl === 'boolean' &&
+          optionsObject.cacheControl === true
+        ) {
+          // cacheControl: true means that the user needs the cache-control
+          // extensions. This means we are running the proxy, so we should not
+          // strip out the cache control extension and not add cache-control headers
+          cacheControl = {
+            stripFormattedExtensions: false,
+            calculateHttpHeaders: false,
+            defaultMaxAge: 0,
+          };
+        } else {
+          // Default behavior is to run default header calculation and return
+          // no cacheControl extensions
+          cacheControl = {
+            stripFormattedExtensions: true,
+            calculateHttpHeaders: true,
+            defaultMaxAge: 0,
+            ...optionsObject.cacheControl,
+          };
+        }
+      }
+
       let params: QueryOptions = {
         schema: optionsObject.schema,
         queryString,
@@ -308,7 +354,12 @@ export async function runHttpQuery(
         fieldResolver: optionsObject.fieldResolver,
         debug: optionsObject.debug,
         tracing: optionsObject.tracing,
-        cacheControl: optionsObject.cacheControl,
+        cacheControl: cacheControl
+          ? omit(cacheControl, [
+              'calculateHttpHeaders',
+              'stripFormattedExtensions',
+            ])
+          : false,
         request: request.request,
         extensions: optionsObject.extensions,
       };
@@ -327,7 +378,7 @@ export async function runHttpQuery(
       // Populate any HttpQueryError to our handler which should
       // convert it to Http Error.
       if (e.name === 'HttpQueryError') {
-        //async function wraps this in a Promise
+        // async function wraps this in a Promise
         throw e;
       }
 
@@ -338,21 +389,68 @@ export async function runHttpQuery(
         }),
       };
     }
-  }) as Array<Promise<ExecutionResult>>;
+  }) as Array<Promise<ExecutionResult & { extensions?: Record<string, any> }>>;
 
   const responses = await Promise.all(requests);
 
-  if (!isBatch) {
-    const gqlResponse = responses[0];
-    //This code is run on parse/validation errors and any other error that
-    //doesn't reach GraphQL execution
-    if (gqlResponse.errors && typeof gqlResponse.data === 'undefined') {
-      throw new HttpQueryError(400, prettyJSONStringify(gqlResponse), true, {
-        'Content-Type': 'application/json',
-      });
-    }
-    return prettyJSONStringify(gqlResponse);
+  const responseInit: ApolloServerHttpResponse = {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  };
+
+  if (cacheControl.calculateHttpHeaders) {
+    const calculatedHeaders =
+      typeof cacheControl.calculateHttpHeaders === 'function'
+        ? cacheControl.calculateHttpHeaders(responses)
+        : calculateCacheControlHeaders(responses);
+
+    responseInit.headers = {
+      ...responseInit.headers,
+      ...calculatedHeaders,
+    };
   }
 
-  return prettyJSONStringify(responses);
+  if (cacheControl.stripFormattedExtensions) {
+    responses.forEach(response => {
+      if (response.extensions) {
+        delete response.extensions.cacheControl;
+        if (Object.keys(response.extensions).length === 0) {
+          delete response.extensions;
+        }
+      }
+    });
+  }
+
+  if (!isBatch) {
+    const graphqlResponse = responses[0];
+    // This code is run on parse/validation errors and any other error that
+    // doesn't reach GraphQL execution
+    if (graphqlResponse.errors && typeof graphqlResponse.data === 'undefined') {
+      throwHttpGraphQLError(400, graphqlResponse.errors as any, optionsObject);
+    }
+    const stringified = prettyJSONStringify(graphqlResponse);
+
+    responseInit['Content-Length'] = Buffer.byteLength(
+      stringified,
+      'utf8',
+    ).toString();
+
+    return {
+      graphqlResponse: stringified,
+      responseInit,
+    };
+  }
+
+  const stringified = prettyJSONStringify(responses);
+
+  responseInit['Content-Length'] = Buffer.byteLength(
+    stringified,
+    'utf8',
+  ).toString();
+
+  return {
+    graphqlResponse: stringified,
+    responseInit,
+  };
 }

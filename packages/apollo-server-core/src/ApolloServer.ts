@@ -69,7 +69,7 @@ export class ApolloServerBase {
   // set by installSubscriptionHandlers.
   private subscriptionServer?: SubscriptionServer;
 
-  //The constructor should be universal across all environments. All environment specific behavior should be set in an exported registerServer or in by overriding listen
+  // The constructor should be universal across all environments. All environment specific behavior should be set in an exported registerServer or in by overriding listen
   constructor(config: Config) {
     if (!config) throw new Error('ApolloServer requires options.');
     const {
@@ -87,11 +87,11 @@ export class ApolloServerBase {
       ...requestOptions
     } = config;
 
-    //While reading process.env is slow, a server should only be constructed
-    //once per run, so we place the env check inside the constructor. If env
-    //should be used outside of the constructor context, place it as a private
-    //or protected field of the class instead of a global. Keeping the read in
-    //the contructor enables testing of different environments
+    // While reading process.env is slow, a server should only be constructed
+    // once per run, so we place the env check inside the constructor. If env
+    // should be used outside of the constructor context, place it as a private
+    // or protected field of the class instead of a global. Keeping the read in
+    // the contructor enables testing of different environments
     const isDev = process.env.NODE_ENV !== 'production';
 
     // if this is local dev, introspection should turned on
@@ -109,16 +109,16 @@ export class ApolloServerBase {
 
     if (requestOptions.persistedQueries !== false) {
       if (!requestOptions.persistedQueries) {
-        //maxSize is the number of elements that can be stored inside of the cache
-        //https://github.com/withspectrum/spectrum has about 200 instances of gql`
-        //300 queries seems reasonable
+        // maxSize is the number of elements that can be stored inside of the cache
+        // https://github.com/withspectrum/spectrum has about 200 instances of gql`
+        // 300 queries seems reasonable
         const lru = new QuickLru({ maxSize: 300 });
         requestOptions.persistedQueries = {
           cache: new Keyv({ store: lru }),
         };
       }
     } else {
-      //the user does not want to use persisted queries, so we remove the field
+      // the user does not want to use persisted queries, so we remove the field
       delete requestOptions.persistedQueries;
     }
 
@@ -155,8 +155,8 @@ export class ApolloServerBase {
     this.schema = schema
       ? schema
       : makeExecutableSchema({
-          //we add in the upload scalar, so that schemas that don't include it
-          //won't error when we makeExecutableSchema
+          // we add in the upload scalar, so that schemas that don't include it
+          // won't error when we makeExecutableSchema
           typeDefs: this.uploadsConfig
             ? [
                 gql`
@@ -219,8 +219,8 @@ export class ApolloServerBase {
     }
   }
 
-  //used by integrations to synchronize the path with subscriptions, some
-  //integrations do not have paths, such as lambda
+  // used by integrations to synchronize the path with subscriptions, some
+  // integrations do not have paths, such as lambda
   public setGraphQLPath(path: string) {
     this.graphqlPath = path;
   }
@@ -305,9 +305,9 @@ export class ApolloServerBase {
     return false;
   }
 
-  //This function is used by the integrations to generate the graphQLOptions
-  //from an object containing the request and other integration specific
-  //options
+  // This function is used by the integrations to generate the graphQLOptions
+  // from an object containing the request and other integration specific
+  // options
   protected async graphQLServerOptions(
     integrationContextArgument?: Record<string, any>,
   ) {
@@ -319,7 +319,7 @@ export class ApolloServerBase {
           ? await this.context(integrationContextArgument || {})
           : context;
     } catch (error) {
-      //Defer context error resolution to inside of runQuery
+      // Defer context error resolution to inside of runQuery
       context = () => {
         throw error;
       };

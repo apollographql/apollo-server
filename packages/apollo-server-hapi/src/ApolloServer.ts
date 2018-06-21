@@ -24,9 +24,9 @@ function handleFileUploads(uploadsConfig: FileUploadOptions) {
 }
 
 export class ApolloServer extends ApolloServerBase {
-  //This translates the arguments from the middleware into graphQL options It
-  //provides typings for the integration specific behavior, ideally this would
-  //be propagated with a generic to the super class
+  // This translates the arguments from the middleware into graphQL options It
+  // provides typings for the integration specific behavior, ideally this would
+  // be propagated with a generic to the super class
   async createGraphQLServerOptions(
     request: hapi.Request,
     h: hapi.ResponseToolkit,
@@ -72,7 +72,7 @@ export class ApolloServer extends ApolloServerBase {
 
         // enableGUI takes precedence over the server tools setting
         if (guiEnabled && request.method === 'get') {
-          //perform more expensive content-type check only if necessary
+          // perform more expensive content-type check only if necessary
           const accept = parseAll(request.headers);
           const types = accept.mediaTypes as string[];
           const prefersHTML =

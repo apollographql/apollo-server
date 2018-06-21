@@ -46,7 +46,7 @@ export interface Config
       | 'dataSources'
       | 'cache'
     > {
-  typeDefs?: DocumentNode | [DocumentNode];
+  typeDefs?: DocumentNode | Array<DocumentNode>;
   resolvers?: IResolvers;
   schema?: GraphQLSchema;
   schemaDirectives?: Record<string, typeof SchemaDirectiveVisitor>;

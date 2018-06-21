@@ -40,19 +40,24 @@ const graphqlHapi: IPlugin = {
       options: options.route || {},
       handler: async (request, h) => {
         try {
-          const gqlResponse = await runHttpQuery([request], {
-            method: request.method.toUpperCase(),
-            options: options.graphqlOptions,
-            query:
-              request.method === 'post'
-                ? //TODO type payload as string or Record
-                  (request.payload as any)
-                : request.query,
-            request: convertNodeHttpToRequest(request.raw.req),
-          });
+          const { graphqlResponse, responseInit } = await runHttpQuery(
+            [request],
+            {
+              method: request.method.toUpperCase(),
+              options: options.graphqlOptions,
+              query:
+                request.method === 'post'
+                  ? // TODO type payload as string or Record
+                    (request.payload as any)
+                  : request.query,
+              request: convertNodeHttpToRequest(request.raw.req),
+            },
+          );
 
-          const response = h.response(gqlResponse);
-          response.type('application/json');
+          const response = h.response(graphqlResponse);
+          Object.keys(responseInit.headers).forEach(key =>
+            response.header(key, responseInit.headers[key]),
+          );
           return response;
         } catch (error) {
           if ('HttpQueryError' !== error.name) {
