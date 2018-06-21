@@ -31,9 +31,7 @@
     "@types/fibers": "0.0.30",
     "@types/graphql": "^0.13.1",
     "@types/keyv": "^3.0.1",
-    "@types/node-fetch": "^2.1.1",
     "@types/quick-lru": "^1.1.0",
-    "@types/ws": "^5.1.2",
     "apollo-fetch": "^0.7.0",
     "apollo-link": "^1.2.2",
     "apollo-link-http": "^1.5.4",
@@ -51,9 +49,10 @@
     "definition": "dist/index.d.ts"
   },
   "dependencies": {
+    "@types/ws": "^5.1.2",
     "apollo-cache-control": "^0.1.1",
     "apollo-datasource-rest": "^2.0.0-rc.0",
-    "apollo-engine-reporting": "0.0.0-beta.12",
+    "apollo-engine-reporting": "0.0.0-beta.13",
     "apollo-server-env": "^2.0.0-rc.0",
     "apollo-server-errors": "^2.0.0-rc.0",
     "apollo-tracing": "^0.2.0-beta.1",
@@ -64,7 +63,6 @@
     "hash.js": "^1.1.3",
     "keyv": "^3.0.0",
     "lodash": "^4.17.10",
-    "node-fetch": "^2.1.2",
     "quick-lru": "^1.1.0",
     "subscriptions-transport-ws": "^0.9.9",
     "ws": "^5.2.0"

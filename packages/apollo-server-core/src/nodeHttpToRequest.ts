@@ -1,5 +1,4 @@
 import { IncomingMessage } from 'http';
-import { Request, Headers } from 'node-fetch';
 
 export function convertNodeHttpToRequest(req: IncomingMessage): Request {
   const headers = new Headers();
