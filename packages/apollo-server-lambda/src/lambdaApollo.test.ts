@@ -3,8 +3,7 @@ import testSuite, {
   schema as Schema,
   CreateAppOptions,
 } from 'apollo-server-integration-testsuite';
-import { expect } from 'chai';
-import { GraphQLOptions, Config } from 'apollo-server-core';
+import { Config } from 'apollo-server-core';
 import 'mocha';
 import * as url from 'url';
 import { IncomingMessage, ServerResponse } from 'http';
@@ -52,19 +51,6 @@ const createLambda = (options: CreateAppOptions = {}) => {
     });
   };
 };
-
-describe('lambdaApollo', () => {
-  it('throws error if called without schema', () => {
-    expect(() => new ApolloServer(undefined as GraphQLOptions)).to.throw(
-      'ApolloServer requires options.',
-    );
-  });
-  // it('throws an error if called with more than one argument', function() {
-  //   expect(() => (<any>graphqlLambda)({}, {})).to.throw(
-  //     'Apollo Server expects exactly one argument, got 2',
-  //   );
-  // });
-});
 
 describe('integration:Lambda', () => {
   testSuite(createLambda);
