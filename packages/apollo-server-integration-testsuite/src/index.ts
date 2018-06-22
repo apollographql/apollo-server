@@ -815,7 +815,33 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
         app = await createApp({
           graphqlOptions: {
             schema,
-            formatError: () => ({ message: expected }),
+            formatError: error => {
+              expect(error instanceof Error).true;
+              return { message: expected };
+            },
+          },
+        });
+        const req = request(app)
+          .post('/graphql')
+          .send({
+            query: 'query test{ testError }',
+          });
+        return req.then(res => {
+          expect(res.status).to.equal(200);
+          expect(res.body.errors[0].message).to.equal(expected);
+        });
+      });
+
+      it('formatError receives error that passes instanceof checks', async () => {
+        const expected = '--blank--';
+        app = await createApp({
+          graphqlOptions: {
+            schema,
+            formatError: error => {
+              expect(error instanceof Error).true;
+              expect(error instanceof GraphQLError).true;
+              return { message: expected };
+            },
           },
         });
         const req = request(app)
