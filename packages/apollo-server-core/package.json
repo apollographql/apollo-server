@@ -56,6 +56,7 @@
     "apollo-server-env": "^2.0.0-rc.1",
     "apollo-server-errors": "^2.0.0-rc.1",
     "apollo-tracing": "^0.2.0-beta.1",
+    "apollo-upload-server": "^5.0.0",
     "graphql-extensions": "0.1.0-beta.13",
     "graphql-subscriptions": "^0.5.8",
     "graphql-tag": "^2.9.2",
