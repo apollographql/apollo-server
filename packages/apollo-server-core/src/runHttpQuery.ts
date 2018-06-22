@@ -209,7 +209,7 @@ export async function runHttpQuery(
           queryString = await optionsObject.persistedQueries.cache.get(sha);
           if (!queryString) {
             if (isBatch) {
-              // A batch can contain multiple undefined persisted queries, 
+              // A batch can contain multiple undefined persisted queries,
               // so we don't error out the entire request with an HttpError
               throw new PersistedQueryNotFoundError();
             }
