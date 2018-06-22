@@ -1,15 +1,20 @@
 ---
 title: Monitoring and Metrics
-description: Understand Apollo Server's performance
+description: How to monitor Apollo Server's performance
 ---
 
 Understanding the behavior of GraphQL execution inside of Apollo Server is critical to developing and running a production GraphQL layer. Apollo Server enables GraphQL monitoring in Apollo Engine and provides more primitive native mechanisms to log each phase of a GraphQL request.
 
 ## Apollo Engine
 
-Apollo Engine provides an integrated hub for all GraphQL performance data that is free for one million queries per month. With an API key from the [Engine UI](https://engine.apollographql.com/), Apollo Server reports performance and error data out-of-band. Apollo Engine then aggregates and displays information for [queries](https://www.apollographql.com/docs/engine/query-tracking.html), [requests](https://www.apollographql.com/docs/engine/performance.html), the [schema](https://www.apollographql.com/docs/engine/schema-analytics.html), [errors](https://www.apollographql.com/docs/engine/error-tracking.html). In addition to aggregating data, Apollo Server provides [proactive alerts](https://www.apollographql.com/docs/engine/alerts.html), [daily slack reports](https://www.apollographql.com/docs/engine/reports.html), and [Datadog integration](https://www.apollographql.com/docs/engine/datadog.html).
+Apollo Engine provides an integrated hub for all GraphQL performance data that is free for one million queries per month. With an API key from the [Engine UI](https://engine.apollographql.com/), Apollo Server reports performance and error data out-of-band. Apollo Engine then aggregates and displays information for [queries](https://www.apollographql.com/docs/engine/query-tracking.html), [requests](https://www.apollographql.com/docs/engine/performance.html), the [schema](https://www.apollographql.com/docs/engine/schema-analytics.html), and [errors](https://www.apollographql.com/docs/engine/error-tracking.html). In addition to aggregating data, Apollo Server provides [proactive alerts](https://www.apollographql.com/docs/engine/alerts.html), [daily slack reports](https://www.apollographql.com/docs/engine/reports.html), and [Datadog integration](https://www.apollographql.com/docs/engine/datadog.html).
 
-To set up Apollo Server with Engine, [click here](https://engine.apollographql.com/) to get an Engine API key and provide it to the `ENGINE_API_KEY` environment variable. Setting an environment variable can be done in commandline(`ENGINE_API_KEY=REPLACE_WITH_YOUR_API_KEY node start-server.js`) or with the [dotenv npm package](https://www.npmjs.com/package/dotenv).
+To set up Apollo Server with Engine, [click here](https://engine.apollographql.com/) to get an Engine API key and provide it to the `ENGINE_API_KEY` environment variable. Setting an environment variable can be done in commandline as seen below or with the [dotenv npm package](https://www.npmjs.com/package/dotenv).
+
+```bash
+#Replace YOUR_API_KEY with the api key for you service in the Engine UI
+ENGINE_API_KEY=YOUR_API_KEY node start-server.js
+```
 
 ## Logging
 
@@ -44,7 +49,7 @@ server.listen().then(({ url }) => {
 
 ### Granular Logs
 
-Additionally for more advanced cases, Apollo Server accepts an array of `graphql-extensions` to the `extensions` field. These extensions receive a variety of lifecycle calls for each phase of a GraphQL request and can keep state, such as the request headers. For example the `logFunction` from Apollo Server can be implemented as an [extension](https://github.com/apollographql/apollo-server/blob/8914b135df9840051fe81cc9224b444cfc5b61ab/packages/apollo-server-core/src/logging.ts) and could be modified to add additional state or functionality.
+Additionally for more advanced cases, Apollo Server accepts an array of `graphql-extensions` to the `extensions` field. These extensions receive a variety of lifecycle calls for each phase of a GraphQL request and can keep state, such as the request headers.
 
 ```js
 const { ApolloServer }  = require('apollo-server');
@@ -60,3 +65,6 @@ server.listen().then(({ url }) => {
   console.log(`🚀  Server ready at ${url}`);
 });
 ```
+
+For example the `logFunction` from Apollo Server 1 can be implemented as an [extension](https://github.com/apollographql/apollo-server/blob/8914b135df9840051fe81cc9224b444cfc5b61ab/packages/apollo-server-core/src/logging.ts) and could be modified to add additional state or functionality. The example uses a beta of `graphql-extensions, which can be added to a project with `npm install graphql-extensions@beta`.
+
