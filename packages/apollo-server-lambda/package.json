@@ -36,5 +36,8 @@
   "devDependencies": {
     "@types/aws-lambda": "^8.10.6",
     "apollo-server-integration-testsuite": "^2.0.0-rc.2"
+  },
+  "peerDependencies": {
+    "graphql": "^0.12.0 || ^0.13.0 || ^14.0.0"
   }
 }

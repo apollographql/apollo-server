@@ -54,6 +54,9 @@
     "node-fetch": "^2.1.2",
     "qs-middleware": "^1.0.3"
   },
+  "peerDependencies": {
+    "graphql": "^0.12.0 || ^0.13.0 || ^14.0.0"
+  },
   "typings": "dist/index.d.ts",
   "typescript": {
     "definition": "dist/index.d.ts"
