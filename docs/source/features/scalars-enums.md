@@ -191,7 +191,7 @@ function oddValue(value) {
   return value % 2 === 1 ? value : null;
 }
 
-const resovers = {
+const resolvers = {
   Odd: new GraphQLScalarType({
     name: 'Odd',
     description: 'Odd custom scalar type',
