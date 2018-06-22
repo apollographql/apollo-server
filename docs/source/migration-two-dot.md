@@ -193,9 +193,10 @@ app.listen({ port: 4000 }, () =>
 
 For many existing instances of Apollo Server, the schema is created at runtime before server startup, using `makeExecutableSchema` or `mergeSchemas`. Apollo Server 2 stays backwards compatible with these more complex schemas, accepting it as the `schema` field in the server constructor options. Additionally, Apollo Server 2 exports all of `graphql-tools`, so `makeExecutableSchema` and other functions can be imported directly from Apollo Server.
 
-> Note: the string to create these schema will not use th `gql` tag exported from apollo-server.
+> Note: the string to create these schema will not use the `gql` tag exported from apollo-server.
+
 ```js
-const { ApolloServer, makeExecutableSchema } = require('apollo-server');
+const { ApolloServer, makeExecutableSchema, gql } = require('apollo-server');
 
 //For developer tooling, such as autoformatting, use the following workaround
 const gql = String.raw;
@@ -210,7 +211,7 @@ const schema = makeExecutableSchema({
   typeDefs,
   resolvers,
 });
-//mergeSchemas is imported from apollo-server
+//mergeSchemas can be imported from apollo-server
 //const schema = mergeSchemas(...);
 
 const server = new ApolloServer({ schema });
@@ -219,3 +220,70 @@ server.listen().then(({ url }) => {
   console.log(`🚀 Server ready at ${url}`);
 });
 ```
+
+<h2 id="request-headers">Accessing Request Headers</h2>
+
+Apollo Server 1 allowed request headers to be used in the construction of the GraphQL options. Apollo Server 2 allows constructor to create the context based upon the request.
+
+```js
+//old way
+graphqlExpress((req, res) => ({
+  schema: myGraphQLSchema,
+  context: {
+    token: req.headers['auth-token'],
+  },
+}))
+
+//new way
+new ApolloServer({
+  schema: myGraphQLSchema,
+  context: ({req, res}) => ({
+    token: req.headers['auth-token'],
+  }),
+});
+```
+
+For most other functions that might have required access to the middleware arguments, such as `formatParams`, `formatError`, and `formatResponse`, it is possible to create a `graphql-extension`.
+
+For more complicated use cases, the `ApolloServer` class can be extended to override the `createGraphQLServerOptions` function to create parameters based on the same argument that's passed to the context.
+
+<h2 id="log-function">Replacing `logFunction`</h2>
+
+Apollo Server 2 removes the `logFunction` in favor of using `graphql-extensions`, which provides a more structured and flexible way of instrumenting Apollo Server. The explanation of how to do this more granular logging, can be found in the [metrics section](./features/metrics.html)
+
+<h2 id="graphiql">Replacing GraphiQL</h2>
+
+Apollo Server 2 ships with GraphQL Playground instead of GraphiQL and collocates the gui with the endpoint. GraphQL playground can be customized in the following manner.
+
+```js
+const { ApolloServer, gql } = require('apollo-server-express');
+
+const server = new ApolloServer({
+  // These will be defined for both new or existing servers
+  typeDefs,
+  resolvers,
+});
+
+server.applyMiddleware({
+  app, // app is from an existing express app
+  gui: {
+    endpoint?: string
+    subscriptionEndpoint?: string
+    tabs: [
+      {
+        endpoint: string
+        query: string
+        variables?: string
+        responses?: string[]
+        headers?: { [key: string]: string }
+      },
+    ],
+  }
+});
+
+app.listen({ port: 4000 }, () =>
+  console.log(`🚀 Server ready at http://localhost:4000${server.graphqlPath}`)
+)
+```
+
+Some Apollo Server 1 implementations use a custom version of GraphiQL, which can be added to Apollo Server 2 as a middleware or ported to use the [React version of GraphQL Playground](https://www.npmjs.com/package/graphql-playground-react).
