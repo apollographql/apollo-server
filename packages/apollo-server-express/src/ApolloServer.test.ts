@@ -9,8 +9,8 @@ import * as FormData from 'form-data';
 import * as fs from 'fs';
 import { createApolloFetch } from 'apollo-fetch';
 
-import { gql, AuthenticationError } from 'apollo-server-core';
-import { ApolloServer } from './ApolloServer';
+import { gql, AuthenticationError, Config } from 'apollo-server-core';
+import { ApolloServer, ServerRegistration } from './ApolloServer';
 
 import {
   testApolloServer,
@@ -55,7 +55,10 @@ describe('apollo-server-express', () => {
   let app: express.Application;
   let httpServer: http.Server;
 
-  async function createServer(serverOptions, options = {}) {
+  async function createServer(
+    serverOptions: Config,
+    options: Partial<ServerRegistration> = {},
+  ) {
     server = new ApolloServer(serverOptions);
     app = express();
 
@@ -629,8 +632,6 @@ describe('apollo-server-express', () => {
         expect(result.extensions).not.to.exist;
       });
 
-      // Not sure why this test is failing, the scope that comes back from the
-      // extensions is undefined
       it('contains private cacheControl Headers when scoped', async () => {
         const { url: uri } = await createServer({ typeDefs, resolvers });
 
@@ -639,6 +640,28 @@ describe('apollo-server-express', () => {
             expect(response.response.headers.get('cache-control')).to.equal(
               'max-age=20, private',
             );
+            next();
+          },
+        );
+        const result = await apolloFetch({
+          query: `{ pooks { title books { title author } } }`,
+        });
+        expect(result.data).to.deep.equal({
+          pooks: [{ title: 'pook', books }],
+        });
+        expect(result.extensions).not.to.exist;
+      });
+
+      it('runs when cache-control is false', async () => {
+        const { url: uri } = await createServer({
+          typeDefs,
+          resolvers,
+          cacheControl: false,
+        });
+
+        const apolloFetch = createApolloFetch({ uri }).useAfter(
+          (response, next) => {
+            expect(response.response.headers.get('cache-control')).null;
             next();
           },
         );
@@ -675,6 +698,45 @@ describe('apollo-server-express', () => {
           typeDefs,
           resolvers,
           tracing: true,
+        });
+
+        const apolloFetch = createApolloFetch({ uri });
+        const result = await apolloFetch({
+          query: `{ books { title author } }`,
+        });
+        expect(result.data).to.deep.equal({ books });
+        expect(result.extensions).to.exist;
+        expect(result.extensions.tracing).to.exist;
+      });
+
+      it('applies tracing extension with cache control enabled', async () => {
+        const { url: uri } = await createServer({
+          typeDefs,
+          resolvers,
+          tracing: true,
+          cacheControl: true,
+        });
+
+        const apolloFetch = createApolloFetch({ uri });
+        const result = await apolloFetch({
+          query: `{ books { title author } }`,
+        });
+        expect(result.data).to.deep.equal({ books });
+        expect(result.extensions).to.exist;
+        expect(result.extensions.tracing).to.exist;
+      });
+
+      xit('applies tracing extension with engine enabled', async () => {
+        const { url: uri } = await createServer({
+          typeDefs,
+          resolvers,
+          tracing: true,
+          engine: {
+            apiKey: 'fake',
+            maxAttempts: 0,
+            endpointUrl: 'l',
+            reportErrorFunction: () => {},
+          },
         });
 
         const apolloFetch = createApolloFetch({ uri });

@@ -399,27 +399,29 @@ export async function runHttpQuery(
     },
   };
 
-  if (cacheControl.calculateHttpHeaders) {
-    const calculatedHeaders =
-      typeof cacheControl.calculateHttpHeaders === 'function'
-        ? cacheControl.calculateHttpHeaders(responses)
-        : calculateCacheControlHeaders(responses);
+  if (cacheControl) {
+    if (cacheControl.calculateHttpHeaders) {
+      const calculatedHeaders =
+        typeof cacheControl.calculateHttpHeaders === 'function'
+          ? cacheControl.calculateHttpHeaders(responses)
+          : calculateCacheControlHeaders(responses);
 
-    responseInit.headers = {
-      ...responseInit.headers,
-      ...calculatedHeaders,
-    };
-  }
+      responseInit.headers = {
+        ...responseInit.headers,
+        ...calculatedHeaders,
+      };
+    }
 
-  if (cacheControl.stripFormattedExtensions) {
-    responses.forEach(response => {
-      if (response.extensions) {
-        delete response.extensions.cacheControl;
-        if (Object.keys(response.extensions).length === 0) {
-          delete response.extensions;
+    if (cacheControl.stripFormattedExtensions) {
+      responses.forEach(response => {
+        if (response.extensions) {
+          delete response.extensions.cacheControl;
+          if (Object.keys(response.extensions).length === 0) {
+            delete response.extensions;
+          }
         }
-      }
-    });
+      });
+    }
   }
 
   if (!isBatch) {
