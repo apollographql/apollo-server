@@ -22,6 +22,7 @@ sidebar_categories:
     - features/data-sources
     - features/subscriptions
     - features/logging
+    - features/file-uploads
     - features/scalars-enums
     - features/unions-interfaces
     - features/directives
