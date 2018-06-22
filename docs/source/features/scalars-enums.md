@@ -236,7 +236,7 @@ type Query {
 }
 ```
 
-A query migh look like this:
+A query might look like this:
 
 ```graphql
 query {
