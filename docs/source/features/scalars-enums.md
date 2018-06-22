@@ -306,7 +306,7 @@ const resolvers = {
 };
 ```
 
-These don't change the public API at all and the resovers accept these value instead of the schema value, like so:
+These don't change the public API at all and the resolvers accept these value instead of the schema value, like so:
 
 ```js
 const resolvers = {
