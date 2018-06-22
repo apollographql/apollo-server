@@ -2,7 +2,6 @@ import { expect } from 'chai';
 import 'mocha';
 import * as express from 'express';
 
-import * as net from 'net';
 import * as http from 'http';
 
 import * as request from 'request';
@@ -30,9 +29,6 @@ const resolvers = {
   },
 };
 
-const url = 'http://localhost:4000/graphql';
-const uri = url;
-
 describe('apollo-server-express', () => {
   let server;
   let httpServer;
@@ -59,6 +55,19 @@ describe('apollo-server-express', () => {
   let app: express.Application;
   let httpServer: http.Server;
 
+  async function createServer(serverOptions, options = {}) {
+    server = new ApolloServer(serverOptions);
+    app = express();
+
+    server.applyMiddleware({ ...options, app });
+
+    httpServer = await new Promise<http.Server>(resolve => {
+      const l = app.listen({ port: 4000 }, () => resolve(l));
+    });
+
+    return createServerInfo(server, httpServer);
+  }
+
   afterEach(async () => {
     if (server) await server.stop();
     if (httpServer) await httpServer.close();
@@ -66,30 +75,15 @@ describe('apollo-server-express', () => {
 
   describe('constructor', () => {
     it('accepts typeDefs and resolvers', () => {
-      const app = express();
-      const server = new ApolloServer({ typeDefs, resolvers });
-      expect(() => server.applyMiddleware({ app })).not.to.throw;
-    });
-
-    it('accepts typeDefs and mocks', () => {
-      const app = express();
-      const server = new ApolloServer({ typeDefs, resolvers });
-      expect(() => server.applyMiddleware({ app })).not.to.throw;
+      return createServer({ typeDefs, resolvers });
     });
   });
 
   describe('applyMiddleware', () => {
     it('can be queried', async () => {
-      server = new ApolloServer({
+      const { url: uri } = await createServer({
         typeDefs,
         resolvers,
-      });
-      app = express();
-
-      server.applyMiddleware({ app });
-
-      httpServer = await new Promise<http.Server>(resolve => {
-        const l = app.listen({ port: 4000 }, () => resolve(l));
       });
       const apolloFetch = createApolloFetch({ uri });
       const result = await apolloFetch({ query: '{hello}' });
@@ -112,19 +106,13 @@ describe('apollo-server-express', () => {
   }
 `;
 
-      server = new ApolloServer({
+      const { url: uri } = await createServer({
         typeDefs,
         resolvers,
         introspection: false,
       });
-      app = express();
 
-      server.applyMiddleware({ app, gui: true });
-
-      httpServer = await new Promise<http.Server>(resolve => {
-        const l = app.listen({ port: 4000 }, () => resolve(l));
-      });
-      const apolloFetch = createApolloFetch({ uri: url });
+      const apolloFetch = createApolloFetch({ uri });
       const result = await apolloFetch({ query: INTROSPECTION_QUERY });
 
       expect(result.errors.length).to.equal(1);
@@ -135,7 +123,7 @@ describe('apollo-server-express', () => {
       return new Promise<http.Server>((resolve, reject) => {
         request(
           {
-            url,
+            url: uri,
             method: 'GET',
             headers: {
               accept:
@@ -159,17 +147,11 @@ describe('apollo-server-express', () => {
       const nodeEnv = process.env.NODE_ENV;
       delete process.env.NODE_ENV;
 
-      server = new ApolloServer({
+      const { url } = await createServer({
         typeDefs,
         resolvers,
       });
-      app = express();
 
-      server.applyMiddleware({ app });
-
-      httpServer = await new Promise<http.Server>(resolve => {
-        const l = app.listen({ port: 4000 }, () => resolve(l));
-      });
       return new Promise<http.Server>((resolve, reject) => {
         request(
           {
@@ -195,17 +177,15 @@ describe('apollo-server-express', () => {
     });
 
     it('accepts cors configuration', async () => {
-      server = new ApolloServer({
-        typeDefs,
-        resolvers,
-      });
-      app = express();
-
-      server.applyMiddleware({ app, cors: { origin: 'apollographql.com' } });
-
-      httpServer = await new Promise<http.Server>(resolve => {
-        const l = app.listen({ port: 4000 }, () => resolve(l));
-      });
+      const { url: uri } = await createServer(
+        {
+          typeDefs,
+          resolvers,
+        },
+        {
+          cors: { origin: 'apollographql.com' },
+        },
+      );
 
       const apolloFetch = createApolloFetch({ uri }).useAfter(
         (response, next) => {
@@ -219,17 +199,15 @@ describe('apollo-server-express', () => {
     });
 
     it('accepts body parser configuration', async () => {
-      server = new ApolloServer({
-        typeDefs,
-        resolvers,
-      });
-      app = express();
-
-      server.applyMiddleware({ app, bodyParserConfig: { limit: 0 } });
-
-      httpServer = await new Promise<http.Server>(resolve => {
-        const l = app.listen({ port: 4000 }, () => resolve(l));
-      });
+      const { url: uri } = await createServer(
+        {
+          typeDefs,
+          resolvers,
+        },
+        {
+          bodyParserConfig: { limit: 0 },
+        },
+      );
 
       const apolloFetch = createApolloFetch({ uri });
 
@@ -251,18 +229,10 @@ describe('apollo-server-express', () => {
       });
 
       it('creates a healthcheck endpoint', async () => {
-        server = new ApolloServer({
+        const { port } = await createServer({
           typeDefs,
           resolvers,
         });
-        app = express();
-
-        server.applyMiddleware({ app, bodyParserConfig: { limit: 0 } });
-
-        httpServer = await new Promise<http.Server>(resolve => {
-          const l = app.listen({ port: 4000 }, () => resolve(l));
-        });
-        const { port } = httpServer.address() as net.AddressInfo;
 
         return new Promise((resolve, reject) => {
           request(
@@ -284,23 +254,17 @@ describe('apollo-server-express', () => {
       });
 
       it('provides a callback for the healthcheck', async () => {
-        server = new ApolloServer({
-          typeDefs,
-          resolvers,
-        });
-        app = express();
-
-        server.applyMiddleware({
-          app,
-          onHealthCheck: async () => {
-            throw Error("can't connect to DB");
+        const { port } = await createServer(
+          {
+            typeDefs,
+            resolvers,
           },
-        });
-
-        httpServer = await new Promise<http.Server>(resolve => {
-          const l = app.listen({ port: 4000 }, () => resolve(l));
-        });
-        const { port } = httpServer.address() as net.AddressInfo;
+          {
+            onHealthCheck: async () => {
+              throw Error("can't connect to DB");
+            },
+          },
+        );
 
         return new Promise((resolve, reject) => {
           request(
@@ -322,20 +286,15 @@ describe('apollo-server-express', () => {
       });
 
       it('can disable the healthCheck', async () => {
-        server = new ApolloServer({
-          typeDefs,
-          resolvers,
-        });
-        app = express();
-        server.applyMiddleware({
-          app,
-          disableHealthCheck: true,
-        });
-
-        httpServer = await new Promise<http.Server>(resolve => {
-          const l = app.listen({ port: 4000 }, () => resolve(l));
-        });
-        const { port } = httpServer.address() as net.AddressInfo;
+        const { port } = await createServer(
+          {
+            typeDefs,
+            resolvers,
+          },
+          {
+            disableHealthCheck: true,
+          },
+        );
 
         return new Promise((resolve, reject) => {
           request(
@@ -362,7 +321,7 @@ describe('apollo-server-express', () => {
         const NODE_MAJOR_VERSION = parseInt(NODE_VERSION[0].replace(/^v/, ''));
         if (NODE_MAJOR_VERSION === 10) return;
 
-        server = new ApolloServer({
+        const { port } = await createServer({
           typeDefs: gql`
             type File {
               filename: String!
@@ -390,15 +349,6 @@ describe('apollo-server-express', () => {
             },
           },
         });
-        app = express();
-        server.applyMiddleware({
-          app,
-        });
-
-        httpServer = await new Promise<http.Server>(resolve => {
-          const l = app.listen({ port: 4000 }, () => resolve(l));
-        });
-        const { port } = httpServer.address() as net.AddressInfo;
 
         const body = new FormData();
 
@@ -460,7 +410,7 @@ describe('apollo-server-express', () => {
             },
           },
         };
-        server = new ApolloServer({
+        const { url: uri } = await createServer({
           typeDefs,
           resolvers,
           context: () => {
@@ -468,12 +418,6 @@ describe('apollo-server-express', () => {
           },
         });
 
-        app = express();
-        server.applyMiddleware({ app });
-
-        httpServer = await new Promise<http.Server>(resolve => {
-          const l = app.listen({ port: 4000 }, () => resolve(l));
-        });
         const apolloFetch = createApolloFetch({ uri });
 
         const result = await apolloFetch({ query: '{hello}' });
@@ -493,7 +437,7 @@ describe('apollo-server-express', () => {
         const nodeEnv = process.env.NODE_ENV;
         delete process.env.NODE_ENV;
 
-        server = new ApolloServer({
+        const { url: uri } = await createServer({
           typeDefs: gql`
             type Query {
               error: String
@@ -508,12 +452,6 @@ describe('apollo-server-express', () => {
           },
         });
 
-        app = express();
-        server.applyMiddleware({ app });
-
-        httpServer = await new Promise<http.Server>(resolve => {
-          const l = app.listen({ port: 4000 }, () => resolve(l));
-        });
         const apolloFetch = createApolloFetch({ uri });
 
         const result = await apolloFetch({ query: `{error}` });
@@ -533,7 +471,7 @@ describe('apollo-server-express', () => {
         const nodeEnv = process.env.NODE_ENV;
         process.env.NODE_ENV = 'production';
 
-        server = new ApolloServer({
+        const { url: uri } = await createServer({
           typeDefs: gql`
             type Query {
               error: String
@@ -548,12 +486,6 @@ describe('apollo-server-express', () => {
           },
         });
 
-        app = express();
-        server.applyMiddleware({ app });
-
-        httpServer = await new Promise<http.Server>(resolve => {
-          const l = app.listen({ port: 4000 }, () => resolve(l));
-        });
         const apolloFetch = createApolloFetch({ uri });
 
         const result = await apolloFetch({ query: `{error}` });
@@ -572,7 +504,7 @@ describe('apollo-server-express', () => {
         const nodeEnv = process.env.NODE_ENV;
         process.env.NODE_ENV = 'production';
 
-        server = new ApolloServer({
+        const { url: uri } = await createServer({
           typeDefs: gql`
             type Query {
               error: String!
@@ -587,12 +519,6 @@ describe('apollo-server-express', () => {
           },
         });
 
-        app = express();
-        server.applyMiddleware({ app });
-
-        httpServer = await new Promise<http.Server>(resolve => {
-          const l = app.listen({ port: 4000 }, () => resolve(l));
-        });
         const apolloFetch = createApolloFetch({ uri });
 
         const result = await apolloFetch({ query: `{error}` });
@@ -608,7 +534,7 @@ describe('apollo-server-express', () => {
     });
   });
 
-  describe('Cache Control Headers', () => {
+  describe('extensions', () => {
     const books = [
       {
         title: 'H',
@@ -629,7 +555,7 @@ describe('apollo-server-express', () => {
 
       type Pook @cacheControl(maxAge: 200) {
         title: String
-        books: [Book] @cacheControl(maxAge: 20, scope: "PRIVATE")
+        books: [Book] @cacheControl(maxAge: 20, scope: PRIVATE)
       }
 
       type Query {
@@ -647,94 +573,118 @@ describe('apollo-server-express', () => {
       },
     };
 
-    it('applies cacheControl Headers and strips out extension', async () => {
-      server = new ApolloServer({ typeDefs, resolvers });
-      app = express();
+    describe('Cache Control Headers', () => {
+      it('applies cacheControl Headers and strips out extension', async () => {
+        const { url: uri } = await createServer({ typeDefs, resolvers });
 
-      server.applyMiddleware({ app });
-
-      httpServer = await new Promise<http.Server>(resolve => {
-        const l = app.listen({ port: 4000 }, () => resolve(l));
+        const apolloFetch = createApolloFetch({ uri }).useAfter(
+          (response, next) => {
+            expect(response.response.headers.get('cache-control')).to.equal(
+              'max-age=200, public',
+            );
+            next();
+          },
+        );
+        const result = await apolloFetch({
+          query: `{ cooks { title author } }`,
+        });
+        expect(result.data).to.deep.equal({ cooks: books });
+        expect(result.extensions).not.to.exist;
       });
-      const { url: uri } = createServerInfo(server, httpServer);
-      const apolloFetch = createApolloFetch({ uri }).useAfter(
-        (response, next) => {
-          expect(response.response.headers.get('cache-control')).to.equal(
-            'max-age=200, public',
-          );
-          next();
-        },
-      );
-      const result = await apolloFetch({ query: `{ cooks { title author } }` });
-      expect(result.data).to.deep.equal({ cooks: books });
-      expect(result.extensions).not.to.exist;
+
+      it('contains no cacheControl Headers and keeps extension with engine proxy', async () => {
+        const { url: uri } = await createServer({
+          typeDefs,
+          resolvers,
+          cacheControl: true,
+        });
+
+        const apolloFetch = createApolloFetch({ uri }).useAfter(
+          (response, next) => {
+            expect(response.response.headers.get('cache-control')).not.to.exist;
+            next();
+          },
+        );
+        const result = await apolloFetch({
+          query: `{ cooks { title author } }`,
+        });
+        expect(result.data).to.deep.equal({ cooks: books });
+        expect(result.extensions).to.exist;
+        expect(result.extensions.cacheControl).to.exist;
+      });
+
+      it('contains no cacheControl Headers when uncachable', async () => {
+        const { url: uri } = await createServer({ typeDefs, resolvers });
+
+        const apolloFetch = createApolloFetch({ uri }).useAfter(
+          (response, next) => {
+            expect(response.response.headers.get('cache-control')).not.to.exist;
+            next();
+          },
+        );
+        const result = await apolloFetch({
+          query: `{ books { title author } }`,
+        });
+        expect(result.data).to.deep.equal({ books });
+        expect(result.extensions).not.to.exist;
+      });
+
+      // Not sure why this test is failing, the scope that comes back from the
+      // extensions is undefined
+      it('contains private cacheControl Headers when scoped', async () => {
+        const { url: uri } = await createServer({ typeDefs, resolvers });
+
+        const apolloFetch = createApolloFetch({ uri }).useAfter(
+          (response, next) => {
+            expect(response.response.headers.get('cache-control')).to.equal(
+              'max-age=20, private',
+            );
+            next();
+          },
+        );
+        const result = await apolloFetch({
+          query: `{ pooks { title books { title author } } }`,
+        });
+        expect(result.data).to.deep.equal({
+          pooks: [{ title: 'pook', books }],
+        });
+        expect(result.extensions).not.to.exist;
+      });
     });
 
-    it('contains no cacheControl Headers and keeps extension with engine proxy', async () => {
-      server = new ApolloServer({ typeDefs, resolvers, cacheControl: true });
-      app = express();
+    describe('Tracing', () => {
+      const typeDefs = gql`
+        type Book {
+          title: String
+          author: String
+        }
 
-      server.applyMiddleware({ app });
+        type Query {
+          books: [Book]
+        }
+      `;
 
-      httpServer = await new Promise<http.Server>(resolve => {
-        const l = app.listen({ port: 4000 }, () => resolve(l));
-      });
-      const { url: uri } = createServerInfo(server, httpServer);
-      const apolloFetch = createApolloFetch({ uri }).useAfter(
-        (response, next) => {
-          expect(response.response.headers.get('cache-control')).not.to.exist;
-          next();
+      const resolvers = {
+        Query: {
+          books: () => books,
         },
-      );
-      const result = await apolloFetch({ query: `{ cooks { title author } }` });
-      expect(result.data).to.deep.equal({ cooks: books });
-      expect(result.extensions).to.exist;
-      expect(result.extensions.cacheControl).to.exist;
-    });
+      };
 
-    it('contains no cacheControl Headers when uncachable', async () => {
-      server = new ApolloServer({ typeDefs, resolvers });
-      app = express();
+      it('applies tracing extension', async () => {
+        const { url: uri } = await createServer({
+          typeDefs,
+          resolvers,
+          tracing: true,
+        });
 
-      server.applyMiddleware({ app });
-
-      httpServer = await new Promise<http.Server>(resolve => {
-        const l = app.listen({ port: 4000 }, () => resolve(l));
+        const apolloFetch = createApolloFetch({ uri });
+        const result = await apolloFetch({
+          query: `{ books { title author } }`,
+        });
+        expect(result.data).to.deep.equal({ books });
+        expect(result.extensions).to.exist;
+        expect(result.extensions.tracing).to.exist;
       });
-      const { url: uri } = createServerInfo(server, httpServer);
-      const apolloFetch = createApolloFetch({ uri }).useAfter(
-        (response, next) => {
-          expect(response.response.headers.get('cache-control')).not.to.exist;
-          next();
-        },
-      );
-      const result = await apolloFetch({ query: `{ books { title author } }` });
-      expect(result.data).to.deep.equal({ books });
-      expect(result.extensions).not.to.exist;
     });
-
-    // Not sure why this test is failing, the scope that comes back from the
-    // extensions is undefined
-    // it('contains private cacheControl Headers when scoped', async () => {
-    //   server = new ApolloServer({ typeDefs, resolvers });
-    //   app = express();
-
-    //   server.applyMiddleware({ app });
-
-    //   const { url: uri } = await server.listen({ engineInRequestPath: true });
-    //   const apolloFetch = createApolloFetch({ uri }).useAfter(
-    //     (response, next) => {
-    //       expect(response.response.headers.get('cache-control')).to.equal(
-    //         'max-age=20, private',
-    //       );
-    //       next();
-    //     },
-    //   );
-    //   const result = await apolloFetch({
-    //     query: `{ pooks { title books { title author } } }`,
-    //   });
-    //   expect(result.data).to.deep.equal({ pooks: [{ books }] });
-    //   expect(result.extensions).not.to.exist;
-    // });
   });
 });

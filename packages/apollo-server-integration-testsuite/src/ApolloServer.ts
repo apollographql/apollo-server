@@ -141,16 +141,12 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
           const apolloFetch = createApolloFetch({ uri });
 
-          try {
-            const introspectionResult = await apolloFetch({
-              query: INTROSPECTION_QUERY,
-            });
-            expect(introspectionResult.data, 'data should not exist').not.to
-              .exist;
-            expect(introspectionResult.errors, 'errors should exist').to.exist;
-          } catch (e) {
-            console.log(e);
-          }
+          const introspectionResult = await apolloFetch({
+            query: INTROSPECTION_QUERY,
+          });
+          expect(introspectionResult.data, 'data should not exist').not.to
+            .exist;
+          expect(introspectionResult.errors, 'errors should exist').to.exist;
 
           const result = await apolloFetch({ query: TEST_STRING_QUERY });
           expect(result.data, 'data should not exist').not.to.exist;
