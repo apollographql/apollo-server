@@ -25,13 +25,13 @@ export class ApolloError extends Error implements GraphQLError {
       });
     }
 
-    //if no name provided, use the default. defineProperty ensures that it stays non-enumerable
+    // if no name provided, use the default. defineProperty ensures that it stays non-enumerable
     if (!this.name) {
       Object.defineProperty(this, 'name', { value: 'ApolloError' });
     }
 
-    //extensions are flattened to be included in the root of GraphQLError's, so
-    //don't add properties to extensions
+    // extensions are flattened to be included in the root of GraphQLError's, so
+    // don't add properties to extensions
     this.extensions = { code };
   }
 }
@@ -81,9 +81,9 @@ function enrichError(error: Partial<GraphQLError>, debug: boolean = false) {
     },
   };
 
-  //ensure that extensions is not taken from the originalError
-  //graphql-js ensures that the originalError's extensions are hoisted
-  //https://github.com/graphql/graphql-js/blob/0bb47b2/src/error/GraphQLError.js#L138
+  // ensure that extensions is not taken from the originalError
+  // graphql-js ensures that the originalError's extensions are hoisted
+  // https://github.com/graphql/graphql-js/blob/0bb47b2/src/error/GraphQLError.js#L138
   delete expanded.extensions.exception.extensions;
   if (debug && !expanded.extensions.exception.stacktrace) {
     expanded.extensions.exception.stacktrace =
@@ -94,7 +94,7 @@ function enrichError(error: Partial<GraphQLError>, debug: boolean = false) {
   }
 
   if (Object.keys(expanded.extensions.exception).length === 0) {
-    //remove from printing an empty object
+    // remove from printing an empty object
     delete expanded.extensions.exception;
   }
 
@@ -125,24 +125,24 @@ export function fromGraphQLError(error: GraphQLError, options?: ErrorOptions) {
       ? new options.errorClass(error.message)
       : new ApolloError(error.message);
 
-  //copy enumerable keys
+  // copy enumerable keys
   Object.keys(error).forEach(key => {
     copy[key] = error[key];
   });
 
-  //extensions are non enumerable, so copy them directly
+  // extensions are non enumerable, so copy them directly
   copy.extensions = {
     ...copy.extensions,
     ...error.extensions,
   };
 
-  //Fallback on default for code
+  // Fallback on default for code
   if (!copy.extensions.code) {
     copy.extensions.code = (options && options.code) || 'INTERNAL_SERVER_ERROR';
   }
 
-  //copy the original error, while keeping all values non-enumerable, so they
-  //are not printed unless directly referenced
+  // copy the original error, while keeping all values non-enumerable, so they
+  // are not printed unless directly referenced
   Object.defineProperty(copy, 'originalError', { value: {} });
   Object.getOwnPropertyNames(error).forEach(key => {
     Object.defineProperty(copy.originalError, key, { value: error[key] });
@@ -259,7 +259,7 @@ export function formatApolloErrors(
       if (debug) {
         return enrichError(err, debug);
       } else {
-        //obscure error
+        // obscure error
         const newError = fromGraphQLError(
           new GraphQLError('Internal server error'),
         );

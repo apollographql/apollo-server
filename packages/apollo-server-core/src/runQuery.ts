@@ -19,7 +19,10 @@ import {
   GraphQLExtensionStack,
 } from 'graphql-extensions';
 import { TracingExtension } from 'apollo-tracing';
-import { CacheControlExtension } from 'apollo-cache-control';
+import {
+  CacheControlExtension,
+  CacheControlExtensionOptions,
+} from 'apollo-cache-control';
 
 import {
   fromGraphQLError,
@@ -58,8 +61,7 @@ export interface QueryOptions {
   formatResponse?: Function;
   debug?: boolean;
   tracing?: boolean;
-  // cacheControl?: boolean | CacheControlExtensionOptions;
-  cacheControl?: boolean | any;
+  cacheControl?: boolean | CacheControlExtensionOptions;
   request: Pick<Request, 'url' | 'method' | 'headers'>;
   extensions?: Array<() => GraphQLExtension>;
 }

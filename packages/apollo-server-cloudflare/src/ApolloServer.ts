@@ -5,9 +5,9 @@ export { GraphQLOptions, GraphQLExtension } from 'apollo-server-core';
 import { GraphQLOptions } from 'apollo-server-core';
 
 export class ApolloServer extends ApolloServerBase {
-  //This translates the arguments from the middleware into graphQL options It
-  //provides typings for the integration specific behavior, ideally this would
-  //be propagated with a generic to the super class
+  // This translates the arguments from the middleware into graphQL options It
+  // provides typings for the integration specific behavior, ideally this would
+  // be propagated with a generic to the super class
   async createGraphQLServerOptions(request: Request): Promise<GraphQLOptions> {
     return super.graphQLServerOptions({ request });
   }

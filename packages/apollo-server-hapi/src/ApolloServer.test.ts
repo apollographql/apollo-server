@@ -10,7 +10,6 @@ import http = require('http');
 import request = require('request');
 import FormData = require('form-data');
 import fs = require('fs');
-import fetch from 'node-fetch';
 import { createApolloFetch } from 'apollo-fetch';
 
 import { gql, AuthenticationError } from 'apollo-server-core';
@@ -389,7 +388,7 @@ describe('apollo-server-hapi', () => {
         try {
           const resolved = await fetch(`http://localhost:${port}/graphql`, {
             method: 'POST',
-            body,
+            body: body as any,
           });
           const response = await resolved.json();
 

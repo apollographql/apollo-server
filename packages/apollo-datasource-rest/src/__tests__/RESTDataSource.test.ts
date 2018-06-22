@@ -3,7 +3,7 @@ import {
   ApolloError,
   AuthenticationError,
   ForbiddenError,
-} from 'apollo-server-core';
+} from 'apollo-server-errors';
 import { RESTDataSource } from '../RESTDataSource';
 
 import fetch, { mockFetch, unmockFetch } from '../../../../__mocks__/fetch';
