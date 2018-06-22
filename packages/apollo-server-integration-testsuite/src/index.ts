@@ -942,6 +942,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
 
     describe('Persisted Queries', () => {
       const query = '{testString}';
+      const query2 = '{ testString }';
 
       const hash = sha256
         .create()
@@ -951,6 +952,16 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
         persistedQuery: {
           version: VERSION,
           sha256Hash: hash,
+        },
+      };
+
+      const extensions2 = {
+        persistedQuery: {
+          version: VERSION,
+          sha256Hash: sha256
+            .create()
+            .update(query2)
+            .hex(),
         },
       };
 
@@ -1002,6 +1013,51 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
 
         expect(result.body.data).to.deep.equal({ testString: 'it works' });
+        expect(result.body.errors).not.to.exist;
+      });
+
+      it('returns with batched persisted queries', async () => {
+        const errors = await request(app)
+          .post('/graphql')
+          .send([
+            {
+              extensions,
+            },
+            {
+              extensions: extensions2,
+            },
+          ]);
+
+        expect(errors.body[0].data).to.not.exist;
+        expect(errors.body[1].data).to.not.exist;
+        expect(errors.body[0].errors[0].message).to.equal(
+          'PersistedQueryNotFound',
+        );
+        expect(errors.body[0].errors[0].extensions.code).to.equal(
+          'PERSISTED_QUERY_NOT_FOUND',
+        );
+        expect(errors.body[1].errors[0].message).to.equal(
+          'PersistedQueryNotFound',
+        );
+        expect(errors.body[1].errors[0].extensions.code).to.equal(
+          'PERSISTED_QUERY_NOT_FOUND',
+        );
+
+        const result = await request(app)
+          .post('/graphql')
+          .send([
+            {
+              extensions,
+              query,
+            },
+            {
+              extensions: extensions2,
+              query: query2,
+            },
+          ]);
+
+        expect(result.body[0].data).to.deep.equal({ testString: 'it works' });
+        expect(result.body[0].data).to.deep.equal({ testString: 'it works' });
         expect(result.body.errors).not.to.exist;
       });
 
