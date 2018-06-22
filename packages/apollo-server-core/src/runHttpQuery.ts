@@ -187,6 +187,11 @@ export async function runHttpQuery(
           !optionsObject.persistedQueries ||
           !optionsObject.persistedQueries.cache
         ) {
+          if (isBatch) {
+            // A batch can contain another query that returns data,
+            // so we don't error out the entire request with an HttpError
+            throw new PersistedQueryNotSupportedError();
+          }
           // Return 200 to simplify processing: we want this to be intepreted by
           // the client as data worth interpreting, not an error.
           throwHttpGraphQLError(
@@ -203,6 +208,11 @@ export async function runHttpQuery(
         if (queryString === undefined) {
           queryString = await optionsObject.persistedQueries.cache.get(sha);
           if (!queryString) {
+            if (isBatch) {
+              // A batch can contain multiple undefined persisted queries,
+              // so we don't error out the entire request with an HttpError
+              throw new PersistedQueryNotFoundError();
+            }
             throwHttpGraphQLError(
               200,
               [new PersistedQueryNotFoundError()],
