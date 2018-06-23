@@ -35,6 +35,8 @@ export class GraphQLExtension<TContext = any> {
     parsedQuery?: DocumentNode;
     operationName?: string;
     variables?: { [key: string]: any };
+    persistedQueryHit?: boolean;
+    persistedQueryRegister?: boolean;
   }): EndHandler | void;
   public parsingDidStart?(o: { queryString: string }): EndHandler | void;
   public validationDidStart?(): EndHandler | void;
@@ -69,6 +71,8 @@ export class GraphQLExtensionStack<TContext = any> {
     parsedQuery?: DocumentNode;
     operationName?: string;
     variables?: { [key: string]: any };
+    persistedQueryHit?: boolean;
+    persistedQueryRegister?: boolean;
   }): EndHandler {
     return this.handleDidStart(
       ext => ext.requestDidStart && ext.requestDidStart(o),
