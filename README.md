@@ -4,13 +4,11 @@
 [![Build Status](https://circleci.com/gh/apollographql/apollo-cache-control-js.svg?style=svg)](https://circleci.com/gh/apollographql/apollo-cache-control-js)
 [![Get on Slack](https://img.shields.io/badge/slack-join-orange.svg)](https://www.apollographql.com/#slack)
 
-FIXME update README for 2.x; refer to 1.x branch for currently unsupported web frameworks and encourage community to help port ApolloServer to other frameworks.
-
 Apollo Server is a community-maintained open-source GraphQL server. It works with pretty much all Node.js HTTP server frameworks, and we're happy to take PRs for more! Apollo Server works with any GraphQL schema built with [GraphQL.js](https://github.com/graphql/graphql-js), so you can build your schema with that directly or with a convenience library such as [graphql-tools](https://www.apollographql.com/docs/graphql-tools/).
 
 ## Documentation
 
-[Read the docs!](https://www.apollographql.com/docs/apollo-server/)
+[Read the docs!](https://www.apollographql.com/docs/apollo-server/v2)
 
 ## Principles
 
@@ -24,259 +22,178 @@ Anyone is welcome to contribute to Apollo Server, just read [CONTRIBUTING.md](./
 
 ## Getting started
 
-Apollo Server is super easy to set up. Just `npm install apollo-server-<variant>`, write a GraphQL schema, and then use one of the following snippets to get started. For more info, read the [Apollo Server docs](https://www.apollographql.com/docs/apollo-server/). To experiment a live example of Apollo Server, create an [Apollo Launchpad](https://launchpad.graphql.com). Downloading the pad will provide you a local Apollo Server project.
+Apollo Server is super easy to set up. Just `npm install apollo-server-<integration>`, write a GraphQL schema, and then use one of the following snippets to get started. For more info, read the [Apollo Server docs](https://www.apollographql.com/docs/apollo-server/v2).
 
 ### Installation
 
-Just run `npm install --save apollo-server-<variant>` and you're good to go!
+Run `npm install --save apollo-server-<integration>` and you're good to go!
 
-where `<variant>` is one of the following:
+```js
+const { ApolloServer, gql } = require('apollo-server');
+
+// The GraphQL schema
+const typeDefs = gql`
+  type Query {
+    "A simple type for getting started!"
+    hello: String
+  }
+`;
+
+// A map of functions which return data for the schema.
+const resolvers = {
+  Query: {
+    hello: () => 'world'
+  }
+};
+
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+});
+```
+
+## Integrations
+
+Often times, Apollo Server needs to be run with a particular integration. To start, run `npm install --save apollo-server-<integration>` where `<integration>` is one of the following:
 
 - `express`
-- `koa`
 - `hapi`
-- `restify`
 - `lambda`
-- `micro`
-- `azure-functions`
-- `adonis`
+- `cloudflare`
+
+If a framework is not on this list and it should be supported, please open a PR.
 
 ### Express
 
 ```js
-import express from 'express';
-import bodyParser from 'body-parser';
-import { graphqlExpress, graphiqlExpress } from 'apollo-server-express';
+const express = require('express');
+const { ApolloServer, gql } = require('apollo-server-express');
 
-const myGraphQLSchema = // ... define or import your schema here!
-const PORT = 3000;
+// Construct a schema, using GraphQL schema language
+const typeDefs = gql`
+  type Query {
+    hello: String
+  }
+`;
+
+// Provide resolver functions for your schema fields
+const resolvers = {
+  Query: {
+    hello: () => 'Hello world!',
+  },
+};
+
+const server = new ApolloServer({ typeDefs, resolvers });
 
 const app = express();
+server.applyMiddleware({ app });
 
-// bodyParser is needed just for POST.
-app.use('/graphql', bodyParser.json(), graphqlExpress({ schema: myGraphQLSchema }));
-app.get('/graphiql', graphiqlExpress({ endpointURL: '/graphql' })); // if you want GraphiQL enabled
-
-app.listen(PORT);
+app.listen({ port: 4000 }, () =>
+  console.log(`🚀 Server ready at http://localhost:4000${server.graphqlPath}`)
+)
 ```
 
 ### Connect
 
 ```js
-import connect from 'connect';
-import bodyParser from 'body-parser';
-import query from 'connect-query';
-import { graphqlConnect } from 'apollo-server-express';
-import http from 'http';
+const connect = require('connect');
+const { ApolloServer, gql } = require('apollo-server-express');
+const query = require('qs-middleware');
 
-const PORT = 3000;
+// Construct a schema, using GraphQL schema language
+const typeDefs = gql`
+  type Query {
+    hello: String
+  }
+`;
+
+// Provide resolver functions for your schema fields
+const resolvers = {
+  Query: {
+    hello: () => 'Hello world!',
+  },
+};
+
+const server = new ApolloServer({ typeDefs, resolvers });
 
 const app = connect();
+const path = '/graphql';
 
-// bodyParser is only needed for POST.
-app.use('/graphql', bodyParser.json());
-// query is only needed for GET.
-app.use('/graphql', query());
-app.use('/graphql', graphqlConnect({ schema: myGraphQLSchema }));
+server.use(query());
+server.applyMiddleware({ app, path });
 
-http.createServer(app).listen(PORT);
+app.listen({ port: 4000 }, () =>
+  console.log(`🚀 Server ready at http://localhost:4000${server.graphqlPath}`)
+)
 ```
 
-### Hapi
+> Note; `qs-middleware` is only required if running outside of Meteor
 
-Now with the Hapi plugins `graphqlHapi` and `graphiqlHapi` you can pass a route object that includes options to be applied to the route. The example below enables CORS on the `/graphql` route.
+### Hapi
 
 The code below requires Hapi 17 or higher.
 
 ```js
-import Hapi from 'hapi';
-import { graphqlHapi } from 'apollo-server-hapi';
-
-const HOST = 'localhost';
-const PORT = 3000;
+const { ApolloServer, gql } = require('apollo-server-hapi');
+const Hapi = require('hapi');
 
 async function StartServer() {
-  const server = new Hapi.server({
-    host: HOST,
-    port: PORT,
+  const server = new ApolloServer({ typeDefs, resolvers });
+
+  const app = new Hapi.server({
+    port: 4000
   });
 
-  await server.register({
-    plugin: graphqlHapi,
-    options: {
-      path: '/graphql',
-      graphqlOptions: {
-        schema: myGraphQLSchema,
-      },
-      route: {
-        cors: true,
-      },
-    },
+  await server.applyMiddleware({
+    app,
   });
 
-  try {
-    await server.start();
-  } catch (err) {
-    console.log(`Error while starting server: ${err.message}`);
-  }
+  await server.installSubscriptionHandlers(app.listener);
 
-  console.log(`Server running at: ${server.info.uri}`);
+  await app.start();
 }
 
-StartServer();
+StartServer().catch(error => console.log(error));
 ```
 
-### Koa
+### Context
+
+The context is created for each request. The following code snippet shows the creation of a context. The arguments are the `request`, the request, and `h`, the response toolkit.
 
 ```js
-import koa from 'koa'; // koa@2
-import koaRouter from 'koa-router'; // koa-router@next
-import koaBody from 'koa-bodyparser'; // koa-bodyparser@next
-import { graphqlKoa, graphiqlKoa } from 'apollo-server-koa';
-
-const app = new koa();
-const router = new koaRouter();
-const PORT = 3000;
-
-// koaBody is needed just for POST.
-router.post('/graphql', koaBody(), graphqlKoa({ schema: myGraphQLSchema }));
-router.get('/graphql', graphqlKoa({ schema: myGraphQLSchema }));
-
-router.get('/graphiql', graphiqlKoa({ endpointURL: '/graphql' }));
-
-app.use(router.routes());
-app.use(router.allowedMethods());
-app.listen(PORT);
-```
-
-### Restify
-
-```js
-import restify from 'restify';
-import { graphqlRestify, graphiqlRestify } from 'apollo-server-restify';
-
-const PORT = 3000;
-
-const server = restify.createServer({
-  title: 'Apollo Server',
-});
-
-const graphQLOptions = { schema: myGraphQLSchema };
-
-server.use(restify.plugins.bodyParser());
-server.use(restify.plugins.queryParser());
-
-server.post('/graphql', graphqlRestify(graphQLOptions));
-server.get('/graphql', graphqlRestify(graphQLOptions));
-
-server.get('/graphiql', graphiqlRestify({ endpointURL: '/graphql' }));
-
-server.listen(PORT, () => console.log(`Listening on ${PORT}`));
+new ApolloServer({
+  typeDefs,
+  resolvers,
+  context: async ({ request, h }) => {
+    return { ... };
+  },
+})
 ```
 
 ### AWS Lambda
 
-Lambda function should be run with [Node.js 4.3 or v6.1](https://docs.aws.amazon.com/lambda/latest/dg/nodejs-prog-model-using-old-runtime.html#nodejs-prog-model-runtime-support-policy). Requires an API Gateway with Lambda Proxy Integration.
+Apollo Server can be run on Lambda and deployed with AWS Serverless Application Model (SAM). It requires an API Gateway with Lambda Proxy Integration.
 
 ```js
-var server = require('apollo-server-lambda');
+const { ApolloServer, gql } = require('apollo-server-lambda');
 
-exports.handler = server.graphqlLambda({ schema: myGraphQLSchema });
-```
+// Construct a schema, using GraphQL schema language
+const typeDefs = gql`
+  type Query {
+    hello: String
+  }
+`;
 
-### ZEIT Micro
-
-Requires the [Micro](https://github.com/zeit/micro) module
-
-```js
-const server = require('apollo-server-micro');
-
-module.exports = server.microGraphql({ schema: myGraphQLSchema });
-```
-
-### Adonis Framework
-
-```js
-// start/routes.js
-const { graphqlAdonis } = require('apollo-server-adonis');
-
-const Route = use('Route');
-
-Route.post('/graphql', graphqlAdonis({ schema: myGraphQLSchema }));
-Route.get('/graphql', graphqlAdonis({ schema: myGraphQLSchema }));
-```
-
-## Options
-
-Apollo Server can be configured with an options object with the following fields:
-
-- **schema**: the GraphQLSchema to be used
-- **context**: the context value passed to resolvers during GraphQL execution
-- **rootValue**: the value passed to the first resolve function
-- **formatError**: a function to apply to every error before sending the response to clients
-- **validationRules**: additional GraphQL validation rules to be applied to client-specified queries
-- **formatParams**: a function applied for each query in a batch to format parameters before execution
-- **formatResponse**: a function applied to each response after execution
-- **tracing**: when set to true, collect and expose trace data in the [Apollo Tracing format](https://github.com/apollographql/apollo-tracing)
-- **fieldResolver**: a custom default field resolver
-- **debug**: a boolean that will print additional debug logging if execution errors occur
-- **cacheControl**: when set to true, enable built-in support for Apollo Cache Control
-
-All options except for `schema` are optional.
-
-### Whitelisting
-
-The `formatParams` function can be used in combination with the `OperationStore` to enable whitelisting.
-
-```js
-const store = new OperationStore(Schema);
-store.put('query testquery{ testString }');
-graphqlOptions = {
-  schema: Schema,
-  formatParams(params) {
-    params['parsedQuery'] = store.get(params.operationName);
-    delete params['queryString']; // Or throw if this is provided.
-    return params;
+// Provide resolver functions for your schema fields
+const resolvers = {
+  Query: {
+    hello: () => 'Hello world!',
   },
 };
-```
 
-## Comparison with `express-graphql`
+const server = new ApolloServer({ typeDefs, resolvers });
 
-Both Apollo Server and [`express-graphql`](https://github.com/graphql/express-graphql) are GraphQL servers for Node.js, built on top of the [`graphql-js` reference implementation](https://github.com/graphql/graphql-js), but there are a few key differences:
-
-- `express-graphql` works with Express and Connect, Apollo Server supports Express, Connect, Hapi, Koa and Restify.
-- Compared to `express-graphql`, Apollo Server has a simpler interface and supports exactly one way of passing queries.
-- Apollo Server separates serving [GraphiQL](https://github.com/graphql/graphiql) (an in-browser IDE for exploring GraphQL) from responding to GraphQL requests.
-- `express-graphql` contains code for parsing HTTP request bodies, Apollo Server leaves that to standard packages like body-parser.
-- Apollo Server includes an `OperationStore` to easily manage whitelisting.
-- Apollo Server is built with TypeScript.
-
-### application/graphql requests
-
-`express-graphql` supports the `application/graphql` Content-Type for requests, which is an alternative to `application/json` request with only the query part sent as text. In the same way that we use `bodyParser.json` to parse `application/json` requests for apollo-server, we can use `bodyParser.text` plus one extra step in order to also parse `application/graphql` requests. Here's an example for Express:
-
-```js
-import express from 'express';
-import bodyParser from 'body-parser';
-import { graphqlExpress } from 'apollo-server-express';
-
-const myGraphQLSchema = // ... define or import your schema here!
-
-const helperMiddleware = [
-    bodyParser.json(),
-    bodyParser.text({ type: 'application/graphql' }),
-    (req, res, next) => {
-        if (req.is('application/graphql')) {
-            req.body = { query: req.body };
-        }
-        next();
-    }
-];
-
-express()
-    .use('/graphql', ...helperMiddleware, graphqlExpress({ schema: myGraphQLSchema }))
-    .listen(3000);
+exports.graphqlHandler = server.createHandler();
 ```
 
 ## Apollo Server Development
@@ -291,7 +208,7 @@ If you want to develop Apollo Server locally you must follow the following instr
 git clone https://github.com/[your-user]/apollo-server
 cd apollo-server
 npm install
-cd packages/apollo-server-<variant>/
+cd packages/apollo-server-<integration>/
 npm link
 ```
 
@@ -299,5 +216,5 @@ npm link
 
 ```
 cd ~/myApp
-npm link apollo-server-<variant>
+npm link apollo-server-<integration>
 ```

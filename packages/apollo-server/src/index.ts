@@ -1,5 +1,5 @@
 // Note: express is only used if you use the ApolloServer.listen API to create
-// an express app for you instead of registerServer (which you might not even
+// an express app for you instead of applyMiddleware (which you might not even
 // use with express). The dependency is unused otherwise, so don't worry if
 // you're not using express or your version doesn't quite match up.
 import * as express from 'express';

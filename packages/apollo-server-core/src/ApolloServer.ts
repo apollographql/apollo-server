@@ -69,7 +69,7 @@ export class ApolloServerBase {
   // set by installSubscriptionHandlers.
   private subscriptionServer?: SubscriptionServer;
 
-  // The constructor should be universal across all environments. All environment specific behavior should be set in an exported registerServer or in by overriding listen
+  // The constructor should be universal across all environments. All environment specific behavior should be set by adding or overriding methods
   constructor(config: Config) {
     if (!config) throw new Error('ApolloServer requires options.');
     const {
