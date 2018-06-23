@@ -165,6 +165,8 @@ export async function runHttpQuery(
     try {
       let queryString: string | undefined = requestParams.query;
       let extensions = requestParams.extensions;
+      let persistedQueryHit = false;
+      let persistedQueryRegister = false;
 
       if (isGetRequest && extensions) {
         // For GET requests, we have to JSON-parse extensions. (For POST
@@ -207,7 +209,9 @@ export async function runHttpQuery(
 
         if (queryString === undefined) {
           queryString = await optionsObject.persistedQueries.cache.get(sha);
-          if (!queryString) {
+          if (queryString) {
+            persistedQueryHit = true;
+          } else {
             if (isBatch) {
               // A batch can contain multiple undefined persisted queries,
               // so we don't error out the entire request with an HttpError
@@ -226,6 +230,7 @@ export async function runHttpQuery(
           if (sha !== calculatedSha) {
             throw new HttpQueryError(400, 'provided sha does not match query');
           }
+          persistedQueryRegister = true;
 
           // Do the store completely asynchronously
           Promise.resolve()
@@ -372,6 +377,8 @@ export async function runHttpQuery(
           : false,
         request: request.request,
         extensions: optionsObject.extensions,
+        persistedQueryHit,
+        persistedQueryRegister,
       };
 
       if (optionsObject.formatParams) {

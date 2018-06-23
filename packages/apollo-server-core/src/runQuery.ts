@@ -64,6 +64,8 @@ export interface QueryOptions {
   cacheControl?: boolean | CacheControlExtensionOptions;
   request: Pick<Request, 'url' | 'method' | 'headers'>;
   extensions?: Array<() => GraphQLExtension>;
+  persistedQueryHit?: boolean;
+  persistedQueryRegister?: boolean;
 }
 
 function isQueryOperation(query: DocumentNode, operationName: string) {
@@ -129,6 +131,8 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
     parsedQuery: options.parsedQuery,
     operationName: options.operationName,
     variables: options.variables,
+    persistedQueryHit: options.persistedQueryHit,
+    persistedQueryRegister: options.persistedQueryRegister,
   });
   return Promise.resolve()
     .then(() => {
