@@ -1,3 +1,4 @@
 src
 *.tgz
 *.md
+coverage
