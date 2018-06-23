@@ -55,6 +55,8 @@ export class EngineReportingExtension<TContext = any>
     queryString?: string;
     parsedQuery?: DocumentNode;
     variables: Record<string, any>;
+    persistedQueryHit?: boolean;
+    persistedQueryRegister?: boolean;
   }): EndHandler {
     this.trace.startTime = dateToTimestamp(new Date());
     this.startHrTime = process.hrtime();
@@ -98,6 +100,13 @@ export class EngineReportingExtension<TContext = any>
             });
         }
       });
+
+      if (o.persistedQueryHit) {
+        this.trace.persistedQueryHit = true;
+      }
+      if (o.persistedQueryRegister) {
+        this.trace.persistedQueryRegister = true;
+      }
     }
 
     if (this.options.privateVariables !== true && o.variables) {

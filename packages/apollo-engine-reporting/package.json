@@ -47,7 +47,7 @@
     "@types/node-fetch": "^1.6.9",
     "@types/requestretry": "^1.12.3",
     "graphql": "^0.13.2",
-    "graphql-extensions": "0.1.0-beta.13",
+    "graphql-extensions": "0.1.0-beta.15",
     "graphql-tag": "^2.9.2",
     "graphql-tools": "^3.0.1",
     "jest": "^22.4.3",
