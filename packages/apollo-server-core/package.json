@@ -1,6 +1,6 @@
 {
   "name": "apollo-server-core",
-  "version": "2.0.0-rc.2",
+  "version": "2.0.0-rc.3",
   "description": "Core engine for Apollo GraphQL server",
   "main": "dist/index.js",
   "scripts": {
@@ -30,10 +30,10 @@
   "dependencies": {
     "@types/ws": "^5.1.2",
     "apollo-cache-control": "^0.1.1",
-    "apollo-datasource-rest": "^2.0.0-rc.2",
+    "apollo-datasource-rest": "^2.0.0-rc.3",
     "apollo-engine-reporting": "0.0.0-beta.15",
-    "apollo-server-env": "^2.0.0-rc.2",
-    "apollo-server-errors": "^2.0.0-rc.2",
+    "apollo-server-env": "^2.0.0-rc.3",
+    "apollo-server-errors": "^2.0.0-rc.3",
     "apollo-tracing": "^0.2.0-beta.1",
     "apollo-upload-server": "^5.0.0",
     "graphql-extensions": "0.1.0-beta.15",
