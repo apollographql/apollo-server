@@ -116,7 +116,7 @@ server.listen().then(({ url }) => {
 
 ## Health Checks
 
-The default Apollo server provides a health check endpoint at `/.well-known/apollo/server-health` hat returns a 200 status code by default. If `onHealthCheck` is defined, the promise returned from the callback determines the status code. A successful resolution causes a 200 and rejection causes a 503. Health checks are often used by load balancers to determine if a server is available.
+The default Apollo server provides a health check endpoint at `/.well-known/apollo/server-health` that returns a 200 status code by default. If `onHealthCheck` is defined, the promise returned from the callback determines the status code. A successful resolution causes a 200 and rejection causes a 503. Health checks are often used by load balancers to determine if a server is available.
 
 ```js
 const { ApolloServer, gql } = require('apollo-server');
