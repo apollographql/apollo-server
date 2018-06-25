@@ -90,22 +90,22 @@ export class ApolloServer extends ApolloServerBase {
       context: lambda.Context,
       callback: lambda.APIGatewayProxyCallback,
     ) => {
-      if (event.httpMethod === 'OPTIONS') {
-        if (typeof cors === 'object' && cors.origin) {
-          if (typeof cors.origin === 'string') {
-            corsHeaders['Access-Control-Allow-Origin'] = cors.origin;
-          } else if (
-            typeof cors.origin === 'boolean' ||
-            (Array.isArray(cors.origin) &&
-              cors.origin.includes(
-                event.headers['Origin'] || event.headers['origin'],
-              ))
-          ) {
-            corsHeaders['Access-Control-Allow-Origin'] =
-              event.headers['Origin'] || event.headers['origin'];
-          }
+      if (typeof cors === 'object' && cors.origin) {
+        if (typeof cors.origin === 'string') {
+          corsHeaders['Access-Control-Allow-Origin'] = cors.origin;
+        } else if (
+          typeof cors.origin === 'boolean' ||
+          (Array.isArray(cors.origin) &&
+            cors.origin.includes(
+              event.headers['Origin'] || event.headers['origin'],
+            ))
+        ) {
+          corsHeaders['Access-Control-Allow-Origin'] =
+            event.headers['Origin'] || event.headers['origin'];
         }
+      }
 
+      if (event.httpMethod === 'OPTIONS') {
         return callback(null, {
           body: '',
           statusCode: 200,
@@ -132,6 +132,7 @@ export class ApolloServer extends ApolloServerBase {
             body: playgroundPageHtml,
             statusCode: 200,
             headers: {
+              ...corsHeaders,
               'Content-Type': 'text/html',
               'Content-Length': playgroundPageHtml.length,
             },
@@ -145,7 +146,10 @@ export class ApolloServer extends ApolloServerBase {
       ) => {
         callback(error, {
           ...result,
-          headers: result.headers,
+          headers: {
+            ...corsHeaders,
+            ...result.headers,
+          },
         });
       };
 
