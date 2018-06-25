@@ -21,7 +21,10 @@ To define a data source, extend the `RESTDataSource` class and implement the dat
 const { RESTDataSource } = require('apollo-datasource-rest');
 
 class MoviesAPI extends RESTDataSource {
-  baseURL = 'https://movies-api.example.com';
+  constructor() {
+    super();
+    this.baseURL = 'https://movies-api.example.com';
+  }
 
   async getMovie(id) {
     return this.get(`movies/${id}`);
@@ -41,7 +44,10 @@ Data sources allow you to intercept fetches to set headers or make other changes
 
 ```js
 class PersonalizationAPI extends RESTDataSource {
-  baseURL = 'https://personalization-api.example.com';
+  constructor() {
+    super();
+    this.baseURL = 'https://personalization-api.example.com';
+  }
 
   willSendRequest(request) {
     request.headers.set('Authorization', this.context.token);
@@ -110,7 +116,10 @@ Our recommendation is to restrict batching to requests that can't be cached. In 
 
 ```js
 class PersonalizationAPI extends RESTDataSource {
-  baseURL = 'https://personalization-api.example.com';
+  constructor() {
+    super();
+    this.baseURL = 'https://personalization-api.example.com';
+  }
 
   willSendRequest(request) {
     request.headers.set('Authorization', this.context.token);
