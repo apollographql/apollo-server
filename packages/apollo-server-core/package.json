@@ -1,6 +1,6 @@
 {
   "name": "apollo-server-core",
-  "version": "2.0.0-rc.3",
+  "version": "2.0.0-rc.4",
   "description": "Core engine for Apollo GraphQL server",
   "main": "dist/index.js",
   "scripts": {
@@ -30,7 +30,7 @@
   "dependencies": {
     "@types/ws": "^5.1.2",
     "apollo-cache-control": "^0.1.1",
-    "apollo-datasource-rest": "^2.0.0-rc.3",
+    "apollo-datasource-rest": "^2.0.0-rc.4",
     "apollo-engine-reporting": "0.0.0-beta.16",
     "apollo-server-env": "^2.0.0-rc.3",
     "apollo-server-errors": "^2.0.0-rc.3",
