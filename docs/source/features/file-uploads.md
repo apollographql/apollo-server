@@ -72,8 +72,8 @@ The `Upload` type automatically added to the schema by Apollo Server resolves an
 There are several file upload options that you can pass into the Apollo Server constructor. They are:
 
 - `maxFieldSize`: represents allowed non-file multipart form field size in bytes. The default is 1 MB.
-- `maxFileSize`: represents the allowed file size in bytes.
-- `maxFiles`: represents the allowed number of files. It can accept as many files as possible.
+- `maxFileSize: represents the allowed file size in bytes.
+- `maxFiles: represents the allowed number of files. It can accept as many files as possible.
 
 
 ## Setup with Client 
