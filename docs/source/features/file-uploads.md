@@ -3,11 +3,11 @@ title: File Uploads
 description: Implementing File Uploads on Apollo Server
 ---
 
-File uploads are frequently requested features of several applications. Apollo Server enables file uploads by default. 
+File uploads are a requirement for many applications. Apollo Server supports the [GraphQL multipart request spec](https://github.com/jaydenseric/graphql-multipart-request-spec) for uploading files as mutation arguments.
 
-## Default File Uploads example
+## File upload with default options
 
-To enable file uploads, reference the `Upload` type in the schema passed to the Apollo Server construction.
+Apollo Server automatically adds the `Upload` scalar to the schema, so any existing declaration of `scalar Upload` in the schema should be removed.
 
 ```js
 const { ApolloServer, gql } = require('apollo-server');
@@ -30,17 +30,24 @@ const typeDefs = gql`
 
 const resolvers = {
   Query: {
-    uploads: (parent, args) => {},
+    files: () => {
+      // Return the record of files uploaded.
+    }
   },
   Mutation: {
-    singleUpload: (parent, args) => {
+    async singleUpload(parent, { upload }) {
+      const { stream, filename, mimetype, encoding } = await upload
 
-      return args.file.then(file => {
-        //file.stream is a node stream that contains the contents of the uploaded file
-        //node stream api: https://nodejs.org/api/stream.html
-        return file;
-      })
-    },
+      // 1. Validate file metadata.
+
+      // 2. Stream file contents into cloud storage:
+      // https://nodejs.org/api/stream.html
+
+      // 3. Record the file upload in your DB.
+      // const id = await recordFile( … )
+
+      return { id, filename, mimetype, encoding }
+    }
   },
 };
 
@@ -54,8 +61,6 @@ server.listen().then(({ url }) => {
 });
 ```
 
-> Note: Apollo Server automatically adds the Upload scalar to the schema, so any existing declaration of `scalar Upload` in the schema should be removed.
-
 
 ## Scalar Upload
 
@@ -67,16 +72,16 @@ The `Upload` type automatically added to the schema by Apollo Server resolves an
 - `encoding`
 
 
-### File Upload Options
+### File upload options
 
 There are several file upload options that you can pass into the Apollo Server constructor. They are:
 
-- `maxFieldSize`: represents allowed non-file multipart form field size in bytes. The default is 1 MB.
-- `maxFileSize: represents the allowed file size in bytes.
-- `maxFiles: represents the allowed number of files. It can accept as many files as possible.
+- `maxFieldSize`: represents allowed non-file multipart form field size in bytes.
+- `maxFileSize`: represents the allowed file size in bytes.
+- `maxFiles`: represents the allowed number of files. It can accept as many files as possible.
 
 
-## Setup with Client 
+## Client setup 
 
 File uploads might not happen from the terminal every time. In most cases, there's always a client with an intuitive UI that users can interact with to upload files. From the client side, you need to install the `apollo-upload-client` package. It enhances Apollo Client for intuitive file uploads via GraphQL mutations.
 
@@ -84,7 +89,30 @@ File uploads might not happen from the terminal every time. In most cases, there
 npm i apollo-upload-client
 ```
 
-_file uploads example from the client for multple files_
+_File uploads example from the client for a single file:_
+
+```js
+import gql from 'graphql-tag'
+import { graphql } from 'react-apollo'
+
+export default graphql(gql`
+  mutation($file: Upload!) {
+    uploadFile(file: $file) {
+      id
+    }
+  }
+`)(({ mutate }) => (
+  <input
+    type="file"
+    required
+    onChange={({ target: { validity, files: [file] } }) =>
+      validity.valid && mutate({ variables: { file } })
+    }
+  />
+))
+```
+
+_File uploads example from the client for multiple files:_
 
 ```js
 import gql from 'graphql-tag'
@@ -108,27 +136,4 @@ export default graphql(gql`
 ))
 ```
 
-_file uploads example from the client for a single file_
-
-```js
-import gql from 'graphql-tag'
-import { graphql } from 'react-apollo'
-
-export default graphql(gql`
-  mutation($file: Upload!) {
-    uploadFile(file: $file) {
-      id
-    }
-  }
-`)(({ mutate }) => (
-  <input
-    type="file"
-    required
-    onChange={({ target: { validity, files: [file] } }) =>
-      validity.valid && mutate({ variables: { file } })
-    }
-  />
-))
-```
-
-**Jayden Seric**, author of `apollo-upload-client` has [an example app on GitHub](https://github.com/jaydenseric/apollo-upload-examples/tree/master/app). It's a web app using `Next.js`, `react-apollo`, and `apollo-upload-client`.
+**Jayden Seric**, author of [apollo-upload-client](https://github.com/jaydenseric/apollo-upload-client) has [an example app on GitHub](https://github.com/jaydenseric/apollo-upload-examples/tree/master/app). It's a web app using [Next.js](https://github.com/zeit/next.js/), [react-apollo](https://github.com/apollographql/react-apollo), and [apollo-upload-client](https://github.com/jaydenseric/apollo-upload-client).
