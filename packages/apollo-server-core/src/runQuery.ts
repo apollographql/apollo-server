@@ -19,16 +19,17 @@ import {
   GraphQLExtensionStack,
 } from 'graphql-extensions';
 import { TracingExtension } from 'apollo-tracing';
-import { CacheControlExtension } from 'apollo-cache-control';
+import {
+  CacheControlExtension,
+  CacheControlExtensionOptions,
+} from 'apollo-cache-control';
 
 import {
   fromGraphQLError,
   formatApolloErrors,
   ValidationError,
   SyntaxError,
-} from './errors';
-
-import { LogFunction, LogFunctionExtension } from './logging';
+} from 'apollo-server-errors';
 
 export interface GraphQLResponse {
   data?: object;
@@ -51,7 +52,6 @@ export interface QueryOptions {
   context?: any;
   variables?: { [key: string]: any };
   operationName?: string;
-  logFunction?: LogFunction;
   validationRules?: Array<(context: ValidationContext) => any>;
   fieldResolver?: GraphQLFieldResolver<any, any>;
   // WARNING: these extra validation rules are only applied to queries
@@ -61,10 +61,11 @@ export interface QueryOptions {
   formatResponse?: Function;
   debug?: boolean;
   tracing?: boolean;
-  // cacheControl?: boolean | CacheControlExtensionOptions;
-  cacheControl?: boolean | any;
+  cacheControl?: boolean | CacheControlExtensionOptions;
   request: Pick<Request, 'url' | 'method' | 'headers'>;
   extensions?: Array<() => GraphQLExtension>;
+  persistedQueryHit?: boolean;
+  persistedQueryRegister?: boolean;
 }
 
 function isQueryOperation(query: DocumentNode, operationName: string) {
@@ -105,9 +106,6 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
   } else if (options.cacheControl) {
     extensions.push(new CacheControlExtension(options.cacheControl));
   }
-  if (options.logFunction) {
-    extensions.push(new LogFunctionExtension(options.logFunction));
-  }
 
   const extensionStack = new GraphQLExtensionStack(extensions);
 
@@ -133,6 +131,8 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
     parsedQuery: options.parsedQuery,
     operationName: options.operationName,
     variables: options.variables,
+    persistedQueryHit: options.persistedQueryHit,
+    persistedQueryRegister: options.persistedQueryRegister,
   });
   return Promise.resolve()
     .then(() => {
@@ -198,7 +198,6 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
               ),
               {
                 formatter: options.formatError,
-                logFunction: options.logFunction,
                 debug,
               },
             );
@@ -250,7 +249,6 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
           if (result.errors) {
             response.errors = formatApolloErrors([...result.errors], {
               formatter: options.formatError,
-              logFunction: options.logFunction,
               debug,
             });
           }

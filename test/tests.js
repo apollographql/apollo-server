@@ -28,3 +28,5 @@ require('../packages/apollo-server-express/dist/datasource.test');
 require('../packages/apollo-server-hapi/dist/hapiApollo.test') && // Hapi 17 is 8.9+
   require('../packages/apollo-server-hapi/dist/ApolloServer.test.js');
 require('../packages/apollo-server-express/dist/apolloServerHttp.test');
+
+require('../packages/apollo-server-lambda/dist/lambdaApollo.test');

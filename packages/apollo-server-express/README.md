@@ -8,15 +8,14 @@ description: Setting up Apollo Server with Express.js or Connect
 This is the Express and Connect integration of GraphQL Server. Apollo Server is a community-maintained open-source GraphQL server that works with many Node.js HTTP server frameworks. [Read the docs](https://www.apollographql.com/docs/apollo-server/). [Read the CHANGELOG.](https://github.com/apollographql/apollo-server/blob/master/CHANGELOG.md)
 
 ```sh
-npm install apollo-server@beta apollo-server-express@beta
+npm install apollo-server-express@rc
 ```
 
 ## Express
 
 ```js
 const express = require('express');
-const { registerServer } = require('apollo-server-express');
-const { ApolloServer, gql } = require('apollo-server');
+const { ApolloServer, gql } = require('apollo-server-express');
 
 // Construct a schema, using GraphQL schema language
 const typeDefs = gql`
@@ -35,19 +34,19 @@ const resolvers = {
 const server = new ApolloServer({ typeDefs, resolvers });
 
 const app = express();
-registerServer({ server, app });
+server.applyMiddleware({ app });
 
-server.listen().then(({ url }) => {
-  console.log(`🚀 Server ready at ${url}`);
-});
+app.listen({ port: 4000 }, () =>
+  console.log(`🚀 Server ready at http://localhost:4000${server.graphqlPath}`)
+)
 ```
 
 ## Connect
 
 ```js
-import connect from 'connect';
-const { registerServer } = require('apollo-server-express');
-const { ApolloServer, gql } = require('apollo-server');
+const connect = require('connect');
+const { ApolloServer, gql } = require('apollo-server-express');
+const query = require('qs-middleware');
 
 // Construct a schema, using GraphQL schema language
 const typeDefs = gql`
@@ -66,12 +65,17 @@ const resolvers = {
 const server = new ApolloServer({ typeDefs, resolvers });
 
 const app = connect();
-registerServer({ server, app });
+const path = '/graphql';
 
-server.listen().then(({ url }) => {
-  console.log(`🚀 Server ready at ${url}`);
-});
+server.use(query());
+server.applyMiddleware({ app, path });
+
+app.listen({ port: 4000 }, () =>
+  console.log(`🚀 Server ready at http://localhost:4000${server.graphqlPath}`)
+)
 ```
+
+> Note; `qs-middleware` is only required if running outside of Meteor
 
 ## Principles
 

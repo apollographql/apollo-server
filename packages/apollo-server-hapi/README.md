@@ -8,74 +8,31 @@ description: Setting up Apollo Server with Hapi
 This is the Hapi integration of Apollo Server. Apollo Server is a community-maintained open-source Apollo Server that works with many Node.js HTTP server frameworks. [Read the docs](https://www.apollographql.com/docs/apollo-server/). [Read the CHANGELOG.](https://github.com/apollographql/apollo-server/blob/master/CHANGELOG.md)
 
 ```sh
-npm install apollo-server-hapi@beta
+npm install apollo-server-hapi@rc
 ```
 
 ## Usage
 
-After constructing Apollo server, a hapi server can be enabled with a call to `registerServer`. Ensure that `autoListen` is set to false in the `Hapi.server` constructor.
-
 The code below requires Hapi 17 or higher.
 
 ```js
-const { registerServer, ApolloServer, gql } = require('apollo-server-hapi');
-
-const HOST = 'localhost';
-
-const typeDefs = gql`
-  type Query {
-    hello: String
-  }
-`;
-
-const resolvers = {
-  Query: {
-    hello: () => 'hello',
-  },
-}
-
-async function StartServer() {
-  const server = new ApolloServer({ typeDefs, resolvers });
-
-  await registerServer({
-    server,
-    //Hapi Server constructor options
-    options: {
-      host: HOST,
-    },
-  });
-
-  server.listen().then(({ url }) => {
-    console.log(`🚀  Server ready at ${url}`);
-  });
-}
-
-StartServer().catch(error => console.log(error));
-```
-
-For more advanced use cases or migrating from 1.x, a Hapi server can be constructed and passed into `registerServer`.
-
-```js
-const { ApolloServer, gql, registerServer } = require('apollo-server-hapi');
+const { ApolloServer, gql } = require('apollo-server-hapi');
 const Hapi = require('hapi');
 
 async function StartServer() {
   const server = new ApolloServer({ typeDefs, resolvers });
 
   const app = new Hapi.server({
-    //autoListen must be set to false, since Apollo Server will setup the listener
-    autoListen: false,
-    host: HOST,
+    port: 4000
   });
 
-  await registerServer({
-    server,
+  await server.applyMiddleware({
     app,
   });
 
-  server.listen().then(({ url }) => {
-    console.log(`🚀  Server ready at ${url}`);
-  });
+  await server.installSubscriptionHandlers(app.listener);
+
+  await app.start();
 }
 
 StartServer().catch(error => console.log(error));

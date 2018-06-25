@@ -1,4 +1,9 @@
 import 'apollo-server-env';
+import {
+  ApolloError,
+  AuthenticationError,
+  ForbiddenError,
+} from 'apollo-server-errors';
 import { RESTDataSource } from '../RESTDataSource';
 
 import fetch, { mockFetch, unmockFetch } from '../../../../__mocks__/fetch';
@@ -178,4 +183,52 @@ describe('RESTDataSource', () => {
       expect(fetch.mock.calls[0][0].method).toEqual(method);
     });
   }
+
+  it('throws an AuthenticationError when the response status is 401', async () => {
+    const dataSource = new class extends RESTDataSource {
+      baseURL = 'https://api.example.com';
+
+      getFoo() {
+        return this.get('foo');
+      }
+    }();
+
+    dataSource.httpCache = httpCache;
+
+    fetch.mockResponseOnce('Invalid token', undefined, 401);
+
+    await expect(dataSource.getFoo()).rejects.toThrow(AuthenticationError);
+  });
+
+  it('throws a ForbiddenError when the response status is 403', async () => {
+    const dataSource = new class extends RESTDataSource {
+      baseURL = 'https://api.example.com';
+
+      getFoo() {
+        return this.get('foo');
+      }
+    }();
+
+    dataSource.httpCache = httpCache;
+
+    fetch.mockResponseOnce('No access', undefined, 403);
+
+    await expect(dataSource.getFoo()).rejects.toThrow(ForbiddenError);
+  });
+
+  it('throws an ApolloError when the response status is 500', async () => {
+    const dataSource = new class extends RESTDataSource {
+      baseURL = 'https://api.example.com';
+
+      getFoo() {
+        return this.get('foo');
+      }
+    }();
+
+    dataSource.httpCache = httpCache;
+
+    fetch.mockResponseOnce('Oops', undefined, 500);
+
+    await expect(dataSource.getFoo()).rejects.toThrow(ApolloError);
+  });
 });

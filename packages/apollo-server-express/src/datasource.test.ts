@@ -1,8 +1,8 @@
 import { expect } from 'chai';
 import 'mocha';
-import express from 'express';
+import * as express from 'express';
 
-import http from 'http';
+import * as http from 'http';
 
 import { RESTDataSource } from 'apollo-datasource-rest';
 
@@ -25,7 +25,7 @@ export class IdAPI extends RESTDataSource {
   }
 }
 
-//to remove the circular dependency, we reference it directly
+// to remove the circular dependency, we reference it directly
 const gql = require('../../apollo-server/dist/index').gql;
 
 const typeDefs = gql`

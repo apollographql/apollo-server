@@ -1,21 +1,18 @@
-import express from 'express';
-import corsMiddleware from 'cors';
+import * as express from 'express';
+import * as corsMiddleware from 'cors';
 import { json, OptionsJson } from 'body-parser';
 import playgroundMiddleware from 'graphql-playground-middleware-express';
 import { MiddlewareOptions as PlaygroundMiddlewareOptions } from 'graphql-playground-html';
 import { ApolloServerBase, formatApolloErrors } from 'apollo-server-core';
-import accepts from 'accepts';
-import typeis from 'type-is';
+import * as accepts from 'accepts';
+import * as typeis from 'type-is';
 
 import { graphqlExpress } from './expressApollo';
 
-import {
-  processRequest as processFileUploads,
-  GraphQLUpload,
-} from 'apollo-upload-server';
+import { processRequest as processFileUploads } from 'apollo-upload-server';
 
 export { GraphQLOptions, GraphQLExtension } from 'apollo-server-core';
-import { GraphQLOptions, gql, makeExecutableSchema } from 'apollo-server-core';
+import { GraphQLOptions, FileUploadOptions } from 'apollo-server-core';
 
 export interface ServerRegistration {
   // Note: You can also pass a connect.Server here. If we changed this field to
@@ -31,12 +28,10 @@ export interface ServerRegistration {
   onHealthCheck?: (req: express.Request) => Promise<any>;
   disableHealthCheck?: boolean;
   gui?: boolean | PlaygroundMiddlewareOptions;
-  //https://github.com/jaydenseric/apollo-upload-server#options
-  uploads?: boolean | Record<string, any>;
 }
 
 const fileUploadMiddleware = (
-  uploadsConfig: Record<string, any>,
+  uploadsConfig: FileUploadOptions,
   server: ApolloServerBase,
 ) => (
   req: express.Request,
@@ -57,7 +52,6 @@ const fileUploadMiddleware = (
           formatApolloErrors([error], {
             formatter: server.requestOptions.formatError,
             debug: server.requestOptions.debug,
-            logFunction: server.requestOptions.logFunction,
           }),
         );
       });
@@ -67,9 +61,9 @@ const fileUploadMiddleware = (
 };
 
 export class ApolloServer extends ApolloServerBase {
-  //This translates the arguments from the middleware into graphQL options It
-  //provides typings for the integration specific behavior, ideally this would
-  //be propagated with a generic to the super class
+  // This translates the arguments from the middleware into graphQL options It
+  // provides typings for the integration specific behavior, ideally this would
+  // be propagated with a generic to the super class
   async createGraphQLServerOptions(
     req: express.Request,
     res: express.Response,
@@ -81,6 +75,10 @@ export class ApolloServer extends ApolloServerBase {
     return true;
   }
 
+  protected supportsUploads(): boolean {
+    return true;
+  }
+
   public applyMiddleware({
     app,
     path,
@@ -89,14 +87,13 @@ export class ApolloServer extends ApolloServerBase {
     disableHealthCheck,
     gui,
     onHealthCheck,
-    uploads,
   }: ServerRegistration) {
     if (!path) path = '/graphql';
 
     if (!disableHealthCheck) {
-      //uses same path as engine proxy, but is generally useful.
+      // uses same path as engine proxy, but is generally useful.
       app.use('/.well-known/apollo/server-health', (req, res) => {
-        //Response follows https://tools.ietf.org/html/draft-inadarei-api-health-check-01
+        // Response follows https://tools.ietf.org/html/draft-inadarei-api-health-check-01
         res.type('application/health+json');
 
         if (onHealthCheck) {
@@ -114,20 +111,8 @@ export class ApolloServer extends ApolloServerBase {
     }
 
     let uploadsMiddleware;
-    if (uploads !== false) {
-      this.enhanceSchema(
-        makeExecutableSchema({
-          typeDefs: gql`
-            scalar Upload
-          `,
-          resolvers: { Upload: GraphQLUpload },
-        }),
-      );
-
-      uploadsMiddleware = fileUploadMiddleware(
-        typeof uploads !== 'boolean' ? uploads : {},
-        this,
-      );
+    if (this.uploadsConfig) {
+      uploadsMiddleware = fileUploadMiddleware(this.uploadsConfig, this);
     }
 
     // XXX multiple paths?
@@ -160,7 +145,7 @@ export class ApolloServer extends ApolloServerBase {
 
     app.use(path, (req, res, next) => {
       if (guiEnabled && req.method === 'GET') {
-        //perform more expensive content-type check only if necessary
+        // perform more expensive content-type check only if necessary
         const accept = accepts(req);
         const types = accept.types() as string[];
         const prefersHTML =

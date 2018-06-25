@@ -111,8 +111,6 @@ Your server itself is hosted at http://localhost:4000/graphql. This would be the
 
 Depending on whether we are creating a new application or an existing application, the steps will vary slightly since Apollo Server must adapt to the semantics of existing servers (e.g. Express, Hapi, etc.)
 
-Both import methods will use the `apollo-server` module we installed in the previous step, but existing applications will also install a middleware package which corresponds to the desired HTTP server.
-
 <h3 id="middleware">Middleware</h3>
 
 Existing applications generally already have middleware in place and Apollo Server works along with those middleware. To integrate with Apollo Server, we'll pass it into the `server.applyMiddleware` method as `app` to add the Apollo Server's middleware.
@@ -136,6 +134,7 @@ app.listen({ port: 4000 }, () =>
 )
 ```
 
+Hapi follows the same pattern with `apollo-server-express` replaced with `apollo-server-hapi` and `app` replaced with Hapi server. `applyMiddleware` registers plugins, so it should be called with `await`.
 
 <h3 id="serverless">Serverless</h3>
 

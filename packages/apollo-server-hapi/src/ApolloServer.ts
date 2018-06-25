@@ -1,21 +1,18 @@
-import hapi from 'hapi';
+import * as hapi from 'hapi';
 import { ApolloServerBase } from 'apollo-server-core';
 import { parseAll } from 'accept';
 import {
   renderPlaygroundPage,
   MiddlewareOptions as PlaygroundMiddlewareOptions,
 } from 'graphql-playground-html';
-import {
-  processRequest as processFileUploads,
-  GraphQLUpload,
-} from 'apollo-upload-server';
+import { processRequest as processFileUploads } from 'apollo-upload-server';
 
 import { graphqlHapi } from './hapiApollo';
 
 export { GraphQLOptions, GraphQLExtension } from 'apollo-server-core';
-import { GraphQLOptions, gql, makeExecutableSchema } from 'apollo-server-core';
+import { GraphQLOptions, FileUploadOptions } from 'apollo-server-core';
 
-function handleFileUploads(uploadsConfig: Record<string, any>) {
+function handleFileUploads(uploadsConfig: FileUploadOptions) {
   return async (request: hapi.Request) => {
     if (request.mime === 'multipart/form-data') {
       Object.defineProperty(request, 'payload', {
@@ -27,9 +24,9 @@ function handleFileUploads(uploadsConfig: Record<string, any>) {
 }
 
 export class ApolloServer extends ApolloServerBase {
-  //This translates the arguments from the middleware into graphQL options It
-  //provides typings for the integration specific behavior, ideally this would
-  //be propagated with a generic to the super class
+  // This translates the arguments from the middleware into graphQL options It
+  // provides typings for the integration specific behavior, ideally this would
+  // be propagated with a generic to the super class
   async createGraphQLServerOptions(
     request: hapi.Request,
     h: hapi.ResponseToolkit,
@@ -41,6 +38,10 @@ export class ApolloServer extends ApolloServerBase {
     return true;
   }
 
+  protected supportsUploads(): boolean {
+    return true;
+  }
+
   public async applyMiddleware({
     app,
     cors,
@@ -48,20 +49,8 @@ export class ApolloServer extends ApolloServerBase {
     disableHealthCheck,
     gui,
     onHealthCheck,
-    uploads,
   }: ServerRegistration) {
     if (!path) path = '/graphql';
-
-    if (uploads !== false) {
-      this.enhanceSchema(
-        makeExecutableSchema({
-          typeDefs: gql`
-            scalar Upload
-          `,
-          resolvers: { Upload: GraphQLUpload },
-        }),
-      );
-    }
 
     await app.ext({
       type: 'onRequest',
@@ -70,10 +59,8 @@ export class ApolloServer extends ApolloServerBase {
           return h.continue;
         }
 
-        if (uploads !== false) {
-          await handleFileUploads(typeof uploads !== 'boolean' ? uploads : {})(
-            request,
-          );
+        if (this.uploadsConfig) {
+          await handleFileUploads(this.uploadsConfig)(request);
         }
 
         // Note: if you enable a gui in production and expect to be able to see your
@@ -85,7 +72,7 @@ export class ApolloServer extends ApolloServerBase {
 
         // enableGUI takes precedence over the server tools setting
         if (guiEnabled && request.method === 'get') {
-          //perform more expensive content-type check only if necessary
+          // perform more expensive content-type check only if necessary
           const accept = parseAll(request.headers);
           const types = accept.mediaTypes as string[];
           const prefersHTML =
@@ -108,7 +95,7 @@ export class ApolloServer extends ApolloServerBase {
           }
         }
         return h.continue;
-      },
+      }.bind(this),
     });
 
     if (!disableHealthCheck) {
@@ -116,7 +103,7 @@ export class ApolloServer extends ApolloServerBase {
         method: '*',
         path: '/.well-known/apollo/server-health',
         options: {
-          cors: typeof cors === 'boolean' ? cors : true,
+          cors: cors !== undefined ? cors : true,
         },
         handler: async function(request, h) {
           if (onHealthCheck) {
@@ -142,7 +129,7 @@ export class ApolloServer extends ApolloServerBase {
         path: path,
         graphqlOptions: this.createGraphQLServerOptions.bind(this),
         route: {
-          cors: typeof cors === 'boolean' ? cors : true,
+          cors: cors !== undefined ? cors : true,
         },
       },
     });
@@ -154,7 +141,7 @@ export class ApolloServer extends ApolloServerBase {
 export interface ServerRegistration {
   app?: hapi.Server;
   path?: string;
-  cors?: boolean;
+  cors?: boolean | hapi.RouteOptionsCors;
   onHealthCheck?: (request: hapi.Request) => Promise<any>;
   disableHealthCheck?: boolean;
   gui?: boolean | PlaygroundMiddlewareOptions;

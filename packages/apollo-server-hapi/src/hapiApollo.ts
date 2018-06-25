@@ -1,5 +1,5 @@
-import Boom from 'boom';
-import { Server, Request } from 'hapi';
+import * as Boom from 'boom';
+import { Server, Request, RouteOptions } from 'hapi';
 import {
   GraphQLOptions,
   runHttpQuery,
@@ -23,7 +23,7 @@ export interface HapiOptionsFunction {
 export interface HapiPluginOptions {
   path: string;
   vhost?: string;
-  route?: any;
+  route?: RouteOptions;
   graphqlOptions: GraphQLOptions | HapiOptionsFunction;
 }
 
@@ -33,7 +33,6 @@ const graphqlHapi: IPlugin = {
     if (!options || !options.graphqlOptions) {
       throw new Error('Apollo Server requires options.');
     }
-
     server.route({
       method: ['GET', 'POST'],
       path: options.path || '/graphql',
@@ -41,19 +40,24 @@ const graphqlHapi: IPlugin = {
       options: options.route || {},
       handler: async (request, h) => {
         try {
-          const gqlResponse = await runHttpQuery([request], {
-            method: request.method.toUpperCase(),
-            options: options.graphqlOptions,
-            query:
-              request.method === 'post'
-                ? //TODO type payload as string or Record
-                  (request.payload as any)
-                : request.query,
-            request: convertNodeHttpToRequest(request.raw.req),
-          });
+          const { graphqlResponse, responseInit } = await runHttpQuery(
+            [request],
+            {
+              method: request.method.toUpperCase(),
+              options: options.graphqlOptions,
+              query:
+                request.method === 'post'
+                  ? // TODO type payload as string or Record
+                    (request.payload as any)
+                  : request.query,
+              request: convertNodeHttpToRequest(request.raw.req),
+            },
+          );
 
-          const response = h.response(gqlResponse);
-          response.type('application/json');
+          const response = h.response(graphqlResponse);
+          Object.keys(responseInit.headers).forEach(key =>
+            response.header(key, responseInit.headers[key]),
+          );
           return response;
         } catch (error) {
           if ('HttpQueryError' !== error.name) {

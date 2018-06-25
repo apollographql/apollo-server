@@ -191,7 +191,7 @@ function oddValue(value) {
   return value % 2 === 1 ? value : null;
 }
 
-const resovers = {
+const resolvers = {
   Odd: new GraphQLScalarType({
     name: 'Odd',
     description: 'Odd custom scalar type',
@@ -236,7 +236,7 @@ type Query {
 }
 ```
 
-A query migh look like this:
+A query might look like this:
 
 ```graphql
 query {
@@ -306,7 +306,7 @@ const resolvers = {
 };
 ```
 
-These don't change the public API at all and the resovers accept these value instead of the schema value, like so:
+These don't change the public API at all and the resolvers accept these value instead of the schema value, like so:
 
 ```js
 const resolvers = {

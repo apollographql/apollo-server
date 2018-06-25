@@ -1,10 +1,10 @@
 // Note: express is only used if you use the ApolloServer.listen API to create
-// an express app for you instead of registerServer (which you might not even
+// an express app for you instead of applyMiddleware (which you might not even
 // use with express). The dependency is unused otherwise, so don't worry if
 // you're not using express or your version doesn't quite match up.
-import express from 'express';
-import http from 'http';
-import net from 'net';
+import * as express from 'express';
+import * as http from 'http';
+import * as net from 'net';
 import { ApolloServer as ApolloServerBase } from 'apollo-server-express';
 
 export { GraphQLOptions, GraphQLExtension, gql } from 'apollo-server-core';
@@ -59,7 +59,7 @@ export class ApolloServer extends ApolloServerBase {
     // object, so we have to create it.
     const app = express();
 
-    //provide generous values for the getting started experience
+    // provide generous values for the getting started experience
     this.applyMiddleware({
       app,
       path: '/',
