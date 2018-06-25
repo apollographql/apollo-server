@@ -3,7 +3,7 @@ title: File Uploads
 description: Implementing File Uploads on Apollo Server
 ---
 
-File uploads are a requirement for many applications. Apollo Server supports the [GraphQL multipart request spec](https://github.com/jaydenseric/graphql-multipart-request-spec) for uploading files as mutation arguments.
+File uploads are a requirement for many applications. Apollo Server supports the [GraphQL multipart request spec](https://github.com/jaydenseric/graphql-multipart-request-spec) for uploading files as mutation arguments using [apollo-upload-server](https://github.com/jaydenseric/apollo-upload-server).
 
 ## File upload with default options
 
@@ -31,7 +31,7 @@ const typeDefs = gql`
 const resolvers = {
   Query: {
     files: () => {
-      // Return the record of files uploaded.
+      // Return the record of files uploaded from your DB or API or filesystem.
     }
   },
   Mutation: {
