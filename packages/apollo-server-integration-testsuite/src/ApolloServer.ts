@@ -304,6 +304,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
         const formatError = stub().callsFake(error => {
           expect(error instanceof Error).true;
+          expect(error.constructor.name).to.equal('Error');
           return error;
         });
 
