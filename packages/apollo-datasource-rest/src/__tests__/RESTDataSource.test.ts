@@ -92,6 +92,44 @@ describe('RESTDataSource', () => {
     expect(data).toEqual('bar');
   });
 
+  it('interprets paths relative to the baseURL', async () => {
+    const dataSource = new class extends RESTDataSource {
+      baseURL = 'https://api.example.com';
+
+      getFoo() {
+        return this.get('foo');
+      }
+    }();
+
+    dataSource.httpCache = httpCache;
+
+    fetch.mockJSONResponseOnce();
+
+    await dataSource.getFoo();
+
+    expect(fetch.mock.calls.length).toEqual(1);
+    expect(fetch.mock.calls[0][0].url).toEqual('https://api.example.com/foo');
+  });
+
+  it('adds a trailing slash to the baseURL if needed', async () => {
+    const dataSource = new class extends RESTDataSource {
+      baseURL = 'https://example.com/api';
+
+      getFoo() {
+        return this.get('foo');
+      }
+    }();
+
+    dataSource.httpCache = httpCache;
+
+    fetch.mockJSONResponseOnce();
+
+    await dataSource.getFoo();
+
+    expect(fetch.mock.calls.length).toEqual(1);
+    expect(fetch.mock.calls[0][0].url).toEqual('https://example.com/api/foo');
+  });
+
   it('allows adding query string parameters', async () => {
     const dataSource = new class extends RESTDataSource {
       baseURL = 'https://api.example.com';

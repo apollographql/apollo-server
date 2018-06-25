@@ -94,7 +94,10 @@ export abstract class RESTDataSource<TContext = any> {
     params?: URLSearchParamsInit,
     init?: RequestInit,
   ): Promise<TResult> {
-    const url = new URL(path, this.baseURL);
+    const normalizedBaseURL = this.baseURL.endsWith('/')
+      ? this.baseURL
+      : this.baseURL.concat('/');
+    const url = new URL(path, normalizedBaseURL);
 
     if (params) {
       // Append params to existing params in the path
