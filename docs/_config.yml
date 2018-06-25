@@ -22,6 +22,7 @@ sidebar_categories:
     - features/data-sources
     - features/cdn
     - features/subscriptions
+    - features/file-uploads
     - features/metrics
     - features/scalars-enums
     - features/unions-interfaces
