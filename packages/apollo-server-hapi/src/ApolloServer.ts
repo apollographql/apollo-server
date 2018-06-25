@@ -126,7 +126,7 @@ export class ApolloServer extends ApolloServerBase {
     await app.register({
       plugin: graphqlHapi,
       options: {
-        path: path,
+        path,
         graphqlOptions: this.createGraphQLServerOptions.bind(this),
         route: {
           cors: cors !== undefined ? cors : true,

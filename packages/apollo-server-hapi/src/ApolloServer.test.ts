@@ -183,18 +183,27 @@ describe('apollo-server-hapi', () => {
       });
     });
 
-    // XXX currently this test fails. Unsure why, since the otpins are passed
-    // correctly to the server.route call in graphqlHapi
-    xit('accepts cors configuration', async () => {
+    it('accepts cors configuration', async () => {
       server = new ApolloServer({
         typeDefs,
         resolvers,
       });
-      app = new Server({ port: 4000 });
+      app = new Server({
+        port: 4000,
+      });
 
       await server.applyMiddleware({
         app,
-        cors: { origin: ['apollographql.com'] },
+        cors: {
+          additionalExposedHeaders: ['X-Apollo'],
+          exposedHeaders: [
+            'Accept',
+            'Authorization',
+            'Content-Type',
+            'If-None-Match',
+            'Another-One',
+          ],
+        },
       });
       await app.start();
 
@@ -203,9 +212,12 @@ describe('apollo-server-hapi', () => {
 
       const apolloFetch = createApolloFetch({ uri }).useAfter(
         (response, next) => {
+          console.log(response.response.headers);
           expect(
-            response.response.headers.get('access-control-allow-origin'),
-          ).to.equal('apollographql.com');
+            response.response.headers.get('access-control-expose-headers'),
+          ).to.deep.equal(
+            'Accept,Authorization,Content-Type,If-None-Match,Another-One,X-Apollo',
+          );
           next();
         },
       );
