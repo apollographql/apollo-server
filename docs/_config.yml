@@ -35,7 +35,7 @@ sidebar_categories:
   Deployment:
     # - deployment/index
     - deployment/heroku
-    # - deployment/lambda
+    - deployment/lambda
   API Reference:
     - api/apollo-server
     - title: graphql-subscriptions
