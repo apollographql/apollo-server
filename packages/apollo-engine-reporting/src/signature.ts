@@ -10,30 +10,26 @@
 // "signatures". We don't (by default) send the full query string of queries to
 // the Engine servers. Instead, each trace has its query string's "signature".
 //
-// The default signature implementation drops unused operations and fragments
-// from the query document and formats it as a GraphQL query with all extraneous
-// whitespace removed.
+// You can specify any function mapping a GraphQL query AST (DocumentNode) to
+// string as your signature algorithm by providing it as the 'signature' option
+// to the EngineReportingAgent constructor. Ideally, your signature should be a
+// valid GraphQL query, though as of now the Engine servers do not re-parse your
+// signature and do not expect it to match the execution tree in the trace.
 //
-// However, you can specify any function mapping a GraphQL query AST
-// (DocumentNode) to string as your signature algorithm by providing it as the
-// 'signature' option to the EngineReportingAgent constructor. Ideally, your
-// signature should be a valid GraphQL query, though as of now the Engine
-// servers do not re-parse your signature and do not expect it to match the
-// execution tree in the trace.
-//
-// In addition to providing the defaultSignature function, this file also
-// provides several useful building blocks for writing your own signature
-// function. This includes:
+// This file provides several useful building blocks for writing your own
+// signature function. These are:
 //
 // - dropUnusedDefinitions, which removes operations and fragments that
-//   aren't going to be used in execution (part of defaultSignature)
-// - printWithReducedWhitespace, a variant on graphql-js's 'print'
-//   which gets rid of unneeded whitespace (part of defaultSignature)
+//   aren't going to be used in execution
 // - hideLiterals, which replaces all numeric and string literals as well
 //   as list and object input values with "empty" values
+// - removeAliases, which removes field aliasing from the query
 // - sortAST, which sorts the children of most multi-child nodes
 //   consistently
-// - removeAliases, which removes field aliasing from the query
+// - printWithReducedWhitespace, a variant on graphql-js's 'print'
+//   which gets rid of unneeded whitespace
+//
+// defaultSignature consists of applying all of these building blocks.
 //
 // Historical note: the default signature algorithm of the Go engineproxy
 // performed all of the above operations, and the Engine servers then re-ran a
@@ -48,9 +44,7 @@
 // explicitly include the operation name with each signature; this means that
 // the server no longer needs to parse the signature or run its own signature
 // algorithm on it, and the details of the signature algorithm are now up to the
-// reporting agent. We decided to make the default signature algorithm be less
-// invasive than in engineproxy, and to allow users with special needs to add
-// the other building blocks in when necessary.
+// reporting agent.
 
 import { sortBy, ListIteratee } from 'lodash';
 
@@ -240,5 +234,9 @@ export function defaultSignature(
   ast: DocumentNode,
   operationName: string,
 ): string {
-  return printWithReducedWhitespace(dropUnusedDefinitions(ast, operationName));
+  return printWithReducedWhitespace(
+    sortAST(
+      removeAliases(hideLiterals(dropUnusedDefinitions(ast, operationName))),
+    ),
+  );
 }
