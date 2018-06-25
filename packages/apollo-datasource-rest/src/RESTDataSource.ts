@@ -5,6 +5,12 @@ import {
   ForbiddenError,
 } from 'apollo-server-errors';
 
+export type RequestOptions = RequestInit & {
+  params?: URLSearchParamsInit;
+  body: Body;
+};
+export type Body = BodyInit | object;
+
 export abstract class RESTDataSource<TContext = any> {
   abstract baseURL: string;
 
@@ -32,68 +38,64 @@ export abstract class RESTDataSource<TContext = any> {
   protected async get<TResult = any>(
     path: string,
     params?: URLSearchParamsInit,
-    options?: RequestInit,
+    options?: RequestOptions,
   ): Promise<TResult> {
     return this.fetch<TResult>(
       path,
-      params,
-      Object.assign({ method: 'GET' }, options),
+      Object.assign({ method: 'GET', params }, options),
     );
   }
 
   protected async post<TResult = any>(
     path: string,
-    params?: URLSearchParamsInit,
-    options?: RequestInit,
+    body?: Body,
+    options?: RequestOptions,
   ): Promise<TResult> {
     return this.fetch<TResult>(
       path,
-      params,
-      Object.assign({ method: 'POST' }, options),
+      Object.assign({ method: 'POST', body }, options),
     );
   }
 
   protected async patch<TResult = any>(
     path: string,
-    params?: URLSearchParamsInit,
-    options?: RequestInit,
+    body?: Body,
+    options?: RequestOptions,
   ): Promise<TResult> {
     return this.fetch<TResult>(
       path,
-      params,
-      Object.assign({ method: 'PATCH' }, options),
+      Object.assign({ method: 'PATCH', body }, options),
     );
   }
 
   protected async put<TResult = any>(
     path: string,
-    params?: URLSearchParamsInit,
-    options?: RequestInit,
+    body?: Body,
+    options?: RequestOptions,
   ): Promise<TResult> {
     return this.fetch<TResult>(
       path,
-      params,
-      Object.assign({ method: 'PUT' }, options),
+      Object.assign({ method: 'PUT', body }, options),
     );
   }
 
   protected async delete<TResult = any>(
     path: string,
     params?: URLSearchParamsInit,
-    options?: RequestInit,
+    options?: RequestOptions,
   ): Promise<TResult> {
     return this.fetch<TResult>(
       path,
-      params,
-      Object.assign({ method: 'DELETE' }, options),
+      Object.assign({ method: 'DELETE', params }, options),
     );
   }
 
   private async fetch<TResult>(
     path: string,
-    params?: URLSearchParamsInit,
-    init?: RequestInit,
+    options: RequestOptions,
   ): Promise<TResult> {
+    const { params, ...init } = options;
+
     const normalizedBaseURL = this.baseURL.endsWith('/')
       ? this.baseURL
       : this.baseURL.concat('/');
@@ -106,14 +108,27 @@ export abstract class RESTDataSource<TContext = any> {
       }
     }
 
-    return this.trace(`${(init && init.method) || 'GET'} ${url}`, async () => {
-      const request = new Request(String(url));
+    // We accept arbitrary objects as body and serialize them as JSON
+    if (
+      init.body !== undefined &&
+      typeof init.body !== 'string' &&
+      !(init.body instanceof ArrayBuffer)
+    ) {
+      init.body = JSON.stringify(init.body);
+      if (!(init.headers instanceof Headers)) {
+        init.headers = new Headers(init.headers);
+      }
+      init.headers.set('Content-Type', 'application/json');
+    }
+
+    return this.trace(`${init.method || 'GET'} ${url}`, async () => {
+      const request = new Request(String(url), init);
 
       if (this.willSendRequest) {
         this.willSendRequest(request);
       }
 
-      const response = await this.httpCache.fetch(request, init);
+      const response = await this.httpCache.fetch(request);
       if (response.ok) {
         const contentType = response.headers.get('Content-Type');
 
