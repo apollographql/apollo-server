@@ -52,7 +52,10 @@ export function graphqlLambda(
         callback(null, {
           body: graphqlResponse,
           statusCode: 200,
-          headers: responseInit.headers,
+          headers: {
+            ...responseInit.headers,
+            'Content-Length': graphqlResponse.length,
+          },
         });
       },
       (error: HttpQueryError) => {

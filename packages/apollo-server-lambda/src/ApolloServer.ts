@@ -12,14 +12,16 @@ import { graphqlLambda } from './lambdaApollo';
 
 export interface CreateHandlerOptions {
   gui?: boolean | PlaygroundMiddlewareOptions;
-  cors?: {
-    origin?: boolean | string | string[];
-    methods?: string | string[];
-    allowedHeaders?: string | string[];
-    exposedHeaders?: string | string[];
-    credentials?: boolean;
-    maxAge?: number;
-  };
+  cors?:
+    | boolean
+    | {
+        origin?: boolean | string | string[];
+        methods?: string | string[];
+        allowedHeaders?: string | string[];
+        exposedHeaders?: string | string[];
+        credentials?: boolean;
+        maxAge?: number;
+      };
 }
 
 export class ApolloServer extends ApolloServerBase {
@@ -42,7 +44,11 @@ export class ApolloServer extends ApolloServerBase {
 
     const corsHeaders = {};
 
-    if (cors) {
+    if (typeof cors === 'boolean' && cors === true) {
+      corsHeaders['Access-Control-Allow-Methods'] = 'GET,POST';
+      corsHeaders['Access-Control-Allow-Headers'] = '*';
+      corsHeaders['Access-Control-Allow-Origin'] = '*';
+    } else if (typeof cors === 'object') {
       if (cors.methods) {
         if (typeof cors.methods === 'string') {
           corsHeaders['Access-Control-Allow-Methods'] = cors.methods;
@@ -84,19 +90,30 @@ export class ApolloServer extends ApolloServerBase {
       context: lambda.Context,
       callback: lambda.APIGatewayProxyCallback,
     ) => {
-      if (cors && cors.origin) {
-        if (typeof cors.origin === 'string') {
-          corsHeaders['Access-Control-Allow-Origin'] = cors.origin;
-        } else if (
-          typeof cors.origin === 'boolean' ||
-          (Array.isArray(cors.origin) &&
-            cors.origin.includes(
-              event.headers['Origin'] || event.headers['origin'],
-            ))
-        ) {
-          corsHeaders['Access-Control-Allow-Origin'] =
-            event.headers['Origin'] || event.headers['origin'];
+      if (event.httpMethod === 'OPTIONS') {
+        if (typeof cors === 'object' && cors.origin) {
+          if (typeof cors.origin === 'string') {
+            corsHeaders['Access-Control-Allow-Origin'] = cors.origin;
+          } else if (
+            typeof cors.origin === 'boolean' ||
+            (Array.isArray(cors.origin) &&
+              cors.origin.includes(
+                event.headers['Origin'] || event.headers['origin'],
+              ))
+          ) {
+            corsHeaders['Access-Control-Allow-Origin'] =
+              event.headers['Origin'] || event.headers['origin'];
+          }
         }
+
+        return callback(null, {
+          body: '',
+          statusCode: 200,
+          headers: {
+            ...corsHeaders,
+            'Content-Length': 0,
+          },
+        });
       }
 
       if (guiEnabled && event.httpMethod === 'GET') {
@@ -108,12 +125,15 @@ export class ApolloServer extends ApolloServerBase {
             version: '1.7.0',
           };
 
+          const playgroundPageHtml = renderPlaygroundPage(
+            playgroundRenderPageOptions,
+          );
           return callback(null, {
-            body: renderPlaygroundPage(playgroundRenderPageOptions),
+            body: playgroundPageHtml,
             statusCode: 200,
             headers: {
               'Content-Type': 'text/html',
-              ...corsHeaders,
+              'Content-Length': playgroundPageHtml.length,
             },
           });
         }
@@ -125,10 +145,7 @@ export class ApolloServer extends ApolloServerBase {
       ) => {
         callback(error, {
           ...result,
-          headers: {
-            ...result.headers,
-            ...corsHeaders,
-          },
+          headers: result.headers,
         });
       };
 
