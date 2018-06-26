@@ -303,7 +303,9 @@ export async function runHttpQuery(
           e.message = `Context creation failed: ${e.message}`;
           throwHttpGraphQLError(500, [e], optionsObject);
         }
-      } else if (isBatch) {
+      } else {
+        // Always clone the context if it's not a function, because that preserves
+        // having a fresh context per request.
         context = Object.assign(
           Object.create(Object.getPrototypeOf(context)),
           context,
