@@ -1,7 +1,7 @@
 # GraphQL Server for Express, Connect, Hapi, Cloudflare workers, and more
 
 [![npm version](https://badge.fury.io/js/apollo-server-core.svg)](https://badge.fury.io/js/apollo-server-core)
-[![Build Status](https://circleci.com/gh/apollographql/apollo-cache-control-js.svg?style=svg)](https://circleci.com/gh/apollographql/apollo-cache-control-js)
+[![Build Status](https://circleci.com/gh/apollographql/apollo-server.svg?style=svg)](https://circleci.com/gh/apollographql/apollo-server)
 [![Get on Slack](https://img.shields.io/badge/slack-join-orange.svg)](https://www.apollographql.com/#slack)
 
 Apollo Server is a community-maintained open-source GraphQL server. It works with pretty much all Node.js HTTP server frameworks, and we're happy to take PRs for more! Apollo Server works with any GraphQL schema built with [GraphQL.js](https://github.com/graphql/graphql-js), so you can build your schema with that directly or with a convenience library such as [graphql-tools](https://www.apollographql.com/docs/graphql-tools/).
@@ -42,8 +42,8 @@ const typeDefs = gql`
 // A map of functions which return data for the schema.
 const resolvers = {
   Query: {
-    hello: () => 'world'
-  }
+    hello: () => 'world',
+  },
 };
 
 const server = new ApolloServer({
@@ -89,8 +89,8 @@ const app = express();
 server.applyMiddleware({ app });
 
 app.listen({ port: 4000 }, () =>
-  console.log(`🚀 Server ready at http://localhost:4000${server.graphqlPath}`)
-)
+  console.log(`🚀 Server ready at http://localhost:4000${server.graphqlPath}`),
+);
 ```
 
 ### Connect
@@ -123,8 +123,8 @@ server.use(query());
 server.applyMiddleware({ app, path });
 
 app.listen({ port: 4000 }, () =>
-  console.log(`🚀 Server ready at http://localhost:4000${server.graphqlPath}`)
-)
+  console.log(`🚀 Server ready at http://localhost:4000${server.graphqlPath}`),
+);
 ```
 
 > Note; `qs-middleware` is only required if running outside of Meteor
@@ -141,7 +141,7 @@ async function StartServer() {
   const server = new ApolloServer({ typeDefs, resolvers });
 
   const app = new Hapi.server({
-    port: 4000
+    port: 4000,
   });
 
   await server.applyMiddleware({
