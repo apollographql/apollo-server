@@ -375,7 +375,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
         const resolvers = {
           Query: {
             hello: (_parent, _args, context) => {
-              expect(context).to.equal(uniqueContext);
+              expect(context.key).to.equal('major');
               return spy();
             },
           },
@@ -391,6 +391,39 @@ export function testApolloServer<AS extends ApolloServerBase>(
         expect(spy.notCalled).true;
         await apolloFetch({ query: '{hello}' });
         expect(spy.calledOnce).true;
+      });
+
+      it('clones the context for every request', async () => {
+        const uniqueContext = { key: 'major' };
+        const spy = stub().returns('hi');
+        const typeDefs = gql`
+          type Query {
+            hello: String
+          }
+        `;
+        const resolvers = {
+          Query: {
+            hello: (_parent, _args, context) => {
+              expect(context.key).to.equal('major');
+              context.key = 'minor';
+              return spy();
+            },
+          },
+        };
+        const { url: uri } = await createApolloServer({
+          typeDefs,
+          resolvers,
+          context: uniqueContext,
+        });
+
+        const apolloFetch = createApolloFetch({ uri });
+
+        expect(spy.notCalled).true;
+
+        await apolloFetch({ query: '{hello}' });
+        expect(spy.calledOnce).true;
+        await apolloFetch({ query: '{hello}' });
+        expect(spy.calledTwice).true;
       });
 
       it('returns thrown context error as a valid graphql result', async () => {
