@@ -17,17 +17,35 @@ import {
 } from 'apollo-server-errors';
 
 export type RequestOptions = RequestInit & {
-  params?: URLSearchParamsInit;
-  body: Body;
+  path: string;
+  params?: Params;
+  body?: Body;
 };
+export type Params = { [key: string]: Object };
 export type Body = BodyInit | object;
 export { Request };
 
-export abstract class RESTDataSource<TContext = any> {
-  abstract baseURL: string;
+type PromiseOrValue<T> = Promise<T> | T;
 
+type ValueOrFunction<T> = T | ((options: RequestOptions) => T);
+
+function resolveIfNeeded<T>(
+  valueOrFunction: ValueOrFunction<T>,
+  options: RequestOptions,
+) {
+  if (typeof valueOrFunction === 'function') {
+    return valueOrFunction(options);
+  } else {
+    return valueOrFunction;
+  }
+}
+
+export abstract class RESTDataSource<TContext = any> {
   httpCache!: HTTPCache;
   context!: TContext;
+
+  abstract baseURL: ValueOrFunction<PromiseOrValue<string>>;
+  defaultParams?: ValueOrFunction<PromiseOrValue<Params>>;
 
   protected willSendRequest?(request: Request): void;
 
@@ -49,12 +67,11 @@ export abstract class RESTDataSource<TContext = any> {
 
   protected async get<TResult = any>(
     path: string,
-    params?: URLSearchParamsInit,
+    params?: Params,
     options?: RequestOptions,
   ): Promise<TResult> {
     return this.fetch<TResult>(
-      path,
-      Object.assign({ method: 'GET', params }, options),
+      Object.assign({ method: 'GET', path, params }, options),
     );
   }
 
@@ -64,8 +81,7 @@ export abstract class RESTDataSource<TContext = any> {
     options?: RequestOptions,
   ): Promise<TResult> {
     return this.fetch<TResult>(
-      path,
-      Object.assign({ method: 'POST', body }, options),
+      Object.assign({ method: 'POST', path, body }, options),
     );
   }
 
@@ -75,8 +91,7 @@ export abstract class RESTDataSource<TContext = any> {
     options?: RequestOptions,
   ): Promise<TResult> {
     return this.fetch<TResult>(
-      path,
-      Object.assign({ method: 'PATCH', body }, options),
+      Object.assign({ method: 'PATCH', path, body }, options),
     );
   }
 
@@ -86,38 +101,36 @@ export abstract class RESTDataSource<TContext = any> {
     options?: RequestOptions,
   ): Promise<TResult> {
     return this.fetch<TResult>(
-      path,
-      Object.assign({ method: 'PUT', body }, options),
+      Object.assign({ method: 'PUT', path, body }, options),
     );
   }
 
   protected async delete<TResult = any>(
     path: string,
-    params?: URLSearchParamsInit,
+    params?: Params,
     options?: RequestOptions,
   ): Promise<TResult> {
     return this.fetch<TResult>(
-      path,
-      Object.assign({ method: 'DELETE', params }, options),
+      Object.assign({ method: 'DELETE', path, params }, options),
     );
   }
 
-  private async fetch<TResult>(
-    path: string,
-    options: RequestOptions,
-  ): Promise<TResult> {
-    const { params, ...init } = options;
+  private async fetch<TResult>(options: RequestOptions): Promise<TResult> {
+    const { path, params, ...init } = options;
 
-    const normalizedBaseURL = this.baseURL.endsWith('/')
-      ? this.baseURL
-      : this.baseURL.concat('/');
+    const baseURL = await resolveIfNeeded(this.baseURL, options);
+    const normalizedBaseURL = baseURL.endsWith('/')
+      ? baseURL
+      : baseURL.concat('/');
     const url = new URL(path, normalizedBaseURL);
 
-    if (params) {
-      // Append params to existing params in the path
-      for (const [name, value] of new URLSearchParams(params)) {
-        url.searchParams.append(name, value);
-      }
+    const defaultParams = await resolveIfNeeded(this.defaultParams, options);
+
+    // Append params to existing params in the path
+    for (const [name, value] of new URLSearchParams(
+      Object.assign({}, params, defaultParams),
+    )) {
+      url.searchParams.append(name, value);
     }
 
     // We accept arbitrary objects as body and serialize them as JSON
@@ -133,13 +146,13 @@ export abstract class RESTDataSource<TContext = any> {
       init.headers.set('Content-Type', 'application/json');
     }
 
+    const request = new Request(String(url), init);
+
+    if (this.willSendRequest) {
+      this.willSendRequest(request);
+    }
+
     return this.trace(`${init.method || 'GET'} ${url}`, async () => {
-      const request = new Request(String(url), init);
-
-      if (this.willSendRequest) {
-        this.willSendRequest(request);
-      }
-
       const response = await this.httpCache.fetch(request);
       if (response.ok) {
         const contentType = response.headers.get('Content-Type');

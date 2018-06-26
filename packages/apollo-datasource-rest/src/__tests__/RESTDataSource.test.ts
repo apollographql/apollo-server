@@ -5,7 +5,7 @@ import {
   AuthenticationError,
   ForbiddenError,
 } from 'apollo-server-errors';
-import { RESTDataSource, Request } from '../RESTDataSource';
+import { RESTDataSource, RequestOptions, Request } from '../RESTDataSource';
 
 import { HTTPCache } from '../HTTPCache';
 
@@ -124,6 +124,40 @@ describe('RESTDataSource', () => {
     expect(fetch.mock.calls[0][0].url).toEqual('https://example.com/api/foo');
   });
 
+  it('allows computing a dynamic URL per request', async () => {
+    const dataSource = new class extends RESTDataSource {
+      baseURL = async (options: RequestOptions) => {
+        if (options.method === 'GET') {
+          return 'https://api-idempotent.example.com';
+        } else {
+          return 'https://api.example.com';
+        }
+      };
+
+      getFoo() {
+        return this.get('foo');
+      }
+
+      postFoo() {
+        return this.post('foo');
+      }
+    }();
+
+    dataSource.httpCache = httpCache;
+
+    fetch.mockJSONResponseOnce();
+    await dataSource.getFoo();
+
+    fetch.mockJSONResponseOnce();
+    await dataSource.postFoo();
+
+    expect(fetch.mock.calls.length).toEqual(2);
+    expect(fetch.mock.calls[0][0].url).toEqual(
+      'https://api-idempotent.example.com/foo',
+    );
+    expect(fetch.mock.calls[1][0].url).toEqual('https://api.example.com/foo');
+  });
+
   it('allows adding query string parameters', async () => {
     const dataSource = new class extends RESTDataSource {
       baseURL = 'https://api.example.com';
@@ -149,6 +183,36 @@ describe('RESTDataSource', () => {
     expect(fetch.mock.calls.length).toEqual(1);
     expect(fetch.mock.calls[0][0].url).toEqual(
       'https://api.example.com/posts?username=beyonc%C3%A9&filter=jalape%C3%B1o&limit=10&offset=20',
+    );
+  });
+
+  it('allows adding additional query string parameters', async () => {
+    const dataSource = new class extends RESTDataSource {
+      baseURL = 'https://api.example.com';
+
+      defaultParams = async (options: RequestOptions) => {
+        if (options.method === 'GET') {
+          return {
+            api_key: this.context.token,
+          };
+        }
+      };
+
+      getFoo() {
+        return this.get('foo', { a: 1 });
+      }
+    }();
+
+    dataSource.context = { token: 'secret' };
+    dataSource.httpCache = httpCache;
+
+    fetch.mockJSONResponseOnce();
+
+    await dataSource.getFoo();
+
+    expect(fetch.mock.calls.length).toEqual(1);
+    expect(fetch.mock.calls[0][0].url).toEqual(
+      'https://api.example.com/foo?a=1&api_key=secret',
     );
   });
 
