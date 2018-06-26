@@ -140,7 +140,7 @@ server.listen().then(({ url }) => {
 });
 ```
 
-## [Performance Monitoring](features/metrics.html)
+## [Performance Monitoring](./features/metrics.html)
 
 Apollo Server 2.0 enables GraphQL monitoring out of the box. It reports performance and error data out-of-band to Apollo Engine. And Apollo Engine displays information about every query and schema present in your GraphQL service.
 
