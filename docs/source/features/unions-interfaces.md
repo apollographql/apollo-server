@@ -66,7 +66,7 @@ A possible query for these result could appear as follows. This query demonstrat
 {
   search(contains: "") {
     ... on Book {
-			title
+      title
     }
     ... on Author {
       name
