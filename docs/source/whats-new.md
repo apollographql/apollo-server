@@ -140,6 +140,36 @@ server.listen().then(({ url }) => {
 });
 ```
 
+## [Performance Monitoring](features/metrics.html)
+
+Apollo Server 2.0 enables GraphQL monitoring out of the box. It reports performance and error data out-of-band to Apollo Engine. And Apollo Engine displays information about every query and schema present in your GraphQL service.
+
+To set up Apollo Server with Engine, [click here](https://engine.apollographql.com/) to get an Engine API key and provide it to the `ENGINE_API_KEY` environment variable. Setting an environment variable can be done in commandline as seen below or with the [dotenv npm package](https://www.npmjs.com/package/dotenv).
+
+```bash
+#Replace YOUR_API_KEY with the api key for you service in the Engine UI
+ENGINE_API_KEY=YOUR_API_KEY node start-server.js
+``` 
+
+The simplest option is to pass the Engine API Key directly to the Apollo Server constructor.
+
+```js lines=6-8
+const { ApolloServer } = require("apollo-server");
+
+const server = new ApolloSever({
+  typeDefs,
+  resolvers,
+  engine: {
+    apiKey: "YOUR API KEY HERE"
+  }
+});
+
+server.listen().then(({ url }) => {
+  console.log(`🚀  Server ready at ${url}`);
+});
+```
+
+
 ## GraphQL Playground
 
 Apollo Server 2.0 creates a single GraphQL endpoint that provides data and a gui explorer depending on how the endpoint is accessed. In browser, Apollo Server returns GraphQL playground. For other cases, Apollo server returns the data for a GraphQL requests from other clients, such as Apollo Client, curl, Postman, or Insomnia.
