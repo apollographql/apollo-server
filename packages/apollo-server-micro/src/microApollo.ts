@@ -45,7 +45,7 @@ export function microGraphql(
       });
 
       res.setHeader('Content-Type', 'application/json');
-      return gqlResponse;
+      return JSON.stringify(gqlResponse);
     } catch (error) {
       if ('HttpQueryError' === error.name) {
         if (error.headers) {

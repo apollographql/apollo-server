@@ -48,7 +48,7 @@ const graphqlHapi: IPlugin = {
             query: request.method === 'post' ? request.payload : request.query,
           });
 
-          const response = h.response(gqlResponse);
+          const response = h.response(JSON.stringify(gqlResponse));
           response.type('application/json');
           return response;
         } catch (error) {

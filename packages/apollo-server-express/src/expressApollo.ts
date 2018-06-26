@@ -47,12 +47,13 @@ export function graphqlExpress(
       query: req.method === 'POST' ? req.body : req.query,
     }).then(
       gqlResponse => {
+        let jsonResponse = JSON.stringify(gqlResponse);
         res.setHeader('Content-Type', 'application/json');
         res.setHeader(
           'Content-Length',
-          Buffer.byteLength(gqlResponse, 'utf8').toString(),
+          Buffer.byteLength(jsonResponse, 'utf8').toString(),
         );
-        res.write(gqlResponse);
+        res.write(jsonResponse);
         res.end();
       },
       (error: HttpQueryError) => {

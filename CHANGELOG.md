@@ -5,6 +5,7 @@ All of the packages in the `apollo-server` repo are released with the same versi
 ### vNEXT
 
 * Upgrade `subscription-transport-ws` to 0.9.9 for Graphiql
+* Move `JSON.stringify` into framework shims, rather than core [PR #1144](https://github.com/apollographql/apollo-server/pull/1144)
 
 ### v1.3.6
 

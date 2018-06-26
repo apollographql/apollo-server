@@ -71,7 +71,7 @@ export function graphqlAzureFunctions(
           headers: {
             'Content-Type': 'application/json',
           },
-          body: gqlResponse,
+          body: JSON.stringify(gqlResponse),
           isRaw: true,
         };
         httpContext.res = result;

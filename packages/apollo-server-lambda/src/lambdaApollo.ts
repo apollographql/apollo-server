@@ -50,11 +50,13 @@ export function graphqlLambda(
     }
 
     try {
-      gqlResponse = await runHttpQuery([event, lambdaContext], {
-        method: event.httpMethod,
-        options: options,
-        query: query,
-      });
+      gqlResponse = JSON.stringify(
+        await runHttpQuery([event, lambdaContext], {
+          method: event.httpMethod,
+          options: options,
+          query: query,
+        }),
+      );
       headers['Content-Type'] = 'application/json';
       statusCode = 200;
     } catch (error) {
