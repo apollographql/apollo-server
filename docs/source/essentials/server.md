@@ -19,7 +19,7 @@ To install, run:
 
 When adding Apollo Server to an existing application, a corresponding HTTP server support package needs to be installed as well.  For example, for Express this is:
 
-    npm install --save apollo-server-express@rc
+    npm install --save apollo-server-express@rc graphql
 
 > Note: During the release candidate period, it's necessary to use the `rc` npm package, as shown in the above commands.
 
