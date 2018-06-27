@@ -84,7 +84,7 @@ export class ApolloServer extends ApolloServerBase {
             const middlewareOptions = {
               endpoint: path,
               subscriptionEndpoint: this.subscriptionsPath,
-              version: '1.4.0',
+              version: '1.7.0',
               ...(typeof gui === 'boolean' ? {} : gui),
             };
 

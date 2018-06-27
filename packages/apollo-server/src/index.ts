@@ -15,6 +15,7 @@ export interface ServerInfo {
   address: string;
   family: string;
   url: string;
+  subscriptionsUrl: string;
   port: number | string;
   subscriptionsPath: string;
   server: http.Server;
@@ -48,6 +49,14 @@ export class ApolloServer extends ApolloServerBase {
       hostname: hostForUrl,
       port: serverInfo.port,
       pathname: this.graphqlPath,
+    });
+
+    serverInfo.subscriptionsUrl = require('url').format({
+      protocol: 'ws',
+      hostname: hostForUrl,
+      port: serverInfo.port,
+      slashes: true,
+      pathname: subscriptionsPath,
     });
 
     return serverInfo;
