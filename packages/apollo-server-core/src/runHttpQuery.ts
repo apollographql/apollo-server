@@ -6,6 +6,7 @@ import { CacheControlExtensionOptions } from 'apollo-cache-control';
 
 import { omit } from 'lodash';
 
+import { Request } from 'apollo-server-env';
 import { runQuery, QueryOptions } from './runQuery';
 import {
   default as GraphQLOptions,
