@@ -1,6 +1,6 @@
 {
   "name": "apollo-server-errors",
-  "version": "2.0.0-rc.3",
+  "version": "2.0.0-rc.5",
   "author": "opensource@apollographql.com",
   "license": "MIT",
   "repository": {
@@ -21,12 +21,29 @@
   "engines": {
     "node": ">=6"
   },
-  "peerDependencies": {
-    "graphql": "^0.12.0 || ^0.13.0 || ^14.0.0"
-  },
   "devDependencies": {
     "@types/jest": "^23.1.2",
     "jest": "^23.2.0",
     "ts-jest": "^22.4.6"
+  },
+  "peerDependencies": {
+    "graphql": "^0.12.0 || ^0.13.0 || ^14.0.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "transform": {
+      "^.+\\.(ts|js)$": "ts-jest"
+    },
+    "moduleFileExtensions": [
+      "ts",
+      "js",
+      "json"
+    ],
+    "testRegex": "/__tests__/.*$",
+    "globals": {
+      "ts-jest": {
+        "skipBabel": true
+      }
+    }
   }
 }

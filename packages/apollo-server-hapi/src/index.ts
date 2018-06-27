@@ -1,5 +1,5 @@
-// Expose types which can be used by both middleware flavors.
 export { GraphQLOptions, gql } from 'apollo-server-core';
+
 export {
   ApolloError,
   toApolloError,
@@ -10,7 +10,10 @@ export {
   UserInputError,
 } from 'apollo-server-core';
 
-// ApolloServer integration
+export * from 'graphql-tools';
+export * from 'graphql-subscriptions';
+
+// ApolloServer integration.
 export {
   ApolloServer,
   registerServer,

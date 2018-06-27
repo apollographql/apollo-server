@@ -133,10 +133,16 @@ export function testApolloServer<AS extends ApolloServerBase>(
             },
           });
 
+          const formatError = stub().callsFake(error => {
+            expect(error instanceof Error).true;
+            return error;
+          });
+
           const { url: uri } = await createApolloServer({
             schema,
             validationRules: [NoTestString],
             introspection: false,
+            formatError,
           });
 
           const apolloFetch = createApolloFetch({ uri });
@@ -151,6 +157,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           const result = await apolloFetch({ query: TEST_STRING_QUERY });
           expect(result.data, 'data should not exist').not.to.exist;
           expect(result.errors, 'errors should exist').to.exist;
+          expect(formatError.called).true;
         });
 
         it('allows introspection by default', async () => {
@@ -289,6 +296,41 @@ export function testApolloServer<AS extends ApolloServerBase>(
       });
     });
 
+    describe('formatError', () => {
+      it('wraps thrown error from validation rules', async () => {
+        const throwError = stub().callsFake(() => {
+          throw new Error('nope');
+        });
+
+        const formatError = stub().callsFake(error => {
+          expect(error instanceof Error).true;
+          expect(error.constructor.name).to.equal('Error');
+          return error;
+        });
+
+        const { url: uri } = await createApolloServer({
+          schema,
+          validationRules: [throwError],
+          introspection: true,
+          formatError,
+        });
+
+        const apolloFetch = createApolloFetch({ uri });
+
+        const introspectionResult = await apolloFetch({
+          query: INTROSPECTION_QUERY,
+        });
+        expect(introspectionResult.data, 'data should not exist').not.to.exist;
+        expect(introspectionResult.errors, 'errors should exist').to.exist;
+
+        const result = await apolloFetch({ query: TEST_STRING_QUERY });
+        expect(result.data, 'data should not exist').not.to.exist;
+        expect(result.errors, 'errors should exist').to.exist;
+        expect(formatError.called).true;
+        expect(throwError.called).true;
+      });
+    });
+
     describe('lifecycle', () => {
       it('defers context eval with thunk until after options creation', async () => {
         const uniqueContext = { key: 'major' };
@@ -333,7 +375,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
         const resolvers = {
           Query: {
             hello: (_parent, _args, context) => {
-              expect(context).to.equal(uniqueContext);
+              expect(context.key).to.equal('major');
               return spy();
             },
           },
@@ -349,6 +391,39 @@ export function testApolloServer<AS extends ApolloServerBase>(
         expect(spy.notCalled).true;
         await apolloFetch({ query: '{hello}' });
         expect(spy.calledOnce).true;
+      });
+
+      it('clones the context for every request', async () => {
+        const uniqueContext = { key: 'major' };
+        const spy = stub().returns('hi');
+        const typeDefs = gql`
+          type Query {
+            hello: String
+          }
+        `;
+        const resolvers = {
+          Query: {
+            hello: (_parent, _args, context) => {
+              expect(context.key).to.equal('major');
+              context.key = 'minor';
+              return spy();
+            },
+          },
+        };
+        const { url: uri } = await createApolloServer({
+          typeDefs,
+          resolvers,
+          context: uniqueContext,
+        });
+
+        const apolloFetch = createApolloFetch({ uri });
+
+        expect(spy.notCalled).true;
+
+        await apolloFetch({ query: '{hello}' });
+        expect(spy.calledOnce).true;
+        await apolloFetch({ query: '{hello}' });
+        expect(spy.calledTwice).true;
       });
 
       it('returns thrown context error as a valid graphql result', async () => {

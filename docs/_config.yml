@@ -22,6 +22,7 @@ sidebar_categories:
     - features/data-sources
     - features/cdn
     - features/subscriptions
+    - features/file-uploads
     - features/metrics
     - features/scalars-enums
     - features/unions-interfaces
@@ -35,7 +36,7 @@ sidebar_categories:
   Deployment:
     # - deployment/index
     - deployment/heroku
-    # - deployment/lambda
+    - deployment/lambda
   API Reference:
     - api/apollo-server
     - title: graphql-subscriptions

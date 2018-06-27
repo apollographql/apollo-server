@@ -1,7 +1,7 @@
 {
   "name": "apollo-server-integration-testsuite",
   "private": true,
-  "version": "2.0.0-rc.3",
+  "version": "2.0.0-rc.5",
   "description": "Apollo Server Integrations testsuite",
   "main": "dist/index.js",
   "scripts": {
@@ -23,11 +23,7 @@
     "node": ">=6"
   },
   "dependencies": {
-    "apollo-server-core": "^2.0.0-rc.3"
-  },
-  "typings": "dist/index.d.ts",
-  "typescript": {
-    "definition": "dist/index.d.ts"
+    "apollo-server-core": "^2.0.0-rc.5"
   },
   "devDependencies": {
     "apollo-fetch": "^0.7.0",
@@ -40,5 +36,9 @@
     "js-sha256": "^0.9.0",
     "subscriptions-transport-ws": "^0.9.11",
     "ws": "^5.2.0"
+  },
+  "typings": "dist/index.d.ts",
+  "typescript": {
+    "definition": "dist/index.d.ts"
   }
 }

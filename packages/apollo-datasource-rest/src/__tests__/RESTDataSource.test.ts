@@ -86,6 +86,44 @@ describe('RESTDataSource', () => {
     expect(data).toEqual('bar');
   });
 
+  it('interprets paths relative to the baseURL', async () => {
+    const dataSource = new class extends RESTDataSource {
+      baseURL = 'https://api.example.com';
+
+      getFoo() {
+        return this.get('foo');
+      }
+    }();
+
+    dataSource.httpCache = httpCache;
+
+    fetch.mockJSONResponseOnce();
+
+    await dataSource.getFoo();
+
+    expect(fetch.mock.calls.length).toEqual(1);
+    expect(fetch.mock.calls[0][0].url).toEqual('https://api.example.com/foo');
+  });
+
+  it('adds a trailing slash to the baseURL if needed', async () => {
+    const dataSource = new class extends RESTDataSource {
+      baseURL = 'https://example.com/api';
+
+      getFoo() {
+        return this.get('foo');
+      }
+    }();
+
+    dataSource.httpCache = httpCache;
+
+    fetch.mockJSONResponseOnce();
+
+    await dataSource.getFoo();
+
+    expect(fetch.mock.calls.length).toEqual(1);
+    expect(fetch.mock.calls[0][0].url).toEqual('https://example.com/api/foo');
+  });
+
   it('allows adding query string parameters', async () => {
     const dataSource = new class extends RESTDataSource {
       baseURL = 'https://api.example.com';
@@ -136,6 +174,29 @@ describe('RESTDataSource', () => {
     expect(fetch.mock.calls.length).toEqual(1);
     expect(fetch.mock.calls[0][0].headers.get('Authorization')).toEqual(
       'secret',
+    );
+  });
+
+  it('allows passing a request body', async () => {
+    const dataSource = new class extends RESTDataSource {
+      baseURL = 'https://api.example.com';
+
+      postFoo(foo) {
+        return this.post('foo', foo);
+      }
+    }();
+
+    dataSource.httpCache = httpCache;
+
+    fetch.mockJSONResponseOnce();
+
+    await dataSource.postFoo({ foo: 'bar' });
+
+    expect(fetch.mock.calls.length).toEqual(1);
+    expect(fetch.mock.calls[0][0].url).toEqual('https://api.example.com/foo');
+    expect(fetch.mock.calls[0][0].body).toEqual(JSON.stringify({ foo: 'bar' }));
+    expect(fetch.mock.calls[0][0].headers.get('Content-Type')).toEqual(
+      'application/json',
     );
   });
 

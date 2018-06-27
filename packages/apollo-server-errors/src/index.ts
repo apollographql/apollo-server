@@ -37,10 +37,9 @@ export class ApolloError extends Error implements GraphQLError {
 }
 
 function enrichError(error: Partial<GraphQLError>, debug: boolean = false) {
-  const expanded = {} as any;
   // follows similar structure to https://github.com/graphql/graphql-js/blob/master/src/error/GraphQLError.js#L145-L193
   // with the addition of name
-  Object.defineProperties(expanded, {
+  const expanded = Object.create(Object.getPrototypeOf(error), {
     name: {
       value: error.name,
     },

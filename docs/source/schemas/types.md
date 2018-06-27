@@ -1,5 +1,5 @@
 ---
-title: Schema Types
+title: Schema types
 description: How to write your types, expose your data, and keep it all working great
 ---
 

@@ -57,7 +57,7 @@ Check out the following changes for Apollo Server 2.0 RC.
 
 With the middleware option used by Apollo Server 1.0 users, it is necessary to install the release candidate version of `apollo-server-express`.  To do this, use the `rc` tag when installing:
 
-    npm install --save apollo-server-express@rc
+    npm install --save apollo-server-express@rc graphql
 
 The changes are best shown by comparing the before and after of the application.
 
@@ -136,7 +136,7 @@ For these cases, it's possible to remove the existing `apollo-server-{integratio
 
     npm uninstall --save apollo-server-express
 
-    npm install --save apollo-server@rc
+    npm install --save apollo-server@rc graphql
 
 An implementation with this pattern would look like:
 
