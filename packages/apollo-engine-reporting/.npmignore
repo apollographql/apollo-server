@@ -1,4 +1,6 @@
-src
-*.tgz
-*.md
-coverage
+*
+!src/**/*
+!dist/**/*
+dist/**/*.test.*
+!package.json
+!README.md

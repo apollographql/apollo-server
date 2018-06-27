@@ -12,7 +12,7 @@
     "url": "https://github.com/apollographql/apollo-server/issues"
   },
   "scripts": {
-    "clean": "rm -rf lib",
+    "clean": "rm -rf dist",
     "compile": "tsc",
     "prepublish": "npm run clean && npm run compile"
   },

@@ -98,8 +98,8 @@ const REPORT_HEADER = new ReportHeader({
 export class EngineReportingAgent<TContext = any> {
   private options: EngineReportingOptions;
   private apiKey: string;
-  private report: FullTracesReport;
-  private reportSize: number;
+  private report!: FullTracesReport;
+  private reportSize!: number;
   private reportTimer: any; // timer typing is weird and node-specific
 
   public constructor(options: EngineReportingOptions = {}) {

@@ -1,4 +1,4 @@
-import { parse as urlParse } from 'url'; // XXX use W3C URL instead for CloudFlare?
+import { Request, URL } from 'apollo-server-env';
 
 import {
   GraphQLResolveInfo,
@@ -28,7 +28,7 @@ export class EngineReportingExtension<TContext = any>
   implements GraphQLExtension<TContext> {
   public trace = new Trace();
   private nodes = new Map<string, Trace.Node>();
-  private startHrTime: [number, number];
+  private startHrTime!: [number, number];
   private operationName?: string;
   private queryString?: string;
   private documentAST?: DocumentNode;
@@ -67,17 +67,17 @@ export class EngineReportingExtension<TContext = any>
     this.queryString = o.queryString;
     this.documentAST = o.parsedQuery;
 
-    const u = urlParse(o.request.url);
+    const u = new URL(o.request.url);
 
     this.trace.http = new Trace.HTTP({
       method:
         Trace.HTTP.Method[o.request.method as keyof typeof Trace.HTTP.Method] ||
         Trace.HTTP.Method.UNKNOWN,
       host: u.hostname, // XXX Includes port; is this right?
-      path: u.path,
+      path: u.pathname,
     });
     if (this.options.privateHeaders !== true) {
-      o.request.headers.forEach((value: string, key: string) => {
+      for (const [key, value] of o.request.headers) {
         if (
           this.options.privateHeaders &&
           typeof this.options.privateHeaders === 'object' &&
@@ -86,7 +86,7 @@ export class EngineReportingExtension<TContext = any>
           // operation if it causes real performance issues.
           this.options.privateHeaders.includes(key.toLowerCase())
         ) {
-          return;
+          break;
         }
 
         switch (key) {
@@ -99,7 +99,7 @@ export class EngineReportingExtension<TContext = any>
               value: [value],
             });
         }
-      });
+      }
 
       if (o.persistedQueryHit) {
         this.trace.persistedQueryHit = true;

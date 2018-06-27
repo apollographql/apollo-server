@@ -35,7 +35,7 @@
   "dependencies": {
     "apollo-server-core": "^2.0.0-rc.3",
     "apollo-server-express": "^2.0.0-rc.3",
-    "express": "^4.0.0",
+    "express": "^4.16.3",
     "graphql-subscriptions": "^0.5.8"
   }
 }

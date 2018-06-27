@@ -1,18 +1,17 @@
 {
+  "extends": "../../tsconfig",
   "compilerOptions": {
-    "target": "es5",
-    "module": "commonjs",
-    "moduleResolution": "node",
-    "declaration": true,
-    "sourceMap": true,
-    "outDir": "lib",
-    "lib": ["es2017", "dom", "esnext.asynciterable"],
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "removeComments": true,
     "strict": true,
-    "strictPropertyInitialization": false,
+    "noImplicitAny": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUnusedParameters": true,
     "noUnusedLocals": true,
-    "noUnusedParameters": true
+    "types": ["node", "jest"]
   },
-  "include" : [
-    "src/**/*"
-  ]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "**/__tests__/*", "**/__mocks__/*"]
 }
