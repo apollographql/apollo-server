@@ -149,11 +149,11 @@ To set up Apollo Server with Engine, [click here](https://engine.apollographql.c
 ```bash
 #Replace YOUR_API_KEY with the api key for you service in the Engine UI
 ENGINE_API_KEY=YOUR_API_KEY node start-server.js
-``` 
+```
 
 The simplest option is to pass the Engine API Key directly to the Apollo Server constructor.
 
-```js lines=6-8
+```js line=6-8
 const { ApolloServer } = require("apollo-server");
 
 const server = new ApolloSever({

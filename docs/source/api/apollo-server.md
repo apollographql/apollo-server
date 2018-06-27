@@ -69,7 +69,6 @@ new ApolloServer({
 
   An executable GraphQL schema that will override the `typeDefs` and `resolvers` provided
 
-
 * `subscriptions`: <`Object`> | <`String`> | false
 
   String defining the path for subscriptions or an Object to customize the subscriptions server. Set to false to disable subscriptions
@@ -78,6 +77,10 @@ new ApolloServer({
   * `keepAlive`: <`Number`>
   * `onConnect`: <`Function`>
   * `onDisconnect`: <`Function`>
+
+* `engine`: <`EngineReportingOptions`> | boolean _(required)_
+
+  Provided the `ENGINE_API_KEY` environment variable is set, the engine reporting agent will be started. The API key can also be provided as the `apiKey` field in an object passed as the `engine` field. See the [EngineReportingOptions](#EngineReportingOptions) section for a full description of how to configure the reporting agent, including how to blacklist variables
 
 #### Returns
 
@@ -239,3 +242,73 @@ addMockFunctionsToSchema({
   preserveResolvers: false,
 });
 ```
+
+## `EngineReportingOptions`
+
+*  `apiKey`: string __(required)__
+
+  API key for the service. Get this from
+  [Engine](https://engine.apollographql.com) by logging in and creating
+  a service. You may also specify this with the `ENGINE_API_KEY`
+  environment variable the option takes precedence.
+
+*  `calculateSignature`: (ast: DocumentNode, operationName: string) => string
+
+   Specify the function for creating a signature for a query. See signature.ts
+   for details.
+
+*  `reportIntervalMs`: number
+
+   How often to send reports to the Engine server. We'll also send reports
+   when the report gets big see maxUncompressedReportSize.
+
+*  `maxUncompressedReportSize`: number
+
+   We send a report when the report size will become bigger than this size in
+   bytes (default: 4MB).  (This is a rough limit --- we ignore the size of the
+   report header and some other top level bytes. We just add up the lengths of
+   the serialized traces and signatures.)
+
+*  `endpointUrl`: string
+
+   The URL of the Engine report ingress server.
+
+*  `debugPrintReports`: boolean
+
+   If set, prints all reports as JSON when they are sent.
+
+*  `maxAttempts`: number
+
+   Reporting is retried with exponential backoff up to this many times
+   (including the original request). Defaults to 5.
+
+*  `minimumRetryDelayMs`: number
+
+   Minimum backoff for retries. Defaults to 100ms.
+
+*  `reportErrorFunction`: (err: Error) => void
+
+   By default, errors sending reports to Engine servers will be logged
+   to standard error. Specify this function to process errors in a different
+   way.
+
+*  `privateVariables`: Array<String> | boolean
+
+   A case-sensitive list of names of variables whose values should not be sent
+   to Apollo servers, or 'true' to leave out all variables. In the former
+   case, the report will indicate that each private variable was redacted in
+   the latter case, no variables are sent at all.
+
+*  `privateHeaders`: Array<String> | boolean
+
+   A case-insensitive list of names of HTTP headers whose values should not be
+   sent to Apollo servers, or 'true' to leave out all HTTP headers. Unlike
+   with privateVariables, names of dropped headers are not reported.
+
+*  `handleSignals`: boolean
+
+   By default, EngineReportingAgent listens for the 'SIGINT' and 'SIGTERM'
+   signals, stops, sends a final report, and re-sends the signal to
+   itself. Set this to false to disable. You can manually invoke 'stop()' and
+   'sendReport()' on other signals if you'd like. Note that 'sendReport()'
+   does not run synchronously so it cannot work usefully in an 'exit' handler.
