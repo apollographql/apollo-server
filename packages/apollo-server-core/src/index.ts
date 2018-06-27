@@ -26,9 +26,6 @@ export { convertNodeHttpToRequest } from './nodeHttpToRequest';
 export { ApolloServerBase } from './ApolloServer';
 export * from './types';
 
-export * from 'graphql-tools';
-export * from 'graphql-subscriptions';
-
 // This currently provides the ability to have syntax highlighting as well as
 // consistency between client and server gql tags
 import { DocumentNode } from 'graphql';
