@@ -28,7 +28,8 @@
     "apollo-server-core": "^2.0.0-rc.5",
     "apollo-server-express": "^2.0.0-rc.5",
     "express": "^4.0.0",
-    "graphql-subscriptions": "^0.5.8"
+    "graphql-subscriptions": "^0.5.8",
+    "graphql-tools": "^3.0.4"
   },
   "devDependencies": {
     "@types/request": "^2.47.0",
