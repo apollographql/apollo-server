@@ -40,6 +40,54 @@ class MoviesAPI extends RESTDataSource {
 }
 ```
 
+### Supported Methods
+
+The `get` method on the `RESTDataSource` makes an HTTP `GET` request. Similarly, there are methods built-in to allow for `POST`, `PUT`, `PATCH`, and `DELETE` requests.
+
+```js
+class MoviesAPI extends RESTDataSource {
+  constructor() {
+    super();
+    this.baseURL = 'https://movies-api.example.com/';
+  }
+
+  // an example making an HTTP POST request
+  async postMovie(movie) {
+    return this.post(
+      `movies`, // path
+      movie, // request body
+    );
+  }
+
+  // an example making an HTTP PUT request
+  async newMovie(movie) {
+    return this.put(
+      `movies`, // path
+      movie, // request body
+    );
+  }
+
+  // an example making an HTTP PATCH request
+  async updateMovie(movie) {
+    return this.patch(
+      `movies`, // path
+      { id: movie.id, movie }, // request body
+    );
+  }
+
+  // an example making an HTTP DELETE request
+  async deleteMovie(movie) {
+    return this.delete(
+      `movies/${movie.id}`, // path
+    );
+  }
+}
+```
+
+All of the HTTP helper functions (`get`, `put`, `post`, `patch`, and `delete`) accept a third `options` parameter, which can be used to set things like headers and referrers. For more info on the options available, see MDN's [fetch docs](https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/fetch#Parameters).
+
+### Example API
+
 Data sources allow you to intercept fetches to set headers or make other changes to the outgoing request. This is most often used for authorization. Data sources also get access to the GraphQL execution context, which is a great place to store a user token or other information you need to have available.
 
 ```js
