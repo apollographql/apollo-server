@@ -1,5 +1,5 @@
 ---
-title: Data Sources
+title: Data sources
 description: Caching Partial Query Results
 ---
 

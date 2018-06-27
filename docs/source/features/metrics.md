@@ -1,5 +1,5 @@
 ---
-title: Monitoring and Metrics
+title: Monitoring and metrics
 description: How to monitor Apollo Server's performance
 ---
 
