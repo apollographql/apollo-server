@@ -1,4 +1,6 @@
 import {
+  BodyInit,
+  Headers,
   Request,
   RequestInit,
   Response,
