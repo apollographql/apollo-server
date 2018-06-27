@@ -3,7 +3,8 @@
   "compilerOptions": {
     "rootDir": "./src",
     "outDir": "./dist",
-    "noImplicitAny": true
+    "noImplicitAny": true,
+    "lib": ["es2017", "esnext.asynciterable", "dom"]
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]

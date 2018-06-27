@@ -9,7 +9,6 @@
     "compile": "tsc",
     "watch": "tsc -w",
     "prepublish": "npm run clean && npm run compile",
-    "test": "./node_modules/.bin/jest",
     "lint": "prettier -l 'src/**/*.ts' && tslint -p tsconfig.json 'src/**/*.ts'",
     "lint-fix": "prettier --write 'src/**/*.ts' && tslint --fix -p tsconfig.json 'src/**/*.ts'"
   },
@@ -42,23 +41,19 @@
   },
   "jest": {
     "testEnvironment": "node",
-    "setupFiles": [
-      "<rootDir>/src/polyfills.js"
-    ],
-    "testMatch": [
-      "**/test/**/*.(js|ts)",
-      "**/test/*.(js|ts)"
-    ],
-    "testPathIgnorePatterns": [
-      "<rootDir>/node_modules/",
-      "<rootDir>/lib/"
-    ],
     "transform": {
-      "^.+\\.(ts|js)x?$": "<rootDir>/node_modules/ts-jest/preprocessor.js"
+      "^.+\\.(ts|js)$": "ts-jest"
     },
     "moduleFileExtensions": [
       "ts",
-      "js"
-    ]
+      "js",
+      "json"
+    ],
+    "testRegex": "/__tests__/.*$",
+    "globals": {
+      "ts-jest": {
+        "skipBabel": true
+      }
+    }
   }
 }
