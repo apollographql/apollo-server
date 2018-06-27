@@ -1,3 +1,12 @@
+import {
+  fetch,
+  Request,
+  RequestInfo,
+  RequestInit,
+  Response,
+  Headers,
+} from 'apollo-server-env';
+
 import CachePolicy = require('http-cache-semantics');
 
 import { KeyValueCache, InMemoryLRUCache } from 'apollo-server-caching';

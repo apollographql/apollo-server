@@ -12,8 +12,8 @@
     "url": "https://github.com/apollographql/apollo-server/issues"
   },
   "scripts": {
-    "clean": "rm -rf lib",
-    "compile": "tsc",
+    "clean": "rm -rf dist",
+    "compile": "tsc && cp src/*.d.ts dist",
     "prepublish": "npm run clean && npm run compile"
   },
   "main": "dist/index.js",
@@ -22,6 +22,7 @@
     "node": ">=6"
   },
   "dependencies": {
-    "node-fetch": "^2.1.2"
+    "node-fetch": "^2.1.2",
+    "util.promisify": "^1.0.0"
   }
 }

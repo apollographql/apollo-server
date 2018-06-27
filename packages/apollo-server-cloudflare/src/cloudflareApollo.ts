@@ -4,6 +4,8 @@ import {
   runHttpQuery,
 } from 'apollo-server-core';
 
+import { Request, Response, URL } from 'apollo-server-env';
+
 // Design principles:
 // - You can issue a GET or POST with your query.
 // - simple, fast and secure

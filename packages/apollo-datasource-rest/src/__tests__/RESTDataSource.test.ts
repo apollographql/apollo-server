@@ -1,4 +1,5 @@
-import 'apollo-server-env';
+import { fetch } from 'apollo-server-env';
+
 import {
   ApolloError,
   AuthenticationError,
@@ -6,7 +7,6 @@ import {
 } from 'apollo-server-errors';
 import { RESTDataSource } from '../RESTDataSource';
 
-import fetch, { mockFetch, unmockFetch } from '../../../../__mocks__/fetch';
 import { HTTPCache } from '../HTTPCache';
 
 describe('RESTDataSource', () => {
@@ -14,8 +14,6 @@ describe('RESTDataSource', () => {
   let httpCache: HTTPCache;
 
   beforeAll(() => {
-    mockFetch();
-
     httpCache = new HTTPCache({
       async get(key: string) {
         return store.get(key);
@@ -29,10 +27,6 @@ describe('RESTDataSource', () => {
   beforeEach(() => {
     fetch.mockReset();
     store.clear();
-  });
-
-  afterAll(() => {
-    unmockFetch();
   });
 
   it('returns data as parsed JSON when Content-Type is application/json', async () => {

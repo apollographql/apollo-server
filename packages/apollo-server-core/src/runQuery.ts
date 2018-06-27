@@ -13,6 +13,8 @@ import {
   ValidationContext,
 } from 'graphql';
 
+import { Request } from 'apollo-server-env';
+
 import {
   enableGraphQLExtensions,
   GraphQLExtension,

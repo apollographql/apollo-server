@@ -12,7 +12,7 @@
     "url": "https://github.com/apollographql/apollo-server/issues"
   },
   "scripts": {
-    "clean": "rm -rf lib",
+    "clean": "rm -rf dist",
     "compile": "tsc",
     "prepublish": "npm run clean && npm run compile",
     "test": "jest --verbose"
@@ -28,14 +28,17 @@
     "memcached": "^2.2.2"
   },
   "devDependencies": {
-    "@types/jest": "^23.0.0",
+    "@types/jest": "^23.1.2",
     "@types/memcached": "^2.2.5",
-    "jest": "^23.1.0",
+    "jest": "^23.2.0",
     "memcached-mock": "^0.1.0",
     "ts-jest": "^22.4.6"
   },
   "jest": {
     "testEnvironment": "node",
+    "setupFiles": [
+      "<rootDir>/node_modules/apollo-server-env/dist/index.js"
+    ],
     "transform": {
       "^.+\\.(ts|js)$": "ts-jest"
     },

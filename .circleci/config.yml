@@ -25,8 +25,15 @@ common_test_steps: &common_test_steps
   steps:
     - *run_install_desired_npm
     - checkout
+    - run: cat ./packages/*/package.json > package-checksum
+    - restore_cache:
+        key: dependency-cache-{{ checksum "package.json" }}-{{ checksum "package-checksum" }}
     - run: npm --version
     - run: npm install
+    - save_cache:
+        key: dependency-cache-{{ checksum "package.json" }}-{{ checksum "package-checksum" }}
+        paths:
+          - ./node_modules
     - run: npm run travis
 
 # Important! When adding a new job to `jobs`, make sure to define when it
@@ -62,8 +69,14 @@ jobs:
     steps:
       # (speed) Intentionally omitted, unnecessary, run_install_desired_npm.
       - checkout
+      - restore_cache:
+          key: dependency-cache-{{ checksum "./docs/package.json" }}
       # (speed) Ignore scripts to skip the Lerna build stuff for linting.
       - run: npm install-test --prefix ./docs
+      - save_cache:
+          key: dependency-cache-{{ checksum "./docs/package.json" }}
+          paths:
+            - ./docs/node_modules
 
 ignore_doc_branches: &ignore_doc_branches
   filters:

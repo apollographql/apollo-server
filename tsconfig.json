@@ -10,7 +10,7 @@
     "removeComments": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "lib": ["es2016", "esnext.asynciterable"],
+    "lib": ["es2017", "esnext.asynciterable"],
     "types": ["node", "mocha"]
   }
 }

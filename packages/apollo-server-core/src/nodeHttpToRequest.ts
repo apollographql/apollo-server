@@ -1,4 +1,5 @@
 import { IncomingMessage } from 'http';
+import { Request, Headers } from 'apollo-server-env';
 
 export function convertNodeHttpToRequest(req: IncomingMessage): Request {
   const headers = new Headers();

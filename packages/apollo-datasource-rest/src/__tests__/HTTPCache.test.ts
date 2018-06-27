@@ -1,7 +1,6 @@
-import 'apollo-server-env';
+import { fetch } from 'apollo-server-env';
 import { HTTPCache } from '../HTTPCache';
 
-import fetch, { mockFetch, unmockFetch } from '../../../../__mocks__/fetch';
 import {
   mockDate,
   unmockDate,
@@ -13,7 +12,6 @@ describe('HTTPCache', () => {
   let httpCache: HTTPCache;
 
   beforeAll(() => {
-    mockFetch();
     mockDate();
   });
 
@@ -25,7 +23,6 @@ describe('HTTPCache', () => {
   });
 
   afterAll(() => {
-    unmockFetch();
     unmockDate();
   });
 
