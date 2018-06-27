@@ -236,7 +236,7 @@ export class EngineReportingAgent<TContext = any> {
           // on 'this', and use an 'as any' because the type definitions don't know
           // about the function version of this parameter.
           delayStrategy: function() {
-            return minimumRetryDelayMs * 2 ** this.attempts;
+            return Math.pow(minimumRetryDelayMs * 2, this.attempts);
           },
           // XXX Back in Optics, we had an explicit proxyUrl option for corporate
           //     proxies. I was never clear on why `request`'s handling of the
