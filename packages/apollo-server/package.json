@@ -24,6 +24,13 @@
     "url": "https://github.com/apollographql/apollo-server/issues"
   },
   "homepage": "https://github.com/apollographql/apollo-server#readme",
+  "dependencies": {
+    "apollo-server-core": "^2.0.0-rc.5",
+    "apollo-server-express": "^2.0.0-rc.5",
+    "express": "^4.0.0",
+    "graphql-subscriptions": "^0.5.8",
+    "graphql-tools": "^3.0.4"
+  },
   "devDependencies": {
     "@types/request": "^2.47.0",
     "request": "^2.87.0"
@@ -31,11 +38,5 @@
   "peerDependencies": {
     "graphql": "^0.12.0 || ^0.13.0 || ^14.0.0"
   },
-  "typings": "dist/index.d.ts",
-  "dependencies": {
-    "apollo-server-core": "^2.0.0-rc.5",
-    "apollo-server-express": "^2.0.0-rc.5",
-    "express": "^4.0.0",
-    "graphql-subscriptions": "^0.5.8"
-  }
+  "typings": "dist/index.d.ts"
 }

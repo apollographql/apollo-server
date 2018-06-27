@@ -1,11 +1,14 @@
 import 'apollo-server-env';
+
 export { runQuery } from './runQuery';
 export { runHttpQuery, HttpQueryRequest, HttpQueryError } from './runHttpQuery';
+
 export {
   default as GraphQLOptions,
   resolveGraphqlOptions,
   PersistedQueryOptions,
 } from './graphqlOptions';
+
 export {
   ApolloError,
   toApolloError,
@@ -22,9 +25,6 @@ export { convertNodeHttpToRequest } from './nodeHttpToRequest';
 // ApolloServer Base class
 export { ApolloServerBase } from './ApolloServer';
 export * from './types';
-
-export * from 'graphql-tools';
-export * from 'graphql-subscriptions';
 
 // This currently provides the ability to have syntax highlighting as well as
 // consistency between client and server gql tags
