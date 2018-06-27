@@ -1,5 +1,5 @@
 ---
-title: CDN Integration
+title: CDN integration
 description: Getting content delivery networks to cache GraphQL responses
 ---
 

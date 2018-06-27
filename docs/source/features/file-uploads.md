@@ -1,6 +1,6 @@
 ---
-title: File Uploads
-description: Implementing File Uploads on Apollo Server
+title: File uploads
+description: Implementing file uploads on Apollo Server
 ---
 
 File uploads are a requirement for many applications. Apollo Server supports the [GraphQL multipart request spec](https://github.com/jaydenseric/graphql-multipart-request-spec) for uploading files as mutation arguments using [apollo-upload-server](https://github.com/jaydenseric/apollo-upload-server).
