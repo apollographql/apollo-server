@@ -25,10 +25,6 @@
   "dependencies": {
     "apollo-server-core": "^2.0.0-rc.5"
   },
-  "typings": "dist/index.d.ts",
-  "typescript": {
-    "definition": "dist/index.d.ts"
-  },
   "devDependencies": {
     "apollo-fetch": "^0.7.0",
     "apollo-link": "^1.2.2",
@@ -39,5 +35,9 @@
     "js-sha256": "^0.9.0",
     "subscriptions-transport-ws": "^0.9.11",
     "ws": "^5.2.0"
+  },
+  "typings": "dist/index.d.ts",
+  "typescript": {
+    "definition": "dist/index.d.ts"
   }
 }
