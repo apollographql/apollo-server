@@ -9,7 +9,7 @@ All integration that allow HTTP servers, such as express and Hapi, also provide 
 
 ## Subscriptions Example
 
-Subscriptions depend on use a publish and subscribe primitive to generate the events that notify a subscription. `PubSub` is a factory that creates event generators that is provided by all supported packages. `PubSub` is an implementation of the `PubSubEngine` interface, which has been adopted by a variety of additional [event-generating backends](#).
+Subscriptions depend on use a publish and subscribe primitive to generate the events that notify a subscription. `PubSub` is a factory that creates event generators that is provided by all supported packages. `PubSub` is an implementation of the `PubSubEngine` interface, which has been adopted by a variety of additional [event-generating backends](#PubSub-Implementations).
 
 ```js
 const { PubSub } = require('apollo-server');
@@ -144,7 +144,7 @@ In case of an authentication error, the Promise will be rejected, which prevents
 
 Sometimes a client will want to filter out specific events based on context and arguments.
 
-To do so, we can use the `withFilter` helper from the `apollo-server` or `apollo-server-{integration} package to control each publication for each user. Inside of `withFilter`,  the `AsyncIterator` created by `PubSub` is wrapped with a filter function.
+To do so, we can use the `withFilter` helper from the `apollo-server` or `apollo-server-{integration}` package to control each publication for each user. Inside of `withFilter`,  the `AsyncIterator` created by `PubSub` is wrapped with a filter function.
 
 Let's see an example - for the `commentAdded` server-side subscription, the client want to subscribe only to comments added to a specific repo:
 
@@ -161,17 +161,20 @@ When using `withFilter`, provide a filter function. The filter is executed with 
 
 The following definition of the subscription resolver will filter out all of the `commentAdded` events that are not associated with the requested repository:
 
-```js
+```js line=8,10-12
 const { withFilter } = require('apollo-server');
 
-const rootResolver = {
+const resolvers = {
     Query: () => { ... },
     Mutation: () => { ... },
     Subscription: {
         commentAdded: {
-          subscribe: withFilter(() => pubsub.asyncIterator('commentAdded'), (payload, variables) => {
+          subscribe: withFilter(
+            () => pubsub.asyncIterator('COMMENT_ADDED'),
+            (payload, variables) => {
              return payload.commentAdded.repository_name === variables.repoFullName;
-          }),
+            },
+          ),
         }
     },
 };
@@ -203,7 +206,7 @@ httpServer.listen(PORT, () => {
 })
 ```
 
-## Lifecycle events
+## Lifecycle Events
 
 `ApolloServer` exposes lifecycle hooks you can use to manage subscriptions and clients:
 
@@ -222,3 +225,17 @@ const server = new ApolloServer(
   },
 );
 ```
+
+## `PubSub` Implementations
+
+The Apollo Server implementation of `PubSub` can be replaced by another implementations of [PubSubEngine interface](https://github.com/apollographql/graphql-subscriptions/blob/master/src/pubsub-engine.ts). The community has created the following integrations:
+
+- [Redis](https://github.com/davidyaha/graphql-redis-subscriptions)
+- [Google PubSub](https://github.com/axelspringer/graphql-google-pubsub)
+- [MQTT enabled broker](https://github.com/davidyaha/graphql-mqtt-subscriptions)
+- [RabbitMQ](https://github.com/cdmbase/graphql-rabbitmq-subscriptions)
+- [Kafka](https://github.com/ancashoria/graphql-kafka-subscriptions)
+- [Postgres](https://github.com/GraphQLCollege/graphql-postgres-subscriptions)
+- [Add your implementation...](https://github.com/apollographql/apollo-server/pull/new/master)
+
+You can implement a `PubSub` of your own, using the exported `PubSubEngine` interface from `apollo-server` or another integration.
