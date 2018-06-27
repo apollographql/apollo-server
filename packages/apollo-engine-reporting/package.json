@@ -20,23 +20,6 @@
   "engines": {
     "node": ">=6.0"
   },
-  "jest": {
-    "testEnvironment": "node",
-    "transform": {
-      "^.+\\.(ts|js)$": "ts-jest"
-    },
-    "moduleFileExtensions": [
-      "ts",
-      "js",
-      "json"
-    ],
-    "testRegex": "/__tests__/.*$",
-    "globals": {
-      "ts-jest": {
-        "skipBabel": true
-      }
-    }
-  },
   "dependencies": {
     "apollo-server-env": "^2.0.0-rc.3",
     "apollo-engine-reporting-protobuf": "0.0.0-beta.7",
@@ -57,5 +40,22 @@
     "node-fetch": "^2.1.2",
     "ts-jest": "^22.4.6",
     "tslint": "^5.10.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "transform": {
+      "^.+\\.(ts|js)$": "ts-jest"
+    },
+    "moduleFileExtensions": [
+      "ts",
+      "js",
+      "json"
+    ],
+    "testRegex": "/__tests__/.*$",
+    "globals": {
+      "ts-jest": {
+        "skipBabel": true
+      }
+    }
   }
 }

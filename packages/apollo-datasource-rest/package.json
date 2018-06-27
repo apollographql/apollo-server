@@ -45,7 +45,10 @@
       "js",
       "json"
     ],
-    "testRegex": "/__tests__/.*$",
+    "testRegex": "apollo-datasource-rest/src/__tests__/.*$",
+    "roots": [
+      "../../"
+    ],
     "globals": {
       "ts-jest": {
         "skipBabel": true

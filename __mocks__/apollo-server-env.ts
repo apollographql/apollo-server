@@ -1,10 +1,12 @@
-declare global {
-  namespace NodeJS {
-    interface Global {
-      fetch: typeof fetch;
-    }
-  }
-}
+import {
+  fetch,
+  Request,
+  Response,
+  BodyInit,
+  Headers,
+  URL,
+  URLSearchParams,
+} from 'apollo-server-env';
 
 type Headers = { [name: string]: string };
 
@@ -13,14 +15,14 @@ interface FetchMock extends jest.Mock<typeof fetch> {
   mockJSONResponseOnce(data?: object, headers?: Headers);
 }
 
-const fetchMock = jest.fn<typeof fetch>() as FetchMock;
+const mockFetch = jest.fn<typeof fetch>() as FetchMock;
 
-fetchMock.mockResponseOnce = (
+mockFetch.mockResponseOnce = (
   data?: BodyInit,
   headers?: Headers,
   status: number = 200,
 ) => {
-  return fetchMock.mockImplementationOnce(async () => {
+  return mockFetch.mockImplementationOnce(async () => {
     return new Response(data, {
       status,
       headers,
@@ -28,24 +30,23 @@ fetchMock.mockResponseOnce = (
   });
 };
 
-fetchMock.mockJSONResponseOnce = (
+mockFetch.mockJSONResponseOnce = (
   data = {},
   headers?: Headers,
   status?: number,
 ) => {
-  return fetchMock.mockResponseOnce(
+  return mockFetch.mockResponseOnce(
     JSON.stringify(data),
     Object.assign({ 'Content-Type': 'application/json' }, headers),
     status,
   );
 };
 
-export default fetchMock;
-
-export function mockFetch() {
-  global.fetch = fetchMock;
-}
-
-export function unmockFetch() {
-  global.fetch = fetch;
-}
+export = {
+  fetch: mockFetch,
+  Request,
+  Response,
+  Headers,
+  URL,
+  URLSearchParams,
+};
