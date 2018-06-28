@@ -67,14 +67,27 @@ export class EngineReportingExtension<TContext = any>
     this.queryString = o.queryString;
     this.documentAST = o.parsedQuery;
 
-    const u = new URL(o.request.url);
+    let host: string | null;
+    let path: string;
+    // On Node's HTTP module, message.url only includes the path
+    // (see https://nodejs.org/api/http.html#http_message_url)
+    // The same is true on Lambda (where we pass event.path)
+    // That isn't a URL and parsing will fail, so we just set the path directly.
+    if (o.request.url.startsWith('/')) {
+      host = null;
+      path = o.request.url;
+    } else {
+      const url = new URL(o.request.url);
+      host = url.hostname;
+      path = url.pathname;
+    }
 
     this.trace.http = new Trace.HTTP({
       method:
         Trace.HTTP.Method[o.request.method as keyof typeof Trace.HTTP.Method] ||
         Trace.HTTP.Method.UNKNOWN,
-      host: u.hostname, // XXX Includes port; is this right?
-      path: u.pathname,
+      host,
+      path,
     });
     if (this.options.privateHeaders !== true) {
       for (const [key, value] of o.request.headers) {
