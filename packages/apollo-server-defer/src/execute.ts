@@ -63,6 +63,7 @@ import {
   VariableDefinitionNode,
 } from 'graphql/language/ast';
 import GraphQLDeferDirective from './GraphQLDeferDirective';
+import { Observable } from 'rxjs';
 
 export type MaybePromise<T> = Promise<T> | T;
 
@@ -86,6 +87,56 @@ function shouldDeferNode(
     exeContext.variableValues,
   );
   return defer && defer.if !== false; // default value for "if" is true
+}
+
+/**
+ * Define a new type for patches that are sent as a result of using defer.
+ * Its is basically the same as ExecutionResult, except that it has a "path"
+ * field that keeps track of the where the patch is to be merged with the
+ * original result.
+ */
+export interface ExecutionPatchResult {
+  data?: Record<string, any>;
+  errors?: ReadonlyArray<GraphQLError>;
+  path: ReadonlyArray<string | number>;
+}
+
+/**
+ * Define a return type from execute() that is a wraps over the initial
+ * result that is returned from a deferred query. Alongside the initial
+ * response, an observable that will stream patches of deferred fields is
+ * returned.
+ */
+export interface DeferredExecutionResult {
+  initialResult: ExecutionResult;
+  deferredPatchesObservable: Observable<ExecutionPatchResult>;
+}
+
+/**
+ * Type guard for DeferredExecutionResult
+ */
+export function isDeferredExecutionResult(
+  result: any,
+): result is DeferredExecutionResult {
+  return (
+    (<DeferredExecutionResult>result).initialResult !== undefined &&
+    (<DeferredExecutionResult>result).deferredPatchesObservable !== undefined
+  );
+}
+
+/**
+ * Build a ExecutionPatchResult from supplied arguments
+ */
+function formatDataAsPatch(
+  path: ReadonlyArray<string | number>,
+  data: Record<string, any>,
+  errors: ReadonlyArray<GraphQLError>,
+): ExecutionPatchResult {
+  return {
+    path: responsePathAsArray(path),
+    data,
+    errors,
+  };
 }
 
 /**
@@ -161,7 +212,7 @@ export interface ExecutionArgs {
 export default function execute(
   ExecutionArgs,
   ..._: any[]
-): MaybePromise<ExecutionResult>;
+): MaybePromise<ExecutionResult | DeferredExecutionResult>;
 /* eslint-disable no-redeclare */
 export default function execute(
   schema: GraphQLSchema,
@@ -171,7 +222,7 @@ export default function execute(
   variableValues?: { [variable: string]: {} },
   operationName?: string,
   fieldResolver?: GraphQLFieldResolver<any, any>,
-): MaybePromise<ExecutionResult>;
+): MaybePromise<ExecutionResult | DeferredExecutionResult>;
 export function execute(
   argsOrSchema,
   document,
@@ -180,7 +231,7 @@ export function execute(
   variableValues,
   operationName,
   fieldResolver,
-) {
+): MaybePromise<ExecutionResult | DeferredExecutionResult> {
   /* eslint-enable no-redeclare */
   // Extract arguments from object args if provided.
   return arguments.length === 1
@@ -212,7 +263,7 @@ function executeImpl(
   variableValues,
   operationName,
   fieldResolver,
-) {
+): MaybePromise<ExecutionResult | DeferredExecutionResult> {
   // If arguments are missing or incorrect, throw an error.
   assertValidExecutionArguments(schema, document, variableValues);
 
@@ -255,7 +306,7 @@ function executeImpl(
 function buildResponse(
   context: ExecutionContext,
   data: MaybePromise<ObjMap<{}> | null>,
-) {
+): MaybePromise<ExecutionResult | DeferredExecutionResult> {
   if (isPromise(data)) {
     return data.then(resolved => buildResponse(context, resolved));
   }
