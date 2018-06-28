@@ -23,7 +23,6 @@ Deployment to `now` for node apps simply requires a `package.json` file to be pr
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "apollo-engine": "^1.1.2",
     "apollo-server": "^2.0.0-rc.5",
     "graphql": "^0.13.2"
   }
