@@ -63,7 +63,7 @@ import {
   VariableDefinitionNode,
 } from 'graphql/language/ast';
 import GraphQLDeferDirective from './GraphQLDeferDirective';
-import { Observable } from 'rxjs';
+import { Observable, merge } from 'rxjs';
 
 export type MaybePromise<T> = Promise<T> | T;
 
@@ -140,6 +140,24 @@ function formatDataAsPatch(
 }
 
 /**
+ * Merge a observable for a deferred field with the into a single stream on
+ * ExecutionContext
+ */
+function mergeDeferredResults(
+  exeContext: ExecutionContext,
+  ob: Observable<ExecutionPatchResult>,
+): void {
+  if (exeContext.deferredResultsObservable) {
+    exeContext.deferredResultsObservable = merge(
+      exeContext.deferredResultsObservable,
+      ob,
+    );
+  } else {
+    exeContext.deferredResultsObservable = ob;
+  }
+}
+
+/**
  * Terminology
  *
  * "Definitions" are the generic name for top-level statements in the document.
@@ -163,7 +181,10 @@ function formatDataAsPatch(
  * Data that must be available at all points during query execution.
  *
  * Namely, schema of the type system that is currently executing,
- * and the fragments defined in the query document
+ * and the fragments defined in the query document.
+ *
+ * To enable defer support, the ExecutionContext is also used as a bus to store
+ * observable streams and deferred errors.
  */
 export type ExecutionContext = {
   schema: GraphQLSchema;
@@ -174,6 +195,8 @@ export type ExecutionContext = {
   variableValues: { [variable: string]: {} };
   fieldResolver: GraphQLFieldResolver<any, any>;
   errors: Array<GraphQLError>;
+  deferredResultsObservable: Observable<ExecutionPatchResult> | null;
+  deferredErrors: Record<string, GraphQLError[]> | null;
 };
 
 /**
@@ -310,9 +333,18 @@ function buildResponse(
   if (isPromise(data)) {
     return data.then(resolved => buildResponse(context, resolved));
   }
-  return context.errors.length === 0
-    ? { data }
-    : { errors: context.errors, data };
+  const result =
+    context.errors.length === 0 ? { data } : { errors: context.errors, data };
+
+  // Check if there are deferred fields
+  if (context.deferredResultsObservable) {
+    return {
+      initialResult: result,
+      deferredPatchesObservable: context.deferredResultsObservable,
+    };
+  } else {
+    return result;
+  }
 }
 
 /**
@@ -448,6 +480,9 @@ export function buildExecutionContext(
     variableValues,
     fieldResolver: fieldResolver || defaultFieldResolver,
     errors,
+    // Initialize defer related fields to null, not used in the general case
+    deferredResultsObservable: null,
+    deferredErrors: null,
   };
 }
 
