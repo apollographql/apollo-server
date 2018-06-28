@@ -82,6 +82,10 @@ new ApolloServer({
 
   Provided the `ENGINE_API_KEY` environment variable is set, the engine reporting agent will be started. The API key can also be provided as the `apiKey` field in an object passed as the `engine` field. See the [EngineReportingOptions](#EngineReportingOptions) section for a full description of how to configure the reporting agent, including how to blacklist variables
 
+* `persistedQueries`: <`Object`> | false
+
+  The persisted queries option can be set to an object containing a `cache` field, which will be used to store the mapping between hash and query string.
+
 #### Returns
 
 `ApolloServer`

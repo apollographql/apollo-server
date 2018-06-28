@@ -27,7 +27,23 @@ const client = new ApolloClient({
 
 > Note: using `apollo-link-persisted-query` requires migrating from [apollo-boost](https://www.apollographql.com/docs/react/advanced/boost-migration.html):
 
-Inside Apollo Server, the query registry is stored in a user-configurable cache. By default, Apollo Server uses a in-memory cache.
+Inside Apollo Server, the query registry is stored in a user-configurable cache. By default, Apollo Server uses a in-memory cache. This can be configured inside of the `ApolloServer` constructor:
+
+```js
+const { MemcachedCache } = require('apollo-server-memcached');
+const { ApolloServe } = require('apollo-server');
+
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  persistedQueries: {
+    cache: new MemcachedCache(
+      ['memcached-server-1', 'memcached-server-2', 'memcached-server-3'],
+      { retries: 10, retry: 10000 }, // Options
+    ),
+  },
+});
+```
 
 <h2 id="verify">Verify</h2>
 
