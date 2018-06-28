@@ -33,7 +33,7 @@ The `now` command immediately deploys your server to the cloud and returns the h
 
 ### Deploying directly from GitHub
 
-If you have your GraphQL server published to GitHub, `Now` provides the ability to deploy straight from GitHub to the cloud.
+If you have your GraphQL server published to GitHub, Now provides the ability to deploy straight from GitHub to the cloud.
 
 Assuming you'd like to deploy an instance of [apollo](https://github.com/apollographql)'s [graphql-server-example](https://github.com/apollographql/graphql-server-example), this is what you'll do:
 
