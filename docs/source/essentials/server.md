@@ -117,6 +117,8 @@ Existing applications generally already have middleware in place and Apollo Serv
 
 > The existing application is frequently already named `app`, especially when using Express.  If the application is identified by a different variable, pass the existing variable in place of `app`.
 
+The following code uses the `apollo-server-express` package, which can be installed with `npm install apollo-server-express@rc`.
+
 ```js
 const { ApolloServer, gql } = require('apollo-server-express');
 const { typeDefs, resolvers } = require('./schema');
@@ -135,6 +137,8 @@ app.listen({ port: 4000 }, () =>
 ```
 
 Hapi follows the same pattern with `apollo-server-express` replaced with `apollo-server-hapi` and `app` replaced with Hapi server. `applyMiddleware` registers plugins, so it should be called with `await`.
+
+> When transition from `apollo-server` to an integration package, running `npm uninstall apollo-server` will remove the extra dependency.
 
 <h3 id="serverless">Serverless</h3>
 
