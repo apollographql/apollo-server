@@ -24,6 +24,7 @@ sidebar_categories:
     - features/subscriptions
     - features/file-uploads
     - features/metrics
+    - features/playground
     - features/scalars-enums
     - features/unions-interfaces
     - features/directives
