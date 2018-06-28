@@ -12,6 +12,7 @@ import {
 } from 'graphql';
 
 import { Request } from 'apollo-server-env';
+export { Request } from 'apollo-server-env';
 
 export type EndHandler = (...errors: Array<Error>) => void;
 // A StartHandlerInvoker is a function that, given a specific GraphQLExtension,
