@@ -1,4 +1,4 @@
-import { Request, URL } from 'apollo-server-env';
+import { Request } from 'apollo-server-env';
 
 import {
   GraphQLResolveInfo,
@@ -67,27 +67,19 @@ export class EngineReportingExtension<TContext = any>
     this.queryString = o.queryString;
     this.documentAST = o.parsedQuery;
 
-    let host: string | null;
-    let path: string;
-    // On Node's HTTP module, message.url only includes the path
-    // (see https://nodejs.org/api/http.html#http_message_url)
-    // The same is true on Lambda (where we pass event.path)
-    // That isn't a URL and parsing will fail, so we just set the path directly.
-    if (o.request.url.startsWith('/')) {
-      host = null;
-      path = o.request.url;
-    } else {
-      const url = new URL(o.request.url);
-      host = url.hostname;
-      path = url.pathname;
-    }
-
     this.trace.http = new Trace.HTTP({
       method:
         Trace.HTTP.Method[o.request.method as keyof typeof Trace.HTTP.Method] ||
         Trace.HTTP.Method.UNKNOWN,
-      host,
-      path,
+      // Host and path are not used anywhere on the backend, so let's not bother
+      // trying to parse request.url to get them, which is a potential
+      // source of bugs because integrations have different behavior here.
+      // On Node's HTTP module, request.url only includes the path
+      // (see https://nodejs.org/api/http.html#http_message_url)
+      // The same is true on Lambda (where we pass event.path)
+      // But on environments like Cloudflare we do get a complete URL.
+      host: null,
+      path: null,
     });
     if (this.options.privateHeaders !== true) {
       for (const [key, value] of o.request.headers) {
