@@ -4,11 +4,11 @@ sidebar_title: Now
 description: Deploying your GraphQL server to Zeit Now
 ---
 
-`Now` is a service by Zeit that allows the deployment of an instance of Apollo Server, which provides a functional GraphQL endpoint.
+Now is a service by Zeit that allows the deployment of an instance of Apollo Server, which provides a functional GraphQL endpoint.
 
 ## Node.js Deployment
 
-Deployment to `now` for Node.js apps simply requires a `package.json` file to be present in your app directory.
+Deployment to Now for Node.js apps simply requires a `package.json` file to be present in your app directory.
 
 ```js
 {
