@@ -30,17 +30,17 @@ Deployment to `now` for node apps simply requires a `package.json` file to be pr
 }
 ```
 
-#### Push project to Now
+### Deploy server to Now
 
-Install the [now cli](https://zeit.co/download#now-cli), then visit your app directory and run the `now` command:
+Install the [now cli](https://zeit.co/download#now-cli), then visit your server directory and run the `now` command:
 
 ```sh
 $ now
 ```
 
-It deploys your project to the cloud and returns the hosted project link. Your GraphQL server will immediately be deployed to the cloud. Send a query to your GraphQL service on `now` at `<NOW_APP_NAME>.now.sh`.
+The `now` command immediately deploys your server to the cloud and returns the hosted project link. Send a query to your GraphQL server on `now` at `<NOW_APP_NAME>.now.sh`.
 
-#### Deploying directly from GitHub
+### Deploying directly from GitHub
 
 If you have your GraphQL server published to GitHub, `now` provides the ability to deploy straight from GitHub to the cloud.
 
