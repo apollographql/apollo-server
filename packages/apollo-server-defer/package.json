@@ -21,7 +21,6 @@
     "graphql": "^0.12.0 || ^0.13.0 || ^14.0.0"
   },
   "devDependencies": {
-    "@types/graphql": "^0.13.1",
     "@types/jest": "^23.1.2",
     "@types/lru-cache": "^4.1.1",
     "jest": "^23.2.0",
@@ -37,7 +36,7 @@
       "js",
       "json"
     ],
-    "testRegex": "apollo-server-defer/src/__tests__/.*$",
+    "testRegex": "apollo-server-defer/src/__tests__/.*.(spec|test).(js|ts)?$",
     "globals": {
       "ts-jest": {
         "skipBabel": true
