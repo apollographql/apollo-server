@@ -21,6 +21,7 @@ export type RequestOptions = RequestInit & {
   body: Body;
 };
 export type Body = BodyInit | object;
+export { Request };
 
 export abstract class RESTDataSource<TContext = any> {
   abstract baseURL: string;
