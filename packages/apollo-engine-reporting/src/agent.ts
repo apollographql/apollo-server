@@ -8,17 +8,8 @@ import {
   Trace,
 } from 'apollo-engine-reporting-protobuf';
 
-import {
-  fetch as originalFetch,
-  RequestInfo,
-  RequestInit,
-  Response,
-} from 'apollo-server-env';
-// Wrap fetch with @zeit/fetch-retry for automatic retrying
-const fetch = require('@zeit/fetch-retry')(originalFetch) as (
-  input?: RequestInfo,
-  init?: RequestInit & { retries: number; minTimeout: number },
-) => Promise<Response>;
+import { fetch, Response } from 'apollo-server-env';
+import * as retry from 'async-retry';
 
 import { EngineReportingExtension } from './extension';
 
@@ -226,24 +217,32 @@ export class EngineReportingAgent<TContext = any> {
       (this.options.endpointUrl || 'https://engine-report.apollodata.com') +
       '/api/ingress/traces';
 
-    const response = await fetch(endpointUrl, {
-      method: 'POST',
-      headers: {
-        'user-agent': 'apollo-engine-reporting',
-        'x-api-key': this.apiKey,
-        'content-encoding': 'gzip',
-      },
-      body: compressed,
-      // By default, fetch-retry will retry on network errors and 5xx HTTP
+    // Wrap fetch with async-retry for automatic retrying
+    const response: Response = await retry(
+      // Retry on network errors and 5xx HTTP
       // responses.
-      retries: this.options.maxAttempts || 5,
-      minTimeout: this.options.minimumRetryDelayMs || 100,
-      // XXX Back in Optics, we had an explicit proxyUrl option for corporate
-      //     proxies. I was never clear on why `request`'s handling of the
-      //     standard env vars wasn't good enough (see
-      //     https://github.com/apollographql/optics-agent-js/pull/70#discussion_r89374066).
-      //     We may have to add it here.
-    }).catch((err: Error) => {
+      async () => {
+        const response = await fetch(endpointUrl, {
+          method: 'POST',
+          headers: {
+            'user-agent': 'apollo-engine-reporting',
+            'x-api-key': this.apiKey,
+            'content-encoding': 'gzip',
+          },
+          body: compressed,
+        });
+
+        if (response.status >= 500 && response.status < 600) {
+          throw new Error(`${response.status}: ${response.statusText}`);
+        } else {
+          return response;
+        }
+      },
+      {
+        retries: this.options.maxAttempts || 5,
+        minTimeout: this.options.minimumRetryDelayMs || 100,
+      },
+    ).catch((err: Error) => {
       throw new Error(`Error sending report to Engine servers: ${err}`);
     });
 

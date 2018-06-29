@@ -21,13 +21,14 @@
     "node": ">=6.0"
   },
   "dependencies": {
-    "@zeit/fetch-retry": "^3.0.0",
     "apollo-engine-reporting-protobuf": "0.0.0-beta.7",
     "apollo-server-env": "^2.0.0-rc.3",
+    "async-retry": "^1.2.1",
     "graphql-extensions": "^0.1.0-beta.15",
     "lodash": "^4.17.10"
   },
   "devDependencies": {
+    "@types/async-retry": "^1.2.1",
     "@types/graphql": "^0.13.1",
     "@types/jest": "^23.1.2",
     "@types/lodash": "^4.14.110",
