@@ -307,6 +307,8 @@ export async function runHttpQuery(
           context = await context();
         } catch (e) {
           e.message = `Context creation failed: ${e.message}`;
+          // For errors that are not internal, such as authentication, we
+          // should provide a 400 response
           if (
             e.extensions &&
             e.extensions.code &&
