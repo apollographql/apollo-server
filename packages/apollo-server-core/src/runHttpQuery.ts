@@ -307,7 +307,11 @@ export async function runHttpQuery(
           context = await context();
         } catch (e) {
           e.message = `Context creation failed: ${e.message}`;
-          if (e.extensions && e.extensions.code) {
+          if (
+            e.extensions &&
+            e.extensions.code &&
+            e.extensions.code !== 'INTERNAL_SERVER_ERROR'
+          ) {
             throwHttpGraphQLError(400, [e], optionsObject);
           } else {
             throwHttpGraphQLError(500, [e], optionsObject);
