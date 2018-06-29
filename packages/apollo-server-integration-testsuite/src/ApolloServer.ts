@@ -336,12 +336,14 @@ export function testApolloServer<AS extends ApolloServerBase>(
         });
         expect(introspectionResult.data, 'data should not exist').not.to.exist;
         expect(introspectionResult.errors, 'errors should exist').to.exist;
+        expect(formatError.calledOnce).true;
+        expect(throwError.calledOnce).true;
 
         const result = await apolloFetch({ query: TEST_STRING_QUERY });
         expect(result.data, 'data should not exist').not.to.exist;
         expect(result.errors, 'errors should exist').to.exist;
-        expect(formatError.called).true;
-        expect(throwError.called).true;
+        expect(formatError.calledTwice).true;
+        expect(throwError.calledTwice).true;
       });
     });
 
