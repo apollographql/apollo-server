@@ -4,7 +4,7 @@ import { parseAll } from 'accept';
 import {
   renderPlaygroundPage,
   RenderPageOptions as PlaygroundRenderPageOptions,
-} from 'graphql-playground-html';
+} from '@apollographql/graphql-playground-html';
 import { processRequest as processFileUploads } from 'apollo-upload-server';
 
 import { graphqlHapi } from './hapiApollo';

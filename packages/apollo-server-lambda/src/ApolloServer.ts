@@ -5,7 +5,7 @@ import { GraphQLOptions } from 'apollo-server-core';
 import {
   renderPlaygroundPage,
   RenderPageOptions as PlaygroundRenderPageOptions,
-} from 'graphql-playground-html';
+} from '@apollographql/graphql-playground-html';
 
 import { graphqlLambda } from './lambdaApollo';
 

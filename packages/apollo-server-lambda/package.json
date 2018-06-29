@@ -31,7 +31,7 @@
   },
   "dependencies": {
     "apollo-server-core": "^2.0.0-rc.5",
-    "graphql-playground-html": "^1.6.0",
+    "@apollographql/graphql-playground-html": "^1.6.0",
     "graphql-tools": "^3.0.4"
   },
   "devDependencies": {
