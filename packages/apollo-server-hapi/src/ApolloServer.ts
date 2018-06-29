@@ -3,8 +3,8 @@ import { ApolloServerBase } from 'apollo-server-core';
 import { parseAll } from 'accept';
 import {
   renderPlaygroundPage,
-  MiddlewareOptions as PlaygroundMiddlewareOptions,
-} from 'graphql-playground-html';
+  RenderPageOptions as PlaygroundRenderPageOptions,
+} from '@apollographql/graphql-playground-html';
 import { processRequest as processFileUploads } from 'apollo-upload-server';
 
 import { graphqlHapi } from './hapiApollo';
@@ -81,15 +81,14 @@ export class ApolloServer extends ApolloServerBase {
             ) === 'text/html';
 
           if (prefersHTML) {
-            const middlewareOptions = {
+            const playgroundRenderPageOptions: PlaygroundRenderPageOptions = {
               endpoint: path,
               subscriptionEndpoint: this.subscriptionsPath,
-              version: '1.7.0',
-              ...(typeof gui === 'boolean' ? {} : gui),
+              version: this.playgroundVersion,
             };
 
             return h
-              .response(renderPlaygroundPage(middlewareOptions))
+              .response(renderPlaygroundPage(playgroundRenderPageOptions))
               .type('text/html')
               .takeover();
           }
@@ -144,7 +143,7 @@ export interface ServerRegistration {
   cors?: boolean | hapi.RouteOptionsCors;
   onHealthCheck?: (request: hapi.Request) => Promise<any>;
   disableHealthCheck?: boolean;
-  gui?: boolean | PlaygroundMiddlewareOptions;
+  gui?: boolean;
   uploads?: boolean | Record<string, any>;
 }
 

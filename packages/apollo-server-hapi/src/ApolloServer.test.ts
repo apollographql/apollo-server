@@ -212,7 +212,6 @@ describe('apollo-server-hapi', () => {
 
       const apolloFetch = createApolloFetch({ uri }).useAfter(
         (response, next) => {
-          console.log(response.response.headers);
           expect(
             response.response.headers.get('access-control-expose-headers'),
           ).to.deep.equal(

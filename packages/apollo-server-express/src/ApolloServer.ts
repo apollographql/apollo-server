@@ -1,8 +1,10 @@
 import * as express from 'express';
 import * as corsMiddleware from 'cors';
 import { json, OptionsJson } from 'body-parser';
-import playgroundMiddleware from 'graphql-playground-middleware-express';
-import { MiddlewareOptions as PlaygroundMiddlewareOptions } from 'graphql-playground-html';
+import {
+  renderPlaygroundPage,
+  RenderPageOptions as PlaygroundRenderPageOptions,
+} from '@apollographql/graphql-playground-html';
 import { ApolloServerBase, formatApolloErrors } from 'apollo-server-core';
 import * as accepts from 'accepts';
 import * as typeis from 'type-is';
@@ -27,7 +29,7 @@ export interface ServerRegistration {
   bodyParserConfig?: OptionsJson | boolean;
   onHealthCheck?: (req: express.Request) => Promise<any>;
   disableHealthCheck?: boolean;
-  gui?: boolean | PlaygroundMiddlewareOptions;
+  gui?: boolean;
 }
 
 const fileUploadMiddleware = (
@@ -154,12 +156,17 @@ export class ApolloServer extends ApolloServerBase {
           ) === 'text/html';
 
         if (prefersHTML) {
-          const middlewareOptions = {
+          const playgroundRenderPageOptions: PlaygroundRenderPageOptions = {
             endpoint: path,
             subscriptionEndpoint: this.subscriptionsPath,
-            ...(typeof gui === 'boolean' ? {} : gui),
+            version: this.playgroundVersion,
           };
-          return playgroundMiddleware(middlewareOptions)(req, res, next);
+          res.setHeader('Content-Type', 'text/html');
+          const playground = renderPlaygroundPage(playgroundRenderPageOptions);
+          res.write(playground);
+          res.end();
+          next();
+          return;
         }
       }
       return graphqlExpress(this.createGraphQLServerOptions.bind(this))(
