@@ -21,8 +21,9 @@
     "node": ">=6.0"
   },
   "dependencies": {
-    "apollo-server-env": "^2.0.0-rc.3",
+    "@zeit/fetch-retry": "^3.0.0",
     "apollo-engine-reporting-protobuf": "0.0.0-beta.7",
+    "apollo-server-env": "^2.0.0-rc.3",
     "graphql-extensions": "^0.1.0-beta.15",
     "lodash": "^4.17.10"
   },

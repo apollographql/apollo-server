@@ -7,7 +7,18 @@ import {
   Traces,
   Trace,
 } from 'apollo-engine-reporting-protobuf';
-import { fetch } from 'apollo-server-env';
+
+import {
+  fetch as originalFetch,
+  RequestInfo,
+  RequestInit,
+  Response,
+} from 'apollo-server-env';
+// Wrap fetch with @zeit/fetch-retry for automatic retrying
+const fetch = require('@zeit/fetch-retry')(originalFetch) as (
+  input?: RequestInfo,
+  init?: RequestInit & { retries: number; minTimeout: number },
+) => Promise<Response>;
 
 import { EngineReportingExtension } from './extension';
 
@@ -170,101 +181,85 @@ export class EngineReportingAgent<TContext = any> {
     }
   }
 
-  public sendReport(): Promise<void> {
+  public async sendReport(): Promise<void> {
     const report = this.report;
     this.resetReport();
 
     if (Object.keys(report.tracesPerQuery).length === 0) {
-      return Promise.resolve();
+      return;
     }
 
     // Send traces asynchronously, so that (eg) addTrace inside a resolver
     // doesn't block on it.
-    return Promise.resolve()
-      .then(() => {
-        if (this.options.debugPrintReports) {
-          // tslint:disable-next-line no-console
-          console.log(
-            `Engine sending report: ${JSON.stringify(report.toJSON())}`,
-          );
-        }
+    await Promise.resolve();
 
-        const protobufError = FullTracesReport.verify(report);
-        if (protobufError) {
-          throw new Error(`Error encoding report: ${protobufError}`);
-        }
-        const message = FullTracesReport.encode(report).finish();
+    if (this.options.debugPrintReports) {
+      // tslint:disable-next-line no-console
+      console.log(`Engine sending report: ${JSON.stringify(report.toJSON())}`);
+    }
 
-        return new Promise((resolve, reject) => {
-          // The protobuf library gives us a Uint8Array. Node 8's zlib lets us
-          // pass it directly; convert for the sake of Node 6. (No support right
-          // now for Node 4, which lacks Buffer.from.)
-          const messageBuffer = Buffer.from(
-            message.buffer as ArrayBuffer,
-            message.byteOffset,
-            message.byteLength,
-          );
-          gzip(messageBuffer, (err, compressed) => {
-            if (err) {
-              reject(err);
-            } else {
-              resolve(compressed);
-            }
-          });
-        });
-      })
-      .then(compressed => {
-        // Grab this here because the delayStrategy function has a different 'this'.
-        const minimumRetryDelayMs = this.options.minimumRetryDelayMs || 100;
+    const protobufError = FullTracesReport.verify(report);
+    if (protobufError) {
+      throw new Error(`Error encoding report: ${protobufError}`);
+    }
+    const message = FullTracesReport.encode(report).finish();
 
-        // note: retryrequest has built-in Promise support, unlike the base 'request'.
-        const endpointUrl =
-          this.options.endpointUrl ||
-          'https://engine-report.apollodata.com' + '/api/ingress/traces';
-        return (fetch(endpointUrl, {
-          method: 'POST',
-          headers: {
-            'user-agent': 'apollo-engine-reporting',
-            'x-api-key': this.apiKey,
-            'content-encoding': 'gzip',
-          },
-          body: compressed,
-          // By default, retryrequest will retry on network errors and 5xx HTTP
-          // responses.
-          maxAttempts: this.options.maxAttempts || 5,
-          // Note: use a non-arrow function as this API gives us useful information
-          // on 'this', and use an 'as any' because the type definitions don't know
-          // about the function version of this parameter.
-          delayStrategy: function() {
-            return Math.pow(minimumRetryDelayMs * 2, this.attempts);
-          },
-          // XXX Back in Optics, we had an explicit proxyUrl option for corporate
-          //     proxies. I was never clear on why `request`'s handling of the
-          //     standard env vars wasn't good enough (see
-          //     https://github.com/apollographql/optics-agent-js/pull/70#discussion_r89374066).
-          //     We may have to add it here.
-
-          // Include 'as any's because @types/requestretry doesn't understand the
-          // promise API or delayStrategy.
-        } as any) as any).catch((err: Error) => {
-          throw new Error(`Error sending report to Engine servers: ${err}`);
-        });
-      })
-      .then(response => {
-        if (response.statusCode < 200 || response.statusCode >= 300) {
-          // Note that we don't expect to see a 3xx here because request follows
-          // redirects.
-          throw new Error(
-            `Error sending report to Engine servers (HTTP status ${
-              response.statusCode
-            }): ${response.body}`,
-          );
-        }
-        if (this.options.debugPrintReports) {
-          // tslint:disable-next-line no-console
-          console.log(`Engine report: status ${response.statusCode}`);
+    const compressed = await new Promise<Buffer>((resolve, reject) => {
+      // The protobuf library gives us a Uint8Array. Node 8's zlib lets us
+      // pass it directly; convert for the sake of Node 6. (No support right
+      // now for Node 4, which lacks Buffer.from.)
+      const messageBuffer = Buffer.from(
+        message.buffer as ArrayBuffer,
+        message.byteOffset,
+        message.byteLength,
+      );
+      gzip(messageBuffer, (err, compressed) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(compressed);
         }
       });
+    });
+
+    const endpointUrl =
+      (this.options.endpointUrl || 'https://engine-report.apollodata.com') +
+      '/api/ingress/traces';
+
+    const response = await fetch(endpointUrl, {
+      method: 'POST',
+      headers: {
+        'user-agent': 'apollo-engine-reporting',
+        'x-api-key': this.apiKey,
+        'content-encoding': 'gzip',
+      },
+      body: compressed,
+      // By default, fetch-retry will retry on network errors and 5xx HTTP
+      // responses.
+      retries: this.options.maxAttempts || 5,
+      minTimeout: this.options.minimumRetryDelayMs || 100,
+      // XXX Back in Optics, we had an explicit proxyUrl option for corporate
+      //     proxies. I was never clear on why `request`'s handling of the
+      //     standard env vars wasn't good enough (see
+      //     https://github.com/apollographql/optics-agent-js/pull/70#discussion_r89374066).
+      //     We may have to add it here.
+    }).catch((err: Error) => {
+      throw new Error(`Error sending report to Engine servers: ${err}`);
+    });
+
+    if (response.status < 200 || response.status >= 300) {
+      // Note that we don't expect to see a 3xx here because request follows
+      // redirects.
+      throw new Error(
+        `Error sending report to Engine servers (HTTP status ${
+          response.status
+        }): ${await response.text()}`,
+      );
+    }
+    if (this.options.debugPrintReports) {
+      // tslint:disable-next-line no-console
+      console.log(`Engine report: status ${response.status}`);
+    }
   }
 
   // Stop prevents reports from being sent automatically due to time or buffer
