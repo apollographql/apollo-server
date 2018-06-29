@@ -26,11 +26,15 @@
     "apollo-server-core": "^2.0.0-rc.5"
   },
   "devDependencies": {
+    "@types/body-parser": "1.17.0",
+    "apollo-engine-reporting-protobuf": "0.0.0-beta.7",
     "apollo-fetch": "^0.7.0",
     "apollo-link": "^1.2.2",
     "apollo-link-http": "^1.5.4",
     "apollo-link-persisted-queries": "^0.2.1",
     "apollo-server-env": "^2.0.0-rc.3",
+    "body-parser": "^1.18.3",
+    "graphql-extensions": "^0.1.0-beta.15",
     "graphql-subscriptions": "^0.5.8",
     "graphql-tag": "^2.9.2",
     "js-sha256": "^0.9.0",
