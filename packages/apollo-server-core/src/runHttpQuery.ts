@@ -307,7 +307,11 @@ export async function runHttpQuery(
           context = await context();
         } catch (e) {
           e.message = `Context creation failed: ${e.message}`;
-          throwHttpGraphQLError(500, [e], optionsObject);
+          if (e.extensions && e.extensions.code) {
+            throwHttpGraphQLError(400, [e], optionsObject);
+          } else {
+            throwHttpGraphQLError(500, [e], optionsObject);
+          }
         }
       } else {
         // Always clone the context if it's not a function, because that preserves
