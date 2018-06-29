@@ -22,7 +22,7 @@
     "node": ">=6.0"
   },
   "dependencies": {
-    "apollo-server-env": "^2.0.0-rc.3",
+    "apollo-server-env": "^2.0.0-rc.5",
     "core-js": "^2.5.7",
     "source-map-support": "^0.5.6"
   },
