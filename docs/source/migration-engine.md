@@ -41,7 +41,7 @@ const server = new ApolloServer({
   engine: false,
 });
 
-server.applyMiddlware({ app });
+server.applyMiddleware({ app });
 
 const engine = new ApolloEngine({
   apiKey: process.env.ENGINE_API_KEY,
