@@ -98,4 +98,4 @@ export interface ResponseInit {
   statusText?: string;
 }
 
-export type BodyInit = ArrayBuffer | string;
+export type BodyInit = ArrayBuffer | ArrayBufferView | string;
