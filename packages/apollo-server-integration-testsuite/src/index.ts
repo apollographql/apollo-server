@@ -13,6 +13,7 @@ import {
   GraphQLInt,
   GraphQLError,
   GraphQLNonNull,
+  GraphQLScalarType,
   introspectionQuery,
   BREAK,
 } from 'graphql';
@@ -23,6 +24,61 @@ import { GraphQLOptions, Config } from 'apollo-server-core';
 import gql from 'graphql-tag';
 
 export * from './ApolloServer';
+
+const QueryRootType = new GraphQLObjectType({
+  name: 'QueryRoot',
+  fields: {
+    test: {
+      type: GraphQLString,
+      args: {
+        who: {
+          type: GraphQLString,
+        },
+      },
+      resolve: (_, args) => 'Hello ' + (args['who'] || 'World'),
+    },
+    thrower: {
+      type: new GraphQLNonNull(GraphQLString),
+      resolve: () => {
+        throw new Error('Throws!');
+      },
+    },
+    custom: {
+      type: GraphQLString,
+      args: {
+        foo: {
+          type: new GraphQLScalarType({
+            name: 'Foo',
+            serialize: v => v,
+            parseValue: () => {
+              throw new Error('Something bad happened');
+            },
+            parseLiteral: () => {
+              throw new Error('Something bad happened');
+            },
+          }),
+        },
+      },
+    },
+    context: {
+      type: GraphQLString,
+      resolve: (_obj, _args, context) => context,
+    },
+  },
+});
+
+const TestSchema = new GraphQLSchema({
+  query: QueryRootType,
+  mutation: new GraphQLObjectType({
+    name: 'MutationRoot',
+    fields: {
+      writeTest: {
+        type: QueryRootType,
+        resolve: () => ({}),
+      },
+    },
+  }),
+});
 
 const personType = new GraphQLObjectType({
   name: 'PersonType',
@@ -852,6 +908,66 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
         return req.then(res => {
           expect(res.status).to.equal(200);
           expect(res.body.errors[0].message).to.equal(expected);
+        });
+      });
+
+      it('allows for custom error formatting to sanitize', async () => {
+        app = await createApp({
+          graphqlOptions: {
+            schema: TestSchema,
+            formatError(error) {
+              return { message: 'Custom error format: ' + error.message };
+            },
+          },
+        });
+
+        const response = await request(app)
+          .post('/graphql')
+          .send({
+            query: '{thrower}',
+          });
+
+        expect(response.status).to.equal(200);
+        expect(JSON.parse(response.text)).to.deep.equal({
+          data: null,
+          errors: [
+            {
+              message: 'Custom error format: Throws!',
+            },
+          ],
+        });
+      });
+
+      it('allows for custom error formatting to elaborate', async () => {
+        app = await createApp({
+          graphqlOptions: {
+            schema: TestSchema,
+            formatError(error) {
+              return {
+                message: error.message,
+                locations: error.locations,
+                stack: 'Stack trace',
+              };
+            },
+          },
+        });
+
+        const response = await request(app)
+          .post('/graphql')
+          .send({
+            query: '{thrower}',
+          });
+
+        expect(response.status).to.equal(200);
+        expect(JSON.parse(response.text)).to.deep.equal({
+          data: null,
+          errors: [
+            {
+              message: 'Throws!',
+              locations: [{ line: 1, column: 2 }],
+              stack: 'Stack trace',
+            },
+          ],
         });
       });
 

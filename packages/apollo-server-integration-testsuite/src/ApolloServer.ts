@@ -153,11 +153,20 @@ export function testApolloServer<AS extends ApolloServerBase>(
           expect(introspectionResult.data, 'data should not exist').not.to
             .exist;
           expect(introspectionResult.errors, 'errors should exist').to.exist;
+          expect(introspectionResult.errors[0].message).to.match(
+            /introspection/,
+          );
+          expect(formatError.callCount).to.equal(
+            introspectionResult.errors.length,
+          );
 
           const result = await apolloFetch({ query: TEST_STRING_QUERY });
           expect(result.data, 'data should not exist').not.to.exist;
           expect(result.errors, 'errors should exist').to.exist;
-          expect(formatError.called).true;
+          expect(result.errors[0].message).to.match(/Not allowed/);
+          expect(formatError.callCount).to.equal(
+            introspectionResult.errors.length + result.errors.length,
+          );
         });
 
         it('allows introspection by default', async () => {
