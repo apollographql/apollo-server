@@ -1,6 +1,5 @@
 import * as os from 'os';
 import { gzip } from 'zlib';
-import * as request from 'requestretry';
 import { DocumentNode } from 'graphql';
 import {
   FullTracesReport,
@@ -8,6 +7,7 @@ import {
   Traces,
   Trace,
 } from 'apollo-engine-reporting-protobuf';
+import { fetch } from 'apollo-server-env';
 
 import { EngineReportingExtension } from './extension';
 
@@ -218,10 +218,10 @@ export class EngineReportingAgent<TContext = any> {
         const minimumRetryDelayMs = this.options.minimumRetryDelayMs || 100;
 
         // note: retryrequest has built-in Promise support, unlike the base 'request'.
-        return (request({
-          url:
-            (this.options.endpointUrl ||
-              'https://engine-report.apollodata.com') + '/api/ingress/traces',
+        const endpointUrl =
+          this.options.endpointUrl ||
+          'https://engine-report.apollodata.com' + '/api/ingress/traces';
+        return (fetch(endpointUrl, {
           method: 'POST',
           headers: {
             'user-agent': 'apollo-engine-reporting',
