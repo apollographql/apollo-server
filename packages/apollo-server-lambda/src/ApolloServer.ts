@@ -3,7 +3,6 @@ import { ApolloServerBase } from 'apollo-server-core';
 export { GraphQLOptions, GraphQLExtension } from 'apollo-server-core';
 import { GraphQLOptions } from 'apollo-server-core';
 import {
-  MiddlewareOptions as PlaygroundMiddlewareOptions,
   renderPlaygroundPage,
   RenderPageOptions as PlaygroundRenderPageOptions,
 } from 'graphql-playground-html';
@@ -11,7 +10,7 @@ import {
 import { graphqlLambda } from './lambdaApollo';
 
 export interface CreateHandlerOptions {
-  gui?: boolean | PlaygroundMiddlewareOptions;
+  gui?: boolean;
   cors?: {
     origin?: boolean | string | string[];
     methods?: string | string[];
@@ -104,8 +103,7 @@ export class ApolloServer extends ApolloServerBase {
         if (acceptHeader && acceptHeader.includes('text/html')) {
           const playgroundRenderPageOptions: PlaygroundRenderPageOptions = {
             endpoint: event.requestContext.path,
-            ...(typeof gui === 'boolean' ? {} : gui),
-            version: '1.7.0',
+            version: this.playgroundVersion,
           };
 
           return callback(null, {
