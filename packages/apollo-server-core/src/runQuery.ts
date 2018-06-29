@@ -159,7 +159,6 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
               }),
             ],
             {
-              formatter: options.formatError,
               debug,
             },
           );
@@ -199,7 +198,6 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
                 fromGraphQLError(err, { errorClass: ValidationError }),
               ),
               {
-                formatter: options.formatError,
                 debug,
               },
             );
@@ -250,7 +248,6 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
 
           if (result.errors) {
             response.errors = formatApolloErrors([...result.errors], {
-              formatter: options.formatError,
               debug,
             });
           }
@@ -277,8 +274,8 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
       throw err;
     })
     .then(graphqlResponse => {
-      extensionStack.willSendResponse({ graphqlResponse });
+      const response = extensionStack.willSendResponse({ graphqlResponse });
       requestDidEnd();
-      return graphqlResponse;
+      return response.graphqlResponse;
     });
 }

@@ -39,6 +39,8 @@ import {
   FileUploadOptions,
 } from './types';
 
+import { FormatErrorExtension } from './formatters';
+
 import { gql } from './index';
 
 const NoIntrospection = (context: ValidationContext) => ({
@@ -185,11 +187,23 @@ export class ApolloServerBase {
     // or cacheControl.
     this.extensions = [];
 
+    // Error formatting should happen after the engine reporting agent, so that
+    // engine gets the unmasked errors if necessary
+    if (this.requestOptions.formatError) {
+      this.extensions.push(
+        () =>
+          new FormatErrorExtension(
+            this.requestOptions.formatError,
+            this.requestOptions.debug,
+          ),
+      );
+    }
+
     if (engine || (engine !== false && process.env.ENGINE_API_KEY)) {
       this.engineReportingAgent = new EngineReportingAgent(
         engine === true ? {} : engine,
       );
-      // Let's keep this extension first so it wraps everything.
+      // Let's keep this extension second so it wraps everything, except error formatting
       this.extensions.push(() => this.engineReportingAgent.newExtension());
     }
 

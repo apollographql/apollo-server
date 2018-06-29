@@ -47,7 +47,9 @@ export class GraphQLExtension<TContext = any> {
     executionArgs: ExecutionArgs;
   }): EndHandler | void;
 
-  public willSendResponse?(o: { graphqlResponse: GraphQLResponse }): void;
+  public willSendResponse?(o: {
+    graphqlResponse: GraphQLResponse;
+  }): void | { graphqlResponse: GraphQLResponse };
 
   public willResolveField?(
     source: any,
@@ -100,12 +102,20 @@ export class GraphQLExtensionStack<TContext = any> {
     );
   }
 
-  public willSendResponse(o: { graphqlResponse: GraphQLResponse }): void {
-    this.extensions.forEach(extension => {
+  public willSendResponse(o: {
+    graphqlResponse: GraphQLResponse;
+  }): { graphqlResponse: GraphQLResponse } {
+    let reference = o;
+    // Reverse the array, since this is functions as an end handler
+    [...this.extensions].reverse().forEach(extension => {
       if (extension.willSendResponse) {
-        extension.willSendResponse(o);
+        const result = extension.willSendResponse(reference);
+        if (result) {
+          reference = result;
+        }
       }
     });
+    return reference;
   }
 
   public willResolveField(

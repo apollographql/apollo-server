@@ -69,18 +69,23 @@ export class HttpQueryError extends Error {
   }
 }
 
-function throwHttpGraphQLError(
-  statusCode,
-  errors: Array<Error>,
-  optionsObject,
+/**
+ * If optionsObject is specified, then the errors array will be formatted
+ */
+function throwHttpGraphQLError<E extends Error>(
+  statusCode: number,
+  errors: Array<E>,
+  optionsObject?: Partial<GraphQLOptions>,
 ) {
   throw new HttpQueryError(
     statusCode,
     prettyJSONStringify({
-      errors: formatApolloErrors(errors, {
-        debug: optionsObject.debug,
-        formatter: optionsObject.formatError,
-      }),
+      errors: optionsObject
+        ? formatApolloErrors(errors, {
+            debug: optionsObject.debug,
+            formatter: optionsObject.formatError,
+          })
+        : errors,
     }),
     true,
     {
@@ -302,7 +307,17 @@ export async function runHttpQuery(
           context = await context();
         } catch (e) {
           e.message = `Context creation failed: ${e.message}`;
-          throwHttpGraphQLError(500, [e], optionsObject);
+          // For errors that are not internal, such as authentication, we
+          // should provide a 400 response
+          if (
+            e.extensions &&
+            e.extensions.code &&
+            e.extensions.code !== 'INTERNAL_SERVER_ERROR'
+          ) {
+            throwHttpGraphQLError(400, [e], optionsObject);
+          } else {
+            throwHttpGraphQLError(500, [e], optionsObject);
+          }
         }
       } else {
         // Always clone the context if it's not a function, because that preserves
@@ -402,16 +417,23 @@ export async function runHttpQuery(
         throw e;
       }
 
+      // This error will be uncaught, so we need to wrap it and treat it as an
+      // internal server error
       return {
-        errors: formatApolloErrors([e], {
-          formatter: optionsObject.formatError,
-          debug: optionsObject.debug,
-        }),
+        errors: formatApolloErrors([e], optionsObject),
       };
     }
   }) as Array<Promise<ExecutionResult & { extensions?: Record<string, any> }>>;
 
-  const responses = await Promise.all(requests);
+  let responses;
+  try {
+    responses = await Promise.all(requests);
+  } catch (e) {
+    if (e.name === 'HttpQueryError') {
+      throw e;
+    }
+    throwHttpGraphQLError(500, [e], optionsObject);
+  }
 
   const responseInit: ApolloServerHttpResponse = {
     headers: {
@@ -449,7 +471,8 @@ export async function runHttpQuery(
     // This code is run on parse/validation errors and any other error that
     // doesn't reach GraphQL execution
     if (graphqlResponse.errors && typeof graphqlResponse.data === 'undefined') {
-      throwHttpGraphQLError(400, graphqlResponse.errors as any, optionsObject);
+      // don't include optionsObject, since the errors have already been formatted
+      throwHttpGraphQLError(400, graphqlResponse.errors as any);
     }
     const stringified = prettyJSONStringify(graphqlResponse);
 

@@ -5,6 +5,10 @@ import * as http from 'http';
 import * as net from 'net';
 import 'mocha';
 import { sha256 } from 'js-sha256';
+import express = require('express');
+import bodyParser = require('body-parser');
+
+import { Trace } from 'apollo-engine-reporting-protobuf';
 
 import {
   GraphQLSchema,
@@ -33,6 +37,7 @@ import {
   Config,
   ApolloServerBase,
 } from 'apollo-server-core';
+import { GraphQLExtension, GraphQLResponse } from 'graphql-extensions';
 
 export function createServerInfo<AS extends ApolloServerBase>(
   server: AS,
@@ -153,11 +158,20 @@ export function testApolloServer<AS extends ApolloServerBase>(
           expect(introspectionResult.data, 'data should not exist').not.to
             .exist;
           expect(introspectionResult.errors, 'errors should exist').to.exist;
+          expect(introspectionResult.errors[0].message).to.match(
+            /introspection/,
+          );
+          expect(formatError.callCount).to.equal(
+            introspectionResult.errors.length,
+          );
 
           const result = await apolloFetch({ query: TEST_STRING_QUERY });
           expect(result.data, 'data should not exist').not.to.exist;
           expect(result.errors, 'errors should exist').to.exist;
-          expect(formatError.called).true;
+          expect(result.errors[0].message).to.match(/Not allowed/);
+          expect(formatError.callCount).to.equal(
+            introspectionResult.errors.length + result.errors.length,
+          );
         });
 
         it('allows introspection by default', async () => {
@@ -322,16 +336,197 @@ export function testApolloServer<AS extends ApolloServerBase>(
         });
         expect(introspectionResult.data, 'data should not exist').not.to.exist;
         expect(introspectionResult.errors, 'errors should exist').to.exist;
+        expect(formatError.calledOnce).true;
+        expect(throwError.calledOnce).true;
 
         const result = await apolloFetch({ query: TEST_STRING_QUERY });
         expect(result.data, 'data should not exist').not.to.exist;
         expect(result.errors, 'errors should exist').to.exist;
-        expect(formatError.called).true;
-        expect(throwError.called).true;
+        expect(formatError.calledTwice).true;
+        expect(throwError.calledTwice).true;
       });
     });
 
     describe('lifecycle', () => {
+      async function startEngineServer({ port, check }) {
+        const engine = express();
+        engine.use((req, _res, next) => {
+          // body parser requires a content-type
+          req.headers['content-type'] = 'text/plain';
+          next();
+        });
+        engine.use(
+          bodyParser.raw({
+            inflate: true,
+            type: '*/*',
+          }),
+        );
+        engine.use(check);
+        return await engine.listen(port);
+      }
+
+      it('validation > engine > extensions > formatError', async () => {
+        return new Promise(async (resolve, reject) => {
+          const nodeEnv = process.env.NODE_ENV;
+          delete process.env.NODE_ENV;
+
+          let listener = await startEngineServer({
+            port: 10101,
+            check: (req, res) => {
+              const trace = JSON.stringify(Trace.decode(req.body));
+              try {
+                expect(trace).to.match(/nope/);
+                expect(trace).not.to.match(/masked/);
+              } catch (e) {
+                reject(e);
+              }
+              res.end();
+              listener.close(resolve);
+            },
+          });
+
+          const throwError = stub().callsFake(() => {
+            throw new Error('nope');
+          });
+
+          const validationRule = stub().callsFake(() => {
+            expect(
+              formatError.notCalled,
+              'formatError should be called after validation',
+            ).true;
+            expect(
+              extension.notCalled,
+              'extension should be called after validation',
+            ).true;
+            return true;
+          });
+          const extension = stub();
+
+          const formatError = stub().callsFake(error => {
+            expect(error instanceof Error).true;
+            expect(
+              extension.calledOnce,
+              'extension should be called before formatError',
+            ).true;
+            expect(
+              validationRule.calledOnce,
+              'validationRules should be called before formatError',
+            ).true;
+
+            error.message = 'masked';
+            return error;
+          });
+
+          class Extension extends GraphQLExtension {
+            willSendResponse(o: { graphqlResponse: GraphQLResponse }) {
+              expect(o.graphqlResponse.errors.length).to.equal(1);
+              expect(
+                formatError.notCalled,
+                'formatError should be called after extensions',
+              ).true;
+              expect(
+                validationRule.calledOnce,
+                'validationRules should be called before extensions',
+              ).true;
+              extension();
+            }
+          }
+
+          const { url: uri } = await createApolloServer({
+            typeDefs: gql`
+              type Query {
+                error: String
+              }
+            `,
+            resolvers: {
+              Query: {
+                error: () => {
+                  throwError();
+                },
+              },
+            },
+            validationRules: [validationRule],
+            extensions: [() => new Extension()],
+            engine: {
+              endpointUrl: 'http://localhost:10101',
+              apiKey: 'fake',
+              maxUncompressedReportSize: 1,
+            },
+            formatError,
+            debug: true,
+          });
+
+          const apolloFetch = createApolloFetch({ uri });
+
+          const result = await apolloFetch({
+            query: `{error}`,
+          });
+          expect(result.data).to.deep.equal({
+            error: null,
+          });
+          expect(result.errors, 'errors should exist').to.exist;
+          expect(result.errors[0].message).to.equal('masked');
+          expect(formatError.calledOnce).true;
+          expect(throwError.calledOnce).true;
+
+          process.env.NODE_ENV = nodeEnv;
+        });
+      });
+
+      it('errors thrown in extensions call formatError and are wrapped', async () => {
+        const extension = stub().callsFake(() => {
+          throw new Error('nope');
+        });
+
+        const formatError = stub().callsFake(error => {
+          expect(error instanceof Error).true;
+          expect(
+            extension.calledOnce,
+            'extension should be called before formatError',
+          ).true;
+
+          error.message = 'masked';
+          return error;
+        });
+
+        class Extension extends GraphQLExtension {
+          willSendResponse(_o: { graphqlResponse: GraphQLResponse }) {
+            expect(
+              formatError.notCalled,
+              'formatError should be called after extensions',
+            ).true;
+            extension();
+          }
+        }
+
+        const { url: uri } = await createApolloServer({
+          typeDefs: gql`
+            type Query {
+              error: String
+            }
+          `,
+          resolvers: {
+            Query: {
+              error: () => {},
+            },
+          },
+          extensions: [() => new Extension()],
+          formatError,
+          debug: true,
+        });
+
+        const apolloFetch = createApolloFetch({ uri });
+
+        const result = await apolloFetch({
+          query: `{error}`,
+        });
+        expect(result.data, 'data should not exist').to.not.exist;
+        expect(result.errors, 'errors should exist').to.exist;
+        expect(result.errors[0].message).to.equal('masked');
+        expect(result.errors[0].message).to.equal('masked');
+        expect(formatError.calledOnce).true;
+      });
+
       it('defers context eval with thunk until after options creation', async () => {
         const uniqueContext = { key: 'major' };
         const typeDefs = gql`
