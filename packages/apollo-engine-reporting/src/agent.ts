@@ -241,6 +241,7 @@ export class EngineReportingAgent<TContext = any> {
       {
         retries: this.options.maxAttempts || 5,
         minTimeout: this.options.minimumRetryDelayMs || 100,
+        factor: 2,
       },
     ).catch((err: Error) => {
       throw new Error(`Error sending report to Engine servers: ${err}`);
