@@ -14,9 +14,13 @@ Deployment to Now for Node.js apps simply requires a `package.json` file to be p
 {
   "name": "graphqlservice",
   "version": "1.0.0",
+  "scripts": {
+    "start": "nodemon index.js"
+  },
   "dependencies": {
     "apollo-server": "^2.0.0-rc.5",
-    "graphql": "^0.13.2"
+    "graphql": "^0.13.2",
+    "nodemon": "^1.17.5"
   }
 }
 ```
