@@ -277,8 +277,8 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
       throw err;
     })
     .then(graphqlResponse => {
-      extensionStack.willSendResponse({ graphqlResponse });
+      const response = extensionStack.willSendResponse({ graphqlResponse });
       requestDidEnd();
-      return graphqlResponse;
+      return response.graphqlResponse;
     });
 }
