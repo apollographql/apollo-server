@@ -22,7 +22,7 @@
   },
   "dependencies": {
     "apollo-engine-reporting-protobuf": "0.0.0-beta.7",
-    "apollo-server-env": "^2.0.0-rc.3",
+    "apollo-server-env": "^2.0.0-rc.5",
     "async-retry": "^1.2.1",
     "graphql-extensions": "^0.1.0-beta.15",
     "lodash": "^4.17.10"

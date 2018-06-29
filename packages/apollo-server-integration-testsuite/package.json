@@ -32,7 +32,7 @@
     "apollo-link": "^1.2.2",
     "apollo-link-http": "^1.5.4",
     "apollo-link-persisted-queries": "^0.2.1",
-    "apollo-server-env": "^2.0.0-rc.3",
+    "apollo-server-env": "^2.0.0-rc.5",
     "body-parser": "^1.18.3",
     "graphql-extensions": "^0.1.0-beta.15",
     "graphql-subscriptions": "^0.5.8",
