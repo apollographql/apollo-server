@@ -27,7 +27,9 @@
   },
   "homepage": "https://github.com/apollographql/apollo-server#readme",
   "dependencies": {
+    "accept": "^3.0.2",
     "apollo-server-core": "^2.0.0-rc.5",
+    "graphql-playground-html": "^1.6.0",
     "micro": "^9.3.2"
   },
   "devDependencies": {
