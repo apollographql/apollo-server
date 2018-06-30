@@ -86,7 +86,7 @@ describe('RESTDataSource', () => {
     expect(data).toEqual('bar');
   });
 
-  it('interprets paths relative to the baseURL', async () => {
+  it('interprets paths relative to the base URL', async () => {
     const dataSource = new class extends RESTDataSource {
       baseURL = 'https://api.example.com';
 
@@ -105,7 +105,7 @@ describe('RESTDataSource', () => {
     expect(fetch.mock.calls[0][0].url).toEqual('https://api.example.com/foo');
   });
 
-  it('adds a trailing slash to the baseURL if needed', async () => {
+  it('adds a trailing slash to the base URL if needed', async () => {
     const dataSource = new class extends RESTDataSource {
       baseURL = 'https://example.com/api';
 
@@ -124,7 +124,7 @@ describe('RESTDataSource', () => {
     expect(fetch.mock.calls[0][0].url).toEqual('https://example.com/api/foo');
   });
 
-  it('allows computing a dynamic URL per request', async () => {
+  it('allows computing a dynamic base URL per request', async () => {
     const dataSource = new class extends RESTDataSource {
       baseURL = async (options: RequestOptions) => {
         if (options.method === 'GET') {
@@ -158,7 +158,7 @@ describe('RESTDataSource', () => {
     expect(fetch.mock.calls[1][0].url).toEqual('https://api.example.com/foo');
   });
 
-  it('allows adding query string parameters', async () => {
+  it('allows passing in query string parameters', async () => {
     const dataSource = new class extends RESTDataSource {
       baseURL = 'https://api.example.com';
 
@@ -186,17 +186,13 @@ describe('RESTDataSource', () => {
     );
   });
 
-  it('allows adding additional query string parameters', async () => {
+  it('allows setting default query string parameters', async () => {
     const dataSource = new class extends RESTDataSource {
       baseURL = 'https://api.example.com';
 
-      defaultParams = async (options: RequestOptions) => {
-        if (options.method === 'GET') {
-          return {
-            api_key: this.context.token,
-          };
-        }
-      };
+      defaultParams = () => ({
+        api_key: this.context.token,
+      });
 
       getFoo() {
         return this.get('foo', { a: 1 });
@@ -212,8 +208,29 @@ describe('RESTDataSource', () => {
 
     expect(fetch.mock.calls.length).toEqual(1);
     expect(fetch.mock.calls[0][0].url).toEqual(
-      'https://api.example.com/foo?a=1&api_key=secret',
+      'https://api.example.com/foo?api_key=secret&a=1',
     );
+  });
+
+  it('allows setting default fetch options', async () => {
+    const dataSource = new class extends RESTDataSource {
+      baseURL = 'https://api.example.com';
+      defaults = { credentials: 'include' };
+
+      getFoo() {
+        return this.get('foo');
+      }
+    }();
+
+    dataSource.httpCache = httpCache;
+
+    fetch.mockJSONResponseOnce();
+
+    await dataSource.getFoo();
+
+    expect(fetch.mock.calls.length).toEqual(1);
+    // FIXME: request.credentials is not supported by node-fetch
+    // expect(fetch.mock.calls[0][0].credentials).toEqual('include');
   });
 
   it('allows setting request headers', async () => {
@@ -241,7 +258,7 @@ describe('RESTDataSource', () => {
     );
   });
 
-  it('allows passing a request body', async () => {
+  it('allows passing in a request body', async () => {
     const dataSource = new class extends RESTDataSource {
       baseURL = 'https://api.example.com';
 

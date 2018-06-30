@@ -6,7 +6,6 @@ import {
   Response,
   URL,
   URLSearchParams,
-  URLSearchParamsInit,
 } from 'apollo-server-env';
 
 import { HTTPCache } from './HTTPCache';
@@ -21,11 +20,12 @@ export type RequestOptions = RequestInit & {
   params?: Params;
   body?: Body;
 };
+
 export type Params = { [key: string]: Object };
 export type Body = BodyInit | object;
 export { Request };
 
-type PromiseOrValue<T> = Promise<T> | T;
+type ValueOrPromise<T> = T | Promise<T>;
 
 type ValueOrFunction<T> = T | ((options: RequestOptions) => T);
 
@@ -44,10 +44,11 @@ export abstract class RESTDataSource<TContext = any> {
   httpCache!: HTTPCache;
   context!: TContext;
 
-  abstract baseURL: ValueOrFunction<PromiseOrValue<string>>;
-  defaultParams?: ValueOrFunction<PromiseOrValue<Params>>;
+  defaults?: ValueOrFunction<ValueOrPromise<RequestInit | undefined>>;
+  abstract baseURL: ValueOrFunction<ValueOrPromise<string>>;
+  defaultParams?: ValueOrFunction<ValueOrPromise<Params | undefined>>;
 
-  protected willSendRequest?(request: Request): void;
+  protected willSendRequest?(request: Request): ValueOrPromise<void>;
 
   protected async didReceiveErrorResponse<TResult = any>(
     response: Response,
@@ -116,7 +117,11 @@ export abstract class RESTDataSource<TContext = any> {
   }
 
   private async fetch<TResult>(options: RequestOptions): Promise<TResult> {
-    const { path, params, ...init } = options;
+    const { path, params, ...init } = Object.assign(
+      {},
+      await resolveIfNeeded(this.defaults, options),
+      options,
+    );
 
     const baseURL = await resolveIfNeeded(this.baseURL, options);
     const normalizedBaseURL = baseURL.endsWith('/')
@@ -128,7 +133,7 @@ export abstract class RESTDataSource<TContext = any> {
 
     // Append params to existing params in the path
     for (const [name, value] of new URLSearchParams(
-      Object.assign({}, params, defaultParams),
+      Object.assign({}, defaultParams, params),
     )) {
       url.searchParams.append(name, value);
     }
@@ -149,7 +154,7 @@ export abstract class RESTDataSource<TContext = any> {
     const request = new Request(String(url), init);
 
     if (this.willSendRequest) {
-      this.willSendRequest(request);
+      await this.willSendRequest(request);
     }
 
     return this.trace(`${init.method || 'GET'} ${url}`, async () => {
