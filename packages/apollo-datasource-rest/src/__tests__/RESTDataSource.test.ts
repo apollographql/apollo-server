@@ -5,7 +5,7 @@ import {
   AuthenticationError,
   ForbiddenError,
 } from 'apollo-server-errors';
-import { RESTDataSource, RequestOptions, Request } from '../RESTDataSource';
+import { RESTDataSource, RequestOptions } from '../RESTDataSource';
 
 import { HTTPCache } from '../HTTPCache';
 
@@ -126,8 +126,8 @@ describe('RESTDataSource', () => {
 
   it('allows computing a dynamic base URL per request', async () => {
     const dataSource = new class extends RESTDataSource {
-      baseURL = async (options: RequestOptions) => {
-        if (options.method === 'GET') {
+      baseURL = async (request: RequestOptions) => {
+        if (request.method === 'GET') {
           return 'https://api-idempotent.example.com';
         } else {
           return 'https://api.example.com';
@@ -190,9 +190,9 @@ describe('RESTDataSource', () => {
     const dataSource = new class extends RESTDataSource {
       baseURL = 'https://api.example.com';
 
-      defaultParams = () => ({
-        api_key: this.context.token,
-      });
+      willSendRequest(request: RequestOptions) {
+        request.params.set('api_key', 'secret');
+      }
 
       getFoo() {
         return this.get('foo', { a: 1 });
@@ -208,14 +208,17 @@ describe('RESTDataSource', () => {
 
     expect(fetch.mock.calls.length).toEqual(1);
     expect(fetch.mock.calls[0][0].url).toEqual(
-      'https://api.example.com/foo?api_key=secret&a=1',
+      'https://api.example.com/foo?a=1&api_key=secret',
     );
   });
 
   it('allows setting default fetch options', async () => {
     const dataSource = new class extends RESTDataSource {
       baseURL = 'https://api.example.com';
-      defaults = { credentials: 'include' };
+
+      willSendRequest(request: RequestOptions) {
+        request.credentials = 'include';
+      }
 
       getFoo() {
         return this.get('foo');
@@ -237,7 +240,7 @@ describe('RESTDataSource', () => {
     const dataSource = new class extends RESTDataSource {
       baseURL = 'https://api.example.com';
 
-      willSendRequest(request: Request) {
+      willSendRequest(request: RequestOptions) {
         request.headers.set('Authorization', 'secret');
       }
 
