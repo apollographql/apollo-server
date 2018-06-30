@@ -1,11 +1,11 @@
-import { fetch } from 'apollo-server-env';
+import { fetch } from '../../../../__mocks__/apollo-server-env';
 
 import {
   ApolloError,
   AuthenticationError,
   ForbiddenError,
 } from 'apollo-server-errors';
-import { RESTDataSource } from '../RESTDataSource';
+import { RESTDataSource, Request } from '../RESTDataSource';
 
 import { HTTPCache } from '../HTTPCache';
 

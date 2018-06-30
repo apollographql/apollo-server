@@ -1,11 +1,12 @@
-import { fetch } from 'apollo-server-env';
-import { HTTPCache } from '../HTTPCache';
+import { fetch } from '../../../../__mocks__/apollo-server-env';
 
 import {
   mockDate,
   unmockDate,
   advanceTimeBy,
 } from '../../../../__mocks__/date';
+
+import { HTTPCache } from '../HTTPCache';
 
 describe('HTTPCache', () => {
   let store: Map<string, string>;
