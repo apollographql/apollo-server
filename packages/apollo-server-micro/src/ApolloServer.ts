@@ -10,6 +10,7 @@ import { parseAll } from 'accept';
 import { graphqlMicro } from './microApollo';
 
 export interface ServerRegistration {
+  path?: string;
   disableHealthCheck?: boolean;
   onHealthCheck?: (req: IncomingMessage) => Promise<any>;
   gui?: boolean | PlaygroundMiddlewareOptions;
@@ -27,6 +28,7 @@ export class ApolloServer extends ApolloServerBase {
   // Prepares and returns an async function that can be used by Micro to handle
   // GraphQL requests.
   public graphqlHandler({
+    path,
     disableHealthCheck,
     onHealthCheck,
     gui,
@@ -38,8 +40,9 @@ export class ApolloServer extends ApolloServerBase {
         disableHealthCheck,
         onHealthCheck,
       })) ||
-        this.handleGraphqlRequestsWithPlayground({ req, res, gui }) ||
-        (await this.handleGraphqlRequestsWithServer({ req, res }));
+        this.handleGraphqlRequestsWithPlayground({ req, res, path, gui }) ||
+        (await this.handleGraphqlRequestsWithServer({ req, res, path })) ||
+        send(res, 404, null);
     };
   }
 
@@ -55,7 +58,7 @@ export class ApolloServer extends ApolloServerBase {
     res: ServerResponse;
     disableHealthCheck?: boolean;
     onHealthCheck?: (req: IncomingMessage) => Promise<any>;
-  }): boolean {
+  }): Promise<boolean> {
     let handled = false;
 
     if (
@@ -87,10 +90,12 @@ export class ApolloServer extends ApolloServerBase {
   private handleGraphqlRequestsWithPlayground({
     req,
     res,
+    path,
     gui,
   }: {
     req: IncomingMessage;
     res: ServerResponse;
+    path?: string;
     gui?: boolean | PlaygroundMiddlewareOptions;
   }): boolean {
     let handled = false;
@@ -107,7 +112,7 @@ export class ApolloServer extends ApolloServerBase {
 
       if (prefersHTML) {
         const middlewareOptions = {
-          endpoint: '/', // TODO
+          endpoint: path || '/graphql',
           version: '1.7.0',
           ...(typeof gui === 'boolean' ? {} : gui),
         };
@@ -123,14 +128,22 @@ export class ApolloServer extends ApolloServerBase {
   private async handleGraphqlRequestsWithServer({
     req,
     res,
+    path,
   }: {
     req: IncomingMessage;
     res: ServerResponse;
-  }) {
-    const graphqlHandler = graphqlMicro(
-      this.createGraphQLServerOptions.bind(this),
-    );
-    const responseData = await graphqlHandler(req, res);
-    send(res, 200, responseData);
+    path?: string;
+  }): Promise<boolean> {
+    let handled = false;
+    const pathWithFallback = path || '/graphql';
+    if (req.url === pathWithFallback) {
+      const graphqlHandler = graphqlMicro(
+        this.createGraphQLServerOptions.bind(this),
+      );
+      const responseData = await graphqlHandler(req, res);
+      send(res, 200, responseData);
+      handled = true;
+    }
+    return handled;
   }
 }
