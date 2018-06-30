@@ -7,7 +7,7 @@
  */
 
 import { StarWarsSchema } from './starWarsSchema';
-import { graphqlSync } from 'graphql/graphql';
+import { graphqlSync } from './graphql';
 
 describe('Star Wars Introspection Tests', () => {
   describe('Basic Introspection', () => {
@@ -38,6 +38,9 @@ describe('Star Wars Introspection Tests', () => {
             },
             {
               name: 'Human',
+            },
+            {
+              name: 'Weapon',
             },
             {
               name: 'Droid',

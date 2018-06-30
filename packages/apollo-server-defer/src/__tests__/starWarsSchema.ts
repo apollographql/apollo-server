@@ -17,6 +17,7 @@ import {
 } from 'graphql/type';
 
 import { getFriends, getHero, getHuman, getDroid } from './starWarsData';
+import GraphQLDeferDirective from '../GraphQLDeferDirective';
 
 /**
  * This is designed to be an end-to-end test, demonstrating
@@ -45,9 +46,17 @@ import { getFriends, getHero, getHuman, getDroid } from './starWarsData';
  * type Human implements Character {
  *   id: String!
  *   name: String
+ *   nonNullField: String!
  *   friends: [Character]
  *   appearsIn: [Episode]
  *   homePlanet: String
+ *   soulmate: Character! # Everyone has a soulmate <3
+ *   weapon: Weapon
+ * }
+ *
+ * type Weapon {
+ *   name: String
+ *   strength: String
  * }
  *
  * type Droid implements Character {
@@ -165,6 +174,10 @@ const humanType = new GraphQLObjectType({
       type: GraphQLString,
       description: 'The name of the human.',
     },
+    nonNullField: {
+      type: new GraphQLNonNull(GraphQLString),
+      description: 'This field cannot be null.',
+    },
     friends: {
       type: new GraphQLList(characterInterface),
       description:
@@ -185,6 +198,25 @@ const humanType = new GraphQLObjectType({
       resolve() {
         throw new Error('secretBackstory is secret.');
       },
+    },
+    soulmate: {
+      type: GraphQLNonNull(characterInterface),
+      description: 'Everyone has a soulmate and should error otherwise.',
+    },
+    weapon: {
+      type: new GraphQLObjectType({
+        name: 'Weapon',
+        fields: {
+          name: {
+            type: GraphQLString,
+            description: 'Name of the weapon',
+          },
+          strength: {
+            type: GraphQLString,
+            description: 'Strength of weapon',
+          },
+        },
+      }),
     },
   }),
   interfaces: [characterInterface],
@@ -299,4 +331,7 @@ const queryType = new GraphQLObjectType({
 export const StarWarsSchema = new GraphQLSchema({
   query: queryType,
   types: [humanType, droidType],
+  directives: [GraphQLDeferDirective],
+  // TODO: Eventually bake in @defer as a standard directive and do validation
+  // at in the validation phase.
 });

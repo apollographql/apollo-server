@@ -14,15 +14,6 @@
  * JSON objects in a more complex demo.
  */
 
-const luke = {
-  type: 'Human',
-  id: '1000',
-  name: 'Luke Skywalker',
-  friends: ['1002', '1003', '2000', '2001'],
-  appearsIn: [4, 5, 6],
-  homePlanet: 'Tatooine',
-};
-
 const vader = {
   type: 'Human',
   id: '1001',
@@ -32,12 +23,40 @@ const vader = {
   homePlanet: 'Tatooine',
 };
 
+const luke = {
+  type: 'Human',
+  id: '1000',
+  name: 'Luke Skywalker',
+  friends: ['1002', '1003', '2000', '2001'],
+  appearsIn: [4, 5, 6],
+  homePlanet: 'Tatooine',
+  soulmate: vader,
+  weapon: {
+    name: 'Light Saber',
+    strength: 'High',
+  },
+};
+
 const han = {
   type: 'Human',
   id: '1002',
   name: 'Han Solo',
   friends: ['1000', '1003', '2001'],
   appearsIn: [4, 5, 6],
+  soulmate: {
+    type: 'Human',
+    id: () =>
+      new Promise(() => {
+        throw new Error('Han Solo only goes solo');
+      }),
+    name: () =>
+      new Promise(() => {
+        throw new Error('Han Solo only goes solo');
+      }),
+    friends: ['1002', '1003', '2000', '2001'],
+    appearsIn: [4, 5, 6],
+    homePlanet: 'Tatooine',
+  },
 };
 
 const leia = {
@@ -93,28 +112,28 @@ const droidData = {
  * They represent the shape of the data visited during field resolution.
  */
 export type Character = {
-  id: string,
-  name: string,
-  friends: Array<string>,
-  appearsIn: Array<number>,
+  id: string;
+  name: string;
+  friends: Array<string>;
+  appearsIn: Array<number>;
 };
 
 export type Human = {
-  type: 'Human',
-  id: string,
-  name: string,
-  friends: Array<string>,
-  appearsIn: Array<number>,
-  homePlanet: string,
+  type: 'Human';
+  id: string;
+  name: string;
+  friends: Array<string>;
+  appearsIn: Array<number>;
+  homePlanet: string;
 };
 
 export type Droid = {
-  type: 'Droid',
-  id: string,
-  name: string,
-  friends: Array<string>,
-  appearsIn: Array<number>,
-  primaryFunction: string,
+  type: 'Droid';
+  id: string;
+  name: string;
+  friends: Array<string>;
+  appearsIn: Array<number>;
+  primaryFunction: string;
 };
 
 /**
