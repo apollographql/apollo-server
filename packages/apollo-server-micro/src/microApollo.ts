@@ -3,7 +3,7 @@ import {
   runHttpQuery,
   convertNodeHttpToRequest,
 } from 'apollo-server-core';
-import { json, RequestHandler, send } from 'micro';
+import { json, RequestHandler } from 'micro';
 import * as url from 'url';
 import { IncomingMessage, ServerResponse } from 'http';
 
@@ -55,7 +55,7 @@ export function graphqlMicro(
         request: convertNodeHttpToRequest(req),
       });
       setHeaders(res, responseInit.headers);
-      send(res, 200, graphqlResponse);
+      return graphqlResponse;
     } catch (error) {
       if ('HttpQueryError' === error.name && error.headers) {
         setHeaders(res, error.headers);
