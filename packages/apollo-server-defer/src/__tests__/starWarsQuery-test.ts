@@ -7,7 +7,7 @@
  */
 
 import { StarWarsSchema } from './starWarsSchema';
-import { graphql } from 'graphql/graphql';
+import { graphql } from './graphql';
 
 describe('Star Wars Query Tests', () => {
   describe('Basic Queries', () => {
