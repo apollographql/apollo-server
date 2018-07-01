@@ -29,6 +29,7 @@
   "dependencies": {
     "accept": "^3.0.2",
     "apollo-server-core": "^2.0.0-rc.5",
+    "apollo-upload-server": "^5.0.0",
     "graphql-playground-html": "^1.6.0",
     "micro": "^9.3.2"
   },

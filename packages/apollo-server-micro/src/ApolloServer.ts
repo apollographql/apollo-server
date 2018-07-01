@@ -1,4 +1,5 @@
 import { ApolloServerBase, GraphQLOptions } from 'apollo-server-core';
+import { processRequest as processFileUploads } from 'apollo-upload-server';
 import { IncomingMessage, ServerResponse } from 'http';
 import { send } from 'micro';
 import {
@@ -8,18 +9,19 @@ import {
 import { parseAll } from 'accept';
 
 import { graphqlMicro } from './microApollo';
+import { MicroRequest } from './types';
 
 export interface ServerRegistration {
   path?: string;
   disableHealthCheck?: boolean;
-  onHealthCheck?: (req: IncomingMessage) => Promise<any>;
+  onHealthCheck?: (req: MicroRequest) => Promise<any>;
   gui?: boolean | PlaygroundMiddlewareOptions;
 }
 
 export class ApolloServer extends ApolloServerBase {
   // Extract Apollo Server options from the request.
   async createGraphQLServerOptions(
-    req: IncomingMessage,
+    req: MicroRequest,
     res: ServerResponse,
   ): Promise<GraphQLOptions> {
     return super.graphQLServerOptions({ req, res });
@@ -34,16 +36,25 @@ export class ApolloServer extends ApolloServerBase {
     gui,
   }: ServerRegistration = {}) {
     return async (req, res) => {
+      this.graphqlPath = path || '/graphql';
+
+      await this.handleFileUploads(req);
+
       (await this.handleHealthCheck({
         req,
         res,
         disableHealthCheck,
         onHealthCheck,
       })) ||
-        this.handleGraphqlRequestsWithPlayground({ req, res, path, gui }) ||
-        (await this.handleGraphqlRequestsWithServer({ req, res, path })) ||
+        this.handleGraphqlRequestsWithPlayground({ req, res, gui }) ||
+        (await this.handleGraphqlRequestsWithServer({ req, res })) ||
         send(res, 404, null);
     };
+  }
+
+  // This integration supports file uploads.
+  protected supportsUploads(): boolean {
+    return true;
   }
 
   // If health checking is enabled trigger the `onHealthCheck`
@@ -54,10 +65,10 @@ export class ApolloServer extends ApolloServerBase {
     disableHealthCheck,
     onHealthCheck,
   }: {
-    req: IncomingMessage;
+    req: MicroRequest;
     res: ServerResponse;
     disableHealthCheck?: boolean;
-    onHealthCheck?: (req: IncomingMessage) => Promise<any>;
+    onHealthCheck?: (req: MicroRequest) => Promise<any>;
   }): Promise<boolean> {
     let handled = false;
 
@@ -90,12 +101,10 @@ export class ApolloServer extends ApolloServerBase {
   private handleGraphqlRequestsWithPlayground({
     req,
     res,
-    path,
     gui,
   }: {
-    req: IncomingMessage;
+    req: MicroRequest;
     res: ServerResponse;
-    path?: string;
     gui?: boolean | PlaygroundMiddlewareOptions;
   }): boolean {
     let handled = false;
@@ -112,7 +121,7 @@ export class ApolloServer extends ApolloServerBase {
 
       if (prefersHTML) {
         const middlewareOptions = {
-          endpoint: path || '/graphql',
+          endpoint: this.graphqlPath,
           version: '1.7.0',
           ...(typeof gui === 'boolean' ? {} : gui),
         };
@@ -128,15 +137,12 @@ export class ApolloServer extends ApolloServerBase {
   private async handleGraphqlRequestsWithServer({
     req,
     res,
-    path,
   }: {
-    req: IncomingMessage;
+    req: MicroRequest;
     res: ServerResponse;
-    path?: string;
   }): Promise<boolean> {
     let handled = false;
-    const pathWithFallback = path || '/graphql';
-    if (req.url === pathWithFallback) {
+    if (req.url === this.graphqlPath) {
       const graphqlHandler = graphqlMicro(
         this.createGraphQLServerOptions.bind(this),
       );
@@ -145,5 +151,16 @@ export class ApolloServer extends ApolloServerBase {
       handled = true;
     }
     return handled;
+  }
+
+  // If file uploads are detected, prepare them for easier handling with
+  // the help of `apollo-upload-server`.
+  private async handleFileUploads(req: MicroRequest) {
+    if (
+      this.uploadsConfig &&
+      req.headers['content-type'].startsWith('multipart/form-data')
+    ) {
+      req.filePayload = await processFileUploads(req, this.uploadsConfig);
+    }
   }
 }

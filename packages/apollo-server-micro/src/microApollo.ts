@@ -7,6 +7,8 @@ import { json, RequestHandler } from 'micro';
 import * as url from 'url';
 import { IncomingMessage, ServerResponse } from 'http';
 
+import { MicroRequest } from './types';
+
 // Allowed Micro Apollo Server options.
 export interface MicroGraphQLOptionsFunction {
   (req?: IncomingMessage): GraphQLOptions | Promise<GraphQLOptions>;
@@ -35,16 +37,15 @@ export function graphqlMicro(
     );
   }
 
-  const graphqlHandler = async (req: IncomingMessage, res: ServerResponse) => {
+  const graphqlHandler = async (req: MicroRequest, res: ServerResponse) => {
     let query;
-    if (req.method === 'POST') {
-      try {
-        query = await json(req);
-      } catch (err) {
-        query = undefined;
-      }
-    } else {
-      query = url.parse(req.url, true).query;
+    try {
+      query =
+        req.method === 'POST'
+          ? req.filePayload || (await json(req))
+          : url.parse(req.url, true).query;
+    } catch (error) {
+      // Do nothing; `query` stays `undefined`
     }
 
     try {
