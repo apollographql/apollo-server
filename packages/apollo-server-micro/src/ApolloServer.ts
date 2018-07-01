@@ -57,8 +57,13 @@ export class ApolloServer extends ApolloServerBase {
     return true;
   }
 
-  // If health checking is enabled trigger the `onHealthCheck`
-  // function, when the health check URL is requested.
+  // This integration supports subscriptions.
+  protected supportsSubscriptions(): boolean {
+    return true;
+  }
+
+  // If health checking is enabled, trigger the `onHealthCheck`
+  // function when the health check URL is requested.
   private async handleHealthCheck({
     req,
     res,
@@ -122,6 +127,7 @@ export class ApolloServer extends ApolloServerBase {
       if (prefersHTML) {
         const middlewareOptions = {
           endpoint: this.graphqlPath,
+          subscriptionEndpoint: this.subscriptionsPath,
           version: '1.7.0',
           ...(typeof gui === 'boolean' ? {} : gui),
         };
