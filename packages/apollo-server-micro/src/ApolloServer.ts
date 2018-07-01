@@ -1,6 +1,6 @@
 import { ApolloServerBase, GraphQLOptions } from 'apollo-server-core';
 import { processRequest as processFileUploads } from 'apollo-upload-server';
-import { IncomingMessage, ServerResponse } from 'http';
+import { ServerResponse } from 'http';
 import { send } from 'micro';
 import {
   renderPlaygroundPage,
@@ -162,9 +162,11 @@ export class ApolloServer extends ApolloServerBase {
   // If file uploads are detected, prepare them for easier handling with
   // the help of `apollo-upload-server`.
   private async handleFileUploads(req: MicroRequest) {
+    const contentType = req.headers['content-type'];
     if (
       this.uploadsConfig &&
-      req.headers['content-type'].startsWith('multipart/form-data')
+      contentType &&
+      contentType.startsWith('multipart/form-data')
     ) {
       req.filePayload = await processFileUploads(req, this.uploadsConfig);
     }

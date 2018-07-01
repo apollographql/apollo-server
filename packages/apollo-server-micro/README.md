@@ -10,7 +10,7 @@ This is the [Micro](https://github.com/zeit/micro) integration for the Apollo co
 ## Basic GraphQL Microservice
 
 This example demonstrates how to setup a simple microservice using Micro, that
-handles all incoming requests as GraphQL requests.
+handles incoming GraphQL requests via the default `/graphql` endpoint.
 
 1) Package installation.
 
@@ -52,5 +52,51 @@ module.exports = apolloServer.graphqlHandler();
 }
 ```
 
-4) After an `npm start`, your `http://localhost:3000` endpoint can now handle
-GraphQL requests.
+4) After an `npm start`, access `http://localhost:3000` to run queries using
+[`graphql-playground`](https://github.com/prismagraphql/graphql-playground),
+or send GraphQL requests directly to `http://localhost:3000/graphql`.
+
+## CORS Example
+
+Adjust the `Basic GraphQL Microservice` example as follows, to use [`micro-cors`](https://github.com/possibilities/micro-cors):
+
+```sh
+npm install --save micro-cors
+```
+
+```js
+const cors = require('micro-cors')();
+...
+module.exports = cors(apolloServer.graphqlHandler());
+```
+
+## Custom GraphQL Path Example
+
+Adjust the `Basic GraphQL Microservice` example as follows:
+
+```js
+...
+module.exports = cors(apolloServer.graphqlHandler({ path: '/data' }));
+```
+
+## Fully Custom Routing Example
+
+Adjust the `Basic GraphQL Microservice` example as follows, to use
+[`micro-router`](https://github.com/pedronauck/micro-router):
+
+```sh
+npm install --save microrouter
+```
+
+```js
+const { router, get, post, options } = require('microrouter');
+...
+const graphqlPath = '/data';
+const graphqlHandler = cors(apolloServer.graphqlHandler({ path: graphqlPath }));
+module.exports = router(
+  get('/', (req, res) => 'Welcome!'),
+  options(graphqlPath, graphqlHandler),
+  post(graphqlPath, graphqlHandler),
+  get(graphqlPath, graphqlHandler),
+);
+```
