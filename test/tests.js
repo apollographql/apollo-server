@@ -34,5 +34,12 @@ require('../packages/apollo-server-express/dist/apolloServerHttp.test');
 // apollo-server-lambda
 require('../packages/apollo-server-lambda/dist/lambdaApollo.test');
 
-require('../packages/apollo-server-micro/dist/ApolloServer.test.js');
+//apollo-server-micro
+require('../packages/apollo-server-micro/dist/ApolloServer.test');
 require('../packages/apollo-server-micro/dist/microApollo.test');
+
+//apollo-server-koa
+require('../packages/apollo-server-koa/dist/ApolloServer.test');
+require('../packages/apollo-server-koa/dist/apolloServerHttp.test');
+require('../packages/apollo-server-koa/dist/koaApollo.test');
+require('../packages/apollo-server-koa/dist/datasource.test');
