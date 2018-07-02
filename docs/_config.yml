@@ -35,6 +35,15 @@ sidebar_categories:
     - deployment/heroku
     - deployment/lambda
     - deployment/now
+  Related Guides:
+    - title: Monitoring
+      href: https://www.apollographql.com/docs/guides/monitoring.html
+    - title: Versioning
+      href: https://www.apollographql.com/docs/guides/versioning.html
+    - title: Access Control
+      href: https://www.apollographql.com/docs/guides/access-control.html
+    - title: Security
+      href: https://www.apollographql.com/docs/guides/security.html
   API Reference:
     - api/apollo-server
     - title: graphql-subscriptions
