@@ -128,7 +128,7 @@ export function isDeferredExecutionResult(
  * Build a ExecutionPatchResult from supplied arguments
  */
 function formatDataAsPatch(
-  path: ReadonlyArray<string | number>,
+  path: ResponsePath,
   data: Record<string, any>,
   errors: ReadonlyArray<GraphQLError>,
 ): ExecutionPatchResult {
@@ -367,7 +367,10 @@ export function responsePathAsArray(
  * Given a ResponsePath and a key, return a new ResponsePath containing the
  * new key.
  */
-export function addPath(prev: ResponsePath | void, key: string | number) {
+export function addPath(
+  prev: ResponsePath,
+  key: string | number,
+): ResponsePath {
   return { prev, key };
 }
 
@@ -410,7 +413,7 @@ export function buildExecutionContext(
   fieldResolver: GraphQLFieldResolver<any, any>,
 ): ReadonlyArray<GraphQLError> | ExecutionContext {
   const errors: Array<GraphQLError> = [];
-  let operation: OperationDefinitionNode | void;
+  let operation: OperationDefinitionNode;
   let hasMultipleAssumedOperations = false;
   const fragments: ObjMap<FragmentDefinitionNode> = Object.create(null);
   for (let i = 0; i < document.definitions.length; i++) {
@@ -514,7 +517,7 @@ function executeOperation(
     const result =
       operation.operation === 'mutation'
         ? executeFieldsSerially(exeContext, type, rootValue, path, fields)
-        : executeFields(exeContext, type, rootValue, path, fields, null);
+        : executeFields(exeContext, type, rootValue, path, fields);
     if (isPromise(result)) {
       return result.then(undefined, error => {
         exeContext.errors.push(error);
@@ -577,7 +580,7 @@ function executeFieldsSerially(
   exeContext: ExecutionContext,
   parentType: GraphQLObjectType,
   sourceValue: {},
-  path: ResponsePath | void,
+  path: ResponsePath,
   fields: ObjMap<Array<FieldNode>>,
 ): MaybePromise<ObjMap<{}>> {
   return promiseReduce(
@@ -617,9 +620,9 @@ function executeFields(
   exeContext: ExecutionContext,
   parentType: GraphQLObjectType,
   sourceValue: {},
-  path: ResponsePath | void,
+  path: ResponsePath,
   fields: ObjMap<Array<FieldNode>>,
-  closestDeferredParent: string,
+  closestDeferredParent?: string,
 ): MaybePromise<ObjMap<{}>> {
   const results = Object.create(null);
   let containsPromise = false;
@@ -864,7 +867,7 @@ export function buildResolveInfo(
     rootValue: exeContext.rootValue,
     operation: exeContext.operation,
     variableValues: exeContext.variableValues,
-  };
+  } as GraphQLResolveInfo;
 }
 
 // Isolates the "ReturnOrAbrupt" behavior to not de-opt the `resolveField`
@@ -925,8 +928,8 @@ function completeValueCatchingError(
   info: GraphQLResolveInfo,
   path: ResponsePath,
   result: {},
-  closestDeferredParent: string,
-): MaybePromise<{}> {
+  closestDeferredParent?: string,
+): MaybePromise<{}> | undefined {
   const pathArray = responsePathAsArray(path);
   const isListItem = typeof pathArray[pathArray.length - 1] === 'number';
 
@@ -1098,7 +1101,7 @@ function handleDeferredFieldError(
   path,
   returnType,
   exeContext,
-  closestDeferredParent,
+  closestDeferredParent?,
   observer?,
 ): Observable<ExecutionPatchResult> | null {
   const error = locatedError(
@@ -1166,7 +1169,7 @@ function completeValue(
   info: GraphQLResolveInfo,
   path: ResponsePath,
   result: {},
-  closestDeferredParent: string,
+  closestDeferredParent?: string,
 ): MaybePromise<{}> {
   // If result is an Error, throw a located error.
   if (result instanceof Error) {
@@ -1264,7 +1267,7 @@ function completeListValue(
   info: GraphQLResolveInfo,
   path: ResponsePath,
   result: {},
-  closestDeferredParent: string,
+  closestDeferredParent?: string,
 ): MaybePromise<ReadonlyArray<{}>> {
   invariant(
     isCollection(result),
@@ -1328,7 +1331,7 @@ function completeAbstractValue(
   info: GraphQLResolveInfo,
   path: ResponsePath,
   result: {},
-  closestDeferredParent: string,
+  closestDeferredParent?: string,
 ): MaybePromise<ObjMap<{}>> {
   const runtimeType = returnType.resolveType
     ? returnType.resolveType(result, exeContext.contextValue, info)
@@ -1419,7 +1422,7 @@ function completeObjectValue(
   info: GraphQLResolveInfo,
   path: ResponsePath,
   result: {},
-  closestDeferredParent: string,
+  closestDeferredParent?: string,
 ): MaybePromise<ObjMap<{}>> {
   // If there is an isTypeOf predicate function, call it with the
   // current result. If isTypeOf returns false, then raise an error rather
@@ -1478,7 +1481,7 @@ function collectAndExecuteSubfields(
   info: GraphQLResolveInfo,
   path: ResponsePath,
   result: {},
-  closestDeferredParent: string,
+  closestDeferredParent?: string,
 ): MaybePromise<ObjMap<{}>> {
   // Collect sub-fields to execute to complete this value.
   const subFieldNodes = collectSubfields(exeContext, returnType, fieldNodes);
