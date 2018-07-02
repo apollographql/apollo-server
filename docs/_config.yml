@@ -55,5 +55,11 @@ root: /docs/apollo-server/
 
 public_dir: public/docs/apollo-server
 
+redirects:
+  /docs/apollo-server/v2/features/cdn.html:
+    docs/guides/performance
+  /docs/apollo-server/v2/features/apq.html:
+    docs/guides/performance
+
 versioned-netlify-redirects:
   netlify_site_id: apollo-server-docs
