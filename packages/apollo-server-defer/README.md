@@ -65,8 +65,10 @@ Instead of holding the GraphQL response and page rendering until the entire quer
 ```
 // Initial Response
 {
-  "asset": {
-    "title": "Westworld",
+  "data": {
+    "asset": {
+      "title": "Westworld",
+    }
   }
 }
 
@@ -114,7 +116,7 @@ Instead of holding the GraphQL response and page rendering until the entire quer
 
 #### Apollo Server:
 
-In order to support @defer, there are significant changes to be made to the execution phase if GraphQL.
+In order to support @defer, there are significant changes to be made to the execution phase of GraphQL.
 
 - Roll our own derivative of graphql.js execution that supports deferred responses and streaming patches using observables.
 - Try to maximize code reuse by exporting types and utility functions from graphql.js, making a PR if necessary.
