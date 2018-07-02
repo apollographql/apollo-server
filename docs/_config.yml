@@ -18,11 +18,8 @@ sidebar_categories:
   Features:
     - features/mocking
     - features/errors
-    - features/apq
     - features/data-sources
-    - features/cdn
     - features/subscriptions
-    - features/file-uploads
     - features/metrics
     - features/scalars-enums
     - features/unions-interfaces
