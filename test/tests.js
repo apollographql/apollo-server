@@ -30,3 +30,6 @@ require('../packages/apollo-server-hapi/dist/hapiApollo.test') && // Hapi 17 is 
 require('../packages/apollo-server-express/dist/apolloServerHttp.test');
 
 require('../packages/apollo-server-lambda/dist/lambdaApollo.test');
+
+require('../packages/apollo-server-micro/dist/ApolloServer.test.js');
+require('../packages/apollo-server-micro/dist/microApollo.test');

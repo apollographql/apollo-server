@@ -90,11 +90,14 @@ export class ApolloServer extends ApolloServerBase {
           await onHealthCheck(req);
         } catch (error) {
           send(res, 503, { status: 'fail' });
+          handled = true;
         }
       }
 
-      send(res, 200, { status: 'pass' });
-      handled = true;
+      if (!handled) {
+        send(res, 200, { status: 'pass' });
+        handled = true;
+      }
     }
 
     return handled;
@@ -148,7 +151,8 @@ export class ApolloServer extends ApolloServerBase {
     res: ServerResponse;
   }): Promise<boolean> {
     let handled = false;
-    if (req.url === this.graphqlPath) {
+    const url = req.url.split('?')[0];
+    if (url === this.graphqlPath) {
       const graphqlHandler = graphqlMicro(
         this.createGraphQLServerOptions.bind(this),
       );
