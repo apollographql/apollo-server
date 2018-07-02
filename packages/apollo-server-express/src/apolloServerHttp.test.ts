@@ -25,8 +25,8 @@ import { expect } from 'chai';
 import * as zlib from 'zlib';
 import * as multer from 'multer';
 import * as bodyParser from 'body-parser';
-const request = require('supertest');
-const express4 = require('express'); // modern
+import * as request from 'supertest';
+import * as express4 from 'express'; // modern
 import {
   GraphQLSchema,
   GraphQLObjectType,
