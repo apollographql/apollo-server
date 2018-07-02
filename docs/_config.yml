@@ -18,11 +18,8 @@ sidebar_categories:
   Features:
     - features/mocking
     - features/errors
-    - features/apq
     - features/data-sources
-    - features/cdn
     - features/subscriptions
-    - features/file-uploads
     - features/metrics
     - features/scalars-enums
     - features/unions-interfaces
@@ -57,6 +54,12 @@ url: https://www.apollographql.com/docs/apollo-server/
 root: /docs/apollo-server/
 
 public_dir: public/docs/apollo-server
+
+redirects:
+  /docs/apollo-server/v2/features/cdn.html:
+    docs/guides/performance
+  /docs/apollo-server/v2/features/apq.html:
+    docs/guides/performance
 
 versioned-netlify-redirects:
   netlify_site_id: apollo-server-docs
