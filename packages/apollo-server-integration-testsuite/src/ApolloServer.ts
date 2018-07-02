@@ -7,6 +7,7 @@ import 'mocha';
 import { sha256 } from 'js-sha256';
 import express = require('express');
 import bodyParser = require('body-parser');
+import yup = require('yup');
 
 import { Trace } from 'apollo-engine-reporting-protobuf';
 
@@ -33,6 +34,7 @@ import {
 import { createApolloFetch } from 'apollo-fetch';
 import {
   AuthenticationError,
+  UserInputError,
   gql,
   Config,
   ApolloServerBase,
@@ -344,6 +346,61 @@ export function testApolloServer<AS extends ApolloServerBase>(
         expect(result.errors, 'errors should exist').to.exist;
         expect(formatError.calledTwice).true;
         expect(throwError.calledTwice).true;
+      });
+
+      it('works with errors similar to GraphQL errors, such as yup', async () => {
+        const throwError = stub().callsFake(async () => {
+          const schema = yup.object().shape({
+            email: yup
+              .string()
+              .email()
+              .required('Please enter your email address'),
+          });
+
+          await schema.validate({ email: 'lol' });
+        });
+
+        const formatError = stub().callsFake(error => {
+          expect(error instanceof Error).true;
+          expect(error.extensions.code).to.equal('INTERNAL_SERVER_ERROR');
+          expect(error.extensions.exception.name).to.equal('ValidationError');
+          expect(error.extensions.exception.message).to.exist;
+          const inputError = new UserInputError('User Input Error');
+          return {
+            message: inputError.message,
+            extensions: inputError.extensions,
+          };
+        });
+
+        const { url: uri } = await createApolloServer({
+          typeDefs: gql`
+            type Query {
+              error: String
+            }
+          `,
+          resolvers: {
+            Query: {
+              error: () => {
+                return throwError();
+              },
+            },
+          },
+          introspection: true,
+          debug: true,
+          formatError,
+        });
+
+        const apolloFetch = createApolloFetch({ uri });
+
+        const result = await apolloFetch({
+          query: '{error}',
+        });
+        expect(result.data).to.deep.equal({ error: null });
+        expect(result.errors, 'errors should exist').to.exist;
+        expect(result.errors[0].extensions.code).equals('BAD_USER_INPUT');
+        expect(result.errors[0].message).equals('User Input Error');
+        expect(formatError.calledOnce).true;
+        expect(throwError.calledOnce).true;
       });
     });
 

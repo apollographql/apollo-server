@@ -222,30 +222,27 @@ export function formatApolloErrors(
   }
   const { formatter, debug } = options;
 
-  const flattenedErrors: Error[] = [];
-  errors.forEach(error => {
-    // Errors that occur in graphql-tools can contain an errors array that contains the errors thrown in a merged schema
-    // https://github.com/apollographql/graphql-tools/blob/3d53986ca/src/stitching/errors.ts#L104-L107
-    //
-    // They are are wrapped in an extra GraphQL error
-    // https://github.com/apollographql/graphql-tools/blob/3d53986ca/src/stitching/errors.ts#L109-L113
-    // which calls:
-    // https://github.com/graphql/graphql-js/blob/0a30b62964/src/error/locatedError.js#L18-L37
-    if (Array.isArray((error as any).errors)) {
-      (error as any).errors.forEach(e => flattenedErrors.push(e));
-    } else if (
-      (error as any).originalError &&
-      Array.isArray((error as any).originalError.errors)
-    ) {
-      (error as any).originalError.errors.forEach(e => flattenedErrors.push(e));
-    } else {
-      flattenedErrors.push(error);
-    }
-  });
+  // Errors that occur in graphql-tools can contain an errors array that contains the errors thrown in a merged schema
+  // https://github.com/apollographql/graphql-tools/blob/3d53986ca/src/stitching/errors.ts#L104-L107
+  //
+  // They are are wrapped in an extra GraphQL error
+  // https://github.com/apollographql/graphql-tools/blob/3d53986ca/src/stitching/errors.ts#L109-L113
+  // which calls:
+  // https://github.com/graphql/graphql-js/blob/0a30b62964/src/error/locatedError.js#L18-L37
+  // Some processing for these nested errors could be done here:
+  //
+  // if (Array.isArray((error as any).errors)) {
+  //   (error as any).errors.forEach(e => flattenedErrors.push(e));
+  // } else if (
+  //   (error as any).originalError &&
+  //   Array.isArray((error as any).originalError.errors)
+  // ) {
+  //   (error as any).originalError.errors.forEach(e => flattenedErrors.push(e));
+  // } else {
+  //   flattenedErrors.push(error);
+  // }
 
-  const enrichedErrors = flattenedErrors.map(error =>
-    enrichError(error, debug),
-  );
+  const enrichedErrors = errors.map(error => enrichError(error, debug));
 
   if (!formatter) {
     return enrichedErrors;
