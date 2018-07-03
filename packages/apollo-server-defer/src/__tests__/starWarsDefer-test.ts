@@ -2,8 +2,9 @@ import { isDeferredExecutionResult } from '../execute';
 import { toArray } from 'rxjs/operators';
 
 import { StarWarsSchema } from './starWarsSchema';
-import { GraphQLError } from 'graphql';
 import { graphql } from './graphql';
+
+// TODO: Add tests for fragments
 
 describe('@defer Directive tests', () => {
   describe('Basic Queries', () => {
@@ -34,6 +35,45 @@ describe('@defer Directive tests', () => {
               expect(patches).toContainEqual({
                 path: ['hero', 'name'],
                 data: 'R2-D2',
+              });
+              done();
+            });
+        }
+      } catch (error) {
+        done(error);
+      }
+    });
+
+    it('Can @defer on object types', async done => {
+      const query = `
+        query HeroNameQuery {
+          human(id: "1000") {
+            id
+            weapon @defer {
+              name
+              strength
+            }
+          }
+        }
+      `;
+      try {
+        const result = await graphql(StarWarsSchema, query);
+        expect(isDeferredExecutionResult(result)).toBe(true);
+        if (isDeferredExecutionResult(result)) {
+          expect(result.initialResult).toEqual({
+            data: {
+              human: {
+                id: '1000',
+              },
+            },
+          });
+          const patchesObserver = result.deferredPatchesObservable
+            .pipe(toArray())
+            .subscribe(patches => {
+              expect(patches.length).toBe(1);
+              expect(patches).toContainEqual({
+                data: { name: 'Light Saber', strength: 'High' },
+                path: ['human', 'weapon'],
               });
               done();
             });
