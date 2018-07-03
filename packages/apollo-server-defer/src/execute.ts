@@ -63,7 +63,7 @@ import {
   VariableDefinitionNode,
 } from 'graphql/language/ast';
 import GraphQLDeferDirective from './GraphQLDeferDirective';
-import { Observable, merge } from 'rxjs';
+import { Observable, Subscriber, merge } from 'rxjs';
 
 export type MaybePromise<T> = Promise<T> | T;
 
@@ -594,7 +594,6 @@ function executeFieldsSerially(
         sourceValue,
         fieldNodes,
         fieldPath,
-        null,
       );
       if (result === undefined) {
         return results;
@@ -623,6 +622,7 @@ function executeFields(
   path: ResponsePath,
   fields: ObjMap<Array<FieldNode>>,
   closestDeferredParent?: string,
+  observer?: Subscriber<ExecutionPatchResult>,
 ): MaybePromise<ObjMap<{}>> {
   const results = Object.create(null);
   let containsPromise = false;
@@ -642,6 +642,7 @@ function executeFields(
       shouldDefer
         ? responsePathAsArray(fieldPath).toString()
         : closestDeferredParent,
+      observer,
     );
 
     if (result !== undefined) {
@@ -805,7 +806,8 @@ function resolveField(
   source: {},
   fieldNodes: ReadonlyArray<FieldNode>,
   path: ResponsePath,
-  closestDeferredParent: string,
+  closestDeferredParent?: string,
+  observer?: Subscriber<ExecutionPatchResult>,
 ): MaybePromise<{}> {
   const fieldNode = fieldNodes[0];
   const fieldName = fieldNode.name.value;
@@ -844,6 +846,7 @@ function resolveField(
     path,
     result,
     closestDeferredParent,
+    observer,
   );
 }
 
@@ -908,6 +911,100 @@ function asErrorInstance(error: any): Error {
   return error instanceof Error ? error : new Error(error || undefined);
 }
 
+// Helper function that completes a promise or value by recursively calling
+// completeValue()
+function completePromiseOrValue(
+  exeContext: ExecutionContext,
+  returnType: GraphQLOutputType,
+  fieldNodes: ReadonlyArray<FieldNode>,
+  info: GraphQLResolveInfo,
+  path: ResponsePath,
+  result: MaybePromise<{}>,
+  closestDeferredParent: string,
+  observer: Subscriber<ExecutionPatchResult>,
+) {
+  try {
+    if (isPromise(result)) {
+      return result.then(resolved =>
+        completeValue(
+          exeContext,
+          returnType,
+          fieldNodes,
+          info,
+          path,
+          resolved,
+          closestDeferredParent,
+          observer,
+        ),
+      );
+    } else {
+      return completeValue(
+        exeContext,
+        returnType,
+        fieldNodes,
+        info,
+        path,
+        result,
+        closestDeferredParent,
+        observer,
+      );
+    }
+  } catch (error) {
+    throw error;
+  }
+}
+
+/**
+ * Helper function that sets up the observable to stream patches when deferred
+ * fields are resolved. Caller function should pass in the an observer that
+ * should be called when patches are ready to be emitted.
+ */
+function setupPatchObserver(
+  exeContext: ExecutionContext,
+  returnType: GraphQLOutputType,
+  fieldNodes: ReadonlyArray<FieldNode>,
+  path: ResponsePath,
+  result: MaybePromise<{}>,
+  closestDeferredParent: string,
+  observer: Subscriber<ExecutionPatchResult>,
+  shouldComplete: boolean,
+): void {
+  // Get a key that allows us to access errors that should
+  // be returned with this node - put there by its children
+  const pathString = responsePathAsArray(path).toString();
+
+  if (isPromise(result)) {
+    result
+      .then(data => {
+        // Fetch errors that should be returned with this patch
+        const errors = exeContext.deferredErrors
+          ? exeContext.deferredErrors[pathString]
+          : undefined;
+        observer.next(formatDataAsPatch(path, data, errors));
+      })
+      .catch(error => {
+        handleDeferredFieldError(
+          error,
+          fieldNodes,
+          path,
+          returnType,
+          exeContext,
+          closestDeferredParent,
+          observer,
+        );
+      })
+      .then(() => {
+        if (shouldComplete) observer.complete();
+      });
+  } else {
+    const errors = exeContext.deferredErrors
+      ? exeContext.deferredErrors[pathString]
+      : undefined;
+    observer.next(formatDataAsPatch(path, result, errors));
+    if (shouldComplete) observer.complete();
+  }
+}
+
 /* This is a small wrapper around completeValue which detects and logs errors
  * in the execution context.
  *
@@ -928,13 +1025,18 @@ function completeValueCatchingError(
   info: GraphQLResolveInfo,
   path: ResponsePath,
   result: {},
-  closestDeferredParent?: string,
+  closestDeferredParent: string,
+  observer: Subscriber<ExecutionPatchResult>,
 ): MaybePromise<{}> | undefined {
   const pathArray = responsePathAsArray(path);
   const isListItem = typeof pathArray[pathArray.length - 1] === 'number';
 
+  // Items in a list inherit the @defer directive applied on the list type,
+  // but we do not need to defer the item itself.
   const shouldDefer = shouldDeferNode(exeContext, fieldNodes[0]) && !isListItem;
 
+  // Throw error if @defer is applied to a non-nullable field
+  // TODO: We can check for this earlier in the validation phase.
   if (isNonNullType(returnType) && shouldDefer) {
     throw locatedError(
       new Error(
@@ -949,73 +1051,100 @@ function completeValueCatchingError(
 
   try {
     let completed;
-    if (isPromise(result)) {
-      completed = result.then(resolved =>
-        completeValue(
+    if (shouldDefer) {
+      if (observer) {
+        // If observer is already passed in from parent, use it instead of
+        // creating a new Observable. This allows nested @defer's to reuse the
+        // same observer.\
+        completed = completePromiseOrValue(
           exeContext,
           returnType,
           fieldNodes,
           info,
           path,
-          resolved,
+          result,
           closestDeferredParent,
-        ),
-      );
-    } else {
-      completed = completeValue(
-        exeContext,
-        returnType,
-        fieldNodes,
-        info,
-        path,
-        result,
-        closestDeferredParent,
-      );
-    }
+          observer,
+        );
 
-    if (shouldDefer) {
-      // Get a key that allows us to access errors that should
-      // be returned with this node - put there by its children
-      const pathString = responsePathAsArray(path).toString();
+        setupPatchObserver(
+          exeContext,
+          returnType,
+          fieldNodes,
+          path,
+          completed,
+          closestDeferredParent,
+          observer,
+          false, // Leave it to deferred parent to complete()
+        );
+      } else {
+        // Otherwise, this field does not have a deferred parent, and should
+        // set up its own observable to stream patches.
+        const observable = new Observable<ExecutionPatchResult>(observer => {
+          try {
+            completed = completePromiseOrValue(
+              exeContext,
+              returnType,
+              fieldNodes,
+              info,
+              path,
+              result,
+              closestDeferredParent,
+              observer,
+            );
 
-      const observable = new Observable<ExecutionPatchResult>(observer => {
-        const errors = exeContext.deferredErrors
-          ? exeContext.deferredErrors[pathString]
-          : undefined;
+            setupPatchObserver(
+              exeContext,
+              returnType,
+              fieldNodes,
+              path,
+              completed,
+              closestDeferredParent,
+              observer,
+              true,
+            );
+          } catch (error) {
+            handleDeferredFieldError(
+              error,
+              fieldNodes,
+              path,
+              returnType,
+              exeContext,
+              closestDeferredParent,
+              observer,
+            );
+            observer.complete();
+          }
+        });
 
-        if (isPromise(completed)) {
-          completed
-            .then(data => {
-              observer.next(formatDataAsPatch(path, data, errors));
-            })
-            .catch(error => {
-              handleDeferredFieldError(
-                error,
-                fieldNodes,
-                path,
-                returnType,
-                exeContext,
-                closestDeferredParent,
-                observer,
-              );
-            })
-            .then(() => {
-              observer.complete();
-            });
-        } else {
-          observer.next(formatDataAsPatch(path, completed, errors));
-          observer.complete();
-        }
-      });
-      mergeDeferredResults(exeContext, observable);
+        // Merge it with other observables from sibling fields
+        mergeDeferredResults(exeContext, observable);
+      }
+
+      // Return undefined instead of a Promise so execution does not wait for
+      // this field to be resolved.
       return;
     }
+
+    // If field is not deferred, execution proceeds normally.
+    completed = completePromiseOrValue(
+      exeContext,
+      returnType,
+      fieldNodes,
+      info,
+      path,
+      result,
+      closestDeferredParent,
+      observer,
+    );
 
     if (isPromise(completed)) {
       // Note: we don't rely on a `catch` method, but we do expect "thenable"
       // to take a second callback for the error case.
       return completed.then(undefined, error => {
-        if (closestDeferredParent || shouldDefer) {
+        if (closestDeferredParent) {
+          // If this field is a child of a deferred field, return errors from it
+          // with the appropriate patch.
           const observable = handleDeferredFieldError(
             error,
             fieldNodes,
@@ -1029,6 +1158,7 @@ function completeValueCatchingError(
           }
           return null;
         } else {
+          // Otherwise handle error normally
           return handleFieldError(
             error,
             fieldNodes,
@@ -1062,6 +1192,9 @@ function completeValueCatchingError(
   }
 }
 
+// This helper function actually comes from v14 of graphql.js.
+// Using it because its much more readable, and will make merging easier when
+// we upgrade.
 function handleFieldError(rawError, fieldNodes, path, returnType, context) {
   const error = locatedError(
     asErrorInstance(rawError),
@@ -1101,8 +1234,8 @@ function handleDeferredFieldError(
   path,
   returnType,
   exeContext,
-  closestDeferredParent?,
-  observer?,
+  closestDeferredParent,
+  observer?: Subscriber<ExecutionPatchResult>,
 ): Observable<ExecutionPatchResult> | null {
   const error = locatedError(
     asErrorInstance(rawError),
@@ -1168,8 +1301,9 @@ function completeValue(
   fieldNodes: ReadonlyArray<FieldNode>,
   info: GraphQLResolveInfo,
   path: ResponsePath,
-  result: {},
-  closestDeferredParent?: string,
+  result: MaybePromise<{}>,
+  closestDeferredParent: string,
+  observer: Subscriber<ExecutionPatchResult>,
 ): MaybePromise<{}> {
   // If result is an Error, throw a located error.
   if (result instanceof Error) {
@@ -1187,6 +1321,7 @@ function completeValue(
       path,
       result,
       closestDeferredParent,
+      observer,
     );
     if (completed === null) {
       throw new Error(
@@ -1213,6 +1348,7 @@ function completeValue(
       path,
       result,
       closestDeferredParent,
+      observer,
     );
   }
 
@@ -1233,6 +1369,7 @@ function completeValue(
       path,
       result,
       closestDeferredParent,
+      observer,
     );
   }
 
@@ -1246,6 +1383,7 @@ function completeValue(
       path,
       result,
       closestDeferredParent,
+      observer,
     );
   }
 
@@ -1267,7 +1405,8 @@ function completeListValue(
   info: GraphQLResolveInfo,
   path: ResponsePath,
   result: {},
-  closestDeferredParent?: string,
+  closestDeferredParent: string,
+  observer: Subscriber<ExecutionPatchResult>,
 ): MaybePromise<ReadonlyArray<{}>> {
   invariant(
     isCollection(result),
@@ -1293,6 +1432,7 @@ function completeListValue(
       fieldPath,
       item,
       closestDeferredParent,
+      observer,
     );
 
     if (!containsPromise && isPromise(completedItem)) {
@@ -1331,7 +1471,8 @@ function completeAbstractValue(
   info: GraphQLResolveInfo,
   path: ResponsePath,
   result: {},
-  closestDeferredParent?: string,
+  closestDeferredParent: string,
+  observer: Subscriber<ExecutionPatchResult>,
 ): MaybePromise<ObjMap<{}>> {
   const runtimeType = returnType.resolveType
     ? returnType.resolveType(result, exeContext.contextValue, info)
@@ -1354,6 +1495,7 @@ function completeAbstractValue(
         path,
         result,
         closestDeferredParent,
+        observer,
       ),
     );
   }
@@ -1373,6 +1515,7 @@ function completeAbstractValue(
     path,
     result,
     closestDeferredParent,
+    observer,
   );
 }
 
@@ -1422,7 +1565,8 @@ function completeObjectValue(
   info: GraphQLResolveInfo,
   path: ResponsePath,
   result: {},
-  closestDeferredParent?: string,
+  closestDeferredParent: string,
+  observer: Subscriber<ExecutionPatchResult>,
 ): MaybePromise<ObjMap<{}>> {
   // If there is an isTypeOf predicate function, call it with the
   // current result. If isTypeOf returns false, then raise an error rather
@@ -1443,6 +1587,7 @@ function completeObjectValue(
           path,
           result,
           closestDeferredParent,
+          observer,
         );
       });
     }
@@ -1460,6 +1605,7 @@ function completeObjectValue(
     path,
     result,
     closestDeferredParent,
+    observer,
   );
 }
 
@@ -1481,7 +1627,8 @@ function collectAndExecuteSubfields(
   info: GraphQLResolveInfo,
   path: ResponsePath,
   result: {},
-  closestDeferredParent?: string,
+  closestDeferredParent: string,
+  observer: Subscriber<ExecutionPatchResult>,
 ): MaybePromise<ObjMap<{}>> {
   // Collect sub-fields to execute to complete this value.
   const subFieldNodes = collectSubfields(exeContext, returnType, fieldNodes);
@@ -1492,6 +1639,7 @@ function collectAndExecuteSubfields(
     path,
     subFieldNodes,
     closestDeferredParent,
+    observer,
   );
 }
 
