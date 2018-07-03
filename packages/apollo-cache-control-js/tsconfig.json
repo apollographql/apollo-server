@@ -5,19 +5,13 @@
     "moduleResolution": "node",
     "declaration": true,
     "sourceMap": true,
-    "outDir": "lib",
+    "outDir": "dist",
     "lib": ["es2017", "esnext.asynciterable"],
     "types": ["jest", "node"],
     "strict": true,
     "noUnusedParameters": true,
     "noUnusedLocals": true
   },
-  "include": [
-    "src/**/*"
-  ],
-  "exclude": [
-    "node_modules",
-    "lib",
-    "__tests__"
-  ]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "__tests__"]
 }
