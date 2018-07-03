@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *
  * The execution phase has been modified to enable @defer support, with
- * modifications starting from `executeOperation`. The bulk of the changes are
+ * modifications starting from `executeOperation()`. The bulk of the changes are
  * at `completeValueCatchingError()`. Most utility functions are
  * exported from `graphql.js` where possible.
  */
@@ -52,7 +52,6 @@ import {
   addPath,
   assertValidExecutionArguments,
   buildExecutionContext,
-  getOperationRootType,
   collectFields,
   buildResolveInfo,
   resolveFieldValueOrError,
@@ -340,6 +339,47 @@ function executeOperation(
   } catch (error) {
     exeContext.errors.push(error);
     return null;
+  }
+}
+
+/**
+ * Unchanged but not exported in @types/graphql
+ */
+export function getOperationRootType(
+  schema: GraphQLSchema,
+  operation: OperationDefinitionNode,
+): GraphQLObjectType {
+  switch (operation.operation) {
+    case 'query':
+      const queryType = schema.getQueryType();
+      if (!queryType) {
+        throw new GraphQLError(
+          'Schema does not define the required query root type.',
+          [operation],
+        );
+      }
+      return queryType;
+    case 'mutation':
+      const mutationType = schema.getMutationType();
+      if (!mutationType) {
+        throw new GraphQLError('Schema is not configured for mutations.', [
+          operation,
+        ]);
+      }
+      return mutationType;
+    case 'subscription':
+      const subscriptionType = schema.getSubscriptionType();
+      if (!subscriptionType) {
+        throw new GraphQLError('Schema is not configured for subscriptions.', [
+          operation,
+        ]);
+      }
+      return subscriptionType;
+    default:
+      throw new GraphQLError(
+        'Can only execute queries, mutations and subscriptions.',
+        [operation],
+      );
   }
 }
 
@@ -707,9 +747,9 @@ function completeValueCatchingError(
         mergeDeferredResults(exeContext, observable);
       }
 
-      // Return undefined instead of a Promise so execution does not wait for
+      // Return null instead of a Promise so execution does not wait for
       // this field to be resolved.
-      return;
+      return null;
     }
 
     // If field is not deferred, execution proceeds normally.
@@ -769,9 +809,7 @@ function completeValueCatchingError(
       if (observable) {
         mergeDeferredResults(exeContext, observable);
       }
-      // Undefined is used to signal that this field is deferred and a patch
-      // will be sent containing that error.
-      return shouldDefer ? undefined : null;
+      return null;
     } else {
       return handleFieldError(error, fieldNodes, path, returnType, exeContext);
     }
