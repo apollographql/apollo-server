@@ -5,8 +5,9 @@ import {
 } from 'graphql';
 import { PersistedQueryCache, HttpHeaderCalculation } from './caching';
 import { GraphQLExtension } from 'graphql-extensions';
-import { RESTDataSource, KeyValueCache } from 'apollo-datasource-rest';
+import { RESTDataSource } from 'apollo-datasource-rest';
 import { CacheControlExtensionOptions } from 'apollo-cache-control';
+import { KeyValueCache } from 'apollo-server-caching';
 
 /*
  * GraphQLServerOptions
