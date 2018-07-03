@@ -1,3 +1,8 @@
+# apollo-server-caching
+
+[![npm version](https://badge.fury.io/js/apollo-server-caching.svg)](https://badge.fury.io/js/apollo-server-caching)
+[![Build Status](https://circleci.com/gh/apollographql/apollo-server.svg?style=svg)](https://circleci.com/gh/apollographql/apollo-server)
+
 ## Implementing your own Cache
 
 Internally, Apollo Server uses the `KeyValueCache` interface to provide a caching store for the Data Sources. An in-memory LRU cache is used by default, and we provide connectors for [Memcached](../apollo-server-memcached)/[Redis](../apollo-server-redis) backends.

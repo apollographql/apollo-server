@@ -8,25 +8,28 @@ process.on('unhandledRejection', reason => {
   console.log('Stack: ' + reason.stack);
 });
 
-//apollo-server-core
-require('../packages/apollo-server-core/dist/runQuery.test.js');
-require('../packages/apollo-server-core/dist/runHttpQuery.test.js');
-require('../packages/apollo-server-core/dist/errors.test.js');
+// apollo-server-core
+require('../packages/apollo-server-core/dist/runQuery.test');
+require('../packages/apollo-server-core/dist/runHttpQuery.test');
+require('../packages/apollo-server-core/dist/errors.test');
 
-//Apollo server 2 tests
+// Apollo server 2 tests
 
-//apollo-server
-require('../packages/apollo-server/dist/index.test.js');
+// apollo-server
+require('../packages/apollo-server/dist/index.test');
 
-require('../packages/apollo-server-express/dist/ApolloServer.test.js');
+// apollo-server-express
+require('../packages/apollo-server-express/dist/ApolloServer.test');
 require('../packages/apollo-server-express/dist/expressApollo.test');
 require('../packages/apollo-server-express/dist/connectApollo.test');
 require('../packages/apollo-server-express/dist/datasource.test');
-
-(NODE_MAJOR_VERSION >= 9 ||
-  (NODE_MAJOR_VERSION >= 8 && NODE_MAJOR_REVISION >= 9)) &&
-require('../packages/apollo-server-hapi/dist/hapiApollo.test') && // Hapi 17 is 8.9+
-  require('../packages/apollo-server-hapi/dist/ApolloServer.test.js');
 require('../packages/apollo-server-express/dist/apolloServerHttp.test');
 
+// apollo-server-hapi
+(NODE_MAJOR_VERSION >= 9 ||
+  (NODE_MAJOR_VERSION >= 8 && NODE_MAJOR_REVISION >= 9)) && // Hapi 17 is 8.9+
+  require('../packages/apollo-server-hapi/dist/hapiApollo.test') &&
+  require('../packages/apollo-server-hapi/dist/ApolloServer.test');
+
+// apollo-server-lambda
 require('../packages/apollo-server-lambda/dist/lambdaApollo.test');

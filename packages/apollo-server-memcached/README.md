@@ -1,5 +1,8 @@
 ## MemcachedCache
 
+[![npm version](https://badge.fury.io/js/apollo-server-memcached.svg)](https://badge.fury.io/js/apollo-server-memcached)
+[![Build Status](https://circleci.com/gh/apollographql/apollo-server.svg?style=svg)](https://circleci.com/gh/apollographql/apollo-server)
+
 This package exports an implementation of `KeyValueCache` that allows using Memcached as a backing store for resource caching in [Data Sources](https://www.apollographql.com/docs/apollo-server/v2/features/data-sources.html).
 
 ## Usage
