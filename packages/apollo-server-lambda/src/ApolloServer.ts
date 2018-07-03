@@ -121,13 +121,16 @@ export class ApolloServer extends ApolloServerBase {
         error,
         result,
       ) => {
-        callback(error, {
-          ...result,
-          headers: {
-            ...result.headers,
-            ...corsHeaders,
+        callback(
+          error,
+          result && {
+            ...result,
+            headers: {
+              ...result.headers,
+              ...corsHeaders,
+            },
           },
-        });
+        );
       };
 
       graphqlLambda(this.createGraphQLServerOptions.bind(this))(
