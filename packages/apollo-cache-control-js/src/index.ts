@@ -74,10 +74,7 @@ export class CacheControlExtension<TContext = any>
     // If this field is a field on an object, look for hints on the field
     // itself, taking precedence over previously calculated hints.
     const parentType = info.parentType;
-    if (
-      parentType instanceof GraphQLObjectType ||
-      parentType instanceof GraphQLInterfaceType
-    ) {
+    if (parentType instanceof GraphQLObjectType) {
       const fieldDef = parentType.getFields()[info.fieldName];
       if (fieldDef.astNode) {
         hint = mergeHints(
@@ -126,7 +123,7 @@ export class CacheControlExtension<TContext = any>
       {
         version: 1,
         hints: Array.from(this.hints).map(([path, hint]) => ({
-          path: responsePathAsArray(path),
+          path: [...responsePathAsArray(path)],
           ...hint,
         })),
       },
@@ -135,7 +132,7 @@ export class CacheControlExtension<TContext = any>
 }
 
 function cacheHintFromDirectives(
-  directives: DirectiveNode[] | undefined,
+  directives: ReadonlyArray<DirectiveNode> | undefined,
 ): CacheHint | undefined {
   if (!directives) return undefined;
 

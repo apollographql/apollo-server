@@ -39,7 +39,7 @@ describe('dynamic cache control', () => {
 
     const resolvers: GraphQLResolvers = {
       Query: {
-        droid: (_source, { _id }, _context, { cacheControl }) => {
+        droid: (_source, _args, _context, { cacheControl }) => {
           cacheControl.setCacheHint({ maxAge: 60 });
           return {
             id: 2001,
@@ -80,7 +80,7 @@ describe('dynamic cache control', () => {
 
     const resolvers: GraphQLResolvers = {
       Query: {
-        droid: (_source, { _id }, _context, { cacheControl }) => {
+        droid: (_source, _args, _context, { cacheControl }) => {
           cacheControl.setCacheHint({ scope: CacheScope.Private });
           return {
             id: 2001,
@@ -125,7 +125,7 @@ describe('dynamic cache control', () => {
 
     const resolvers: GraphQLResolvers = {
       Query: {
-        droid: (_source, { _id }, _context, { cacheControl }) => {
+        droid: (_source, _args, _context, { cacheControl }) => {
           cacheControl.setCacheHint({ maxAge: 120 });
           return {
             id: 2001,
