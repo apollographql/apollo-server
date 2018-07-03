@@ -207,7 +207,7 @@ describe('RESTDataSource', () => {
       baseURL = 'https://api.example.com';
 
       willSendRequest(request: RequestOptions) {
-        request.params.set('api_key', 'secret');
+        request.params.set('api_key', this.context.token);
       }
 
       getFoo() {
@@ -257,7 +257,7 @@ describe('RESTDataSource', () => {
       baseURL = 'https://api.example.com';
 
       willSendRequest(request: RequestOptions) {
-        request.headers.set('Authorization', 'secret');
+        request.headers.set('Authorization', this.context.token);
       }
 
       getFoo() {
@@ -265,6 +265,7 @@ describe('RESTDataSource', () => {
       }
     }();
 
+    dataSource.context = { token: 'secret' };
     dataSource.httpCache = httpCache;
 
     fetch.mockJSONResponseOnce();
