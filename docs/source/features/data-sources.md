@@ -40,7 +40,7 @@ class MoviesAPI extends RESTDataSource {
 }
 ```
 
-### Supported Methods
+### HTTP Methods
 
 The `get` method on the `RESTDataSource` makes an HTTP `GET` request. Similarly, there are methods built-in to allow for `POST`, `PUT`, `PATCH`, and `DELETE` requests.
 
@@ -86,32 +86,71 @@ class MoviesAPI extends RESTDataSource {
 
 All of the HTTP helper functions (`get`, `put`, `post`, `patch`, and `delete`) accept a third `options` parameter, which can be used to set things like headers and referrers. For more info on the options available, see MDN's [fetch docs](https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/fetch#Parameters).
 
-### Example API
+### Intercepting fetches
 
-Data sources allow you to intercept fetches to set headers or make other changes to the outgoing request. This is most often used for authorization. Data sources also get access to the GraphQL execution context, which is a great place to store a user token or other information you need to have available.
+Data sources allow you to intercept fetches to set headers, query parameters, or make other changes to the outgoing request. This is most often used for authorization or other common concerns that apply to all requests. Data sources also get access to the GraphQL context, which is a great place to store a user token or other information you need to have available.
+
+You can easily set a header on every request:
 
 ```js
 class PersonalizationAPI extends RESTDataSource {
-  constructor() {
-    super();
-    this.baseURL = 'https://personalization-api.example.com/';
-  }
-
   willSendRequest(request) {
     request.headers.set('Authorization', this.context.token);
   }
+}
+```
 
-  async getFavorites() {
-    return this.get('favorites');
-  }
+Or add a query parameter:
 
-  async getProgressFor(movieId) {
-    return this.get('progress', {
-      id: movieId,
-    });
+```js
+class PersonalizationAPI extends RESTDataSource {
+  willSendRequest(request) {
+    request.params.set('api_key', this.context.token);
   }
 }
 ```
+
+If you're using TypeScript, make sure to import the `RequestOptions` type:
+
+```typescript
+import { RESTDataSource, RequestOptions } from 'apollo-datasource-rest';
+
+class PersonalizationAPI extends RESTDataSource {
+  baseURL = 'https://personalization-api.example.com/';
+
+  willSendRequest(request: RequestOptions) {
+    request.headers.set('Authorization', this.context.token);
+  }
+}
+```
+
+### Resolving URLs dynamically
+
+In some cases, you'll want to set the URL based on the environment or other contextual values. You can use a getter for this:
+
+```js
+get baseURL() {
+  if (this.context.env === 'development') {
+    return 'https://movies-api-dev.example.com/';
+  } else {
+    return 'https://movies-api.example.com/';
+  }
+}
+```
+
+If you need more customization, including the ability to resolve a URL asynchronously, you can also override `resolveURL`:
+
+```js
+async resolveURL(request: RequestOptions) {
+  if (!this.baseURL) {
+    const addresses = await resolveSrv(request.path.split("/")[1] + ".service.consul");
+    this.baseURL = addresses[0];
+  }
+  return super.resolveURL(request);
+}
+```
+
+## Accessing data sources from resolvers
 
 To give resolvers access to data sources, you pass them as options to the `ApolloServer` constructor:
 
