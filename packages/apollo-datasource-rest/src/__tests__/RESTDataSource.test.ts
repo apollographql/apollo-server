@@ -5,7 +5,7 @@ import {
   AuthenticationError,
   ForbiddenError,
 } from 'apollo-server-errors';
-import { RESTDataSource, Request } from '../RESTDataSource';
+import { RESTDataSource, RequestOptions } from '../RESTDataSource';
 
 import { HTTPCache } from '../HTTPCache';
 
@@ -86,7 +86,7 @@ describe('RESTDataSource', () => {
     expect(data).toEqual('bar');
   });
 
-  it('interprets paths relative to the baseURL', async () => {
+  it('interprets paths relative to the base URL', async () => {
     const dataSource = new class extends RESTDataSource {
       baseURL = 'https://api.example.com';
 
@@ -105,7 +105,7 @@ describe('RESTDataSource', () => {
     expect(fetch.mock.calls[0][0].url).toEqual('https://api.example.com/foo');
   });
 
-  it('adds a trailing slash to the baseURL if needed', async () => {
+  it('adds a trailing slash to the base URL if needed', async () => {
     const dataSource = new class extends RESTDataSource {
       baseURL = 'https://example.com/api';
 
@@ -124,7 +124,57 @@ describe('RESTDataSource', () => {
     expect(fetch.mock.calls[0][0].url).toEqual('https://example.com/api/foo');
   });
 
-  it('allows adding query string parameters', async () => {
+  it('allows computing a dynamic base URL', async () => {
+    const dataSource = new class extends RESTDataSource {
+      get baseURL() {
+        if (this.context.env === 'development') {
+          return 'https://api-dev.example.com';
+        } else {
+          return 'https://api.example.com';
+        }
+      }
+
+      getFoo() {
+        return this.get('foo');
+      }
+    }();
+
+    dataSource.context = { env: 'development' };
+    dataSource.httpCache = httpCache;
+
+    fetch.mockJSONResponseOnce();
+    await dataSource.getFoo();
+
+    expect(fetch.mock.calls.length).toEqual(1);
+    expect(fetch.mock.calls[0][0].url).toEqual(
+      'https://api-dev.example.com/foo',
+    );
+  });
+
+  it('allows resolving a base URL asynchronously', async () => {
+    const dataSource = new class extends RESTDataSource {
+      async resolveURL(request: RequestOptions) {
+        if (!this.baseURL) {
+          this.baseURL = 'https://api.example.com';
+        }
+        return super.resolveURL(request);
+      }
+
+      getFoo() {
+        return this.get('foo');
+      }
+    }();
+
+    dataSource.httpCache = httpCache;
+
+    fetch.mockJSONResponseOnce();
+    await dataSource.getFoo();
+
+    expect(fetch.mock.calls.length).toEqual(1);
+    expect(fetch.mock.calls[0][0].url).toEqual('https://api.example.com/foo');
+  });
+
+  it('allows passing in query string parameters', async () => {
     const dataSource = new class extends RESTDataSource {
       baseURL = 'https://api.example.com';
 
@@ -152,12 +202,38 @@ describe('RESTDataSource', () => {
     );
   });
 
-  it('allows setting request headers', async () => {
+  it('allows setting default query string parameters', async () => {
     const dataSource = new class extends RESTDataSource {
       baseURL = 'https://api.example.com';
 
-      willSendRequest(request: Request) {
-        request.headers.set('Authorization', 'secret');
+      willSendRequest(request: RequestOptions) {
+        request.params.set('api_key', this.context.token);
+      }
+
+      getFoo() {
+        return this.get('foo', { a: 1 });
+      }
+    }();
+
+    dataSource.context = { token: 'secret' };
+    dataSource.httpCache = httpCache;
+
+    fetch.mockJSONResponseOnce();
+
+    await dataSource.getFoo();
+
+    expect(fetch.mock.calls.length).toEqual(1);
+    expect(fetch.mock.calls[0][0].url).toEqual(
+      'https://api.example.com/foo?a=1&api_key=secret',
+    );
+  });
+
+  it('allows setting default fetch options', async () => {
+    const dataSource = new class extends RESTDataSource {
+      baseURL = 'https://api.example.com';
+
+      willSendRequest(request: RequestOptions) {
+        request.credentials = 'include';
       }
 
       getFoo() {
@@ -172,12 +248,37 @@ describe('RESTDataSource', () => {
     await dataSource.getFoo();
 
     expect(fetch.mock.calls.length).toEqual(1);
+    // FIXME: request.credentials is not supported by node-fetch
+    // expect(fetch.mock.calls[0][0].credentials).toEqual('include');
+  });
+
+  it('allows setting request headers', async () => {
+    const dataSource = new class extends RESTDataSource {
+      baseURL = 'https://api.example.com';
+
+      willSendRequest(request: RequestOptions) {
+        request.headers.set('Authorization', this.context.token);
+      }
+
+      getFoo() {
+        return this.get('foo');
+      }
+    }();
+
+    dataSource.context = { token: 'secret' };
+    dataSource.httpCache = httpCache;
+
+    fetch.mockJSONResponseOnce();
+
+    await dataSource.getFoo();
+
+    expect(fetch.mock.calls.length).toEqual(1);
     expect(fetch.mock.calls[0][0].headers.get('Authorization')).toEqual(
       'secret',
     );
   });
 
-  it('allows passing a request body', async () => {
+  it('allows passing in a request body', async () => {
     const dataSource = new class extends RESTDataSource {
       baseURL = 'https://api.example.com';
 

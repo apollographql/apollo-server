@@ -3,12 +3,15 @@
 import {
   fetch,
   Request,
+  RequestInit,
   Response,
+  Body,
   BodyInit,
   Headers,
   HeadersInit,
   URL,
   URLSearchParams,
+  URLSearchParamsInit,
 } from '../packages/apollo-server-env';
 
 interface FetchMock extends jest.Mock<typeof fetch> {
@@ -43,4 +46,16 @@ mockFetch.mockJSONResponseOnce = (
   );
 };
 
-export { mockFetch as fetch, Request, Response, Headers, URL, URLSearchParams };
+export {
+  mockFetch as fetch,
+  Request,
+  RequestInit,
+  Response,
+  Body,
+  BodyInit,
+  Headers,
+  HeadersInit,
+  URL,
+  URLSearchParams,
+  URLSearchParamsInit,
+};
