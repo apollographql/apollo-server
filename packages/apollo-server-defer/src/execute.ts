@@ -4,6 +4,10 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
+ * The execution phase has been modified to enable @defer support, with
+ * modifications starting from `executeOperation`. The bulk of the changes are
+ * at `completeValueCatchingError()`. Most utility functions are
+ * exported from `graphql.js` where possible.
  */
 
 import { forEach, isCollection } from 'iterall';
@@ -15,14 +19,7 @@ import memoize3 from 'graphql/jsutils/memoize3';
 import promiseForObject from 'graphql/jsutils/promiseForObject';
 import promiseReduce from 'graphql/jsutils/promiseReduce';
 import { ObjMap } from 'graphql/jsutils/ObjMap';
-
-import { typeFromAST } from 'graphql/utilities/typeFromAST';
-import { Kind } from 'graphql/language/kinds';
-import {
-  getVariableValues,
-  getArgumentValues,
-  getDirectiveValues,
-} from 'graphql/execution/values';
+import { getDirectiveValues } from 'graphql/execution/values';
 import {
   isObjectType,
   isAbstractType,
@@ -35,7 +32,6 @@ import {
   GraphQLOutputType,
   GraphQLLeafType,
   GraphQLAbstractType,
-  GraphQLField,
   GraphQLFieldResolver,
   GraphQLResolveInfo,
   ResponsePath,
@@ -43,28 +39,31 @@ import {
 } from 'graphql/type/definition';
 import { GraphQLSchema } from 'graphql/type/schema';
 import {
-  SchemaMetaFieldDef,
-  TypeMetaFieldDef,
-  TypeNameMetaFieldDef,
-} from 'graphql/type/introspection';
-import {
-  GraphQLIncludeDirective,
-  GraphQLSkipDirective,
-} from 'graphql/type/directives';
-import { assertValidSchema } from 'graphql/type/validate';
-import {
   DocumentNode,
   OperationDefinitionNode,
-  SelectionSetNode,
   FieldNode,
   FragmentSpreadNode,
   InlineFragmentNode,
   FragmentDefinitionNode,
-  VariableDefinitionNode,
 } from 'graphql/language/ast';
+import {
+  ExecutionResult,
+  responsePathAsArray,
+  addPath,
+  assertValidExecutionArguments,
+  buildExecutionContext,
+  getOperationRootType,
+  collectFields,
+  buildResolveInfo,
+  resolveFieldValueOrError,
+  getFieldDef,
+} from 'graphql/execution/execute';
 import GraphQLDeferDirective from './GraphQLDeferDirective';
 import { Observable, Subscriber, merge } from 'rxjs';
 
+/**
+ * Rewrite flow types in typescript
+ */
 export type MaybePromise<T> = Promise<T> | T;
 
 function isPromise(
@@ -158,26 +157,6 @@ function mergeDeferredResults(
 }
 
 /**
- * Terminology
- *
- * "Definitions" are the generic name for top-level statements in the document.
- * Examples of this include:
- * 1) Operations (such as a query)
- * 2) Fragments
- *
- * "Operations" are a generic name for requests in the document.
- * Examples of this include:
- * 1) query,
- * 2) mutation
- *
- * "Selections" are the definitions that can appear legally and at
- * single level of the query. These include:
- * 1) field references e.g "a"
- * 2) fragment "spreads" e.g. "...c"
- * 3) inline fragment "spreads" e.g. "...on Type { a }"
- */
-
-/**
  * Data that must be available at all points during query execution.
  *
  * Namely, schema of the type system that is currently executing,
@@ -195,42 +174,12 @@ export type ExecutionContext = {
   variableValues: { [variable: string]: {} };
   fieldResolver: GraphQLFieldResolver<any, any>;
   errors: Array<GraphQLError>;
-  deferredResultsObservable: Observable<ExecutionPatchResult> | null;
-  deferredErrors: Record<string, GraphQLError[]> | null;
+  deferredResultsObservable?: Observable<ExecutionPatchResult>;
+  deferredErrors?: Record<string, GraphQLError[]>;
 };
 
 /**
- * The result of GraphQL execution.
- *
- *   - `errors` is included when any errors occurred as a non-empty array.
- *   - `data` is the result of a successful execution of the query.
- */
-export interface ExecutionResult {
-  errors?: ReadonlyArray<GraphQLError>;
-  data?: Record<string, any>;
-}
-
-export interface ExecutionArgs {
-  schema: GraphQLSchema;
-  document: DocumentNode;
-  rootValue?: {};
-  contextValue?: {};
-  variableValues?: { [variable: string]: {} };
-  operationName?: string;
-  fieldResolver?: GraphQLFieldResolver<any, any>;
-}
-
-/**
- * Implements the "Evaluating requests" section of the GraphQL specification.
- *
- * Returns either a synchronous ExecutionResult (if all encountered resolvers
- * are synchronous), or a Promise of an ExecutionResult that will eventually be
- * resolved and never rejected.
- *
- * If the arguments to this function do not result in a legal execution context,
- * a GraphQLError will be thrown immediately explaining the invalid input.
- *
- * Accepts either an object with named arguments, or individual arguments.
+ * Unchanged
  */
 export function execute(
   ExecutionArgs,
@@ -278,6 +227,9 @@ export function execute(
       );
 }
 
+/**
+ * Unchanged
+ */
 function executeImpl(
   schema,
   document,
@@ -325,6 +277,8 @@ function executeImpl(
 /**
  * Given a completed execution context and data, build the { errors, data }
  * response defined by the "Response" section of the GraphQL specification.
+ * Checks to see if there are any deferred fields, returning a
+ * DeferredExecutionResult if so.
  */
 function buildResponse(
   context: ExecutionContext,
@@ -348,149 +302,7 @@ function buildResponse(
 }
 
 /**
- * Given a ResponsePath (found in the `path` entry in the information provided
- * as the last argument to a field resolver), return an Array of the path keys.
- */
-export function responsePathAsArray(
-  path: ResponsePath,
-): ReadonlyArray<string | number> {
-  const flattened = [];
-  let curr = path;
-  while (curr) {
-    flattened.push(curr.key);
-    curr = curr.prev;
-  }
-  return flattened.reverse();
-}
-
-/**
- * Given a ResponsePath and a key, return a new ResponsePath containing the
- * new key.
- */
-export function addPath(
-  prev: ResponsePath,
-  key: string | number,
-): ResponsePath {
-  return { prev, key };
-}
-
-/**
- * Essential assertions before executing to provide developer feedback for
- * improper use of the GraphQL library.
- */
-export function assertValidExecutionArguments(
-  schema: GraphQLSchema,
-  document: DocumentNode,
-  rawVariableValues: ObjMap<{}>,
-): void {
-  invariant(document, 'Must provide document');
-
-  // If the schema used for execution is invalid, throw an error.
-  assertValidSchema(schema);
-
-  // Variables, if provided, must be an object.
-  invariant(
-    !rawVariableValues || typeof rawVariableValues === 'object',
-    'Variables must be provided as an Object where each property is a ' +
-      'variable value. Perhaps look to see if an unparsed JSON string ' +
-      'was provided.',
-  );
-}
-
-/**
- * Constructs a ExecutionContext object from the arguments passed to
- * execute, which we will pass throughout the other execution methods.
- *
- * Throws a GraphQLError if a valid execution context cannot be created.
- */
-export function buildExecutionContext(
-  schema: GraphQLSchema,
-  document: DocumentNode,
-  rootValue: {},
-  contextValue: {},
-  rawVariableValues: ObjMap<{}>,
-  operationName: string,
-  fieldResolver: GraphQLFieldResolver<any, any>,
-): ReadonlyArray<GraphQLError> | ExecutionContext {
-  const errors: Array<GraphQLError> = [];
-  let operation: OperationDefinitionNode;
-  let hasMultipleAssumedOperations = false;
-  const fragments: ObjMap<FragmentDefinitionNode> = Object.create(null);
-  for (let i = 0; i < document.definitions.length; i++) {
-    const definition = document.definitions[i];
-    switch (definition.kind) {
-      case Kind.OPERATION_DEFINITION:
-        if (!operationName && operation) {
-          hasMultipleAssumedOperations = true;
-        } else if (
-          !operationName ||
-          (definition.name && definition.name.value === operationName)
-        ) {
-          operation = definition;
-        }
-        break;
-      case Kind.FRAGMENT_DEFINITION:
-        fragments[definition.name.value] = definition;
-        break;
-    }
-  }
-
-  if (!operation) {
-    if (operationName) {
-      errors.push(
-        new GraphQLError(`Unknown operation named "${operationName}".`),
-      );
-    } else {
-      errors.push(new GraphQLError('Must provide an operation.'));
-    }
-  } else if (hasMultipleAssumedOperations) {
-    errors.push(
-      new GraphQLError(
-        'Must provide operation name if query contains ' +
-          'multiple operations.',
-      ),
-    );
-  }
-
-  let variableValues;
-  if (operation) {
-    const coercedVariableValues = getVariableValues(
-      schema,
-      (operation.variableDefinitions as VariableDefinitionNode[]) || [],
-      rawVariableValues || {},
-    );
-
-    if (coercedVariableValues.errors) {
-      errors.push(...coercedVariableValues.errors);
-    } else {
-      variableValues = coercedVariableValues.coerced;
-    }
-  }
-
-  if (errors.length !== 0) {
-    return errors;
-  }
-
-  invariant(operation, 'Has operation if no errors.');
-  invariant(variableValues, 'Has variables if no errors.');
-
-  return {
-    schema,
-    fragments,
-    rootValue,
-    contextValue,
-    operation,
-    variableValues,
-    fieldResolver: fieldResolver || defaultFieldResolver,
-    errors,
-    // Initialize defer related fields to null, not used in the general case
-    deferredResultsObservable: null,
-    deferredErrors: null,
-  };
-}
-
-/**
- * Implements the "Evaluating operations" section of the spec.
+ * Unchanged
  */
 function executeOperation(
   exeContext: ExecutionContext,
@@ -532,49 +344,7 @@ function executeOperation(
 }
 
 /**
- * Extracts the root type of the operation from the schema.
- */
-export function getOperationRootType(
-  schema: GraphQLSchema,
-  operation: OperationDefinitionNode,
-): GraphQLObjectType {
-  switch (operation.operation) {
-    case 'query':
-      const queryType = schema.getQueryType();
-      if (!queryType) {
-        throw new GraphQLError(
-          'Schema does not define the required query root type.',
-          [operation],
-        );
-      }
-      return queryType;
-    case 'mutation':
-      const mutationType = schema.getMutationType();
-      if (!mutationType) {
-        throw new GraphQLError('Schema is not configured for mutations.', [
-          operation,
-        ]);
-      }
-      return mutationType;
-    case 'subscription':
-      const subscriptionType = schema.getSubscriptionType();
-      if (!subscriptionType) {
-        throw new GraphQLError('Schema is not configured for subscriptions.', [
-          operation,
-        ]);
-      }
-      return subscriptionType;
-    default:
-      throw new GraphQLError(
-        'Can only execute queries, mutations and subscriptions.',
-        [operation],
-      );
-  }
-}
-
-/**
- * Implements the "Evaluating selection sets" section of the spec
- * for "write" mode.
+ * Unchanged
  */
 function executeFieldsSerially(
   exeContext: ExecutionContext,
@@ -666,135 +436,6 @@ function executeFields(
 }
 
 /**
- * Given a selectionSet, adds all of the fields in that selection to
- * the passed in map of fields, and returns it at the end.
- *
- * CollectFields requires the "runtime type" of an object. For a field which
- * returns an Interface or Union type, the "runtime type" will be the actual
- * Object type returned by that field.
- */
-export function collectFields(
-  exeContext: ExecutionContext,
-  runtimeType: GraphQLObjectType,
-  selectionSet: SelectionSetNode,
-  fields: ObjMap<Array<FieldNode>>,
-  visitedFragmentNames: ObjMap<boolean>,
-): ObjMap<Array<FieldNode>> {
-  for (let i = 0; i < selectionSet.selections.length; i++) {
-    const selection = selectionSet.selections[i];
-    switch (selection.kind) {
-      case Kind.FIELD:
-        if (!shouldIncludeNode(exeContext, selection)) {
-          continue;
-        }
-        const name = getFieldEntryKey(selection);
-        if (!fields[name]) {
-          fields[name] = [];
-        }
-        fields[name].push(selection);
-        break;
-      case Kind.INLINE_FRAGMENT:
-        if (
-          !shouldIncludeNode(exeContext, selection) ||
-          !doesFragmentConditionMatch(exeContext, selection, runtimeType)
-        ) {
-          continue;
-        }
-        collectFields(
-          exeContext,
-          runtimeType,
-          selection.selectionSet,
-          fields,
-          visitedFragmentNames,
-        );
-        break;
-      case Kind.FRAGMENT_SPREAD:
-        const fragName = selection.name.value;
-        if (
-          visitedFragmentNames[fragName] ||
-          !shouldIncludeNode(exeContext, selection)
-        ) {
-          continue;
-        }
-        visitedFragmentNames[fragName] = true;
-        const fragment = exeContext.fragments[fragName];
-        if (
-          !fragment ||
-          !doesFragmentConditionMatch(exeContext, fragment, runtimeType)
-        ) {
-          continue;
-        }
-        collectFields(
-          exeContext,
-          runtimeType,
-          fragment.selectionSet,
-          fields,
-          visitedFragmentNames,
-        );
-        break;
-    }
-  }
-  return fields;
-}
-
-/**
- * Determines if a field should be included based on the @include and @skip
- * directives, where @skip has higher precidence than @include.
- */
-function shouldIncludeNode(
-  exeContext: ExecutionContext,
-  node: FragmentSpreadNode | FieldNode | InlineFragmentNode,
-): boolean {
-  const skip = getDirectiveValues(
-    GraphQLSkipDirective,
-    node,
-    exeContext.variableValues,
-  );
-  if (skip && skip.if === true) {
-    return false;
-  }
-
-  const include = getDirectiveValues(
-    GraphQLIncludeDirective,
-    node,
-    exeContext.variableValues,
-  );
-  if (include && include.if === false) {
-    return false;
-  }
-  return true;
-}
-
-/**
- * Determines if a fragment is applicable to the given type.
- */
-function doesFragmentConditionMatch(
-  exeContext: ExecutionContext,
-  fragment: FragmentDefinitionNode | InlineFragmentNode,
-  type: GraphQLObjectType,
-): boolean {
-  const typeConditionNode = fragment.typeCondition;
-  if (!typeConditionNode) {
-    return true;
-  }
-  const conditionalType = typeFromAST(exeContext.schema, typeConditionNode);
-  if (conditionalType === type) {
-    return true;
-  }
-  if (isAbstractType(conditionalType)) {
-    return exeContext.schema.isPossibleType(conditionalType, type);
-  }
-  return false;
-}
-
-/**
- * Implements the logic to compute the key of a given field's entry
- */
-function getFieldEntryKey(node: FieldNode): string {
-  return node.alias ? node.alias.value : node.name.value;
-}
-
-/**
  * Resolves the field on the given source object. In particular, this
  * figures out the value that the field returns by calling its resolve function,
  * then calls completeValue to complete promises, serialize scalars, or execute
@@ -850,69 +491,17 @@ function resolveField(
   );
 }
 
-export function buildResolveInfo(
-  exeContext: ExecutionContext,
-  fieldDef: GraphQLField<any, any>,
-  fieldNodes: ReadonlyArray<FieldNode>,
-  parentType: GraphQLObjectType,
-  path: ResponsePath,
-): GraphQLResolveInfo {
-  // The resolve function's optional fourth argument is a collection of
-  // information about the current execution state.
-  return {
-    fieldName: fieldNodes[0].name.value,
-    fieldNodes,
-    returnType: fieldDef.type,
-    parentType,
-    path,
-    schema: exeContext.schema,
-    fragments: exeContext.fragments,
-    rootValue: exeContext.rootValue,
-    operation: exeContext.operation,
-    variableValues: exeContext.variableValues,
-  } as GraphQLResolveInfo;
-}
-
-// Isolates the "ReturnOrAbrupt" behavior to not de-opt the `resolveField`
-// function. Returns the result of resolveFn or the abrupt-return Error object.
-export function resolveFieldValueOrError<TSource>(
-  exeContext: ExecutionContext,
-  fieldDef: GraphQLField<TSource, any>,
-  fieldNodes: ReadonlyArray<FieldNode>,
-  resolveFn: GraphQLFieldResolver<TSource, any>,
-  source: TSource,
-  info: GraphQLResolveInfo,
-): Error | {} {
-  try {
-    // Build a JS object of arguments from the field.arguments AST, using the
-    // variables scope to fulfill any variable references.
-    // TODO: find a way to memoize, in case this field is within a List type.
-    const args = getArgumentValues(
-      fieldDef,
-      fieldNodes[0],
-      exeContext.variableValues,
-    );
-
-    // The resolve function's optional third argument is a context value that
-    // is provided to every resolve function within an execution. It is commonly
-    // used to represent an authenticated user, or request-specific caches.
-    const context = exeContext.contextValue;
-
-    const result = resolveFn(source, args, context, info);
-    return isPromise(result) ? result.then(undefined, asErrorInstance) : result;
-  } catch (error) {
-    return asErrorInstance(error);
-  }
-}
-
-// Sometimes a non-error is thrown, wrap it as an Error instance to ensure a
-// consistent Error interface.
+/**
+ * Unchanged but not exported from graphql.js
+ */
 function asErrorInstance(error: any): Error {
   return error instanceof Error ? error : new Error(error || undefined);
 }
 
-// Helper function that completes a promise or value by recursively calling
-// completeValue()
+/**
+ * Helper function that completes a promise or value by recursively calling
+ * completeValue()
+ */
 function completePromiseOrValue(
   exeContext: ExecutionContext,
   returnType: GraphQLOutputType,
@@ -1014,9 +603,6 @@ function setupPatchObserver(
  * If an error occurs while completing a value, it should be returned within
  * the patch of the closest deferred parent node. The ExecutionContext is used
  * to store a mapping to errors for each deferred field.
- *
- * Items in a list inherit the @defer directive applied on the list type,
- * but it should not emit a patch.
  */
 function completeValueCatchingError(
   exeContext: ExecutionContext,
@@ -1192,9 +778,11 @@ function completeValueCatchingError(
   }
 }
 
-// This helper function actually comes from v14 of graphql.js.
-// Using it because its much more readable, and will make merging easier when
-// we upgrade.
+/**
+ * This helper function actually comes from v14 of graphql.js.
+ * Using it because its much more readable, and will make merging easier when
+ * we upgrade.
+ */
 function handleFieldError(rawError, fieldNodes, path, returnType, context) {
   const error = locatedError(
     asErrorInstance(rawError),
@@ -1519,6 +1107,9 @@ function completeAbstractValue(
   );
 }
 
+/**
+ * Unchanged but not exported from graphql.js
+ */
 function ensureValidRuntimeType(
   runtimeTypeOrName: GraphQLObjectType | string,
   exeContext: ExecutionContext,
@@ -1644,9 +1235,7 @@ function collectAndExecuteSubfields(
 }
 
 /**
- * A memoized collection of relevant subfields in the context of the return
- * type. Memoizing ensures the subfields are not repeatedly calculated, which
- * saves overhead when resolving lists of values.
+ * Unchanged but not exported from graphql.js
  */
 const collectSubfields = memoize3(_collectSubfields);
 function _collectSubfields(
@@ -1672,14 +1261,7 @@ function _collectSubfields(
 }
 
 /**
- * If a resolveType function is not given, then a default resolve behavior is
- * used which attempts two strategies:
- *
- * First, See if the provided value has a `__typename` field defined, if so, use
- * that value as name of the resolved type.
- *
- * Otherwise, test each possible type for the abstract type by calling
- * isTypeOf for the object being coerced, returning the first type that matches.
+ * Unchanged but not exported from graphql.js
  */
 function defaultResolveTypeFn(
   value: { __typename?: string },
@@ -1723,56 +1305,4 @@ function defaultResolveTypeFn(
       }
     });
   }
-}
-
-/**
- * If a resolve function is not given, then a default resolve behavior is used
- * which takes the property of the source object of the same name as the field
- * and returns it as the result, or if it's a function, returns the result
- * of calling that function while passing along args and context.
- */
-export const defaultFieldResolver: GraphQLFieldResolver<any, any> = function(
-  source,
-  args,
-  context,
-  info,
-) {
-  // ensure source is a value for which property access is acceptable.
-  if (typeof source === 'object' || typeof source === 'function') {
-    const property = source[info.fieldName];
-    if (typeof property === 'function') {
-      return source[info.fieldName](args, context, info);
-    }
-    return property;
-  }
-};
-
-/**
- * This method looks up the field on the given type defintion.
- * It has special casing for the two introspection fields, __schema
- * and __typename. __typename is special because it can always be
- * queried as a field, even in situations where no other fields
- * are allowed, like on a Union. __schema could get automatically
- * added to the query type, but that would require mutating type
- * definitions, which would cause issues.
- */
-export function getFieldDef(
-  schema: GraphQLSchema,
-  parentType: GraphQLObjectType,
-  fieldName: string,
-): GraphQLField<any, any> {
-  if (
-    fieldName === SchemaMetaFieldDef.name &&
-    schema.getQueryType() === parentType
-  ) {
-    return SchemaMetaFieldDef;
-  } else if (
-    fieldName === TypeMetaFieldDef.name &&
-    schema.getQueryType() === parentType
-  ) {
-    return TypeMetaFieldDef;
-  } else if (fieldName === TypeNameMetaFieldDef.name) {
-    return TypeNameMetaFieldDef;
-  }
-  return parentType.getFields()[fieldName];
 }
