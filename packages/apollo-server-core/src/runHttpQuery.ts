@@ -336,7 +336,7 @@ export async function runHttpQuery(
 
         for (const dataSource of Object.values(dataSources)) {
           dataSource.context = context;
-          dataSource.httpCache = httpCache;
+          (dataSource as any).httpCache = httpCache;
         }
 
         if ('dataSources' in context) {
