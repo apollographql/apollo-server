@@ -20,6 +20,10 @@ _@defer_ provides a way for us to mark fields in our schema to _not_ wait on, be
 - _Not on the critical path for interactivity._ This includes loading the comments section of a blog post, or the number of claps received.
 - _Expensive to send._ Even if the field may resolve quickly (ready in memory), users might still choose to defer it if the cost of transport is too expensive.
 
+This approach has been used internally at Facebook (see [Lee Byron's 2016 talk](https://youtu.be/ViXL0YQnioU?t=9m4s)), and the concept had generated alot of interest within the GraphQL community since. But until now, there was no way for people to actually use it. 
+
+At Apollo, we are committed to providing the best developer experience throughout your GraphQL journey. With Apollo Server and Client, we see this as a unique opportunity to bake in first class support for advanced features like @defer. 
+
 #### Use Cases
 
 ```graphql
@@ -89,10 +93,6 @@ Instead of holding the GraphQL response and page rendering until the entire quer
 }
 ```
 
-#### Who needs this the most?
-
-- Media companies, banks, other data-heavy enterprise applications.
-
 #### Why is @defer an ideal solution?
 
 - Query remains super easy to read 👍
@@ -118,10 +118,11 @@ Instead of holding the GraphQL response and page rendering until the entire quer
 
 In order to support @defer, there are significant changes to be made to the execution phase of GraphQL.
 
-- Roll our own derivative of graphql.js execution that supports deferred responses and streaming patches using observables.
-- Try to maximize code reuse by exporting types and utility functions from graphql.js, making a PR if necessary.
+- Extending graphql-js execution to support deferred responses.
+- Defining a new response type that wraps the initial response, and an asynchronous stream of patches. 
+- Maximize code reuse by exporting types and utility functions from graphql.js, making a PR if necessary.
 - Restrict peer dependency on graphql.js to versions that we have tested with.
-- @skip and @include should take priority over @defer
+- @skip and @include should take priority over @defer.
 
 #### Apollo Client:
 
@@ -137,12 +138,13 @@ This refers specifically to the errors that occur when streaming deferred fields
 
 #### Transport:
 
-- @defer requires a transport layer that is able to stream or push data to the client, like websockets or server side events. If the transport layer does not support this, Apollo Server should fallback to normal execution and ignore @defer.
+- @defer requires a transport layer that is able to stream or push data to the client, like websockets or server side events. If the transport layer does not support this, Apollo Server should fallback to normal execution and ignore @defer, while providing a warning message on the console. 
 - Note: Deferred queries are not able to be refetched in isolation. So links like apollo-link-retry and apollo-link-error might need to ignore patches for now.
 
 #### Restrictions on @defer usage:
 
-- _Mutations:_ already execute serially, so there does not seem to be any use case for @defer. We should throw an error if @defer is applied to the root mutation type. However, @defer should apply normally for the selection set on a mutation.
+- _Mutations:_ already execute serially, so there does not seem to be any use case for @defer. We should throw an error if @defer is applied to the root mutation type.
+
 - _Non-Nullable Types_: Deferring non-nullable types may lead to unexpected behavior when errors occur, since errors will propagate up to a nullable field. We do not want a deferred field to propagate errors up to its parent. The fields returned with the initial response should not be nulled by a deferred error - it makes things easier to reason about as all patches are strictly additive.
 
 - _@defer should apply regardless of data availability_
