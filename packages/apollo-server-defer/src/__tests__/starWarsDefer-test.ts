@@ -245,6 +245,59 @@ describe('@defer Directive tests', () => {
         done(error);
       }
     });
+
+    it('Can @defer on fields nested within deferred lists', async done => {
+      const query = `
+        query NestedQuery {
+          human(id: "1002") {
+            name
+            friends @defer {
+              id
+              name @defer
+            }
+          }
+        }
+      `;
+      try {
+        const result = await graphql(StarWarsSchema, query);
+        expect(isDeferredExecutionResult(result)).toBe(true);
+        if (isDeferredExecutionResult(result)) {
+          expect(result.initialResult).toEqual({
+            data: {
+              human: {
+                name: 'Han Solo',
+              },
+            },
+          });
+          const patchesObserver = result.deferredPatchesObservable
+            .pipe(toArray())
+            .subscribe(patches => {
+              expect(patches.length).toBe(4);
+              expect(patches).toContainEqual({
+                path: ['human', 'friends'],
+                data: [
+                  {
+                    id: '1000',
+                  },
+                  {
+                    id: '1003',
+                  },
+                  {
+                    id: '2001',
+                  },
+                ],
+              });
+              expect(patches).toContainEqual({
+                path: ['human', 'friends', 0, 'name'],
+                data: 'Luke Skywalker',
+              });
+              done();
+            });
+        }
+      } catch (error) {
+        done(error);
+      }
+    });
   });
 
   describe('Error Handling', () => {

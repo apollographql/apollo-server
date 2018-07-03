@@ -53,9 +53,6 @@ const han = {
       new Promise(() => {
         throw new Error('Han Solo only goes solo');
       }),
-    friends: ['1002', '1003', '2000', '2001'],
-    appearsIn: [4, 5, 6],
-    homePlanet: 'Tatooine',
   },
 };
 
