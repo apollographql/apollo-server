@@ -1,0 +1,60 @@
+{
+  "name": "apollo-tracing",
+  "version": "0.2.0-beta.1",
+  "description": "Collect and expose trace data for GraphQL requests",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "clean": "rm -rf dist",
+    "compile": "tsc",
+    "prepublish": "npm run compile",
+    "test": "jest --verbose",
+    "watch": "tsc -w"
+  },
+  "license": "MIT",
+  "repository": "apollographql/apollo-tracing-js",
+  "author": "Martijn Walraven <martijn@martijnwalraven.com>",
+  "engines": {
+    "node": ">=4.0"
+  },
+  "dependencies": {
+    "graphql-extensions": "0.1.0-beta.0"
+  },
+  "peerDependencies": {
+    "graphql": "0.10.x - 0.13.x"
+  },
+  "devDependencies": {
+    "@types/graphql": "^0.13.1",
+    "@types/jest": "^23.1.2",
+    "@types/node": "^10.3.6",
+    "jest": "^23.2.0",
+    "jest-matcher-utils": "^23.2.0",
+    "prettier": "^1.13.6",
+    "ts-jest": "^22.4.6",
+    "typescript": "^2.9.2"
+  },
+  "prettier": {
+    "trailingComma": "all",
+    "singleQuote": true
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "transform": {
+      "^.+\\.(ts|js)$": "ts-jest"
+    },
+    "moduleFileExtensions": [
+      "ts",
+      "js",
+      "json"
+    ],
+    "testRegex": "apollo-tracing-js/src/__tests__/.*$",
+    "roots": [
+      "../../"
+    ],
+    "globals": {
+      "ts-jest": {
+        "skipBabel": true
+      }
+    }
+  }
+}
