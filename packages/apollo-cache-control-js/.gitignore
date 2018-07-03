@@ -1,9 +1,0 @@
-node_modules
-lib
-
-# Visual Studio Code workspace settings
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
