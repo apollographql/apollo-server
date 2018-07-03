@@ -28,26 +28,25 @@ export { Request };
 
 type ValueOrPromise<T> = T | Promise<T>;
 
-type ValueOrFunction<T> = T | ((options: RequestOptions) => T);
-
-function resolveIfNeeded<T>(
-  valueOrFunction: ValueOrFunction<T>,
-  options: RequestOptions,
-) {
-  if (typeof valueOrFunction === 'function') {
-    return valueOrFunction(options);
-  } else {
-    return valueOrFunction;
-  }
-}
-
 export abstract class RESTDataSource<TContext = any> {
   httpCache!: HTTPCache;
   context!: TContext;
 
-  abstract baseURL: ValueOrFunction<ValueOrPromise<string>>;
+  baseURL?: string;
 
   protected willSendRequest?(request: RequestOptions): ValueOrPromise<void>;
+
+  protected resolveURL(request: RequestOptions): ValueOrPromise<URL> {
+    const baseURL = this.baseURL;
+    if (baseURL) {
+      const normalizedBaseURL = baseURL.endsWith('/')
+        ? baseURL
+        : baseURL.concat('/');
+      return new URL(request.path, normalizedBaseURL);
+    } else {
+      return new URL(request.path);
+    }
+  }
 
   protected async didReceiveErrorResponse<TResult = any>(
     response: Response,
@@ -135,11 +134,7 @@ export abstract class RESTDataSource<TContext = any> {
       await this.willSendRequest(options);
     }
 
-    const baseURL = await resolveIfNeeded(this.baseURL, options);
-    const normalizedBaseURL = baseURL.endsWith('/')
-      ? baseURL
-      : baseURL.concat('/');
-    const url = new URL(options.path, normalizedBaseURL);
+    const url = await this.resolveURL(options);
 
     // Append params to existing params in the path
     for (const [name, value] of options.params) {

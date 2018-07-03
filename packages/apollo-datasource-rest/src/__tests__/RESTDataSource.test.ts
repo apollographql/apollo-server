@@ -124,22 +124,44 @@ describe('RESTDataSource', () => {
     expect(fetch.mock.calls[0][0].url).toEqual('https://example.com/api/foo');
   });
 
-  it('allows computing a dynamic base URL per request', async () => {
+  it('allows computing a dynamic base URL', async () => {
     const dataSource = new class extends RESTDataSource {
-      baseURL = async (request: RequestOptions) => {
-        if (request.method === 'GET') {
-          return 'https://api-idempotent.example.com';
+      get baseURL() {
+        if (this.context.env === 'development') {
+          return 'https://api-dev.example.com';
         } else {
           return 'https://api.example.com';
         }
-      };
+      }
 
       getFoo() {
         return this.get('foo');
       }
+    }();
 
-      postFoo() {
-        return this.post('foo');
+    dataSource.context = { env: 'development' };
+    dataSource.httpCache = httpCache;
+
+    fetch.mockJSONResponseOnce();
+    await dataSource.getFoo();
+
+    expect(fetch.mock.calls.length).toEqual(1);
+    expect(fetch.mock.calls[0][0].url).toEqual(
+      'https://api-dev.example.com/foo',
+    );
+  });
+
+  it('allows resolving a base URL asynchronously', async () => {
+    const dataSource = new class extends RESTDataSource {
+      async resolveURL(request: RequestOptions) {
+        if (!this.baseURL) {
+          this.baseURL = 'https://api.example.com';
+        }
+        return super.resolveURL(request);
+      }
+
+      getFoo() {
+        return this.get('foo');
       }
     }();
 
@@ -148,14 +170,8 @@ describe('RESTDataSource', () => {
     fetch.mockJSONResponseOnce();
     await dataSource.getFoo();
 
-    fetch.mockJSONResponseOnce();
-    await dataSource.postFoo();
-
-    expect(fetch.mock.calls.length).toEqual(2);
-    expect(fetch.mock.calls[0][0].url).toEqual(
-      'https://api-idempotent.example.com/foo',
-    );
-    expect(fetch.mock.calls[1][0].url).toEqual('https://api.example.com/foo');
+    expect(fetch.mock.calls.length).toEqual(1);
+    expect(fetch.mock.calls[0][0].url).toEqual('https://api.example.com/foo');
   });
 
   it('allows passing in query string parameters', async () => {
