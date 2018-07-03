@@ -108,7 +108,7 @@ export class TracingExtension<TContext = any>
               ? durationHrTimeToNanos(resolverCall.endOffset) - startOffset
               : 0;
             return {
-              path: responsePathAsArray(resolverCall.path),
+              path: [...responsePathAsArray(resolverCall.path)],
               parentType: resolverCall.parentType.toString(),
               fieldName: resolverCall.fieldName,
               returnType: resolverCall.returnType.toString(),
