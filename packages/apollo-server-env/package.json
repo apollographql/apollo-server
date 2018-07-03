@@ -17,6 +17,7 @@
     "prepare": "npm run clean && npm run compile"
   },
   "main": "dist/index.js",
+  "browser": "dist/index.browser.js",
   "types": "dist/index.d.ts",
   "engines": {
     "node": ">=6"
