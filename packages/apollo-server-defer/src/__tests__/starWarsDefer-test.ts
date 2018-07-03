@@ -25,6 +25,7 @@ describe('@defer Directive tests', () => {
             data: {
               hero: {
                 id: '2001',
+                name: null,
               },
             },
           });
@@ -64,6 +65,7 @@ describe('@defer Directive tests', () => {
             data: {
               human: {
                 id: '1000',
+                weapon: null,
               },
             },
           });
@@ -104,7 +106,7 @@ describe('@defer Directive tests', () => {
               hero: {
                 id: '2001',
                 name: 'R2-D2',
-                friends: [{}, {}, {}],
+                friends: [{ name: null }, { name: null }, { name: null }],
               },
             },
           });
@@ -153,6 +155,7 @@ describe('@defer Directive tests', () => {
               hero: {
                 id: '2001',
                 name: 'R2-D2',
+                friends: null,
               },
             },
           });
@@ -201,21 +204,32 @@ describe('@defer Directive tests', () => {
             data: {
               hero: {
                 name: 'R2-D2',
+                appearsIn: null,
                 friends: [
                   {
                     name: 'Luke Skywalker',
                     appearsIn: ['NEWHOPE', 'EMPIRE', 'JEDI'],
-                    friends: [{}, {}, {}, {}],
+                    friends: [
+                      { name: null },
+                      { name: null },
+                      { name: null },
+                      { name: null },
+                    ],
                   },
                   {
                     name: 'Han Solo',
                     appearsIn: ['NEWHOPE', 'EMPIRE', 'JEDI'],
-                    friends: [{}, {}, {}],
+                    friends: [{ name: null }, { name: null }, { name: null }],
                   },
                   {
                     name: 'Leia Organa',
                     appearsIn: ['NEWHOPE', 'EMPIRE', 'JEDI'],
-                    friends: [{}, {}, {}, {}],
+                    friends: [
+                      { name: null },
+                      { name: null },
+                      { name: null },
+                      { name: null },
+                    ],
                   },
                 ],
               },
@@ -261,6 +275,7 @@ describe('@defer Directive tests', () => {
             data: {
               human: {
                 name: 'Luke Skywalker',
+                weapon: null,
               },
             },
           });
@@ -272,6 +287,7 @@ describe('@defer Directive tests', () => {
                 path: ['human', 'weapon'],
                 data: {
                   strength: 'High',
+                  name: null,
                 },
               });
               expect(patches).toContainEqual({
@@ -306,6 +322,7 @@ describe('@defer Directive tests', () => {
             data: {
               human: {
                 name: 'Han Solo',
+                friends: null,
               },
             },
           });
@@ -318,12 +335,15 @@ describe('@defer Directive tests', () => {
                 data: [
                   {
                     id: '1000',
+                    name: null,
                   },
                   {
                     id: '1003',
+                    name: null,
                   },
                   {
                     id: '2001',
+                    name: null,
                   },
                 ],
               });
@@ -358,6 +378,7 @@ describe('@defer Directive tests', () => {
             data: {
               hero: {
                 name: 'R2-D2',
+                secretBackstory: null,
               },
             },
           });
@@ -405,6 +426,7 @@ describe('@defer Directive tests', () => {
             data: {
               hero: {
                 name: 'R2-D2',
+                friends: null,
               },
             },
           });
@@ -524,38 +546,40 @@ describe('@defer Directive tests', () => {
       try {
         const result = await graphql(StarWarsSchema, query);
         expect(isDeferredExecutionResult(result)).toBe(true);
-        expect(result.initialResult).toEqual({
-          data: {},
-        });
-        const patchesObserver = result.deferredPatchesObservable
-          .pipe(toArray())
-          .subscribe(patches => {
-            expect(patches.length).toBe(1);
-            expect(JSON.stringify(patches[0])).toBe(
-              JSON.stringify({
-                path: ['human'],
-                data: {
-                  id: '1001',
-                  name: 'Darth Vader',
-                  nonNullField: null,
-                },
-                errors: [
-                  {
-                    message:
-                      'Cannot return null for non-nullable field Human.nonNullField.',
-                    locations: [
-                      {
-                        line: 6,
-                        column: 13,
-                      },
-                    ],
-                    path: ['human', 'nonNullField'],
-                  },
-                ],
-              }),
-            );
-            done();
+        if (isDeferredExecutionResult(result)) {
+          expect(result.initialResult).toEqual({
+            data: { human: null },
           });
+          const patchesObserver = result.deferredPatchesObservable
+            .pipe(toArray())
+            .subscribe(patches => {
+              expect(patches.length).toBe(1);
+              expect(JSON.stringify(patches[0])).toBe(
+                JSON.stringify({
+                  path: ['human'],
+                  data: {
+                    id: '1001',
+                    name: 'Darth Vader',
+                    nonNullField: null,
+                  },
+                  errors: [
+                    {
+                      message:
+                        'Cannot return null for non-nullable field Human.nonNullField.',
+                      locations: [
+                        {
+                          line: 6,
+                          column: 13,
+                        },
+                      ],
+                      path: ['human', 'nonNullField'],
+                    },
+                  ],
+                }),
+              );
+              done();
+            });
+        }
       } catch (error) {
         done(error);
       }
@@ -576,27 +600,29 @@ describe('@defer Directive tests', () => {
       try {
         const result = await graphql(StarWarsSchema, query);
         expect(isDeferredExecutionResult(result)).toBe(true);
-        expect(result.initialResult).toEqual({
-          data: {
-            human: {
-              id: '1000',
-              name: 'Luke Skywalker',
-              soulmate: {},
+        if (isDeferredExecutionResult(result)) {
+          expect(result.initialResult).toEqual({
+            data: {
+              human: {
+                id: '1000',
+                name: 'Luke Skywalker',
+                soulmate: { name: null },
+              },
             },
-          },
-        });
-        const patchesObserver = result.deferredPatchesObservable
-          .pipe(toArray())
-          .subscribe(patches => {
-            expect(patches.length).toBe(1);
-            expect(JSON.stringify(patches[0])).toBe(
-              JSON.stringify({
-                path: ['human', 'soulmate', 'name'],
-                data: 'Darth Vader',
-              }),
-            );
-            done();
           });
+          const patchesObserver = result.deferredPatchesObservable
+            .pipe(toArray())
+            .subscribe(patches => {
+              expect(patches.length).toBe(1);
+              expect(JSON.stringify(patches[0])).toBe(
+                JSON.stringify({
+                  path: ['human', 'soulmate', 'name'],
+                  data: 'Darth Vader',
+                }),
+              );
+              done();
+            });
+        }
       } catch (error) {
         done(error);
       }
