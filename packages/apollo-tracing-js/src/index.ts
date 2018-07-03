@@ -2,10 +2,10 @@ import {
   ResponsePath,
   responsePathAsArray,
   GraphQLResolveInfo,
-  GraphQLType
-} from "graphql";
+  GraphQLType,
+} from 'graphql';
 
-import { GraphQLExtension } from "graphql-extensions";
+import { GraphQLExtension } from 'graphql-extensions';
 
 export interface TracingFormat {
   version: 1;
@@ -42,25 +42,36 @@ export class TracingExtension<TContext = any>
 
   private resolverCalls: ResolverCall[] = [];
 
-  requestDidStart() {
+  public requestDidStart() {
     this.startWallTime = new Date();
     this.startHrTime = process.hrtime();
   }
 
-  executionDidStart() {}
+  public executionDidStart() {
+    // It's a little odd that we record the end time after execution rather than
+    // at the end of the whole request, but because we need to include our
+    // formatted trace in the request itself, we have to record it before the
+    // request is over!  It's also odd that we don't do traces for parse or
+    // validation errors, but runQuery doesn't currently support that, as
+    // format() is only invoked after execution.
+    return () => {
+      this.duration = process.hrtime(this.startHrTime);
+      this.endWallTime = new Date();
+    };
+  }
 
-  willResolveField(
+  public willResolveField(
     _source: any,
     _args: { [argName: string]: any },
     _context: TContext,
-    info: GraphQLResolveInfo
+    info: GraphQLResolveInfo,
   ) {
     const resolverCall: ResolverCall = {
       path: info.path,
       fieldName: info.fieldName,
       parentType: info.parentType,
       returnType: info.returnType,
-      startOffset: process.hrtime(this.startHrTime)
+      startOffset: process.hrtime(this.startHrTime),
     };
 
     this.resolverCalls.push(resolverCall);
@@ -70,33 +81,21 @@ export class TracingExtension<TContext = any>
     };
   }
 
-  didResolveField(
-    _source: any,
-    _args: { [argName: string]: any },
-    _context: TContext,
-    info: GraphQLResolveInfo
-  ) {}
-
-  requestDidEnd() {
-    this.duration = process.hrtime(this.startHrTime);
-    this.endWallTime = new Date();
-  }
-
-  format(): [string, TracingFormat] | undefined {
+  public format(): [string, TracingFormat] | undefined {
     // In the event that we are called prior to the initialization of critical
     // date metrics, we'll return undefined to signal that the extension did not
     // format properly.  Any undefined extension results are simply purged by
     // the graphql-extensions module.
     if (
-      typeof this.startWallTime === "undefined" ||
-      typeof this.endWallTime === "undefined" ||
-      typeof this.duration === "undefined"
+      typeof this.startWallTime === 'undefined' ||
+      typeof this.endWallTime === 'undefined' ||
+      typeof this.duration === 'undefined'
     ) {
       return;
     }
 
     return [
-      "tracing",
+      'tracing',
       {
         version: 1,
         startTime: this.startWallTime.toISOString(),
@@ -114,11 +113,11 @@ export class TracingExtension<TContext = any>
               fieldName: resolverCall.fieldName,
               returnType: resolverCall.returnType.toString(),
               startOffset,
-              duration
+              duration,
             };
-          })
-        }
-      }
+          }),
+        },
+      },
     ];
   }
 }

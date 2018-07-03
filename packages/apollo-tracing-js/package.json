@@ -1,6 +1,6 @@
 {
   "name": "apollo-tracing",
-  "version": "0.1.4",
+  "version": "0.2.0-beta.1",
   "description": "Collect and expose trace data for GraphQL requests",
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",
@@ -9,7 +9,9 @@
     "compile": "tsc",
     "watch": "tsc -w",
     "prepare": "npm run clean && npm run compile",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "prettier -l 'src/**/*.ts' && tslint -p tsconfig.json 'src/**/*.ts'",
+    "lint-fix": "prettier --write 'src/**/*.ts' && tslint --fix -p tsconfig.json 'src/**/*.ts'"
   },
   "license": "MIT",
   "repository": "apollographql/apollo-tracing-js",
@@ -26,10 +28,16 @@
     "@types/node": "^9.6.0",
     "jest": "^22.4.3",
     "jest-matcher-utils": "^22.4.3",
+    "prettier": "^1.12.1",
     "ts-jest": "^22.4.2",
-    "typescript": "^2.7.2"
+    "tslint": "^5.10.0",
+    "typescript": "^2.8.3"
+  },
+  "prettier": {
+    "trailingComma": "all",
+    "singleQuote": true
   },
   "dependencies": {
-    "graphql-extensions": "~0.0.9"
+    "graphql-extensions": "0.1.0-beta.0"
   }
 }
