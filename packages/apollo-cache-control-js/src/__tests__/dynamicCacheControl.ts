@@ -2,7 +2,7 @@ import {
   GraphQLScalarType,
   GraphQLFieldResolver,
   GraphQLTypeResolver,
-  GraphQLIsTypeOfFn
+  GraphQLIsTypeOfFn,
 } from 'graphql';
 import { makeExecutableSchema } from 'graphql-tools';
 
@@ -43,10 +43,10 @@ describe('dynamic cache control', () => {
           cacheControl.setCacheHint({ maxAge: 60 });
           return {
             id: 2001,
-            name: 'R2-D2'
+            name: 'R2-D2',
           };
-        }
-      }
+        },
+      },
     };
 
     const schema = makeExecutableSchema({ typeDefs, resolvers });
@@ -84,10 +84,10 @@ describe('dynamic cache control', () => {
           cacheControl.setCacheHint({ scope: CacheScope.Private });
           return {
             id: 2001,
-            name: 'R2-D2'
+            name: 'R2-D2',
           };
-        }
-      }
+        },
+      },
     };
 
     const schema = makeExecutableSchema({ typeDefs, resolvers });
@@ -104,7 +104,11 @@ describe('dynamic cache control', () => {
       { defaultMaxAge: 10 },
     );
 
-    expect(hints).toContainEqual({ path: ['droid'], maxAge: 60, scope: CacheScope.Private });
+    expect(hints).toContainEqual({
+      path: ['droid'],
+      maxAge: 60,
+      scope: CacheScope.Private,
+    });
   });
 
   it('should override the maxAge set for a field from a dynamic cache hint', async () => {
@@ -125,10 +129,10 @@ describe('dynamic cache control', () => {
           cacheControl.setCacheHint({ maxAge: 120 });
           return {
             id: 2001,
-            name: 'R2-D2'
+            name: 'R2-D2',
           };
-        }
-      }
+        },
+      },
     };
 
     const schema = makeExecutableSchema({ typeDefs, resolvers });

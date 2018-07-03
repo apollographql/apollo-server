@@ -1,12 +1,20 @@
+import { GraphQLSchema, graphql } from 'graphql';
+
 import {
-  GraphQLSchema,
-  graphql
-} from 'graphql';
+  enableGraphQLExtensions,
+  GraphQLExtensionStack,
+} from 'graphql-extensions';
+import {
+  CacheControlExtension,
+  CacheHint,
+  CacheControlExtensionOptions,
+} from '../..';
 
-import { enableGraphQLExtensions, GraphQLExtensionStack } from 'graphql-extensions';
-import { CacheControlExtension, CacheHint, CacheControlExtensionOptions } from '../..';
-
-export async function collectCacheControlHints(schema: GraphQLSchema, source: string, options?: CacheControlExtensionOptions): Promise<CacheHint[]> {
+export async function collectCacheControlHints(
+  schema: GraphQLSchema,
+  source: string,
+  options?: CacheControlExtensionOptions,
+): Promise<CacheHint[]> {
   enableGraphQLExtensions(schema);
 
   const cacheControlExtension = new CacheControlExtension(options);
@@ -15,8 +23,8 @@ export async function collectCacheControlHints(schema: GraphQLSchema, source: st
     schema,
     source,
     contextValue: {
-      _extensionStack: new GraphQLExtensionStack([cacheControlExtension])
-    }
+      _extensionStack: new GraphQLExtensionStack([cacheControlExtension]),
+    },
   });
 
   expect(response.errors).toBeUndefined();

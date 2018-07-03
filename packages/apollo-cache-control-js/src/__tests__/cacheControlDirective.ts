@@ -1,6 +1,4 @@
-import {
-  buildSchema
-} from 'graphql';
+import { buildSchema } from 'graphql';
 
 import { CacheScope } from '../';
 import { collectCacheControlHints } from './test-utils/helpers';
@@ -26,7 +24,7 @@ describe('@cacheControl directives', () => {
             name
           }
         }
-      `
+      `,
     );
 
     expect(hints).toContainEqual({ path: ['droid'], maxAge: 0 });
@@ -191,7 +189,11 @@ describe('@cacheControl directives', () => {
       { defaultMaxAge: 10 },
     );
 
-    expect(hints).toContainEqual({ path: ['droid'], maxAge: 120, scope: CacheScope.Private });
+    expect(hints).toContainEqual({
+      path: ['droid'],
+      maxAge: 120,
+      scope: CacheScope.Private,
+    });
   });
 
   it('should override the scope from the target type with that specified on a field', async () => {
@@ -218,6 +220,10 @@ describe('@cacheControl directives', () => {
       { defaultMaxAge: 10 },
     );
 
-    expect(hints).toContainEqual({ path: ['droid'], maxAge: 60, scope: CacheScope.Private });
+    expect(hints).toContainEqual({
+      path: ['droid'],
+      maxAge: 60,
+      scope: CacheScope.Private,
+    });
   });
 });
