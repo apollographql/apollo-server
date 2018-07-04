@@ -66,7 +66,10 @@ export function calculateCacheControlHeaders(
 
     // If a root field inside of data does not have a cache hint, then we do not
     // cache the response
-    if (Object.keys(response.data).find(rootKey => !rootHints.has(rootKey))) {
+    if (
+      response.data &&
+      Object.keys(response.data).find(rootKey => !rootHints.has(rootKey))
+    ) {
       return {};
     }
   }

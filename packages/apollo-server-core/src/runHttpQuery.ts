@@ -1,5 +1,5 @@
 import { ExecutionResult } from 'graphql';
-import * as sha256 from 'hash.js/lib/hash/sha/256';
+const sha256 = require('hash.js/lib/hash/sha/256');
 
 import { HTTPCache } from 'apollo-datasource-rest';
 import { CacheControlExtensionOptions } from 'apollo-cache-control';
@@ -34,8 +34,8 @@ export interface HttpQueryRequest {
 }
 
 // The result of a curl does not appear well in the terminal, so we add an extra new line
-function prettyJSONStringify(toStringfy) {
-  return JSON.stringify(toStringfy) + '\n';
+function prettyJSONStringify(value: any) {
+  return JSON.stringify(value) + '\n';
 }
 
 export interface ApolloServerHttpResponse {
@@ -53,7 +53,7 @@ export interface HttpQueryResponse {
 export class HttpQueryError extends Error {
   public statusCode: number;
   public isGraphQLError: boolean;
-  public headers: { [key: string]: string };
+  public headers?: { [key: string]: string };
 
   constructor(
     statusCode: number,
@@ -76,7 +76,7 @@ function throwHttpGraphQLError<E extends Error>(
   statusCode: number,
   errors: Array<E>,
   optionsObject?: Partial<GraphQLOptions>,
-) {
+): never {
   throw new HttpQueryError(
     statusCode,
     prettyJSONStringify({
@@ -102,10 +102,12 @@ export async function runHttpQuery(
   let optionsObject: GraphQLOptions;
   const debugDefault =
     process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test';
-  let cacheControl: CacheControlExtensionOptions & {
-    calculateHttpHeaders: boolean | HttpHeaderCalculation;
-    stripFormattedExtensions: boolean;
-  };
+  let cacheControl:
+    | CacheControlExtensionOptions & {
+        calculateHttpHeaders: boolean | HttpHeaderCalculation;
+        stripFormattedExtensions: boolean;
+      }
+    | undefined;
 
   try {
     optionsObject = await resolveGraphqlOptions(
@@ -121,7 +123,7 @@ export async function runHttpQuery(
     if (!debugDefault) {
       e.warning = `To remove the stacktrace, set the NODE_ENV environment variable to production if the options creation can fail`;
     }
-    throwHttpGraphQLError(500, [e], { debug: debugDefault });
+    return throwHttpGraphQLError(500, [e], { debug: debugDefault });
   }
   if (optionsObject.debug === undefined) {
     optionsObject.debug = debugDefault;
@@ -202,7 +204,7 @@ export async function runHttpQuery(
           }
           // Return 200 to simplify processing: we want this to be intepreted by
           // the client as data worth interpreting, not an error.
-          throwHttpGraphQLError(
+          return throwHttpGraphQLError(
             200,
             [new PersistedQueryNotSupportedError()],
             optionsObject,
@@ -214,7 +216,8 @@ export async function runHttpQuery(
         const sha = extensions.persistedQuery.sha256Hash;
 
         if (queryString === undefined) {
-          queryString = await optionsObject.persistedQueries.cache.get(sha);
+          queryString =
+            (await optionsObject.persistedQueries.cache.get(sha)) || undefined;
           if (queryString) {
             persistedQueryHit = true;
           } else {
@@ -223,7 +226,7 @@ export async function runHttpQuery(
               // so we don't error out the entire request with an HttpError
               throw new PersistedQueryNotFoundError();
             }
-            throwHttpGraphQLError(
+            return throwHttpGraphQLError(
               200,
               [new PersistedQueryNotFoundError()],
               optionsObject,
@@ -239,14 +242,15 @@ export async function runHttpQuery(
           persistedQueryRegister = true;
 
           // Do the store completely asynchronously
-          Promise.resolve()
-            .then(() => {
-              // We do not wait on the cache storage to complete
-              return optionsObject.persistedQueries.cache.set(sha, queryString);
-            })
-            .catch(error => {
-              console.warn(error);
-            });
+          (async () => {
+            // We do not wait on the cache storage to complete
+            return (
+              optionsObject.persistedQueries &&
+              optionsObject.persistedQueries.cache.set(sha, queryString)
+            );
+          })().catch(error => {
+            console.warn(error);
+          });
         }
       }
 
@@ -300,8 +304,7 @@ export async function runHttpQuery(
 
       let context = optionsObject.context;
       if (!context) {
-        // appease typescript compiler, otherwise could use || {}
-        context = {};
+        context = {} as Record<string, any>;
       } else if (typeof context === 'function') {
         try {
           context = await context();
@@ -314,9 +317,9 @@ export async function runHttpQuery(
             e.extensions.code &&
             e.extensions.code !== 'INTERNAL_SERVER_ERROR'
           ) {
-            throwHttpGraphQLError(400, [e], optionsObject);
+            return throwHttpGraphQLError(400, [e], optionsObject);
           } else {
-            throwHttpGraphQLError(500, [e], optionsObject);
+            return throwHttpGraphQLError(500, [e], optionsObject);
           }
         }
       } else {
@@ -325,7 +328,7 @@ export async function runHttpQuery(
         context = Object.assign(
           Object.create(Object.getPrototypeOf(context)),
           context,
-        );
+        ) as Record<string, any>;
       }
 
       if (optionsObject.dataSources) {
@@ -432,7 +435,7 @@ export async function runHttpQuery(
     if (e.name === 'HttpQueryError') {
       throw e;
     }
-    throwHttpGraphQLError(500, [e], optionsObject);
+    return throwHttpGraphQLError(500, [e], optionsObject);
   }
 
   const responseInit: ApolloServerHttpResponse = {
@@ -472,11 +475,11 @@ export async function runHttpQuery(
     // doesn't reach GraphQL execution
     if (graphqlResponse.errors && typeof graphqlResponse.data === 'undefined') {
       // don't include optionsObject, since the errors have already been formatted
-      throwHttpGraphQLError(400, graphqlResponse.errors as any);
+      return throwHttpGraphQLError(400, graphqlResponse.errors as any);
     }
     const stringified = prettyJSONStringify(graphqlResponse);
 
-    responseInit['Content-Length'] = Buffer.byteLength(
+    responseInit.headers!['Content-Length'] = Buffer.byteLength(
       stringified,
       'utf8',
     ).toString();
@@ -489,7 +492,7 @@ export async function runHttpQuery(
 
   const stringified = prettyJSONStringify(responses);
 
-  responseInit['Content-Length'] = Buffer.byteLength(
+  responseInit.headers!['Content-Length'] = Buffer.byteLength(
     stringified,
     'utf8',
   ).toString();

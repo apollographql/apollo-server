@@ -35,14 +35,17 @@ describe('Errors', () => {
 
   describe('formatApolloErrors', () => {
     type CreateFormatError =
-      | ((options: Record<string, any>, errors) => Record<string, any>[])
+      | ((
+          options: Record<string, any>,
+          errors: Error[],
+        ) => Record<string, any>[])
       | ((options?: Record<string, any>) => Record<string, any>);
     const message = 'message';
     const code = 'CODE';
     const key = 'key';
 
-    const createFromttedError: CreateFormatError = (
-      options,
+    const createFormattedError: CreateFormatError = (
+      options?: Record<string, any>,
       errors?: Error[],
     ) => {
       if (errors === undefined) {
@@ -66,7 +69,7 @@ describe('Errors', () => {
     };
 
     it('exposes a stacktrace in debug mode', () => {
-      const error = createFromttedError({ debug: true });
+      const error = createFormattedError({ debug: true });
       expect(error.message).to.equal(message);
       expect(error.extensions.exception.key).to.equal(key);
       expect(error.extensions.code).to.equal(code);
@@ -97,7 +100,7 @@ describe('Errors', () => {
       ).not.to.exist;
     });
     it('exposes fields on error under exception field and provides code', () => {
-      const error = createFromttedError();
+      const error = createFormattedError();
       expect(error.message).to.equal(message);
       expect(error.extensions.exception.key).to.equal(key);
       expect(error.extensions.code).to.equal(code);
@@ -122,7 +125,14 @@ describe('Errors', () => {
   });
   describe('Named Errors', () => {
     const message = 'message';
-    function verifyError(error, { code, errorClass, name }) {
+    function verifyError(
+      error: ApolloError,
+      {
+        code,
+        errorClass,
+        name,
+      }: { code: string; errorClass: any; name: string },
+    ) {
       expect(error.message).to.equal(message);
       expect(error.extensions.code).to.equal(code);
       expect(error.name).equals(name);

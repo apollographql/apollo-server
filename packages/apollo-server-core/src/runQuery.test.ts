@@ -1,7 +1,7 @@
 /* tslint:disable:no-unused-expression */
 import { expect } from 'chai';
 import { stub } from 'sinon';
-import * as MockReq from 'mock-req';
+import MockReq = require('mock-req');
 import 'mocha';
 
 import {
@@ -124,8 +124,8 @@ describe('runQuery', () => {
       request: new MockReq(),
     }).then(res => {
       expect(res.data).to.be.undefined;
-      expect(res.errors.length).to.equal(1);
-      expect(res.errors[0].message).to.match(expected);
+      expect(res.errors!.length).to.equal(1);
+      expect(res.errors![0].message).to.match(expected);
     });
   });
 
@@ -168,8 +168,8 @@ describe('runQuery', () => {
       request: new MockReq(),
     }).then(res => {
       expect(res.data).to.be.undefined;
-      expect(res.errors.length).to.equal(1);
-      expect(res.errors[0].message).to.deep.equal(expected);
+      expect(res.errors!.length).to.equal(1);
+      expect(res.errors![0].message).to.deep.equal(expected);
     });
   });
 
@@ -206,7 +206,7 @@ describe('runQuery', () => {
       schema,
       queryString: query,
       context: { s: 'it still' },
-      formatResponse: (response, { context }) => {
+      formatResponse: (response: any, { context }: { context: any }) => {
         response['extensions'] = context.s;
         return response;
       },
@@ -239,7 +239,7 @@ describe('runQuery', () => {
       queryString: query,
       request: new MockReq(),
     }).then(res => {
-      expect(res.errors[0].message).to.deep.equal(expected);
+      expect(res.errors![0].message).to.deep.equal(expected);
     });
   });
 
@@ -367,8 +367,8 @@ describe('runQuery', () => {
   });
 
   describe('async_hooks', () => {
-    let asyncHooks;
-    let asyncHook;
+    let asyncHooks: typeof import('async_hooks');
+    let asyncHook: import('async_hooks').AsyncHook;
     const ids: number[] = [];
 
     try {
@@ -378,7 +378,9 @@ describe('runQuery', () => {
     }
 
     before(() => {
-      asyncHook = asyncHooks.createHook({ init: asyncId => ids.push(asyncId) });
+      asyncHook = asyncHooks.createHook({
+        init: (asyncId: number) => ids.push(asyncId),
+      });
       asyncHook.enable();
     });
 
