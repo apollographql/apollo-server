@@ -5,8 +5,8 @@ import {
 } from 'graphql';
 import { PersistedQueryCache, HttpHeaderCalculation } from './caching';
 import { GraphQLExtension } from 'graphql-extensions';
-import { RESTDataSource, KeyValueCache } from 'apollo-datasource-rest';
 import { CacheControlExtensionOptions } from 'apollo-cache-control';
+import { KeyValueCache } from 'apollo-server-caching';
 
 /*
  * GraphQLServerOptions
@@ -45,12 +45,18 @@ export interface GraphQLServerOptions<
         stripFormattedExtensions?: boolean;
       });
   extensions?: Array<() => GraphQLExtension>;
-  dataSources?: () => DataSources;
+  dataSources?: () => DataSources<TContext>;
   cache?: KeyValueCache;
   persistedQueries?: PersistedQueryOptions;
 }
 
-export type DataSources = { [name: string]: RESTDataSource };
+export interface DataSource<TContext> {
+  context: TContext;
+}
+
+export type DataSources<TContext> = {
+  [name: string]: DataSource<TContext>;
+};
 
 export interface PersistedQueryOptions {
   cache: PersistedQueryCache;

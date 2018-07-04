@@ -32,6 +32,7 @@
     "apollo-cache-control": "^0.1.1",
     "apollo-datasource-rest": "^2.0.0-rc.6",
     "apollo-engine-reporting": "^0.0.0-rc.0",
+    "apollo-server-caching": "^2.0.0-rc.6",
     "apollo-server-env": "^2.0.0-rc.6",
     "apollo-server-errors": "^2.0.0-rc.6",
     "apollo-tracing": "^0.2.0-beta.1",
