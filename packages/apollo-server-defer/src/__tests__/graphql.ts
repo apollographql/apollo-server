@@ -10,7 +10,7 @@
 import { validateSchema } from 'graphql/type/validate';
 import { parse } from 'graphql/language/parser';
 import { validate } from 'graphql/validation/validate';
-import { execute } from '../execute';
+import { DeferredExecutionResult, execute } from '../execute';
 import { ObjMap } from 'graphql/jsutils/ObjMap';
 import { Source } from 'graphql/language/source';
 import { GraphQLFieldResolver } from 'graphql/type/definition';
@@ -154,7 +154,7 @@ export function graphqlSync(
         );
 
   // Assert that the execution was synchronous.
-  if (result.then) {
+  if ((result as Promise<any>).then) {
     throw new Error('GraphQL execution failed to complete synchronously.');
   }
 
@@ -169,7 +169,7 @@ function graphqlImpl(
   variableValues,
   operationName,
   fieldResolver,
-): MaybePromise<ExecutionResult> {
+): MaybePromise<ExecutionResult | DeferredExecutionResult> {
   // Validate Schema
   const schemaValidationErrors = validateSchema(schema);
   if (schemaValidationErrors.length > 0) {
