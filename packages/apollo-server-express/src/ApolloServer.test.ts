@@ -10,7 +10,11 @@ import * as fs from 'fs';
 import { createApolloFetch } from 'apollo-fetch';
 
 import { gql, AuthenticationError, Config } from 'apollo-server-core';
-import { ApolloServer, ServerRegistration } from './ApolloServer';
+import {
+  ApolloServer,
+  defaultGuiOptions,
+  ServerRegistration,
+} from './ApolloServer';
 
 import {
   testApolloServer,
@@ -146,7 +150,7 @@ describe('apollo-server-express', () => {
       });
     });
 
-    it('renders GraphQL playground when browser requests', async () => {
+    it('renders GraphQL playground by default when browser requests', async () => {
       const nodeEnv = process.env.NODE_ENV;
       delete process.env.NODE_ENV;
 
@@ -171,6 +175,145 @@ describe('apollo-server-express', () => {
               reject(error);
             } else {
               expect(body).to.contain('GraphQLPlayground');
+              expect(response.statusCode).to.equal(200);
+              resolve();
+            }
+          },
+        );
+      });
+    });
+
+    it('accepts dynamic GraphQL Playground Options', async () => {
+      const nodeEnv = process.env.NODE_ENV;
+      delete process.env.NODE_ENV;
+
+      const { url } = await createServer(
+        {
+          typeDefs,
+          resolvers,
+        },
+        {
+          gui: req => {
+            if (!!req.get('Foo')) {
+              return defaultGuiOptions;
+            } else {
+              return {
+                enabled: false,
+              };
+            }
+          },
+        },
+      );
+
+      return new Promise<http.Server>((resolve, reject) => {
+        request(
+          {
+            url,
+            method: 'GET',
+            headers: {
+              accept:
+                'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+              Fool: 'bar',
+            },
+          },
+          (error, response, body) => {
+            process.env.NODE_ENV = nodeEnv;
+            if (error) {
+              reject(error);
+            } else {
+              expect(body).not.to.contain('GraphQLPlayground');
+              expect(response.statusCode).not.to.equal(200);
+              resolve();
+            }
+          },
+        );
+      });
+    });
+
+    it('accepts dynamic GraphQL Playground Options 2', async () => {
+      const nodeEnv = process.env.NODE_ENV;
+      delete process.env.NODE_ENV;
+
+      const { url } = await createServer(
+        {
+          typeDefs,
+          resolvers,
+        },
+        {
+          gui: req => {
+            if (!!req.get('Foo')) {
+              return defaultGuiOptions;
+            } else {
+              return {
+                enabled: false,
+              };
+            }
+          },
+        },
+      );
+
+      return new Promise<http.Server>((resolve, reject) => {
+        request(
+          {
+            url,
+            method: 'GET',
+            headers: {
+              accept:
+                'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+              Foo: 'bar',
+            },
+          },
+          (error, response, body) => {
+            process.env.NODE_ENV = nodeEnv;
+            if (error) {
+              reject(error);
+            } else {
+              expect(body).to.contain('GraphQLPlayground');
+              expect(response.statusCode).to.equal(200);
+              resolve();
+            }
+          },
+        );
+      });
+    });
+
+    it('accepts partial GraphQL Playground Options', async () => {
+      const nodeEnv = process.env.NODE_ENV;
+      delete process.env.NODE_ENV;
+
+      const { url } = await createServer(
+        {
+          typeDefs,
+          resolvers,
+        },
+        {
+          gui: {
+            enabled: true,
+            playgroundSettings: {
+              'editor.theme': 'light',
+            },
+          },
+        },
+      );
+
+      return new Promise<http.Server>((resolve, reject) => {
+        request(
+          {
+            url,
+            method: 'GET',
+            headers: {
+              accept:
+                'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+              Folo: 'bar',
+            },
+          },
+          (error, response, body) => {
+            process.env.NODE_ENV = nodeEnv;
+            if (error) {
+              reject(error);
+            } else {
+              expect(body).to.contain('GraphQLPlayground');
+              expect(body).to.contain(`"editor.theme": "light"`);
               expect(response.statusCode).to.equal(200);
               resolve();
             }

@@ -5,6 +5,7 @@ import {
   renderPlaygroundPage,
   RenderPageOptions as PlaygroundRenderPageOptions,
 } from '@apollographql/graphql-playground-html';
+import { ISettings } from '@apollographql/graphql-playground-html/dist/render-playground-page';
 import { ApolloServerBase, formatApolloErrors } from 'apollo-server-core';
 import * as accepts from 'accepts';
 import * as typeis from 'type-is';
@@ -29,8 +30,26 @@ export interface ServerRegistration {
   bodyParserConfig?: OptionsJson | boolean;
   onHealthCheck?: (req: express.Request) => Promise<any>;
   disableHealthCheck?: boolean;
-  gui?: boolean;
+  gui?: ((req: express.Request) => Partial<GuiOptions>) | Partial<GuiOptions>;
 }
+
+export interface GuiOptions {
+  enabled: boolean;
+  playgroundSettings: Partial<ISettings>;
+}
+
+export const defaultGuiOptions: GuiOptions = {
+  enabled: process.env.NODE_ENV !== 'production',
+  playgroundSettings: {
+    'general.betaUpdates': false,
+    'editor.theme': 'dark',
+    'editor.reuseHeaders': true,
+    'tracing.hideTracingResponse': true,
+    'editor.fontSize': 14,
+    'editor.fontFamily': `'Source Code Pro', 'Consolas', 'Inconsolata', 'Droid Sans Mono', 'Monaco', monospace`,
+    'request.credentials': 'omit',
+  },
+};
 
 const fileUploadMiddleware = (
   uploadsConfig: FileUploadOptions,
@@ -142,12 +161,40 @@ export class ApolloServer extends ApolloServerBase {
     // schema, you'll need to manually specify `introspection: true` in the
     // ApolloServer constructor; by default, the introspection query is only
     // enabled in dev.
-    const guiEnabled =
-      !!gui || (gui === undefined && process.env.NODE_ENV !== 'production');
-
     app.use(path, (req, res, next) => {
-      if (guiEnabled && req.method === 'GET') {
+      let partialGuiOverrides: Partial<GuiOptions>;
+      if (!gui) {
+        partialGuiOverrides = {};
+      } else if (isPartialGui(gui)) {
+        partialGuiOverrides = gui;
+      } else {
+        partialGuiOverrides = gui(req);
+      }
+
+      console.log('partial enabled', partialGuiOverrides.enabled);
+      const enabled =
+        partialGuiOverrides.enabled !== undefined
+          ? partialGuiOverrides.enabled
+          : defaultGuiOptions.enabled;
+
+      partialGuiOverrides.enabled
+        ? partialGuiOverrides.enabled && defaultGuiOptions.enabled
+        : defaultGuiOptions.enabled;
+      console.log('overall enabled', enabled);
+      const guiOptions: GuiOptions = {
+        enabled,
+        playgroundSettings: enabled
+          ? {
+              ...defaultGuiOptions.playgroundSettings,
+              ...partialGuiOverrides.playgroundSettings,
+            }
+          : null,
+      };
+
+      if (guiOptions.enabled && req.method === 'GET') {
         // perform more expensive content-type check only if necessary
+        // XXX We could potentially move this logic into the GuiOptions lambda,
+        // but I don't think it needs any overriding
         const accept = accepts(req);
         const types = accept.types() as string[];
         const prefersHTML =
@@ -160,6 +207,7 @@ export class ApolloServer extends ApolloServerBase {
             endpoint: path,
             subscriptionEndpoint: this.subscriptionsPath,
             version: this.playgroundVersion,
+            settings: guiOptions.playgroundSettings as ISettings,
           };
           res.setHeader('Content-Type', 'text/html');
           const playground = renderPlaygroundPage(playgroundRenderPageOptions);
@@ -183,3 +231,15 @@ export const registerServer = () => {
     'Please use server.applyMiddleware instead of registerServer. This warning will be removed in the next release',
   );
 };
+
+// XXX It would be great if there was a way to go through all properties of the parent to the Partial
+// to perform this check, but that does not exist yet, so we will need to check each one of the properties
+// of GuiOptions to see if there is anything set.
+function isPartialGui(
+  gui: Partial<GuiOptions> | ((req: express.Request) => Partial<GuiOptions>),
+): gui is Partial<GuiOptions> {
+  return (
+    (<Partial<GuiOptions>>gui).enabled !== undefined ||
+    (<Partial<GuiOptions>>gui).playgroundSettings !== undefined
+  );
+}
