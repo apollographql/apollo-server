@@ -16,11 +16,7 @@ export function calculateCacheControlHeaders(
   let lowestMaxAge = Number.MAX_VALUE;
   let publicOrPrivate = 'public';
 
-  // Because of the early exit, we are unable to use forEach. While a reduce
-  // loop might be possible, a for loop is more readable
-  for (let i = 0; i < responses.length; i++) {
-    const response = responses[i];
-
+  for (const response of responses) {
     const cacheControl: CacheControlFormat =
       response.extensions && response.extensions.cacheControl;
 
@@ -38,8 +34,7 @@ export function calculateCacheControlHeaders(
     }
 
     const rootHints = new Set<string>();
-    for (let j = 0; j < cacheControl.hints.length; j++) {
-      const hint = cacheControl.hints[j];
+    for (const hint of cacheControl.hints) {
       if (hint.scope && hint.scope.toLowerCase() === 'private') {
         publicOrPrivate = 'private';
       }
