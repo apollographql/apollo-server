@@ -200,7 +200,7 @@ const humanType = new GraphQLObjectType({
       },
     },
     soulmate: {
-      type: GraphQLNonNull(characterInterface),
+      type: new GraphQLNonNull(characterInterface),
       description: 'Everyone has a soulmate and should error otherwise.',
     },
     weapon: {
@@ -332,6 +332,4 @@ export const StarWarsSchema = new GraphQLSchema({
   query: queryType,
   types: [humanType, droidType],
   directives: [GraphQLDeferDirective],
-  // TODO: Eventually bake in @defer as a standard directive and do validation
-  // at in the validation phase.
 });
