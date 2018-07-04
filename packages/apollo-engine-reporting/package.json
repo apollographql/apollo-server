@@ -52,7 +52,7 @@
       "js",
       "json"
     ],
-    "testRegex": "/__tests__/.*$",
+    "testRegex": "src/__tests__/.*$",
     "globals": {
       "ts-jest": {
         "skipBabel": true
