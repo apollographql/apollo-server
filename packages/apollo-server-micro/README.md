@@ -15,7 +15,7 @@ handles incoming GraphQL requests via the default `/graphql` endpoint.
 1) Package installation.
 
 ```sh
-npm install --save micro apollo-server-micro@rc
+npm install --save micro apollo-server-micro@rc graphql
 ```
 
 2) `index.js`
@@ -65,12 +65,12 @@ microservice, using [`micro-cors`](https://github.com/possibilities/micro-cors):
 1) Package installation.
 
 ```sh
-npm install --save micro micro-cors apollo-server-micro@rc
+npm install --save micro micro-cors apollo-server-micro@rc graphql
 ```
 
 2) `index.js`
 
-```js
+```js line=1,19
 const cors = require('micro-cors')();
 const { ApolloServer, gql } = require('apollo-server-micro');
 
@@ -116,12 +116,12 @@ uses a custom GraphQL endpoint path:
 1) Package installation.
 
 ```sh
-npm install --save micro apollo-server-micro@rc
+npm install --save micro apollo-server-micro@rc graphql
 ```
 
 2) `index.js`
 
-```js
+```js line=18
 const { ApolloServer, gql } = require('apollo-server-micro');
 
 const typeDefs = gql`
@@ -167,12 +167,12 @@ fully custom routing:
 1) Package installation.
 
 ```sh
-npm install --save micro microrouter apollo-server-micro@rc
+npm install --save micro microrouter apollo-server-micro@rc graphql
 ```
 
 2) `index.js`
 
-```js
+```js line=1,21-26
 const { router, get, post, options } = require('microrouter');
 const { ApolloServer, gql } = require('apollo-server-micro');
 
