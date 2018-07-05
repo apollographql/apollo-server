@@ -13,7 +13,7 @@ function createApp(options: CreateAppOptions = {}) {
   const server = new ApolloServer(
     (options.graphqlOptions as Config) || { schema: Schema },
   );
-  return micro(server.graphqlHandler({ gui: false }));
+  return micro(server.createHandler({ gui: false }));
 }
 
 describe('microApollo', function() {

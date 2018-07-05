@@ -72,6 +72,3 @@ export function graphqlMicro(
 
   return graphqlHandler;
 }
-
-// Backwards compatibility with AS 1.x
-export const microGraphql = graphqlMicro;

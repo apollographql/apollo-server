@@ -24,7 +24,7 @@ const resolvers = {
 
 async function createServer(options: object = {}): Promise<any> {
   const apolloServer = new ApolloServer({ typeDefs, resolvers });
-  const service = micro(apolloServer.graphqlHandler(options));
+  const service = micro(apolloServer.createHandler(options));
   const uri = await listen(service);
   return {
     service,
@@ -40,7 +40,7 @@ describe('apollo-server-micro', function() {
     });
   });
 
-  describe('#graphqlHandler', function() {
+  describe('#createHandler', function() {
     describe('querying', function() {
       it(
         'should be queryable using the default /graphql path, if no path ' +
@@ -182,7 +182,7 @@ describe('apollo-server-micro', function() {
             },
           },
         });
-        const service = micro(apolloServer.graphqlHandler());
+        const service = micro(apolloServer.createHandler());
         const url = await listen(service);
 
         const body = new FormData();

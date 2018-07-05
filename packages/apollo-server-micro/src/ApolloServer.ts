@@ -29,7 +29,7 @@ export class ApolloServer extends ApolloServerBase {
 
   // Prepares and returns an async function that can be used by Micro to handle
   // GraphQL requests.
-  public graphqlHandler({
+  public createHandler({
     path,
     disableHealthCheck,
     onHealthCheck,
