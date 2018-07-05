@@ -14,7 +14,6 @@ description: Visually exploring a Apollo Server
 To enable Playground in production, an integration package must be installed to provide more control over the middlewares used. The following example uses the express integration:
 
 ```bash
-npm uninstall --save apollo-server
 npm install --save apollo-server-express@rc graphql
 ```
 
@@ -43,3 +42,5 @@ app.listen({ port: 4000 }, () =>
   console.log(`🚀 Server ready at http://localhost:4000${server.graphqlPath}`),
 );
 ```
+
+> Note: when using apollo-server-express, you can remove apollo-server from your package.json
