@@ -170,9 +170,9 @@ server.listen().then(({ url }) => {
 ```
 
 
-## GraphQL Playground
+## [GraphQL Playground](./features/playground.html)
 
-Apollo Server 2.0 creates a single GraphQL endpoint that provides data and a gui explorer depending on how the endpoint is accessed. In browser, Apollo Server returns GraphQL playground. For other cases, Apollo server returns the data for a GraphQL requests from other clients, such as Apollo Client, curl, Postman, or Insomnia.
+Apollo Server 2.0 creates a single GraphQL endpoint that provides data and a gui explorer depending on how the endpoint is accessed. In browser, Apollo Server returns GraphQL playground. For other cases, Apollo server returns the data for GraphQL requests from other clients, such as Apollo Client, curl, Postman, or Insomnia.
 
 ```js
 const { ApolloServer, gql } = require('apollo-server');
