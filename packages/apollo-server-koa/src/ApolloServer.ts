@@ -17,17 +17,17 @@ import { processRequest as processFileUploads } from 'apollo-upload-server';
 export { GraphQLOptions, GraphQLExtension } from 'apollo-server-core';
 import { GraphQLOptions, FileUploadOptions } from 'apollo-server-core';
 
+// koa-bodyparser does not expose an Options interface so we infer the type here.
+// we can replace this when this PR get merged: https://github.com/DefinitelyTyped/DefinitelyTyped/pull/27047
+export type BodyParserOptions = typeof bodyParser extends (opts: infer U) => any
+  ? U
+  : never;
+
 export interface ServerRegistration {
-  // Note: You can also pass a connect.Server here. If we changed this field to
-  // `express.Application | connect.Server`, it would be very hard to get the
-  // app.use calls to typecheck even though they do work properly. Our
-  // assumption is that very few people use connect with TypeScript (and in fact
-  // we suspect the only connect users left writing GraphQL apps are Meteor
-  // users).
   app: Koa;
   path?: string;
   cors?: corsMiddleware.Options | boolean;
-  bodyParserConfig?: Object | boolean;
+  bodyParserConfig?: BodyParserOptions | boolean;
   onHealthCheck?: (ctx: Koa.Context) => Promise<any>;
   disableHealthCheck?: boolean;
   gui?: boolean;
@@ -111,7 +111,6 @@ export class ApolloServer extends ApolloServerBase {
       uploadsMiddleware = fileUploadMiddleware(this.uploadsConfig, this);
     }
 
-    // XXX multiple paths?
     this.graphqlPath = path;
 
     const middleware = [];

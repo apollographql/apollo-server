@@ -10,11 +10,6 @@ export interface KoaGraphQLOptionsFunction {
   (ctx: Koa.Context): GraphQLOptions | Promise<GraphQLOptions>;
 }
 
-// Design principles:
-// - there is just one way allowed: POST request with JSON body. Nothing else.
-// - simple, fast and secure
-//
-
 export interface KoaHandler {
   (ctx: Koa.Context, next): void;
 }
