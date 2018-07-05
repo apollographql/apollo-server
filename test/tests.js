@@ -33,3 +33,6 @@ require('../packages/apollo-server-express/dist/apolloServerHttp.test');
 
 // apollo-server-lambda
 require('../packages/apollo-server-lambda/dist/lambdaApollo.test');
+
+require('../packages/apollo-server-micro/dist/ApolloServer.test.js');
+require('../packages/apollo-server-micro/dist/microApollo.test');
