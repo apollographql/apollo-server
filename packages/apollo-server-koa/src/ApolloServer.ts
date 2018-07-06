@@ -1,7 +1,7 @@
 import * as Koa from 'koa';
-import * as KoaRouter from 'koa-router';
 import * as corsMiddleware from '@koa/cors';
 import * as bodyParser from 'koa-bodyparser';
+import * as compose from 'koa-compose';
 import {
   renderPlaygroundPage,
   RenderPageOptions as PlaygroundRenderPageOptions,
@@ -56,12 +56,23 @@ const fileUploadMiddleware = (
   }
 };
 
+const middlewareFromPath = (
+  path: string,
+  middleware: compose.Middleware<Koa.Context>,
+) => (ctx: Koa.Context, next: () => Promise<any>) => {
+  if (ctx.path === path) {
+    return middleware(ctx, next);
+  } else {
+    return next();
+  }
+};
+
 export class ApolloServer extends ApolloServerBase {
   // This translates the arguments from the middleware into graphQL options It
   // provides typings for the integration specific behavior, ideally this would
   // be propagated with a generic to the super class
   async createGraphQLServerOptions(ctx: Koa.Context): Promise<GraphQLOptions> {
-    return super.graphQLServerOptions(ctx);
+    return super.graphQLServerOptions({ ctx });
   }
 
   protected supportsSubscriptions(): boolean {
@@ -81,29 +92,32 @@ export class ApolloServer extends ApolloServerBase {
     gui,
     onHealthCheck,
   }: ServerRegistration) {
-    const router = new KoaRouter();
-
     if (!path) path = '/graphql';
 
     if (!disableHealthCheck) {
       // uses same path as engine proxy, but is generally useful.
-      router.all('/.well-known/apollo/server-health', (ctx: Koa.Context) => {
-        // Response follows https://tools.ietf.org/html/draft-inadarei-api-health-check-01
-        ctx.set('Content-Type', 'application/health+json');
+      app.use(
+        middlewareFromPath(
+          '/.well-known/apollo/server-health',
+          (ctx: Koa.Context) => {
+            // Response follows https://tools.ietf.org/html/draft-inadarei-api-health-check-01
+            ctx.set('Content-Type', 'application/health+json');
 
-        if (onHealthCheck) {
-          return onHealthCheck(ctx)
-            .then(() => {
+            if (onHealthCheck) {
+              return onHealthCheck(ctx)
+                .then(() => {
+                  ctx.body = { status: 'pass' };
+                })
+                .catch(() => {
+                  ctx.status = 503;
+                  ctx.body = { status: 'fail' };
+                });
+            } else {
               ctx.body = { status: 'pass' };
-            })
-            .catch(() => {
-              ctx.status = 503;
-              ctx.body = { status: 'fail' };
-            });
-        } else {
-          ctx.body = { status: 'pass' };
-        }
-      });
+            }
+          },
+        ),
+      );
     }
 
     let uploadsMiddleware;
@@ -113,22 +127,20 @@ export class ApolloServer extends ApolloServerBase {
 
     this.graphqlPath = path;
 
-    const middleware = [];
-
     if (cors === true) {
-      middleware.push(corsMiddleware());
+      app.use(middlewareFromPath(path, corsMiddleware()));
     } else if (cors !== false) {
-      middleware.push(corsMiddleware(cors));
+      app.use(middlewareFromPath(path, corsMiddleware(cors)));
     }
 
     if (bodyParserConfig === true) {
-      middleware.push(bodyParser());
+      app.use(middlewareFromPath(path, bodyParser()));
     } else if (bodyParserConfig !== false) {
-      middleware.push(bodyParser(bodyParserConfig));
+      app.use(middlewareFromPath(path, bodyParser(bodyParserConfig)));
     }
 
     if (uploadsMiddleware) {
-      middleware.push(uploadsMiddleware);
+      app.use(middlewareFromPath(path, uploadsMiddleware));
     }
 
     // Note: if you enable a gui in production and expect to be able to see your
@@ -138,35 +150,37 @@ export class ApolloServer extends ApolloServerBase {
     const guiEnabled =
       !!gui || (gui === undefined && process.env.NODE_ENV !== 'production');
 
-    middleware.push((ctx: Koa.Context, next: Function) => {
-      if (guiEnabled && ctx.request.method === 'GET') {
-        // perform more expensive content-type check only if necessary
-        const accept = accepts(ctx.req);
-        const types = accept.types() as string[];
-        const prefersHTML =
-          types.find(
-            (x: string) => x === 'text/html' || x === 'application/json',
-          ) === 'text/html';
+    app.use(
+      middlewareFromPath(path, (ctx: Koa.Context, next: Function) => {
+        if (guiEnabled && ctx.request.method === 'GET') {
+          // perform more expensive content-type check only if necessary
+          const accept = accepts(ctx.req);
+          const types = accept.types() as string[];
+          const prefersHTML =
+            types.find(
+              (x: string) => x === 'text/html' || x === 'application/json',
+            ) === 'text/html';
 
-        if (prefersHTML) {
-          const playgroundRenderPageOptions: PlaygroundRenderPageOptions = {
-            endpoint: path,
-            subscriptionEndpoint: this.subscriptionsPath,
-            version: this.playgroundVersion,
-          };
-          ctx.set('Content-Type', 'text/html');
-          const playground = renderPlaygroundPage(playgroundRenderPageOptions);
-          ctx.body = playground;
-          return next();
+          if (prefersHTML) {
+            const playgroundRenderPageOptions: PlaygroundRenderPageOptions = {
+              endpoint: path,
+              subscriptionEndpoint: this.subscriptionsPath,
+              version: this.playgroundVersion,
+            };
+            ctx.set('Content-Type', 'text/html');
+            const playground = renderPlaygroundPage(
+              playgroundRenderPageOptions,
+            );
+            ctx.body = playground;
+            return next();
+          }
         }
-      }
-      return graphqlKoa(this.createGraphQLServerOptions.bind(this))(ctx, next);
-    });
-
-    router.all(path, ...middleware);
-
-    app.use(router.routes());
-    app.use(router.allowedMethods());
+        return graphqlKoa(this.createGraphQLServerOptions.bind(this))(
+          ctx,
+          next,
+        );
+      }),
+    );
   }
 }
 
