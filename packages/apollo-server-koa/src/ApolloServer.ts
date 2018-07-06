@@ -36,21 +36,19 @@ export interface ServerRegistration {
 const fileUploadMiddleware = (
   uploadsConfig: FileUploadOptions,
   server: ApolloServerBase,
-) => (ctx: Koa.Context, next: Function) => {
+) => async (ctx: Koa.Context, next: Function) => {
   if (typeis(ctx.req, ['multipart/form-data'])) {
-    return processFileUploads(ctx.req, uploadsConfig)
-      .then(body => {
-        ctx.request.body = body;
-        return next();
-      })
-      .catch(error => {
-        if (error.status && error.expose) ctx.status = error.status;
+    try {
+      ctx.request.body = await processFileUploads(ctx.req, uploadsConfig);
+      return next();
+    } catch (error) {
+      if (error.status && error.expose) ctx.status = error.status;
 
-        throw formatApolloErrors([error], {
-          formatter: server.requestOptions.formatError,
-          debug: server.requestOptions.debug,
-        });
+      throw formatApolloErrors([error], {
+        formatter: server.requestOptions.formatError,
+        debug: server.requestOptions.debug,
       });
+    }
   } else {
     return next();
   }
