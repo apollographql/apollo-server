@@ -5,7 +5,10 @@ import {
   renderPlaygroundPage,
   RenderPageOptions as PlaygroundRenderPageOptions,
 } from '@apollographql/graphql-playground-html';
-import { ISettings } from '@apollographql/graphql-playground-html/dist/render-playground-page';
+import {
+  ISettings,
+  Tab,
+} from '@apollographql/graphql-playground-html/dist/render-playground-page';
 import { ApolloServerBase, formatApolloErrors } from 'apollo-server-core';
 import * as accepts from 'accepts';
 import * as typeis from 'type-is';
@@ -30,17 +33,21 @@ export interface ServerRegistration {
   bodyParserConfig?: OptionsJson | boolean;
   onHealthCheck?: (req: express.Request) => Promise<any>;
   disableHealthCheck?: boolean;
-  gui?: ((req: express.Request) => Partial<GuiOptions>) | Partial<GuiOptions>;
+  gui?: GuiConfig | boolean;
 }
 
+type GuiConfig =
+  | NonDynamicGuiConfig
+  | ((req: express.Request) => NonDynamicGuiConfig);
+type NonDynamicGuiConfig = Partial<GuiOptions> | boolean;
+
 export interface GuiOptions {
-  enabled: boolean;
-  playgroundSettings: Partial<ISettings>;
+  playgroundThemeOptions: Partial<ISettings>;
+  playgroundTabOptions: Partial<Tab>[];
 }
 
 export const defaultGuiOptions: GuiOptions = {
-  enabled: process.env.NODE_ENV !== 'production',
-  playgroundSettings: {
+  playgroundThemeOptions: {
     'general.betaUpdates': false,
     'editor.theme': 'dark',
     'editor.reuseHeaders': true,
@@ -49,6 +56,7 @@ export const defaultGuiOptions: GuiOptions = {
     'editor.fontFamily': `'Source Code Pro', 'Consolas', 'Inconsolata', 'Droid Sans Mono', 'Monaco', monospace`,
     'request.credentials': 'omit',
   },
+  playgroundTabOptions: [],
 };
 
 const fileUploadMiddleware = (
@@ -162,36 +170,45 @@ export class ApolloServer extends ApolloServerBase {
     // ApolloServer constructor; by default, the introspection query is only
     // enabled in dev.
     app.use(path, (req, res, next) => {
-      let partialGuiOverrides: Partial<GuiOptions>;
-      if (!gui) {
-        partialGuiOverrides = {};
-      } else if (isPartialGui(gui)) {
-        partialGuiOverrides = gui;
-      } else {
-        partialGuiOverrides = gui(req);
+      // We cannot do an existence check on `gui` since it may be a boolean
+      const nonDynamicGui: NonDynamicGuiConfig =
+        gui !== undefined && gui !== null
+          ? isNonDynamic(gui)
+            ? gui
+            : gui(req)
+          : {};
+      const enabled: boolean = isBoolean(nonDynamicGui) ? nonDynamicGui : true;
+      const partialGuiOverrides: Partial<GuiOptions> = isBoolean(nonDynamicGui)
+        ? {}
+        : nonDynamicGui;
+
+      // Disallow endpoints in pre-fill settings
+      if (
+        partialGuiOverrides.playgroundTabOptions &&
+        partialGuiOverrides.playgroundTabOptions.filter(setting => {
+          return !!setting.endpoint && setting.endpoint !== path;
+        }).length > 0
+      ) {
+        // Should we just create the middlewares for any additional endpoints?
+        // throw Error(`Please create a middleware for each additional endpoint on which you'd like GraphQL playground to be available.`)
       }
 
-      console.log('partial enabled', partialGuiOverrides.enabled);
-      const enabled =
-        partialGuiOverrides.enabled !== undefined
-          ? partialGuiOverrides.enabled
-          : defaultGuiOptions.enabled;
-
-      partialGuiOverrides.enabled
-        ? partialGuiOverrides.enabled && defaultGuiOptions.enabled
-        : defaultGuiOptions.enabled;
-      console.log('overall enabled', enabled);
       const guiOptions: GuiOptions = {
-        enabled,
-        playgroundSettings: enabled
+        playgroundThemeOptions: enabled
           ? {
-              ...defaultGuiOptions.playgroundSettings,
-              ...partialGuiOverrides.playgroundSettings,
+              ...defaultGuiOptions.playgroundThemeOptions,
+              ...partialGuiOverrides.playgroundThemeOptions,
+            }
+          : null,
+        playgroundTabOptions: enabled
+          ? {
+              ...defaultGuiOptions.playgroundTabOptions,
+              ...partialGuiOverrides.playgroundTabOptions,
             }
           : null,
       };
 
-      if (guiOptions.enabled && req.method === 'GET') {
+      if (enabled && req.method === 'GET') {
         // perform more expensive content-type check only if necessary
         // XXX We could potentially move this logic into the GuiOptions lambda,
         // but I don't think it needs any overriding
@@ -207,7 +224,8 @@ export class ApolloServer extends ApolloServerBase {
             endpoint: path,
             subscriptionEndpoint: this.subscriptionsPath,
             version: this.playgroundVersion,
-            settings: guiOptions.playgroundSettings as ISettings,
+            settings: guiOptions.playgroundThemeOptions as ISettings,
+            tabs: guiOptions.playgroundTabOptions as Tab[],
           };
           res.setHeader('Content-Type', 'text/html');
           const playground = renderPlaygroundPage(playgroundRenderPageOptions);
@@ -235,11 +253,21 @@ export const registerServer = () => {
 // XXX It would be great if there was a way to go through all properties of the parent to the Partial
 // to perform this check, but that does not exist yet, so we will need to check each one of the properties
 // of GuiOptions to see if there is anything set.
-function isPartialGui(
-  gui: Partial<GuiOptions> | ((req: express.Request) => Partial<GuiOptions>),
-): gui is Partial<GuiOptions> {
+function isPartialGui(gui: NonDynamicGuiConfig): gui is Partial<GuiOptions> {
   return (
-    (<Partial<GuiOptions>>gui).enabled !== undefined ||
-    (<Partial<GuiOptions>>gui).playgroundSettings !== undefined
+    (<Partial<GuiOptions>>gui).playgroundThemeOptions !== undefined ||
+    (<Partial<GuiOptions>>gui).playgroundTabOptions !== undefined
+  );
+}
+
+// This is necessary to make TypeScript happy, since it cannot smart-cast types via conditional logic
+function isBoolean(gui: NonDynamicGuiConfig): gui is boolean {
+  return typeof gui === typeof true;
+}
+
+function isNonDynamic(gui: GuiConfig): gui is NonDynamicGuiConfig {
+  return (
+    isBoolean(<NonDynamicGuiConfig>gui) ||
+    isPartialGui(<NonDynamicGuiConfig>gui)
   );
 }

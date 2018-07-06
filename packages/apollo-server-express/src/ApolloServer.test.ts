@@ -183,7 +183,7 @@ describe('apollo-server-express', () => {
       });
     });
 
-    it('accepts dynamic GraphQL Playground Options', async () => {
+    it('accepts dynamic partial GraphQL Playground Options', async () => {
       const nodeEnv = process.env.NODE_ENV;
       delete process.env.NODE_ENV;
 
@@ -197,9 +197,7 @@ describe('apollo-server-express', () => {
             if (!!req.get('Foo')) {
               return defaultGuiOptions;
             } else {
-              return {
-                enabled: false,
-              };
+              return false;
             }
           },
         },
@@ -230,7 +228,7 @@ describe('apollo-server-express', () => {
       });
     });
 
-    it('accepts dynamic GraphQL Playground Options 2', async () => {
+    it('accepts dynamic partial GraphQL Playground Options 2', async () => {
       const nodeEnv = process.env.NODE_ENV;
       delete process.env.NODE_ENV;
 
@@ -244,9 +242,7 @@ describe('apollo-server-express', () => {
             if (!!req.get('Foo')) {
               return defaultGuiOptions;
             } else {
-              return {
-                enabled: false,
-              };
+              return false;
             }
           },
         },
@@ -281,6 +277,8 @@ describe('apollo-server-express', () => {
       const nodeEnv = process.env.NODE_ENV;
       delete process.env.NODE_ENV;
 
+      const defaultQuery = 'query { foo { bar } }';
+      const endpoint = '/fumanchupacabra';
       const { url } = await createServer(
         {
           typeDefs,
@@ -288,10 +286,17 @@ describe('apollo-server-express', () => {
         },
         {
           gui: {
-            enabled: true,
-            playgroundSettings: {
+            playgroundThemeOptions: {
               'editor.theme': 'light',
             },
+            playgroundTabOptions: [
+              {
+                query: defaultQuery,
+              },
+              {
+                endpoint,
+              },
+            ],
           },
         },
       );
@@ -312,9 +317,50 @@ describe('apollo-server-express', () => {
             if (error) {
               reject(error);
             } else {
+              console.log('body', body);
               expect(body).to.contain('GraphQLPlayground');
               expect(body).to.contain(`"editor.theme": "light"`);
+              expect(body).to.contain(defaultQuery);
+              expect(body).to.contain(endpoint);
               expect(response.statusCode).to.equal(200);
+              resolve();
+            }
+          },
+        );
+      });
+    });
+
+    it('accepts gui options as a boolean', async () => {
+      const nodeEnv = process.env.NODE_ENV;
+      delete process.env.NODE_ENV;
+
+      const { url } = await createServer(
+        {
+          typeDefs,
+          resolvers,
+        },
+        {
+          gui: false,
+        },
+      );
+
+      return new Promise<http.Server>((resolve, reject) => {
+        request(
+          {
+            url,
+            method: 'GET',
+            headers: {
+              accept:
+                'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+            },
+          },
+          (error, response, body) => {
+            process.env.NODE_ENV = nodeEnv;
+            if (error) {
+              reject(error);
+            } else {
+              expect(body).not.to.contain('GraphQLPlayground');
+              expect(response.statusCode).not.to.equal(200);
               resolve();
             }
           },
