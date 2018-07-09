@@ -72,7 +72,7 @@ export class ApolloServerBase {
   // This specifies the version of GraphQL Playground that will be served
   // from graphql-playground-html, and is passed to renderPlaygroundPage
   // by the integration subclasses
-  protected playgroundVersion = '1.7.1';
+  protected playgroundVersion = '1.7.2';
 
   // set by installSubscriptionHandlers.
   private subscriptionServer?: SubscriptionServer;
