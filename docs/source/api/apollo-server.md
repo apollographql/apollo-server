@@ -67,7 +67,7 @@ new ApolloServer({
 
 * `schema`: <`Object`>
 
-  An executable GraphQL schema that will override the `typeDefs` and `resolvers` provided
+  An executable GraphQL schema that will override the `typeDefs` and `resolvers` provided. If you are using [file uploads](https://www.apollographql.com/docs/guides/file-uploads.html), you will have to add the `Upload` scalar to the schema, as it is not automatically added in case of setting the `schema` manually.
 
 * `subscriptions`: <`Object`> | <`String`> | false
 
