@@ -79,6 +79,8 @@ export interface EngineReportingOptions {
   // 'sendReport()' on other signals if you'd like. Note that 'sendReport()'
   // does not run synchronously so it cannot work usefully in an 'exit' handler.
   handleSignals?: boolean;
+  // Disables reporting on an interval for stateless environments
+  disableInterval?: boolean;
 
   // XXX Provide a way to set client_name, client_version, client_address,
   // service, and service_version fields. They are currently not revealed in the
@@ -103,6 +105,7 @@ export class EngineReportingAgent<TContext = any> {
   private report!: FullTracesReport;
   private reportSize!: number;
   private reportTimer: any; // timer typing is weird and node-specific
+  private stopped: boolean = false;
 
   public constructor(options: EngineReportingOptions = {}) {
     this.options = options;
@@ -115,10 +118,12 @@ export class EngineReportingAgent<TContext = any> {
 
     this.resetReport();
 
-    this.reportTimer = setInterval(
-      () => this.sendReportAndReportErrors(),
-      this.options.reportIntervalMs || 10 * 1000,
-    );
+    if (options.disableInterval) {
+      this.reportTimer = setInterval(
+        () => this.sendReportAndReportErrors(),
+        this.options.reportIntervalMs || 10 * 1000,
+      );
+    }
 
     if (this.options.handleSignals !== false) {
       const signals: NodeJS.Signals[] = ['SIGINT', 'SIGTERM'];
@@ -141,7 +146,7 @@ export class EngineReportingAgent<TContext = any> {
 
   public addTrace(signature: string, operationName: string, trace: Trace) {
     // Ignore traces that come in after stop().
-    if (!this.reportTimer) {
+    if (this.stopped) {
       return;
     }
 
@@ -270,6 +275,8 @@ export class EngineReportingAgent<TContext = any> {
       clearInterval(this.reportTimer);
       this.reportTimer = undefined;
     }
+
+    this.stopped = true;
   }
 
   private sendReportAndReportErrors(): Promise<void> {
