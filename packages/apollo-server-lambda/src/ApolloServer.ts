@@ -28,8 +28,7 @@ export class ApolloServer extends ApolloServerBase {
   constructor(options: Config) {
     if (process.env.ENGINE_API_KEY || options.engine) {
       options.engine = {
-        disableInterval: true,
-        maxUncompressedReportSize: 1,
+        sendReportsImmediately: true,
         ...(typeof options.engine !== 'boolean' ? options.engine : {}),
       };
     }

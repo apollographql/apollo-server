@@ -102,8 +102,8 @@ const REPORT_HEADER = new ReportHeader({
 export class EngineReportingAgent<TContext = any> {
   private options: EngineReportingOptions;
   private apiKey: string;
-  private report: FullTracesReport;
-  private reportSize: number;
+  private report!: FullTracesReport;
+  private reportSize!: number;
   private reportTimer: any; // timer typing is weird and node-specific
   private sendReportsImmediately?: boolean;
   private stopped: boolean = false;
@@ -172,7 +172,7 @@ export class EngineReportingAgent<TContext = any> {
 
     // If the buffer gets big (according to our estimate), send.
     if (
-      this.sendReportsImmediately &&
+      this.sendReportsImmediately ||
       this.reportSize >=
         (this.options.maxUncompressedReportSize || 4 * 1024 * 1024)
     ) {
