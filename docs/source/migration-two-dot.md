@@ -36,7 +36,7 @@ const typeDefs = gql(fs.readFileSync(__dirname.concat('/schema.graphql'), 'utf8'
 
 > Apollo Server 2.0 RC requires Node.js v6 and higher.
 
-Apollo Server 2.0 simplifies implementing a GraphQL server.  Apollo Server 1.0 revolved around providing middleware-based solutions, which had to be added to an application which already existed.  These middleware implementations were tied to the HTTP server in use (e.g. `apollo-server-express` for Express implementations, `apollo-server-hapi` for hapi, etc.).
+Apollo Server 2.0 simplifies implementing a GraphQL server.  Apollo Server 1.0 revolved around providing middleware-based solutions, which had to be added to an application which already existed.  These middleware implementations were tied to the HTTP server in use (e.g. `apollo-server-koa` for Koa implementations, `apollo-server-hapi` for hapi, etc.).
 
 There is a consideration to be made when following the rest of the guide:
 
@@ -55,9 +55,9 @@ Check out the following changes for Apollo Server 2.0 RC.
 
 <h2 id="Middleware">Middleware</h2>
 
-With the middleware option used by Apollo Server 1.0 users, it is necessary to install the release candidate version of `apollo-server-express`.  To do this, use the `rc` tag when installing:
+With the middleware option used by Apollo Server 1.0 users, it is necessary to install the release candidate version of `apollo-server`.  To do this, use the `rc` tag when installing:
 
-    npm install --save apollo-server-express@rc graphql
+    npm install --save apollo-server@rc graphql
 
 The changes are best shown by comparing the before and after of the application.
 
@@ -104,7 +104,7 @@ Now, you can just do this instead:
 
 ```js
 const express = require('express');
-const { ApolloServer, gql } = require('apollo-server-express');
+const { ApolloServer, gql } = require('apollo-server');
 
 const app = express();
 
@@ -172,7 +172,7 @@ For middleware that is collocated with the GraphQL endpoint, Apollo Server 2 all
 
 ```js
 const express = require('express');
-const { ApolloServer, gql } = require('apollo-server-express');
+const { ApolloServer, gql } = require('apollo-server');
 
 const app = express();
 const path = '/graphql';
@@ -256,7 +256,7 @@ Apollo Server 2 removes the `logFunction` in favor of using `graphql-extensions`
 Apollo Server 2 ships with GraphQL Playground instead of GraphiQL and collocates the gui with the endpoint. GraphQL playground can be customized in the following manner.
 
 ```js
-const { ApolloServer, gql } = require('apollo-server-express');
+const { ApolloServer, gql } = require('apollo-server');
 
 const server = new ApolloServer({
   // These will be defined for both new or existing servers

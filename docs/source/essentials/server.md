@@ -17,10 +17,6 @@ To install, run:
 
     npm install --save apollo-server@rc graphql
 
-When adding Apollo Server to an existing application, a corresponding HTTP server support package needs to be installed as well.  For example, for Express this is:
-
-    npm install --save apollo-server-express@rc graphql
-
 > Note: During the release candidate period, it's necessary to use the `rc` npm package, as shown in the above commands.
 
 <h2 id="creating">Creating a server</h2>
@@ -117,10 +113,8 @@ Existing applications generally already have middleware in place and Apollo Serv
 
 > The existing application is frequently already named `app`, especially when using Express.  If the application is identified by a different variable, pass the existing variable in place of `app`.
 
-The following code uses the `apollo-server-express` package, which can be installed with `npm install apollo-server-express@rc`.
-
 ```js
-const { ApolloServer, gql } = require('apollo-server-express');
+const { ApolloServer, gql } = require('apollo-server');
 const { typeDefs, resolvers } = require('./schema');
 
 const server = new ApolloServer({
@@ -136,9 +130,7 @@ app.listen({ port: 4000 }, () =>
 )
 ```
 
-Hapi follows the same pattern with `apollo-server-express` replaced with `apollo-server-hapi` and `app` replaced with Hapi server. `applyMiddleware` registers plugins, so it should be called with `await`.
-
-> When transition from `apollo-server` to an integration package, running `npm uninstall apollo-server` will remove the extra dependency.
+Currently the `apollo-server` package can be used directly with Express only. Koa and Hapi follow the same pattern with `apollo-server` replaced with `apollo-server-koa` and `apollo-server-hapi` and `app` replaced with Koa and Hapi server. For Hapi, `applyMiddleware` registers plugins, so it should be called with `await`.
 
 <h3 id="serverless">Serverless</h3>
 

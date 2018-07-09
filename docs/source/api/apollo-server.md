@@ -134,10 +134,10 @@ The `applyMiddleware` method is provided by the `apollo-server-{integration}` pa
 
 ### Usage
 
-The `applyMiddleware` method from `apollo-server-express` registration of middleware as shown in the example below:
+The `applyMiddleware` method from `apollo-server` registration of middleware as shown in the example below:
 
 ```js
-const { ApolloServer } = require('apollo-server-express');
+const { ApolloServer } = require('apollo-server');
 const { typeDefs, resolvers } = require('./schema');
 
 const server = new ApolloServer({

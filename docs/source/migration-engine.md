@@ -28,7 +28,7 @@ Some infrastructure already contains the Engine proxy and requires it for full r
 
 ```js
 const { ApolloEngine } = require('apollo-engine');
-const { ApolloServer } = require('apollo-server-express');
+const { ApolloServer } = require('apollo-server');
 const express = require('express');
 
 const app = express();

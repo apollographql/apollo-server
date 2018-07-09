@@ -32,5 +32,3 @@ app.listen({ port: 4000 }, () =>
   console.log(`🚀 Server ready at http://localhost:4000${server.graphqlPath}`),
 );
 ```
-
-> Note: when using apollo-server-express, you can remove apollo-server from your package.json
