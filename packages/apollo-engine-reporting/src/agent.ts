@@ -120,7 +120,7 @@ export class EngineReportingAgent<TContext = any> {
     this.resetReport();
 
     this.sendReportsImmediately = options.sendReportsImmediately;
-    if (this.sendReportsImmediately) {
+    if (!this.sendReportsImmediately) {
       this.reportTimer = setInterval(
         () => this.sendReportAndReportErrors(),
         this.options.reportIntervalMs || 10 * 1000,
