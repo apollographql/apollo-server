@@ -20,5 +20,11 @@
   "types": "dist/index.d.ts",
   "engines": {
     "node": ">=6"
+  },
+  "dependencies": {
+    "lru-cache": "^4.1.3"
+  },
+  "devDependencies": {
+    "@types/lru-cache": "^4.1.1"
   }
 }
