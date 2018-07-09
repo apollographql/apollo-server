@@ -79,8 +79,8 @@ export interface EngineReportingOptions {
   // 'sendReport()' on other signals if you'd like. Note that 'sendReport()'
   // does not run synchronously so it cannot work usefully in an 'exit' handler.
   handleSignals?: boolean;
-  // Disables reporting on an interval for stateless environments
-  disableInterval?: boolean;
+  // Sends the trace report immediately. This options is useful for stateless environments
+  sendReportsImmediately?: boolean;
 
   // XXX Provide a way to set client_name, client_version, client_address,
   // service, and service_version fields. They are currently not revealed in the
@@ -102,9 +102,10 @@ const REPORT_HEADER = new ReportHeader({
 export class EngineReportingAgent<TContext = any> {
   private options: EngineReportingOptions;
   private apiKey: string;
-  private report!: FullTracesReport;
-  private reportSize!: number;
+  private report: FullTracesReport;
+  private reportSize: number;
   private reportTimer: any; // timer typing is weird and node-specific
+  private sendReportsImmediately?: boolean;
   private stopped: boolean = false;
 
   public constructor(options: EngineReportingOptions = {}) {
@@ -118,7 +119,8 @@ export class EngineReportingAgent<TContext = any> {
 
     this.resetReport();
 
-    if (options.disableInterval) {
+    this.sendReportsImmediately = options.sendReportsImmediately;
+    if (this.sendReportsImmediately) {
       this.reportTimer = setInterval(
         () => this.sendReportAndReportErrors(),
         this.options.reportIntervalMs || 10 * 1000,
@@ -170,8 +172,9 @@ export class EngineReportingAgent<TContext = any> {
 
     // If the buffer gets big (according to our estimate), send.
     if (
+      this.sendReportsImmediately &&
       this.reportSize >=
-      (this.options.maxUncompressedReportSize || 4 * 1024 * 1024)
+        (this.options.maxUncompressedReportSize || 4 * 1024 * 1024)
     ) {
       this.sendReportAndReportErrors();
     }

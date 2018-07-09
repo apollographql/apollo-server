@@ -316,7 +316,3 @@ addMockFunctionsToSchema({
    itself. Set this to false to disable. You can manually invoke 'stop()' and
    'sendReport()' on other signals if you'd like. Note that 'sendReport()'
    does not run synchronously so it cannot work usefully in an 'exit' handler.
-
-*  `disableInterval`: boolean;
-
-   Disables reporting on an interval for stateless environments
