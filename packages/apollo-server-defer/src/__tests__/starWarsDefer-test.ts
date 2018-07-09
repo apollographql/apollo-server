@@ -1,6 +1,5 @@
 import { isDeferredExecutionResult } from '../execute';
-import { toArray } from 'rxjs/operators';
-
+import { forAwaitEach, getAsyncIterator, isAsyncIterable } from 'iterall';
 import { StarWarsSchema } from './starWarsSchema';
 import { graphql } from './graphql';
 
@@ -29,16 +28,17 @@ describe('@defer Directive tests', () => {
               },
             },
           });
-          const patchesObserver = result.deferredPatchesObservable
-            .pipe(toArray())
-            .subscribe(patches => {
-              expect(patches.length).toBe(1);
-              expect(patches).toContainEqual({
-                path: ['hero', 'name'],
-                data: 'R2-D2',
-              });
-              done();
-            });
+
+          const patches = [];
+          await forAwaitEach(result.deferredPatches, patch => {
+            patches.push(patch);
+          });
+          expect(patches.length).toBe(1);
+          expect(patches).toContainEqual({
+            path: ['hero', 'name'],
+            data: 'R2-D2',
+          });
+          done();
         }
       } catch (error) {
         done(error);
@@ -69,16 +69,16 @@ describe('@defer Directive tests', () => {
               },
             },
           });
-          const patchesObserver = result.deferredPatchesObservable
-            .pipe(toArray())
-            .subscribe(patches => {
-              expect(patches.length).toBe(1);
-              expect(patches).toContainEqual({
-                data: { name: 'Light Saber', strength: 'High' },
-                path: ['human', 'weapon'],
-              });
-              done();
-            });
+          const patches = [];
+          await forAwaitEach(result.deferredPatches, patch => {
+            patches.push(patch);
+          });
+          expect(patches.length).toBe(1);
+          expect(patches).toContainEqual({
+            data: { name: 'Light Saber', strength: 'High' },
+            path: ['human', 'weapon'],
+          });
+          done();
         }
       } catch (error) {
         done(error);
@@ -110,24 +110,24 @@ describe('@defer Directive tests', () => {
               },
             },
           });
-          const patchesObserver = result.deferredPatchesObservable
-            .pipe(toArray())
-            .subscribe(patches => {
-              expect(patches.length).toBe(3);
-              expect(patches).toContainEqual({
-                path: ['hero', 'friends', 0, 'name'],
-                data: 'Luke Skywalker',
-              });
-              expect(patches).toContainEqual({
-                path: ['hero', 'friends', 1, 'name'],
-                data: 'Han Solo',
-              });
-              expect(patches).toContainEqual({
-                path: ['hero', 'friends', 2, 'name'],
-                data: 'Leia Organa',
-              });
-              done();
-            });
+          const patches = [];
+          await forAwaitEach(result.deferredPatches, patch => {
+            patches.push(patch);
+          });
+          expect(patches.length).toBe(3);
+          expect(patches).toContainEqual({
+            path: ['hero', 'friends', 0, 'name'],
+            data: 'Luke Skywalker',
+          });
+          expect(patches).toContainEqual({
+            path: ['hero', 'friends', 1, 'name'],
+            data: 'Han Solo',
+          });
+          expect(patches).toContainEqual({
+            path: ['hero', 'friends', 2, 'name'],
+            data: 'Leia Organa',
+          });
+          done();
         }
       } catch (error) {
         done(error);
@@ -159,20 +159,20 @@ describe('@defer Directive tests', () => {
               },
             },
           });
-          const patchesObserver = result.deferredPatchesObservable
-            .pipe(toArray())
-            .subscribe(patches => {
-              expect(patches.length).toBe(1);
-              expect(patches).toContainEqual({
-                path: ['hero', 'friends'],
-                data: [
-                  { name: 'Luke Skywalker' },
-                  { name: 'Han Solo' },
-                  { name: 'Leia Organa' },
-                ],
-              });
-              done();
-            });
+          const patches = [];
+          await forAwaitEach(result.deferredPatches, patch => {
+            patches.push(patch);
+          });
+          expect(patches.length).toBe(1);
+          expect(patches).toContainEqual({
+            path: ['hero', 'friends'],
+            data: [
+              { name: 'Luke Skywalker' },
+              { name: 'Han Solo' },
+              { name: 'Leia Organa' },
+            ],
+          });
+          done();
         }
       } catch (error) {
         done(error);
@@ -235,20 +235,20 @@ describe('@defer Directive tests', () => {
               },
             },
           });
-          const patchesObserver = result.deferredPatchesObservable
-            .pipe(toArray())
-            .subscribe(patches => {
-              expect(patches.length).toBe(12);
-              expect(patches).toContainEqual({
-                path: ['hero', 'friends', 0, 'friends', 0, 'name'],
-                data: 'Han Solo',
-              });
-              expect(patches).toContainEqual({
-                path: ['hero', 'appearsIn'],
-                data: ['NEWHOPE', 'EMPIRE', 'JEDI'],
-              });
-              done();
-            });
+          const patches = [];
+          await forAwaitEach(result.deferredPatches, patch => {
+            patches.push(patch);
+          });
+          expect(patches.length).toBe(12);
+          expect(patches).toContainEqual({
+            path: ['hero', 'friends', 0, 'friends', 0, 'name'],
+            data: 'Han Solo',
+          });
+          expect(patches).toContainEqual({
+            path: ['hero', 'appearsIn'],
+            data: ['NEWHOPE', 'EMPIRE', 'JEDI'],
+          });
+          done();
         }
       } catch (error) {
         done(error);
@@ -279,23 +279,23 @@ describe('@defer Directive tests', () => {
               },
             },
           });
-          const patchesObserver = result.deferredPatchesObservable
-            .pipe(toArray())
-            .subscribe(patches => {
-              expect(patches.length).toBe(2);
-              expect(patches).toContainEqual({
-                path: ['human', 'weapon'],
-                data: {
-                  strength: 'High',
-                  name: null,
-                },
-              });
-              expect(patches).toContainEqual({
-                path: ['human', 'weapon', 'name'],
-                data: 'Light Saber',
-              });
-              done();
-            });
+          const patches = [];
+          await forAwaitEach(result.deferredPatches, patch => {
+            patches.push(patch);
+          });
+          expect(patches.length).toBe(2);
+          expect(patches).toContainEqual({
+            path: ['human', 'weapon'],
+            data: {
+              strength: 'High',
+              name: null,
+            },
+          });
+          expect(patches).toContainEqual({
+            path: ['human', 'weapon', 'name'],
+            data: 'Light Saber',
+          });
+          done();
         }
       } catch (error) {
         done(error);
@@ -326,33 +326,33 @@ describe('@defer Directive tests', () => {
               },
             },
           });
-          const patchesObserver = result.deferredPatchesObservable
-            .pipe(toArray())
-            .subscribe(patches => {
-              expect(patches.length).toBe(4);
-              expect(patches).toContainEqual({
-                path: ['human', 'friends'],
-                data: [
-                  {
-                    id: '1000',
-                    name: null,
-                  },
-                  {
-                    id: '1003',
-                    name: null,
-                  },
-                  {
-                    id: '2001',
-                    name: null,
-                  },
-                ],
-              });
-              expect(patches).toContainEqual({
-                path: ['human', 'friends', 0, 'name'],
-                data: 'Luke Skywalker',
-              });
-              done();
-            });
+          const patches = [];
+          await forAwaitEach(result.deferredPatches, patch => {
+            patches.push(patch);
+          });
+          expect(patches.length).toBe(4);
+          expect(patches).toContainEqual({
+            path: ['human', 'friends'],
+            data: [
+              {
+                id: '1000',
+                name: null,
+              },
+              {
+                id: '1003',
+                name: null,
+              },
+              {
+                id: '2001',
+                name: null,
+              },
+            ],
+          });
+          expect(patches).toContainEqual({
+            path: ['human', 'friends', 0, 'name'],
+            data: 'Luke Skywalker',
+          });
+          done();
         }
       } catch (error) {
         done(error);
@@ -382,24 +382,24 @@ describe('@defer Directive tests', () => {
               },
             },
           });
-          const patchesObserver = result.deferredPatchesObservable
-            .pipe(toArray())
-            .subscribe(patches => {
-              expect(patches.length).toBe(1);
-              expect(JSON.stringify(patches[0])).toBe(
-                JSON.stringify({
+          const patches = [];
+          await forAwaitEach(result.deferredPatches, patch => {
+            patches.push(patch);
+          });
+          expect(patches.length).toBe(1);
+          expect(JSON.stringify(patches[0])).toBe(
+            JSON.stringify({
+              path: ['hero', 'secretBackstory'],
+              errors: [
+                {
+                  message: 'secretBackstory is secret.',
+                  locations: [{ line: 5, column: 13 }],
                   path: ['hero', 'secretBackstory'],
-                  errors: [
-                    {
-                      message: 'secretBackstory is secret.',
-                      locations: [{ line: 5, column: 13 }],
-                      path: ['hero', 'secretBackstory'],
-                    },
-                  ],
-                }),
-              );
-              done();
-            });
+                },
+              ],
+            }),
+          );
+          done();
         }
       } catch (error) {
         done(error);
@@ -430,63 +430,63 @@ describe('@defer Directive tests', () => {
               },
             },
           });
-          const patchesObserver = result.deferredPatchesObservable
-            .pipe(toArray())
-            .subscribe(patches => {
-              expect(patches.length).toBe(1);
-              expect(JSON.stringify(patches[0])).toBe(
-                JSON.stringify({
-                  path: ['hero', 'friends'],
-                  data: [
+          const patches = [];
+          await forAwaitEach(result.deferredPatches, patch => {
+            patches.push(patch);
+          });
+          expect(patches.length).toBe(1);
+          expect(JSON.stringify(patches[0])).toBe(
+            JSON.stringify({
+              path: ['hero', 'friends'],
+              data: [
+                {
+                  name: 'Luke Skywalker',
+                  secretBackstory: null,
+                },
+                {
+                  name: 'Han Solo',
+                  secretBackstory: null,
+                },
+                {
+                  name: 'Leia Organa',
+                  secretBackstory: null,
+                },
+              ],
+              errors: [
+                {
+                  message: 'secretBackstory is secret.',
+                  locations: [
                     {
-                      name: 'Luke Skywalker',
-                      secretBackstory: null,
-                    },
-                    {
-                      name: 'Han Solo',
-                      secretBackstory: null,
-                    },
-                    {
-                      name: 'Leia Organa',
-                      secretBackstory: null,
-                    },
-                  ],
-                  errors: [
-                    {
-                      message: 'secretBackstory is secret.',
-                      locations: [
-                        {
-                          line: 7,
-                          column: 15,
-                        },
-                      ],
-                      path: ['hero', 'friends', 0, 'secretBackstory'],
-                    },
-                    {
-                      message: 'secretBackstory is secret.',
-                      locations: [
-                        {
-                          line: 7,
-                          column: 15,
-                        },
-                      ],
-                      path: ['hero', 'friends', 1, 'secretBackstory'],
-                    },
-                    {
-                      message: 'secretBackstory is secret.',
-                      locations: [
-                        {
-                          line: 7,
-                          column: 15,
-                        },
-                      ],
-                      path: ['hero', 'friends', 2, 'secretBackstory'],
+                      line: 7,
+                      column: 15,
                     },
                   ],
-                }),
-              );
-              done();
-            });
+                  path: ['hero', 'friends', 0, 'secretBackstory'],
+                },
+                {
+                  message: 'secretBackstory is secret.',
+                  locations: [
+                    {
+                      line: 7,
+                      column: 15,
+                    },
+                  ],
+                  path: ['hero', 'friends', 1, 'secretBackstory'],
+                },
+                {
+                  message: 'secretBackstory is secret.',
+                  locations: [
+                    {
+                      line: 7,
+                      column: 15,
+                    },
+                  ],
+                  path: ['hero', 'friends', 2, 'secretBackstory'],
+                },
+              ],
+            }),
+          );
+          done();
         }
       } catch (error) {
         done(error);
@@ -550,35 +550,35 @@ describe('@defer Directive tests', () => {
           expect(result.initialResult).toEqual({
             data: { human: null },
           });
-          const patchesObserver = result.deferredPatchesObservable
-            .pipe(toArray())
-            .subscribe(patches => {
-              expect(patches.length).toBe(1);
-              expect(JSON.stringify(patches[0])).toBe(
-                JSON.stringify({
-                  path: ['human'],
-                  data: {
-                    id: '1001',
-                    name: 'Darth Vader',
-                    nonNullField: null,
-                  },
-                  errors: [
+          const patches = [];
+          await forAwaitEach(result.deferredPatches, patch => {
+            patches.push(patch);
+          });
+          expect(patches.length).toBe(1);
+          expect(JSON.stringify(patches[0])).toBe(
+            JSON.stringify({
+              path: ['human'],
+              data: {
+                id: '1001',
+                name: 'Darth Vader',
+                nonNullField: null,
+              },
+              errors: [
+                {
+                  message:
+                    'Cannot return null for non-nullable field Human.nonNullField.',
+                  locations: [
                     {
-                      message:
-                        'Cannot return null for non-nullable field Human.nonNullField.',
-                      locations: [
-                        {
-                          line: 6,
-                          column: 13,
-                        },
-                      ],
-                      path: ['human', 'nonNullField'],
+                      line: 6,
+                      column: 13,
                     },
                   ],
-                }),
-              );
-              done();
-            });
+                  path: ['human', 'nonNullField'],
+                },
+              ],
+            }),
+          );
+          done();
         }
       } catch (error) {
         done(error);
@@ -610,18 +610,18 @@ describe('@defer Directive tests', () => {
               },
             },
           });
-          const patchesObserver = result.deferredPatchesObservable
-            .pipe(toArray())
-            .subscribe(patches => {
-              expect(patches.length).toBe(1);
-              expect(JSON.stringify(patches[0])).toBe(
-                JSON.stringify({
-                  path: ['human', 'soulmate', 'name'],
-                  data: 'Darth Vader',
-                }),
-              );
-              done();
-            });
+          const patches = [];
+          await forAwaitEach(result.deferredPatches, patch => {
+            patches.push(patch);
+          });
+          expect(patches.length).toBe(1);
+          expect(JSON.stringify(patches[0])).toBe(
+            JSON.stringify({
+              path: ['human', 'soulmate', 'name'],
+              data: 'Darth Vader',
+            }),
+          );
+          done();
         }
       } catch (error) {
         done(error);

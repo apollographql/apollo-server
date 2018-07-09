@@ -15,7 +15,7 @@
   "dependencies": {
     "graphql-tag": "^2.9.2",
     "graphql-tools": "^3.0.4",
-    "rxjs": "^6.2.1"
+    "iterall": "^1.2.2"
   },
   "peerDependencies": {
     "graphql": "^0.12.0 || ^0.13.0 || ^14.0.0"
