@@ -13,7 +13,8 @@ import {
   parse,
 } from 'graphql';
 
-import { runQuery } from './runQuery';
+import { GraphQLResponse, runQuery } from './runQuery';
+import { isDeferredExecutionResult } from './execute';
 
 // Make the global Promise constructor Fiber-aware to simulate a Meteor
 // environment.
@@ -98,7 +99,8 @@ describe('runQuery', () => {
       queryString: query,
       request: new MockReq(),
     }).then(res => {
-      expect(res.data).to.deep.equal(expected);
+      expect(isDeferredExecutionResult(res)).to.be.false;
+      expect((res as GraphQLResponse).data).to.deep.equal(expected);
     });
   });
 
@@ -110,7 +112,8 @@ describe('runQuery', () => {
       parsedQuery: query,
       request: new MockReq(),
     }).then(res => {
-      expect(res.data).to.deep.equal(expected);
+      expect(isDeferredExecutionResult(res)).to.be.false;
+      expect((res as GraphQLResponse).data).to.deep.equal(expected);
     });
   });
 
@@ -123,9 +126,10 @@ describe('runQuery', () => {
       variables: { base: 1 },
       request: new MockReq(),
     }).then(res => {
-      expect(res.data).to.be.undefined;
-      expect(res.errors!.length).to.equal(1);
-      expect(res.errors![0].message).to.match(expected);
+      expect(isDeferredExecutionResult(res)).to.be.false;
+      expect((res as GraphQLResponse).data).to.be.undefined;
+      expect((res as GraphQLResponse).errors!.length).to.equal(1);
+      expect((res as GraphQLResponse).errors![0].message).to.match(expected);
     });
   });
 
@@ -167,9 +171,12 @@ describe('runQuery', () => {
       variables: { base: 1 },
       request: new MockReq(),
     }).then(res => {
-      expect(res.data).to.be.undefined;
-      expect(res.errors!.length).to.equal(1);
-      expect(res.errors![0].message).to.deep.equal(expected);
+      expect(isDeferredExecutionResult(res)).to.be.false;
+      expect((res as GraphQLResponse).data).to.be.undefined;
+      expect((res as GraphQLResponse).errors!.length).to.equal(1);
+      expect((res as GraphQLResponse).errors![0].message).to.deep.equal(
+        expected,
+      );
     });
   });
 
@@ -182,7 +189,8 @@ describe('runQuery', () => {
       rootValue: 'it also',
       request: new MockReq(),
     }).then(res => {
-      expect(res.data).to.deep.equal(expected);
+      expect(isDeferredExecutionResult(res)).to.be.false;
+      expect((res as GraphQLResponse).data).to.deep.equal(expected);
     });
   });
 
@@ -195,7 +203,8 @@ describe('runQuery', () => {
       context: { s: 'it still' },
       request: new MockReq(),
     }).then(res => {
-      expect(res.data).to.deep.equal(expected);
+      expect(isDeferredExecutionResult(res)).to.be.false;
+      expect((res as GraphQLResponse).data).to.deep.equal(expected);
     });
   });
 
@@ -212,7 +221,8 @@ describe('runQuery', () => {
       },
       request: new MockReq(),
     }).then(res => {
-      expect(res.data).to.deep.equal(expected);
+      expect(isDeferredExecutionResult(res)).to.be.false;
+      expect((res as GraphQLResponse).data).to.deep.equal(expected);
       expect(res['extensions']).to.equal('it still');
     });
   });
@@ -226,7 +236,8 @@ describe('runQuery', () => {
       variables: { base: 1 },
       request: new MockReq(),
     }).then(res => {
-      expect(res.data).to.deep.equal(expected);
+      expect(isDeferredExecutionResult(res)).to.be.false;
+      expect((res as GraphQLResponse).data).to.deep.equal(expected);
     });
   });
 
@@ -239,7 +250,10 @@ describe('runQuery', () => {
       queryString: query,
       request: new MockReq(),
     }).then(res => {
-      expect(res.errors![0].message).to.deep.equal(expected);
+      expect(isDeferredExecutionResult(res)).to.be.false;
+      expect((res as GraphQLResponse).errors![0].message).to.deep.equal(
+        expected,
+      );
     });
   });
 
@@ -249,7 +263,8 @@ describe('runQuery', () => {
       queryString: `{ testAwaitedValue }`,
       request: new MockReq(),
     }).then(res => {
-      expect(res.data).to.deep.equal({
+      expect(isDeferredExecutionResult(res)).to.be.false;
+      expect((res as GraphQLResponse).data).to.deep.equal({
         testAwaitedValue: 'it works',
       });
     });
@@ -272,7 +287,8 @@ describe('runQuery', () => {
       operationName: 'Q1',
       request: new MockReq(),
     }).then(res => {
-      expect(res.data).to.deep.equal(expected);
+      expect(isDeferredExecutionResult(res)).to.be.false;
+      expect((res as GraphQLResponse).data).to.deep.equal(expected);
     });
   });
 
@@ -292,7 +308,8 @@ describe('runQuery', () => {
       request: new MockReq(),
     });
 
-    expect(result1.data).to.deep.equal({
+    expect(isDeferredExecutionResult(result1)).to.be.false;
+    expect((result1 as GraphQLResponse).data).to.deep.equal({
       testObject: {
         testString: 'a very test string',
       },
@@ -306,7 +323,8 @@ describe('runQuery', () => {
       request: new MockReq(),
     });
 
-    expect(result2.data).to.deep.equal({
+    expect(isDeferredExecutionResult(result1)).to.be.false;
+    expect((result2 as GraphQLResponse).data).to.deep.equal({
       testObject: {
         testString: 'a very testful field resolver string',
       },
@@ -358,8 +376,8 @@ describe('runQuery', () => {
         extensions,
         request: new MockReq(),
       }).then(res => {
-        expect(res.data).to.deep.equal(expected);
-        expect(res.extensions).to.deep.equal({
+        expect((res as GraphQLResponse).data).to.deep.equal(expected);
+        expect((res as GraphQLResponse).extensions).to.deep.equal({
           customExtension: { foo: 'bar' },
         });
       });
