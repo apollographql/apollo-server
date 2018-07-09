@@ -2,6 +2,7 @@ import 'apollo-server-env';
 
 export { runQuery } from './runQuery';
 export { runHttpQuery, HttpQueryRequest, HttpQueryError } from './runHttpQuery';
+export { default as GraphQLDeferDirective } from './GraphQLDeferDirective';
 
 export {
   default as GraphQLOptions,
