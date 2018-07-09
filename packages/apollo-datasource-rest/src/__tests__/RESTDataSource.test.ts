@@ -301,6 +301,33 @@ describe('RESTDataSource', () => {
     );
   });
 
+  it('does not serialize a request body that is not an object', async () => {
+    const dataSource = new class extends RESTDataSource {
+      baseURL = 'https://api.example.com';
+
+      postFoo(foo) {
+        return this.post('foo', foo);
+      }
+    }();
+
+    dataSource.httpCache = httpCache;
+
+    fetch.mockJSONResponseOnce();
+
+    // Dumb FormData constructor
+    function FormData() {}
+    const form = new FormData();
+
+    await dataSource.postFoo(form);
+
+    expect(fetch.mock.calls.length).toEqual(1);
+    expect(fetch.mock.calls[0][0].url).toEqual('https://api.example.com/foo');
+    expect(fetch.mock.calls[0][0].body).not.toEqual('{}');
+    expect(fetch.mock.calls[0][0].headers.get('Content-Type')).not.toEqual(
+      'application/json',
+    );
+  });
+
   for (const method of ['GET', 'POST', 'PATCH', 'PUT', 'DELETE']) {
     const dataSource = new class extends RESTDataSource {
       baseURL = 'https://api.example.com';
