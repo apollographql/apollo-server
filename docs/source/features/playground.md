@@ -11,17 +11,10 @@ description: Visually exploring a Apollo Server
 
 ## Enabling Playground in Production
 
-To enable Playground in production, an integration package must be installed to provide more control over the middlewares used. The following example uses the express integration:
-
-```bash
-npm install --save apollo-server-express@rc graphql
-```
-
-Introspection and the gui can be enabled explicitly in the following manner.
+By default, Apollo Server disables introspection and GraphQL Playground in production. For some applications, it is possible to expose them in production. In those case, introspection and the gui can be enabled explicitly in the following manner.
 
 ```js line=8,16
-const { ApolloServer, gql } = require('apollo-server-express');
-const express = require('express');
+const { ApolloServer, gql } = require('apollo-server');
 const { typeDefs, resolvers } = require('./schema');
 
 const server = new ApolloServer({
@@ -30,11 +23,8 @@ const server = new ApolloServer({
   introspection: true,
 });
 
-const app = express();
-
 // gui accepts a Playground configuration
 server.applyMiddleware({
-  app,
   gui: true,
 });
 
