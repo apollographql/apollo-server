@@ -70,6 +70,8 @@ redirects:
     docs/guides/performance
   /docs/apollo-server/v2/features/apq.html:
     docs/guides/performance
+  /docs/apollo-server/v2/features/file-uploads.html:
+    docs/guides/file-uploads
 
 versioned-netlify-redirects:
   netlify_site_id: apollo-server-docs
