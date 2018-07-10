@@ -3,7 +3,7 @@ import {
   ValidationContext,
   GraphQLFieldResolver,
 } from 'graphql';
-import { PersistedQueryCache, HttpHeaderCalculation } from './caching';
+import { HttpHeaderCalculation } from './caching';
 import { GraphQLExtension } from 'graphql-extensions';
 import { CacheControlExtensionOptions } from 'apollo-cache-control';
 import { KeyValueCache } from 'apollo-server-caching';
@@ -59,7 +59,7 @@ export type DataSources<TContext> = {
 };
 
 export interface PersistedQueryOptions {
-  cache: PersistedQueryCache;
+  cache: KeyValueCache;
 }
 
 export default GraphQLServerOptions;

@@ -1,11 +1,6 @@
 import { ExecutionResult } from 'graphql';
 import { CacheControlFormat } from 'apollo-cache-control';
 
-export interface PersistedQueryCache {
-  set(key: string, data: string): Promise<any>;
-  get(key: string): Promise<string | null>;
-}
-
 export type HttpHeaderCalculation = (
   responses: Array<ExecutionResult & { extensions?: Record<string, any> }>,
 ) => Record<string, string>;

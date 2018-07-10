@@ -21,10 +21,6 @@ import {
   ExecutionParams,
 } from 'subscriptions-transport-ws';
 
-// use as default persisted query store
-import Keyv = require('keyv');
-import QuickLru = require('quick-lru');
-
 import { formatApolloErrors } from 'apollo-server-errors';
 import {
   GraphQLServerOptions as GraphQLOptions,
@@ -42,7 +38,6 @@ import {
 import { FormatErrorExtension } from './formatters';
 
 import { gql } from './index';
-import { PersistedQueryCache } from './caching';
 
 const NoIntrospection = (context: ValidationContext) => ({
   Field(node: FieldDefinitionNode) {
@@ -115,23 +110,19 @@ export class ApolloServerBase {
         : noIntro;
     }
 
+    if (!requestOptions.cache) {
+      requestOptions.cache = new InMemoryLRUCache();
+    }
+
     if (requestOptions.persistedQueries !== false) {
       if (!requestOptions.persistedQueries) {
-        // maxSize is the number of elements that can be stored inside of the cache
-        // https://github.com/withspectrum/spectrum has about 200 instances of gql`
-        // 300 queries seems reasonable
-        const lru = new QuickLru({ maxSize: 300 });
         requestOptions.persistedQueries = {
-          cache: new Keyv({ store: lru }) as PersistedQueryCache,
+          cache: requestOptions.cache!,
         };
       }
     } else {
       // the user does not want to use persisted queries, so we remove the field
       delete requestOptions.persistedQueries;
-    }
-
-    if (!requestOptions.cache) {
-      requestOptions.cache = new InMemoryLRUCache();
     }
 
     this.requestOptions = requestOptions as GraphQLOptions;
