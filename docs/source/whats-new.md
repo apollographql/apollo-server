@@ -44,7 +44,7 @@ This is just the beginning. We have published a [roadmap](https://github.com/apo
 
 ## Automatic Persisted Queries ([guide](https://www.apollographql.com/docs/guides/performance.html#Automatic-Persisted-Queries))
 
-A persisted query is an ID or hash that can be sent to the server in place of the GraphQL query string. This smaller signature reduces bandwidth utilization and speeds up client loading times. Apollo Server enables persisted queries without additional server configuration, using an in-memory LRU cache to store the mapping between hash an query string. This cache can be configured as shown in the following code snippet. To enable persisted queries on the client, follow the [Performance Guide](https://www.apollographql.com/docs/guides/performance.html#Automatic-Persisted-Queries).
+A persisted query is an ID or hash that can be sent to the server in place of the GraphQL query string. This smaller signature reduces bandwidth utilization and speeds up client loading times. Apollo Server enables persisted queries without additional server configuration, using an in-memory LRU cache to store the mapping between hash and query string. The persisted query cache can be configured as shown in the following code snippet. To enable persisted queries on the client, follow the [Performance Guide](https://www.apollographql.com/docs/guides/performance.html#Automatic-Persisted-Queries).
 
 ```js line=7-12
 const { ApolloServer } = require("apollo-server");
@@ -68,7 +68,7 @@ server.listen().then(({ url }) => {
 
 ## CDN Integration ([guide](https://www.apollographql.com/docs/guides/performance.html#CDN-Integration))
 
-Apollo Server works well with CDN by enabling the ability to cache full GraphQL query results. To enable this full response caching, Apollo Server provides `cache-control` headers that the CDN consumes to determine how long a request should be cached. A CDN paired with persisted queries is especially powerful, since requests can be sent with a HTTP GET. To enable a caching and a CDN in Apollo Server, follow the [Performance Guide](https://www.apollographql.com/docs/guides/performance.html#CDN-Integration).
+Apollo Server works well with a Content-Distribution Network to cache full GraphQL query results. Apollo Server provides `cache-control` headers that a CDN uses to determine how long a request should be cached. For subsequent requests, the result will be served directly from the CDN's cache. A CDN paired with Apollo Server's persisted queries is especially powerful, since GraphQL operations can be shortened and sent with a HTTP GET request. To enable caching and a CDN in Apollo Server, follow the [Performance Guide](https://www.apollographql.com/docs/guides/performance.html#CDN-Integration).
 
 ## [Apollo Errors](./features/errors.html)
 
