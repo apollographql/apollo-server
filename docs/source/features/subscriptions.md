@@ -188,14 +188,14 @@ For example: with an Express server already running on port 4000 that accepts Gr
 
 ```js line=12
 const http = require('http');
-const { ApolloServer } = require('apollo-server-express');
+const { ApolloServer } = require('apollo-server');
 const express = require('express');
 
 const PORT = 4000;
 const app = express();
 const server = new ApolloServer({ typeDefs, resolvers });
 
-server.applyMiddleware({app})
+server.applyMiddleware({ app })
 
 const httpServer = http.createServer(app);
 server.installSubscriptionHandlers(httpServer);

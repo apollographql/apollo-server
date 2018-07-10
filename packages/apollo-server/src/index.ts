@@ -5,9 +5,13 @@
 import * as express from 'express';
 import * as http from 'http';
 import * as net from 'net';
-import { ApolloServer as ApolloServerBase } from 'apollo-server-express';
+import {
+  ApolloServer as ApolloServerBase,
+  ServerRegistration as ExpressRegistration,
+} from 'apollo-server-express';
 
 export { GraphQLOptions, GraphQLExtension, gql } from 'apollo-server-core';
+export type ServerRegistration = Partial<ExpressRegistration>;
 
 export * from './exports';
 
@@ -23,6 +27,7 @@ export interface ServerInfo {
 
 export class ApolloServer extends ApolloServerBase {
   private httpServer: http.Server;
+  private app: express.Application;
 
   private createServerInfo(
     server: http.Server,
@@ -62,15 +67,18 @@ export class ApolloServer extends ApolloServerBase {
     return serverInfo;
   }
 
-  // Listen takes the same arguments as http.Server.listen.
-  public async listen(...opts: Array<any>): Promise<ServerInfo> {
+  public applyMiddleware(options: ServerRegistration) {
     // This class is the easy mode for people who don't create their own express
     // object, so we have to create it.
-    const app = express();
+    this.app = options.app || express();
+    options.app = this.app;
+    super.applyMiddleware(options as ExpressRegistration);
+  }
 
+  // Listen takes the same arguments as http.Server.listen.
+  public async listen(...opts: Array<any>): Promise<ServerInfo> {
     // provide generous values for the getting started experience
     this.applyMiddleware({
-      app,
       path: '/',
       bodyParserConfig: { limit: '50mb' },
       cors: {
@@ -78,7 +86,7 @@ export class ApolloServer extends ApolloServerBase {
       },
     });
 
-    this.httpServer = http.createServer(app);
+    this.httpServer = http.createServer(this.app);
 
     if (this.subscriptionServerOptions) {
       this.installSubscriptionHandlers(this.httpServer);
