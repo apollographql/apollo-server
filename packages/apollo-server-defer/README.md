@@ -139,6 +139,7 @@ This refers specifically to the errors that occur when streaming deferred fields
 #### Transport:
 
 - @defer requires a transport layer that is able to stream or push data to the client, like websockets or server side events. If the transport layer does not support this, Apollo Server should fallback to normal execution and ignore @defer, while providing a warning message on the console. 
+- Another approach is to look into upgrading `HttpLink` to accept multipart http responses. This is ideal, since it is lightweight compared to websockets, and requires the least amount of setup from the user. 
 - Note: Deferred queries are not able to be refetched in isolation. So links like apollo-link-retry and apollo-link-error might need to ignore patches for now.
 
 #### Restrictions on @defer usage:
@@ -147,11 +148,14 @@ This refers specifically to the errors that occur when streaming deferred fields
 
 - _Non-Nullable Types_: Deferring non-nullable types may lead to unexpected behavior when errors occur, since errors will propagate up to a nullable field. We do not want a deferred field to propagate errors up to its parent. The fields returned with the initial response should not be nulled by a deferred error - it makes things easier to reason about as all patches are strictly additive.
 
+- _Nesting_: @defer can be nested arbitrarily. For example, we can defer a list type, and defer a field on an object in the list. However, this brings up thorny issues about the order in which patches are returned - the patch for an outer object should be sent before the inner object, regardless of when they are resolved. This will simplify the logic for merging patches. 
+
 - _@defer should apply regardless of data availability_
 
   - Even if the deferred fields are available in memory immediately, it should not be sent with the initial response.
 
-    ```// For example, even if the entire "asset" is queried from
+    ```
+    // For example, even if the entire "asset" is queried from
     // the database as a single object, we still defer sending
     // the "reviews" field
     query {
