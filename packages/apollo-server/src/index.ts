@@ -7,7 +7,12 @@ import * as http from 'http';
 import * as net from 'net';
 import { ApolloServer as ApolloServerBase } from 'apollo-server-express';
 
-export { GraphQLOptions, GraphQLExtension, gql } from 'apollo-server-core';
+export {
+  GraphQLUpload,
+  GraphQLOptions,
+  GraphQLExtension,
+  gql,
+} from 'apollo-server-core';
 
 export * from './exports';
 
