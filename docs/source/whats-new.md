@@ -2,7 +2,7 @@
 title: What's new?
 ---
 
-This section of the Apollo Server docs is an announcement page where it is easy to find and share big changes to the ApolloServer package, or the Apollo server side ecosystem. For a more detailed list of changes, check out the [Changelog](https://github.com/apollographql/apollo-server/blob/version-2/CHANGELOG.md).
+This section of the Apollo Server docs is an announcement page where it is easy to find and share big changes to the ApolloServer package, or the Apollo server side ecosystem. For a more detailed list of changes, check out the [Changelog](https://github.com/apollographql/apollo-server/blob/version-2/CHANGELOG.md). To upgrade from Apollo Server 1, please follow the [migration guide](./migration-two-dot.html)
 
 ## 2.0
 
@@ -42,7 +42,35 @@ server.listen().then(({ url }) => {
 
 This is just the beginning. We have published a [roadmap](https://github.com/apollographql/apollo-server/blob/master/ROADMAP.md) for all of the features we will be bringing to Apollo Server soon and we would love your help! If you have any interest, you can get involved on [Github](https://github.com/apollographql/apollo-server) or by joining the [Apollo Slack](https://www.apollographql.com/slack) and going to the #apollo-server channel.
 
-## [Errors](./features/errors.html)
+## Automatic Persisted Queries ([guide](https://www.apollographql.com/docs/guides/performance.html#Automatic-Persisted-Queries))
+
+A persisted query is an ID or hash that can be sent to the server in place of the GraphQL query string. This smaller signature reduces bandwidth utilization and speeds up client loading times. Apollo Server enables persisted queries without additional server configuration, using an in-memory LRU cache to store the mapping between hash and query string. The persisted query cache can be configured as shown in the following code snippet. To enable persisted queries on the client, follow the [Performance Guide](https://www.apollographql.com/docs/guides/performance.html#Automatic-Persisted-Queries).
+
+```js line=7-12
+const { ApolloServer } = require("apollo-server");
+const { MemcachedCache } = require('apollo-server-memcached');
+
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  persistedQueries: {
+    cache: new MemcachedCache(
+      ['memcached-server-1', 'memcached-server-2', 'memcached-server-3'],
+      { retries: 10, retry: 10000 }, // Options
+    ),
+  },
+});
+
+server.listen().then(({ url }) => {
+  console.log(`🚀 Server ready at ${url}`)
+});
+```
+
+## CDN Integration ([guide](https://www.apollographql.com/docs/guides/performance.html#CDN-Integration))
+
+Apollo Server works well with a Content-Distribution Network to cache full GraphQL query results. Apollo Server provides `cache-control` headers that a CDN uses to determine how long a request should be cached. For subsequent requests, the result will be served directly from the CDN's cache. A CDN paired with Apollo Server's persisted queries is especially powerful, since GraphQL operations can be shortened and sent with a HTTP GET request. To enable caching and a CDN in Apollo Server, follow the [Performance Guide](https://www.apollographql.com/docs/guides/performance.html#CDN-Integration).
+
+## [Apollo Errors](./features/errors.html)
 
 Apollo Server provides the ability to add error codes to categorize errors that occur within resolvers. In addition to an error code, Apollo Server 2 passes error stack traces in development mode to enable a smoother getting started experience.
 
@@ -114,32 +142,6 @@ server.listen().then(({ url }) => {
 });
 ```
 
-## Health Checks
-
-The default Apollo server provides a health check endpoint at `/.well-known/apollo/server-health` that returns a 200 status code by default. If `onHealthCheck` is defined, the promise returned from the callback determines the status code. A successful resolution causes a 200 and rejection causes a 503. Health checks are often used by load balancers to determine if a server is available.
-
-```js
-const { ApolloServer, gql } = require('apollo-server');
-
-const typeDefs = gql``;
-const resolvers = {};
-
-const server = new ApolloServer({
-  typeDefs,
-  resolvers,
-  //optional parameter
-  onHealthCheck: () => new Promise((resolve, reject) => {
-    //database check or other asynchronous action
-  }),
-});
-
-
-server.listen().then(({ url }) => {
-  console.log(`🚀 Server ready at ${url}`);
-  console.log(`Try your health check at: ${url}.well-known/apollo/server-health`);
-});
-```
-
 ## [Performance Monitoring](./features/metrics.html)
 
 Apollo Server 2.0 enables GraphQL monitoring out of the box. It reports performance and error data out-of-band to Apollo Engine. And Apollo Engine displays information about every query and schema present in your GraphQL service.
@@ -168,7 +170,6 @@ server.listen().then(({ url }) => {
   console.log(`🚀  Server ready at ${url}`);
 });
 ```
-
 
 ## [GraphQL Playground](./features/playground.html)
 
@@ -303,3 +304,29 @@ setInterval(
 ```
 
 > Note: to disable subscriptions, set `subscriptions` to `false` in the options passed to `listen`
+
+## Health Checks
+
+The default Apollo server provides a health check endpoint at `/.well-known/apollo/server-health` that returns a 200 status code by default. If `onHealthCheck` is defined, the promise returned from the callback determines the status code. A successful resolution causes a 200 and rejection causes a 503. Health checks are often used by load balancers to determine if a server is available.
+
+```js
+const { ApolloServer, gql } = require('apollo-server');
+
+const typeDefs = gql``;
+const resolvers = {};
+
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  //optional parameter
+  onHealthCheck: () => new Promise((resolve, reject) => {
+    //database check or other asynchronous action
+  }),
+});
+
+
+server.listen().then(({ url }) => {
+  console.log(`🚀 Server ready at ${url}`);
+  console.log(`Try your health check at: ${url}.well-known/apollo/server-health`);
+});
+```
