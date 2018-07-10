@@ -1,7 +1,7 @@
 import * as lambda from 'aws-lambda';
 import { ApolloServerBase } from 'apollo-server-core';
 export { GraphQLOptions, GraphQLExtension } from 'apollo-server-core';
-import { GraphQLOptions } from 'apollo-server-core';
+import { GraphQLOptions, Config } from 'apollo-server-core';
 import {
   renderPlaygroundPage,
   RenderPageOptions as PlaygroundRenderPageOptions,
@@ -22,6 +22,19 @@ export interface CreateHandlerOptions {
 }
 
 export class ApolloServer extends ApolloServerBase {
+  // If you feel tempted to add an option to this constructor. Please consider
+  // another place, since the documentation becomes much more complicated when
+  // the constructor is not longer shared between all integration
+  constructor(options: Config) {
+    if (process.env.ENGINE_API_KEY || options.engine) {
+      options.engine = {
+        sendReportsImmediately: true,
+        ...(typeof options.engine !== 'boolean' ? options.engine : {}),
+      };
+    }
+    super(options);
+  }
+
   // This translates the arguments from the middleware into graphQL options It
   // provides typings for the integration specific behavior, ideally this would
   // be propagated with a generic to the super class
