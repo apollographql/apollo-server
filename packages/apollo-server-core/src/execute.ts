@@ -10,12 +10,7 @@
  * exported from `graphql.js` where possible.
  */
 
-import {
-  $$asyncIterator,
-  createAsyncIterator,
-  forEach,
-  isCollection,
-} from 'iterall';
+import { $$asyncIterator, forEach, isCollection } from 'iterall';
 import { GraphQLError, locatedError } from 'graphql/error';
 import invariant from 'graphql/jsutils/invariant';
 import isInvalid from 'graphql/jsutils/isInvalid';
@@ -73,6 +68,28 @@ function isPromise(
 ): maybePromise is Promise<any> {
   return maybePromise && typeof maybePromise.then === 'function';
 }
+
+/**
+ * Data that must be available at all points during query execution.
+ *
+ * Namely, schema of the type system that is currently executing,
+ * and the fragments defined in the query document.
+ *
+ * To enable defer support, the ExecutionContext is also used to store
+ * promises to patches, and deferred errors.
+ */
+export type ExecutionContext = {
+  schema: GraphQLSchema;
+  fragments: Record<string, FragmentDefinitionNode>;
+  rootValue: {};
+  contextValue: {};
+  operation: OperationDefinitionNode;
+  variableValues: { [variable: string]: {} };
+  fieldResolver: GraphQLFieldResolver<any, any>;
+  errors: Array<GraphQLError>;
+  patchDispatcher?: PatchDispatcher;
+  deferredErrors?: Record<string, GraphQLError[]>;
+};
 
 /**
  * Determines if a field should be deferred. @skip and @include has higher
@@ -140,41 +157,59 @@ function formatDataAsPatch(
 }
 
 /**
- * Uses the ExecutionContext to store an array of promises that resolves to
- * deferred patches. Using for-await-of loop will keep the order of the patches.
+ * Calls dispatch on the PatchDispatcher, creating it if it is not already
+ * instantiated.
  */
-function queuePatch(
+function dispatchPatch(
   exeContext: ExecutionContext,
   patch: Promise<ExecutionPatchResult>,
 ): void {
-  if (exeContext.deferredPatches) {
-    exeContext.deferredPatches.push(patch);
-  } else {
-    exeContext.deferredPatches = [patch];
+  if (!exeContext.patchDispatcher) {
+    exeContext.patchDispatcher = new PatchDispatcher();
   }
+  exeContext.patchDispatcher.dispatch(patch);
 }
 
 /**
- * Data that must be available at all points during query execution.
- *
- * Namely, schema of the type system that is currently executing,
- * and the fragments defined in the query document.
- *
- * To enable defer support, the ExecutionContext is also used to store
- * promises to patches, and deferred errors.
+ * Helper class that allows us to dispatch patches dynamically, and obtain an
+ * AsyncIterable that yields each patch in the order that they get resolved.
  */
-export type ExecutionContext = {
-  schema: GraphQLSchema;
-  fragments: Record<string, FragmentDefinitionNode>;
-  rootValue: {};
-  contextValue: {};
-  operation: OperationDefinitionNode;
-  variableValues: { [variable: string]: {} };
-  fieldResolver: GraphQLFieldResolver<any, any>;
-  errors: Array<GraphQLError>;
-  deferredPatches?: Array<Promise<ExecutionPatchResult>>;
-  deferredErrors?: Record<string, GraphQLError[]>;
-};
+class PatchDispatcher {
+  private resolvers: ((
+    { value: ExecutionPatchResult, done: boolean },
+  ) => void)[] = [];
+
+  private resultPromises: Promise<{
+    value: ExecutionPatchResult;
+    done: boolean;
+  }>[] = [];
+
+  public dispatch(promisedPatch: Promise<ExecutionPatchResult>): void {
+    promisedPatch.then(value => {
+      this.resolvers.shift()({ value, done: false });
+    });
+    this.resultPromises.push(
+      new Promise<{ value: ExecutionPatchResult; done: boolean }>(resolve => {
+        this.resolvers.push(resolve);
+      }),
+    );
+  }
+
+  public getAsyncIterable(): AsyncIterable<ExecutionPatchResult> {
+    const self = this;
+    return {
+      [$$asyncIterator]() {
+        return {
+          next() {
+            return (
+              self.resultPromises.shift() || Promise.resolve({ done: true })
+            );
+          },
+        };
+      },
+    } as any; // Typescript does not handle $$asyncIterator correctly
+  }
+}
 
 /**
  * Unchanged
@@ -289,14 +324,10 @@ function buildResponse(
     context.errors.length === 0 ? { data } : { errors: context.errors, data };
 
   // Return a DeferredExecutionResult if there are deferred fields
-  if (context.deferredPatches) {
+  if (context.patchDispatcher) {
     return {
       initialResult: result,
-      deferredPatches: {
-        [$$asyncIterator]() {
-          return createAsyncIterator(context.deferredPatches);
-        },
-      } as any, // Typescript checks are failing when using $$asyncIterator
+      deferredPatches: context.patchDispatcher.getAsyncIterable(),
     };
   } else {
     return result;
@@ -636,7 +667,7 @@ function completeValueCatchingError(
       const pathString = responsePathAsArray(path).toString();
 
       if (isPromise(completed)) {
-        queuePatch(
+        dispatchPatch(
           exeContext,
           completed.then(data => {
             // Fetch errors that should be returned with this patch
@@ -650,7 +681,7 @@ function completeValueCatchingError(
         const errors = exeContext.deferredErrors
           ? exeContext.deferredErrors[pathString]
           : undefined;
-        queuePatch(
+        dispatchPatch(
           exeContext,
           Promise.resolve(formatDataAsPatch(path, completed, errors)),
         );
@@ -769,7 +800,7 @@ function handleDeferredFieldError(
   if (shouldDeferNode(exeContext, fieldNodes[0])) {
     // If this node is itself deferred, then send errors with this patch
     const patch = formatDataAsPatch(path, undefined, [error]);
-    queuePatch(exeContext, Promise.resolve(patch));
+    dispatchPatch(exeContext, Promise.resolve(patch));
   }
 
   // If it is its parent that is deferred, errors should be returned with the
