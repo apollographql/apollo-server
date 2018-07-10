@@ -67,7 +67,7 @@ export function graphql(
   variableValues?: ObjMap<{}>,
   operationName?: string,
   fieldResolver?: GraphQLFieldResolver<any, any>,
-): Promise<ExecutionResult>;
+): Promise<ExecutionResult | DeferredExecutionResult>;
 export function graphql(
   argsOrSchema,
   source,
