@@ -7,6 +7,7 @@ export {
   ForbiddenError,
   UserInputError,
   GraphQLOptions,
+  GraphQLUpload,
   gql,
 } from 'apollo-server-core';
 

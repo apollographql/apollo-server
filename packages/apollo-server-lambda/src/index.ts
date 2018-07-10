@@ -1,4 +1,4 @@
-export { GraphQLOptions, gql } from 'apollo-server-core';
+export { GraphQLUpload, GraphQLOptions, gql } from 'apollo-server-core';
 
 export {
   ApolloError,
