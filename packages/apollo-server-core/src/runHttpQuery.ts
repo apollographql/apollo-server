@@ -217,7 +217,8 @@ export async function runHttpQuery(
 
         if (queryString === undefined) {
           queryString =
-            (await optionsObject.persistedQueries.cache.get(sha)) || undefined;
+            (await optionsObject.persistedQueries.cache.get(`apq:${sha}`)) ||
+            undefined;
           if (queryString) {
             persistedQueryHit = true;
           } else {
@@ -246,7 +247,10 @@ export async function runHttpQuery(
             // We do not wait on the cache storage to complete
             return (
               optionsObject.persistedQueries &&
-              optionsObject.persistedQueries.cache.set(sha, queryString)
+              optionsObject.persistedQueries.cache.set(
+                `apq:${sha}`,
+                queryString,
+              )
             );
           })().catch(error => {
             console.warn(error);
