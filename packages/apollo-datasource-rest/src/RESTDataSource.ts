@@ -48,6 +48,17 @@ export abstract class RESTDataSource<TContext = any> {
     }
   }
 
+  protected async didReceiveResponse<TResult = any>(
+    response: Response,
+  ): Promise<TResult> {
+    const contentType = response.headers.get('Content-Type');
+    if (contentType && contentType.startsWith('application/json')) {
+      return response.json();
+    } else {
+      return response.text() as Promise<any>;
+    }
+  }
+
   protected async didReceiveErrorResponse<TResult = any>(
     response: Response,
   ): Promise<TResult> {
@@ -156,13 +167,7 @@ export abstract class RESTDataSource<TContext = any> {
     return this.trace(`${options.method || 'GET'} ${url}`, async () => {
       const response = await this.httpCache.fetch(request);
       if (response.ok) {
-        const contentType = response.headers.get('Content-Type');
-
-        if (contentType && contentType.startsWith('application/json')) {
-          return response.json();
-        } else {
-          return response.text();
-        }
+        return this.didReceiveResponse(response);
       } else {
         return this.didReceiveErrorResponse(response);
       }
