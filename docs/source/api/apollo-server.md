@@ -88,7 +88,7 @@ new ApolloServer({
 
 * `cors`: <`Object` | `boolean`> ([apollo-server](https://github.com/expressjs/cors#cors))
 
-  Pass the integration-specific cors options. False removes the cors middleware and true uses the defaults. This option is only available to apollo-sever. For other server integrations, place `cors` inside of `applyMiddleware`.
+  Pass the integration-specific CORS options. `false` removes the CORS middleware and `true` uses the defaults. This option is only available to `apollo-server`. For other server integrations, place `cors` inside of `applyMiddleware`.
 
 #### Returns
 
