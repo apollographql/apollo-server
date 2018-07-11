@@ -17,7 +17,7 @@ import {
   PersistedQueryNotSupportedError,
   PersistedQueryNotFoundError,
 } from 'apollo-server-errors';
-import { calculateCacheControlHeaders, HttpHeaderCalculation } from './caching';
+import { calculateCacheControlHeaders } from './caching';
 
 export interface HttpQueryRequest {
   method: string;
@@ -104,7 +104,7 @@ export async function runHttpQuery(
     process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test';
   let cacheControl:
     | CacheControlExtensionOptions & {
-        calculateHttpHeaders: boolean | HttpHeaderCalculation;
+        calculateHttpHeaders: boolean;
         stripFormattedExtensions: boolean;
       }
     | undefined;
@@ -450,10 +450,7 @@ export async function runHttpQuery(
 
   if (cacheControl) {
     if (cacheControl.calculateHttpHeaders) {
-      const calculatedHeaders =
-        typeof cacheControl.calculateHttpHeaders === 'function'
-          ? cacheControl.calculateHttpHeaders(responses)
-          : calculateCacheControlHeaders(responses);
+      const calculatedHeaders = calculateCacheControlHeaders(responses);
 
       responseInit.headers = {
         ...responseInit.headers,

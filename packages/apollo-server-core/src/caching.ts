@@ -1,10 +1,6 @@
 import { ExecutionResult } from 'graphql';
 import { CacheControlFormat } from 'apollo-cache-control';
 
-export type HttpHeaderCalculation = (
-  responses: Array<ExecutionResult & { extensions?: Record<string, any> }>,
-) => Record<string, string>;
-
 export function calculateCacheControlHeaders(
   responses: Array<ExecutionResult & { extensions?: Record<string, any> }>,
 ): Record<string, string> {
