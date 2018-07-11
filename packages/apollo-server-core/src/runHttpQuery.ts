@@ -258,7 +258,11 @@ export async function runHttpQuery(
         }
       }
 
-      if (queryString && typeof queryString !== 'string') {
+      if (!queryString) {
+        throw new HttpQueryError(400, 'Must provide query string.');
+      }
+
+      if (typeof queryString !== 'string') {
         // Check for a common error first.
         if (queryString && (queryString as any).kind === 'Document') {
           throw new HttpQueryError(
