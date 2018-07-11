@@ -1,11 +1,6 @@
 import { ExecutionResult } from 'graphql';
 import { CacheControlFormat } from 'apollo-cache-control';
 
-export interface PersistedQueryCache {
-  set(key: string, data: string): Promise<any>;
-  get(key: string): Promise<string | null>;
-}
-
 export type HttpHeaderCalculation = (
   responses: Array<ExecutionResult & { extensions?: Record<string, any> }>,
 ) => Record<string, string>;
@@ -16,11 +11,7 @@ export function calculateCacheControlHeaders(
   let lowestMaxAge = Number.MAX_VALUE;
   let publicOrPrivate = 'public';
 
-  // Because of the early exit, we are unable to use forEach. While a reduce
-  // loop might be possible, a for loop is more readable
-  for (let i = 0; i < responses.length; i++) {
-    const response = responses[i];
-
+  for (const response of responses) {
     const cacheControl: CacheControlFormat =
       response.extensions && response.extensions.cacheControl;
 
@@ -38,8 +29,7 @@ export function calculateCacheControlHeaders(
     }
 
     const rootHints = new Set<string>();
-    for (let j = 0; j < cacheControl.hints.length; j++) {
-      const hint = cacheControl.hints[j];
+    for (const hint of cacheControl.hints) {
       if (hint.scope && hint.scope.toLowerCase() === 'private') {
         publicOrPrivate = 'private';
       }
@@ -66,7 +56,10 @@ export function calculateCacheControlHeaders(
 
     // If a root field inside of data does not have a cache hint, then we do not
     // cache the response
-    if (Object.keys(response.data).find(rootKey => !rootHints.has(rootKey))) {
+    if (
+      response.data &&
+      Object.keys(response.data).find(rootKey => !rootHints.has(rootKey))
+    ) {
       return {};
     }
   }

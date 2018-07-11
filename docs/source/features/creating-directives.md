@@ -60,6 +60,7 @@ type ExampleType {
 
 const server = new ApolloServer({
   typeDefs,
+  resolvers,
   schemaDirectives: {
     deprecated: DeprecatedDirective
   }
@@ -419,26 +420,28 @@ One drawback of this approach is that it does not guarantee fields will be wrapp
 Suppose you want to enforce a maximum length for a string-valued field:
 
 ```js
-const { ApolloServer, gql, SchemaDirectiveVisitor } = require("apollo-server");
+const { ApolloServer, gql, SchemaDirectiveVisitor } = require('apollo-server');
+const { GraphQLScalarType, GraphQLNonNull } = require('graphql');
 
 const typeDefs = gql`
-directive @length(max: Int) on FIELD_DEFINITION | INPUT_FIELD_DEFINITION
+  directive @length(max: Int) on FIELD_DEFINITION | INPUT_FIELD_DEFINITION
 
-type Query {
-  books: [Book]
-}
+  type Query {
+    books: [Book]
+  }
 
-type Book {
-  title: String @length(max: 50)
-}
+  type Book {
+    title: String @length(max: 50)
+  }
 
-type Mutation {
-  createBook(book: BookInput): Book
-}
+  type Mutation {
+    createBook(book: BookInput): Book
+  }
 
-input BookInput {
-  title: String! @length(max: 50)
-}`;
+  input BookInput {
+    title: String! @length(max: 50)
+  }
+`;
 
 class LengthDirective extends SchemaDirectiveVisitor {
   visitInputFieldDefinition(field) {
@@ -452,10 +455,13 @@ class LengthDirective extends SchemaDirectiveVisitor {
   // Replace field.type with a custom GraphQLScalarType that enforces the
   // length restriction.
   wrapType(field) {
-    if (field.type instanceof GraphQLNonNull &&
-        field.type.ofType instanceof GraphQLScalarType) {
+    if (
+      field.type instanceof GraphQLNonNull &&
+      field.type.ofType instanceof GraphQLScalarType
+    ) {
       field.type = new GraphQLNonNull(
-        new LimitedLengthType(field.type.ofType, this.args.max));
+        new LimitedLengthType(field.type.ofType, this.args.max),
+      );
     } else if (field.type instanceof GraphQLScalarType) {
       field.type = new LimitedLengthType(field.type, this.args.max);
     } else {
@@ -477,7 +483,7 @@ class LimitedLengthType extends GraphQLScalarType {
         value = type.serialize(value);
         assert.isAtMost(value.length, maxLength);
         return value;
-      }
+      },
 
       parseValue(value) {
         return type.parseValue(value);
@@ -485,16 +491,17 @@ class LimitedLengthType extends GraphQLScalarType {
 
       parseLiteral(ast) {
         return type.parseLiteral(ast);
-      }
+      },
     });
   }
 }
 
 const server = new ApolloServer({
   typeDefs,
+  resolvers,
   schemaDirectives: {
-    length: LengthDirective
-  }
+    length: LengthDirective,
+  },
 });
 
 server.listen().then(({ url }) => {
@@ -560,6 +567,7 @@ class UniqueIdDirective extends SchemaDirectiveVisitor {
 
 const server = new ApolloServer({
   typeDefs,
+  resolvers,
   schemaDirectives: {
     uniqueID: UniqueIdDirective
   }

@@ -21,10 +21,6 @@ import {
   ExecutionParams,
 } from 'subscriptions-transport-ws';
 
-// use as default persisted query store
-import Keyv = require('keyv');
-import QuickLru = require('quick-lru');
-
 import { formatApolloErrors } from 'apollo-server-errors';
 import {
   GraphQLServerOptions as GraphQLOptions,
@@ -62,7 +58,7 @@ const NoIntrospection = (context: ValidationContext) => ({
 });
 
 export class ApolloServerBase {
-  public subscriptionsPath: string;
+  public subscriptionsPath?: string;
   public graphqlPath: string = '/graphql';
   public requestOptions: Partial<GraphQLOptions<any>>;
 
@@ -118,23 +114,19 @@ export class ApolloServerBase {
         : noIntro;
     }
 
+    if (!requestOptions.cache) {
+      requestOptions.cache = new InMemoryLRUCache();
+    }
+
     if (requestOptions.persistedQueries !== false) {
       if (!requestOptions.persistedQueries) {
-        // maxSize is the number of elements that can be stored inside of the cache
-        // https://github.com/withspectrum/spectrum has about 200 instances of gql`
-        // 300 queries seems reasonable
-        const lru = new QuickLru({ maxSize: 300 });
         requestOptions.persistedQueries = {
-          cache: new Keyv({ store: lru }),
+          cache: requestOptions.cache!,
         };
       }
     } else {
       // the user does not want to use persisted queries, so we remove the field
       delete requestOptions.persistedQueries;
-    }
-
-    if (!requestOptions.cache) {
-      requestOptions.cache = new InMemoryLRUCache();
     }
 
     this.requestOptions = requestOptions as GraphQLOptions;
@@ -163,21 +155,28 @@ export class ApolloServerBase {
       }
     }
 
-    this.schema = schema
-      ? schema
-      : makeExecutableSchema({
-          // we add in the upload scalar, so that schemas that don't include it
-          // won't error when we makeExecutableSchema
-          typeDefs: this.uploadsConfig
-            ? [
-                gql`
-                  scalar Upload
-                `,
-              ].concat(typeDefs)
-            : typeDefs,
-          schemaDirectives,
-          resolvers,
-        });
+    if (schema) {
+      this.schema = schema;
+    } else {
+      if (!typeDefs) {
+        throw Error(
+          'Apollo Server requires either an existing schema or typeDefs',
+        );
+      }
+      this.schema = makeExecutableSchema({
+        // we add in the upload scalar, so that schemas that don't include it
+        // won't error when we makeExecutableSchema
+        typeDefs: this.uploadsConfig
+          ? [
+              gql`
+                scalar Upload
+              `,
+            ].concat(typeDefs)
+          : typeDefs,
+        schemaDirectives,
+        resolvers,
+      });
+    }
 
     if (mocks) {
       addMockFunctionsToSchema({
@@ -197,7 +196,7 @@ export class ApolloServerBase {
       this.extensions.push(
         () =>
           new FormatErrorExtension(
-            this.requestOptions.formatError,
+            this.requestOptions.formatError!,
             this.requestOptions.debug,
           ),
       );
@@ -208,7 +207,7 @@ export class ApolloServerBase {
         engine === true ? {} : engine,
       );
       // Let's keep this extension second so it wraps everything, except error formatting
-      this.extensions.push(() => this.engineReportingAgent.newExtension());
+      this.extensions.push(() => this.engineReportingAgent!.newExtension());
     }
 
     if (extensions) {

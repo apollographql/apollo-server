@@ -4,7 +4,7 @@ import { Request, Headers } from 'apollo-server-env';
 export function convertNodeHttpToRequest(req: IncomingMessage): Request {
   const headers = new Headers();
   Object.keys(req.headers).forEach(key => {
-    const values = req.headers[key];
+    const values = req.headers[key]!;
     if (Array.isArray(values)) {
       values.forEach(value => headers.append(key, value));
     } else {
@@ -12,7 +12,7 @@ export function convertNodeHttpToRequest(req: IncomingMessage): Request {
     }
   });
 
-  return new Request(req.url, {
+  return new Request(req.url!, {
     headers,
     method: req.method,
   });
