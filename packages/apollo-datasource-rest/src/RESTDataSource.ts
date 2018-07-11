@@ -180,7 +180,9 @@ export abstract class RESTDataSource<TContext = any> {
     if (
       options.body !== undefined &&
       options.body !== null &&
-      options.body.constructor === Object
+      (options.body.constructor === Object ||
+        ((options.body as any).toJSON &&
+          typeof (options.body as any).toJSON === 'function'))
     ) {
       options.body = JSON.stringify(options.body);
       options.headers.set('Content-Type', 'application/json');

@@ -278,7 +278,7 @@ describe('RESTDataSource', () => {
     );
   });
 
-  it('allows passing in a request body', async () => {
+  it('serializes a request body that is an object as JSON', async () => {
     const dataSource = new class extends RESTDataSource {
       baseURL = 'https://api.example.com';
 
@@ -301,6 +301,40 @@ describe('RESTDataSource', () => {
     );
   });
 
+  it('serializes a request body that has a toJSON method as JSON', async () => {
+    const dataSource = new class extends RESTDataSource {
+      baseURL = 'https://api.example.com';
+
+      postFoo(foo) {
+        return this.post('foo', foo);
+      }
+    }();
+
+    dataSource.httpCache = httpCache;
+
+    fetch.mockJSONResponseOnce();
+
+    class Model {
+      constructor(public baz: any) {}
+
+      toJSON() {
+        return {
+          foo: this.baz,
+        };
+      }
+    }
+    const model = new Model('bar');
+
+    await dataSource.postFoo(model);
+
+    expect(fetch.mock.calls.length).toEqual(1);
+    expect(fetch.mock.calls[0][0].url).toEqual('https://api.example.com/foo');
+    expect(fetch.mock.calls[0][0].body).toEqual(JSON.stringify({ foo: 'bar' }));
+    expect(fetch.mock.calls[0][0].headers.get('Content-Type')).toEqual(
+      'application/json',
+    );
+  });
+
   it('does not serialize a request body that is not an object', async () => {
     const dataSource = new class extends RESTDataSource {
       baseURL = 'https://api.example.com';
@@ -314,8 +348,7 @@ describe('RESTDataSource', () => {
 
     fetch.mockJSONResponseOnce();
 
-    // Dumb FormData constructor
-    function FormData() {}
+    class FormData {}
     const form = new FormData();
 
     await dataSource.postFoo(form);
