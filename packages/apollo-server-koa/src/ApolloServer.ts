@@ -17,17 +17,11 @@ import { processRequest as processFileUploads } from 'apollo-upload-server';
 export { GraphQLOptions, GraphQLExtension } from 'apollo-server-core';
 import { GraphQLOptions, FileUploadOptions } from 'apollo-server-core';
 
-// koa-bodyparser does not expose an Options interface so we infer the type here.
-// we can replace this when this PR get merged: https://github.com/DefinitelyTyped/DefinitelyTyped/pull/27047
-export type BodyParserOptions = typeof bodyParser extends (opts: infer U) => any
-  ? U
-  : never;
-
 export interface ServerRegistration {
   app: Koa;
   path?: string;
   cors?: corsMiddleware.Options | boolean;
-  bodyParserConfig?: BodyParserOptions | boolean;
+  bodyParserConfig?: bodyParser.Options | boolean;
   onHealthCheck?: (ctx: Koa.Context) => Promise<any>;
   disableHealthCheck?: boolean;
   gui?: boolean;
