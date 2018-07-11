@@ -140,7 +140,7 @@ export class ApolloServer extends ApolloServerBase {
       app.use(path, uploadsMiddleware);
     }
 
-    // Note: if you enable a gui in production and expect to be able to see your
+    // Note: if you enable playground in production and expect to be able to see your
     // schema, you'll need to manually specify `introspection: true` in the
     // ApolloServer constructor; by default, the introspection query is only
     // enabled in dev.

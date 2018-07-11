@@ -44,7 +44,6 @@ export class ApolloServer extends ApolloServerBase {
     return super.graphQLServerOptions({ event, context });
   }
 
-  // Added "= { gui: undefined }" to fix "module initialization error: TypeError"
   public createHandler({ cors }: CreateHandlerOptions = { cors: undefined }) {
     const corsHeaders = {};
 

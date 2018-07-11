@@ -2,10 +2,7 @@ import { ApolloServerBase, GraphQLOptions } from 'apollo-server-core';
 import { processRequest as processFileUploads } from 'apollo-upload-server';
 import { ServerResponse } from 'http';
 import { send } from 'micro';
-import {
-  renderPlaygroundPage,
-  MiddlewareOptions as PlaygroundMiddlewareOptions,
-} from 'graphql-playground-html';
+import { renderPlaygroundPage } from 'graphql-playground-html';
 import { parseAll } from 'accept';
 
 import { graphqlMicro } from './microApollo';
@@ -15,7 +12,6 @@ export interface ServerRegistration {
   path?: string;
   disableHealthCheck?: boolean;
   onHealthCheck?: (req: MicroRequest) => Promise<any>;
-  gui?: boolean | PlaygroundMiddlewareOptions;
 }
 
 export class ApolloServer extends ApolloServerBase {
@@ -33,7 +29,6 @@ export class ApolloServer extends ApolloServerBase {
     path,
     disableHealthCheck,
     onHealthCheck,
-    gui,
   }: ServerRegistration = {}) {
     return async (req, res) => {
       this.graphqlPath = path || '/graphql';
@@ -46,7 +41,7 @@ export class ApolloServer extends ApolloServerBase {
         disableHealthCheck,
         onHealthCheck,
       })) ||
-        this.handleGraphqlRequestsWithPlayground({ req, res, gui }) ||
+        this.handleGraphqlRequestsWithPlayground({ req, res }) ||
         (await this.handleGraphqlRequestsWithServer({ req, res })) ||
         send(res, 404, null);
     };
@@ -103,7 +98,7 @@ export class ApolloServer extends ApolloServerBase {
     return handled;
   }
 
-  // If the `gui` option is set, register a `graphql-playground` instance
+  // If the `playgroundOptions` are set, register a `graphql-playground` instance
   // (not available in production) that is then used to handle all
   // incoming GraphQL requests.
   private handleGraphqlRequestsWithPlayground({
@@ -112,7 +107,6 @@ export class ApolloServer extends ApolloServerBase {
   }: {
     req: MicroRequest;
     res: ServerResponse;
-    gui?: boolean | PlaygroundMiddlewareOptions;
   }): boolean {
     let handled = false;
 

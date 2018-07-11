@@ -11,11 +11,7 @@ export {
 // by the integration subclasses
 const playgroundVersion = '1.7.2';
 
-export type GuiOptions = {
-  playgroundOptions?: Partial<PlaygroundRenderPageOptions>;
-};
-
-export type GuiConfig = GuiOptions | boolean;
+export type PlaygroundConfig = Partial<PlaygroundRenderPageOptions> | boolean;
 
 export const defaultPlaygroundOptions = {
   version: playgroundVersion,
@@ -31,17 +27,18 @@ export const defaultPlaygroundOptions = {
 };
 
 export function createPlaygroundOptions(
-  gui: GuiConfig = {},
+  playground: PlaygroundConfig = {},
 ): PlaygroundRenderPageOptions | undefined {
   const isDev = process.env.NODE_ENV === 'production';
-  const enabled: boolean = typeof gui === 'boolean' ? gui : !isDev;
+  const enabled: boolean =
+    typeof playground === 'boolean' ? playground : !isDev;
 
   if (!enabled) {
     return undefined;
   }
 
   const playgroundOverrides =
-    typeof gui === 'boolean' ? {} : (gui && gui.playgroundOptions) || {};
+    typeof playground === 'boolean' ? {} : playground || {};
 
   const playgroundOptions: PlaygroundRenderPageOptions = {
     ...defaultPlaygroundOptions,

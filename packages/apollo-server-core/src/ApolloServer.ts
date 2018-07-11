@@ -90,7 +90,7 @@ export class ApolloServerBase {
       engine,
       subscriptions,
       uploads,
-      gui,
+      playground,
       ...requestOptions
     } = config;
 
@@ -240,7 +240,7 @@ export class ApolloServerBase {
       }
     }
 
-    this.playgroundOptions = createPlaygroundOptions(gui);
+    this.playgroundOptions = createPlaygroundOptions(playground);
   }
 
   // used by integrations to synchronize the path with subscriptions, some

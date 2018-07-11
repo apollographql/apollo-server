@@ -65,7 +65,6 @@ export class ApolloServer extends ApolloServerBase {
           await handleFileUploads(this.uploadsConfig)(request);
         }
 
-        // enableGUI takes precedence over the server tools setting
         if (this.playgroundOptions && request.method === 'get') {
           // perform more expensive content-type check only if necessary
           const accept = parseAll(request.headers);
@@ -139,7 +138,6 @@ export interface ServerRegistration {
   cors?: boolean | hapi.RouteOptionsCors;
   onHealthCheck?: (request: hapi.Request) => Promise<any>;
   disableHealthCheck?: boolean;
-  gui?: boolean;
   uploads?: boolean | Record<string, any>;
 }
 

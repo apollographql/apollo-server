@@ -98,7 +98,7 @@ describe('apollo-server-express', () => {
     // XXX Unclear why this would be something somebody would want (vs enabling
     // introspection without graphql-playground, which seems reasonable, eg you
     // have your own graphql-playground setup with a custom link)
-    it('can enable gui separately from introspection during production', async () => {
+    it('can enable playground separately from introspection during production', async () => {
       const INTROSPECTION_QUERY = `
   {
     __schema {
@@ -189,22 +189,20 @@ describe('apollo-server-express', () => {
         {
           typeDefs,
           resolvers,
-          gui: {
-            playgroundOptions: {
-              // https://github.com/apollographql/graphql-playground/blob/0e452d2005fcd26f10fbdcc4eed3b2e2af935e3a/packages/graphql-playground-html/src/render-playground-page.ts#L16-L24
-              // must be made partial
-              settings: {
-                'editor.theme': 'light',
+          playground: {
+            // https://github.com/apollographql/graphql-playground/blob/0e452d2005fcd26f10fbdcc4eed3b2e2af935e3a/packages/graphql-playground-html/src/render-playground-page.ts#L16-L24
+            // must be made partial
+            settings: {
+              'editor.theme': 'light',
+            } as any,
+            tabs: [
+              {
+                query: defaultQuery,
+              },
+              {
+                endpoint,
               } as any,
-              tabs: [
-                {
-                  query: defaultQuery,
-                },
-                {
-                  endpoint,
-                } as any,
-              ],
-            },
+            ],
           },
         },
         {},
@@ -239,7 +237,7 @@ describe('apollo-server-express', () => {
       });
     });
 
-    it('accepts gui options as a boolean', async () => {
+    it('accepts playground options as a boolean', async () => {
       const nodeEnv = process.env.NODE_ENV;
       delete process.env.NODE_ENV;
 
@@ -247,7 +245,7 @@ describe('apollo-server-express', () => {
         {
           typeDefs,
           resolvers,
-          gui: false,
+          playground: false,
         },
         {},
       );
