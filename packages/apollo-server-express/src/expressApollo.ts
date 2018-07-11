@@ -35,22 +35,37 @@ export function graphqlExpress(
     );
   }
 
-  const graphqlHandler = (
+  const graphqlHandler = async (
     req: express.Request,
     res: express.Response,
     next,
-  ): void => {
-    runHttpQuery([req, res], {
+  ) => {
+    const a = runHttpQuery([req, res], {
       method: req.method,
       options: options,
       query: req.method === 'POST' ? req.body : req.query,
       request: convertNodeHttpToRequest(req),
     }).then(
-      ({ graphqlResponse, responseInit }) => {
+      async ({ graphqlResponses, responseInit }) => {
         Object.keys(responseInit.headers).forEach(key =>
           res.setHeader(key, responseInit.headers[key]),
         );
-        res.write(graphqlResponse);
+        const isMultipart =
+          responseInit.headers['Content-Type'].indexOf('multipart/mixed') >= 0;
+
+        for await (let data of graphqlResponses) {
+          // Write the boundary if sending multipart data, according to:
+          // https://www.w3.org/Protocols/rfc1341/7_2_Multipart.html
+          if (isMultipart) {
+            res.write(data + '\r\n---\r\n'); // Simplest boundary
+          } else {
+            res.write(data);
+          }
+        }
+        // Finish up multipart with the last encapsulation boundary
+        if (isMultipart) {
+          res.write('\r\n---');
+        }
         res.end();
       },
       (error: HttpQueryError) => {
