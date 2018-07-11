@@ -14,7 +14,6 @@ import {
 
 import {
   execute,
-  DeferredExecutionResult,
   isDeferredExecutionResult,
   ExecutionPatchResult,
 } from './execute';
@@ -46,8 +45,18 @@ export interface GraphQLResponse {
 }
 
 export interface DeferredGraphQLResponse {
+  errors?: Array<GraphQLError & object>;
   initialResponse: GraphQLResponse;
   deferredPatches: AsyncIterable<ExecutionPatchResult>;
+}
+
+export function isDeferredGraphQLResponse(
+  result: any,
+): result is DeferredGraphQLResponse {
+  return (
+    (<DeferredGraphQLResponse>result).initialResponse !== undefined &&
+    (<DeferredGraphQLResponse>result).deferredPatches !== undefined
+  );
 }
 
 export interface QueryOptions {
@@ -228,7 +237,7 @@ function doRunQuery(
             if (validationErrors && validationErrors.length) {
               return Promise.resolve({
                 errors: validationErrors,
-              });
+              } as GraphQLResponse);
             }
           }
         }
@@ -259,7 +268,7 @@ function doRunQuery(
               // Options: PREPROCESSING_FAILED, GRAPHQL_RUNTIME_CHECK_FAILED
 
             errors: [fromGraphQLError(executionError)],
-          } as ExecutionResult| DeferredExecutionResult;
+          } as ExecutionResult ;
         })
         .then(result => {
           let executionResult: ExecutionResult;
@@ -267,8 +276,8 @@ function doRunQuery(
 
           if (isDeferredExecutionResult(result)) {
             // TODO: Deferred execution should be disabled if transport does not support it
-            executionResult = (result as DeferredExecutionResult).initialResult;
-            patches = (result as DeferredExecutionResult).deferredPatches;
+            executionResult = result.initialResult;
+            patches = result.deferredPatches;
           } else {
             executionResult = result;
           }let response: GraphQLResponse = {
@@ -292,11 +301,15 @@ function doRunQuery(
               response = options.formatResponse(response, options);
             }
 
-            return response;
-          });
-      },
-    )
-    .catch((err: Error) => {
+          if (isDeferredExecutionResult(result)) {
+            return {
+              initialResponse: response,
+              deferredPatches: patches,
+            };
+          } else {return response;}
+        });
+    },
+    ).catch((err: Error) => {
       // Handle the case of an internal server failure (or nonQueryError) ---
       // we're not returning a GraphQL response so we don't call
       // willSendResponse.
@@ -304,7 +317,17 @@ function doRunQuery(
       throw err;
     })
     .then((graphqlResponse: GraphQLResponse) => {
-      const response = extensionStack.willSendResponse({ graphqlResponse });
+      // TODO: For deferred queries, what do we want to present to the extension stack
+      let response;
+      if (isDeferredGraphQLResponse(graphqlResponse)) {
+        response = extensionStack.willSendResponse({
+          graphqlResponse: graphqlResponse.initialResponse,
+        });
+      } else {
+        response = extensionStack.willSendResponse({
+          graphqlResponse: graphqlResponse as GraphQLResponse,
+        });
+      }
       requestDidEnd();
       return response.graphqlResponse;
     });
