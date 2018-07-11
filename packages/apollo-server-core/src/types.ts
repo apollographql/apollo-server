@@ -8,7 +8,7 @@ export { GraphQLExtension } from 'graphql-extensions';
 import { EngineReportingOptions } from 'apollo-engine-reporting';
 
 import { GuiConfig } from './playground';
-export { GuiConfig, GuiOptions, ISettings, Tab } from './playground';
+export { GuiConfig, GuiOptions } from './playground';
 
 import {
   GraphQLServerOptions as GraphQLOptions,

@@ -109,17 +109,14 @@ export class ApolloServer extends ApolloServerBase {
   private handleGraphqlRequestsWithPlayground({
     req,
     res,
-    gui,
   }: {
     req: MicroRequest;
     res: ServerResponse;
     gui?: boolean | PlaygroundMiddlewareOptions;
   }): boolean {
     let handled = false;
-    const guiEnabled =
-      !!gui || (gui === undefined && process.env.NODE_ENV !== 'production');
 
-    if (guiEnabled && req.method === 'GET') {
+    if (this.playgroundOptions && req.method === 'GET') {
       const accept = parseAll(req.headers);
       const types = accept.mediaTypes as string[];
       const prefersHTML =
@@ -131,8 +128,7 @@ export class ApolloServer extends ApolloServerBase {
         const middlewareOptions = {
           endpoint: this.graphqlPath,
           subscriptionEndpoint: this.subscriptionsPath,
-          version: '1.7.0',
-          ...(typeof gui === 'boolean' ? {} : gui),
+          ...this.playgroundOptions,
         };
         send(res, 200, renderPlaygroundPage(middlewareOptions));
         handled = true;

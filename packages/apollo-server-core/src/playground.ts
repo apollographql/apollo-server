@@ -1,7 +1,8 @@
-import { RenderPageOptions as PlaygroundRenderPageOptions } from '@apollographql/graphql-playground-html/dist/render-playground-page';
+import {
+  RenderPageOptions as PlaygroundRenderPageOptions,
+  Theme,
+} from '@apollographql/graphql-playground-html/dist/render-playground-page';
 export {
-  ISettings,
-  Tab,
   RenderPageOptions as PlaygroundRenderPageOptions,
 } from '@apollographql/graphql-playground-html/dist/render-playground-page';
 
@@ -16,11 +17,11 @@ export type GuiOptions = {
 
 export type GuiConfig = GuiOptions | boolean;
 
-export const defaultPlaygroundOptions: PlaygroundRenderPageOptions = {
+export const defaultPlaygroundOptions = {
   version: playgroundVersion,
   settings: {
     'general.betaUpdates': false,
-    'editor.theme': 'dark',
+    'editor.theme': 'dark' as Theme,
     'editor.reuseHeaders': true,
     'tracing.hideTracingResponse': true,
     'editor.fontSize': 14,
@@ -30,7 +31,7 @@ export const defaultPlaygroundOptions: PlaygroundRenderPageOptions = {
 };
 
 export function createPlaygroundOptions(
-  gui: GuiConfig,
+  gui: GuiConfig = {},
 ): PlaygroundRenderPageOptions | undefined {
   const isDev = process.env.NODE_ENV === 'production';
   const enabled: boolean = typeof gui === 'boolean' ? gui : !isDev;
