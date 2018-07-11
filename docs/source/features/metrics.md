@@ -40,16 +40,12 @@ Apollo Server provides two ways to log a server: per input, response, and errors
 
 ### High Level Logging
 
-To log the inputs, response, and request, Apollo Server provides three methods: `formatParams`, `formatError`, and `formatResponse`. This example uses `console.log` to record the information, servers can use other more sophisticated tools.
+To log the inputs, response, and request, Apollo Server provides three methods: `formatError` and `formatResponse`. This example uses `console.log` to record the information, servers can use other more sophisticated tools.
 
 ```js
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  formatParams: params => {
-    console.log(params);
-    return params;
-  },
   formatError: error => {
     console.log(error);
     return error;
