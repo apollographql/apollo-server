@@ -2,10 +2,7 @@ import { ApolloServerBase, GraphQLOptions } from 'apollo-server-core';
 import { processRequest as processFileUploads } from 'apollo-upload-server';
 import { ServerResponse } from 'http';
 import { send } from 'micro';
-import {
-  renderPlaygroundPage,
-  MiddlewareOptions as PlaygroundMiddlewareOptions,
-} from 'graphql-playground-html';
+import { renderPlaygroundPage } from 'graphql-playground-html';
 import { parseAll } from 'accept';
 
 import { graphqlMicro } from './microApollo';
@@ -15,7 +12,6 @@ export interface ServerRegistration {
   path?: string;
   disableHealthCheck?: boolean;
   onHealthCheck?: (req: MicroRequest) => Promise<any>;
-  gui?: boolean | PlaygroundMiddlewareOptions;
 }
 
 export class ApolloServer extends ApolloServerBase {
@@ -33,7 +29,6 @@ export class ApolloServer extends ApolloServerBase {
     path,
     disableHealthCheck,
     onHealthCheck,
-    gui,
   }: ServerRegistration = {}) {
     return async (req, res) => {
       this.graphqlPath = path || '/graphql';
@@ -46,7 +41,7 @@ export class ApolloServer extends ApolloServerBase {
         disableHealthCheck,
         onHealthCheck,
       })) ||
-        this.handleGraphqlRequestsWithPlayground({ req, res, gui }) ||
+        this.handleGraphqlRequestsWithPlayground({ req, res }) ||
         (await this.handleGraphqlRequestsWithServer({ req, res })) ||
         send(res, 404, null);
     };
@@ -103,23 +98,19 @@ export class ApolloServer extends ApolloServerBase {
     return handled;
   }
 
-  // If the `gui` option is set, register a `graphql-playground` instance
+  // If the `playgroundOptions` are set, register a `graphql-playground` instance
   // (not available in production) that is then used to handle all
   // incoming GraphQL requests.
   private handleGraphqlRequestsWithPlayground({
     req,
     res,
-    gui,
   }: {
     req: MicroRequest;
     res: ServerResponse;
-    gui?: boolean | PlaygroundMiddlewareOptions;
   }): boolean {
     let handled = false;
-    const guiEnabled =
-      !!gui || (gui === undefined && process.env.NODE_ENV !== 'production');
 
-    if (guiEnabled && req.method === 'GET') {
+    if (this.playgroundOptions && req.method === 'GET') {
       const accept = parseAll(req.headers);
       const types = accept.mediaTypes as string[];
       const prefersHTML =
@@ -131,8 +122,7 @@ export class ApolloServer extends ApolloServerBase {
         const middlewareOptions = {
           endpoint: this.graphqlPath,
           subscriptionEndpoint: this.subscriptionsPath,
-          version: '1.7.0',
-          ...(typeof gui === 'boolean' ? {} : gui),
+          ...this.playgroundOptions,
         };
         send(res, 200, renderPlaygroundPage(middlewareOptions));
         handled = true;

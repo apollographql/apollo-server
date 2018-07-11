@@ -10,7 +10,6 @@ import {
 import { graphqlLambda } from './lambdaApollo';
 
 export interface CreateHandlerOptions {
-  gui?: boolean;
   cors?: {
     origin?: boolean | string | string[];
     methods?: string | string[];
@@ -45,13 +44,7 @@ export class ApolloServer extends ApolloServerBase {
     return super.graphQLServerOptions({ event, context });
   }
 
-  // Added "= { gui: undefined }" to fix "module initialization error: TypeError"
-  public createHandler(
-    { gui, cors }: CreateHandlerOptions = { gui: undefined, cors: undefined },
-  ) {
-    const guiEnabled =
-      !!gui || (gui === undefined && process.env.NODE_ENV !== 'production');
-
+  public createHandler({ cors }: CreateHandlerOptions = { cors: undefined }) {
     const corsHeaders = {};
 
     if (cors) {
@@ -111,12 +104,12 @@ export class ApolloServer extends ApolloServerBase {
         }
       }
 
-      if (guiEnabled && event.httpMethod === 'GET') {
+      if (this.playgroundOptions && event.httpMethod === 'GET') {
         const acceptHeader = event.headers['Accept'] || event.headers['accept'];
         if (acceptHeader && acceptHeader.includes('text/html')) {
           const playgroundRenderPageOptions: PlaygroundRenderPageOptions = {
             endpoint: event.requestContext.path,
-            version: this.playgroundVersion,
+            ...this.playgroundOptions,
           };
 
           return callback(null, {

@@ -3,8 +3,12 @@ import { SchemaDirectiveVisitor, IResolvers, IMocks } from 'graphql-tools';
 import { ConnectionContext } from 'subscriptions-transport-ws';
 import * as WebSocket from 'ws';
 import { GraphQLExtension } from 'graphql-extensions';
-import { EngineReportingOptions } from 'apollo-engine-reporting';
 export { GraphQLExtension } from 'graphql-extensions';
+
+import { EngineReportingOptions } from 'apollo-engine-reporting';
+
+import { PlaygroundConfig } from './playground';
+export { PlaygroundConfig, PlaygroundRenderPageOptions } from './playground';
 
 import {
   GraphQLServerOptions as GraphQLOptions,
@@ -59,6 +63,7 @@ export interface Config
   subscriptions?: Partial<SubscriptionServerOptions> | string | false;
   //https://github.com/jaydenseric/apollo-upload-server#options
   uploads?: boolean | FileUploadOptions;
+  playground?: PlaygroundConfig;
 }
 
 export interface FileUploadOptions {
@@ -68,10 +73,4 @@ export interface FileUploadOptions {
   maxFileSize?: number;
   //Max allowed number of files (default: Infinity).
   maxFiles?: number;
-}
-
-export interface MiddlewareOptions {
-  path?: string;
-  gui?: boolean;
-  subscriptions?: boolean;
 }
