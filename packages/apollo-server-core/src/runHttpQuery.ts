@@ -1,7 +1,6 @@
 import { ExecutionResult } from 'graphql';
 const sha256 = require('hash.js/lib/hash/sha/256');
 
-import { HTTPCache } from 'apollo-datasource-rest';
 import { CacheControlExtensionOptions } from 'apollo-cache-control';
 
 import { omit } from 'lodash';
@@ -338,12 +337,8 @@ export async function runHttpQuery(
       if (optionsObject.dataSources) {
         const dataSources = optionsObject.dataSources() || {};
 
-        // we use the cache provided to the request and add the Http semantics on top
-        const httpCache = new HTTPCache(optionsObject.cache);
-
         for (const dataSource of Object.values(dataSources)) {
-          dataSource.context = context;
-          (dataSource as any).httpCache = httpCache;
+          dataSource.initialize(context, optionsObject.cache!);
         }
 
         if ('dataSources' in context) {

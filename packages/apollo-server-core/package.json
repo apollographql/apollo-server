@@ -30,7 +30,7 @@
   "dependencies": {
     "@types/ws": "^5.1.2",
     "apollo-cache-control": "^0.2.0-rc.0",
-    "apollo-datasource-rest": "^2.0.0-rc.7",
+    "apollo-datasource": "^2.0.0-rc.7",
     "apollo-engine-reporting": "^0.0.0-rc.1",
     "apollo-server-caching": "^2.0.0-rc.7",
     "apollo-server-env": "^2.0.0-rc.7",

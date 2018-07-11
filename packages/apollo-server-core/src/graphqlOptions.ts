@@ -7,6 +7,7 @@ import { HttpHeaderCalculation } from './caching';
 import { GraphQLExtension } from 'graphql-extensions';
 import { CacheControlExtensionOptions } from 'apollo-cache-control';
 import { KeyValueCache } from 'apollo-server-caching';
+import { DataSource } from 'apollo-datasource';
 
 /*
  * GraphQLServerOptions
@@ -48,10 +49,6 @@ export interface GraphQLServerOptions<
   dataSources?: () => DataSources<TContext>;
   cache?: KeyValueCache;
   persistedQueries?: PersistedQueryOptions;
-}
-
-export interface DataSource<TContext> {
-  context: TContext;
 }
 
 export type DataSources<TContext> = {
