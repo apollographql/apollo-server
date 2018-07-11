@@ -86,6 +86,10 @@ new ApolloServer({
 
   The persisted queries option can be set to an object containing a `cache` field, which will be used to store the mapping between hash and query string.
 
+* `cors`: <`Object` | `boolean`> ([apollo-server](https://github.com/expressjs/cors#cors))
+
+  Pass the integration-specific CORS options. `false` removes the CORS middleware and `true` uses the defaults. This option is only available to `apollo-server`. For other server integrations, place `cors` inside of `applyMiddleware`.
+
 #### Returns
 
 `ApolloServer`

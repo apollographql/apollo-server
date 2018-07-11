@@ -5,14 +5,21 @@
 import * as express from 'express';
 import * as http from 'http';
 import * as net from 'net';
-import { ApolloServer as ApolloServerBase } from 'apollo-server-express';
+import {
+  ApolloServer as ApolloServerBase,
+  CorsOptions,
+} from 'apollo-server-express';
+import { Config } from 'apollo-server-core';
 
 export {
   GraphQLUpload,
   GraphQLOptions,
   GraphQLExtension,
   gql,
+  Config,
 } from 'apollo-server-core';
+
+export { CorsOptions } from 'apollo-server-express';
 
 export * from './exports';
 
@@ -27,7 +34,13 @@ export interface ServerInfo {
 }
 
 export class ApolloServer extends ApolloServerBase {
-  private httpServer: http.Server;
+  private httpServer!: http.Server;
+  private cors?: CorsOptions | boolean;
+
+  constructor(config: Config & { cors?: CorsOptions | boolean }) {
+    super(config);
+    this.cors = config && config.cors;
+  }
 
   private createServerInfo(
     server: http.Server,
@@ -78,9 +91,12 @@ export class ApolloServer extends ApolloServerBase {
       app,
       path: '/',
       bodyParserConfig: { limit: '50mb' },
-      cors: {
-        origin: '*',
-      },
+      cors:
+        typeof this.cors !== 'undefined'
+          ? this.cors
+          : {
+              origin: '*',
+            },
     });
 
     this.httpServer = http.createServer(app);

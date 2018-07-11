@@ -102,6 +102,26 @@ describe('apollo-server', () => {
       await apolloFetch({ query: '{hello}' });
     });
 
+    it('configures cors', async () => {
+      server = new ApolloServer({
+        typeDefs,
+        resolvers,
+        cors: { origin: 'localhost' },
+      });
+
+      const { url: uri } = await server.listen();
+
+      const apolloFetch = createApolloFetch({ uri }).useAfter(
+        (response, next) => {
+          expect(
+            response.response.headers.get('access-control-allow-origin'),
+          ).to.equal('localhost');
+          next();
+        },
+      );
+      await apolloFetch({ query: '{hello}' });
+    });
+
     it('creates a healthcheck endpoint', async () => {
       server = new ApolloServer({
         typeDefs,
