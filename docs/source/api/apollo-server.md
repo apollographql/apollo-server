@@ -49,9 +49,9 @@ new ApolloServer({
 
   Enables and disables schema introspection
 
-* `gui`: <`Boolean`> | <`Object`>
+* `playground`: <`Boolean`> | <`Object`>
 
-  Enables and disables gui and allows configuration of GraphQL playground under the `playgroundOptions` field. The options can be found on GraphQL Playground's [documentation](https://github.com/prismagraphql/graphql-playground/#usage)
+  Enables and disables playground and allows configuration of GraphQL Playground. The options can be found on GraphQL Playground's [documentation](https://github.com/prismagraphql/graphql-playground/#usage)
 
 * `debug`: <`Boolean`>
 
