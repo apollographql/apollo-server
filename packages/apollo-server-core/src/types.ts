@@ -37,7 +37,6 @@ export interface Config
       | 'formatError'
       | 'debug'
       | 'rootValue'
-      | 'formatParams'
       | 'validationRules'
       | 'formatResponse'
       | 'fieldResolver'
