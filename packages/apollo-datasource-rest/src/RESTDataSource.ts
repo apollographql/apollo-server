@@ -10,6 +10,7 @@ import {
 } from 'apollo-server-env';
 
 import { HTTPCache } from './HTTPCache';
+
 import {
   ApolloError,
   AuthenticationError,
@@ -50,29 +51,52 @@ export abstract class RESTDataSource<TContext = any> {
 
   protected async didReceiveResponse<TResult = any>(
     response: Response,
+    _request: Request,
   ): Promise<TResult> {
+    if (response.ok) {
+      return (this.parseBody(response) as any) as Promise<TResult>;
+    } else {
+      throw await this.errorFromResponse(response);
+    }
+  }
+
+  protected didEncounterError(error: Error, _request: Request) {
+    throw error;
+  }
+
+  protected parseBody(response: Response): Promise<object | string> {
     const contentType = response.headers.get('Content-Type');
     if (contentType && contentType.startsWith('application/json')) {
       return response.json();
     } else {
-      return response.text() as Promise<any>;
+      return response.text();
     }
   }
 
-  protected async didReceiveErrorResponse<TResult = any>(
-    response: Response,
-  ): Promise<TResult> {
-    const message = `${response.status} ${
-      response.statusText
-    }: ${await response.text()}`;
+  protected async errorFromResponse(response: Response) {
+    const message = `${response.status}: ${response.statusText}`;
 
+    let error: ApolloError;
     if (response.status === 401) {
-      throw new AuthenticationError(message);
+      error = new AuthenticationError(message);
     } else if (response.status === 403) {
-      throw new ForbiddenError(message);
+      error = new ForbiddenError(message);
     } else {
-      throw new ApolloError(message);
+      error = new ApolloError(message);
     }
+
+    const body = await this.parseBody(response);
+
+    Object.assign(error.extensions, {
+      response: {
+        url: response.url,
+        status: response.status,
+        statusText: response.statusText,
+        body,
+      },
+    });
+
+    return error;
   }
 
   protected async get<TResult = any>(
@@ -165,11 +189,11 @@ export abstract class RESTDataSource<TContext = any> {
     const request = new Request(String(url), options);
 
     return this.trace(`${options.method || 'GET'} ${url}`, async () => {
-      const response = await this.httpCache.fetch(request);
-      if (response.ok) {
-        return this.didReceiveResponse(response);
-      } else {
-        return this.didReceiveErrorResponse(response);
+      try {
+        const response = await this.httpCache.fetch(request);
+        return this.didReceiveResponse(response, request);
+      } catch (error) {
+        this.didEncounterError(error, request);
       }
     });
   }
