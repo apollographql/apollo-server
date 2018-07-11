@@ -5,11 +5,11 @@ subtitle: Adding subscriptions to Apollo Server
 
 Subscriptions are GraphQL operations that watch events emitted from Apollo Server.
 The native Apollo Server supports GraphQL subscriptions without additional configuration.
-All integration that allow HTTP servers, such as express and Hapi, also provide GraphQL subscriptions.
+All integrations that allow HTTP servers, such as express and Hapi, also provide GraphQL subscriptions.
 
 ## Subscriptions Example
 
-Subscriptions depend on use a publish and subscribe primitive to generate the events that notify a subscription. `PubSub` is a factory that creates event generators that is provided by all supported packages. `PubSub` is an implementation of the `PubSubEngine` interface, which has been adopted by a variety of additional [event-generating backends](#PubSub-Implementations).
+Subscriptions depend on use of a publish and subscribe primitive to generate the events that notify a subscription. `PubSub` is a factory that creates event generators that is provided by all supported packages. `PubSub` is an implementation of the `PubSubEngine` interface, which has been adopted by a variety of additional [event-generating backends](#PubSub-Implementations).
 
 ```js
 const { PubSub } = require('apollo-server');
