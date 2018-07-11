@@ -10,11 +10,7 @@ import * as fs from 'fs';
 import { createApolloFetch } from 'apollo-fetch';
 
 import { gql, AuthenticationError, Config } from 'apollo-server-core';
-import {
-  ApolloServer,
-  defaultGuiOptions,
-  ServerRegistration,
-} from './ApolloServer';
+import { ApolloServer, ServerRegistration } from './ApolloServer';
 
 import {
   testApolloServer,
@@ -183,96 +179,6 @@ describe('apollo-server-express', () => {
       });
     });
 
-    it('accepts dynamic partial GraphQL Playground Options', async () => {
-      const nodeEnv = process.env.NODE_ENV;
-      delete process.env.NODE_ENV;
-
-      const { url } = await createServer(
-        {
-          typeDefs,
-          resolvers,
-        },
-        {
-          gui: req => {
-            if (!!req.get('Foo')) {
-              return defaultGuiOptions;
-            } else {
-              return false;
-            }
-          },
-        },
-      );
-
-      return new Promise<http.Server>((resolve, reject) => {
-        request(
-          {
-            url,
-            method: 'GET',
-            headers: {
-              accept:
-                'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
-              Fool: 'bar',
-            },
-          },
-          (error, response, body) => {
-            process.env.NODE_ENV = nodeEnv;
-            if (error) {
-              reject(error);
-            } else {
-              expect(body).not.to.contain('GraphQLPlayground');
-              expect(response.statusCode).not.to.equal(200);
-              resolve();
-            }
-          },
-        );
-      });
-    });
-
-    it('accepts dynamic partial GraphQL Playground Options 2', async () => {
-      const nodeEnv = process.env.NODE_ENV;
-      delete process.env.NODE_ENV;
-
-      const { url } = await createServer(
-        {
-          typeDefs,
-          resolvers,
-        },
-        {
-          gui: req => {
-            if (!!req.get('Foo')) {
-              return defaultGuiOptions;
-            } else {
-              return false;
-            }
-          },
-        },
-      );
-
-      return new Promise<http.Server>((resolve, reject) => {
-        request(
-          {
-            url,
-            method: 'GET',
-            headers: {
-              accept:
-                'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
-              Foo: 'bar',
-            },
-          },
-          (error, response, body) => {
-            process.env.NODE_ENV = nodeEnv;
-            if (error) {
-              reject(error);
-            } else {
-              expect(body).to.contain('GraphQLPlayground');
-              expect(response.statusCode).to.equal(200);
-              resolve();
-            }
-          },
-        );
-      });
-    });
-
     it('accepts partial GraphQL Playground Options', async () => {
       const nodeEnv = process.env.NODE_ENV;
       delete process.env.NODE_ENV;
@@ -283,22 +189,25 @@ describe('apollo-server-express', () => {
         {
           typeDefs,
           resolvers,
-        },
-        {
           gui: {
-            playgroundThemeOptions: {
-              'editor.theme': 'light',
+            playgroundOptions: {
+              // https://github.com/apollographql/graphql-playground/blob/0e452d2005fcd26f10fbdcc4eed3b2e2af935e3a/packages/graphql-playground-html/src/render-playground-page.ts#L16-L24
+              // must be made partial
+              settings: {
+                'editor.theme': 'light',
+              } as any,
+              tabs: [
+                {
+                  query: defaultQuery,
+                },
+                {
+                  endpoint,
+                } as any,
+              ],
             },
-            playgroundTabOptions: [
-              {
-                query: defaultQuery,
-              },
-              {
-                endpoint,
-              },
-            ],
           },
         },
+        {},
       );
 
       return new Promise<http.Server>((resolve, reject) => {
@@ -338,10 +247,9 @@ describe('apollo-server-express', () => {
         {
           typeDefs,
           resolvers,
-        },
-        {
           gui: false,
         },
+        {},
       );
 
       return new Promise<http.Server>((resolve, reject) => {

@@ -22,6 +22,8 @@ export {
 
 export { convertNodeHttpToRequest } from './nodeHttpToRequest';
 
+export { createPlaygroundOptions } from './playground';
+
 // ApolloServer Base class
 export { ApolloServerBase } from './ApolloServer';
 export * from './types';

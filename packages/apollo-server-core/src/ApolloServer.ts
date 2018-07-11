@@ -43,6 +43,11 @@ import { FormatErrorExtension } from './formatters';
 
 import { gql } from './index';
 
+import {
+  createPlaygroundOptions,
+  PlaygroundRenderPageOptions,
+} from './playground';
+
 const NoIntrospection = (context: ValidationContext) => ({
   Field(node: FieldDefinitionNode) {
     if (node.name.value === '__schema' || node.name.value === '__type') {
@@ -68,13 +73,11 @@ export class ApolloServerBase {
   protected subscriptionServerOptions?: SubscriptionServerOptions;
   protected uploadsConfig?: FileUploadOptions;
 
-  // This specifies the version of GraphQL Playground that will be served
-  // from graphql-playground-html, and is passed to renderPlaygroundPage
-  // by the integration subclasses
-  protected playgroundVersion = '1.7.1';
-
   // set by installSubscriptionHandlers.
   private subscriptionServer?: SubscriptionServer;
+
+  // the default version is specified in playground.ts
+  protected playgroundOptions?: PlaygroundRenderPageOptions;
 
   // The constructor should be universal across all environments. All environment specific behavior should be set by adding or overriding methods
   constructor(config: Config) {
@@ -91,6 +94,7 @@ export class ApolloServerBase {
       engine,
       subscriptions,
       uploads,
+      gui,
       ...requestOptions
     } = config;
 
@@ -236,6 +240,8 @@ export class ApolloServerBase {
         );
       }
     }
+
+    this.playgroundOptions = createPlaygroundOptions(gui);
   }
 
   // used by integrations to synchronize the path with subscriptions, some
