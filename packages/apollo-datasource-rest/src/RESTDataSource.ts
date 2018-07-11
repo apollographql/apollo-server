@@ -179,8 +179,8 @@ export abstract class RESTDataSource<TContext = any> {
     // We accept arbitrary objects as body and serialize them as JSON
     if (
       options.body !== undefined &&
-      typeof options.body !== 'string' &&
-      !(options.body instanceof ArrayBuffer)
+      options.body !== null &&
+      options.body.constructor === Object
     ) {
       options.body = JSON.stringify(options.body);
       options.headers.set('Content-Type', 'application/json');
