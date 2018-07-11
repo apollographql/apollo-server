@@ -5,8 +5,10 @@
 import * as express from 'express';
 import * as http from 'http';
 import * as net from 'net';
-import { CorsOptions } from 'cors';
-import { ApolloServer as ApolloServerBase } from 'apollo-server-express';
+import {
+  ApolloServer as ApolloServerBase,
+  CorsOptions,
+} from 'apollo-server-express';
 import { Config } from 'apollo-server-core';
 
 export {
@@ -16,6 +18,8 @@ export {
   gql,
   Config,
 } from 'apollo-server-core';
+
+export { CorsOptions } from 'apollo-server-express';
 
 export * from './exports';
 

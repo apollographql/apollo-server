@@ -21,3 +21,6 @@ export {
   registerServer,
   ServerRegistration,
 } from './ApolloServer';
+
+export { CorsOptions } from 'cors';
+export { OptionsJson } from 'body-parser';
