@@ -14,6 +14,14 @@
  * JSON objects in a more complex demo.
  */
 
+function delay(result, delay) {
+  return new Promise(resolve => {
+    setTimeout(() => {
+      resolve(result);
+    }, delay);
+  });
+}
+
 const vader = {
   type: 'Human',
   id: '1001',
@@ -32,8 +40,8 @@ const luke = {
   homePlanet: 'Tatooine',
   soulmate: vader,
   weapon: {
-    name: 'Light Saber',
-    strength: 'High',
+    name: () => delay('Light Saber', 10),
+    strength: () => delay('High', 20),
   },
 };
 
