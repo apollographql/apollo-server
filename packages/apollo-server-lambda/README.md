@@ -36,9 +36,12 @@ const resolvers = {
   },
 };
 
-const server = new ApolloServer({ typeDefs, resolvers });
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+});
 
-exports.graphqlHandler = server.createHandler();
+exports.handler = server.createHandler();
 ```
 
 #### 2. Create an S3 bucket
@@ -64,19 +67,14 @@ Resources:
   GraphQL:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: graphql.graphqlHandler
+      Handler: graphql.handler
       Runtime: nodejs8.10
       Events:
-        GetRequest:
+        AnyRequest:
           Type: Api
           Properties:
             Path: /graphql
-            Method: get
-        PostRequest:
-          Type: Api
-          Properties:
-            Path: /graphql
-            Method: post
+            Method: ANY
 ```
 
 #### 4. Package source code and dependencies
@@ -130,10 +128,10 @@ const server = new ApolloServer({
     functionName: context.functionName,
     event,
     context,
-  })
+  }),
 });
 
-exports.graphqlHandler = server.createHandler();
+exports.handler = server.createHandler();
 ```
 
 ## Modifying the Lambda Response (Enable CORS)
@@ -157,9 +155,12 @@ const resolvers = {
   },
 };
 
-const server = new ApolloServer({ typeDefs, resolvers });
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+});
 
-exports.graphqlHandler = server.createHandler({
+exports.handler = server.createHandler({
   cors: {
     origin: '*',
     credentials: true,
@@ -186,9 +187,12 @@ const resolvers = {
   },
 };
 
-const server = new ApolloServer({ typeDefs, resolvers });
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+});
 
-exports.graphqlHandler = server.createHandler({
+exports.handler = server.createHandler({
   cors: {
     origin: true,
     credentials: true,
