@@ -30,9 +30,9 @@
   },
   "devDependencies": {
     "@types/graphql": "0.12.7",
-    "@types/restify": "5.0.9",
+    "@types/restify": "7.2.3",
     "apollo-server-integration-testsuite": "^1.4.0",
-    "restify": "5.2.1"
+    "restify": "7.2.1"
   },
   "typings": "dist/index.d.ts",
   "typescript": {
