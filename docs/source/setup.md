@@ -50,7 +50,7 @@ The `GraphQLOptions` object has the following properties:
 
 <h3 id="graphqlOptions.schema">schema</h3>
 
-The GraphQL.js schema object that represents your GraphQL schema. You can create this directly using [GraphQL.js](https://github.com/graphql/graphql-js), the reference GraphQL implementation, or you can use graphql-tools, which makes it simple to combine a schema and resolvers. [See en example.](./example.html)
+The GraphQL.js schema object that represents your GraphQL schema. You can create this directly using [GraphQL.js](https://github.com/graphql/graphql-js), the reference GraphQL implementation, or you can use graphql-tools, which makes it simple to combine a schema and resolvers. [See an example.](./example.html)
 
 <h3 id="graphqlOptions.context">context</h3>
 
@@ -71,6 +71,25 @@ app.use(
       },
       // other options here
     };
+  }),
+);
+```
+
+<h4 id="graphqlOptions.contextFn">Passing context as a function</h4>
+
+The value passed to `context` can also be a function. [No arguments are passed the function](https://github.com/apollographql/apollo-server/blob/df51fd90dad90c9468a74e2c4ec2a6af69f4188d/packages/apollo-server-core/src/runHttpQuery.ts#L138-L139), but this can be useful for constructing a new context on each request (for example, creating a new instance of a class).
+
+```js
+app.use(
+  '/graphql',
+  bodyParser.json(),
+  graphqlExpress({
+    schema: myGraphQLSchema,
+    context: () => ({
+      // Create a new instance of the user class for each request
+      user: new User(),
+    }),
+    // other options here
   }),
 );
 ```
