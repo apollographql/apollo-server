@@ -89,3 +89,5 @@ const graphqlHapi: IPlugin = {
     }
   },
 };
+
+export { graphqlHapi };
