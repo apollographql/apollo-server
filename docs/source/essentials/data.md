@@ -91,13 +91,13 @@ Every GraphQL query is a tree of function calls in the server. So the `obj` cont
 3. `parent` in `Post.title` and `Post.author` will be one item from the `posts` result array.
 4. `parent` in `Author.name` is the result from the above `Post.author` call.
 
-Every resolver function is called according to the nesting of the query. To understand this transition from query to resolvers from another perspective, read this [blog post](https://dev-blog.apollodata.com/graphql-explained-5844742f195e#.fq5jjdw7t).
+Every resolver function is called according to the nesting of the query. To understand this transition from query to resolvers from another perspective, read this [blog post](https://blog.apollographql.com/graphql-explained-5844742f195e#.fq5jjdw7t).
 
 <h3 id="context">Context argument</h3>
 
 The context is how you access your shared connections and fetchers in resolvers to get data.
 
-The `context` is the third argument passed to every resolver. It is useful for passing things that any resolver may need, like [authentication scope](https://dev-blog.apollodata.com/authorization-in-graphql-452b1c402a9), database connections, and custom fetch functions. Additionally, if you're using [dataloaders to batch requests](../best-practices/performance.html#Batching-data-lookups)  across resolvers, you can attach them to the `context` as well.
+The `context` is the third argument passed to every resolver. It is useful for passing things that any resolver may need, like [authentication scope](https://blog.apollographql.com/authorization-in-graphql-452b1c402a9), database connections, and custom fetch functions. Additionally, if you're using [dataloaders to batch requests](../best-practices/performance.html#Batching-data-lookups)  across resolvers, you can attach them to the `context` as well.
 
 As a best practice, `context` should be the same for all resolvers, no matter the particular query or mutation, and resolvers should never modify it. This ensures consistency across resolvers, and helps increase development velocity.
 
