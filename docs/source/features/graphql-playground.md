@@ -11,38 +11,45 @@ In development, Apollo Server enables GraphQL Playground on the same URL as the 
 ![GraphQL Playground](../images/graphql-playground.png)
 </div>
 
-## Enabling GraphQL Playground in production
+## Configuring Playground
 
-To enable GraphQL Playground in production, an integration package must be installed to provide more control over the middlewares used. The following example uses the express integration:
+The Apollo Server constructor contains the ability to configure GraphQL Playground with the `playground` configuration option. The options can be found on GraphQL Playground's [documentation](https://github.com/prismagraphql/graphql-playground/#usage)
 
-```bash
-npm install --save apollo-server-express@rc graphql
+```js
+new ApolloServer({
+typeDefs,
+resolvers,
+playground: {
+  settings: {
+    'editor.theme': 'light',
+  },
+  tabs: [
+    {
+      endpoint,
+      query: defaultQuery,
+    },
+  ],
+},
+});
 ```
 
-Introspection and the GUI can be enabled explicitly in the following manner.
+## Enabling GraphQL Playground in production
 
-```js line=8,16
-const { ApolloServer } = require('apollo-server-express');
-const express = require('express');
+To enable GraphQL Playground in production, introspection and the playground can be enabled explicitly in the following manner.
+
+```js line=7-8
+const { ApolloServer } = require('apollo-server');
 const { typeDefs, resolvers } = require('./schema');
 
 const server = new ApolloServer({
   typeDefs,
   resolvers,
   introspection: true,
+  playground: true,
 });
 
-const app = express();
 
-// `gui` accepts a GraphQL Playground configuration
-server.applyMiddleware({
-  app,
-  gui: true,
+server.listen().then(({ url }) => {
+  console.log(`🚀 Server ready at ${url}`);
 });
-
-app.listen({ port: 4000 }, () =>
-  console.log(`🚀 Server ready at http://localhost:4000${server.graphqlPath}`),
-);
 ```
-
-> Note: When using the `apollo-server-express` package, the `apollo-server` package can be uninstalled.
