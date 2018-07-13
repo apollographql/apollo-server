@@ -5,7 +5,12 @@ import {
   renderPlaygroundPage,
   RenderPageOptions as PlaygroundRenderPageOptions,
 } from '@apollographql/graphql-playground-html';
-import { ApolloServerBase, formatApolloErrors } from 'apollo-server-core';
+import {
+  GraphQLOptions,
+  FileUploadOptions,
+  ApolloServerBase,
+  formatApolloErrors,
+} from 'apollo-server-core';
 import * as accepts from 'accepts';
 import * as typeis from 'type-is';
 
@@ -14,7 +19,6 @@ import { graphqlExpress } from './expressApollo';
 import { processRequest as processFileUploads } from 'apollo-upload-server';
 
 export { GraphQLOptions, GraphQLExtension } from 'apollo-server-core';
-import { GraphQLOptions, FileUploadOptions } from 'apollo-server-core';
 
 export interface ServerRegistration {
   // Note: You can also pass a connect.Server here. If we changed this field to
@@ -29,7 +33,6 @@ export interface ServerRegistration {
   bodyParserConfig?: OptionsJson | boolean;
   onHealthCheck?: (req: express.Request) => Promise<any>;
   disableHealthCheck?: boolean;
-  gui?: boolean;
 }
 
 const fileUploadMiddleware = (
@@ -87,7 +90,6 @@ export class ApolloServer extends ApolloServerBase {
     cors,
     bodyParserConfig,
     disableHealthCheck,
-    gui,
     onHealthCheck,
   }: ServerRegistration) {
     if (!path) path = '/graphql';
@@ -138,16 +140,15 @@ export class ApolloServer extends ApolloServerBase {
       app.use(path, uploadsMiddleware);
     }
 
-    // Note: if you enable a gui in production and expect to be able to see your
+    // Note: if you enable playground in production and expect to be able to see your
     // schema, you'll need to manually specify `introspection: true` in the
     // ApolloServer constructor; by default, the introspection query is only
     // enabled in dev.
-    const guiEnabled =
-      !!gui || (gui === undefined && process.env.NODE_ENV !== 'production');
-
     app.use(path, (req, res, next) => {
-      if (guiEnabled && req.method === 'GET') {
+      if (this.playgroundOptions && req.method === 'GET') {
         // perform more expensive content-type check only if necessary
+        // XXX We could potentially move this logic into the GuiOptions lambda,
+        // but I don't think it needs any overriding
         const accept = accepts(req);
         const types = accept.types() as string[];
         const prefersHTML =
@@ -159,7 +160,7 @@ export class ApolloServer extends ApolloServerBase {
           const playgroundRenderPageOptions: PlaygroundRenderPageOptions = {
             endpoint: path,
             subscriptionEndpoint: this.subscriptionsPath,
-            version: this.playgroundVersion,
+            ...this.playgroundOptions,
           };
           res.setHeader('Content-Type', 'text/html');
           const playground = renderPlaygroundPage(playgroundRenderPageOptions);

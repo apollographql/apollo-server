@@ -49,6 +49,10 @@ new ApolloServer({
 
   Enables and disables schema introspection
 
+* `playground`: <`Boolean`> | <`Object`>
+
+  Enables and disables playground and allows configuration of GraphQL Playground. The options can be found on GraphQL Playground's [documentation](https://github.com/prismagraphql/graphql-playground/#usage)
+
 * `debug`: <`Boolean`>
 
   Enables and disables development mode helpers. Defaults to `true`
@@ -61,13 +65,13 @@ new ApolloServer({
 
   Add tracing or cacheControl meta data to the GraphQL response
 
-* `formatError`, `formatResponse`, `formatParams`: <`Function`>
+* `formatError`, `formatResponse`: <`Function`>
 
   Functions to format the errors and response returned from the server, as well as the parameters to graphql execution(`runQuery`)
 
 * `schema`: <`Object`>
 
-  An executable GraphQL schema that will override the `typeDefs` and `resolvers` provided
+  An executable GraphQL schema that will override the `typeDefs` and `resolvers` provided. If you are using [file uploads](https://www.apollographql.com/docs/guides/file-uploads.html), you will have to add the `Upload` scalar to the schema, as it is not automatically added in case of setting the `schema` manually.
 
 * `subscriptions`: <`Object`> | <`String`> | false
 
@@ -85,6 +89,10 @@ new ApolloServer({
 * `persistedQueries`: <`Object`> | false
 
   The persisted queries option can be set to an object containing a `cache` field, which will be used to store the mapping between hash and query string.
+
+* `cors`: <`Object` | `boolean`> ([apollo-server](https://github.com/expressjs/cors#cors))
+
+  Pass the integration-specific CORS options. `false` removes the CORS middleware and `true` uses the defaults. This option is only available to `apollo-server`. For other server integrations, place `cors` inside of `applyMiddleware`.
 
 #### Returns
 

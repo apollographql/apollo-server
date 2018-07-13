@@ -278,7 +278,7 @@ describe('RESTDataSource', () => {
     );
   });
 
-  it('allows passing in a request body', async () => {
+  it('serializes a request body that is an object as JSON', async () => {
     const dataSource = new class extends RESTDataSource {
       baseURL = 'https://api.example.com';
 
@@ -297,6 +297,66 @@ describe('RESTDataSource', () => {
     expect(fetch.mock.calls[0][0].url).toEqual('https://api.example.com/foo');
     expect(fetch.mock.calls[0][0].body).toEqual(JSON.stringify({ foo: 'bar' }));
     expect(fetch.mock.calls[0][0].headers.get('Content-Type')).toEqual(
+      'application/json',
+    );
+  });
+
+  it('serializes a request body that has a toJSON method as JSON', async () => {
+    const dataSource = new class extends RESTDataSource {
+      baseURL = 'https://api.example.com';
+
+      postFoo(foo) {
+        return this.post('foo', foo);
+      }
+    }();
+
+    dataSource.httpCache = httpCache;
+
+    fetch.mockJSONResponseOnce();
+
+    class Model {
+      constructor(public baz: any) {}
+
+      toJSON() {
+        return {
+          foo: this.baz,
+        };
+      }
+    }
+    const model = new Model('bar');
+
+    await dataSource.postFoo(model);
+
+    expect(fetch.mock.calls.length).toEqual(1);
+    expect(fetch.mock.calls[0][0].url).toEqual('https://api.example.com/foo');
+    expect(fetch.mock.calls[0][0].body).toEqual(JSON.stringify({ foo: 'bar' }));
+    expect(fetch.mock.calls[0][0].headers.get('Content-Type')).toEqual(
+      'application/json',
+    );
+  });
+
+  it('does not serialize a request body that is not an object', async () => {
+    const dataSource = new class extends RESTDataSource {
+      baseURL = 'https://api.example.com';
+
+      postFoo(foo) {
+        return this.post('foo', foo);
+      }
+    }();
+
+    dataSource.httpCache = httpCache;
+
+    fetch.mockJSONResponseOnce();
+
+    class FormData {}
+    const form = new FormData();
+
+    await dataSource.postFoo(form);
+
+    expect(fetch.mock.calls.length).toEqual(1);
+    expect(fetch.mock.calls[0][0].url).toEqual('https://api.example.com/foo');
+    expect(fetch.mock.calls[0][0].body).not.toEqual('{}');
+    expect(fetch.mock.calls[0][0].headers.get('Content-Type')).not.toEqual(
       'application/json',
     );
   });
@@ -340,51 +400,123 @@ describe('RESTDataSource', () => {
     });
   }
 
-  it('throws an AuthenticationError when the response status is 401', async () => {
-    const dataSource = new class extends RESTDataSource {
-      baseURL = 'https://api.example.com';
+  describe('error handling', () => {
+    it('throws an AuthenticationError when the response status is 401', async () => {
+      const dataSource = new class extends RESTDataSource {
+        baseURL = 'https://api.example.com';
 
-      getFoo() {
-        return this.get('foo');
-      }
-    }();
+        getFoo() {
+          return this.get('foo');
+        }
+      }();
 
-    dataSource.httpCache = httpCache;
+      dataSource.httpCache = httpCache;
 
-    fetch.mockResponseOnce('Invalid token', undefined, 401);
+      fetch.mockResponseOnce('Invalid token', undefined, 401);
 
-    await expect(dataSource.getFoo()).rejects.toThrow(AuthenticationError);
-  });
+      const result = dataSource.getFoo();
+      await expect(result).rejects.toThrow(AuthenticationError);
+      await expect(result).rejects.toMatchObject({
+        extensions: {
+          code: 'UNAUTHENTICATED',
+          response: {
+            status: 401,
+            body: 'Invalid token',
+          },
+        },
+      });
+    });
 
-  it('throws a ForbiddenError when the response status is 403', async () => {
-    const dataSource = new class extends RESTDataSource {
-      baseURL = 'https://api.example.com';
+    it('throws a ForbiddenError when the response status is 403', async () => {
+      const dataSource = new class extends RESTDataSource {
+        baseURL = 'https://api.example.com';
 
-      getFoo() {
-        return this.get('foo');
-      }
-    }();
+        getFoo() {
+          return this.get('foo');
+        }
+      }();
 
-    dataSource.httpCache = httpCache;
+      dataSource.httpCache = httpCache;
 
-    fetch.mockResponseOnce('No access', undefined, 403);
+      fetch.mockResponseOnce('No access', undefined, 403);
 
-    await expect(dataSource.getFoo()).rejects.toThrow(ForbiddenError);
-  });
+      const result = dataSource.getFoo();
+      await expect(result).rejects.toThrow(ForbiddenError);
+      await expect(result).rejects.toMatchObject({
+        extensions: {
+          code: 'FORBIDDEN',
+          response: {
+            status: 403,
+            body: 'No access',
+          },
+        },
+      });
+    });
 
-  it('throws an ApolloError when the response status is 500', async () => {
-    const dataSource = new class extends RESTDataSource {
-      baseURL = 'https://api.example.com';
+    it('throws an ApolloError when the response status is 500', async () => {
+      const dataSource = new class extends RESTDataSource {
+        baseURL = 'https://api.example.com';
 
-      getFoo() {
-        return this.get('foo');
-      }
-    }();
+        getFoo() {
+          return this.get('foo');
+        }
+      }();
 
-    dataSource.httpCache = httpCache;
+      dataSource.httpCache = httpCache;
 
-    fetch.mockResponseOnce('Oops', undefined, 500);
+      fetch.mockResponseOnce('Oops', undefined, 500);
 
-    await expect(dataSource.getFoo()).rejects.toThrow(ApolloError);
+      const result = dataSource.getFoo();
+      await expect(result).rejects.toThrow(ApolloError);
+      await expect(result).rejects.toMatchObject({
+        extensions: {
+          response: {
+            status: 500,
+            body: 'Oops',
+          },
+        },
+      });
+    });
+
+    it('puts JSON error responses on the error as an object', async () => {
+      const dataSource = new class extends RESTDataSource {
+        baseURL = 'https://api.example.com';
+
+        getFoo() {
+          return this.get('foo');
+        }
+      }();
+
+      dataSource.httpCache = httpCache;
+
+      fetch.mockResponseOnce(
+        JSON.stringify({
+          errors: [
+            {
+              message: 'Houston, we have a problem.',
+            },
+          ],
+        }),
+        { 'Content-Type': 'application/json' },
+        500,
+      );
+
+      const result = dataSource.getFoo();
+      await expect(result).rejects.toThrow(ApolloError);
+      await expect(result).rejects.toMatchObject({
+        extensions: {
+          response: {
+            status: 500,
+            body: {
+              errors: [
+                {
+                  message: 'Houston, we have a problem.',
+                },
+              ],
+            },
+          },
+        },
+      });
+    });
   });
 });

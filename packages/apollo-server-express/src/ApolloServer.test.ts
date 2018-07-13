@@ -98,7 +98,7 @@ describe('apollo-server-express', () => {
     // XXX Unclear why this would be something somebody would want (vs enabling
     // introspection without graphql-playground, which seems reasonable, eg you
     // have your own graphql-playground setup with a custom link)
-    it('can enable gui separately from introspection during production', async () => {
+    it('can enable playground separately from introspection during production', async () => {
       const INTROSPECTION_QUERY = `
   {
     __schema {
@@ -146,7 +146,7 @@ describe('apollo-server-express', () => {
       });
     });
 
-    it('renders GraphQL playground when browser requests', async () => {
+    it('renders GraphQL playground by default when browser requests', async () => {
       const nodeEnv = process.env.NODE_ENV;
       delete process.env.NODE_ENV;
 
@@ -172,6 +172,101 @@ describe('apollo-server-express', () => {
             } else {
               expect(body).to.contain('GraphQLPlayground');
               expect(response.statusCode).to.equal(200);
+              resolve();
+            }
+          },
+        );
+      });
+    });
+
+    it('accepts partial GraphQL Playground Options', async () => {
+      const nodeEnv = process.env.NODE_ENV;
+      delete process.env.NODE_ENV;
+
+      const defaultQuery = 'query { foo { bar } }';
+      const endpoint = '/fumanchupacabra';
+      const { url } = await createServer(
+        {
+          typeDefs,
+          resolvers,
+          playground: {
+            // https://github.com/apollographql/graphql-playground/blob/0e452d2005fcd26f10fbdcc4eed3b2e2af935e3a/packages/graphql-playground-html/src/render-playground-page.ts#L16-L24
+            // must be made partial
+            settings: {
+              'editor.theme': 'light',
+            } as any,
+            tabs: [
+              {
+                query: defaultQuery,
+              },
+              {
+                endpoint,
+              } as any,
+            ],
+          },
+        },
+        {},
+      );
+
+      return new Promise<http.Server>((resolve, reject) => {
+        request(
+          {
+            url,
+            method: 'GET',
+            headers: {
+              accept:
+                'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+              Folo: 'bar',
+            },
+          },
+          (error, response, body) => {
+            process.env.NODE_ENV = nodeEnv;
+            if (error) {
+              reject(error);
+            } else {
+              console.log('body', body);
+              expect(body).to.contain('GraphQLPlayground');
+              expect(body).to.contain(`"editor.theme": "light"`);
+              expect(body).to.contain(defaultQuery);
+              expect(body).to.contain(endpoint);
+              expect(response.statusCode).to.equal(200);
+              resolve();
+            }
+          },
+        );
+      });
+    });
+
+    it('accepts playground options as a boolean', async () => {
+      const nodeEnv = process.env.NODE_ENV;
+      delete process.env.NODE_ENV;
+
+      const { url } = await createServer(
+        {
+          typeDefs,
+          resolvers,
+          playground: false,
+        },
+        {},
+      );
+
+      return new Promise<http.Server>((resolve, reject) => {
+        request(
+          {
+            url,
+            method: 'GET',
+            headers: {
+              accept:
+                'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+            },
+          },
+          (error, response, body) => {
+            process.env.NODE_ENV = nodeEnv;
+            if (error) {
+              reject(error);
+            } else {
+              expect(body).not.to.contain('GraphQLPlayground');
+              expect(response.statusCode).not.to.equal(200);
               resolve();
             }
           },

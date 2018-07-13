@@ -4,6 +4,7 @@ import {
   HttpQueryError,
   runHttpQuery,
 } from 'apollo-server-core';
+import { Headers } from 'apollo-server-env';
 
 export interface LambdaGraphQLOptionsFunction {
   (event: lambda.APIGatewayProxyEvent, context: lambda.Context):
@@ -45,7 +46,7 @@ export function graphqlLambda(
       request: {
         url: event.path,
         method: event.httpMethod,
-        headers: event.headers as any,
+        headers: new Headers(event.headers),
       },
     }).then(
       ({ graphqlResponse, responseInit }) => {

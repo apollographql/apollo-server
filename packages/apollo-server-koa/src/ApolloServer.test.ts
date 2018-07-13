@@ -98,7 +98,7 @@ describe('apollo-server-koa', () => {
     // XXX Unclear why this would be something somebody would want (vs enabling
     // introspection without graphql-playground, which seems reasonable, eg you
     // have your own graphql-playground setup with a custom link)
-    it('can enable gui separately from introspection during production', async () => {
+    it('can enable playground separately from introspection during production', async () => {
       const INTROSPECTION_QUERY = `
   {
     __schema {

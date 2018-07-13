@@ -17,20 +17,13 @@ import { processRequest as processFileUploads } from 'apollo-upload-server';
 export { GraphQLOptions, GraphQLExtension } from 'apollo-server-core';
 import { GraphQLOptions, FileUploadOptions } from 'apollo-server-core';
 
-// koa-bodyparser does not expose an Options interface so we infer the type here.
-// we can replace this when this PR get merged: https://github.com/DefinitelyTyped/DefinitelyTyped/pull/27047
-export type BodyParserOptions = typeof bodyParser extends (opts: infer U) => any
-  ? U
-  : never;
-
 export interface ServerRegistration {
   app: Koa;
   path?: string;
   cors?: corsMiddleware.Options | boolean;
-  bodyParserConfig?: BodyParserOptions | boolean;
+  bodyParserConfig?: bodyParser.Options | boolean;
   onHealthCheck?: (ctx: Koa.Context) => Promise<any>;
   disableHealthCheck?: boolean;
-  gui?: boolean;
 }
 
 const fileUploadMiddleware = (
@@ -87,7 +80,6 @@ export class ApolloServer extends ApolloServerBase {
     cors,
     bodyParserConfig,
     disableHealthCheck,
-    gui,
     onHealthCheck,
   }: ServerRegistration) {
     if (!path) path = '/graphql';
@@ -141,16 +133,9 @@ export class ApolloServer extends ApolloServerBase {
       app.use(middlewareFromPath(path, uploadsMiddleware));
     }
 
-    // Note: if you enable a gui in production and expect to be able to see your
-    // schema, you'll need to manually specify `introspection: true` in the
-    // ApolloServer constructor; by default, the introspection query is only
-    // enabled in dev.
-    const guiEnabled =
-      !!gui || (gui === undefined && process.env.NODE_ENV !== 'production');
-
     app.use(
       middlewareFromPath(path, (ctx: Koa.Context, next: Function) => {
-        if (guiEnabled && ctx.request.method === 'GET') {
+        if (this.playgroundOptions && ctx.request.method === 'GET') {
           // perform more expensive content-type check only if necessary
           const accept = accepts(ctx.req);
           const types = accept.types() as string[];
@@ -163,7 +148,7 @@ export class ApolloServer extends ApolloServerBase {
             const playgroundRenderPageOptions: PlaygroundRenderPageOptions = {
               endpoint: path,
               subscriptionEndpoint: this.subscriptionsPath,
-              version: this.playgroundVersion,
+              ...this.playgroundOptions,
             };
             ctx.set('Content-Type', 'text/html');
             const playground = renderPlaygroundPage(

@@ -1,4 +1,8 @@
 export {
+  GraphQLUpload,
+  GraphQLOptions,
+  gql,
+  // Errors
   ApolloError,
   toApolloError,
   SyntaxError,
@@ -6,8 +10,6 @@ export {
   AuthenticationError,
   ForbiddenError,
   UserInputError,
-  GraphQLOptions,
-  gql,
 } from 'apollo-server-core';
 
 export * from 'graphql-tools';

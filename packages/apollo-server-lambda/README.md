@@ -17,6 +17,8 @@ To deploy the AWS Lambda function we must create a Cloudformation Template and a
 
 #### 1. Write the API handlers
 
+In a file named `graphql.js`, place the following code:
+
 ```js
 const { ApolloServer, gql } = require('apollo-server-lambda');
 
@@ -136,7 +138,7 @@ exports.graphqlHandler = server.createHandler();
 
 ## Modifying the Lambda Response (Enable CORS)
 
-To enable CORS the response HTTP headers need to be modified. To accomplish this use `cors` options.
+To enable CORS the response HTTP headers need to be modified. To accomplish this use the `cors` option.
 
 ```js
 const { ApolloServer, gql } = require('apollo-server-lambda');

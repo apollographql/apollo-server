@@ -1,7 +1,6 @@
 import { ExecutionResult } from 'graphql';
 const sha256 = require('hash.js/lib/hash/sha/256');
 
-import { HTTPCache } from 'apollo-datasource-rest';
 import { CacheControlExtensionOptions } from 'apollo-cache-control';
 
 import { omit } from 'lodash';
@@ -17,7 +16,7 @@ import {
   PersistedQueryNotSupportedError,
   PersistedQueryNotFoundError,
 } from 'apollo-server-errors';
-import { calculateCacheControlHeaders, HttpHeaderCalculation } from './caching';
+import { calculateCacheControlHeaders } from './caching';
 
 export interface HttpQueryRequest {
   method: string;
@@ -104,7 +103,7 @@ export async function runHttpQuery(
     process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test';
   let cacheControl:
     | CacheControlExtensionOptions & {
-        calculateHttpHeaders: boolean | HttpHeaderCalculation;
+        calculateHttpHeaders: boolean;
         stripFormattedExtensions: boolean;
       }
     | undefined;
@@ -217,7 +216,8 @@ export async function runHttpQuery(
 
         if (queryString === undefined) {
           queryString =
-            (await optionsObject.persistedQueries.cache.get(sha)) || undefined;
+            (await optionsObject.persistedQueries.cache.get(`apq:${sha}`)) ||
+            undefined;
           if (queryString) {
             persistedQueryHit = true;
           } else {
@@ -246,7 +246,10 @@ export async function runHttpQuery(
             // We do not wait on the cache storage to complete
             return (
               optionsObject.persistedQueries &&
-              optionsObject.persistedQueries.cache.set(sha, queryString)
+              optionsObject.persistedQueries.cache.set(
+                `apq:${sha}`,
+                queryString,
+              )
             );
           })().catch(error => {
             console.warn(error);
@@ -254,8 +257,11 @@ export async function runHttpQuery(
         }
       }
 
-      // We ensure that there is a queryString or parsedQuery after formatParams
-      if (queryString && typeof queryString !== 'string') {
+      if (!queryString) {
+        throw new HttpQueryError(400, 'Must provide query string.');
+      }
+
+      if (typeof queryString !== 'string') {
         // Check for a common error first.
         if (queryString && (queryString as any).kind === 'Document') {
           throw new HttpQueryError(
@@ -334,12 +340,8 @@ export async function runHttpQuery(
       if (optionsObject.dataSources) {
         const dataSources = optionsObject.dataSources() || {};
 
-        // we use the cache provided to the request and add the Http semantics on top
-        const httpCache = new HTTPCache(optionsObject.cache);
-
         for (const dataSource of Object.values(dataSources)) {
-          dataSource.context = context;
-          (dataSource as any).httpCache = httpCache;
+          dataSource.initialize(context, optionsObject.cache!);
         }
 
         if ('dataSources' in context) {
@@ -402,15 +404,6 @@ export async function runHttpQuery(
         persistedQueryRegister,
       };
 
-      if (optionsObject.formatParams) {
-        params = optionsObject.formatParams(params);
-      }
-
-      if (!params.queryString && !params.parsedQuery) {
-        // Note that we've already thrown a different error if it looks like APQ.
-        throw new HttpQueryError(400, 'Must provide query string.');
-      }
-
       return runQuery(params);
     } catch (e) {
       // Populate any HttpQueryError to our handler which should
@@ -446,10 +439,7 @@ export async function runHttpQuery(
 
   if (cacheControl) {
     if (cacheControl.calculateHttpHeaders) {
-      const calculatedHeaders =
-        typeof cacheControl.calculateHttpHeaders === 'function'
-          ? cacheControl.calculateHttpHeaders(responses)
-          : calculateCacheControlHeaders(responses);
+      const calculatedHeaders = calculateCacheControlHeaders(responses);
 
       responseInit.headers = {
         ...responseInit.headers,
