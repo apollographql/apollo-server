@@ -4,6 +4,8 @@ All of the packages in the `apollo-server` repo are released with the same versi
 
 ### vNEXT
 
+### 1.4.0
+
 * [Issue #626] Integrate apollo-fastify plugin. [PR #1013](https://github.com/apollographql/apollo-server/pull/1013)
 * add hapi 16 next() invocation [PR #743](https://github.com/apollographql/apollo-server/pull/743)
 * Add skipValidation option [PR #839](https://github.com/apollographql/apollo-server/pull/839)
