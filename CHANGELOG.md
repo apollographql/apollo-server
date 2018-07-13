@@ -4,6 +4,7 @@ All of the packages in the `apollo-server` repo are released with the same versi
 
 ### vNEXT
 
+* Add skipValidation option [PR #839](https://github.com/apollographql/apollo-server/pull/839)
 * `apollo-server-module-graphiql`: adds an option to the constructor to disable url rewriting when editing a query [PR #1047](https://github.com/apollographql/apollo-server/pull/1047)
 * Upgrade `subscription-transport-ws` to 0.9.9 for Graphiql
 

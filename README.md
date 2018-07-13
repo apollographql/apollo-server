@@ -214,6 +214,7 @@ Apollo Server can be configured with an options object with the following fields
 * **context**: the context value passed to resolvers during GraphQL execution
 * **rootValue**: the value passed to the first resolve function
 * **formatError**: a function to apply to every error before sending the response to clients
+* **skipValidation**: skip query validation (increase performance, use carefully, only with whitelisting)
 * **validationRules**: additional GraphQL validation rules to be applied to client-specified queries
 * **formatParams**: a function applied for each query in a batch to format parameters before execution
 * **formatResponse**: a function applied to each response after execution
@@ -228,6 +229,7 @@ All options except for `schema` are optional.
 ### Whitelisting
 
 The `formatParams` function can be used in combination with the `OperationStore` to enable whitelisting.
+In this case query parsing and validation will be called only once when saving to store.
 
 ```js
 const store = new OperationStore(Schema);
@@ -236,6 +238,7 @@ graphqlOptions = {
   schema: Schema,
   formatParams(params) {
     params['query'] = store.get(params.operationName);
+    params['skipValidation'] = true;
     return params;
   },
 };

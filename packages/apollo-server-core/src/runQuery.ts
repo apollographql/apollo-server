@@ -72,6 +72,7 @@ export interface QueryOptions {
   debug?: boolean;
   tracing?: boolean;
   cacheControl?: boolean | CacheControlExtensionOptions;
+  skipValidation?: boolean;
 }
 
 export function runQuery(options: QueryOptions): Promise<GraphQLResponse> {
@@ -171,17 +172,19 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
     documentAST = options.query as DocumentNode;
   }
 
-  let rules = specifiedRules;
-  if (options.validationRules) {
-    rules = rules.concat(options.validationRules);
-  }
-  logFunction({ action: LogAction.validation, step: LogStep.start });
-  const validationErrors = validate(options.schema, documentAST, rules);
-  logFunction({ action: LogAction.validation, step: LogStep.end });
-  if (validationErrors.length) {
-    return Promise.resolve({
-      errors: format(validationErrors, options.formatError),
-    });
+  if (options.skipValidation !== true) {
+    let rules = specifiedRules;
+    if (options.validationRules) {
+      rules = rules.concat(options.validationRules);
+    }
+    logFunction({ action: LogAction.validation, step: LogStep.start });
+    const validationErrors = validate(options.schema, documentAST, rules);
+    logFunction({ action: LogAction.validation, step: LogStep.end });
+    if (validationErrors.length) {
+      return Promise.resolve({
+        errors: format(validationErrors, options.formatError),
+      });
+    }
   }
 
   if (extensionStack) {
