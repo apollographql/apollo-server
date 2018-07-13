@@ -30,7 +30,7 @@
     "boom": "^7.1.0"
   },
   "devDependencies": {
-    "@types/graphql": "0.12.7",
+    "@types/graphql": "0.13.3",
     "apollo-server-integration-testsuite": "^1.4.0",
     "hapi": "17.5.2"
   },

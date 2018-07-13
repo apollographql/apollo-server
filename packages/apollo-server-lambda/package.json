@@ -30,7 +30,7 @@
   },
   "devDependencies": {
     "@types/aws-lambda": "8.10.7",
-    "@types/graphql": "0.12.7",
+    "@types/graphql": "0.13.3",
     "apollo-server-integration-testsuite": "^1.4.0"
   },
   "typings": "dist/index.d.ts",
