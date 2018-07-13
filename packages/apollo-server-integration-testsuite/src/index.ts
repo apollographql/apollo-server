@@ -19,6 +19,19 @@ const request = require('supertest');
 import { GraphQLOptions } from 'apollo-server-core';
 import * as GraphiQL from 'apollo-server-module-graphiql';
 import { OperationStore } from 'apollo-server-module-operation-store';
+import { LogAction } from '../../apollo-server-core/dist';
+
+const personType = new GraphQLObjectType({
+  name: 'PersonType',
+  fields: {
+    firstName: {
+      type: GraphQLString,
+    },
+    lastName: {
+      type: GraphQLString,
+    },
+  },
+});
 
 const queryType = new GraphQLObjectType({
   name: 'QueryType',
@@ -27,6 +40,12 @@ const queryType = new GraphQLObjectType({
       type: GraphQLString,
       resolve() {
         return 'it works';
+      },
+    },
+    testPerson: {
+      type: personType,
+      resolve() {
+        return { firstName: 'Jane', lastName: 'Doe' };
       },
     },
     testStringWithDelay: {
@@ -68,18 +87,6 @@ const queryType = new GraphQLObjectType({
       resolve() {
         throw new Error('Secret error message');
       },
-    },
-  },
-});
-
-const personType = new GraphQLObjectType({
-  name: 'PersonType',
-  fields: {
-    firstName: {
-      type: GraphQLString,
-    },
-    lastName: {
-      type: GraphQLString,
     },
   },
 });
@@ -164,7 +171,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
         return req.then(res => {
           expect(res.status).to.equal(200);
-          return expect(res.body.data).to.deep.equal(expected);
+          expect(res.body.data).to.deep.equal(expected);
         });
       });
 
@@ -186,7 +193,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
         return req.then(res => {
           expect(res.status).to.equal(200);
-          return expect(res.body.data).to.deep.equal(expected);
+          expect(res.body.data).to.deep.equal(expected);
         });
       });
 
@@ -204,7 +211,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
         return req.then(res => {
           expect(res.status).to.equal(500);
-          return expect(res.error.text).to.contain(expected);
+          expect(res.error.text).to.contain(expected);
         });
       });
 
@@ -226,7 +233,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           .send();
         return req.then(res => {
           expect(res.status).to.equal(500);
-          return expect(res.error.text).to.contain('POST body missing.');
+          expect(res.error.text).to.contain('POST body missing.');
         });
       });
 
@@ -235,7 +242,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
         const req = request(app).get(`/graphql`);
         return req.then(res => {
           expect(res.status).to.equal(400);
-          return expect(res.error.text).to.contain('GET query missing.');
+          expect(res.error.text).to.contain('GET query missing.');
         });
       });
 
@@ -252,7 +259,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           .query(query);
         return req.then(res => {
           expect(res.status).to.equal(200);
-          return expect(res.body.data).to.deep.equal(expected);
+          expect(res.body.data).to.deep.equal(expected);
         });
       });
 
@@ -269,7 +276,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           .query(query);
         return req.then(res => {
           expect(res.status).to.equal(200);
-          return expect(res.body.data).to.deep.equal(expected);
+          expect(res.body.data).to.deep.equal(expected);
         });
       });
 
@@ -284,7 +291,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
         return req.then(res => {
           expect(res.status).to.equal(405);
           expect(res.headers['allow']).to.equal('POST');
-          return expect(res.error.text).to.contain(
+          expect(res.error.text).to.contain(
             'GET supports only query operation',
           );
         });
@@ -309,7 +316,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
         return req.then(res => {
           expect(res.status).to.equal(405);
           expect(res.headers['allow']).to.equal('POST');
-          return expect(res.error.text).to.contain(
+          expect(res.error.text).to.contain(
             'GET supports only query operation',
           );
         });
@@ -329,7 +336,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           .query(query);
         return req.then(res => {
           expect(res.status).to.equal(200);
-          return expect(res.body.data).to.deep.equal(expected);
+          expect(res.body.data).to.deep.equal(expected);
         });
       });
 
@@ -345,7 +352,97 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
         return req.then(res => {
           expect(res.status).to.equal(200);
-          return expect(res.body.data).to.deep.equal(expected);
+          expect(res.body.data).to.deep.equal(expected);
+        });
+      });
+
+      it('can handle a basic request with cacheControl', async () => {
+        app = await createApp({
+          graphqlOptions: { schema, cacheControl: true },
+        });
+        const expected = {
+          testPerson: { firstName: 'Jane' },
+        };
+        const req = request(app)
+          .post('/graphql')
+          .send({
+            query: 'query test{ testPerson { firstName } }',
+          });
+        return req.then(res => {
+          expect(res.status).to.equal(200);
+          expect(res.body.data).to.deep.equal(expected);
+          expect(res.body.extensions).to.deep.equal({
+            cacheControl: {
+              version: 1,
+              hints: [{ maxAge: 0, path: ['testPerson'] }],
+            },
+          });
+        });
+      });
+
+      it('can handle a basic request with cacheControl and defaultMaxAge', async () => {
+        app = await createApp({
+          graphqlOptions: { schema, cacheControl: { defaultMaxAge: 5 } },
+        });
+        const expected = {
+          testPerson: { firstName: 'Jane' },
+        };
+        const req = request(app)
+          .post('/graphql')
+          .send({
+            query: 'query test{ testPerson { firstName } }',
+          });
+        return req.then(res => {
+          expect(res.status).to.equal(200);
+          expect(res.body.data).to.deep.equal(expected);
+          expect(res.body.extensions).to.deep.equal({
+            cacheControl: {
+              version: 1,
+              hints: [{ maxAge: 5, path: ['testPerson'] }],
+            },
+          });
+        });
+      });
+
+      it('returns PersistedQueryNotSupported to a GET request', async () => {
+        app = await createApp();
+        const req = request(app)
+          .get('/graphql')
+          .query({
+            extensions: JSON.stringify({
+              persistedQuery: {
+                version: 1,
+                sha256Hash:
+                  'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+              },
+            }),
+          });
+        return req.then(res => {
+          expect(res.status).to.equal(200);
+          expect(res.body).to.deep.equal({
+            errors: [{ message: 'PersistedQueryNotSupported' }],
+          });
+        });
+      });
+
+      it('returns PersistedQueryNotSupported to a POST request', async () => {
+        app = await createApp();
+        const req = request(app)
+          .post('/graphql')
+          .send({
+            extensions: {
+              persistedQuery: {
+                version: 1,
+                sha256Hash:
+                  'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+              },
+            },
+          });
+        return req.then(res => {
+          expect(res.status).to.equal(200);
+          expect(res.body).to.deep.equal({
+            errors: [{ message: 'PersistedQueryNotSupported' }],
+          });
         });
       });
 
@@ -362,7 +459,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
         return req.then(res => {
           expect(res.status).to.equal(200);
-          return expect(res.body.data).to.deep.equal(expected);
+          expect(res.body.data).to.deep.equal(expected);
         });
       });
 
@@ -379,7 +476,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
         return req.then(res => {
           expect(res.status).to.equal(200);
-          return expect(res.body.data).to.deep.equal(expected);
+          expect(res.body.data).to.deep.equal(expected);
         });
       });
 
@@ -393,9 +490,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
         return req.then(res => {
           expect(res.status).to.equal(400);
-          return expect(res.error.text).to.contain(
-            'Variables are invalid JSON.',
-          );
+          expect(res.error.text).to.contain('Variables are invalid JSON.');
         });
       });
 
@@ -415,7 +510,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
         return req.then(res => {
           expect(res.status).to.equal(200);
-          return expect(res.body.data).to.deep.equal(expected);
+          expect(res.body.data).to.deep.equal(expected);
         });
       });
 
@@ -426,9 +521,9 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           .send({ query: introspectionQuery });
         return req.then(res => {
           expect(res.status).to.equal(200);
-          return expect(
-            res.body.data.__schema.types[0].fields[0].name,
-          ).to.equal('testString');
+          expect(res.body.data.__schema.types[0].fields[0].name).to.equal(
+            'testString',
+          );
         });
       });
 
@@ -465,7 +560,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           ]);
         return req.then(res => {
           expect(res.status).to.equal(200);
-          return expect(res.body).to.deep.equal(expected);
+          expect(res.body).to.deep.equal(expected);
         });
       });
 
@@ -491,7 +586,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           ]);
         return req.then(res => {
           expect(res.status).to.equal(200);
-          return expect(res.body).to.deep.equal(expected);
+          expect(res.body).to.deep.equal(expected);
         });
       });
 
@@ -516,7 +611,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           );
         return req.then(res => {
           expect(res.status).to.equal(200);
-          return expect(res.body).to.deep.equal(expected);
+          expect(res.body).to.deep.equal(expected);
         });
       });
 
@@ -551,7 +646,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           ]);
         return req.then(res => {
           expect(res.status).to.equal(200);
-          return expect(res.body).to.deep.equal(expected);
+          expect(res.body).to.deep.equal(expected);
         });
       });
 
@@ -591,7 +686,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
         return req.then(res => {
           expect(callCount).to.equal(2);
           expect(res.status).to.equal(200);
-          return expect(res.body).to.deep.equal(expected);
+          expect(res.body).to.deep.equal(expected);
         });
       });
 
@@ -608,7 +703,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
         return req.then(res => {
           expect(res.status).to.equal(200);
-          return expect(res.body.data).to.deep.equal(expected);
+          expect(res.body.data).to.deep.equal(expected);
         });
       });
 
@@ -631,7 +726,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
         return req.then(res => {
           expect(res.status).to.equal(200);
-          return expect(res.body.extensions).to.deep.equal(expected);
+          expect(res.body.extensions).to.deep.equal(expected);
         });
       });
 
@@ -650,7 +745,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
         return req.then(res => {
           expect(res.status).to.equal(200);
-          return expect(res.body.data.testContext).to.equal(expected);
+          expect(res.body.data.testContext).to.equal(expected);
         });
       });
 
@@ -669,7 +764,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
         return req.then(res => {
           expect(res.status).to.equal(200);
-          return expect(res.body.data.testRootValue).to.equal(expected);
+          expect(res.body.data.testRootValue).to.equal(expected);
         });
       });
 
@@ -687,7 +782,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
         return req.then(res => {
           expect(res.status).to.equal(200);
-          return expect(res.body.errors[0].message).to.equal(expected);
+          expect(res.body.errors[0].message).to.equal(expected);
         });
       });
 
@@ -706,7 +801,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
         return req.then(res => {
           expect(res.status).to.equal(200);
-          return expect(res.body.errors[0].message).to.equal(expected);
+          expect(res.body.errors[0].message).to.equal(expected);
         });
       });
 
@@ -725,9 +820,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
             query: 'query test{ testError }',
           });
         return req.then(res => {
-          return expect(res.body.errors[0].message).to.equal(
-            'Internal server error',
-          );
+          expect(res.body.errors[0].message).to.equal('Internal server error');
         });
       });
 
@@ -749,7 +842,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
         return req.then(res => {
           console.error = origError;
-          return expect(stackTrace[0][0]).to.match(expected);
+          expect(stackTrace[0][0]).to.match(expected);
         });
       });
 
@@ -770,7 +863,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
         return req.then(res => {
           logStub.restore();
           expect(logStub.callCount).to.equal(1);
-          return expect(logStub.getCall(0).args[0]).to.match(expected);
+          expect(logStub.getCall(0).args[0]).to.match(expected);
         });
       });
 
@@ -797,7 +890,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
         return req.then(res => {
           expect(res.status).to.equal(400);
-          return expect(res.body.errors[0].message).to.equal(expected);
+          expect(res.body.errors[0].message).to.equal(expected);
         });
       });
     });
@@ -913,7 +1006,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
         return req.then(res => {
           expect(res.status).to.equal(200);
-          return expect(res.body.data).to.deep.equal(expected);
+          expect(res.body.data).to.deep.equal(expected);
         });
       });
 
@@ -959,7 +1052,39 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           ]);
         return req.then(res => {
           expect(res.status).to.equal(200);
-          return expect(res.body).to.deep.equal(expected);
+          expect(res.body).to.deep.equal(expected);
+        });
+      });
+
+      it('do not validate if query is already an AST', async () => {
+        const store = new OperationStore(schema);
+        let validationCalled = false;
+        store.put('query testquery{ testString }');
+        app = await createApp({
+          graphqlOptions: {
+            schema,
+            formatParams(params) {
+              params['query'] = store.get(params.operationName);
+              params['skipValidation'] = true;
+              return params;
+            },
+            logFunction: ({ action }) => {
+              if (action == LogAction.validation) {
+                validationCalled = true;
+              }
+            },
+          },
+        });
+        const req = request(app)
+          .post('/graphql')
+          .send({
+            operationName: 'testquery',
+          });
+        return req.then(res => {
+          return expect(
+            validationCalled,
+            'Validation should not be called if skipValidation option provided',
+          ).to.equal(false);
         });
       });
     });

@@ -25,7 +25,7 @@ export function microGraphql(
     );
   }
 
-  return async function(req: IncomingMessage, res: ServerResponse) {
+  const graphqlHandler = async (req: IncomingMessage, res: ServerResponse) => {
     let query;
     if (req.method === 'POST') {
       try {
@@ -62,6 +62,8 @@ export function microGraphql(
       throw error;
     }
   };
+
+  return graphqlHandler;
 }
 
 export interface MicroGraphiQLOptionsFunction {
@@ -73,7 +75,7 @@ export interface MicroGraphiQLOptionsFunction {
 export function microGraphiql(
   options: GraphiQL.GraphiQLData | MicroGraphiQLOptionsFunction,
 ): RequestHandler {
-  return (req: IncomingMessage, res: ServerResponse) => {
+  const graphiqlHandler = (req: IncomingMessage, res: ServerResponse) => {
     const query = (req.url && url.parse(req.url, true).query) || {};
     return GraphiQL.resolveGraphiQLString(query, options, req).then(
       graphiqlString => {
@@ -88,4 +90,6 @@ export function microGraphiql(
       },
     );
   };
+
+  return graphiqlHandler;
 }

@@ -20,9 +20,9 @@ replace the old `apolloServer` function.
 
 The three main differences between the old and the new approach are:
 
-1. generating the schema is now done with `graphql-tools`, Apollo Server only uses the finished schema.
-2. `bodyParser` has to be used to parse requests before passing them to `expressApollo`
-3. GraphiQL now has to be served on a separate path
+1.  generating the schema is now done with `graphql-tools`, Apollo Server only uses the finished schema.
+2.  `bodyParser` has to be used to parse requests before passing them to `expressApollo`
+3.  GraphiQL now has to be served on a separate path
 
 The following code snippet in Apollo Server 0.1.x
 

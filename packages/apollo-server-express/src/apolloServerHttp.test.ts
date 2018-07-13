@@ -409,7 +409,7 @@ describe(`GraphQL-HTTP (apolloServer) tests for ${version} express`, () => {
           query: '{custom(foo: 123)}',
         });
 
-      expect(response.status).to.equal(500);
+      expect(response.status).to.equal(400);
     });
 
     it('allows for custom error formatting to sanitize', async () => {
@@ -492,7 +492,7 @@ describe(`GraphQL-HTTP (apolloServer) tests for ${version} express`, () => {
 
       expect(response.status).to.equal(405);
       expect(response.headers.allow).to.equal('GET, POST');
-      return expect(response.text).to.contain(
+      expect(response.text).to.contain(
         'Apollo Server supports only GET/POST requests.',
       );
     });

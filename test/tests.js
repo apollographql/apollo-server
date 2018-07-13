@@ -4,6 +4,7 @@ const NODE_MAJOR_REVISION = parseInt(NODE_VERSION[1]);
 process.env.NODE_ENV = 'test';
 
 require('../packages/apollo-server-core/dist/runQuery.test.js');
+require('../packages/apollo-server-core/dist/runHttpQuery.test.js');
 require('../packages/apollo-server-module-operation-store/dist/operationStore.test');
 NODE_MAJOR_VERSION >= 7 &&
   require('../packages/apollo-server-adonis/dist/adonisApollo.test');

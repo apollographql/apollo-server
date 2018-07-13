@@ -3,7 +3,7 @@
 Also supports: Restify, Micro, Azure Functions, AWS Lambda and Adonis Framework
 
 [![npm version](https://badge.fury.io/js/apollo-server-core.svg)](https://badge.fury.io/js/apollo-server-core)
-[![Build Status](https://travis-ci.org/apollographql/apollo-server.svg?branch=master)](https://travis-ci.org/apollographql/apollo-server)
+[![Build Status](https://circleci.com/gh/apollographql/apollo-cache-control-js.svg?style=svg)](https://circleci.com/gh/apollographql/apollo-cache-control-js)
 [![Get on Slack](https://img.shields.io/badge/slack-join-orange.svg)](https://www.apollographql.com/#slack)
 
 Apollo Server is a community-maintained open-source GraphQL server. It works with pretty much all Node.js HTTP server frameworks, and we're happy to take PRs for more! Apollo Server works with any GraphQL schema built with [GraphQL.js](https://github.com/graphql/graphql-js), so you can build your schema with that directly or with a convenience library such as [graphql-tools](https://www.apollographql.com/docs/graphql-tools/).
@@ -129,9 +129,9 @@ StartServer();
 ### Koa
 
 ```js
-import koa from 'koa'; // koa@2
-import koaRouter from 'koa-router'; // koa-router@next
-import koaBody from 'koa-bodyparser'; // koa-bodyparser@next
+import koa from 'koa';
+import koaRouter from 'koa-router';
+import koaBody from 'koa-bodyparser';
 import { graphqlKoa, graphiqlKoa } from 'apollo-server-koa';
 
 const app = new koa();
@@ -214,6 +214,7 @@ Apollo Server can be configured with an options object with the following fields
 * **context**: the context value passed to resolvers during GraphQL execution
 * **rootValue**: the value passed to the first resolve function
 * **formatError**: a function to apply to every error before sending the response to clients
+* **skipValidation**: skip query validation (increase performance, use carefully, only with whitelisting)
 * **validationRules**: additional GraphQL validation rules to be applied to client-specified queries
 * **formatParams**: a function applied for each query in a batch to format parameters before execution
 * **formatResponse**: a function applied to each response after execution
@@ -228,6 +229,7 @@ All options except for `schema` are optional.
 ### Whitelisting
 
 The `formatParams` function can be used in combination with the `OperationStore` to enable whitelisting.
+In this case query parsing and validation will be called only once when saving to store.
 
 ```js
 const store = new OperationStore(Schema);
@@ -236,6 +238,7 @@ graphqlOptions = {
   schema: Schema,
   formatParams(params) {
     params['query'] = store.get(params.operationName);
+    params['skipValidation'] = true;
     return params;
   },
 };

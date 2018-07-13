@@ -1,12 +1,12 @@
 ---
-title: End-to-end example
+title: Quick start
 description: Copy and paste this code to have a GraphQL server running in 30 seconds.
 ---
 
 Here's a complete example that sets up a GraphQL server with `apollo-server-express` and `graphql-tools`. First, make sure to install the necessary modules:
 
 ```sh
-npm install --save apollo-server-express graphql-tools graphql express body-parser
+npm install --save apollo-server-express@1 graphql-tools graphql express body-parser
 ```
 
 Then, run this code:
