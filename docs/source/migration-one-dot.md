@@ -3,7 +3,7 @@ title: Migrating to v1.0
 description: How to migrate to Apollo Server 1.0
 ---
 
-In July of 2017, we [announced the release of Apollo Server 1.0](https://dev-blog.apollodata.com/apollo-server-1-0-a-graphql-server-for-all-node-js-frameworks-2b37d3342f7c). This was not a major change, except for one thing: All of the packages have been renamed from `graphql-server-*` to `apollo-server-*`.
+In July of 2017, we [announced the release of Apollo Server 1.0](https://blog.apollographql.com/apollo-server-1-0-a-graphql-server-for-all-node-js-frameworks-2b37d3342f7c). This was not a major change, except for one thing: All of the packages have been renamed from `graphql-server-*` to `apollo-server-*`.
 
 All of the options, names, and API are identical to pre-1.0 versions.
 
