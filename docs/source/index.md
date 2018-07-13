@@ -18,7 +18,7 @@ If you want to get started quickly, take a look at the [quick start code snippet
 
 <h2 id="tutorial">End-to-end GraphQL server tutorial</h2>
 
-If you're looking to learn about how to connect to different data sources, check out our recently updated tutorial which walks you through building a server from start to finish: [How To Build a GraphQL Server to talk to SQL, MongoDB, and REST](https://dev-blog.apollodata.com/tutorial-building-a-graphql-server-cddaa023c035)
+If you're looking to learn about how to connect to different data sources, check out our recently updated tutorial which walks you through building a server from start to finish: [How To Build a GraphQL Server to talk to SQL, MongoDB, and REST](https://blog.apollographql.com/tutorial-building-a-graphql-server-cddaa023c035)
 
 <h2 id="selecting-package">Selecting the right package</h2>
 
