@@ -12,7 +12,8 @@ require('../packages/apollo-server-express/dist/expressApollo.test');
 require('../packages/apollo-server-express/dist/connectApollo.test');
 (NODE_MAJOR_VERSION >= 9 ||
   (NODE_MAJOR_VERSION >= 8 && NODE_MAJOR_REVISION >= 9)) &&
-  require('../packages/apollo-server-hapi/dist/hapiApollo.test'); // Hapi 17 is 8.9+
+  require('../packages/apollo-server-fastify/dist/fastifyApollo.test') &&
+  require('../packages/apollo-server-hapi/dist/hapiApollo.test'); // Hapi 17 and Fastify are 8.9+
 NODE_MAJOR_VERSION >= 6 &&
   require('../packages/apollo-server-micro/dist/microApollo.test');
 NODE_MAJOR_VERSION >= 7 &&
