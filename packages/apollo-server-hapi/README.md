@@ -56,61 +56,61 @@ StartServer();
 ```
 
 ## Hapi 16
+
 Imports must be monkey patched for Hapi 16 support (mainly attributes).
 
 ```js
-
 import { graphqlHapi, graphiqlHapi } from 'apollo-server-hapi';
 
 // add attributes for hapi 16
 graphqlHapi.attributes = {
-    name: graphqlHapi.name
+  name: graphqlHapi.name,
 };
 
 // if you happen to use graphiql then add attributes for hapi 16
 graphiqlHapi.attributes = {
-    name: graphiqlHapi.name
+  name: graphiqlHapi.name,
 };
 
 async function StartServer() {
-    const server = new Hapi.server({
-        host: HOST,
-        port: PORT,
-    });
+  const server = new Hapi.server({
+    host: HOST,
+    port: PORT,
+  });
 
-    await server.register({
-        plugin: graphqlHapi,
-        options: {
-            path: '/graphql',
-            graphqlOptions: {
-                schema: myGraphQLSchema,
-            },
-            route: {
-                cors: true,
-            },
-        },
-    });
+  await server.register({
+    plugin: graphqlHapi,
+    options: {
+      path: '/graphql',
+      graphqlOptions: {
+        schema: myGraphQLSchema,
+      },
+      route: {
+        cors: true,
+      },
+    },
+  });
 
-    await server.register({
-        plugin: graphiqlHapi,
-        options: {
-            path: '/graphiql',
-            route: {
-                cors: true,
-            },
-            graphiqlOptions: {
-                endpointURL: 'graphql'
-            }
-        },
-    });
+  await server.register({
+    plugin: graphiqlHapi,
+    options: {
+      path: '/graphiql',
+      route: {
+        cors: true,
+      },
+      graphiqlOptions: {
+        endpointURL: 'graphql',
+      },
+    },
+  });
 
-    try {
-        await server.start();
-    } catch (err) {
-        console.log(`Error while starting server: ${err.message}`);
-    }
+  try {
+    await server.start();
+  } catch (err) {
+    console.log(`Error while starting server: ${err.message}`);
+  }
 
-    console.log(`Server running at: ${server.info.uri}`);
+  console.log(`Server running at: ${server.info.uri}`);
 }
 
 StartServer();

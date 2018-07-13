@@ -8,7 +8,7 @@ import {
 } from 'apollo-server-core';
 
 export interface IRegister {
-    (server: Server, options: any, next?: Function): void;
+  (server: Server, options: any, next?: Function): void;
 }
 
 export interface IPlugin {
@@ -16,7 +16,6 @@ export interface IPlugin {
   version?: string;
   register: IRegister;
 }
-
 
 export interface HapiOptionsFunction {
   (req?: Request): GraphQLOptions | Promise<GraphQLOptions>;
@@ -95,7 +94,11 @@ export interface HapiGraphiQLPluginOptions {
 
 const graphiqlHapi: IPlugin = {
   name: 'graphiql',
-  register: (server: Server, options: HapiGraphiQLPluginOptions, next?: Function) => {
+  register: (
+    server: Server,
+    options: HapiGraphiQLPluginOptions,
+    next?: Function,
+  ) => {
     if (!options || !options.graphiqlOptions) {
       throw new Error('Apollo Server GraphiQL requires options.');
     }
@@ -124,4 +127,3 @@ const graphiqlHapi: IPlugin = {
 };
 
 export { graphqlHapi, graphiqlHapi };
-
