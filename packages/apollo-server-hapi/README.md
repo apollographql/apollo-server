@@ -15,7 +15,7 @@ npm install apollo-server-hapi
 
 With the Hapi plugins `graphqlHapi` and `graphiqlHapi` you can pass a route object that includes options to be applied to the route. The example below enables CORS on the `/graphql` route.
 
-The code below requires Hapi 17 or higher.
+The code below requires Hapi 17, See below for Hapi 16 support.
 
 ```js
 import Hapi from 'hapi';
@@ -39,6 +39,67 @@ async function StartServer() {
       },
       route: {
         cors: true,
+      },
+    },
+  });
+
+  try {
+    await server.start();
+  } catch (err) {
+    console.log(`Error while starting server: ${err.message}`);
+  }
+
+  console.log(`Server running at: ${server.info.uri}`);
+}
+
+StartServer();
+```
+
+## Hapi 16
+
+Imports must be monkey patched for Hapi 16 support (mainly attributes).
+
+```js
+import { graphqlHapi, graphiqlHapi } from 'apollo-server-hapi';
+
+// add attributes for hapi 16
+graphqlHapi.attributes = {
+  name: graphqlHapi.name,
+};
+
+// if you happen to use graphiql then add attributes for hapi 16
+graphiqlHapi.attributes = {
+  name: graphiqlHapi.name,
+};
+
+async function StartServer() {
+  const server = new Hapi.server({
+    host: HOST,
+    port: PORT,
+  });
+
+  await server.register({
+    plugin: graphqlHapi,
+    options: {
+      path: '/graphql',
+      graphqlOptions: {
+        schema: myGraphQLSchema,
+      },
+      route: {
+        cors: true,
+      },
+    },
+  });
+
+  await server.register({
+    plugin: graphiqlHapi,
+    options: {
+      path: '/graphiql',
+      route: {
+        cors: true,
+      },
+      graphiqlOptions: {
+        endpointURL: 'graphql',
       },
     },
   });
