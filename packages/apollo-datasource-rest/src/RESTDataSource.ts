@@ -9,7 +9,11 @@ import {
   URLSearchParamsInit,
 } from 'apollo-server-env';
 
+import { DataSource } from 'apollo-datasource';
+
+import { KeyValueCache } from 'apollo-server-caching';
 import { HTTPCache } from './HTTPCache';
+
 import {
   ApolloError,
   AuthenticationError,
@@ -28,9 +32,14 @@ export { Request };
 
 type ValueOrPromise<T> = T | Promise<T>;
 
-export abstract class RESTDataSource<TContext = any> {
+export abstract class RESTDataSource<TContext = any> extends DataSource {
   httpCache!: HTTPCache;
   context!: TContext;
+
+  initialize(context: TContext, cache: KeyValueCache): void {
+    this.context = context;
+    this.httpCache = new HTTPCache(cache);
+  }
 
   baseURL?: string;
 
@@ -48,20 +57,54 @@ export abstract class RESTDataSource<TContext = any> {
     }
   }
 
-  protected async didReceiveErrorResponse<TResult = any>(
+  protected async didReceiveResponse<TResult = any>(
     response: Response,
+    _request: Request,
   ): Promise<TResult> {
-    const message = `${response.status} ${
-      response.statusText
-    }: ${await response.text()}`;
-
-    if (response.status === 401) {
-      throw new AuthenticationError(message);
-    } else if (response.status === 403) {
-      throw new ForbiddenError(message);
+    if (response.ok) {
+      return (this.parseBody(response) as any) as Promise<TResult>;
     } else {
-      throw new ApolloError(message);
+      throw await this.errorFromResponse(response);
     }
+  }
+
+  protected didEncounterError(error: Error, _request: Request) {
+    throw error;
+  }
+
+  protected parseBody(response: Response): Promise<object | string> {
+    const contentType = response.headers.get('Content-Type');
+    if (contentType && contentType.startsWith('application/json')) {
+      return response.json();
+    } else {
+      return response.text();
+    }
+  }
+
+  protected async errorFromResponse(response: Response) {
+    const message = `${response.status}: ${response.statusText}`;
+
+    let error: ApolloError;
+    if (response.status === 401) {
+      error = new AuthenticationError(message);
+    } else if (response.status === 403) {
+      error = new ForbiddenError(message);
+    } else {
+      error = new ApolloError(message);
+    }
+
+    const body = await this.parseBody(response);
+
+    Object.assign(error.extensions, {
+      response: {
+        url: response.url,
+        status: response.status,
+        statusText: response.statusText,
+        body,
+      },
+    });
+
+    return error;
   }
 
   protected async get<TResult = any>(
@@ -144,8 +187,10 @@ export abstract class RESTDataSource<TContext = any> {
     // We accept arbitrary objects as body and serialize them as JSON
     if (
       options.body !== undefined &&
-      typeof options.body !== 'string' &&
-      !(options.body instanceof ArrayBuffer)
+      options.body !== null &&
+      (options.body.constructor === Object ||
+        ((options.body as any).toJSON &&
+          typeof (options.body as any).toJSON === 'function'))
     ) {
       options.body = JSON.stringify(options.body);
       options.headers.set('Content-Type', 'application/json');
@@ -154,17 +199,11 @@ export abstract class RESTDataSource<TContext = any> {
     const request = new Request(String(url), options);
 
     return this.trace(`${options.method || 'GET'} ${url}`, async () => {
-      const response = await this.httpCache.fetch(request);
-      if (response.ok) {
-        const contentType = response.headers.get('Content-Type');
-
-        if (contentType && contentType.startsWith('application/json')) {
-          return response.json();
-        } else {
-          return response.text();
-        }
-      } else {
-        return this.didReceiveErrorResponse(response);
+      try {
+        const response = await this.httpCache.fetch(request);
+        return this.didReceiveResponse(response, request);
+      } catch (error) {
+        this.didEncounterError(error, request);
       }
     });
   }

@@ -243,13 +243,9 @@ new ApolloServer({
 });
 ```
 
-For most other functions that might have required access to the middleware arguments, such as `formatParams`, `formatError`, and `formatResponse`, it is possible to create a `graphql-extension`.
-
-For more complicated use cases, the `ApolloServer` class can be extended to override the `createGraphQLServerOptions` function to create parameters based on the same argument that's passed to the context.
-
 <h2 id="log-function">Replacing `logFunction`</h2>
 
-Apollo Server 2 removes the `logFunction` in favor of using `graphql-extensions`, which provides a more structured and flexible way of instrumenting Apollo Server. The explanation of how to do this more granular logging, can be found in the [metrics section](./features/metrics.html)
+Apollo Server 2 removes the `logFunction` to reduce the exposure of internal implementation details. The experimental, non-public `graphql-extensions` provides a more structured and flexible way of instrumenting Apollo Server. An explanation of to do more granular logging, can be found in the [metrics section](./features/metrics.html).
 
 <h2 id="graphiql">Replacing GraphiQL</h2>
 

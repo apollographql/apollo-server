@@ -1,5 +1,4 @@
 import * as hapi from 'hapi';
-import { ApolloServerBase } from 'apollo-server-core';
 import { parseAll } from 'accept';
 import {
   renderPlaygroundPage,
@@ -10,7 +9,11 @@ import { processRequest as processFileUploads } from 'apollo-upload-server';
 import { graphqlHapi } from './hapiApollo';
 
 export { GraphQLOptions, GraphQLExtension } from 'apollo-server-core';
-import { GraphQLOptions, FileUploadOptions } from 'apollo-server-core';
+import {
+  ApolloServerBase,
+  GraphQLOptions,
+  FileUploadOptions,
+} from 'apollo-server-core';
 
 function handleFileUploads(uploadsConfig: FileUploadOptions) {
   return async (request: hapi.Request) => {
@@ -47,7 +50,6 @@ export class ApolloServer extends ApolloServerBase {
     cors,
     path,
     disableHealthCheck,
-    gui,
     onHealthCheck,
   }: ServerRegistration) {
     if (!path) path = '/graphql';
@@ -63,15 +65,7 @@ export class ApolloServer extends ApolloServerBase {
           await handleFileUploads(this.uploadsConfig)(request);
         }
 
-        // Note: if you enable a gui in production and expect to be able to see your
-        // schema, you'll need to manually specify `introspection: true` in the
-        // ApolloServer constructor; by default, the introspection query is only
-        // enabled in dev.
-        const guiEnabled =
-          !!gui || (gui === undefined && process.env.NODE_ENV !== 'production');
-
-        // enableGUI takes precedence over the server tools setting
-        if (guiEnabled && request.method === 'get') {
+        if (this.playgroundOptions && request.method === 'get') {
           // perform more expensive content-type check only if necessary
           const accept = parseAll(request.headers);
           const types = accept.mediaTypes as string[];
@@ -85,6 +79,7 @@ export class ApolloServer extends ApolloServerBase {
               endpoint: path,
               subscriptionEndpoint: this.subscriptionsPath,
               version: this.playgroundVersion,
+              ...this.playgroundOptions,
             };
 
             return h
@@ -143,7 +138,6 @@ export interface ServerRegistration {
   cors?: boolean | hapi.RouteOptionsCors;
   onHealthCheck?: (request: hapi.Request) => Promise<any>;
   disableHealthCheck?: boolean;
-  gui?: boolean;
   uploads?: boolean | Record<string, any>;
 }
 

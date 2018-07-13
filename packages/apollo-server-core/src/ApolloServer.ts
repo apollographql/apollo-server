@@ -21,10 +21,6 @@ import {
   ExecutionParams,
 } from 'subscriptions-transport-ws';
 
-// use as default persisted query store
-import Keyv = require('keyv');
-import QuickLru = require('quick-lru');
-
 import { formatApolloErrors } from 'apollo-server-errors';
 import {
   GraphQLServerOptions as GraphQLOptions,
@@ -42,7 +38,11 @@ import {
 import { FormatErrorExtension } from './formatters';
 
 import { gql } from './index';
-import { PersistedQueryCache } from './caching';
+
+import {
+  createPlaygroundOptions,
+  PlaygroundRenderPageOptions,
+} from './playground';
 
 const NoIntrospection = (context: ValidationContext) => ({
   Field(node: FieldDefinitionNode) {
@@ -69,13 +69,11 @@ export class ApolloServerBase {
   protected subscriptionServerOptions?: SubscriptionServerOptions;
   protected uploadsConfig?: FileUploadOptions;
 
-  // This specifies the version of GraphQL Playground that will be served
-  // from graphql-playground-html, and is passed to renderPlaygroundPage
-  // by the integration subclasses
-  protected playgroundVersion = '1.7.1';
-
   // set by installSubscriptionHandlers.
   private subscriptionServer?: SubscriptionServer;
+
+  // the default version is specified in playground.ts
+  protected playgroundOptions?: PlaygroundRenderPageOptions;
 
   // The constructor should be universal across all environments. All environment specific behavior should be set by adding or overriding methods
   constructor(config: Config) {
@@ -92,6 +90,7 @@ export class ApolloServerBase {
       engine,
       subscriptions,
       uploads,
+      playground,
       ...requestOptions
     } = config;
 
@@ -115,23 +114,19 @@ export class ApolloServerBase {
         : noIntro;
     }
 
+    if (!requestOptions.cache) {
+      requestOptions.cache = new InMemoryLRUCache();
+    }
+
     if (requestOptions.persistedQueries !== false) {
       if (!requestOptions.persistedQueries) {
-        // maxSize is the number of elements that can be stored inside of the cache
-        // https://github.com/withspectrum/spectrum has about 200 instances of gql`
-        // 300 queries seems reasonable
-        const lru = new QuickLru({ maxSize: 300 });
         requestOptions.persistedQueries = {
-          cache: new Keyv({ store: lru }) as PersistedQueryCache,
+          cache: requestOptions.cache!,
         };
       }
     } else {
       // the user does not want to use persisted queries, so we remove the field
       delete requestOptions.persistedQueries;
-    }
-
-    if (!requestOptions.cache) {
-      requestOptions.cache = new InMemoryLRUCache();
     }
 
     this.requestOptions = requestOptions as GraphQLOptions;
@@ -244,6 +239,8 @@ export class ApolloServerBase {
         );
       }
     }
+
+    this.playgroundOptions = createPlaygroundOptions(playground);
   }
 
   // used by integrations to synchronize the path with subscriptions, some

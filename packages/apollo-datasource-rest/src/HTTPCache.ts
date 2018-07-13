@@ -78,7 +78,7 @@ export class HTTPCache {
     const body = await response.text();
     const entry = JSON.stringify({ policy: policy.toObject(), body });
 
-    let ttl = policy.timeToLive() / 1000;
+    let ttl = Math.round(policy.timeToLive() / 1000);
     // If a response can be revalidated, we don't want to remove it from the cache right after it expires.
     // We may be able to use better heuristics here, but for now we'll take the max-age times 2.
     if (canBeRevalidated(response)) {
