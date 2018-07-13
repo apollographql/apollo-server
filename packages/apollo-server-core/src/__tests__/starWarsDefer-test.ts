@@ -255,7 +255,7 @@ describe('@defer Directive tests', () => {
       }
     });
 
-    it('Can @defer on fields nested within deferred fields', async done => {
+    it('Can @defer on fields nested within deferred fields, ensuring ordering', async done => {
       const query = `
         query NestedQuery {
           human(id: "1000") {
@@ -283,18 +283,21 @@ describe('@defer Directive tests', () => {
           await forAwaitEach(result.deferredPatches, patch => {
             patches.push(patch);
           });
-          expect(patches.length).toBe(2);
-          expect(patches).toContainEqual({
-            path: ['human', 'weapon'],
-            data: {
-              strength: 'High',
-              name: null,
+          // Ensure that ordering constraint is met: parent patches should
+          // be returned before child patches.
+          expect(patches).toEqual([
+            {
+              path: ['human', 'weapon'],
+              data: {
+                strength: 'High',
+                name: null,
+              },
             },
-          });
-          expect(patches).toContainEqual({
-            path: ['human', 'weapon', 'name'],
-            data: 'Light Saber',
-          });
+            {
+              path: ['human', 'weapon', 'name'],
+              data: 'Light Saber',
+            },
+          ]);
           done();
         }
       } catch (error) {
@@ -351,6 +354,86 @@ describe('@defer Directive tests', () => {
           expect(patches).toContainEqual({
             path: ['human', 'friends', 0, 'name'],
             data: 'Luke Skywalker',
+          });
+          done();
+        }
+      } catch (error) {
+        done(error);
+      }
+    });
+
+    it('Can @defer on more nested queries', async done => {
+      const query = `
+        query NestedQuery {
+          hero {
+            name
+            friends @defer {
+              id
+              name @defer
+              friends @defer {
+                name
+              }
+            }
+          }
+        }
+      `;
+      try {
+        const result = await graphql(StarWarsSchema, query);
+        expect(isDeferredExecutionResult(result)).toBe(true);
+        if (isDeferredExecutionResult(result)) {
+          expect(result.initialResult).toEqual({
+            data: {
+              hero: {
+                name: 'R2-D2',
+                friends: null,
+              },
+            },
+          });
+          const patches = [];
+          await forAwaitEach(result.deferredPatches, patch => {
+            patches.push(patch);
+          });
+          expect(patches.length).toBe(7);
+          expect(patches).toContainEqual({
+            path: ['hero', 'friends'],
+            data: [
+              {
+                id: '1000',
+                name: null,
+                friends: null,
+              },
+              {
+                id: '1002',
+                name: null,
+                friends: null,
+              },
+              {
+                id: '1003',
+                name: null,
+                friends: null,
+              },
+            ],
+          });
+          expect(patches).toContainEqual({
+            path: ['hero', 'friends', 0, 'name'],
+            data: 'Luke Skywalker',
+          });
+          expect(patches).toContainEqual({
+            path: ['hero', 'friends', 0, 'friends'],
+            data: [
+              {
+                name: 'Han Solo',
+              },
+              {
+                name: 'Leia Organa',
+              },
+              {
+                name: 'C-3PO',
+              },
+              {
+                name: 'R2-D2',
+              },
+            ],
           });
           done();
         }
