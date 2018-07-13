@@ -4,9 +4,16 @@ All of the packages in the `apollo-server` repo are released with the same versi
 
 ### vNEXT
 
-* Upgrade `subscription-transport-ws` to 0.9.9 for Graphiql
 * Remove tests and guaranteed support for Node 4 [PR #1024](https://github.com/apollographql/apollo-server/pull/1024)
 * Cleanup docs [PR #1233](https://github.com/apollographql/apollo-server/pull/1233/files)
+
+### 1.4.0
+
+* [Issue #626] Integrate apollo-fastify plugin. [PR #1013](https://github.com/apollographql/apollo-server/pull/1013)
+* add hapi 16 next() invocation [PR #743](https://github.com/apollographql/apollo-server/pull/743)
+* Add skipValidation option [PR #839](https://github.com/apollographql/apollo-server/pull/839)
+* `apollo-server-module-graphiql`: adds an option to the constructor to disable url rewriting when editing a query [PR #1047](https://github.com/apollographql/apollo-server/pull/1047)
+* Upgrade `subscription-transport-ws` to 0.9.9 for Graphiql
 
 ### v1.3.6
 
