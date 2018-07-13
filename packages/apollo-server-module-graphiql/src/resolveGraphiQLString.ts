@@ -48,6 +48,7 @@ function createGraphiQLData(
     passHeader: options.passHeader,
     editorTheme: options.editorTheme,
     websocketConnectionParams: options.websocketConnectionParams,
+    rewriteURL: options.rewriteURL,
   };
 }
 

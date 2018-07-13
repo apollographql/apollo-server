@@ -129,9 +129,9 @@ StartServer();
 ### Koa
 
 ```js
-import koa from 'koa'; // koa@2
-import koaRouter from 'koa-router'; // koa-router@next
-import koaBody from 'koa-bodyparser'; // koa-bodyparser@next
+import koa from 'koa';
+import koaRouter from 'koa-router';
+import koaBody from 'koa-bodyparser';
 import { graphqlKoa, graphiqlKoa } from 'apollo-server-koa';
 
 const app = new koa();

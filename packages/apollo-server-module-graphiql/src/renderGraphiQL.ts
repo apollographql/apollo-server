@@ -30,11 +30,12 @@ export type GraphiQLData = {
   passHeader?: string;
   editorTheme?: string;
   websocketConnectionParams?: Object;
+  rewriteURL?: boolean;
 };
 
 // Current latest version of GraphiQL.
 const GRAPHIQL_VERSION = '0.11.11';
-const SUBSCRIPTIONS_TRANSPORT_VERSION = '0.8.2';
+const SUBSCRIPTIONS_TRANSPORT_VERSION = '0.9.9';
 
 // Ensures string values are safe to be used within a <script> tag.
 // TODO: I don't think that's the right escape function
@@ -62,6 +63,7 @@ export function renderGraphiQL(data: GraphiQLData): string {
   const editorTheme = data.editorTheme;
   const usingEditorTheme = !!editorTheme;
   const websocketConnectionParams = data.websocketConnectionParams || null;
+  const rewriteURL = !!data.rewriteURL;
 
   /* eslint-disable max-len */
   return `
@@ -199,15 +201,15 @@ export function renderGraphiQL(data: GraphiQLData): string {
     // that it can be easily shared.
     function onEditQuery(newQuery) {
       parameters.query = newQuery;
-      updateURL();
+      ${rewriteURL ? 'updateURL();' : ''}
     }
     function onEditVariables(newVariables) {
       parameters.variables = newVariables;
-      updateURL();
+      ${rewriteURL ? 'updateURL();' : ''}
     }
     function onEditOperationName(newOperationName) {
       parameters.operationName = newOperationName;
-      updateURL();
+      ${rewriteURL ? 'updateURL();' : ''}
     }
     function updateURL() {
       var cleanParams = Object.keys(parameters).filter(function(v) {
