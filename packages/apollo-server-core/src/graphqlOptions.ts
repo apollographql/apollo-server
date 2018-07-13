@@ -3,7 +3,6 @@ import {
   ValidationContext,
   GraphQLFieldResolver,
 } from 'graphql';
-import { HttpHeaderCalculation } from './caching';
 import { GraphQLExtension } from 'graphql-extensions';
 import { CacheControlExtensionOptions } from 'apollo-cache-control';
 import { KeyValueCache } from 'apollo-server-caching';
@@ -42,7 +41,7 @@ export interface GraphQLServerOptions<
   cacheControl?:
     | boolean
     | (CacheControlExtensionOptions & {
-        calculateHttpHeaders?: boolean | HttpHeaderCalculation;
+        calculateHttpHeaders?: boolean;
         stripFormattedExtensions?: boolean;
       });
   extensions?: Array<() => GraphQLExtension>;
