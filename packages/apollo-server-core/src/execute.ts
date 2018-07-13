@@ -69,6 +69,20 @@ function isPromise(
   return maybePromise && typeof maybePromise.then === 'function';
 }
 
+// Valid types a GraphQL field can take
+type FieldValue =
+  | Record<string, {}>
+  | Record<string, {}>[]
+  | string
+  | number
+  | boolean
+  | null;
+
+type PatchBundle = Promise<{
+  patch: ExecutionPatchResult;
+  dependentPatches: PatchBundle[];
+}>;
+
 /**
  * Data that must be available at all points during query execution.
  *
@@ -88,7 +102,13 @@ export type ExecutionContext = {
   fieldResolver: GraphQLFieldResolver<any, any>;
   errors: Array<GraphQLError>;
   patchDispatcher?: PatchDispatcher;
-  deferredErrors?: Record<string, GraphQLError[]>;
+  deferredDependents?: Record<
+    string,
+    {
+      patches: PatchBundle[];
+      errors: GraphQLError[];
+    }
+  >;
 };
 
 /**
@@ -114,7 +134,7 @@ function shouldDeferNode(
  * original result.
  */
 export interface ExecutionPatchResult {
-  data?: Record<string, any>;
+  data?: FieldValue;
   errors?: ReadonlyArray<GraphQLError>;
   path: ReadonlyArray<string | number>;
 }
@@ -146,24 +166,59 @@ export function isDeferredExecutionResult(
  */
 function formatDataAsPatch(
   path: ResponsePath,
-  data: Record<string, any>,
+  data: FieldValue,
   errors: ReadonlyArray<GraphQLError>,
 ): ExecutionPatchResult {
   return {
     path: responsePathAsArray(path),
     data,
-    errors,
+    errors: errors && errors.length > 0 ? errors : undefined,
   };
+}
+
+/**
+ * Utlity functions to store patches or errors that should be returned with
+ * its parent. These patches/errors are added here by child nodes, and retrieved
+ * by the parent.
+ */
+function initializeDependentStore(
+  exeContext: ExecutionContext,
+  parentPath: string,
+) {
+  if (!exeContext.deferredDependents) {
+    exeContext.deferredDependents = {};
+  }
+  if (!exeContext.deferredDependents[parentPath]) {
+    exeContext.deferredDependents[parentPath] = {
+      errors: [] as GraphQLError[],
+      patches: [] as PatchBundle[],
+    };
+  }
+}
+
+function deferErrorToParent(
+  exeContext: ExecutionContext,
+  parentPath: string,
+  error: GraphQLError,
+) {
+  initializeDependentStore(exeContext, parentPath);
+  exeContext.deferredDependents[parentPath].errors.push(error);
+}
+
+function deferPatchToParent(
+  exeContext: ExecutionContext,
+  parentPath: string,
+  patch: PatchBundle,
+) {
+  initializeDependentStore(exeContext, parentPath);
+  exeContext.deferredDependents[parentPath].patches.push(patch);
 }
 
 /**
  * Calls dispatch on the PatchDispatcher, creating it if it is not already
  * instantiated.
  */
-function dispatchPatch(
-  exeContext: ExecutionContext,
-  patch: Promise<ExecutionPatchResult>,
-): void {
+function dispatchPatch(exeContext: ExecutionContext, patch: PatchBundle): void {
   if (!exeContext.patchDispatcher) {
     exeContext.patchDispatcher = new PatchDispatcher();
   }
@@ -184,9 +239,15 @@ class PatchDispatcher {
     done: boolean;
   }>[] = [];
 
-  public dispatch(promisedPatch: Promise<ExecutionPatchResult>): void {
-    promisedPatch.then(value => {
-      this.resolvers.shift()({ value, done: false });
+  public dispatch(patch: PatchBundle): void {
+    patch.then(({ patch, dependentPatches }) => {
+      if (dependentPatches) {
+        for (const patch of dependentPatches) {
+          this.dispatch(patch);
+        }
+      } else {
+      }
+      this.resolvers.shift()({ value: patch, done: false });
     });
     this.resultPromises.push(
       new Promise<{ value: ExecutionPatchResult; done: boolean }>(resolve => {
@@ -304,7 +365,10 @@ function executeImpl(
     (context as ExecutionContext).operation,
     rootValue,
   );
-  return buildResponse(context as ExecutionContext, data);
+  return buildResponse(
+    context as ExecutionContext,
+    data as MaybePromise<Record<string, {}> | null>,
+  );
 }
 
 /**
@@ -341,7 +405,7 @@ function executeOperation(
   exeContext: ExecutionContext,
   operation: OperationDefinitionNode,
   rootValue: {},
-): MaybePromise<Record<string, {}> | null> {
+): MaybePromise<FieldValue> {
   const type = getOperationRootType(exeContext.schema, operation);
   const fields = collectFields(
     exeContext,
@@ -426,7 +490,7 @@ function executeFieldsSerially(
   sourceValue: {},
   path: ResponsePath,
   fields: Record<string, Array<FieldNode>>,
-): MaybePromise<Record<string, {}>> {
+): MaybePromise<FieldValue> {
   return promiseReduce(
     Object.keys(fields),
     (results, responseName) => {
@@ -466,7 +530,7 @@ function executeFields(
   path: ResponsePath,
   fields: Record<string, Array<FieldNode>>,
   closestDeferredParent?: string,
-): MaybePromise<Record<string, {}>> {
+): MaybePromise<FieldValue> {
   const results = Object.create(null);
   let containsPromise = false;
 
@@ -482,9 +546,7 @@ function executeFields(
       sourceValue,
       fieldNodes,
       fieldPath,
-      shouldDefer
-        ? responsePathAsArray(fieldPath).toString()
-        : closestDeferredParent,
+      closestDeferredParent,
     );
 
     if (result !== undefined) {
@@ -569,45 +631,32 @@ function asErrorInstance(error: any): Error {
 }
 
 /**
- * Helper function that completes a promise or value by recursively calling
- * completeValue()
+ * Creates a bundle of patches, in a recursive structure that expresses the
+ * dependencies between patches. We want to ensure that patches of child fields
+ * get returned only after patches for its parent deferred field returns.
  */
-function completePromiseOrValue(
+function makePatchBundle(
   exeContext: ExecutionContext,
-  returnType: GraphQLOutputType,
-  fieldNodes: ReadonlyArray<FieldNode>,
-  info: GraphQLResolveInfo,
   path: ResponsePath,
-  result: MaybePromise<{}>,
-  closestDeferredParent: string,
-) {
-  try {
-    if (isPromise(result)) {
-      return result.then(resolved =>
-        completeValue(
-          exeContext,
-          returnType,
-          fieldNodes,
-          info,
-          path,
-          resolved,
-          closestDeferredParent,
-        ),
-      );
-    } else {
-      return completeValue(
-        exeContext,
-        returnType,
-        fieldNodes,
-        info,
-        path,
-        result,
-        closestDeferredParent,
-      );
-    }
-  } catch (error) {
-    throw error;
+  data: MaybePromise<FieldValue>,
+): PatchBundle {
+  if (isPromise(data)) {
+    return data.then(resolvedData =>
+      makePatchBundle(exeContext, path, resolvedData),
+    );
   }
+  const dependent = exeContext.deferredDependents
+    ? exeContext.deferredDependents[responsePathAsArray(path).toString()]
+    : undefined;
+
+  return Promise.resolve({
+    patch: formatDataAsPatch(
+      path,
+      data,
+      dependent ? dependent.errors : (dependent as undefined),
+    ),
+    dependentPatches: dependent ? dependent.patches : (dependent as undefined),
+  });
 }
 
 /* This is a small wrapper around completeValue which detects and logs errors
@@ -628,7 +677,7 @@ function completeValueCatchingError(
   path: ResponsePath,
   result: {},
   closestDeferredParent: string,
-): MaybePromise<{}> | undefined {
+): MaybePromise<FieldValue> | undefined {
   // Items in a list inherit the @defer directive applied on the list type,
   // but we do not need to defer the item itself.
   const pathArray = responsePathAsArray(path);
@@ -649,42 +698,49 @@ function completeValueCatchingError(
     );
   }
 
+  // Update closestDeferredParent if the current node is deferred
+  const curClosestDeferredParent = shouldDefer
+    ? responsePathAsArray(path).toString()
+    : closestDeferredParent;
+
   try {
     let completed;
-    if (shouldDefer) {
-      completed = completePromiseOrValue(
+    if (isPromise(result)) {
+      completed = result.then(resolved =>
+        completeValue(
+          exeContext,
+          returnType,
+          fieldNodes,
+          info,
+          path,
+          resolved,
+          curClosestDeferredParent,
+        ),
+      );
+    } else {
+      completed = completeValue(
         exeContext,
         returnType,
         fieldNodes,
         info,
         path,
         result,
-        closestDeferredParent,
+        curClosestDeferredParent,
       );
+    }
 
-      // Get a key that allows us to access errors that should
-      // be returned with this node - put there by its children
-      const pathString = responsePathAsArray(path).toString();
-
-      if (isPromise(completed)) {
-        dispatchPatch(
-          exeContext,
-          completed.then(data => {
-            // Fetch errors that should be returned with this patch
-            const errors = exeContext.deferredErrors
-              ? exeContext.deferredErrors[pathString]
-              : undefined;
-            return formatDataAsPatch(path, data, errors);
-          }),
-        );
+    if (shouldDefer) {
+      let promisedPatch: PatchBundle = makePatchBundle(
+        exeContext,
+        path,
+        completed,
+      );
+      if (closestDeferredParent) {
+        // If this field is a child of a deferred field, let the parent
+        // dispatch it.
+        deferPatchToParent(exeContext, closestDeferredParent, promisedPatch);
       } else {
-        const errors = exeContext.deferredErrors
-          ? exeContext.deferredErrors[pathString]
-          : undefined;
-        dispatchPatch(
-          exeContext,
-          Promise.resolve(formatDataAsPatch(path, completed, errors)),
-        );
+        dispatchPatch(exeContext, promisedPatch);
       }
 
       // Return null instead of a Promise so execution does not wait for
@@ -693,16 +749,6 @@ function completeValueCatchingError(
     }
 
     // If field is not deferred, execution proceeds normally.
-    completed = completePromiseOrValue(
-      exeContext,
-      returnType,
-      fieldNodes,
-      info,
-      path,
-      result,
-      closestDeferredParent,
-    );
-
     if (isPromise(completed)) {
       // Note: we don't rely on a `catch` method, but we do expect "thenable"
       // to take a second callback for the error case.
@@ -789,7 +835,7 @@ function handleDeferredFieldError(
   path,
   returnType,
   exeContext,
-  closestDeferredParent,
+  closestDeferredParent: string,
 ): void {
   const error = locatedError(
     asErrorInstance(rawError),
@@ -797,25 +843,28 @@ function handleDeferredFieldError(
     responsePathAsArray(path),
   );
 
+  const dependent = exeContext.deferredDependents
+    ? exeContext.deferredDependents[responsePathAsArray(path).toString()]
+    : undefined;
+
   if (shouldDeferNode(exeContext, fieldNodes[0])) {
     // If this node is itself deferred, then send errors with this patch
     const patch = formatDataAsPatch(path, undefined, [error]);
-    dispatchPatch(exeContext, Promise.resolve(patch));
+    const promisedPatch = Promise.resolve({
+      patch,
+      dependentPatches: dependent ? dependent.patches : dependent,
+    });
+    if (closestDeferredParent) {
+      deferPatchToParent(exeContext, closestDeferredParent, promisedPatch);
+    } else {
+      dispatchPatch(exeContext, promisedPatch);
+    }
   }
 
   // If it is its parent that is deferred, errors should be returned with the
   // parent's patch, so store it on ExecutionContext first.
   if (closestDeferredParent) {
-    if (exeContext.deferredErrors) {
-      if (exeContext.deferredErrors[closestDeferredParent]) {
-        exeContext.deferredErrors[closestDeferredParent].push(error);
-      } else {
-        exeContext.deferredErrors[closestDeferredParent] = [error];
-      }
-    } else {
-      exeContext.deferredErrors = {};
-      exeContext.deferredErrors[closestDeferredParent] = [error];
-    }
+    deferErrorToParent(exeContext, closestDeferredParent, error);
   }
 
   return null;
@@ -850,7 +899,7 @@ function completeValue(
   path: ResponsePath,
   result: MaybePromise<{}>,
   closestDeferredParent: string,
-): MaybePromise<{}> {
+): MaybePromise<FieldValue> {
   // If result is an Error, throw a located error.
   if (result instanceof Error) {
     throw result;
@@ -948,7 +997,7 @@ function completeListValue(
   path: ResponsePath,
   result: {},
   closestDeferredParent: string,
-): MaybePromise<ReadonlyArray<{}>> {
+): MaybePromise<FieldValue> {
   invariant(
     isCollection(result),
     `Expected Iterable, but did not find one for field ${
@@ -988,7 +1037,10 @@ function completeListValue(
  * Complete a Scalar or Enum by serializing to a valid value, returning
  * null if serialization is not possible.
  */
-function completeLeafValue(returnType: GraphQLLeafType, result: {}): {} {
+function completeLeafValue(
+  returnType: GraphQLLeafType,
+  result: {},
+): FieldValue {
   invariant(returnType.serialize, 'Missing serialize method on type');
   const serializedResult = returnType.serialize(result);
   if (isInvalid(serializedResult)) {
@@ -1012,7 +1064,7 @@ function completeAbstractValue(
   path: ResponsePath,
   result: {},
   closestDeferredParent: string,
-): MaybePromise<Record<string, {}>> {
+): MaybePromise<FieldValue> {
   const runtimeType = returnType.resolveType
     ? returnType.resolveType(result, exeContext.contextValue, info)
     : defaultResolveTypeFn(result, exeContext.contextValue, info, returnType);
@@ -1106,7 +1158,7 @@ function completeObjectValue(
   path: ResponsePath,
   result: {},
   closestDeferredParent: string,
-): MaybePromise<Record<string, {}>> {
+): MaybePromise<FieldValue> {
   // If there is an isTypeOf predicate function, call it with the
   // current result. If isTypeOf returns false, then raise an error rather
   // than continuing execution.
@@ -1165,7 +1217,7 @@ function collectAndExecuteSubfields(
   path: ResponsePath,
   result: {},
   closestDeferredParent: string,
-): MaybePromise<Record<string, {}>> {
+): MaybePromise<FieldValue> {
   // Collect sub-fields to execute to complete this value.
   const subFieldNodes = collectSubfields(exeContext, returnType, fieldNodes);
   return executeFields(
