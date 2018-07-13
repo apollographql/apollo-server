@@ -1,0 +1,1 @@
+The `graphql-server-module-graphiql` package is now called [`apollo-server-module-graphiql`](https://www.npmjs.com/package/apollo-server-module-graphiql). We are continuing to release matching versions of the package under the old name, but we recommend you switch to using the new name. The API is identical.

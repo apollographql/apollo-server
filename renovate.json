@@ -1,13 +1,22 @@
 {
-  "pinVersions": true,
+  "extends": [":pinOnlyDevDependencies"],
   "semanticCommits": true,
-  "depTypes": [{ "depType": "dependencies", "pinVersions": false }],
   "timezone": "America/Los_Angeles",
-  "schedule": ["after 10pm and before 5am on every weekday"],
+  "schedule": ["after 6pm and before 8am on every weekday"],
   "rebaseStalePrs": true,
   "prCreation": "not-pending",
   "automerge": "minor",
   "labels": ["tooling", "dependencies"],
+  "pathRules": [
+    {
+      "paths": ["docs/package.json"],
+      "extends": ["apollo-docs"],
+      "baseBranches": [
+        "master",
+        "version-2"
+      ]
+    }
+  ],
   "packageRules": [
     {
       "packageNames": ["lint-staged"],

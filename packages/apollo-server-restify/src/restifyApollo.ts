@@ -35,7 +35,7 @@ export function graphqlRestify(
     );
   }
 
-  return (
+  const graphqlHandler = (
     req: restify.Request,
     res: restify.Response,
     next: restify.Next,
@@ -69,6 +69,8 @@ export function graphqlRestify(
       },
     );
   };
+
+  return graphqlHandler;
 }
 
 export interface RestifyGraphiQLOptionsFunction {
@@ -91,7 +93,11 @@ export interface RestifyGraphiQLOptionsFunction {
 export function graphiqlRestify(
   options: GraphiQL.GraphiQLData | RestifyGraphiQLOptionsFunction,
 ) {
-  return (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  const graphiqlHandler = (
+    req: restify.Request,
+    res: restify.Response,
+    next: restify.Next,
+  ) => {
     const query = (req.url && url.parse(req.url, true).query) || {};
     GraphiQL.resolveGraphiQLString(query, options, req).then(
       graphiqlString => {
@@ -108,4 +114,6 @@ export function graphiqlRestify(
       },
     );
   };
+
+  return graphiqlHandler;
 }

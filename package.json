@@ -7,52 +7,53 @@
   },
   "scripts": {
     "compile": "lerna exec -- npm run compile",
-    "lint":
-      "prettier-check --ignore-path .gitignore \"{docs/{,source/**},.,packages/**,test}/{*.js,*.ts,*.md}\"",
-    "lint-fix":
-      "prettier --write --ignore-path .gitignore \"{docs/{,source/**},.,packages/**,test}/{*.js,*.ts,*.md}\"",
+    "lint": "prettier-check --ignore-path .gitignore \"{docs/{,source/**},.,packages/**,test}/{*.js,*.ts,*.md}\"",
+    "lint-fix": "prettier --write --ignore-path .gitignore \"{docs/{,source/**},.,packages/**,test}/{*.js,*.ts,*.md}\"",
     "prebootstrap": "npm install",
     "postinstall": "lerna bootstrap",
     "pretest": "npm run compile",
     "test": "npm run testonly --",
     "posttest": "npm run lint",
-    "testonly":
-      "mocha --reporter spec --full-trace --timeout 5000 ./test/tests.js",
-    "coverage":
-      "istanbul cover -x \"*.test.js\" _mocha -- --timeout 5000 --full-trace --reporter dot ./test/tests.js",
+    "testonly": "mocha --reporter spec --full-trace --timeout 5000 ./test/tests.js",
+    "coverage": "istanbul cover -x \"*.test.js\" _mocha -- --timeout 5000 --full-trace --reporter dot ./test/tests.js",
     "pretravis": "npm run compile",
-    "travis":
-      "istanbul cover -x \"*.test.js\" _mocha -- --timeout 5000 --full-trace ./test/tests.js",
-    "postcoverage":
-      "remap-istanbul --input coverage/coverage.raw.json --type lcovonly --output coverage/lcov.info",
+    "travis": "istanbul cover -x \"*.test.js\" _mocha -- --timeout 5000 --full-trace ./test/tests.js",
+    "postcoverage": "remap-istanbul --input coverage/coverage.raw.json --type lcovonly --output coverage/lcov.info",
     "release": "lerna publish",
     "precommit": "lint-staged"
   },
   "lint-staged": {
-    "*.ts*": ["prettier --write", "git add"],
-    "*.js*": ["prettier --write", "git add"],
-    "*.json*": ["prettier --write", "git add"],
-    "*.md*": ["prettier --write", "git add"]
+    "*.ts": [
+      "prettier --write",
+      "git add"
+    ],
+    "*.js": [
+      "prettier --write",
+      "git add"
+    ],
+    "*.md": [
+      "prettier --write",
+      "git add"
+    ]
   },
   "devDependencies": {
-    "@types/chai": "4.1.2",
-    "@types/mocha": "2.2.48",
-    "@types/node": "9.4.7",
-    "@types/sinon": "4.3.0",
+    "@types/chai": "4.1.4",
+    "@types/mocha": "5.2.4",
+    "@types/node": "9.6.23",
+    "@types/sinon": "5.0.1",
     "chai": "4.1.2",
     "graphql": "0.13.2",
     "husky": "0.14.3",
     "istanbul": "1.1.0-alpha.1",
-    "lerna": "2.9.0",
+    "lerna": "2.11.0",
     "lint-staged": "6.1.1",
-    "mocha": "5.0.4",
-    "npm-check-updates": "2.14.1",
-    "prettier": "1.11.1",
+    "mocha": "5.2.0",
+    "prettier": "1.12.1",
     "prettier-check": "2.0.0",
-    "remap-istanbul": "0.11.0",
-    "sinon": "4.4.6",
-    "supertest": "3.0.0",
+    "remap-istanbul": "0.11.1",
+    "sinon": "5.1.1",
+    "supertest": "3.1.0",
     "supertest-as-promised": "4.0.2",
-    "typescript": "2.7.2"
+    "typescript": "2.8.4"
   }
 }
