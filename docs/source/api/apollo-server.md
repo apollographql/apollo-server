@@ -65,7 +65,7 @@ new ApolloServer({
 
   Add tracing or cacheControl meta data to the GraphQL response
 
-* `formatError`, `formatResponse`, `formatParams`: <`Function`>
+* `formatError`, `formatResponse`: <`Function`>
 
   Functions to format the errors and response returned from the server, as well as the parameters to graphql execution(`runQuery`)
 

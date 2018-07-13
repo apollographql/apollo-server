@@ -100,9 +100,6 @@ The above are the only options you need most of the time. Here are some others t
 ```js
 // options object
 const GraphQLOptions = {
-  // a function applied to the parameters of every invocation of runQuery
-  formatParams?: Function,
-
   // * - (optional) validationRules: extra validation rules applied to requests
   validationRules?: Array<ValidationRule>,
 
