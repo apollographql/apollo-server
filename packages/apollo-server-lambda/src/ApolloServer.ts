@@ -104,6 +104,14 @@ export class ApolloServer extends ApolloServerBase {
         }
       }
 
+      if (event.httpMethod === 'OPTIONS') {
+        return callback(null, {
+          body: '',
+          statusCode: 204,
+          headers: corsHeaders,
+        });
+      }
+
       if (this.playgroundOptions && event.httpMethod === 'GET') {
         const acceptHeader = event.headers['Accept'] || event.headers['accept'];
         if (acceptHeader && acceptHeader.includes('text/html')) {

@@ -36,9 +36,12 @@ const resolvers = {
   },
 };
 
-const server = new ApolloServer({ typeDefs, resolvers });
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+});
 
-exports.graphqlHandler = server.createHandler();
+exports.handler = server.createHandler();
 ```
 
 #### 2. Create an S3 bucket
@@ -64,19 +67,14 @@ Resources:
   GraphQL:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: graphql.graphqlHandler
+      Handler: graphql.handler
       Runtime: nodejs8.10
       Events:
-        GetRequest:
+        AnyRequest:
           Type: Api
           Properties:
             Path: /graphql
-            Method: get
-        PostRequest:
-          Type: Api
-          Properties:
-            Path: /graphql
-            Method: post
+            Method: ANY
 ```
 
 #### 4. Package source code and dependencies
@@ -103,7 +101,7 @@ aws cloudformation deploy \
 
 ## Getting request info
 
-To read information about the current request from the API Gateway event (HTTP headers, HTTP method, body, path, ...) or the current Lambda Context (Function Name, Function Version, awsRequestId, time remaning, ...) use the options function. This way they can be passed to your schema resolvers using the context option.
+To read information about the current request from the API Gateway event (HTTP headers, HTTP method, body, path, ...) or the current Lambda Context (Function Name, Function Version, awsRequestId, time remaining, ...) use the options function. This way they can be passed to your schema resolvers using the context option.
 
 ```js
 const { ApolloServer, gql } = require('apollo-server-lambda');
@@ -130,10 +128,10 @@ const server = new ApolloServer({
     functionName: context.functionName,
     event,
     context,
-  })
+  }),
 });
 
-exports.graphqlHandler = server.createHandler();
+exports.handler = server.createHandler();
 ```
 
 ## Modifying the Lambda Response (Enable CORS)
@@ -157,12 +155,16 @@ const resolvers = {
   },
 };
 
-const server = new ApolloServer({ typeDefs, resolvers });
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+});
 
-exports.graphqlHandler = server.createHandler({
+exports.handler = server.createHandler({
   cors: {
     origin: '*',
     credentials: true,
+    allowedHeaders: ['X-Apollo-Tracing', 'Content-Type', 'Authorization'],
   },
 });
 ```
@@ -186,9 +188,12 @@ const resolvers = {
   },
 };
 
-const server = new ApolloServer({ typeDefs, resolvers });
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+});
 
-exports.graphqlHandler = server.createHandler({
+exports.handler = server.createHandler({
   cors: {
     origin: true,
     credentials: true,
