@@ -1,31 +1,44 @@
 ---
 title: Lambda
-description: Setting up Apollo Server with Lambda
+description: Setting up Apollo Server with AWS Lambda
 ---
 
-[![npm version](https://badge.fury.io/js/apollo-server-core.svg)](https://badge.fury.io/js/apollo-server-core) [![Build Status](https://circleci.com/gh/apollographql/apollo-cache-control-js.svg?style=svg)](https://circleci.com/gh/apollographql/apollo-cache-control-js) [![Coverage Status](https://coveralls.io/repos/github/apollographql/apollo-server/badge.svg?branch=master)](https://coveralls.io/github/apollographql/apollo-server?branch=master) [![Get on Slack](https://img.shields.io/badge/slack-join-orange.svg)](https://www.apollographql.com/#slack)
+[![npm version](https://badge.fury.io/js/apollo-server-lambda.svg)](https://badge.fury.io/js/apollo-server-lambda) [![Build Status](https://circleci.com/gh/apollographql/apollo-server.svg?style=svg)](https://circleci.com/gh/apollographql/apollo-server) [![Coverage Status](https://coveralls.io/repos/github/apollographql/apollo-server/badge.svg?branch=master)](https://coveralls.io/github/apollographql/apollo-server?branch=master) [![Get on Slack](https://img.shields.io/badge/slack-join-orange.svg)](https://www.apollographql.com/#slack)
 
-This is the AWS Lambda integration for the Apollo community GraphQL Server. [Read the docs.](https://www.apollographql.com/docs/apollo-server/) [Read the CHANGELOG.](https://github.com/apollographql/apollo-server/blob/master/CHANGELOG.md)
+This is the AWS Lambda integration of GraphQL Server. Apollo Server is a community-maintained open-source GraphQL server that works with many Node.js HTTP server frameworks. [Read the docs](https://www.apollographql.com/docs/apollo-server/v2). [Read the CHANGELOG](https://github.com/apollographql/apollo-server/blob/master/CHANGELOG.md).
 
 ```sh
-npm install apollo-server-lambda
+npm install apollo-server-lambda@rc graphql
 ```
 
-<h2 id="deploying" title="Deploying with SAM">Deploying with AWS Serverless Application Model (SAM)</h2>
+## Deploying with AWS Serverless Application Model (SAM)
 
 To deploy the AWS Lambda function we must create a Cloudformation Template and a S3 bucket to store the artifact (zip of source code) and template. We will use the [AWS Command Line Interface](https://aws.amazon.com/cli/).
 
 #### 1. Write the API handlers
 
-```js
-// graphql.js
-var server = require('apollo-server-lambda'),
-  myGraphQLSchema = require('./schema');
+In a file named `graphql.js`, place the following code:
 
-exports.graphqlHandler = server.graphqlLambda({ schema: myGraphQLSchema });
-exports.graphiqlHandler = server.graphiqlLambda({
-  endpointURL: '/Prod/graphql',
-});
+```js
+const { ApolloServer, gql } = require('apollo-server-lambda');
+
+// Construct a schema, using GraphQL schema language
+const typeDefs = gql`
+  type Query {
+    hello: String
+  }
+`;
+
+// Provide resolver functions for your schema fields
+const resolvers = {
+  Query: {
+    hello: () => 'Hello world!',
+  },
+};
+
+const server = new ApolloServer({ typeDefs, resolvers });
+
+exports.graphqlHandler = server.createHandler();
 ```
 
 #### 2. Create an S3 bucket
@@ -38,10 +51,9 @@ aws s3 mb s3://<bucket name>
 
 #### 3. Create the Template
 
-This will look for a file called graphql.js with two exports: `graphqlHandler` and `graphiqlHandler`. It creates two API endpoints:
+This will look for a file called graphql.js with the export `graphqlHandler`. It creates one API endpoints:
 
 * `/graphql` (GET and POST)
-* `/graphiql` (GET)
 
 In a file called `template.yaml`:
 
@@ -53,7 +65,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: graphql.graphqlHandler
-      Runtime: nodejs6.10
+      Runtime: nodejs8.10
       Events:
         GetRequest:
           Type: Api
@@ -65,17 +77,6 @@ Resources:
           Properties:
             Path: /graphql
             Method: post
-  GraphQLInspector:
-    Type: AWS::Serverless::Function
-    Properties:
-      Handler: graphql.graphiqlHandler
-      Runtime: nodejs6.10
-      Events:
-        GetRequest:
-          Type: Api
-          Properties:
-            Path: /graphiql
-            Method: get
 ```
 
 #### 4. Package source code and dependencies
@@ -84,9 +85,9 @@ This will read and transform the template, created in previous step. Package and
 
 ```sh
 aws cloudformation package \
-   --template-file template.yaml \
-   --output-template-file serverless-output.yaml \
-   --s3-bucket <bucket-name>
+  --template-file template.yaml \
+  --output-template-file serverless-output.yaml \
+  --s3-bucket <bucket-name>
 ```
 
 #### 5. Deploy the API
@@ -95,73 +96,112 @@ The will create the Lambda Function and API Gateway for GraphQL. We use the stac
 
 ```
 aws cloudformation deploy \
-   --template-file serverless-output.yaml \
-   --stack-name prod \
-   --capabilities CAPABILITY_IAM
+  --template-file serverless-output.yaml \
+  --stack-name prod \
+  --capabilities CAPABILITY_IAM
 ```
 
-<h2 id="request-info" title="Getting request info">Getting request info</h2>
+## Getting request info
 
 To read information about the current request from the API Gateway event (HTTP headers, HTTP method, body, path, ...) or the current Lambda Context (Function Name, Function Version, awsRequestId, time remaning, ...) use the options function. This way they can be passed to your schema resolvers using the context option.
 
 ```js
-var server = require('apollo-server-lambda'),
-  myGraphQLSchema = require('./schema');
+const { ApolloServer, gql } = require('apollo-server-lambda');
 
-exports.graphqlHandler = server.graphqlLambda((event, context) => {
-  const headers = event.headers,
-    functionName = context.functionName;
+// Construct a schema, using GraphQL schema language
+const typeDefs = gql`
+  type Query {
+    hello: String
+  }
+`;
 
-  return {
-    schema: myGraphQLSchema,
-    context: {
-      headers,
-      functionName,
-      event,
-      context,
-    },
-  };
+// Provide resolver functions for your schema fields
+const resolvers = {
+  Query: {
+    hello: () => 'Hello world!',
+  },
+};
+
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  context: ({ event, context }) => ({
+    headers: event.headers,
+    functionName: context.functionName,
+    event,
+    context,
+  })
 });
+
+exports.graphqlHandler = server.createHandler();
 ```
 
-<h2 id="modifying-response" title="Modifying the response">Modifying the Lambda Response (Enable CORS)</h2>
+## Modifying the Lambda Response (Enable CORS)
 
-To enable CORS the response HTTP headers need to be modified. To accomplish this pass in a callback filter to the generated handler of graphqlLambda.
+To enable CORS the response HTTP headers need to be modified. To accomplish this use the `cors` option.
 
 ```js
-var server = require('apollo-server-lambda'),
-  myGraphQLSchema = require('./schema');
+const { ApolloServer, gql } = require('apollo-server-lambda');
 
-exports.graphqlHandler = function(event, context, callback) {
-  const callbackFilter = function(error, output) {
-    output.headers['Access-Control-Allow-Origin'] = '*';
-    callback(error, output);
-  };
-  const handler = server.graphqlLambda({ schema: myGraphQLSchema });
+// Construct a schema, using GraphQL schema language
+const typeDefs = gql`
+  type Query {
+    hello: String
+  }
+`;
 
-  return handler(event, context, callbackFilter);
+// Provide resolver functions for your schema fields
+const resolvers = {
+  Query: {
+    hello: () => 'Hello world!',
+  },
 };
+
+const server = new ApolloServer({ typeDefs, resolvers });
+
+exports.graphqlHandler = server.createHandler({
+  cors: {
+    origin: '*',
+    credentials: true,
+  },
+});
 ```
 
 To enable CORS response for requests with credentials (cookies, http authentication) the allow origin header must equal the request origin and the allow credential header must be set to true.
 
 ```js
-const CORS_ORIGIN = 'https://example.com';
+const { ApolloServer, gql } = require('apollo-server-lambda');
 
-var server = require('apollo-server-lambda'),
-  myGraphQLSchema = require('./schema');
+// Construct a schema, using GraphQL schema language
+const typeDefs = gql`
+  type Query {
+    hello: String
+  }
+`;
 
-exports.graphqlHandler = function(event, context, callback) {
-  const requestOrigin = event.headers.origin,
-    callbackFilter = function(error, output) {
-      if (requestOrigin === CORS_ORIGIN) {
-        output.headers['Access-Control-Allow-Origin'] = CORS_ORIGIN;
-        output.headers['Access-Control-Allow-Credentials'] = 'true';
-      }
-      callback(error, output);
-    };
-  const handler = server.graphqlLambda({ schema: myGraphQLSchema });
-
-  return handler(event, context, callbackFilter);
+// Provide resolver functions for your schema fields
+const resolvers = {
+  Query: {
+    hello: () => 'Hello world!',
+  },
 };
+
+const server = new ApolloServer({ typeDefs, resolvers });
+
+exports.graphqlHandler = server.createHandler({
+  cors: {
+    origin: true,
+    credentials: true,
+  },
+});
 ```
+
+## Principles
+
+GraphQL Server is built with the following principles in mind:
+
+* **By the community, for the community**: GraphQL Server's development is driven by the needs of developers
+* **Simplicity**: by keeping things simple, GraphQL Server is easier to use, easier to contribute to, and more secure
+* **Performance**: GraphQL Server is well-tested and production-ready - no modifications needed
+
+Anyone is welcome to contribute to GraphQL Server, just read [CONTRIBUTING.md](https://github.com/apollographql/apollo-server/blob/master/CONTRIBUTING.md), take a look at the [roadmap](https://github.com/apollographql/apollo-server/blob/master/ROADMAP.md) and make your first PR!

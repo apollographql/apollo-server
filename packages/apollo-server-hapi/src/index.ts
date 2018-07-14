@@ -1,9 +1,23 @@
 export {
-  IRegister,
-  HapiOptionsFunction,
-  HapiPluginOptions,
-  HapiGraphiQLOptionsFunction,
-  HapiGraphiQLPluginOptions,
-  graphqlHapi,
-  graphiqlHapi,
-} from './hapiApollo';
+  GraphQLUpload,
+  GraphQLOptions,
+  gql,
+  // Errors
+  ApolloError,
+  toApolloError,
+  SyntaxError,
+  ValidationError,
+  AuthenticationError,
+  ForbiddenError,
+  UserInputError,
+} from 'apollo-server-core';
+
+export * from 'graphql-tools';
+export * from 'graphql-subscriptions';
+
+// ApolloServer integration.
+export {
+  ApolloServer,
+  registerServer,
+  ServerRegistration,
+} from './ApolloServer';

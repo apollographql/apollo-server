@@ -1,49 +1,38 @@
-import * as koa from 'koa';
-import * as koaRouter from 'koa-router';
-import * as koaBody from 'koa-bodyparser';
-import { graphqlKoa, graphiqlKoa } from './koaApollo';
-import { GraphQLOptions } from 'apollo-server-core';
-import { expect } from 'chai';
-import * as http from 'http';
-
+import * as Koa from 'koa';
+import { ApolloServer } from './ApolloServer';
 import testSuite, {
   schema as Schema,
   CreateAppOptions,
 } from 'apollo-server-integration-testsuite';
+import { expect } from 'chai';
+import { GraphQLOptions, Config } from 'apollo-server-core';
+import 'mocha';
 
 function createApp(options: CreateAppOptions = {}) {
-  const app = new koa();
-  const router = new koaRouter();
+  const app = new Koa();
 
-  options.graphqlOptions = options.graphqlOptions || { schema: Schema };
-
-  if (!options.excludeParser) {
-    app.use(koaBody());
-  }
-  if (options.graphiqlOptions) {
-    router.get('/graphiql', graphiqlKoa(options.graphiqlOptions));
-  }
-  router.get('/graphql', graphqlKoa(options.graphqlOptions));
-  router.post('/graphql', graphqlKoa(options.graphqlOptions));
-  app.use(router.routes());
-  app.use(router.allowedMethods());
-  return http.createServer(app.callback());
+  const server = new ApolloServer(
+    (options.graphqlOptions as Config) || { schema: Schema },
+  );
+  server.applyMiddleware({ app });
+  return app.listen();
 }
 
-function destroyApp(app) {
-  app.close();
+async function destroyApp(app) {
+  if (!app || !app.close) {
+    return;
+  }
+  await new Promise(resolve => app.close(resolve));
 }
+
+describe('integration:Hapi', () => {
+  testSuite(createApp, destroyApp);
+});
 
 describe('koaApollo', () => {
   it('throws error if called without schema', function() {
-    expect(() => graphqlKoa(undefined as GraphQLOptions)).to.throw(
-      'Apollo Server requires options.',
-    );
-  });
-
-  it('throws an error if called with more than one argument', function() {
-    expect(() => (<any>graphqlKoa)({}, 'x')).to.throw(
-      'Apollo Server expects exactly one argument, got 2',
+    expect(() => new ApolloServer(undefined as GraphQLOptions)).to.throw(
+      'ApolloServer requires options.',
     );
   });
 });

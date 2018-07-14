@@ -1,15 +1,16 @@
 {
   "compilerOptions": {
-    "target": "es5",
+    "target": "es2016",
     "module": "commonjs",
     "moduleResolution": "node",
     "sourceMap": true,
     "declaration": true,
+    "declarationMap": true,
     "noImplicitAny": false,
-    "allowSyntheticDefaultImports": false,
-    "pretty": true,
     "removeComments": true,
-    "lib": ["es6", "esnext.asynciterable"],
-    "types": ["@types/node"]
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "lib": ["es2017", "esnext.asynciterable"],
+    "types": ["node", "mocha"]
   }
 }

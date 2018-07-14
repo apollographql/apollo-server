@@ -1,5 +1,6 @@
 import * as hapi from 'hapi';
-import { graphqlHapi, graphiqlHapi } from './hapiApollo';
+import { ApolloServer } from './ApolloServer';
+import { Config } from 'apollo-server-core';
 import 'mocha';
 
 import testSuite, {
@@ -7,33 +8,22 @@ import testSuite, {
   CreateAppOptions,
 } from 'apollo-server-integration-testsuite';
 
-async function createApp(options: CreateAppOptions) {
-  const server = new hapi.Server({
+async function createApp(options: CreateAppOptions = {}) {
+  const app = new hapi.Server({
     host: 'localhost',
     port: 8000,
   });
 
-  await server.register({
-    plugin: graphqlHapi,
-    options: {
-      graphqlOptions: (options && options.graphqlOptions) || { schema: Schema },
-      path: '/graphql',
-    },
+  const server = new ApolloServer(
+    (options.graphqlOptions as Config) || { schema: Schema },
+  );
+  await server.applyMiddleware({
+    app,
   });
 
-  await server.register({
-    plugin: graphiqlHapi,
-    options: {
-      path: '/graphiql',
-      graphiqlOptions: (options && options.graphiqlOptions) || {
-        endpointURL: '/graphql',
-      },
-    },
-  });
+  await app.start();
 
-  await server.start();
-
-  return server.listener;
+  return app.listener;
 }
 
 async function destroyApp(app) {

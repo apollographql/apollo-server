@@ -4,6 +4,92 @@ All of the packages in the `apollo-server` repo are released with the same versi
 
 ### vNEXT
 
+### rc.7
+
+- enable engine reporting from lambda [#1313](https://github.com/apollographql/apollo-server/pull/1313)
+- remove flattening of errors [#1288](https://github.com/apollographql/apollo-server/pull/1288)
+- dynamic url in datasourece ([#1277](https://github.com/apollographql/apollo-server/pull/1277))
+
+### rc.6
+
+- BREAKING: errors are passed to user extensions, then engine reporting, and finally `formatError` ([#1272](https://github.com/apollographql/apollo-server/pull/1272))
+- `formatError` only called once on validation errors ([#1272](https://github.com/apollographql/apollo-server/pull/1272))
+- BREAKING: apollo-server-env does place types in global namespace ([#1259](https://github.com/apollographql/apollo-server/pull/1259))
+- export Request from apollo-datasource-rest and graphql-extensions (53d7a75 c525818)
+- Use scoped graphql-playground and centralize version (8ea36d8, 84233d2)
+- fix dependencies + exports  ([#1257](https://github.com/apollographql/apollo-server/pull/1257))
+- fix data source + context cloning (7e35305)
+- use fetch instead of Node request for engine-reporting ([#1274](https://github.com/apollographql/apollo-server/pull/1274))
+
+### rc.5
+
+- fix formatError to keep prototype of Error ([#1235](https://github.com/apollographql/apollo-server/pull/1235))
+
+### rc.4
+
+- Add trailing slash to data source
+- allow body passed to data source
+- new apollo-engine-reporting agent
+
+### rc.3
+
+- graphql as peerDependency ([#1232](https://github.com/apollographql/apollo-server/pull/1232))
+- APQ in batches ([#1234](https://github.com/apollographql/apollo-server/pull/1234))
+- APQ hits/misses in traces
+
+### rc.2
+
+- Missing apollo-upload-server dependency ([#1221](https://github.com/apollographql/apollo-server/pull/1221))
+- encode trace report over each request in apollo-engine-reporting
+
+### rc.1
+
+- BREAKING: remove logFunction ([71a403d](https://github.com/apollographql/apollo-server/pull/1125/commits/71a403dfa38ee050606d3fa32630005e0a98016f)), see [this commit](https://github.com/apollographql/apollo-server/blob/8914b135df9840051fe81cc9224b444cfc5b61ab/packages/apollo-server-core/src/logging.ts) for an implementation
+- move upload option to constructor ([#1204](https://github.com/apollographql/apollo-server/pull/1204))
+- fixed hapi gui bugs ([#1211](https://github.com/apollographql/apollo-server/pull/1211))
+- remove requirement for exModuleInterop ([#1210](https://github.com/apollographql/apollo-server/pull/1210))
+- change BadUserInputError to UserInputError ([#1208](https://github.com/apollographql/apollo-server/pull/1208))
+- add cache-control headers for CDN integration ([#1138](https://github.com/apollographql/apollo-server/pull/1138))
+- Lambda support (thanks to @adnsio, @bwlt, and @gragio [#1138](https://github.com/apollographql/apollo-server/pull/1138))
+
+Data sources
+
+- add memcache and redis support ([#1191](https://github.com/apollographql/apollo-server/pull/1191))
+- add patch method ([#1190](https://github.com/apollographql/apollo-server/pull/1190))
+
+### rc.0
+
+- Breaking: `registerServer` changed to `server.applyMiddleware` ([3279991](https://github.com/apollographql/apollo-server/pull/1125/commits/327999174cfbcecaa4e401ffd7b2d7148ba0fd65))
+- Breaking: subscriptions enabled with `installSubscriptionHandlers`
+- Add Data Sources ([#1163](https://github.com/apollographql/apollo-server/pull/1163))
+
+### beta.4
+
+* Bug fix to allow async context ([#1129](https://github.com/apollographql/apollo-server/pull/1129))
+* logFunction is now an extension ([#1128](https://github.com/apollographql/apollo-server/pull/1128))
+* Allow user defined extensions and include engine reporting ([#1105](https://github.com/apollographql/apollo-server/pull/#105))
+
+### beta.3
+
+* remove registerServer configuration from `apollo-server`'s listen ([#1090](https://github.com/apollographql/apollo-server/pull/1090))
+* move healthcheck into variants ([#1086](https://github.com/apollographql/apollo-server/pull/1086))
+* Add file uploads, **breaking** requires removing `scalar Upload` from the typeDefs ([#1071](https://github.com/apollographql/apollo-server/pull/1071))
+* Add reporting to Engine as apollo-engine-reporting ([#1105](https://github.com/apollographql/apollo-server/pull/1105))
+* Allow users to define extensions ([#1105](https://github.com/apollographql/apollo-server/pull/1105))
+
+### beta.2
+
+ListenOptions:
+* `engine` -> `engineProxy`
+* `port`, `host`, and other http options moved under `http` key ([#1080](https://github.com/apollographql/apollo-server/pull/1080))
+
+* `subscriptions` moved to `server.listen` ([#1059](https://github.com/apollographql/apollo-server/pull/1059))
+* Add mocks to server constructor ([#1017](https://github.com/apollographql/apollo-server/pull/1017))
+* Add `bodyParserConfig` parameter to `registerServer` in apollo-server ([#1059](https://github.com/apollographql/apollo-server/pull/1059)) [commit](https://github.com/apollographql/apollo-server/pull/1063/commits/d08f862063b60f35d92f903c9ac52702150c10f6)
+* Hapi variant ([#1058](https://github.com/apollographql/apollo-server/pull/1058)) ([#1082](https://github.com/apollographql/apollo-server/pull/1082))
+* Remove tests and guaranteed support for Node 4 [PR #1024](https://github.com/apollographql/apollo-server/pull/1024)
+* Cleanup docs [PR #1233](https://github.com/apollographql/apollo-server/pull/1233/files)
+
 ### 1.4.0
 
 * [Issue #626] Integrate apollo-fastify plugin. [PR #1013](https://github.com/apollographql/apollo-server/pull/1013)

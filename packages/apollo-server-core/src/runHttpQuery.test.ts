@@ -1,14 +1,9 @@
 /* tslint:disable:no-unused-expression */
 import { expect } from 'chai';
-import { stub } from 'sinon';
 import 'mocha';
+import MockReq = require('mock-req');
 
-import {
-  GraphQLSchema,
-  GraphQLObjectType,
-  GraphQLString,
-  GraphQLInt,
-} from 'graphql';
+import { GraphQLSchema, GraphQLObjectType, GraphQLString } from 'graphql';
 
 import { runHttpQuery, HttpQueryError } from './runHttpQuery';
 
@@ -38,13 +33,14 @@ describe('runHttpQuery', () => {
       options: {
         schema,
       },
+      request: new MockReq(),
     };
 
     it('raises a 400 error if the query is missing', () => {
       const noQueryRequest = Object.assign({}, mockQueryRequest, {
         query: 'foo',
       });
-      return runHttpQuery([], noQueryRequest).catch(err => {
+      return runHttpQuery([], noQueryRequest).catch((err: HttpQueryError) => {
         expect(err.statusCode).to.equal(400);
         expect(err.message).to.equal('Must provide query string.');
       });

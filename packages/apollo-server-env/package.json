@@ -1,0 +1,28 @@
+{
+  "name": "apollo-server-env",
+  "version": "2.0.0-rc.7",
+  "author": "opensource@apollographql.com",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-env"
+  },
+  "homepage": "https://github.com/apollographql/apollo-server#readme",
+  "bugs": {
+    "url": "https://github.com/apollographql/apollo-server/issues"
+  },
+  "scripts": {
+    "clean": "rm -rf dist",
+    "compile": "tsc && cp src/*.d.ts dist",
+    "prepublish": "npm run clean && npm run compile"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "engines": {
+    "node": ">=6"
+  },
+  "dependencies": {
+    "node-fetch": "^2.1.2",
+    "util.promisify": "^1.0.0"
+  }
+}

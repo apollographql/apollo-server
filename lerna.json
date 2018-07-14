@@ -1,6 +1,6 @@
 {
   "lerna": "2.0.0",
-  "version": "1.4.0",
+  "version": "independent",
   "changelog": {
     "repo": "apollographql/apollo-server",
     "labels": {
@@ -12,7 +12,6 @@
       "tag: internal": ":house: Internal"
     }
   },
-  "packages": [
-    "packages/*"
-  ]
+  "hoist": true,
+  "packages": ["packages/*"]
 }

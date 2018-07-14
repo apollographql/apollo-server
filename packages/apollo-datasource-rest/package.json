@@ -1,0 +1,60 @@
+{
+  "name": "apollo-datasource-rest",
+  "version": "2.0.0-rc.7",
+  "author": "opensource@apollographql.com",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/apollographql/apollo-server/tree/master/packages/apollo-datasource-rest"
+  },
+  "homepage": "https://github.com/apollographql/apollo-server#readme",
+  "bugs": {
+    "url": "https://github.com/apollographql/apollo-server/issues"
+  },
+  "scripts": {
+    "clean": "rm -rf dist",
+    "compile": "tsc",
+    "prepublish": "npm run clean && npm run compile",
+    "test": "jest --verbose"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "engines": {
+    "node": ">=6"
+  },
+  "dependencies": {
+    "apollo-datasource": "^2.0.0-rc.7",
+    "apollo-server-caching": "^2.0.0-rc.7",
+    "apollo-server-env": "^2.0.0-rc.7",
+    "apollo-server-errors": "^2.0.0-rc.7",
+    "http-cache-semantics": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^23.1.2",
+    "jest": "^23.2.0",
+    "ts-jest": "^22.4.6"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "setupFiles": [
+      "<rootDir>/node_modules/apollo-server-env/dist/index.js"
+    ],
+    "transform": {
+      "^.+\\.(ts|js)$": "ts-jest"
+    },
+    "moduleFileExtensions": [
+      "ts",
+      "js",
+      "json"
+    ],
+    "testRegex": "apollo-datasource-rest/src/__tests__/.*$",
+    "roots": [
+      "../../"
+    ],
+    "globals": {
+      "ts-jest": {
+        "skipBabel": true
+      }
+    }
+  }
+}

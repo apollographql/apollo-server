@@ -1,54 +1,29 @@
-import { microGraphql, microGraphiql } from './microApollo';
-import 'mocha';
-
-import micro, { send } from 'micro';
-import {
-  router,
-  get,
-  post,
-  put,
-  patch,
-  del,
-  head,
-  options as opts,
-} from 'microrouter';
+import micro from 'micro';
 import testSuite, {
-  schema,
+  schema as Schema,
   CreateAppOptions,
 } from 'apollo-server-integration-testsuite';
+import { expect } from 'chai';
+import { GraphQLOptions, Config } from 'apollo-server-core';
+import 'mocha';
 
-function createApp(options: CreateAppOptions) {
-  const graphqlOptions = (options && options.graphqlOptions) || { schema };
-  const graphiqlOptions = (options && options.graphiqlOptions) || {
-    endpointURL: '/graphql',
-  };
+import { ApolloServer } from './ApolloServer';
 
-  const graphqlHandler = microGraphql(graphqlOptions);
-  const graphiqlHandler = microGraphiql(graphiqlOptions);
-
-  return micro(
-    router(
-      get('/graphql', graphqlHandler),
-      post('/graphql', graphqlHandler),
-      put('/graphql', graphqlHandler),
-      patch('/graphql', graphqlHandler),
-      del('/graphql', graphqlHandler),
-      head('/graphql', graphqlHandler),
-      opts('/graphql', graphqlHandler),
-
-      get('/graphiql', graphiqlHandler),
-      post('/graphiql', graphiqlHandler),
-      put('/graphiql', graphiqlHandler),
-      patch('/graphiql', graphiqlHandler),
-      del('/graphiql', graphiqlHandler),
-      head('/graphiql', graphiqlHandler),
-      opts('/graphiql', graphiqlHandler),
-
-      (req, res) => send(res, 404, 'not found'),
-    ),
+function createApp(options: CreateAppOptions = {}) {
+  const server = new ApolloServer(
+    (options.graphqlOptions as Config) || { schema: Schema },
   );
+  return micro(server.createHandler());
 }
 
-describe('integration:Micro', () => {
+describe('microApollo', function() {
+  it('should throw an error if called without a schema', function() {
+    expect(() => new ApolloServer(undefined as GraphQLOptions)).to.throw(
+      'ApolloServer requires options.',
+    );
+  });
+});
+
+describe('integration:Micro', function() {
   testSuite(createApp);
 });

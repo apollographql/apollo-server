@@ -1,0 +1,62 @@
+{
+  "name": "apollo-engine-reporting",
+  "version": "0.0.0-rc.1",
+  "description": "Send reports about your GraphQL services to Apollo Engine",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "clean": "rm -rf dist",
+    "compile": "tsc",
+    "watch": "tsc -w",
+    "prepublish": "npm run clean && npm run compile",
+    "test": "jest --verbose",
+    "circle": "jest --verbose --coverage",
+    "lint": "prettier -l 'src/**/*.{ts,js}' && tslint -p tsconfig.json 'src/**/*.ts'",
+    "lint-fix": "prettier --write 'src/**/*.{ts,js}' && tslint --fix -p tsconfig.json 'src/**/*.ts'"
+  },
+  "license": "MIT",
+  "repository": "https://github.com/apollographql/apollo-engine-reporting",
+  "author": "Apollo <community@apollographql.com>",
+  "engines": {
+    "node": ">=6.0"
+  },
+  "dependencies": {
+    "apollo-engine-reporting-protobuf": "0.0.0-beta.7",
+    "apollo-server-env": "^2.0.0-rc.7",
+    "async-retry": "^1.2.1",
+    "graphql-extensions": "^0.1.0-rc.1",
+    "lodash": "^4.17.10"
+  },
+  "devDependencies": {
+    "@types/async-retry": "^1.2.1",
+    "@types/graphql": "^0.13.1",
+    "@types/jest": "^23.1.2",
+    "@types/lodash": "^4.14.110",
+    "graphql": "^0.13.2",
+    "graphql-tag": "^2.9.2",
+    "graphql-tools": "^3.0.4",
+    "jest": "^23.2.0",
+    "ts-jest": "^22.4.6",
+    "tslint": "^5.10.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "setupFiles": [
+      "<rootDir>/node_modules/apollo-server-env/dist/index.js"
+    ],
+    "transform": {
+      "^.+\\.(ts|js)$": "ts-jest"
+    },
+    "moduleFileExtensions": [
+      "ts",
+      "js",
+      "json"
+    ],
+    "testRegex": "src/__tests__/.*$",
+    "globals": {
+      "ts-jest": {
+        "skipBabel": true
+      }
+    }
+  }
+}

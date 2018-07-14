@@ -2,38 +2,57 @@ title: Apollo Server
 propertytitle: Using Apollo Server
 subtitle: Apollo Server
 description: A guide to using Apollo Server.
+version: 2
 versions:
   - '1'
   - '2'
 sidebar_categories:
   null:
     - index
-    - example
-    - setup
-    - requests
-    - graphiql
-  Servers:
-    - servers/express
-    - servers/hapi
-    - servers/koa
-    - servers/lambda
-    - servers/micro
-    - servers/restify
-    - servers/azure-functions
-    - servers/adonis
-  Related:
-    - title: Monitoring and caching
-      href: https://www.apollographql.com/docs/engine/setup-node.html
-    - title: graphql-tools
-      href: https://www.apollographql.com/docs/graphql-tools/
-    - title: GraphQL Subscriptions
-      href: https://www.apollographql.com/docs/graphql-subscriptions/
-    - title: Production deployment
-      href: https://dev-blog.apollodata.com/graphql-over-rest-with-node-heroku-and-apollo-engine-fb8581f8d77f
+    - getting-started
+    - whats-new
+  Essentials:
+    - essentials/schema
+    - essentials/server
+    - essentials/data
+  Features:
+    - features/mocking
+    - features/errors
+    - features/data-sources
+    - features/subscriptions
+    - features/metrics
+    - features/graphql-playground
+    - features/scalars-enums
+    - features/unions-interfaces
+    - features/directives
+    - features/creating-directives
+  # Schema stitching:
+  #   - features/schema-stitching
+  #   - features/remote-schemas
+  #   - features/schema-delegation
+  #   - features/schema-transforms
+  Deployment:
+    # - deployment/index
+    - deployment/heroku
+    - deployment/lambda
+    - deployment/now
+  Related Guides:
+    - title: Monitoring
+      href: https://www.apollographql.com/docs/guides/monitoring.html
+    - title: Versioning
+      href: https://www.apollographql.com/docs/guides/versioning.html
+    - title: Access Control
+      href: https://www.apollographql.com/docs/guides/access-control.html
+    - title: Security
+      href: https://www.apollographql.com/docs/guides/security.html
+  API Reference:
+    - api/apollo-server
+    - title: graphql-subscriptions
+      href: https://www.apollographql.com/docs/graphql-subscriptions
+    - api/graphql-tools
   Migration:
-    - migration-one-dot
-    - migration-hapi
-    - migration
+    - migration-two-dot
+    - migration-engine
 
 github_repo: apollographql/apollo-server
 content_root: docs/source
@@ -45,6 +64,14 @@ url: https://www.apollographql.com/docs/apollo-server/
 root: /docs/apollo-server/
 
 public_dir: public/docs/apollo-server
+
+redirects:
+  /docs/apollo-server/v2/features/cdn.html:
+    docs/guides/performance
+  /docs/apollo-server/v2/features/apq.html:
+    docs/guides/performance
+  /docs/apollo-server/v2/features/file-uploads.html:
+    docs/guides/file-uploads
 
 versioned-netlify-redirects:
   netlify_site_id: apollo-server-docs

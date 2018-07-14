@@ -1,14 +1,26 @@
-// Expose types which can be used by both middleware flavors.
-export { GraphQLOptions } from 'apollo-server-core';
-
-// Express Middleware
 export {
-  ExpressGraphQLOptionsFunction,
-  ExpressHandler,
-  ExpressGraphiQLOptionsFunction,
-  graphqlExpress,
-  graphiqlExpress,
-} from './expressApollo';
+  GraphQLUpload,
+  GraphQLOptions,
+  gql,
+  // Errors
+  ApolloError,
+  toApolloError,
+  SyntaxError,
+  ValidationError,
+  AuthenticationError,
+  ForbiddenError,
+  UserInputError,
+} from 'apollo-server-core';
 
-// Connect Middleware
-export { graphqlConnect, graphiqlConnect } from './connectApollo';
+export * from 'graphql-tools';
+export * from 'graphql-subscriptions';
+
+// ApolloServer integration.
+export {
+  ApolloServer,
+  registerServer,
+  ServerRegistration,
+} from './ApolloServer';
+
+export { CorsOptions } from 'cors';
+export { OptionsJson } from 'body-parser';

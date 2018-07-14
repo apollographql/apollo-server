@@ -1,46 +1,43 @@
-import { graphqlLambda, graphiqlLambda } from './lambdaApollo';
+import { ApolloServer } from './ApolloServer';
 import testSuite, {
   schema as Schema,
   CreateAppOptions,
 } from 'apollo-server-integration-testsuite';
-import { expect } from 'chai';
-import { GraphQLOptions } from 'apollo-server-core';
+import { Config } from 'apollo-server-core';
 import 'mocha';
 import * as url from 'url';
+import { IncomingMessage, ServerResponse } from 'http';
 
-function createLambda(options: CreateAppOptions = {}) {
-  let route, handler, callback, event, context;
+const createLambda = (options: CreateAppOptions = {}) => {
+  const server = new ApolloServer(
+    (options.graphqlOptions as Config) || { schema: Schema },
+  );
 
-  options.graphqlOptions = options.graphqlOptions || { schema: Schema };
-  if (options.graphiqlOptions) {
-    route = '/graphiql';
-    handler = graphiqlLambda(options.graphiqlOptions);
-  } else {
-    route = '/graphql';
-    handler = graphqlLambda(options.graphqlOptions);
-  }
+  const handler = server.createHandler();
 
-  return function(req, res) {
-    if (!req.url.startsWith(route)) {
+  return (req: IncomingMessage, res: ServerResponse) => {
+    // return 404 if path is /bogus-route to pass the test, lambda doesn't have paths
+    if (req.url.includes('/bogus-route')) {
       res.statusCode = 404;
-      res.end();
-      return;
+      return res.end();
     }
 
     let body = '';
-    req.on('data', function(chunk) {
-      body += chunk;
-    });
-    req.on('end', function() {
-      let urlObject = url.parse(req.url, true);
-      event = {
+    req.on('data', chunk => (body += chunk));
+    req.on('end', () => {
+      const urlObject = url.parse(req.url, true);
+      const event = {
         httpMethod: req.method,
         body: body,
         path: req.url,
         queryStringParameters: urlObject.query,
+        requestContext: {
+          path: urlObject.pathname,
+        },
+        headers: req.headers,
       };
-      context = {};
-      callback = function(error, result) {
+      const callback = (error, result) => {
+        if (error) throw error;
         res.statusCode = result.statusCode;
         for (let key in result.headers) {
           if (result.headers.hasOwnProperty(key)) {
@@ -50,25 +47,10 @@ function createLambda(options: CreateAppOptions = {}) {
         res.write(result.body);
         res.end();
       };
-
-      handler(event, context, callback);
+      handler(event as any, {} as any, callback);
     });
   };
-}
-
-describe('lambdaApollo', () => {
-  it('throws error if called without schema', function() {
-    expect(() => graphqlLambda(undefined as GraphQLOptions)).to.throw(
-      'Apollo Server requires options.',
-    );
-  });
-
-  it('throws an error if called with more than one argument', function() {
-    expect(() => (<any>graphqlLambda)({}, {})).to.throw(
-      'Apollo Server expects exactly one argument, got 2',
-    );
-  });
-});
+};
 
 describe('integration:Lambda', () => {
   testSuite(createLambda);

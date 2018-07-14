@@ -1,39 +1,27 @@
 import * as express from 'express';
-import * as bodyParser from 'body-parser';
-import { graphqlExpress, graphiqlExpress } from './expressApollo';
+import { ApolloServer } from './ApolloServer';
 import testSuite, {
   schema as Schema,
   CreateAppOptions,
 } from 'apollo-server-integration-testsuite';
 import { expect } from 'chai';
-import { GraphQLOptions } from 'apollo-server-core';
+import { GraphQLOptions, Config } from 'apollo-server-core';
 import 'mocha';
 
 function createApp(options: CreateAppOptions = {}) {
   const app = express();
 
-  options.graphqlOptions = options.graphqlOptions || { schema: Schema };
-  if (!options.excludeParser) {
-    app.use('/graphql', bodyParser.json());
-  }
-  if (options.graphiqlOptions) {
-    app.use('/graphiql', graphiqlExpress(options.graphiqlOptions));
-  }
-  app.use('/graphql', require('connect-query')());
-  app.use('/graphql', graphqlExpress(options.graphqlOptions));
+  const server = new ApolloServer(
+    (options.graphqlOptions as Config) || { schema: Schema },
+  );
+  server.applyMiddleware({ app });
   return app;
 }
 
 describe('expressApollo', () => {
   it('throws error if called without schema', function() {
-    expect(() => graphqlExpress(undefined as GraphQLOptions)).to.throw(
-      'Apollo Server requires options.',
-    );
-  });
-
-  it('throws an error if called with more than one argument', function() {
-    expect(() => (<any>graphqlExpress)({}, 'x')).to.throw(
-      'Apollo Server expects exactly one argument, got 2',
+    expect(() => new ApolloServer(undefined as GraphQLOptions)).to.throw(
+      'ApolloServer requires options.',
     );
   });
 });
