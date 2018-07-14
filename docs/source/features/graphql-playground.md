@@ -1,12 +1,14 @@
 ---
 title: GraphQL Playground
-description: Visually exploring a Apollo Server
+description: Visually exploring an Apollo Server
 ---
 
-[GraphQL Playground](https://github.com/prismagraphql/graphql-playground) is a graphical interactive in-browser GraphQL IDE, created by [Prisma](https://www.prisma.io/), based on [GraphiQL](https://github.com/graphql/graphiql). In development, Apollo Server collocates a GraphQL Playground instance with the GraphQL path. When a browser sends a request to Apollo Server, it receives GraphQL Playground. When `NODE_ENV` is set to production, introspection and Playground are disabled as a production best practice.
+[GraphQL Playground](https://github.com/prismagraphql/graphql-playground) is a graphical, interactive, in-browser GraphQL IDE, created by [Prisma](https://www.prisma.io/) and based on [GraphiQL](https://github.com/graphql/graphiql).
+
+In development, Apollo Server enables GraphQL Playground on the same URL as the GraphQL server itself (e.g. `http://localhost:4000/graphql`) and automatically serves the GUI to web browsers.  When `NODE_ENV` is set to `production`, GraphQL Playground (as well as introspection) is disabled as a production best-practice.
 
 <div align="center">
-![GraphQL Playground](../images/playground.png)
+![GraphQL Playground](../images/graphql-playground.png)
 </div>
 
 ## Configuring Playground
@@ -31,9 +33,9 @@ playground: {
 });
 ```
 
-## Enabling Playground in Production
+## Enabling GraphQL Playground in production
 
-To enable Playground in production, introspection and the playground can be enabled explicitly in the following manner.
+To enable GraphQL Playground in production, introspection and the playground can be enabled explicitly in the following manner.
 
 ```js line=7-8
 const { ApolloServer } = require('apollo-server');

@@ -19,5 +19,5 @@ If our application has a lot of public data that doesn’t change very frequentl
 A CDN will store our API result close to the “edge” of the network — that is, close to the region the user is in — and deliver a cached result much faster than it would have required to do a full round-trip to our actual server. As an added benefit, we get to save on server load since that query doesn’t actually hit our API.
 
 - Setting up CDN caching with Apollo Server is incredibly easy, simply setup Apollo Engine then follow this [guide](https://www.apollographql.com/docs/engine/cdn.html)
-- For more information about using a CDN with Apollo Engine, check out this [article](https://dev-blog.apollodata.com/caching-graphql-results-in-your-cdn-54299832b8e2)
+- For more information about using a CDN with Apollo Engine, check out this [article](https://blog.apollographql.com/caching-graphql-results-in-your-cdn-54299832b8e2)
 

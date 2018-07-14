@@ -40,16 +40,12 @@ Apollo Server provides two ways to log a server: per input, response, and errors
 
 ### High Level Logging
 
-To log the inputs, response, and request, Apollo Server provides three methods: `formatParams`, `formatError`, and `formatResponse`. This example uses `console.log` to record the information, servers can use other more sophisticated tools.
+To log, Apollo Server provides: `formatError` and `formatResponse`. This example uses `console.log` to record the information, servers can use other more sophisticated tools.
 
 ```js
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  formatParams: params => {
-    console.log(params);
-    return params;
-  },
   formatError: error => {
     console.log(error);
     return error;
@@ -67,7 +63,7 @@ server.listen().then(({ url }) => {
 
 ### Granular Logs
 
-Additionally for more advanced cases, Apollo Server accepts an array of `graphql-extensions` to the `extensions` field. These extensions receive a variety of lifecycle calls for each phase of a GraphQL request and can keep state, such as the request headers.
+For more advanced cases, Apollo Server provides an experimental api that accepts an array of `graphql-extensions` to the `extensions` field. These extensions receive a variety of lifecycle calls for each phase of a GraphQL request and can keep state, such as the request headers.
 
 ```js
 const { ApolloServer }  = require('apollo-server');

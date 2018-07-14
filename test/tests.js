@@ -23,7 +23,6 @@ require('../packages/apollo-server-express/dist/ApolloServer.test');
 require('../packages/apollo-server-express/dist/expressApollo.test');
 require('../packages/apollo-server-express/dist/connectApollo.test');
 require('../packages/apollo-server-express/dist/datasource.test');
-require('../packages/apollo-server-express/dist/apolloServerHttp.test');
 
 // apollo-server-hapi
 (NODE_MAJOR_VERSION >= 9 ||
@@ -40,6 +39,5 @@ require('../packages/apollo-server-micro/dist/microApollo.test');
 
 //apollo-server-koa
 require('../packages/apollo-server-koa/dist/ApolloServer.test');
-require('../packages/apollo-server-koa/dist/apolloServerHttp.test');
 require('../packages/apollo-server-koa/dist/koaApollo.test');
 require('../packages/apollo-server-koa/dist/datasource.test');

@@ -34,7 +34,7 @@ export interface ServerInfo {
 }
 
 export class ApolloServer extends ApolloServerBase {
-  private httpServer!: http.Server;
+  private httpServer: http.Server;
   private cors?: CorsOptions | boolean;
 
   constructor(config: Config & { cors?: CorsOptions | boolean }) {
@@ -80,6 +80,12 @@ export class ApolloServer extends ApolloServerBase {
     return serverInfo;
   }
 
+  public applyMiddleware() {
+    throw new Error(
+      'To use Apollo Server with an existing express application, please use apollo-server-express',
+    );
+  }
+
   // Listen takes the same arguments as http.Server.listen.
   public async listen(...opts: Array<any>): Promise<ServerInfo> {
     // This class is the easy mode for people who don't create their own express
@@ -87,7 +93,7 @@ export class ApolloServer extends ApolloServerBase {
     const app = express();
 
     // provide generous values for the getting started experience
-    this.applyMiddleware({
+    super.applyMiddleware({
       app,
       path: '/',
       bodyParserConfig: { limit: '50mb' },

@@ -16,7 +16,7 @@ import {
   PersistedQueryNotSupportedError,
   PersistedQueryNotFoundError,
 } from 'apollo-server-errors';
-import { calculateCacheControlHeaders, HttpHeaderCalculation } from './caching';
+import { calculateCacheControlHeaders } from './caching';
 
 export interface HttpQueryRequest {
   method: string;
@@ -103,7 +103,7 @@ export async function runHttpQuery(
     process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test';
   let cacheControl:
     | CacheControlExtensionOptions & {
-        calculateHttpHeaders: boolean | HttpHeaderCalculation;
+        calculateHttpHeaders: boolean;
         stripFormattedExtensions: boolean;
       }
     | undefined;
@@ -257,8 +257,11 @@ export async function runHttpQuery(
         }
       }
 
-      // We ensure that there is a queryString or parsedQuery after formatParams
-      if (queryString && typeof queryString !== 'string') {
+      if (!queryString) {
+        throw new HttpQueryError(400, 'Must provide query string.');
+      }
+
+      if (typeof queryString !== 'string') {
         // Check for a common error first.
         if (queryString && (queryString as any).kind === 'Document') {
           throw new HttpQueryError(
@@ -401,15 +404,6 @@ export async function runHttpQuery(
         persistedQueryRegister,
       };
 
-      if (optionsObject.formatParams) {
-        params = optionsObject.formatParams(params);
-      }
-
-      if (!params.queryString && !params.parsedQuery) {
-        // Note that we've already thrown a different error if it looks like APQ.
-        throw new HttpQueryError(400, 'Must provide query string.');
-      }
-
       return runQuery(params);
     } catch (e) {
       // Populate any HttpQueryError to our handler which should
@@ -445,10 +439,7 @@ export async function runHttpQuery(
 
   if (cacheControl) {
     if (cacheControl.calculateHttpHeaders) {
-      const calculatedHeaders =
-        typeof cacheControl.calculateHttpHeaders === 'function'
-          ? cacheControl.calculateHttpHeaders(responses)
-          : calculateCacheControlHeaders(responses);
+      const calculatedHeaders = calculateCacheControlHeaders(responses);
 
       responseInit.headers = {
         ...responseInit.headers,

@@ -3,7 +3,6 @@ import {
   ValidationContext,
   GraphQLFieldResolver,
 } from 'graphql';
-import { HttpHeaderCalculation } from './caching';
 import { GraphQLExtension } from 'graphql-extensions';
 import { CacheControlExtensionOptions } from 'apollo-cache-control';
 import { KeyValueCache } from 'apollo-server-caching';
@@ -16,7 +15,6 @@ import { DataSource } from 'apollo-datasource';
  * - (optional) formatError: Formatting function applied to all errors before response is sent
  * - (optional) rootValue: rootValue passed to GraphQL execution
  * - (optional) context: the context passed to GraphQL execution
- * - (optional) formatParams: a function applied to the parameters of every invocation of runQuery
  * - (optional) validationRules: extra validation rules applied to requests
  * - (optional) formatResponse: a function applied to each graphQL execution result
  * - (optional) fieldResolver: a custom default field resolver
@@ -33,7 +31,6 @@ export interface GraphQLServerOptions<
   formatError?: Function;
   rootValue?: any;
   context?: TContext;
-  formatParams?: Function;
   validationRules?: Array<(context: ValidationContext) => any>;
   formatResponse?: Function;
   fieldResolver?: GraphQLFieldResolver<any, TContext>;
@@ -42,7 +39,7 @@ export interface GraphQLServerOptions<
   cacheControl?:
     | boolean
     | (CacheControlExtensionOptions & {
-        calculateHttpHeaders?: boolean | HttpHeaderCalculation;
+        calculateHttpHeaders?: boolean;
         stripFormattedExtensions?: boolean;
       });
   extensions?: Array<() => GraphQLExtension>;
