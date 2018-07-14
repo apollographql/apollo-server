@@ -94,6 +94,7 @@ export declare class Response extends Body {
 
 export interface ResponseInit {
   headers?: HeadersInit;
+  url?: string;
   status?: number;
   statusText?: string;
 }
