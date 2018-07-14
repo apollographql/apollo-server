@@ -28,11 +28,11 @@
     "redis": "^2.8.0"
   },
   "devDependencies": {
-    "@types/jest": "^23.1.2",
-    "@types/redis": "^2.8.6",
-    "jest": "^23.2.0",
-    "redis-mock": "^0.27.0",
-    "ts-jest": "^22.4.6"
+    "@types/jest": "23.1.6",
+    "@types/redis": "2.8.6",
+    "jest": "23.4.1",
+    "redis-mock": "0.27.0",
+    "ts-jest": "22.4.6"
   },
   "jest": {
     "testEnvironment": "node",
