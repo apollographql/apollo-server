@@ -112,7 +112,6 @@ const server = new ApolloServer({ typeDefs, resolvers });
 
 // This `listen` method launches a web-server.  Existing apps
 // can utilize middleware options, which we'll discuss later.
-// By default, it launches the GraphQL Server on port 4000
 server.listen().then(({ url }) => {
   console.log(`🚀  Server ready at ${url}`);
 });
@@ -136,17 +135,6 @@ For this step, we'll return to the terminal/console and start the server we defi
 * If everything is working, you should see the GraphQL Playground explorer tool, which we will use in the next step.
 
 ![GraphQL Playground](./images/getting-started/graphql-playground.png)
-
-
-The server launches by default on `port 4000`. However, you can configure the server to listen on any port as shown in the code below:
-
-```js line=2-3
-...
-const PORT = 3000;
-server.listen({ port: PORT }).then(({ url }) => {
-  console.log(`🚀  Server ready at ${url}`);
-});
-```
 
 In the next step, we'll use the GraphQL Playground tool to send queries to the GraphQL server.
 
