@@ -18,6 +18,7 @@ import {
 } from 'apollo-server-errors';
 import { calculateCacheControlHeaders } from './caching';
 import { DeferredExecutionResult } from './execute';
+import { fromGraphQLError } from 'apollo-server-errors';
 
 export interface HttpQueryRequest {
   method: string;
@@ -527,6 +528,9 @@ async function* graphqlResponseToAsyncIterable(
   if (isDeferredGraphQLResponse(result)) {
     yield prettyJSONStringify(result.initialResponse);
     for await (let patch of result.deferredPatches) {
+      if (patch.errors) {
+        patch.errors = patch.errors.map(error => fromGraphQLError(error));
+      }
       yield prettyJSONStringify(patch);
     }
   } else {
