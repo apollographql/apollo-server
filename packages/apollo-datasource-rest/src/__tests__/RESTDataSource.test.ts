@@ -49,6 +49,27 @@ describe('RESTDataSource', () => {
       expect(fetch.mock.calls[0][0].url).toEqual('https://api.example.com/foo');
     });
 
+    it('interprets paths with a leading slash relative to the base URL', async () => {
+      const dataSource = new class extends RESTDataSource {
+        baseURL = 'https://api.example.com/bar';
+
+        getFoo() {
+          return this.get('/foo');
+        }
+      }();
+
+      dataSource.httpCache = httpCache;
+
+      fetch.mockJSONResponseOnce();
+
+      await dataSource.getFoo();
+
+      expect(fetch.mock.calls.length).toEqual(1);
+      expect(fetch.mock.calls[0][0].url).toEqual(
+        'https://api.example.com/bar/foo',
+      );
+    });
+
     it('adds a trailing slash to the base URL if needed', async () => {
       const dataSource = new class extends RESTDataSource {
         baseURL = 'https://example.com/api';
