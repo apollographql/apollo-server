@@ -40,7 +40,6 @@ function prettyJSONStringify(value: any) {
 export interface ApolloServerHttpResponse {
   headers?: Record<string, string>;
   // ResponseInit contains the follow, which we do not use
-  // url?: string;
   // status?: number;
   // statusText?: string;
 }
