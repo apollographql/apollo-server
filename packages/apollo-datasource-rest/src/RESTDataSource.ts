@@ -43,6 +43,15 @@ export abstract class RESTDataSource<TContext = any> extends DataSource {
 
   baseURL?: string;
 
+  // By default, we use the full request URL as the cache key.
+  // You can override this to remove query parameters or compute a cache key in any way that makes sense.
+  // For example, you could use this to take Vary header fields into account.
+  // Although we do validate header fields and don't serve responses from cache when they don't match,
+  // new reponses overwrite old ones with different vary header fields.
+  protected cacheKeyFor(request: Request): string {
+    return request.url;
+  }
+
   protected willSendRequest?(request: RequestOptions): ValueOrPromise<void>;
 
   protected resolveURL(request: RequestOptions): ValueOrPromise<URL> {
@@ -198,9 +207,11 @@ export abstract class RESTDataSource<TContext = any> extends DataSource {
 
     const request = new Request(String(url), options);
 
+    const cacheKey = this.cacheKeyFor(request);
+
     return this.trace(`${options.method || 'GET'} ${url}`, async () => {
       try {
-        const response = await this.httpCache.fetch(request);
+        const response = await this.httpCache.fetch(request, { cacheKey });
         return this.didReceiveResponse(response, request);
       } catch (error) {
         this.didEncounterError(error, request);
