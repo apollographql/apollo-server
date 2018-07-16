@@ -18,7 +18,7 @@
     "node": ">=4.0"
   },
   "dependencies": {
-    "apollo-server-env": "^2.0.0-rc.8",
+    "apollo-server-env": "2.0.0-rc.8",
     "graphql-extensions": "0.1.0-beta.0"
   },
   "peerDependencies": {

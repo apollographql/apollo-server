@@ -25,8 +25,8 @@
   },
   "homepage": "https://github.com/apollographql/apollo-server#readme",
   "dependencies": {
-    "apollo-server-core": "^2.0.0-rc.8",
-    "apollo-server-express": "^2.0.0-rc.8",
+    "apollo-server-core": "2.0.0-rc.8",
+    "apollo-server-express": "2.0.0-rc.8",
     "express": "^4.0.0",
     "graphql-subscriptions": "^0.5.8",
     "graphql-tools": "^3.0.4"
