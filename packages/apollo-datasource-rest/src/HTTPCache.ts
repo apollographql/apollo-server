@@ -3,18 +3,21 @@ import { fetch, Request, Response, Headers } from 'apollo-server-env';
 import CachePolicy = require('http-cache-semantics');
 
 import { KeyValueCache, InMemoryLRUCache } from 'apollo-server-caching';
-
-interface CacheOptions {
-  cacheKey?: string;
-  ttl?: number;
-}
+import { CacheOptions } from './RESTDataSource';
 
 export class HTTPCache {
   constructor(private keyValueCache: KeyValueCache = new InMemoryLRUCache()) {}
 
-  async fetch(request: Request, options: CacheOptions = {}): Promise<Response> {
+  async fetch(
+    request: Request,
+    options: {
+      cacheKey?: string;
+      cacheOptions?:
+        | CacheOptions
+        | ((response: Response, request: Request) => CacheOptions | undefined);
+    } = {},
+  ): Promise<Response> {
     const cacheKey = options.cacheKey ? options.cacheKey : request.url;
-    const ttl = options.ttl;
 
     const entry = await this.keyValueCache.get(`httpcache:${cacheKey}`);
     if (!entry) {
@@ -25,7 +28,13 @@ export class HTTPCache {
         policyResponseFrom(response),
       );
 
-      return this.storeResponseAndReturnClone(response, policy, cacheKey, ttl);
+      return this.storeResponseAndReturnClone(
+        response,
+        request,
+        policy,
+        cacheKey,
+        options.cacheOptions,
+      );
     }
 
     const { policy: policyRaw, body } = JSON.parse(entry);
@@ -63,19 +72,29 @@ export class HTTPCache {
               status: revalidatedPolicy._status,
               headers: revalidatedPolicy.responseHeaders(),
             }),
+        request,
         revalidatedPolicy,
         cacheKey,
-        ttl,
+        options.cacheOptions,
       );
     }
   }
 
   private async storeResponseAndReturnClone(
     response: Response,
+    request: Request,
     policy: CachePolicy,
     cacheKey: string,
-    ttl?: number,
+    cacheOptions?:
+      | CacheOptions
+      | ((response: Response, request: Request) => CacheOptions | undefined),
   ): Promise<Response> {
+    if (cacheOptions && typeof cacheOptions === 'function') {
+      cacheOptions = cacheOptions(response, request);
+    }
+
+    let ttl = cacheOptions && cacheOptions.ttl;
+
     if (ttl) {
       (policy as any)._rescc['max-age'] = ttl;
     }

@@ -1,4 +1,8 @@
-import { fetch, Request } from '../../../../__mocks__/apollo-server-env';
+import {
+  fetch,
+  Request,
+  Response,
+} from '../../../../__mocks__/apollo-server-env';
 
 import {
   mockDate,
@@ -86,7 +90,29 @@ describe('HTTPCache', () => {
     fetch.mockJSONResponseOnce({ name: 'Ada Lovelace' });
 
     await httpCache.fetch(new Request('https://api.example.com/people/1'), {
-      ttl: 30,
+      cacheOptions: {
+        ttl: 30,
+      },
+    });
+
+    advanceTimeBy(10000);
+
+    const response = await httpCache.fetch(
+      new Request('https://api.example.com/people/1'),
+    );
+
+    expect(fetch.mock.calls.length).toEqual(1);
+    expect(await response.json()).toEqual({ name: 'Ada Lovelace' });
+    expect(response.headers.get('Age')).toEqual('10');
+  });
+
+  it('allows overriding the TTL dynamically', async () => {
+    fetch.mockJSONResponseOnce({ name: 'Ada Lovelace' });
+
+    await httpCache.fetch(new Request('https://api.example.com/people/1'), {
+      cacheOptions: (response: Response, request: Request) => ({
+        ttl: 30,
+      }),
     });
 
     advanceTimeBy(10000);
