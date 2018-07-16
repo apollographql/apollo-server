@@ -34,10 +34,10 @@
     "micro": "^9.3.2"
   },
   "devDependencies": {
-    "@types/micro": "^7.3.1",
+    "@types/micro": "7.3.1",
     "apollo-server-integration-testsuite": "^2.0.0-rc.8",
-    "request-promise": "^4.2.2",
-    "test-listen": "^1.1.0"
+    "request-promise": "4.2.2",
+    "test-listen": "1.1.0"
   },
   "typings": "dist/index.d.ts",
   "typescript": {

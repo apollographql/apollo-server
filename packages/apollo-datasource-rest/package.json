@@ -30,9 +30,9 @@
     "http-cache-semantics": "^4.0.0"
   },
   "devDependencies": {
-    "@types/jest": "^23.1.2",
-    "jest": "^23.2.0",
-    "ts-jest": "^22.4.6"
+    "@types/jest": "23.1.6",
+    "jest": "23.4.1",
+    "ts-jest": "22.4.6"
   },
   "jest": {
     "testEnvironment": "node",

@@ -37,7 +37,7 @@
     "graphql-tools": "^3.0.4"
   },
   "devDependencies": {
-    "@types/hapi": "^17.0.12",
+    "@types/hapi": "17.0.15",
     "apollo-server-integration-testsuite": "^2.0.0-rc.8",
     "hapi": "17.5.2"
   },
