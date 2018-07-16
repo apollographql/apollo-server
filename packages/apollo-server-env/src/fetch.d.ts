@@ -78,7 +78,8 @@ export type ReferrerPolicy =
   | 'unsafe-url';
 
 export declare class Response extends Body {
-  constructor(body?: BodyInit, init?: ResponseInit);
+  // node-fetch accepts options as the second argument instead of a pure ResponseInit
+  constructor(body?: BodyInit, options?: ResponseOptions);
   static error(): Response;
   static redirect(url: string, status?: number): Response;
 
@@ -96,6 +97,10 @@ export interface ResponseInit {
   headers?: HeadersInit;
   status?: number;
   statusText?: string;
+}
+
+export interface ResponseOptions extends ResponseInit {
+  url?: string;
 }
 
 export type BodyInit = ArrayBuffer | ArrayBufferView | string;
