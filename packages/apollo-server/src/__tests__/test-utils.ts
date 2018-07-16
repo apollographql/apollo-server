@@ -1,8 +1,7 @@
 import gql from 'graphql-tag';
 import { HttpLink } from 'apollo-link-http';
 
-import { ApolloServer } from '../../';
-import { startTestServer, toPromise } from '../';
+import { ApolloServer, startTestServer, toPromise } from '../';
 
 const typeDefs = gql`
   type Query {

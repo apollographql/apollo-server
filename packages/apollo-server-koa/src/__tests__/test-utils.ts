@@ -1,8 +1,7 @@
 import gql from 'graphql-tag';
 import { HttpLink } from 'apollo-link-http';
 
-import { ApolloServer } from '../../';
-import { startTestServer, toPromise } from '../';
+import { ApolloServer, startTestServer, toPromise } from '../';
 
 const typeDefs = gql`
   type Query {
@@ -16,10 +15,9 @@ const resolvers = {
   },
 };
 
-describe('apollo-server-express > startTestServer', () => {
-  it('executes an operation against a test server', async done => {
+describe('apollo-server-koa > startTestServer', () => {
+  it('executes an operation against a test server', async () => {
     const server = new ApolloServer({ typeDefs, resolvers });
-    startTestServer(server);
     const { stop, graphql } = await startTestServer(server);
 
     const helloWorld = gql`

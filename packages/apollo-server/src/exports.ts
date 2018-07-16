@@ -21,4 +21,5 @@ export {
   PlaygroundRenderPageOptions,
 } from 'apollo-server-core';
 
-export { CorsOptions } from 'apollo-server-express';
+// testUtil exports
+export { CorsOptions, startTestServer, toPromise } from 'apollo-server-express';
