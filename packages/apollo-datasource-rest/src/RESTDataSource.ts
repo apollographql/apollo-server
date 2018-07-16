@@ -35,6 +35,7 @@ type ValueOrPromise<T> = T | Promise<T>;
 export abstract class RESTDataSource<TContext = any> extends DataSource {
   httpCache!: HTTPCache;
   context!: TContext;
+  memoizedResults = new Map<string, Promise<any>>();
 
   initialize(context: TContext, cache: KeyValueCache): void {
     this.context = context;
@@ -209,14 +210,28 @@ export abstract class RESTDataSource<TContext = any> extends DataSource {
 
     const cacheKey = this.cacheKeyFor(request);
 
-    return this.trace(`${options.method || 'GET'} ${url}`, async () => {
-      try {
-        const response = await this.httpCache.fetch(request, { cacheKey });
-        return this.didReceiveResponse(response, request);
-      } catch (error) {
-        this.didEncounterError(error, request);
-      }
+    return this.memoize(cacheKey, async () => {
+      return this.trace(`${options.method || 'GET'} ${url}`, async () => {
+        try {
+          const response = await this.httpCache.fetch(request, { cacheKey });
+          return this.didReceiveResponse(response, request);
+        } catch (error) {
+          this.didEncounterError(error, request);
+        }
+      });
     });
+  }
+
+  private async memoize<TResult>(
+    cacheKey: string,
+    fn: () => Promise<TResult>,
+  ): Promise<TResult> {
+    let promise = this.memoizedResults.get(cacheKey);
+    if (promise) return promise;
+
+    promise = fn();
+    this.memoizedResults.set(cacheKey, promise);
+    return promise;
   }
 
   private async trace<TResult>(

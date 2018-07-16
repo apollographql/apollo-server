@@ -408,45 +408,77 @@ describe('RESTDataSource', () => {
     });
   });
 
-  describe('caching', () => {
+  describe('memoization', () => {
+    it('deduplicates requests with the same cache key', async () => {
+      const dataSource = new class extends RESTDataSource {
+        baseURL = 'https://api.example.com';
+
+        getFoo(a: number) {
+          return this.get('foo', { a });
+        }
+      }();
+
+      dataSource.httpCache = httpCache;
+
+      fetch.mockJSONResponseOnce();
+
+      await Promise.all([dataSource.getFoo(1), dataSource.getFoo(1)]);
+
+      expect(fetch.mock.calls.length).toEqual(1);
+      expect(fetch.mock.calls[0][0].url).toEqual(
+        'https://api.example.com/foo?a=1',
+      );
+    });
+
+    it('does not deduplicate requests with a different cache key', async () => {
+      const dataSource = new class extends RESTDataSource {
+        baseURL = 'https://api.example.com';
+
+        getFoo(a: number) {
+          return this.get('foo', { a });
+        }
+      }();
+
+      dataSource.httpCache = httpCache;
+
+      fetch.mockJSONResponseOnce();
+      fetch.mockJSONResponseOnce();
+
+      await Promise.all([dataSource.getFoo(1), dataSource.getFoo(2)]);
+
+      expect(fetch.mock.calls.length).toEqual(2);
+      expect(fetch.mock.calls[0][0].url).toEqual(
+        'https://api.example.com/foo?a=1',
+      );
+      expect(fetch.mock.calls[1][0].url).toEqual(
+        'https://api.example.com/foo?a=2',
+      );
+    });
+
     it('allows specifying a custom cache key', async () => {
       const dataSource = new class extends RESTDataSource {
         baseURL = 'https://api.example.com';
 
-        willSendRequest(request: RequestOptions) {
-          request.params.set('api_key', this.context.token);
-        }
-
         cacheKeyFor(request: Request) {
           const url = new URL(request.url);
-          const params = url.searchParams;
-          params.delete('api_key');
-          url.search = params.toString();
+          url.search = undefined;
           return url.toString();
         }
 
-        getFoo() {
-          return this.get('foo', { a: 1 });
+        getFoo(a: number) {
+          return this.get('foo', { a });
         }
       }();
 
-      dataSource.context = { token: 'secret' };
       dataSource.httpCache = httpCache;
 
-      fetch.mockJSONResponseOnce(
-        { name: 'Ada Lovelace' },
-        { 'Cache-Control': 'max-age=30' },
-      );
+      fetch.mockJSONResponseOnce();
 
-      await dataSource.getFoo();
-
-      dataSource.context = { token: 'anothersecret' };
-
-      await dataSource.getFoo();
+      await Promise.all([dataSource.getFoo(1), dataSource.getFoo(2)]);
 
       expect(fetch.mock.calls.length).toEqual(1);
       expect(fetch.mock.calls[0][0].url).toEqual(
-        'https://api.example.com/foo?a=1&api_key=secret',
+        'https://api.example.com/foo?a=1',
       );
     });
   });
