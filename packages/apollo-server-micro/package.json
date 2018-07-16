@@ -6,7 +6,8 @@
   "scripts": {
     "compile": "tsc",
     "watch": "tsc -w",
-    "prepare": "npm run compile"
+    "prepare": "npm run compile",
+    "test": "jest --verbose"
   },
   "repository": {
     "type": "git",
@@ -37,10 +38,33 @@
     "@types/micro": "7.3.1",
     "apollo-server-integration-testsuite": "2.0.0",
     "request-promise": "4.2.2",
-    "test-listen": "1.1.0"
+    "test-listen": "1.1.0",
+    "@types/jest": "^23.1.2",
+    "jest": "^23.2.0",
+    "ts-jest": "^22.4.6"
   },
   "typings": "dist/index.d.ts",
   "typescript": {
     "definition": "dist/index.d.ts"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "transform": {
+      "^.+\\.(ts|js)$": "ts-jest"
+    },
+    "moduleFileExtensions": [
+      "ts",
+      "js",
+      "json"
+    ],
+    "testRegex": "apollo-server-micro/src.*/__tests__/.*$",
+    "roots": [
+      "../../"
+    ],
+    "globals": {
+      "ts-jest": {
+        "skipBabel": true
+      }
+    }
   }
 }
