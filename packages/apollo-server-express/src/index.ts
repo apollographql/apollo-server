@@ -1,6 +1,8 @@
 export {
   GraphQLUpload,
   GraphQLOptions,
+  GraphQLExtension,
+  Config,
   gql,
   // Errors
   ApolloError,
@@ -10,6 +12,10 @@ export {
   AuthenticationError,
   ForbiddenError,
   UserInputError,
+  // playground
+  defaultPlaygroundOptions,
+  PlaygroundConfig,
+  PlaygroundRenderPageOptions,
 } from 'apollo-server-core';
 
 export * from 'graphql-tools';
