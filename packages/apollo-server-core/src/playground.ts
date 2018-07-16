@@ -11,7 +11,16 @@ export {
 // by the integration subclasses
 const playgroundVersion = '1.7.2';
 
-export type PlaygroundConfig = Partial<PlaygroundRenderPageOptions> | boolean;
+// https://stackoverflow.com/a/51365037
+type RecursivePartial<T> = {
+  [P in keyof T]?: T[P] extends (infer U)[]
+    ? RecursivePartial<U>[]
+    : T[P] extends object ? RecursivePartial<T[P]> : T[P]
+};
+
+export type PlaygroundConfig =
+  | RecursivePartial<PlaygroundRenderPageOptions>
+  | boolean;
 
 export const defaultPlaygroundOptions = {
   version: playgroundVersion,
