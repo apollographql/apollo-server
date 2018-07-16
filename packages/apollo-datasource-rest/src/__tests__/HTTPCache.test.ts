@@ -82,6 +82,26 @@ describe('HTTPCache', () => {
     expect(response.headers.get('Age')).toEqual('0');
   });
 
+  it('allows specifying a custom cache key', async () => {
+    fetch.mockJSONResponseOnce(
+      { name: 'Ada Lovelace' },
+      { 'Cache-Control': 'max-age=30' },
+    );
+
+    await httpCache.fetch(
+      new Request('https://api.example.com/people/1?foo=bar'),
+      { cacheKey: 'https://api.example.com/people/1' },
+    );
+
+    const response = await httpCache.fetch(
+      new Request('https://api.example.com/people/1?foo=baz'),
+      { cacheKey: 'https://api.example.com/people/1' },
+    );
+
+    expect(fetch.mock.calls.length).toEqual(1);
+    expect(await response.json()).toEqual({ name: 'Ada Lovelace' });
+  });
+
   it('does not store a response with a non-success status code', async () => {
     fetch.mockResponseOnce(
       'Internal server error',

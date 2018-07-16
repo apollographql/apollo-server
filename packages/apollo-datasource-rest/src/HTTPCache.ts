@@ -4,13 +4,18 @@ import CachePolicy = require('http-cache-semantics');
 
 import { KeyValueCache, InMemoryLRUCache } from 'apollo-server-caching';
 
+interface CacheOptions {
+  cacheKey: string;
+}
+
 export class HTTPCache {
   constructor(private keyValueCache: KeyValueCache = new InMemoryLRUCache()) {}
 
-  async fetch(request: Request): Promise<Response> {
-    const cacheKey = cacheKeyFor(request);
-
-    const entry = await this.keyValueCache.get(cacheKey);
+  async fetch(
+    request: Request,
+    options: CacheOptions = { cacheKey: request.url },
+  ): Promise<Response> {
+    const entry = await this.keyValueCache.get(`httpcache:${options.cacheKey}`);
     if (!entry) {
       const response = await fetch(request);
 
@@ -19,12 +24,14 @@ export class HTTPCache {
         policyResponseFrom(response),
       );
 
-      return this.storeResponseAndReturnClone(request, response, policy);
+      return this.storeResponseAndReturnClone(response, policy, options);
     }
 
     const { policy: policyRaw, body } = JSON.parse(entry);
 
     const policy = CachePolicy.fromObject(policyRaw);
+    // Remove url from the policy, because otherwise it would never match a request with a custom cache key
+    (policy as any)._url = undefined;
 
     if (policy.satisfiesWithoutRevalidation(policyRequestFrom(request))) {
       const headers = policy.responseHeaders();
@@ -48,7 +55,6 @@ export class HTTPCache {
       );
 
       return this.storeResponseAndReturnClone(
-        revalidationRequest,
         modified
           ? revalidationResponse
           : new Response(body, {
@@ -57,22 +63,24 @@ export class HTTPCache {
               headers: revalidatedPolicy.responseHeaders(),
             }),
         revalidatedPolicy,
+        options,
       );
     }
   }
 
   private async storeResponseAndReturnClone(
-    request: Request,
     response: Response,
     policy: CachePolicy,
+    options: CacheOptions,
   ): Promise<Response> {
     if (!response.headers.has('Cache-Control') || !policy.storable())
       return response;
 
-    const cacheKey = cacheKeyFor(request);
-
     const body = await response.text();
-    const entry = JSON.stringify({ policy: policy.toObject(), body });
+    const entry = JSON.stringify({
+      policy: policy.toObject(),
+      body,
+    });
 
     let ttl = Math.round(policy.timeToLive() / 1000);
     // If a response can be revalidated, we don't want to remove it from the cache right after it expires.
@@ -80,7 +88,9 @@ export class HTTPCache {
     if (canBeRevalidated(response)) {
       ttl *= 2;
     }
-    await this.keyValueCache.set(cacheKey, entry, { ttl });
+    await this.keyValueCache.set(`httpcache:${options.cacheKey}`, entry, {
+      ttl,
+    });
 
     // We have to clone the response before returning it because the
     // body can only be used once.
@@ -97,14 +107,6 @@ export class HTTPCache {
 
 function canBeRevalidated(response: Response): boolean {
   return response.headers.has('ETag');
-}
-
-function cacheKeyFor(request: Request): string {
-  // FIXME: Find a way to take Vary header fields into account when computing a cache key
-  // Although we do validate header fields and don't serve responses from cache when they don't match,
-  // new reponses overwrite old ones with different vary header fields.
-  // (I think we have similar heuristics in the Engine proxy)
-  return `httpcache:${request.url}`;
 }
 
 function policyRequestFrom(request: Request) {

@@ -1,4 +1,4 @@
-import { fetch } from '../../../../__mocks__/apollo-server-env';
+import { fetch, Request, URL } from '../../../../__mocks__/apollo-server-env';
 
 import {
   ApolloError,
@@ -219,6 +219,47 @@ describe('RESTDataSource', () => {
     dataSource.httpCache = httpCache;
 
     fetch.mockJSONResponseOnce();
+
+    await dataSource.getFoo();
+
+    expect(fetch.mock.calls.length).toEqual(1);
+    expect(fetch.mock.calls[0][0].url).toEqual(
+      'https://api.example.com/foo?a=1&api_key=secret',
+    );
+  });
+
+  it('allows specifying a custom cache key', async () => {
+    const dataSource = new class extends RESTDataSource {
+      baseURL = 'https://api.example.com';
+
+      willSendRequest(request: RequestOptions) {
+        request.params.set('api_key', this.context.token);
+      }
+
+      cacheKeyFor(request: Request) {
+        const url = new URL(request.url);
+        const params = url.searchParams;
+        params.delete('api_key');
+        url.search = params.toString();
+        return url.toString();
+      }
+
+      getFoo() {
+        return this.get('foo', { a: 1 });
+      }
+    }();
+
+    dataSource.context = { token: 'secret' };
+    dataSource.httpCache = httpCache;
+
+    fetch.mockJSONResponseOnce(
+      { name: 'Ada Lovelace' },
+      { 'Cache-Control': 'max-age=30' },
+    );
+
+    await dataSource.getFoo();
+
+    dataSource.context = { token: 'anothersecret' };
 
     await dataSource.getFoo();
 
