@@ -9,9 +9,8 @@ import {
   URLSearchParamsInit,
 } from 'apollo-server-env';
 
-import { DataSource } from 'apollo-datasource';
+import { DataSource, DataSourceConfig } from 'apollo-datasource';
 
-import { KeyValueCache } from 'apollo-server-caching';
 import { HTTPCache } from './HTTPCache';
 
 import {
@@ -37,9 +36,9 @@ export abstract class RESTDataSource<TContext = any> extends DataSource {
   context!: TContext;
   memoizedResults = new Map<string, Promise<any>>();
 
-  initialize(context: TContext, cache: KeyValueCache): void {
-    this.context = context;
-    this.httpCache = new HTTPCache(cache);
+  initialize(config: DataSourceConfig<TContext>): void {
+    this.context = config.context;
+    this.httpCache = new HTTPCache(config.cache);
   }
 
   baseURL?: string;
