@@ -82,6 +82,24 @@ describe('HTTPCache', () => {
     expect(response.headers.get('Age')).toEqual('0');
   });
 
+  it('allows overriding the TTL', async () => {
+    fetch.mockJSONResponseOnce({ name: 'Ada Lovelace' });
+
+    await httpCache.fetch(new Request('https://api.example.com/people/1'), {
+      ttl: 30,
+    });
+
+    advanceTimeBy(10000);
+
+    const response = await httpCache.fetch(
+      new Request('https://api.example.com/people/1'),
+    );
+
+    expect(fetch.mock.calls.length).toEqual(1);
+    expect(await response.json()).toEqual({ name: 'Ada Lovelace' });
+    expect(response.headers.get('Age')).toEqual('10');
+  });
+
   it('allows specifying a custom cache key', async () => {
     fetch.mockJSONResponseOnce(
       { name: 'Ada Lovelace' },

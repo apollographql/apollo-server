@@ -5,17 +5,18 @@ import CachePolicy = require('http-cache-semantics');
 import { KeyValueCache, InMemoryLRUCache } from 'apollo-server-caching';
 
 interface CacheOptions {
-  cacheKey: string;
+  cacheKey?: string;
+  ttl?: number;
 }
 
 export class HTTPCache {
   constructor(private keyValueCache: KeyValueCache = new InMemoryLRUCache()) {}
 
-  async fetch(
-    request: Request,
-    options: CacheOptions = { cacheKey: request.url },
-  ): Promise<Response> {
-    const entry = await this.keyValueCache.get(`httpcache:${options.cacheKey}`);
+  async fetch(request: Request, options: CacheOptions = {}): Promise<Response> {
+    const cacheKey = options.cacheKey ? options.cacheKey : request.url;
+    const ttl = options.ttl;
+
+    const entry = await this.keyValueCache.get(`httpcache:${cacheKey}`);
     if (!entry) {
       const response = await fetch(request);
 
@@ -24,7 +25,7 @@ export class HTTPCache {
         policyResponseFrom(response),
       );
 
-      return this.storeResponseAndReturnClone(response, policy, options);
+      return this.storeResponseAndReturnClone(response, policy, cacheKey, ttl);
     }
 
     const { policy: policyRaw, body } = JSON.parse(entry);
@@ -63,7 +64,8 @@ export class HTTPCache {
               headers: revalidatedPolicy.responseHeaders(),
             }),
         revalidatedPolicy,
-        options,
+        cacheKey,
+        ttl,
       );
     }
   }
@@ -71,10 +73,25 @@ export class HTTPCache {
   private async storeResponseAndReturnClone(
     response: Response,
     policy: CachePolicy,
-    options: CacheOptions,
+    cacheKey: string,
+    ttl?: number,
   ): Promise<Response> {
-    if (!response.headers.has('Cache-Control') || !policy.storable())
-      return response;
+    if (ttl) {
+      (policy as any)._rescc['max-age'] = ttl;
+    }
+
+    if (!policy.storable()) return response;
+
+    if (!ttl) {
+      ttl = Math.round(policy.timeToLive() / 1000);
+      // If a response can be revalidated, we don't want to remove it from the cache right after it expires.
+      // We may be able to use better heuristics here, but for now we'll take the max-age times 2.
+      if (canBeRevalidated(response)) {
+        ttl *= 2;
+      }
+    }
+
+    if (ttl <= 0) return response;
 
     const body = await response.text();
     const entry = JSON.stringify({
@@ -82,13 +99,7 @@ export class HTTPCache {
       body,
     });
 
-    let ttl = Math.round(policy.timeToLive() / 1000);
-    // If a response can be revalidated, we don't want to remove it from the cache right after it expires.
-    // We may be able to use better heuristics here, but for now we'll take the max-age times 2.
-    if (canBeRevalidated(response)) {
-      ttl *= 2;
-    }
-    await this.keyValueCache.set(`httpcache:${options.cacheKey}`, entry, {
+    await this.keyValueCache.set(`httpcache:${cacheKey}`, entry, {
       ttl,
     });
 
