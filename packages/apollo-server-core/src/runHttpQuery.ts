@@ -6,7 +6,12 @@ import { CacheControlExtensionOptions } from 'apollo-cache-control';
 import { omit } from 'lodash';
 
 import { Request } from 'apollo-server-env';
-import { runQuery, QueryOptions, isDeferredGraphQLResponse } from './runQuery';
+import {
+  runQuery,
+  QueryOptions,
+  isDeferredGraphQLResponse,
+  DeferredGraphQLResponse,
+} from './runQuery';
 import {
   default as GraphQLOptions,
   resolveGraphqlOptions,
@@ -47,7 +52,8 @@ export interface ApolloServerHttpResponse {
 }
 
 export interface HttpQueryResponse {
-  graphqlResponses: AsyncIterable<string>;
+  graphqlResponse?: string;
+  graphqlResponses?: AsyncIterable<string>;
   responseInit: ApolloServerHttpResponse;
 }
 
@@ -472,13 +478,13 @@ export async function runHttpQuery(
   if (!isBatch) {
     const graphqlResponse = responses[0];
 
-    let initialResponse: ExecutionResult; // We need this to set Content-Length and throw errors
+    const isDeferred = isDeferredGraphQLResponse(graphqlResponse);
 
-    if (isDeferredGraphQLResponse(graphqlResponse)) {
-      initialResponse = graphqlResponse.initialResponse;
-      // Update the content type to be able to send multipart data
-      // See: https://www.w3.org/Protocols/rfc1341/7_2_Multipart.html
-      responseInit.headers['Content-Type'] = 'multipart/mixed; boundary="-"';
+    let initialResponse: ExecutionResult; // We need this check for and and throw errors
+
+    if (isDeferred) {
+      initialResponse = (graphqlResponse as DeferredGraphQLResponse)
+        .initialResponse;
     } else {
       initialResponse = graphqlResponse;
     }
@@ -489,53 +495,35 @@ export async function runHttpQuery(
       // don't include optionsObject, since the errors have already been formatted
       return throwHttpGraphQLError(400, initialResponse.errors as any);
     }
-    const stringified = prettyJSONStringify(initialResponse);
-
-    responseInit.headers!['Content-Length'] = Buffer.byteLength(
-      stringified,
-      'utf8',
-    ).toString();
 
     return {
-      graphqlResponses: graphqlResponseToAsyncIterable(graphqlResponse),
+      graphqlResponse: isDeferred
+        ? undefined
+        : prettyJSONStringify(graphqlResponse),
+      graphqlResponses: isDeferred
+        ? graphqlResponseToAsyncIterable(
+            graphqlResponse as DeferredGraphQLResponse,
+          )
+        : undefined,
       responseInit,
     };
   }
 
   // TODO: Handle defer in batched queries. This is a little awkward now since we need a separate HTTP connection to stream patches.
-  const stringified = prettyJSONStringify(responses);
-
-  responseInit.headers!['Content-Length'] = Buffer.byteLength(
-    stringified,
-    'utf8',
-  ).toString();
-
   return {
-    graphqlResponses: {
-      [Symbol.asyncIterator]() {
-        return {
-          next() {
-            return Promise.resolve({ value: stringified, done: true });
-          },
-        };
-      },
-    },
+    graphqlResponse: prettyJSONStringify(responses),
     responseInit,
   };
 }
 
 async function* graphqlResponseToAsyncIterable(
-  result: ExecutionResult | DeferredExecutionResult,
+  result: DeferredGraphQLResponse,
 ) {
-  if (isDeferredGraphQLResponse(result)) {
-    yield prettyJSONStringify(result.initialResponse);
-    for await (let patch of result.deferredPatches) {
-      if (patch.errors) {
-        patch.errors = patch.errors.map(error => fromGraphQLError(error));
-      }
-      yield prettyJSONStringify(patch);
+  yield prettyJSONStringify(result.initialResponse);
+  for await (let patch of result.deferredPatches) {
+    if (patch.errors) {
+      patch.errors = patch.errors.map(error => fromGraphQLError(error));
     }
-  } else {
-    yield prettyJSONStringify(result);
+    yield prettyJSONStringify(patch);
   }
 }
