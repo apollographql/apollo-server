@@ -19,12 +19,24 @@ import {
   ForbiddenError,
 } from 'apollo-server-errors';
 
+declare module 'apollo-server-env/dist/fetch' {
+  interface RequestInit {
+    cacheOptions?:
+      | CacheOptions
+      | ((response: Response, request: Request) => CacheOptions | undefined);
+  }
+}
+
 export type RequestOptions = RequestInit & {
   path: string;
   params: URLSearchParams;
   headers: Headers;
   body?: Body;
 };
+
+export interface CacheOptions {
+  ttl?: number;
+}
 
 export type Body = BodyInit | object;
 export { Request };
@@ -69,6 +81,11 @@ export abstract class RESTDataSource<TContext = any> extends DataSource {
       return new URL(path);
     }
   }
+
+  protected cacheOptionsFor?(
+    response: Response,
+    request: Request,
+  ): CacheOptions | undefined;
 
   protected async didReceiveResponse<TResult = any>(
     response: Response,
@@ -215,8 +232,14 @@ export abstract class RESTDataSource<TContext = any> extends DataSource {
 
     return this.memoize(cacheKey, async () => {
       return this.trace(`${options.method || 'GET'} ${url}`, async () => {
+        const cacheOptions = options.cacheOptions
+          ? options.cacheOptions
+          : this.cacheOptionsFor && this.cacheOptionsFor.bind(this);
         try {
-          const response = await this.httpCache.fetch(request, { cacheKey });
+          const response = await this.httpCache.fetch(request, {
+            cacheKey,
+            cacheOptions,
+          });
           return this.didReceiveResponse(response, request);
         } catch (error) {
           this.didEncounterError(error, request);
