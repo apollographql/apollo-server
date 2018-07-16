@@ -46,27 +46,31 @@ export function graphqlExpress(
       query: req.method === 'POST' ? req.body : req.query,
       request: convertNodeHttpToRequest(req),
     }).then(
-      async ({ graphqlResponses, responseInit }) => {
+      async ({ graphqlResponse, graphqlResponses, responseInit }) => {
         Object.keys(responseInit.headers).forEach(key =>
           res.setHeader(key, responseInit.headers[key]),
         );
-        const isMultipart =
-          responseInit.headers['Content-Type'].indexOf('multipart/mixed') >= 0;
 
-        for await (let data of graphqlResponses) {
-          // Write the boundary if sending multipart data, according to:
-          // https://www.w3.org/Protocols/rfc1341/7_2_Multipart.html
-          if (isMultipart) {
+        if (graphqlResponse) {
+          res.setHeader(
+            'Content-Length',
+            Buffer.byteLength(graphqlResponse, 'utf8').toString(),
+          );
+          res.write(graphqlResponse);
+          res.end();
+        } else if (graphqlResponses) {
+          // This is a deferred response, so send it as patches become ready.
+          // Update the content type to be able to send multipart data
+          // See: https://www.w3.org/Protocols/rfc1341/7_2_Multipart.html
+          res.setHeader('Content-Type', 'multipart/mixed; boundary="-"');
+          for await (let data of graphqlResponses) {
+            // Write the boundary for sending multipart data
             res.write(data + '\r\n---\r\n'); // Simplest boundary
-          } else {
-            res.write(data);
           }
-        }
-        // Finish up multipart with the last encapsulation boundary
-        if (isMultipart) {
+          // Finish up multipart with the last encapsulation boundary
           res.write('\r\n---');
+          res.end();
         }
-        res.end();
       },
       (error: HttpQueryError) => {
         if ('HttpQueryError' !== error.name) {
