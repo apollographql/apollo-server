@@ -23,10 +23,10 @@
     "node": ">=6"
   },
   "dependencies": {
-    "apollo-datasource": "^2.0.0-rc.8",
-    "apollo-server-caching": "^2.0.0-rc.8",
-    "apollo-server-env": "^2.0.0-rc.8",
-    "apollo-server-errors": "^2.0.0-rc.8",
+    "apollo-datasource": "2.0.0-rc.8",
+    "apollo-server-caching": "2.0.0-rc.8",
+    "apollo-server-env": "2.0.0-rc.8",
+    "apollo-server-errors": "2.0.0-rc.8",
     "http-cache-semantics": "^4.0.0"
   },
   "devDependencies": {

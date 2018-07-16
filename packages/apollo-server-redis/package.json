@@ -23,8 +23,8 @@
     "node": ">=6"
   },
   "dependencies": {
-    "apollo-server-caching": "^2.0.0-rc.8",
-    "apollo-server-env": "^2.0.0-rc.8",
+    "apollo-server-caching": "2.0.0-rc.8",
+    "apollo-server-env": "2.0.0-rc.8",
     "redis": "^2.8.0"
   },
   "devDependencies": {

@@ -22,7 +22,7 @@
     "node": ">=6.0"
   },
   "dependencies": {
-    "apollo-server-env": "^2.0.0-rc.8"
+    "apollo-server-env": "2.0.0-rc.8"
   },
   "peerDependencies": {
     "graphql": "0.10.x - 0.13.x"
