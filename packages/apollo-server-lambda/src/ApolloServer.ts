@@ -1,6 +1,5 @@
 import * as lambda from 'aws-lambda';
 import { ApolloServerBase } from 'apollo-server-core';
-export { GraphQLOptions, GraphQLExtension } from 'apollo-server-core';
 import { GraphQLOptions, Config } from 'apollo-server-core';
 import {
   renderPlaygroundPage,

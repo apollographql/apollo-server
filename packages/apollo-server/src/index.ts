@@ -11,16 +11,6 @@ import {
 } from 'apollo-server-express';
 import { Config } from 'apollo-server-core';
 
-export {
-  GraphQLUpload,
-  GraphQLOptions,
-  GraphQLExtension,
-  gql,
-  Config,
-} from 'apollo-server-core';
-
-export { CorsOptions } from 'apollo-server-express';
-
 export * from './exports';
 
 export interface ServerInfo {

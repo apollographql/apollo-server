@@ -22,7 +22,12 @@ export {
 
 export { convertNodeHttpToRequest } from './nodeHttpToRequest';
 
-export { createPlaygroundOptions } from './playground';
+export {
+  createPlaygroundOptions,
+  PlaygroundConfig,
+  defaultPlaygroundOptions,
+  PlaygroundRenderPageOptions,
+} from './playground';
 
 // ApolloServer Base class
 export { ApolloServerBase } from './ApolloServer';
