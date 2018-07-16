@@ -1,24 +1,20 @@
 import { HttpLink } from 'apollo-link-http';
-import * as Koa from 'koa';
-import * as http from 'http';
+import micro from 'micro';
 import fetch from 'node-fetch';
 import { AddressInfo } from 'net';
 import { execute } from 'apollo-link';
 export { toPromise } from 'apollo-link';
 
-import { ApolloServer } from '../';
+import { ApolloServer } from './';
 
 export const startTestServer = async (server: ApolloServer) => {
-  const app = new Koa();
-  server.applyMiddleware({ app });
-  const httpServer = await new Promise<http.Server>(resolve => {
-    const s = app.listen({ port: 0 }, () => resolve(s));
-  });
+  const app = micro(server.createHandler());
+  const httpServer = await app.listen();
+
+  const port = (httpServer.address() as AddressInfo).port;
 
   const link = new HttpLink({
-    uri: `http://localhost:${
-      (httpServer.address() as AddressInfo).port
-    }/graphql`,
+    uri: `http://localhost:${port}/graphql`,
     fetch,
   });
 

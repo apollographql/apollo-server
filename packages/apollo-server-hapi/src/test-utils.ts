@@ -1,16 +1,18 @@
 import { HttpLink } from 'apollo-link-http';
-import micro from 'micro';
+import { Server } from 'hapi';
 import fetch from 'node-fetch';
 import { execute } from 'apollo-link';
 export { toPromise } from 'apollo-link';
 
-import { ApolloServer } from '../';
+import { ApolloServer } from './';
 
 export const startTestServer = async (server: ApolloServer) => {
-  const app = micro(server.createHandler());
-  const httpServer = await app.listen();
+  const app = new Server({ host: 'localhost', port: 0 });
 
-  const port = httpServer.address().port;
+  server.applyMiddleware({ app });
+  await app.start();
+
+  const port = app.info.port;
 
   const link = new HttpLink({
     uri: `http://localhost:${port}/graphql`,
@@ -25,5 +27,5 @@ export const startTestServer = async (server: ApolloServer) => {
     variables: Record<string, any>;
   }) => execute(link, { query, variables });
 
-  return { link, stop: () => app.close(), graphql: executeOperation };
+  return { link, stop: () => app.stop(), graphql: executeOperation };
 };

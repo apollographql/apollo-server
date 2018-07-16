@@ -30,3 +30,6 @@ export {
 
 export { CorsOptions } from 'cors';
 export { OptionsJson } from 'body-parser';
+
+// testUtil exports
+export { startTestServer, toPromise } from './test-utils';

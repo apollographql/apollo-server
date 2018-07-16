@@ -1,23 +1,25 @@
 import { HttpLink } from 'apollo-link-http';
-import { Server } from 'hapi';
+import * as Koa from 'koa';
 // import * as http from 'http';
 import fetch from 'node-fetch';
-// import { AddressInfo } from 'net';
+import { AddressInfo } from 'net';
 import { execute } from 'apollo-link';
 export { toPromise } from 'apollo-link';
 
-import { ApolloServer } from '../';
+import { ApolloServer } from './';
 
 export const startTestServer = async (server: ApolloServer) => {
-  const app = new Server({ host: 'localhost', port: 0 });
-
+  const app = new Koa();
   server.applyMiddleware({ app });
-  await app.start();
-
-  const port = app.info.port;
+  // const httpServer = await new Promise<http.Server>(resolve => {
+  //   const s = app.listen({ port: 0 }, () => resolve(s));
+  // });
+  const httpServer = await app.listen({ port: 0 });
 
   const link = new HttpLink({
-    uri: `http://localhost:${port}/graphql`,
+    uri: `http://localhost:${
+      (httpServer.address() as AddressInfo).port
+    }/graphql`,
     fetch,
   });
 
@@ -29,5 +31,5 @@ export const startTestServer = async (server: ApolloServer) => {
     variables: Record<string, any>;
   }) => execute(link, { query, variables });
 
-  return { link, stop: () => app.stop(), graphql: executeOperation };
+  return { link, stop: () => httpServer.close(), graphql: executeOperation };
 };
