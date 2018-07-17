@@ -164,7 +164,6 @@ exports.handler = server.createHandler({
   cors: {
     origin: '*',
     credentials: true,
-    allowedHeaders: ['X-Apollo-Tracing', 'Content-Type', 'Authorization'],
   },
 });
 ```
@@ -200,6 +199,17 @@ exports.handler = server.createHandler({
   },
 });
 ```
+
+### Cors Options
+
+The options correspond to the [express cors configuration](https://github.com/expressjs/cors#configuration-options) with the following fields(all are optional):
+
+* `origin`: boolean | string | string[]
+* `methods`: string | string[]
+* `allowedHeaders`: string | string[]
+* `exposedHeaders`: string | string[]
+* `credentials`: boolean
+* `maxAge`: number
 
 ## Principles
 
