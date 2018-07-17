@@ -162,7 +162,7 @@ function doRunQuery(
   });
   return Promise.resolve()
     .then(
-      (): Promise<GraphQLResponse> => {
+      (): Promise<GraphQLResponse | DeferredGraphQLResponse> => {
         // Parse the document.
         let documentAST: DocumentNode;
         if (options.parsedQuery) {
@@ -267,27 +267,31 @@ function doRunQuery(
               // * operation type is unsupported
               // Options: PREPROCESSING_FAILED, GRAPHQL_RUNTIME_CHECK_FAILED
 
-            errors: [fromGraphQLError(executionError)],
-          } as ExecutionResult ;
-        })
-        .then(result => {
-          let executionResult: ExecutionResult;
-          let patches: AsyncIterable<ExecutionPatchResult>;
+              errors: [fromGraphQLError(executionError)],
+            } as ExecutionResult;
+          })
+          .then(result => {
+            let executionResult: ExecutionResult;
+            let patches: AsyncIterable<ExecutionPatchResult>;
 
-          if (isDeferredExecutionResult(result)) {
-            // TODO: Deferred execution should be disabled if transport does not support it
-            executionResult = result.initialResult;
-            patches = result.deferredPatches;
-          } else {
-            executionResult = result;
-          }let response: GraphQLResponse = {
-            data: executionResult.data,
-          };
+            if (isDeferredExecutionResult(result)) {
+              // TODO: Deferred execution should be disabled if transport does not support it
+              executionResult = result.initialResult;
+              patches = result.deferredPatches;
+            } else {
+              executionResult = result;
+            }
+            let response: GraphQLResponse = {
+              data: executionResult.data,
+            };
 
             if (executionResult.errors) {
-              response.errors = formatApolloErrors([...executionResult.errors], {
-                debug,
-              });
+              response.errors = formatApolloErrors(
+                [...executionResult.errors],
+                {
+                  debug,
+                },
+              );
             }
 
             executionDidEnd(...(executionResult.errors || []));
@@ -301,15 +305,18 @@ function doRunQuery(
               response = options.formatResponse(response, options);
             }
 
-          if (isDeferredExecutionResult(result)) {
-            return {
-              initialResponse: response,
-              deferredPatches: patches,
-            };
-          } else {return response;}
-        });
-    },
-    ).catch((err: Error) => {
+            if (isDeferredExecutionResult(result)) {
+              return {
+                initialResponse: response,
+                deferredPatches: patches,
+              };
+            } else {
+              return response;
+            }
+          });
+      },
+    )
+    .catch((err: Error) => {
       // Handle the case of an internal server failure (or nonQueryError) ---
       // we're not returning a GraphQL response so we don't call
       // willSendResponse.

@@ -55,7 +55,7 @@ export function createPlaygroundOptions(
       ...defaultPlaygroundOptions.settings,
       ...playgroundOverrides.settings,
     },
-  };
+  } as PlaygroundRenderPageOptions; // TODO: Remove casting when strict mode = true in apollo-server-core tsconfig
 
   return playgroundOptions;
 }
