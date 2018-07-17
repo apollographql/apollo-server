@@ -538,7 +538,6 @@ function executeFields(
     const responseName = keys[i];
     const fieldNodes = fields[responseName];
     const fieldPath = addPath(path, responseName);
-    const shouldDefer = shouldDeferNode(exeContext, fieldNodes[0]);
 
     const result = resolveField(
       exeContext,
