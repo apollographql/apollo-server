@@ -101,6 +101,11 @@ export class ApolloServer extends ApolloServerBase {
           corsHeaders['Access-Control-Allow-Origin'] =
             event.headers['Origin'] || event.headers['origin'];
         }
+
+        if (!cors.allowedHeaders) {
+          corsHeaders['Access-Control-Allow-Headers'] =
+            event.headers['Access-Control-Request-Headers'];
+        }
       }
 
       if (event.httpMethod === 'OPTIONS') {
