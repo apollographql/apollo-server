@@ -37,7 +37,7 @@
     "graphql-tools": "3.0.5",
     "jest": "23.4.1",
     "ts-jest": "22.4.6",
-    "tslint": "5.10.0"
+    "tslint": "5.11.0"
   },
   "jest": {
     "testEnvironment": "node",
