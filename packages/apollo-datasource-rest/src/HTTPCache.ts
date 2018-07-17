@@ -96,7 +96,7 @@ export class HTTPCache {
     let ttl = cacheOptions && cacheOptions.ttl;
 
     if (ttl) {
-      policy._rescc['max-age'] = ttl;
+      policy._rescc = { 'max-age': ttl };
     }
 
     if (!policy.storable()) return response;

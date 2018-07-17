@@ -87,7 +87,10 @@ describe('HTTPCache', () => {
   });
 
   it('allows overriding the TTL', async () => {
-    fetch.mockJSONResponseOnce({ name: 'Ada Lovelace' });
+    fetch.mockJSONResponseOnce(
+      { name: 'Ada Lovelace' },
+      { 'Cache-Control': 'private, no-cache' },
+    );
 
     await httpCache.fetch(new Request('https://api.example.com/people/1'), {
       cacheOptions: {
@@ -107,7 +110,10 @@ describe('HTTPCache', () => {
   });
 
   it('allows overriding the TTL dynamically', async () => {
-    fetch.mockJSONResponseOnce({ name: 'Ada Lovelace' });
+    fetch.mockJSONResponseOnce(
+      { name: 'Ada Lovelace' },
+      { 'Cache-Control': 'private, no-cache' },
+    );
 
     await httpCache.fetch(new Request('https://api.example.com/people/1'), {
       cacheOptions: (response: Response, request: Request) => ({
