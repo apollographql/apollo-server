@@ -1,6 +1,6 @@
 {
   "name": "apollo-server-redis",
-  "version": "0.1.0-rc.10",
+  "version": "0.1.0-rc.11",
   "author": "opensource@apollographql.com",
   "license": "MIT",
   "repository": {
@@ -23,8 +23,8 @@
     "node": ">=6"
   },
   "dependencies": {
-    "apollo-server-caching": "0.1.0-rc.10",
-    "apollo-server-env": "2.0.0-rc.10",
+    "apollo-server-caching": "0.1.0-rc.11",
+    "apollo-server-env": "2.0.0-rc.11",
     "redis": "^2.8.0"
   },
   "devDependencies": {
