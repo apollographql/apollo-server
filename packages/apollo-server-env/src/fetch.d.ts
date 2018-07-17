@@ -50,6 +50,11 @@ export interface RequestInit {
   referrer?: string;
   referrerPolicy?: ReferrerPolicy;
   integrity?: string;
+  // Cloudflare Workers accept a `cf` property to control Cloudflare features
+  // See https://developers.cloudflare.com/workers/reference/cloudflare-features/
+  cf?: {
+    [key: string]: any;
+  };
 }
 
 export type RequestMode = 'navigate' | 'same-origin' | 'no-cors' | 'cors';
@@ -97,6 +102,8 @@ export interface ResponseInit {
   headers?: HeadersInit;
   status?: number;
   statusText?: string;
+  // Although this isn't part of the spec, `node-fetch` accepts a `url` property
+  url?: string;
 }
 
 export interface ResponseOptions extends ResponseInit {

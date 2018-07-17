@@ -9,9 +9,8 @@ import {
   URLSearchParamsInit,
 } from 'apollo-server-env';
 
-import { DataSource } from 'apollo-datasource';
+import { DataSource, DataSourceConfig } from 'apollo-datasource';
 
-import { KeyValueCache } from 'apollo-server-caching';
 import { HTTPCache } from './HTTPCache';
 
 import {
@@ -20,12 +19,24 @@ import {
   ForbiddenError,
 } from 'apollo-server-errors';
 
+declare module 'apollo-server-env/dist/fetch' {
+  interface RequestInit {
+    cacheOptions?:
+      | CacheOptions
+      | ((response: Response, request: Request) => CacheOptions | undefined);
+  }
+}
+
 export type RequestOptions = RequestInit & {
   path: string;
   params: URLSearchParams;
   headers: Headers;
   body?: Body;
 };
+
+export interface CacheOptions {
+  ttl?: number;
+}
 
 export type Body = BodyInit | object;
 export { Request };
@@ -35,27 +46,46 @@ type ValueOrPromise<T> = T | Promise<T>;
 export abstract class RESTDataSource<TContext = any> extends DataSource {
   httpCache!: HTTPCache;
   context!: TContext;
+  memoizedResults = new Map<string, Promise<any>>();
 
-  initialize(context: TContext, cache: KeyValueCache): void {
-    this.context = context;
-    this.httpCache = new HTTPCache(cache);
+  initialize(config: DataSourceConfig<TContext>): void {
+    this.context = config.context;
+    this.httpCache = new HTTPCache(config.cache);
   }
 
   baseURL?: string;
 
+  // By default, we use the full request URL as the cache key.
+  // You can override this to remove query parameters or compute a cache key in any way that makes sense.
+  // For example, you could use this to take Vary header fields into account.
+  // Although we do validate header fields and don't serve responses from cache when they don't match,
+  // new reponses overwrite old ones with different vary header fields.
+  protected cacheKeyFor(request: Request): string {
+    return request.url;
+  }
+
   protected willSendRequest?(request: RequestOptions): ValueOrPromise<void>;
 
   protected resolveURL(request: RequestOptions): ValueOrPromise<URL> {
+    let path = request.path;
+    if (path.startsWith('/')) {
+      path = path.slice(1);
+    }
     const baseURL = this.baseURL;
     if (baseURL) {
       const normalizedBaseURL = baseURL.endsWith('/')
         ? baseURL
         : baseURL.concat('/');
-      return new URL(request.path, normalizedBaseURL);
+      return new URL(path, normalizedBaseURL);
     } else {
-      return new URL(request.path);
+      return new URL(path);
     }
   }
+
+  protected cacheOptionsFor?(
+    response: Response,
+    request: Request,
+  ): CacheOptions | undefined;
 
   protected async didReceiveResponse<TResult = any>(
     response: Response,
@@ -198,14 +228,36 @@ export abstract class RESTDataSource<TContext = any> extends DataSource {
 
     const request = new Request(String(url), options);
 
-    return this.trace(`${options.method || 'GET'} ${url}`, async () => {
-      try {
-        const response = await this.httpCache.fetch(request);
-        return this.didReceiveResponse(response, request);
-      } catch (error) {
-        this.didEncounterError(error, request);
-      }
+    const cacheKey = this.cacheKeyFor(request);
+
+    return this.memoize(cacheKey, async () => {
+      return this.trace(`${options.method || 'GET'} ${url}`, async () => {
+        const cacheOptions = options.cacheOptions
+          ? options.cacheOptions
+          : this.cacheOptionsFor && this.cacheOptionsFor.bind(this);
+        try {
+          const response = await this.httpCache.fetch(request, {
+            cacheKey,
+            cacheOptions,
+          });
+          return this.didReceiveResponse(response, request);
+        } catch (error) {
+          this.didEncounterError(error, request);
+        }
+      });
     });
+  }
+
+  private async memoize<TResult>(
+    cacheKey: string,
+    fn: () => Promise<TResult>,
+  ): Promise<TResult> {
+    let promise = this.memoizedResults.get(cacheKey);
+    if (promise) return promise;
+
+    promise = fn();
+    this.memoizedResults.set(cacheKey, promise);
+    return promise;
   }
 
   private async trace<TResult>(

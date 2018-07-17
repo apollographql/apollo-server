@@ -1,6 +1,5 @@
 import * as lambda from 'aws-lambda';
 import { ApolloServerBase } from 'apollo-server-core';
-export { GraphQLOptions, GraphQLExtension } from 'apollo-server-core';
 import { GraphQLOptions, Config } from 'apollo-server-core';
 import {
   renderPlaygroundPage,
@@ -102,6 +101,19 @@ export class ApolloServer extends ApolloServerBase {
           corsHeaders['Access-Control-Allow-Origin'] =
             event.headers['Origin'] || event.headers['origin'];
         }
+
+        if (!cors.allowedHeaders) {
+          corsHeaders['Access-Control-Allow-Headers'] =
+            event.headers['Access-Control-Request-Headers'];
+        }
+      }
+
+      if (event.httpMethod === 'OPTIONS') {
+        return callback(null, {
+          body: '',
+          statusCode: 204,
+          headers: corsHeaders,
+        });
       }
 
       if (this.playgroundOptions && event.httpMethod === 'GET') {

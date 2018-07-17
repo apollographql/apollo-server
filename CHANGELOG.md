@@ -4,6 +4,24 @@ All of the packages in the `apollo-server` repo are released with the same versi
 
 ### vNEXT
 
+### rc.10
+
+- Fix and Export Extension and Playground Types [#1360](https://github.com/apollographql/apollo-server/pull/1360)
+- Pin internal dependencies [#1361](https://github.com/apollographql/apollo-server/pull/1361)
+
+### rc.9
+
+Unused RC, due to publication issues
+
+### rc.8
+
+- export GraphQLUpload from integrations [#1322](https://github.com/apollographql/apollo-server/pull/1322)
+- add `cors` to vanilla [#1335](https://github.com/apollographql/apollo-server/pull/1335)
+- export `bodyParser.Options` to koa [#1334](https://github.com/apollographql/apollo-server/pull/1334)
+- add and use playground in ApolloServer constructor [#1297](https://github.com/apollographql/apollo-server/pull/1297)
+- **breaking**: remove calculate headers as function [#1337](https://github.com/apollographql/apollo-server/pull/1337)
+- **breaking**: remove `fromatParams` [#1331](https://github.com/apollographql/apollo-server/pull/1331)
+
 ### rc.7
 
 - enable engine reporting from lambda [#1313](https://github.com/apollographql/apollo-server/pull/1313)

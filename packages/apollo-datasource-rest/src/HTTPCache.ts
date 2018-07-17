@@ -1,25 +1,25 @@
-import {
-  fetch,
-  Request,
-  RequestInfo,
-  RequestInit,
-  Response,
-  Headers,
-} from 'apollo-server-env';
+import { fetch, Request, Response, Headers } from 'apollo-server-env';
 
 import CachePolicy = require('http-cache-semantics');
 
 import { KeyValueCache, InMemoryLRUCache } from 'apollo-server-caching';
+import { CacheOptions } from './RESTDataSource';
 
 export class HTTPCache {
   constructor(private keyValueCache: KeyValueCache = new InMemoryLRUCache()) {}
 
-  async fetch(input: RequestInfo, init?: RequestInit): Promise<Response> {
-    const request = new Request(input, init);
+  async fetch(
+    request: Request,
+    options: {
+      cacheKey?: string;
+      cacheOptions?:
+        | CacheOptions
+        | ((response: Response, request: Request) => CacheOptions | undefined);
+    } = {},
+  ): Promise<Response> {
+    const cacheKey = options.cacheKey ? options.cacheKey : request.url;
 
-    const cacheKey = cacheKeyFor(request);
-
-    const entry = await this.keyValueCache.get(cacheKey);
+    const entry = await this.keyValueCache.get(`httpcache:${cacheKey}`);
     if (!entry) {
       const response = await fetch(request);
 
@@ -28,12 +28,20 @@ export class HTTPCache {
         policyResponseFrom(response),
       );
 
-      return this.storeResponseAndReturnClone(request, response, policy);
+      return this.storeResponseAndReturnClone(
+        response,
+        request,
+        policy,
+        cacheKey,
+        options.cacheOptions,
+      );
     }
 
     const { policy: policyRaw, body } = JSON.parse(entry);
 
     const policy = CachePolicy.fromObject(policyRaw);
+    // Remove url from the policy, because otherwise it would never match a request with a custom cache key
+    policy._url = undefined;
 
     if (policy.satisfiesWithoutRevalidation(policyRequestFrom(request))) {
       const headers = policy.responseHeaders();
@@ -57,7 +65,6 @@ export class HTTPCache {
       );
 
       return this.storeResponseAndReturnClone(
-        revalidationRequest,
         modified
           ? revalidationResponse
           : new Response(body, {
@@ -65,31 +72,56 @@ export class HTTPCache {
               status: revalidatedPolicy._status,
               headers: revalidatedPolicy.responseHeaders(),
             }),
+        request,
         revalidatedPolicy,
+        cacheKey,
+        options.cacheOptions,
       );
     }
   }
 
   private async storeResponseAndReturnClone(
-    request: Request,
     response: Response,
+    request: Request,
     policy: CachePolicy,
+    cacheKey: string,
+    cacheOptions?:
+      | CacheOptions
+      | ((response: Response, request: Request) => CacheOptions | undefined),
   ): Promise<Response> {
-    if (!response.headers.has('Cache-Control') || !policy.storable())
-      return response;
+    if (cacheOptions && typeof cacheOptions === 'function') {
+      cacheOptions = cacheOptions(response, request);
+    }
 
-    const cacheKey = cacheKeyFor(request);
+    let ttl = cacheOptions && cacheOptions.ttl;
 
-    const body = await response.text();
-    const entry = JSON.stringify({ policy: policy.toObject(), body });
+    if (ttl) {
+      policy._rescc = { 'max-age': ttl };
+    }
 
-    let ttl = Math.round(policy.timeToLive() / 1000);
+    if (!policy.storable()) return response;
+
+    if (!ttl) {
+      ttl = Math.round(policy.timeToLive() / 1000);
+    }
+
     // If a response can be revalidated, we don't want to remove it from the cache right after it expires.
     // We may be able to use better heuristics here, but for now we'll take the max-age times 2.
     if (canBeRevalidated(response)) {
       ttl *= 2;
     }
-    await this.keyValueCache.set(cacheKey, entry, { ttl });
+
+    if (ttl <= 0) return response;
+
+    const body = await response.text();
+    const entry = JSON.stringify({
+      policy: policy.toObject(),
+      body,
+    });
+
+    await this.keyValueCache.set(`httpcache:${cacheKey}`, entry, {
+      ttl,
+    });
 
     // We have to clone the response before returning it because the
     // body can only be used once.
@@ -106,14 +138,6 @@ export class HTTPCache {
 
 function canBeRevalidated(response: Response): boolean {
   return response.headers.has('ETag');
-}
-
-function cacheKeyFor(request: Request): string {
-  // FIXME: Find a way to take Vary header fields into account when computing a cache key
-  // Although we do validate header fields and don't serve responses from cache when they don't match,
-  // new reponses overwrite old ones with different vary header fields.
-  // (I think we have similar heuristics in the Engine proxy)
-  return `httpcache:${request.url}`;
 }
 
 function policyRequestFrom(request: Request) {
