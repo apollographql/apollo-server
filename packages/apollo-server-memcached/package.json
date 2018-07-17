@@ -28,7 +28,7 @@
     "memcached": "^2.2.2"
   },
   "devDependencies": {
-    "@types/jest": "23.1.6",
+    "@types/jest": "23.3.0",
     "@types/memcached": "2.2.5",
     "jest": "23.4.1",
     "memcached-mock": "0.1.0",

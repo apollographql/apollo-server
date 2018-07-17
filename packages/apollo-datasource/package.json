@@ -27,7 +27,7 @@
     "apollo-server-env": "2.0.0-rc.8"
   },
   "devDependencies": {
-    "@types/jest": "23.1.6",
+    "@types/jest": "23.3.0",
     "jest": "23.4.1",
     "ts-jest": "22.4.6"
   },
