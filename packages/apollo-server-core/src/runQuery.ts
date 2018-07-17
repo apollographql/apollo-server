@@ -323,19 +323,24 @@ function doRunQuery(
       requestDidEnd(err);
       throw err;
     })
-    .then((graphqlResponse: GraphQLResponse) => {
-      // TODO: For deferred queries, what do we want to present to the extension stack
-      let response;
+    .then((graphqlResponse: GraphQLResponse | DeferredGraphQLResponse) => {
+      // For deferred queries, only the initial response gets presented to the
+      // extension stack
       if (isDeferredGraphQLResponse(graphqlResponse)) {
-        response = extensionStack.willSendResponse({
+        const response = extensionStack.willSendResponse({
           graphqlResponse: graphqlResponse.initialResponse,
         });
+        requestDidEnd();
+        return {
+          initialResponse: response.graphqlResponse,
+          deferredPatches: graphqlResponse.deferredPatches,
+        };
       } else {
-        response = extensionStack.willSendResponse({
+        const response = extensionStack.willSendResponse({
           graphqlResponse: graphqlResponse as GraphQLResponse,
         });
+        requestDidEnd();
+        return response.graphqlResponse;
       }
-      requestDidEnd();
-      return response.graphqlResponse;
     });
 }
