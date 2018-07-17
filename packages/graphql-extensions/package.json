@@ -1,6 +1,6 @@
 {
   "name": "graphql-extensions",
-  "version": "0.1.0-rc.2",
+  "version": "0.1.0-rc.3",
   "description": "Add extensions to GraphQL servers",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -22,7 +22,7 @@
     "node": ">=6.0"
   },
   "dependencies": {
-    "apollo-server-env": "2.0.0-rc.8"
+    "apollo-server-env": "^2.0.0-rc.9"
   },
   "peerDependencies": {
     "graphql": "0.10.x - 0.13.x"
