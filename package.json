@@ -19,7 +19,7 @@
     "pretravis": "npm run compile",
     "travis": "istanbul cover -x \"*.test.js\" _mocha -- --timeout 5000 --full-trace ./test/tests.js",
     "postcoverage": "remap-istanbul --input coverage/coverage.raw.json --type lcovonly --output coverage/lcov.info",
-    "release": "lerna publish",
+    "release": "lerna publish --exact",
     "precommit": "lint-staged"
   },
   "lint-staged": {
