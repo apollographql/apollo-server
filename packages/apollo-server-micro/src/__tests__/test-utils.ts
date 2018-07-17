@@ -16,9 +16,8 @@ const resolvers = {
 };
 
 describe('apollo-server-micro > startTestServer', () => {
-  it('executes an operation against a test server', async done => {
+  it('executes an operation against a test server', async () => {
     const server = new ApolloServer({ typeDefs, resolvers });
-    startTestServer(server);
     const { stop, graphql } = await startTestServer(server);
 
     const helloWorld = gql`
@@ -34,7 +33,6 @@ describe('apollo-server-micro > startTestServer', () => {
 
     const result = await toPromise(observable);
 
-    console.log(result);
     expect(result).toEqual({ data: { hello: 'Hello, Apollo' } });
     stop();
   });
