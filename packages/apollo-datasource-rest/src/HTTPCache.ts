@@ -103,11 +103,12 @@ export class HTTPCache {
 
     if (!ttl) {
       ttl = Math.round(policy.timeToLive() / 1000);
-      // If a response can be revalidated, we don't want to remove it from the cache right after it expires.
-      // We may be able to use better heuristics here, but for now we'll take the max-age times 2.
-      if (canBeRevalidated(response)) {
-        ttl *= 2;
-      }
+    }
+
+    // If a response can be revalidated, we don't want to remove it from the cache right after it expires.
+    // We may be able to use better heuristics here, but for now we'll take the max-age times 2.
+    if (canBeRevalidated(response)) {
+      ttl *= 2;
     }
 
     if (ttl <= 0) return response;
