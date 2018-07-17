@@ -31,8 +31,9 @@ declare module 'http-cache-semantics' {
     static fromObject(object: object): CachePolicy;
     toObject(): object;
 
-    _url: string;
+    _url: string | undefined;
     _status: number;
+    _rescc: { [key: string]: any };
   }
 
   export = CachePolicy;

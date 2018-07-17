@@ -41,7 +41,7 @@ export class HTTPCache {
 
     const policy = CachePolicy.fromObject(policyRaw);
     // Remove url from the policy, because otherwise it would never match a request with a custom cache key
-    (policy as any)._url = undefined;
+    policy._url = undefined;
 
     if (policy.satisfiesWithoutRevalidation(policyRequestFrom(request))) {
       const headers = policy.responseHeaders();
@@ -96,7 +96,7 @@ export class HTTPCache {
     let ttl = cacheOptions && cacheOptions.ttl;
 
     if (ttl) {
-      (policy as any)._rescc['max-age'] = ttl;
+      policy._rescc['max-age'] = ttl;
     }
 
     if (!policy.storable()) return response;
