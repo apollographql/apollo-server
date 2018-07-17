@@ -2,10 +2,9 @@ title: Apollo Server
 propertytitle: Using Apollo Server
 subtitle: Apollo Server
 description: A guide to using Apollo Server.
-version: 2
 versions:
-  - '1'
   - '2'
+  - '1'
 sidebar_categories:
   null:
     - index
