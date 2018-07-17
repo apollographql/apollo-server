@@ -4,8 +4,8 @@ subtitle: Apollo Server
 description: A guide to using Apollo Server.
 version: 1
 versions:
-  - '1'
   - '2'
+  - '1'
 sidebar_categories:
   null:
     - index
