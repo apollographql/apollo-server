@@ -5,6 +5,7 @@ import {
   runHttpQuery,
   convertNodeHttpToRequest,
 } from 'apollo-server-core';
+import { forAwaitEach } from 'iterall';
 
 export interface ExpressGraphQLOptionsFunction {
   (req?: express.Request, res?: express.Response):
@@ -63,10 +64,11 @@ export function graphqlExpress(
           // Update the content type to be able to send multipart data
           // See: https://www.w3.org/Protocols/rfc1341/7_2_Multipart.html
           res.setHeader('Content-Type', 'multipart/mixed; boundary="-"');
-          for await (let data of graphqlResponses) {
+          await forAwaitEach(graphqlResponses, data => {
             // Write the boundary for sending multipart data
             res.write(data + '\r\n---\r\n'); // Simplest boundary
-          }
+          });
+
           // Finish up multipart with the last encapsulation boundary
           res.write('\r\n---');
           res.end();
