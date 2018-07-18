@@ -25,6 +25,7 @@
   "dependencies": {
     "apollo-server-caching": "0.1.0-rc.11",
     "apollo-server-env": "2.0.0-rc.11",
+    "dataloader": "^1.4.0",
     "redis": "^2.8.0"
   },
   "devDependencies": {
