@@ -681,7 +681,8 @@ function completeValueCatchingError(
   // but we do not need to defer the item itself.
   const pathArray = responsePathAsArray(path);
   const isListItem = typeof pathArray[pathArray.length - 1] === 'number';
-  const shouldDefer = shouldDeferNode(exeContext, fieldNodes[0]) && !isListItem;
+  const shouldDefer =
+    fieldNodes.every(node => shouldDeferNode(exeContext, node)) && !isListItem;
 
   // Throw error if @defer is applied to a non-nullable field
   // TODO: We can check for this earlier in the validation phase.
@@ -846,7 +847,10 @@ function handleDeferredFieldError(
     ? exeContext.deferredDependents[responsePathAsArray(path).toString()]
     : undefined;
 
-  if (shouldDeferNode(exeContext, fieldNodes[0])) {
+  const shouldDefer = fieldNodes.every(node =>
+    shouldDeferNode(exeContext, node),
+  );
+  if (shouldDefer) {
     // If this node is itself deferred, then send errors with this patch
     const patch = formatDataAsPatch(path, undefined, [error]);
     const promisedPatch = Promise.resolve({
