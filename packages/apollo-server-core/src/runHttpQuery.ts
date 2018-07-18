@@ -341,7 +341,9 @@ export async function runHttpQuery(
         const dataSources = optionsObject.dataSources() || {};
 
         for (const dataSource of Object.values(dataSources)) {
-          dataSource.initialize({ context, cache: optionsObject.cache! });
+          if (dataSource.initialize) {
+            dataSource.initialize({ context, cache: optionsObject.cache! });
+          }
         }
 
         if ('dataSources' in context) {
