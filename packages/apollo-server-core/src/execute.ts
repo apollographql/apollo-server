@@ -241,11 +241,11 @@ class PatchDispatcher {
 
   public dispatch(patch: PatchBundle): void {
     patch.then(({ patch, dependentPatches }) => {
+      // Queue patches for dependent fields before resolving parent
       if (dependentPatches) {
         for (const patch of dependentPatches) {
           this.dispatch(patch);
         }
-      } else {
       }
       this.resolvers.shift()({ value: patch, done: false });
     });
