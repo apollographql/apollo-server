@@ -86,50 +86,93 @@ describe('HTTPCache', () => {
     expect(response.headers.get('Age')).toEqual('0');
   });
 
-  it('allows overriding the TTL', async () => {
-    fetch.mockJSONResponseOnce(
-      { name: 'Ada Lovelace' },
-      { 'Cache-Control': 'private, no-cache' },
-    );
+  describe('overriding TTL', () => {
+    it('returns a cached response when the overridden TTL is not expired', async () => {
+      fetch.mockJSONResponseOnce(
+        { name: 'Ada Lovelace' },
+        {
+          'Cache-Control': 'private, no-cache',
+          'Set-Cookie': 'foo',
+        },
+      );
 
-    await httpCache.fetch(new Request('https://api.example.com/people/1'), {
-      cacheOptions: {
-        ttl: 30,
-      },
+      await httpCache.fetch(new Request('https://api.example.com/people/1'), {
+        cacheOptions: {
+          ttl: 30,
+        },
+      });
+
+      advanceTimeBy(10000);
+
+      const response = await httpCache.fetch(
+        new Request('https://api.example.com/people/1'),
+      );
+
+      expect(fetch.mock.calls.length).toEqual(1);
+      expect(await response.json()).toEqual({ name: 'Ada Lovelace' });
+      expect(response.headers.get('Age')).toEqual('10');
     });
 
-    advanceTimeBy(10000);
+    it('fetches a fresh response from the origin when the overridden TTL expired', async () => {
+      fetch.mockJSONResponseOnce(
+        { name: 'Ada Lovelace' },
+        {
+          'Cache-Control': 'private, no-cache',
+          'Set-Cookie': 'foo',
+        },
+      );
 
-    const response = await httpCache.fetch(
-      new Request('https://api.example.com/people/1'),
-    );
+      await httpCache.fetch(new Request('https://api.example.com/people/1'), {
+        cacheOptions: {
+          ttl: 30,
+        },
+      });
 
-    expect(fetch.mock.calls.length).toEqual(1);
-    expect(await response.json()).toEqual({ name: 'Ada Lovelace' });
-    expect(response.headers.get('Age')).toEqual('10');
-  });
+      advanceTimeBy(30000);
 
-  it('allows overriding the TTL dynamically', async () => {
-    fetch.mockJSONResponseOnce(
-      { name: 'Ada Lovelace' },
-      { 'Cache-Control': 'private, no-cache' },
-    );
+      fetch.mockJSONResponseOnce(
+        { name: 'Alan Turing' },
+        {
+          'Cache-Control': 'private, no-cache',
+          'Set-Cookie': 'foo',
+        },
+      );
 
-    await httpCache.fetch(new Request('https://api.example.com/people/1'), {
-      cacheOptions: (response: Response, request: Request) => ({
-        ttl: 30,
-      }),
+      const response = await httpCache.fetch(
+        new Request('https://api.example.com/people/1'),
+      );
+
+      expect(fetch.mock.calls.length).toEqual(2);
+
+      expect(await response.json()).toEqual({ name: 'Alan Turing' });
+      expect(response.headers.get('Age')).toEqual('0');
     });
 
-    advanceTimeBy(10000);
+    it('allows overriding the TTL dynamically', async () => {
+      fetch.mockJSONResponseOnce(
+        { name: 'Ada Lovelace' },
+        {
+          'Cache-Control': 'private, no-cache',
+          'Set-Cookie': 'foo',
+        },
+      );
 
-    const response = await httpCache.fetch(
-      new Request('https://api.example.com/people/1'),
-    );
+      await httpCache.fetch(new Request('https://api.example.com/people/1'), {
+        cacheOptions: (response: Response, request: Request) => ({
+          ttl: 30,
+        }),
+      });
 
-    expect(fetch.mock.calls.length).toEqual(1);
-    expect(await response.json()).toEqual({ name: 'Ada Lovelace' });
-    expect(response.headers.get('Age')).toEqual('10');
+      advanceTimeBy(10000);
+
+      const response = await httpCache.fetch(
+        new Request('https://api.example.com/people/1'),
+      );
+
+      expect(fetch.mock.calls.length).toEqual(1);
+      expect(await response.json()).toEqual({ name: 'Ada Lovelace' });
+      expect(response.headers.get('Age')).toEqual('10');
+    });
   });
 
   it('allows specifying a custom cache key', async () => {

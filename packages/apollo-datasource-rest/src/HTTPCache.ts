@@ -37,13 +37,16 @@ export class HTTPCache {
       );
     }
 
-    const { policy: policyRaw, body } = JSON.parse(entry);
+    const { policy: policyRaw, ttlOverride, body } = JSON.parse(entry);
 
     const policy = CachePolicy.fromObject(policyRaw);
     // Remove url from the policy, because otherwise it would never match a request with a custom cache key
     policy._url = undefined;
 
-    if (policy.satisfiesWithoutRevalidation(policyRequestFrom(request))) {
+    if (
+      (ttlOverride && policy.age() < ttlOverride) ||
+      policy.satisfiesWithoutRevalidation(policyRequestFrom(request))
+    ) {
       const headers = policy.responseHeaders();
       return new Response(body, {
         url: policy._url,
@@ -65,13 +68,11 @@ export class HTTPCache {
       );
 
       return this.storeResponseAndReturnClone(
-        modified
-          ? revalidationResponse
-          : new Response(body, {
-              url: revalidatedPolicy._url,
-              status: revalidatedPolicy._status,
-              headers: revalidatedPolicy.responseHeaders(),
-            }),
+        new Response(modified ? await revalidationResponse.text() : body, {
+          url: revalidatedPolicy._url,
+          status: revalidatedPolicy._status,
+          headers: revalidatedPolicy.responseHeaders(),
+        }),
         request,
         revalidatedPolicy,
         cacheKey,
@@ -93,17 +94,12 @@ export class HTTPCache {
       cacheOptions = cacheOptions(response, request);
     }
 
-    let ttl = cacheOptions && cacheOptions.ttl;
+    let ttlOverride = cacheOptions && cacheOptions.ttl;
 
-    if (ttl) {
-      policy._rescc = { 'max-age': ttl };
-    }
+    if (!ttlOverride && !policy.storable()) return response;
 
-    if (!policy.storable()) return response;
-
-    if (!ttl) {
-      ttl = Math.round(policy.timeToLive() / 1000);
-    }
+    let ttl = ttlOverride || Math.round(policy.timeToLive() / 1000);
+    if (ttl <= 0) return response;
 
     // If a response can be revalidated, we don't want to remove it from the cache right after it expires.
     // We may be able to use better heuristics here, but for now we'll take the max-age times 2.
@@ -111,11 +107,10 @@ export class HTTPCache {
       ttl *= 2;
     }
 
-    if (ttl <= 0) return response;
-
     const body = await response.text();
     const entry = JSON.stringify({
       policy: policy.toObject(),
+      ttlOverride,
       body,
     });
 
@@ -131,7 +126,7 @@ export class HTTPCache {
       url: response.url,
       status: response.status,
       statusText: response.statusText,
-      headers: policy.responseHeaders(),
+      headers: response.headers,
     });
   }
 }
