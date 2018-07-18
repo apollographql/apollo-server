@@ -1,6 +1,6 @@
 {
   "name": "apollo-engine-reporting",
-  "version": "0.0.0-rc.4",
+  "version": "0.0.0-rc.5",
   "description": "Send reports about your GraphQL services to Apollo Engine",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -22,9 +22,9 @@
   },
   "dependencies": {
     "apollo-engine-reporting-protobuf": "0.0.0-beta.7",
-    "apollo-server-env": "2.0.0-rc.10",
+    "apollo-server-env": "2.0.0-rc.11",
     "async-retry": "^1.2.1",
-    "graphql-extensions": "0.1.0-rc.4",
+    "graphql-extensions": "0.1.0-rc.5",
     "lodash": "^4.17.10"
   },
   "devDependencies": {

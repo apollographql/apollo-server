@@ -1,6 +1,7 @@
 import { KeyValueCache } from 'apollo-server-caching';
 import * as Redis from 'redis';
 import { promisify } from 'util';
+import * as DataLoader from 'dataloader';
 
 export class RedisCache implements KeyValueCache {
   readonly client;
@@ -8,10 +9,16 @@ export class RedisCache implements KeyValueCache {
     ttl: 300,
   };
 
+  private loader: DataLoader<string, string>;
+
   constructor(options: Redis.ClientOpts) {
     this.client = Redis.createClient(options);
+    this.loader = new DataLoader(keys => this.client.mget(keys), {
+      cache: false,
+    });
+
     // promisify client calls for convenience
-    this.client.get = promisify(this.client.get).bind(this.client);
+    this.client.mget = promisify(this.client.mget).bind(this.client);
     this.client.set = promisify(this.client.set).bind(this.client);
     this.client.flushdb = promisify(this.client.flushdb).bind(this.client);
     this.client.quit = promisify(this.client.quit).bind(this.client);
@@ -27,7 +34,7 @@ export class RedisCache implements KeyValueCache {
   }
 
   async get(key: string): Promise<string | undefined> {
-    const reply = await this.client.get(key);
+    const reply = await this.loader.load(key);
     // reply is null if key is not found
     if (reply !== null) {
       return reply;

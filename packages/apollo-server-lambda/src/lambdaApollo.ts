@@ -30,6 +30,8 @@ export function graphqlLambda(
     context,
     callback,
   ): void => {
+    context.callbackWaitsForEmptyEventLoop = false;
+
     if (event.httpMethod === 'POST' && !event.body) {
       return callback(null, {
         body: 'POST body missing.',
