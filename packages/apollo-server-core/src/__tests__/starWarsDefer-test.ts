@@ -3,8 +3,6 @@ import { forAwaitEach } from 'iterall';
 import { StarWarsSchema } from './starWarsSchema';
 import { graphql } from './graphql';
 
-// TODO: Add tests for fragments
-
 describe('@defer Directive tests', () => {
   describe('Basic Queries', () => {
     it('Can @defer on scalar types', async done => {
@@ -746,6 +744,171 @@ describe('@defer Directive tests', () => {
           },
         });
         done();
+      } catch (error) {
+        done(error);
+      }
+    });
+  });
+  describe('With Fragments', () => {
+    it('Can @defer fields in fragment', async done => {
+      const query = `
+        query HeroNameQuery {
+          hero {
+            ...BasicInfo
+          }
+        }
+        fragment BasicInfo on Character {
+          id
+          name @defer
+        }
+      `;
+      try {
+        const result = await graphql(StarWarsSchema, query);
+        expect(isDeferredExecutionResult(result)).toBe(true);
+        if (isDeferredExecutionResult(result)) {
+          expect(result.initialResult).toEqual({
+            data: {
+              hero: {
+                id: '2001',
+                name: null,
+              },
+            },
+          });
+
+          const patches = [];
+          await forAwaitEach(result.deferredPatches, patch => {
+            patches.push(patch);
+          });
+          expect(patches.length).toBe(1);
+          expect(patches).toContainEqual({
+            path: ['hero', 'name'],
+            data: 'R2-D2',
+          });
+          done();
+        }
+      } catch (error) {
+        done(error);
+      }
+    });
+
+    it('All copies of a field need to specify defer', async done => {
+      const query = `
+        query HeroNameQuery {
+          hero {
+            name
+            ...BasicInfo
+          }
+        }
+        fragment BasicInfo on Character {
+          id
+          name @defer
+        }
+      `;
+      try {
+        const result = await graphql(StarWarsSchema, query);
+        expect(result).toEqual({
+          data: {
+            hero: {
+              name: 'R2-D2',
+              id: '2001',
+            },
+          },
+        });
+        done();
+      } catch (error) {
+        done(error);
+      }
+    });
+
+    it('All copies of a field need to specify defer', async done => {
+      const query = `
+        query HeroNameQuery {
+          hero {
+            name @defer
+            ...BasicInfo
+          }
+        }
+        fragment BasicInfo on Character {
+          id
+          name @defer
+        }
+      `;
+      try {
+        const result = await graphql(StarWarsSchema, query);
+        expect(isDeferredExecutionResult(result)).toBe(true);
+        if (isDeferredExecutionResult(result)) {
+          expect(result.initialResult).toEqual({
+            data: {
+              hero: {
+                id: '2001',
+                name: null,
+              },
+            },
+          });
+
+          const patches = [];
+          await forAwaitEach(result.deferredPatches, patch => {
+            patches.push(patch);
+          });
+          expect(patches.length).toBe(1);
+          expect(patches).toContainEqual({
+            path: ['hero', 'name'],
+            data: 'R2-D2',
+          });
+          done();
+        }
+      } catch (error) {
+        done(error);
+      }
+    });
+
+    it('Can @defer fields in a fragment on a list type', async done => {
+      const query = `
+        query HeroNameAndFriendsQuery {
+          hero {
+            id
+            name 
+            friends {
+              ...Name
+            }
+          }
+        }
+        fragment Name on Character {
+          name @defer
+        }
+      `;
+      try {
+        const result = await graphql(StarWarsSchema, query);
+        expect(isDeferredExecutionResult(result)).toBe(true);
+        if (isDeferredExecutionResult(result)) {
+          expect(result.initialResult).toEqual({
+            data: {
+              hero: {
+                id: '2001',
+                name: 'R2-D2',
+                friends: [{ name: null }, { name: null }, { name: null }],
+              },
+            },
+          });
+          const patches = [];
+          await forAwaitEach(result.deferredPatches, patch => {
+            patches.push(patch);
+          });
+          expect(patches.length).toBe(3);
+          expect(patches).toContainEqual({
+            path: ['hero', 'friends', 0, 'name'],
+            data: 'Luke Skywalker',
+          });
+          expect(patches).toContainEqual({
+            path: ['hero', 'friends', 1, 'name'],
+            data: 'Han Solo',
+          });
+          expect(patches).toContainEqual({
+            path: ['hero', 'friends', 2, 'name'],
+            data: 'Leia Organa',
+          });
+          done();
+        }
       } catch (error) {
         done(error);
       }
