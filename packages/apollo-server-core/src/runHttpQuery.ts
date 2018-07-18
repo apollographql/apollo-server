@@ -24,6 +24,7 @@ import {
 import { calculateCacheControlHeaders } from './caching';
 import { DeferredExecutionResult } from './execute';
 import { fromGraphQLError } from 'apollo-server-errors';
+import { $$asyncIterator, createAsyncIterator } from 'iterall';
 
 export interface HttpQueryRequest {
   method: string;
@@ -514,14 +515,35 @@ export async function runHttpQuery(
   };
 }
 
-async function* graphqlResponseToAsyncIterable(
+/**
+ * Note: We can use async generators directly when it is supported in node 8/6
+ */
+function graphqlResponseToAsyncIterable(
   result: DeferredGraphQLResponse,
-) {
-  yield prettyJSONStringify(result.initialResponse);
-  for await (let patch of result.deferredPatches) {
-    if (patch.errors) {
-      patch.errors = patch.errors.map(error => fromGraphQLError(error));
-    }
-    yield prettyJSONStringify(patch);
-  }
+): AsyncIterable<string> {
+  const initialResponse = prettyJSONStringify(result.initialResponse);
+  let initialResponseSent = false;
+  const patchIterator = createAsyncIterator(result.deferredPatches);
+
+  return {
+    [$$asyncIterator]() {
+      return {
+        next() {
+          if (!initialResponseSent) {
+            initialResponseSent = true;
+            return Promise.resolve({ value: initialResponse, done: false });
+          } else {
+            return patchIterator.next().then(({ value, done }) => {
+              if (value && value.errors) {
+                value.errors = value.errors.map(error =>
+                  fromGraphQLError(error),
+                );
+              }
+              return { value: prettyJSONStringify(value), done };
+            });
+          }
+        },
+      };
+    },
+  } as any; // Typescript does not handle $$asyncIterator correctly
 }
