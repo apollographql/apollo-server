@@ -1,8 +1,7 @@
 ---
 title: What's new?
+description: A quick rundown of big announcements in the Apollo Server ecosystem.
 ---
-
-This section of the Apollo Server docs is an announcement page where it is easy to find and share big changes to the `apollo-server` package, or the Apollo server side ecosystem.
 
 ## 2.0
 
