@@ -1,6 +1,6 @@
 ---
-title: Using Engine with v2.0 RC
-description: How to use Engine with Apollo Server 2.0 RC
+title: Using Engine with v2.0
+description: How to use Engine with Apollo Server 2.0
 ---
 
 Apollo Server provides reporting, persisted queries, and cache-control headers in native javascript by default, so often times moving to Apollo Server 2 without the Engine proxy is possible. For services that already contain the Engine proxy and depend on its full response caching, Apollo Server continues to support it with first class functionality. With Apollo Server 2, the Engine proxy can be started by the same node process. If the Engine proxy is running in a dedicated machine, Apollo Server 2 supports the cache-control and tracing extensions, used to communicate with the proxy.
