@@ -1,4 +1,4 @@
-## Proposal to add @defer support in Apollo Server
+## Proposal to add @defer support in Apollo
 
 ### Motivation
 
@@ -12,7 +12,7 @@ In GraphQL/Apollo Client, using that same approach leads to the same developer o
 - Sharing data between queries may be problematic (e.g. secondary queries might depend on some data returned from the first query)
 - Breaking up queries like this just doesn't feel like the smooth GraphQL experience we want 😢
 
-#### A Better Way
+### A Better Way
 
 _@defer_ provides a way for us to mark fields in our schema to _not_ wait on, because they might be:
 
@@ -24,7 +24,7 @@ This approach has been used internally at Facebook (see [Lee Byron's 2016 talk](
 
 At Apollo, we are committed to providing the best developer experience throughout your GraphQL journey. With Apollo Server and Client, we see this as a unique opportunity to bake in first class support for advanced features like @defer. 
 
-#### Use Cases
+### Use Cases
 
 ```graphql
 type Video {
@@ -93,15 +93,15 @@ Instead of holding back the GraphQL response until the entire query is resolved,
 }
 ```
 
-#### Why is @defer an ideal solution?
+### Why is @defer an ideal solution?
 
 - Query remains super easy to read 👍
 - Stays true to Apollo's declarative approach to data loading - everything is encapsulated in a single query component 😎
 - Greatly reduces boilerplate code to manage multiple requests, a huge value-add for users that use both Apollo Server AND Client together.
 
-### Implementation Details
+## Implementation Details
 
-#### Patch Data Format:
+### Patch Data Format:
 
 - Proposed format for `ExecutionPatchResult`
   ```graphql
@@ -113,7 +113,7 @@ Instead of holding back the GraphQL response until the entire query is resolved,
   ```
 - We should use the same patch format for @defer/stream/live support.
 
-#### Apollo Server:
+### Apollo Server:
 
 In order to support @defer, there are significant changes to be made to the execution phase of GraphQL.
 
@@ -122,25 +122,25 @@ In order to support @defer, there are significant changes to be made to the exec
 - Maximize code reuse by exporting types and utility functions from graphql.js, making a PR if necessary.
 - Restrict peer dependency on graphql.js to versions that we have tested with.
 
-#### Apollo Client:
+### Apollo Client:
 
 - Should contain the logic to merge patches in and update the UI as data gets streamed in. 
 - Initial implementation of @defer support should come as a Apollo Link. Reads from a socket connection or some other event stream, keeps the partial response in memory, merging patches as they come and pushing it through the link stack.
 
-#### Errors:
+### Errors:
 
 This refers specifically to the errors that occur when streaming deferred fields. Errors on the initial response will be handled as per normal.
 
 - Resolver level errors can be sent along with the patch. These will be merged with the errors array to create the full response.
 - Network errors (i.e when the websocket connection is broken). Ideally, a network error should not nullify the results that have already been sent succesfully. However, the client should expose the network status to indicate whether all the patches have been sent successfully.  
 
-#### Transport:
+### Transport:
 
 - Upgrading `HttpLink` to accept multipart http responses from `apollo-server-express`. This is the default solution, since it is lightweight compared to websockets, and requires no additional set up from the user. Note that we are using the ReadableStream API, which is available on most modern browsers. 
 - In the future, we should be able to support any transport that can stream or push data to the client, like websockets or server side events. If the transport layer does not support this, Apollo Server may fall back to normal execution and ignore @defer, while providing a warning message on the console. 
 - Note: Deferred queries are not able to be refetched in isolation. So links like apollo-link-retry and apollo-link-error might need to ignore patches for now.
 
-#### Restrictions on @defer usage:
+### Restrictions on @defer usage:
 
 - _Mutations:_ Not supported yet. Would love to hear if there are any usecases for this!
 
@@ -178,3 +178,9 @@ This refers specifically to the errors that occur when streaming deferred fields
     }
     ```
 - _Performance considerations_: If @defer is used too granularly, the overhead of performing patching and re-rendering could be worse than just waiting for the full data response. 
+
+## Open PRs
+- [`apollo-server`](https://github.com/apollographql/apollo-server/pull/1287)
+- [`apollo-link`](https://github.com/apollographql/apollo-link/pull/714)
+- [`apollo-client`](https://github.com/apollographql/apollo-client/pull/3686)
+- [`react-apollo`](https://github.com/apollographql/react-apollo/pull/2192)
