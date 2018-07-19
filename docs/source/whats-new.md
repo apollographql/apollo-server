@@ -181,7 +181,6 @@ server.listen().then(({ url }) => {
 });
 ```
 
-<<<<<<< HEAD
 For more information, check out the details in the [performance monitoring guide](./features/metrics.html).
 
 ### GraphQL Playground
