@@ -64,7 +64,7 @@ query {
 }
 ```
 
-Instead of holding the GraphQL response and page rendering until the entire query is resolved, @defer tells Apollo Server to return a partial query response if the deferred fields are not ready yet. In the example above, we see how it may be used to remove `progress` and `comments` from the intial query response. Apollo Server would then take care of resolving the rest of the deferred fields in the background, and stream them to the client when they are ready.
+Instead of holding back the GraphQL response until the entire query is resolved, @defer tells Apollo Server to return a partial query response ahead of time. In the example above, we see how it may be used to remove `progress` and `comments` from the intial query response. Apollo Server would then take care of resolving the rest of the deferred fields in the background, and stream them to the client when they are ready.
 
 ```
 // Initial Response
@@ -111,7 +111,6 @@ Instead of holding the GraphQL response and page rendering until the entire quer
     errors: []
   }
   ```
-- Current transport assumes ExecutionResult so some changes need to be made.
 - We should use the same patch format for @defer/stream/live support.
 
 #### Apollo Server:
@@ -119,14 +118,13 @@ Instead of holding the GraphQL response and page rendering until the entire quer
 In order to support @defer, there are significant changes to be made to the execution phase of GraphQL.
 
 - Extending graphql-js execution to support deferred responses.
-- Defining a new response type that wraps the initial response, and an asynchronous stream of patches. 
+- Defining a new response type that wraps the initial response and an asynchronous stream of patches. 
 - Maximize code reuse by exporting types and utility functions from graphql.js, making a PR if necessary.
 - Restrict peer dependency on graphql.js to versions that we have tested with.
-- @skip and @include should take priority over @defer.
 
 #### Apollo Client:
 
-- No changes required
+- Should contain the logic to merge patches in and update the UI as data gets streamed in. 
 - Initial implementation of @defer support should come as a Apollo Link. Reads from a socket connection or some other event stream, keeps the partial response in memory, merging patches as they come and pushing it through the link stack.
 
 #### Errors:
@@ -138,17 +136,17 @@ This refers specifically to the errors that occur when streaming deferred fields
 
 #### Transport:
 
-- @defer requires a transport layer that is able to stream or push data to the client, like websockets or server side events. If the transport layer does not support this, Apollo Server should fallback to normal execution and ignore @defer, while providing a warning message on the console. 
-- Another approach is to look into upgrading `HttpLink` to accept multipart http responses. This is ideal, since it is lightweight compared to websockets, and requires the least amount of setup from the user. 
+- Upgrading `HttpLink` to accept multipart http responses from `apollo-server-express`. This is the default solution, since it is lightweight compared to websockets, and requires no additional set up from the user. Note that we are using the ReadableStream API, which is available on most modern browsers. 
+- In the future, we should be able to support any transport that can stream or push data to the client, like websockets or server side events. If the transport layer does not support this, Apollo Server may fall back to normal execution and ignore @defer, while providing a warning message on the console. 
 - Note: Deferred queries are not able to be refetched in isolation. So links like apollo-link-retry and apollo-link-error might need to ignore patches for now.
 
 #### Restrictions on @defer usage:
 
-- _Mutations:_ already execute serially, so there does not seem to be any use case for @defer. We should throw an error if @defer is applied to the root mutation type.
+- _Mutations:_ Not supported yet. Would love to hear if there are any usecases for this!
 
-- _Non-Nullable Types_: Deferring non-nullable types may lead to unexpected behavior when errors occur, since errors will propagate up to a nullable field. We do not want a deferred field to propagate errors up to its parent. The fields returned with the initial response should not be nulled by a deferred error - it makes things easier to reason about as all patches are strictly additive.
+- _Non-Nullable Types_: Not allowed and will throw an error. Deferring non-nullable types may lead to unexpected behavior when errors occur, since errors will propagate up to the nearest nullable parent as per the GraphQL spec. We want to avoid letting errors on deferred fields clobber the initial data that was loaded already.
 
-- _Nesting_: @defer can be nested arbitrarily. For example, we can defer a list type, and defer a field on an object in the list. However, this brings up thorny issues about the order in which patches are returned - the patch for an outer object should be sent before the inner object, regardless of when they are resolved. This will simplify the logic for merging patches. 
+- _Nesting_: @defer can be nested arbitrarily. For example, we can defer a list type, and defer a field on an object in the list. We ensure that the patch for a parent field will be sent before a child field, even if the child object resolves first. This will simplify the logic for merging patches.
 
 - _@defer should apply regardless of data availability_
 
@@ -179,3 +177,4 @@ This refers specifically to the errors that occur when streaming deferred fields
       }
     }
     ```
+- _Performance considerations_: If @defer is used too granularly, the overhead of performing patching and re-rendering could be worse than just waiting for the full data response. 
