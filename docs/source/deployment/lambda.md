@@ -9,7 +9,7 @@ AWS Lambda is a service that lets you run code without provisioning or managing 
 Learn how to integrate Apollo Server 2 with AWS Lambda. First, install the `apollo-server-lambda` package:
 
 ```sh
-npm install apollo-server-lambda@rc graphql
+npm install apollo-server-lambda graphql
 ```
 
 ## Deploying with AWS Serverless Application Model (SAM)
