@@ -1,6 +1,6 @@
 {
   "name": "apollo-tracing",
-  "version": "0.2.0-rc.4",
+  "version": "0.2.0",
   "description": "Collect and expose trace data for GraphQL requests",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -18,7 +18,7 @@
     "node": ">=4.0"
   },
   "dependencies": {
-    "apollo-server-env": "2.0.0-rc.11",
+    "apollo-server-env": "2.0.0",
     "graphql-extensions": "0.1.0-beta.0"
   },
   "peerDependencies": {
