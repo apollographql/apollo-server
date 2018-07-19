@@ -2,7 +2,7 @@
 title: What's new?
 ---
 
-This section of the Apollo Server docs is an announcement page where it is easy to find and share big changes to the ApolloServer package, or the Apollo server side ecosystem. For a more detailed list of changes, check out the [Changelog](https://github.com/apollographql/apollo-server/blob/version-2/CHANGELOG.md). To upgrade from Apollo Server 1, please follow the [migration guide](./migration-two-dot.html)
+This section of the Apollo Server docs is an announcement page where it is easy to find and share big changes to the `apollo-server` package, or the Apollo server side ecosystem. For a more detailed list of changes, check out the [Changelog](https://github.com/apollographql/apollo-server/blob/version-2/CHANGELOG.md). To upgrade from Apollo Server 1, please follow the [migration guide](./migration-two-dot.html)
 
 ## 2.0
 
@@ -69,9 +69,9 @@ server.listen().then(({ url }) => {
 });
 ```
 
-## CDN Integration ([guide](https://www.apollographql.com/docs/guides/performance.html#CDN-Integration))
+## CDN Integration ([guide](https://www.apollographql.com/docs/guides/performance.html#cdn))
 
-Apollo Server works well with a Content-Distribution Network to cache full GraphQL query results. Apollo Server provides `cache-control` headers that a CDN uses to determine how long a request should be cached. For subsequent requests, the result will be served directly from the CDN's cache. A CDN paired with Apollo Server's persisted queries is especially powerful, since GraphQL operations can be shortened and sent with a HTTP GET request. To enable caching and a CDN in Apollo Server, follow the [Performance Guide](https://www.apollographql.com/docs/guides/performance.html#CDN-Integration).
+Apollo Server works well with a Content-Distribution Network to cache full GraphQL query results. Apollo Server provides `cache-control` headers that a CDN uses to determine how long a request should be cached. For subsequent requests, the result will be served directly from the CDN's cache. A CDN paired with Apollo Server's persisted queries is especially powerful, since GraphQL operations can be shortened and sent with a HTTP GET request. To enable caching and a CDN in Apollo Server, follow the [Performance Guide](https://www.apollographql.com/docs/guides/performance.html#cdn).
 
 ## [Apollo Errors](./features/errors.html)
 
@@ -176,7 +176,7 @@ server.listen().then(({ url }) => {
 
 ## [GraphQL Playground](./features/playground.html)
 
-Apollo Server 2.0 creates a single GraphQL endpoint that provides data and a gui explorer depending on how the endpoint is accessed. In browser, Apollo Server returns GraphQL playground. For other cases, Apollo server returns the data for GraphQL requests from other clients, such as Apollo Client, curl, Postman, or Insomnia.
+Apollo Server 2.0 creates a single GraphQL endpoint that provides data and a gui explorer depending on how the endpoint is accessed. In browser, Apollo Server returns GraphQL playground. For other cases, Apollo Server returns the data for GraphQL requests from other clients, such as Apollo Client, curl, Postman, or Insomnia.
 
 ```js
 const { ApolloServer, gql } = require('apollo-server');
@@ -203,7 +203,7 @@ server.listen().then(({ url }) => {
 });
 ```
 
-To start production mode, set the NODE_ENV environment variables to `production`. The Apollo Server constructor accepts `introspection` as a boolean, which can overwrite the default for the environment.
+To start production mode, set the `NODE_ENV` environment variables to `production`. The Apollo Server constructor accepts `introspection` as a boolean, which can overwrite the default for the environment.
 
 ## File Uploads
 
@@ -309,7 +309,7 @@ setInterval(
 
 ## Health Checks
 
-The default Apollo server provides a health check endpoint at `/.well-known/apollo/server-health` that returns a 200 status code by default. If `onHealthCheck` is defined, the promise returned from the callback determines the status code. A successful resolution causes a 200 and rejection causes a 503. Health checks are often used by load balancers to determine if a server is available.
+The default Apollo Server provides a health check endpoint at `/.well-known/apollo/server-health` that returns a 200 status code by default. If `onHealthCheck` is defined, the promise returned from the callback determines the status code. A successful resolution causes a 200 and rejection causes a 503. Health checks are often used by load balancers to determine if a server is available.
 
 ```js
 const { ApolloServer, gql } = require('apollo-server');
