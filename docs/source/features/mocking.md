@@ -170,4 +170,4 @@ server.listen().then(({ url }) => {
 
 ## API
 
-Under the hood, Apollo Sever uses a library for building GraphQL servers, called `graphql-tools`. The mocking functionality is provided by the function [`addMockFunctionsToSchema`](../api/graphql-tools.html#addMockFunctionsToSchema). The `mocks` object is passed directly to the function and `preserveResolvers` is always true. [`MockList`](../api/graphql-tools.html#MockList) is exported directly from the `graphql-tools` library.
+Under the hood, Apollo Server uses a library for building GraphQL servers, called `graphql-tools`. The mocking functionality is provided by the function [`addMockFunctionsToSchema`](../api/graphql-tools.html#addMockFunctionsToSchema). The `mocks` object is passed directly to the function and `preserveResolvers` is always true. [`MockList`](../api/graphql-tools.html#MockList) is exported directly from the `graphql-tools` library.

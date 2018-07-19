@@ -4,7 +4,7 @@ title: Building a server
 
 > Estimated time: About 8 minutes.
 
-Apollo Server provides an easy way for new, or existing, applications to get running quickly.  Existing applications can take advantage of middleware and new applications can utilize an integrated web-server.  Both of these servers can be configured with minimal configuration and follow industry best-practices.
+Apollo Server provides an easy way for new, or existing, applications to get running quickly.  Existing applications can take advantage of middleware and new applications can utilize an integrated web server. Both of these servers can be configured with minimal configuration and follow industry best practices.
 
 <h2 id="installation">Installation</h2>
 
@@ -15,13 +15,12 @@ We need to install two packages to use Apollo Server, and a third package when u
 
 To install, run:
 
-    npm install --save apollo-server@rc graphql
+    npm install --save apollo-server graphql
 
 When adding Apollo Server to an existing application, a corresponding HTTP server support package needs to be installed as well.  For example, for Express this is:
 
-    npm install --save apollo-server-express@rc graphql
+    npm install --save apollo-server-express graphql
 
-> Note: During the release candidate period, it's necessary to use the `rc` npm package, as shown in the above commands.
 
 <h2 id="creating">Creating a server</h2>
 
@@ -85,7 +84,7 @@ At this point, if the message isn't printed to the console, it's possible that s
 
 <h3 id="running">GraphQL Playground</h3>
 
-To explore the newly created GraphQL server, open a browser to the link shown in the console, http://localhost:4000/graphql. Apollo Server sets up GraphQL Playground for you so that you can start running queries and exploring schemas quickly.
+To explore the newly created GraphQL server, open a browser to the link shown in the console, `http://localhost:4000/graphql`. Apollo Server sets up GraphQL Playground for you so that you can start running queries and exploring schemas quickly.
 
 To run a query, copy the following query and then press the "▶️" button:
 
@@ -105,7 +104,7 @@ And the server should return a simple response:
 }
 ```
 
-Your server itself is hosted at http://localhost:4000/graphql. This would be the endpoint you pass to set up Apollo Client.
+Your server itself is hosted at `http://localhost:4000/graphql`. This would be the endpoint you pass to set up Apollo Client.
 
 <h2 id="integrations">Server integrations</h2>
 
@@ -117,7 +116,7 @@ Existing applications generally already have middleware in place and Apollo Serv
 
 > The existing application is frequently already named `app`, especially when using Express.  If the application is identified by a different variable, pass the existing variable in place of `app`.
 
-The following code uses the `apollo-server-express` package, which can be installed with `npm install apollo-server-express@rc`.
+The following code uses the `apollo-server-express` package, which can be installed with `npm install apollo-server-express`.
 
 ```js
 const { ApolloServer, gql } = require('apollo-server-express');
@@ -138,7 +137,7 @@ app.listen({ port: 4000 }, () =>
 
 Hapi follows the same pattern with `apollo-server-express` replaced with `apollo-server-hapi` and `app` replaced with Hapi server. `applyMiddleware` registers plugins, so it should be called with `await`.
 
-> When transition from `apollo-server` to an integration package, running `npm uninstall apollo-server` will remove the extra dependency.
+> When transitioning from `apollo-server` to an integration package, running`npm uninstall apollo-server` will remove the extra dependency.
 
 <h3 id="serverless">Serverless</h3>
 

@@ -1,13 +1,11 @@
 ---
-title: Migrating to v2.0 Release Candidate
-description: How to migrate to Apollo Server 2.0 rc
+title: Migrating to v2.0
+description: How to migrate to Apollo Server 2.0
 ---
 
-The Apollo Server 2.0 release candidate dramatically simplifies the API for building a GraphQL server without compromising on features. It's also completely backward compatible, so you don't have to worry about breaking changes when upgrading.
+Apollo Server 2.0 dramatically simplifies the API for building a GraphQL server without compromising on features. It's also completely backward compatible, so you don't have to worry about breaking changes when upgrading.
 
-While it's possible to migrate an existing server to the 2.0 release candidate without any changes, we recommend changing to new patterns we're suggesting in order to take advantage of all the latest Apollo Server features, reduce the boilerplate, and enable future flexibility.  To learn how to migrate to the 2.0 release candidate from version 1.0, please read the following guide.
-
-> **Note:** In the release candidate of Apollo Server 2.0 only Express and Hapi are supported.  Additional integrations will be implemented in the official 2.0 release.
+While it's possible to migrate an existing server to 2.0 without any changes, we recommend changing to new patterns we're suggesting in order to take advantage of all the latest Apollo Server features, reduce the boilerplate, and enable future flexibility.  To learn how to migrate to the 2.0 from version 1.0, please read the following guide.
 
 <h2 id="gql-tag">The `gql` tag</h2>
 
@@ -34,7 +32,7 @@ const typeDefs = gql(fs.readFileSync(__dirname.concat('/schema.graphql'), 'utf8'
 
 <h2 id="app-deps">Changes to app dependencies</h2>
 
-> Apollo Server 2.0 RC requires Node.js v6 and higher.
+> Apollo Server 2.0 requires Node.js v6 and higher.
 
 Apollo Server 2.0 simplifies implementing a GraphQL server.  Apollo Server 1.0 revolved around providing middleware-based solutions, which had to be added to an application which already existed.  These middleware implementations were tied to the HTTP server in use (e.g. `apollo-server-express` for Express implementations, `apollo-server-hapi` for hapi, etc.).
 
@@ -45,7 +43,7 @@ There is a consideration to be made when following the rest of the guide:
 
 <h2 id="simple-use">Simplified usage</h2>
 
-Check out the following changes for Apollo Server 2.0 RC.
+Check out the following changes for Apollo Server 2.0.
 
 * You no longer need to import `body-parser` to set up `apollo-server-express`.
 * You no longer need to import `makeExecutableSchema` from `graphql-tools`.
@@ -55,9 +53,9 @@ Check out the following changes for Apollo Server 2.0 RC.
 
 <h2 id="Middleware">Middleware</h2>
 
-With the middleware option used by Apollo Server 1.0 users, it is necessary to install the release candidate version of `apollo-server-express`.  To do this, use the `rc` tag when installing:
+With the middleware option used by Apollo Server 1.0 users, it is necessary to install the 2.0 version of `apollo-server-express`.  To do this, install via the terminal:
 
-    npm install --save apollo-server-express@rc graphql
+    npm install --save apollo-server-express graphql
 
 The changes are best shown by comparing the before and after of the application.
 
@@ -106,6 +104,8 @@ Now, you can just do this instead:
 const express = require('express');
 const { ApolloServer, gql } = require('apollo-server-express');
 
+const PORT = 4000;
+
 const app = express();
 
 const typeDefs = gql`
@@ -123,7 +123,7 @@ const resolvers = {
 const server = new ApolloServer({ typeDefs, resolvers });
 server.applyMiddleware({ app });
 
-app.listen({ port: 4000 }, () =>
+app.listen({ port: PORT }, () =>
   console.log(`🚀 Server ready at http://localhost:4000${server.graphqlPath}`)
 )
 ```
@@ -132,11 +132,11 @@ app.listen({ port: 4000 }, () =>
 
 For starting a production-ready GraphQL server quickly, Apollo Server 2.0 ships with a built-in server, so starting a server (e.g. Express, Koa, etc.) is no longer necessary.
 
-For these cases, it's possible to remove the existing `apollo-server-{integrations}` package and add the new `apollo-server` release candidate.  If using Express, this can be done by running:
+For these cases, it's possible to remove the existing `apollo-server-{integrations}` package and add the new version 2.0 of `apollo-server`. If using Express, this can be done by running:
 
     npm uninstall --save apollo-server-express
 
-    npm install --save apollo-server@rc graphql
+    npm install --save apollo-server graphql
 
 An implementation with this pattern would look like:
 
