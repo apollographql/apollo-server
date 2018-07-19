@@ -2,9 +2,11 @@
 title: What's new?
 ---
 
-This section of the Apollo Server docs is an announcement page where it is easy to find and share big changes to the `apollo-server` package, or the Apollo server side ecosystem. For a more detailed list of changes, check out the [Changelog](https://github.com/apollographql/apollo-server/blob/version-2/CHANGELOG.md). To upgrade from Apollo Server 1, please follow the [migration guide](./migration-two-dot.html)
+This section of the Apollo Server docs is an announcement page where it is easy to find and share big changes to the `apollo-server` package, or the Apollo server side ecosystem.
 
 ## 2.0
+
+> To upgrade from Apollo Server 1.x, see the [2.0 migration guide](./migration-two-dot.html).  For a more detailed list of smaller changes, see the Apollo Server [`CHANGELOG`](https://github.com/apollographql/apollo-server/blob/master/CHANGELOG.md).
 
 Apollo Server 2.0 makes building the most powerful and production ready GraphQL app easy. Apollo Server 1.x provided all of the tools necessary to make a great GraphQL backend, allowing the developer to pick and choose from a set of unopinionated tools. Building on 1.x and fully backwards compatible, 2.0's defaults bake in the best practices and patterns gathered from two years of community feedback and iteration. It is an opinionated, production focused, GraphQL server that works with any backend.
 
