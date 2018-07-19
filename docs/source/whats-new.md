@@ -181,6 +181,7 @@ server.listen().then(({ url }) => {
 });
 ```
 
+<<<<<<< HEAD
 For more information, check out the details in the [performance monitoring guide](./features/metrics.html).
 
 ### GraphQL Playground
@@ -214,7 +215,7 @@ server.listen().then(({ url }) => {
 
 To start in production mode, set the `NODE_ENV` environment variables to `production`. For further customization, the Apollo Server constructor options accepts an `introspection` boolean, which can overwrite the default for the environment.
 
-For additional information, check out the [guide on configuring GraphQL playground](./features/playground.html).
+For additional information, check out the [guide on configuring GraphQL playground](./features/graphql-playground.html).
 
 ### File Uploads
 
