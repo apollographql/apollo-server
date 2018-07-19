@@ -24,8 +24,11 @@ const typeDefs = gql`
 // A map of functions which return data for the schema.
 const resolvers = {
   Query: {
-    hello: () => fetch('https://fourtonfish.com/hellosalut/?mode=auto').then(res => res.json()).then(data => data.hello)
-  }
+    hello: () =>
+      fetch('https://fourtonfish.com/hellosalut/?mode=auto')
+        .then(res => res.json())
+        .then(data => data.hello),
+  },
 };
 
 const server = new ApolloServer({
@@ -36,7 +39,7 @@ const server = new ApolloServer({
 });
 
 server.listen().then(({ url }) => {
-  console.log(`🚀 Server ready at ${url}`)
+  console.log(`🚀 Server ready at ${url}`);
 });
 ```
 
@@ -47,8 +50,8 @@ This is just the beginning. We have published a [roadmap](https://github.com/apo
 A persisted query is an ID or hash that can be sent to the server in place of the GraphQL query string. This smaller signature reduces bandwidth utilization and speeds up client loading times. Apollo Server enables persisted queries without additional server configuration, using an in-memory LRU cache to store the mapping between hash and query string. The persisted query cache can be configured as shown in the following code snippet. To enable persisted queries on the client, follow the [Performance Guide](https://www.apollographql.com/docs/guides/performance.html#Automatic-Persisted-Queries).
 
 ```js line=7-12
-const { ApolloServer } = require("apollo-server");
-const { MemcachedCache } = require('apollo-server-memcached');
+const { ApolloServer } = require('apollo-server');
+const { MemcachedCache } = require('apollo-server-cache-memcached');
 
 const server = new ApolloServer({
   typeDefs,
@@ -62,7 +65,7 @@ const server = new ApolloServer({
 });
 
 server.listen().then(({ url }) => {
-  console.log(`🚀 Server ready at ${url}`)
+  console.log(`🚀 Server ready at ${url}`);
 });
 ```
 
@@ -113,10 +116,10 @@ Apollo Server 2 allows mocking of a schema with the `mocks` parameter in the con
 const { ApolloServer, gql } = require('apollo-server');
 
 const typeDefs = gql`
-type Query {
-  hello: String
-  resolved: String
-}
+  type Query {
+    hello: String
+    resolved: String
+  }
 `;
 
 const resolvers = {
@@ -138,7 +141,7 @@ const server = new ApolloServer({
 });
 
 server.listen().then(({ url }) => {
-  console.log(`🚀 Server ready at ${url}`)
+  console.log(`🚀 Server ready at ${url}`);
 });
 ```
 
@@ -156,14 +159,14 @@ ENGINE_API_KEY=YOUR_API_KEY node start-server.js
 The simplest option is to pass the Engine API Key directly to the Apollo Server constructor.
 
 ```js line=6-8
-const { ApolloServer } = require("apollo-server");
+const { ApolloServer } = require('apollo-server');
 
 const server = new ApolloSever({
   typeDefs,
   resolvers,
   engine: {
-    apiKey: "YOUR API KEY HERE"
-  }
+    apiKey: 'YOUR API KEY HERE',
+  },
 });
 
 server.listen().then(({ url }) => {
@@ -186,8 +189,8 @@ const typeDefs = gql`
 
 const resolvers = {
   Query: {
-    hello: () => 'hello'
-  }
+    hello: () => 'hello',
+  },
 };
 
 const server = new ApolloServer({
@@ -196,7 +199,7 @@ const server = new ApolloServer({
 });
 
 server.listen().then(({ url }) => {
-  console.log(`🚀 Server ready at ${url}`)
+  console.log(`🚀 Server ready at ${url}`);
 });
 ```
 
@@ -231,13 +234,12 @@ const resolvers = {
   },
   Mutation: {
     singleUpload: (parent, args) => {
-
       return args.file.then(file => {
         //Contents of Upload scalar: https://github.com/jaydenseric/apollo-upload-server#upload-scalar
         //file.stream is a node stream that contains the contents of the uploaded file
         //node stream api: https://nodejs.org/api/stream.html
         return file;
-      })
+      });
     },
   },
 };
@@ -319,14 +321,16 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
   //optional parameter
-  onHealthCheck: () => new Promise((resolve, reject) => {
-    //database check or other asynchronous action
-  }),
+  onHealthCheck: () =>
+    new Promise((resolve, reject) => {
+      //database check or other asynchronous action
+    }),
 });
-
 
 server.listen().then(({ url }) => {
   console.log(`🚀 Server ready at ${url}`);
-  console.log(`Try your health check at: ${url}.well-known/apollo/server-health`);
+  console.log(
+    `Try your health check at: ${url}.well-known/apollo/server-health`,
+  );
 });
 ```

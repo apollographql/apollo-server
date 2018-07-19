@@ -1,11 +1,11 @@
 {
-  "name": "apollo-server-memcached",
+  "name": "apollo-server-cache-memcached",
   "version": "0.1.0-rc.11",
   "author": "opensource@apollographql.com",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-memcached"
+    "url": "https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-cache-memcached"
   },
   "homepage": "https://github.com/apollographql/apollo-server#readme",
   "bugs": {

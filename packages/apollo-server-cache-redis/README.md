@@ -1,6 +1,6 @@
 ## RedisCache
 
-[![npm version](https://badge.fury.io/js/apollo-server-redis.svg)](https://badge.fury.io/js/apollo-server-redis)
+[![npm version](https://badge.fury.io/js/apollo-server-cache-redis.svg)](https://badge.fury.io/js/apollo-server-cache-redis)
 [![Build Status](https://circleci.com/gh/apollographql/apollo-server.svg?style=svg)](https://circleci.com/gh/apollographql/apollo-server)
 
 This package exports an implementation of `KeyValueCache` that allows using Redis as a backing store for resource caching in [Data Sources](https://www.apollographql.com/docs/apollo-server/v2/features/data-sources.html).
@@ -8,7 +8,7 @@ This package exports an implementation of `KeyValueCache` that allows using Redi
 ## Usage
 
 ```js
-const { RedisCache } = require('apollo-server-redis');
+const { RedisCache } = require('apollo-server-cache-redis');
 
 const server = new ApolloServer({
   typeDefs,

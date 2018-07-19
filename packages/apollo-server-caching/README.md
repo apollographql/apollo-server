@@ -5,7 +5,7 @@
 
 ## Implementing your own Cache
 
-Internally, Apollo Server uses the `KeyValueCache` interface to provide a caching store for the Data Sources. An in-memory LRU cache is used by default, and we provide connectors for [Memcached](../apollo-server-memcached)/[Redis](../apollo-server-redis) backends.
+Internally, Apollo Server uses the `KeyValueCache` interface to provide a caching store for the Data Sources. An in-memory LRU cache is used by default, and we provide connectors for [Memcached](../apollo-server-cache-memcached)/[Redis](../apollo-server-cache-redis) backends.
 
 Built with extensibility in mind, you can also implement your own cache to use with Apollo Server, in a way that best suits your application needs. It needs to implement the following interface that can be exported from `apollo-server-caching`:
 

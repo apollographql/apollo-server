@@ -228,10 +228,10 @@ class PersonalizationAPI extends RESTDataSource {
 
 ## Using Memcached/Redis as a cache storage backend
 
-By default, resource caching will use an in memory LRU cache. When running multiple server instances, you'll want to use a shared cache backend instead. That's why Apollo Server also includes support for using [Memcached](../../../packages/apollo-server-memcached) or [Redis](../../../packages/apollo-server-redis) as your backing store. You can specify which one to use by creating an instance and passing it into the Apollo Server constructor:
+By default, resource caching will use an in memory LRU cache. When running multiple server instances, you'll want to use a shared cache backend instead. That's why Apollo Server also includes support for using [Memcached](../../../packages/apollo-server-cache-memcached) or [Redis](../../../packages/apollo-server-cache-redis) as your backing store. You can specify which one to use by creating an instance and passing it into the Apollo Server constructor:
 
 ```js
-const { MemcachedCache } = require('apollo-server-memcached');
+const { MemcachedCache } = require('apollo-server-cache-memcached');
 
 const server = new ApolloServer({
   typeDefs,
@@ -249,7 +249,7 @@ const server = new ApolloServer({
 For documentation of the options you can pass to the underlying Memcached client, look [here](https://github.com/3rd-Eden/memcached).
 
 ```js
-const { RedisCache } = require('apollo-server-redis');
+const { RedisCache } = require('apollo-server-cache-redis');
 
 const server = new ApolloServer({
   typeDefs,
