@@ -61,7 +61,7 @@ const jsSchema = makeExecutableSchema({
 
 - `typeDefs` is a required argument and should be an GraphQL schema language string or array of GraphQL schema language strings or a function that takes no arguments and returns an array of GraphQL schema language strings. The order of the strings in the array is not important, but it must include a schema definition.
 
-- `resolvers` is an optional argument _(empty object by default)_ and should be an object that follows the pattern explained in [documentation on resolvers](../features/resolvers.html).
+- `resolvers` is an optional argument _(empty object by default)_ and should be an object that follows the pattern explained in the [resolvers documentation](../features/data.html).
 
 - `logger` is an optional argument, which can be used to print errors to the server console that are usually swallowed by GraphQL. The `logger` argument should be an object with a `log` function, eg. `const logger = { log: e => console.log(e) }`
 
