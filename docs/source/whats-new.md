@@ -45,7 +45,7 @@ server.listen().then(({ url }) => {
 
 This is just the beginning. We have published a [roadmap](https://github.com/apollographql/apollo-server/blob/master/ROADMAP.md) for all of the features we will be bringing to Apollo Server soon and we would love your help! If you have any interest, you can get involved on [Github](https://github.com/apollographql/apollo-server) or by joining the [Apollo Slack](https://www.apollographql.com/slack) and going to the #apollo-server channel.
 
-## Automatic Persisted Queries ([guide](https://www.apollographql.com/docs/guides/performance.html#automatic-persisted-queries))
+### Automatic Persisted Queries
 
 A persisted query is an ID or hash that can be sent to the server in place of the GraphQL query string. This smaller signature reduces bandwidth utilization and speeds up client loading times. Apollo Server enables persisted queries without additional server configuration, using an in-memory LRU cache to store the mapping between hash and query string. The persisted query cache can be configured as shown in the following code snippet. To enable persisted queries on the client, follow the [Performance Guide](https://www.apollographql.com/docs/guides/performance.html#Automatic-Persisted-Queries).
 
@@ -69,11 +69,13 @@ server.listen().then(({ url }) => {
 });
 ```
 
-## CDN Integration ([guide](https://www.apollographql.com/docs/guides/performance.html#cdn))
+For more information on automatic persisted queries, check the [APQ section of the performance guide](https://www.apollographql.com/docs/guides/performance.html#automatic-persisted-queries).
+
+### CDN integration
 
 Apollo Server works well with a Content-Distribution Network to cache full GraphQL query results. Apollo Server provides `cache-control` headers that a CDN uses to determine how long a request should be cached. For subsequent requests, the result will be served directly from the CDN's cache. A CDN paired with Apollo Server's persisted queries is especially powerful, since GraphQL operations can be shortened and sent with a HTTP GET request. To enable caching and a CDN in Apollo Server, follow the [Performance Guide](https://www.apollographql.com/docs/guides/performance.html#cdn).
 
-## [Apollo Errors](./features/errors.html)
+### GraphQL errors
 
 Apollo Server provides the ability to add error codes to categorize errors that occur within resolvers. In addition to an error code, Apollo Server 2 passes error stack traces in development mode to enable a smoother getting started experience.
 
@@ -108,7 +110,9 @@ const resolvers = {
 };
 ```
 
-## [Mocking](features/mocking.html)
+For more information, read about [errors in Apollo Server 2](./features/errors.html).
+
+### Schema mocking
 
 Apollo Server 2 allows mocking of a schema with the `mocks` parameter in the constructor. The `mocks` parameter can be a boolean to enable the default mocking functions or an object to define custom mock functions by type.
 
@@ -145,11 +149,13 @@ server.listen().then(({ url }) => {
 });
 ```
 
-## [Performance Monitoring](./features/metrics.html)
+For more information, check out the [feature explanation about mocking](./features/mocking.html).
+
+### Performance monitoring
 
 Apollo Server 2.0 enables GraphQL monitoring out of the box. It reports performance and error data out-of-band to Apollo Engine. And Apollo Engine displays information about every query and schema present in your GraphQL service.
 
-To set up Apollo Server with Engine, [click here](https://engine.apollographql.com/) to get an Engine API key and provide it to the `ENGINE_API_KEY` environment variable. Setting an environment variable can be done in commandline as seen below or with the [dotenv npm package](https://www.npmjs.com/package/dotenv).
+To set up Apollo Server with Engine, [click here](https://engine.apollographql.com/) to get an Engine API key and provide it to the `ENGINE_API_KEY` environment variable. Setting an environment variable can be done on the command-line as seen below, or with the [`dotenv` npm package](https://www.npmjs.com/package/dotenv).
 
 ```bash
 #Replace YOUR_API_KEY with the api key for you service in the Engine UI
@@ -174,9 +180,11 @@ server.listen().then(({ url }) => {
 });
 ```
 
-## [GraphQL Playground](./features/playground.html)
+For more information, check out the details in the [performance monitoring guide](./features/metrics.html).
 
-Apollo Server 2.0 creates a single GraphQL endpoint that provides data and a gui explorer depending on how the endpoint is accessed. In browser, Apollo Server returns GraphQL playground. For other cases, Apollo Server returns the data for GraphQL requests from other clients, such as Apollo Client, curl, Postman, or Insomnia.
+### GraphQL Playground
+
+Apollo Server 2.0 creates a single GraphQL endpoint that provides data and a GUI explorer depending on how the endpoint is accessed. In browser, Apollo Server returns GraphQL playground. For other cases, Apollo Server returns the data for GraphQL requests from other clients, such as Apollo Client, curl, Postman, or Insomnia.
 
 ```js
 const { ApolloServer, gql } = require('apollo-server');
@@ -203,9 +211,11 @@ server.listen().then(({ url }) => {
 });
 ```
 
-To start production mode, set the `NODE_ENV` environment variables to `production`. The Apollo Server constructor accepts `introspection` as a boolean, which can overwrite the default for the environment.
+To start in production mode, set the `NODE_ENV` environment variables to `production`. For further customization, the Apollo Server constructor options accepts an `introspection` boolean, which can overwrite the default for the environment.
 
-## File Uploads
+For additional information, check out the [guide on configuring GraphQL playground](./features/playground.html).
+
+### File Uploads
 
 For server integrations that support file uploads(express, hapi, koa, etc), Apollo Server enables file uploads by default. To enable file uploads, reference the `Upload` type in the schema passed to the Apollo Server construction.
 
@@ -256,7 +266,7 @@ server.listen().then(({ url }) => {
 
 > Note: Apollo Server adds the Upload scalar to the schema, so any existing declaration of `scalar Upload` in the schema should be removed
 
-## [Subscriptions](/docs/graphql-subscriptions/)
+### Subscriptions
 
 Subscriptions are enabled by default in integrations that support persistent connections.
 
@@ -305,9 +315,11 @@ setInterval(
 );
 ```
 
-> Note: to disable subscriptions, set `subscriptions` to `false` in the options passed to `listen`
+> Note: to disable subscriptions, set `subscriptions` to `false` in the options passed to `listen`.
 
-## Health Checks
+For more information, check out the [documentation for GraphQL subscriptions](/docs/graphql-subscriptions/).
+
+### Health checks
 
 The default Apollo Server provides a health check endpoint at `/.well-known/apollo/server-health` that returns a 200 status code by default. If `onHealthCheck` is defined, the promise returned from the callback determines the status code. A successful resolution causes a 200 and rejection causes a 503. Health checks are often used by load balancers to determine if a server is available.
 
