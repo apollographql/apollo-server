@@ -45,7 +45,8 @@ export class HTTPCache {
 
     if (
       (ttlOverride && policy.age() < ttlOverride) ||
-      policy.satisfiesWithoutRevalidation(policyRequestFrom(request))
+      (!ttlOverride &&
+        policy.satisfiesWithoutRevalidation(policyRequestFrom(request)))
     ) {
       const headers = policy.responseHeaders();
       return new Response(body, {

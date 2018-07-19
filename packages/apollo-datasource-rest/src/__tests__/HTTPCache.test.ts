@@ -148,6 +148,35 @@ describe('HTTPCache', () => {
       expect(response.headers.get('Age')).toEqual('0');
     });
 
+    it('fetches a fresh response from the origin when the overridden TTL expired even if a longer max-age has been specified', async () => {
+      fetch.mockJSONResponseOnce(
+        { name: 'Ada Lovelace' },
+        { 'Cache-Control': 'max-age=30' },
+      );
+
+      await httpCache.fetch(new Request('https://api.example.com/people/1'), {
+        cacheOptions: {
+          ttl: 10,
+        },
+      });
+
+      advanceTimeBy(10000);
+
+      fetch.mockJSONResponseOnce(
+        { name: 'Alan Turing' },
+        { 'Cache-Control': 'max-age=30' },
+      );
+
+      const response = await httpCache.fetch(
+        new Request('https://api.example.com/people/1'),
+      );
+
+      expect(fetch.mock.calls.length).toEqual(2);
+
+      expect(await response.json()).toEqual({ name: 'Alan Turing' });
+      expect(response.headers.get('Age')).toEqual('0');
+    });
+
     it('allows overriding the TTL dynamically', async () => {
       fetch.mockJSONResponseOnce(
         { name: 'Ada Lovelace' },
