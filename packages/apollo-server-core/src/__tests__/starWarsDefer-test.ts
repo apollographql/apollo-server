@@ -2,6 +2,9 @@ import { isDeferredExecutionResult } from '../execute';
 import { forAwaitEach } from 'iterall';
 import { StarWarsSchema } from './starWarsSchema';
 import { graphql } from './graphql';
+import { validate } from 'graphql';
+import gql from 'graphql-tag';
+import { CannotDeferNonNullableFields } from '../validationRules/CannotDeferNonNullableFields';
 
 describe('@defer Directive tests', () => {
   describe('Basic Queries', () => {
@@ -576,6 +579,25 @@ describe('@defer Directive tests', () => {
   });
 
   describe('Non-nullable fields', () => {
+    it('Throws validation error if @defer used on non-nullable field', () => {
+      const query = gql`
+        query HeroIdQuery {
+          hero {
+            id @defer
+            name
+          }
+        }
+      `;
+      const validationErrors = validate(StarWarsSchema, query, [
+        CannotDeferNonNullableFields,
+      ]);
+      expect(validationErrors.toString()).toEqual(
+        '@defer cannot be applied on non-nullable field "Character.id".',
+      );
+    });
+
+    // Failing validation, a runtime error is still thrown
+
     it('Throws error if @defer used on non-nullable field', async done => {
       const query = `
         query HeroIdQuery {
@@ -709,7 +731,6 @@ describe('@defer Directive tests', () => {
       }
     });
 
-    // This is a particularly weird case where the initial response
     it('Throws error if @defer used on nested non-nullable field', async done => {
       const query = `
         query HeroSoulmateQuery {

@@ -37,6 +37,7 @@ import {
   ValidationError,
   SyntaxError,
 } from 'apollo-server-errors';
+import { CannotDeferNonNullableFields } from './validationRules/CannotDeferNonNullableFields';
 
 export interface GraphQLResponse {
   data?: object;
@@ -204,7 +205,7 @@ function doRunQuery(
           throw options.nonQueryError;
         }
 
-        let rules = specifiedRules;
+        let rules = specifiedRules.concat([CannotDeferNonNullableFields]);
         if (options.validationRules) {
           rules = rules.concat(options.validationRules);
         }
