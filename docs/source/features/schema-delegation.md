@@ -158,4 +158,4 @@ Delegation preserves aliases that are passed from the parent query. However that
 
 ## API
 
-Under the hood, Apollo server uses the `graphql-tools` library, which includes [`delegateToSchema`](../api/graphql-tools.html#delegateToSchema) by default.
+Under the hood, Apollo Server uses the `graphql-tools` library, which includes [`delegateToSchema`](../api/graphql-tools.html#delegateToSchema) by default.
