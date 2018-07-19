@@ -272,7 +272,7 @@ This is the main function that implements schema stitching. Read below for a des
 
 ### resolvers
 
-`resolvers` accepts resolvers in same format as [makeExecutableSchema](../features/resolvers.html). It can also take an Array of resolvers. One addition to the resolver format is the possibility to specify a `fragment` for a resolver. The `fragment` must be a GraphQL fragment definition string, specifying which fields from the parent schema are required for the resolver to function properly.
+`resolvers` accepts resolvers in same format as [`makeExecutableSchema`](#makeExecutableSchema). It can also take an Array of resolvers. One addition to the resolver format is the possibility to specify a `fragment` for a resolver. The `fragment` must be a GraphQL fragment definition string, specifying which fields from the parent schema are required for the resolver to function properly.
 
 ```js
 resolvers: {
