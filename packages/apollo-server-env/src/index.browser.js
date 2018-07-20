@@ -12,7 +12,8 @@ if (!global.process) {
 
 if (!global.process.env) {
   global.process.env = {
-    NODE_ENV: 'production',
+    // app is a global available on fly.io
+    NODE_ENV: app ? app.env : 'production',
   };
 }
 
