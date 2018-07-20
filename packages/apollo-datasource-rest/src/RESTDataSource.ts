@@ -240,7 +240,7 @@ export abstract class RESTDataSource<TContext = any> extends DataSource {
             cacheKey,
             cacheOptions,
           });
-          return this.didReceiveResponse(response, request);
+          return await this.didReceiveResponse(response, request);
         } catch (error) {
           this.didEncounterError(error, request);
         }
