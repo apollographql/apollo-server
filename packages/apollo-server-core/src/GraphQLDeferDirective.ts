@@ -4,7 +4,7 @@ import { DirectiveLocation } from 'graphql/language/directiveLocation';
 
 const GraphQLDeferDirective = new GraphQLDirective({
   name: 'defer',
-  description: 'Defers execution of this field if the `if` argument is true',
+  description: 'Defers this field if the `if` argument is true',
   locations: [DirectiveLocation.FIELD],
   args: {
     if: {
