@@ -164,16 +164,19 @@ export class ApolloServerBase {
           'Apollo Server requires either an existing schema or typeDefs',
         );
       }
+
+      const deferDirectiveDef = gql`
+        directive @defer(if: Boolean = true) on FIELD
+      `;
+      const uploadScalarDef = gql`
+        scalar Upload
+      `;
       this.schema = makeExecutableSchema({
-        // we add in the upload scalar, so that schemas that don't include it
-        // won't error when we makeExecutableSchema
+        // Add in the upload scalar, and @defer directive so that schemas
+        // that don't include it won't error when we makeExecutableSchema
         typeDefs: this.uploadsConfig
-          ? [
-              gql`
-                scalar Upload
-              `,
-            ].concat(typeDefs)
-          : typeDefs,
+          ? [uploadScalarDef, deferDirectiveDef].concat(typeDefs)
+          : [deferDirectiveDef].concat(typeDefs),
         schemaDirectives,
         resolvers,
       });
