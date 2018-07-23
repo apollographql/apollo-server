@@ -63,14 +63,19 @@ export function graphqlExpress(
           // This is a deferred response, so send it as patches become ready.
           // Update the content type to be able to send multipart data
           // See: https://www.w3.org/Protocols/rfc1341/7_2_Multipart.html
+          // Note that we are sending JSON strings, so we can use a simple
+          // "-" as the boundary delimiter.
           res.setHeader('Content-Type', 'multipart/mixed; boundary="-"');
+          const contentTypeHeader = 'Content-Type: application/json\r\n\r\n';
+          const boundary = '\r\n---\r\n';
+          const terminatingBoundary = '\r\n-----\r\n';
           await forAwaitEach(graphqlResponses, data => {
-            // Write the boundary for sending multipart data
-            res.write(data + '\r\n---\r\n'); // Simplest boundary
+            // Format each message as a proper multipart HTTP part
+            res.write(boundary + contentTypeHeader + data);
           });
 
           // Finish up multipart with the last encapsulation boundary
-          res.write('\r\n---');
+          res.write(terminatingBoundary);
           res.end();
         }
       },
