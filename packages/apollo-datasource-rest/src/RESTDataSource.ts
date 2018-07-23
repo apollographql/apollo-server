@@ -61,7 +61,10 @@ export abstract class RESTDataSource<TContext = any> extends DataSource {
   // Although we do validate header fields and don't serve responses from cache when they don't match,
   // new reponses overwrite old ones with different vary header fields.
   protected cacheKeyFor(request: Request): string {
-    return request.url;
+    if (request.method === 'GET') {
+      return request.url;
+    }
+    return request.url + Date.now();
   }
 
   protected willSendRequest?(request: RequestOptions): ValueOrPromise<void>;
