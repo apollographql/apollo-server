@@ -4,6 +4,8 @@ All of the packages in the `apollo-server` repo are released with the same versi
 
 ### vNEXT
 
+- Pass the response tollkit to the context function. [#1407](https://github.com/apollographql/apollo-server/pull/1407)
+
 ### rc.10
 
 - Fix and Export Extension and Playground Types [#1360](https://github.com/apollographql/apollo-server/pull/1360)
