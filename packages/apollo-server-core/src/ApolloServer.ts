@@ -365,4 +365,26 @@ export class ApolloServerBase {
       ...this.requestOptions,
     } as GraphQLOptions;
   }
+
+  // This function allows for manual execution of a schema, and passing of custom/mocked
+  // context and dataSources.
+  async execute({
+    query,
+    variables,
+    context,
+    dataSources,
+  }: {
+    query: any;
+    variables: Record<string, any>;
+    context: any;
+    dataSources: Record<string, any>;
+  }) {
+    // merge context arg with passed in dataSources
+    const contextWithDataSources = {
+      ...(context || {}),
+      ...(dataSources ? { dataSources } : {}),
+    };
+
+    return execute(this.schema, query, null, contextWithDataSources, variables);
+  }
 }
