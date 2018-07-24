@@ -36,7 +36,7 @@ ENGINE_API_KEY=YOUR_API_KEY node start-server.js
 
 ## Logging
 
-Apollo Server provides two ways to log a server: per input, response, and errors or periodically throughout a request's lifecycle. Treating the GraphQL execution as a black box by logging the inputs and outputs of the system allows developers to diagnose issues quickly without being mired by lower level logs. Once a problem has been found at a high level, the lower level logs enable accurate tracing of how a request was handled.
+Apollo Server provides two ways to log a server: per input, response, and errors; or periodically throughout a request's lifecycle. Treating the GraphQL execution as a black box by logging the inputs and outputs of the system allows developers to diagnose issues quickly without being mired by lower level logs. Once a problem has been found at a high level, the lower level logs enable accurate tracing of how a request was handled.
 
 ### High Level Logging
 
@@ -50,7 +50,8 @@ const server = new ApolloServer({
     console.log(error);
     return error;
   },
-  formatResponse: response => {
+  formatResponse: (response, query) => {
+    console.log(query.queryString);
     console.log(response);
     return response;
   },
