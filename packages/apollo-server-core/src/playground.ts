@@ -1,3 +1,4 @@
+import { omit } from 'lodash';
 import {
   RenderPageOptions as PlaygroundRenderPageOptions,
   Theme,
@@ -18,9 +19,12 @@ type RecursivePartial<T> = {
     : T[P] extends object ? RecursivePartial<T[P]> : T[P]
 };
 
-export type PlaygroundConfig =
-  | RecursivePartial<PlaygroundRenderPageOptions>
-  | boolean;
+type PlaygroundConfigObject = RecursivePartial<PlaygroundRenderPageOptions>;
+type PlaygroundConfigObjectWithExtras = PlaygroundConfigObject & {
+  enabled?: boolean;
+};
+
+export type PlaygroundConfig = PlaygroundConfigObjectWithExtras | boolean;
 
 export const defaultPlaygroundOptions = {
   version: playgroundVersion,
@@ -39,7 +43,8 @@ export function createPlaygroundOptions(
   playground: PlaygroundConfig = {},
 ): PlaygroundRenderPageOptions | undefined {
   const isDev = process.env.NODE_ENV !== 'production';
-  const enabled: boolean = typeof playground === 'boolean' ? playground : isDev;
+  const enabled: boolean =
+    typeof playground === 'boolean' ? playground : playground.enabled || isDev;
 
   if (!enabled) {
     return undefined;
@@ -48,9 +53,14 @@ export function createPlaygroundOptions(
   const playgroundOverrides =
     typeof playground === 'boolean' ? {} : playground || {};
 
+  const playgroundOverridesWithoutExtras: PlaygroundConfigObject = omit(
+    playgroundOverrides,
+    ['enabled'],
+  );
+
   const playgroundOptions: PlaygroundRenderPageOptions = {
     ...defaultPlaygroundOptions,
-    ...playgroundOverrides,
+    ...playgroundOverridesWithoutExtras,
     settings: {
       ...defaultPlaygroundOptions.settings,
       ...playgroundOverrides.settings,
