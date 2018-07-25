@@ -20,7 +20,8 @@
     "travis": "istanbul cover -x \"*.test.js\" _mocha -- --timeout 5000 --full-trace ./test/tests.js",
     "postcoverage": "remap-istanbul --input coverage/coverage.raw.json --type lcovonly --output coverage/lcov.info",
     "release": "lerna publish --exact",
-    "precommit": "lint-staged"
+    "precommit": "lint-staged",
+    "deploy-alpha": "lerna publish --exact --scope={apollo-server,apollo-server-express,apollo-server-core} --npm-tag=alpha"
   },
   "lint-staged": {
     "*.ts": [
