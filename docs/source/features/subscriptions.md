@@ -17,7 +17,7 @@ const { PubSub } = require('apollo-server');
 const pubsub = new PubSub();
 ```
 
-Subscriptions are another root level type, similar to Query and Mutation. To start, we need add to add the `Subscription` type to our schema:
+Subscriptions are another root level type, similar to Query and Mutation. To start, we need to add the `Subscription` type to our schema:
 
 ```js line=2-4
 const typeDefs = gql`
