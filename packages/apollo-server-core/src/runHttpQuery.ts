@@ -502,7 +502,7 @@ export async function runHttpQuery(
     if (!isDeferred) {
       // Add content-length header
       responseInit.headers['Content-Length'] = Buffer.byteLength(
-        graphqlResponse,
+        prettyJSONStringify(graphqlResponse),
         'utf8',
       ).toString();
     }
