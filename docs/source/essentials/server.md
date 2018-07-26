@@ -84,7 +84,7 @@ At this point, if the message isn't printed to the console, it's possible that s
 
 <h3 id="running">GraphQL Playground</h3>
 
-To explore the newly created GraphQL server, open a browser to the link shown in the console, `http://localhost:4000/graphql`. Apollo Server sets up GraphQL Playground for you so that you can start running queries and exploring schemas quickly.
+To explore the newly created GraphQL server, open a browser to the link shown in the console, `http://localhost:4000/`. Apollo Server sets up GraphQL Playground for you so that you can start running queries and exploring schemas quickly.
 
 To run a query, copy the following query and then press the "▶️" button:
 
@@ -104,7 +104,7 @@ And the server should return a simple response:
 }
 ```
 
-Your server itself is hosted at `http://localhost:4000/graphql`. This would be the endpoint you pass to set up Apollo Client.
+> The GraphQL server itself is also served at `http://localhost:4000/`, but only direct requests from a web browser will return the GraphQL Playground interface.  Therefore, Apollo Client will work properly when configured with this endpoint.
 
 <h2 id="integrations">Server integrations</h2>
 
