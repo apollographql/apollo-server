@@ -6,9 +6,7 @@ title: Spec for @defer Directive
 
 Apollo Server supports the `@defer` directive out of the box, allowing declarative control of when individual fields in a single GraphQL query get fulfilled and sent to the client. The GraphQL execution phase does not wait for deferred fields to resolve, instead returning `null` as a placeholder, and sending patches to the client as those fields get resolved asynchronously.
 
-Apollo Server extends the execution phase of the reference [graphql.js](https://github.com/graphql/graphql-js) implementation, to modify its behavior when dealing with deferred fields.
-
-This document describes the implementation of `@defer` support in Apollo Server, but also serves as a specification for implementations of GraphQL servers that wish to interoperate with Apollo Client.
+This document describes the implementation of `@defer` support in Apollo Server, and how it interoperates with Apollo Client. 
 
 ## The `@defer` Directive
 
