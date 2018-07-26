@@ -18,6 +18,7 @@ export interface CacheControlFormat {
 export interface CacheHint {
   maxAge?: number;
   scope?: CacheScope;
+  inherit?: boolean;
 }
 
 export enum CacheScope {
@@ -86,12 +87,13 @@ export class CacheControlExtension<TContext = any>
 
     // If this resolver returns an object and we haven't seen an explicit maxAge
     // hint, set the maxAge to 0 (uncached) or the default if specified in the
-    // constructor.  (Non-object fields by default are assumed to inherit their
-    // cacheability from their parents.)
+    // constructor unless it inherits from parent. (Non-object fields by default
+    // are assumed to inherit their cacheability from their parents.)
     if (
       (targetType instanceof GraphQLObjectType ||
         targetType instanceof GraphQLInterfaceType) &&
-      hint.maxAge === undefined
+      hint.maxAge === undefined &&
+      !hint.inherit
     ) {
       hint.maxAge = this.defaultMaxAge;
     }
@@ -149,6 +151,9 @@ function cacheHintFromDirectives(
   const scopeArgument = cacheControlDirective.arguments.find(
     argument => argument.name.value === 'scope',
   );
+  const inheritArgument = cacheControlDirective.arguments.find(
+    argument => argument.name.value === 'inherit',
+  );
 
   // TODO: Add proper typechecking of arguments
   return {
@@ -164,6 +169,12 @@ function cacheHintFromDirectives(
       scopeArgument.value.kind === 'EnumValue'
         ? (scopeArgument.value.value as CacheScope)
         : undefined,
+    inherit:
+      inheritArgument &&
+      inheritArgument.value &&
+      inheritArgument.value.kind === 'BooleanValue'
+        ? (inheritArgument.value.value as boolean)
+        : undefined,
   };
 }
 
@@ -176,5 +187,6 @@ function mergeHints(
   return {
     maxAge: otherHint.maxAge !== undefined ? otherHint.maxAge : hint.maxAge,
     scope: otherHint.scope || hint.scope,
+    inherit: otherHint.inherit,
   };
 }

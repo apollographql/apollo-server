@@ -1,4 +1,5 @@
 import { buildSchema } from 'graphql';
+import { makeExecutableSchema } from 'graphql-tools';
 
 import { CacheScope } from '../';
 import { collectCacheControlHints } from './test-utils/helpers';
@@ -225,5 +226,115 @@ describe('@cacheControl directives', () => {
       maxAge: 60,
       scope: CacheScope.Private,
     });
+  });
+
+  it('should use cache from parent if inherit is true', async () => {
+    const typeDefs = `
+      type Query {
+        droids(page: Int = 0): DroidList @cacheControl(maxAge: 10)
+      }
+
+      type DroidList @cacheControl(inherit: true) {
+        edges: [DroidEdge!]
+      }
+
+      type DroidEdge @cacheControl(inherit: true) {
+        node: Droid!
+      }
+
+      type Droid @cacheControl(inherit: true) {
+        id: ID!
+        name: String!
+      }
+    `;
+
+    const resolvers = {
+      Query: {
+        droids: (_source, _args, _context, { cacheControl }) => {
+          return {
+            edges: [{ node: { id: 1 } }],
+          };
+        },
+      },
+    };
+
+    const schema = makeExecutableSchema({ typeDefs, resolvers });
+
+    const hints = await collectCacheControlHints(
+      schema,
+      `
+        query {
+          droids {
+            edges {
+              node {
+                id
+              }
+            }
+          }
+        }
+      `,
+      { defaultMaxAge: 0 },
+    );
+
+    expect(hints).toEqual([{ maxAge: 10, path: ['droids'], scope: undefined }]);
+  });
+
+  it('should not use cache from parent if inherit is false', async () => {
+    const typeDefs = `
+      type Query {
+        droids(page: Int = 0): DroidList @cacheControl(maxAge: 10)
+      }
+
+      type DroidList @cacheControl(inherit: true) {
+        edges: [DroidEdge!]
+      }
+
+      type DroidEdge @cacheControl(inherit: false) {
+        node: Droid!
+      }
+
+      type Droid @cacheControl(inherit: true) {
+        id: ID!
+        name: String!
+      }
+    `;
+
+    const resolvers = {
+      Query: {
+        droids: (_source, _args, _context, { cacheControl }) => {
+          return {
+            edges: [{ node: { id: 1 } }],
+          };
+        },
+      },
+    };
+
+    const schema = makeExecutableSchema({ typeDefs, resolvers });
+
+    const hints = await collectCacheControlHints(
+      schema,
+      `
+        query {
+          droids {
+            edges {
+              node {
+                id
+              }
+            }
+          }
+        }
+      `,
+      { defaultMaxAge: 0 },
+    );
+
+    expect(hints).toEqual([
+      { inherit: undefined, maxAge: 10, path: ['droids'], scope: undefined },
+      {
+        inherit: false,
+        maxAge: 0,
+        path: ['droids', 'edges'],
+        scope: undefined,
+      },
+    ]);
   });
 });
