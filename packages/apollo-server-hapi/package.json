@@ -30,11 +30,12 @@
   "dependencies": {
     "@apollographql/graphql-playground-html": "^1.6.0",
     "accept": "^3.0.2",
-    "apollo-server-core": "2.0.0",
+    "apollo-server-core": "2.1.0-alpha.6",
     "apollo-upload-server": "^5.0.0",
     "boom": "^7.1.0",
     "graphql-subscriptions": "^0.5.8",
-    "graphql-tools": "^3.0.4"
+    "graphql-tools": "^3.0.4",
+    "iterall": "^1.2.2"
   },
   "devDependencies": {
     "@types/hapi": "17.0.16",

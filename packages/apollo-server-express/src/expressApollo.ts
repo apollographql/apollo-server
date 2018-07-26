@@ -54,10 +54,6 @@ export function graphqlExpress(
         );
 
         if (graphqlResponse) {
-          res.setHeader(
-            'Content-Length',
-            Buffer.byteLength(graphqlResponse, 'utf8').toString(),
-          );
           res.write(graphqlResponse);
           res.end();
         } else if (graphqlResponses) {

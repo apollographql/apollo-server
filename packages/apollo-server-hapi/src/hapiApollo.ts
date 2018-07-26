@@ -5,6 +5,8 @@ import {
   runHttpQuery,
   convertNodeHttpToRequest,
 } from 'apollo-server-core';
+import { PassThrough } from 'stream';
+import { forAwaitEach } from 'iterall';
 
 export interface IRegister {
   (server: Server, options: any, next?: Function): void;
@@ -40,25 +42,53 @@ const graphqlHapi: IPlugin = {
       options: options.route || {},
       handler: async (request, h) => {
         try {
-          const { graphqlResponse, responseInit } = await runHttpQuery(
-            [request],
-            {
-              method: request.method.toUpperCase(),
-              options: options.graphqlOptions,
-              query:
-                request.method === 'post'
-                  ? // TODO type payload as string or Record
-                    (request.payload as any)
-                  : request.query,
-              request: convertNodeHttpToRequest(request.raw.req),
-            },
-          );
+          const {
+            graphqlResponse,
+            graphqlResponses,
+            responseInit,
+          } = await runHttpQuery([request], {
+            method: request.method.toUpperCase(),
+            options: options.graphqlOptions,
+            query:
+              request.method === 'post'
+                ? // TODO type payload as string or Record
+                  (request.payload as any)
+                : request.query,
+            request: convertNodeHttpToRequest(request.raw.req),
+            enableDefer: true,
+          });
 
-          const response = h.response(graphqlResponse);
-          Object.keys(responseInit.headers).forEach(key =>
-            response.header(key, responseInit.headers[key]),
-          );
-          return response;
+          if (graphqlResponse) {
+            const response = h.response(graphqlResponse);
+            Object.keys(responseInit.headers).forEach(key =>
+              response.header(key, responseInit.headers[key]),
+            );
+            return response;
+          } else if (graphqlResponses) {
+            // This is a deferred response, so send it as patches become ready.
+            // Update the content type to be able to send multipart data
+            // See: https://www.w3.org/Protocols/rfc1341/7_2_Multipart.html
+            // Note that we are sending JSON strings, so we can use a simple
+            // "-" as the boundary delimiter.
+            const contentTypeHeader = 'Content-Type: application/json\r\n\r\n';
+            const boundary = '\r\n---\r\n';
+            const terminatingBoundary = '\r\n-----\r\n';
+
+            const responseStream = new PassThrough();
+            const response = h
+              .response(responseStream)
+              .header('Content-Type', 'multipart/mixed; boundary="-"');
+
+            forAwaitEach(graphqlResponses, data => {
+              responseStream.write(boundary + contentTypeHeader + data);
+            }).then(() => {
+              // Finish up multipart with the last encapsulation boundary
+              responseStream.write(terminatingBoundary);
+              responseStream.end();
+            });
+
+            return response;
+          }
         } catch (error) {
           if ('HttpQueryError' !== error.name) {
             throw Boom.boomify(error);
