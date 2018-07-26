@@ -5,7 +5,6 @@ import {
   DocumentNode,
   parse,
   validate,
-  ExecutionArgs,
   getOperationAST,
   GraphQLError,
   specifiedRules,
@@ -14,6 +13,7 @@ import {
 
 import {
   execute,
+  ExecutionArgs,
   isDeferredExecutionResult,
   ExecutionPatchResult,
 } from './execute';
@@ -89,6 +89,7 @@ export interface QueryOptions {
   extensions?: Array<() => GraphQLExtension>;
   persistedQueryHit?: boolean;
   persistedQueryRegister?: boolean;
+  enableDefer?: boolean;
 }
 
 function isQueryOperation(query: DocumentNode, operationName?: string) {
@@ -251,6 +252,7 @@ function doRunQuery(
           variableValues: options.variables,
           operationName: options.operationName,
           fieldResolver: options.fieldResolver,
+          enableDefer: options.enableDefer || false,
         };
         const executionDidEnd = extensionStack.executionDidStart({
           executionArgs,

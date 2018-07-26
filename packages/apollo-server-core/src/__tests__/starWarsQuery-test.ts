@@ -193,7 +193,14 @@ describe('Star Wars Query Tests', () => {
         }
       `;
       const params = { someId: '1000' };
-      const result = await graphql(StarWarsSchema, query, null, null, params);
+      const result = await graphql(
+        StarWarsSchema,
+        query,
+        null,
+        null,
+        null,
+        params,
+      );
       expect(result).toEqual({
         data: {
           human: {
@@ -212,7 +219,14 @@ describe('Star Wars Query Tests', () => {
         }
       `;
       const params = { someId: '1002' };
-      const result = await graphql(StarWarsSchema, query, null, null, params);
+      const result = await graphql(
+        StarWarsSchema,
+        query,
+        null,
+        null,
+        null,
+        params,
+      );
       expect(result).toEqual({
         data: {
           human: {
@@ -231,7 +245,14 @@ describe('Star Wars Query Tests', () => {
         }
       `;
       const params = { id: 'not a valid id' };
-      const result = await graphql(StarWarsSchema, query, null, null, params);
+      const result = await graphql(
+        StarWarsSchema,
+        query,
+        null,
+        null,
+        null,
+        params,
+      );
       expect(result).toEqual({
         data: {
           human: null,

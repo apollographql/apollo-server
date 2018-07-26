@@ -44,24 +44,39 @@ import {
   FragmentSpreadNode,
   InlineFragmentNode,
   FragmentDefinitionNode,
+  VariableDefinitionNode,
 } from 'graphql/language/ast';
 import {
   ExecutionResult,
   responsePathAsArray,
   addPath,
   assertValidExecutionArguments,
-  buildExecutionContext,
   collectFields,
   buildResolveInfo,
   resolveFieldValueOrError,
   getFieldDef,
+  defaultFieldResolver,
 } from 'graphql/execution/execute';
+import { getVariableValues } from 'graphql/execution/values';
 import GraphQLDeferDirective from './GraphQLDeferDirective';
+import Maybe from 'graphql/tsutils/Maybe';
+import { Kind } from 'graphql';
 
 /**
  * Rewrite flow types in typescript
  */
 export type MaybePromise<T> = Promise<T> | T;
+
+export type ExecutionArgs = {
+  schema: GraphQLSchema;
+  document: DocumentNode;
+  rootValue?: any;
+  contextValue?: any;
+  variableValues?: Maybe<{ [key: string]: any }>;
+  operationName?: Maybe<string>;
+  fieldResolver?: Maybe<GraphQLFieldResolver<any, any>>;
+  enableDefer?: boolean;
+};
 
 function isPromise(
   maybePromise: MaybePromise<any>,
@@ -100,7 +115,8 @@ export type ExecutionContext = {
   operation: OperationDefinitionNode;
   variableValues: { [variable: string]: {} };
   fieldResolver: GraphQLFieldResolver<any, any>;
-  errors: Array<GraphQLError>;
+  errors: GraphQLError[];
+  enableDefer?: boolean;
   patchDispatcher?: PatchDispatcher;
   deferredDependents?: Record<
     string,
@@ -111,6 +127,91 @@ export type ExecutionContext = {
   >;
 };
 
+export function buildExecutionContext(
+  schema: GraphQLSchema,
+  document: DocumentNode,
+  rootValue: {},
+  contextValue: {},
+  rawVariableValues: Record<string, {}> | null,
+  operationName: string | null,
+  fieldResolver: GraphQLFieldResolver<any, any> | null,
+  enableDefer?: boolean,
+): GraphQLError[] | ExecutionContext {
+  const errors: Array<GraphQLError> = [];
+  let operation: OperationDefinitionNode;
+  let hasMultipleAssumedOperations = false;
+  const fragments: Record<string, FragmentDefinitionNode> = Object.create(null);
+  for (let i = 0; i < document.definitions.length; i++) {
+    const definition = document.definitions[i];
+    switch (definition.kind) {
+      case Kind.OPERATION_DEFINITION:
+        if (!operationName && operation) {
+          hasMultipleAssumedOperations = true;
+        } else if (
+          !operationName ||
+          (definition.name && definition.name.value === operationName)
+        ) {
+          operation = definition;
+        }
+        break;
+      case Kind.FRAGMENT_DEFINITION:
+        fragments[definition.name.value] = definition;
+        break;
+    }
+  }
+
+  if (!operation) {
+    if (operationName) {
+      errors.push(
+        new GraphQLError(`Unknown operation named "${operationName}".`),
+      );
+    } else {
+      errors.push(new GraphQLError('Must provide an operation.'));
+    }
+  } else if (hasMultipleAssumedOperations) {
+    errors.push(
+      new GraphQLError(
+        'Must provide operation name if query contains ' +
+          'multiple operations.',
+      ),
+    );
+  }
+
+  let variableValues;
+  if (operation) {
+    const coercedVariableValues = getVariableValues(
+      schema,
+      (operation.variableDefinitions as VariableDefinitionNode[]) || [],
+      rawVariableValues || {},
+    );
+
+    if (coercedVariableValues.errors) {
+      errors.push(...coercedVariableValues.errors);
+    } else {
+      variableValues = coercedVariableValues.coerced;
+    }
+  }
+
+  if (errors.length !== 0) {
+    return errors;
+  }
+
+  invariant(operation, 'Has operation if no errors.');
+  invariant(variableValues, 'Has variables if no errors.');
+
+  return {
+    schema,
+    fragments,
+    rootValue,
+    contextValue,
+    operation,
+    variableValues,
+    fieldResolver: fieldResolver || defaultFieldResolver,
+    errors,
+    enableDefer,
+  };
+}
+
 /**
  * Determines if a field should be deferred. @skip and @include has higher
  * precedence than @defer.
@@ -119,6 +220,9 @@ function shouldDeferNode(
   exeContext: ExecutionContext,
   node: FragmentSpreadNode | FieldNode | InlineFragmentNode,
 ): boolean {
+  if (!exeContext.enableDefer) {
+    return false;
+  }
   const defer = getDirectiveValues(
     GraphQLDeferDirective,
     node,
@@ -276,7 +380,7 @@ class PatchDispatcher {
  * Unchanged
  */
 export function execute(
-  ExecutionArgs,
+  ExecutionArgs: ExecutionArgs,
   ..._: any[]
 ): MaybePromise<ExecutionResult | DeferredExecutionResult>;
 /* eslint-disable no-redeclare */
@@ -288,6 +392,7 @@ export function execute(
   variableValues?: { [variable: string]: {} },
   operationName?: string,
   fieldResolver?: GraphQLFieldResolver<any, any>,
+  enableDefer?: boolean,
 ): MaybePromise<ExecutionResult | DeferredExecutionResult>;
 export function execute(
   argsOrSchema,
@@ -297,6 +402,7 @@ export function execute(
   variableValues,
   operationName,
   fieldResolver,
+  enableDefer,
 ): MaybePromise<ExecutionResult | DeferredExecutionResult> {
   /* eslint-enable no-redeclare */
   // Extract arguments from object args if provided.
@@ -309,6 +415,7 @@ export function execute(
         argsOrSchema.variableValues,
         argsOrSchema.operationName,
         argsOrSchema.fieldResolver,
+        argsOrSchema.enableDefer,
       )
     : executeImpl(
         argsOrSchema,
@@ -318,6 +425,7 @@ export function execute(
         variableValues,
         operationName,
         fieldResolver,
+        enableDefer,
       );
 }
 
@@ -332,6 +440,7 @@ function executeImpl(
   variableValues,
   operationName,
   fieldResolver,
+  enableDefer,
 ): MaybePromise<ExecutionResult | DeferredExecutionResult> {
   // If arguments are missing or incorrect, throw an error.
   assertValidExecutionArguments(schema, document, variableValues);
@@ -346,6 +455,7 @@ function executeImpl(
     variableValues,
     operationName,
     fieldResolver,
+    enableDefer,
   );
 
   // Return early errors if execution context failed.

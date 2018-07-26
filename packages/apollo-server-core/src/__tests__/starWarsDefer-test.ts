@@ -7,6 +7,34 @@ import gql from 'graphql-tag';
 import { CannotDeferNonNullableFields } from '../validationRules/CannotDeferNonNullableFields';
 
 describe('@defer Directive tests', () => {
+  describe('Compatibility', () => {
+    it('Can disable @defer', async done => {
+      const query = `
+        query HeroNameQuery {
+          hero {
+            id
+            name @defer
+          }
+        }
+      `;
+      try {
+        const result = await graphql(StarWarsSchema, query, false);
+        expect(isDeferredExecutionResult(result)).toBe(false);
+        expect(result).toEqual({
+          data: {
+            hero: {
+              id: '2001',
+              name: 'R2-D2',
+            },
+          },
+        });
+        done();
+      } catch (error) {
+        done(error);
+      }
+    });
+  });
+
   describe('Basic Queries', () => {
     it('Can @defer on scalar types', async done => {
       const query = `

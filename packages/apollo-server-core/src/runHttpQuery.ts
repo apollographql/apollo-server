@@ -38,6 +38,7 @@ export interface HttpQueryRequest {
     | GraphQLOptions
     | ((...args: Array<any>) => Promise<GraphQLOptions> | GraphQLOptions);
   request: Pick<Request, 'url' | 'method' | 'headers'>;
+  enableDefer?: boolean;
 }
 
 // The result of a curl does not appear well in the terminal, so we add an extra new line
@@ -413,6 +414,7 @@ export async function runHttpQuery(
         extensions: optionsObject.extensions,
         persistedQueryHit,
         persistedQueryRegister,
+        enableDefer: request.enableDefer,
       };
 
       return runQuery(params);

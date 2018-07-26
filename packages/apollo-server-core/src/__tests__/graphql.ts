@@ -51,6 +51,7 @@ import { MaybePromise } from 'graphql/jsutils/MaybePromise';
 export interface GraphQLArgs {
   schema: GraphQLSchema;
   source: string | Source;
+  enableDefer?: boolean;
   rootValue?: {};
   contextValue?: {};
   variableValues?: ObjMap<{}>;
@@ -62,6 +63,7 @@ export function graphql(GraphQLArgs, ..._: any[]): Promise<ExecutionResult>;
 export function graphql(
   schema: GraphQLSchema,
   source: Source | string,
+  enableDefer?: boolean,
   rootValue?: {},
   contextValue?: {},
   variableValues?: ObjMap<{}>,
@@ -71,6 +73,7 @@ export function graphql(
 export function graphql(
   argsOrSchema,
   source,
+  enableDefer,
   rootValue,
   contextValue,
   variableValues,
@@ -86,6 +89,7 @@ export function graphql(
         ? graphqlImpl(
             argsOrSchema.schema,
             argsOrSchema.source,
+            argsOrSchema.enableDefer,
             argsOrSchema.rootValue,
             argsOrSchema.contextValue,
             argsOrSchema.variableValues,
@@ -95,6 +99,7 @@ export function graphql(
         : graphqlImpl(
             argsOrSchema,
             source,
+            enableDefer,
             rootValue,
             contextValue,
             variableValues,
@@ -116,6 +121,7 @@ export function graphqlSync(GraphQLArgs, ..._: any[]): ExecutionResult;
 export function graphqlSync(
   schema: GraphQLSchema,
   source: Source | string,
+  enableDefer?: boolean,
   rootValue?: {},
   contextValue?: {},
   variableValues?: ObjMap<{}>,
@@ -125,6 +131,7 @@ export function graphqlSync(
 export function graphqlSync(
   argsOrSchema,
   source,
+  enableDefer,
   rootValue,
   contextValue,
   variableValues,
@@ -137,6 +144,7 @@ export function graphqlSync(
       ? graphqlImpl(
           argsOrSchema.schema,
           argsOrSchema.source,
+          argsOrSchema.enableDefer,
           argsOrSchema.rootValue,
           argsOrSchema.contextValue,
           argsOrSchema.variableValues,
@@ -146,6 +154,7 @@ export function graphqlSync(
       : graphqlImpl(
           argsOrSchema,
           source,
+          enableDefer,
           rootValue,
           contextValue,
           variableValues,
@@ -164,6 +173,7 @@ export function graphqlSync(
 function graphqlImpl(
   schema,
   source,
+  enableDefer,
   rootValue,
   contextValue,
   variableValues,
@@ -174,6 +184,11 @@ function graphqlImpl(
   const schemaValidationErrors = validateSchema(schema);
   if (schemaValidationErrors.length > 0) {
     return { errors: schemaValidationErrors };
+  }
+
+  // Enable defer by default for tests
+  if (enableDefer === undefined || enableDefer === null) {
+    enableDefer = true;
   }
 
   // Parse
@@ -199,5 +214,6 @@ function graphqlImpl(
     variableValues,
     operationName,
     fieldResolver,
+    enableDefer,
   );
 }

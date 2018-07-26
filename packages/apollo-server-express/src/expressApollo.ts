@@ -46,6 +46,7 @@ export function graphqlExpress(
       options: options,
       query: req.method === 'POST' ? req.body : req.query,
       request: convertNodeHttpToRequest(req),
+      enableDefer: true,
     }).then(
       async ({ graphqlResponse, graphqlResponses, responseInit }) => {
         Object.keys(responseInit.headers).forEach(key =>

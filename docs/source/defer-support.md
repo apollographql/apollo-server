@@ -77,6 +77,25 @@ One drawback of using Multipart HTTP is that there is generally a finite browser
 
 We are working on refactoring the request pipeline in Apollo Server to make it easier to add support for other transport modules.
 
+## Apollo Server Variants
+In order to support `@defer`, Apollo Server variants like Koa, Hapi etc must explicitly support and enable it. This is done by passing in an `enableDefer` flag to `runHttpQuery`. For illustration, this is how it looks like on `apollo-server-express`. Without this flag, the `@defer` directive will be ignored. 
+
+```typescript
+const graphqlHandler = async (
+    req: express.Request,
+    res: express.Response,
+    next,
+  ) => {
+    const a = runHttpQuery([req, res], {
+      method: req.method,
+      options: options,
+      query: req.method === 'POST' ? req.body : req.query,
+      request: convertNodeHttpToRequest(req),
+      enableDefer: true,
+    }).then(() => {})
+  }
+```
+
 ## Response Specification
 
 Apollo Client is able to read from a Multipart HTTP response stream (using `apollo-link-http`) and merge patches with the intial payload.
