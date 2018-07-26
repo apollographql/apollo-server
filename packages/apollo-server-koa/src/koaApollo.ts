@@ -55,14 +55,21 @@ export function graphqlKoa(
           // Note that we are sending JSON strings, so we can use a simple
           // "-" as the boundary delimiter.
           ctx.set('Content-Type', 'multipart/mixed; boundary="-"');
-          const contentTypeHeader = 'Content-Type: application/json\r\n\r\n';
+          const contentTypeHeader = 'Content-Type: application/json\r\n';
           const boundary = '\r\n---\r\n';
           const terminatingBoundary = '\r\n-----\r\n';
 
           ctx.res.writeHead(200);
 
           await forAwaitEach(graphqlResponses, data => {
-            ctx.res.write(boundary + contentTypeHeader + data);
+            const contentLengthHeader = `Content-Length: ${Buffer.byteLength(
+              data as string,
+              'utf8',
+            ).toString()}\r\n\r\n`;
+
+            ctx.res.write(
+              boundary + contentTypeHeader + contentLengthHeader + data,
+            );
           });
 
           // Finish up multipart with the last encapsulation boundary

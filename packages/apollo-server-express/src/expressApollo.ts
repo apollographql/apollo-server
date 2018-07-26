@@ -63,12 +63,18 @@ export function graphqlExpress(
           // Note that we are sending JSON strings, so we can use a simple
           // "-" as the boundary delimiter.
           res.setHeader('Content-Type', 'multipart/mixed; boundary="-"');
-          const contentTypeHeader = 'Content-Type: application/json\r\n\r\n';
+          const contentTypeHeader = 'Content-Type: application/json\r\n';
           const boundary = '\r\n---\r\n';
           const terminatingBoundary = '\r\n-----\r\n';
           await forAwaitEach(graphqlResponses, data => {
             // Format each message as a proper multipart HTTP part
-            res.write(boundary + contentTypeHeader + data);
+            const contentLengthHeader = `Content-Length: ${Buffer.byteLength(
+              data as string,
+              'utf8',
+            ).toString()}\r\n\r\n`;
+            res.write(
+              boundary + contentTypeHeader + contentLengthHeader + data,
+            );
           });
 
           // Finish up multipart with the last encapsulation boundary

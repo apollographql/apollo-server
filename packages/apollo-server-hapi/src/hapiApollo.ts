@@ -70,7 +70,7 @@ const graphqlHapi: IPlugin = {
             // See: https://www.w3.org/Protocols/rfc1341/7_2_Multipart.html
             // Note that we are sending JSON strings, so we can use a simple
             // "-" as the boundary delimiter.
-            const contentTypeHeader = 'Content-Type: application/json\r\n\r\n';
+            const contentTypeHeader = 'Content-Type: application/json\r\n';
             const boundary = '\r\n---\r\n';
             const terminatingBoundary = '\r\n-----\r\n';
 
@@ -80,7 +80,13 @@ const graphqlHapi: IPlugin = {
               .header('Content-Type', 'multipart/mixed; boundary="-"');
 
             forAwaitEach(graphqlResponses, data => {
-              responseStream.write(boundary + contentTypeHeader + data);
+              const contentLengthHeader = `Content-Length: ${Buffer.byteLength(
+                data as string,
+                'utf8',
+              ).toString()}\r\n\r\n`;
+              responseStream.write(
+                boundary + contentTypeHeader + contentLengthHeader + data,
+              );
             }).then(() => {
               // Finish up multipart with the last encapsulation boundary
               responseStream.write(terminatingBoundary);
