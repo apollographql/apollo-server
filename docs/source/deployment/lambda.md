@@ -58,6 +58,8 @@ Finally, **pay close attention to the last line**. This creates an export named 
 
 ## Deploying with the Serverless framework
 
+[Serverless](https://serverless.com) is a framework that makes deploying to services like AWS Lambda simpler.
+
 ### Configuring Serverless
 
 Serverless uses a config file named `serverless.yml` to determine what service to deploy to and where the handlers are.
@@ -73,7 +75,7 @@ provider:
   runtime: nodejs6.10
 functions:
   graphql:
-    # this is <filename>.<name of handler export>
+    # this is formatted as <FILENAME>.<HANDLER>
     handler: graphql.graphqlHandler
     events:
     - http:
