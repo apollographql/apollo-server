@@ -75,7 +75,7 @@ A possible query for these result could appear as follows. This query demonstrat
 }
 ```
 
-## Intersection type
+## Interface type
 
 An `Interface` type provides the ability to describe fields that are shared across different types. It is best used to show that all types implementing an interface always contain the interface's fields. In other words, it is the semantic opposite of a union. For example, in this example `Vehicle` interface type is used by members `Airplane` and `Car`:
 
