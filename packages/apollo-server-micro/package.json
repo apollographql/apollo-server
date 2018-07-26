@@ -28,10 +28,11 @@
   "homepage": "https://github.com/apollographql/apollo-server#readme",
   "dependencies": {
     "accept": "^3.0.2",
-    "apollo-server-core": "2.0.0",
+    "apollo-server-core": "2.1.0-alpha.7",
     "apollo-upload-server": "^5.0.0",
     "graphql-playground-html": "^1.6.0",
-    "micro": "^9.3.2"
+    "micro": "^9.3.2",
+    "iterall": "^1.2.2"
   },
   "devDependencies": {
     "@types/micro": "7.3.1",
