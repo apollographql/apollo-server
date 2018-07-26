@@ -21,7 +21,7 @@
     "postcoverage": "remap-istanbul --input coverage/coverage.raw.json --type lcovonly --output coverage/lcov.info",
     "release": "lerna publish --exact",
     "precommit": "lint-staged",
-    "deploy-alpha": "lerna publish --exact --scope=apollo-server{,-express,-core,-koa,-hapi} --npm-tag=alpha"
+    "deploy-alpha": "lerna publish --exact --scope=apollo-server{,-core,-express,-koa,-hapi,-micro} --npm-tag=alpha"
   },
   "lint-staged": {
     "*.ts": [
