@@ -499,6 +499,14 @@ export async function runHttpQuery(
       return throwHttpGraphQLError(400, initialResponse.errors as any);
     }
 
+    if (!isDeferred) {
+      // Add content-length header
+      responseInit.headers['Content-Length'] = Buffer.byteLength(
+        graphqlResponse,
+        'utf8',
+      ).toString();
+    }
+
     return {
       graphqlResponse: isDeferred
         ? undefined
