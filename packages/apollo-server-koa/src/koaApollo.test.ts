@@ -25,10 +25,6 @@ async function destroyApp(app) {
   await new Promise(resolve => app.close(resolve));
 }
 
-describe('integration:Hapi', () => {
-  testSuite(createApp, destroyApp);
-});
-
 describe('koaApollo', () => {
   it('throws error if called without schema', function() {
     expect(() => new ApolloServer(undefined as GraphQLOptions)).to.throw(
