@@ -4,6 +4,8 @@ All of the packages in the `apollo-server` repo are released with the same versi
 
 ### vNEXT
 
+- update apollo-engine-reporting-protobuf to non-beta [#1429](https://github.com/apollographql/apollo-server/pull/1429)
+
 ### rc.10
 
 - Fix and Export Extension and Playground Types [#1360](https://github.com/apollographql/apollo-server/pull/1360)
