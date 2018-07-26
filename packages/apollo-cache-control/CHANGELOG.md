@@ -1,5 +1,10 @@
 # Changelog
 
+### Unreleased
+
+* Add support for `inherited` key to skip setting a `maxAge` to 0 if a
+    type has no explicit `maxAge` set.
+
 ### v0.1.1
 
 * Fix `defaultMaxAge` feature (introduced in 0.1.0) so that `maxAge: 0` overrides the default, as previously documented.
