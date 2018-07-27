@@ -4,6 +4,7 @@ All of the packages in the `apollo-server` repo are released with the same versi
 
 ### vNEXT
 
+- express, koa: remove next after playground [#1436](https://github.com/apollographql/apollo-server/pull/1436)
 - update apollo-engine-reporting-protobuf to non-beta [#1429](https://github.com/apollographql/apollo-server/pull/1429)
 
 ### rc.10
