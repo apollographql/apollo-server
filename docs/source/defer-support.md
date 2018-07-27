@@ -110,7 +110,7 @@ Apollo Client is able to read from a Multipart HTTP response stream (using `apol
         }
       }
       recommendedForYou {
-        story: {
+        story {
           id
           text
         }
@@ -125,7 +125,7 @@ For the sample query above, Apollo Client expects a response following this spec
 
 - The HTTP response should adhere to the [HTTP Multipart Content-Type](https://www.w3.org/Protocols/rfc1341/7_2_Multipart.html) format.
 
-- Each part of the multipart response should have `Content-Type` set to `application/json`.
+- Each part of the multipart response should have `Content-Type` set to `application/json`. `Content-Length` should also be set for each part. 
 
 - Since the body of each part is JSON, it is safe to use `-` as the simplest boundary for each part. Therefore, each delimiter looks like `\r\n---\r\n` and the terminating delimiter looks like `\r\n-----\r\n`.
 
@@ -162,6 +162,7 @@ For the sample query above, Apollo Client expects a response following this spec
 
   ---
   Content-Type: application/json
+  Content-Length: 999
 
   {
     "data": {
@@ -178,6 +179,7 @@ For the sample query above, Apollo Client expects a response following this spec
 
   ---
   Content-Type: application/json
+  Content-Length: 999
 
   {
     "path":["newsFeed","stories",0,"comments"],
@@ -186,6 +188,7 @@ For the sample query above, Apollo Client expects a response following this spec
 
   ---
   Content-Type: application/json
+  Content-Length: 999
 
   {
     "path":["newsFeed","stories",1,"comments"],
@@ -194,6 +197,7 @@ For the sample query above, Apollo Client expects a response following this spec
 
   ---
   Content-Type: application/json
+  Content-Length: 999
 
   {
     "path":["newsFeed","stories",2,"comments"],
@@ -202,6 +206,7 @@ For the sample query above, Apollo Client expects a response following this spec
 
   ---
   Content-Type: application/json
+  Content-Length: 999
 
   {
     "path":["newsFeed","recommendedForYou"],
