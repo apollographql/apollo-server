@@ -41,7 +41,7 @@ const graphqlHapi: IPlugin = {
       handler: async (request, h) => {
         try {
           const { graphqlResponse, responseInit } = await runHttpQuery(
-            [request],
+            [request, h],
             {
               method: request.method.toUpperCase(),
               options: options.graphqlOptions,
