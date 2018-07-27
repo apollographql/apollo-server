@@ -248,22 +248,16 @@ export abstract class RESTDataSource<TContext = any> extends DataSource {
     };
 
     if (request.method === 'GET') {
-      return this.memoize(cacheKey, performRequest);
+      let promise = this.memoizedResults.get(cacheKey);
+      if (promise) return promise;
+
+      promise = performRequest();
+      this.memoizedResults.set(cacheKey, promise);
+      return promise;
     } else {
+      this.memoizedResults.delete(cacheKey);
       return performRequest();
     }
-  }
-
-  private async memoize<TResult>(
-    cacheKey: string,
-    fn: () => Promise<TResult>,
-  ): Promise<TResult> {
-    let promise = this.memoizedResults.get(cacheKey);
-    if (promise) return promise;
-
-    promise = fn();
-    this.memoizedResults.set(cacheKey, promise);
-    return promise;
   }
 
   private async trace<TResult>(
