@@ -223,6 +223,33 @@ describe('apollo-server-hapi', () => {
       await apolloFetch({ query: '{hello}' });
     });
 
+    it('passes each request and response toolkit through to the context function', async () => {
+      const context = async ({ request, h }) => {
+        expect(request, 'request argument should exist').to.exist;
+        expect(h, 'response toolkit argument should exist').to.exist;
+        return {};
+      };
+
+      server = new ApolloServer({
+        typeDefs,
+        resolvers,
+        context,
+      });
+      app = new Server({ port: 4000 });
+
+      await server.applyMiddleware({ app });
+      await app.start();
+
+      httpServer = app.listener;
+      const uri = app.info.uri + '/graphql';
+
+      const apolloFetch = createApolloFetch({ uri });
+      const result = await apolloFetch({ query: '{hello}' });
+
+      expect(result.data).to.deep.equal({ hello: 'hi' });
+      expect(result.errors, 'errors should exist').not.to.exist;
+    });
+
     describe('healthchecks', () => {
       afterEach(async () => {
         await server.stop();
