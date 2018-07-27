@@ -476,6 +476,25 @@ describe('RESTDataSource', () => {
       );
     });
 
+    it('does not deduplicate non-GET requests', async () => {
+      const dataSource = new class extends RESTDataSource {
+        baseURL = 'https://api.example.com';
+
+        postFoo(a: number) {
+          return this.post('foo', { a });
+        }
+      }();
+
+      dataSource.httpCache = httpCache;
+
+      fetch.mockJSONResponseOnce();
+      fetch.mockJSONResponseOnce();
+
+      await Promise.all([dataSource.postFoo(1), dataSource.postFoo(1)]);
+
+      expect(fetch.mock.calls.length).toEqual(2);
+    });
+
     it('allows specifying a custom cache key', async () => {
       const dataSource = new class extends RESTDataSource {
         baseURL = 'https://api.example.com';

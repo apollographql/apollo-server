@@ -230,7 +230,7 @@ export abstract class RESTDataSource<TContext = any> extends DataSource {
 
     const cacheKey = this.cacheKeyFor(request);
 
-    return this.memoize(cacheKey, async () => {
+    const performRequest = async () => {
       return this.trace(`${options.method || 'GET'} ${url}`, async () => {
         const cacheOptions = options.cacheOptions
           ? options.cacheOptions
@@ -245,7 +245,13 @@ export abstract class RESTDataSource<TContext = any> extends DataSource {
           this.didEncounterError(error, request);
         }
       });
-    });
+    };
+
+    if (request.method === 'GET') {
+      return this.memoize(cacheKey, performRequest);
+    } else {
+      return performRequest();
+    }
   }
 
   private async memoize<TResult>(
