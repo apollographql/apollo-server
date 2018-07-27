@@ -38,11 +38,39 @@
   },
   "devDependencies": {
     "@types/hapi": "17.0.16",
+    "@types/jest": "23.3.0",
     "apollo-server-integration-testsuite": "2.0.0",
     "hapi": "17.5.2"
+    "jest": "23.4.1",
+    "ts-jest": "23.0.1"
   },
   "peerDependencies": {
     "graphql": "^0.12.0 || ^0.13.0 || ^14.0.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "setupFiles": [
+      "<rootDir>/node_modules/apollo-server-env/dist/index.js"
+    ],
+    "transform": {
+      "^.+\\.(ts|js)$": "ts-jest"
+    },
+    "moduleFileExtensions": [
+      "ts",
+      "js",
+      "json"
+    ],
+    "testRegex": "src/__tests__/.*$",
+    "testPathIgnorePatterns": [
+      "<rootDir>/node_modules/",
+      "<rootDir>/lib/",
+      "test-utils"
+    ],
+    "globals": {
+      "ts-jest": {
+        "skipBabel": true
+      }
+    }
   },
   "typings": "dist/index.d.ts",
   "typescript": {

@@ -46,9 +46,13 @@
     "subscriptions-transport-ws": "^0.9.11",
     "ws": "^5.2.0"
   },
+  "peerDependencies": {
+    "graphql": "^0.12.0 || ^0.13.0 || ^14.0.0"
+  },
   "devDependencies": {
     "@types/fibers": "0.0.30",
     "@types/graphql": "0.13.3",
+    "@types/jest": "23.3.0",
     "@types/keyv": "3.0.1",
     "@types/quick-lru": "1.1.0",
     "apollo-fetch": "0.7.0",
@@ -56,12 +60,37 @@
     "apollo-link-http": "1.5.4",
     "apollo-link-persisted-queries": "0.2.1",
     "fibers": "2.0.2",
+    "jest": "23.4.1",
+    "jest-matcher-utils": "23.2.0",
     "js-sha256": "0.9.0",
     "meteor-promise": "0.8.6",
-    "mock-req": "0.2.0"
+    "mock-req": "0.2.0",
+    "ts-jest": "23.0.1"
   },
-  "peerDependencies": {
-    "graphql": "^0.12.0 || ^0.13.0 || ^14.0.0"
+  "jest": {
+    "testEnvironment": "node",
+    "setupFiles": [
+      "<rootDir>/node_modules/apollo-server-env/dist/index.js"
+    ],
+    "transform": {
+      "^.+\\.(ts|js)$": "ts-jest"
+    },
+    "moduleFileExtensions": [
+      "ts",
+      "js",
+      "json"
+    ],
+    "testRegex": "src/__tests__/.*$",
+    "testPathIgnorePatterns": [
+      "<rootDir>/node_modules/",
+      "<rootDir>/lib/",
+      "test-utils"
+    ],
+    "globals": {
+      "ts-jest": {
+        "skipBabel": true
+      }
+    }
   },
   "typings": "dist/index.d.ts",
   "typescript": {
