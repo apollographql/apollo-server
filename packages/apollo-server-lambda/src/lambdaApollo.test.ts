@@ -4,7 +4,6 @@ import testSuite, {
   CreateAppOptions,
 } from 'apollo-server-integration-testsuite';
 import { Config } from 'apollo-server-core';
-import 'mocha';
 import * as url from 'url';
 import { IncomingMessage, ServerResponse } from 'http';
 

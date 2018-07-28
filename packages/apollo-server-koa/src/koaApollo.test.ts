@@ -4,9 +4,7 @@ import testSuite, {
   schema as Schema,
   CreateAppOptions,
 } from 'apollo-server-integration-testsuite';
-import { expect } from 'chai';
 import { GraphQLOptions, Config } from 'apollo-server-core';
-import 'mocha';
 
 function createApp(options: CreateAppOptions = {}) {
   const app = new Koa();

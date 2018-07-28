@@ -1,9 +1,6 @@
 /* tslint:disable:no-unused-expression */
-import { expect } from 'chai';
-import { stub } from 'sinon';
 import * as http from 'http';
 import * as net from 'net';
-import 'mocha';
 import { sha256 } from 'js-sha256';
 import express = require('express');
 import bodyParser = require('body-parser');
@@ -140,7 +137,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             },
           });
 
-          const formatError = stub().callsFake(error => {
+          const formatError = jest.fn().callsFake(error => {
             expect(error instanceof Error).true;
             return error;
           });
@@ -314,11 +311,11 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
     describe('formatError', () => {
       it('wraps thrown error from validation rules', async () => {
-        const throwError = stub().callsFake(() => {
+        const throwError = jest.fn().callsFake(() => {
           throw new Error('nope');
         });
 
-        const formatError = stub().callsFake(error => {
+        const formatError = jest.fn().callsFake(error => {
           expect(error instanceof Error).true;
           expect(error.constructor.name).to.equal('Error');
           return error;
@@ -349,7 +346,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
       });
 
       it('works with errors similar to GraphQL errors, such as yup', async () => {
-        const throwError = stub().callsFake(async () => {
+        const throwError = jest.fn().callsFake(async () => {
           const schema = yup.object().shape({
             email: yup
               .string()
@@ -360,7 +357,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           await schema.validate({ email: 'lol' });
         });
 
-        const formatError = stub().callsFake(error => {
+        const formatError = jest.fn().callsFake(error => {
           expect(error instanceof Error).true;
           expect(error.extensions.code).to.equal('INTERNAL_SERVER_ERROR');
           expect(error.extensions.exception.name).to.equal('ValidationError');
@@ -442,11 +439,11 @@ export function testApolloServer<AS extends ApolloServerBase>(
             },
           });
 
-          const throwError = stub().callsFake(() => {
+          const throwError = jest.fn().callsFake(() => {
             throw new Error('nope');
           });
 
-          const validationRule = stub().callsFake(() => {
+          const validationRule = jest.fn().callsFake(() => {
             expect(
               formatError.notCalled,
               'formatError should be called after validation',
@@ -457,9 +454,9 @@ export function testApolloServer<AS extends ApolloServerBase>(
             ).true;
             return true;
           });
-          const extension = stub();
+          const extension = jest.fn();
 
-          const formatError = stub().callsFake(error => {
+          const formatError = jest.fn().callsFake(error => {
             expect(error instanceof Error).true;
             expect(
               extension.calledOnce,
@@ -531,11 +528,11 @@ export function testApolloServer<AS extends ApolloServerBase>(
       });
 
       it('errors thrown in extensions call formatError and are wrapped', async () => {
-        const extension = stub().callsFake(() => {
+        const extension = jest.fn().callsFake(() => {
           throw new Error('nope');
         });
 
-        const formatError = stub().callsFake(error => {
+        const formatError = jest.fn().callsFake(error => {
           expect(error instanceof Error).true;
           expect(
             extension.calledOnce,
@@ -599,7 +596,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             },
           },
         };
-        const spy = stub().returns({});
+        const spy = jest.fn().returns({});
         const { url: uri } = await createApolloServer({
           typeDefs,
           resolvers,
@@ -618,7 +615,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
       it('allows context to be async function', async () => {
         const uniqueContext = { key: 'major' };
-        const spy = stub().returns('hi');
+        const spy = jest.fn().returns('hi');
         const typeDefs = gql`
           type Query {
             hello: String
@@ -647,7 +644,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
       it('clones the context for every request', async () => {
         const uniqueContext = { key: 'major' };
-        const spy = stub().returns('hi');
+        const spy = jest.fn().returns('hi');
         const typeDefs = gql`
           type Query {
             hello: String
@@ -949,7 +946,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
         });
       });
       it('accepts subscriptions configuration', done => {
-        const onConnect = stub().callsFake(connectionParams => ({
+        const onConnect = jest.fn().callsFake(connectionParams => ({
           ...connectionParams,
         }));
         const typeDefs = gql`

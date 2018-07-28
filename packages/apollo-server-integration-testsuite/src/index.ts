@@ -1,7 +1,3 @@
-import { expect } from 'chai';
-import { stub } from 'sinon';
-import 'mocha';
-
 // persisted query tests
 import { sha256 } from 'js-sha256';
 import { VERSION } from 'apollo-link-persisted-queries';
@@ -993,7 +989,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
       it('sends stack trace to error if debug mode is set', async () => {
         const expected = /at resolveFieldValueOrError/;
         const origError = console.error;
-        const err = stub();
+        const err = jest.fn();
         console.error = err;
         app = await createApp({
           graphqlOptions: {
@@ -1016,7 +1012,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
       });
 
       it('sends stack trace to error log if debug mode is set', async () => {
-        const logStub = stub(console, 'error');
+        const logStub = jest.spyOn(console, 'error');
         const expected = /at resolveFieldValueOrError/;
         app = await createApp({
           graphqlOptions: {

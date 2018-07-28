@@ -1,5 +1,3 @@
-import { expect } from 'chai';
-import 'mocha';
 import * as express from 'express';
 
 import * as http from 'http';

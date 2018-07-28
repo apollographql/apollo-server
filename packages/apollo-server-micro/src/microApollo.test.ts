@@ -3,9 +3,7 @@ import testSuite, {
   schema as Schema,
   CreateAppOptions,
 } from 'apollo-server-integration-testsuite';
-import { expect } from 'chai';
 import { GraphQLOptions, Config } from 'apollo-server-core';
-import 'mocha';
 
 import { ApolloServer } from './ApolloServer';
 

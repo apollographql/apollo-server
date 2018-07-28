@@ -1,8 +1,5 @@
 /* tslint:disable:no-unused-expression */
-import { expect } from 'chai';
-import { stub } from 'sinon';
 import MockReq = require('mock-req');
-import 'mocha';
 
 import {
   GraphQLSchema,
@@ -131,7 +128,7 @@ describe('runQuery', () => {
 
   it('does not call console.error if in an error occurs and debug mode is set', () => {
     const query = `query { testError }`;
-    const logStub = stub(console, 'error');
+    const logStub = jest.spyOn(console, 'error');
     return runQuery({
       schema,
       queryString: query,
@@ -145,7 +142,7 @@ describe('runQuery', () => {
 
   it('does not call console.error if in an error occurs and not in debug mode', () => {
     const query = `query { testError }`;
-    const logStub = stub(console, 'error');
+    const logStub = jest.spyOn(console, 'error');
     return runQuery({
       schema,
       queryString: query,

@@ -1,8 +1,4 @@
 /* tslint:disable:no-unused-expression */
-import { expect } from 'chai';
-import { stub } from 'sinon';
-import 'mocha';
-
 import { GraphQLError } from 'graphql';
 
 import {
@@ -111,7 +107,7 @@ describe('Errors', () => {
     });
     it('calls formatter after exposing the code and stacktrace', () => {
       const error = new ApolloError(message, code, { key });
-      const formatter = stub();
+      const formatter = jest.fn();
       formatApolloErrors([error], {
         formatter,
         debug: true,
