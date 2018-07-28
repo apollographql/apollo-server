@@ -35,7 +35,7 @@
     "apollo-server-env": "2.0.0",
     "graphql-tools": "^3.0.4"
   },
-  "xdevDependencies": {
+  "devDependencies": {
     "apollo-server-integration-testsuite": "2.0.0"
   },
   "peerDependencies": {
