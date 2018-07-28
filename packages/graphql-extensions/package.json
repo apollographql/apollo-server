@@ -30,7 +30,7 @@
   "devDependencies": {
     "@types/graphql": "0.13.3",
     "@types/jest": "23.3.1",
-    "@types/node": "10.5.3",
+    "@types/node": "10.5.4",
     "graphql": "0.13.2",
     "jest": "23.4.1",
     "jest-matcher-utils": "23.2.0",
