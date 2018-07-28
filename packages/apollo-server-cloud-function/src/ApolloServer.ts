@@ -18,11 +18,6 @@ export interface CreateHandlerOptions {
   };
 }
 
-const env = Object.assign({}, process.env);
-const endpoint = `https://${env.X_GOOGLE_FUNCTION_REGION}-${
-  env.X_GOOGLE_GCP_PROJECT
-}.cloudfunctions.net/${env.X_GOOGLE_FUNCTION_NAME}`;
-
 export class ApolloServer extends ApolloServerBase {
   // If you feel tempted to add an option to this constructor. Please consider
   // another place, since the documentation becomes much more complicated when
@@ -112,7 +107,7 @@ export class ApolloServer extends ApolloServerBase {
       if (this.playgroundOptions && req.method === 'GET') {
         if (req.accepts('text/html')) {
           const playgroundRenderPageOptions: PlaygroundRenderPageOptions = {
-            endpoint,
+            endpoint: req.get('referer'),
             ...this.playgroundOptions,
           };
 
