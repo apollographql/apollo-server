@@ -27,7 +27,9 @@
   "scripts": {
     "clean": "rm -rf dist",
     "compile": "tsc",
-    "prepublish": "npm run clean && npm run compile"
+    "prepublish": "npm run clean && npm run compile",
+    "test": "jest --verbose",
+    "watch": "tsc -w"
   },
   "dependencies": {
     "@apollographql/graphql-playground-html": "^1.6.0",

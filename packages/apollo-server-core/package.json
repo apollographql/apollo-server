@@ -5,8 +5,9 @@
   "main": "dist/index.js",
   "scripts": {
     "compile": "tsc",
-    "watch": "tsc -w",
-    "prepublish": "npm run compile"
+    "prepublish": "npm run compile",
+    "test": "jest --verbose",
+    "watch": "tsc -w"
   },
   "repository": {
     "type": "git",

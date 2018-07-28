@@ -14,7 +14,8 @@
   "scripts": {
     "clean": "rm -rf dist",
     "compile": "tsc",
-    "prepublish": "npm run clean && npm run compile"
+    "prepublish": "npm run clean && npm run compile",
+    "test": "jest --verbose"
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

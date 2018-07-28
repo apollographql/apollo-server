@@ -5,14 +5,14 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
+    "circle": "jest --verbose --coverage",
     "clean": "rm -rf dist",
     "compile": "tsc",
-    "watch": "tsc -w",
+    "lint": "prettier -l 'src/**/*.{ts,js}' && tslint -p tsconfig.json 'src/**/*.ts'",
+    "lint-fix": "prettier --write 'src/**/*.{ts,js}' && tslint --fix -p tsconfig.json 'src/**/*.ts'",
     "prepublish": "npm run clean && npm run compile",
     "test": "jest --verbose",
-    "circle": "jest --verbose --coverage",
-    "lint": "prettier -l 'src/**/*.{ts,js}' && tslint -p tsconfig.json 'src/**/*.ts'",
-    "lint-fix": "prettier --write 'src/**/*.{ts,js}' && tslint --fix -p tsconfig.json 'src/**/*.ts'"
+    "watch": "tsc -w"
   },
   "license": "MIT",
   "repository": "https://github.com/apollographql/apollo-engine-reporting",

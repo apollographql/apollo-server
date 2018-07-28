@@ -7,10 +7,10 @@
   "scripts": {
     "clean": "rm -rf dist",
     "compile": "tsc",
-    "watch": "tsc -w",
-    "prepublish": "npm run clean && npm run compile",
     "lint": "prettier -l 'src/**/*.ts' && tslint -p tsconfig.json 'src/**/*.ts'",
-    "lint-fix": "prettier --write 'src/**/*.ts' && tslint --fix -p tsconfig.json 'src/**/*.ts'"
+    "lint-fix": "prettier --write 'src/**/*.ts' && tslint --fix -p tsconfig.json 'src/**/*.ts'",
+    "prepublish": "npm run clean && npm run compile",
+    "watch": "tsc -w"
   },
   "repository": {
     "type": "git",
