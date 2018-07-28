@@ -5,7 +5,7 @@ import {
   RenderPageOptions as PlaygroundRenderPageOptions,
 } from '@apollographql/graphql-playground-html';
 
-import { graphqlLambda } from './gqlApollo';
+import { graphqlCloudFunction } from './gqlApollo';
 
 export interface CreateHandlerOptions {
   cors?: {
@@ -125,7 +125,10 @@ export class ApolloServer extends ApolloServerBase {
 
       res.set(corsHeaders);
 
-      graphqlLambda(this.createGraphQLServerOptions.bind(this))(req, res);
+      graphqlCloudFunction(this.createGraphQLServerOptions.bind(this))(
+        req,
+        res,
+      );
     };
   }
 }

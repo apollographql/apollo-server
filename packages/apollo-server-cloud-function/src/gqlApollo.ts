@@ -5,7 +5,7 @@ import {
 } from 'apollo-server-core';
 import { Headers } from 'apollo-server-env';
 
-export function graphqlLambda(options: GraphQLOptions): any {
+export function graphqlCloudFunction(options: GraphQLOptions): any {
   if (!options) {
     throw new Error('Apollo Server requires options.');
   }
