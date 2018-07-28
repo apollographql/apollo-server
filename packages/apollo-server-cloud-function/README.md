@@ -42,9 +42,10 @@ const server = new ApolloServer({
 exports.handler = server.createHandler();
 ```
 
-#### 2. Configure your Cloud function
+#### 2. Configure your Cloud function and deploy
 
-#### 4. Deploy the API
+Set the _Function to execute_ option to _handler_
+and deploy
 
 ## Getting request info
 
@@ -71,7 +72,9 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
   context: ({ req, res }) => ({
-    // TODO
+    headers: req.headers,
+    req,
+    res,
   }),
 });
 
