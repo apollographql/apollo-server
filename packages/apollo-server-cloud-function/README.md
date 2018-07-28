@@ -51,7 +51,7 @@ exports.handler = server.createHandler();
 To read information about the current request from the API Gateway event (HTTP headers, HTTP method, body, path, ...) or the current Google Cloud Function (Function Name, Function Version, awsRequestId, time remaining, ...) use the options function. This way they can be passed to your schema resolvers using the context option.
 
 ```js
-const { ApolloServer, gql } = require('apollo-server-lambda');
+const { ApolloServer, gql } = require('apollo-server-cloud-function');
 
 // Construct a schema, using GraphQL schema language
 const typeDefs = gql`
@@ -83,7 +83,7 @@ exports.handler = server.createHandler();
 To enable CORS the response HTTP headers need to be modified. To accomplish this use the `cors` option.
 
 ```js
-const { ApolloServer, gql } = require('apollo-server-lambda');
+const { ApolloServer, gql } = require('apollo-server-cloud-function');
 
 // Construct a schema, using GraphQL schema language
 const typeDefs = gql`
@@ -115,7 +115,7 @@ exports.handler = server.createHandler({
 To enable CORS response for requests with credentials (cookies, http authentication) the allow origin header must equal the request origin and the allow credential header must be set to true.
 
 ```js
-const { ApolloServer, gql } = require('apollo-server-lambda');
+const { ApolloServer, gql } = require('apollo-server-cloud-function');
 
 // Construct a schema, using GraphQL schema language
 const typeDefs = gql`

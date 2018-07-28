@@ -6,7 +6,7 @@
     "GraphQL",
     "Apollo",
     "Server",
-    "Lambda",
+    "Google Cloud Functions",
     "Javascript"
   ],
   "author": "opensource@apollographql.com",
