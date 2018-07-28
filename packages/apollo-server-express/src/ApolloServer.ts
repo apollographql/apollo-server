@@ -166,7 +166,6 @@ export class ApolloServer extends ApolloServerBase {
           const playground = renderPlaygroundPage(playgroundRenderPageOptions);
           res.write(playground);
           res.end();
-          next();
           return;
         }
       }

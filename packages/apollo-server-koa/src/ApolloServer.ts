@@ -155,7 +155,7 @@ export class ApolloServer extends ApolloServerBase {
               playgroundRenderPageOptions,
             );
             ctx.body = playground;
-            return next();
+            return;
           }
         }
         return graphqlKoa(this.createGraphQLServerOptions.bind(this))(
