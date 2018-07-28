@@ -48,7 +48,7 @@
   },
   "devDependencies": {
     "@types/koa-multer": "1.0.0",
-    "@types/koa-router": "7.0.30",
+    "@types/koa-router": "7.0.31",
     "apollo-datasource-rest": "0.1.0",
     "apollo-server-integration-testsuite": "2.0.0",
     "form-data": "2.3.2",
