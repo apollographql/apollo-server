@@ -40,7 +40,7 @@
     "@types/hapi": "17.0.16",
     "@types/jest": "23.3.0",
     "apollo-server-integration-testsuite": "2.0.0",
-    "hapi": "17.5.2"
+    "hapi": "17.5.2",
     "jest": "23.4.1",
     "ts-jest": "23.0.1"
   },
