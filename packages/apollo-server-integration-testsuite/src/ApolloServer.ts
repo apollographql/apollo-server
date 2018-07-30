@@ -154,7 +154,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           const introspectionResult = await apolloFetch({
             query: INTROSPECTION_QUERY,
           });
-          expect(introspectionResult.data).not.to.exist;
+          expect(introspectionResult.data).toBeUndefined();
           expect(introspectionResult.errors).toBeDefined();
           expect(introspectionResult.errors[0].message).toMatch(
             /introspection/,
