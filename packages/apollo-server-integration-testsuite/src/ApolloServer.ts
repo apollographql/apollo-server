@@ -137,7 +137,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             },
           });
 
-          const formatError = jest.fn().callsFake(error => {
+          const formatError = jest.fn(error => {
             expect(error instanceof Error).toBe(true);
             return error;
           });
@@ -313,11 +313,11 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
     describe('formatError', () => {
       it('wraps thrown error from validation rules', async () => {
-        const throwError = jest.fn().callsFake(() => {
+        const throwError = jest.fn(() => {
           throw new Error('nope');
         });
 
-        const formatError = jest.fn().callsFake(error => {
+        const formatError = jest.fn(error => {
           expect(error instanceof Error).toBe(true);
           expect(error.constructor.name).toEqual('Error');
           return error;
@@ -351,7 +351,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
       });
 
       it('works with errors similar to GraphQL errors, such as yup', async () => {
-        const throwError = jest.fn().callsFake(async () => {
+        const throwError = jest.fn(async () => {
           const schema = yup.object().shape({
             email: yup
               .string()
@@ -362,7 +362,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           await schema.validate({ email: 'lol' });
         });
 
-        const formatError = jest.fn().callsFake(error => {
+        const formatError = jest.fn(error => {
           expect(error instanceof Error).toBe(true);
           expect(error.extensions.code).toEqual('INTERNAL_SERVER_ERROR');
           expect(error.extensions.exception.name).toEqual('ValidationError');
@@ -444,11 +444,11 @@ export function testApolloServer<AS extends ApolloServerBase>(
             },
           });
 
-          const throwError = jest.fn().callsFake(() => {
+          const throwError = jest.fn(() => {
             throw new Error('nope');
           });
 
-          const validationRule = jest.fn().callsFake(() => {
+          const validationRule = jest.fn(() => {
             expect(
               formatError.notCalled,
               'formatError should be called after validation',
@@ -461,7 +461,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           });
           const extension = jest.fn();
 
-          const formatError = jest.fn().callsFake(error => {
+          const formatError = jest.fn(error => {
             expect(error instanceof Error).toBe(true);
             expect(
               extension.calledOnce,
@@ -533,11 +533,11 @@ export function testApolloServer<AS extends ApolloServerBase>(
       });
 
       it('errors thrown in extensions call formatError and are wrapped', async () => {
-        const extension = jest.fn().callsFake(() => {
+        const extension = jest.fn(() => {
           throw new Error('nope');
         });
 
-        const formatError = jest.fn().callsFake(error => {
+        const formatError = jest.fn(error => {
           expect(error instanceof Error).toBe(true);
           expect(
             extension.calledOnce,
@@ -952,7 +952,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
         });
       });
       it('accepts subscriptions configuration', done => {
-        const onConnect = jest.fn().callsFake(connectionParams => ({
+        const onConnect = jest.fn(connectionParams => ({
           ...connectionParams,
         }));
         const typeDefs = gql`
