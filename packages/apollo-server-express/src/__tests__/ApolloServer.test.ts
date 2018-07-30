@@ -618,7 +618,7 @@ describe('apollo-server-express', () => {
         const apolloFetch = createApolloFetch({ uri });
 
         const result = await apolloFetch({ query: `{error}` });
-        expect(result.data).null;
+        expect(result.data).toBe(null);
 
         expect(result.errors).toBeDefined();
         expect(result.errors.length).toEqual(1);
@@ -758,7 +758,7 @@ describe('apollo-server-express', () => {
 
         const apolloFetch = createApolloFetch({ uri }).useAfter(
           (response, next) => {
-            expect(response.response.headers.get('cache-control')).null;
+            expect(response.response.headers.get('cache-control')).toBe(null);
             next();
           },
         );
