@@ -578,7 +578,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             },
           },
         };
-        const spy = jest.fn().returns({});
+        const spy = jest.fn(() => ({}));
         const { url: uri } = await createApolloServer({
           typeDefs,
           resolvers,
@@ -597,7 +597,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
       it('allows context to be async function', async () => {
         const uniqueContext = { key: 'major' };
-        const spy = jest.fn().returns('hi');
+        const spy = jest.fn(() => 'hi');
         const typeDefs = gql`
           type Query {
             hello: String
@@ -626,7 +626,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
       it('clones the context for every request', async () => {
         const uniqueContext = { key: 'major' };
-        const spy = jest.fn().returns('hi');
+        const spy = jest.fn(() => 'hi');
         const typeDefs = gql`
           type Query {
             hello: String
