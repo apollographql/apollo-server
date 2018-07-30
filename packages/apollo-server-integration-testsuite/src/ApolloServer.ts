@@ -155,10 +155,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             query: INTROSPECTION_QUERY,
           });
           expect(introspectionResult.data).not.to.exist;
-          expect(
-            introspectionResult.errors,
-            'errors should exist',
-          ).toBeDefined();
+          expect(introspectionResult.errors).toBeDefined();
           expect(introspectionResult.errors[0].message).toMatch(
             /introspection/,
           );
@@ -335,19 +332,16 @@ export function testApolloServer<AS extends ApolloServerBase>(
         const introspectionResult = await apolloFetch({
           query: INTROSPECTION_QUERY,
         });
-        expect(
-          introspectionResult.data,
-          'data should not exist',
-        ).toBeUndefined();
+        expect(introspectionResult.data).toBeUndefined();
         expect(introspectionResult.errors).toBeDefined();
-        expect(formatError.calledOnce).toBe(true);
-        expect(throwError.calledOnce).toBe(true);
+        expect(formatError).toHaveBeenCalledTimes(1);
+        expect(throwError).toHaveBeenCalledTimes(1);
 
         const result = await apolloFetch({ query: TEST_STRING_QUERY });
         expect(result.data).toBeUndefined();
         expect(result.errors).toBeDefined();
-        expect(formatError.calledTwice).toBe(true);
-        expect(throwError.calledTwice).toBe(true);
+        expect(formatError).toHaveBeenCalledTimes(2);
+        expect(throwError).toHaveBeenCalledTimes(2);
       });
 
       it('works with errors similar to GraphQL errors, such as yup', async () => {
@@ -401,8 +395,8 @@ export function testApolloServer<AS extends ApolloServerBase>(
         expect(result.errors).toBeDefined();
         expect(result.errors[0].extensions.code).equals('BAD_USER_INPUT');
         expect(result.errors[0].message).equals('User Input Error');
-        expect(formatError.calledOnce).toBe(true);
-        expect(throwError.calledOnce).toBe(true);
+        expect(formatError).toHaveBeenCalledTimes(1);
+        expect(throwError).toHaveBeenCalledTimes(1);
       });
     });
 
@@ -449,28 +443,20 @@ export function testApolloServer<AS extends ApolloServerBase>(
           });
 
           const validationRule = jest.fn(() => {
-            expect(
-              formatError.notCalled,
-              'formatError should be called after validation',
-            ).toBe(true);
-            expect(
-              extension.notCalled,
-              'extension should be called after validation',
-            ).toBe(true);
+            // formatError should be called after validation
+            expect(formatError).not.toBeCalled();
+            // extension should be called after validation
+            expect(extension).not.toBeCalled();
             return true;
           });
           const extension = jest.fn();
 
           const formatError = jest.fn(error => {
             expect(error instanceof Error).toBe(true);
-            expect(
-              extension.calledOnce,
-              'extension should be called before formatError',
-            ).toBe(true);
-            expect(
-              validationRule.calledOnce,
-              'validationRules should be called before formatError',
-            ).toBe(true);
+            // extension should be called before formatError
+            expect(extension).toHaveBeenCalledTimes(1);
+            // validationRules should be called before formatError
+            expect(validationRule).toHaveBeenCalledTimes(1);
 
             error.message = 'masked';
             return error;
@@ -479,14 +465,10 @@ export function testApolloServer<AS extends ApolloServerBase>(
           class Extension extends GraphQLExtension {
             willSendResponse(o: { graphqlResponse: GraphQLResponse }) {
               expect(o.graphqlResponse.errors.length).toEqual(1);
-              expect(
-                formatError.notCalled,
-                'formatError should be called after extensions',
-              ).toBe(true);
-              expect(
-                validationRule.calledOnce,
-                'validationRules should be called before extensions',
-              ).toBe(true);
+              // formatError should be called after extensions
+              expect(formatError).not.toBeCalled();
+              // validationRules should be called before extensions
+              expect(validationRule).toHaveBeenCalledTimes(1);
               extension();
             }
           }
@@ -525,8 +507,8 @@ export function testApolloServer<AS extends ApolloServerBase>(
           });
           expect(result.errors).toBeDefined();
           expect(result.errors[0].message).toEqual('masked');
-          expect(formatError.calledOnce).toBe(true);
-          expect(throwError.calledOnce).toBe(true);
+          expect(formatError).toHaveBeenCalledTimes(1);
+          expect(throwError).toHaveBeenCalledTimes(1);
 
           process.env.NODE_ENV = nodeEnv;
         });
@@ -539,10 +521,8 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
         const formatError = jest.fn(error => {
           expect(error instanceof Error).toBe(true);
-          expect(
-            extension.calledOnce,
-            'extension should be called before formatError',
-          ).toBe(true);
+          // extension should be called before formatError
+          expect(extension).toHaveBeenCalledTimes(1);
 
           error.message = 'masked';
           return error;
@@ -550,10 +530,8 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
         class Extension extends GraphQLExtension {
           willSendResponse(_o: { graphqlResponse: GraphQLResponse }) {
-            expect(
-              formatError.notCalled,
-              'formatError should be called after extensions',
-            ).toBe(true);
+            // formatError should be called after extensions
+            expect(formatError).not.toBeCalled();
             extension();
           }
         }
@@ -582,7 +560,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
         expect(result.data).toBeUndefined();
         expect(result.errors).toBeDefined();
         expect(result.errors[0].message).toEqual('masked');
-        expect(formatError.calledOnce).toBe(true);
+        expect(formatError).toHaveBeenCalledTimes(1);
       });
 
       it('defers context eval with thunk until after options creation', async () => {
@@ -609,12 +587,12 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
         const apolloFetch = createApolloFetch({ uri });
 
-        expect(spy.notCalled).toBe(true);
+        expect(spy).not.toBeCalled();
 
         await apolloFetch({ query: '{hello}' });
-        expect(spy.calledOnce).toBe(true);
+        expect(spy).toHaveBeenCalledTimes(1);
         await apolloFetch({ query: '{hello}' });
-        expect(spy.calledTwice).toBe(true);
+        expect(spy).toHaveBeenCalledTimes(2);
       });
 
       it('allows context to be async function', async () => {
@@ -641,9 +619,9 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
         const apolloFetch = createApolloFetch({ uri });
 
-        expect(spy.notCalled).toBe(true);
+        expect(spy).not.toBeCalled();
         await apolloFetch({ query: '{hello}' });
-        expect(spy.calledOnce).toBe(true);
+        expect(spy).toHaveBeenCalledTimes(1);
       });
 
       it('clones the context for every request', async () => {
@@ -671,12 +649,12 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
         const apolloFetch = createApolloFetch({ uri });
 
-        expect(spy.notCalled).toBe(true);
+        expect(spy).not.toBeCalled();
 
         await apolloFetch({ query: '{hello}' });
-        expect(spy.calledOnce).toBe(true);
+        expect(spy).toHaveBeenCalledTimes(1);
         await apolloFetch({ query: '{hello}' });
-        expect(spy.calledTwice).toBe(true);
+        expect(spy).toHaveBeenCalledTimes(2);
       });
 
       it('returns thrown context error as a valid graphql result', async () => {
@@ -995,7 +973,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
         })
           .then(({ port, server, httpServer }) => {
             server.installSubscriptionHandlers(httpServer);
-            expect(onConnect.notCalled).toBe(true);
+            expect(onConnect).not.toBeCalled();
 
             expect(server.subscriptionsPath).toEqual(path);
             const client = new SubscriptionClient(
@@ -1010,7 +988,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             subscription = observable.subscribe({
               next: ({ data }) => {
                 try {
-                  expect(onConnect.calledOnce).toBe(true);
+                  expect(onConnect).toHaveBeenCalledTimes(1);
                   expect(data.num).toEqual(i);
                   if (i === 3) {
                     done();

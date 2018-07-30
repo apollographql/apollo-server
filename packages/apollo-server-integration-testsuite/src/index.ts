@@ -999,10 +999,8 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
         return req.then(() => {
           console.error = origError;
-          if (err.called) {
-            expect(err.calledOnce);
-            expect(err.getCall(0).args[0]).toMatch(expected);
-          }
+          expect(err).toHaveBeenCalledTimes(1);
+          expect(err.mock.calls[0][0]).toMatch(expected);
         });
       });
 
@@ -1021,11 +1019,9 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
             query: 'query test{ testError }',
           });
         return req.then(() => {
-          logStub.restore();
-          if (logStub.called) {
-            expect(logStub.callCount).toEqual(1);
-            expect(logStub.getCall(0).args[0]).toMatch(expected);
-          }
+          logStub.mockRestore();
+          expect(logStub).toHaveBeenCalledTimes(1);
+          expect(logStub.mock.calls[0][0]).toMatch(expected);
         });
       });
 

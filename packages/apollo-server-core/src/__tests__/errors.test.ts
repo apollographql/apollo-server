@@ -116,7 +116,7 @@ describe('Errors', () => {
       expect(error.key).toEqual(key);
       expect(error.extensions.code).toEqual(code);
       expect(error instanceof ApolloError).toBe(true);
-      expect(formatter.calledOnce);
+      expect(formatter).toHaveBeenCalledTimes(1);
     });
   });
   describe('Named Errors', () => {
