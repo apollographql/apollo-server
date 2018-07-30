@@ -131,7 +131,7 @@ describe('Errors', () => {
     ) {
       expect(error.message).toEqual(message);
       expect(error.extensions.code).toEqual(code);
-      expect(error.name).equals(name);
+      expect(error.name).toEqual(name);
       expect(error instanceof ApolloError).toBe(true);
       expect(error instanceof errorClass).toBe(true);
     }

@@ -393,8 +393,8 @@ export function testApolloServer<AS extends ApolloServerBase>(
         });
         expect(result.data).toEqual({ error: null });
         expect(result.errors).toBeDefined();
-        expect(result.errors[0].extensions.code).equals('BAD_USER_INPUT');
-        expect(result.errors[0].message).equals('User Input Error');
+        expect(result.errors[0].extensions.code).toEqual('BAD_USER_INPUT');
+        expect(result.errors[0].message).toEqual('User Input Error');
         expect(formatError).toHaveBeenCalledTimes(1);
         expect(throwError).toHaveBeenCalledTimes(1);
       });
