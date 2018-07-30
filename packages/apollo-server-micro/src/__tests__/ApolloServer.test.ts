@@ -66,7 +66,7 @@ describe('apollo-server-micro', function() {
           } catch (error) {
             errorThrown = true;
           }
-          expect(errorThrown).to.be.true;
+          expect(errorThrown).toBe(true);
           service.close();
         },
       );

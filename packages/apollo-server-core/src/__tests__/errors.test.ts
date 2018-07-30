@@ -115,7 +115,7 @@ describe('Errors', () => {
       expect(error.message).toEqual(message);
       expect(error.key).toEqual(key);
       expect(error.extensions.code).toEqual(code);
-      expect(error instanceof ApolloError).true;
+      expect(error instanceof ApolloError).toBe(true);
       expect(formatter.calledOnce);
     });
   });
@@ -132,8 +132,8 @@ describe('Errors', () => {
       expect(error.message).toEqual(message);
       expect(error.extensions.code).toEqual(code);
       expect(error.name).equals(name);
-      expect(error instanceof ApolloError).true;
-      expect(error instanceof errorClass).true;
+      expect(error instanceof ApolloError).toBe(true);
+      expect(error instanceof errorClass).toBe(true);
     }
 
     it('provides an authentication error', () => {
