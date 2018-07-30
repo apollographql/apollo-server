@@ -69,10 +69,8 @@ describe('Errors', () => {
       expect(error.message).toEqual(message);
       expect(error.extensions.exception.key).toEqual(key);
       expect(error.extensions.code).toEqual(code);
-      expect(
-        error.extensions.exception.stacktrace,
-        'stacktrace should exist under exception',
-      ).toBeDefined();
+      // stacktrace should exist under exception
+      expect(error.extensions.exception.stacktrace).toBeDefined();
     });
     it('hides stacktrace by default', () => {
       const thrown = new Error(message);
@@ -90,20 +88,16 @@ describe('Errors', () => {
       expect(error.message).toEqual(message);
       expect(error.extensions.code).toEqual('INTERNAL_SERVER_ERROR');
       expect(error.extensions.exception.key).toEqual(key);
-      expect(
-        error.extensions.exception.stacktrace,
-        'stacktrace should exist under exception',
-      ).toBeUndefined();
+      // stacktrace should exist under exception
+      expect(error.extensions.exception.stacktrace).toBeUndefined();
     });
     it('exposes fields on error under exception field and provides code', () => {
       const error = createFormattedError();
       expect(error.message).toEqual(message);
       expect(error.extensions.exception.key).toEqual(key);
       expect(error.extensions.code).toEqual(code);
-      expect(
-        error.extensions.exception.stacktrace,
-        'stacktrace should exist under exception',
-      ).toBeUndefined();
+      // stacktrace should exist under exception
+      expect(error.extensions.exception.stacktrace).toBeUndefined();
     });
     it('calls formatter after exposing the code and stacktrace', () => {
       const error = new ApolloError(message, code, { key });
