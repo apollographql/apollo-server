@@ -43,7 +43,7 @@ describe('apollo-server', () => {
       const result = await apolloFetch({ query: '{hello}' });
 
       expect(result.data).toEqual({ hello: 'hi' });
-      expect(result.errors, 'errors should exist').not.to.exist;
+      expect(result.errors, 'errors should exist').not.toBeDefined();
     });
 
     it('renders GraphQL playground when browser requests', async () => {

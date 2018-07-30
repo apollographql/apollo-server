@@ -423,8 +423,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
         return req.then(res => {
           expect(res.status).toEqual(200);
-          expect(res.body.errors).to.exist;
-          expect(res.body.errors.length).toEqual(1);
+          expect(res.body.errors).toBeDefined();
           expect(res.body.errors[0].message).toEqual(
             'PersistedQueryNotSupported',
           );
@@ -448,7 +447,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
         return req.then(res => {
           expect(res.status).toEqual(200);
-          expect(res.body.errors).to.exist;
+          expect(res.body.errors).toBeDefined();
           expect(res.body.errors.length).toEqual(1);
           expect(res.body.errors[0].message).toEqual(
             'PersistedQueryNotSupported',
@@ -471,7 +470,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
         return req.then(res => {
           expect(res.status).toEqual(200);
-          expect(res.body.errors).to.exist;
+          expect(res.body.errors).toBeDefined();
           expect(res.body.errors.length).toEqual(1);
           expect(res.body.errors[0].message).toEqual('PersistedQueryNotFound');
         });
@@ -492,7 +491,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
         return req.then(res => {
           expect(res.status).toEqual(200);
-          expect(res.body.errors).to.exist;
+          expect(res.body.errors).toBeDefined();
           expect(res.body.errors.length).toEqual(1);
           expect(res.body.errors[0].message).toEqual('PersistedQueryNotFound');
         });
@@ -1128,7 +1127,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
             extensions,
           });
 
-        expect(result.body.data).not.to.exist;
+        expect(result.body.data).not.toBeDefined();
         expect(result.body.errors.length).toEqual(1);
         expect(result.body.errors[0].message).toEqual('PersistedQueryNotFound');
         expect(result.body.errors[0].extensions.code).toEqual(
@@ -1149,7 +1148,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
 
         expect(result.body.data).toEqual({ testString: 'it works' });
-        expect(result.body.errors).not.to.exist;
+        expect(result.body.errors).not.toBeDefined();
       });
 
       it('returns with batched persisted queries', async () => {
@@ -1194,7 +1193,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
 
         expect(result.body[0].data).toEqual({ testString: 'it works' });
         expect(result.body[0].data).toEqual({ testString: 'it works' });
-        expect(result.body.errors).not.to.exist;
+        expect(result.body.errors).not.toBeDefined();
       });
 
       it('returns result on the persisted query', async () => {
@@ -1216,7 +1215,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
 
         expect(result.body.data).toEqual({ testString: 'it works' });
-        expect(result.body.errors).not.to.exist;
+        expect(result.body.errors).not.toBeDefined();
       });
 
       it('returns error when hash does not match', async () => {

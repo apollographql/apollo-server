@@ -110,13 +110,13 @@ describe('apollo-server-koa', () => {
     const firstResult = await apolloFetch({ query: '{ id }' });
 
     expect(firstResult.data).toEqual({ id: 'hi' });
-    expect(firstResult.errors, 'errors should exist').not.to.exist;
+    expect(firstResult.errors, 'errors should exist').not.toBeDefined();
     expect(restCalls).toEqual(1);
 
     const secondResult = await apolloFetch({ query: '{ id }' });
 
     expect(secondResult.data).toEqual({ id: 'hi' });
-    expect(secondResult.errors, 'errors should exist').not.to.exist;
+    expect(secondResult.errors, 'errors should exist').not.toBeDefined();
     expect(restCalls).toEqual(1);
   });
 
@@ -140,13 +140,13 @@ describe('apollo-server-koa', () => {
     const firstResult = await apolloFetch({ query: '{ id: stringId }' });
 
     expect(firstResult.data).toEqual({ id: 'hi' });
-    expect(firstResult.errors, 'errors should exist').not.to.exist;
+    expect(firstResult.errors, 'errors should exist').not.toBeDefined();
     expect(restCalls).toEqual(1);
 
     const secondResult = await apolloFetch({ query: '{ id: stringId }' });
 
     expect(secondResult.data).toEqual({ id: 'hi' });
-    expect(secondResult.errors, 'errors should exist').not.to.exist;
+    expect(secondResult.errors, 'errors should exist').not.toBeDefined();
     expect(restCalls).toEqual(1);
   });
 });

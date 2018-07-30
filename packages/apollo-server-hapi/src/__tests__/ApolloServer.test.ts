@@ -79,7 +79,7 @@ describe('apollo-server-hapi', () => {
       const result = await apolloFetch({ query: '{hello}' });
 
       expect(result.data).toEqual({ hello: 'hi' });
-      expect(result.errors, 'errors should exist').not.to.exist;
+      expect(result.errors, 'errors should exist').not.toBeDefined();
     });
 
     // XXX Unclear why this would be something somebody would want (vs enabling
@@ -223,8 +223,8 @@ describe('apollo-server-hapi', () => {
 
     it('passes each request and response toolkit through to the context function', async () => {
       const context = async ({ request, h }) => {
-        expect(request, 'request argument should exist').to.exist;
-        expect(h, 'response toolkit argument should exist').to.exist;
+        expect(request, 'request argument should exist').toBeDefined();
+        expect(h, 'response toolkit argument should exist').toBeDefined();
         return {};
       };
 
@@ -245,7 +245,7 @@ describe('apollo-server-hapi', () => {
       const result = await apolloFetch({ query: '{hello}' });
 
       expect(result.data).toEqual({ hello: 'hi' });
-      expect(result.errors, 'errors should exist').not.to.exist;
+      expect(result.errors, 'errors should exist').not.toBeDefined();
     });
 
     describe('healthchecks', () => {
@@ -381,7 +381,7 @@ describe('apollo-server-hapi', () => {
             },
             Mutation: {
               singleUpload: async (_, args) => {
-                expect((await args.file).stream).to.exist;
+                expect((await args.file).stream).toBeDefined();
                 return args.file;
               },
             },
@@ -480,13 +480,13 @@ describe('apollo-server-hapi', () => {
 
         const result = await apolloFetch({ query: '{hello}' });
         expect(result.errors.length).toEqual(1);
-        expect(result.data).not.to.exist;
+        expect(result.data).not.toBeDefined();
 
         const e = result.errors[0];
         expect(e.message).to.contain('valid result');
-        expect(e.extensions).to.exist;
+        expect(e.extensions).toBeDefined();
         expect(e.extensions.code).toEqual('UNAUTHENTICATED');
-        expect(e.extensions.exception.stacktrace).to.exist;
+        expect(e.extensions.exception.stacktrace).toBeDefined();
 
         process.env.NODE_ENV = nodeEnv;
       });
@@ -524,14 +524,14 @@ describe('apollo-server-hapi', () => {
         const apolloFetch = createApolloFetch({ uri });
 
         const result = await apolloFetch({ query: `{error}` });
-        expect(result.data).to.exist;
+        expect(result.data).toBeDefined();
         expect(result.data).toEqual({ error: null });
 
-        expect(result.errors, 'errors should exist').to.exist;
+        expect(result.errors, 'errors should exist').toBeDefined();
         expect(result.errors.length).toEqual(1);
         expect(result.errors[0].extensions.code).toEqual('UNAUTHENTICATED');
-        expect(result.errors[0].extensions.exception).to.exist;
-        expect(result.errors[0].extensions.exception.stacktrace).to.exist;
+        expect(result.errors[0].extensions.exception).toBeDefined();
+        expect(result.errors[0].extensions.exception.stacktrace).toBeDefined();
 
         process.env.NODE_ENV = nodeEnv;
       });
@@ -569,13 +569,13 @@ describe('apollo-server-hapi', () => {
         const apolloFetch = createApolloFetch({ uri });
 
         const result = await apolloFetch({ query: `{error}` });
-        expect(result.data).to.exist;
+        expect(result.data).toBeDefined();
         expect(result.data).toEqual({ error: null });
 
-        expect(result.errors, 'errors should exist').to.exist;
+        expect(result.errors, 'errors should exist').toBeDefined();
         expect(result.errors.length).toEqual(1);
         expect(result.errors[0].extensions.code).toEqual('UNAUTHENTICATED');
-        expect(result.errors[0].extensions.exception).not.to.exist;
+        expect(result.errors[0].extensions.exception).not.toBeDefined();
 
         process.env.NODE_ENV = nodeEnv;
       });
@@ -615,10 +615,10 @@ describe('apollo-server-hapi', () => {
         const result = await apolloFetch({ query: `{error}` });
         expect(result.data).null;
 
-        expect(result.errors, 'errors should exist').to.exist;
+        expect(result.errors, 'errors should exist').toBeDefined();
         expect(result.errors.length).toEqual(1);
         expect(result.errors[0].extensions.code).toEqual('UNAUTHENTICATED');
-        expect(result.errors[0].extensions.exception).not.to.exist;
+        expect(result.errors[0].extensions.exception).not.toBeDefined();
 
         process.env.NODE_ENV = nodeEnv;
       });
