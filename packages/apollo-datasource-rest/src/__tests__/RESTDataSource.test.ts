@@ -434,8 +434,8 @@ describe('RESTDataSource', () => {
       const dataSource = new class extends RESTDataSource {
         baseURL = 'https://api.example.com';
 
-        getFoo(a: number) {
-          return this.get('foo', { a });
+        getFoo(id: number) {
+          return this.get(`foo/${id}`);
         }
       }();
 
@@ -447,7 +447,7 @@ describe('RESTDataSource', () => {
 
       expect(fetch.mock.calls.length).toEqual(1);
       expect(fetch.mock.calls[0][0].url).toEqual(
-        'https://api.example.com/foo?a=1',
+        'https://api.example.com/foo/1',
       );
     });
 
@@ -455,8 +455,8 @@ describe('RESTDataSource', () => {
       const dataSource = new class extends RESTDataSource {
         baseURL = 'https://api.example.com';
 
-        getFoo(a: number) {
-          return this.get('foo', { a });
+        getFoo(id: number) {
+          return this.get(`foo/${id}`);
         }
       }();
 
@@ -469,10 +469,63 @@ describe('RESTDataSource', () => {
 
       expect(fetch.mock.calls.length).toEqual(2);
       expect(fetch.mock.calls[0][0].url).toEqual(
-        'https://api.example.com/foo?a=1',
+        'https://api.example.com/foo/1',
       );
       expect(fetch.mock.calls[1][0].url).toEqual(
-        'https://api.example.com/foo?a=2',
+        'https://api.example.com/foo/2',
+      );
+    });
+
+    it('does not deduplicate non-GET requests', async () => {
+      const dataSource = new class extends RESTDataSource {
+        baseURL = 'https://api.example.com';
+
+        postFoo(id: number) {
+          return this.post(`foo/${id}`);
+        }
+      }();
+
+      dataSource.httpCache = httpCache;
+
+      fetch.mockJSONResponseOnce();
+      fetch.mockJSONResponseOnce();
+
+      await Promise.all([dataSource.postFoo(1), dataSource.postFoo(1)]);
+
+      expect(fetch.mock.calls.length).toEqual(2);
+    });
+
+    it('non-GET request removes memoized request with the same cache key', async () => {
+      const dataSource = new class extends RESTDataSource {
+        baseURL = 'https://api.example.com';
+
+        getFoo(id: number) {
+          return this.get(`foo/${id}`);
+        }
+
+        postFoo(id: number) {
+          return this.post(`foo/${id}`);
+        }
+      }();
+
+      dataSource.httpCache = httpCache;
+
+      fetch.mockJSONResponseOnce();
+      fetch.mockJSONResponseOnce();
+      fetch.mockJSONResponseOnce();
+
+      await Promise.all([
+        dataSource.getFoo(1),
+        dataSource.postFoo(1),
+        dataSource.getFoo(1),
+      ]);
+
+      expect(fetch.mock.calls.length).toEqual(3);
+      expect(fetch.mock.calls[0][0].url).toEqual(
+        'https://api.example.com/foo/1',
+      );
+      expect(fetch.mock.calls[2][0].url).toEqual(
+        'https://api.example.com/foo/1',
       );
     });
 
@@ -486,8 +539,8 @@ describe('RESTDataSource', () => {
           return url.toString();
         }
 
-        getFoo(a: number) {
-          return this.get('foo', { a });
+        getFoo(id: number, apiKey: string) {
+          return this.get(`foo/${id}`, { api_key: apiKey });
         }
       }();
 
@@ -495,11 +548,14 @@ describe('RESTDataSource', () => {
 
       fetch.mockJSONResponseOnce();
 
-      await Promise.all([dataSource.getFoo(1), dataSource.getFoo(2)]);
+      await Promise.all([
+        dataSource.getFoo(1, 'secret'),
+        dataSource.getFoo(1, 'anotherSecret'),
+      ]);
 
       expect(fetch.mock.calls.length).toEqual(1);
       expect(fetch.mock.calls[0][0].url).toEqual(
-        'https://api.example.com/foo?a=1',
+        'https://api.example.com/foo/1?api_key=secret',
       );
     });
   });

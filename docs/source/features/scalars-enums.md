@@ -3,7 +3,7 @@ title: Custom scalars and enums
 description: Add custom scalar and enum types to a schema.
 ---
 
-The GraphQL specification includes the following default scalar types: `Int`, `Float`, `String`, `Boolean` and `ID`. While this covers most of the use cases, some need to support custom atomic data types (e.g. `Date`), or add validation an existing type. To enable this, GraphQL allows custom scalar types. Enumerations are similar to custom scalars with the limitation that their values can only be one of a pre-defined list of strings.
+The GraphQL specification includes the following default scalar types: `Int`, `Float`, `String`, `Boolean` and `ID`. While this covers most of the use cases, some need to support custom atomic data types (e.g. `Date`), or add validation to an existing type. To enable this, GraphQL allows custom scalar types. Enumerations are similar to custom scalars with the limitation that their values can only be one of a pre-defined list of strings.
 
 <h2 id="custom-scalars">Custom scalars</h2>
 

@@ -224,6 +224,19 @@ describe('HTTPCache', () => {
     expect(await response.json()).toEqual({ name: 'Ada Lovelace' });
   });
 
+  it('does not store a response to a non-GET request', async () => {
+    fetch.mockJSONResponseOnce(
+      { name: 'Ada Lovelace' },
+      { 'Cache-Control': 'max-age=30' },
+    );
+
+    await httpCache.fetch(
+      new Request('https://api.example.com/people/1', { method: 'POST' }),
+    );
+
+    expect(store.size).toEqual(0);
+  });
+
   it('does not store a response with a non-success status code', async () => {
     fetch.mockResponseOnce(
       'Internal server error',
