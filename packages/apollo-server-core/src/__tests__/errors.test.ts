@@ -17,7 +17,7 @@ describe('Errors', () => {
     it('defaults code to INTERNAL_SERVER_ERROR', () => {
       const error = new ApolloError(message);
       expect(error.message).toEqual(message);
-      expect(error.extensions.code).not.toBeDefined();
+      expect(error.extensions.code).toBeUndefined();
     });
     it('allows code setting and additional properties', () => {
       const code = 'CODE';
@@ -93,7 +93,7 @@ describe('Errors', () => {
       expect(
         error.extensions.exception.stacktrace,
         'stacktrace should exist under exception',
-      ).not.toBeDefined();
+      ).toBeUndefined();
     });
     it('exposes fields on error under exception field and provides code', () => {
       const error = createFormattedError();
@@ -103,7 +103,7 @@ describe('Errors', () => {
       expect(
         error.extensions.exception.stacktrace,
         'stacktrace should exist under exception',
-      ).not.toBeDefined();
+      ).toBeUndefined();
     });
     it('calls formatter after exposing the code and stacktrace', () => {
       const error = new ApolloError(message, code, { key });

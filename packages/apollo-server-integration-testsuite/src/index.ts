@@ -1123,7 +1123,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
             extensions,
           });
 
-        expect(result.body.data).not.toBeDefined();
+        expect(result.body.data).toBeUndefined();
         expect(result.body.errors.length).toEqual(1);
         expect(result.body.errors[0].message).toEqual('PersistedQueryNotFound');
         expect(result.body.errors[0].extensions.code).toEqual(
@@ -1144,7 +1144,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
 
         expect(result.body.data).toEqual({ testString: 'it works' });
-        expect(result.body.errors).not.toBeDefined();
+        expect(result.body.errors).toBeUndefined();
       });
 
       it('returns with batched persisted queries', async () => {
@@ -1189,7 +1189,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
 
         expect(result.body[0].data).toEqual({ testString: 'it works' });
         expect(result.body[0].data).toEqual({ testString: 'it works' });
-        expect(result.body.errors).not.toBeDefined();
+        expect(result.body.errors).toBeUndefined();
       });
 
       it('returns result on the persisted query', async () => {
@@ -1211,7 +1211,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
 
         expect(result.body.data).toEqual({ testString: 'it works' });
-        expect(result.body.errors).not.toBeDefined();
+        expect(result.body.errors).toBeUndefined();
       });
 
       it('returns error when hash does not match', async () => {

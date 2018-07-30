@@ -168,7 +168,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           );
 
           const result = await apolloFetch({ query: TEST_STRING_QUERY });
-          expect(result.data, 'data should not exist').not.toBeDefined();
+          expect(result.data, 'data should not exist').toBeUndefined();
           expect(result.errors, 'errors should exist').toBeDefined();
           expect(result.errors[0].message).toMatch(/Not allowed/);
           expect(formatError.callCount).toEqual(
@@ -188,7 +188,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
           const result = await apolloFetch({ query: INTROSPECTION_QUERY });
           expect(result.data, 'data should not exist').toBeDefined();
-          expect(result.errors, 'errors should exist').not.toBeDefined();
+          expect(result.errors, 'errors should exist').toBeUndefined();
 
           process.env.NODE_ENV = nodeEnv;
         });
@@ -204,7 +204,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           const apolloFetch = createApolloFetch({ uri });
 
           const result = await apolloFetch({ query: INTROSPECTION_QUERY });
-          expect(result.data, 'data should not exist').not.toBeDefined();
+          expect(result.data, 'data should not exist').toBeUndefined();
           expect(result.errors, 'errors should exist').toBeDefined();
           expect(result.errors.length).toEqual(1);
           expect(result.errors[0].extensions.code).toEqual(
@@ -227,7 +227,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
           const result = await apolloFetch({ query: INTROSPECTION_QUERY });
           expect(result.data, 'data should not exist').toBeDefined();
-          expect(result.errors, 'errors should exist').not.toBeDefined();
+          expect(result.errors, 'errors should exist').toBeUndefined();
 
           process.env.NODE_ENV = nodeEnv;
         });
@@ -250,7 +250,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           const result = await apolloFetch({ query: '{hello}' });
 
           expect(result.data).toEqual({ hello: 'hi' });
-          expect(result.errors, 'errors should exist').not.toBeDefined();
+          expect(result.errors, 'errors should exist').toBeUndefined();
         });
         it('uses schema over resolvers + typeDefs', async () => {
           const typeDefs = gql`
@@ -268,12 +268,12 @@ export function testApolloServer<AS extends ApolloServerBase>(
           const apolloFetch = createApolloFetch({ uri });
           const typeDefResult = await apolloFetch({ query: '{hello}' });
 
-          expect(typeDefResult.data, 'data should not exist').not.toBeDefined();
+          expect(typeDefResult.data, 'data should not exist').toBeUndefined();
           expect(typeDefResult.errors, 'errors should exist').toBeDefined();
 
           const result = await apolloFetch({ query: '{testString}' });
           expect(result.data).toEqual({ testString: 'test string' });
-          expect(result.errors, 'errors should exist').not.toBeDefined();
+          expect(result.errors, 'errors should exist').toBeUndefined();
         });
         it('allows mocks as boolean', async () => {
           const typeDefs = gql`
@@ -289,7 +289,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           const apolloFetch = createApolloFetch({ uri });
           const result = await apolloFetch({ query: '{hello}' });
           expect(result.data).toEqual({ hello: 'Hello World' });
-          expect(result.errors, 'errors should exist').not.toBeDefined();
+          expect(result.errors, 'errors should exist').toBeUndefined();
         });
 
         it('allows mocks as an object', async () => {
@@ -307,7 +307,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           const result = await apolloFetch({ query: '{hello}' });
 
           expect(result.data).toEqual({ hello: 'mock city' });
-          expect(result.errors, 'errors should exist').not.toBeDefined();
+          expect(result.errors, 'errors should exist').toBeUndefined();
         });
       });
     });
@@ -339,13 +339,13 @@ export function testApolloServer<AS extends ApolloServerBase>(
         expect(
           introspectionResult.data,
           'data should not exist',
-        ).not.toBeDefined();
+        ).toBeUndefined();
         expect(introspectionResult.errors, 'errors should exist').toBeDefined();
         expect(formatError.calledOnce).true;
         expect(throwError.calledOnce).true;
 
         const result = await apolloFetch({ query: TEST_STRING_QUERY });
-        expect(result.data, 'data should not exist').not.toBeDefined();
+        expect(result.data, 'data should not exist').toBeUndefined();
         expect(result.errors, 'errors should exist').toBeDefined();
         expect(formatError.calledTwice).true;
         expect(throwError.calledTwice).true;
@@ -707,7 +707,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
         const result = await apolloFetch({ query: '{hello}' });
         expect(result.errors.length).toEqual(1);
-        expect(result.data).not.toBeDefined();
+        expect(result.data).toBeUndefined();
 
         const e = result.errors[0];
         expect(e.message).toMatch('valid result');
@@ -746,7 +746,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
         expect(result.errors, 'errors should exist').toBeDefined();
         expect(result.errors.length).toEqual(1);
         expect(result.errors[0].extensions.code).toEqual('UNAUTHENTICATED');
-        expect(result.errors[0].extensions.exception).not.toBeDefined();
+        expect(result.errors[0].extensions.exception).toBeUndefined();
 
         process.env.NODE_ENV = nodeEnv;
       });
@@ -778,7 +778,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
         expect(result.errors, 'errors should exist').toBeDefined();
         expect(result.errors.length).toEqual(1);
         expect(result.errors[0].extensions.code).toEqual('UNAUTHENTICATED');
-        expect(result.errors[0].extensions.exception).not.toBeDefined();
+        expect(result.errors[0].extensions.exception).toBeUndefined();
 
         process.env.NODE_ENV = nodeEnv;
       });
@@ -1063,7 +1063,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           extensions,
         } as any);
 
-        expect(result.data).not.toBeDefined();
+        expect(result.data).toBeUndefined();
         expect(result.errors.length).toEqual(1);
         expect(result.errors[0].message).toEqual('PersistedQueryNotFound');
         expect(result.errors[0].extensions.code).toEqual(
@@ -1082,7 +1082,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
         } as any);
 
         expect(result.data).toEqual({ testString: 'test string' });
-        expect(result.errors).not.toBeDefined();
+        expect(result.errors).toBeUndefined();
       });
 
       it('returns result on the persisted query', async () => {
@@ -1100,7 +1100,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
         } as any);
 
         expect(result.data).toEqual({ testString: 'test string' });
-        expect(result.errors).not.toBeDefined();
+        expect(result.errors).toBeUndefined();
       });
 
       // Apollo Fetch's result depends on the server implementation, if the

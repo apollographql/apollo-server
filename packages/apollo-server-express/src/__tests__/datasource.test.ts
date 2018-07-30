@@ -109,13 +109,13 @@ describe('apollo-server-express', () => {
     const firstResult = await apolloFetch({ query: '{ id }' });
 
     expect(firstResult.data).toEqual({ id: 'hi' });
-    expect(firstResult.errors, 'errors should exist').not.toBeDefined();
+    expect(firstResult.errors, 'errors should exist').toBeUndefined();
     expect(restCalls).toEqual(1);
 
     const secondResult = await apolloFetch({ query: '{ id }' });
 
     expect(secondResult.data).toEqual({ id: 'hi' });
-    expect(secondResult.errors, 'errors should exist').not.toBeDefined();
+    expect(secondResult.errors, 'errors should exist').toBeUndefined();
     expect(restCalls).toEqual(1);
   });
 
@@ -139,13 +139,13 @@ describe('apollo-server-express', () => {
     const firstResult = await apolloFetch({ query: '{ id: stringId }' });
 
     expect(firstResult.data).toEqual({ id: 'hi' });
-    expect(firstResult.errors, 'errors should exist').not.toBeDefined();
+    expect(firstResult.errors, 'errors should exist').toBeUndefined();
     expect(restCalls).toEqual(1);
 
     const secondResult = await apolloFetch({ query: '{ id: stringId }' });
 
     expect(secondResult.data).toEqual({ id: 'hi' });
-    expect(secondResult.errors, 'errors should exist').not.toBeDefined();
+    expect(secondResult.errors, 'errors should exist').toBeUndefined();
     expect(restCalls).toEqual(1);
   });
 });

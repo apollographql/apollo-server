@@ -90,7 +90,7 @@ describe('apollo-server-express', () => {
       const result = await apolloFetch({ query: '{hello}' });
 
       expect(result.data).toEqual({ hello: 'hi' });
-      expect(result.errors, 'errors should exist').not.toBeDefined();
+      expect(result.errors, 'errors should not exist').toBeUndefined();
     });
 
     // XXX Unclear why this would be something somebody would want (vs enabling
@@ -518,7 +518,7 @@ describe('apollo-server-express', () => {
 
         const result = await apolloFetch({ query: '{hello}' });
         expect(result.errors.length).toEqual(1);
-        expect(result.data).not.toBeDefined();
+        expect(result.data).toBeUndefined();
 
         const e = result.errors[0];
         expect(e.message).toMatch('valid result');
@@ -591,7 +591,7 @@ describe('apollo-server-express', () => {
         expect(result.errors, 'errors should exist').toBeDefined();
         expect(result.errors.length).toEqual(1);
         expect(result.errors[0].extensions.code).toEqual('UNAUTHENTICATED');
-        expect(result.errors[0].extensions.exception).not.toBeDefined();
+        expect(result.errors[0].extensions.exception).toBeUndefined();
 
         process.env.NODE_ENV = nodeEnv;
       });
@@ -623,7 +623,7 @@ describe('apollo-server-express', () => {
         expect(result.errors, 'errors should exist').toBeDefined();
         expect(result.errors.length).toEqual(1);
         expect(result.errors[0].extensions.code).toEqual('UNAUTHENTICATED');
-        expect(result.errors[0].extensions.exception).not.toBeDefined();
+        expect(result.errors[0].extensions.exception).toBeUndefined();
 
         process.env.NODE_ENV = nodeEnv;
       });
@@ -685,7 +685,7 @@ describe('apollo-server-express', () => {
           query: `{ cooks { title author } }`,
         });
         expect(result.data).toEqual({ cooks: books });
-        expect(result.extensions).not.toBeDefined();
+        expect(result.extensions).toBeUndefined();
       });
 
       it('contains no cacheControl Headers and keeps extension with engine proxy', async () => {
@@ -699,7 +699,7 @@ describe('apollo-server-express', () => {
           (response, next) => {
             expect(
               response.response.headers.get('cache-control'),
-            ).not.toBeDefined();
+            ).toBeUndefined();
             next();
           },
         );
@@ -718,7 +718,7 @@ describe('apollo-server-express', () => {
           (response, next) => {
             expect(
               response.response.headers.get('cache-control'),
-            ).not.toBeDefined();
+            ).toBeUndefined();
             next();
           },
         );
@@ -726,7 +726,7 @@ describe('apollo-server-express', () => {
           query: `{ books { title author } }`,
         });
         expect(result.data).toEqual({ books });
-        expect(result.extensions).not.toBeDefined();
+        expect(result.extensions).toBeUndefined();
       });
 
       it('contains private cacheControl Headers when scoped', async () => {
@@ -746,7 +746,7 @@ describe('apollo-server-express', () => {
         expect(result.data).toEqual({
           pooks: [{ title: 'pook', books }],
         });
-        expect(result.extensions).not.toBeDefined();
+        expect(result.extensions).toBeUndefined();
       });
 
       it('runs when cache-control is false', async () => {
@@ -768,7 +768,7 @@ describe('apollo-server-express', () => {
         expect(result.data).toEqual({
           pooks: [{ title: 'pook', books }],
         });
-        expect(result.extensions).not.toBeDefined();
+        expect(result.extensions).toBeUndefined();
       });
     });
 
