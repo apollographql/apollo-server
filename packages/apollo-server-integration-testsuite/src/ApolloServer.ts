@@ -913,7 +913,9 @@ export function testApolloServer<AS extends ApolloServerBase>(
         }).then(({ port, server, httpServer }) => {
           try {
             server.installSubscriptionHandlers(httpServer);
-            expect.fail();
+            done.fail(
+              'subscription server creation should fail, since subscriptions are disabled',
+            );
           } catch (e) {
             expect(e.message).toMatch(/disabled/);
           }
