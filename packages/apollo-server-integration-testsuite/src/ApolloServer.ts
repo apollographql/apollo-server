@@ -160,7 +160,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             introspectionResult.errors,
             'errors should exist',
           ).toBeDefined();
-          expect(introspectionResult.errors[0].message).to.match(
+          expect(introspectionResult.errors[0].message).toMatch(
             /introspection/,
           );
           expect(formatError.callCount).toEqual(
@@ -170,7 +170,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           const result = await apolloFetch({ query: TEST_STRING_QUERY });
           expect(result.data, 'data should not exist').not.toBeDefined();
           expect(result.errors, 'errors should exist').toBeDefined();
-          expect(result.errors[0].message).to.match(/Not allowed/);
+          expect(result.errors[0].message).toMatch(/Not allowed/);
           expect(formatError.callCount).toEqual(
             introspectionResult.errors.length + result.errors.length,
           );
@@ -435,8 +435,8 @@ export function testApolloServer<AS extends ApolloServerBase>(
             check: (req, res) => {
               const trace = JSON.stringify(Trace.decode(req.body));
               try {
-                expect(trace).to.match(/nope/);
-                expect(trace).not.to.match(/masked/);
+                expect(trace).toMatch(/nope/);
+                expect(trace).not.toMatch(/masked/);
               } catch (e) {
                 reject(e);
               }
@@ -916,7 +916,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             server.installSubscriptionHandlers(httpServer);
             expect.fail();
           } catch (e) {
-            expect(e.message).to.match(/disabled/);
+            expect(e.message).toMatch(/disabled/);
           }
 
           const client = new SubscriptionClient(
@@ -1109,7 +1109,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
       it('returns error when hash does not match', async () => {
         const apolloFetch = createApolloFetch({ uri }).useAfter((res, next) => {
           expect(res.response.status).toEqual(400);
-          expect(res.response.raw).to.match(/does not match query/);
+          expect(res.response.raw).toMatch(/does not match query/);
           next();
         });
 
@@ -1127,7 +1127,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
         } catch (e) {
           expect(e.response).toBeDefined();
           expect(e.response.status).toEqual(400);
-          expect(e.response.raw).to.match(/does not match query/);
+          expect(e.response.raw).toMatch(/does not match query/);
         }
       });
 

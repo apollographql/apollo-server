@@ -122,7 +122,7 @@ describe('runQuery', () => {
     }).then(res => {
       expect(res.data).to.be.undefined;
       expect(res.errors!.length).toEqual(1);
-      expect(res.errors![0].message).to.match(expected);
+      expect(res.errors![0].message).toMatch(expected);
     });
   });
 

@@ -1001,7 +1001,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           console.error = origError;
           if (err.called) {
             expect(err.calledOnce);
-            expect(err.getCall(0).args[0]).to.match(expected);
+            expect(err.getCall(0).args[0]).toMatch(expected);
           }
         });
       });
@@ -1024,7 +1024,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           logStub.restore();
           if (logStub.called) {
             expect(logStub.callCount).toEqual(1);
-            expect(logStub.getCall(0).args[0]).to.match(expected);
+            expect(logStub.getCall(0).args[0]).toMatch(expected);
           }
         });
       });
@@ -1228,7 +1228,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
             query,
           });
         expect(response.status).toEqual(400);
-        expect(response.error.text).to.match(/does not match query/);
+        expect(response.error.text).toMatch(/does not match query/);
       });
 
       it('returns correct result using get request', async () => {
