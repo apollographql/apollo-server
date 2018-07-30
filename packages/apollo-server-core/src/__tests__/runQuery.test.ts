@@ -120,7 +120,7 @@ describe('runQuery', () => {
       variables: { base: 1 },
       request: new MockReq(),
     }).then(res => {
-      expect(res.data).to.be.undefined;
+      expect(res.data).toBeUndefined();
       expect(res.errors!.length).toEqual(1);
       expect(res.errors![0].message).toMatch(expected);
     });
@@ -164,7 +164,7 @@ describe('runQuery', () => {
       variables: { base: 1 },
       request: new MockReq(),
     }).then(res => {
-      expect(res.data).to.be.undefined;
+      expect(res.data).toBeUndefined();
       expect(res.errors!.length).toEqual(1);
       expect(res.errors![0].message).toEqual(expected);
     });

@@ -36,7 +36,7 @@ describe('apollo-server-micro', function() {
   describe('constructor', function() {
     it('should accepts typeDefs and resolvers', function() {
       const apolloServer = new ApolloServer({ typeDefs, resolvers });
-      expect(apolloServer).to.not.be.undefined;
+      expect(apolloServer).toBeDefined();
     });
   });
 
@@ -124,7 +124,7 @@ describe('apollo-server-micro', function() {
         } catch (err) {
           error = err;
         }
-        expect(error).to.not.be.undefined;
+        expect(error).toBeDefined();
         expect(error.statusCode).toEqual(503);
         expect(error.error).toEqual(JSON.stringify({ status: 'fail' }));
         service.close();
@@ -141,7 +141,7 @@ describe('apollo-server-micro', function() {
         } catch (err) {
           error = err;
         }
-        expect(error).to.not.be.undefined;
+        expect(error).toBeDefined();
         expect(error.statusCode).toEqual(404);
         service.close();
       });
