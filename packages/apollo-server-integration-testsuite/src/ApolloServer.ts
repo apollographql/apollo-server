@@ -159,7 +159,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           expect(introspectionResult.errors[0].message).toMatch(
             /introspection/,
           );
-          expect(formatError.callCount).toEqual(
+          expect(formatError.mock.calls.length).toEqual(
             introspectionResult.errors.length,
           );
 
@@ -167,7 +167,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           expect(result.data).toBeUndefined();
           expect(result.errors).toBeDefined();
           expect(result.errors[0].message).toMatch(/Not allowed/);
-          expect(formatError.callCount).toEqual(
+          expect(formatError.mock.calls.length).toEqual(
             introspectionResult.errors.length + result.errors.length,
           );
         });

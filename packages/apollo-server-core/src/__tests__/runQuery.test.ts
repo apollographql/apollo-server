@@ -136,7 +136,7 @@ describe('runQuery', () => {
       request: new MockReq(),
     }).then(() => {
       logStub.restore();
-      expect(logStub.callCount).toEqual(0);
+      expect(logStub.mock.calls.length).toEqual(0);
     });
   });
 
@@ -150,7 +150,7 @@ describe('runQuery', () => {
       request: new MockReq(),
     }).then(() => {
       logStub.restore();
-      expect(logStub.callCount).toEqual(0);
+      expect(logStub.mock.calls.length).toEqual(0);
     });
   });
 
