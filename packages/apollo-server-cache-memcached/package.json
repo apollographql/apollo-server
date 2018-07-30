@@ -30,7 +30,7 @@
   "devDependencies": {
     "@types/jest": "23.3.1",
     "@types/memcached": "2.2.5",
-    "jest": "23.4.1",
+    "jest": "23.4.2",
     "memcached-mock": "0.1.0",
     "ts-jest": "23.0.1"
   },

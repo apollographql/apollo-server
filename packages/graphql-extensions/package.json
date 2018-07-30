@@ -32,7 +32,7 @@
     "@types/jest": "23.3.1",
     "@types/node": "10.5.4",
     "graphql": "0.13.2",
-    "jest": "23.4.1",
+    "jest": "23.4.2",
     "jest-matcher-utils": "23.2.0",
     "ts-jest": "23.0.1",
     "tslint": "5.11.0"

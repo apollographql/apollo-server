@@ -27,7 +27,7 @@
   "devDependencies": {
     "@types/jest": "23.3.1",
     "graphql-tools": "3.0.5",
-    "jest": "23.4.1",
+    "jest": "23.4.2",
     "jest-matcher-utils": "23.2.0",
     "ts-jest": "23.0.1"
   },
