@@ -79,7 +79,7 @@ describe('apollo-server-hapi', () => {
       const result = await apolloFetch({ query: '{hello}' });
 
       expect(result.data).toEqual({ hello: 'hi' });
-      expect(result.errors, 'errors should exist').toBeUndefined();
+      expect(result.errors).toBeUndefined();
     });
 
     // XXX Unclear why this would be something somebody would want (vs enabling
@@ -223,8 +223,8 @@ describe('apollo-server-hapi', () => {
 
     it('passes each request and response toolkit through to the context function', async () => {
       const context = async ({ request, h }) => {
-        expect(request, 'request argument should exist').toBeDefined();
-        expect(h, 'response toolkit argument should exist').toBeDefined();
+        expect(request).toBeDefined();
+        expect(h).toBeDefined();
         return {};
       };
 
@@ -245,7 +245,7 @@ describe('apollo-server-hapi', () => {
       const result = await apolloFetch({ query: '{hello}' });
 
       expect(result.data).toEqual({ hello: 'hi' });
-      expect(result.errors, 'errors should exist').toBeUndefined();
+      expect(result.errors).toBeUndefined();
     });
 
     describe('healthchecks', () => {
@@ -527,7 +527,7 @@ describe('apollo-server-hapi', () => {
         expect(result.data).toBeDefined();
         expect(result.data).toEqual({ error: null });
 
-        expect(result.errors, 'errors should exist').toBeDefined();
+        expect(result.errors).toBeDefined();
         expect(result.errors.length).toEqual(1);
         expect(result.errors[0].extensions.code).toEqual('UNAUTHENTICATED');
         expect(result.errors[0].extensions.exception).toBeDefined();
@@ -572,7 +572,7 @@ describe('apollo-server-hapi', () => {
         expect(result.data).toBeDefined();
         expect(result.data).toEqual({ error: null });
 
-        expect(result.errors, 'errors should exist').toBeDefined();
+        expect(result.errors).toBeDefined();
         expect(result.errors.length).toEqual(1);
         expect(result.errors[0].extensions.code).toEqual('UNAUTHENTICATED');
         expect(result.errors[0].extensions.exception).toBeUndefined();
@@ -615,7 +615,7 @@ describe('apollo-server-hapi', () => {
         const result = await apolloFetch({ query: `{error}` });
         expect(result.data).null;
 
-        expect(result.errors, 'errors should exist').toBeDefined();
+        expect(result.errors).toBeDefined();
         expect(result.errors.length).toEqual(1);
         expect(result.errors[0].extensions.code).toEqual('UNAUTHENTICATED');
         expect(result.errors[0].extensions.exception).toBeUndefined();
