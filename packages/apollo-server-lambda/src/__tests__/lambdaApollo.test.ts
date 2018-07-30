@@ -1,4 +1,4 @@
-import { ApolloServer } from './ApolloServer';
+import { ApolloServer } from '../ApolloServer';
 import testSuite, {
   schema as Schema,
   CreateAppOptions,

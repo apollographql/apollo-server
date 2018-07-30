@@ -5,7 +5,7 @@ import testSuite, {
 } from 'apollo-server-integration-testsuite';
 import { GraphQLOptions, Config } from 'apollo-server-core';
 
-import { ApolloServer } from './ApolloServer';
+import { ApolloServer } from '../ApolloServer';
 
 function createApp(options: CreateAppOptions = {}) {
   const server = new ApolloServer(

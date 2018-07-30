@@ -11,7 +11,7 @@ import fs = require('fs');
 import { createApolloFetch } from 'apollo-fetch';
 
 import { gql, AuthenticationError } from 'apollo-server-core';
-import { ApolloServer } from './ApolloServer';
+import { ApolloServer } from '../ApolloServer';
 
 describe('apollo-server-hapi', () => {
   let server: ApolloServer;

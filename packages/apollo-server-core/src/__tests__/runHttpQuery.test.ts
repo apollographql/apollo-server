@@ -3,7 +3,7 @@ import MockReq = require('mock-req');
 
 import { GraphQLSchema, GraphQLObjectType, GraphQLString } from 'graphql';
 
-import { runHttpQuery, HttpQueryError } from './runHttpQuery';
+import { runHttpQuery, HttpQueryError } from '../runHttpQuery';
 
 const queryType = new GraphQLObjectType({
   name: 'QueryType',

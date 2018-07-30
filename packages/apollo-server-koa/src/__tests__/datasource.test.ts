@@ -6,7 +6,7 @@ import * as http from 'http';
 import { RESTDataSource } from 'apollo-datasource-rest';
 
 import { createApolloFetch } from 'apollo-fetch';
-import { ApolloServer } from './ApolloServer';
+import { ApolloServer } from '../ApolloServer';
 
 import { createServerInfo } from 'apollo-server-integration-testsuite';
 

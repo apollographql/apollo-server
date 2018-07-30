@@ -1,5 +1,5 @@
 import * as hapi from 'hapi';
-import { ApolloServer } from './ApolloServer';
+import { ApolloServer } from '../ApolloServer';
 import { Config } from 'apollo-server-core';
 
 import testSuite, {

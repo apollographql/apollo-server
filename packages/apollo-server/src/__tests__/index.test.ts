@@ -1,7 +1,7 @@
 import * as request from 'request';
 import { createApolloFetch } from 'apollo-fetch';
 
-import { gql, ApolloServer } from './index';
+import { gql, ApolloServer } from '../index';
 
 const typeDefs = gql`
   type Query {

@@ -8,7 +8,7 @@ import * as fs from 'fs';
 import { createApolloFetch } from 'apollo-fetch';
 
 import { gql, AuthenticationError, Config } from 'apollo-server-core';
-import { ApolloServer, ServerRegistration } from './ApolloServer';
+import { ApolloServer, ServerRegistration } from '../ApolloServer';
 
 import {
   testApolloServer,

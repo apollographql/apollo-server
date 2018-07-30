@@ -1,6 +1,6 @@
 import * as connect from 'connect';
 import * as query from 'qs-middleware';
-import { ApolloServer } from './ApolloServer';
+import { ApolloServer } from '../ApolloServer';
 import { Config } from 'apollo-server-core';
 
 import testSuite, {

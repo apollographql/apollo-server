@@ -1,5 +1,3 @@
-import { expect } from 'chai';
-import 'mocha';
 import micro from 'micro';
 import * as listen from 'test-listen';
 import { createApolloFetch } from 'apollo-fetch';
@@ -8,7 +6,7 @@ import * as FormData from 'form-data';
 import * as fs from 'fs';
 import * as rp from 'request-promise';
 
-import { ApolloServer } from './ApolloServer';
+import { ApolloServer } from '../ApolloServer';
 
 const typeDefs = gql`
   type Query {

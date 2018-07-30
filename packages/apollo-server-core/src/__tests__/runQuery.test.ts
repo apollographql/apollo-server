@@ -10,7 +10,7 @@ import {
   parse,
 } from 'graphql';
 
-import { runQuery } from './runQuery';
+import { runQuery } from '../runQuery';
 
 // Make the global Promise constructor Fiber-aware to simulate a Meteor
 // environment.
