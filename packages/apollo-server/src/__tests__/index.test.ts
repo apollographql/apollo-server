@@ -72,7 +72,7 @@ describe('apollo-server', () => {
               reject(error);
             } else {
               expect(body).to.contain('GraphQLPlayground');
-              expect(response.statusCode).to.equal(200);
+              expect(response.statusCode).toEqual(200);
               resolve();
             }
           },
@@ -92,7 +92,7 @@ describe('apollo-server', () => {
         (response, next) => {
           expect(
             response.response.headers.get('access-control-allow-origin'),
-          ).to.equal('*');
+          ).toEqual('*');
           next();
         },
       );
@@ -112,7 +112,7 @@ describe('apollo-server', () => {
         (response, next) => {
           expect(
             response.response.headers.get('access-control-allow-origin'),
-          ).to.equal('localhost');
+          ).toEqual('localhost');
           next();
         },
       );
@@ -136,8 +136,8 @@ describe('apollo-server', () => {
             if (error) {
               reject(error);
             } else {
-              expect(body).to.equal(JSON.stringify({ status: 'pass' }));
-              expect(response.statusCode).to.equal(200);
+              expect(body).toEqual(JSON.stringify({ status: 'pass' }));
+              expect(response.statusCode).toEqual(200);
               resolve();
             }
           },

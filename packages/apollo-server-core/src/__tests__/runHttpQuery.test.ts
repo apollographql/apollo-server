@@ -39,8 +39,8 @@ describe('runHttpQuery', () => {
         query: 'foo',
       });
       return runHttpQuery([], noQueryRequest).catch((err: HttpQueryError) => {
-        expect(err.statusCode).to.equal(400);
-        expect(err.message).to.equal('Must provide query string.');
+        expect(err.statusCode).toEqual(400);
+        expect(err.message).toEqual('Must provide query string.');
       });
     });
   });

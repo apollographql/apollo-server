@@ -49,7 +49,7 @@ describe('apollo-server-micro', function() {
           const { service, uri } = await createServer();
           const apolloFetch = createApolloFetch({ uri: `${uri}/graphql` });
           const result = await apolloFetch({ query: '{hello}' });
-          expect(result.data.hello).to.equal('hi');
+          expect(result.data.hello).toEqual('hi');
           service.close();
         },
       );
@@ -75,7 +75,7 @@ describe('apollo-server-micro', function() {
         const { service, uri } = await createServer({ path: '/data' });
         const apolloFetch = createApolloFetch({ uri: `${uri}/data` });
         const result = await apolloFetch({ query: '{hello}' });
-        expect(result.data.hello).to.equal('hi');
+        expect(result.data.hello).toEqual('hi');
         service.close();
       });
 
@@ -107,7 +107,7 @@ describe('apollo-server-micro', function() {
       it('should create a healthcheck endpoint', async function() {
         const { service, uri } = await createServer();
         const body = await rp(`${uri}/.well-known/apollo/server-health`);
-        expect(body).to.equal(JSON.stringify({ status: 'pass' }));
+        expect(body).toEqual(JSON.stringify({ status: 'pass' }));
         service.close();
       });
 
@@ -125,8 +125,8 @@ describe('apollo-server-micro', function() {
           error = err;
         }
         expect(error).to.not.be.undefined;
-        expect(error.statusCode).to.equal(503);
-        expect(error.error).to.equal(JSON.stringify({ status: 'fail' }));
+        expect(error.statusCode).toEqual(503);
+        expect(error.error).toEqual(JSON.stringify({ status: 'fail' }));
         service.close();
       });
 
@@ -142,7 +142,7 @@ describe('apollo-server-micro', function() {
           error = err;
         }
         expect(error).to.not.be.undefined;
-        expect(error.statusCode).to.equal(404);
+        expect(error.statusCode).toEqual(404);
         service.close();
       });
     });

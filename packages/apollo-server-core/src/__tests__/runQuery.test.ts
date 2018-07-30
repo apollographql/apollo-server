@@ -121,7 +121,7 @@ describe('runQuery', () => {
       request: new MockReq(),
     }).then(res => {
       expect(res.data).to.be.undefined;
-      expect(res.errors!.length).to.equal(1);
+      expect(res.errors!.length).toEqual(1);
       expect(res.errors![0].message).to.match(expected);
     });
   });
@@ -136,7 +136,7 @@ describe('runQuery', () => {
       request: new MockReq(),
     }).then(() => {
       logStub.restore();
-      expect(logStub.callCount).to.equal(0);
+      expect(logStub.callCount).toEqual(0);
     });
   });
 
@@ -150,7 +150,7 @@ describe('runQuery', () => {
       request: new MockReq(),
     }).then(() => {
       logStub.restore();
-      expect(logStub.callCount).to.equal(0);
+      expect(logStub.callCount).toEqual(0);
     });
   });
 
@@ -165,7 +165,7 @@ describe('runQuery', () => {
       request: new MockReq(),
     }).then(res => {
       expect(res.data).to.be.undefined;
-      expect(res.errors!.length).to.equal(1);
+      expect(res.errors!.length).toEqual(1);
       expect(res.errors![0].message).to.deep.equal(expected);
     });
   });
@@ -210,7 +210,7 @@ describe('runQuery', () => {
       request: new MockReq(),
     }).then(res => {
       expect(res.data).to.deep.equal(expected);
-      expect(res['extensions']).to.equal('it still');
+      expect(res['extensions']).toEqual('it still');
     });
   });
 
@@ -404,7 +404,7 @@ describe('runQuery', () => {
       // this is the only async process so we expect the async ids to be a sequence
       ids.forEach((id, i) => {
         if (i > 0) {
-          expect(id).to.equal(ids[i - 1] + 1);
+          expect(id).toEqual(ids[i - 1] + 1);
         }
       });
     });

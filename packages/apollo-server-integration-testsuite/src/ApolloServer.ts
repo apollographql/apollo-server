@@ -160,7 +160,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           expect(introspectionResult.errors[0].message).to.match(
             /introspection/,
           );
-          expect(formatError.callCount).to.equal(
+          expect(formatError.callCount).toEqual(
             introspectionResult.errors.length,
           );
 
@@ -168,7 +168,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           expect(result.data, 'data should not exist').not.to.exist;
           expect(result.errors, 'errors should exist').to.exist;
           expect(result.errors[0].message).to.match(/Not allowed/);
-          expect(formatError.callCount).to.equal(
+          expect(formatError.callCount).toEqual(
             introspectionResult.errors.length + result.errors.length,
           );
         });
@@ -203,8 +203,8 @@ export function testApolloServer<AS extends ApolloServerBase>(
           const result = await apolloFetch({ query: INTROSPECTION_QUERY });
           expect(result.data, 'data should not exist').not.to.exist;
           expect(result.errors, 'errors should exist').to.exist;
-          expect(result.errors.length).to.equal(1);
-          expect(result.errors[0].extensions.code).to.equal(
+          expect(result.errors.length).toEqual(1);
+          expect(result.errors[0].extensions.code).toEqual(
             'GRAPHQL_VALIDATION_FAILED',
           );
 
@@ -317,7 +317,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
         const formatError = jest.fn().callsFake(error => {
           expect(error instanceof Error).true;
-          expect(error.constructor.name).to.equal('Error');
+          expect(error.constructor.name).toEqual('Error');
           return error;
         });
 
@@ -359,8 +359,8 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
         const formatError = jest.fn().callsFake(error => {
           expect(error instanceof Error).true;
-          expect(error.extensions.code).to.equal('INTERNAL_SERVER_ERROR');
-          expect(error.extensions.exception.name).to.equal('ValidationError');
+          expect(error.extensions.code).toEqual('INTERNAL_SERVER_ERROR');
+          expect(error.extensions.exception.name).toEqual('ValidationError');
           expect(error.extensions.exception.message).to.exist;
           const inputError = new UserInputError('User Input Error');
           return {
@@ -473,7 +473,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
           class Extension extends GraphQLExtension {
             willSendResponse(o: { graphqlResponse: GraphQLResponse }) {
-              expect(o.graphqlResponse.errors.length).to.equal(1);
+              expect(o.graphqlResponse.errors.length).toEqual(1);
               expect(
                 formatError.notCalled,
                 'formatError should be called after extensions',
@@ -519,7 +519,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             error: null,
           });
           expect(result.errors, 'errors should exist').to.exist;
-          expect(result.errors[0].message).to.equal('masked');
+          expect(result.errors[0].message).toEqual('masked');
           expect(formatError.calledOnce).true;
           expect(throwError.calledOnce).true;
 
@@ -576,8 +576,8 @@ export function testApolloServer<AS extends ApolloServerBase>(
         });
         expect(result.data, 'data should not exist').to.not.exist;
         expect(result.errors, 'errors should exist').to.exist;
-        expect(result.errors[0].message).to.equal('masked');
-        expect(result.errors[0].message).to.equal('masked');
+        expect(result.errors[0].message).toEqual('masked');
+        expect(result.errors[0].message).toEqual('masked');
         expect(formatError.calledOnce).true;
       });
 
@@ -591,7 +591,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
         const resolvers = {
           Query: {
             hello: (_parent, _args, context) => {
-              expect(context).to.equal(Promise.resolve(uniqueContext));
+              expect(context).toEqual(Promise.resolve(uniqueContext));
               return 'hi';
             },
           },
@@ -624,7 +624,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
         const resolvers = {
           Query: {
             hello: (_parent, _args, context) => {
-              expect(context.key).to.equal('major');
+              expect(context.key).toEqual('major');
               return spy();
             },
           },
@@ -653,7 +653,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
         const resolvers = {
           Query: {
             hello: (_parent, _args, context) => {
-              expect(context.key).to.equal('major');
+              expect(context.key).toEqual('major');
               context.key = 'minor';
               return spy();
             },
@@ -701,13 +701,13 @@ export function testApolloServer<AS extends ApolloServerBase>(
         const apolloFetch = createApolloFetch({ uri });
 
         const result = await apolloFetch({ query: '{hello}' });
-        expect(result.errors.length).to.equal(1);
+        expect(result.errors.length).toEqual(1);
         expect(result.data).not.to.exist;
 
         const e = result.errors[0];
         expect(e.message).to.contain('valid result');
         expect(e.extensions).to.exist;
-        expect(e.extensions.code).to.equal('UNAUTHENTICATED');
+        expect(e.extensions.code).toEqual('UNAUTHENTICATED');
         expect(e.extensions.exception.stacktrace).to.exist;
 
         process.env.NODE_ENV = nodeEnv;
@@ -739,8 +739,8 @@ export function testApolloServer<AS extends ApolloServerBase>(
         expect(result.data).to.deep.equal({ error: null });
 
         expect(result.errors, 'errors should exist').to.exist;
-        expect(result.errors.length).to.equal(1);
-        expect(result.errors[0].extensions.code).to.equal('UNAUTHENTICATED');
+        expect(result.errors.length).toEqual(1);
+        expect(result.errors[0].extensions.code).toEqual('UNAUTHENTICATED');
         expect(result.errors[0].extensions.exception).not.to.exist;
 
         process.env.NODE_ENV = nodeEnv;
@@ -771,8 +771,8 @@ export function testApolloServer<AS extends ApolloServerBase>(
         expect(result.data).null;
 
         expect(result.errors, 'errors should exist').to.exist;
-        expect(result.errors.length).to.equal(1);
-        expect(result.errors[0].extensions.code).to.equal('UNAUTHENTICATED');
+        expect(result.errors.length).toEqual(1);
+        expect(result.errors[0].extensions.code).toEqual('UNAUTHENTICATED');
         expect(result.errors[0].extensions.exception).not.to.exist;
 
         process.env.NODE_ENV = nodeEnv;
@@ -854,7 +854,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           subscription = observable.subscribe({
             next: ({ data }) => {
               try {
-                expect(data.num).to.equal(i);
+                expect(data.num).toEqual(i);
                 if (i === 3) {
                   done();
                 }
@@ -991,7 +991,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             server.installSubscriptionHandlers(httpServer);
             expect(onConnect.notCalled).true;
 
-            expect(server.subscriptionsPath).to.equal(path);
+            expect(server.subscriptionsPath).toEqual(path);
             const client = new SubscriptionClient(
               `ws://localhost:${port}${server.subscriptionsPath}`,
               {},
@@ -1005,7 +1005,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
               next: ({ data }) => {
                 try {
                   expect(onConnect.calledOnce).true;
-                  expect(data.num).to.equal(i);
+                  expect(data.num).toEqual(i);
                   if (i === 3) {
                     done();
                   }
@@ -1059,9 +1059,9 @@ export function testApolloServer<AS extends ApolloServerBase>(
         } as any);
 
         expect(result.data).not.to.exist;
-        expect(result.errors.length).to.equal(1);
-        expect(result.errors[0].message).to.equal('PersistedQueryNotFound');
-        expect(result.errors[0].extensions.code).to.equal(
+        expect(result.errors.length).toEqual(1);
+        expect(result.errors[0].message).toEqual('PersistedQueryNotFound');
+        expect(result.errors[0].extensions.code).toEqual(
           'PERSISTED_QUERY_NOT_FOUND',
         );
       });
@@ -1103,7 +1103,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
       // such as with express. If it is parsable, then we'll use the afterware
       it('returns error when hash does not match', async () => {
         const apolloFetch = createApolloFetch({ uri }).useAfter((res, next) => {
-          expect(res.response.status).to.equal(400);
+          expect(res.response.status).toEqual(400);
           expect(res.response.raw).to.match(/does not match query/);
           next();
         });
@@ -1121,7 +1121,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           } as any);
         } catch (e) {
           expect(e.response).to.exist;
-          expect(e.response.status).to.equal(400);
+          expect(e.response.status).toEqual(400);
           expect(e.response.raw).to.match(/does not match query/);
         }
       });

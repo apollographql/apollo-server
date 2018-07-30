@@ -113,8 +113,8 @@ describe('apollo-server-hapi', () => {
       const apolloFetch = createApolloFetch({ uri });
       const result = await apolloFetch({ query: INTROSPECTION_QUERY });
 
-      expect(result.errors.length).to.equal(1);
-      expect(result.errors[0].extensions.code).to.equal(
+      expect(result.errors.length).toEqual(1);
+      expect(result.errors[0].extensions.code).toEqual(
         'GRAPHQL_VALIDATION_FAILED',
       );
 
@@ -133,7 +133,7 @@ describe('apollo-server-hapi', () => {
               reject(error);
             } else {
               expect(body).to.contain('GraphQLPlayground');
-              expect(response.statusCode).to.equal(200);
+              expect(response.statusCode).toEqual(200);
               resolve();
             }
           },
@@ -173,7 +173,7 @@ describe('apollo-server-hapi', () => {
               reject(error);
             } else {
               expect(body).to.contain('GraphQLPlayground');
-              expect(response.statusCode).to.equal(200);
+              expect(response.statusCode).toEqual(200);
               resolve();
             }
           },
@@ -276,8 +276,8 @@ describe('apollo-server-hapi', () => {
               if (error) {
                 reject(error);
               } else {
-                expect(body).to.equal(JSON.stringify({ status: 'pass' }));
-                expect(response.statusCode).to.equal(200);
+                expect(body).toEqual(JSON.stringify({ status: 'pass' }));
+                expect(response.statusCode).toEqual(200);
                 resolve();
               }
             },
@@ -313,8 +313,8 @@ describe('apollo-server-hapi', () => {
               if (error) {
                 reject(error);
               } else {
-                expect(body).to.equal(JSON.stringify({ status: 'fail' }));
-                expect(response.statusCode).to.equal(503);
+                expect(body).toEqual(JSON.stringify({ status: 'fail' }));
+                expect(response.statusCode).toEqual(503);
                 resolve();
               }
             },
@@ -349,7 +349,7 @@ describe('apollo-server-hapi', () => {
               if (error) {
                 reject(error);
               } else {
-                expect(response.statusCode).to.equal(404);
+                expect(response.statusCode).toEqual(404);
                 resolve();
               }
             },
@@ -479,13 +479,13 @@ describe('apollo-server-hapi', () => {
         const apolloFetch = createApolloFetch({ uri });
 
         const result = await apolloFetch({ query: '{hello}' });
-        expect(result.errors.length).to.equal(1);
+        expect(result.errors.length).toEqual(1);
         expect(result.data).not.to.exist;
 
         const e = result.errors[0];
         expect(e.message).to.contain('valid result');
         expect(e.extensions).to.exist;
-        expect(e.extensions.code).to.equal('UNAUTHENTICATED');
+        expect(e.extensions.code).toEqual('UNAUTHENTICATED');
         expect(e.extensions.exception.stacktrace).to.exist;
 
         process.env.NODE_ENV = nodeEnv;
@@ -528,8 +528,8 @@ describe('apollo-server-hapi', () => {
         expect(result.data).to.deep.equal({ error: null });
 
         expect(result.errors, 'errors should exist').to.exist;
-        expect(result.errors.length).to.equal(1);
-        expect(result.errors[0].extensions.code).to.equal('UNAUTHENTICATED');
+        expect(result.errors.length).toEqual(1);
+        expect(result.errors[0].extensions.code).toEqual('UNAUTHENTICATED');
         expect(result.errors[0].extensions.exception).to.exist;
         expect(result.errors[0].extensions.exception.stacktrace).to.exist;
 
@@ -573,8 +573,8 @@ describe('apollo-server-hapi', () => {
         expect(result.data).to.deep.equal({ error: null });
 
         expect(result.errors, 'errors should exist').to.exist;
-        expect(result.errors.length).to.equal(1);
-        expect(result.errors[0].extensions.code).to.equal('UNAUTHENTICATED');
+        expect(result.errors.length).toEqual(1);
+        expect(result.errors[0].extensions.code).toEqual('UNAUTHENTICATED');
         expect(result.errors[0].extensions.exception).not.to.exist;
 
         process.env.NODE_ENV = nodeEnv;
@@ -616,8 +616,8 @@ describe('apollo-server-hapi', () => {
         expect(result.data).null;
 
         expect(result.errors, 'errors should exist').to.exist;
-        expect(result.errors.length).to.equal(1);
-        expect(result.errors[0].extensions.code).to.equal('UNAUTHENTICATED');
+        expect(result.errors.length).toEqual(1);
+        expect(result.errors[0].extensions.code).toEqual('UNAUTHENTICATED');
         expect(result.errors[0].extensions.exception).not.to.exist;
 
         process.env.NODE_ENV = nodeEnv;

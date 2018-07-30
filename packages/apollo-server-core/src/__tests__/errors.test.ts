@@ -16,16 +16,16 @@ describe('Errors', () => {
     const message = 'message';
     it('defaults code to INTERNAL_SERVER_ERROR', () => {
       const error = new ApolloError(message);
-      expect(error.message).to.equal(message);
+      expect(error.message).toEqual(message);
       expect(error.extensions.code).not.to.exist;
     });
     it('allows code setting and additional properties', () => {
       const code = 'CODE';
       const key = 'key';
       const error = new ApolloError(message, code, { key });
-      expect(error.message).to.equal(message);
-      expect(error.key).to.equal(key);
-      expect(error.extensions.code).to.equal(code);
+      expect(error.message).toEqual(message);
+      expect(error.key).toEqual(key);
+      expect(error.extensions.code).toEqual(code);
     });
   });
 
@@ -66,9 +66,9 @@ describe('Errors', () => {
 
     it('exposes a stacktrace in debug mode', () => {
       const error = createFormattedError({ debug: true });
-      expect(error.message).to.equal(message);
-      expect(error.extensions.exception.key).to.equal(key);
-      expect(error.extensions.code).to.equal(code);
+      expect(error.message).toEqual(message);
+      expect(error.extensions.exception.key).toEqual(key);
+      expect(error.extensions.code).toEqual(code);
       expect(
         error.extensions.exception.stacktrace,
         'stacktrace should exist under exception',
@@ -87,9 +87,9 @@ describe('Errors', () => {
           thrown,
         ),
       ])[0];
-      expect(error.message).to.equal(message);
-      expect(error.extensions.code).to.equal('INTERNAL_SERVER_ERROR');
-      expect(error.extensions.exception.key).to.equal(key);
+      expect(error.message).toEqual(message);
+      expect(error.extensions.code).toEqual('INTERNAL_SERVER_ERROR');
+      expect(error.extensions.exception.key).toEqual(key);
       expect(
         error.extensions.exception.stacktrace,
         'stacktrace should exist under exception',
@@ -97,9 +97,9 @@ describe('Errors', () => {
     });
     it('exposes fields on error under exception field and provides code', () => {
       const error = createFormattedError();
-      expect(error.message).to.equal(message);
-      expect(error.extensions.exception.key).to.equal(key);
-      expect(error.extensions.code).to.equal(code);
+      expect(error.message).toEqual(message);
+      expect(error.extensions.exception.key).toEqual(key);
+      expect(error.extensions.code).toEqual(code);
       expect(
         error.extensions.exception.stacktrace,
         'stacktrace should exist under exception',
@@ -112,9 +112,9 @@ describe('Errors', () => {
         formatter,
         debug: true,
       });
-      expect(error.message).to.equal(message);
-      expect(error.key).to.equal(key);
-      expect(error.extensions.code).to.equal(code);
+      expect(error.message).toEqual(message);
+      expect(error.key).toEqual(key);
+      expect(error.extensions.code).toEqual(code);
       expect(error instanceof ApolloError).true;
       expect(formatter.calledOnce);
     });
@@ -129,8 +129,8 @@ describe('Errors', () => {
         name,
       }: { code: string; errorClass: any; name: string },
     ) {
-      expect(error.message).to.equal(message);
-      expect(error.extensions.code).to.equal(code);
+      expect(error.message).toEqual(message);
+      expect(error.extensions.code).toEqual(code);
       expect(error.name).equals(name);
       expect(error instanceof ApolloError).true;
       expect(error instanceof errorClass).true;
@@ -186,8 +186,8 @@ describe('Errors', () => {
         ),
       ])[0];
 
-      expect(formattedError.extensions.exception.field1).to.equal('property1');
-      expect(formattedError.extensions.exception.field2).to.equal('property2');
+      expect(formattedError.extensions.exception.field1).toEqual('property1');
+      expect(formattedError.extensions.exception.field2).toEqual('property2');
     });
   });
 });
