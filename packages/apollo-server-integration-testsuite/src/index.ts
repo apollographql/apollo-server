@@ -863,7 +863,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           graphqlOptions: {
             schema,
             formatError: error => {
-              expect(error instanceof Error).true;
+              expect(error instanceof Error).toBe(true);
               return { message: expected };
             },
           },
@@ -885,8 +885,8 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           graphqlOptions: {
             schema,
             formatError: error => {
-              expect(error instanceof Error).true;
-              expect(error instanceof GraphQLError).true;
+              expect(error instanceof Error).toBe(true);
+              expect(error instanceof GraphQLError).toBe(true);
               return { message: expected };
             },
           },
@@ -1159,8 +1159,8 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
             },
           ]);
 
-        expect(errors.body[0].data).to.not.exist;
-        expect(errors.body[1].data).to.not.exist;
+        expect(errors.body[0].data).toBeUndefined();
+        expect(errors.body[1].data).toBeUndefined();
         expect(errors.body[0].errors[0].message).toEqual(
           'PersistedQueryNotFound',
         );
