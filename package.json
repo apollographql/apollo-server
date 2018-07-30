@@ -48,7 +48,7 @@
     "lerna": "2.11.0",
     "lint-staged": "7.2.0",
     "mocha": "5.2.0",
-    "prettier": "1.13.7",
+    "prettier": "1.14.0",
     "prettier-check": "2.0.0",
     "remap-istanbul": "0.11.1",
     "sinon": "6.1.4",
