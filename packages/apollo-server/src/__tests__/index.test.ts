@@ -71,7 +71,7 @@ describe('apollo-server', () => {
             if (error) {
               reject(error);
             } else {
-              expect(body).to.contain('GraphQLPlayground');
+              expect(body).toMatch('GraphQLPlayground');
               expect(response.statusCode).toEqual(200);
               resolve();
             }

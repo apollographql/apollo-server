@@ -710,7 +710,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
         expect(result.data).not.toBeDefined();
 
         const e = result.errors[0];
-        expect(e.message).to.contain('valid result');
+        expect(e.message).toMatch('valid result');
         expect(e.extensions).toBeDefined();
         expect(e.extensions.code).toEqual('UNAUTHENTICATED');
         expect(e.extensions.exception.stacktrace).toBeDefined();

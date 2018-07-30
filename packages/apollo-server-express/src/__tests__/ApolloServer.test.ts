@@ -135,7 +135,7 @@ describe('apollo-server-express', () => {
             if (error) {
               reject(error);
             } else {
-              expect(body).to.contain('GraphQLPlayground');
+              expect(body).toMatch('GraphQLPlayground');
               expect(response.statusCode).toEqual(200);
               resolve();
             }
@@ -168,7 +168,7 @@ describe('apollo-server-express', () => {
             if (error) {
               reject(error);
             } else {
-              expect(body).to.contain('GraphQLPlayground');
+              expect(body).toMatch('GraphQLPlayground');
               expect(response.statusCode).toEqual(200);
               resolve();
             }
@@ -223,10 +223,10 @@ describe('apollo-server-express', () => {
               reject(error);
             } else {
               console.log('body', body);
-              expect(body).to.contain('GraphQLPlayground');
-              expect(body).to.contain(`"editor.theme": "light"`);
-              expect(body).to.contain(defaultQuery);
-              expect(body).to.contain(endpoint);
+              expect(body).toMatch('GraphQLPlayground');
+              expect(body).toMatch(`"editor.theme": "light"`);
+              expect(body).toMatch(defaultQuery);
+              expect(body).toMatch(endpoint);
               expect(response.statusCode).toEqual(200);
               resolve();
             }
@@ -263,7 +263,7 @@ describe('apollo-server-express', () => {
             if (error) {
               reject(error);
             } else {
-              expect(body).not.to.contain('GraphQLPlayground');
+              expect(body).not.toMatch('GraphQLPlayground');
               expect(response.statusCode).not.toEqual(200);
               resolve();
             }
@@ -313,7 +313,7 @@ describe('apollo-server-express', () => {
           .catch(error => {
             expect(error.response).toBeDefined();
             expect(error.response.status).toEqual(413);
-            expect(error.toString()).to.contain('Payload Too Large');
+            expect(error.toString()).toMatch('Payload Too Large');
             resolve();
           });
       });
@@ -521,7 +521,7 @@ describe('apollo-server-express', () => {
         expect(result.data).not.toBeDefined();
 
         const e = result.errors[0];
-        expect(e.message).to.contain('valid result');
+        expect(e.message).toMatch('valid result');
         expect(e.extensions).toBeDefined();
         expect(e.extensions.code).toEqual('UNAUTHENTICATED');
         expect(e.extensions.exception.stacktrace).toBeDefined();

@@ -97,7 +97,7 @@ describe('apollo-server-micro', function() {
             },
           });
           process.env.NODE_ENV = nodeEnv;
-          expect(body).to.contain('GraphQLPlayground');
+          expect(body).toMatch('GraphQLPlayground');
           service.close();
         },
       );

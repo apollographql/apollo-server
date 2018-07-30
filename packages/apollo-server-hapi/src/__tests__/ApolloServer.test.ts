@@ -132,7 +132,7 @@ describe('apollo-server-hapi', () => {
             if (error) {
               reject(error);
             } else {
-              expect(body).to.contain('GraphQLPlayground');
+              expect(body).toMatch('GraphQLPlayground');
               expect(response.statusCode).toEqual(200);
               resolve();
             }
@@ -172,7 +172,7 @@ describe('apollo-server-hapi', () => {
             if (error) {
               reject(error);
             } else {
-              expect(body).to.contain('GraphQLPlayground');
+              expect(body).toMatch('GraphQLPlayground');
               expect(response.statusCode).toEqual(200);
               resolve();
             }
@@ -483,7 +483,7 @@ describe('apollo-server-hapi', () => {
         expect(result.data).not.toBeDefined();
 
         const e = result.errors[0];
-        expect(e.message).to.contain('valid result');
+        expect(e.message).toMatch('valid result');
         expect(e.extensions).toBeDefined();
         expect(e.extensions.code).toEqual('UNAUTHENTICATED');
         expect(e.extensions.exception.stacktrace).toBeDefined();

@@ -228,7 +228,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           .send();
         return req.then(res => {
           expect(res.status).toEqual(500);
-          expect(res.error.text).to.contain('POST body missing.');
+          expect(res.error.text).toMatch('POST body missing.');
         });
       });
 
@@ -237,7 +237,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
         const req = request(app).get(`/graphql`);
         return req.then(res => {
           expect(res.status).toEqual(400);
-          expect(res.error.text).to.contain('GET query missing.');
+          expect(res.error.text).toMatch('GET query missing.');
         });
       });
 
@@ -286,9 +286,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
         return req.then(res => {
           expect(res.status).toEqual(405);
           expect(res.headers['allow']).toEqual('POST');
-          expect(res.error.text).to.contain(
-            'GET supports only query operation',
-          );
+          expect(res.error.text).toMatch('GET supports only query operation');
         });
       });
 
@@ -311,9 +309,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
         return req.then(res => {
           expect(res.status).toEqual(405);
           expect(res.headers['allow']).toEqual('POST');
-          expect(res.error.text).to.contain(
-            'GET supports only query operation',
-          );
+          expect(res.error.text).toMatch('GET supports only query operation');
         });
       });
 
@@ -541,7 +537,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
         return req.then(res => {
           expect(res.status).toEqual(400);
-          expect(res.error.text).to.contain('Variables are invalid JSON.');
+          expect(res.error.text).toMatch('Variables are invalid JSON.');
         });
       });
 
@@ -591,7 +587,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
         return req.then(res => {
           expect(res.status).toEqual(400);
-          expect(res.text).to.contain('GraphQL queries must be strings');
+          expect(res.text).toMatch('GraphQL queries must be strings');
         });
       });
 
