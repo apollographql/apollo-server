@@ -254,7 +254,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           .query(query);
         return req.then(res => {
           expect(res.status).toEqual(200);
-          expect(res.body.data).to.deep.equal(expected);
+          expect(res.body.data).toEqual(expected);
         });
       });
 
@@ -271,7 +271,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           .query(query);
         return req.then(res => {
           expect(res.status).toEqual(200);
-          expect(res.body.data).to.deep.equal(expected);
+          expect(res.body.data).toEqual(expected);
         });
       });
 
@@ -331,7 +331,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           .query(query);
         return req.then(res => {
           expect(res.status).toEqual(200);
-          expect(res.body.data).to.deep.equal(expected);
+          expect(res.body.data).toEqual(expected);
         });
       });
 
@@ -347,7 +347,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
         return req.then(res => {
           expect(res.status).toEqual(200);
-          expect(res.body.data).to.deep.equal(expected);
+          expect(res.body.data).toEqual(expected);
         });
       });
 
@@ -365,8 +365,8 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
         return req.then(res => {
           expect(res.status).toEqual(200);
-          expect(res.body.data).to.deep.equal(expected);
-          expect(res.body.extensions).to.deep.equal({
+          expect(res.body.data).toEqual(expected);
+          expect(res.body.extensions).toEqual({
             cacheControl: {
               version: 1,
               hints: [{ maxAge: 0, path: ['testPerson'] }],
@@ -396,8 +396,8 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
         return req.then(res => {
           expect(res.status).toEqual(200);
-          expect(res.body.data).to.deep.equal(expected);
-          expect(res.body.extensions).to.deep.equal({
+          expect(res.body.data).toEqual(expected);
+          expect(res.body.extensions).toEqual({
             cacheControl: {
               version: 1,
               hints: [{ maxAge: 5, path: ['testPerson'] }],
@@ -511,7 +511,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
         return req.then(res => {
           expect(res.status).toEqual(200);
-          expect(res.body.data).to.deep.equal(expected);
+          expect(res.body.data).toEqual(expected);
         });
       });
 
@@ -528,7 +528,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
         return req.then(res => {
           expect(res.status).toEqual(200);
-          expect(res.body.data).to.deep.equal(expected);
+          expect(res.body.data).toEqual(expected);
         });
       });
 
@@ -562,7 +562,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
         return req.then(res => {
           expect(res.status).toEqual(200);
-          expect(res.body.data).to.deep.equal(expected);
+          expect(res.body.data).toEqual(expected);
         });
       });
 
@@ -629,7 +629,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           ]);
         return req.then(res => {
           expect(res.status).toEqual(200);
-          expect(res.body).to.deep.equal(expected);
+          expect(res.body).toEqual(expected);
         });
       });
 
@@ -655,7 +655,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           ]);
         return req.then(res => {
           expect(res.status).toEqual(200);
-          expect(res.body).to.deep.equal(expected);
+          expect(res.body).toEqual(expected);
         });
       });
 
@@ -680,7 +680,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           );
         return req.then(res => {
           expect(res.status).toEqual(200);
-          expect(res.body).to.deep.equal(expected);
+          expect(res.body).toEqual(expected);
         });
       });
 
@@ -715,7 +715,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           ]);
         return req.then(res => {
           expect(res.status).toEqual(200);
-          expect(res.body).to.deep.equal(expected);
+          expect(res.body).toEqual(expected);
         });
       });
 
@@ -762,7 +762,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           // runHttpQuery.
           expect(callCount).toEqual(1);
           expect(res.status).toEqual(200);
-          expect(res.body).to.deep.equal(expected);
+          expect(res.body).toEqual(expected);
         });
       });
 
@@ -779,7 +779,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
         return req.then(res => {
           expect(res.status).toEqual(200);
-          expect(res.body.data).to.deep.equal(expected);
+          expect(res.body.data).toEqual(expected);
         });
       });
 
@@ -802,7 +802,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
         return req.then(res => {
           expect(res.status).toEqual(200);
-          expect(res.body.extensions).to.deep.equal(expected);
+          expect(res.body.extensions).toEqual(expected);
         });
       });
 
@@ -924,7 +924,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
 
         expect(response.status).toEqual(200);
-        expect(JSON.parse(response.text)).to.deep.equal({
+        expect(JSON.parse(response.text)).toEqual({
           data: null,
           errors: [
             {
@@ -955,7 +955,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
 
         expect(response.status).toEqual(200);
-        expect(JSON.parse(response.text)).to.deep.equal({
+        expect(JSON.parse(response.text)).toEqual({
           data: null,
           errors: [
             {
@@ -1148,7 +1148,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
             query,
           });
 
-        expect(result.body.data).to.deep.equal({ testString: 'it works' });
+        expect(result.body.data).toEqual({ testString: 'it works' });
         expect(result.body.errors).not.to.exist;
       });
 
@@ -1192,8 +1192,8 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
             },
           ]);
 
-        expect(result.body[0].data).to.deep.equal({ testString: 'it works' });
-        expect(result.body[0].data).to.deep.equal({ testString: 'it works' });
+        expect(result.body[0].data).toEqual({ testString: 'it works' });
+        expect(result.body[0].data).toEqual({ testString: 'it works' });
         expect(result.body.errors).not.to.exist;
       });
 
@@ -1215,7 +1215,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
             extensions,
           });
 
-        expect(result.body.data).to.deep.equal({ testString: 'it works' });
+        expect(result.body.data).toEqual({ testString: 'it works' });
         expect(result.body.errors).not.to.exist;
       });
 
@@ -1248,7 +1248,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           .query({
             extensions: JSON.stringify(extensions),
           });
-        expect(result.body.data).to.deep.equal({ testString: 'it works' });
+        expect(result.body.data).toEqual({ testString: 'it works' });
       });
     });
   });

@@ -95,7 +95,7 @@ describe('runQuery', () => {
       queryString: query,
       request: new MockReq(),
     }).then(res => {
-      expect(res.data).to.deep.equal(expected);
+      expect(res.data).toEqual(expected);
     });
   });
 
@@ -107,7 +107,7 @@ describe('runQuery', () => {
       parsedQuery: query,
       request: new MockReq(),
     }).then(res => {
-      expect(res.data).to.deep.equal(expected);
+      expect(res.data).toEqual(expected);
     });
   });
 
@@ -166,7 +166,7 @@ describe('runQuery', () => {
     }).then(res => {
       expect(res.data).to.be.undefined;
       expect(res.errors!.length).toEqual(1);
-      expect(res.errors![0].message).to.deep.equal(expected);
+      expect(res.errors![0].message).toEqual(expected);
     });
   });
 
@@ -179,7 +179,7 @@ describe('runQuery', () => {
       rootValue: 'it also',
       request: new MockReq(),
     }).then(res => {
-      expect(res.data).to.deep.equal(expected);
+      expect(res.data).toEqual(expected);
     });
   });
 
@@ -192,7 +192,7 @@ describe('runQuery', () => {
       context: { s: 'it still' },
       request: new MockReq(),
     }).then(res => {
-      expect(res.data).to.deep.equal(expected);
+      expect(res.data).toEqual(expected);
     });
   });
 
@@ -209,7 +209,7 @@ describe('runQuery', () => {
       },
       request: new MockReq(),
     }).then(res => {
-      expect(res.data).to.deep.equal(expected);
+      expect(res.data).toEqual(expected);
       expect(res['extensions']).toEqual('it still');
     });
   });
@@ -223,7 +223,7 @@ describe('runQuery', () => {
       variables: { base: 1 },
       request: new MockReq(),
     }).then(res => {
-      expect(res.data).to.deep.equal(expected);
+      expect(res.data).toEqual(expected);
     });
   });
 
@@ -236,7 +236,7 @@ describe('runQuery', () => {
       queryString: query,
       request: new MockReq(),
     }).then(res => {
-      expect(res.errors![0].message).to.deep.equal(expected);
+      expect(res.errors![0].message).toEqual(expected);
     });
   });
 
@@ -246,7 +246,7 @@ describe('runQuery', () => {
       queryString: `{ testAwaitedValue }`,
       request: new MockReq(),
     }).then(res => {
-      expect(res.data).to.deep.equal({
+      expect(res.data).toEqual({
         testAwaitedValue: 'it works',
       });
     });
@@ -269,7 +269,7 @@ describe('runQuery', () => {
       operationName: 'Q1',
       request: new MockReq(),
     }).then(res => {
-      expect(res.data).to.deep.equal(expected);
+      expect(res.data).toEqual(expected);
     });
   });
 
@@ -289,7 +289,7 @@ describe('runQuery', () => {
       request: new MockReq(),
     });
 
-    expect(result1.data).to.deep.equal({
+    expect(result1.data).toEqual({
       testObject: {
         testString: 'a very test string',
       },
@@ -303,7 +303,7 @@ describe('runQuery', () => {
       request: new MockReq(),
     });
 
-    expect(result2.data).to.deep.equal({
+    expect(result2.data).toEqual({
       testObject: {
         testString: 'a very testful field resolver string',
       },
@@ -355,8 +355,8 @@ describe('runQuery', () => {
         extensions,
         request: new MockReq(),
       }).then(res => {
-        expect(res.data).to.deep.equal(expected);
-        expect(res.extensions).to.deep.equal({
+        expect(res.data).toEqual(expected);
+        expect(res.extensions).toEqual({
           customExtension: { foo: 'bar' },
         });
       });

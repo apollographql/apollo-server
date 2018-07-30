@@ -214,7 +214,7 @@ describe('apollo-server-micro', function() {
           const text = await resolved.text();
           const response = JSON.parse(text);
 
-          expect(response.data.singleUpload).to.deep.equal({
+          expect(response.data.singleUpload).toEqual({
             filename: 'package.json',
             encoding: '7bit',
             mimetype: 'application/json',

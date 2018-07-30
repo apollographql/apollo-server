@@ -78,7 +78,7 @@ describe('apollo-server-hapi', () => {
       const apolloFetch = createApolloFetch({ uri });
       const result = await apolloFetch({ query: '{hello}' });
 
-      expect(result.data).to.deep.equal({ hello: 'hi' });
+      expect(result.data).toEqual({ hello: 'hi' });
       expect(result.errors, 'errors should exist').not.to.exist;
     });
 
@@ -212,7 +212,7 @@ describe('apollo-server-hapi', () => {
         (response, next) => {
           expect(
             response.response.headers.get('access-control-expose-headers'),
-          ).to.deep.equal(
+          ).toEqual(
             'Accept,Authorization,Content-Type,If-None-Match,Another-One,X-Apollo',
           );
           next();
@@ -244,7 +244,7 @@ describe('apollo-server-hapi', () => {
       const apolloFetch = createApolloFetch({ uri });
       const result = await apolloFetch({ query: '{hello}' });
 
-      expect(result.data).to.deep.equal({ hello: 'hi' });
+      expect(result.data).toEqual({ hello: 'hi' });
       expect(result.errors, 'errors should exist').not.to.exist;
     });
 
@@ -428,7 +428,7 @@ describe('apollo-server-hapi', () => {
           });
           const response = await resolved.json();
 
-          expect(response.data.singleUpload).to.deep.equal({
+          expect(response.data.singleUpload).toEqual({
             filename: 'package.json',
             encoding: '7bit',
             mimetype: 'application/json',
@@ -525,7 +525,7 @@ describe('apollo-server-hapi', () => {
 
         const result = await apolloFetch({ query: `{error}` });
         expect(result.data).to.exist;
-        expect(result.data).to.deep.equal({ error: null });
+        expect(result.data).toEqual({ error: null });
 
         expect(result.errors, 'errors should exist').to.exist;
         expect(result.errors.length).toEqual(1);
@@ -570,7 +570,7 @@ describe('apollo-server-hapi', () => {
 
         const result = await apolloFetch({ query: `{error}` });
         expect(result.data).to.exist;
-        expect(result.data).to.deep.equal({ error: null });
+        expect(result.data).toEqual({ error: null });
 
         expect(result.errors, 'errors should exist').to.exist;
         expect(result.errors.length).toEqual(1);

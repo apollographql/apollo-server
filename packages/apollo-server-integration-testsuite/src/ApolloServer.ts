@@ -246,7 +246,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           const apolloFetch = createApolloFetch({ uri });
           const result = await apolloFetch({ query: '{hello}' });
 
-          expect(result.data).to.deep.equal({ hello: 'hi' });
+          expect(result.data).toEqual({ hello: 'hi' });
           expect(result.errors, 'errors should exist').not.to.exist;
         });
         it('uses schema over resolvers + typeDefs', async () => {
@@ -269,7 +269,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           expect(typeDefResult.errors, 'errors should exist').to.exist;
 
           const result = await apolloFetch({ query: '{testString}' });
-          expect(result.data).to.deep.equal({ testString: 'test string' });
+          expect(result.data).toEqual({ testString: 'test string' });
           expect(result.errors, 'errors should exist').not.to.exist;
         });
         it('allows mocks as boolean', async () => {
@@ -285,7 +285,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
           const apolloFetch = createApolloFetch({ uri });
           const result = await apolloFetch({ query: '{hello}' });
-          expect(result.data).to.deep.equal({ hello: 'Hello World' });
+          expect(result.data).toEqual({ hello: 'Hello World' });
           expect(result.errors, 'errors should exist').not.to.exist;
         });
 
@@ -303,7 +303,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           const apolloFetch = createApolloFetch({ uri });
           const result = await apolloFetch({ query: '{hello}' });
 
-          expect(result.data).to.deep.equal({ hello: 'mock city' });
+          expect(result.data).toEqual({ hello: 'mock city' });
           expect(result.errors, 'errors should exist').not.to.exist;
         });
       });
@@ -392,7 +392,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
         const result = await apolloFetch({
           query: '{error}',
         });
-        expect(result.data).to.deep.equal({ error: null });
+        expect(result.data).toEqual({ error: null });
         expect(result.errors, 'errors should exist').to.exist;
         expect(result.errors[0].extensions.code).equals('BAD_USER_INPUT');
         expect(result.errors[0].message).equals('User Input Error');
@@ -515,7 +515,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           const result = await apolloFetch({
             query: `{error}`,
           });
-          expect(result.data).to.deep.equal({
+          expect(result.data).toEqual({
             error: null,
           });
           expect(result.errors, 'errors should exist').to.exist;
@@ -736,7 +736,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
         const result = await apolloFetch({ query: `{error}` });
         expect(result.data).to.exist;
-        expect(result.data).to.deep.equal({ error: null });
+        expect(result.data).toEqual({ error: null });
 
         expect(result.errors, 'errors should exist').to.exist;
         expect(result.errors.length).toEqual(1);
@@ -1076,7 +1076,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           query: TEST_STRING_QUERY,
         } as any);
 
-        expect(result.data).to.deep.equal({ testString: 'test string' });
+        expect(result.data).toEqual({ testString: 'test string' });
         expect(result.errors).not.to.exist;
       });
 
@@ -1094,7 +1094,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           extensions,
         } as any);
 
-        expect(result.data).to.deep.equal({ testString: 'test string' });
+        expect(result.data).toEqual({ testString: 'test string' });
         expect(result.errors).not.to.exist;
       });
 
@@ -1133,7 +1133,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
         );
 
         execute(link, { query, variables } as any).subscribe(result => {
-          expect(result.data).to.deep.equal({ testString: 'test string' });
+          expect(result.data).toEqual({ testString: 'test string' });
           done();
         }, done);
       });
@@ -1145,7 +1145,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
         }).concat(createHttpLink({ uri, fetch } as any));
 
         execute(link, { query, variables } as any).subscribe(result => {
-          expect(result.data).to.deep.equal({ testString: 'test string' });
+          expect(result.data).toEqual({ testString: 'test string' });
           done();
         }, done);
       });

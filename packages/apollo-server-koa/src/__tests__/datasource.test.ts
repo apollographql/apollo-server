@@ -109,15 +109,15 @@ describe('apollo-server-koa', () => {
     const apolloFetch = createApolloFetch({ uri });
     const firstResult = await apolloFetch({ query: '{ id }' });
 
-    expect(firstResult.data).to.deep.equal({ id: 'hi' });
+    expect(firstResult.data).toEqual({ id: 'hi' });
     expect(firstResult.errors, 'errors should exist').not.to.exist;
-    expect(restCalls).to.deep.equal(1);
+    expect(restCalls).toEqual(1);
 
     const secondResult = await apolloFetch({ query: '{ id }' });
 
-    expect(secondResult.data).to.deep.equal({ id: 'hi' });
+    expect(secondResult.data).toEqual({ id: 'hi' });
     expect(secondResult.errors, 'errors should exist').not.to.exist;
-    expect(restCalls).to.deep.equal(1);
+    expect(restCalls).toEqual(1);
   });
 
   it('can cache a string from the backend', async () => {
@@ -139,14 +139,14 @@ describe('apollo-server-koa', () => {
     const apolloFetch = createApolloFetch({ uri });
     const firstResult = await apolloFetch({ query: '{ id: stringId }' });
 
-    expect(firstResult.data).to.deep.equal({ id: 'hi' });
+    expect(firstResult.data).toEqual({ id: 'hi' });
     expect(firstResult.errors, 'errors should exist').not.to.exist;
-    expect(restCalls).to.deep.equal(1);
+    expect(restCalls).toEqual(1);
 
     const secondResult = await apolloFetch({ query: '{ id: stringId }' });
 
-    expect(secondResult.data).to.deep.equal({ id: 'hi' });
+    expect(secondResult.data).toEqual({ id: 'hi' });
     expect(secondResult.errors, 'errors should exist').not.to.exist;
-    expect(restCalls).to.deep.equal(1);
+    expect(restCalls).toEqual(1);
   });
 });

@@ -42,7 +42,7 @@ describe('apollo-server', () => {
       const apolloFetch = createApolloFetch({ uri });
       const result = await apolloFetch({ query: '{hello}' });
 
-      expect(result.data).to.deep.equal({ hello: 'hi' });
+      expect(result.data).toEqual({ hello: 'hi' });
       expect(result.errors, 'errors should exist').not.to.exist;
     });
 

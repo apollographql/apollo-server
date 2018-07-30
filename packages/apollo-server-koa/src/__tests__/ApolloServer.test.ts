@@ -89,7 +89,7 @@ describe('apollo-server-koa', () => {
       const apolloFetch = createApolloFetch({ uri });
       const result = await apolloFetch({ query: '{hello}' });
 
-      expect(result.data).to.deep.equal({ hello: 'hi' });
+      expect(result.data).toEqual({ hello: 'hi' });
       expect(result.errors, 'errors should exist').not.to.exist;
     });
 
@@ -389,7 +389,7 @@ describe('apollo-server-koa', () => {
           const text = await resolved.text();
           const response = JSON.parse(text);
 
-          expect(response.data.singleUpload).to.deep.equal({
+          expect(response.data.singleUpload).toEqual({
             filename: 'package.json',
             encoding: '7bit',
             mimetype: 'application/json',
@@ -464,7 +464,7 @@ describe('apollo-server-koa', () => {
 
         const result = await apolloFetch({ query: `{error}` });
         expect(result.data).to.exist;
-        expect(result.data).to.deep.equal({ error: null });
+        expect(result.data).toEqual({ error: null });
 
         expect(result.errors, 'errors should exist').to.exist;
         expect(result.errors.length).toEqual(1);
@@ -498,7 +498,7 @@ describe('apollo-server-koa', () => {
 
         const result = await apolloFetch({ query: `{error}` });
         expect(result.data).to.exist;
-        expect(result.data).to.deep.equal({ error: null });
+        expect(result.data).toEqual({ error: null });
 
         expect(result.errors, 'errors should exist').to.exist;
         expect(result.errors.length).toEqual(1);
@@ -596,7 +596,7 @@ describe('apollo-server-koa', () => {
         const result = await apolloFetch({
           query: `{ cooks { title author } }`,
         });
-        expect(result.data).to.deep.equal({ cooks: books });
+        expect(result.data).toEqual({ cooks: books });
         expect(result.extensions).not.to.exist;
       });
 
@@ -616,7 +616,7 @@ describe('apollo-server-koa', () => {
         const result = await apolloFetch({
           query: `{ cooks { title author } }`,
         });
-        expect(result.data).to.deep.equal({ cooks: books });
+        expect(result.data).toEqual({ cooks: books });
         expect(result.extensions).to.exist;
         expect(result.extensions.cacheControl).to.exist;
       });
@@ -633,7 +633,7 @@ describe('apollo-server-koa', () => {
         const result = await apolloFetch({
           query: `{ books { title author } }`,
         });
-        expect(result.data).to.deep.equal({ books });
+        expect(result.data).toEqual({ books });
         expect(result.extensions).not.to.exist;
       });
 
@@ -651,7 +651,7 @@ describe('apollo-server-koa', () => {
         const result = await apolloFetch({
           query: `{ pooks { title books { title author } } }`,
         });
-        expect(result.data).to.deep.equal({
+        expect(result.data).toEqual({
           pooks: [{ title: 'pook', books }],
         });
         expect(result.extensions).not.to.exist;
@@ -673,7 +673,7 @@ describe('apollo-server-koa', () => {
         const result = await apolloFetch({
           query: `{ pooks { title books { title author } } }`,
         });
-        expect(result.data).to.deep.equal({
+        expect(result.data).toEqual({
           pooks: [{ title: 'pook', books }],
         });
         expect(result.extensions).not.to.exist;
@@ -709,7 +709,7 @@ describe('apollo-server-koa', () => {
         const result = await apolloFetch({
           query: `{ books { title author } }`,
         });
-        expect(result.data).to.deep.equal({ books });
+        expect(result.data).toEqual({ books });
         expect(result.extensions).to.exist;
         expect(result.extensions.tracing).to.exist;
       });
@@ -726,7 +726,7 @@ describe('apollo-server-koa', () => {
         const result = await apolloFetch({
           query: `{ books { title author } }`,
         });
-        expect(result.data).to.deep.equal({ books });
+        expect(result.data).toEqual({ books });
         expect(result.extensions).to.exist;
         expect(result.extensions.tracing).to.exist;
       });
@@ -748,7 +748,7 @@ describe('apollo-server-koa', () => {
         const result = await apolloFetch({
           query: `{ books { title author } }`,
         });
-        expect(result.data).to.deep.equal({ books });
+        expect(result.data).toEqual({ books });
         expect(result.extensions).to.exist;
         expect(result.extensions.tracing).to.exist;
       });
