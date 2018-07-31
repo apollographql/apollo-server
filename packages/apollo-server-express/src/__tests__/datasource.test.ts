@@ -73,7 +73,7 @@ describe('apollo-server-express', () => {
     });
   });
 
-  after(async () => {
+  afterAll(async () => {
     await restServer.close();
   });
 

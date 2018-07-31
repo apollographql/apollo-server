@@ -74,7 +74,7 @@ describe('apollo-server-koa', () => {
     });
   });
 
-  after(async () => {
+  afterAll(async () => {
     await restServer.close();
   });
 

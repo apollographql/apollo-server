@@ -376,7 +376,7 @@ describe('runQuery', () => {
       asyncHook.enable();
     });
 
-    after(() => {
+    afterAll(() => {
       asyncHook.disable();
     });
 
