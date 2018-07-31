@@ -67,7 +67,8 @@ new ApolloServer({
 
 * `playground`: <`Boolean`> | <`Object`>
 
-  Enables and disables playground and allows configuration of GraphQL Playground. The options can be found on GraphQL Playground's [documentation](https://github.com/prismagraphql/graphql-playground/#usage)
+  Enables and disables playground and allows configuration of GraphQL Playground. The options can be found on GraphQL Playground's [documentation](https://github.com/prismagraphql/graphql-playground/#usage).
+  If you pass an object, use the `enabled` key to control whether playground is enabled.
 
 * `debug`: <`Boolean`>
 
