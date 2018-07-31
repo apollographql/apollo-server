@@ -24,7 +24,7 @@ export class IdAPI extends RESTDataSource {
 }
 
 // to remove the circular dependency, we reference it directly
-const gql = require('../../apollo-server/dist/index').gql;
+const gql = require('../../../apollo-server/dist/index').gql;
 
 const typeDefs = gql`
   type Query {
