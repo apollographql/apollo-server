@@ -842,10 +842,10 @@ export function testApolloServer<AS extends ApolloServerBase>(
                 }
                 i++;
               } catch (e) {
-                done(e);
+                done.fail(e);
               }
             },
-            error: done,
+            error: done.fail,
             complete: () => {
               done.fail(new Error('should not complete'));
             },
@@ -995,16 +995,16 @@ export function testApolloServer<AS extends ApolloServerBase>(
                   }
                   i++;
                 } catch (e) {
-                  done(e);
+                  done.fail(e);
                 }
               },
-              error: done,
+              error: done.fail,
               complete: () => {
                 done.fail(new Error('should not complete'));
               },
             });
           })
-          .catch(done);
+          .catch(done.fail);
       });
     });
 
@@ -1119,7 +1119,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
         execute(link, { query, variables } as any).subscribe(result => {
           expect(result.data).toEqual({ testString: 'test string' });
           done();
-        }, done);
+        }, done.fail);
       });
 
       it('returns correct result for persisted query link using get request', done => {
@@ -1131,7 +1131,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
         execute(link, { query, variables } as any).subscribe(result => {
           expect(result.data).toEqual({ testString: 'test string' });
           done();
-        }, done);
+        }, done.fail);
       });
     });
   });
