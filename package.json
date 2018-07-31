@@ -14,11 +14,9 @@
     "pretest": "npm run compile",
     "test": "npm run testonly",
     "posttest": "npm run lint",
-    "testonly": "lerna run test && mocha --reporter spec --full-trace --timeout 5000 ./test/tests.js",
-    "coverage": "istanbul cover -x \"*.test.js\" _mocha -- --timeout 5000 --full-trace --reporter dot ./test/tests.js",
-    "pretravis": "npm run compile",
-    "travis": "istanbul cover -x \"*.test.js\" _mocha -- --timeout 5000 --full-trace ./test/tests.js",
-    "postcoverage": "remap-istanbul --input coverage/coverage.raw.json --type lcovonly --output coverage/lcov.info",
+    "testonly": "lerna run test",
+    "coverage": "lerna run coverage",
+    "circle": "lerna run coverage && lerna run circle",
     "release": "lerna publish --exact",
     "precommit": "lint-staged"
   },
@@ -36,23 +34,19 @@
     "node": ">=6"
   },
   "devDependencies": {
-    "@types/chai": "4.1.4",
     "@types/graphql": "0.13.3",
-    "@types/mocha": "5.2.5",
+    "@types/jest": "23.3.1",
     "@types/node": "10.5.4",
-    "@types/sinon": "5.0.1",
-    "chai": "4.1.2",
     "graphql": "0.13.2",
     "husky": "0.14.3",
-    "istanbul": "1.1.0-alpha.1",
+    "jest": "23.4.2",
+    "jest-matcher-utils": "23.2.0",
     "lerna": "2.11.0",
     "lint-staged": "7.2.0",
-    "mocha": "5.2.0",
     "prettier": "1.14.0",
     "prettier-check": "2.0.0",
-    "remap-istanbul": "0.11.1",
-    "sinon": "6.1.4",
     "supertest": "3.1.0",
+    "ts-jest": "23.0.1",
     "typescript": "2.9.2"
   }
 }

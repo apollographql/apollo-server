@@ -1,5 +1,3 @@
-import { expect } from 'chai';
-import 'mocha';
 import * as Koa from 'koa';
 
 import * as http from 'http';
@@ -10,7 +8,7 @@ import * as fs from 'fs';
 import { createApolloFetch } from 'apollo-fetch';
 
 import { gql, AuthenticationError, Config } from 'apollo-server-core';
-import { ApolloServer, ServerRegistration } from './ApolloServer';
+import { ApolloServer, ServerRegistration } from '../ApolloServer';
 
 import {
   testApolloServer,
@@ -38,7 +36,7 @@ describe('apollo-server-koa', () => {
       const app = new Koa();
       server.applyMiddleware({ app });
       httpServer = await new Promise<http.Server>(resolve => {
-        const s = app.listen({ port: 4000 }, () => resolve(s));
+        const s = app.listen({ port: 7777 }, () => resolve(s));
       });
       return createServerInfo(server, httpServer);
     },
@@ -91,8 +89,8 @@ describe('apollo-server-koa', () => {
       const apolloFetch = createApolloFetch({ uri });
       const result = await apolloFetch({ query: '{hello}' });
 
-      expect(result.data).to.deep.equal({ hello: 'hi' });
-      expect(result.errors, 'errors should exist').not.to.exist;
+      expect(result.data).toEqual({ hello: 'hi' });
+      expect(result.errors).toBeUndefined();
     });
 
     // XXX Unclear why this would be something somebody would want (vs enabling
@@ -118,8 +116,8 @@ describe('apollo-server-koa', () => {
       const apolloFetch = createApolloFetch({ uri });
       const result = await apolloFetch({ query: INTROSPECTION_QUERY });
 
-      expect(result.errors.length).to.equal(1);
-      expect(result.errors[0].extensions.code).to.equal(
+      expect(result.errors.length).toEqual(1);
+      expect(result.errors[0].extensions.code).toEqual(
         'GRAPHQL_VALIDATION_FAILED',
       );
 
@@ -137,8 +135,8 @@ describe('apollo-server-koa', () => {
             if (error) {
               reject(error);
             } else {
-              expect(body).to.contain('GraphQLPlayground');
-              expect(response.statusCode).to.equal(200);
+              expect(body).toMatch('GraphQLPlayground');
+              expect(response.statusCode).toEqual(200);
               resolve();
             }
           },
@@ -170,8 +168,8 @@ describe('apollo-server-koa', () => {
             if (error) {
               reject(error);
             } else {
-              expect(body).to.contain('GraphQLPlayground');
-              expect(response.statusCode).to.equal(200);
+              expect(body).toMatch('GraphQLPlayground');
+              expect(response.statusCode).toEqual(200);
               resolve();
             }
           },
@@ -202,7 +200,7 @@ describe('apollo-server-koa', () => {
         .useAfter((response, next) => {
           expect(
             response.response.headers.get('access-control-allow-origin'),
-          ).to.equal('apollographql.com');
+          ).toEqual('apollographql.com');
           next();
         });
       await apolloFetch({ query: '{hello}' });
@@ -225,9 +223,9 @@ describe('apollo-server-koa', () => {
         apolloFetch({ query: '{hello}' })
           .then(reject)
           .catch(error => {
-            expect(error.response).to.exist;
-            expect(error.response.status).to.equal(413);
-            expect(error.toString()).to.contain('Payload Too Large');
+            expect(error.response).toBeDefined();
+            expect(error.response.status).toEqual(413);
+            expect(error.toString()).toMatch('Payload Too Large');
             resolve();
           });
       });
@@ -254,8 +252,8 @@ describe('apollo-server-koa', () => {
               if (error) {
                 reject(error);
               } else {
-                expect(body).to.equal(JSON.stringify({ status: 'pass' }));
-                expect(response.statusCode).to.equal(200);
+                expect(body).toEqual(JSON.stringify({ status: 'pass' }));
+                expect(response.statusCode).toEqual(200);
                 resolve();
               }
             },
@@ -286,8 +284,8 @@ describe('apollo-server-koa', () => {
               if (error) {
                 reject(error);
               } else {
-                expect(body).to.equal(JSON.stringify({ status: 'fail' }));
-                expect(response.statusCode).to.equal(503);
+                expect(body).toEqual(JSON.stringify({ status: 'fail' }));
+                expect(response.statusCode).toEqual(503);
                 resolve();
               }
             },
@@ -316,7 +314,7 @@ describe('apollo-server-koa', () => {
               if (error) {
                 reject(error);
               } else {
-                expect(response.statusCode).to.equal(404);
+                expect(response.statusCode).toEqual(404);
                 resolve();
               }
             },
@@ -353,7 +351,7 @@ describe('apollo-server-koa', () => {
             },
             Mutation: {
               singleUpload: async (_, args) => {
-                expect((await args.file).stream).to.exist;
+                expect((await args.file).stream).toBeDefined();
                 return args.file;
               },
             },
@@ -391,7 +389,7 @@ describe('apollo-server-koa', () => {
           const text = await resolved.text();
           const response = JSON.parse(text);
 
-          expect(response.data.singleUpload).to.deep.equal({
+          expect(response.data.singleUpload).toEqual({
             filename: 'package.json',
             encoding: '7bit',
             mimetype: 'application/json',
@@ -431,14 +429,14 @@ describe('apollo-server-koa', () => {
         const apolloFetch = createApolloFetch({ uri });
 
         const result = await apolloFetch({ query: '{hello}' });
-        expect(result.errors.length).to.equal(1);
-        expect(result.data).not.to.exist;
+        expect(result.errors.length).toEqual(1);
+        expect(result.data).toBeUndefined();
 
         const e = result.errors[0];
-        expect(e.message).to.contain('valid result');
-        expect(e.extensions).to.exist;
-        expect(e.extensions.code).to.equal('UNAUTHENTICATED');
-        expect(e.extensions.exception.stacktrace).to.exist;
+        expect(e.message).toMatch('valid result');
+        expect(e.extensions).toBeDefined();
+        expect(e.extensions.code).toEqual('UNAUTHENTICATED');
+        expect(e.extensions.exception.stacktrace).toBeDefined();
 
         process.env.NODE_ENV = nodeEnv;
       });
@@ -465,14 +463,14 @@ describe('apollo-server-koa', () => {
         const apolloFetch = createApolloFetch({ uri });
 
         const result = await apolloFetch({ query: `{error}` });
-        expect(result.data).to.exist;
-        expect(result.data).to.deep.equal({ error: null });
+        expect(result.data).toBeDefined();
+        expect(result.data).toEqual({ error: null });
 
-        expect(result.errors, 'errors should exist').to.exist;
-        expect(result.errors.length).to.equal(1);
-        expect(result.errors[0].extensions.code).to.equal('UNAUTHENTICATED');
-        expect(result.errors[0].extensions.exception).to.exist;
-        expect(result.errors[0].extensions.exception.stacktrace).to.exist;
+        expect(result.errors).toBeDefined();
+        expect(result.errors.length).toEqual(1);
+        expect(result.errors[0].extensions.code).toEqual('UNAUTHENTICATED');
+        expect(result.errors[0].extensions.exception).toBeDefined();
+        expect(result.errors[0].extensions.exception.stacktrace).toBeDefined();
 
         process.env.NODE_ENV = nodeEnv;
       });
@@ -499,13 +497,13 @@ describe('apollo-server-koa', () => {
         const apolloFetch = createApolloFetch({ uri });
 
         const result = await apolloFetch({ query: `{error}` });
-        expect(result.data).to.exist;
-        expect(result.data).to.deep.equal({ error: null });
+        expect(result.data).toBeDefined();
+        expect(result.data).toEqual({ error: null });
 
-        expect(result.errors, 'errors should exist').to.exist;
-        expect(result.errors.length).to.equal(1);
-        expect(result.errors[0].extensions.code).to.equal('UNAUTHENTICATED');
-        expect(result.errors[0].extensions.exception).not.to.exist;
+        expect(result.errors).toBeDefined();
+        expect(result.errors.length).toEqual(1);
+        expect(result.errors[0].extensions.code).toEqual('UNAUTHENTICATED');
+        expect(result.errors[0].extensions.exception).toBeUndefined();
 
         process.env.NODE_ENV = nodeEnv;
       });
@@ -532,12 +530,12 @@ describe('apollo-server-koa', () => {
         const apolloFetch = createApolloFetch({ uri });
 
         const result = await apolloFetch({ query: `{error}` });
-        expect(result.data).null;
+        expect(result.data).toBeNull();
 
-        expect(result.errors, 'errors should exist').to.exist;
-        expect(result.errors.length).to.equal(1);
-        expect(result.errors[0].extensions.code).to.equal('UNAUTHENTICATED');
-        expect(result.errors[0].extensions.exception).not.to.exist;
+        expect(result.errors).toBeDefined();
+        expect(result.errors.length).toEqual(1);
+        expect(result.errors[0].extensions.code).toEqual('UNAUTHENTICATED');
+        expect(result.errors[0].extensions.exception).toBeUndefined();
 
         process.env.NODE_ENV = nodeEnv;
       });
@@ -589,7 +587,7 @@ describe('apollo-server-koa', () => {
 
         const apolloFetch = createApolloFetch({ uri }).useAfter(
           (response, next) => {
-            expect(response.response.headers.get('cache-control')).to.equal(
+            expect(response.response.headers.get('cache-control')).toEqual(
               'max-age=200, public',
             );
             next();
@@ -598,8 +596,8 @@ describe('apollo-server-koa', () => {
         const result = await apolloFetch({
           query: `{ cooks { title author } }`,
         });
-        expect(result.data).to.deep.equal({ cooks: books });
-        expect(result.extensions).not.to.exist;
+        expect(result.data).toEqual({ cooks: books });
+        expect(result.extensions).toBeUndefined();
       });
 
       it('contains no cacheControl Headers and keeps extension with engine proxy', async () => {
@@ -611,16 +609,16 @@ describe('apollo-server-koa', () => {
 
         const apolloFetch = createApolloFetch({ uri }).useAfter(
           (response, next) => {
-            expect(response.response.headers.get('cache-control')).not.to.exist;
+            expect(response.response.headers.get('cache-control')).toBeNull();
             next();
           },
         );
         const result = await apolloFetch({
           query: `{ cooks { title author } }`,
         });
-        expect(result.data).to.deep.equal({ cooks: books });
-        expect(result.extensions).to.exist;
-        expect(result.extensions.cacheControl).to.exist;
+        expect(result.data).toEqual({ cooks: books });
+        expect(result.extensions).toBeDefined();
+        expect(result.extensions.cacheControl).toBeDefined();
       });
 
       it('contains no cacheControl Headers when uncachable', async () => {
@@ -628,15 +626,15 @@ describe('apollo-server-koa', () => {
 
         const apolloFetch = createApolloFetch({ uri }).useAfter(
           (response, next) => {
-            expect(response.response.headers.get('cache-control')).not.to.exist;
+            expect(response.response.headers.get('cache-control')).toBeNull();
             next();
           },
         );
         const result = await apolloFetch({
           query: `{ books { title author } }`,
         });
-        expect(result.data).to.deep.equal({ books });
-        expect(result.extensions).not.to.exist;
+        expect(result.data).toEqual({ books });
+        expect(result.extensions).toBeUndefined();
       });
 
       it('contains private cacheControl Headers when scoped', async () => {
@@ -644,7 +642,7 @@ describe('apollo-server-koa', () => {
 
         const apolloFetch = createApolloFetch({ uri }).useAfter(
           (response, next) => {
-            expect(response.response.headers.get('cache-control')).to.equal(
+            expect(response.response.headers.get('cache-control')).toEqual(
               'max-age=20, private',
             );
             next();
@@ -653,10 +651,10 @@ describe('apollo-server-koa', () => {
         const result = await apolloFetch({
           query: `{ pooks { title books { title author } } }`,
         });
-        expect(result.data).to.deep.equal({
+        expect(result.data).toEqual({
           pooks: [{ title: 'pook', books }],
         });
-        expect(result.extensions).not.to.exist;
+        expect(result.extensions).toBeUndefined();
       });
 
       it('runs when cache-control is false', async () => {
@@ -668,17 +666,17 @@ describe('apollo-server-koa', () => {
 
         const apolloFetch = createApolloFetch({ uri }).useAfter(
           (response, next) => {
-            expect(response.response.headers.get('cache-control')).null;
+            expect(response.response.headers.get('cache-control')).toBeNull();
             next();
           },
         );
         const result = await apolloFetch({
           query: `{ pooks { title books { title author } } }`,
         });
-        expect(result.data).to.deep.equal({
+        expect(result.data).toEqual({
           pooks: [{ title: 'pook', books }],
         });
-        expect(result.extensions).not.to.exist;
+        expect(result.extensions).toBeUndefined();
       });
     });
 
@@ -711,9 +709,9 @@ describe('apollo-server-koa', () => {
         const result = await apolloFetch({
           query: `{ books { title author } }`,
         });
-        expect(result.data).to.deep.equal({ books });
-        expect(result.extensions).to.exist;
-        expect(result.extensions.tracing).to.exist;
+        expect(result.data).toEqual({ books });
+        expect(result.extensions).toBeDefined();
+        expect(result.extensions.tracing).toBeDefined();
       });
 
       it('applies tracing extension with cache control enabled', async () => {
@@ -728,9 +726,9 @@ describe('apollo-server-koa', () => {
         const result = await apolloFetch({
           query: `{ books { title author } }`,
         });
-        expect(result.data).to.deep.equal({ books });
-        expect(result.extensions).to.exist;
-        expect(result.extensions.tracing).to.exist;
+        expect(result.data).toEqual({ books });
+        expect(result.extensions).toBeDefined();
+        expect(result.extensions.tracing).toBeDefined();
       });
 
       xit('applies tracing extension with engine enabled', async () => {
@@ -750,9 +748,9 @@ describe('apollo-server-koa', () => {
         const result = await apolloFetch({
           query: `{ books { title author } }`,
         });
-        expect(result.data).to.deep.equal({ books });
-        expect(result.extensions).to.exist;
-        expect(result.extensions.tracing).to.exist;
+        expect(result.data).toEqual({ books });
+        expect(result.extensions).toBeDefined();
+        expect(result.extensions.tracing).toBeDefined();
       });
     });
   });

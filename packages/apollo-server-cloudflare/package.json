@@ -5,7 +5,10 @@
   "main": "dist/index.js",
   "scripts": {
     "compile": "tsc",
-    "prepublish": "npm run compile"
+    "coverage": "jest --coverage",
+    "prepublish": "npm run compile",
+    "test": "jest --verbose",
+    "watch": "tsc -w"
   },
   "repository": {
     "type": "git",
@@ -29,6 +32,31 @@
   },
   "peerDependencies": {
     "graphql": "^0.12.0 || ^0.13.0 || ^14.0.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "setupFiles": [
+      "<rootDir>/node_modules/apollo-server-env/dist/index.js"
+    ],
+    "transform": {
+      "^.+\\.(ts|js)$": "ts-jest"
+    },
+    "moduleFileExtensions": [
+      "ts",
+      "js",
+      "json"
+    ],
+    "testRegex": "src/__tests__/.*$",
+    "testPathIgnorePatterns": [
+      "<rootDir>/node_modules/",
+      "<rootDir>/lib/",
+      "test-utils"
+    ],
+    "globals": {
+      "ts-jest": {
+        "skipBabel": true
+      }
+    }
   },
   "typings": "dist/index.d.ts",
   "typescript": {

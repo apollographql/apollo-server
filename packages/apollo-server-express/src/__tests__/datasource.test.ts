@@ -1,16 +1,14 @@
-import { expect } from 'chai';
-import 'mocha';
-import * as Koa from 'koa';
-import * as KoaRouter from 'koa-router';
+import * as express from 'express';
 
 import * as http from 'http';
 
 import { RESTDataSource } from 'apollo-datasource-rest';
 
 import { createApolloFetch } from 'apollo-fetch';
-import { ApolloServer } from './ApolloServer';
+import { ApolloServer } from '../ApolloServer';
 
 import { createServerInfo } from 'apollo-server-integration-testsuite';
+import { gql } from '../index';
 
 const restPort = 4001;
 
@@ -25,9 +23,6 @@ export class IdAPI extends RESTDataSource {
     return this.get(`str/${id}`);
   }
 }
-
-// to remove the circular dependency, we reference it directly
-const gql = require('../../apollo-server/dist/index').gql;
 
 const typeDefs = gql`
   type Query {
@@ -48,35 +43,35 @@ const resolvers = {
 };
 
 let restCalls = 0;
-const restAPI = new Koa();
-const router = new KoaRouter();
-router.all('/id/:id', ctx => {
-  const id = ctx.params.id;
+const restAPI = express();
+restAPI.use('/id/:id', (req, res) => {
+  const id = req.params.id;
   restCalls++;
-  ctx.set('Cache-Control', 'max-age=2000, public');
-  ctx.body = { id };
+  res.header('Content-Type', 'application/json');
+  res.header('Cache-Control', 'max-age=2000, public');
+  res.write(JSON.stringify({ id }));
+  res.end();
 });
 
-router.all('/str/:id', ctx => {
-  const id = ctx.params.id;
+restAPI.use('/str/:id', (req, res) => {
+  const id = req.params.id;
   restCalls++;
-  ctx.set('Cache-Control', 'max-age=2000, public');
-  ctx.body = id;
+  res.header('Content-Type', 'text/plain');
+  res.header('Cache-Control', 'max-age=2000, public');
+  res.write(id);
+  res.end();
 });
 
-restAPI.use(router.routes());
-restAPI.use(router.allowedMethods());
-
-describe('apollo-server-koa', () => {
+describe('apollo-server-express', () => {
   let restServer;
 
-  before(async () => {
+  beforeAll(async () => {
     await new Promise(resolve => {
       restServer = restAPI.listen(restPort, resolve);
     });
   });
 
-  after(async () => {
+  afterAll(async () => {
     await restServer.close();
   });
 
@@ -100,26 +95,26 @@ describe('apollo-server-koa', () => {
         id: new IdAPI(),
       }),
     });
-    const app = new Koa();
+    const app = express();
 
     server.applyMiddleware({ app });
     httpServer = await new Promise<http.Server>(resolve => {
-      const s = app.listen({ port: 4000 }, () => resolve(s));
+      const s = app.listen({ port: 6667 }, () => resolve(s));
     });
     const { url: uri } = createServerInfo(server, httpServer);
 
     const apolloFetch = createApolloFetch({ uri });
     const firstResult = await apolloFetch({ query: '{ id }' });
 
-    expect(firstResult.data).to.deep.equal({ id: 'hi' });
-    expect(firstResult.errors, 'errors should exist').not.to.exist;
-    expect(restCalls).to.deep.equal(1);
+    expect(firstResult.data).toEqual({ id: 'hi' });
+    expect(firstResult.errors).toBeUndefined();
+    expect(restCalls).toEqual(1);
 
     const secondResult = await apolloFetch({ query: '{ id }' });
 
-    expect(secondResult.data).to.deep.equal({ id: 'hi' });
-    expect(secondResult.errors, 'errors should exist').not.to.exist;
-    expect(restCalls).to.deep.equal(1);
+    expect(secondResult.data).toEqual({ id: 'hi' });
+    expect(secondResult.errors).toBeUndefined();
+    expect(restCalls).toEqual(1);
   });
 
   it('can cache a string from the backend', async () => {
@@ -130,25 +125,25 @@ describe('apollo-server-koa', () => {
         id: new IdAPI(),
       }),
     });
-    const app = new Koa();
+    const app = express();
 
     server.applyMiddleware({ app });
     httpServer = await new Promise<http.Server>(resolve => {
-      const s = app.listen({ port: 4000 }, () => resolve(s));
+      const s = app.listen({ port: 6668 }, () => resolve(s));
     });
     const { url: uri } = createServerInfo(server, httpServer);
 
     const apolloFetch = createApolloFetch({ uri });
     const firstResult = await apolloFetch({ query: '{ id: stringId }' });
 
-    expect(firstResult.data).to.deep.equal({ id: 'hi' });
-    expect(firstResult.errors, 'errors should exist').not.to.exist;
-    expect(restCalls).to.deep.equal(1);
+    expect(firstResult.data).toEqual({ id: 'hi' });
+    expect(firstResult.errors).toBeUndefined();
+    expect(restCalls).toEqual(1);
 
     const secondResult = await apolloFetch({ query: '{ id: stringId }' });
 
-    expect(secondResult.data).to.deep.equal({ id: 'hi' });
-    expect(secondResult.errors, 'errors should exist').not.to.exist;
-    expect(restCalls).to.deep.equal(1);
+    expect(secondResult.data).toEqual({ id: 'hi' });
+    expect(secondResult.errors).toBeUndefined();
+    expect(restCalls).toEqual(1);
   });
 });

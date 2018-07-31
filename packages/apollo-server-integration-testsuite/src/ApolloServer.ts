@@ -1,9 +1,6 @@
 /* tslint:disable:no-unused-expression */
-import { expect } from 'chai';
-import { stub } from 'sinon';
 import * as http from 'http';
 import * as net from 'net';
-import 'mocha';
 import { sha256 } from 'js-sha256';
 import express = require('express');
 import bodyParser = require('body-parser');
@@ -140,8 +137,8 @@ export function testApolloServer<AS extends ApolloServerBase>(
             },
           });
 
-          const formatError = stub().callsFake(error => {
-            expect(error instanceof Error).true;
+          const formatError = jest.fn(error => {
+            expect(error instanceof Error).toBe(true);
             return error;
           });
 
@@ -157,21 +154,20 @@ export function testApolloServer<AS extends ApolloServerBase>(
           const introspectionResult = await apolloFetch({
             query: INTROSPECTION_QUERY,
           });
-          expect(introspectionResult.data, 'data should not exist').not.to
-            .exist;
-          expect(introspectionResult.errors, 'errors should exist').to.exist;
-          expect(introspectionResult.errors[0].message).to.match(
+          expect(introspectionResult.data).toBeUndefined();
+          expect(introspectionResult.errors).toBeDefined();
+          expect(introspectionResult.errors[0].message).toMatch(
             /introspection/,
           );
-          expect(formatError.callCount).to.equal(
+          expect(formatError.mock.calls.length).toEqual(
             introspectionResult.errors.length,
           );
 
           const result = await apolloFetch({ query: TEST_STRING_QUERY });
-          expect(result.data, 'data should not exist').not.to.exist;
-          expect(result.errors, 'errors should exist').to.exist;
-          expect(result.errors[0].message).to.match(/Not allowed/);
-          expect(formatError.callCount).to.equal(
+          expect(result.data).toBeUndefined();
+          expect(result.errors).toBeDefined();
+          expect(result.errors[0].message).toMatch(/Not allowed/);
+          expect(formatError.mock.calls.length).toEqual(
             introspectionResult.errors.length + result.errors.length,
           );
         });
@@ -187,8 +183,8 @@ export function testApolloServer<AS extends ApolloServerBase>(
           const apolloFetch = createApolloFetch({ uri });
 
           const result = await apolloFetch({ query: INTROSPECTION_QUERY });
-          expect(result.data, 'data should not exist').to.exist;
-          expect(result.errors, 'errors should exist').not.to.exist;
+          expect(result.data).toBeDefined();
+          expect(result.errors).toBeUndefined();
 
           process.env.NODE_ENV = nodeEnv;
         });
@@ -204,10 +200,10 @@ export function testApolloServer<AS extends ApolloServerBase>(
           const apolloFetch = createApolloFetch({ uri });
 
           const result = await apolloFetch({ query: INTROSPECTION_QUERY });
-          expect(result.data, 'data should not exist').not.to.exist;
-          expect(result.errors, 'errors should exist').to.exist;
-          expect(result.errors.length).to.equal(1);
-          expect(result.errors[0].extensions.code).to.equal(
+          expect(result.data).toBeUndefined();
+          expect(result.errors).toBeDefined();
+          expect(result.errors.length).toEqual(1);
+          expect(result.errors[0].extensions.code).toEqual(
             'GRAPHQL_VALIDATION_FAILED',
           );
 
@@ -226,8 +222,8 @@ export function testApolloServer<AS extends ApolloServerBase>(
           const apolloFetch = createApolloFetch({ uri });
 
           const result = await apolloFetch({ query: INTROSPECTION_QUERY });
-          expect(result.data, 'data should not exist').to.exist;
-          expect(result.errors, 'errors should exist').not.to.exist;
+          expect(result.data).toBeDefined();
+          expect(result.errors).toBeUndefined();
 
           process.env.NODE_ENV = nodeEnv;
         });
@@ -249,8 +245,8 @@ export function testApolloServer<AS extends ApolloServerBase>(
           const apolloFetch = createApolloFetch({ uri });
           const result = await apolloFetch({ query: '{hello}' });
 
-          expect(result.data).to.deep.equal({ hello: 'hi' });
-          expect(result.errors, 'errors should exist').not.to.exist;
+          expect(result.data).toEqual({ hello: 'hi' });
+          expect(result.errors).toBeUndefined();
         });
         it('uses schema over resolvers + typeDefs', async () => {
           const typeDefs = gql`
@@ -268,12 +264,12 @@ export function testApolloServer<AS extends ApolloServerBase>(
           const apolloFetch = createApolloFetch({ uri });
           const typeDefResult = await apolloFetch({ query: '{hello}' });
 
-          expect(typeDefResult.data, 'data should not exist').not.to.exist;
-          expect(typeDefResult.errors, 'errors should exist').to.exist;
+          expect(typeDefResult.data).toBeUndefined();
+          expect(typeDefResult.errors).toBeDefined();
 
           const result = await apolloFetch({ query: '{testString}' });
-          expect(result.data).to.deep.equal({ testString: 'test string' });
-          expect(result.errors, 'errors should exist').not.to.exist;
+          expect(result.data).toEqual({ testString: 'test string' });
+          expect(result.errors).toBeUndefined();
         });
         it('allows mocks as boolean', async () => {
           const typeDefs = gql`
@@ -288,8 +284,8 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
           const apolloFetch = createApolloFetch({ uri });
           const result = await apolloFetch({ query: '{hello}' });
-          expect(result.data).to.deep.equal({ hello: 'Hello World' });
-          expect(result.errors, 'errors should exist').not.to.exist;
+          expect(result.data).toEqual({ hello: 'Hello World' });
+          expect(result.errors).toBeUndefined();
         });
 
         it('allows mocks as an object', async () => {
@@ -306,21 +302,21 @@ export function testApolloServer<AS extends ApolloServerBase>(
           const apolloFetch = createApolloFetch({ uri });
           const result = await apolloFetch({ query: '{hello}' });
 
-          expect(result.data).to.deep.equal({ hello: 'mock city' });
-          expect(result.errors, 'errors should exist').not.to.exist;
+          expect(result.data).toEqual({ hello: 'mock city' });
+          expect(result.errors).toBeUndefined();
         });
       });
     });
 
     describe('formatError', () => {
       it('wraps thrown error from validation rules', async () => {
-        const throwError = stub().callsFake(() => {
+        const throwError = jest.fn(() => {
           throw new Error('nope');
         });
 
-        const formatError = stub().callsFake(error => {
-          expect(error instanceof Error).true;
-          expect(error.constructor.name).to.equal('Error');
+        const formatError = jest.fn(error => {
+          expect(error instanceof Error).toBe(true);
+          expect(error.constructor.name).toEqual('Error');
           return error;
         });
 
@@ -336,20 +332,20 @@ export function testApolloServer<AS extends ApolloServerBase>(
         const introspectionResult = await apolloFetch({
           query: INTROSPECTION_QUERY,
         });
-        expect(introspectionResult.data, 'data should not exist').not.to.exist;
-        expect(introspectionResult.errors, 'errors should exist').to.exist;
-        expect(formatError.calledOnce).true;
-        expect(throwError.calledOnce).true;
+        expect(introspectionResult.data).toBeUndefined();
+        expect(introspectionResult.errors).toBeDefined();
+        expect(formatError).toHaveBeenCalledTimes(1);
+        expect(throwError).toHaveBeenCalledTimes(1);
 
         const result = await apolloFetch({ query: TEST_STRING_QUERY });
-        expect(result.data, 'data should not exist').not.to.exist;
-        expect(result.errors, 'errors should exist').to.exist;
-        expect(formatError.calledTwice).true;
-        expect(throwError.calledTwice).true;
+        expect(result.data).toBeUndefined();
+        expect(result.errors).toBeDefined();
+        expect(formatError).toHaveBeenCalledTimes(2);
+        expect(throwError).toHaveBeenCalledTimes(2);
       });
 
       it('works with errors similar to GraphQL errors, such as yup', async () => {
-        const throwError = stub().callsFake(async () => {
+        const throwError = jest.fn(async () => {
           const schema = yup.object().shape({
             email: yup
               .string()
@@ -360,11 +356,11 @@ export function testApolloServer<AS extends ApolloServerBase>(
           await schema.validate({ email: 'lol' });
         });
 
-        const formatError = stub().callsFake(error => {
-          expect(error instanceof Error).true;
-          expect(error.extensions.code).to.equal('INTERNAL_SERVER_ERROR');
-          expect(error.extensions.exception.name).to.equal('ValidationError');
-          expect(error.extensions.exception.message).to.exist;
+        const formatError = jest.fn(error => {
+          expect(error instanceof Error).toBe(true);
+          expect(error.extensions.code).toEqual('INTERNAL_SERVER_ERROR');
+          expect(error.extensions.exception.name).toEqual('ValidationError');
+          expect(error.extensions.exception.message).toBeDefined();
           const inputError = new UserInputError('User Input Error');
           return {
             message: inputError.message,
@@ -395,12 +391,12 @@ export function testApolloServer<AS extends ApolloServerBase>(
         const result = await apolloFetch({
           query: '{error}',
         });
-        expect(result.data).to.deep.equal({ error: null });
-        expect(result.errors, 'errors should exist').to.exist;
-        expect(result.errors[0].extensions.code).equals('BAD_USER_INPUT');
-        expect(result.errors[0].message).equals('User Input Error');
-        expect(formatError.calledOnce).true;
-        expect(throwError.calledOnce).true;
+        expect(result.data).toEqual({ error: null });
+        expect(result.errors).toBeDefined();
+        expect(result.errors[0].extensions.code).toEqual('BAD_USER_INPUT');
+        expect(result.errors[0].message).toEqual('User Input Error');
+        expect(formatError).toHaveBeenCalledTimes(1);
+        expect(throwError).toHaveBeenCalledTimes(1);
       });
     });
 
@@ -427,48 +423,25 @@ export function testApolloServer<AS extends ApolloServerBase>(
           const nodeEnv = process.env.NODE_ENV;
           delete process.env.NODE_ENV;
 
-          let listener = await startEngineServer({
-            port: 10101,
-            check: (req, res) => {
-              const trace = JSON.stringify(Trace.decode(req.body));
-              try {
-                expect(trace).to.match(/nope/);
-                expect(trace).not.to.match(/masked/);
-              } catch (e) {
-                reject(e);
-              }
-              res.end();
-              listener.close(resolve);
-            },
-          });
-
-          const throwError = stub().callsFake(() => {
+          const throwError = jest.fn(() => {
             throw new Error('nope');
           });
 
-          const validationRule = stub().callsFake(() => {
-            expect(
-              formatError.notCalled,
-              'formatError should be called after validation',
-            ).true;
-            expect(
-              extension.notCalled,
-              'extension should be called after validation',
-            ).true;
+          const validationRule = jest.fn(() => {
+            // formatError should be called after validation
+            expect(formatError).not.toBeCalled();
+            // extension should be called after validation
+            expect(extension).not.toBeCalled();
             return true;
           });
-          const extension = stub();
+          const extension = jest.fn();
 
-          const formatError = stub().callsFake(error => {
-            expect(error instanceof Error).true;
-            expect(
-              extension.calledOnce,
-              'extension should be called before formatError',
-            ).true;
-            expect(
-              validationRule.calledOnce,
-              'validationRules should be called before formatError',
-            ).true;
+          const formatError = jest.fn(error => {
+            expect(error instanceof Error).toBe(true);
+            // extension should be called before formatError
+            expect(extension).toHaveBeenCalledTimes(1);
+            // validationRules should be called before formatError
+            expect(validationRule).toHaveBeenCalledTimes(1);
 
             error.message = 'masked';
             return error;
@@ -476,18 +449,16 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
           class Extension extends GraphQLExtension {
             willSendResponse(o: { graphqlResponse: GraphQLResponse }) {
-              expect(o.graphqlResponse.errors.length).to.equal(1);
-              expect(
-                formatError.notCalled,
-                'formatError should be called after extensions',
-              ).true;
-              expect(
-                validationRule.calledOnce,
-                'validationRules should be called before extensions',
-              ).true;
+              expect(o.graphqlResponse.errors.length).toEqual(1);
+              // formatError should be called after extensions
+              expect(formatError).not.toBeCalled();
+              // validationRules should be called before extensions
+              expect(validationRule).toHaveBeenCalledTimes(1);
               extension();
             }
           }
+
+          const port = Math.floor(Math.random() * (65535 - 1025)) + 1025;
 
           const { url: uri } = await createApolloServer({
             typeDefs: gql`
@@ -505,7 +476,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             validationRules: [validationRule],
             extensions: [() => new Extension()],
             engine: {
-              endpointUrl: 'http://localhost:10101',
+              endpointUrl: `http://localhost:${port}`,
               apiKey: 'fake',
               maxUncompressedReportSize: 1,
             },
@@ -513,34 +484,47 @@ export function testApolloServer<AS extends ApolloServerBase>(
             debug: true,
           });
 
+          let listener = await startEngineServer({
+            port,
+            check: (req, res) => {
+              const trace = JSON.stringify(Trace.decode(req.body));
+              try {
+                expect(trace).toMatch(/nope/);
+                expect(trace).not.toMatch(/masked/);
+              } catch (e) {
+                reject(e);
+              }
+              res.end();
+              listener.close(resolve);
+            },
+          });
+
           const apolloFetch = createApolloFetch({ uri });
 
           const result = await apolloFetch({
             query: `{error}`,
           });
-          expect(result.data).to.deep.equal({
+          expect(result.data).toEqual({
             error: null,
           });
-          expect(result.errors, 'errors should exist').to.exist;
-          expect(result.errors[0].message).to.equal('masked');
-          expect(formatError.calledOnce).true;
-          expect(throwError.calledOnce).true;
+          expect(result.errors).toBeDefined();
+          expect(result.errors[0].message).toEqual('masked');
+          expect(formatError).toHaveBeenCalledTimes(1);
+          expect(throwError).toHaveBeenCalledTimes(1);
 
           process.env.NODE_ENV = nodeEnv;
         });
       });
 
       it('errors thrown in extensions call formatError and are wrapped', async () => {
-        const extension = stub().callsFake(() => {
+        const extension = jest.fn(() => {
           throw new Error('nope');
         });
 
-        const formatError = stub().callsFake(error => {
-          expect(error instanceof Error).true;
-          expect(
-            extension.calledOnce,
-            'extension should be called before formatError',
-          ).true;
+        const formatError = jest.fn(error => {
+          expect(error instanceof Error).toBe(true);
+          // extension should be called before formatError
+          expect(extension).toHaveBeenCalledTimes(1);
 
           error.message = 'masked';
           return error;
@@ -548,10 +532,8 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
         class Extension extends GraphQLExtension {
           willSendResponse(_o: { graphqlResponse: GraphQLResponse }) {
-            expect(
-              formatError.notCalled,
-              'formatError should be called after extensions',
-            ).true;
+            // formatError should be called after extensions
+            expect(formatError).not.toBeCalled();
             extension();
           }
         }
@@ -577,11 +559,10 @@ export function testApolloServer<AS extends ApolloServerBase>(
         const result = await apolloFetch({
           query: `{error}`,
         });
-        expect(result.data, 'data should not exist').to.not.exist;
-        expect(result.errors, 'errors should exist').to.exist;
-        expect(result.errors[0].message).to.equal('masked');
-        expect(result.errors[0].message).to.equal('masked');
-        expect(formatError.calledOnce).true;
+        expect(result.data).toBeUndefined();
+        expect(result.errors).toBeDefined();
+        expect(result.errors[0].message).toEqual('masked');
+        expect(formatError).toHaveBeenCalledTimes(1);
       });
 
       it('defers context eval with thunk until after options creation', async () => {
@@ -594,12 +575,12 @@ export function testApolloServer<AS extends ApolloServerBase>(
         const resolvers = {
           Query: {
             hello: (_parent, _args, context) => {
-              expect(context).to.equal(Promise.resolve(uniqueContext));
+              expect(context).toEqual(Promise.resolve(uniqueContext));
               return 'hi';
             },
           },
         };
-        const spy = stub().returns({});
+        const spy = jest.fn(() => ({}));
         const { url: uri } = await createApolloServer({
           typeDefs,
           resolvers,
@@ -608,17 +589,17 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
         const apolloFetch = createApolloFetch({ uri });
 
-        expect(spy.notCalled).true;
+        expect(spy).not.toBeCalled();
 
         await apolloFetch({ query: '{hello}' });
-        expect(spy.calledOnce).true;
+        expect(spy).toHaveBeenCalledTimes(1);
         await apolloFetch({ query: '{hello}' });
-        expect(spy.calledTwice).true;
+        expect(spy).toHaveBeenCalledTimes(2);
       });
 
       it('allows context to be async function', async () => {
         const uniqueContext = { key: 'major' };
-        const spy = stub().returns('hi');
+        const spy = jest.fn(() => 'hi');
         const typeDefs = gql`
           type Query {
             hello: String
@@ -627,7 +608,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
         const resolvers = {
           Query: {
             hello: (_parent, _args, context) => {
-              expect(context.key).to.equal('major');
+              expect(context.key).toEqual('major');
               return spy();
             },
           },
@@ -640,14 +621,14 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
         const apolloFetch = createApolloFetch({ uri });
 
-        expect(spy.notCalled).true;
+        expect(spy).not.toBeCalled();
         await apolloFetch({ query: '{hello}' });
-        expect(spy.calledOnce).true;
+        expect(spy).toHaveBeenCalledTimes(1);
       });
 
       it('clones the context for every request', async () => {
         const uniqueContext = { key: 'major' };
-        const spy = stub().returns('hi');
+        const spy = jest.fn(() => 'hi');
         const typeDefs = gql`
           type Query {
             hello: String
@@ -656,7 +637,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
         const resolvers = {
           Query: {
             hello: (_parent, _args, context) => {
-              expect(context.key).to.equal('major');
+              expect(context.key).toEqual('major');
               context.key = 'minor';
               return spy();
             },
@@ -670,12 +651,12 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
         const apolloFetch = createApolloFetch({ uri });
 
-        expect(spy.notCalled).true;
+        expect(spy).not.toBeCalled();
 
         await apolloFetch({ query: '{hello}' });
-        expect(spy.calledOnce).true;
+        expect(spy).toHaveBeenCalledTimes(1);
         await apolloFetch({ query: '{hello}' });
-        expect(spy.calledTwice).true;
+        expect(spy).toHaveBeenCalledTimes(2);
       });
 
       it('returns thrown context error as a valid graphql result', async () => {
@@ -704,14 +685,14 @@ export function testApolloServer<AS extends ApolloServerBase>(
         const apolloFetch = createApolloFetch({ uri });
 
         const result = await apolloFetch({ query: '{hello}' });
-        expect(result.errors.length).to.equal(1);
-        expect(result.data).not.to.exist;
+        expect(result.errors.length).toEqual(1);
+        expect(result.data).toBeUndefined();
 
         const e = result.errors[0];
-        expect(e.message).to.contain('valid result');
-        expect(e.extensions).to.exist;
-        expect(e.extensions.code).to.equal('UNAUTHENTICATED');
-        expect(e.extensions.exception.stacktrace).to.exist;
+        expect(e.message).toMatch('valid result');
+        expect(e.extensions).toBeDefined();
+        expect(e.extensions.code).toEqual('UNAUTHENTICATED');
+        expect(e.extensions.exception.stacktrace).toBeDefined();
 
         process.env.NODE_ENV = nodeEnv;
       });
@@ -738,13 +719,13 @@ export function testApolloServer<AS extends ApolloServerBase>(
         const apolloFetch = createApolloFetch({ uri });
 
         const result = await apolloFetch({ query: `{error}` });
-        expect(result.data).to.exist;
-        expect(result.data).to.deep.equal({ error: null });
+        expect(result.data).toBeDefined();
+        expect(result.data).toEqual({ error: null });
 
-        expect(result.errors, 'errors should exist').to.exist;
-        expect(result.errors.length).to.equal(1);
-        expect(result.errors[0].extensions.code).to.equal('UNAUTHENTICATED');
-        expect(result.errors[0].extensions.exception).not.to.exist;
+        expect(result.errors).toBeDefined();
+        expect(result.errors.length).toEqual(1);
+        expect(result.errors[0].extensions.code).toEqual('UNAUTHENTICATED');
+        expect(result.errors[0].extensions.exception).toBeUndefined();
 
         process.env.NODE_ENV = nodeEnv;
       });
@@ -771,12 +752,12 @@ export function testApolloServer<AS extends ApolloServerBase>(
         const apolloFetch = createApolloFetch({ uri });
 
         const result = await apolloFetch({ query: `{error}` });
-        expect(result.data).null;
+        expect(result.data).toBeNull();
 
-        expect(result.errors, 'errors should exist').to.exist;
-        expect(result.errors.length).to.equal(1);
-        expect(result.errors[0].extensions.code).to.equal('UNAUTHENTICATED');
-        expect(result.errors[0].extensions.exception).not.to.exist;
+        expect(result.errors).toBeDefined();
+        expect(result.errors.length).toEqual(1);
+        expect(result.errors[0].extensions.code).toEqual('UNAUTHENTICATED');
+        expect(result.errors[0].extensions.exception).toBeUndefined();
 
         process.env.NODE_ENV = nodeEnv;
       });
@@ -857,18 +838,18 @@ export function testApolloServer<AS extends ApolloServerBase>(
           subscription = observable.subscribe({
             next: ({ data }) => {
               try {
-                expect(data.num).to.equal(i);
+                expect(data.num).toEqual(i);
                 if (i === 3) {
                   done();
                 }
                 i++;
               } catch (e) {
-                done(e);
+                done.fail(e);
               }
             },
-            error: done,
+            error: done.fail,
             complete: () => {
-              done(new Error('should not complete'));
+              done.fail(new Error('should not complete'));
             },
           });
         });
@@ -912,9 +893,11 @@ export function testApolloServer<AS extends ApolloServerBase>(
         }).then(({ port, server, httpServer }) => {
           try {
             server.installSubscriptionHandlers(httpServer);
-            expect.fail();
+            done.fail(
+              'subscription server creation should fail, since subscriptions are disabled',
+            );
           } catch (e) {
-            expect(e.message).to.match(/disabled/);
+            expect(e.message).toMatch(/disabled/);
           }
 
           const client = new SubscriptionClient(
@@ -927,13 +910,13 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
           subscription = observable.subscribe({
             next: () => {
-              done(new Error('should not call next'));
+              done.fail(new Error('should not call next'));
             },
             error: () => {
-              done(new Error('should not notify of error'));
+              done.fail(new Error('should not notify of error'));
             },
             complete: () => {
-              done(new Error('should not complete'));
+              done.fail(new Error('should not complete'));
             },
           });
 
@@ -949,7 +932,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
         });
       });
       it('accepts subscriptions configuration', done => {
-        const onConnect = stub().callsFake(connectionParams => ({
+        const onConnect = jest.fn(connectionParams => ({
           ...connectionParams,
         }));
         const typeDefs = gql`
@@ -992,9 +975,9 @@ export function testApolloServer<AS extends ApolloServerBase>(
         })
           .then(({ port, server, httpServer }) => {
             server.installSubscriptionHandlers(httpServer);
-            expect(onConnect.notCalled).true;
+            expect(onConnect).not.toBeCalled();
 
-            expect(server.subscriptionsPath).to.equal(path);
+            expect(server.subscriptionsPath).toEqual(path);
             const client = new SubscriptionClient(
               `ws://localhost:${port}${server.subscriptionsPath}`,
               {},
@@ -1007,23 +990,23 @@ export function testApolloServer<AS extends ApolloServerBase>(
             subscription = observable.subscribe({
               next: ({ data }) => {
                 try {
-                  expect(onConnect.calledOnce).true;
-                  expect(data.num).to.equal(i);
+                  expect(onConnect).toHaveBeenCalledTimes(1);
+                  expect(data.num).toEqual(i);
                   if (i === 3) {
                     done();
                   }
                   i++;
                 } catch (e) {
-                  done(e);
+                  done.fail(e);
                 }
               },
-              error: done,
+              error: done.fail,
               complete: () => {
-                done(new Error('should not complete'));
+                done.fail(new Error('should not complete'));
               },
             });
           })
-          .catch(done);
+          .catch(done.fail);
       });
     });
 
@@ -1061,10 +1044,10 @@ export function testApolloServer<AS extends ApolloServerBase>(
           extensions,
         } as any);
 
-        expect(result.data).not.to.exist;
-        expect(result.errors.length).to.equal(1);
-        expect(result.errors[0].message).to.equal('PersistedQueryNotFound');
-        expect(result.errors[0].extensions.code).to.equal(
+        expect(result.data).toBeUndefined();
+        expect(result.errors.length).toEqual(1);
+        expect(result.errors[0].message).toEqual('PersistedQueryNotFound');
+        expect(result.errors[0].extensions.code).toEqual(
           'PERSISTED_QUERY_NOT_FOUND',
         );
       });
@@ -1079,8 +1062,8 @@ export function testApolloServer<AS extends ApolloServerBase>(
           query: TEST_STRING_QUERY,
         } as any);
 
-        expect(result.data).to.deep.equal({ testString: 'test string' });
-        expect(result.errors).not.to.exist;
+        expect(result.data).toEqual({ testString: 'test string' });
+        expect(result.errors).toBeUndefined();
       });
 
       it('returns result on the persisted query', async () => {
@@ -1097,8 +1080,8 @@ export function testApolloServer<AS extends ApolloServerBase>(
           extensions,
         } as any);
 
-        expect(result.data).to.deep.equal({ testString: 'test string' });
-        expect(result.errors).not.to.exist;
+        expect(result.data).toEqual({ testString: 'test string' });
+        expect(result.errors).toBeUndefined();
       });
 
       // Apollo Fetch's result depends on the server implementation, if the
@@ -1106,8 +1089,8 @@ export function testApolloServer<AS extends ApolloServerBase>(
       // such as with express. If it is parsable, then we'll use the afterware
       it('returns error when hash does not match', async () => {
         const apolloFetch = createApolloFetch({ uri }).useAfter((res, next) => {
-          expect(res.response.status).to.equal(400);
-          expect(res.response.raw).to.match(/does not match query/);
+          expect(res.response.status).toEqual(400);
+          expect(res.response.raw).toMatch(/does not match query/);
           next();
         });
 
@@ -1123,9 +1106,9 @@ export function testApolloServer<AS extends ApolloServerBase>(
             query: TEST_STRING_QUERY,
           } as any);
         } catch (e) {
-          expect(e.response).to.exist;
-          expect(e.response.status).to.equal(400);
-          expect(e.response.raw).to.match(/does not match query/);
+          expect(e.response).toBeDefined();
+          expect(e.response.status).toEqual(400);
+          expect(e.response.raw).toMatch(/does not match query/);
         }
       });
 
@@ -1136,9 +1119,9 @@ export function testApolloServer<AS extends ApolloServerBase>(
         );
 
         execute(link, { query, variables } as any).subscribe(result => {
-          expect(result.data).to.deep.equal({ testString: 'test string' });
+          expect(result.data).toEqual({ testString: 'test string' });
           done();
-        }, done);
+        }, done.fail);
       });
 
       it('returns correct result for persisted query link using get request', done => {
@@ -1148,9 +1131,9 @@ export function testApolloServer<AS extends ApolloServerBase>(
         }).concat(createHttpLink({ uri, fetch } as any));
 
         execute(link, { query, variables } as any).subscribe(result => {
-          expect(result.data).to.deep.equal({ testString: 'test string' });
+          expect(result.data).toEqual({ testString: 'test string' });
           done();
-        }, done);
+        }, done.fail);
       });
     });
   });

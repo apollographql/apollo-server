@@ -6,7 +6,8 @@
   "main": "dist/index.js",
   "scripts": {
     "compile": "tsc",
-    "prepublish": "npm run compile"
+    "prepublish": "npm run compile",
+    "watch": "tsc -w"
   },
   "repository": {
     "type": "git",
