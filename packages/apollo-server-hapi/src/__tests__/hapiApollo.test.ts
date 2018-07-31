@@ -1,3 +1,12 @@
+const NODE_VERSION = process.version.split('.');
+const NODE_MAJOR_VERSION = parseInt(NODE_VERSION[0].replace(/^v/, ''));
+
+// Skip hapi tests for unsupported versions of node
+if (NODE_MAJOR_VERSION < 8) {
+  it('does not run for node versions < 8', () => {});
+  return;
+}
+
 import * as hapi from 'hapi';
 import { ApolloServer } from '../ApolloServer';
 import { Config } from 'apollo-server-core';
