@@ -7,7 +7,7 @@
     "prepublish": "npm run pbjs && npm run pbts",
     "pbjs": "bash -c 'mkdir -p dist && pbjs --target static-module --out dist/index.js --wrap commonjs --force-number <(grep -v \"package mdg.engine.proto\" reports.proto)'",
     "pbts": "pbts -o dist/index.d.ts dist/index.js",
-    "circle": "npm run prepare"
+    "circle": "npm run prepublish"
   },
   "repository": {
     "type": "git",
