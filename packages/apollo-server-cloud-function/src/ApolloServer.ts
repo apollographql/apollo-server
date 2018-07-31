@@ -5,7 +5,7 @@ import {
   RenderPageOptions as PlaygroundRenderPageOptions,
 } from '@apollographql/graphql-playground-html';
 
-import { graphqlCloudFunction } from './gqlApollo';
+import { graphqlCloudFunction } from './googleCloudApollo';
 
 export interface CreateHandlerOptions {
   cors?: {
