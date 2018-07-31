@@ -11,7 +11,7 @@ import { ApolloServer } from '../ApolloServer';
 import { createServerInfo } from 'apollo-server-integration-testsuite';
 import { gql } from '../index';
 
-const restPort = 4001;
+const restPort = 4002;
 
 export class IdAPI extends RESTDataSource {
   baseURL = `http://localhost:${restPort}/`;
