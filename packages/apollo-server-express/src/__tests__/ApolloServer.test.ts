@@ -27,6 +27,8 @@ const resolvers = {
   },
 };
 
+const port = 6666;
+
 describe('apollo-server-express', () => {
   let server;
   let httpServer;
@@ -36,7 +38,7 @@ describe('apollo-server-express', () => {
       const app = express();
       server.applyMiddleware({ app });
       httpServer = await new Promise<http.Server>(resolve => {
-        const s = app.listen({ port: 4000 }, () => resolve(s));
+        const s = app.listen({ port }, () => resolve(s));
       });
       return createServerInfo(server, httpServer);
     },
@@ -63,7 +65,7 @@ describe('apollo-server-express', () => {
     server.applyMiddleware({ ...options, app });
 
     httpServer = await new Promise<http.Server>(resolve => {
-      const l = app.listen({ port: 4000 }, () => resolve(l));
+      const l = app.listen({ port }, () => resolve(l));
     });
 
     return createServerInfo(server, httpServer);
@@ -222,7 +224,6 @@ describe('apollo-server-express', () => {
             if (error) {
               reject(error);
             } else {
-              console.log('body', body);
               expect(body).toMatch('GraphQLPlayground');
               expect(body).toMatch(`"editor.theme": "light"`);
               expect(body).toMatch(defaultQuery);

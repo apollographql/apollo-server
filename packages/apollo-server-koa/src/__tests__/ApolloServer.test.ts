@@ -36,7 +36,7 @@ describe('apollo-server-koa', () => {
       const app = new Koa();
       server.applyMiddleware({ app });
       httpServer = await new Promise<http.Server>(resolve => {
-        const s = app.listen({ port: 4000 }, () => resolve(s));
+        const s = app.listen({ port: 7777 }, () => resolve(s));
       });
       return createServerInfo(server, httpServer);
     },

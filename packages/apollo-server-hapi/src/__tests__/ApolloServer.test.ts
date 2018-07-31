@@ -22,7 +22,7 @@ describe('apollo-server-hapi', () => {
   testApolloServer(
     async options => {
       server = new ApolloServer(options);
-      app = new Server({ host: 'localhost', port: 4000 });
+      app = new Server({ host: 'localhost', port: 5555 });
       await server.applyMiddleware({ app });
       await app.start();
       const httpServer = app.listener;
