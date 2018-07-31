@@ -847,7 +847,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             },
             error: done,
             complete: () => {
-              done(new Error('should not complete'));
+              done.fail(new Error('should not complete'));
             },
           });
         });
@@ -908,13 +908,13 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
           subscription = observable.subscribe({
             next: () => {
-              done(new Error('should not call next'));
+              done.fail(new Error('should not call next'));
             },
             error: () => {
-              done(new Error('should not notify of error'));
+              done.fail(new Error('should not notify of error'));
             },
             complete: () => {
-              done(new Error('should not complete'));
+              done.fail(new Error('should not complete'));
             },
           });
 
@@ -1000,7 +1000,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
               },
               error: done,
               complete: () => {
-                done(new Error('should not complete'));
+                done.fail(new Error('should not complete'));
               },
             });
           })
