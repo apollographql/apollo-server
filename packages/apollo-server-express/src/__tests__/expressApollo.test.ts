@@ -18,7 +18,7 @@ function createApp(options: CreateAppOptions = {}) {
 
 describe('expressApollo', () => {
   it('throws error if called without schema', function() {
-    expect(() => new ApolloServer(undefined as GraphQLOptions)).to.throw(
+    expect(() => new ApolloServer(undefined as GraphQLOptions)).toThrow(
       'ApolloServer requires options.',
     );
   });

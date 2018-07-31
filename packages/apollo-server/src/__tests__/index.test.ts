@@ -18,11 +18,11 @@ const resolvers = {
 describe('apollo-server', () => {
   describe('constructor', () => {
     it('accepts typeDefs and resolvers', () => {
-      expect(() => new ApolloServer({ typeDefs, resolvers })).not.to.throw;
+      expect(() => new ApolloServer({ typeDefs, resolvers })).not.toThrow;
     });
 
     it('accepts typeDefs and mocks', () => {
-      expect(() => new ApolloServer({ typeDefs, mocks: true })).not.to.throw;
+      expect(() => new ApolloServer({ typeDefs, mocks: true })).not.toThrow;
     });
   });
 

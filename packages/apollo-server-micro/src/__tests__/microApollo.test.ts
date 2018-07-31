@@ -16,7 +16,7 @@ function createApp(options: CreateAppOptions = {}) {
 
 describe('microApollo', function() {
   it('should throw an error if called without a schema', function() {
-    expect(() => new ApolloServer(undefined as GraphQLOptions)).to.throw(
+    expect(() => new ApolloServer(undefined as GraphQLOptions)).toThrow(
       'ApolloServer requires options.',
     );
   });
