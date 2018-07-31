@@ -750,7 +750,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
         const apolloFetch = createApolloFetch({ uri });
 
         const result = await apolloFetch({ query: `{error}` });
-        expect(result.data).toBe(null);
+        expect(result.data).toBeNull();
 
         expect(result.errors).toBeDefined();
         expect(result.errors.length).toEqual(1);

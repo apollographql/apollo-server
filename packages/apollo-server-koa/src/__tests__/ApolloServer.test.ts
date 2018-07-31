@@ -530,7 +530,7 @@ describe('apollo-server-koa', () => {
         const apolloFetch = createApolloFetch({ uri });
 
         const result = await apolloFetch({ query: `{error}` });
-        expect(result.data).toBe(null);
+        expect(result.data).toBeNull();
 
         expect(result.errors).toBeDefined();
         expect(result.errors.length).toEqual(1);
@@ -609,9 +609,7 @@ describe('apollo-server-koa', () => {
 
         const apolloFetch = createApolloFetch({ uri }).useAfter(
           (response, next) => {
-            expect(
-              response.response.headers.get('cache-control'),
-            ).toBeUndefined();
+            expect(response.response.headers.get('cache-control')).toBeNull();
             next();
           },
         );
@@ -628,9 +626,7 @@ describe('apollo-server-koa', () => {
 
         const apolloFetch = createApolloFetch({ uri }).useAfter(
           (response, next) => {
-            expect(
-              response.response.headers.get('cache-control'),
-            ).toBeUndefined();
+            expect(response.response.headers.get('cache-control')).toBeNull();
             next();
           },
         );
@@ -670,7 +666,7 @@ describe('apollo-server-koa', () => {
 
         const apolloFetch = createApolloFetch({ uri }).useAfter(
           (response, next) => {
-            expect(response.response.headers.get('cache-control')).toBe(null);
+            expect(response.response.headers.get('cache-control')).toBeNull();
             next();
           },
         );
