@@ -22,6 +22,8 @@ import { createApolloFetch } from 'apollo-fetch';
 import { gql, AuthenticationError } from 'apollo-server-core';
 import { ApolloServer } from '../ApolloServer';
 
+const port = 5555;
+
 describe('apollo-server-hapi', () => {
   let server: ApolloServer;
 
@@ -31,7 +33,7 @@ describe('apollo-server-hapi', () => {
   testApolloServer(
     async options => {
       server = new ApolloServer(options);
-      app = new Server({ host: 'localhost', port: 5555 });
+      app = new Server({ host: 'localhost', port });
       await server.applyMiddleware({ app });
       await app.start();
       const httpServer = app.listener;
@@ -76,7 +78,7 @@ describe('apollo-server-hapi', () => {
         typeDefs,
         resolvers,
       });
-      app = new Server({ port: 4000 });
+      app = new Server({ port });
 
       await server.applyMiddleware({ app });
       await app.start();
@@ -110,7 +112,7 @@ describe('apollo-server-hapi', () => {
         resolvers,
         introspection: false,
       });
-      app = new Server({ port: 4000 });
+      app = new Server({ port });
 
       await server.applyMiddleware({ app });
       await app.start();
@@ -158,7 +160,7 @@ describe('apollo-server-hapi', () => {
         typeDefs,
         resolvers,
       });
-      app = new Server({ port: 4000 });
+      app = new Server({ port });
 
       await server.applyMiddleware({ app });
       await app.start();
@@ -196,7 +198,7 @@ describe('apollo-server-hapi', () => {
         resolvers,
       });
       app = new Server({
-        port: 4000,
+        port,
       });
 
       await server.applyMiddleware({
@@ -242,7 +244,7 @@ describe('apollo-server-hapi', () => {
         resolvers,
         context,
       });
-      app = new Server({ port: 4000 });
+      app = new Server({ port });
 
       await server.applyMiddleware({ app });
       await app.start();
@@ -267,7 +269,7 @@ describe('apollo-server-hapi', () => {
           typeDefs,
           resolvers,
         });
-        app = new Server({ port: 4000 });
+        app = new Server({ port });
 
         await server.applyMiddleware({ app });
         await app.start();
@@ -299,7 +301,7 @@ describe('apollo-server-hapi', () => {
           typeDefs,
           resolvers,
         });
-        app = new Server({ port: 4000 });
+        app = new Server({ port });
 
         await server.applyMiddleware({
           app,
@@ -337,7 +339,7 @@ describe('apollo-server-hapi', () => {
           resolvers,
         });
 
-        app = new Server({ port: 4000 });
+        app = new Server({ port });
 
         await server.applyMiddleware({
           app,
@@ -396,7 +398,7 @@ describe('apollo-server-hapi', () => {
             },
           },
         });
-        app = new Server({ port: 4000 });
+        app = new Server({ port });
 
         await server.applyMiddleware({
           app,
@@ -474,7 +476,7 @@ describe('apollo-server-hapi', () => {
           },
         });
 
-        app = new Server({ port: 4000 });
+        app = new Server({ port });
 
         await server.applyMiddleware({
           app,
@@ -519,7 +521,7 @@ describe('apollo-server-hapi', () => {
           },
         });
 
-        app = new Server({ port: 4000 });
+        app = new Server({ port });
 
         await server.applyMiddleware({
           app,
@@ -564,7 +566,7 @@ describe('apollo-server-hapi', () => {
           },
         });
 
-        app = new Server({ port: 4000 });
+        app = new Server({ port });
 
         await server.applyMiddleware({
           app,
@@ -608,7 +610,7 @@ describe('apollo-server-hapi', () => {
           },
         });
 
-        app = new Server({ port: 4000 });
+        app = new Server({ port });
 
         await server.applyMiddleware({
           app,
