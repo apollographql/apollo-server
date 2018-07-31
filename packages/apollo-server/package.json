@@ -6,6 +6,7 @@
   "main": "dist/index.js",
   "scripts": {
     "compile": "tsc",
+    "coverage": "jest --coverage",
     "prepublish": "npm run compile",
     "watch": "tsc -w"
   },

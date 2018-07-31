@@ -8,6 +8,7 @@
     "circle": "jest --verbose --coverage",
     "clean": "rm -rf dist",
     "compile": "tsc",
+    "coverage": "jest --coverage",
     "lint": "prettier -l 'src/**/*.{ts,js}' && tslint -p tsconfig.json 'src/**/*.ts'",
     "lint-fix": "prettier --write 'src/**/*.{ts,js}' && tslint --fix -p tsconfig.json 'src/**/*.ts'",
     "prepublish": "npm run clean && npm run compile",
