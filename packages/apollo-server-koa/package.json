@@ -65,9 +65,6 @@
   },
   "jest": {
     "testEnvironment": "node",
-    "setupFiles": [
-      "<rootDir>/node_modules/apollo-server-env/dist/index.js"
-    ],
     "transform": {
       "^.+\\.(ts|js)$": "ts-jest"
     },
