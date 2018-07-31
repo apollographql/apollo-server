@@ -423,21 +423,6 @@ export function testApolloServer<AS extends ApolloServerBase>(
           const nodeEnv = process.env.NODE_ENV;
           delete process.env.NODE_ENV;
 
-          let listener = await startEngineServer({
-            port: 10101,
-            check: (req, res) => {
-              const trace = JSON.stringify(Trace.decode(req.body));
-              try {
-                expect(trace).toMatch(/nope/);
-                expect(trace).not.toMatch(/masked/);
-              } catch (e) {
-                reject(e);
-              }
-              res.end();
-              listener.close(resolve);
-            },
-          });
-
           const throwError = jest.fn(() => {
             throw new Error('nope');
           });
@@ -473,7 +458,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             }
           }
 
-          const { url: uri } = await createApolloServer({
+          const { url: uri, port } = await createApolloServer({
             typeDefs: gql`
               type Query {
                 error: String
@@ -495,6 +480,21 @@ export function testApolloServer<AS extends ApolloServerBase>(
             },
             formatError,
             debug: true,
+          });
+
+          let listener = await startEngineServer({
+            port: (typeof port === 'string' ? parseInt(port) : port) + 10101,
+            check: (req, res) => {
+              const trace = JSON.stringify(Trace.decode(req.body));
+              try {
+                expect(trace).toMatch(/nope/);
+                expect(trace).not.toMatch(/masked/);
+              } catch (e) {
+                reject(e);
+              }
+              res.end();
+              listener.close(resolve);
+            },
           });
 
           const apolloFetch = createApolloFetch({ uri });
