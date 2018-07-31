@@ -61,11 +61,8 @@ const queryType = new GraphQLObjectType({
     },
     testAwaitedValue: {
       type: GraphQLString,
-      resolve() {
-        // Calling Promise.await is legal here even though this is
-        // not an async function, because we are guaranteed to be
-        // running in a Fiber.
-        return 'it ' + (<any>Promise).await('works');
+      async resolve() {
+        return 'it ' + (await 'works');
       },
     },
     testError: {
@@ -396,12 +393,8 @@ describe('runQuery', () => {
         request: new MockReq(),
       });
 
-      // this is the only async process so we expect the async ids to be a sequence
-      ids.forEach((id, i) => {
-        if (i > 0) {
-          expect(id).toEqual(ids[i - 1] + 1);
-        }
-      });
+      // Expect there to be several async ids provided
+      expect(ids.length).toBeGreaterThanOrEqual(2);
     });
   });
 });
