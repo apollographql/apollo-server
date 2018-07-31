@@ -8,6 +8,7 @@ import { createApolloFetch } from 'apollo-fetch';
 import { ApolloServer } from '../ApolloServer';
 
 import { createServerInfo } from 'apollo-server-integration-testsuite';
+import { gql } from '../index';
 
 const restPort = 4001;
 
@@ -22,9 +23,6 @@ export class IdAPI extends RESTDataSource {
     return this.get(`str/${id}`);
   }
 }
-
-// to remove the circular dependency, we reference it directly
-const gql = require('../../../apollo-server/dist/index').gql;
 
 const typeDefs = gql`
   type Query {
