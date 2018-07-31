@@ -458,7 +458,9 @@ export function testApolloServer<AS extends ApolloServerBase>(
             }
           }
 
-          const { url: uri, port } = await createApolloServer({
+          const port = Math.floor(Math.random() * (65535 - 1025)) + 1025;
+
+          const { url: uri } = await createApolloServer({
             typeDefs: gql`
               type Query {
                 error: String
@@ -474,7 +476,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             validationRules: [validationRule],
             extensions: [() => new Extension()],
             engine: {
-              endpointUrl: 'http://localhost:10101',
+              endpointUrl: `http://localhost:${port}`,
               apiKey: 'fake',
               maxUncompressedReportSize: 1,
             },
@@ -483,7 +485,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           });
 
           let listener = await startEngineServer({
-            port: (typeof port === 'string' ? parseInt(port) : port) + 10101,
+            port,
             check: (req, res) => {
               const trace = JSON.stringify(Trace.decode(req.body));
               try {
