@@ -46,8 +46,6 @@ sidebar_categories:
       href: https://www.apollographql.com/docs/guides/security.html
   API Reference:
     - api/apollo-server
-    - title: graphql-subscriptions
-      href: https://www.apollographql.com/docs/graphql-subscriptions
     - api/graphql-tools
   Migration:
     - migration-two-dot

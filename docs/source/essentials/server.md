@@ -84,7 +84,7 @@ At this point, if the message isn't printed to the console, it's possible that s
 
 <h3 id="running">GraphQL Playground</h3>
 
-To explore the newly created GraphQL server, open a browser to the link shown in the console, `http://localhost:4000/graphql`. Apollo Server sets up GraphQL Playground for you so that you can start running queries and exploring schemas quickly.
+To explore the newly created GraphQL API, open a browser to the link shown in the console, `http://localhost:4000/`. Apollo Server sets up GraphQL Playground for you so that you can start running queries and exploring schemas quickly.
 
 To run a query, copy the following query and then press the "▶️" button:
 
@@ -104,7 +104,7 @@ And the server should return a simple response:
 }
 ```
 
-Your server itself is hosted at `http://localhost:4000/graphql`. This would be the endpoint you pass to set up Apollo Client.
+> GraphQL operations should _also_ be sent directly to `http://localhost:4000/` and Apollo Client should be configured with this endpoint.  Only `GET` requests from a web browser will result the GraphQL Playground interface being served.  Futhermore, by default, GraphQL Playground will only be enabled during development.
 
 <h2 id="integrations">Server integrations</h2>
 
@@ -137,7 +137,7 @@ app.listen({ port: 4000 }, () =>
 
 Hapi follows the same pattern with `apollo-server-express` replaced with `apollo-server-hapi` and `app` replaced with Hapi server. `applyMiddleware` registers plugins, so it should be called with `await`.
 
-> When transitioning from `apollo-server` to an integration package, running`npm uninstall apollo-server` will remove the extra dependency.
+> When transitioning from `apollo-server` to an integration package, running `npm uninstall apollo-server` will remove the extra dependency.
 
 <h3 id="serverless">Serverless</h3>
 

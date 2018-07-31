@@ -17,7 +17,7 @@ const { PubSub } = require('apollo-server');
 const pubsub = new PubSub();
 ```
 
-Subscriptions are another root level type, similar to Query and Mutation. To start, we need add to add the `Subscription` type to our schema:
+Subscriptions are another root level type, similar to Query and Mutation. To start, we need to add the `Subscription` type to our schema:
 
 ```js line=2-4
 const typeDefs = gql`
@@ -239,4 +239,4 @@ The Apollo Server implementation of `PubSub` can be replaced by another implemen
 - [Postgres](https://github.com/GraphQLCollege/graphql-postgres-subscriptions)
 - [Add your implementation...](https://github.com/apollographql/apollo-server/pull/new/master)
 
-You can implement a `PubSub` of your own, using the exported `PubSubEngine` interface from `apollo-server` or another integration.
+You can implement a `PubSub` of your own, using the exported `PubSubEngine` interface from `apollo-server` or another integration. If you want to set up a GraphQL server using the `graphql-subscriptions` package, follow [this guide](https://www.apollographql.com/docs/graphql-subscriptions/).
