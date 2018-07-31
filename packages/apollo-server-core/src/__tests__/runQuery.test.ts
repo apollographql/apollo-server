@@ -320,12 +320,12 @@ describe('runQuery', () => {
               testString: {
                 type: GraphQLString,
                 resolve(_root, _args, context) {
-                  expect(context._extensionStack).to.be.instanceof(
+                  expect(context._extensionStack).toBeInstanceOf(
                     GraphQLExtensionStack,
                   );
-                  expect(
-                    context._extensionStack.extensions[0],
-                  ).to.be.instanceof(CustomExtension);
+                  expect(context._extensionStack.extensions[0]).toBeInstanceOf(
+                    CustomExtension,
+                  );
                 },
               },
             },
