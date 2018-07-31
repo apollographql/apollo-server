@@ -275,12 +275,12 @@ describe('apollo-server-hapi', () => {
         await app.start();
 
         httpServer = app.listener;
-        const { port } = app.info;
+        const { port: appPort } = app.info;
 
         return new Promise((resolve, reject) => {
           request(
             {
-              url: `http://localhost:${port}/.well-known/apollo/server-health`,
+              url: `http://localhost:${appPort}/.well-known/apollo/server-health`,
               method: 'GET',
             },
             (error, response, body) => {
@@ -312,12 +312,12 @@ describe('apollo-server-hapi', () => {
         await app.start();
 
         httpServer = app.listener;
-        const { port } = app.info;
+        const { port: appPort } = app.info;
 
         return new Promise((resolve, reject) => {
           request(
             {
-              url: `http://localhost:${port}/.well-known/apollo/server-health`,
+              url: `http://localhost:${appPort}/.well-known/apollo/server-health`,
               method: 'GET',
             },
             (error, response, body) => {
@@ -348,12 +348,12 @@ describe('apollo-server-hapi', () => {
         await app.start();
 
         httpServer = app.listener;
-        const { port } = app.info;
+        const { port: appPort } = app.info;
 
         return new Promise((resolve, reject) => {
           request(
             {
-              url: `http://localhost:${port}/.well-known/apollo/server-health`,
+              url: `http://localhost:${appPort}/.well-known/apollo/server-health`,
               method: 'GET',
             },
             (error, response) => {
@@ -407,7 +407,7 @@ describe('apollo-server-hapi', () => {
         await app.start();
 
         httpServer = app.listener;
-        const { port } = app.info;
+        const { port: appPort } = app.info;
 
         const body = new FormData();
 
@@ -433,7 +433,7 @@ describe('apollo-server-hapi', () => {
         body.append('1', fs.createReadStream('package.json'));
 
         try {
-          const resolved = await fetch(`http://localhost:${port}/graphql`, {
+          const resolved = await fetch(`http://localhost:${appPort}/graphql`, {
             method: 'POST',
             body: body as any,
           });
