@@ -984,50 +984,6 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
         });
       });
 
-      it('sends stack trace to error if debug mode is set', async () => {
-        const expected = /at resolveFieldValueOrError/;
-        const origError = console.error;
-        const err = jest.fn();
-        console.error = err;
-        app = await createApp({
-          graphqlOptions: {
-            schema,
-            debug: true,
-          },
-        });
-        const req = request(app)
-          .post('/graphql')
-          .send({
-            query: 'query test{ testError }',
-          });
-        return req.then(() => {
-          console.error = origError;
-          expect(err).toHaveBeenCalledTimes(1);
-          expect(err.mock.calls[0][0]).toMatch(expected);
-        });
-      });
-
-      it('sends stack trace to error log if debug mode is set', async () => {
-        const logStub = jest.spyOn(console, 'error');
-        const expected = /at resolveFieldValueOrError/;
-        app = await createApp({
-          graphqlOptions: {
-            schema,
-            debug: true,
-          },
-        });
-        const req = request(app)
-          .post('/graphql')
-          .send({
-            query: 'query test{ testError }',
-          });
-        return req.then(() => {
-          logStub.mockRestore();
-          expect(logStub).toHaveBeenCalledTimes(1);
-          expect(logStub.mock.calls[0][0]).toMatch(expected);
-        });
-      });
-
       it('applies additional validationRules', async () => {
         const expected = 'alwaysInvalidRule was really invalid!';
         const alwaysInvalidRule = function(context) {
