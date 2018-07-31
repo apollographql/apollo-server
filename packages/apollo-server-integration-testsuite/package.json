@@ -7,7 +7,6 @@
   "scripts": {
     "compile": "tsc",
     "prepublish": "npm run compile",
-    "test": "jest --verbose",
     "watch": "tsc -w"
   },
   "repository": {
@@ -46,31 +45,6 @@
     "ts-jest": "23.0.1",
     "ws": "5.2.2",
     "yup": "0.26.0"
-  },
-  "jest": {
-    "testEnvironment": "node",
-    "setupFiles": [
-      "<rootDir>/node_modules/apollo-server-env/dist/index.js"
-    ],
-    "transform": {
-      "^.+\\.(ts|js)$": "ts-jest"
-    },
-    "moduleFileExtensions": [
-      "ts",
-      "js",
-      "json"
-    ],
-    "testRegex": "src/__tests__/.*$",
-    "testPathIgnorePatterns": [
-      "<rootDir>/node_modules/",
-      "<rootDir>/lib/",
-      "test-utils"
-    ],
-    "globals": {
-      "ts-jest": {
-        "skipBabel": true
-      }
-    }
   },
   "typings": "dist/index.d.ts",
   "typescript": {
