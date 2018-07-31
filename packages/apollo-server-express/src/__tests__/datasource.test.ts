@@ -67,7 +67,7 @@ restAPI.use('/str/:id', (req, res) => {
 describe('apollo-server-express', () => {
   let restServer;
 
-  before(async () => {
+  beforeAll(async () => {
     await new Promise(resolve => {
       restServer = restAPI.listen(restPort, resolve);
     });

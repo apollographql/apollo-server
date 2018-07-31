@@ -369,7 +369,7 @@ describe('runQuery', () => {
       return; // async_hooks not present, give up
     }
 
-    before(() => {
+    beforeAll(() => {
       asyncHook = asyncHooks.createHook({
         init: (asyncId: number) => ids.push(asyncId),
       });

@@ -68,7 +68,7 @@ restAPI.use(router.allowedMethods());
 describe('apollo-server-koa', () => {
   let restServer;
 
-  before(async () => {
+  beforeAll(async () => {
     await new Promise(resolve => {
       restServer = restAPI.listen(restPort, resolve);
     });
