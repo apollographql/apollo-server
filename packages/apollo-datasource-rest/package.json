@@ -30,11 +30,6 @@
     "apollo-server-errors": "2.0.0",
     "http-cache-semantics": "^4.0.0"
   },
-  "devDependencies": {
-    "@types/jest": "23.3.1",
-    "jest": "23.4.2",
-    "ts-jest": "23.0.1"
-  },
   "jest": {
     "testEnvironment": "node",
     "setupFiles": [
