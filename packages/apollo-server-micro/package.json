@@ -3,6 +3,7 @@
   "version": "2.0.0",
   "description": "Production-ready Node.js GraphQL server for Micro",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "compile": "tsc",
     "coverage": "jest --coverage",
@@ -62,6 +63,5 @@
         "skipBabel": true
       }
     }
-  },
-  "typings": "dist/index.d.ts"
+  }
 }

@@ -3,6 +3,7 @@
   "version": "0.0.0-beta.7",
   "description": "Protobuf format for Apollo Engine",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "prepublish": "npm run pbjs && npm run pbts",
     "pbjs": "bash -c 'mkdir -p dist && pbjs --target static-module --out dist/index.js --wrap commonjs --force-number <(grep -v \"package mdg.engine.proto\" reports.proto)'",
@@ -28,6 +29,5 @@
   "homepage": "https://github.com/apollographql/apollo-engine-reporting#readme",
   "dependencies": {
     "protobufjs": "^6.8.6"
-  },
-  "typings": "dist/index.d.ts"
+  }
 }

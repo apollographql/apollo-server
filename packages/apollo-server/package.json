@@ -4,6 +4,7 @@
   "description": "Production ready GraphQL Server",
   "author": "opensource@apollographql.com",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "compile": "tsc",
     "coverage": "jest --coverage",
@@ -60,6 +61,5 @@
         "skipBabel": true
       }
     }
-  },
-  "typings": "dist/index.d.ts"
+  }
 }

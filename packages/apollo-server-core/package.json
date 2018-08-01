@@ -3,6 +3,7 @@
   "version": "2.0.0",
   "description": "Core engine for Apollo GraphQL server",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "compile": "tsc",
     "coverage": "jest --coverage",
@@ -89,6 +90,5 @@
         "skipBabel": true
       }
     }
-  },
-  "typings": "dist/index.d.ts"
+  }
 }

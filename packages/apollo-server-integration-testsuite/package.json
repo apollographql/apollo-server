@@ -4,6 +4,7 @@
   "version": "2.0.0",
   "description": "Apollo Server Integrations testsuite",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "compile": "tsc",
     "prepublish": "npm run compile",
@@ -42,6 +43,5 @@
     "subscriptions-transport-ws": "0.9.14",
     "ws": "5.2.2",
     "yup": "0.26.0"
-  },
-  "typings": "dist/index.d.ts"
+  }
 }

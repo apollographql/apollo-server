@@ -3,6 +3,7 @@
   "version": "2.0.0-rc.12",
   "description": "Production-ready Node.js GraphQL server for Cloudflare workers",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "compile": "tsc",
     "coverage": "jest --coverage",
@@ -57,6 +58,5 @@
         "skipBabel": true
       }
     }
-  },
-  "typings": "dist/index.d.ts"
+  }
 }
