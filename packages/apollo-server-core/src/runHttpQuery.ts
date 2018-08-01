@@ -1,4 +1,9 @@
-import { ExecutionResult } from 'graphql';
+import {
+  ExecutionResult,
+  ValidationContext,
+  DocumentNode,
+  getOperationAST,
+} from 'graphql';
 const sha256 = require('hash.js/lib/hash/sha/256');
 
 import { CacheControlExtensionOptions } from 'apollo-cache-control';
@@ -174,6 +179,7 @@ export async function runHttpQuery(
   const requests = requestPayload.map(async requestParams => {
     try {
       let extensions = requestParams.extensions;
+      let validationRules = [...(optionsObject.validationRules || [])];
 
       if (isGetRequest && extensions) {
         // For GET requests, we have to JSON-parse extensions. (For POST
@@ -220,18 +226,15 @@ export async function runHttpQuery(
       // GET operations should only be queries (not mutations). We want to throw
       // a particular HTTP error in that case, but we don't actually parse the
       // query until we're in runQuery, so we declare the error we want to throw
-      // here and pass it into runQuery.
-      // TODO this could/should be added as a validation rule rather than an ad hoc error
-      let nonQueryError;
+      // here as a validation rule
       if (isGetRequest) {
-        nonQueryError = new HttpQueryError(
-          405,
-          `GET supports only query operation`,
-          false,
-          {
-            Allow: 'POST',
-          },
-        );
+        validationRules.unshift((context: ValidationContext) => {
+          if (!isQueryOperation(context.getDocument(), operationName)) {
+            throw new Error(`GET supports only query operation`);
+          }
+          // GraphQL-js throws if a validation rule does not return
+          return {};
+        });
       }
 
       let variables = requestParams.variables;
@@ -321,12 +324,11 @@ export async function runHttpQuery(
       let params: QueryOptions = {
         schema: optionsObject.schema,
         queryString,
-        nonQueryError,
-        variables: variables,
+        variables,
         context,
         rootValue: optionsObject.rootValue,
-        operationName: operationName,
-        validationRules: optionsObject.validationRules,
+        operationName,
+        validationRules,
         formatError: optionsObject.formatError,
         formatResponse: optionsObject.formatResponse,
         fieldResolver: optionsObject.fieldResolver,
@@ -512,4 +514,9 @@ async function generateQueryString({
   }
 
   return { queryString, persistedQueryHit, persistedQueryRegister };
+}
+
+function isQueryOperation(query: DocumentNode, operationName?: string) {
+  const operationAST = getOperationAST(query, operationName);
+  return operationAST && operationAST.operation === 'query';
 }

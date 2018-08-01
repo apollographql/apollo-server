@@ -7,7 +7,6 @@ import {
   validate,
   execute,
   ExecutionArgs,
-  getOperationAST,
   GraphQLError,
   specifiedRules,
   ValidationContext,
@@ -46,10 +45,6 @@ export interface QueryOptions {
   queryString?: string;
   parsedQuery?: DocumentNode;
 
-  // If this is specified and the given GraphQL query is not a "query" (eg, it's
-  // a mutation), throw this error.
-  nonQueryError?: Error;
-
   rootValue?: any;
   context?: any;
   variables?: { [key: string]: any };
@@ -68,11 +63,6 @@ export interface QueryOptions {
   extensions?: Array<() => GraphQLExtension>;
   persistedQueryHit?: boolean;
   persistedQueryRegister?: boolean;
-}
-
-function isQueryOperation(query: DocumentNode, operationName?: string) {
-  const operationAST = getOperationAST(query, operationName);
-  return operationAST && operationAST.operation === 'query';
 }
 
 export function runQuery(options: QueryOptions): Promise<GraphQLResponse> {
@@ -163,19 +153,11 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
           });
         }
 
-        if (
-          options.nonQueryError &&
-          !isQueryOperation(documentAST, options.operationName)
-        ) {
-          // XXX this goes to requestDidEnd, is that correct or should it be
-          // validation?
-          throw options.nonQueryError;
-        }
-
         let rules = specifiedRules;
         if (options.validationRules) {
           rules = rules.concat(options.validationRules);
         }
+
         const validationErrors = doValidation({
           extensionStack,
           schema: options.schema,
@@ -202,7 +184,7 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
       },
     )
     .catch((err: Error) => {
-      // Handle the case of an internal server failure (or nonQueryError) ---
+      // Handle the case of an internal server failure ---
       // we're not returning a GraphQL response so we don't call
       // willSendResponse.
       requestDidEnd(err);
