@@ -136,24 +136,21 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
     persistedQueryHit: options.persistedQueryHit,
     persistedQueryRegister: options.persistedQueryRegister,
   });
+
   return Promise.resolve()
     .then(
       (): Promise<GraphQLResponse> => {
         // Parse the document.
         let documentAST: DocumentNode;
-        if (options.parsedQuery) {
-          documentAST = options.parsedQuery;
-        } else if (!options.queryString) {
-          throw new Error('Must supply one of queryString and parsedQuery');
-        } else {
-          const parsingDidEnd = extensionStack.parsingDidStart({
+        try {
+          documentAST = doParse({
+            parsedQuery: options.parsedQuery,
             queryString: options.queryString,
+            extensionStack,
           });
-          let graphqlParseErrors: SyntaxError[] | undefined;
-          try {
-            documentAST = parse(options.queryString);
-          } catch (syntaxError) {
-            graphqlParseErrors = formatApolloErrors(
+        } catch (syntaxError) {
+          return Promise.resolve({
+            errors: formatApolloErrors(
               [
                 fromGraphQLError(syntaxError, {
                   errorClass: SyntaxError,
@@ -162,11 +159,8 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
               {
                 debug,
               },
-            );
-            return Promise.resolve({ errors: graphqlParseErrors });
-          } finally {
-            parsingDidEnd(...(graphqlParseErrors || []));
-          }
+            ),
+          });
         }
 
         if (
@@ -182,41 +176,18 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
         if (options.validationRules) {
           rules = rules.concat(options.validationRules);
         }
-        const validationDidEnd = extensionStack.validationDidStart();
-        let validationErrors: GraphQLError[] | undefined;
-        try {
-          validationErrors = validate(
-            options.schema,
-            documentAST,
-            rules,
-          ) as GraphQLError[]; // Return type of validate is ReadonlyArray<GraphQLError>
-        } catch (validationThrewError) {
-          // Catch errors thrown by validate, not just those returned by it.
-          validationErrors = [validationThrewError];
-        } finally {
-          try {
-            if (validationErrors) {
-              validationErrors = formatApolloErrors(
-                validationErrors.map(err =>
-                  fromGraphQLError(err, { errorClass: ValidationError }),
-                ),
-                {
-                  debug,
-                },
-              );
-            }
-          } finally {
-            validationDidEnd(...(validationErrors || []));
-
-            if (validationErrors && validationErrors.length) {
-              return Promise.resolve({
-                errors: validationErrors,
-              });
-            }
-          }
+        const validationErrors = doValidation({
+          extensionStack,
+          schema: options.schema,
+          documentAST,
+          rules,
+          debug,
+        });
+        if (validationErrors) {
+          return validationErrors;
         }
 
-        const executionArgs: ExecutionArgs = {
+        return doExecution({
           schema: options.schema,
           document: documentAST,
           rootValue: options.rootValue,
@@ -224,50 +195,10 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
           variableValues: options.variables,
           operationName: options.operationName,
           fieldResolver: options.fieldResolver,
-        };
-        const executionDidEnd = extensionStack.executionDidStart({
-          executionArgs,
+          extensionStack,
+          debug,
+          options,
         });
-        return Promise.resolve()
-          .then(() => execute(executionArgs))
-          .catch(executionError => {
-            return {
-              // These errors will get passed through formatApolloErrors in the
-              // `then` below.
-              // TODO accurate code for this error, which describes this error, which
-              // can occur when:
-              // * variables incorrectly typed/null when nonnullable
-              // * unknown operation/operation name invalid
-              // * operation type is unsupported
-              // Options: PREPROCESSING_FAILED, GRAPHQL_RUNTIME_CHECK_FAILED
-
-              errors: [fromGraphQLError(executionError)],
-            } as ExecutionResult;
-          })
-          .then(result => {
-            let response: GraphQLResponse = {
-              data: result.data,
-            };
-
-            if (result.errors) {
-              response.errors = formatApolloErrors([...result.errors], {
-                debug,
-              });
-            }
-
-            executionDidEnd(...(result.errors || []));
-
-            const formattedExtensions = extensionStack.format();
-            if (Object.keys(formattedExtensions).length > 0) {
-              response.extensions = formattedExtensions;
-            }
-
-            if (options.formatResponse) {
-              response = options.formatResponse(response, options);
-            }
-
-            return response;
-          });
       },
     )
     .catch((err: Error) => {
@@ -281,5 +212,147 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
       const response = extensionStack.willSendResponse({ graphqlResponse });
       requestDidEnd();
       return response.graphqlResponse;
+    });
+}
+
+interface ParseArgs {
+  extensionStack: GraphQLExtensionStack<any>;
+  queryString?: string;
+  parsedQuery?: DocumentNode;
+}
+
+function doParse({
+  parsedQuery,
+  queryString,
+  extensionStack,
+}: ParseArgs): DocumentNode {
+  if (parsedQuery) {
+    return parsedQuery;
+  } else if (!queryString) {
+    throw new Error('Must supply one of queryString and parsedQuery');
+  } else {
+    const parsingDidEnd = extensionStack.parsingDidStart({
+      queryString,
+    });
+    let graphqlParseErrors: SyntaxError[] | undefined;
+    try {
+      return parse(queryString);
+    } finally {
+      parsingDidEnd(...(graphqlParseErrors || []));
+    }
+  }
+}
+
+interface ValidationArgs {
+  extensionStack: GraphQLExtensionStack<any>;
+  schema: GraphQLSchema;
+  documentAST: DocumentNode;
+  rules: ((context: ValidationContext) => any)[];
+  debug: boolean;
+}
+
+function doValidation({
+  extensionStack,
+  schema,
+  documentAST,
+  rules,
+  debug,
+}: ValidationArgs): void | Promise<GraphQLResponse> {
+  const validationDidEnd = extensionStack.validationDidStart();
+  let validationErrors: GraphQLError[] | undefined;
+  try {
+    validationErrors = validate(schema, documentAST, rules) as GraphQLError[]; // Return type of validate is ReadonlyArray<GraphQLError>
+  } catch (validationThrewError) {
+    // Catch errors thrown by validate, not just those returned by it.
+    validationErrors = [validationThrewError];
+  } finally {
+    if (validationErrors) {
+      validationErrors = formatApolloErrors(
+        validationErrors.map(err =>
+          fromGraphQLError(err, { errorClass: ValidationError }),
+        ),
+        {
+          debug,
+        },
+      );
+    }
+
+    validationDidEnd(...(validationErrors || []));
+
+    if (validationErrors && validationErrors.length) {
+      return Promise.resolve({
+        errors: validationErrors,
+      });
+    }
+  }
+}
+
+function doExecution({
+  schema,
+  document,
+  rootValue,
+  contextValue,
+  variableValues,
+  operationName,
+  fieldResolver,
+  debug,
+  extensionStack,
+  options,
+}: ExecutionArgs & {
+  debug: boolean;
+  extensionStack: GraphQLExtensionStack<any>;
+  options: QueryOptions;
+}): Promise<GraphQLResponse> {
+  let executionArgs: ExecutionArgs = {
+    schema,
+    document,
+    rootValue,
+    contextValue,
+    variableValues,
+    operationName,
+    fieldResolver,
+  };
+  const executionDidEnd = extensionStack.executionDidStart({
+    executionArgs,
+  });
+  return Promise.resolve()
+    .then(() => execute(executionArgs))
+    .catch(executionError => {
+      return {
+        // These errors will get passed through formatApolloErrors in the
+        // `then` below.
+        // TODO accurate code for this error, which describes this error, which
+        // can occur when:
+        // * variables incorrectly typed/null when nonnullable
+        // * unknown operation/operation name invalid
+        // * operation type is unsupported
+        // Options: PREPROCESSING_FAILED, GRAPHQL_RUNTIME_CHECK_FAILED
+
+        errors: [fromGraphQLError(executionError)],
+      } as ExecutionResult;
+    })
+    .then(result => {
+      let response: GraphQLResponse = {
+        data: result.data,
+      };
+
+      if (result.errors) {
+        response.errors = formatApolloErrors([...result.errors], {
+          debug,
+        });
+      }
+
+      executionDidEnd(...(result.errors || []));
+
+      const formattedExtensions = extensionStack.format();
+      if (Object.keys(formattedExtensions).length > 0) {
+        response.extensions = formattedExtensions;
+      }
+
+      if (options.formatResponse) {
+        response = options.formatResponse(response, options);
+      }
+
+      return response;
     });
 }
