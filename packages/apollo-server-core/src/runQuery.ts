@@ -161,6 +161,7 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
               ],
               {
                 debug,
+                formatter: options.formatError,
               },
             );
             return Promise.resolve({ errors: graphqlParseErrors });
@@ -202,6 +203,7 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
                 ),
                 {
                   debug,
+                  formatter: options.formatError,
                 },
               );
             }
@@ -252,6 +254,7 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
             if (result.errors) {
               response.errors = formatApolloErrors([...result.errors], {
                 debug,
+                formatter: options.formatError,
               });
             }
 
