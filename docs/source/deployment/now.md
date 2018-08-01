@@ -13,7 +13,7 @@ description: Deploying your GraphQL server to Zeit Now
 
 ## Setting up the project
 
-Deployment to Now for Node.js apps requires a `package.json` file to be present in the app's root directory.
+Deployment to [Now](https://zeit.co/now) for Node.js apps requires a `package.json` file to be present in the app's root directory.
 
 ```js
 {
@@ -30,15 +30,15 @@ Deployment to Now for Node.js apps requires a `package.json` file to be present 
 }
 ```
 
-Now looks for a `start` script to start the app. As long as that is in the `package.json`, the app should be able to start up.
+[Now](https://zeit.co/now) looks for a `start` script to start the app. As long as that is in the `package.json`, the app should be able to start up.
 
 ## Deploying with Now
 
-Now offers multiple options for deploying projects.
+[Now](https://zeit.co/now) offers multiple options for deploying projects.
 
 ### Local Projects
 
-If the Now CLI is installed, then running the `now` command from the root directory of the project should deploy the project.
+If the [Now](https://zeit.co/now) CLI is installed, then running the `now` command from the root directory of the project should deploy the project.
 
 ```sh
 $ now
@@ -48,23 +48,23 @@ The `now` command immediately deploys a server to the cloud and returns the host
 
 ### Manual GitHub deployment
 
-If a GraphQL server project is publically available on GitHub, Now provides the ability to deploy straight from GitHub by calling the `now` command with the user/organization name and repository name in the format `user/repository-name`.
+If a GraphQL server project is publically available on GitHub, [Now](https://zeit.co/now) provides the ability to deploy straight from GitHub by calling the `now` command with the user/organization name and repository name in the format `user/repository-name`.
 
-For example, to deploy [Apollo](https://github.com/apollographql)'s [graphql-server-example](https://github.com/apollographql/graphql-server-example), the command would be:
+For example, to deploy Apollo's [graphql-server-example](https://github.com/apollographql/graphql-server-example), the command would be:
 
 ```sh
 $ now apollographql/graphql-server-example
 ```
 
-The `now` command deploys right away and attempts to start the server This specific example would fail though, due to missing environment variables. There's more info on that in the [next section](#env-variables).
+The `now` command deploys right away and attempts to start the server. This specific example would fail though, due to missing environment variables. They can be added by following the [section](#env-variables) on environment variables.
 
 <h3 id="automatic-github-deploys">Automatic GitHub deployment</h3>
 
-Now supports automatic deployments from GitHub on pull requests.
+[Now](https://zeit.co/now) supports automatic deployment from GitHub on pull requests.
 
-To set up automatic deplotments, visit [https://zeit.co/github](https://zeit.co/github) and click on the "Setup Now" button.
+To set up automatic deployment, visit [https://zeit.co/github](https://zeit.co/github) and click on the "Setup Now" button.
 
-After signing in with GitHub, a GitHub app can be added to any account or organization. Once installed, it's possible to choose which Repositories that Now will run on, and will create new deployments on Pull Requests.
+After signing in with GitHub, the [Now](https://zeit.co/now) GitHub app can be added to any account or organization. Once installed, it's possible to choose which Repositories that [Now](https://zeit.co/now) will run on, and will create new deployments on Pull Requests.
 
 ![now permissions setup](../images/deployment/zeit/now-github-permissions.png)
 

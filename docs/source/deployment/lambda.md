@@ -13,7 +13,7 @@ This guide explains how to setup Apollo Server 2 to run on AWS Lambda.
 The following must be done before following this guide:
 
 - Setup an AWS account
-- [Install the AWS CLI](https://aws.amazon.com/cli/)
+- [Install the AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/installing.html)
 - [Configure the AWS CLI with user credentials](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html)
 - Install the serverless framework from NPM
   - `npm install -g serverless`
@@ -30,9 +30,11 @@ First, install the `apollo-server-lambda` package:
 npm install apollo-server-lambda graphql
 ```
 
-Next, set up the schema's type definitions and resolvers, and pass them to the `ApolloServer` constructor like normal. Here, `ApolloServer` must be imported from `apollo-server-lambda`.
+Next, set up the schema's type definitions and resolvers, and pass them to the `ApolloServer` constructor like normal. Here, `ApolloServer` must be imported from `apollo-server-lambda`. It's also important to note that this file must be named `graphql.js`, as the config example in a later step depends on the filename.
 
 ```js
+// graphql.js
+
 const { ApolloServer, gql } = require('apollo-server-lambda');
 
 // Construct a schema, using GraphQL schema language
@@ -56,11 +58,11 @@ exports.graphqlHandler = server.createHandler();
 
 Finally, **pay close attention to the last line**. This creates an export named `graphqlHandler` with a Lambda function handler.
 
-## Deploying with the Serverless framework
+## Deploying with the Serverless Framework
 
 [Serverless](https://serverless.com) is a framework that makes deploying to services like AWS Lambda simpler.
 
-### Configuring Serverless
+### Configuring the Serverless Framework
 
 Serverless uses a config file named `serverless.yml` to determine what service to deploy to and where the handlers are.
 
@@ -84,11 +86,11 @@ functions:
         cors: true
 ```
 
-### Running Serverless
+### Running the Serverless Framework
 
-After configuring Serverless, all you have to do to deploy is run `serverless deploy`
+After configuring the Serverless Framework, all you have to do to deploy is run `serverless deploy`
 
-If successful, Serverless should output something similar to this example:
+If successful, `serverless` should output something similar to this example:
 
 ```
 > serverless deploy
@@ -115,13 +117,13 @@ functions:
   graphql: apollo-lambda-dev-graphql
 ```
 
-So what does Serverless do here?
+#### What does `serverless` do?
 
-First, it builds the functions, zips up the artifacts, and uploads the artifacts to an S3 bucket that it creates. Then, it creates a Lambda function with those artifacts, and if successful, outputs the HTTP endpoint URLs to the console.
+First, it builds the functions, zips up the artifacts, and uploads the artifacts to a new S3 bucket. Then, it creates a Lambda function with those artifacts, and if successful, outputs the HTTP endpoint URLs to the console.
 
 ### Managing the resulting services
 
-The resulting S3 buckets and lambda functions can be viewed and managed after logging in to the [AWS Console](https://console.aws.amazon.com).
+The resulting S3 buckets and Lambda functions can be viewed and managed after logging in to the [AWS Console](https://console.aws.amazon.com).
 
 - To find the created S3 bucket, search the listed services for S3. For this example, the bucket created by Serverless was named `apollo-lambda-dev-serverlessdeploymentbucket-1s10e00wvoe5f`
 - To find the created Lambda function, search the listed services for `Lambda`. If the list of Lambda functions is empty, or missing the newly created function, double check the region at the top right of the screen. The default region for Serverless deployments is `us-east-1` (N. Virginia)
