@@ -64,7 +64,7 @@ The `now` command deploys right away and attempts to start the server. This spec
 
 To set up automatic deployment, visit [https://zeit.co/github](https://zeit.co/github) and click on the "Setup Now" button.
 
-After signing in with GitHub, the [Now](https://zeit.co/now) GitHub app can be added to any account or organization. Once installed, it's possible to choose which Repositories that [Now](https://zeit.co/now) will run on, and will create new deployments on Pull Requests.
+After signing in with GitHub, the [Now](https://zeit.co/now) GitHub app can be added to any account or organization. Once installed, it's possible to choose which repositories that [Now](https://zeit.co/now) can run on, allowing new deployments on Pull Requests.
 
 ![now permissions setup](../images/deployment/zeit/now-github-permissions.png)
 
