@@ -29,8 +29,5 @@
   "dependencies": {
     "protobufjs": "^6.8.6"
   },
-  "typings": "dist/index.d.ts",
-  "typescript": {
-    "definition": "dist/index.d.ts"
-  }
+  "typings": "dist/index.d.ts"
 }
