@@ -22,15 +22,15 @@ import { DataSource } from 'apollo-datasource';
  * - (optional) extensions: an array of functions which create GraphQLExtensions (each GraphQLExtension object is used for one request)
  *
  */
-export interface GraphQLServerOptions<
-  TContext =
-    | (() => Promise<Record<string, any>> | Record<string, any>)
-    | Record<string, any>
-> {
+export interface GraphQLServerOptions<TContext extends object = object> {
   schema: GraphQLSchema;
   formatError?: Function;
   rootValue?: any;
-  context?: TContext;
+  context?:
+    | TContext
+    | ((
+        integrationContextArgument: Record<string, any>,
+      ) => TContext | Promise<TContext>);
   validationRules?: Array<(context: ValidationContext) => any>;
   formatResponse?: Function;
   fieldResolver?: GraphQLFieldResolver<any, TContext>;
