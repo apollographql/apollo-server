@@ -105,63 +105,12 @@ export async function runHttpQuery(
   handlerArguments: Array<any>,
   request: HttpQueryRequest,
 ): Promise<HttpQueryResponse> {
-  let isGetRequest: boolean = false;
-  let options: GraphQLOptions;
-  const debugDefault =
-    process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test';
-
-  try {
-    options = await resolveGraphqlOptions(request.options, ...handlerArguments);
-  } catch (e) {
-    // The options can be generated asynchronously, so we don't have access to
-    // the normal options provided by the user, such as: formatError,
-    // debug. Therefore, we need to do some unnatural things, such
-    // as use NODE_ENV to determine the debug settings
-    e.message = `Invalid options provided to ApolloServer: ${e.message}`;
-    if (!debugDefault) {
-      e.warning = `To remove the stacktrace, set the NODE_ENV environment variable to production if the options creation can fail`;
-    }
-    throw createHttpGraphQLError(500, [e], { debug: debugDefault });
-  }
-
-  if (options.debug === undefined) {
-    options.debug = debugDefault;
-  }
-
-  let cacheControl:
-    | CacheControlExtensionOptions & {
-        calculateHttpHeaders: boolean;
-        stripFormattedExtensions: boolean;
-      }
-    | undefined;
-
-  if (options.cacheControl !== false) {
-    if (
-      typeof options.cacheControl === 'boolean' &&
-      options.cacheControl === true
-    ) {
-      // cacheControl: true means that the user needs the cache-control
-      // extensions. This means we are running the proxy, so we should not
-      // strip out the cache control extension and not add cache-control headers
-      cacheControl = {
-        stripFormattedExtensions: false,
-        calculateHttpHeaders: false,
-        defaultMaxAge: 0,
-      };
-    } else {
-      // Default behavior is to run default header calculation and return
-      // no cacheControl extensions
-      cacheControl = {
-        stripFormattedExtensions: true,
-        calculateHttpHeaders: true,
-        defaultMaxAge: 0,
-        ...options.cacheControl,
-      };
-    }
-  }
+  const options = await resolveOptions(request.options, handlerArguments);
+  const cacheControl = initializeCacheControlOptions(options.cacheControl);
 
   let context = await initializeContext(options);
 
+  let isGetRequest: boolean = false;
   let requestPayload;
 
   switch (request.method) {
@@ -394,6 +343,67 @@ export async function runHttpQuery(
     graphqlResponse: stringified,
     responseInit,
   };
+}
+
+async function resolveOptions(
+  options: HttpQueryRequest['options'],
+  handlerArguments: Array<any>,
+): Promise<GraphQLOptions> {
+  const debugDefault =
+    process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test';
+
+  try {
+    options = await resolveGraphqlOptions(options, ...handlerArguments);
+  } catch (e) {
+    // The options can be generated asynchronously, so we don't have access to
+    // the normal options provided by the user, such as: formatError,
+    // debug. Therefore, we need to do some unnatural things, such
+    // as use NODE_ENV to determine the debug settings
+    e.message = `Invalid options provided to ApolloServer: ${e.message}`;
+    if (!debugDefault) {
+      e.warning = `To remove the stacktrace, set the NODE_ENV environment variable to production if the options creation can fail`;
+    }
+    throw createHttpGraphQLError(500, [e], { debug: debugDefault });
+  }
+
+  if (options.debug === undefined) {
+    options.debug = debugDefault;
+  }
+
+  return options;
+}
+
+function initializeCacheControlOptions(
+  cacheControl: GraphQLOptions['cacheControl'],
+):
+  | CacheControlExtensionOptions & {
+      calculateHttpHeaders: boolean;
+      stripFormattedExtensions: boolean;
+    }
+  | undefined {
+  if (cacheControl === false) {
+    return undefined;
+  }
+
+  if (typeof cacheControl === 'boolean' && cacheControl === true) {
+    // cacheControl: true means that the user needs the cache-control
+    // extensions. This means we are running the proxy, so we should not
+    // strip out the cache control extension and not add cache-control headers
+    return {
+      stripFormattedExtensions: false,
+      calculateHttpHeaders: false,
+      defaultMaxAge: 0,
+    };
+  } else {
+    // Default behavior is to run default header calculation and return
+    // no cacheControl extensions
+    return {
+      stripFormattedExtensions: true,
+      calculateHttpHeaders: true,
+      defaultMaxAge: 0,
+      ...cacheControl,
+    };
+  }
 }
 
 async function initializeContext(options: GraphQLOptions): Promise<object> {
