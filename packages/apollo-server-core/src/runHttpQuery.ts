@@ -109,12 +109,6 @@ export async function runHttpQuery(
   let options: GraphQLOptions;
   const debugDefault =
     process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test';
-  let cacheControl:
-    | CacheControlExtensionOptions & {
-        calculateHttpHeaders: boolean;
-        stripFormattedExtensions: boolean;
-      }
-    | undefined;
 
   try {
     options = await resolveGraphqlOptions(request.options, ...handlerArguments);
@@ -132,6 +126,39 @@ export async function runHttpQuery(
   if (options.debug === undefined) {
     options.debug = debugDefault;
   }
+
+  let cacheControl:
+    | CacheControlExtensionOptions & {
+        calculateHttpHeaders: boolean;
+        stripFormattedExtensions: boolean;
+      }
+    | undefined;
+
+  if (options.cacheControl !== false) {
+    if (
+      typeof options.cacheControl === 'boolean' &&
+      options.cacheControl === true
+    ) {
+      // cacheControl: true means that the user needs the cache-control
+      // extensions. This means we are running the proxy, so we should not
+      // strip out the cache control extension and not add cache-control headers
+      cacheControl = {
+        stripFormattedExtensions: false,
+        calculateHttpHeaders: false,
+        defaultMaxAge: 0,
+      };
+    } else {
+      // Default behavior is to run default header calculation and return
+      // no cacheControl extensions
+      cacheControl = {
+        stripFormattedExtensions: true,
+        calculateHttpHeaders: true,
+        defaultMaxAge: 0,
+        ...options.cacheControl,
+      };
+    }
+  }
+
   let requestPayload;
 
   switch (request.method) {
@@ -289,31 +316,6 @@ export async function runHttpQuery(
         }
 
         (context as any).dataSources = dataSources;
-      }
-
-      if (options.cacheControl !== false) {
-        if (
-          typeof options.cacheControl === 'boolean' &&
-          options.cacheControl === true
-        ) {
-          // cacheControl: true means that the user needs the cache-control
-          // extensions. This means we are running the proxy, so we should not
-          // strip out the cache control extension and not add cache-control headers
-          cacheControl = {
-            stripFormattedExtensions: false,
-            calculateHttpHeaders: false,
-            defaultMaxAge: 0,
-          };
-        } else {
-          // Default behavior is to run default header calculation and return
-          // no cacheControl extensions
-          cacheControl = {
-            stripFormattedExtensions: true,
-            calculateHttpHeaders: true,
-            defaultMaxAge: 0,
-            ...options.cacheControl,
-          };
-        }
       }
 
       let params: QueryOptions = {
