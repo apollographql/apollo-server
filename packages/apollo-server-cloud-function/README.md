@@ -15,7 +15,7 @@ npm install apollo-server-cloud-function@rc graphql
 
 #### 1. Write the API handlers
 
-In a file named `graphql.js`, place the following code:
+First, create a `package.json` file and include `apollo-server-cloud-function` in your dependencies. Then in a file named `index.js`, place the following code:
 
 ```js
 const { ApolloServer, gql } = require('apollo-server-cloud-function');
@@ -37,19 +37,27 @@ const resolvers = {
 const server = new ApolloServer({
   typeDefs,
   resolvers,
+  playground: true,
+  introspection: true,
 });
 
 exports.handler = server.createHandler();
 ```
 
-#### 2. Configure your Cloud function and deploy
+#### 2. Configure your Cloud Function and deploy
 
-Set the _Function to execute_ option to _handler_
-and deploy
+On the Create Function page, set _Trigger_ to `HTTP` and _Function to execute_ to the name of your exported handler, in this case `handler`.
+
+Since NODE_ENV is a reserved environment variable in GCF and it defaults to "production", both the **playground** and **introspection**
+options need to be explicitly set to `true` for the GraphQL Playground to work correctly.
+
+After configuring your Function you can press **Create** and an http endpoint will be created a few seconds later.
+
+You can refer to the [Cloud Functions documentation](https://cloud.google.com/functions/docs/quickstart-console) for more details
 
 ## Getting request info
 
-To read information about the current request from the API Gateway event (HTTP headers, HTTP method, body, path, ...) or the current Google Cloud Function (Function Name, Function Version, awsRequestId, time remaining, ...) use the options function. This way they can be passed to your schema resolvers using the context option.
+To read information about the currently executing Google Cloud Function (HTTP headers, HTTP method, body, path, ...) use the context option. This way you can pass any request specific data to your schema resolvers.
 
 ```js
 const { ApolloServer, gql } = require('apollo-server-cloud-function');
