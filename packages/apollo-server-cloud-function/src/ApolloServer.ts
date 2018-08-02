@@ -80,7 +80,7 @@ export class ApolloServer extends ApolloServerBase {
     }
 
     return (req: any, res: any) => {
-      if (cors && cors.origin) {
+      if (cors) {
         if (typeof cors.origin === 'string') {
           res.set('Access-Control-Allow-Origin', cors.origin);
         } else if (
