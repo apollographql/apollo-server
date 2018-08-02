@@ -146,6 +146,63 @@ describe('runQuery', () => {
     });
   });
 
+  it('passes syntax errors to formatError', () => {
+    const query = `query { testError`;
+    const expectedError = {
+      message: 'Formatted Error Message',
+      additionalValue: 'foo',
+    };
+    const formatError = jest.fn(() => expectedError);
+    return runQuery({
+      schema,
+      queryString: query,
+      debug: false,
+      request: new MockReq(),
+      formatError,
+    }).then(res => {
+      expect(res.errors!.length).toEqual(1);
+      expect(res.errors![0]).toEqual(expectedError);
+    });
+  });
+
+  it('passes validation errors to formatError', () => {
+    const query = `query { nottestError }`;
+    const expectedError = {
+      message: 'Formatted Error Message',
+      additionalValue: 'foo',
+    };
+    const formatError = jest.fn(() => expectedError);
+    return runQuery({
+      schema,
+      queryString: query,
+      debug: false,
+      request: new MockReq(),
+      formatError,
+    }).then(res => {
+      expect(res.errors!.length).toEqual(1);
+      expect(res.errors![0]).toEqual(expectedError);
+    });
+  });
+
+  it('passes execution errors to formatError', () => {
+    const query = `query { testError }`;
+    const expectedError = {
+      message: 'Formatted Error Message',
+      additionalValue: 'foo',
+    };
+    const formatError = jest.fn(() => expectedError);
+    return runQuery({
+      schema,
+      queryString: query,
+      debug: false,
+      request: new MockReq(),
+      formatError,
+    }).then(res => {
+      expect(res.errors!.length).toEqual(1);
+      expect(res.errors![0]).toEqual(expectedError);
+    });
+  });
+
   it('returns a validation error if the query string does not pass validation', () => {
     const query = `query TestVar($base: String){ testArgumentValue(base: $base) }`;
     const expected =
