@@ -82,7 +82,7 @@ export class HttpQueryError extends Error {
 function createHttpGraphQLError<E extends Error>(
   statusCode: number,
   errors: Array<E>,
-  options?: Partial<GraphQLOptions>,
+  options?: Pick<GraphQLOptions, 'debug' | 'formatError'>,
 ): HttpQueryError {
   return new HttpQueryError(
     statusCode,
@@ -123,6 +123,7 @@ export async function runHttpQuery(
     }
     throw createHttpGraphQLError(500, [e], { debug: debugDefault });
   }
+
   if (options.debug === undefined) {
     options.debug = debugDefault;
   }
@@ -158,6 +159,8 @@ export async function runHttpQuery(
       };
     }
   }
+
+  let context = await initializeContext(options);
 
   let requestPayload;
 
@@ -271,52 +274,13 @@ export async function runHttpQuery(
         }
       }
 
-      let context = options.context;
-      if (!context) {
-        context = {} as Record<string, any>;
-      } else if (typeof context === 'function') {
-        try {
-          context = await context();
-        } catch (e) {
-          e.message = `Context creation failed: ${e.message}`;
-          // For errors that are not internal, such as authentication, we
-          // should provide a 400 response
-          if (
-            e.extensions &&
-            e.extensions.code &&
-            e.extensions.code !== 'INTERNAL_SERVER_ERROR'
-          ) {
-            throw createHttpGraphQLError(400, [e], options);
-          } else {
-            throw createHttpGraphQLError(500, [e], options);
-          }
-        }
-      } else {
-        // Always clone the context if it's not a function, because that preserves
-        // having a fresh context per request.
-        context = Object.assign(
-          Object.create(Object.getPrototypeOf(context)),
-          context,
-        ) as Record<string, any>;
-      }
-
-      if (options.dataSources) {
-        const dataSources = options.dataSources() || {};
-
-        for (const dataSource of Object.values(dataSources)) {
-          if (dataSource.initialize) {
-            dataSource.initialize({ context, cache: options.cache! });
-          }
-        }
-
-        if ('dataSources' in context) {
-          throw new Error(
-            'Please use the dataSources config option instead of putting dataSources on the context yourself.',
-          );
-        }
-
-        (context as any).dataSources = dataSources;
-      }
+      // FIXME: Is this actually what we want?
+      // Always clone the context, because that preserves
+      // having a fresh context per request.
+      context = Object.assign(
+        Object.create(Object.getPrototypeOf(context)),
+        context,
+      ) as object;
 
       let params: QueryOptions = {
         schema: options.schema,
@@ -430,6 +394,53 @@ export async function runHttpQuery(
     graphqlResponse: stringified,
     responseInit,
   };
+}
+
+async function initializeContext(options: GraphQLOptions): Promise<object> {
+  let context = options.context!;
+
+  // FIXME: This is pretty confusing code, because options.context isn't the context option passed by the user
+  // but has already been initialized by ApolloServer.graphQLServerOptions.
+  // If it is a function, that is because we defer errors that occur during context initalization so
+  // we can throw an appropriate error.
+  if (typeof context === 'function') {
+    try {
+      context = await (context as Function)();
+    } catch (e) {
+      e.message = `Context creation failed: ${e.message}`;
+      // For errors that are not internal, such as authentication, we
+      // should provide a 400 response
+      if (
+        e.extensions &&
+        e.extensions.code &&
+        e.extensions.code !== 'INTERNAL_SERVER_ERROR'
+      ) {
+        throw createHttpGraphQLError(400, [e], options);
+      } else {
+        throw createHttpGraphQLError(500, [e], options);
+      }
+    }
+  }
+
+  if (options.dataSources) {
+    const dataSources = options.dataSources() || {};
+
+    for (const dataSource of Object.values(dataSources)) {
+      if (dataSource.initialize) {
+        dataSource.initialize({ context, cache: options.cache! });
+      }
+    }
+
+    if ('dataSources' in context) {
+      throw new Error(
+        'Please use the dataSources config option instead of putting dataSources on the context yourself.',
+      );
+    }
+
+    (context as any).dataSources = dataSources;
+  }
+
+  return context;
 }
 
 async function generateQueryString({
