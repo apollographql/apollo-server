@@ -77,20 +77,20 @@ export class HttpQueryError extends Error {
 }
 
 /**
- * If optionsObject is specified, then the errors array will be formatted
+ * If options is specified, then the errors array will be formatted
  */
 function createHttpGraphQLError<E extends Error>(
   statusCode: number,
   errors: Array<E>,
-  optionsObject?: Partial<GraphQLOptions>,
+  options?: Partial<GraphQLOptions>,
 ): HttpQueryError {
   return new HttpQueryError(
     statusCode,
     prettyJSONStringify({
-      errors: optionsObject
+      errors: options
         ? formatApolloErrors(errors, {
-            debug: optionsObject.debug,
-            formatter: optionsObject.formatError,
+            debug: options.debug,
+            formatter: options.formatError,
           })
         : errors,
     }),
@@ -106,7 +106,7 @@ export async function runHttpQuery(
   request: HttpQueryRequest,
 ): Promise<HttpQueryResponse> {
   let isGetRequest: boolean = false;
-  let optionsObject: GraphQLOptions;
+  let options: GraphQLOptions;
   const debugDefault =
     process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test';
   let cacheControl:
@@ -117,10 +117,7 @@ export async function runHttpQuery(
     | undefined;
 
   try {
-    optionsObject = await resolveGraphqlOptions(
-      request.options,
-      ...handlerArguments,
-    );
+    options = await resolveGraphqlOptions(request.options, ...handlerArguments);
   } catch (e) {
     // The options can be generated asynchronously, so we don't have access to
     // the normal options provided by the user, such as: formatError,
@@ -132,8 +129,8 @@ export async function runHttpQuery(
     }
     throw createHttpGraphQLError(500, [e], { debug: debugDefault });
   }
-  if (optionsObject.debug === undefined) {
-    optionsObject.debug = debugDefault;
+  if (options.debug === undefined) {
+    options.debug = debugDefault;
   }
   let requestPayload;
 
@@ -179,7 +176,7 @@ export async function runHttpQuery(
   const requests = requestPayload.map(async requestParams => {
     try {
       let extensions = requestParams.extensions;
-      let validationRules = [...(optionsObject.validationRules || [])];
+      let validationRules = [...(options.validationRules || [])];
 
       if (isGetRequest && extensions) {
         // For GET requests, we have to JSON-parse extensions. (For POST
@@ -206,9 +203,7 @@ export async function runHttpQuery(
         } = await generateQueryString({
           receivedQuery: requestParams.query,
           extensions,
-          cache:
-            optionsObject.persistedQueries &&
-            optionsObject.persistedQueries.cache,
+          cache: options.persistedQueries && options.persistedQueries.cache,
         }));
       } catch (error) {
         if (isBatch || error.name === 'HttpQueryError') {
@@ -218,7 +213,7 @@ export async function runHttpQuery(
         }
         // Return 200 to simplify processing: we want this to be intepreted by
         // the client as data worth interpreting, not an error.
-        throw createHttpGraphQLError(200, [error], optionsObject);
+        throw createHttpGraphQLError(200, [error], options);
       }
 
       const operationName = requestParams.operationName;
@@ -249,7 +244,7 @@ export async function runHttpQuery(
         }
       }
 
-      let context = optionsObject.context;
+      let context = options.context;
       if (!context) {
         context = {} as Record<string, any>;
       } else if (typeof context === 'function') {
@@ -264,9 +259,9 @@ export async function runHttpQuery(
             e.extensions.code &&
             e.extensions.code !== 'INTERNAL_SERVER_ERROR'
           ) {
-            throw createHttpGraphQLError(400, [e], optionsObject);
+            throw createHttpGraphQLError(400, [e], options);
           } else {
-            throw createHttpGraphQLError(500, [e], optionsObject);
+            throw createHttpGraphQLError(500, [e], options);
           }
         }
       } else {
@@ -278,12 +273,12 @@ export async function runHttpQuery(
         ) as Record<string, any>;
       }
 
-      if (optionsObject.dataSources) {
-        const dataSources = optionsObject.dataSources() || {};
+      if (options.dataSources) {
+        const dataSources = options.dataSources() || {};
 
         for (const dataSource of Object.values(dataSources)) {
           if (dataSource.initialize) {
-            dataSource.initialize({ context, cache: optionsObject.cache! });
+            dataSource.initialize({ context, cache: options.cache! });
           }
         }
 
@@ -296,10 +291,10 @@ export async function runHttpQuery(
         (context as any).dataSources = dataSources;
       }
 
-      if (optionsObject.cacheControl !== false) {
+      if (options.cacheControl !== false) {
         if (
-          typeof optionsObject.cacheControl === 'boolean' &&
-          optionsObject.cacheControl === true
+          typeof options.cacheControl === 'boolean' &&
+          options.cacheControl === true
         ) {
           // cacheControl: true means that the user needs the cache-control
           // extensions. This means we are running the proxy, so we should not
@@ -316,24 +311,24 @@ export async function runHttpQuery(
             stripFormattedExtensions: true,
             calculateHttpHeaders: true,
             defaultMaxAge: 0,
-            ...optionsObject.cacheControl,
+            ...options.cacheControl,
           };
         }
       }
 
       let params: QueryOptions = {
-        schema: optionsObject.schema,
+        schema: options.schema,
         queryString,
         variables,
         context,
-        rootValue: optionsObject.rootValue,
+        rootValue: options.rootValue,
         operationName,
         validationRules,
-        formatError: optionsObject.formatError,
-        formatResponse: optionsObject.formatResponse,
-        fieldResolver: optionsObject.fieldResolver,
-        debug: optionsObject.debug,
-        tracing: optionsObject.tracing,
+        formatError: options.formatError,
+        formatResponse: options.formatResponse,
+        fieldResolver: options.fieldResolver,
+        debug: options.debug,
+        tracing: options.tracing,
         cacheControl: cacheControl
           ? omit(cacheControl, [
               'calculateHttpHeaders',
@@ -341,7 +336,7 @@ export async function runHttpQuery(
             ])
           : false,
         request: request.request,
-        extensions: optionsObject.extensions,
+        extensions: options.extensions,
         persistedQueryHit,
         persistedQueryRegister,
       };
@@ -358,7 +353,7 @@ export async function runHttpQuery(
       // This error will be uncaught, so we need to wrap it and treat it as an
       // internal server error
       return {
-        errors: formatApolloErrors([e], optionsObject),
+        errors: formatApolloErrors([e], options),
       };
     }
   }) as Array<Promise<ExecutionResult & { extensions?: Record<string, any> }>>;
@@ -370,7 +365,7 @@ export async function runHttpQuery(
     if (e.name === 'HttpQueryError') {
       throw e;
     }
-    throw createHttpGraphQLError(500, [e], optionsObject);
+    throw createHttpGraphQLError(500, [e], options);
   }
 
   const responseInit: ApolloServerHttpResponse = {
@@ -406,7 +401,7 @@ export async function runHttpQuery(
     // This code is run on parse/validation errors and any other error that
     // doesn't reach GraphQL execution
     if (graphqlResponse.errors && typeof graphqlResponse.data === 'undefined') {
-      // don't include optionsObject, since the errors have already been formatted
+      // don't include options, since the errors have already been formatted
       throw createHttpGraphQLError(400, graphqlResponse.errors as any);
     }
     const stringified = prettyJSONStringify(graphqlResponse);
