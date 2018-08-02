@@ -97,7 +97,8 @@ export class HTTPCache {
 
     let ttlOverride = cacheOptions && cacheOptions.ttl;
 
-    if (!ttlOverride && !policy.storable()) return response;
+    if (!ttlOverride && !(request.method === 'GET' && policy.storable()))
+      return response;
 
     let ttl = ttlOverride || Math.round(policy.timeToLive() / 1000);
     if (ttl <= 0) return response;

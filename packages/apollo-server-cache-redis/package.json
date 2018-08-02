@@ -14,6 +14,7 @@
   "scripts": {
     "clean": "rm -rf dist",
     "compile": "tsc",
+    "coverage": "jest --coverage",
     "prepublish": "npm run clean && npm run compile",
     "test": "jest --verbose"
   },
@@ -29,11 +30,8 @@
     "redis": "^2.8.0"
   },
   "devDependencies": {
-    "@types/jest": "23.3.0",
     "@types/redis": "2.8.6",
-    "jest": "23.4.1",
-    "redis-mock": "0.29.0",
-    "ts-jest": "23.0.1"
+    "redis-mock": "0.29.0"
   },
   "jest": {
     "testEnvironment": "node",

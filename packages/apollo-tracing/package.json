@@ -7,6 +7,7 @@
   "scripts": {
     "clean": "rm -rf dist",
     "compile": "tsc",
+    "coverage": "jest --coverage",
     "prepublish": "npm run compile",
     "test": "jest --verbose",
     "watch": "tsc -w"
@@ -23,12 +24,6 @@
   },
   "peerDependencies": {
     "graphql": "0.10.x - 0.13.x"
-  },
-  "devDependencies": {
-    "@types/jest": "23.3.0",
-    "jest": "23.4.1",
-    "jest-matcher-utils": "23.2.0",
-    "ts-jest": "23.0.1"
   },
   "jest": {
     "testEnvironment": "node",

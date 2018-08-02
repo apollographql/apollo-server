@@ -3,9 +3,13 @@
   "version": "2.0.0",
   "description": "Production-ready Node.js GraphQL server for Koa",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "compile": "tsc",
-    "prepublish": "npm run compile"
+    "coverage": "jest --coverage",
+    "prepublish": "npm run compile",
+    "test": "jest --verbose",
+    "watch": "tsc -w"
   },
   "repository": {
     "type": "git",
@@ -48,7 +52,7 @@
   },
   "devDependencies": {
     "@types/koa-multer": "1.0.0",
-    "@types/koa-router": "7.0.30",
+    "@types/koa-router": "7.0.31",
     "apollo-datasource-rest": "0.1.0",
     "apollo-server-integration-testsuite": "2.0.0",
     "form-data": "2.3.2",
@@ -58,8 +62,26 @@
   "peerDependencies": {
     "graphql": "^0.12.0 || ^0.13.0 || ^14.0.0"
   },
-  "typings": "dist/index.d.ts",
-  "typescript": {
-    "definition": "dist/index.d.ts"
+  "jest": {
+    "testEnvironment": "node",
+    "transform": {
+      "^.+\\.(ts|js)$": "ts-jest"
+    },
+    "moduleFileExtensions": [
+      "ts",
+      "js",
+      "json"
+    ],
+    "testRegex": "src/__tests__/.*$",
+    "testPathIgnorePatterns": [
+      "<rootDir>/node_modules/",
+      "<rootDir>/lib/",
+      "test-utils"
+    ],
+    "globals": {
+      "ts-jest": {
+        "skipBabel": true
+      }
+    }
   }
 }

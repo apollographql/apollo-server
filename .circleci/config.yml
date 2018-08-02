@@ -34,7 +34,7 @@ common_test_steps: &common_test_steps
         key: dependency-cache-{{ checksum "package.json" }}-{{ checksum "package-checksum" }}
         paths:
           - ./node_modules
-    - run: npm run travis
+    - run: npm run circle
 
 # Important! When adding a new job to `jobs`, make sure to define when it
 # executes by also adding it to the `workflows` section below!

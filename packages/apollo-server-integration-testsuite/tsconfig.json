@@ -5,5 +5,6 @@
     "outDir": "./dist",
     "lib": ["es2017", "esnext.asynciterable", "dom"]
   },
-  "exclude": ["node_modules", "dist"]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "**/__tests__/*", "**/__mocks__/*"]
 }
