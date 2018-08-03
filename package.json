@@ -46,7 +46,7 @@
     "prettier": "1.14.0",
     "prettier-check": "2.0.0",
     "supertest": "3.1.0",
-    "ts-jest": "23.0.1",
+    "ts-jest": "23.1.2",
     "typescript": "2.9.2"
   }
 }
