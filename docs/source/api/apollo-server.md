@@ -63,7 +63,7 @@ new ApolloServer({
 
 * `introspection`: <`Boolean`>
 
-  Enables and disables schema introspection
+  Enables and disables schema introspection. Disabled in production by default.
 
 * `playground`: <`Boolean`> | <`Object`>
 
