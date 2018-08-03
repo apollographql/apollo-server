@@ -275,7 +275,7 @@ function doRunQuery(
           })
           .then(result => {
             let executionResult: ExecutionResult;
-            let patches: AsyncIterable<ExecutionPatchResult>;
+            let patches: AsyncIterable<ExecutionPatchResult> | undefined;
 
             if (isDeferredExecutionResult(result)) {
               // TODO: Deferred execution should be disabled if transport does not support it
@@ -311,7 +311,7 @@ function doRunQuery(
             if (isDeferredExecutionResult(result)) {
               return {
                 initialResponse: response,
-                deferredPatches: patches,
+                deferredPatches: patches!,
               };
             } else {
               return response;

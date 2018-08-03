@@ -501,7 +501,7 @@ export async function runHttpQuery(
 
     if (!isDeferred) {
       // Add content-length header
-      responseInit.headers['Content-Length'] = Buffer.byteLength(
+      responseInit.headers!['Content-Length'] = Buffer.byteLength(
         prettyJSONStringify(graphqlResponse),
         'utf8',
       ).toString();

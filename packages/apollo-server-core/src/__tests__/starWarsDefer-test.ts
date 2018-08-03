@@ -502,6 +502,7 @@ describe('@defer Directive tests', () => {
           expect(JSON.stringify(patches[0])).toBe(
             JSON.stringify({
               path: ['hero', 'secretBackstory'],
+              data: null,
               errors: [
                 {
                   message: 'secretBackstory is secret.',

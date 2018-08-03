@@ -1,7 +1,7 @@
 /**
  * The execution phase has been modified to enable @defer support, with
  * modifications starting from `executeOperation()`. The bulk of the changes are
- * at `completeValueCatchingError()`. Most utility functions are
+ * at `completeValueCatchingError()`. Utility functions are
  * exported from `graphql.js` where possible.
  */
 
@@ -20,6 +20,7 @@ import {
   isLeafType,
   isListType,
   isNonNullType,
+  GraphQLType,
 } from 'graphql/type/definition';
 import {
   GraphQLObjectType,
@@ -82,7 +83,7 @@ function isPromise(
 // Valid types a GraphQL field can take
 type FieldValue =
   | Record<string, {}>
-  | Record<string, {}>[]
+  | Array<any>
   | string
   | number
   | boolean
@@ -90,7 +91,7 @@ type FieldValue =
 
 type PatchBundle = Promise<{
   patch: ExecutionPatchResult;
-  dependentPatches: PatchBundle[];
+  dependentPatches?: PatchBundle[];
 }>;
 
 /**
@@ -133,7 +134,7 @@ export function buildExecutionContext(
   enableDefer?: boolean,
 ): GraphQLError[] | ExecutionContext {
   const errors: Array<GraphQLError> = [];
-  let operation: OperationDefinitionNode;
+  let operation: OperationDefinitionNode | undefined;
   let hasMultipleAssumedOperations = false;
   const fragments: Record<string, FragmentDefinitionNode> = Object.create(null);
   for (let i = 0; i < document.definitions.length; i++) {
@@ -199,7 +200,7 @@ export function buildExecutionContext(
     fragments,
     rootValue,
     contextValue,
-    operation,
+    operation: operation as OperationDefinitionNode,
     variableValues,
     fieldResolver: fieldResolver || defaultFieldResolver,
     errors,
@@ -223,7 +224,7 @@ function shouldDeferNode(
     node,
     exeContext.variableValues,
   );
-  return defer && defer.if !== false; // default value for "if" is true
+  return defer !== undefined ? !defer.if : false; // default value for "if" is true
 }
 
 /**
@@ -301,7 +302,7 @@ function deferErrorToParent(
   error: GraphQLError,
 ) {
   initializeDependentStore(exeContext, parentPath);
-  exeContext.deferredDependents[parentPath].errors.push(error);
+  exeContext.deferredDependents![parentPath].errors.push(error);
 }
 
 function deferPatchToParent(
@@ -310,7 +311,7 @@ function deferPatchToParent(
   patch: PatchBundle,
 ) {
   initializeDependentStore(exeContext, parentPath);
-  exeContext.deferredDependents[parentPath].patches.push(patch);
+  exeContext.deferredDependents![parentPath].patches.push(patch);
 }
 
 /**
@@ -346,7 +347,8 @@ class PatchDispatcher {
           this.dispatch(patch);
         }
       }
-      this.resolvers.shift()({ value: patch, done: false });
+      const resolver = this.resolvers.shift();
+      if (resolver) resolver({ value: patch, done: false });
     });
     this.resultPromises.push(
       new Promise<{ value: ExecutionPatchResult; done: boolean }>(resolve => {
@@ -497,9 +499,9 @@ function buildResponse(
     return {
       initialResult: result,
       deferredPatches: context.patchDispatcher.getAsyncIterable(),
-    };
+    } as DeferredExecutionResult;
   } else {
-    return result;
+    return result as ExecutionResult;
   }
 }
 
@@ -593,7 +595,7 @@ function executeFieldsSerially(
   exeContext: ExecutionContext,
   parentType: GraphQLObjectType,
   sourceValue: {},
-  path: ResponsePath,
+  path: ResponsePath | undefined,
   fields: Record<string, Array<FieldNode>>,
 ): MaybePromise<FieldValue> {
   return promiseReduce(
@@ -631,8 +633,8 @@ function executeFieldsSerially(
 function executeFields(
   exeContext: ExecutionContext,
   parentType: GraphQLObjectType,
-  sourceValue: {},
-  path: ResponsePath,
+  sourceValue: FieldValue,
+  path: ResponsePath | undefined,
   fields: Record<string, Array<FieldNode>>,
   closestDeferredParent?: string,
 ): MaybePromise<FieldValue> {
@@ -682,11 +684,11 @@ function executeFields(
 function resolveField(
   exeContext: ExecutionContext,
   parentType: GraphQLObjectType,
-  source: {},
+  source: FieldValue,
   fieldNodes: ReadonlyArray<FieldNode>,
   path: ResponsePath,
   closestDeferredParent?: string,
-): MaybePromise<{}> {
+): MaybePromise<FieldValue> | undefined {
   const fieldNode = fieldNodes[0];
   const fieldName = fieldNode.name.value;
 
@@ -754,11 +756,7 @@ function makePatchBundle(
     : undefined;
 
   return Promise.resolve({
-    patch: formatDataAsPatch(
-      path,
-      data,
-      dependent ? dependent.errors : (dependent as undefined),
-    ),
+    patch: formatDataAsPatch(path, data, dependent ? dependent.errors : []),
     dependentPatches: dependent ? dependent.patches : (dependent as undefined),
   });
 }
@@ -780,8 +778,8 @@ function completeValueCatchingError(
   info: GraphQLResolveInfo,
   path: ResponsePath,
   result: {},
-  closestDeferredParent: string,
-): MaybePromise<FieldValue> | undefined {
+  closestDeferredParent?: string,
+): MaybePromise<FieldValue> {
   // Items in a list inherit the @defer directive applied on the list type,
   // but we do not need to defer the item itself.
   const pathArray = responsePathAsArray(path);
@@ -789,8 +787,8 @@ function completeValueCatchingError(
   const shouldDefer =
     fieldNodes.every(node => shouldDeferNode(exeContext, node)) && !isListItem;
 
-  // Throw error if @defer is applied to a non-nullable field
-  // TODO: We can check for this earlier in the validation phase.
+  // Throw error if @defer is applied to a non-nullable field,
+  // this is already caught in the validation phase.
   if (isNonNullType(returnType) && shouldDefer) {
     throw locatedError(
       new Error(
@@ -940,7 +938,7 @@ function handleDeferredFieldError(
   path,
   returnType,
   exeContext,
-  closestDeferredParent: string,
+  closestDeferredParent?: string,
 ): void {
   const error = locatedError(
     asErrorInstance(rawError),
@@ -957,7 +955,7 @@ function handleDeferredFieldError(
   );
   if (shouldDefer) {
     // If this node is itself deferred, then send errors with this patch
-    const patch = formatDataAsPatch(path, undefined, [error]);
+    const patch = formatDataAsPatch(path, null, [error]);
     const promisedPatch = Promise.resolve({
       patch,
       dependentPatches: dependent ? dependent.patches : dependent,
@@ -974,8 +972,6 @@ function handleDeferredFieldError(
   if (closestDeferredParent) {
     deferErrorToParent(exeContext, closestDeferredParent, error);
   }
-
-  return null;
 }
 
 /**
@@ -1005,8 +1001,8 @@ function completeValue(
   fieldNodes: ReadonlyArray<FieldNode>,
   info: GraphQLResolveInfo,
   path: ResponsePath,
-  result: MaybePromise<{}>,
-  closestDeferredParent: string,
+  result: MaybePromise<FieldValue>,
+  closestDeferredParent?: string,
 ): MaybePromise<FieldValue> {
   // If result is an Error, throw a located error.
   if (result instanceof Error) {
@@ -1103,8 +1099,8 @@ function completeListValue(
   fieldNodes: ReadonlyArray<FieldNode>,
   info: GraphQLResolveInfo,
   path: ResponsePath,
-  result: {},
-  closestDeferredParent: string,
+  result: MaybePromise<FieldValue>,
+  closestDeferredParent?: string,
 ): MaybePromise<FieldValue> {
   invariant(
     isCollection(result),
@@ -1117,7 +1113,7 @@ function completeListValue(
   // where the list contains no Promises by avoiding creating another Promise.
   const itemType = returnType.ofType;
   let containsPromise = false;
-  const completedResults = [];
+  const completedResults: MaybePromise<FieldValue>[] = [];
   forEach(result as any, (item, index) => {
     // No need to modify the info object containing the path,
     // since from here on it is not ever accessed by resolver functions.
@@ -1147,7 +1143,7 @@ function completeListValue(
  */
 function completeLeafValue(
   returnType: GraphQLLeafType,
-  result: {},
+  result: MaybePromise<FieldValue>,
 ): FieldValue {
   invariant(returnType.serialize, 'Missing serialize method on type');
   const serializedResult = returnType.serialize(result);
@@ -1170,24 +1166,29 @@ function completeAbstractValue(
   fieldNodes: ReadonlyArray<FieldNode>,
   info: GraphQLResolveInfo,
   path: ResponsePath,
-  result: {},
-  closestDeferredParent: string,
+  result: MaybePromise<FieldValue>,
+  closestDeferredParent?: string,
 ): MaybePromise<FieldValue> {
   const runtimeType = returnType.resolveType
     ? returnType.resolveType(result, exeContext.contextValue, info)
-    : defaultResolveTypeFn(result, exeContext.contextValue, info, returnType);
+    : defaultResolveTypeFn(
+        result as { __typename?: string },
+        exeContext.contextValue,
+        info,
+        returnType,
+      );
 
   if (isPromise(runtimeType)) {
     return runtimeType.then(resolvedRuntimeType =>
       completeObjectValue(
         exeContext,
         ensureValidRuntimeType(
-          resolvedRuntimeType,
+          resolvedRuntimeType as string | GraphQLObjectType,
           exeContext,
           returnType,
           fieldNodes,
           info,
-          result,
+          result as FieldValue,
         ),
         fieldNodes,
         info,
@@ -1201,12 +1202,12 @@ function completeAbstractValue(
   return completeObjectValue(
     exeContext,
     ensureValidRuntimeType(
-      runtimeType,
+      runtimeType as string | GraphQLObjectType,
       exeContext,
       returnType,
       fieldNodes,
       info,
-      result,
+      result as FieldValue,
     ),
     fieldNodes,
     info,
@@ -1225,14 +1226,14 @@ function ensureValidRuntimeType(
   returnType: GraphQLAbstractType,
   fieldNodes: ReadonlyArray<FieldNode>,
   info: GraphQLResolveInfo,
-  result: {},
+  result: FieldValue,
 ): GraphQLObjectType {
   const runtimeType =
     typeof runtimeTypeOrName === 'string'
       ? exeContext.schema.getType(runtimeTypeOrName)
       : runtimeTypeOrName;
 
-  if (!isObjectType(runtimeType)) {
+  if (!isObjectType(runtimeType as GraphQLType)) {
     throw new GraphQLError(
       `Abstract type ${returnType.name} must resolve to an Object type at ` +
         `runtime for field ${info.parentType.name}.${info.fieldName} with ` +
@@ -1244,15 +1245,21 @@ function ensureValidRuntimeType(
     );
   }
 
-  if (!exeContext.schema.isPossibleType(returnType, runtimeType)) {
+  if (
+    !exeContext.schema.isPossibleType(
+      returnType,
+      runtimeType as GraphQLObjectType,
+    )
+  ) {
     throw new GraphQLError(
-      `Runtime Object type "${runtimeType.name}" is not a possible type ` +
-        `for "${returnType.name}".`,
+      `Runtime Object type "${
+        (runtimeType as GraphQLObjectType).name
+      }" is not a possible type ` + `for "${returnType.name}".`,
       fieldNodes,
     );
   }
 
-  return runtimeType;
+  return runtimeType as GraphQLObjectType;
 }
 
 /**
@@ -1264,8 +1271,8 @@ function completeObjectValue(
   fieldNodes: ReadonlyArray<FieldNode>,
   info: GraphQLResolveInfo,
   path: ResponsePath,
-  result: {},
-  closestDeferredParent: string,
+  result: MaybePromise<FieldValue>,
+  closestDeferredParent?: string,
 ): MaybePromise<FieldValue> {
   // If there is an isTypeOf predicate function, call it with the
   // current result. If isTypeOf returns false, then raise an error rather
@@ -1276,7 +1283,11 @@ function completeObjectValue(
     if (isPromise(isTypeOf)) {
       return isTypeOf.then(resolvedIsTypeOf => {
         if (!resolvedIsTypeOf) {
-          throw invalidReturnTypeError(returnType, result, fieldNodes);
+          throw invalidReturnTypeError(
+            returnType,
+            result as FieldValue,
+            fieldNodes,
+          );
         }
         return collectAndExecuteSubfields(
           exeContext,
@@ -1284,14 +1295,18 @@ function completeObjectValue(
           fieldNodes,
           info,
           path,
-          result,
+          result as FieldValue,
           closestDeferredParent,
         );
       });
     }
 
     if (!isTypeOf) {
-      throw invalidReturnTypeError(returnType, result, fieldNodes);
+      throw invalidReturnTypeError(
+        returnType,
+        result as FieldValue,
+        fieldNodes,
+      );
     }
   }
 
@@ -1301,14 +1316,14 @@ function completeObjectValue(
     fieldNodes,
     info,
     path,
-    result,
+    result as FieldValue,
     closestDeferredParent,
   );
 }
 
 function invalidReturnTypeError(
   returnType: GraphQLObjectType,
-  result: {},
+  result: FieldValue,
   fieldNodes: ReadonlyArray<FieldNode>,
 ): GraphQLError {
   return new GraphQLError(
@@ -1323,8 +1338,8 @@ function collectAndExecuteSubfields(
   fieldNodes: ReadonlyArray<FieldNode>,
   info: GraphQLResolveInfo,
   path: ResponsePath,
-  result: {},
-  closestDeferredParent: string,
+  result: FieldValue,
+  closestDeferredParent?: string,
 ): MaybePromise<FieldValue> {
   // Collect sub-fields to execute to complete this value.
   const subFieldNodes = collectSubfields(exeContext, returnType, fieldNodes);
@@ -1372,7 +1387,11 @@ function defaultResolveTypeFn(
   context: {},
   info: GraphQLResolveInfo,
   abstractType: GraphQLAbstractType,
-): GraphQLObjectType | string | Promise<GraphQLObjectType | string> {
+):
+  | GraphQLObjectType
+  | string
+  | Promise<GraphQLObjectType | string | undefined>
+  | undefined {
   // First, look for `__typename`.
   if (
     value !== null &&
@@ -1384,7 +1403,7 @@ function defaultResolveTypeFn(
 
   // Otherwise, test each possible type.
   const possibleTypes = info.schema.getPossibleTypes(abstractType);
-  const promisedIsTypeOfResults = [];
+  const promisedIsTypeOfResults: Promise<boolean>[] = [];
 
   for (let i = 0; i < possibleTypes.length; i++) {
     const type = possibleTypes[i];

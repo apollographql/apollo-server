@@ -15,17 +15,18 @@ export function CannotDeferNonNullableFields(
   return {
     Directive(node, key, parent, path, ancestors) {
       const fieldDef = context.getFieldDef();
-      if (node.name.value === 'defer' && isNonNullType(fieldDef.type)) {
-        context.reportError(
-          new GraphQLError(
-            cannotDeferOnNonNullMessage(
-              `${context.getParentType()}.${fieldDef.name}`,
+      if (fieldDef) {
+        if (node.name.value === 'defer' && isNonNullType(fieldDef.type)) {
+          context.reportError(
+            new GraphQLError(
+              cannotDeferOnNonNullMessage(
+                `${context.getParentType()}.${fieldDef.name}`,
+              ),
+              [node],
             ),
-            [node],
-          ),
-        );
+          );
+        }
       }
-      return;
     },
   };
 }
