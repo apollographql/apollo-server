@@ -24,7 +24,7 @@ Unused RC, due to publication issues
 - export `bodyParser.Options` to koa [#1334](https://github.com/apollographql/apollo-server/pull/1334)
 - add and use playground in ApolloServer constructor [#1297](https://github.com/apollographql/apollo-server/pull/1297)
 - **breaking**: remove calculate headers as function [#1337](https://github.com/apollographql/apollo-server/pull/1337)
-- **breaking**: remove `fromatParams` [#1331](https://github.com/apollographql/apollo-server/pull/1331)
+- **breaking**: remove `formatParams` [#1331](https://github.com/apollographql/apollo-server/pull/1331)
 
 ### rc.7
 
