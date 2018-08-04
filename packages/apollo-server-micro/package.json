@@ -3,10 +3,13 @@
   "version": "2.0.0",
   "description": "Production-ready Node.js GraphQL server for Micro",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "compile": "tsc",
-    "watch": "tsc -w",
-    "prepare": "npm run compile"
+    "coverage": "jest --coverage",
+    "prepare": "npm run compile",
+    "test": "jest --verbose",
+    "watch": "tsc -w"
   },
   "repository": {
     "type": "git",
@@ -39,8 +42,26 @@
     "request-promise": "4.2.2",
     "test-listen": "1.1.0"
   },
-  "typings": "dist/index.d.ts",
-  "typescript": {
-    "definition": "dist/index.d.ts"
+  "jest": {
+    "testEnvironment": "node",
+    "transform": {
+      "^.+\\.(ts|js)$": "ts-jest"
+    },
+    "moduleFileExtensions": [
+      "ts",
+      "js",
+      "json"
+    ],
+    "testRegex": "src/__tests__/.*$",
+    "testPathIgnorePatterns": [
+      "<rootDir>/node_modules/",
+      "<rootDir>/lib/",
+      "test-utils"
+    ],
+    "globals": {
+      "ts-jest": {
+        "skipBabel": true
+      }
+    }
   }
 }

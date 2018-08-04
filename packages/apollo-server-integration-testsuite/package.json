@@ -4,9 +4,11 @@
   "version": "2.0.0",
   "description": "Apollo Server Integrations testsuite",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "compile": "tsc",
-    "prepublish": "npm run compile"
+    "prepublish": "npm run compile",
+    "watch": "tsc -w"
   },
   "repository": {
     "type": "git",
@@ -38,12 +40,8 @@
     "graphql-subscriptions": "0.5.8",
     "graphql-tag": "2.9.2",
     "js-sha256": "0.9.0",
-    "subscriptions-transport-ws": "0.9.12",
+    "subscriptions-transport-ws": "0.9.14",
     "ws": "5.2.2",
     "yup": "0.26.0"
-  },
-  "typings": "dist/index.d.ts",
-  "typescript": {
-    "definition": "dist/index.d.ts"
   }
 }

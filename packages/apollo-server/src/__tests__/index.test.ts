@@ -1,10 +1,7 @@
-import { expect } from 'chai';
-import 'mocha';
-
 import * as request from 'request';
 import { createApolloFetch } from 'apollo-fetch';
 
-import { gql, ApolloServer } from './index';
+import { gql, ApolloServer } from '../index';
 
 const typeDefs = gql`
   type Query {
@@ -21,11 +18,11 @@ const resolvers = {
 describe('apollo-server', () => {
   describe('constructor', () => {
     it('accepts typeDefs and resolvers', () => {
-      expect(() => new ApolloServer({ typeDefs, resolvers })).not.to.throw;
+      expect(() => new ApolloServer({ typeDefs, resolvers })).not.toThrow;
     });
 
     it('accepts typeDefs and mocks', () => {
-      expect(() => new ApolloServer({ typeDefs, mocks: true })).not.to.throw;
+      expect(() => new ApolloServer({ typeDefs, mocks: true })).not.toThrow;
     });
   });
 
@@ -45,8 +42,8 @@ describe('apollo-server', () => {
       const apolloFetch = createApolloFetch({ uri });
       const result = await apolloFetch({ query: '{hello}' });
 
-      expect(result.data).to.deep.equal({ hello: 'hi' });
-      expect(result.errors, 'errors should exist').not.to.exist;
+      expect(result.data).toEqual({ hello: 'hi' });
+      expect(result.errors).toBeUndefined();
     });
 
     it('renders GraphQL playground when browser requests', async () => {
@@ -74,8 +71,8 @@ describe('apollo-server', () => {
             if (error) {
               reject(error);
             } else {
-              expect(body).to.contain('GraphQLPlayground');
-              expect(response.statusCode).to.equal(200);
+              expect(body).toMatch('GraphQLPlayground');
+              expect(response.statusCode).toEqual(200);
               resolve();
             }
           },
@@ -95,7 +92,7 @@ describe('apollo-server', () => {
         (response, next) => {
           expect(
             response.response.headers.get('access-control-allow-origin'),
-          ).to.equal('*');
+          ).toEqual('*');
           next();
         },
       );
@@ -115,7 +112,7 @@ describe('apollo-server', () => {
         (response, next) => {
           expect(
             response.response.headers.get('access-control-allow-origin'),
-          ).to.equal('localhost');
+          ).toEqual('localhost');
           next();
         },
       );
@@ -139,8 +136,8 @@ describe('apollo-server', () => {
             if (error) {
               reject(error);
             } else {
-              expect(body).to.equal(JSON.stringify({ status: 'pass' }));
-              expect(response.statusCode).to.equal(200);
+              expect(body).toEqual(JSON.stringify({ status: 'pass' }));
+              expect(response.statusCode).toEqual(200);
               resolve();
             }
           },
