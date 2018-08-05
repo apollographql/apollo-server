@@ -380,6 +380,10 @@ export async function runHttpQuery(
         }
       }
 
+      if (optionsObject.serverTiming === true && !optionsObject.tracing) {
+        throw new Error('Tracing must be enabled for serverTiming to work.');
+      }
+
       let params: QueryOptions = {
         schema: optionsObject.schema,
         queryString,
@@ -459,6 +463,44 @@ export async function runHttpQuery(
         }
       });
     }
+  }
+
+  if (optionsObject.serverTiming) {
+    responses.forEach(response => {
+      if (response.extensions && response.extensions.tracing) {
+        const pathToKey = (path: any[]) =>
+          path.filter(k => typeof k === 'string').join('.');
+
+        const results = response.extensions.tracing.execution.resolvers.reduce(
+          (results: Map<string, any>, resolver: any) => {
+            const key = pathToKey(resolver.path);
+            if (
+              !results.has(key) ||
+              results.get(key).duration < resolver.duration
+            ) {
+              return results.set(key, resolver);
+            }
+
+            return results;
+          },
+          new Map(),
+        );
+        const keyToIDs = new Map();
+        var timings: string[] = [];
+        results.forEach((value: any, key: string) => {
+          const [rootKey] = value.path;
+          if (!keyToIDs.has(rootKey)) {
+            keyToIDs.set(rootKey, keyToIDs.size + 1);
+          }
+          const durationInMS = Math.round(value.duration / 1000000);
+
+          timings.push(
+            `gql-${keyToIDs.get(rootKey)};dur=${durationInMS};desc="${key}"`,
+          );
+        });
+        responseInit.headers!['Server-Timing'] = timings.join(',');
+      }
+    });
   }
 
   if (!isBatch) {
