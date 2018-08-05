@@ -492,7 +492,7 @@ export async function runHttpQuery(
           if (!keyToIDs.has(rootKey)) {
             keyToIDs.set(rootKey, keyToIDs.size + 1);
           }
-          const durationInMS = Math.round(value.duration / 1000000);
+          const durationInMS = (value.duration / 1000000).toFixed(2);
 
           timings.push(
             `gql-${keyToIDs.get(rootKey)};dur=${durationInMS};desc="${key}"`,
