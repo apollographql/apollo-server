@@ -181,7 +181,7 @@ describe('apollo-server-express', () => {
 
     it('accepts partial GraphQL Playground Options', async () => {
       const nodeEnv = process.env.NODE_ENV;
-      delete process.env.NODE_ENV;
+      process.env.NODE_ENV = 'production';
 
       const defaultQuery = 'query { foo { bar } }';
       const endpoint = '/fumanchupacabra';
