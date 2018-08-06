@@ -1,8 +1,18 @@
 /**
+ * Adding @defer Support
  * The execution phase has been modified to enable @defer support, with
- * modifications starting from `executeOperation()`. The bulk of the changes are
- * at `completeValueCatchingError()`. Utility functions are
+ * changes starting from `executeOperation()`. Utility functions are
  * exported from `graphql.js` where possible.
+ *
+ * Within `completeValueCatchingError()`, we check if the current field should
+ * be deferred. If it is, `null` is returned to its parent instead of a promise
+ * for the field. The promise is then queued to be sent as a patch once it
+ * resolves.
+ *
+ * Deferred fields are returned to the caller in the form of an
+ * AsyncIterable<ExecutionPatchResult>. AsyncIterables are supported natively
+ * in Node 10, otherwise the 'iterall' package provides support for all
+ * versions.
  */
 
 import { $$asyncIterator, forEach, isCollection } from 'iterall';
@@ -833,6 +843,7 @@ function completeValueCatchingError(
     }
 
     if (shouldDefer) {
+      // PatchBundle ensures the ordering of patches from nested deferred fields
       let promisedPatch: PatchBundle = makePatchBundle(
         exeContext,
         path,
