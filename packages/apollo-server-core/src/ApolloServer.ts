@@ -8,6 +8,7 @@ import {
   GraphQLFieldResolver,
   ValidationContext,
   FieldDefinitionNode,
+  GraphQLSchemaConfig,
 } from 'graphql';
 import { execute } from './execute';
 import { GraphQLExtension } from 'graphql-extensions';
@@ -44,6 +45,7 @@ import {
   createPlaygroundOptions,
   PlaygroundRenderPageOptions,
 } from './playground';
+import GraphQLDeferDirective from './GraphQLDeferDirective';
 
 const NoIntrospection = (context: ValidationContext) => ({
   Field(node: FieldDefinitionNode) {
@@ -157,7 +159,18 @@ export class ApolloServerBase {
     }
 
     if (schema) {
-      this.schema = schema;
+      // @defer directive should be added by default
+      const newDirectives = schema.getDirectives().slice();
+      newDirectives.push(GraphQLDeferDirective);
+      const newSchemaConfig: GraphQLSchemaConfig = {
+        query: schema.getQueryType(),
+        mutation: schema.getMutationType(),
+        subscription: schema.getSubscriptionType(),
+        types: Object.values(schema.getTypeMap()),
+        directives: newDirectives,
+        astNode: schema.astNode,
+      };
+      this.schema = new GraphQLSchema(newSchemaConfig);
     } else {
       if (!typeDefs) {
         throw Error(
