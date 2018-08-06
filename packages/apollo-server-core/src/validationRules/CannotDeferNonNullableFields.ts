@@ -3,6 +3,7 @@ import {
   ASTVisitor,
   GraphQLError,
   isNonNullType,
+  DirectiveNode,
 } from 'graphql';
 
 export function cannotDeferOnNonNullMessage(fieldName: string): string {
@@ -13,7 +14,7 @@ export function CannotDeferNonNullableFields(
   context: ValidationContext,
 ): ASTVisitor {
   return {
-    Directive(node, key, parent, path, ancestors) {
+    Directive(node: DirectiveNode) {
       const fieldDef = context.getFieldDef();
       if (fieldDef) {
         if (node.name.value === 'defer' && isNonNullType(fieldDef.type)) {

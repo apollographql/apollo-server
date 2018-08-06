@@ -341,7 +341,7 @@ function dispatchPatch(exeContext: ExecutionContext, patch: PatchBundle): void {
  */
 class PatchDispatcher {
   private resolvers: ((
-    { value: ExecutionPatchResult, done: boolean },
+    { value, done }: { value: ExecutionPatchResult; done: boolean },
   ) => void)[] = [];
 
   private resultPromises: Promise<{
@@ -914,7 +914,13 @@ function completeValueCatchingError(
  * Using it because its much more readable, and will make merging easier when
  * we upgrade.
  */
-function handleFieldError(rawError, fieldNodes, path, returnType, context) {
+function handleFieldError(
+  rawError: Error,
+  fieldNodes: ReadonlyArray<FieldNode>,
+  path: ResponsePath,
+  returnType: GraphQLOutputType,
+  context: ExecutionContext,
+) {
   const error = locatedError(
     asErrorInstance(rawError),
     fieldNodes,
@@ -944,11 +950,11 @@ function handleFieldError(rawError, fieldNodes, path, returnType, context) {
  *   to be retrieved by that parent deferred field.
  */
 function handleDeferredFieldError(
-  rawError,
-  fieldNodes,
-  path,
-  returnType,
-  exeContext,
+  rawError: Error,
+  fieldNodes: ReadonlyArray<FieldNode>,
+  path: ResponsePath,
+  _: GraphQLOutputType,
+  exeContext: ExecutionContext,
   closestDeferredParent?: string,
 ): void {
   const error = locatedError(
@@ -1347,7 +1353,7 @@ function collectAndExecuteSubfields(
   exeContext: ExecutionContext,
   returnType: GraphQLObjectType,
   fieldNodes: ReadonlyArray<FieldNode>,
-  info: GraphQLResolveInfo,
+  _: GraphQLResolveInfo,
   path: ResponsePath,
   result: FieldValue,
   closestDeferredParent?: string,
@@ -1401,8 +1407,8 @@ function defaultResolveTypeFn(
 ):
   | GraphQLObjectType
   | string
-  | Promise<GraphQLObjectType | string | undefined>
-  | undefined {
+  | undefined
+  | Promise<GraphQLObjectType | string | undefined> {
   // First, look for `__typename`.
   if (
     value !== null &&
@@ -1437,6 +1443,8 @@ function defaultResolveTypeFn(
           return possibleTypes[i];
         }
       }
+      return;
     });
   }
+  return;
 }

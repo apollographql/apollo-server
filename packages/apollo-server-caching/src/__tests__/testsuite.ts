@@ -23,7 +23,7 @@ export function testKeyValueCache(keyValueCache: any) {
     it('can do a basic get and set', async () => {
       await keyValueCache.set('hello', 'world');
       expect(await keyValueCache.get('hello')).toBe('world');
-      expect(await keyValueCache.get('missing')).not.toBeDefined();
+      expect(await keyValueCache.get('missing')).toBeUndefined();
     });
 
     it('is able to expire keys based on ttl', async () => {
@@ -33,12 +33,12 @@ export function testKeyValueCache(keyValueCache: any) {
       expect(await keyValueCache.get('long')).toBe('l');
       advanceTimeBy(1500);
       jest.advanceTimersByTime(1500);
-      expect(await keyValueCache.get('short')).not.toBeDefined();
+      expect(await keyValueCache.get('short')).toBeUndefined();
       expect(await keyValueCache.get('long')).toBe('l');
       advanceTimeBy(4000);
       jest.advanceTimersByTime(4000);
-      expect(await keyValueCache.get('short')).not.toBeDefined();
-      expect(await keyValueCache.get('long')).not.toBeDefined();
+      expect(await keyValueCache.get('short')).toBeUndefined();
+      expect(await keyValueCache.get('long')).toBeUndefined();
     });
   });
 }

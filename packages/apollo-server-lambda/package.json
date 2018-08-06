@@ -27,7 +27,10 @@
   "scripts": {
     "clean": "rm -rf dist",
     "compile": "tsc",
-    "prepublish": "npm run clean && npm run compile"
+    "coverage": "jest --coverage",
+    "prepublish": "npm run clean && npm run compile",
+    "test": "jest --verbose",
+    "watch": "tsc -w"
   },
   "dependencies": {
     "@apollographql/graphql-playground-html": "^1.6.0",
@@ -36,10 +39,32 @@
     "graphql-tools": "^3.0.4"
   },
   "devDependencies": {
-    "@types/aws-lambda": "8.10.8",
+    "@types/aws-lambda": "8.10.10",
     "apollo-server-integration-testsuite": "2.0.0"
   },
   "peerDependencies": {
     "graphql": "^0.12.0 || ^0.13.0 || ^14.0.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "transform": {
+      "^.+\\.(ts|js)$": "ts-jest"
+    },
+    "moduleFileExtensions": [
+      "ts",
+      "js",
+      "json"
+    ],
+    "testRegex": "src/__tests__/.*$",
+    "testPathIgnorePatterns": [
+      "<rootDir>/node_modules/",
+      "<rootDir>/lib/",
+      "test-utils"
+    ],
+    "globals": {
+      "ts-jest": {
+        "skipBabel": true
+      }
+    }
   }
 }

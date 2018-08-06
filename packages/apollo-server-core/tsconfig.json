@@ -5,11 +5,11 @@
     "outDir": "./dist",
     "strict": true,
     "noImplicitAny": false,
-    "noImplicitReturns": false,
+    "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
-    "noUnusedParameters": false,
+    "noUnusedParameters": true,
     "noUnusedLocals": true
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "**/__tests__/*", "**/__mocks__/*"]
+  "exclude": ["node_modules", "**/__tests__/*", "**/__mocks__/*"]
 }

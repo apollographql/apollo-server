@@ -7,10 +7,10 @@
   "scripts": {
     "clean": "rm -rf dist",
     "compile": "tsc",
-    "watch": "tsc -w",
-    "prepublish": "npm run clean && npm run compile",
     "lint": "prettier -l 'src/**/*.ts' && tslint -p tsconfig.json 'src/**/*.ts'",
-    "lint-fix": "prettier --write 'src/**/*.ts' && tslint --fix -p tsconfig.json 'src/**/*.ts'"
+    "lint-fix": "prettier --write 'src/**/*.ts' && tslint --fix -p tsconfig.json 'src/**/*.ts'",
+    "prepublish": "npm run clean && npm run compile",
+    "watch": "tsc -w"
   },
   "repository": {
     "type": "git",
@@ -29,12 +29,8 @@
   },
   "devDependencies": {
     "@types/graphql": "0.13.3",
-    "@types/jest": "23.3.0",
-    "@types/node": "10.5.3",
+    "@types/node": "10.5.5",
     "graphql": "0.13.2",
-    "jest": "23.4.1",
-    "jest-matcher-utils": "23.2.0",
-    "ts-jest": "23.0.1",
     "tslint": "5.11.0"
   }
 }

@@ -1,11 +1,9 @@
 /* tslint:disable:no-unused-expression */
-import { expect } from 'chai';
-import 'mocha';
 import MockReq = require('mock-req');
 
 import { GraphQLSchema, GraphQLObjectType, GraphQLString } from 'graphql';
 
-import { runHttpQuery, HttpQueryError } from './runHttpQuery';
+import { runHttpQuery, HttpQueryError } from '../runHttpQuery';
 
 const queryType = new GraphQLObjectType({
   name: 'QueryType',
@@ -41,8 +39,8 @@ describe('runHttpQuery', () => {
         query: 'foo',
       });
       return runHttpQuery([], noQueryRequest).catch((err: HttpQueryError) => {
-        expect(err.statusCode).to.equal(400);
-        expect(err.message).to.equal('Must provide query string.');
+        expect(err.statusCode).toEqual(400);
+        expect(err.message).toEqual('Must provide query string.');
       });
     });
   });

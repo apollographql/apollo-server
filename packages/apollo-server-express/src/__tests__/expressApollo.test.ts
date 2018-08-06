@@ -1,29 +1,29 @@
-import micro from 'micro';
+import * as express from 'express';
+import { ApolloServer } from '../ApolloServer';
 import testSuite, {
   schema as Schema,
   CreateAppOptions,
 } from 'apollo-server-integration-testsuite';
-import { expect } from 'chai';
 import { GraphQLOptions, Config } from 'apollo-server-core';
-import 'mocha';
-
-import { ApolloServer } from './ApolloServer';
 
 function createApp(options: CreateAppOptions = {}) {
+  const app = express();
+
   const server = new ApolloServer(
     (options.graphqlOptions as Config) || { schema: Schema },
   );
-  return micro(server.createHandler());
+  server.applyMiddleware({ app });
+  return app;
 }
 
-describe('microApollo', function() {
-  it('should throw an error if called without a schema', function() {
-    expect(() => new ApolloServer(undefined as GraphQLOptions)).to.throw(
+describe('expressApollo', () => {
+  it('throws error if called without schema', function() {
+    expect(() => new ApolloServer(undefined as GraphQLOptions)).toThrow(
       'ApolloServer requires options.',
     );
   });
 });
 
-describe('integration:Micro', function() {
+describe('integration:Express', () => {
   testSuite(createApp);
 });

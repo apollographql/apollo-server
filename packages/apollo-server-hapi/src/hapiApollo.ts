@@ -46,7 +46,7 @@ const graphqlHapi: IPlugin = {
             graphqlResponse,
             graphqlResponses,
             responseInit,
-          } = await runHttpQuery([request], {
+          } = await runHttpQuery([request, h], {
             method: request.method.toUpperCase(),
             options: options.graphqlOptions,
             query:

@@ -1,12 +1,10 @@
 import * as Koa from 'koa';
-import { ApolloServer } from './ApolloServer';
+import { ApolloServer } from '../ApolloServer';
 import testSuite, {
   schema as Schema,
   CreateAppOptions,
 } from 'apollo-server-integration-testsuite';
-import { expect } from 'chai';
 import { GraphQLOptions, Config } from 'apollo-server-core';
-import 'mocha';
 
 function createApp(options: CreateAppOptions = {}) {
   const app = new Koa();
@@ -25,13 +23,9 @@ async function destroyApp(app) {
   await new Promise(resolve => app.close(resolve));
 }
 
-describe('integration:Hapi', () => {
-  testSuite(createApp, destroyApp);
-});
-
 describe('koaApollo', () => {
   it('throws error if called without schema', function() {
-    expect(() => new ApolloServer(undefined as GraphQLOptions)).to.throw(
+    expect(() => new ApolloServer(undefined as GraphQLOptions)).toThrow(
       'ApolloServer requires options.',
     );
   });
