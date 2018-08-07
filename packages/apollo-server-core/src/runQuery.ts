@@ -35,6 +35,8 @@ import {
   SyntaxError,
 } from 'apollo-server-errors';
 
+import { calculateCacheControlHeaders } from './caching';
+
 export interface GraphQLResponse {
   data?: object;
   errors?: Array<GraphQLError & object>;
@@ -179,10 +181,15 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
     cacheGet = Promise.resolve(undefined);
   }
 
+  let cacheHit = false;
+  let maxAgeMs: number | undefined;
+  let cacheScope: string | undefined;
   return cacheGet
     .then(
       (cacheResult): Promise<GraphQLResponse> | GraphQLResponse => {
         if (cacheResult) {
+          cacheHit = true;
+
           // XXX Ideally we would return this response directly back to the user without parsing and stringifying again
           return JSON.parse(cacheResult);
         }
@@ -316,8 +323,15 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
 
             if (cacheKey && cache) {
               (async () => {
+                const cacheInfo = calculateCacheControlHeaders([response]);
                 // We do not wait on the cache storage to complete
-                return cache.set(cacheKey, JSON.stringify(response));
+                if (cacheInfo.lowestMaxAge!) {
+                  maxAgeMs = cacheInfo.lowestMaxAge;
+                  cacheScope = cacheInfo.publicOrPrivate;
+                  return cache.set(cacheKey, JSON.stringify(response), {
+                    ttl: cacheInfo.lowestMaxAge,
+                  });
+                }
               })().catch(error => {
                 console.warn(error);
               });
@@ -335,7 +349,12 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
       throw err;
     })
     .then((graphqlResponse: GraphQLResponse) => {
-      const response = extensionStack.willSendResponse({ graphqlResponse });
+      const response = extensionStack.willSendResponse({
+        graphqlResponse,
+        cacheHit,
+        maxAgeMs,
+        scope: cacheScope,
+      } as any);
       requestDidEnd();
       return response.graphqlResponse;
     });

@@ -213,7 +213,34 @@ export class EngineReportingExtension<TContext = any>
     };
   }
 
-  public willSendResponse(o: { graphqlResponse: GraphQLResponse }) {
+  public willSendResponse(o: {
+    graphqlResponse: GraphQLResponse;
+    cacheHit: boolean;
+    cachePolicy: string;
+    maxAgeMs: number;
+  }) {
+    this.trace.fullQueryCacheHit = o.cacheHit;
+    if (o.cacheHit) {
+      switch (o.cachePolicy) {
+        case 'public':
+          this.trace.cachePolicy = {
+            scope: Trace.CachePolicy.Scope.PUBLIC,
+            maxAgeNs: o.maxAgeMs * 1000,
+          };
+          break;
+        case 'private':
+          this.trace.cachePolicy = {
+            scope: Trace.CachePolicy.Scope.PRIVATE,
+            maxAgeNs: o.maxAgeMs * 1000,
+          };
+          break;
+        default:
+          this.trace.cachePolicy = {
+            scope: Trace.CachePolicy.Scope.UNKNOWN,
+            maxAgeNs: o.maxAgeMs,
+          };
+      }
+    }
     const { errors } = o.graphqlResponse;
     if (errors) {
       errors.forEach((error: GraphQLError) => {

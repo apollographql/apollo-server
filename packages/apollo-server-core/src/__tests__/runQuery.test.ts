@@ -1,5 +1,5 @@
 /* tslint:disable:no-unused-expression */
-import MockReq = require('mock-req');
+import { Request } from 'apollo-server-env';
 
 import {
   GraphQLSchema,
@@ -85,7 +85,7 @@ describe('runQuery', () => {
     return runQuery({
       schema,
       queryString: query,
-      request: new MockReq(),
+      request: new Request('local'),
     }).then(res => {
       expect(res.data).toEqual(expected);
     });
@@ -97,7 +97,7 @@ describe('runQuery', () => {
     return runQuery({
       schema,
       parsedQuery: query,
-      request: new MockReq(),
+      request: new Request('local'),
     }).then(res => {
       expect(res.data).toEqual(expected);
     });
@@ -110,7 +110,7 @@ describe('runQuery', () => {
       schema,
       queryString: query,
       variables: { base: 1 },
-      request: new MockReq(),
+      request: new Request('local'),
     }).then(res => {
       expect(res.data).toBeUndefined();
       expect(res.errors!.length).toEqual(1);
@@ -125,7 +125,7 @@ describe('runQuery', () => {
       schema,
       queryString: query,
       debug: true,
-      request: new MockReq(),
+      request: new Request('local'),
     }).then(() => {
       logStub.mockRestore();
       expect(logStub.mock.calls.length).toEqual(0);
@@ -139,7 +139,7 @@ describe('runQuery', () => {
       schema,
       queryString: query,
       debug: false,
-      request: new MockReq(),
+      request: new Request('local'),
     }).then(() => {
       logStub.mockRestore();
       expect(logStub.mock.calls.length).toEqual(0);
@@ -154,7 +154,7 @@ describe('runQuery', () => {
       schema,
       queryString: query,
       variables: { base: 1 },
-      request: new MockReq(),
+      request: new Request('local'),
     }).then(res => {
       expect(res.data).toBeUndefined();
       expect(res.errors!.length).toEqual(1);
@@ -169,7 +169,7 @@ describe('runQuery', () => {
       schema,
       queryString: query,
       rootValue: 'it also',
-      request: new MockReq(),
+      request: new Request('local'),
     }).then(res => {
       expect(res.data).toEqual(expected);
     });
@@ -182,7 +182,7 @@ describe('runQuery', () => {
       schema,
       queryString: query,
       context: { s: 'it still' },
-      request: new MockReq(),
+      request: new Request('local'),
     }).then(res => {
       expect(res.data).toEqual(expected);
     });
@@ -199,7 +199,7 @@ describe('runQuery', () => {
         response['extensions'] = context.s;
         return response;
       },
-      request: new MockReq(),
+      request: new Request('local'),
     }).then(res => {
       expect(res.data).toEqual(expected);
       expect(res['extensions']).toEqual('it still');
@@ -213,7 +213,7 @@ describe('runQuery', () => {
       schema,
       queryString: query,
       variables: { base: 1 },
-      request: new MockReq(),
+      request: new Request('local'),
     }).then(res => {
       expect(res.data).toEqual(expected);
     });
@@ -226,7 +226,7 @@ describe('runQuery', () => {
     return runQuery({
       schema,
       queryString: query,
-      request: new MockReq(),
+      request: new Request('local'),
     }).then(res => {
       expect(res.errors![0].message).toEqual(expected);
     });
@@ -236,7 +236,7 @@ describe('runQuery', () => {
     return runQuery({
       schema,
       queryString: `{ testAwaitedValue }`,
-      request: new MockReq(),
+      request: new Request('local'),
     }).then(res => {
       expect(res.data).toEqual({
         testAwaitedValue: 'it works',
@@ -259,7 +259,7 @@ describe('runQuery', () => {
       schema,
       queryString: query,
       operationName: 'Q1',
-      request: new MockReq(),
+      request: new Request('local'),
     }).then(res => {
       expect(res.data).toEqual(expected);
     });
@@ -278,7 +278,7 @@ describe('runQuery', () => {
       schema,
       queryString: query,
       operationName: 'Q1',
-      request: new MockReq(),
+      request: new Request('local'),
     });
 
     expect(result1.data).toEqual({
@@ -292,7 +292,7 @@ describe('runQuery', () => {
       queryString: query,
       operationName: 'Q1',
       fieldResolver: () => 'a very testful field resolver string',
-      request: new MockReq(),
+      request: new Request('local'),
     });
 
     expect(result2.data).toEqual({
@@ -333,7 +333,7 @@ describe('runQuery', () => {
         }),
         queryString,
         extensions,
-        request: new MockReq(),
+        request: new Request('local'),
       });
     });
 
@@ -345,7 +345,7 @@ describe('runQuery', () => {
         schema,
         queryString,
         extensions,
-        request: new MockReq(),
+        request: new Request('local'),
       }).then(res => {
         expect(res.data).toEqual(expected);
         expect(res.extensions).toEqual({
@@ -390,7 +390,7 @@ describe('runQuery', () => {
         schema,
         queryString: query,
         operationName: 'Q1',
-        request: new MockReq(),
+        request: new Request('local'),
       });
 
       // Expect there to be several async ids provided

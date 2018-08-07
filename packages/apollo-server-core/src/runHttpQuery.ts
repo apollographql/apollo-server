@@ -370,8 +370,8 @@ export async function runHttpQuery(
           cacheControl = {
             stripFormattedExtensions: false,
             calculateHttpHeaders: false,
-            privateCache: optionsObject.cache,
-            cache: optionsObject.cache,
+            privateCache: optionsObject.cache!,
+            cache: optionsObject.cache!,
             defaultMaxAge: 0,
           };
         } else {
@@ -381,8 +381,8 @@ export async function runHttpQuery(
             stripFormattedExtensions: true,
             calculateHttpHeaders: true,
             defaultMaxAge: 0,
-            privateCache: optionsObject.cache,
-            cache: optionsObject.cache,
+            privateCache: optionsObject.cache!,
+            cache: optionsObject.cache!,
             ...optionsObject.cacheControl,
           };
         }
@@ -413,7 +413,6 @@ export async function runHttpQuery(
         persistedQueryHit,
         persistedQueryRegister,
         queryHash: calculatedSha,
-        privateCache,
       };
 
       return runQuery(params);
@@ -455,7 +454,10 @@ export async function runHttpQuery(
 
       responseInit.headers = {
         ...responseInit.headers,
-        ...calculatedHeaders,
+        ...(omit(calculatedHeaders, [
+          'lowestMaxAge',
+          'publicOrPrivate',
+        ]) as Record<string, string>),
       };
     }
 
