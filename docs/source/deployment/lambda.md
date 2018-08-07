@@ -4,21 +4,37 @@ sidebar_title: Lambda
 description: How to deploy Apollo Server with AWS Lambda
 ---
 
-AWS Lambda is a service that lets you run code without provisioning or managing servers. You pay only for the compute time you consume-there is no charge when your code is not running.
+AWS Lambda is a service that allows users to run code without provisioning or managing servers. Cost is based on the compute time that is consumed, and there is no charge when code is not running.
 
-Learn how to integrate Apollo Server 2 with AWS Lambda. First, install the `apollo-server-lambda` package:
+This guide explains how to setup Apollo Server 2 to run on AWS Lambda.
+
+## Prerequisites
+
+The following must be done before following this guide:
+
+- Setup an AWS account
+- [Install the AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/installing.html)
+- [Configure the AWS CLI with user credentials](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html)
+- Install the serverless framework from NPM
+  - `npm install -g serverless`
+
+---
+
+## Setting up your project
+
+Setting up a project to work with Lambda isn't that different from a typical NodeJS project.
+
+First, install the `apollo-server-lambda` package:
 
 ```sh
 npm install apollo-server-lambda graphql
 ```
 
-## Deploying with AWS Serverless Application Model (SAM)
-
-To deploy the AWS Lambda function, you must create a Cloudformation Template and a S3 bucket to store the artifact (zip of source code) and template. You'll use the [AWS Command Line Interface](https://aws.amazon.com/cli/).
-
-#### 1. Write the API handlers
+Next, set up the schema's type definitions and resolvers, and pass them to the `ApolloServer` constructor like normal. Here, `ApolloServer` must be imported from `apollo-server-lambda`. It's also important to note that this file must be named `graphql.js`, as the config example in a later step depends on the filename.
 
 ```js
+// graphql.js
+
 const { ApolloServer, gql } = require('apollo-server-lambda');
 
 // Construct a schema, using GraphQL schema language
@@ -40,65 +56,77 @@ const server = new ApolloServer({ typeDefs, resolvers });
 exports.graphqlHandler = server.createHandler();
 ```
 
-#### 2. Create an S3 bucket
+Finally, **pay close attention to the last line**. This creates an export named `graphqlHandler` with a Lambda function handler.
 
-The bucket name must be universally unique.
+## Deploying with the Serverless Framework
 
-```bash
-aws s3 mb s3://<bucket name>
-```
+[Serverless](https://serverless.com) is a framework that makes deploying to services like AWS Lambda simpler.
 
-#### 3. Create the Template
+### Configuring the Serverless Framework
 
-This will look for a file called `graphql.js` with the export `graphqlHandler`. It creates one API endpoints:
+Serverless uses a config file named `serverless.yml` to determine what service to deploy to and where the handlers are.
 
-* `/graphql` (GET and POST)
-
-In a file called `template.yaml`:
-
-```yaml
-AWSTemplateFormatVersion: '2010-09-09'
-Transform: AWS::Serverless-2016-10-31
-Resources:
-  GraphQL:
-    Type: AWS::Serverless::Function
-    Properties:
-      Handler: graphql.graphqlHandler
-      Runtime: nodejs8.10
-      Events:
-        GetRequest:
-          Type: Api
-          Properties:
-            Path: /graphql
-            Method: get
-        PostRequest:
-          Type: Api
-          Properties:
-            Path: /graphql
-            Method: post
-```
-
-#### 4. Package source code and dependencies
-
-Read and transform the template, created in the previous step. Package and upload the artifact to the S3 bucket and generate another template for the deployment.
-
-```sh
-aws cloudformation package \
-  --template-file template.yaml \
-  --output-template-file serverless-output.yaml \
-  --s3-bucket <bucket-name>
-```
-
-#### 5. Deploy the API
-
-Create the Lambda Function and API Gateway for GraphQL. In the example below, `prod` stands for production. However, you can use any name to represent it.
+For the sake of this example, the following file can just be copied and pasted into the root of your project.
 
 ```
-aws cloudformation deploy \
-  --template-file serverless-output.yaml \
-  --stack-name prod \
-  --capabilities CAPABILITY_IAM
+# serverless.yml
+
+service: apollo-lambda
+provider:
+  name: aws
+  runtime: nodejs6.10
+functions:
+  graphql:
+    # this is formatted as <FILENAME>.<HANDLER>
+    handler: graphql.graphqlHandler
+    events:
+    - http:
+        path: graphql
+        method: post
+        cors: true
 ```
+
+### Running the Serverless Framework
+
+After configuring the Serverless Framework, all you have to do to deploy is run `serverless deploy`
+
+If successful, `serverless` should output something similar to this example:
+
+```
+> serverless deploy
+Serverless: Packaging service...
+Serverless: Excluding development dependencies...
+Serverless: Uploading CloudFormation file to S3...
+Serverless: Uploading artifacts...
+Serverless: Uploading service .zip file to S3 (27.07 MB)...
+Serverless: Validating template...
+Serverless: Updating Stack...
+Serverless: Checking Stack update progress...
+..............
+Serverless: Stack update finished...
+Service Information
+service: apollo-lambda
+stage: dev
+region: us-east-1
+stack: apollo-lambda-dev
+api keys:
+  None
+endpoints:
+  POST - https://ujt89xxyn3.execute-api.us-east-1.amazonaws.com/dev/graphql
+functions:
+  graphql: apollo-lambda-dev-graphql
+```
+
+#### What does `serverless` do?
+
+First, it builds the functions, zips up the artifacts, and uploads the artifacts to a new S3 bucket. Then, it creates a Lambda function with those artifacts, and if successful, outputs the HTTP endpoint URLs to the console.
+
+### Managing the resulting services
+
+The resulting S3 buckets and Lambda functions can be viewed and managed after logging in to the [AWS Console](https://console.aws.amazon.com).
+
+- To find the created S3 bucket, search the listed services for S3. For this example, the bucket created by Serverless was named `apollo-lambda-dev-serverlessdeploymentbucket-1s10e00wvoe5f`
+- To find the created Lambda function, search the listed services for `Lambda`. If the list of Lambda functions is empty, or missing the newly created function, double check the region at the top right of the screen. The default region for Serverless deployments is `us-east-1` (N. Virginia)
 
 ## Getting request info
 
@@ -129,13 +157,13 @@ const server = new ApolloServer({
     functionName: context.functionName,
     event,
     context,
-  })
+  }),
 });
 
 exports.graphqlHandler = server.createHandler();
 ```
 
-## Modifying the Lambda Response (Enable CORS)
+## Modifying the Lambda response (Enable CORS)
 
 To enable CORS, the response HTTP headers need to be modified. To accomplish this, use the `cors` options.
 
