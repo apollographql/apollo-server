@@ -9,10 +9,10 @@ Data sources are classes that encapsulate fetching data from a particular servic
 
 A `RESTDataSource` is responsible for fetching data from a given REST API.
 
-To get started, install the release candidate of the REST data source:
+To get started, install the REST data source package:
 
 ```bash
-npm install apollo-datasource-rest@rc
+npm install apollo-datasource-rest
 ```
 
 To define a data source, extend the `RESTDataSource` class and implement the data fetching methods that your resolvers require. Your implementation of these methods can call on convenience methods built into the `RESTDataSource` class to perform HTTP requests, while making it easy to build up query parameters, parse JSON results, and handle errors.
