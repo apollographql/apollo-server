@@ -10,10 +10,16 @@ import {
   parse,
 } from 'graphql';
 
-import { GraphQLResponse, runQuery } from '../runQuery';
-import { isDeferredExecutionResult } from '../execute';
+import {
+  DeferredGraphQLResponse,
+  GraphQLResponse,
+  runQuery,
+} from '../runQuery';
+import { isDeferredGraphQLResponse } from '../runQuery';
 
 import { GraphQLExtensionStack, GraphQLExtension } from 'graphql-extensions';
+import GraphQLDeferDirective from '../GraphQLDeferDirective';
+import { forAwaitEach } from 'iterall';
 
 const queryType = new GraphQLObjectType({
   name: 'QueryType',
@@ -88,7 +94,7 @@ describe('runQuery', () => {
       queryString: query,
       request: new MockReq(),
     }).then(res => {
-      expect(isDeferredExecutionResult(res)).toEqual(false);
+      expect(isDeferredGraphQLResponse(res)).toEqual(false);
       expect((res as GraphQLResponse).data).toEqual(expected);
     });
   });
@@ -101,7 +107,7 @@ describe('runQuery', () => {
       parsedQuery: query,
       request: new MockReq(),
     }).then(res => {
-      expect(isDeferredExecutionResult(res)).toEqual(false);
+      expect(isDeferredGraphQLResponse(res)).toEqual(false);
       expect((res as GraphQLResponse).data).toEqual(expected);
     });
   });
@@ -115,7 +121,7 @@ describe('runQuery', () => {
       variables: { base: 1 },
       request: new MockReq(),
     }).then(res => {
-      expect(isDeferredExecutionResult(res)).toEqual(false);
+      expect(isDeferredGraphQLResponse(res)).toEqual(false);
       expect((res as GraphQLResponse).data).toBeUndefined();
       expect((res as GraphQLResponse).errors!.length).toEqual(1);
       expect((res as GraphQLResponse).errors![0].message).toMatch(expected);
@@ -160,7 +166,7 @@ describe('runQuery', () => {
       variables: { base: 1 },
       request: new MockReq(),
     }).then(res => {
-      expect(isDeferredExecutionResult(res)).toEqual(false);
+      expect(isDeferredGraphQLResponse(res)).toEqual(false);
       expect((res as GraphQLResponse).data).toBeUndefined();
       expect((res as GraphQLResponse).errors!.length).toEqual(1);
       expect((res as GraphQLResponse).errors![0].message).toEqual(expected);
@@ -176,7 +182,7 @@ describe('runQuery', () => {
       rootValue: 'it also',
       request: new MockReq(),
     }).then(res => {
-      expect(isDeferredExecutionResult(res)).toEqual(false);
+      expect(isDeferredGraphQLResponse(res)).toEqual(false);
       expect((res as GraphQLResponse).data).toEqual(expected);
     });
   });
@@ -190,7 +196,7 @@ describe('runQuery', () => {
       context: { s: 'it still' },
       request: new MockReq(),
     }).then(res => {
-      expect(isDeferredExecutionResult(res)).toEqual(false);
+      expect(isDeferredGraphQLResponse(res)).toEqual(false);
       expect((res as GraphQLResponse).data).toEqual(expected);
     });
   });
@@ -208,7 +214,7 @@ describe('runQuery', () => {
       },
       request: new MockReq(),
     }).then(res => {
-      expect(isDeferredExecutionResult(res)).toEqual(false);
+      expect(isDeferredGraphQLResponse(res)).toEqual(false);
       expect((res as GraphQLResponse).data).toEqual(expected);
       expect(res['extensions']).toEqual('it still');
     });
@@ -223,7 +229,7 @@ describe('runQuery', () => {
       variables: { base: 1 },
       request: new MockReq(),
     }).then(res => {
-      expect(isDeferredExecutionResult(res)).toEqual(false);
+      expect(isDeferredGraphQLResponse(res)).toEqual(false);
       expect((res as GraphQLResponse).data).toEqual(expected);
     });
   });
@@ -237,7 +243,7 @@ describe('runQuery', () => {
       queryString: query,
       request: new MockReq(),
     }).then(res => {
-      expect(isDeferredExecutionResult(res)).toEqual(false);
+      expect(isDeferredGraphQLResponse(res)).toEqual(false);
       expect((res as GraphQLResponse).errors![0].message).toEqual(expected);
     });
   });
@@ -248,7 +254,7 @@ describe('runQuery', () => {
       queryString: `{ testAwaitedValue }`,
       request: new MockReq(),
     }).then(res => {
-      expect(isDeferredExecutionResult(res)).toEqual(false);
+      expect(isDeferredGraphQLResponse(res)).toEqual(false);
       expect((res as GraphQLResponse).data).toEqual({
         testAwaitedValue: 'it works',
       });
@@ -272,7 +278,7 @@ describe('runQuery', () => {
       operationName: 'Q1',
       request: new MockReq(),
     }).then(res => {
-      expect(isDeferredExecutionResult(res)).toEqual(false);
+      expect(isDeferredGraphQLResponse(res)).toEqual(false);
       expect((res as GraphQLResponse).data).toEqual(expected);
     });
   });
@@ -293,7 +299,7 @@ describe('runQuery', () => {
       request: new MockReq(),
     });
 
-    expect(isDeferredExecutionResult(result1)).toEqual(false);
+    expect(isDeferredGraphQLResponse(result1)).toEqual(false);
     expect((result1 as GraphQLResponse).data).toEqual({
       testObject: {
         testString: 'a very test string',
@@ -308,11 +314,87 @@ describe('runQuery', () => {
       request: new MockReq(),
     });
 
-    expect(isDeferredExecutionResult(result1)).toEqual(false);
+    expect(isDeferredGraphQLResponse(result1)).toEqual(false);
     expect((result2 as GraphQLResponse).data).toEqual({
       testObject: {
         testString: 'a very testful field resolver string',
       },
+    });
+  });
+
+  describe('@defer support', () => {
+    it('fails if defer directive not declared in schema', async () => {
+      const query = `
+        query Q1 {
+          testObject {
+            testString @defer
+          }
+        }
+      `;
+
+      const result1 = await runQuery({
+        schema,
+        queryString: query,
+        operationName: 'Q1',
+        request: new MockReq(),
+        enableDefer: true,
+      });
+
+      expect(isDeferredGraphQLResponse(result1)).toEqual(false);
+      expect(result1.errors[0].message).toEqual('Unknown directive "defer".');
+    });
+
+    it('takes option to enable @defer', async done => {
+      const schema = new GraphQLSchema({
+        query: queryType,
+        directives: [GraphQLDeferDirective],
+      });
+
+      const query = `
+        query Q1 {
+          testObject {
+            testString @defer
+          }
+        }
+      `;
+
+      const result1 = await runQuery({
+        schema,
+        queryString: query,
+        operationName: 'Q1',
+        request: new MockReq(),
+      });
+
+      expect(isDeferredGraphQLResponse(result1)).toEqual(false);
+      expect(result1).toEqual({
+        data: { testObject: { testString: 'a very test string' } },
+      });
+
+      const result2 = await runQuery({
+        schema,
+        queryString: query,
+        operationName: 'Q1',
+        request: new MockReq(),
+        enableDefer: true,
+      });
+      expect(isDeferredGraphQLResponse(result2)).toEqual(true);
+      expect((result2 as DeferredGraphQLResponse).initialResponse).toEqual({
+        data: { testObject: { testString: null } },
+      });
+      const patches = [];
+      await forAwaitEach(
+        (result2 as DeferredGraphQLResponse).deferredPatches,
+        value => {
+          patches.push(value);
+        },
+      );
+      expect(patches).toEqual([
+        {
+          path: ['testObject', 'testString'],
+          data: 'a very test string',
+        },
+      ]);
+      done();
     });
   });
 
