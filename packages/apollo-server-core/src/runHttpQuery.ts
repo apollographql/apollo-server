@@ -483,7 +483,7 @@ export async function runHttpQuery(
 
     const isDeferred = isDeferredGraphQLResponse(graphqlResponse);
 
-    let initialResponse: ExecutionResult; // We need this check for and and throw errors
+    let initialResponse: ExecutionResult; // We need this check for and throw errors
 
     if (isDeferred) {
       initialResponse = (graphqlResponse as DeferredGraphQLResponse)
@@ -520,7 +520,9 @@ export async function runHttpQuery(
     };
   }
 
-  // TODO: Handle defer in batched queries. This is a little awkward now since we need a separate HTTP connection to stream patches.
+  // TODO: Handle defer in batched queries.
+  // This is a little awkward now since we need a separate HTTP connection
+  // to stream patches per query.
   return {
     graphqlResponse: prettyJSONStringify(responses),
     responseInit,
@@ -551,6 +553,8 @@ function graphqlResponseToAsyncIterable(
                   fromGraphQLError(error),
                 );
               }
+              // Call requestDidEnd when the last patch is resolved
+              if (done) result.requestDidEnd();
               return { value: prettyJSONStringify(value), done };
             });
           }

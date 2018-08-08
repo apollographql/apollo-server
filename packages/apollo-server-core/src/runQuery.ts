@@ -46,9 +46,9 @@ export interface GraphQLResponse {
 }
 
 export interface DeferredGraphQLResponse {
-  errors?: Array<GraphQLError & object>;
   initialResponse: GraphQLResponse;
   deferredPatches: AsyncIterable<ExecutionPatchResult>;
+  requestDidEnd: () => void;
 }
 
 export function isDeferredGraphQLResponse(
@@ -278,7 +278,6 @@ function doRunQuery(
             let patches: AsyncIterable<ExecutionPatchResult> | undefined;
 
             if (isDeferredExecutionResult(result)) {
-              // TODO: Deferred execution should be disabled if transport does not support it
               executionResult = result.initialResult;
               patches = result.deferredPatches;
             } else {
@@ -312,6 +311,7 @@ function doRunQuery(
               return {
                 initialResponse: response,
                 deferredPatches: patches!,
+                requestDidEnd,
               };
             } else {
               return response;
@@ -327,16 +327,16 @@ function doRunQuery(
       throw err;
     })
     .then((graphqlResponse: GraphQLResponse | DeferredGraphQLResponse) => {
-      // For deferred queries, only the initial response gets presented to the
-      // extension stack
+      // For deferred queries, pass the requestDidEnd callback as part of the
+      // AsyncIterable so that it only gets called after all
+      // the patches have been resolved.
       if (isDeferredGraphQLResponse(graphqlResponse)) {
         const response = extensionStack.willSendResponse({
           graphqlResponse: graphqlResponse.initialResponse,
         });
-        requestDidEnd();
         return {
+          ...graphqlResponse,
           initialResponse: response.graphqlResponse,
-          deferredPatches: graphqlResponse.deferredPatches,
         };
       } else {
         const response = extensionStack.willSendResponse({
