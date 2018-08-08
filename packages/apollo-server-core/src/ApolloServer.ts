@@ -1,6 +1,7 @@
 import { makeExecutableSchema, addMockFunctionsToSchema } from 'graphql-tools';
 import { Server as HttpServer } from 'http';
 import {
+  execute,
   GraphQLSchema,
   subscribe,
   ExecutionResult,
@@ -10,7 +11,6 @@ import {
   FieldDefinitionNode,
   GraphQLSchemaConfig,
 } from 'graphql';
-import { execute } from './execute';
 import { GraphQLExtension } from 'graphql-extensions';
 import { EngineReportingAgent } from 'apollo-engine-reporting';
 import { InMemoryLRUCache } from 'apollo-server-caching';
@@ -20,7 +20,6 @@ import { GraphQLUpload } from 'apollo-upload-server';
 import {
   SubscriptionServer,
   ExecutionParams,
-  ServerOptions,
 } from 'subscriptions-transport-ws';
 
 import { formatApolloErrors } from 'apollo-server-errors';
@@ -330,7 +329,7 @@ export class ApolloServerBase {
           return { ...connection, context };
         },
         keepAlive,
-      } as ServerOptions, //TODO: Resolve type errors
+      },
       {
         server,
         path,
