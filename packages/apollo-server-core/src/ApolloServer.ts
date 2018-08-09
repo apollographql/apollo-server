@@ -286,7 +286,10 @@ export class ApolloServerBase {
           ? onConnect
           : (connectionParams: Object) => ({ ...connectionParams }),
         onDisconnect: onDisconnect,
-        onOperation: async (_: string, connection: ExecutionParams) => {
+        onOperation: async (
+          message: { payload: any },
+          connection: ExecutionParams,
+        ) => {
           connection.formatResponse = (value: ExecutionResult) => ({
             ...value,
             errors:
@@ -301,7 +304,7 @@ export class ApolloServerBase {
           try {
             context =
               typeof this.context === 'function'
-                ? await this.context({ connection })
+                ? await this.context({ connection, payload: message.payload })
                 : context;
           } catch (e) {
             throw formatApolloErrors([e], {
