@@ -1,6 +1,6 @@
 {
   "name": "apollo-server-micro",
-  "version": "2.1.0-alpha.9",
+  "version": "2.1.0-alpha.10",
   "description": "Production-ready Node.js GraphQL server for Micro",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -31,7 +31,7 @@
   "homepage": "https://github.com/apollographql/apollo-server#readme",
   "dependencies": {
     "accept": "^3.0.2",
-    "apollo-server-core": "2.1.0-alpha.9",
+    "apollo-server-core": "2.1.0-alpha.10",
     "apollo-upload-server": "^5.0.0",
     "graphql-playground-html": "^1.6.0",
     "iterall": "^1.2.2",
