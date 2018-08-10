@@ -39,7 +39,7 @@
     "graphql-tools": "^3.0.4"
   },
   "devDependencies": {
-    "@types/aws-lambda": "8.10.10",
+    "@types/aws-lambda": "8.10.11",
     "apollo-server-integration-testsuite": "2.0.0"
   },
   "peerDependencies": {
