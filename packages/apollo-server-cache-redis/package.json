@@ -22,14 +22,10 @@
     "node": ">=6"
   },
   "dependencies": {
-    "apollo-server-caching": "0.1.0",
-    "apollo-server-env": "2.0.0",
+    "apollo-server-caching": "file:../apollo-server-caching",
+    "apollo-server-env": "file:../apollo-server-env",
     "dataloader": "^1.4.0",
     "redis": "^2.8.0"
-  },
-  "devDependencies": {
-    "@types/redis": "2.8.6",
-    "redis-mock": "0.29.0"
   },
   "jest": {
     "testEnvironment": "node",

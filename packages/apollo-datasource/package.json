@@ -22,8 +22,8 @@
     "node": ">=6"
   },
   "dependencies": {
-    "apollo-server-caching": "0.1.0",
-    "apollo-server-env": "2.0.0"
+    "apollo-server-caching": "file:../apollo-server-caching",
+    "apollo-server-env": "file:../apollo-server-env"
   },
   "jest": {
     "testEnvironment": "node",

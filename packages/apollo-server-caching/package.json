@@ -23,8 +23,5 @@
   },
   "dependencies": {
     "lru-cache": "^4.1.3"
-  },
-  "devDependencies": {
-    "@types/lru-cache": "4.1.1"
   }
 }

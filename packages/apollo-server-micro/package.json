@@ -28,17 +28,11 @@
   },
   "homepage": "https://github.com/apollographql/apollo-server#readme",
   "dependencies": {
-    "accept": "^3.0.2",
-    "apollo-server-core": "2.0.0",
-    "apollo-upload-server": "^5.0.0",
     "@apollographql/graphql-playground-html": "^1.6.0",
+    "accept": "^3.0.2",
+    "apollo-server-core": "file:../apollo-server-core",
+    "apollo-upload-server": "^5.0.0",
     "micro": "^9.3.2"
-  },
-  "devDependencies": {
-    "@types/micro": "7.3.1",
-    "apollo-server-integration-testsuite": "2.0.0",
-    "request-promise": "4.2.2",
-    "test-listen": "1.1.0"
   },
   "jest": {
     "testEnvironment": "node",
