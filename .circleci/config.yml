@@ -13,8 +13,8 @@ run_install_desired_npm: &run_install_desired_npm
     # use that to work-around the issue.  It's possible that npm cleanup might
     # prevent this from being necessary, but this installation can be switched
     # to use `npm` (rather than `yarn`) once Node 6 is no longer tested below.
-    name: Install npm@5, but with yarn.
-    command: sudo yarn global add npm@5
+    name: Install npm@6, but with yarn.
+    command: sudo yarn global add npm@6
 
 # These are the steps used for each version of Node which we're testing
 # against.  Thanks to YAMLs inability to merge arrays (though it is able
