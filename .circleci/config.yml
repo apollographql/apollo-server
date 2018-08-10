@@ -40,7 +40,7 @@ common_test_steps: &common_test_steps
         paths:
           # This should cache the npm cache instead of node_modules, which is needed because
           # npm ci actually removes node_modules before installing to guarantee a clean slate.
-          - /root/.npm
+          - ~/.npm
     - run: npm run circle
 
 # Important! When adding a new job to `jobs`, make sure to define when it
