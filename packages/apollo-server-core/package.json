@@ -54,7 +54,7 @@
   },
   "devDependencies": {
     "@types/fibers": "0.0.30",
-    "@types/graphql": "0.13.3",
+    "@types/graphql": "0.13.4",
     "@types/keyv": "3.0.1",
     "@types/quick-lru": "1.1.0",
     "apollo-fetch": "0.7.0",
