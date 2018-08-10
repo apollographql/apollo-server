@@ -17,14 +17,11 @@
     "node": ">=6.0"
   },
   "dependencies": {
-    "apollo-server-env": "2.0.0",
-    "graphql-extensions": "0.1.0"
+    "apollo-server-env": "file:../apollo-server-env",
+    "graphql-extensions": "file:../graphql-extensions"
   },
   "peerDependencies": {
     "graphql": "0.10.x - 0.13.x"
-  },
-  "devDependencies": {
-    "graphql-tools": "3.1.1"
   },
   "jest": {
     "testEnvironment": "node",

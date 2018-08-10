@@ -32,16 +32,14 @@
   "dependencies": {
     "@apollographql/graphql-playground-html": "^1.6.0",
     "accept": "^3.0.2",
-    "apollo-server-core": "2.0.0",
+    "apollo-server-core": "file:../apollo-server-core",
     "apollo-upload-server": "^5.0.0",
     "boom": "^7.1.0",
     "graphql-subscriptions": "^0.5.8",
     "graphql-tools": "^3.0.4"
   },
   "devDependencies": {
-    "@types/hapi": "17.0.17",
-    "apollo-server-integration-testsuite": "2.0.0",
-    "hapi": "17.5.3"
+    "apollo-server-integration-testsuite": "file:../apollo-server-integration-testsuite"
   },
   "peerDependencies": {
     "graphql": "^0.12.0 || ^0.13.0 || ^14.0.0"

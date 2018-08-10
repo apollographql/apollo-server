@@ -22,15 +22,9 @@
     "node": ">=6.0"
   },
   "dependencies": {
-    "apollo-server-env": "2.0.0"
+    "apollo-server-env": "file:../apollo-server-env"
   },
   "peerDependencies": {
     "graphql": "0.10.x - 0.13.x"
-  },
-  "devDependencies": {
-    "@types/graphql": "0.13.4",
-    "@types/node": "10.5.7",
-    "graphql": "0.13.2",
-    "tslint": "5.11.0"
   }
 }

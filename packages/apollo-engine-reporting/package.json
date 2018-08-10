@@ -19,20 +19,11 @@
     "node": ">=6.0"
   },
   "dependencies": {
-    "apollo-engine-reporting-protobuf": "0.0.0-beta.7",
-    "apollo-server-env": "2.0.0",
+    "apollo-engine-reporting-protobuf": "file:../apollo-engine-reporting-protobuf",
+    "apollo-server-env": "file:../apollo-server-env",
     "async-retry": "^1.2.1",
-    "graphql-extensions": "0.1.0",
+    "graphql-extensions": "file:../graphql-extensions",
     "lodash": "^4.17.10"
-  },
-  "devDependencies": {
-    "@types/async-retry": "1.2.1",
-    "@types/graphql": "0.13.4",
-    "@types/lodash": "4.14.116",
-    "graphql": "0.13.2",
-    "graphql-tag": "2.9.2",
-    "graphql-tools": "3.1.1",
-    "tslint": "5.11.0"
   },
   "jest": {
     "testEnvironment": "node",
