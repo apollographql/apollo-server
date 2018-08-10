@@ -34,7 +34,7 @@ common_test_steps: &common_test_steps
           - npm-v1-{{ .Branch }}-
           - npm-v1-
     - run: npm --version
-    - run: npm install
+    - run: npm ci
     - save_cache:
         key: npm-v1-{{ .Branch }}-{{ checksum "package-lock.json" }}-{{ checksum "package-dependencies" }}
         paths:
