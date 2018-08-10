@@ -7,7 +7,7 @@
   "scripts": {
     "clean": "rm -rf dist",
     "compile": "tsc",
-    "prepublish": "npm run compile",
+    "prepare": "npm run compile",
     "watch": "tsc -w"
   },
   "license": "MIT",

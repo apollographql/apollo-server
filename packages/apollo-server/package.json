@@ -8,7 +8,7 @@
   "scripts": {
     "compile": "tsc",
     "coverage": "jest --coverage",
-    "prepublish": "npm run compile",
+    "prepare": "npm run compile",
     "watch": "tsc -w"
   },
   "repository": {

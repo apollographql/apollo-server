@@ -9,7 +9,7 @@
     "compile": "tsc",
     "lint": "prettier -l 'src/**/*.ts' && tslint -p tsconfig.json 'src/**/*.ts'",
     "lint-fix": "prettier --write 'src/**/*.ts' && tslint --fix -p tsconfig.json 'src/**/*.ts'",
-    "prepublish": "npm run clean && npm run compile",
+    "prepare": "npm run clean && npm run compile",
     "watch": "tsc -w"
   },
   "repository": {
