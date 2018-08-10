@@ -15,8 +15,7 @@
     "test": "npm run testonly",
     "posttest": "npm run lint",
     "testonly": "jest --verbose",
-    "coverage": "lerna run coverage",
-    "circle": "lerna run coverage && lerna run circle",
+    "circle": "npm run testonly && npm run lint",
     "release": "lerna publish --exact",
     "precommit": "lint-staged"
   },
