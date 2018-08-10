@@ -6,9 +6,7 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "compile": "tsc",
-    "coverage": "jest --coverage",
     "prepare": "npm run compile",
-    "test": "jest --verbose",
     "watch": "tsc -w"
   },
   "repository": {
