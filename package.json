@@ -1,5 +1,5 @@
 {
-  "name": "apollo-server",
+  "name": "apollo-server-monorepo",
   "private": true,
   "license": "MIT",
   "repository": {
