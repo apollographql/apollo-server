@@ -34,7 +34,7 @@
     "node": ">=6"
   },
   "devDependencies": {
-    "@types/graphql": "0.13.3",
+    "@types/graphql": "0.13.4",
     "@types/jest": "23.3.1",
     "@types/node": "10.5.5",
     "graphql": "0.13.2",
@@ -43,7 +43,7 @@
     "jest-matcher-utils": "23.2.0",
     "lerna": "2.11.0",
     "lint-staged": "7.2.0",
-    "prettier": "1.14.0",
+    "prettier": "1.14.2",
     "prettier-check": "2.0.0",
     "supertest": "3.1.0",
     "ts-jest": "23.1.2",
