@@ -179,6 +179,50 @@ describe('apollo-server-express', () => {
       });
     });
 
+    it('accepts GraphQL Playground Original Settings if we do not pass any settings', async () => {
+      const nodeEnv = process.env.NODE_ENV;
+      delete process.env.NODE_ENV;
+
+      const defaultQuery = 'query { foo { bar } }';
+      const endpoint = '/fumanchupacabra';
+      const { url } = await createServer(
+        {
+          typeDefs,
+          resolvers,
+        },
+        {},
+      );
+
+      return new Promise<http.Server>((resolve, reject) => {
+        request(
+          {
+            url,
+            method: 'GET',
+            headers: {
+              accept:
+                'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+              Folo: 'bar',
+            },
+          },
+          (error, response, body) => {
+            process.env.NODE_ENV = nodeEnv;
+            if (error) {
+              reject(error);
+            } else {
+              console.log('body', body);
+              expect(body).to.contain('GraphQLPlayground');
+              // editor.cursorShape is a setting currently not be setted in ApolloServer, but in GraphQL Playground
+              expect(body).to.contain(`"editor.cursorShape": "line"`);
+              expect(body).to.contain(defaultQuery);
+              expect(body).to.contain(endpoint);
+              expect(response.statusCode).to.equal(200);
+              resolve();
+            }
+          },
+        );
+      });
+    });
+
     it('accepts partial GraphQL Playground Options', async () => {
       const nodeEnv = process.env.NODE_ENV;
       delete process.env.NODE_ENV;
