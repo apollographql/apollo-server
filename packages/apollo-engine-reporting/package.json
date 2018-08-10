@@ -30,7 +30,7 @@
   },
   "devDependencies": {
     "@types/async-retry": "1.2.1",
-    "@types/graphql": "0.13.3",
+    "@types/graphql": "0.13.4",
     "@types/lodash": "4.14.116",
     "graphql": "0.13.2",
     "graphql-tag": "2.9.2",
