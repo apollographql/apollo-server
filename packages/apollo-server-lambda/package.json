@@ -27,9 +27,7 @@
   "scripts": {
     "clean": "rm -rf dist",
     "compile": "tsc",
-    "coverage": "jest --coverage",
     "prepublish": "npm run clean && npm run compile",
-    "test": "jest --verbose",
     "watch": "tsc -w"
   },
   "dependencies": {
