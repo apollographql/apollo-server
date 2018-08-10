@@ -6,10 +6,9 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
+    "clean": "rm -rf dist",
     "compile": "tsc",
-    "coverage": "jest --coverage",
-    "prepare": "npm run compile",
-    "watch": "tsc -w"
+    "prepare": "npm run clean && npm run compile"
   },
   "repository": {
     "type": "git",
