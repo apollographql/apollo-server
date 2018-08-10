@@ -7,10 +7,9 @@
   "scripts": {
     "clean": "rm -rf dist",
     "compile": "tsc",
-    "lint": "prettier -l 'src/**/*.{ts,js}' && tslint -p tsconfig.json 'src/**/*.ts'",
-    "lint-fix": "prettier --write 'src/**/*.{ts,js}' && tslint --fix -p tsconfig.json 'src/**/*.ts'",
     "prepare": "npm run clean && npm run compile",
-    "watch": "tsc -w"
+    "lint": "prettier -l 'src/**/*.{ts,js}' && tslint -p tsconfig.json 'src/**/*.ts'",
+    "lint-fix": "prettier --write 'src/**/*.{ts,js}' && tslint --fix -p tsconfig.json 'src/**/*.ts'"
   },
   "license": "MIT",
   "repository": "https://github.com/apollographql/apollo-engine-reporting",
