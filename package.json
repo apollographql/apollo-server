@@ -36,7 +36,7 @@
   "devDependencies": {
     "@types/graphql": "0.13.4",
     "@types/jest": "23.3.1",
-    "@types/node": "10.5.5",
+    "@types/node": "10.5.7",
     "graphql": "0.13.2",
     "husky": "0.14.3",
     "jest": "23.4.2",
