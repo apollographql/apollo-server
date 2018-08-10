@@ -36,9 +36,6 @@ typings
 .node_repl_history
 .dist
 
-# We don't commit lock files currently
-package-lock.json
-
 # Directly ignore this file here, rather than the /docs/ directory's .gitignore
 # so it will be ignored by Prettier, which only supports a single, top-level,
 # ignore file.
