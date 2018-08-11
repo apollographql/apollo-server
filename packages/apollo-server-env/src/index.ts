@@ -1,4 +1,5 @@
 import './polyfills/Object.values';
+import './polyfills/Object.entries';
 
 require('util.promisify').shim();
 
