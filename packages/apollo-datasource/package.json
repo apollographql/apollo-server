@@ -38,7 +38,7 @@
       "js",
       "json"
     ],
-    "testRegex": "apollo-datasource-rest/src/__tests__/.*$",
+    "testRegex": "apollo-datasource/src/__tests__/.*$",
     "roots": [
       "../../"
     ],
