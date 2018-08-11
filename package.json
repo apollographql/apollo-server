@@ -116,8 +116,27 @@
     "yup": "^0.26.2"
   },
   "jest": {
-    "projects": [
-      "<rootDir>/packages/*"
-    ]
+    "testEnvironment": "node",
+    "setupFiles": [
+      "<rootDir>/packages/apollo-server-env/dist/index.js"
+    ],
+    "transform": {
+      "^.+\\.ts$": "ts-jest"
+    },
+    "testRegex": "/__tests__/.*\\.test\\.(js|ts)$",
+    "moduleFileExtensions": [
+      "ts",
+      "js"
+    ],
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "/dist/"
+    ],
+    "clearMocks": true,
+    "globals": {
+      "ts-jest": {
+        "skipBabel": true
+      }
+    }
   }
 }

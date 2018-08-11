@@ -21,25 +21,5 @@
   },
   "peerDependencies": {
     "graphql": "0.10.x - 0.13.x"
-  },
-  "jest": {
-    "testEnvironment": "node",
-    "setupFiles": [
-      "<rootDir>/../apollo-server-env/dist/index.js"
-    ],
-    "transform": {
-      "^.+\\.(ts|js)$": "ts-jest"
-    },
-    "moduleFileExtensions": [
-      "ts",
-      "js",
-      "json"
-    ],
-    "testRegex": "src/__tests__/.*$",
-    "globals": {
-      "ts-jest": {
-        "skipBabel": true
-      }
-    }
   }
 }
