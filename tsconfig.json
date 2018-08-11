@@ -10,6 +10,7 @@
     "removeComments": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
+    "forceConsistentCasingInFileNames": true,
     "lib": ["es2017", "esnext.asynciterable"],
     "types": ["node", "jest"]
   }
