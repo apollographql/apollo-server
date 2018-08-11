@@ -24,28 +24,5 @@
   "dependencies": {
     "apollo-server-caching": "file:../apollo-server-caching",
     "apollo-server-env": "file:../apollo-server-env"
-  },
-  "jest": {
-    "testEnvironment": "node",
-    "setupFiles": [
-      "<rootDir>/../apollo-server-env/dist/index.js"
-    ],
-    "transform": {
-      "^.+\\.(ts|js)$": "ts-jest"
-    },
-    "moduleFileExtensions": [
-      "ts",
-      "js",
-      "json"
-    ],
-    "testRegex": "apollo-datasource/src/__tests__/.*$",
-    "roots": [
-      "../../"
-    ],
-    "globals": {
-      "ts-jest": {
-        "skipBabel": true
-      }
-    }
   }
 }
