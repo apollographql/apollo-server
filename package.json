@@ -15,7 +15,7 @@
     "test": "npm run testonly",
     "posttest": "npm run lint",
     "testonly": "jest --verbose",
-    "circle": "npm run testonly && npm run lint",
+    "circle": "npm run testonly -- --ci --maxWorkers=2 && npm run lint",
     "release": "lerna publish --exact",
     "precommit": "lint-staged"
   },
