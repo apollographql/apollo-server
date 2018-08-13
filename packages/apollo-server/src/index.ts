@@ -24,7 +24,7 @@ export interface ServerInfo {
 }
 
 export class ApolloServer extends ApolloServerBase {
-  private httpServer: http.Server;
+  private httpServer?: http.Server;
   private cors?: CorsOptions | boolean;
 
   constructor(config: Config & { cors?: CorsOptions | boolean }) {
@@ -95,27 +95,29 @@ export class ApolloServer extends ApolloServerBase {
             },
     });
 
-    this.httpServer = http.createServer(app);
+    const httpServer = http.createServer(app);
+    this.httpServer = httpServer;
 
     if (this.subscriptionServerOptions) {
-      this.installSubscriptionHandlers(this.httpServer);
+      this.installSubscriptionHandlers(httpServer);
     }
 
     await new Promise(resolve => {
-      this.httpServer.once('listening', resolve);
+      httpServer.once('listening', resolve);
       // If the user passed a callback to listen, it'll get called in addition
       // to our resolver. They won't have the ability to get the ServerInfo
       // object unless they use our Promise, though.
-      this.httpServer.listen(...(opts.length ? opts : [{ port: 4000 }]));
+      httpServer.listen(...(opts.length ? opts : [{ port: 4000 }]));
     });
 
-    return this.createServerInfo(this.httpServer, this.subscriptionsPath);
+    return this.createServerInfo(httpServer, this.subscriptionsPath);
   }
 
   public async stop() {
     if (this.httpServer) {
-      await new Promise(resolve => this.httpServer.close(resolve));
-      this.httpServer = null;
+      const httpServer = this.httpServer;
+      await new Promise(resolve => httpServer.close(resolve));
+      this.httpServer = undefined;
     }
     await super.stop();
   }

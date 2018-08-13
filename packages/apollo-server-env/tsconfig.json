@@ -5,15 +5,8 @@
     "outDir": "./dist",
     "allowJs": true,
     "declaration": false,
-    "declarationMap": false,
-    "removeComments": true,
-    "strict": true,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
-    "noUnusedParameters": true,
-    "noUnusedLocals": true
+    "declarationMap": false
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "**/__tests__/*", "**/__mocks__/*"],
-  "types": []
+  "exclude": ["**/__tests__", "**/__mocks__"]
 }

@@ -14,7 +14,7 @@
   "scripts": {
     "clean": "rm -rf dist",
     "compile": "tsc && cp src/*.d.ts dist",
-    "prepublish": "npm run clean && npm run compile"
+    "prepare": "npm run clean && npm run compile"
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

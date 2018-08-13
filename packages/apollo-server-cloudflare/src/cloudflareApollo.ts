@@ -47,14 +47,8 @@ export function graphqlCloudflare(options: GraphQLOptions) {
 
         const res = new Response(error.message, {
           status: error.statusCode,
-          headers: { 'content-type': 'application/json' },
+          headers: error.headers,
         });
-
-        if (error.headers) {
-          Object.keys(error.headers).forEach(header => {
-            res.headers[header] = error.headers[header];
-          });
-        }
 
         return res;
       },
