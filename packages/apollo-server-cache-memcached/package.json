@@ -14,9 +14,7 @@
   "scripts": {
     "clean": "rm -rf dist",
     "compile": "tsc",
-    "coverage": "jest --coverage",
-    "prepublish": "npm run clean && npm run compile",
-    "test": "jest --verbose"
+    "prepare": "npm run clean && npm run compile"
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -24,32 +22,8 @@
     "node": ">=6"
   },
   "dependencies": {
-    "apollo-server-caching": "0.1.0",
-    "apollo-server-env": "2.0.0",
+    "apollo-server-caching": "file:../apollo-server-caching",
+    "apollo-server-env": "file:../apollo-server-env",
     "memcached": "^2.2.2"
-  },
-  "devDependencies": {
-    "@types/memcached": "2.2.5",
-    "memcached-mock": "0.1.0"
-  },
-  "jest": {
-    "testEnvironment": "node",
-    "setupFiles": [
-      "<rootDir>/node_modules/apollo-server-env/dist/index.js"
-    ],
-    "transform": {
-      "^.+\\.(ts|js)$": "ts-jest"
-    },
-    "moduleFileExtensions": [
-      "ts",
-      "js",
-      "json"
-    ],
-    "testRegex": "src/__tests__/.*$",
-    "globals": {
-      "ts-jest": {
-        "skipBabel": true
-      }
-    }
   }
 }

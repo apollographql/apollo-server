@@ -3,17 +3,20 @@ import * as Memcached from 'memcached';
 import { promisify } from 'util';
 
 export class MemcachedCache implements KeyValueCache {
-  readonly client;
+  // FIXME: Replace any with proper promisified type
+  readonly client: any;
   readonly defaultSetOptions = {
     ttl: 300,
   };
 
   constructor(serverLocation: Memcached.Location, options?: Memcached.options) {
-    this.client = new Memcached(serverLocation, options);
+    const client = new Memcached(serverLocation, options);
     // promisify client calls for convenience
-    this.client.get = promisify(this.client.get).bind(this.client);
-    this.client.set = promisify(this.client.set).bind(this.client);
-    this.client.flush = promisify(this.client.flush).bind(this.client);
+    client.get = promisify(client.get).bind(client);
+    client.set = promisify(client.set).bind(client);
+    client.flush = promisify(client.flush).bind(client);
+
+    this.client = client;
   }
 
   async set(

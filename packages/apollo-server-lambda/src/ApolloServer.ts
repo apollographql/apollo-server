@@ -44,7 +44,7 @@ export class ApolloServer extends ApolloServerBase {
   }
 
   public createHandler({ cors }: CreateHandlerOptions = { cors: undefined }) {
-    const corsHeaders = {};
+    const corsHeaders: lambda.APIGatewayProxyResult['headers'] = {};
 
     if (cors) {
       if (cors.methods) {
