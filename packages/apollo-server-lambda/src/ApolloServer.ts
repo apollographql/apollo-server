@@ -119,8 +119,13 @@ export class ApolloServer extends ApolloServerBase {
       if (this.playgroundOptions && event.httpMethod === 'GET') {
         const acceptHeader = event.headers['Accept'] || event.headers['accept'];
         if (acceptHeader && acceptHeader.includes('text/html')) {
+          const path =
+            event.path ||
+            (event.requestContext && event.requestContext.path) ||
+            '/';
+
           const playgroundRenderPageOptions: PlaygroundRenderPageOptions = {
-            endpoint: event.requestContext.path,
+            endpoint: path,
             ...this.playgroundOptions,
           };
 
