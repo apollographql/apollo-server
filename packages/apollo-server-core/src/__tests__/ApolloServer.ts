@@ -20,13 +20,23 @@ describe('ApolloServerBase > execute', () => {
   const server = new ApolloServerBase({
     typeDefs,
     resolvers,
-    context: () => ({ foo: 'bar' }),
-    dataSources: () => ({
-      foo: { bar: () => 'baz' },
-    }),
   });
 
   it('allows execution of query', async () => {
+    const query = gql`
+      {
+        hello(world: "Apollo")
+      }
+    `;
+
+    const res = await server.execute({
+      query,
+    });
+
+    expect(res).toEqual({ data: { hello: 'Hello, Apollo' } });
+  });
+
+  it('allows passing of context, variable, and dataSources', async () => {
     const query = gql`
       query test($world: String) {
         hello(world: $world)
@@ -37,10 +47,11 @@ describe('ApolloServerBase > execute', () => {
 
     const res = await server.execute({
       query,
+      context: { foo: 'bar' },
+      dataSources: { foo: { bar: () => 'baz' } },
       variables: { world: 'Apollo' },
     });
 
-    // expect(res).toEqual({ data: { hello: 'Hello, Apollo' } });
     expect(res).toEqual({
       data: {
         hello: 'Hello, Apollo',
