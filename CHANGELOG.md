@@ -9,6 +9,7 @@ All of the packages in the `apollo-server` repo are released with the same versi
 - Hapi: Pass the response toolkit to the context function. [#1407](https://github.com/apollographql/apollo-server/pull/1407)
 - update apollo-engine-reporting-protobuf to non-beta [#1429](https://github.com/apollographql/apollo-server/pull/1429)
 - Lambda: Look in event.path first when picking endpoint for GraphQL Playground [#1527](https://github.com/apollographql/apollo-server/pull/1527)
+- Fix to allow enabling GraphQL Playground in production with custom config [#1495](https://github.com/apollographql/apollo-server/pull/1495)
 
 ### rc.10
 

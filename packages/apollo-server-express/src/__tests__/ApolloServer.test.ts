@@ -179,10 +179,7 @@ describe('apollo-server-express', () => {
       });
     });
 
-    it('accepts partial GraphQL Playground Options', async () => {
-      const nodeEnv = process.env.NODE_ENV;
-      delete process.env.NODE_ENV;
-
+    const playgroundPartialOptionsTest = async () => {
       const defaultQuery = 'query { foo { bar } }';
       const endpoint = '/fumanchupacabra';
       const { url } = await createServer(
@@ -220,7 +217,6 @@ describe('apollo-server-express', () => {
             },
           },
           (error, response, body) => {
-            process.env.NODE_ENV = nodeEnv;
             if (error) {
               reject(error);
             } else {
@@ -234,7 +230,25 @@ describe('apollo-server-express', () => {
           },
         );
       });
+    };
+
+    it('accepts partial GraphQL Playground Options in production', async () => {
+      const nodeEnv = process.env.NODE_ENV;
+      process.env.NODE_ENV = 'production';
+      await playgroundPartialOptionsTest();
+      process.env.NODE_ENV = nodeEnv;
     });
+
+    it(
+      'accepts partial GraphQL Playground Options when an environment is ' +
+        'not specified',
+      async () => {
+        const nodeEnv = process.env.NODE_ENV;
+        delete process.env.NODE_ENV;
+        await playgroundPartialOptionsTest();
+        process.env.NODE_ENV = nodeEnv;
+      },
+    );
 
     it('accepts playground options as a boolean', async () => {
       const nodeEnv = process.env.NODE_ENV;
