@@ -52,6 +52,33 @@ const server = new ApolloServer({
 });
 ```
 
+While we recommend the use [schema-definition language (SDL)](https://www.apollographql.com/docs/apollo-server/essentials/schema.html#sdl) for defining a GraphQL schema since we feel it's more human-readable and language-agnostic, Apollo Server can be configured with a `GraphQLSchema` object:
+
+```js
+const { ApolloServer, gql } = require('apollo-server');
+const { GraphQLSchema, GraphQLObjectType, GraphQLString } = require('graphql');
+
+// The GraphQL schema
+const schema = new GraphQLSchema({
+  query: new GraphQLObjectType({
+    name: 'Query',
+    fields: {
+      hello: {
+        type: GraphQLString,
+        description: 'A simple type for getting started!',
+        resolve: () => 'world',
+      },
+    },
+  }),
+});
+
+const server = new ApolloServer({ schema });
+
+server.listen().then(({ url }) => {
+  console.log(`🚀 Server ready at ${url}`);
+});
+```
+
 ## Integrations
 
 Often times, Apollo Server needs to be run with a particular integration. To start, run `npm install --save apollo-server-<integration>` where `<integration>` is one of the following:

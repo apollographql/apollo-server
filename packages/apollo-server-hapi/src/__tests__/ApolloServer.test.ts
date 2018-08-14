@@ -232,6 +232,50 @@ describe('apollo-server-hapi', () => {
       await apolloFetch({ query: '{hello}' });
     });
 
+    it('accepts custom route configuration', async () => {
+      server = new ApolloServer({
+        typeDefs,
+        resolvers,
+      });
+      app = new Server({
+        port,
+      });
+
+      await server.applyMiddleware({
+        app,
+        route: {
+          cors: {
+            additionalExposedHeaders: ['X-Apollo'],
+            exposedHeaders: [
+              'Accept',
+              'Authorization',
+              'Content-Type',
+              'If-None-Match',
+              'Another-One',
+            ],
+          },
+        },
+      });
+
+      await app.start();
+
+      httpServer = app.listener;
+      const uri = app.info.uri + '/graphql';
+
+      const apolloFetch = createApolloFetch({ uri }).useAfter(
+        (response, next) => {
+          expect(
+            response.response.headers.get('access-control-expose-headers'),
+          ).toEqual(
+            'Accept,Authorization,Content-Type,If-None-Match,Another-One,X-Apollo',
+          );
+          next();
+        },
+      );
+
+      await apolloFetch({ query: '{hello}' });
+    });
+
     it('passes each request and response toolkit through to the context function', async () => {
       const context = async ({ request, h }) => {
         expect(request).toBeDefined();

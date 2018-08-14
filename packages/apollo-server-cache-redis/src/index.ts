@@ -4,7 +4,8 @@ import { promisify } from 'util';
 import * as DataLoader from 'dataloader';
 
 export class RedisCache implements KeyValueCache {
-  readonly client;
+  // FIXME: Replace any with proper promisified type
+  readonly client: any;
   readonly defaultSetOptions = {
     ttl: 300,
   };
@@ -12,16 +13,19 @@ export class RedisCache implements KeyValueCache {
   private loader: DataLoader<string, string>;
 
   constructor(options: Redis.ClientOpts) {
-    this.client = Redis.createClient(options);
+    const client = Redis.createClient(options);
+
+    // promisify client calls for convenience
+    client.mget = promisify(client.mget).bind(client);
+    client.set = promisify(client.set).bind(client);
+    client.flushdb = promisify(client.flushdb).bind(client);
+    client.quit = promisify(client.quit).bind(client);
+
+    this.client = client;
+
     this.loader = new DataLoader(keys => this.client.mget(keys), {
       cache: false,
     });
-
-    // promisify client calls for convenience
-    this.client.mget = promisify(this.client.mget).bind(this.client);
-    this.client.set = promisify(this.client.set).bind(this.client);
-    this.client.flushdb = promisify(this.client.flushdb).bind(this.client);
-    this.client.quit = promisify(this.client.quit).bind(this.client);
   }
 
   async set(
