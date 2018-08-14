@@ -221,6 +221,42 @@ server.listen().then(({ url }) => {
 });
 ```
 
+<h3 id="schema-object-notation">Constructing an Executable Schema Manually</h3>
+
+While we recommend the use [schema-definition language (SDL)](https://www.apollographql.com/docs/apollo-server/essentials/schema.html#sdl) for defining a GraphQL schema since we feel it's more human-readable and language-agnostic, Apollo Server 2 also supports schemas which are built with the [`graphql-js`'s `graphql/type` notation](https://graphql.org/graphql-js/type/) by passing a `GraphQLSchema` to the `schema` option of the `ApolloServer` constructor.
+
+For example, using this technique the above schema might be represented and used as:
+
+```js
+const {
+  graphql,
+  GraphQLSchema,
+  GraphQLObjectType,
+  GraphQLString
+} = require('graphql');
+const { ApolloServer } = require('apollo-server');
+
+const schema = new GraphQLSchema({
+  query: new GraphQLObjectType({
+    name: 'RootQueryType',
+    fields: {
+      hello: {
+        type: GraphQLString,
+        resolve() {
+          return 'hello world';
+        }
+      }
+    }
+  })
+});
+
+const server = new ApolloServer({ schema });
+
+server.listen().then(({ url }) => {
+  console.log(`🚀 Server ready at ${url}`);
+});
+```
+
 <h2 id="request-headers">Accessing Request Headers</h2>
 
 Apollo Server 1 allowed request headers to be used in the construction of the GraphQL options. Apollo Server 2 allows constructor to create the context based upon the request.
