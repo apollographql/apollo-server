@@ -221,9 +221,11 @@ server.listen().then(({ url }) => {
 });
 ```
 
-<h3 id="existing-schema">Using Schema as Objects</h3>
+<h3 id="schema-object-notation">Constructing an Executable Schema Manually</h3>
 
-Some GraphQL server implementations use a GraphQL schema defined as nested objects. Apollo Server 2 accepts these schemas directly to the `ApolloServer` constructor. The following snippet demonstrates how the same schema as above might have been defined and can be passed to Apollo Server.
+While we recommend the use [schema-definition language (SDL)](https://www.apollographql.com/docs/apollo-server/essentials/schema.html#sdl) for defining a GraphQL schema since we feel it's more human-readable and language-agnostic, Apollo Server 2 also supports schemas which are built with the [`graphql-js`'s `graphql/type` notation](https://graphql.org/graphql-js/type/) by passing a `GraphQLSchema` to the `schema` option of the `ApolloServer` constructor.
+
+For example, using this technique the above schema might be represented and used as:
 
 ```js
 const {
@@ -254,8 +256,6 @@ server.listen().then(({ url }) => {
   console.log(`🚀 Server ready at ${url}`);
 });
 ```
-
-> Note: While this pattern is possible, for new implementations we recommend defining `typeDefs` and `resolvers` or using `makeExecutableSchema` if necessary.
 
 <h2 id="request-headers">Accessing Request Headers</h2>
 
