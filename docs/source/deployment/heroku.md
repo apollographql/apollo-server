@@ -4,26 +4,44 @@ sidebar_title: Heroku
 description: Deploying your GraphQL server to Heroku
 ---
 
-Heroku is a common Platform as a Service that allows you to deploy your Apollo Server and have a functional GraphQL endpoint.
+Heroku is a common Platform as a Service solution that allows users to deploy and have a functioning GraphQL endpoint running in a matter of minutes.
 
+## Prerequisites
 
-<h3 id="configure-heroku" title="Configure Heroku">1. Create and set up a new Heroku application</h3>
+The following must be done before following this guide:
 
-Log into the [Heroku dashboard](https://dashboard.heroku.com/apps). Then click “New” > “Create New App” in the top right. The name you choose will be used later in this tutorial as <HEROKU_APP_NAME>, so be sure to replace it in the later sections.
+- Setup a [Heroku](https://heroku.com) account
+- [Install the Heroku CLI](https://devcenter.heroku.com/articles/heroku-cli) if pushing to Heroku manually (see below)
 
-<div style="text-align:center">
+<h2 id="configure-heroku" title="Configure Heroku">Set up a new Heroku application</h2>
+
+Before deploying, a new application must be setup. To do this, log into the [Heroku dashboard](https://dashboard.heroku.com/apps). Then click `New > Create New App` in the top right. The name you choose will be referred to later as `<HEROKU_APP_NAME>`, so be sure to replace it in the later sections.
+
 ![New App Screenshot](../images/deployment/heroku/new-app.png)
-<br></br>
-</div>
 
-Name your app and hit “Create app”
+Name your app and hit "Create app"
 
-<div style="text-align:center">
 ![Create App Screenshot](../images/deployment/heroku/create-app.png)
-<br></br>
-</div>
 
-<h3 id="deploy" title="Deploy with Heroku Push">2. Push project to Heroku</h3>
+## Setting up the project
+
+For Heroku, projects can be setup using any of the `apollo-server` HTTP variants (like express, hapi, etc).
+
+The only special consideration that needs to be made is to allow heroku to choose the port that the server is deployed to. Otherwise, there may be errors, such as a request timeout.
+
+To configure `apollo-server` to use a port defined by Heroku at runtime, the `listen` function in your setup file can be called with a port defined by the `PORT` environment variable:
+
+```
+server.listen({ port: process.env.PORT || 4000 }).then(({ url }) => {
+  console.log(`🚀 Server ready at ${url}`);
+});
+```
+
+## Deploying the project
+
+There are a couple of ways to push projects to Heroku. Automatically, with GitHub integration, or manually using Heroku push.
+
+<h3 id="deploy" title="Deploy with Heroku Push">Deploying with Heroku push</h3>
 
 Install the [Heroku Cli](https://devcenter.heroku.com/articles/heroku-cli), then inside of your project, run:
 
@@ -33,34 +51,27 @@ $ heroku git:remote -a <HEROKU_APP_NAME>
 
 $ git add .
 $ git commit -am "make it better"
-$ git push heroku master
+$ git push heroku master # or your branch name
 ```
 
 Send a query to your GraphQL service at your Heroku Application at `<HEROKU_APP_NAME>.herokuapp.com`
 
-> Note: If you are using a project pushed to GitHub, you may want to setup automatic deployments from your repository, which you can do by following the steps in [this section](#github-deploy).
+<h3>Automatically deploying with GitHub</h3>
 
-<h3 id="env-vars" title="Environment variables">3. Configure environment variables</h3>
+If the project is already pushed to GitHub, it may be easier to setup automatic deployments from the project's repository
+
+On the Heroku dashboard, click on the name of the app that will be deployed from GitHub.
+
+Then, on the app deatail page, there is a tab bar at the top, with a "Deploy" option. On that page, the deployment method can be chosen and setup to integrate with GitHub.
+
+![github deployment instructons](../images/deployment/heroku/heroku-github-instructions.png)
+
+<h2 id="env-vars" title="Environment variables"> Configuring environment variables</h2>
 
 In order to enable the production mode of Apollo Server, you will need to set the `NODE_ENV` variable to production. To ensure you have visibility into your GraphQL performance in Apollo Server, you'll want to add the `ENGINE_API_KEY` environment variable to Heroku. For the API key, log into the [Engine UI](https://engine.apollographql.com) and navigate to your service or create a new one.
 
 Then under the “Settings” tab, click “Reveal Config Vars". Next set `NODE_ENV` to `production` and copy your key from the [Engine UI](http://engine.apollographql.com/) as the value for `ENGINE_API_KEY`.
 
-<div style="text-align:center">
 ![Add Engine Api Key Screenshot](../images/deployment/heroku/add-env-vars.png)
-<br></br>
-</div>
 
 Send a query to your GraphQL service at your Heroku Application at `<HEROKU_APP_NAME>.herokuapp.com` and then check out the tracing data in the [Engine UI](http://engine.apollographql.com/).
-
-> If you would like your GraphQL service to be exposed on a different port, you can also add a PORT environment variable.
-
-<h3 id="github-deploy" title="Github Deploy">Deploying directly from GitHub</h3>
-
-If you have your project published to github, you are able to setup Heroku to perform automatic deployments from branch. If you have pushed your project GitHub, you may select a branch in your repository that will trigger deploys.
-
-<div style="text-align:center">
-![Add Integration Screenshot](../images/deployment/heroku/add-integration.png)
-<br></br>
-</div>
-

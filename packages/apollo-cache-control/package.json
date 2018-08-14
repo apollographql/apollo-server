@@ -7,10 +7,7 @@
   "scripts": {
     "clean": "rm -rf dist",
     "compile": "tsc",
-    "coverage": "jest --coverage",
-    "prepublish": "npm run clean && npm run compile",
-    "test": "jest --verbose",
-    "watch": "tsc -w"
+    "prepare": "npm run clean && npm run compile"
   },
   "license": "MIT",
   "repository": "apollographql/apollo-cache-control-js",
@@ -19,38 +16,10 @@
     "node": ">=6.0"
   },
   "dependencies": {
-    "apollo-server-env": "2.0.0",
-    "graphql-extensions": "0.1.0"
+    "apollo-server-env": "file:../apollo-server-env",
+    "graphql-extensions": "file:../graphql-extensions"
   },
   "peerDependencies": {
     "graphql": "0.10.x - 0.13.x"
-  },
-  "devDependencies": {
-    "graphql-tools": "3.1.1"
-  },
-  "jest": {
-    "testEnvironment": "node",
-    "setupFiles": [
-      "<rootDir>/node_modules/apollo-server-env/dist/index.js"
-    ],
-    "transform": {
-      "^.+\\.(ts|js)$": "ts-jest"
-    },
-    "moduleFileExtensions": [
-      "ts",
-      "js",
-      "json"
-    ],
-    "testRegex": "src/__tests__/.*$",
-    "testPathIgnorePatterns": [
-      "<rootDir>/node_modules/",
-      "<rootDir>/lib/",
-      "test-utils"
-    ],
-    "globals": {
-      "ts-jest": {
-        "skipBabel": true
-      }
-    }
   }
 }
