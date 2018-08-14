@@ -52,7 +52,7 @@ const server = new ApolloServer({
 });
 ```
 
-Apollo Server could also be configured with a GraphQLSchema object:
+While we recommend the use [schema-definition language (SDL)](https://www.apollographql.com/docs/apollo-server/essentials/schema.html#sdl) for defining a GraphQL schema since we feel it's more human-readable and language-agnostic, Apollo Server can be configured with a `GraphQLSchema` object:
 
 ```js
 const { ApolloServer, gql } = require('apollo-server');
@@ -73,6 +73,10 @@ const schema = new GraphQLSchema({
 });
 
 const server = new ApolloServer({ schema });
+
+server.listen().then(({ url }) => {
+  console.log(`🚀 Server ready at ${url}`);
+});
 ```
 
 ## Integrations
