@@ -49,6 +49,7 @@ export class ApolloServer extends ApolloServerBase {
     app,
     cors,
     path,
+    route,
     disableHealthCheck,
     onHealthCheck,
   }: ServerRegistration) {
@@ -122,9 +123,12 @@ export class ApolloServer extends ApolloServerBase {
       options: {
         path,
         graphqlOptions: this.createGraphQLServerOptions.bind(this),
-        route: {
-          cors: cors !== undefined ? cors : true,
-        },
+        route:
+          route !== undefined
+            ? route
+            : {
+                cors: cors !== undefined ? cors : true,
+              },
       },
     });
 
@@ -136,6 +140,7 @@ export interface ServerRegistration {
   app?: hapi.Server;
   path?: string;
   cors?: boolean | hapi.RouteOptionsCors;
+  route?: hapi.RouteOptions;
   onHealthCheck?: (request: hapi.Request) => Promise<any>;
   disableHealthCheck?: boolean;
   uploads?: boolean | Record<string, any>;
