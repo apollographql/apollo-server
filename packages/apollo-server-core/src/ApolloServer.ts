@@ -365,16 +365,4 @@ export class ApolloServerBase {
       ...this.requestOptions,
     } as GraphQLOptions;
   }
-
-  // This function allows for manual execution of a schema
-  async execute({
-    query,
-    variables,
-  }: {
-    query: any;
-    variables: Record<string, any>;
-  }) {
-    console.log(this.context);
-    return execute(this.schema, query, null, this.context, variables);
-  }
 }
