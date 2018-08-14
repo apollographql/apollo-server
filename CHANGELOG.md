@@ -4,6 +4,10 @@ All of the packages in the `apollo-server` repo are released with the same versi
 
 ### vNEXT
 
+### v2.0.2
+
+- Release with Lerna 3
+
 ### v2.0.1
 
 - Hapi: Allow additional route options to be passed to Hapi.js plugin. [PR #1384](https://github.com/apollographql/apollo-server/pull/1384)
