@@ -143,6 +143,44 @@ const mocks = {
 
 For some more background and flavor on this approach, read the ["Mocking your server with one line of code"](https://medium.com/apollo-stack/mocking-your-server-with-just-one-line-of-code-692feda6e9cd) article on the Apollo blog.
 
+### Using existing resolvers with mocks
+
+The default behavior for mocks is to overwrite the resolvers already present in the schema. To keep the existing resolvers, set the `mockEntireSchema` field to false.
+
+```js line=26
+const { ApolloServer } = require('apollo-server');
+
+const typeDefs = gql`
+type Query {
+  hello: String
+  resolved: String
+}
+`;
+
+const resolvers = {
+  Query: {
+    resolved: () => 'Resolved',
+  },
+};
+
+const mocks = {
+  Int: () => 6,
+  Float: () => 22.1,
+  String: () => 'Hello',
+};
+
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  mocks,
+  mockEntireSchema: false,
+});
+
+server.listen().then(({ url }) => {
+  console.log(`🚀 Server ready at ${url}`)
+});
+```
+
 ## Mocking a schema using introspection
 
 The GraphQL specification allows clients to introspect the schema with a [special set of types and fields](https://facebook.github.io/graphql/#sec-Introspection) that every schema must include. The results of a [standard introspection query](https://github.com/graphql/graphql-js/blob/master/src/utilities/introspectionQuery.js) can be used to generate an instance of GraphQLSchema which can be mocked as explained above.
