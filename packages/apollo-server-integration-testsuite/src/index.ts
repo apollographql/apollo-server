@@ -442,7 +442,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
             },
           });
         return req.then(res => {
-          expect(res.status).toEqual(200);
+          expect(res.statusCode).toEqual(200);
           expect(res.body.errors).toBeDefined();
           expect(res.body.errors.length).toEqual(1);
           expect(res.body.errors[0].message).toEqual(
@@ -465,7 +465,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
             }),
           });
         return req.then(res => {
-          expect(res.status).toEqual(200);
+          expect(res.statusCode).toEqual(200);
           expect(res.body.errors).toBeDefined();
           expect(res.body.errors.length).toEqual(1);
           expect(res.body.errors[0].message).toEqual('PersistedQueryNotFound');

@@ -4,6 +4,14 @@ All of the packages in the `apollo-server` repo are released with the same versi
 
 ### vNEXT
 
+- Add option to mock the entire schema(i.e. sets preserveResolvers) [PR #1546](https://github.com/apollographql/apollo-server/pull/1546)
+
+### v2.0.2
+
+- Release with Lerna 3
+
+### v2.0.1
+
 - Hapi: Allow additional route options to be passed to Hapi.js plugin. [PR #1384](https://github.com/apollographql/apollo-server/pull/1384)
 - express, koa: remove next after playground [#1436](https://github.com/apollographql/apollo-server/pull/1436)
 - Hapi: Pass the response toolkit to the context function. [#1407](https://github.com/apollographql/apollo-server/pull/1407)
