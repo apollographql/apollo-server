@@ -4,23 +4,29 @@ All of the packages in the `apollo-server` repo are released with the same versi
 
 ### vNEXT
 
+### v2.0.4
+
+- apollo-server: Release due to failed build and install
+
 ### v2.0.3
 
+- apollo-server: failed publish
 - pass payload into context function for subscriptions [#1513](https://github.com/apollographql/apollo-server/pull/1513)
 - Add option to mock the entire schema(i.e. sets preserveResolvers) [PR #1546](https://github.com/apollographql/apollo-server/pull/1546)
 
 ### v2.0.2
 
-- Release with Lerna 3
-
-### v2.0.1
-
+- Release with Lerna 3 due
 - Hapi: Allow additional route options to be passed to Hapi.js plugin. [PR #1384](https://github.com/apollographql/apollo-server/pull/1384)
 - express, koa: remove next after playground [#1436](https://github.com/apollographql/apollo-server/pull/1436)
 - Hapi: Pass the response toolkit to the context function. [#1407](https://github.com/apollographql/apollo-server/pull/1407)
 - update apollo-engine-reporting-protobuf to non-beta [#1429](https://github.com/apollographql/apollo-server/pull/1429)
 - Lambda: Look in event.path first when picking endpoint for GraphQL Playground [#1527](https://github.com/apollographql/apollo-server/pull/1527)
 - Fix to allow enabling GraphQL Playground in production with custom config [#1495](https://github.com/apollographql/apollo-server/pull/1495)
+
+### v2.0.1
+
+- Bad build due to Lerna 2 release
 
 ### rc.10
 
