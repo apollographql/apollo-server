@@ -135,6 +135,7 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
     variables: options.variables,
     persistedQueryHit: options.persistedQueryHit,
     persistedQueryRegister: options.persistedQueryRegister,
+    context,
   });
   return Promise.resolve()
     .then(
@@ -148,6 +149,7 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
         } else {
           const parsingDidEnd = extensionStack.parsingDidStart({
             queryString: options.queryString,
+            context,
           });
           let graphqlParseErrors: SyntaxError[] | undefined;
           try {
@@ -182,7 +184,7 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
         if (options.validationRules) {
           rules = rules.concat(options.validationRules);
         }
-        const validationDidEnd = extensionStack.validationDidStart();
+        const validationDidEnd = extensionStack.validationDidStart({ context });
         let validationErrors: GraphQLError[] | undefined;
         try {
           validationErrors = validate(
@@ -227,6 +229,7 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
         };
         const executionDidEnd = extensionStack.executionDidStart({
           executionArgs,
+          context,
         });
         return Promise.resolve()
           .then(() => execute(executionArgs))
@@ -257,7 +260,7 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
 
             executionDidEnd(...(result.errors || []));
 
-            const formattedExtensions = extensionStack.format();
+            const formattedExtensions = extensionStack.format({ context });
             if (Object.keys(formattedExtensions).length > 0) {
               response.extensions = formattedExtensions;
             }
@@ -278,7 +281,10 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
       throw err;
     })
     .then((graphqlResponse: GraphQLResponse) => {
-      const response = extensionStack.willSendResponse({ graphqlResponse });
+      const response = extensionStack.willSendResponse({
+        graphqlResponse,
+        context,
+      });
       requestDidEnd();
       return response.graphqlResponse;
     });

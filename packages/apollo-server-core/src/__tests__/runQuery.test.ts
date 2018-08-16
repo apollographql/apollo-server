@@ -304,8 +304,8 @@ describe('runQuery', () => {
 
   describe('graphql extensions', () => {
     class CustomExtension implements GraphQLExtension<any> {
-      format(): [string, any] {
-        return ['customExtension', { foo: 'bar' }];
+      format({ context }: { context: any }): [string, any] {
+        return ['customExtension', { foo: 'bar', ctx: context.baz }];
       }
     }
 
@@ -344,13 +344,36 @@ describe('runQuery', () => {
       return runQuery({
         schema,
         queryString,
+        context: { baz: 'always here' },
         extensions,
         request: new MockReq(),
       }).then(res => {
         expect(res.data).toEqual(expected);
         expect(res.extensions).toEqual({
-          customExtension: { foo: 'bar' },
+          customExtension: { foo: 'bar', ctx: 'always here' },
         });
+      });
+    });
+
+    it('runs willSendResponse with extensions context', async () => {
+      class CustomExtension implements GraphQLExtension<any> {
+        willSendResponse(o: any) {
+          expect(o).toHaveProperty('context.baz', 'always here');
+          return o;
+        }
+      }
+
+      const queryString = `{ testString }`;
+      const expected = { testString: 'it works' };
+      const extensions = [() => new CustomExtension()];
+      return runQuery({
+        schema,
+        queryString,
+        context: { baz: 'always here' },
+        extensions,
+        request: new MockReq(),
+      }).then(res => {
+        expect(res.data).toEqual(expected);
       });
     });
   });

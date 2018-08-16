@@ -57,6 +57,7 @@ export class EngineReportingExtension<TContext = any>
     variables: Record<string, any>;
     persistedQueryHit?: boolean;
     persistedQueryRegister?: boolean;
+    context: TContext;
   }): EndHandler {
     this.trace.startTime = dateToTimestamp(new Date());
     this.startHrTime = process.hrtime();
@@ -172,7 +173,10 @@ export class EngineReportingExtension<TContext = any>
     };
   }
 
-  public executionDidStart(o: { executionArgs: ExecutionArgs }) {
+  public executionDidStart(o: {
+    executionArgs: ExecutionArgs;
+    context: TContext;
+  }) {
     // If the operationName is explicitly provided, save it. If there's just one
     // named operation, the client doesn't have to provide it, but we still want
     // to know the operation name so that the server can identify the query by
@@ -213,7 +217,10 @@ export class EngineReportingExtension<TContext = any>
     };
   }
 
-  public willSendResponse(o: { graphqlResponse: GraphQLResponse }) {
+  public willSendResponse(o: {
+    graphqlResponse: GraphQLResponse;
+    context: TContext;
+  }) {
     const { errors } = o.graphqlResponse;
     if (errors) {
       errors.forEach((error: GraphQLError) => {

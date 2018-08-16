@@ -40,16 +40,22 @@ export class GraphQLExtension<TContext = any> {
     variables?: { [key: string]: any };
     persistedQueryHit?: boolean;
     persistedQueryRegister?: boolean;
+    context: TContext;
   }): EndHandler | void;
-  public parsingDidStart?(o: { queryString: string }): EndHandler | void;
-  public validationDidStart?(): EndHandler | void;
+  public parsingDidStart?(o: {
+    queryString: string;
+    context: TContext;
+  }): EndHandler | void;
+  public validationDidStart?(o: { context: TContext }): EndHandler | void;
   public executionDidStart?(o: {
     executionArgs: ExecutionArgs;
+    context: TContext;
   }): EndHandler | void;
 
   public willSendResponse?(o: {
     graphqlResponse: GraphQLResponse;
-  }): void | { graphqlResponse: GraphQLResponse };
+    context: TContext;
+  }): void | { graphqlResponse: GraphQLResponse; context: TContext };
 
   public willResolveField?(
     source: any,
@@ -58,7 +64,7 @@ export class GraphQLExtension<TContext = any> {
     info: GraphQLResolveInfo,
   ): ((error: Error | null, result?: any) => void) | void;
 
-  public format?(): [string, any] | undefined;
+  public format?(o: { context: TContext }): [string, any] | undefined;
 }
 
 export class GraphQLExtensionStack<TContext = any> {
@@ -78,22 +84,29 @@ export class GraphQLExtensionStack<TContext = any> {
     variables?: { [key: string]: any };
     persistedQueryHit?: boolean;
     persistedQueryRegister?: boolean;
+    context: TContext;
   }): EndHandler {
     return this.handleDidStart(
       ext => ext.requestDidStart && ext.requestDidStart(o),
     );
   }
-  public parsingDidStart(o: { queryString: string }): EndHandler {
+  public parsingDidStart(o: {
+    queryString: string;
+    context: TContext;
+  }): EndHandler {
     return this.handleDidStart(
       ext => ext.parsingDidStart && ext.parsingDidStart(o),
     );
   }
-  public validationDidStart(): EndHandler {
+  public validationDidStart(o: { context: TContext }): EndHandler {
     return this.handleDidStart(
-      ext => ext.validationDidStart && ext.validationDidStart(),
+      ext => ext.validationDidStart && ext.validationDidStart(o),
     );
   }
-  public executionDidStart(o: { executionArgs: ExecutionArgs }): EndHandler {
+  public executionDidStart(o: {
+    executionArgs: ExecutionArgs;
+    context: TContext;
+  }): EndHandler {
     if (o.executionArgs.fieldResolver) {
       this.fieldResolver = o.executionArgs.fieldResolver;
     }
@@ -104,7 +117,8 @@ export class GraphQLExtensionStack<TContext = any> {
 
   public willSendResponse(o: {
     graphqlResponse: GraphQLResponse;
-  }): { graphqlResponse: GraphQLResponse } {
+    context: TContext;
+  }): { graphqlResponse: GraphQLResponse; context: TContext } {
     let reference = o;
     // Reverse the array, since this is functions as an end handler
     [...this.extensions].reverse().forEach(extension => {
@@ -141,9 +155,9 @@ export class GraphQLExtensionStack<TContext = any> {
     };
   }
 
-  public format() {
+  public format(o: { context: TContext }) {
     return (this.extensions
-      .map(extension => extension.format && extension.format())
+      .map(extension => extension.format && extension.format(o))
       .filter(x => x) as [string, any][]).reduce(
       (extensions, [key, value]) => Object.assign(extensions, { [key]: value }),
       {},
