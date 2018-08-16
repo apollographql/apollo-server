@@ -48,7 +48,7 @@ Check out the following changes for Apollo Server 2.0.
 * You no longer need to import `body-parser` to set up `apollo-server-express`.
 * You no longer need to import `makeExecutableSchema` from `graphql-tools`.
 * You no longer need to import `graphqlExpress` and `graphiqlExpress` from `apollo-server-express`.
-* You should pass in `typeDefs` and resolvers as parameters to an instance of Apollo Server.
+* You should pass in `typeDefs` and `resolvers` as parameters to an instance of Apollo Server.
 * If the server is only functioning as a GraphQL server, it's no longer necessary to run your own HTTP server (like `express`).
 
 <h2 id="Middleware">Middleware</h2>
