@@ -177,6 +177,22 @@ describe('HTTPCache', () => {
       expect(response.headers.get('Age')).toEqual('0');
     });
 
+    it('does not store a response with an overriden TTL and a non-success status code', async () => {
+      fetch.mockResponseOnce(
+        'Internal server error',
+        { 'Cache-Control': 'max-age=30' },
+        500,
+      );
+
+      await httpCache.fetch(new Request('https://api.example.com/people/1'), {
+        cacheOptions: {
+          ttl: 30,
+        },
+      });
+
+      expect(store.size).toEqual(0);
+    });
+
     it('allows overriding the TTL dynamically', async () => {
       fetch.mockJSONResponseOnce(
         { name: 'Ada Lovelace' },

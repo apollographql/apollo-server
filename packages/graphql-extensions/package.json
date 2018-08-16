@@ -1,16 +1,15 @@
 {
   "name": "graphql-extensions",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "Add extensions to GraphQL servers",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
     "clean": "rm -rf dist",
     "compile": "tsc",
+    "prepare": "npm run clean && npm run compile",
     "lint": "prettier -l 'src/**/*.ts' && tslint -p tsconfig.json 'src/**/*.ts'",
-    "lint-fix": "prettier --write 'src/**/*.ts' && tslint --fix -p tsconfig.json 'src/**/*.ts'",
-    "prepublish": "npm run clean && npm run compile",
-    "watch": "tsc -w"
+    "lint-fix": "prettier --write 'src/**/*.ts' && tslint --fix -p tsconfig.json 'src/**/*.ts'"
   },
   "repository": {
     "type": "git",
@@ -22,15 +21,9 @@
     "node": ">=6.0"
   },
   "dependencies": {
-    "apollo-server-env": "2.0.0"
+    "apollo-server-env": "file:../apollo-server-env"
   },
   "peerDependencies": {
     "graphql": "0.10.x - 0.13.x"
-  },
-  "devDependencies": {
-    "@types/graphql": "0.13.3",
-    "@types/node": "10.5.5",
-    "graphql": "0.13.2",
-    "tslint": "5.11.0"
   }
 }

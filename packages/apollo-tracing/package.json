@@ -1,16 +1,13 @@
 {
   "name": "apollo-tracing",
-  "version": "0.2.0",
+  "version": "0.2.2",
   "description": "Collect and expose trace data for GraphQL requests",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
     "clean": "rm -rf dist",
     "compile": "tsc",
-    "coverage": "jest --coverage",
-    "prepublish": "npm run compile",
-    "test": "jest --verbose",
-    "watch": "tsc -w"
+    "prepare": "npm run clean && npm run compile"
   },
   "license": "MIT",
   "repository": "apollographql/apollo-tracing-js",
@@ -19,30 +16,10 @@
     "node": ">=4.0"
   },
   "dependencies": {
-    "apollo-server-env": "2.0.0",
-    "graphql-extensions": "0.1.0-beta.0"
+    "apollo-server-env": "file:../apollo-server-env",
+    "graphql-extensions": "file:../graphql-extensions"
   },
   "peerDependencies": {
     "graphql": "0.10.x - 0.13.x"
-  },
-  "jest": {
-    "testEnvironment": "node",
-    "setupFiles": [
-      "<rootDir>/node_modules/apollo-server-env/dist/index.js"
-    ],
-    "transform": {
-      "^.+\\.(ts|js)$": "ts-jest"
-    },
-    "moduleFileExtensions": [
-      "ts",
-      "js",
-      "json"
-    ],
-    "testRegex": "src/__tests__/.*$",
-    "globals": {
-      "ts-jest": {
-        "skipBabel": true
-      }
-    }
   }
 }

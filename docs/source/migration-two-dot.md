@@ -5,11 +5,11 @@ description: How to migrate to Apollo Server 2.0
 
 Apollo Server 2.0 dramatically simplifies the API for building a GraphQL server without compromising on features. It's also completely backward compatible, so you don't have to worry about breaking changes when upgrading.
 
-While it's possible to migrate an existing server to 2.0 without any changes, we recommend changing to new patterns we're suggesting in order to take advantage of all the latest Apollo Server features, reduce the boilerplate, and enable future flexibility.  To learn how to migrate to the 2.0 from version 1.0, please read the following guide.
+While it's possible to migrate an existing server to 2.0 without any changes, we recommend changing to new patterns we're suggesting in order to take advantage of all the latest Apollo Server features, reduce the boilerplate, and enable future flexibility.  To learn how to migrate to 2.0 from version 1.0, please read the following guide.
 
 <h2 id="gql-tag">The `gql` tag</h2>
 
-Apollo Server 2.0 ships with the `gql` tag for **editor syntax highlighting** and **auto-formatting** with Prettier.  In the future, we will be using it for statically analyzing GraphQL queries, so Apollo Servers requires wrapping your schema with `gql`.
+Apollo Server 2.0 ships with the `gql` tag for **editor syntax highlighting** and **auto-formatting** with Prettier.  In the future, we will be using it for statically analyzing GraphQL queries, so Apollo Server requires wrapping your schema with `gql`.
 
 The `gql` tag parses the query string into an AST  and is now exported from the new `apollo-server` package.
 
@@ -48,7 +48,7 @@ Check out the following changes for Apollo Server 2.0.
 * You no longer need to import `body-parser` to set up `apollo-server-express`.
 * You no longer need to import `makeExecutableSchema` from `graphql-tools`.
 * You no longer need to import `graphqlExpress` and `graphiqlExpress` from `apollo-server-express`.
-* You should pass in `typeDefs` and resolvers as parameters to an instance of Apollo Server.
+* You should pass in `typeDefs` and `resolvers` as parameters to an instance of Apollo Server.
 * If the server is only functioning as a GraphQL server, it's no longer necessary to run your own HTTP server (like `express`).
 
 <h2 id="Middleware">Middleware</h2>
@@ -213,6 +213,42 @@ const schema = makeExecutableSchema({
 });
 //mergeSchemas can be imported from apollo-server
 //const schema = mergeSchemas(...);
+
+const server = new ApolloServer({ schema });
+
+server.listen().then(({ url }) => {
+  console.log(`🚀 Server ready at ${url}`);
+});
+```
+
+<h3 id="schema-object-notation">Constructing an Executable Schema Manually</h3>
+
+While we recommend the use [schema-definition language (SDL)](https://www.apollographql.com/docs/apollo-server/essentials/schema.html#sdl) for defining a GraphQL schema since we feel it's more human-readable and language-agnostic, Apollo Server 2 also supports schemas which are built with the [`graphql-js`'s `graphql/type` notation](https://graphql.org/graphql-js/type/) by passing a `GraphQLSchema` to the `schema` option of the `ApolloServer` constructor.
+
+For example, using this technique the above schema might be represented and used as:
+
+```js
+const {
+  graphql,
+  GraphQLSchema,
+  GraphQLObjectType,
+  GraphQLString
+} = require('graphql');
+const { ApolloServer } = require('apollo-server');
+
+const schema = new GraphQLSchema({
+  query: new GraphQLObjectType({
+    name: 'RootQueryType',
+    fields: {
+      hello: {
+        type: GraphQLString,
+        resolve() {
+          return 'hello world';
+        }
+      }
+    }
+  })
+});
 
 const server = new ApolloServer({ schema });
 

@@ -1,14 +1,13 @@
 {
   "name": "apollo-engine-reporting-protobuf",
-  "version": "0.0.0-beta.7",
+  "version": "0.0.1",
   "description": "Protobuf format for Apollo Engine",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "prepublish": "npm run pbjs && npm run pbts",
+    "prepare": "npm run pbjs && npm run pbts",
     "pbjs": "bash -c 'mkdir -p dist && pbjs --target static-module --out dist/index.js --wrap commonjs --force-number <(grep -v \"package mdg.engine.proto\" reports.proto)'",
-    "pbts": "pbts -o dist/index.d.ts dist/index.js",
-    "circle": "npm run prepublish"
+    "pbts": "pbts -o dist/index.d.ts dist/index.js"
   },
   "repository": {
     "type": "git",
