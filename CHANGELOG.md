@@ -4,6 +4,8 @@ All of the packages in the `apollo-server` repo are released with the same versi
 
 ### vNEXT
 
+### v2.0.3
+
 - pass payload into context function for subscriptions [#1513](https://github.com/apollographql/apollo-server/pull/1513)
 - Add option to mock the entire schema(i.e. sets preserveResolvers) [PR #1546](https://github.com/apollographql/apollo-server/pull/1546)
 
