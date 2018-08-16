@@ -57,6 +57,10 @@ new ApolloServer({
 
   A boolean enabling the default mocks or object that contains definitions
 
+* `mockEntireSchema`: <`Boolean`>
+
+  A boolean controlling whether existing resolvers are overridden by mocks. Defaults to true, meaning that all resolvers receive mocked values.
+
 * `schemaDirectives`: <`Object`>
 
   Contains definition of schema directives used in the `typeDefs`

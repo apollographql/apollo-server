@@ -56,6 +56,7 @@ export interface Config
   context?: Context<any> | ContextFunction<any>;
   introspection?: boolean;
   mocks?: boolean | IMocks;
+  mockEntireSchema?: boolean;
   engine?: boolean | EngineReportingOptions;
   extensions?: Array<() => GraphQLExtension>;
   persistedQueries?: PersistedQueryOptions | false;

@@ -86,6 +86,7 @@ export class ApolloServerBase {
       typeDefs,
       introspection,
       mocks,
+      mockEntireSchema,
       extensions,
       engine,
       subscriptions,
@@ -178,11 +179,15 @@ export class ApolloServerBase {
       });
     }
 
-    if (mocks) {
+    if (mocks || typeof mockEntireSchema !== 'undefined') {
       addMockFunctionsToSchema({
         schema: this.schema,
-        preserveResolvers: true,
-        mocks: typeof mocks === 'boolean' ? {} : mocks,
+        mocks:
+          typeof mocks === 'boolean' || typeof mocks === 'undefined'
+            ? {}
+            : mocks,
+        preserveResolvers:
+          typeof mockEntireSchema === 'undefined' ? false : !mockEntireSchema,
       });
     }
 
