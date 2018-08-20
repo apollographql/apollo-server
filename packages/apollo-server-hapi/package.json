@@ -33,7 +33,7 @@
     "@apollographql/graphql-playground-html": "^1.6.0",
     "accept": "^3.0.2",
     "apollo-server-core": "file:../apollo-server-core",
-    "apollo-upload-server": "^5.0.0",
+    "apollo-upload-server": "^7.0.0",
     "boom": "^7.1.0",
     "graphql-subscriptions": "^0.5.8",
     "graphql-tools": "^3.0.4"

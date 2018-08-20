@@ -37,7 +37,7 @@
     "apollo-server-env": "file:../apollo-server-env",
     "apollo-server-errors": "file:../apollo-server-errors",
     "apollo-tracing": "file:../apollo-tracing",
-    "apollo-upload-server": "^5.0.0",
+    "apollo-upload-server": "^7.0.0",
     "graphql-extensions": "file:../graphql-extensions",
     "graphql-subscriptions": "^0.5.8",
     "graphql-tag": "^2.9.2",
