@@ -36,6 +36,7 @@
     "graphql-tools": "^3.0.4"
   },
   "devDependencies": {
+    "@types/express": "4.16.0",
     "apollo-server-integration-testsuite": "2.0.0"
   },
   "peerDependencies": {

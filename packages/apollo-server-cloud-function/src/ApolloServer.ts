@@ -1,9 +1,9 @@
-import { ApolloServerBase } from 'apollo-server-core';
-import { GraphQLOptions, Config } from 'apollo-server-core';
+import { ApolloServerBase, GraphQLOptions, Config } from 'apollo-server-core';
 import {
   renderPlaygroundPage,
   RenderPageOptions as PlaygroundRenderPageOptions,
 } from '@apollographql/graphql-playground-html';
+import { Request, Response } from 'express';
 
 import { graphqlCloudFunction } from './googleCloudApollo';
 
@@ -35,12 +35,15 @@ export class ApolloServer extends ApolloServerBase {
   // This translates the arguments from the middleware into graphQL options It
   // provides typings for the integration specific behavior, ideally this would
   // be propagated with a generic to the super class
-  createGraphQLServerOptions(req, res): Promise<GraphQLOptions> {
+  createGraphQLServerOptions(
+    req: Request,
+    res: Response,
+  ): Promise<GraphQLOptions> {
     return super.graphQLServerOptions({ req, res });
   }
 
   public createHandler({ cors }: CreateHandlerOptions = { cors: undefined }) {
-    const corsHeaders = {};
+    const corsHeaders = {} as Record<string, any>;
 
     if (cors) {
       if (cors.methods) {
@@ -79,14 +82,14 @@ export class ApolloServer extends ApolloServerBase {
       }
     }
 
-    return (req: any, res: any) => {
+    return (req: Request, res: Response) => {
       if (cors) {
         if (typeof cors.origin === 'string') {
           res.set('Access-Control-Allow-Origin', cors.origin);
         } else if (
           typeof cors.origin === 'boolean' ||
           (Array.isArray(cors.origin) &&
-            cors.origin.includes(req.get('origin')))
+            cors.origin.includes(req.get('origin') || ''))
         ) {
           res.set('Access-Control-Allow-Origin', req.get('origin'));
         }
