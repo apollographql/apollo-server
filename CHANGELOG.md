@@ -4,7 +4,10 @@ All of the packages in the `apollo-server` repo are released with the same versi
 
 ### vNEXT
 
-- Google Cloud Function support [#1402](https://github.com/apollographql/apollo-server/issues/1402)
+### v2.0.5
+
+- Google Cloud Function support [#1402](https://github.com/apollographql/apollo-server/issues/1402) [#1446](https://github.com/apollographql/apollo-server/pull/1446)
+- Switch to a fork of `apollo-upload-server` to fix missing `core-js` dependency. [#1556](https://github.com/apollographql/apollo-server/pull/1556)
 
 ### v2.0.4
 
