@@ -12,7 +12,7 @@ import * as typeis from 'type-is';
 
 import { graphqlKoa } from './koaApollo';
 
-import { processRequest as processFileUploads } from 'apollo-upload-server';
+import { processRequest as processFileUploads } from '@apollographql/apollo-upload-server';
 
 export { GraphQLOptions, GraphQLExtension } from 'apollo-server-core';
 import { GraphQLOptions, FileUploadOptions } from 'apollo-server-core';
