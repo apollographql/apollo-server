@@ -4,6 +4,8 @@ All of the packages in the `apollo-server` repo are released with the same versi
 
 ### vNEXT
 
+- Google Cloud Function support [#1402](https://github.com/apollographql/apollo-server/issues/1402)
+
 ### v2.0.4
 
 - apollo-server: Release due to failed build and install
