@@ -4,6 +4,7 @@ import {
   runHttpQuery,
 } from 'apollo-server-core';
 import { Headers } from 'apollo-server-env';
+import { Request, Response } from 'express';
 
 export function graphqlCloudFunction(options: GraphQLOptions): any {
   if (!options) {
@@ -16,7 +17,7 @@ export function graphqlCloudFunction(options: GraphQLOptions): any {
     );
   }
 
-  const graphqlHandler: any = (req, res): void => {
+  const graphqlHandler: any = (req: Request, res: Response): void => {
     if (req.method === 'POST' && !req.body) {
       res.status(500).send('POST body missing.');
       return;
@@ -29,7 +30,7 @@ export function graphqlCloudFunction(options: GraphQLOptions): any {
       request: {
         url: req.url,
         method: req.method,
-        headers: new Headers(req.headers), // ? Check if this actually works
+        headers: new Headers(req.headers as any), // ? Check if this actually works
       },
     }).then(
       ({ graphqlResponse, responseInit }) => {
