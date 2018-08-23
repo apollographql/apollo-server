@@ -143,6 +143,62 @@ Hapi follows the same pattern with `apollo-server-express` replaced with `apollo
 
 Apollo Server works great in "serverless" environments such as Amazon Lambda and Microsoft Azure Functions.  These implementations have some extra considerations which won't be covered in this guide.
 
+<h3 id="ssl">SSL/TLS Support</h3>
+
+If you require an HTTPS connection to your Apollo Server, you can use the `https` module with `apollo-server-express`. Subscriptions can also go through an encrypted WSS socket.
+
+Here is an example of using HTTPS in production and HTTP in development, with subscriptions:
+
+```javascript
+import express from 'express'
+import { ApolloServer } from 'apollo-server-express'
+import typeDefs from './graphql/schema'
+import resolvers from './graphql/resolvers'
+import * as fs from 'fs'
+import * as https from 'https'
+import * as http from 'http'
+
+const configurations = {
+  // Note: You may need sudo to run on port 443
+  production: { ssl: true, port: 443, hostname: 'example.com' },
+  development: { ssl: false, port: 4000, hostname: 'localhost' }
+}
+
+const environment = process.env.NODE_ENV || 'production'
+const config = configurations[environment]
+
+const apollo = new ApolloServer({ typeDefs, resolvers })
+
+const app = express()
+apollo.applyMiddleware({ app })
+
+// Create the HTTPS or HTTP server, per configuration
+var server
+if (config.ssl) {
+  // Assumes certificates are in .ssl folder from package root. Make sure the files
+  // are secured.
+  server = https.createServer(
+    {
+      key: fs.readFileSync(`./ssl/${environment}/server.key`),
+      cert: fs.readFileSync(`./ssl/${environment}/server.crt`)
+    },
+    app
+  )
+} else {
+  server = http.createServer(app)
+}
+
+// Add subscription support
+apollo.installSubscriptionHandlers(server)
+
+server.listen({ port: config.port }, () =>
+  console.log(
+    '🚀 Server ready at',
+    `http${config.ssl ? 's' : ''}://${config.hostname}:${config.port}${apollo.graphqlPath}`
+  )
+)
+```
+
 ## Next steps
 
 Now that the GraphQL server is running, it's time to dive deeper into how we'll fetch data for our types.  We'll get started on that in the [next step](./data.html).
