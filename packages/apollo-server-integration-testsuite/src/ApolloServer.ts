@@ -1224,12 +1224,12 @@ export function testApolloServer<AS extends ApolloServerBase>(
           privateUser: PrivateUser
         }
 
-        type User @cacheControl(maxAge: 100){
-          cached
+        type User @cacheControl(maxAge: 100) {
+          cached: String
         }
 
-        type PrivateUser @cacheControl(maxAge: 100, scope: PRIVATE){
-          cached
+        type PrivateUser @cacheControl(maxAge: 100, scope: PRIVATE) {
+          cached: String
         }
       `;
 
@@ -1263,12 +1263,20 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
         const apolloFetch = createApolloFetch({ uri });
 
-        const result = await apolloFetch({ query: '{ publicUser }' });
-        expect(result.data).toEqual({ publicUser: 'public decency' });
+        const result = await apolloFetch({
+          query: '{ publicUser { cached } }',
+        });
+        expect(result.data).toEqual({
+          publicUser: { cached: 'public decency' },
+        });
         expect(setSpy.mock.calls.length === 1);
 
-        const cachedResult = await apolloFetch({ query: '{ publicUser }' });
-        expect(cachedResult.data).toEqual({ publicUser: 'public decency' });
+        const cachedResult = await apolloFetch({
+          query: '{ publicUser { cached } }',
+        });
+        expect(cachedResult.data).toEqual({
+          publicUser: { cached: 'public decency' },
+        });
         expect(getSpy.mock.calls.length === 1);
       });
 
@@ -1295,12 +1303,18 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
         const apolloFetch = createApolloFetch({ uri });
 
-        const result = await apolloFetch({ query: '{ publicUser }' });
-        expect(result.data).toEqual({ publicUser: 'public decency' });
+        const result = await apolloFetch({
+          query: '{ privateUser { cached } }',
+        });
+        expect(result.data).toEqual({ privateUser: { cached: 'censored' } });
         expect(setSpy.mock.calls.length === 1);
 
-        const cachedResult = await apolloFetch({ query: '{ publicUser }' });
-        expect(cachedResult.data).toEqual({ publicUser: 'public decency' });
+        const cachedResult = await apolloFetch({
+          query: '{ privateUser { cached } }',
+        });
+        expect(cachedResult.data).toEqual({
+          privateUser: { cached: 'censored' },
+        });
         expect(getSpy.mock.calls.length === 1);
       });
     });
