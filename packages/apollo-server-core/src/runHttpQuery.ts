@@ -375,13 +375,16 @@ export async function runHttpQuery(
             defaultMaxAge: 0,
           };
         } else {
+          const privateCache =
+            (optionsObject.cacheControl && optionsObject.cacheControl.cache) ||
+            optionsObject.cache!;
           // Default behavior is to run default header calculation and return
           // no cacheControl extensions
           cacheControl = {
             stripFormattedExtensions: true,
             calculateHttpHeaders: true,
             defaultMaxAge: 0,
-            privateCache: optionsObject.cache!,
+            privateCache,
             cache: optionsObject.cache!,
             ...optionsObject.cacheControl,
           };

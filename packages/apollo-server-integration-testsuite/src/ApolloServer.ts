@@ -35,6 +35,7 @@ import {
   gql,
   Config,
   ApolloServerBase,
+  KeyValueCache,
 } from 'apollo-server-core';
 import { GraphQLExtension, GraphQLResponse } from 'graphql-extensions';
 
@@ -1213,6 +1214,94 @@ export function testApolloServer<AS extends ApolloServerBase>(
           expect(result.data).toEqual({ testString: 'test string' });
           done();
         }, done.fail);
+      });
+    });
+
+    describe('Full Response Caching', () => {
+      const typeDefs = gql`
+        type Query {
+          publicUser: User
+          privateUser: PrivateUser
+        }
+
+        type User @cacheControl(maxAge: 100){
+          cached
+        }
+
+        type PrivateUser @cacheControl(maxAge: 100, scope: PRIVATE){
+          cached
+        }
+      `;
+
+      const resolvers = {
+        Query: {
+          publicUser: () => ({ cached: 'public decency' }),
+          privateUser: () => ({ cached: 'censored' }),
+        },
+      };
+
+      it('it caches and retreives a full response in the public cache', async () => {
+        const real$ = new Map();
+        const getSpy = jest.fn(async (key: string) => {
+          return real$.get(key);
+        });
+        const setSpy = jest.fn(async (key: string, value: string) => {
+          real$.set(key, value);
+        });
+
+        const cache: KeyValueCache = {
+          get: getSpy,
+          set: setSpy,
+        };
+        const { url: uri } = await createApolloServer({
+          typeDefs,
+          resolvers,
+          cacheControl: {
+            privateCache: cache,
+          },
+        });
+
+        const apolloFetch = createApolloFetch({ uri });
+
+        const result = await apolloFetch({ query: '{ publicUser }' });
+        expect(result.data).toEqual({ publicUser: 'public decency' });
+        expect(setSpy.mock.calls.length === 1);
+
+        const cachedResult = await apolloFetch({ query: '{ publicUser }' });
+        expect(cachedResult.data).toEqual({ publicUser: 'public decency' });
+        expect(getSpy.mock.calls.length === 1);
+      });
+
+      it('it stores a full response in the private cache when scoped to private', async () => {
+        const real$ = new Map();
+        const getSpy = jest.fn(async (key: string) => {
+          return real$.get(key);
+        });
+        const setSpy = jest.fn(async (key: string, value: string) => {
+          real$.set(key, value);
+        });
+
+        const cache: KeyValueCache = {
+          get: getSpy,
+          set: setSpy,
+        };
+        const { url: uri } = await createApolloServer({
+          typeDefs,
+          resolvers,
+          cacheControl: {
+            privateCache: cache,
+          },
+        });
+
+        const apolloFetch = createApolloFetch({ uri });
+
+        const result = await apolloFetch({ query: '{ publicUser }' });
+        expect(result.data).toEqual({ publicUser: 'public decency' });
+        expect(setSpy.mock.calls.length === 1);
+
+        const cachedResult = await apolloFetch({ query: '{ publicUser }' });
+        expect(cachedResult.data).toEqual({ publicUser: 'public decency' });
+        expect(getSpy.mock.calls.length === 1);
       });
     });
   });
