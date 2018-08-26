@@ -1,4 +1,4 @@
-import * as Koa from 'koa';
+import Koa = require('koa');
 import * as corsMiddleware from '@koa/cors';
 import * as bodyParser from 'koa-bodyparser';
 import * as compose from 'koa-compose';

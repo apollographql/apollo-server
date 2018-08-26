@@ -1,4 +1,4 @@
-import * as Koa from 'koa';
+import Koa = require('koa');
 
 import * as http from 'http';
 
