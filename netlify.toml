@@ -2,3 +2,5 @@
   base    = "docs/"
   publish = "docs/public/"
   command = "npm install && npm run build"
+[build.environment]
+  NPM_VERSION = 6
