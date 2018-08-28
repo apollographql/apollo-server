@@ -1,0 +1,4 @@
+[build]
+  base    = "docs/"
+  publish = "docs/public/"
+  command = "npm install && npm run build"
