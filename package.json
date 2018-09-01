@@ -15,6 +15,7 @@
     "test": "npm run testonly",
     "posttest": "npm run lint",
     "testonly": "jest --verbose",
+    "test:watch": "npm run testonly -- --watch",
     "test:ci": "npm run testonly -- --ci --maxWorkers=2",
     "release": "npm run clean && npm ci && lerna publish --exact",
     "precommit": "lint-staged",
