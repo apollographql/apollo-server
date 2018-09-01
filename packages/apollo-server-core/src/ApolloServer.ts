@@ -14,7 +14,7 @@ import { GraphQLExtension } from 'graphql-extensions';
 import { EngineReportingAgent } from 'apollo-engine-reporting';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 
-import { GraphQLUpload } from 'apollo-upload-server';
+import { GraphQLUpload } from '@apollographql/apollo-upload-server';
 
 import {
   SubscriptionServer,

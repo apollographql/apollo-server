@@ -16,7 +16,7 @@ import * as typeis from 'type-is';
 
 import { graphqlExpress } from './expressApollo';
 
-import { processRequest as processFileUploads } from 'apollo-upload-server';
+import { processRequest as processFileUploads } from '@apollographql/apollo-upload-server';
 
 export { GraphQLOptions, GraphQLExtension } from 'apollo-server-core';
 

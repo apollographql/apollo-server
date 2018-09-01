@@ -16,7 +16,7 @@
     "posttest": "npm run lint",
     "testonly": "jest --verbose",
     "circle": "npm run testonly -- --ci --maxWorkers=2 && npm run lint",
-    "release": "npm run clean && npm i && lerna publish --exact",
+    "release": "npm run clean && npm ci && lerna publish --exact",
     "precommit": "lint-staged",
     "clean": "find . -name \"node_modules\" -exec rm -rf '{}' + && find . -name \"dist\" -exec rm -rf '{}' +"
   },

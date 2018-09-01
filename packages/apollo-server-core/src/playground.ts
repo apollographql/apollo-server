@@ -9,7 +9,7 @@ export {
 // This specifies the version of GraphQL Playground that will be served
 // from graphql-playground-html, and is passed to renderPlaygroundPage
 // by the integration subclasses
-const playgroundVersion = '1.7.2';
+const playgroundVersion = '1.7.4';
 
 // https://stackoverflow.com/a/51365037
 type RecursivePartial<T> = {
