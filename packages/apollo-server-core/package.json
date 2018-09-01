@@ -30,7 +30,7 @@
   },
   "dependencies": {
     "@apollographql/apollo-upload-server": "^5.0.3",
-    "@types/ws": "^5.1.2",
+    "@types/ws": "^6.0.0",
     "apollo-cache-control": "file:../apollo-cache-control",
     "apollo-datasource": "file:../apollo-datasource",
     "apollo-engine-reporting": "file:../apollo-engine-reporting",
@@ -45,7 +45,7 @@
     "hash.js": "^1.1.3",
     "lodash": "^4.17.10",
     "subscriptions-transport-ws": "^0.9.11",
-    "ws": "^5.2.0"
+    "ws": "^6.0.0"
   },
   "peerDependencies": {
     "graphql": "^0.12.0 || ^0.13.0 || ^14.0.0"
