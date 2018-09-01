@@ -44,7 +44,7 @@
     "graphql-subscriptions": "^0.5.8",
     "graphql-tools": "^3.0.4",
     "koa": "2.5.2",
-    "koa-bodyparser": "^3.0.0",
+    "koa-bodyparser": "^4.0.0",
     "koa-router": "^7.4.0",
     "type-is": "^1.6.16"
   },
