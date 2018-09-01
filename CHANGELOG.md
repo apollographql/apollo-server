@@ -27,6 +27,7 @@ All of the packages in the `apollo-server` repo are released with the same versi
 - express, koa: remove next after playground [#1436](https://github.com/apollographql/apollo-server/pull/1436)
 - Hapi: Pass the response toolkit to the context function. [#1407](https://github.com/apollographql/apollo-server/pull/1407)
 - update apollo-engine-reporting-protobuf to non-beta [#1429](https://github.com/apollographql/apollo-server/pull/1429)
+- playground would use its own settings as default [#1516](https://github.com/apollographql/apollo-server/pull/1516)
 - Lambda: Look in event.path first when picking endpoint for GraphQL Playground [#1527](https://github.com/apollographql/apollo-server/pull/1527)
 - Fix to allow enabling GraphQL Playground in production with custom config [#1495](https://github.com/apollographql/apollo-server/pull/1495)
 

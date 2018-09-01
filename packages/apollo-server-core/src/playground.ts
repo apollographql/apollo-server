@@ -49,13 +49,19 @@ export function createPlaygroundOptions(
   const playgroundOverrides =
     typeof playground === 'boolean' ? {} : playground || {};
 
+  const settingsOverrides = playgroundOverrides.hasOwnProperty('settings')
+    ? {
+        settings: {
+          ...defaultPlaygroundOptions.settings,
+          ...playgroundOverrides.settings,
+        },
+      }
+    : { settings: undefined };
+
   const playgroundOptions: PlaygroundRenderPageOptions = {
     ...defaultPlaygroundOptions,
     ...playgroundOverrides,
-    settings: {
-      ...defaultPlaygroundOptions.settings,
-      ...playgroundOverrides.settings,
-    },
+    ...settingsOverrides,
   };
 
   return playgroundOptions;
