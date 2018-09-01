@@ -1,9 +1,9 @@
 {
-  "extends": "../../tsconfig.json",
+  "extends": "../../tsconfig",
   "compilerOptions": {
     "rootDir": "./src",
-    "outDir": "./dist",
-    "lib": ["es2017", "esnext.asynciterable", "dom"]
+    "outDir": "./dist"
   },
-  "exclude": ["node_modules", "dist"]
+  "include": ["src/**/*"],
+  "exclude": ["**/__tests__", "**/__mocks__"]
 }
