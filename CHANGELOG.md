@@ -3,7 +3,9 @@
 All of the packages in the `apollo-server` repo are released with the same version numbers, so a new version of a particular package might not represent an actual change to that package. We generally try to mark changes that affect only one web server integration package with that package name, and don't specify package names for changes that affect most of the packages or which affect shared core packages.
 
 ### vNEXT
+
 - Update graphql-playground-html to 1.7.4 [#1586](https://github.com/apollographql/apollo-server/pull/1586)
+- Add node-fetch extensions typing to RequestInit [#1602](https://github.com/apollographql/apollo-server/pull/1602)
 
 ### v2.0.5
 
