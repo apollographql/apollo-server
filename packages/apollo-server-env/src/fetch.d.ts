@@ -52,18 +52,19 @@ export interface RequestInit {
   referrer?: string;
   referrerPolicy?: ReferrerPolicy;
   integrity?: string;
+
+  // The following properties are node-fetch extensions
+  follow?: number;
+  timeout?: number;
+  compress?: boolean;
+  size?: number;
+  agent?: Agent;
+
   // Cloudflare Workers accept a `cf` property to control Cloudflare features
   // See https://developers.cloudflare.com/workers/reference/cloudflare-features/
   cf?: {
     [key: string]: any;
   };
-
-  // The following properties are node-fetch extensions
-  follow: number;
-  timeout: number;
-  compress: boolean;
-  size: number;
-  agent?: Agent;
 }
 
 export type RequestMode = 'navigate' | 'same-origin' | 'no-cors' | 'cors';
