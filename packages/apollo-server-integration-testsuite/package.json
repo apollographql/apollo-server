@@ -26,8 +26,5 @@
   },
   "dependencies": {
     "apollo-server-core": "file:../apollo-server-core"
-  },
-  "devDependencies": {
-    "graphql-extensions": "file:../graphql-extensions"
   }
 }
