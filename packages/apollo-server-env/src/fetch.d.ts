@@ -1,3 +1,5 @@
+import { Agent } from 'http';
+
 export declare function fetch(
   input?: RequestInfo,
   init?: RequestInit,
@@ -55,6 +57,13 @@ export interface RequestInit {
   cf?: {
     [key: string]: any;
   };
+
+  // The following properties are node-fetch extensions
+  follow: number;
+  timeout: number;
+  compress: boolean;
+  size: number;
+  agent?: Agent;
 }
 
 export type RequestMode = 'navigate' | 'same-origin' | 'no-cors' | 'cors';
