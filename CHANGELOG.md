@@ -4,8 +4,9 @@ All of the packages in the `apollo-server` repo are released with the same versi
 
 ### vNEXT
 
-- Update graphql-playground-html to 1.7.4 [#1586](https://github.com/apollographql/apollo-server/pull/1586)
-- Add node-fetch extensions typing to RequestInit [#1602](https://github.com/apollographql/apollo-server/pull/1602)
+- Update `graphql-playground-html` to 1.7.4 [#1586](https://github.com/apollographql/apollo-server/pull/1586)
+- Add support for `graphql-js` v14 by augmenting typeDefs with the `@cacheControl` directive so SDL validation doesn't fail [#1595](https://github.com/apollographql/apollo-server/pull/1595)
+- Add `node-fetch` extensions typing to `RequestInit` [#1602](https://github.com/apollographql/apollo-server/pull/1602)
 
 ### v2.0.5
 
