@@ -1,11 +1,10 @@
 import { Request, Response } from 'express';
-import { ApolloServer } from './ApolloServer';
+import { ApolloServer } from '../ApolloServer';
 import testSuite, {
   schema as Schema,
   CreateAppOptions,
 } from 'apollo-server-integration-testsuite';
 import { Config } from 'apollo-server-core';
-import 'mocha';
 
 const createCloudFunction = (options: CreateAppOptions = {}) => {
   const server = new ApolloServer(
