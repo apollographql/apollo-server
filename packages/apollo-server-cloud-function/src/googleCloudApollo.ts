@@ -26,7 +26,10 @@ export function graphqlCloudFunction(options: GraphQLOptions): any {
     runHttpQuery([req, res], {
       method: req.method,
       options: options,
-      query: req.method === 'POST' ? req.body : (req.query as any),
+      query:
+        req.method === 'POST' && Object.keys(req.body).length > 0
+          ? req.body
+          : (req.query as any),
       request: {
         url: req.url,
         method: req.method,
@@ -40,14 +43,10 @@ export function graphqlCloudFunction(options: GraphQLOptions): any {
           .send(graphqlResponse);
       },
       (error: HttpQueryError) => {
-        console.log('Error!');
-        console.log(JSON.stringify(error));
         if ('HttpQueryError' !== error.name) {
           res.status(500).send(error);
           return;
         }
-        console.log('other error');
-        console.log(JSON.stringify(error));
         res
           .status(error.statusCode)
           .set(error.headers)
