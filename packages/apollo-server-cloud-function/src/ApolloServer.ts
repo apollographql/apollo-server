@@ -83,6 +83,11 @@ export class ApolloServer extends ApolloServerBase {
     }
 
     return (req: Request, res: Response) => {
+      if (req.url !== '') {
+        res.status(404).end();
+        return;
+      }
+
       if (cors) {
         if (typeof cors.origin === 'string') {
           res.set('Access-Control-Allow-Origin', cors.origin);
@@ -108,7 +113,8 @@ export class ApolloServer extends ApolloServerBase {
       }
 
       if (this.playgroundOptions && req.method === 'GET') {
-        if (req.accepts('text/html')) {
+        const acceptHeader = req.headers['accept'] as string;
+        if (acceptHeader.includes('text/html')) {
           const playgroundRenderPageOptions: PlaygroundRenderPageOptions = {
             endpoint: req.get('referer'),
             ...this.playgroundOptions,
