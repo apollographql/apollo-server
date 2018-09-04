@@ -344,3 +344,7 @@ addMockFunctionsToSchema({
    itself. Set this to false to disable. You can manually invoke 'stop()' and
    'sendReport()' on other signals if you'd like. Note that 'sendReport()'
    does not run synchronously so it cannot work usefully in an 'exit' handler.
+
+*  `sendErrorTraces`: boolean
+
+   To remove errors from traces, set this to false. Defaults to true
