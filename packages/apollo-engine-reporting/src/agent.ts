@@ -81,8 +81,8 @@ export interface EngineReportingOptions {
   handleSignals?: boolean;
   // Sends the trace report immediately. This options is useful for stateless environments
   sendReportsImmediately?: boolean;
-  // To remove errors from traces, set this to false. Defaults to true
-  sendErrorTraces?: boolean;
+  // To remove the error message from traces, set this to true. Defaults to false
+  maskErrorDetails?: boolean;
 
   // XXX Provide a way to set client_name, client_version, client_address,
   // service, and service_version fields. They are currently not revealed in the

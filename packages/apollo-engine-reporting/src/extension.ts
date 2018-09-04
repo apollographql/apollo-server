@@ -44,7 +44,7 @@ export class EngineReportingExtension<TContext = any>
     addTrace: (signature: string, operationName: string, trace: Trace) => void,
   ) {
     this.options = {
-      sendErrorTraces: true,
+      maskErrorDetails: false,
       ...options,
     };
     this.addTrace = addTrace;
@@ -229,19 +229,16 @@ export class EngineReportingExtension<TContext = any>
           }
         }
 
-        // With noErrorTraces, the Engine proxy strips all error information
-        // from the traces and sends error counts inside of the aggregated stats
-        // reports. To get similar behavior inside of the apollo server metrics
-        // reporting, we always send a trace and mask out the PII
-        const errorInfo = this.options.sendErrorTraces
-          ? {
+        // Always send the trace errors, so that the UI acknowledges that there is an error.
+        const errorInfo = this.options.maskErrorDetails
+          ? { message: '<masked>' }
+          : {
               message: error.message,
               location: (error.locations || []).map(
                 ({ line, column }) => new Trace.Location({ line, column }),
               ),
               json: JSON.stringify(error),
-            }
-          : { message: 'Masked by Apollo Engine Reporting' };
+            };
 
         node!.error!.push(new Trace.Error(errorInfo));
       });
