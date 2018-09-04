@@ -4,8 +4,8 @@ import testSuite, {
   CreateAppOptions,
 } from 'apollo-server-integration-testsuite';
 import { Config } from 'apollo-server-core';
-import * as express from 'express';
-import * as bodyParser from 'body-parser';
+import express = require('express');
+import bodyParser = require('body-parser');
 
 const createCloudFunction = (options: CreateAppOptions = {}) => {
   const handler = new ApolloServer(
