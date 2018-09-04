@@ -33,7 +33,7 @@ export interface GraphQLResponse {
 
 export class GraphQLExtension<TContext = any> {
   public requestDidStart?(o: {
-    request: Request;
+    request: Pick<Request, 'url' | 'method' | 'headers'>;
     queryString?: string;
     parsedQuery?: DocumentNode;
     operationName?: string;
@@ -71,7 +71,7 @@ export class GraphQLExtensionStack<TContext = any> {
   }
 
   public requestDidStart(o: {
-    request: Request;
+    request: Pick<Request, 'url' | 'method' | 'headers'>;
     queryString?: string;
     parsedQuery?: DocumentNode;
     operationName?: string;
@@ -154,9 +154,13 @@ export class GraphQLExtensionStack<TContext = any> {
     const endHandlers: EndHandler[] = [];
     this.extensions.forEach(extension => {
       // Invoke the start handler, which may return an end handler.
-      const endHandler = startInvoker(extension);
-      if (endHandler) {
-        endHandlers.push(endHandler);
+      try {
+        const endHandler = startInvoker(extension);
+        if (endHandler) {
+          endHandlers.push(endHandler);
+        }
+      } catch (error) {
+        console.error(error);
       }
     });
     return (...errors: Array<Error>) => {
@@ -164,7 +168,13 @@ export class GraphQLExtensionStack<TContext = any> {
       // first handler in the stack "surrounds" the entire event's process
       // (helpful for tracing/reporting!)
       endHandlers.reverse();
-      endHandlers.forEach(endHandler => endHandler(...errors));
+      for (const endHandler of endHandlers) {
+        try {
+          endHandler(...errors);
+        } catch (error) {
+          console.error(error);
+        }
+      }
     };
   }
 }

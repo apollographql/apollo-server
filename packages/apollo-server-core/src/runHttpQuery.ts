@@ -3,10 +3,7 @@ const sha256 = require('hash.js/lib/hash/sha/256');
 
 import { CacheControlExtensionOptions } from 'apollo-cache-control';
 
-import { omit } from 'lodash';
-
 import { Request } from 'apollo-server-env';
-import { runQuery, QueryOptions } from './runQuery';
 import {
   default as GraphQLOptions,
   resolveGraphqlOptions,
@@ -17,6 +14,7 @@ import {
   PersistedQueryNotFoundError,
 } from 'apollo-server-errors';
 import { calculateCacheControlHeaders } from './caching';
+import { GraphQLRequestProcessor } from 'apollo-server-core/src/requestProcessing';
 
 export interface HttpQueryRequest {
   method: string;
@@ -277,23 +275,6 @@ export async function runHttpQuery(
         throw new HttpQueryError(400, 'GraphQL queries must be strings.');
       }
 
-      // GET operations should only be queries (not mutations). We want to throw
-      // a particular HTTP error in that case, but we don't actually parse the
-      // query until we're in runQuery, so we declare the error we want to throw
-      // here and pass it into runQuery.
-      // TODO this could/should be added as a validation rule rather than an ad hoc error
-      let nonQueryError;
-      if (isGetRequest) {
-        nonQueryError = new HttpQueryError(
-          405,
-          `GET supports only query operation`,
-          false,
-          {
-            Allow: 'POST',
-          },
-        );
-      }
-
       const operationName = requestParams.operationName;
 
       let variables = requestParams.variables;
@@ -380,33 +361,46 @@ export async function runHttpQuery(
         }
       }
 
-      let params: QueryOptions = {
+      const requestProcessor = new GraphQLRequestProcessor({
         schema: optionsObject.schema,
-        queryString,
-        nonQueryError,
-        variables: variables,
-        context,
         rootValue: optionsObject.rootValue,
-        operationName: operationName,
+        context,
         validationRules: optionsObject.validationRules,
-        formatError: optionsObject.formatError,
-        formatResponse: optionsObject.formatResponse,
         fieldResolver: optionsObject.fieldResolver,
-        debug: optionsObject.debug,
-        tracing: optionsObject.tracing,
-        cacheControl: cacheControl
-          ? omit(cacheControl, [
-              'calculateHttpHeaders',
-              'stripFormattedExtensions',
-            ])
-          : false,
-        request: request.request,
-        extensions: optionsObject.extensions,
-        persistedQueryHit,
-        persistedQueryRegister,
-      };
 
-      return runQuery(params);
+        extensions: optionsObject.extensions,
+        tracing: optionsObject.tracing,
+        cacheControl: cacheControl,
+
+        formatResponse: optionsObject.formatResponse,
+
+        debug: optionsObject.debug,
+      });
+
+      // GET operations should only be queries (not mutations). We want to throw
+      // a particular HTTP error in that case.
+      if (isGetRequest) {
+        requestProcessor.willExecuteOperation = operation => {
+          if (operation.operation !== 'query') {
+            throw new HttpQueryError(
+              405,
+              `GET supports only query operation`,
+              false,
+              {
+                Allow: 'POST',
+              },
+            );
+          }
+        };
+      }
+
+      return requestProcessor.processRequest({
+        query: queryString,
+        operationName,
+        variables,
+        extensions,
+        httpRequest: request.request,
+      });
     } catch (e) {
       // Populate any HttpQueryError to our handler which should
       // convert it to Http Error.

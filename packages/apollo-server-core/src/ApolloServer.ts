@@ -215,17 +215,16 @@ export class ApolloServerBase {
     // or cacheControl.
     this.extensions = [];
 
+    const debugDefault =
+      process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test';
+    const debug =
+      requestOptions.debug !== undefined ? requestOptions.debug : debugDefault;
+
     // Error formatting should happen after the engine reporting agent, so that
     // engine gets the unmasked errors if necessary
-    if (this.requestOptions.formatError) {
-      this.extensions.push(
-        () =>
-          new FormatErrorExtension(
-            this.requestOptions.formatError!,
-            this.requestOptions.debug,
-          ),
-      );
-    }
+    this.extensions.push(
+      () => new FormatErrorExtension(requestOptions.formatError, debug),
+    );
 
     if (engine || (engine !== false && process.env.ENGINE_API_KEY)) {
       this.engineReportingAgent = new EngineReportingAgent(
