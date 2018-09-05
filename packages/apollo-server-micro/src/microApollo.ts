@@ -67,6 +67,7 @@ export function graphqlMicro(
       }
 
       send(res, error.statusCode, error.message);
+      return undefined;
     }
   };
 
