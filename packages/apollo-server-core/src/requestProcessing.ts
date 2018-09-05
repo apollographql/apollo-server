@@ -30,13 +30,16 @@ import {
   fromGraphQLError,
   SyntaxError,
   ValidationError,
+  PersistedQueryNotSupportedError,
+  PersistedQueryNotFoundError,
 } from 'apollo-server-errors';
+import * as crypto from 'crypto';
 
 export interface GraphQLRequest {
   query?: string;
   operationName?: string;
   variables?: { [name: string]: any };
-  extensions?: object;
+  extensions?: Record<string, any>;
   httpRequest?: Pick<Request, 'url' | 'method' | 'headers'>;
 }
 
@@ -66,7 +69,7 @@ export class InvalidGraphQLRequestError extends Error {}
 export interface GraphQLResponse {
   data?: object;
   errors?: GraphQLError[];
-  extensions?: object;
+  extensions?: Record<string, any>;
 }
 
 export interface GraphQLRequestProcessor {
@@ -116,8 +119,65 @@ export class GraphQLRequestProcessor {
   }
 
   async processRequest(request: GraphQLRequest): Promise<GraphQLResponse> {
-    if (!request.query) {
-      throw new InvalidGraphQLRequestError();
+    let { query, extensions } = request;
+
+    let persistedQueryHit = false;
+    let persistedQueryRegister = false;
+
+    if (extensions && extensions.persistedQuery) {
+      // It looks like we've received an Apollo Persisted Query. Check if we
+      // support them. In an ideal world, we always would, however since the
+      // middleware options are created every request, it does not make sense
+      // to create a default cache here and save a referrence to use across
+      // requests
+      if (
+        !this.options.persistedQueries ||
+        !this.options.persistedQueries.cache
+      ) {
+        throw new PersistedQueryNotSupportedError();
+      } else if (extensions.persistedQuery.version !== 1) {
+        throw new InvalidGraphQLRequestError(
+          'Unsupported persisted query version',
+        );
+      }
+
+      const sha = extensions.persistedQuery.sha256Hash;
+
+      if (query === undefined) {
+        query =
+          (await this.options.persistedQueries.cache.get(`apq:${sha}`)) ||
+          undefined;
+        if (query) {
+          persistedQueryHit = true;
+        } else {
+          throw new PersistedQueryNotFoundError();
+        }
+      } else {
+        const hash = crypto.createHash('sha256');
+        const calculatedSha = hash.update(query).digest('hex');
+
+        if (sha !== calculatedSha) {
+          throw new InvalidGraphQLRequestError(
+            'provided sha does not match query',
+          );
+        }
+        persistedQueryRegister = true;
+
+        // Do the store completely asynchronously
+        (async () => {
+          // We do not wait on the cache storage to complete
+          return (
+            this.options.persistedQueries &&
+            this.options.persistedQueries.cache.set(`apq:${sha}`, query)
+          );
+        })().catch(error => {
+          console.warn(error);
+        });
+      }
+    }
+
+    if (!query) {
+      throw new InvalidGraphQLRequestError('Must provide query string.');
     }
 
     const requestDidEnd = this.extensionStack.requestDidStart({
@@ -125,14 +185,14 @@ export class GraphQLRequestProcessor {
       queryString: request.query,
       operationName: request.operationName,
       variables: request.variables,
-      persistedQueryHit: false,
-      persistedQueryRegister: false,
+      persistedQueryHit,
+      persistedQueryRegister,
     });
 
     try {
       let document: DocumentNode;
       try {
-        document = this.parse(request.query);
+        document = this.parse(query);
       } catch (syntaxError) {
         return this.willSendResponse({
           errors: [

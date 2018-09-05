@@ -14,7 +14,10 @@ import {
   PersistedQueryNotFoundError,
 } from 'apollo-server-errors';
 import { calculateCacheControlHeaders } from './caching';
-import { GraphQLRequestProcessor } from './requestProcessing';
+import {
+  GraphQLRequestProcessor,
+  InvalidGraphQLRequestError,
+} from './requestProcessing';
 
 export interface HttpQueryRequest {
   method: string;
@@ -170,8 +173,6 @@ export async function runHttpQuery(
     try {
       let queryString: string | undefined = requestParams.query;
       let extensions = requestParams.extensions;
-      let persistedQueryHit = false;
-      let persistedQueryRegister = false;
 
       if (isGetRequest && extensions) {
         // For GET requests, we have to JSON-parse extensions. (For POST
@@ -184,84 +185,9 @@ export async function runHttpQuery(
         }
       }
 
-      if (extensions && extensions.persistedQuery) {
-        // It looks like we've received an Apollo Persisted Query. Check if we
-        // support them. In an ideal world, we always would, however since the
-        // middleware options are created every request, it does not make sense
-        // to create a default cache here and save a referrence to use across
-        // requests
-        if (
-          !optionsObject.persistedQueries ||
-          !optionsObject.persistedQueries.cache
-        ) {
-          if (isBatch) {
-            // A batch can contain another query that returns data,
-            // so we don't error out the entire request with an HttpError
-            throw new PersistedQueryNotSupportedError();
-          }
-          // Return 200 to simplify processing: we want this to be intepreted by
-          // the client as data worth interpreting, not an error.
-          return throwHttpGraphQLError(
-            200,
-            [new PersistedQueryNotSupportedError()],
-            optionsObject,
-          );
-        } else if (extensions.persistedQuery.version !== 1) {
-          throw new HttpQueryError(400, 'Unsupported persisted query version');
-        }
-
-        const sha = extensions.persistedQuery.sha256Hash;
-
-        if (queryString === undefined) {
-          queryString =
-            (await optionsObject.persistedQueries.cache.get(`apq:${sha}`)) ||
-            undefined;
-          if (queryString) {
-            persistedQueryHit = true;
-          } else {
-            if (isBatch) {
-              // A batch can contain multiple undefined persisted queries,
-              // so we don't error out the entire request with an HttpError
-              throw new PersistedQueryNotFoundError();
-            }
-            return throwHttpGraphQLError(
-              200,
-              [new PersistedQueryNotFoundError()],
-              optionsObject,
-            );
-          }
-        } else {
-          const calculatedSha = sha256()
-            .update(queryString)
-            .digest('hex');
-          if (sha !== calculatedSha) {
-            throw new HttpQueryError(400, 'provided sha does not match query');
-          }
-          persistedQueryRegister = true;
-
-          // Do the store completely asynchronously
-          (async () => {
-            // We do not wait on the cache storage to complete
-            return (
-              optionsObject.persistedQueries &&
-              optionsObject.persistedQueries.cache.set(
-                `apq:${sha}`,
-                queryString,
-              )
-            );
-          })().catch(error => {
-            console.warn(error);
-          });
-        }
-      }
-
-      if (!queryString) {
-        throw new HttpQueryError(400, 'Must provide query string.');
-      }
-
-      if (typeof queryString !== 'string') {
+      if (queryString && typeof queryString !== 'string') {
         // Check for a common error first.
-        if (queryString && (queryString as any).kind === 'Document') {
+        if ((queryString as any).kind === 'Document') {
           throw new HttpQueryError(
             400,
             "GraphQL queries must be strings. It looks like you're sending the " +
@@ -271,8 +197,9 @@ export async function runHttpQuery(
               '`graphql`, or use a client like `apollo-client` which converts ' +
               'the internal representation to a string for you.',
           );
+        } else {
+          throw new HttpQueryError(400, 'GraphQL queries must be strings.');
         }
-        throw new HttpQueryError(400, 'GraphQL queries must be strings.');
       }
 
       const operationName = requestParams.operationName;
@@ -369,6 +296,7 @@ export async function runHttpQuery(
         fieldResolver: optionsObject.fieldResolver,
 
         extensions: optionsObject.extensions,
+        persistedQueries: optionsObject.persistedQueries,
         tracing: optionsObject.tracing,
         cacheControl: cacheControl,
 
@@ -394,37 +322,48 @@ export async function runHttpQuery(
         };
       }
 
-      return requestProcessor.processRequest({
+      return await requestProcessor.processRequest({
         query: queryString,
         operationName,
         variables,
         extensions,
         httpRequest: request.request,
       });
-    } catch (e) {
-      // Populate any HttpQueryError to our handler which should
-      // convert it to Http Error.
-      if (e.name === 'HttpQueryError') {
-        // async function wraps this in a Promise
-        throw e;
+    } catch (error) {
+      console.log(
+        `debug: ${optionsObject.debug}, formatError: ${
+          optionsObject.formatError
+        }`,
+      );
+      // A batch can contain another query that returns data,
+      // so we don't error out the entire request with an HttpError
+      if (isBatch) {
+        return {
+          errors: formatApolloErrors([error], optionsObject),
+        };
       }
 
-      // This error will be uncaught, so we need to wrap it and treat it as an
-      // internal server error
-      return {
-        errors: formatApolloErrors([e], optionsObject),
-      };
+      if (error instanceof InvalidGraphQLRequestError) {
+        throw new HttpQueryError(400, error.message);
+      } else if (
+        error instanceof PersistedQueryNotSupportedError ||
+        error instanceof PersistedQueryNotFoundError
+      ) {
+        return throwHttpGraphQLError(200, [error], optionsObject);
+      } else {
+        throw error;
+      }
     }
   }) as Array<Promise<ExecutionResult & { extensions?: Record<string, any> }>>;
 
   let responses;
   try {
     responses = await Promise.all(requests);
-  } catch (e) {
-    if (e.name === 'HttpQueryError') {
-      throw e;
+  } catch (error) {
+    if (error instanceof HttpQueryError) {
+      throw error;
     }
-    return throwHttpGraphQLError(500, [e], optionsObject);
+    return throwHttpGraphQLError(500, [error], optionsObject);
   }
 
   const responseInit: ApolloServerHttpResponse = {
