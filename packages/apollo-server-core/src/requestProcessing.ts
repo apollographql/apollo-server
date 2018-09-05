@@ -74,9 +74,11 @@ export interface GraphQLRequestProcessor {
 }
 
 export class GraphQLRequestProcessor {
+  context: any;
   extensionStack!: GraphQLExtensionStack;
 
   constructor(public options: GraphQLRequestOptions) {
+    this.context = options.context || {};
     this.initializeExtensions();
   }
 
@@ -110,7 +112,7 @@ export class GraphQLRequestProcessor {
     if (extensions.length > 0) {
       enableGraphQLExtensions(this.options.schema);
     }
-    this.options.context._extensionStack = this.extensionStack;
+    this.context._extensionStack = this.extensionStack;
   }
 
   async processRequest(request: GraphQLRequest): Promise<GraphQLResponse> {
@@ -180,7 +182,9 @@ export class GraphQLRequestProcessor {
       }
 
       if (this.options.formatResponse) {
-        response = this.options.formatResponse(response);
+        response = this.options.formatResponse(response, {
+          context: this.context,
+        });
       }
 
       return this.willSendResponse(response);

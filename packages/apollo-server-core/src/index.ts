@@ -1,6 +1,5 @@
 import 'apollo-server-env';
 
-export { runQuery } from './runQuery';
 export { runHttpQuery, HttpQueryRequest, HttpQueryError } from './runHttpQuery';
 
 export {

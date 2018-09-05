@@ -14,7 +14,7 @@ import {
   PersistedQueryNotFoundError,
 } from 'apollo-server-errors';
 import { calculateCacheControlHeaders } from './caching';
-import { GraphQLRequestProcessor } from 'apollo-server-core/src/requestProcessing';
+import { GraphQLRequestProcessor } from './requestProcessing';
 
 export interface HttpQueryRequest {
   method: string;
