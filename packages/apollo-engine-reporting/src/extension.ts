@@ -43,7 +43,10 @@ export class EngineReportingExtension<TContext = any>
     options: EngineReportingOptions,
     addTrace: (signature: string, operationName: string, trace: Trace) => void,
   ) {
-    this.options = options;
+    this.options = {
+      maskErrorDetails: false,
+      ...options,
+    };
     this.addTrace = addTrace;
     const root = new Trace.Node();
     this.trace.root = root;
@@ -225,15 +228,19 @@ export class EngineReportingExtension<TContext = any>
             node = specificNode;
           }
         }
-        node!.error!.push(
-          new Trace.Error({
-            message: error.message,
-            location: (error.locations || []).map(
-              ({ line, column }) => new Trace.Location({ line, column }),
-            ),
-            json: JSON.stringify(error),
-          }),
-        );
+
+        // Always send the trace errors, so that the UI acknowledges that there is an error.
+        const errorInfo = this.options.maskErrorDetails
+          ? { message: '<masked>' }
+          : {
+              message: error.message,
+              location: (error.locations || []).map(
+                ({ line, column }) => new Trace.Location({ line, column }),
+              ),
+              json: JSON.stringify(error),
+            };
+
+        node!.error!.push(new Trace.Error(errorInfo));
       });
     }
   }

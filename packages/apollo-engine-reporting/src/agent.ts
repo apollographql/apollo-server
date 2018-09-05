@@ -60,9 +60,9 @@ export interface EngineReportingOptions {
   maxAttempts?: number;
   // Minimum backoff for retries. Defaults to 100ms.
   minimumRetryDelayMs?: number;
-  // By default, errors sending reports to Engine servers will be logged
-  // to standard error. Specify this function to process errors in a different
-  // way.
+  // By default, errors that occur when sending trace reports to Engine servers
+  // will be logged to standard error. Specify this function to process errors
+  // in a different way.
   reportErrorFunction?: (err: Error) => void;
   // A case-sensitive list of names of variables whose values should not be sent
   // to Apollo servers, or 'true' to leave out all variables. In the former
@@ -81,6 +81,8 @@ export interface EngineReportingOptions {
   handleSignals?: boolean;
   // Sends the trace report immediately. This options is useful for stateless environments
   sendReportsImmediately?: boolean;
+  // To remove the error message from traces, set this to true. Defaults to false
+  maskErrorDetails?: boolean;
 
   // XXX Provide a way to set client_name, client_version, client_address,
   // service, and service_version fields. They are currently not revealed in the
