@@ -207,4 +207,4 @@ The friends and families request will return at the same time so when we select 
 Horizontal scaling is a fantastic way to increase the amount of load that our servers can handle without having to purchase more expensive computing resources to handling it. Apollo Server can scale extremely well like this as long as a couple of concerns are handled:
 
 - Every request should ensure it has access to the required data source. If we are building on top of a HTTP endpoint this isn't a problem, but when using a database it is a good practice to verify our connection on each request. This helps to make our app more fault tolerant and easily scale up a new service which will connect as soon as requests start!
-- Any state should be saved into a shared stateful datastore like redis. By sharing state, we can easily add more and more servers into our infrastructure without fear of loosing any kind of state between scale up and scale down.
+- Any state should be saved into a shared stateful datastore like redis. By sharing state, we can easily add more and more servers into our infrastructure without fear of losing any kind of state between scale up and scale down.
