@@ -1,5 +1,4 @@
 import { ExecutionResult } from 'graphql';
-const sha256 = require('hash.js/lib/hash/sha/256');
 
 import { CacheControlExtensionOptions } from 'apollo-cache-control';
 
