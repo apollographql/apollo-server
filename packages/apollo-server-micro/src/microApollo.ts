@@ -3,7 +3,7 @@ import {
   runHttpQuery,
   convertNodeHttpToRequest,
 } from 'apollo-server-core';
-import { json, RequestHandler } from 'micro';
+import { send, json, RequestHandler } from 'micro';
 import * as url from 'url';
 import { IncomingMessage, ServerResponse } from 'http';
 
@@ -66,7 +66,7 @@ export function graphqlMicro(
         error.statusCode = 500;
       }
 
-      throw error;
+      send(res, error.statusCode, error.message);
     }
   };
 
