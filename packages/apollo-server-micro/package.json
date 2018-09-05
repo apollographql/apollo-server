@@ -1,6 +1,6 @@
 {
   "name": "apollo-server-micro",
-  "version": "2.0.4",
+  "version": "2.0.5",
   "description": "Production-ready Node.js GraphQL server for Micro",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -33,5 +33,8 @@
     "accept": "^3.0.2",
     "apollo-server-core": "file:../apollo-server-core",
     "micro": "^9.3.2"
+  },
+  "devDependencies": {
+    "apollo-server-integration-testsuite": "file:../apollo-server-integration-testsuite"
   }
 }
