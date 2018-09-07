@@ -85,7 +85,7 @@
     "express": "4.16.3",
     "fibers": "3.0.0",
     "form-data": "2.3.2",
-    "graphql": "14.0.0",
+    "graphql": "14.0.2",
     "graphql-subscriptions": "0.5.8",
     "graphql-tag": "2.9.2",
     "graphql-tools": "3.1.1",
