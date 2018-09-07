@@ -8,7 +8,7 @@ import {
   Trace,
 } from 'apollo-engine-reporting-protobuf';
 
-import { fetch, Response } from 'apollo-server-env';
+import { fetch, Request, Response } from 'apollo-server-env';
 import * as retry from 'async-retry';
 
 import { EngineReportingExtension } from './extension';
@@ -33,6 +33,12 @@ Traces.encode = function(message, originalWriter) {
   }
   return writer;
 };
+
+export interface ClientInfo {
+  clientName?: string;
+  clientAddress?: string;
+  clientVersion?: string;
+}
 
 export interface EngineReportingOptions {
   // API key for the service. Get this from
@@ -83,6 +89,16 @@ export interface EngineReportingOptions {
   sendReportsImmediately?: boolean;
   // To remove the error message from traces, set this to true. Defaults to false
   maskErrorDetails?: boolean;
+  // Creates the client information attached to the traces sent to the Apollo
+  // backend
+  createClientInfo?: (
+    o: {
+      request: Request;
+      queryString?: string;
+      parsedQuery?: DocumentNode;
+      variables: Record<string, any>;
+    },
+  ) => ClientInfo;
 
   // XXX Provide a way to set client_name, client_version, client_address,
   // service, and service_version fields. They are currently not revealed in the

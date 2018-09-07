@@ -350,3 +350,9 @@ addMockFunctionsToSchema({
 *  `maskErrorDetails`: boolean
 
    Set to true to remove error details from the traces sent to Apollo's servers. Defaults to false.
+
+* createClientInfo?: (o: { request: Request, queryString?: string, parsedQuery?: DocumentNode, variables: Record<string, any>}) => ClientInfo;
+
+   Creates the client information that is attached to the traces sent to the
+   Apollo backend. `ClientInfo` contains fields for `clientName`,
+   `clientVersion`, and `clientAddress`, which can all be optional.

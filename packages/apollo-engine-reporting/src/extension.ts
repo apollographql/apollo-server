@@ -15,7 +15,7 @@ import {
 } from 'graphql-extensions';
 import { Trace, google } from 'apollo-engine-reporting-protobuf';
 
-import { EngineReportingOptions } from './agent';
+import { EngineReportingOptions, ClientInfo } from './agent';
 import { defaultSignature } from './signature';
 
 // EngineReportingExtension is the per-request GraphQLExtension which creates a
@@ -153,6 +153,19 @@ export class EngineReportingExtension<TContext = any>
         }
       });
     }
+
+    const { clientName, clientAddress, clientVersion } =
+      (this.options.createClientInfo &&
+        this.options.createClientInfo({
+          request: o.request,
+          queryString: o.queryString,
+          parsedQuery: o.parsedQuery,
+          variables: o.variables,
+        })) ||
+      ({} as ClientInfo);
+    this.trace.clientName = clientName || '';
+    this.trace.clientAddress = clientAddress || '';
+    this.trace.clientVersion = clientVersion || '';
 
     return () => {
       this.trace.durationNs = durationHrTimeToNanos(

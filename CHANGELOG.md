@@ -5,6 +5,7 @@ All of the packages in the `apollo-server` repo are released with the same versi
 ### vNEXT
 
 - Update link inside Authentication Docs [PR #1682](https://github.com/apollographql/apollo-server/pull/1682)
+- Provide ability to specify client info in traces [#1631](https://github.com/apollographql/apollo-server/pull/1631)
 
 ### v2.0.8
 
