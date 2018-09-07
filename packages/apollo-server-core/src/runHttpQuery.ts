@@ -16,6 +16,7 @@ import {
   PersistedQueryNotSupportedError,
   PersistedQueryNotFoundError,
 } from 'apollo-server-errors';
+import { KeyValueCache } from 'apollo-server-caching';
 import { calculateCacheControlHeaders } from './caching';
 
 export interface HttpQueryRequest {
@@ -105,6 +106,8 @@ export async function runHttpQuery(
     | CacheControlExtensionOptions & {
         calculateHttpHeaders: boolean;
         stripFormattedExtensions: boolean;
+        privateCache: KeyValueCache;
+        cache: KeyValueCache;
       }
     | undefined;
 
@@ -186,6 +189,10 @@ export async function runHttpQuery(
         }
       }
 
+      // Used for calculating cache key
+      const calculatedSha: string = sha256()
+        .update(queryString)
+        .digest('hex');
       if (extensions && extensions.persistedQuery) {
         // It looks like we've received an Apollo Persisted Query. Check if we
         // support them. In an ideal world, we always would, however since the
@@ -233,9 +240,6 @@ export async function runHttpQuery(
             );
           }
         } else {
-          const calculatedSha = sha256()
-            .update(queryString)
-            .digest('hex');
           if (sha !== calculatedSha) {
             throw new HttpQueryError(400, 'provided sha does not match query');
           }
@@ -366,15 +370,22 @@ export async function runHttpQuery(
           cacheControl = {
             stripFormattedExtensions: false,
             calculateHttpHeaders: false,
+            privateCache: optionsObject.cache!,
+            cache: optionsObject.cache!,
             defaultMaxAge: 0,
           };
         } else {
+          const privateCache =
+            (optionsObject.cacheControl && optionsObject.cacheControl.cache) ||
+            optionsObject.cache!;
           // Default behavior is to run default header calculation and return
           // no cacheControl extensions
           cacheControl = {
             stripFormattedExtensions: true,
             calculateHttpHeaders: true,
             defaultMaxAge: 0,
+            privateCache,
+            cache: optionsObject.cache!,
             ...optionsObject.cacheControl,
           };
         }
@@ -393,7 +404,7 @@ export async function runHttpQuery(
         formatResponse: optionsObject.formatResponse,
         fieldResolver: optionsObject.fieldResolver,
         debug: optionsObject.debug,
-        tracing: optionsObject.tracing,
+        tracing: optionsObject.tracing || false,
         cacheControl: cacheControl
           ? omit(cacheControl, [
               'calculateHttpHeaders',
@@ -404,6 +415,7 @@ export async function runHttpQuery(
         extensions: optionsObject.extensions,
         persistedQueryHit,
         persistedQueryRegister,
+        queryHash: calculatedSha,
       };
 
       return runQuery(params);
@@ -445,7 +457,10 @@ export async function runHttpQuery(
 
       responseInit.headers = {
         ...responseInit.headers,
-        ...calculatedHeaders,
+        ...(omit(calculatedHeaders, [
+          'lowestMaxAge',
+          'publicOrPrivate',
+        ]) as Record<string, string>),
       };
     }
 

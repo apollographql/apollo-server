@@ -49,6 +49,7 @@ export class GraphQLExtension<TContext = any> {
 
   public willSendResponse?(o: {
     graphqlResponse: GraphQLResponse;
+    cacheHit?: boolean;
   }): void | { graphqlResponse: GraphQLResponse };
 
   public willResolveField?(

@@ -41,6 +41,8 @@ export interface GraphQLServerOptions<
     | (CacheControlExtensionOptions & {
         calculateHttpHeaders?: boolean;
         stripFormattedExtensions?: boolean;
+        cache?: KeyValueCache;
+        privateCache?: KeyValueCache;
       });
   extensions?: Array<() => GraphQLExtension>;
   dataSources?: () => DataSources<TContext>;

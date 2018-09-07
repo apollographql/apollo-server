@@ -3,7 +3,11 @@ import { CacheControlFormat } from 'apollo-cache-control';
 
 export function calculateCacheControlHeaders(
   responses: Array<ExecutionResult & { extensions?: Record<string, any> }>,
-): Record<string, string> {
+): Partial<{
+  'Cache-Control': string;
+  lowestMaxAge: number;
+  publicOrPrivate: string;
+}> {
   let lowestMaxAge = Number.MAX_VALUE;
   let publicOrPrivate = 'public';
 
@@ -62,5 +66,7 @@ export function calculateCacheControlHeaders(
 
   return {
     'Cache-Control': `max-age=${lowestMaxAge}, ${publicOrPrivate}`,
+    lowestMaxAge,
+    publicOrPrivate,
   };
 }

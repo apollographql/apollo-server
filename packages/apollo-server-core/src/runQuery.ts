@@ -12,8 +12,10 @@ import {
   specifiedRules,
   ValidationContext,
 } from 'graphql';
+const sha256 = require('hash.js/lib/hash/sha/256');
 
 import { Request } from 'apollo-server-env';
+import { KeyValueCache } from 'apollo-server-caching';
 
 import {
   enableGraphQLExtensions,
@@ -32,6 +34,8 @@ import {
   ValidationError,
   SyntaxError,
 } from 'apollo-server-errors';
+
+import { calculateCacheControlHeaders } from './caching';
 
 export interface GraphQLResponse {
   data?: object;
@@ -62,12 +66,18 @@ export interface QueryOptions {
   formatError?: Function;
   formatResponse?: Function;
   debug?: boolean;
-  tracing?: boolean;
-  cacheControl?: boolean | CacheControlExtensionOptions;
+  tracing: boolean;
+  cacheControl:
+    | false
+    | CacheControlExtensionOptions & {
+        privateCache: KeyValueCache;
+        cache: KeyValueCache;
+      };
   request: Pick<Request, 'url' | 'method' | 'headers'>;
   extensions?: Array<() => GraphQLExtension>;
   persistedQueryHit?: boolean;
   persistedQueryRegister?: boolean;
+  queryHash: string;
 }
 
 function isQueryOperation(query: DocumentNode, operationName?: string) {
@@ -136,9 +146,54 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
     persistedQueryHit: options.persistedQueryHit,
     persistedQueryRegister: options.persistedQueryRegister,
   });
-  return Promise.resolve()
+
+  let varyString;
+  const varyHeader = options.request.headers.get('Vary');
+  if (varyHeader) {
+    const varyHeaders = varyHeader.split(',').map(header => header.trim());
+    varyString = varyHeaders
+      .map(header => options.request.headers.get(header))
+      .join('');
+  }
+
+  let cacheKey: string | undefined;
+  let cache: KeyValueCache;
+  let cacheGet: Promise<string | undefined>;
+  if (options.cacheControl) {
+    const sessionId = options.request.headers.get('Authorization');
+    const keyExtension =
+      options.operationName +
+      JSON.stringify(options.variables) +
+      varyString +
+      (sessionId || '');
+
+    cacheKey =
+      'q' +
+      options.queryHash +
+      sha256(keyExtension)
+        .update()
+        .digest('hex');
+    cache = sessionId
+      ? options.cacheControl.privateCache
+      : options.cacheControl.cache;
+    cacheGet = cache.get(cacheKey);
+  } else {
+    cacheGet = Promise.resolve(undefined);
+  }
+
+  let cacheHit = false;
+  let maxAgeMs: number | undefined;
+  let cacheScope: string | undefined;
+  return cacheGet
     .then(
-      (): Promise<GraphQLResponse> => {
+      (cacheResult): Promise<GraphQLResponse> | GraphQLResponse => {
+        if (cacheResult) {
+          cacheHit = true;
+
+          // XXX Ideally we would return this response directly back to the user without parsing and stringifying again
+          return JSON.parse(cacheResult);
+        }
+
         // Parse the document.
         let documentAST: DocumentNode;
         if (options.parsedQuery) {
@@ -266,6 +321,22 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
               response = options.formatResponse(response, options);
             }
 
+            if (cacheKey && cache) {
+              (async () => {
+                const cacheInfo = calculateCacheControlHeaders([response]);
+                // We do not wait on the cache storage to complete
+                if (cacheInfo.lowestMaxAge!) {
+                  maxAgeMs = cacheInfo.lowestMaxAge;
+                  cacheScope = cacheInfo.publicOrPrivate;
+                  return cache.set(cacheKey, JSON.stringify(response), {
+                    ttl: cacheInfo.lowestMaxAge,
+                  });
+                }
+              })().catch(error => {
+                console.warn(error);
+              });
+            }
+
             return response;
           });
       },
@@ -278,7 +349,12 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
       throw err;
     })
     .then((graphqlResponse: GraphQLResponse) => {
-      const response = extensionStack.willSendResponse({ graphqlResponse });
+      const response = extensionStack.willSendResponse({
+        graphqlResponse,
+        cacheHit,
+        maxAgeMs,
+        scope: cacheScope,
+      } as any);
       requestDidEnd();
       return response.graphqlResponse;
     });
