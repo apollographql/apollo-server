@@ -4,6 +4,19 @@ All of the packages in the `apollo-server` repo are released with the same versi
 
 ### vNEXT
 
+### v2.0.7
+
+- Fix [#1581](https://github.com/apollographql/apollo-server/issues/1581) `apollo-server-micro` top level error response [#1619](https://github.com/apollographql/apollo-server/pull/1619)
+- Switch `ApolloServerBase.schema` from private access to protected access. [#1610](https://github.com/apollographql/apollo-server/pull/1610)
+- Add toggle for including error messages in reports [#1615](https://github.com/apollographql/apollo-server/pull/1615)
+- Fix `apollo-server-cloud-functions` tests [#1611](https://github.com/apollographql/apollo-server/pull/1611/)
+
+### v2.0.6
+
+- Update `graphql-playground-html` to 1.7.4 [#1586](https://github.com/apollographql/apollo-server/pull/1586)
+- Add support for `graphql-js` v14 by augmenting typeDefs with the `@cacheControl` directive so SDL validation doesn't fail [#1595](https://github.com/apollographql/apollo-server/pull/1595)
+- Add `node-fetch` extensions typing to `RequestInit` [#1602](https://github.com/apollographql/apollo-server/pull/1602)
+
 ### v2.0.5
 
 - Google Cloud Function support [#1402](https://github.com/apollographql/apollo-server/issues/1402) [#1446](https://github.com/apollographql/apollo-server/pull/1446)
@@ -27,6 +40,7 @@ All of the packages in the `apollo-server` repo are released with the same versi
 - express, koa: remove next after playground [#1436](https://github.com/apollographql/apollo-server/pull/1436)
 - Hapi: Pass the response toolkit to the context function. [#1407](https://github.com/apollographql/apollo-server/pull/1407)
 - update apollo-engine-reporting-protobuf to non-beta [#1429](https://github.com/apollographql/apollo-server/pull/1429)
+- playground would use its own settings as default [#1516](https://github.com/apollographql/apollo-server/pull/1516)
 - Lambda: Look in event.path first when picking endpoint for GraphQL Playground [#1527](https://github.com/apollographql/apollo-server/pull/1527)
 - Fix to allow enabling GraphQL Playground in production with custom config [#1495](https://github.com/apollographql/apollo-server/pull/1495)
 

@@ -1,7 +1,7 @@
 {
   "name": "apollo-server-integration-testsuite",
   "private": true,
-  "version": "2.0.4",
+  "version": "2.0.6",
   "description": "Apollo Server Integrations testsuite",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -26,8 +26,5 @@
   },
   "dependencies": {
     "apollo-server-core": "file:../apollo-server-core"
-  },
-  "devDependencies": {
-    "graphql-extensions": "file:../graphql-extensions"
   }
 }
