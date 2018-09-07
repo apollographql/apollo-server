@@ -78,7 +78,11 @@ export interface EngineReportingOptions<TContext> {
   sendReportsImmediately?: boolean;
   // To remove the error message from traces, set this to true. Defaults to false
   maskErrorDetails?: boolean;
-  // A human readable name to tag this variant of a schema (i.e. staging, EU)
+  // By default, all errors get reported to Engine servers. You can specify a
+  // a filter function to exclude specific errors from being reported by
+  // returning false.
+  errorFilter?: (err: Error) => boolean;
+// A human readable name to tag this variant of a schema (i.e. staging, EU)
   schemaTag?: string;
   //Creates the client information for operation traces.
   generateClientInfo?: GenerateClientInfo<TContext>;
