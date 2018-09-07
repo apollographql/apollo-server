@@ -365,3 +365,9 @@ addMockFunctionsToSchema({
 *  `maskErrorDetails`: boolean
 
    Set to true to remove error details from the traces sent to Apollo's servers. Defaults to false.
+
+* `errorFilter`: (err: Error) => boolean
+
+   By default, all errors get reported to Engine servers. You can specify a
+   a filter function to exclude specific errors from being reported by
+   returning false.

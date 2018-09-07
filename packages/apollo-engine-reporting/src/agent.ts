@@ -88,6 +88,10 @@ export interface EngineReportingOptions {
   sendReportsImmediately?: boolean;
   // To remove the error message from traces, set this to true. Defaults to false
   maskErrorDetails?: boolean;
+  // By default, all errors get reported to Engine servers. You can specify a
+  // a filter function to exclude specific errors from being reported by
+  // returning false.
+  errorFilter?: (err: Error) => boolean;
 
   /**
    * (Experimental) Creates the client information for operation traces.

@@ -51,6 +51,7 @@ export class EngineReportingExtension<TContext = any>
   ) {
     this.options = {
       maskErrorDetails: false,
+      errorFilter: () => true,
       ...options,
     };
     this.addTrace = addTrace;
@@ -272,7 +273,9 @@ export class EngineReportingExtension<TContext = any>
               json: JSON.stringify(error),
             };
 
-        node!.error!.push(new Trace.Error(errorInfo));
+        if (!this.options.errorFilter || this.options.errorFilter(error)) {
+          node!.error!.push(new Trace.Error(errorInfo));
+        }
       });
     }
   }
