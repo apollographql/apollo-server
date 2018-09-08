@@ -57,7 +57,7 @@ export class EngineReportingExtension<TContext = any>
     request: Request;
     queryString?: string;
     parsedQuery?: DocumentNode;
-    variables: Record<string, any>;
+    variables?: Record<string, any>;
     persistedQueryHit?: boolean;
     persistedQueryRegister?: boolean;
   }): EndHandler {
@@ -139,7 +139,7 @@ export class EngineReportingExtension<TContext = any>
           this.trace.details!.variablesJson![name] = '';
         } else {
           this.trace.details!.variablesJson![name] = JSON.stringify(
-            o.variables[name],
+            o.variables![name],
           );
         }
       });
