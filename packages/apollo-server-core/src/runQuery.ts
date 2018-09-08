@@ -149,7 +149,6 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
         } else {
           const parsingDidEnd = extensionStack.parsingDidStart({
             queryString: options.queryString,
-            context,
           });
           let graphqlParseErrors: SyntaxError[] | undefined;
           try {
@@ -184,7 +183,7 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
         if (options.validationRules) {
           rules = rules.concat(options.validationRules);
         }
-        const validationDidEnd = extensionStack.validationDidStart({ context });
+        const validationDidEnd = extensionStack.validationDidStart();
         let validationErrors: GraphQLError[] | undefined;
         try {
           validationErrors = validate(
@@ -229,7 +228,6 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
         };
         const executionDidEnd = extensionStack.executionDidStart({
           executionArgs,
-          context,
         });
         return Promise.resolve()
           .then(() => execute(executionArgs))
@@ -260,7 +258,7 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
 
             executionDidEnd(...(result.errors || []));
 
-            const formattedExtensions = extensionStack.format({ context });
+            const formattedExtensions = extensionStack.format();
             if (Object.keys(formattedExtensions).length > 0) {
               response.extensions = formattedExtensions;
             }

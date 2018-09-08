@@ -304,8 +304,8 @@ describe('runQuery', () => {
 
   describe('graphql extensions', () => {
     class CustomExtension implements GraphQLExtension<any> {
-      format({ context }: { context: any }): [string, any] {
-        return ['customExtension', { foo: 'bar', ctx: context.baz }];
+      format(): [string, any] {
+        return ['customExtension', { foo: 'bar' }];
       }
     }
 
@@ -344,13 +344,12 @@ describe('runQuery', () => {
       return runQuery({
         schema,
         queryString,
-        context: { baz: 'always here' },
         extensions,
         request: new MockReq(),
       }).then(res => {
         expect(res.data).toEqual(expected);
         expect(res.extensions).toEqual({
-          customExtension: { foo: 'bar', ctx: 'always here' },
+          customExtension: { foo: 'bar' },
         });
       });
     });

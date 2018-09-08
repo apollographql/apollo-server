@@ -57,10 +57,9 @@ export class EngineReportingExtension<TContext = any>
     request: Request;
     queryString?: string;
     parsedQuery?: DocumentNode;
-    variables: Record<string, any>;
+    variables?: Record<string, any>;
     persistedQueryHit?: boolean;
     persistedQueryRegister?: boolean;
-    context: TContext;
   }): EndHandler {
     this.trace.startTime = dateToTimestamp(new Date());
     this.startHrTime = process.hrtime();
@@ -140,7 +139,7 @@ export class EngineReportingExtension<TContext = any>
           this.trace.details!.variablesJson![name] = '';
         } else {
           this.trace.details!.variablesJson![name] = JSON.stringify(
-            o.variables[name],
+            o.variables![name],
           );
         }
       });
@@ -176,10 +175,7 @@ export class EngineReportingExtension<TContext = any>
     };
   }
 
-  public executionDidStart(o: {
-    executionArgs: ExecutionArgs;
-    context: TContext;
-  }) {
+  public executionDidStart(o: { executionArgs: ExecutionArgs }) {
     // If the operationName is explicitly provided, save it. If there's just one
     // named operation, the client doesn't have to provide it, but we still want
     // to know the operation name so that the server can identify the query by
@@ -220,10 +216,7 @@ export class EngineReportingExtension<TContext = any>
     };
   }
 
-  public willSendResponse(o: {
-    graphqlResponse: GraphQLResponse;
-    context: TContext;
-  }) {
+  public willSendResponse(o: { graphqlResponse: GraphQLResponse }) {
     const { errors } = o.graphqlResponse;
     if (errors) {
       errors.forEach((error: GraphQLError) => {

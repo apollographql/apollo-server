@@ -42,14 +42,10 @@ export class GraphQLExtension<TContext = any> {
     persistedQueryRegister?: boolean;
     context: TContext;
   }): EndHandler | void;
-  public parsingDidStart?(o: {
-    queryString: string;
-    context: TContext;
-  }): EndHandler | void;
-  public validationDidStart?(o: { context: TContext }): EndHandler | void;
+  public parsingDidStart?(o: { queryString: string }): EndHandler | void;
+  public validationDidStart?(): EndHandler | void;
   public executionDidStart?(o: {
     executionArgs: ExecutionArgs;
-    context: TContext;
   }): EndHandler | void;
 
   public willSendResponse?(o: {
@@ -64,7 +60,7 @@ export class GraphQLExtension<TContext = any> {
     info: GraphQLResolveInfo,
   ): ((error: Error | null, result?: any) => void) | void;
 
-  public format?(o: { context: TContext }): [string, any] | undefined;
+  public format?(): [string, any] | undefined;
 }
 
 export class GraphQLExtensionStack<TContext = any> {
@@ -90,23 +86,17 @@ export class GraphQLExtensionStack<TContext = any> {
       ext => ext.requestDidStart && ext.requestDidStart(o),
     );
   }
-  public parsingDidStart(o: {
-    queryString: string;
-    context: TContext;
-  }): EndHandler {
+  public parsingDidStart(o: { queryString: string }): EndHandler {
     return this.handleDidStart(
       ext => ext.parsingDidStart && ext.parsingDidStart(o),
     );
   }
-  public validationDidStart(o: { context: TContext }): EndHandler {
+  public validationDidStart(): EndHandler {
     return this.handleDidStart(
-      ext => ext.validationDidStart && ext.validationDidStart(o),
+      ext => ext.validationDidStart && ext.validationDidStart(),
     );
   }
-  public executionDidStart(o: {
-    executionArgs: ExecutionArgs;
-    context: TContext;
-  }): EndHandler {
+  public executionDidStart(o: { executionArgs: ExecutionArgs }): EndHandler {
     if (o.executionArgs.fieldResolver) {
       this.fieldResolver = o.executionArgs.fieldResolver;
     }
@@ -155,9 +145,9 @@ export class GraphQLExtensionStack<TContext = any> {
     };
   }
 
-  public format(o: { context: TContext }) {
+  public format() {
     return (this.extensions
-      .map(extension => extension.format && extension.format(o))
+      .map(extension => extension.format && extension.format())
       .filter(x => x) as [string, any][]).reduce(
       (extensions, [key, value]) => Object.assign(extensions, { [key]: value }),
       {},
