@@ -33,6 +33,7 @@ export class GraphQLExtension<TContext = any> {
     variables?: { [key: string]: any };
     persistedQueryHit?: boolean;
     persistedQueryRegister?: boolean;
+    context: TContext;
   }): EndHandler | void;
   public parsingDidStart?(o: { queryString: string }): EndHandler | void;
   public validationDidStart?(): EndHandler | void;
@@ -42,7 +43,8 @@ export class GraphQLExtension<TContext = any> {
 
   public willSendResponse?(o: {
     graphqlResponse: GraphQLResponse;
-  }): void | { graphqlResponse: GraphQLResponse };
+    context: TContext;
+  }): void | { graphqlResponse: GraphQLResponse; context: TContext };
 
   public willResolveField?(
     source: any,
@@ -71,7 +73,7 @@ export class GraphQLExtensionStack<TContext = any> {
     variables?: { [key: string]: any };
     persistedQueryHit?: boolean;
     persistedQueryRegister?: boolean;
-    extensions?: Record<string, any>;
+    context: TContext;
   }): EndHandler {
     return this.handleDidStart(
       ext => ext.requestDidStart && ext.requestDidStart(o),
@@ -98,7 +100,8 @@ export class GraphQLExtensionStack<TContext = any> {
 
   public willSendResponse(o: {
     graphqlResponse: GraphQLResponse;
-  }): { graphqlResponse: GraphQLResponse } {
+    context: TContext;
+  }): { graphqlResponse: GraphQLResponse; context: TContext } {
     let reference = o;
     // Reverse the array, since this is functions as an end handler
     [...this.extensions].reverse().forEach(extension => {

@@ -435,6 +435,28 @@ describe('runQuery', () => {
         });
       });
     });
+
+    it('runs willSendResponse with extensions context', async () => {
+      class CustomExtension implements GraphQLExtension<any> {
+        willSendResponse(o: any) {
+          expect(o).toHaveProperty('context.baz', 'always here');
+          return o;
+        }
+      }
+
+      const queryString = `{ testString }`;
+      const expected = { testString: 'it works' };
+      const extensions = [() => new CustomExtension()];
+      return runQuery({
+        schema,
+        queryString,
+        context: { baz: 'always here' },
+        extensions,
+        request: new MockReq(),
+      }).then(res => {
+        expect(res.data).toEqual(expected);
+      });
+    });
   });
 
   describe('async_hooks', () => {

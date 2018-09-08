@@ -547,8 +547,11 @@ export function testApolloServer<AS extends ApolloServerBase>(
             }
           });
 
-          class Extension extends GraphQLExtension {
-            willSendResponse(o: { graphqlResponse: GraphQLResponse }) {
+          class Extension<TContext = any> extends GraphQLExtension {
+            willSendResponse(o: {
+              graphqlResponse: GraphQLResponse;
+              context: TContext;
+            }) {
               expect(o.graphqlResponse.errors.length).toEqual(1);
               // formatError should be called after extensions
               expect(formatError).not.toBeCalled();
@@ -636,8 +639,11 @@ export function testApolloServer<AS extends ApolloServerBase>(
           return error;
         });
 
-        class Extension extends GraphQLExtension {
-          willSendResponse(_o: { graphqlResponse: GraphQLResponse }) {
+        class Extension<TContext = any> extends GraphQLExtension {
+          willSendResponse(_o: {
+            graphqlResponse: GraphQLResponse;
+            context: TContext;
+          }) {
             // formatError should be called after extensions
             expect(formatError).not.toBeCalled();
             extension();
