@@ -91,7 +91,7 @@
     "graphql-tools": "3.1.1",
     "hapi": "17.5.4",
     "husky": "0.14.3",
-    "jest": "23.5.0",
+    "jest": "23.6.0",
     "jest-matcher-utils": "23.5.0",
     "js-sha256": "0.9.0",
     "koa-multer": "1.0.2",
