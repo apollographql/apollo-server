@@ -392,7 +392,7 @@ describe('RESTDataSource', () => {
       expect(data).toEqual({ foo: 'bar' });
     });
 
-    it('returns data as parsed JSON when Content-Type is application/hal+json', async () => {
+    it('returns data as parsed JSON when Content-Type is application/vnd.api+json', async () => {
       const dataSource = new class extends RESTDataSource {
         baseURL = 'https://api.example.com';
 
@@ -405,7 +405,7 @@ describe('RESTDataSource', () => {
 
       fetch.mockJSONResponseOnce(
         { foo: 'bar' },
-        { 'Content-Type': 'application/hal+json' },
+        { 'Content-Type': 'application/vnd.api+json' },
       );
 
       const data = await dataSource.getFoo();
