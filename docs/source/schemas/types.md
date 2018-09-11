@@ -70,6 +70,12 @@ To implement your first mutation, follow the [... guide]().
 
 The `Subscription` type defines entry points into Apollo server for the advanced use case of listening to events over a persistent connection. For more information, see the subscription section.
 
+```graphql
+type Subscription {
+  todoAdded: String
+}
+```
+
 ## Enum type
 
 The `Enum` type are a special type of scalar that is restricted to a set of values.
