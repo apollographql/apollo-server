@@ -31,27 +31,50 @@ export interface GraphQLResponse {
   extensions?: object;
 }
 
-export class GraphQLExtension<TContext = any> {
-  public requestDidStart?(o: {
-    request: Request;
-    queryString?: string;
-    parsedQuery?: DocumentNode;
-    operationName?: string;
-    variables?: { [key: string]: any };
-    persistedQueryHit?: boolean;
-    persistedQueryRegister?: boolean;
-    context: TContext;
-  }): EndHandler | void;
-  public parsingDidStart?(o: { queryString: string }): EndHandler | void;
-  public validationDidStart?(): EndHandler | void;
-  public executionDidStart?(o: {
-    executionArgs: ExecutionArgs;
-  }): EndHandler | void;
+export interface RequestDidStartOptions<TContext> {
+  request: Request;
+  queryString?: string;
+  parsedQuery?: DocumentNode;
+  operationName?: string;
+  variables?: { [key: string]: any };
+  persistedQueryHit?: boolean;
+  persistedQueryRegister?: boolean;
+  context: TContext;
+}
 
-  public willSendResponse?(o: {
-    graphqlResponse: GraphQLResponse;
-    context: TContext;
-  }): void | { graphqlResponse: GraphQLResponse; context: TContext };
+export interface ParsingDidStartOptions<TContext> {
+  queryString: string;
+  context: TContext;
+}
+
+export interface ValidationDidStartOptions<TContext> {
+  context: TContext;
+}
+
+export interface ExecutionDidStartOptions {
+  executionArgs: ExecutionArgs;
+}
+
+export interface WillSendResponseOptions<TContext> {
+  graphqlResponse: GraphQLResponse;
+  context: TContext;
+}
+
+export class GraphQLExtension<TContext = any> {
+  public requestDidStart?(
+    o: RequestDidStartOptions<TContext>,
+  ): EndHandler | void;
+  public parsingDidStart?(
+    o: ParsingDidStartOptions<TContext>,
+  ): EndHandler | void;
+  public validationDidStart?(
+    o: ValidationDidStartOptions<TContext>,
+  ): EndHandler | void;
+  public executionDidStart?(o: ExecutionDidStartOptions): EndHandler | void;
+
+  public willSendResponse?(
+    o: WillSendResponseOptions<TContext>,
+  ): void | { graphqlResponse: GraphQLResponse; context: TContext };
 
   public willResolveField?(
     source: any,
@@ -72,31 +95,24 @@ export class GraphQLExtensionStack<TContext = any> {
     this.extensions = extensions;
   }
 
-  public requestDidStart(o: {
-    request: Request;
-    queryString?: string;
-    parsedQuery?: DocumentNode;
-    operationName?: string;
-    variables?: { [key: string]: any };
-    persistedQueryHit?: boolean;
-    persistedQueryRegister?: boolean;
-    context: TContext;
-  }): EndHandler {
+  public requestDidStart(o: RequestDidStartOptions<TContext>): EndHandler {
     return this.handleDidStart(
       ext => ext.requestDidStart && ext.requestDidStart(o),
     );
   }
-  public parsingDidStart(o: { queryString: string }): EndHandler {
+  public parsingDidStart(o: ParsingDidStartOptions<TContext>): EndHandler {
     return this.handleDidStart(
       ext => ext.parsingDidStart && ext.parsingDidStart(o),
     );
   }
-  public validationDidStart(): EndHandler {
+  public validationDidStart(
+    o: ValidationDidStartOptions<TContext>,
+  ): EndHandler {
     return this.handleDidStart(
-      ext => ext.validationDidStart && ext.validationDidStart(),
+      ext => ext.validationDidStart && ext.validationDidStart(o),
     );
   }
-  public executionDidStart(o: { executionArgs: ExecutionArgs }): EndHandler {
+  public executionDidStart(o: ExecutionDidStartOptions): EndHandler {
     if (o.executionArgs.fieldResolver) {
       this.fieldResolver = o.executionArgs.fieldResolver;
     }
@@ -105,10 +121,9 @@ export class GraphQLExtensionStack<TContext = any> {
     );
   }
 
-  public willSendResponse(o: {
-    graphqlResponse: GraphQLResponse;
-    context: TContext;
-  }): { graphqlResponse: GraphQLResponse; context: TContext } {
+  public willSendResponse(
+    o: WillSendResponseOptions<TContext>,
+  ): { graphqlResponse: GraphQLResponse; context: TContext } {
     let reference = o;
     // Reverse the array, since this is functions as an end handler
     [...this.extensions].reverse().forEach(extension => {

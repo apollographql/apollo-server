@@ -4,7 +4,7 @@ All of the packages in the `apollo-server` repo are released with the same versi
 
 ### vNEXT
 
-- Core: Allow context to be passed to all GraphQLExtension methods. [PR #1547](https://github.com/apollographql/apollo-server/pull/1547)
+- Core: Allow context to be passed to all GraphQLExtension methods. [PR #1547](https://github.com/apollographql/apollo-server/pull/1547),[PR #1653](https://github.com/apollographql/apollo-server/pull/1653)
 
 ### v2.0.7
 

@@ -149,6 +149,7 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
         } else {
           const parsingDidEnd = extensionStack.parsingDidStart({
             queryString: options.queryString,
+            context,
           });
           let graphqlParseErrors: SyntaxError[] | undefined;
           try {
@@ -183,7 +184,7 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
         if (options.validationRules) {
           rules = rules.concat(options.validationRules);
         }
-        const validationDidEnd = extensionStack.validationDidStart();
+        const validationDidEnd = extensionStack.validationDidStart({ context });
         let validationErrors: GraphQLError[] | undefined;
         try {
           validationErrors = validate(
