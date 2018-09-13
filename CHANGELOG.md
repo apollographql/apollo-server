@@ -4,6 +4,7 @@ All of the packages in the `apollo-server` repo are released with the same versi
 
 ### vNEXT
 
+- Fix [#1439](https://github.com/apollographql/apollo-server/issues/1439), use `formatError` if passed in options.
 - Core: Allow context to be passed to all GraphQLExtension methods. [PR #1547](https://github.com/apollographql/apollo-server/pull/1547)
 
 ### v2.0.7
