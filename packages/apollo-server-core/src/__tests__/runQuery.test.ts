@@ -419,4 +419,20 @@ describe('runQuery', () => {
       expect(ids.length).toBeGreaterThanOrEqual(2);
     });
   });
+
+  describe('formatError', () => {
+    it('is called with errors if passed in options', () => {
+      const formatError = jest.fn();
+      const query = `query { testError }`;
+      return runQuery({
+        schema,
+        queryString: query,
+        variables: { base: 1 },
+        request: new MockReq(),
+        formatError,
+      }).then(() => {
+        expect(formatError).toBeCalledTimes(1);
+      });
+    });
+  });
 });

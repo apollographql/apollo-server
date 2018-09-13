@@ -33,6 +33,8 @@ import {
   SyntaxError,
 } from 'apollo-server-errors';
 
+import { FormatErrorExtension } from './formatters';
+
 export interface GraphQLResponse {
   data?: object;
   errors?: Array<GraphQLError & object>;
@@ -97,6 +99,12 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
   // If custom extension factories were provided, create per-request extension
   // objects.
   const extensions = options.extensions ? options.extensions.map(f => f()) : [];
+
+  // Error formatting should happen after the engine reporting agent, so that
+  // engine gets the unmasked errors if necessary
+  if (options.formatError) {
+    extensions.unshift(new FormatErrorExtension(options.formatError, debug));
+  }
 
   // If you're running behind an engineproxy, set these options to turn on
   // tracing and cache-control extensions.

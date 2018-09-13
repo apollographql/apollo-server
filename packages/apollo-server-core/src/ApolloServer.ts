@@ -33,8 +33,6 @@ import {
   FileUploadOptions,
 } from './types';
 
-import { FormatErrorExtension } from './formatters';
-
 import { gql } from './index';
 
 import {
@@ -212,20 +210,8 @@ export class ApolloServerBase {
     }
 
     // Note: doRunQuery will add its own extensions if you set tracing,
-    // or cacheControl.
+    // formatError, or cacheControl.
     this.extensions = [];
-
-    // Error formatting should happen after the engine reporting agent, so that
-    // engine gets the unmasked errors if necessary
-    if (this.requestOptions.formatError) {
-      this.extensions.push(
-        () =>
-          new FormatErrorExtension(
-            this.requestOptions.formatError!,
-            this.requestOptions.debug,
-          ),
-      );
-    }
 
     if (engine || (engine !== false && process.env.ENGINE_API_KEY)) {
       this.engineReportingAgent = new EngineReportingAgent(
