@@ -13,6 +13,7 @@ import {
 import { runQuery } from '../runQuery';
 
 import { GraphQLExtensionStack, GraphQLExtension } from 'graphql-extensions';
+import { FormatErrorExtension } from '../formatters';
 
 const queryType = new GraphQLObjectType({
   name: 'QueryType',
@@ -417,6 +418,41 @@ describe('runQuery', () => {
 
       // Expect there to be several async ids provided
       expect(ids.length).toBeGreaterThanOrEqual(2);
+    });
+  });
+
+  describe('formatError', () => {
+    it('is called with errors if passed in options', () => {
+      const formatError = jest.fn();
+      const query = `query { testError }`;
+      return runQuery({
+        schema,
+        queryString: query,
+        variables: { base: 1 },
+        request: new MockReq(),
+        formatError,
+      }).then(() => {
+        expect(formatError).toBeCalledTimes(1);
+      });
+    });
+
+    it('overrides FormatErrorExtension in extensions if passed', () => {
+      const formatError = jest.fn();
+      const extensionsFormatError = jest.fn();
+      const query = `query { testError }`;
+      return runQuery({
+        schema,
+        queryString: query,
+        variables: { base: 1 },
+        request: new MockReq(),
+        formatError,
+        extensions: [
+          () => new FormatErrorExtension(extensionsFormatError, false),
+        ],
+      }).then(() => {
+        expect(formatError).toBeCalledTimes(1);
+        expect(extensionsFormatError).toBeCalledTimes(0);
+      });
     });
   });
 });

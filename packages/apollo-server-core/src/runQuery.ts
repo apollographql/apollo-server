@@ -32,6 +32,7 @@ import {
   ValidationError,
   SyntaxError,
 } from 'apollo-server-errors';
+import { FormatErrorExtension } from '../src/formatters';
 
 export interface GraphQLResponse {
   data?: object;
@@ -94,9 +95,28 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
 
   const context = options.context || {};
 
+  let hasFormatError = false;
+
   // If custom extension factories were provided, create per-request extension
   // objects.
-  const extensions = options.extensions ? options.extensions.map(f => f()) : [];
+  const extensions = options.extensions
+    ? options.extensions.map(f => {
+        const ext = f();
+        // If we've passed formatError as part of the options,
+        // ensure it overrides any FormatErrorExtension from the constructor.
+        if (options.formatError && !hasFormatError) {
+          if (ext instanceof FormatErrorExtension) {
+            hasFormatError = true;
+            return new FormatErrorExtension(options.formatError, debug);
+          }
+        }
+        return ext;
+      })
+    : [];
+
+  if (options.formatError && !hasFormatError) {
+    extensions.push(new FormatErrorExtension(options.formatError, debug));
+  }
 
   // If you're running behind an engineproxy, set these options to turn on
   // tracing and cache-control extensions.
