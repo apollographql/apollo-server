@@ -95,7 +95,7 @@
     "jest-matcher-utils": "23.6.0",
     "js-sha256": "0.9.0",
     "koa-multer": "1.0.2",
-    "lerna": "3.3.0",
+    "lerna": "3.3.2",
     "lint-staged": "7.2.2",
     "memcached-mock": "0.1.0",
     "meteor-promise": "0.8.6",
@@ -115,7 +115,7 @@
     "tslint": "5.11.0",
     "typescript": "3.0.3",
     "ws": "6.0.0",
-    "yup": "0.26.3"
+    "yup": "0.26.5"
   },
   "jest": {
     "testEnvironment": "node",
