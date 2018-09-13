@@ -50,8 +50,7 @@ export class EngineReportingExtension<TContext = any>
     addTrace: (signature: string, operationName: string, trace: Trace) => void,
   ) {
     this.options = {
-      maskErrorDetails: false,
-      errorFilter: () => true,
+      filterErrors: error => error,
       ...options,
     };
     this.addTrace = addTrace;
@@ -262,18 +261,19 @@ export class EngineReportingExtension<TContext = any>
           }
         }
 
-        // Always send the trace errors, so that the UI acknowledges that there is an error.
-        const errorInfo = this.options.maskErrorDetails
-          ? { message: '<masked>' }
-          : {
-              message: error.message,
-              location: (error.locations || []).map(
-                ({ line, column }) => new Trace.Location({ line, column }),
-              ),
-              json: JSON.stringify(error),
-            };
+        const filteredError = this.options.filterErrors
+          ? this.options.filterErrors(error)
+          : error;
 
-        if (!this.options.errorFilter || this.options.errorFilter(error)) {
+        if (filteredError) {
+          const errorInfo = {
+            message: filteredError.message,
+            location: (filteredError.locations || []).map(
+              ({ line, column }) => new Trace.Location({ line, column }),
+            ),
+            json: JSON.stringify(filteredError),
+          };
+
           node!.error!.push(new Trace.Error(errorInfo));
         }
       });

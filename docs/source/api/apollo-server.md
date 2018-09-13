@@ -362,12 +362,9 @@ addMockFunctionsToSchema({
    'sendReport()' on other signals if you'd like. Note that 'sendReport()'
    does not run synchronously so it cannot work usefully in an 'exit' handler.
 
-*  `maskErrorDetails`: boolean
-
-   Set to true to remove error details from the traces sent to Apollo's servers. Defaults to false.
-
-* `errorFilter`: (err: Error) => boolean
+* `filterErrors`: (err: Error) => Error | null
 
    By default, all errors get reported to Engine servers. You can specify a
    a filter function to exclude specific errors from being reported by
-   returning false.
+   returning null, or you can mask certain details of the error and return the
+   error to be reported.

@@ -1,6 +1,6 @@
 import os from 'os';
 import { gzip } from 'zlib';
-import { DocumentNode } from 'graphql';
+import { DocumentNode, GraphQLError } from 'graphql';
 import {
   FullTracesReport,
   ReportHeader,
@@ -86,12 +86,11 @@ export interface EngineReportingOptions {
   handleSignals?: boolean;
   // Sends the trace report immediately. This options is useful for stateless environments
   sendReportsImmediately?: boolean;
-  // To remove the error message from traces, set this to true. Defaults to false
-  maskErrorDetails?: boolean;
   // By default, all errors get reported to Engine servers. You can specify a
   // a filter function to exclude specific errors from being reported by
-  // returning false.
-  errorFilter?: (err: Error) => boolean;
+  // returning null, or you can mask certain details of the error and return the
+  // error to be reported.
+  filterErrors?: (err: GraphQLError) => GraphQLError | null;
 
   /**
    * (Experimental) Creates the client information for operation traces.
