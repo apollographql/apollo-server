@@ -22,7 +22,7 @@ As you can see, the usage of `@deprecated(reason: ...)` _follows_ the field that
 
 GraphQL provides several default directives: [`@deprecated`](http://facebook.github.io/graphql/draft/#sec--deprecated), [`@skip`](http://facebook.github.io/graphql/draft/#sec--skip), and [`@include`](http://facebook.github.io/graphql/draft/#sec--include).
 
-  * [`@deprecated`](http://facebook.github.io/graphql/draft/#sec--deprecated)`(message: String)` - marks field as deprecated with message
+  * [`@deprecated`](http://facebook.github.io/graphql/draft/#sec--deprecated)`(reason: String)` - marks field as deprecated with message
   * [`@skip`](http://facebook.github.io/graphql/draft/#sec--skip)`(if: Boolean!)` - GraphQL execution skips the field if true by not calling the resolver
   * [`@include`](http://facebook.github.io/graphql/draft/#sec--include)`(if: Boolean!)` - Calls resolver for annotated field if true
 
