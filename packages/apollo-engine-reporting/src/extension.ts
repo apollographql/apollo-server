@@ -138,9 +138,18 @@ export class EngineReportingExtension<TContext = any>
           // will be sent as '""'.
           this.trace.details!.variablesJson![name] = '';
         } else {
-          this.trace.details!.variablesJson![name] = JSON.stringify(
-            o.variables![name],
-          );
+          try {
+            this.trace.details!.variablesJson![name] = JSON.stringify(
+              o.variables![name],
+            );
+          } catch (e) {
+            // This probably means that the value contains a circular reference,
+            // causing `JSON.stringify()` to throw a TypeError:
+            // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#Issue_with_JSON.stringify()_when_serializing_circular_references
+            this.trace.details!.variablesJson![name] = JSON.stringify(
+              '[Unable to convert value to JSON]',
+            );
+          }
         }
       });
     }

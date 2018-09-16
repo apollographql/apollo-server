@@ -214,11 +214,11 @@ export class EngineReportingAgent<TContext = any> {
         message.byteOffset,
         message.byteLength,
       );
-      gzip(messageBuffer, (err, compressed) => {
+      gzip(messageBuffer, (err, gzipResult) => {
         if (err) {
           reject(err);
         } else {
-          resolve(compressed);
+          resolve(gzipResult);
         }
       });
     });
@@ -232,7 +232,7 @@ export class EngineReportingAgent<TContext = any> {
       // Retry on network errors and 5xx HTTP
       // responses.
       async () => {
-        const response = await fetch(endpointUrl, {
+        const curResponse = await fetch(endpointUrl, {
           method: 'POST',
           headers: {
             'user-agent': 'apollo-engine-reporting',
@@ -242,10 +242,10 @@ export class EngineReportingAgent<TContext = any> {
           body: compressed,
         });
 
-        if (response.status >= 500 && response.status < 600) {
-          throw new Error(`${response.status}: ${response.statusText}`);
+        if (curResponse.status >= 500 && curResponse.status < 600) {
+          throw new Error(`${curResponse.status}: ${curResponse.statusText}`);
         } else {
-          return response;
+          return curResponse;
         }
       },
       {

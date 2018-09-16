@@ -4,6 +4,9 @@ All of the packages in the `apollo-server` repo are released with the same versi
 
 ### vNEXT
 
+### v2.0.8
+
+- Reporting: Catch Error if JSON.Stringify Fails for Engine Trace [PR #1668](https://github.com/apollographql/apollo-server/pull/1668)
 - Core: Allow context to be passed to all GraphQLExtension methods. [PR #1547](https://github.com/apollographql/apollo-server/pull/1547)
 
 ### v2.0.7
