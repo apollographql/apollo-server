@@ -84,7 +84,7 @@ export class ApolloServer extends ApolloServerBase {
 
     return (req: Request, res: Response) => {
       // Handle both the root of the GCF endpoint and /graphql
-      if (!['', '/', '/graphql'].includes(req.path)) {
+      if (req.path && !['/', '/graphql'].includes(req.path)) {
         res.status(404).end();
         return;
       }
