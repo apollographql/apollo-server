@@ -77,7 +77,7 @@
     "@types/redis": "2.8.6",
     "@types/request": "2.47.1",
     "apollo-fetch": "0.7.0",
-    "apollo-link": "1.2.2",
+    "apollo-link": "1.2.3",
     "apollo-link-http": "1.5.4",
     "apollo-link-persisted-queries": "0.2.1",
     "body-parser": "1.18.3",
