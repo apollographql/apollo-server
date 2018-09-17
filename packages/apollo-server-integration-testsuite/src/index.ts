@@ -284,8 +284,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           .get('/graphql')
           .query(query);
         return req.then(res => {
-          expect(res.status).toEqual(405);
-          expect(res.headers['allow']).toEqual('POST');
+          expect(res.status).toEqual(400);
           expect(res.error.text).toMatch('GET supports only query operation');
         });
       });
@@ -307,9 +306,10 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           .get('/graphql')
           .query(query);
         return req.then(res => {
-          expect(res.status).toEqual(405);
-          expect(res.headers['allow']).toEqual('POST');
-          expect(res.error.text).toMatch('GET supports only query operation');
+          expect(res.status).toEqual(400);
+          expect(res.body.errors[0].message).toMatch(
+            'GET supports only query operation',
+          );
         });
       });
 
