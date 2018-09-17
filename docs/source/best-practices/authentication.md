@@ -21,7 +21,7 @@ GraphQL offers similar authentication and authorization mechanics as REST and ot
 
 <h2>Authenticating users</h2>
 
-All of the approaches require that users be authenticated with the server. If our system already has login method setup to authenticate users and provide credentials that can be used in subsequent requests, we can use this same system to authenticate GraphQL requests. With that said, if we are creating a new infrastructure for user authentication, we can follow the existing best practice to authenticate users. For a full example of authentication, follow [this example](), which uses [passport.js](http://www.passportjs.org/).
+All of the approaches require that users be authenticated with the server. If our system already has login method setup to authenticate users and provide credentials that can be used in subsequent requests, we can use this same system to authenticate GraphQL requests. With that said, if we are creating a new infrastructure for user authentication, we can follow the existing best practice to authenticate users. For a full example of authentication, follow [this example](#auth-example), which uses [passport.js](http://www.passportjs.org/).
 
 <h2>Schema Authorization</h2>
 
