@@ -130,6 +130,20 @@ To override this default and specify that a type _must_ be defined, an exclamati
 
 Using the exclamation mark to declare a field as non-nullable simplifies the contract with the client, since clients will not have to check to see whether a field contains a value or not. However marking fields as non-nullable means that the field will always be a part of that type, which make it impossible to deprecate from an active schema. Removing a nullability check from a field makes a field optional. Existing client code would need to be made aware of this new requirement, and adjust their logic accordingly.
 
+```js
+const schema = gql`
+type Query {
+  genre: String!
+}
+`;
+
+const resolvers = {
+  Query: {
+    genre: () => 'FANTASY'
+  }
+}
+```
+
 ## Union type
 
 The `Union` type indicates that a field can return more than one object type, but doesn't define specific fields itself.  Therefore, a query being made on a field which is union-typed must specify the object types containing the fields it wants.
