@@ -4,6 +4,8 @@ All of the packages in the `apollo-server` repo are released with the same versi
 
 ### vNEXT
 
+- Update link inside Authentication Docs [PR #1682](https://github.com/apollographql/apollo-server/pull/1682)
+
 ### v2.0.8
 
 - Reporting: Catch Error if JSON.Stringify Fails for Engine Trace [PR #1668](https://github.com/apollographql/apollo-server/pull/1668)
