@@ -58,7 +58,7 @@ export class GraphQLExtension<TContext = any> {
     args: { [argName: string]: any },
     context: TContext,
     info: GraphQLResolveInfo,
-  ): ((error: Error | null, result?: any) => void) | void;
+  ): ((error: Error | null, result?: any) => any) | void;
 
   public format?(): [string, any] | undefined;
 }
@@ -139,9 +139,11 @@ export class GraphQLExtensionStack<TContext = any> {
       .reverse() as ((error: Error | null, result?: any) => void)[];
 
     return (error: Error | null, result?: any) => {
+      let accumulatedResult = result;
       for (const handler of handlers) {
-        handler(error, result);
+        accumulatedResult = handler(error, accumulatedResult);
       }
+      return accumulatedResult;
     };
   }
 
@@ -205,10 +207,8 @@ function wrapField(field: GraphQLField<any, any>): void {
         (extensionStack && extensionStack.fieldResolver) ||
         defaultFieldResolver)(source, args, context, info);
       // Call the stack's handlers either immediately (if result is not a
-      // Promise) or once the Promise is done. Then return that same
-      // maybe-Promise value.
-      whenResultIsFinished(result, handler);
-      return result;
+      // Promise) or once the Promise is done. Then return the result of running the callback.
+      return whenResultIsFinished(result, handler);
     } catch (error) {
       // Normally it's a bad sign to see an error both handled and
       // re-thrown. But it is useful to allow extensions to track errors while
@@ -231,18 +231,21 @@ function whenResultIsFinished(
   callback: (err: Error | null, result?: any) => void,
 ) {
   if (isPromise(result)) {
-    result.then((r: any) => callback(null, r), (err: Error) => callback(err));
+    return result.then(
+      (r: any) => callback(null, r),
+      (err: Error) => callback(err),
+    );
   } else if (Array.isArray(result)) {
     if (result.some(isPromise)) {
-      Promise.all(result).then(
+      return Promise.all(result).then(
         (r: any) => callback(null, r),
         (err: Error) => callback(err),
       );
     } else {
-      callback(null, result);
+      return callback(null, result);
     }
   } else {
-    callback(null, result);
+    return callback(null, result);
   }
 }
 

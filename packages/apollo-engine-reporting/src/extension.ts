@@ -218,10 +218,11 @@ export class EngineReportingExtension<TContext = any>
     node.parentType = info.parentType.toString();
     node.startTime = durationHrTimeToNanos(process.hrtime(this.startHrTime));
 
-    return () => {
+    return (err: Error, result: any) => {
       node.endTime = durationHrTimeToNanos(process.hrtime(this.startHrTime));
       // We could save the error into the trace here, but it won't have all
       // the information that graphql-js adds to it later, like 'locations'.
+      return result;
     };
   }
 

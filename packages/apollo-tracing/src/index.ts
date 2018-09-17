@@ -76,8 +76,9 @@ export class TracingExtension<TContext = any>
 
     this.resolverCalls.push(resolverCall);
 
-    return () => {
+    return (err: Error, result: any) => {
       resolverCall.endOffset = process.hrtime(this.startHrTime);
+      return result;
     };
   }
 
