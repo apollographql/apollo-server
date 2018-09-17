@@ -165,6 +165,7 @@ The `applyMiddleware` method is provided by the `apollo-server-{integration}` pa
 The `applyMiddleware` method from `apollo-server-express` registration of middleware as shown in the example below:
 
 ```js
+const express = require('express');
 const { ApolloServer } = require('apollo-server-express');
 const { typeDefs, resolvers } = require('./schema');
 
@@ -174,6 +175,7 @@ const server = new ApolloServer({
   resolvers,
 });
 
+const app = express();
 // Additional middleware can be mounted at this point to run before Apollo.
 app.use('*', jwtCheck, requireAuth, checkScope);
 
