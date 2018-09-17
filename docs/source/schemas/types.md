@@ -59,7 +59,7 @@ type Response {
   newTodo: String
 }
 
-type Query {
+type Mutation {
   addTodo(user: ID, todo: String): Response
 }
 ```
