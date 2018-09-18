@@ -34,6 +34,11 @@ Traces.encode = function(message, originalWriter) {
   return writer;
 };
 
+export interface ClientInfo {
+  clientName?: string;
+  clientVersion?: string;
+}
+
 export interface EngineReportingOptions {
   // API key for the service. Get this from
   // [Engine](https://engine.apollographql.com) by logging in and creating
@@ -83,6 +88,14 @@ export interface EngineReportingOptions {
   sendReportsImmediately?: boolean;
   // To remove the error message from traces, set this to true. Defaults to false
   maskErrorDetails?: boolean;
+  // Creates the client information attached to the traces sent to the Apollo
+  // backend
+  generateClientInfo?: (
+    o: {
+      context: any;
+      extensions?: Record<string, any>;
+    },
+  ) => ClientInfo;
 
   // XXX Provide a way to set client_name, client_version, client_address,
   // service, and service_version fields. They are currently not revealed in the
