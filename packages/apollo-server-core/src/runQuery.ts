@@ -66,6 +66,7 @@ export interface QueryOptions {
   cacheControl?: boolean | CacheControlExtensionOptions;
   request: Pick<Request, 'url' | 'method' | 'headers'>;
   extensions?: Array<() => GraphQLExtension>;
+  queryExtensions?: Record<string, any>;
   persistedQueryHit?: boolean;
   persistedQueryRegister?: boolean;
 }
@@ -135,6 +136,8 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
     variables: options.variables,
     persistedQueryHit: options.persistedQueryHit,
     persistedQueryRegister: options.persistedQueryRegister,
+    context,
+    extensions: options.queryExtensions,
   });
   return Promise.resolve()
     .then(
@@ -278,7 +281,10 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
       throw err;
     })
     .then((graphqlResponse: GraphQLResponse) => {
-      const response = extensionStack.willSendResponse({ graphqlResponse });
+      const response = extensionStack.willSendResponse({
+        graphqlResponse,
+        context,
+      });
       requestDidEnd();
       return response.graphqlResponse;
     });

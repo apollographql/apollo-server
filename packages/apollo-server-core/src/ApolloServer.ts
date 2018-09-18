@@ -15,8 +15,6 @@ import { EngineReportingAgent } from 'apollo-engine-reporting';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import { applyMiddleware, FragmentReplacement } from 'graphql-middleware';
 
-import { GraphQLUpload } from '@apollographql/apollo-upload-server';
-
 import {
   SubscriptionServer,
   ExecutionParams,
@@ -63,11 +61,12 @@ export class ApolloServerBase {
   public graphqlPath: string = '/graphql';
   public requestOptions: Partial<GraphQLOptions<any>>;
 
-  private schema: GraphQLSchema;
   private context?: Context | ContextFunction;
   private engineReportingAgent?: EngineReportingAgent;
   private extensions: Array<() => GraphQLExtension>;
   private middlewareFragmentReplacements: FragmentReplacement[] = [];
+
+  protected schema: GraphQLSchema;
   protected subscriptionServerOptions?: SubscriptionServerOptions;
   protected uploadsConfig?: FileUploadOptions;
 
@@ -152,13 +151,6 @@ export class ApolloServerBase {
       }
     }
 
-    //Add upload resolver
-    if (this.uploadsConfig) {
-      if (resolvers && !resolvers.Upload) {
-        resolvers.Upload = GraphQLUpload;
-      }
-    }
-
     if (schema) {
       this.schema = schema;
     } else {
@@ -167,16 +159,44 @@ export class ApolloServerBase {
           'Apollo Server requires either an existing schema or typeDefs',
         );
       }
+
+      let augmentedTypeDefs = Array.isArray(typeDefs) ? typeDefs : [typeDefs];
+
+      // We augment the typeDefs with the @cacheControl directive and associated
+      // scope enum, so makeExecutableSchema won't fail SDL validation
+      augmentedTypeDefs.push(
+        gql`
+          enum CacheControlScope {
+            PUBLIC
+            PRIVATE
+          }
+
+          directive @cacheControl(
+            maxAge: Int
+            scope: CacheControlScope
+          ) on FIELD_DEFINITION | OBJECT | INTERFACE
+        `,
+      );
+
+      if (this.uploadsConfig) {
+        const {
+          GraphQLUpload,
+        } = require('@apollographql/apollo-upload-server');
+        if (resolvers && !resolvers.Upload) {
+          resolvers.Upload = GraphQLUpload;
+        }
+
+        // We augment the typeDefs with the Upload scalar, so typeDefs that
+        // don't include it won't fail
+        augmentedTypeDefs.push(
+          gql`
+            scalar Upload
+          `,
+        );
+      }
+
       this.schema = makeExecutableSchema({
-        // we add in the upload scalar, so that schemas that don't include it
-        // won't error when we makeExecutableSchema
-        typeDefs: this.uploadsConfig
-          ? [
-              gql`
-                scalar Upload
-              `,
-            ].concat(typeDefs)
-          : typeDefs,
+        typeDefs: augmentedTypeDefs,
         schemaDirectives,
         resolvers,
       });

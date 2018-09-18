@@ -34,6 +34,11 @@ Traces.encode = function(message, originalWriter) {
   return writer;
 };
 
+export interface ClientInfo {
+  clientName?: string;
+  clientVersion?: string;
+}
+
 export interface EngineReportingOptions {
   // API key for the service. Get this from
   // [Engine](https://engine.apollographql.com) by logging in and creating
@@ -60,9 +65,9 @@ export interface EngineReportingOptions {
   maxAttempts?: number;
   // Minimum backoff for retries. Defaults to 100ms.
   minimumRetryDelayMs?: number;
-  // By default, errors sending reports to Engine servers will be logged
-  // to standard error. Specify this function to process errors in a different
-  // way.
+  // By default, errors that occur when sending trace reports to Engine servers
+  // will be logged to standard error. Specify this function to process errors
+  // in a different way.
   reportErrorFunction?: (err: Error) => void;
   // A case-sensitive list of names of variables whose values should not be sent
   // to Apollo servers, or 'true' to leave out all variables. In the former
@@ -81,6 +86,16 @@ export interface EngineReportingOptions {
   handleSignals?: boolean;
   // Sends the trace report immediately. This options is useful for stateless environments
   sendReportsImmediately?: boolean;
+  // To remove the error message from traces, set this to true. Defaults to false
+  maskErrorDetails?: boolean;
+  // Creates the client information attached to the traces sent to the Apollo
+  // backend
+  generateClientInfo?: (
+    o: {
+      context: any;
+      extensions?: Record<string, any>;
+    },
+  ) => ClientInfo;
 
   // XXX Provide a way to set client_name, client_version, client_address,
   // service, and service_version fields. They are currently not revealed in the
@@ -212,11 +227,11 @@ export class EngineReportingAgent<TContext = any> {
         message.byteOffset,
         message.byteLength,
       );
-      gzip(messageBuffer, (err, compressed) => {
+      gzip(messageBuffer, (err, gzipResult) => {
         if (err) {
           reject(err);
         } else {
-          resolve(compressed);
+          resolve(gzipResult);
         }
       });
     });
@@ -230,7 +245,7 @@ export class EngineReportingAgent<TContext = any> {
       // Retry on network errors and 5xx HTTP
       // responses.
       async () => {
-        const response = await fetch(endpointUrl, {
+        const curResponse = await fetch(endpointUrl, {
           method: 'POST',
           headers: {
             'user-agent': 'apollo-engine-reporting',
@@ -240,10 +255,10 @@ export class EngineReportingAgent<TContext = any> {
           body: compressed,
         });
 
-        if (response.status >= 500 && response.status < 600) {
-          throw new Error(`${response.status}: ${response.statusText}`);
+        if (curResponse.status >= 500 && curResponse.status < 600) {
+          throw new Error(`${curResponse.status}: ${curResponse.statusText}`);
         } else {
-          return response;
+          return curResponse;
         }
       },
       {

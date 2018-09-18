@@ -15,7 +15,7 @@ import {
 } from 'graphql-extensions';
 import { Trace, google } from 'apollo-engine-reporting-protobuf';
 
-import { EngineReportingOptions } from './agent';
+import { EngineReportingOptions, ClientInfo } from './agent';
 import { defaultSignature } from './signature';
 
 // EngineReportingExtension is the per-request GraphQLExtension which creates a
@@ -38,25 +38,41 @@ export class EngineReportingExtension<TContext = any>
     operationName: string,
     trace: Trace,
   ) => void;
+  private generateClientInfo: (
+    o: {
+      context: any;
+      extensions?: Record<string, any>;
+    },
+  ) => ClientInfo;
 
   public constructor(
     options: EngineReportingOptions,
     addTrace: (signature: string, operationName: string, trace: Trace) => void,
   ) {
-    this.options = options;
+    this.options = {
+      maskErrorDetails: false,
+      ...options,
+    };
     this.addTrace = addTrace;
     const root = new Trace.Node();
     this.trace.root = root;
     this.nodes.set(responsePathAsString(undefined), root);
+    this.generateClientInfo =
+      options.generateClientInfo ||
+      // Default to using the clientInfo field of the request's extensions, when
+      // the ClientInfo fields are undefined, we send the empty string
+      (({ extensions }) => (extensions && extensions.clientInfo) || {});
   }
 
   public requestDidStart(o: {
     request: Request;
     queryString?: string;
     parsedQuery?: DocumentNode;
-    variables: Record<string, any>;
+    variables?: Record<string, any>;
     persistedQueryHit?: boolean;
     persistedQueryRegister?: boolean;
+    context: any;
+    extensions?: Record<string, any>;
   }): EndHandler {
     this.trace.startTime = dateToTimestamp(new Date());
     this.startHrTime = process.hrtime();
@@ -135,12 +151,31 @@ export class EngineReportingExtension<TContext = any>
           // will be sent as '""'.
           this.trace.details!.variablesJson![name] = '';
         } else {
-          this.trace.details!.variablesJson![name] = JSON.stringify(
-            o.variables[name],
-          );
+          try {
+            this.trace.details!.variablesJson![name] = JSON.stringify(
+              o.variables![name],
+            );
+          } catch (e) {
+            // This probably means that the value contains a circular reference,
+            // causing `JSON.stringify()` to throw a TypeError:
+            // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#Issue_with_JSON.stringify()_when_serializing_circular_references
+            this.trace.details!.variablesJson![name] = JSON.stringify(
+              '[Unable to convert value to JSON]',
+            );
+          }
         }
       });
     }
+
+    // While clientAddress could be a part of the protobuf, we'll ignore it for
+    // now, since the backend does not group by it and Engine frontend will not
+    // support it in the short term
+    const { clientName, clientVersion } = this.generateClientInfo({
+      context: o.context,
+      extensions: o.extensions,
+    });
+    this.trace.clientName = clientName || '';
+    this.trace.clientVersion = clientVersion || '';
 
     return () => {
       this.trace.durationNs = durationHrTimeToNanos(
@@ -225,15 +260,19 @@ export class EngineReportingExtension<TContext = any>
             node = specificNode;
           }
         }
-        node!.error!.push(
-          new Trace.Error({
-            message: error.message,
-            location: (error.locations || []).map(
-              ({ line, column }) => new Trace.Location({ line, column }),
-            ),
-            json: JSON.stringify(error),
-          }),
-        );
+
+        // Always send the trace errors, so that the UI acknowledges that there is an error.
+        const errorInfo = this.options.maskErrorDetails
+          ? { message: '<masked>' }
+          : {
+              message: error.message,
+              location: (error.locations || []).map(
+                ({ line, column }) => new Trace.Location({ line, column }),
+              ),
+              json: JSON.stringify(error),
+            };
+
+        node!.error!.push(new Trace.Error(errorInfo));
       });
     }
   }
