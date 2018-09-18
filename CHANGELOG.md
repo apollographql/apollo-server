@@ -6,6 +6,7 @@ All of the packages in the `apollo-server` repo are released with the same versi
 
 - Update link inside Authentication Docs [PR #1682](https://github.com/apollographql/apollo-server/pull/1682)
 - Provide ability to specify client info in traces [#1631](https://github.com/apollographql/apollo-server/pull/1631)
+- Fix making sure all headers are getting reported to Engine properly when using `privateHeaders` [PR #1689](https://github.com/apollographql/apollo-server/pull/1689)
 
 ### v2.0.8
 
