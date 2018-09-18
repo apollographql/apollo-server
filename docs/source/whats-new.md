@@ -265,7 +265,7 @@ server.listen().then(({ url }) => {
 });
 ```
 
-> Note: Apollo Server adds the Upload scalar to the schema, so any existing declaration of `scalar Upload` in the schema should be removed
+> Note: When using `typeDefs` Apollo Server adds `Upload scalar` to your schema, so any existing declaration of `scalar Upload` in the type definitions should be removed. If you create your schema with `makeExecutableSchema` and pass it to `ApolloServer` constructor using the `schema` param, make sure to include [`Upload scalar`](https://www.apollographql.com/docs/guides/file-uploads.html#File-upload-with-schema-param).
 
 ### Subscriptions
 

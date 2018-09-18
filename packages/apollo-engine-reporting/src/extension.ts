@@ -15,7 +15,7 @@ import {
 } from 'graphql-extensions';
 import { Trace, google } from 'apollo-engine-reporting-protobuf';
 
-import { EngineReportingOptions } from './agent';
+import { EngineReportingOptions, ClientInfo } from './agent';
 import { defaultSignature } from './signature';
 
 // EngineReportingExtension is the per-request GraphQLExtension which creates a
@@ -38,6 +38,12 @@ export class EngineReportingExtension<TContext = any>
     operationName: string,
     trace: Trace,
   ) => void;
+  private generateClientInfo: (
+    o: {
+      context: any;
+      extensions?: Record<string, any>;
+    },
+  ) => ClientInfo;
 
   public constructor(
     options: EngineReportingOptions,
@@ -51,6 +57,11 @@ export class EngineReportingExtension<TContext = any>
     const root = new Trace.Node();
     this.trace.root = root;
     this.nodes.set(responsePathAsString(undefined), root);
+    this.generateClientInfo =
+      options.generateClientInfo ||
+      // Default to using the clientInfo field of the request's extensions, when
+      // the ClientInfo fields are undefined, we send the empty string
+      (({ extensions }) => (extensions && extensions.clientInfo) || {});
   }
 
   public requestDidStart(o: {
@@ -60,6 +71,8 @@ export class EngineReportingExtension<TContext = any>
     variables?: Record<string, any>;
     persistedQueryHit?: boolean;
     persistedQueryRegister?: boolean;
+    context: any;
+    extensions?: Record<string, any>;
   }): EndHandler {
     this.trace.startTime = dateToTimestamp(new Date());
     this.startHrTime = process.hrtime();
@@ -94,7 +107,7 @@ export class EngineReportingExtension<TContext = any>
           // operation if it causes real performance issues.
           this.options.privateHeaders.includes(key.toLowerCase())
         ) {
-          break;
+          continue;
         }
 
         switch (key) {
@@ -153,6 +166,16 @@ export class EngineReportingExtension<TContext = any>
         }
       });
     }
+
+    // While clientAddress could be a part of the protobuf, we'll ignore it for
+    // now, since the backend does not group by it and Engine frontend will not
+    // support it in the short term
+    const { clientName, clientVersion } = this.generateClientInfo({
+      context: o.context,
+      extensions: o.extensions,
+    });
+    this.trace.clientName = clientName || '';
+    this.trace.clientVersion = clientVersion || '';
 
     return () => {
       this.trace.durationNs = durationHrTimeToNanos(
