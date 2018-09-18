@@ -3,6 +3,7 @@
 All of the packages in the `apollo-server` repo are released with the same version numbers, so a new version of a particular package might not represent an actual change to that package. We generally try to mark changes that affect only one web server integration package with that package name, and don't specify package names for changes that affect most of the packages or which affect shared core packages.
 
 ### vNEXT
+- Updated the google-cloud-functions package to handle null paths [PR #1674](https://github.com/apollographql/apollo-server/pull/1674)
 
 - Update link inside Authentication Docs [PR #1682](https://github.com/apollographql/apollo-server/pull/1682)
 - Provide ability to specify client info in traces [#1631](https://github.com/apollographql/apollo-server/pull/1631)
