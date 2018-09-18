@@ -351,8 +351,12 @@ addMockFunctionsToSchema({
 
    Set to true to remove error details from the traces sent to Apollo's servers. Defaults to false.
 
-* createClientInfo?: (o: { request: Request, queryString?: string, parsedQuery?: DocumentNode, variables: Record<string, any>}) => ClientInfo;
+* generateClientInfo?: (o: { context: any, extensions?: Record<string, any>}) => ClientInfo;
 
    Creates the client information that is attached to the traces sent to the
-   Apollo backend. `ClientInfo` contains fields for `clientName` and
-   `clientVersion`, which can both be optional.
+   Apollo backend. The context field is the execution context passed to the
+   resolvers and the extensions field is the field provided in the request's
+   query, operationName, and variables. `ClientInfo` contains fields for
+   `clientName` and `clientVersion`, which can both be optional. The default
+   value copies the respective fields from the `extensions`'s `clientInfo`
+   field.

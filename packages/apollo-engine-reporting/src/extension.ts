@@ -38,6 +38,12 @@ export class EngineReportingExtension<TContext = any>
     operationName: string,
     trace: Trace,
   ) => void;
+  private generateClientInfo: (
+    o: {
+      context: any;
+      extensions?: Record<string, any>;
+    },
+  ) => ClientInfo;
 
   public constructor(
     options: EngineReportingOptions,
@@ -51,6 +57,10 @@ export class EngineReportingExtension<TContext = any>
     const root = new Trace.Node();
     this.trace.root = root;
     this.nodes.set(responsePathAsString(undefined), root);
+    this.generateClientInfo =
+      options.generateClientInfo ||
+      // Default to using the clientInfo field of the request
+      (({ extensions }) => (extensions && extensions.clientInfo) || {});
   }
 
   public requestDidStart(o: {
@@ -159,13 +169,10 @@ export class EngineReportingExtension<TContext = any>
     // While clientAddress could be a part of the protobuf, we'll ignore it for
     // now, since the backend does not group by it and Engine frontend will not
     // support it in the short term
-    const { clientName, clientVersion } =
-      (this.options.createClientInfo &&
-        this.options.createClientInfo({
-          context: o.context,
-          extensions: o.extensions,
-        })) ||
-      ({} as ClientInfo);
+    const { clientName, clientVersion } = this.generateClientInfo({
+      context: o.context,
+      extensions: o.extensions,
+    });
     this.trace.clientName = clientName || '';
     this.trace.clientVersion = clientVersion || '';
 

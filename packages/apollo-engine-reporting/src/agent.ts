@@ -90,7 +90,7 @@ export interface EngineReportingOptions {
   maskErrorDetails?: boolean;
   // Creates the client information attached to the traces sent to the Apollo
   // backend
-  createClientInfo?: (
+  generateClientInfo?: (
     o: {
       context: any;
       extensions?: Record<string, any>;
