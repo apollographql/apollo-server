@@ -8,7 +8,7 @@ import {
   Trace,
 } from 'apollo-engine-reporting-protobuf';
 
-import { fetch, Request, Response } from 'apollo-server-env';
+import { fetch, Response } from 'apollo-server-env';
 import * as retry from 'async-retry';
 
 import { EngineReportingExtension } from './extension';
@@ -93,10 +93,8 @@ export interface EngineReportingOptions {
   // backend
   createClientInfo?: (
     o: {
-      request: Request;
-      queryString?: string;
-      parsedQuery?: DocumentNode;
-      variables: Record<string, any>;
+      context: any;
+      extensions?: Record<string, any>;
     },
   ) => ClientInfo;
 

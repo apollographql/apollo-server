@@ -60,6 +60,8 @@ export class EngineReportingExtension<TContext = any>
     variables?: Record<string, any>;
     persistedQueryHit?: boolean;
     persistedQueryRegister?: boolean;
+    context: any;
+    extensions?: Record<string, any>;
   }): EndHandler {
     this.trace.startTime = dateToTimestamp(new Date());
     this.startHrTime = process.hrtime();
@@ -157,10 +159,8 @@ export class EngineReportingExtension<TContext = any>
     const { clientName, clientAddress, clientVersion } =
       (this.options.createClientInfo &&
         this.options.createClientInfo({
-          request: o.request,
-          queryString: o.queryString,
-          parsedQuery: o.parsedQuery,
-          variables: o.variables,
+          context: o.context,
+          extensions: o.extensions,
         })) ||
       ({} as ClientInfo);
     this.trace.clientName = clientName || '';

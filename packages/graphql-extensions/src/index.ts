@@ -81,6 +81,7 @@ export class GraphQLExtensionStack<TContext = any> {
     persistedQueryHit?: boolean;
     persistedQueryRegister?: boolean;
     context: TContext;
+    extensions?: Record<string, any>;
   }): EndHandler {
     return this.handleDidStart(
       ext => ext.requestDidStart && ext.requestDidStart(o),
