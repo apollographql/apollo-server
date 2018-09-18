@@ -355,8 +355,8 @@ addMockFunctionsToSchema({
 
    Creates the client information that is attached to the traces sent to the
    Apollo backend. The context field is the execution context passed to the
-   resolvers and the extensions field is the field provided in the request's
-   query, operationName, and variables. `ClientInfo` contains fields for
-   `clientName` and `clientVersion`, which can both be optional. The default
-   value copies the respective fields from the `extensions`'s `clientInfo`
-   field.
+   resolvers and the extensions field corresponds to the same value in the POST
+   body or GET parameters. `ClientInfo` contains fields for `clientName` and
+   `clientVersion`, which are both optional. The default generation copies the
+   respective fields from `extensions.clientInfo`. If `clientName` or
+   `clientVersion` is not present, the values are set to the empty string.

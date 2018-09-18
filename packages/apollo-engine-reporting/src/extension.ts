@@ -59,7 +59,8 @@ export class EngineReportingExtension<TContext = any>
     this.nodes.set(responsePathAsString(undefined), root);
     this.generateClientInfo =
       options.generateClientInfo ||
-      // Default to using the clientInfo field of the request
+      // Default to using the clientInfo field of the request's extensions, when
+      // the ClientInfo fields are undefined, we send the empty string
       (({ extensions }) => (extensions && extensions.clientInfo) || {});
   }
 
