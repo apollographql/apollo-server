@@ -302,6 +302,8 @@ export async function runHttpQuery(
         formatResponse: optionsObject.formatResponse,
 
         debug: optionsObject.debug,
+
+        queryExtensions: extensions,
       });
 
       // GET operations should only be queries (not mutations). We want to throw

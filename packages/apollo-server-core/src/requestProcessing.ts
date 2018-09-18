@@ -55,6 +55,7 @@ export interface GraphQLRequestOptions<TContext = any> {
   debug?: boolean;
 
   extensions?: Array<() => GraphQLExtension>;
+  queryExtensions?: Record<string, any>;
   tracing?: boolean;
   persistedQueries?: PersistedQueryOptions;
   cacheControl?: CacheControlExtensionOptions;
@@ -185,6 +186,7 @@ export class GraphQLRequestProcessor {
       queryString: request.query,
       operationName: request.operationName,
       variables: request.variables,
+      extensions: request.extensions,
       persistedQueryHit,
       persistedQueryRegister,
     });
