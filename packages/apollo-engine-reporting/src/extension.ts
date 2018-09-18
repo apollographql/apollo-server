@@ -107,7 +107,7 @@ export class EngineReportingExtension<TContext = any>
           // operation if it causes real performance issues.
           this.options.privateHeaders.includes(key.toLowerCase())
         ) {
-          break;
+          continue;
         }
 
         switch (key) {
