@@ -156,7 +156,10 @@ export class EngineReportingExtension<TContext = any>
       });
     }
 
-    const { clientName, clientAddress, clientVersion } =
+    // While clientAddress could be a part of the protobuf, we'll ignore it for
+    // now, since the backend does not group by it and Engine frontend will not
+    // support it in the short term
+    const { clientName, clientVersion } =
       (this.options.createClientInfo &&
         this.options.createClientInfo({
           context: o.context,
@@ -164,7 +167,6 @@ export class EngineReportingExtension<TContext = any>
         })) ||
       ({} as ClientInfo);
     this.trace.clientName = clientName || '';
-    this.trace.clientAddress = clientAddress || '';
     this.trace.clientVersion = clientVersion || '';
 
     return () => {

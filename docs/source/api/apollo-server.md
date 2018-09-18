@@ -354,5 +354,5 @@ addMockFunctionsToSchema({
 * createClientInfo?: (o: { request: Request, queryString?: string, parsedQuery?: DocumentNode, variables: Record<string, any>}) => ClientInfo;
 
    Creates the client information that is attached to the traces sent to the
-   Apollo backend. `ClientInfo` contains fields for `clientName`,
-   `clientVersion`, and `clientAddress`, which can all be optional.
+   Apollo backend. `ClientInfo` contains fields for `clientName` and
+   `clientVersion`, which can both be optional.
