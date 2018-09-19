@@ -165,6 +165,7 @@ The `applyMiddleware` method is provided by the `apollo-server-{integration}` pa
 The `applyMiddleware` method from `apollo-server-express` registration of middleware as shown in the example below:
 
 ```js
+const express = require('express');
 const { ApolloServer } = require('apollo-server-express');
 const { typeDefs, resolvers } = require('./schema');
 
@@ -174,6 +175,7 @@ const server = new ApolloServer({
   resolvers,
 });
 
+const app = express();
 // Additional middleware can be mounted at this point to run before Apollo.
 app.use('*', jwtCheck, requireAuth, checkScope);
 
@@ -344,3 +346,17 @@ addMockFunctionsToSchema({
    itself. Set this to false to disable. You can manually invoke 'stop()' and
    'sendReport()' on other signals if you'd like. Note that 'sendReport()'
    does not run synchronously so it cannot work usefully in an 'exit' handler.
+
+*  `maskErrorDetails`: boolean
+
+   Set to true to remove error details from the traces sent to Apollo's servers. Defaults to false.
+
+* generateClientInfo?: (o: { context: any, extensions?: Record<string, any>}) => ClientInfo;
+
+   Creates the client information that is attached to the traces sent to the
+   Apollo backend. The context field is the execution context passed to the
+   resolvers and the extensions field corresponds to the same value in the POST
+   body or GET parameters. `ClientInfo` contains fields for `clientName` and
+   `clientVersion`, which are both optional. The default generation copies the
+   respective fields from `extensions.clientInfo`. If `clientName` or
+   `clientVersion` is not present, the values are set to the empty string.

@@ -59,7 +59,7 @@ type Response {
   newTodo: String
 }
 
-type Query {
+type Mutation {
   addTodo(user: ID, todo: String): Response
 }
 ```
@@ -69,6 +69,12 @@ To implement your first mutation, follow the [... guide]().
 ### `Subscription` type
 
 The `Subscription` type defines entry points into Apollo server for the advanced use case of listening to events over a persistent connection. For more information, see the subscription section.
+
+```graphql
+type Subscription {
+  todoAdded: String
+}
+```
 
 ## Enum type
 
@@ -123,6 +129,20 @@ By default, each of the core scalar types can also be null. That is to say, they
 To override this default and specify that a type _must_ be defined, an exclamation mark (`!`) can be appended to a type to ensure the presence of the value in return results.  For example, a `String` which could not be missing a value would be identified as `String!`. If the resolver for a non-nullable field throws an error, then the error is propagated up to the parents on the resolver chain until either the root field or a nullable field is reached.
 
 Using the exclamation mark to declare a field as non-nullable simplifies the contract with the client, since clients will not have to check to see whether a field contains a value or not. However marking fields as non-nullable means that the field will always be a part of that type, which make it impossible to deprecate from an active schema. Removing a nullability check from a field makes a field optional. Existing client code would need to be made aware of this new requirement, and adjust their logic accordingly.
+
+```js
+const schema = gql`
+type Query {
+  genre: String!
+}
+`;
+
+const resolvers = {
+  Query: {
+    genre: () => 'FANTASY'
+  }
+}
+```
 
 ## Union type
 

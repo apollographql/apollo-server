@@ -60,10 +60,11 @@ export class ApolloServerBase {
   public graphqlPath: string = '/graphql';
   public requestOptions: Partial<GraphQLOptions<any>>;
 
-  private schema: GraphQLSchema;
   private context?: Context | ContextFunction;
   private engineReportingAgent?: EngineReportingAgent;
   private extensions: Array<() => GraphQLExtension>;
+
+  protected schema: GraphQLSchema;
   protected subscriptionServerOptions?: SubscriptionServerOptions;
   protected uploadsConfig?: FileUploadOptions;
 
