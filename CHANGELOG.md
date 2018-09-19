@@ -5,6 +5,17 @@ All of the packages in the `apollo-server` repo are released with the same versi
 ### vNEXT
 
 - Allow an optional function to resolve the `rootValue`, passing the `DocumentNode` AST to determine the value. [PR #1555](https://github.com/apollographql/apollo-server/pull/1555)
+
+### v2.1.0
+
+- Updated the google-cloud-functions package to handle null paths [PR #1674](https://github.com/apollographql/apollo-server/pull/1674)
+- Update link inside Authentication Docs [PR #1682](https://github.com/apollographql/apollo-server/pull/1682)
+- Provide ability to specify client info in traces [#1631](https://github.com/apollographql/apollo-server/pull/1631)
+- Fix making sure all headers are getting reported to Engine properly when using `privateHeaders` [PR #1689](https://github.com/apollographql/apollo-server/pull/1689)
+
+### v2.0.8
+
+- Reporting: Catch Error if JSON.Stringify Fails for Engine Trace [PR #1668](https://github.com/apollographql/apollo-server/pull/1668)
 - Core: Allow context to be passed to all GraphQLExtension methods. [PR #1547](https://github.com/apollographql/apollo-server/pull/1547)
 
 ### v2.0.7
