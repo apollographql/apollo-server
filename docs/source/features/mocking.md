@@ -39,7 +39,7 @@ Mocking logic simply looks at the type definitions and returns a string where a 
 In addition to a boolean, `mocks` can be an object that describes custom mocking logic, which is structured similarly to `resolvers` with a few extra features aimed at mocking. Namely `mocks` accepts functions for specific types in the schema that are called when that type is expected. The functions in `mocks` would be used when no resolver in `resolvers` is specified. In this example `hello` will return `'Hello'` and `resolved` will return `'Resolved'`.
 
 ```js line=16-20
-const { ApolloServer } = require('apollo-server');
+const { ApolloServer, gql } = require('apollo-server');
 
 const typeDefs = gql`
 type Query {
@@ -64,6 +64,7 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
   mocks,
+  mockEntireSchema: false
 });
 
 server.listen().then(({ url }) => {
@@ -148,7 +149,7 @@ For some more background and flavor on this approach, read the ["Mocking your se
 The default behavior for mocks is to overwrite the resolvers already present in the schema. To keep the existing resolvers, set the `mockEntireSchema` field to false.
 
 ```js line=26
-const { ApolloServer } = require('apollo-server');
+const { ApolloServer, gql } = require('apollo-server');
 
 const typeDefs = gql`
 type Query {
