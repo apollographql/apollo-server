@@ -88,18 +88,21 @@ export interface EngineReportingOptions {
   sendReportsImmediately?: boolean;
   // To remove the error message from traces, set this to true. Defaults to false
   maskErrorDetails?: boolean;
-  // Creates the client information attached to the traces sent to the Apollo
-  // backend
+
+  /**
+   * (Experimental) Creates the client information for operation traces.
+   *
+   * @remarks This is experimental and subject to change or removal.
+   *
+   * @private
+   *
+   */
   generateClientInfo?: (
     o: {
       context: any;
       extensions?: Record<string, any>;
     },
   ) => ClientInfo;
-
-  // XXX Provide a way to set client_name, client_version, client_address,
-  // service, and service_version fields. They are currently not revealed in the
-  // Engine frontend app.
 }
 
 const REPORT_HEADER = new ReportHeader({
