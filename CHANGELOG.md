@@ -4,6 +4,8 @@ All of the packages in the `apollo-server` repo are released with the same versi
 
 ### vNEXT
 
+- Follow-up on the work in [PR #1516](https://github.com/apollographql/apollo-server/pull/1516) to also fix missing insertion cursor/caret when a custom GraphQL configuration is specified which doesn't specify its own `cursorShape` property. [PR #1607](https://github.com/apollographql/apollo-server/pull/1607)
+
 ### v2.1.0
 
 - Updated the google-cloud-functions package to handle null paths [PR #1674](https://github.com/apollographql/apollo-server/pull/1674)
