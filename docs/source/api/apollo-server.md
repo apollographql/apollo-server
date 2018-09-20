@@ -53,6 +53,21 @@ new ApolloServer({
 });
 ```
 
+  * `rootValue`: <`Any`> | <`Function`>
+
+    A value or function called with the parsed `Document`, creating the root value passed to the graphql executor. The function is useful if you wish to provide a different root value based on the query operation type.
+
+```js
+new ApolloServer({
+  typeDefs,
+  resolvers,
+  rootValue: (documentAST) => ({
+    const op = getOperationAST(documentNode)
+    return op === 'mutation' ? mutationRoot : queryRoot;
+  })
+});
+```
+
 * `mocks`: <`Object`> | <`Boolean`>
 
   A boolean enabling the default mocks or object that contains definitions
@@ -350,13 +365,3 @@ addMockFunctionsToSchema({
 *  `maskErrorDetails`: boolean
 
    Set to true to remove error details from the traces sent to Apollo's servers. Defaults to false.
-
-* generateClientInfo?: (o: { context: any, extensions?: Record<string, any>}) => ClientInfo;
-
-   Creates the client information that is attached to the traces sent to the
-   Apollo backend. The context field is the execution context passed to the
-   resolvers and the extensions field corresponds to the same value in the POST
-   body or GET parameters. `ClientInfo` contains fields for `clientName` and
-   `clientVersion`, which are both optional. The default generation copies the
-   respective fields from `extensions.clientInfo`. If `clientName` or
-   `clientVersion` is not present, the values are set to the empty string.
