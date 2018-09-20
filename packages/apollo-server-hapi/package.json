@@ -36,7 +36,7 @@
     "apollo-server-core": "file:../apollo-server-core",
     "boom": "^7.1.0",
     "graphql-subscriptions": "^0.5.8",
-    "graphql-tools": "^3.0.4"
+    "graphql-tools": "^4.0.0"
   },
   "devDependencies": {
     "apollo-server-integration-testsuite": "file:../apollo-server-integration-testsuite"
