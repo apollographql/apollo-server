@@ -39,7 +39,7 @@
     "apollo-server-errors": "file:../apollo-server-errors",
     "apollo-tracing": "file:../apollo-tracing",
     "graphql-extensions": "file:../graphql-extensions",
-    "graphql-subscriptions": "^0.5.8",
+    "graphql-subscriptions": "^1.0.0",
     "graphql-tag": "^2.9.2",
     "graphql-tools": "^4.0.0",
     "hash.js": "^1.1.3",
