@@ -46,7 +46,7 @@ export interface GraphQLRequest {
 export interface GraphQLRequestOptions<TContext = any> {
   schema: GraphQLSchema;
 
-  rootValue?: any;
+  rootValue?: ((parsedQuery: DocumentNode) => any) | any;
   context: TContext;
 
   validationRules?: ValidationRule[];
@@ -294,7 +294,10 @@ export class GraphQLRequestProcessor {
     const executionArgs: ExecutionArgs = {
       schema: this.options.schema,
       document,
-      rootValue: this.options.rootValue,
+      rootValue:
+        typeof this.options.rootValue === 'function'
+          ? this.options.rootValue(document)
+          : this.options.rootValue,
       contextValue: this.options.context,
       variableValues: variables,
       operationName,
