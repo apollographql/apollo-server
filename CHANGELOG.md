@@ -4,6 +4,8 @@ All of the packages in the `apollo-server` repo are released with the same versi
 
 ### vNEXT
 
+- Follow-up on the work in [PR #1516](https://github.com/apollographql/apollo-server/pull/1516) to also fix missing insertion cursor/caret when a custom GraphQL configuration is specified which doesn't specify its own `cursorShape` property. [PR #1607](https://github.com/apollographql/apollo-server/pull/1607)
+
 ### v2.1.0
 
 - Updated the google-cloud-functions package to handle null paths [PR #1674](https://github.com/apollographql/apollo-server/pull/1674)
@@ -28,7 +30,6 @@ All of the packages in the `apollo-server` repo are released with the same versi
 - Update `graphql-playground-html` to 1.7.4 [#1586](https://github.com/apollographql/apollo-server/pull/1586)
 - Add support for `graphql-js` v14 by augmenting typeDefs with the `@cacheControl` directive so SDL validation doesn't fail [#1595](https://github.com/apollographql/apollo-server/pull/1595)
 - Add `node-fetch` extensions typing to `RequestInit` [#1602](https://github.com/apollographql/apollo-server/pull/1602)
-- Fix missing insertion cursor/caret by explicitly defining `cursorShape: "line"` in the default configuration for GraphQL Playground.
 
 ### v2.0.5
 
