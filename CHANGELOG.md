@@ -5,13 +5,14 @@ All of the packages in the `apollo-server` repo are released with the same versi
 ### vNEXT
 
 - Allow an optional function to resolve the `rootValue`, passing the `DocumentNode` AST to determine the value. [PR #1555](https://github.com/apollographql/apollo-server/pull/1555)
+- Follow-up on the work in [PR #1516](https://github.com/apollographql/apollo-server/pull/1516) to also fix missing insertion cursor/caret when a custom GraphQL configuration is specified which doesn't specify its own `cursorShape` property. [PR #1607](https://github.com/apollographql/apollo-server/pull/1607)
 
 ### v2.1.0
 
 - Updated the google-cloud-functions package to handle null paths [PR #1674](https://github.com/apollographql/apollo-server/pull/1674)
 - Update link inside Authentication Docs [PR #1682](https://github.com/apollographql/apollo-server/pull/1682)
-- Provide ability to specify client info in traces [#1631](https://github.com/apollographql/apollo-server/pull/1631)
 - Fix making sure all headers are getting reported to Engine properly when using `privateHeaders` [PR #1689](https://github.com/apollographql/apollo-server/pull/1689)
+- _(experimental, subject to change/removal)_ Provide ability to specify client info in traces [#1631](https://github.com/apollographql/apollo-server/pull/1631)
 
 ### v2.0.8
 

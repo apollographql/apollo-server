@@ -27,6 +27,7 @@ export const defaultPlaygroundOptions = {
   settings: {
     'general.betaUpdates': false,
     'editor.theme': 'dark' as Theme,
+    'editor.cursorShape': 'line',
     'editor.reuseHeaders': true,
     'tracing.hideTracingResponse': true,
     'editor.fontSize': 14,
