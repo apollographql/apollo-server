@@ -1,5 +1,5 @@
-import * as express from 'express';
-import * as corsMiddleware from 'cors';
+import express from 'express';
+import corsMiddleware from 'cors';
 import { json, OptionsJson } from 'body-parser';
 import {
   renderPlaygroundPage,
@@ -11,8 +11,8 @@ import {
   ApolloServerBase,
   formatApolloErrors,
 } from 'apollo-server-core';
-import * as accepts from 'accepts';
-import * as typeis from 'type-is';
+import accepts from 'accepts';
+import typeis from 'type-is';
 
 import { graphqlExpress } from './expressApollo';
 

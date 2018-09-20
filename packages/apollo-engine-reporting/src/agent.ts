@@ -1,4 +1,4 @@
-import * as os from 'os';
+import os from 'os';
 import { gzip } from 'zlib';
 import { DocumentNode } from 'graphql';
 import {
@@ -9,7 +9,7 @@ import {
 } from 'apollo-engine-reporting-protobuf';
 
 import { fetch, Response } from 'apollo-server-env';
-import * as retry from 'async-retry';
+import retry from 'async-retry';
 
 import { EngineReportingExtension } from './extension';
 

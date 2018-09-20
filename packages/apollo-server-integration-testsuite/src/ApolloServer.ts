@@ -1,6 +1,6 @@
 /* tslint:disable:no-unused-expression */
-import * as http from 'http';
-import * as net from 'net';
+import http from 'http';
+import net from 'net';
 import { sha256 } from 'js-sha256';
 import express = require('express');
 import bodyParser = require('body-parser');
@@ -19,7 +19,7 @@ import {
 
 import { PubSub } from 'graphql-subscriptions';
 import { SubscriptionClient } from 'subscriptions-transport-ws';
-import * as WebSocket from 'ws';
+import WebSocket from 'ws';
 
 import { execute } from 'apollo-link';
 import { createHttpLink } from 'apollo-link-http';

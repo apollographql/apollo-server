@@ -7,7 +7,7 @@ if (NODE_MAJOR_VERSION < 8) {
   return;
 }
 
-import * as hapi from 'hapi';
+import hapi from 'hapi';
 import { ApolloServer } from '../ApolloServer';
 import { Config } from 'apollo-server-core';
 
