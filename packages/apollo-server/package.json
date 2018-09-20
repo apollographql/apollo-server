@@ -29,7 +29,7 @@
     "apollo-server-core": "file:../apollo-server-core",
     "apollo-server-express": "file:../apollo-server-express",
     "express": "^4.0.0",
-    "graphql-subscriptions": "^0.5.8",
+    "graphql-subscriptions": "^1.0.0",
     "graphql-tools": "^4.0.0"
   },
   "peerDependencies": {

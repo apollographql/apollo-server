@@ -86,7 +86,7 @@
     "fibers": "3.0.0",
     "form-data": "2.3.2",
     "graphql": "14.0.2",
-    "graphql-subscriptions": "0.5.8",
+    "graphql-subscriptions": "1.0.0",
     "graphql-tag": "2.9.2",
     "graphql-tools": "4.0.0",
     "hapi": "17.5.4",

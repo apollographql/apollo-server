@@ -41,7 +41,7 @@
     "apollo-server-core": "file:../apollo-server-core",
     "body-parser": "^1.18.3",
     "cors": "^2.8.4",
-    "graphql-subscriptions": "^0.5.8",
+    "graphql-subscriptions": "^1.0.0",
     "graphql-tools": "^4.0.0",
     "type-is": "^1.6.16"
   },
