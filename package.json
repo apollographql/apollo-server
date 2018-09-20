@@ -67,7 +67,7 @@
     "@types/hapi": "17.0.19",
     "@types/jest": "23.3.2",
     "@types/koa-multer": "1.0.0",
-    "@types/koa-router": "7.0.31",
+    "@types/koa-router": "7.0.32",
     "@types/lodash": "4.14.116",
     "@types/lru-cache": "4.1.1",
     "@types/memcached": "2.2.5",
@@ -115,7 +115,7 @@
     "tslint": "5.11.0",
     "typescript": "3.0.3",
     "ws": "6.0.0",
-    "yup": "0.26.6"
+    "yup": "0.26.5"
   },
   "jest": {
     "testEnvironment": "node",
