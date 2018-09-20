@@ -402,6 +402,7 @@ export async function runHttpQuery(
           : false,
         request: request.request,
         extensions: optionsObject.extensions,
+        queryExtensions: extensions,
         persistedQueryHit,
         persistedQueryRegister,
       };

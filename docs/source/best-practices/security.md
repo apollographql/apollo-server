@@ -16,6 +16,12 @@ Therefore, Apollo Server introspection is automatically disabled when the `NODE_
 
 Of course, no system should rely solely on so-called "security through obscurity" and this practice should be combined with other security techniques like open security and security by design.
 
+<h2 id="ssl">Securing with SSL/TLS</h2>
+
+You can secure all communication between the clients and your GraphQL server by using SSL/TLS. Apollo Server, with subscriptions, can be configured to use the `https` module with `apollo-server-express`. See [example server code](../essentials/server.html#ssl).
+
+Alternatively, you can use a reverse proxy solution like [NGINX](https://www.nginx.com/) or [Traefik](https://traefik.io/). An additional benefit of using Traefik is that you can use a free [Let's Encrypt SSL certificate](http://niels.nu/blog/2017/traefik-https-letsencrypt.html).
+
 <h2 id="injection">Injection prevention</h2>
 
 As we build out our schema, it may be tempting to allow for shortcut arguments to creep in which have security risks. This most commonly happens on filters and on mutation inputs:
