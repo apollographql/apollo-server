@@ -2,6 +2,7 @@ import { GraphQLSchema, DocumentNode } from 'graphql';
 import { SchemaDirectiveVisitor, IResolvers, IMocks } from 'graphql-tools';
 import { ConnectionContext } from 'subscriptions-transport-ws';
 import * as WebSocket from 'ws';
+import { IMiddleware, IMiddlewareGenerator } from 'graphql-middleware';
 import { GraphQLExtension } from 'graphql-extensions';
 export { GraphQLExtension } from 'graphql-extensions';
 
@@ -35,7 +36,11 @@ export interface SubscriptionServerOptions {
 
 // This configuration is shared between all integrations and should include
 // fields that are not specific to a single integration
-export interface Config
+export interface Config<
+  TFieldMiddlewareSource = any,
+  TFieldMiddlewareContext = any,
+  TFieldMiddlewareArgs = any
+>
   extends Pick<
       GraphQLOptions<Context<any>>,
       | 'formatError'
@@ -57,6 +62,17 @@ export interface Config
   introspection?: boolean;
   mocks?: boolean | IMocks;
   mockEntireSchema?: boolean;
+  middlewares?: (
+    | IMiddleware<
+        TFieldMiddlewareSource,
+        TFieldMiddlewareContext,
+        TFieldMiddlewareArgs
+      >
+    | IMiddlewareGenerator<
+        TFieldMiddlewareSource,
+        TFieldMiddlewareContext,
+        TFieldMiddlewareArgs
+      >)[];
   engine?: boolean | EngineReportingOptions;
   extensions?: Array<() => GraphQLExtension>;
   persistedQueries?: PersistedQueryOptions | false;
