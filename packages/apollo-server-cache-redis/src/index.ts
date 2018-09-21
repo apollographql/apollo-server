@@ -1,7 +1,7 @@
 import { KeyValueCache } from 'apollo-server-caching';
-import * as Redis from 'redis';
+import Redis from 'redis';
 import { promisify } from 'util';
-import * as DataLoader from 'dataloader';
+import DataLoader from 'dataloader';
 
 export class RedisCache implements KeyValueCache {
   // FIXME: Replace any with proper promisified type
