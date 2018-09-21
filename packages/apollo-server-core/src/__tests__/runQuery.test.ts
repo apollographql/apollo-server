@@ -8,6 +8,7 @@ import {
   GraphQLInt,
   GraphQLNonNull,
   parse,
+  DocumentNode,
 } from 'graphql';
 
 import { runQuery } from '../runQuery';
@@ -169,6 +170,22 @@ describe('runQuery', () => {
       schema,
       queryString: query,
       rootValue: 'it also',
+      request: new MockReq(),
+    }).then(res => {
+      expect(res.data).toEqual(expected);
+    });
+  });
+
+  it('correctly evaluates a rootValue function', () => {
+    const query = `{ testRootValue }`;
+    const expected = { testRootValue: 'it also works' };
+    return runQuery({
+      schema,
+      queryString: query,
+      rootValue: (doc: DocumentNode) => {
+        expect(doc.kind).toEqual('Document');
+        return 'it also';
+      },
       request: new MockReq(),
     }).then(res => {
       expect(res.data).toEqual(expected);

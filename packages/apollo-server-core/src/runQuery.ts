@@ -52,7 +52,7 @@ export interface QueryOptions {
   // a mutation), throw this error.
   nonQueryError?: Error;
 
-  rootValue?: any;
+  rootValue?: ((parsedQuery: DocumentNode) => any) | any;
   context?: any;
   variables?: { [key: string]: any };
   operationName?: string;
@@ -68,6 +68,7 @@ export interface QueryOptions {
   cacheControl?: boolean | CacheControlExtensionOptions;
   request: Pick<Request, 'url' | 'method' | 'headers'>;
   extensions?: Array<() => GraphQLExtension>;
+  queryExtensions?: Record<string, any>;
   persistedQueryHit?: boolean;
   persistedQueryRegister?: boolean;
 }
@@ -144,6 +145,7 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
     persistedQueryHit: options.persistedQueryHit,
     persistedQueryRegister: options.persistedQueryRegister,
     context,
+    extensions: options.queryExtensions,
   });
   return Promise.resolve()
     .then(
@@ -228,7 +230,10 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
         const executionArgs: ExecutionArgs = {
           schema: options.schema,
           document: documentAST,
-          rootValue: options.rootValue,
+          rootValue:
+            typeof options.rootValue === 'function'
+              ? options.rootValue(documentAST)
+              : options.rootValue,
           contextValue: context,
           variableValues: options.variables,
           operationName: options.operationName,

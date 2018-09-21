@@ -1,10 +1,10 @@
-import * as Koa from 'koa';
+import Koa from 'koa';
 
-import * as http from 'http';
+import http from 'http';
 
-import * as request from 'request';
-import * as FormData from 'form-data';
-import * as fs from 'fs';
+import request from 'request';
+import FormData from 'form-data';
+import fs from 'fs';
 import { createApolloFetch } from 'apollo-fetch';
 
 import { gql, AuthenticationError, Config } from 'apollo-server-core';

@@ -1,14 +1,14 @@
-import * as Koa from 'koa';
-import * as corsMiddleware from '@koa/cors';
-import * as bodyParser from 'koa-bodyparser';
-import * as compose from 'koa-compose';
+import Koa from 'koa';
+import corsMiddleware from '@koa/cors';
+import bodyParser from 'koa-bodyparser';
+import compose from 'koa-compose';
 import {
   renderPlaygroundPage,
   RenderPageOptions as PlaygroundRenderPageOptions,
 } from '@apollographql/graphql-playground-html';
 import { ApolloServerBase, formatApolloErrors } from 'apollo-server-core';
-import * as accepts from 'accepts';
-import * as typeis from 'type-is';
+import accepts from 'accepts';
+import typeis from 'type-is';
 
 import { graphqlKoa } from './koaApollo';
 

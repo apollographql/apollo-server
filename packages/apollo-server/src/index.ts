@@ -2,9 +2,9 @@
 // an express app for you instead of applyMiddleware (which you might not even
 // use with express). The dependency is unused otherwise, so don't worry if
 // you're not using express or your version doesn't quite match up.
-import * as express from 'express';
-import * as http from 'http';
-import * as net from 'net';
+import express from 'express';
+import http from 'http';
+import net from 'net';
 import {
   ApolloServer as ApolloServerBase,
   CorsOptions,

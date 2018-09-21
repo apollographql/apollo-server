@@ -154,9 +154,9 @@ import express from 'express'
 import { ApolloServer } from 'apollo-server-express'
 import typeDefs from './graphql/schema'
 import resolvers from './graphql/resolvers'
-import * as fs from 'fs'
-import * as https from 'https'
-import * as http from 'http'
+import fs from 'fs'
+import https from 'https'
+import http from 'http'
 
 const configurations = {
   // Note: You may need sudo to run on port 443

@@ -4,7 +4,7 @@ import {
   convertNodeHttpToRequest,
 } from 'apollo-server-core';
 import { send, json, RequestHandler } from 'micro';
-import * as url from 'url';
+import url from 'url';
 import { IncomingMessage, ServerResponse } from 'http';
 
 import { MicroRequest } from './types';

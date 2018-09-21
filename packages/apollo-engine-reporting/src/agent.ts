@@ -1,4 +1,4 @@
-import * as os from 'os';
+import os from 'os';
 import { gzip } from 'zlib';
 import { DocumentNode } from 'graphql';
 import {
@@ -9,7 +9,7 @@ import {
 } from 'apollo-engine-reporting-protobuf';
 
 import { fetch, Response } from 'apollo-server-env';
-import * as retry from 'async-retry';
+import retry from 'async-retry';
 
 import { EngineReportingExtension } from './extension';
 
@@ -33,6 +33,11 @@ Traces.encode = function(message, originalWriter) {
   }
   return writer;
 };
+
+export interface ClientInfo {
+  clientName?: string;
+  clientVersion?: string;
+}
 
 export interface EngineReportingOptions {
   // API key for the service. Get this from
@@ -84,9 +89,20 @@ export interface EngineReportingOptions {
   // To remove the error message from traces, set this to true. Defaults to false
   maskErrorDetails?: boolean;
 
-  // XXX Provide a way to set client_name, client_version, client_address,
-  // service, and service_version fields. They are currently not revealed in the
-  // Engine frontend app.
+  /**
+   * (Experimental) Creates the client information for operation traces.
+   *
+   * @remarks This is experimental and subject to change or removal.
+   *
+   * @private
+   *
+   */
+  generateClientInfo?: (
+    o: {
+      context: any;
+      extensions?: Record<string, any>;
+    },
+  ) => ClientInfo;
 }
 
 const REPORT_HEADER = new ReportHeader({
@@ -214,11 +230,11 @@ export class EngineReportingAgent<TContext = any> {
         message.byteOffset,
         message.byteLength,
       );
-      gzip(messageBuffer, (err, compressed) => {
+      gzip(messageBuffer, (err, gzipResult) => {
         if (err) {
           reject(err);
         } else {
-          resolve(compressed);
+          resolve(gzipResult);
         }
       });
     });
@@ -232,7 +248,7 @@ export class EngineReportingAgent<TContext = any> {
       // Retry on network errors and 5xx HTTP
       // responses.
       async () => {
-        const response = await fetch(endpointUrl, {
+        const curResponse = await fetch(endpointUrl, {
           method: 'POST',
           headers: {
             'user-agent': 'apollo-engine-reporting',
@@ -242,10 +258,10 @@ export class EngineReportingAgent<TContext = any> {
           body: compressed,
         });
 
-        if (response.status >= 500 && response.status < 600) {
-          throw new Error(`${response.status}: ${response.statusText}`);
+        if (curResponse.status >= 500 && curResponse.status < 600) {
+          throw new Error(`${curResponse.status}: ${curResponse.statusText}`);
         } else {
-          return response;
+          return curResponse;
         }
       },
       {
