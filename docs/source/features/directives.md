@@ -28,7 +28,7 @@ GraphQL provides several default directives: [`@deprecated`](http://facebook.git
 
 ## Using custom schema directives
 
-To use a custom schema directive, pass the implemented class to Apollo server via the `schemaDirectives` argument, which is an object that maps directive names to directive implementations:
+To use a custom schema directive, pass the implemented class to Apollo Server via the `schemaDirectives` argument, which is an object that maps directive names to directive implementations:
 
 ```js
 const { ApolloServer, gql, SchemaDirectiveVisitor } = require('apollo-server');
