@@ -32,7 +32,7 @@ To use a custom schema directive, pass the implemented class to Apollo server vi
 
 ```js
 const { ApolloServer, gql, SchemaDirectiveVisitor } = require('apollo-server');
-const { defaultFieldResolver } = require("graphql");
+const { defaultFieldResolver } = require('graphql');
 
 // Create (or import) a custom schema directive
 class UpperCaseDirective extends SchemaDirectiveVisitor {
@@ -40,7 +40,7 @@ class UpperCaseDirective extends SchemaDirectiveVisitor {
     const { resolve = defaultFieldResolver } = field;
     field.resolve = async function (...args) {
       const result = await resolve.apply(this, args);
-      if (typeof result === "string") {
+      if (typeof result === 'string') {
         return result.toUpperCase();
       }
       return result;
