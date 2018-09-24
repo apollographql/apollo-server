@@ -63,7 +63,7 @@ export interface Config
   subscriptions?: Partial<SubscriptionServerOptions> | string | false;
   //https://github.com/jaydenseric/apollo-upload-server#options
   uploads?: boolean | FileUploadOptions;
-  playground?: PlaygroundConfig | undefined;
+  playground?: PlaygroundConfig;
 }
 
 export interface FileUploadOptions {
