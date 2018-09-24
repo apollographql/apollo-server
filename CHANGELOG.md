@@ -212,7 +212,7 @@ ListenOptions:
 
 ### v1.3.0
 
-- **Breaking:** `apollo-server-hapi`: now supports Hapi v17, and no longer supports Hapi v16. (We intend to release a new `apollo-server-hapi16` for users still on Hapi v16.)
+- **Breaking:** `apollo-server-hapi`: now supports Hapi v17, and no longer supports Hapi v16.  For information on running Apollo Server 1.x with Hapi v16, [check this documentation](https://www.apollographql.com/docs/apollo-server/v1/servers/hapi.html#Hapi-16).
 - **New package**: `apollo-server-adonis` supporting the Adonis framework!
 - The `graphqlOptions` parameter to server GraphQL integration functions now accepts context as a function and as an object with a prototype. [PR #679](https://github.com/apollographql/apollo-server/pull/679)
 - `apollo-server-express`: Send Content-Length header.
