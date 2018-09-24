@@ -36,7 +36,7 @@ export const defaultPlaygroundOptions = {
 };
 
 export function createPlaygroundOptions(
-  playground: PlaygroundConfig,
+  playground: PlaygroundConfig | undefined,
 ): PlaygroundRenderPageOptions | undefined {
   const isDev = process.env.NODE_ENV !== 'production';
   const enabled: boolean =
