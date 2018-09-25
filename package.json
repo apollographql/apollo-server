@@ -133,11 +133,6 @@
       "/node_modules/",
       "/dist/"
     ],
-    "clearMocks": true,
-    "globals": {
-      "ts-jest": {
-        "skipBabel": true
-      }
-    }
+    "clearMocks": true
   }
 }

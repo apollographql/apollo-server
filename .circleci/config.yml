@@ -40,6 +40,7 @@ common_test_steps: &common_test_steps
           # npm ci actually removes node_modules before installing to guarantee a clean slate.
           - ~/.npm
     - run: npm run test:ci
+    - run: npm run coverage:upload
 
 # Important! When adding a new job to `jobs`, make sure to define when it
 # executes by also adding it to the `workflows` section below!
