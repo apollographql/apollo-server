@@ -7,20 +7,17 @@
     "url": "git+https://github.com/apollographql/apollo-server.git"
   },
   "scripts": {
-    "postinstall": "lerna run prepare",
+    "clean": "git clean -dfqX **/{dist,node_modules}/",
     "compile": "lerna run compile",
-
+    "release": "npm run clean && npm ci && lerna publish --exact",
+    "precommit": "lint-staged",
+    "postinstall": "lerna run prepare",
     "lint": "prettier-check '**/*.{js,ts}'",
     "lint-fix": "prettier '**/*.{js,ts}' --write",
-
     "test": "jest --verbose",
     "posttest": "npm run lint",
     "testonly": "npm test",
-    "test:watch": "npm test -- --watch",
-    "test:ci": "npm test -- --ci --maxWorkers=2",
-    "release": "npm run clean && npm ci && lerna publish --exact",
-    "precommit": "lint-staged",
-    "clean": "git clean -dfqX **/{dist,node_modules}/"
+    "test:ci": "npm test -- --ci --maxWorkers=2"
   },
   "lint-staged": {
     "*.ts": [
