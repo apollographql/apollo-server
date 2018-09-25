@@ -20,7 +20,7 @@
     "test:ci": "npm test -- --ci --maxWorkers=2",
     "release": "npm run clean && npm ci && lerna publish --exact",
     "precommit": "lint-staged",
-    "clean": "find . -name \"node_modules\" -exec rm -rf '{}' + && find . -name \"dist\" -exec rm -rf '{}' +"
+    "clean": "git clean -dfqX **/{dist,node_modules}/"
   },
   "lint-staged": {
     "*.ts": [
