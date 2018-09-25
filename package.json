@@ -9,8 +9,10 @@
   "scripts": {
     "postinstall": "lerna run prepare",
     "compile": "lerna run compile",
-    "lint": "prettier-check --ignore-path .gitignore \"{docs/{,source/**},.,packages/**,test}/{*.js,*.ts}\"",
-    "lint-fix": "prettier --write --ignore-path .gitignore \"{docs/{,source/**},.,packages/**,test}/{*.js,*.ts}\"",
+
+    "lint": "prettier-check '**/*.{js,ts}'",
+    "lint-fix": "prettier '**/*.{js,ts}' --write",
+
     "test": "jest --verbose",
     "posttest": "npm run lint",
     "testonly": "npm test",
