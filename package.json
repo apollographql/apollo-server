@@ -2,10 +2,7 @@
   "name": "apollo-server-monorepo",
   "private": true,
   "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/apollographql/apollo-server.git"
-  },
+  "repository": "github:apollographql/apollo-server",
   "scripts": {
     "clean": "git clean -dfqX **/{dist,node_modules}/",
     "compile": "lerna run compile",
