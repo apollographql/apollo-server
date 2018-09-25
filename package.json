@@ -14,7 +14,9 @@
     "test": "jest --verbose",
     "posttest": "npm run lint",
     "testonly": "npm test",
-    "test:ci": "npm test -- --ci --maxWorkers=2"
+    "test:ci": "npm run coverage -- --ci --maxWorkers=2",
+    "coverage": "npm test -- --coverage",
+    "coverage:upload": "codecov"
   },
   "lint-staged": {
     "*.ts": [
@@ -76,6 +78,7 @@
     "apollo-link-http": "1.5.5",
     "apollo-link-persisted-queries": "0.2.1",
     "body-parser": "1.18.3",
+    "codecov": "^3.1.0",
     "connect": "3.6.6",
     "express": "4.16.3",
     "fibers": "3.0.0",
