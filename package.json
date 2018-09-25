@@ -63,7 +63,7 @@
     "@types/body-parser": "1.17.0",
     "@types/connect": "3.4.32",
     "@types/fibers": "0.0.30",
-    "@types/graphql": "14.0.0",
+    "@types/graphql": "14.0.1",
     "@types/hapi": "17.0.19",
     "@types/jest": "23.3.2",
     "@types/koa-multer": "1.0.0",
