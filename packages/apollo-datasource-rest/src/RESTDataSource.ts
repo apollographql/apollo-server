@@ -55,6 +55,9 @@ export abstract class RESTDataSource<TContext = any> extends DataSource {
 
   baseURL?: string;
 
+  // Set the default Content-Type for json responses to 'application/json'
+  jsonContentType: string = 'application/json';
+
   // By default, we use the full request URL as the cache key.
   // You can override this to remove query parameters or compute a cache key in any way that makes sense.
   // For example, you could use this to take Vary header fields into account.
@@ -104,8 +107,7 @@ export abstract class RESTDataSource<TContext = any> extends DataSource {
 
   protected parseBody(response: Response): Promise<object | string> {
     const contentType = response.headers.get('Content-Type');
-    const applicationJsonRegEx = /^application\/(\S*\+)?json/;
-    if (contentType && applicationJsonRegEx.test(contentType)) {
+    if (contentType && contentType.startsWith(this.jsonContentType)) {
       return response.json();
     } else {
       return response.text();

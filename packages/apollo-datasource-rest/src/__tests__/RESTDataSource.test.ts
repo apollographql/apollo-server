@@ -396,6 +396,8 @@ describe('RESTDataSource', () => {
       const dataSource = new class extends RESTDataSource {
         baseURL = 'https://api.example.com';
 
+        jsonContentType = 'application/vnd.api+json';
+
         getFoo() {
           return this.get('foo');
         }
