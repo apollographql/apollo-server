@@ -1,6 +1,7 @@
 import micro from 'micro';
 import listen from 'test-listen';
 import { createApolloFetch } from 'apollo-fetch';
+import { atLeastMajorNodeVersion } from 'apollo-server-integration-testsuite';
 import { gql } from 'apollo-server-core';
 import FormData from 'form-data';
 import fs from 'fs';
@@ -145,13 +146,12 @@ describe('apollo-server-micro', function() {
       });
     });
 
-    describe('file uploads', function() {
+    (
+      atLeastMajorNodeVersion(10)
+      ? describe.skip
+      : describe
+    )('file uploads', function() {
       it('should handle file uploads', async function() {
-        // XXX This is currently a failing test for node 10
-        const NODE_VERSION = process.version.split('.');
-        const NODE_MAJOR_VERSION = parseInt(NODE_VERSION[0].replace(/^v/, ''));
-        if (NODE_MAJOR_VERSION === 10) return;
-
         const apolloServer = new ApolloServer({
           typeDefs: gql`
             type File {

@@ -1,14 +1,5 @@
-const NODE_VERSION = process.version.split('.');
-const NODE_MAJOR_VERSION = parseInt(NODE_VERSION[0].replace(/^v/, ''));
-
-// Skip hapi tests for unsupported versions of node
-if (NODE_MAJOR_VERSION < 8) {
-  it('does not run for node versions < 8', () => {});
-  return;
-}
-
-import { Server } from 'hapi';
 import {
+  atLeastMajorNodeVersion,
   testApolloServer,
   createServerInfo,
 } from 'apollo-server-integration-testsuite';
@@ -24,11 +15,18 @@ import { ApolloServer } from '../ApolloServer';
 
 const port = 5555;
 
-describe('apollo-server-hapi', () => {
+// NODE: Intentionally skip for Node.js < 8 since Hapi 17 doesn't support those.
+(
+  atLeastMajorNodeVersion(8)
+  ? describe
+  : describe.skip
+)('apollo-server-hapi', () => {
   let server: ApolloServer;
 
-  let app: Server;
+  let app: import('hapi').Server;
   let httpServer: http.Server;
+
+  const { Server } = require('hapi');
 
   testApolloServer(
     async options => {

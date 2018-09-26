@@ -23,6 +23,14 @@ import gql from 'graphql-tag';
 
 export * from './ApolloServer';
 
+const NODE_MAJOR_VERSION: number = parseInt(
+  process.versions.node.split('.', 1)[0],
+  10,
+);
+export function atLeastMajorNodeVersion(desiredVersion: number): boolean {
+  return NODE_MAJOR_VERSION >= desiredVersion;
+}
+
 const QueryRootType = new GraphQLObjectType({
   name: 'QueryRoot',
   fields: {
