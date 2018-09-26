@@ -37,6 +37,7 @@ Traces.encode = function(message, originalWriter) {
 export interface ClientInfo {
   clientName?: string;
   clientVersion?: string;
+  clientId?: string;
 }
 
 export interface EngineReportingOptions {

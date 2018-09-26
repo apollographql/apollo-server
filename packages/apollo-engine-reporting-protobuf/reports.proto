@@ -152,6 +152,7 @@ message Trace {
 	string client_name = 7;
 	string client_version = 8;
 	string client_address = 9;
+	string client_id = 23;
 
 	HTTP http = 10;
 
