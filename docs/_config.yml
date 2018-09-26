@@ -35,6 +35,7 @@ sidebar_categories:
     - deployment/heroku
     - deployment/lambda
     - deployment/now
+    - deployment/netlify
   Related Guides:
     - title: Monitoring
       href: https://www.apollographql.com/docs/guides/monitoring.html
