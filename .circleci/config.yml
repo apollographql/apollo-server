@@ -48,6 +48,8 @@ jobs:
   # Platform tests, each with the same tests but different platform or version.
   # The docker tag represents the Node.js version and the full list is available
   # at https://hub.docker.com/r/circleci/node/.
+
+  # NODE: Note certain tests are currently being skipped for Node.js 6.
   Node.js 6:
     docker: [{ image: 'circleci/node:6' }]
     <<: *common_test_steps
@@ -56,6 +58,7 @@ jobs:
     docker: [{ image: 'circleci/node:8' }]
     <<: *common_test_steps
 
+  # NODE: Note certain tests are currently being skipped for Node.js 10.
   Node.js 10:
     docker: [{ image: 'circleci/node:10' }]
     <<: *common_test_steps
