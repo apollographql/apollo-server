@@ -140,6 +140,13 @@ export class ApolloServer extends ApolloServerBase {
       app.use(path, uploadsMiddleware);
     }
 
+    // mount graphql-playground-react on localhost so that it can be used offline
+    // TODO: how to ensure path to node_modules will always resolve, e.g. when used as a dependency or npm link?
+    app.use(
+      '/graphql-playground-react',
+      express.static('node_modules/graphql-playground-react/'),
+    );
+
     // Note: if you enable playground in production and expect to be able to see your
     // schema, you'll need to manually specify `introspection: true` in the
     // ApolloServer constructor; by default, the introspection query is only
@@ -161,6 +168,8 @@ export class ApolloServer extends ApolloServerBase {
             endpoint: path,
             subscriptionEndpoint: this.subscriptionsPath,
             ...this.playgroundOptions,
+            cdnUrl: '/graphql-playground-react',
+            version: '',
           };
           res.setHeader('Content-Type', 'text/html');
           const playground = renderPlaygroundPage(playgroundRenderPageOptions);

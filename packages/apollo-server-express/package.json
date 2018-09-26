@@ -41,6 +41,7 @@
     "apollo-server-core": "file:../apollo-server-core",
     "body-parser": "^1.18.3",
     "cors": "^2.8.4",
+    "graphql-playground-react": "^1.7.4",
     "graphql-subscriptions": "^0.5.8",
     "graphql-tools": "^3.0.4",
     "type-is": "^1.6.16"
