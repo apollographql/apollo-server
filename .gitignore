@@ -11,5 +11,9 @@ yarn-error.log*
 # Coverage (from Jest)
 coverage/
 
+# JUnit Reports (used mainly in CircleCI)
+reports/
+junit.xml
+
 # Node modules
 node_modules/
