@@ -73,7 +73,7 @@ const server = new ApolloServer({
   context: async ({ req, connection }) => {
     if (connection) {
       // check connection for metadata
-      return {};
+      return connection.context;
     } else {
       // check from req
       const token = req.headers.authorization || "";
