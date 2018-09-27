@@ -19,7 +19,7 @@ While not necessary, you can help organize our issues by labeling this issue whe
 
    > Documentation issues should be labeled, but if you know the answer
    > please consider submitting a Pull Request instead.  (The documentation
-   > lives in the `docs/source` directory of this repository.
+   > lives in the `docs/source` directory of this repository.)
 
 - [ ] blocking
 
