@@ -57,7 +57,7 @@ export class EngineReportingExtension<TContext = any>
     request: Request;
     queryString?: string;
     parsedQuery?: DocumentNode;
-    variables?: Record<string, any>;
+    variables: Record<string, any>;
     persistedQueryHit?: boolean;
     persistedQueryRegister?: boolean;
   }): EndHandler {
@@ -140,7 +140,7 @@ export class EngineReportingExtension<TContext = any>
         } else {
           try {
             this.trace.details!.variablesJson![name] = JSON.stringify(
-              o.variables![name],
+              o.variables[name],
             );
           } catch (e) {
             // This probably means that the value contains a circular reference,

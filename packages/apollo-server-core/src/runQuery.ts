@@ -135,7 +135,6 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
     variables: options.variables,
     persistedQueryHit: options.persistedQueryHit,
     persistedQueryRegister: options.persistedQueryRegister,
-    context,
   });
   return Promise.resolve()
     .then(
@@ -282,10 +281,7 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
       throw err;
     })
     .then((graphqlResponse: GraphQLResponse) => {
-      const response = extensionStack.willSendResponse({
-        graphqlResponse,
-        context,
-      });
+      const response = extensionStack.willSendResponse({ graphqlResponse });
       requestDidEnd();
       return response.graphqlResponse;
     });

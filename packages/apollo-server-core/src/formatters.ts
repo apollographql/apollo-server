@@ -1,7 +1,7 @@
 import { GraphQLExtension, GraphQLResponse } from 'graphql-extensions';
 import { formatApolloErrors } from 'apollo-server-errors';
 
-export class FormatErrorExtension<TContext = any> extends GraphQLExtension {
+export class FormatErrorExtension extends GraphQLExtension {
   private formatError: Function;
   private debug: boolean;
 
@@ -13,11 +13,9 @@ export class FormatErrorExtension<TContext = any> extends GraphQLExtension {
 
   public willSendResponse(o: {
     graphqlResponse: GraphQLResponse;
-    context: TContext;
-  }): void | { graphqlResponse: GraphQLResponse; context: TContext } {
+  }): void | { graphqlResponse: GraphQLResponse } {
     if (o.graphqlResponse.errors) {
       return {
-        ...o,
         graphqlResponse: {
           ...o.graphqlResponse,
           errors: formatApolloErrors(o.graphqlResponse.errors, {
