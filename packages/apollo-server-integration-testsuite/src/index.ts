@@ -12,8 +12,6 @@ import {
   GraphQLScalarType,
   introspectionQuery,
   BREAK,
-  DocumentNode,
-  getOperationAST,
 } from 'graphql';
 
 import request = require('supertest');
@@ -849,40 +847,6 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
         return req.then(res => {
           expect(res.status).toEqual(200);
           expect(res.body.data.testRootValue).toEqual(expected);
-        });
-      });
-
-      it('passes the rootValue function result to the resolver', async () => {
-        const expectedQuery = 'query: it passes rootValue';
-        const expectedMutation = 'mutation: it passes rootValue';
-        app = await createApp({
-          graphqlOptions: {
-            schema,
-            rootValue: (documentNode: DocumentNode) => {
-              const op = getOperationAST(documentNode, undefined);
-              return op.operation === 'query'
-                ? expectedQuery
-                : expectedMutation;
-            },
-          },
-        });
-        const queryReq = request(app)
-          .post('/graphql')
-          .send({
-            query: 'query test{ testRootValue }',
-          });
-        return queryReq.then(res => {
-          expect(res.status).toEqual(200);
-          expect(res.body.data.testRootValue).toEqual(expectedQuery);
-        });
-        const mutationReq = request(app)
-          .post('/graphql')
-          .send({
-            query: 'mutation test{ testMutation(echo: "ping") }',
-          });
-        return mutationReq.then(res => {
-          expect(res.status).toEqual(200);
-          expect(res.body.data.testRootValue).toEqual(expectedMutation);
         });
       });
 

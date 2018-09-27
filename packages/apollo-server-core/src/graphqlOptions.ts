@@ -2,7 +2,6 @@ import {
   GraphQLSchema,
   ValidationContext,
   GraphQLFieldResolver,
-  DocumentNode,
 } from 'graphql';
 import { GraphQLExtension } from 'graphql-extensions';
 import { CacheControlExtensionOptions } from 'apollo-cache-control';
@@ -14,7 +13,7 @@ import { DataSource } from 'apollo-datasource';
  *
  * - schema: an executable GraphQL schema used to fulfill requests.
  * - (optional) formatError: Formatting function applied to all errors before response is sent
- * - (optional) rootValue: rootValue passed to GraphQL execution, or a function to resolving the rootValue from the DocumentNode
+ * - (optional) rootValue: rootValue passed to GraphQL execution
  * - (optional) context: the context passed to GraphQL execution
  * - (optional) validationRules: extra validation rules applied to requests
  * - (optional) formatResponse: a function applied to each graphQL execution result
@@ -26,12 +25,11 @@ import { DataSource } from 'apollo-datasource';
 export interface GraphQLServerOptions<
   TContext =
     | (() => Promise<Record<string, any>> | Record<string, any>)
-    | Record<string, any>,
-  TRootVal = ((parsedQuery: DocumentNode) => any) | any
+    | Record<string, any>
 > {
   schema: GraphQLSchema;
   formatError?: Function;
-  rootValue?: TRootVal;
+  rootValue?: any;
   context?: TContext;
   validationRules?: Array<(context: ValidationContext) => any>;
   formatResponse?: Function;

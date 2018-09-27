@@ -50,7 +50,7 @@ export interface QueryOptions {
   // a mutation), throw this error.
   nonQueryError?: Error;
 
-  rootValue?: ((parsedQuery: DocumentNode) => any) | any;
+  rootValue?: any;
   context?: any;
   variables?: { [key: string]: any };
   operationName?: string;
@@ -219,10 +219,7 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
         const executionArgs: ExecutionArgs = {
           schema: options.schema,
           document: documentAST,
-          rootValue:
-            typeof options.rootValue === 'function'
-              ? options.rootValue(documentAST)
-              : options.rootValue,
+          rootValue: options.rootValue,
           contextValue: context,
           variableValues: options.variables,
           operationName: options.operationName,
