@@ -1,46 +1,43 @@
-const NODE_VERSION = process.version.split('.');
-const NODE_MAJOR_VERSION = parseInt(NODE_VERSION[0].replace(/^v/, ''));
-
-// Skip hapi tests for unsupported versions of node
-if (NODE_MAJOR_VERSION < 8) {
-  it('does not run for node versions < 8', () => {});
-  return;
-}
-
-import hapi from 'hapi';
 import { ApolloServer } from '../ApolloServer';
 import { Config } from 'apollo-server-core';
 
 import testSuite, {
   schema as Schema,
   CreateAppOptions,
+  atLeastMajorNodeVersion,
 } from 'apollo-server-integration-testsuite';
 
-async function createApp(options: CreateAppOptions = {}) {
-  const app = new hapi.Server({
-    host: 'localhost',
-    port: 8000,
-  });
+// NODE: Intentionally skip on Node.js < 8 since Hapi 17 doesn't support less
+(atLeastMajorNodeVersion(8) ? describe : describe.skip)(
+  'integration:Hapi',
+  () => {
+    async function createApp(options: CreateAppOptions = {}) {
+      const { Server } = require('hapi');
 
-  const server = new ApolloServer(
-    (options.graphqlOptions as Config) || { schema: Schema },
-  );
-  await server.applyMiddleware({
-    app,
-  });
+      const app: import('hapi').Server = new Server({
+        host: 'localhost',
+        port: 8000,
+      });
 
-  await app.start();
+      const server = new ApolloServer(
+        (options.graphqlOptions as Config) || { schema: Schema },
+      );
+      await server.applyMiddleware({
+        app,
+      });
 
-  return app.listener;
-}
+      await app.start();
 
-async function destroyApp(app) {
-  if (!app || !app.close) {
-    return;
-  }
-  await new Promise(resolve => app.close(resolve));
-}
+      return app.listener;
+    }
 
-describe('integration:Hapi', () => {
-  testSuite(createApp, destroyApp);
-});
+    async function destroyApp(app) {
+      if (!app || !app.close) {
+        return;
+      }
+      await new Promise(resolve => app.close(resolve));
+    }
+
+    testSuite(createApp, destroyApp);
+  },
+);

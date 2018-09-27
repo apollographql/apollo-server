@@ -2,24 +2,21 @@
   "name": "apollo-server-monorepo",
   "private": true,
   "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/apollographql/apollo-server.git"
-  },
+  "repository": "github:apollographql/apollo-server",
   "scripts": {
-    "postinstall": "lerna run prepare",
+    "clean": "git clean -dfqX **/{dist,node_modules}/",
     "compile": "lerna run compile",
-    "lint": "prettier-check --ignore-path .gitignore \"{docs/{,source/**},.,packages/**,test}/{*.js,*.ts}\"",
-    "lint-fix": "prettier --write --ignore-path .gitignore \"{docs/{,source/**},.,packages/**,test}/{*.js,*.ts}\"",
-    "pretest": "npm run compile",
-    "test": "npm run testonly",
-    "posttest": "npm run lint",
-    "testonly": "jest --verbose",
-    "test:watch": "npm run testonly -- --watch",
-    "test:ci": "npm run testonly -- --ci --maxWorkers=2",
     "release": "npm run clean && npm ci && lerna publish --exact",
     "precommit": "lint-staged",
-    "clean": "find . -name \"node_modules\" -exec rm -rf '{}' + && find . -name \"dist\" -exec rm -rf '{}' +"
+    "postinstall": "lerna run prepare",
+    "lint": "prettier-check '**/*.{js,ts}'",
+    "lint-fix": "prettier '**/*.{js,ts}' --write",
+    "test": "jest --verbose",
+    "posttest": "npm run lint",
+    "testonly": "npm test",
+    "test:ci": "npm run coverage -- --ci --maxWorkers=2  --reporters=default --reporters=jest-junit",
+    "coverage": "npm test -- --coverage",
+    "coverage:upload": "codecov"
   },
   "lint-staged": {
     "*.ts": [
@@ -81,6 +78,7 @@
     "apollo-link-http": "1.5.5",
     "apollo-link-persisted-queries": "0.2.1",
     "body-parser": "1.18.3",
+    "codecov": "^3.1.0",
     "connect": "3.6.6",
     "express": "4.16.3",
     "fibers": "3.0.0",
@@ -92,6 +90,7 @@
     "hapi": "17.6.0",
     "husky": "0.14.3",
     "jest": "23.6.0",
+    "jest-junit": "^5.1.0",
     "jest-matcher-utils": "23.6.0",
     "js-sha256": "0.9.0",
     "koa": "2.5.3",
@@ -135,11 +134,6 @@
       "/node_modules/",
       "/dist/"
     ],
-    "clearMocks": true,
-    "globals": {
-      "ts-jest": {
-        "skipBabel": true
-      }
-    }
+    "clearMocks": true
   }
 }
