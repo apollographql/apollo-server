@@ -331,11 +331,6 @@ export async function runHttpQuery(
         httpRequest: request.request,
       });
     } catch (error) {
-      console.log(
-        `debug: ${optionsObject.debug}, formatError: ${
-          optionsObject.formatError
-        }`,
-      );
       // A batch can contain another query that returns data,
       // so we don't error out the entire request with an HttpError
       if (isBatch) {
