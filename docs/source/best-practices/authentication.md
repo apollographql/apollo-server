@@ -5,7 +5,7 @@ description: Securing our app and serving our users
 
 <h2 id="auth-background">Background: Authentication vs. Authorization</h2>
 
-**Authentication** describes a process where an application proves the identity of a user, meaning they user they are attempting to be from the client is the user making the request on the server. In most systems, a user and server share a handshake and token that uniquely pairs them together, ensuring both sides know they are communicating with their intended target.
+**Authentication** describes a process where an application proves the identity of a user, meaning someone claiming to be a certain user through the client is the actual user that has permission to make a request to the server. In most systems, a user and server share a handshake and token that uniquely pairs them together, ensuring both sides know they are communicating with their intended target.
 
 **Authorization** defines what a user, such as admin or user, is allowed to do. Generally a server will authenticate users and provide them an authorization role that permits the user to perform a subset of all possible operations, such as read and not write.
 
