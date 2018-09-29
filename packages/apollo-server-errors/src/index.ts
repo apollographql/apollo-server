@@ -210,13 +210,13 @@ export class UserInputError extends ApolloError {
   }
 }
 
-export function formatApolloErrors(
+export async function formatApolloErrors(
   errors: Array<Error>,
   options?: {
     formatter?: Function;
     debug?: boolean;
   },
-): Array<ApolloError> {
+): Promise<Array<ApolloError>> {
   if (!options) {
     return errors.map(error => enrichError(error));
   }
@@ -248,19 +248,22 @@ export function formatApolloErrors(
     return enrichedErrors;
   }
 
-  return enrichedErrors.map(error => {
+  const formatterErrors: Array<ApolloError> = [];
+  await enrichedErrors.forEach(async error => {
     try {
-      return formatter(error);
+      const errorValue = formatter(error);
+      formatterErrors.push(errorValue);
     } catch (err) {
       if (debug) {
-        return enrichError(err, debug);
+        formatterErrors.push(enrichError(err, debug));
       } else {
         // obscure error
         const newError = fromGraphQLError(
           new GraphQLError('Internal server error'),
         );
-        return enrichError(newError, debug);
+        formatterErrors.push(enrichError(newError, debug));
       }
     }
-  }) as Array<ApolloError>;
+  });
+  return formatterErrors;
 }
