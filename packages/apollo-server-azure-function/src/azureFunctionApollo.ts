@@ -49,7 +49,6 @@ export function graphqlAzureFunction(
       });
       return;
     }
-    // const requestUrl = new URL(request.originalUrl);
     runHttpQuery([request, context], {
       method: request.method,
       options: options,
