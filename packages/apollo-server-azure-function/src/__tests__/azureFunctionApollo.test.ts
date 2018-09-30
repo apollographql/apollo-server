@@ -7,7 +7,7 @@ import { Config } from 'apollo-server-core';
 import url from 'url';
 import { IncomingMessage, ServerResponse } from 'http';
 
-const createLambda = (options: CreateAppOptions = {}) => {
+const createAzureFunction = (options: CreateAppOptions = {}) => {
   const server = new ApolloServer(
     (options.graphqlOptions as Config) || { schema: Schema },
   );
@@ -51,5 +51,105 @@ const createLambda = (options: CreateAppOptions = {}) => {
 };
 
 describe('integration:AzureFunctions', () => {
-  testSuite(createLambda);
+  testSuite(createAzureFunction);
+
+  it('can append CORS headers to GET request', () => {
+    const server = new ApolloServer({ schema: Schema });
+    const handler = server.createHandler({
+      cors: {
+        origin: 'CORSOrigin',
+        methods: ['GET', 'POST', 'PUT'],
+        allowedHeaders: 'AllowedCORSHeader1,AllowedCORSHeader1',
+        exposedHeaders: 'ExposedCORSHeader1,ExposedCORSHeader2',
+        credentials: true,
+        maxAge: 42,
+      },
+    });
+    const expectedResult = {
+      testString: 'it works',
+    };
+    const query = {
+      query: 'query test{ testString }',
+    };
+    const request = {
+      method: 'GET',
+      body: null,
+      path: '/graphql',
+      query: query,
+      headers: {},
+    };
+    const context = {
+      done(error, result) {
+        if (error) throw error;
+        expect(result.status).toEqual(200);
+        expect(result.body).toEqual(expectedResult);
+        expect(result.headers['Access-Control-Allow-Origin']).toEqual(
+          'CORSOrigin',
+        );
+        expect(result.headers['Access-Control-Allow-Methods']).toEqual(
+          'GET,POST,PUT',
+        );
+        expect(result.headers['Access-Control-Allow-Headers']).toEqual(
+          'AllowedCORSHeader1,AllowedCORSHeader1',
+        );
+        expect(result.headers['Access-Control-Expose-Headers']).toEqual(
+          'ExposedCORSHeader1,ExposedCORSHeader2',
+        );
+        expect(result.headers['Access-Control-Allow-Credentials']).toEqual(
+          'true',
+        );
+        expect(result.headers['Access-Control-Max-Age']).toEqual(42);
+      },
+    };
+    handler(context as any, request as any);
+  });
+
+  it('can handle OPTIONS request with CORS headers', () => {
+    const server = new ApolloServer({ schema: Schema });
+    const handler = server.createHandler({
+      cors: {
+        allowedHeaders: 'AllowedCORSHeader1,AllowedCORSHeader1',
+      },
+    });
+    const request = {
+      method: 'OPTIONS',
+      body: null,
+      path: '/graphql',
+      query: null,
+      headers: {},
+    };
+    const context = {
+      done(error, result) {
+        if (error) throw error;
+        expect(result.status).toEqual(204);
+        expect(result.headers['Access-Control-Allow-Headers']).toEqual(
+          'AllowedCORSHeader1,AllowedCORSHeader1',
+        );
+      },
+    };
+    handler(context as any, request as any);
+  });
+
+  it('can return playground html', () => {
+    const server = new ApolloServer({ schema: Schema });
+    const handler = server.createHandler({});
+    const request = {
+      method: 'GET',
+      body: null,
+      path: '/',
+      query: null,
+      headers: {
+        Accept: 'text/html',
+      },
+    };
+    const context = {
+      done(error, result) {
+        if (error) throw error;
+        expect(result.status).toEqual(200);
+        expect(result.body).toMatch(/GraphQL Playground/gi);
+        expect(result.headers['Content-Type']).toEqual('text/html');
+      },
+    };
+    handler(context as any, request as any);
+  });
 });
