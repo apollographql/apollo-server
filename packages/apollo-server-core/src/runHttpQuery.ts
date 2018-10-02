@@ -97,16 +97,9 @@ export async function runHttpQuery(
   handlerArguments: Array<any>,
   request: HttpQueryRequest,
 ): Promise<HttpQueryResponse> {
-  let isGetRequest: boolean = false;
   let optionsObject: GraphQLOptions;
   const debugDefault =
     process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test';
-  let cacheControl:
-    | CacheControlExtensionOptions & {
-        calculateHttpHeaders: boolean;
-        stripFormattedExtensions: boolean;
-      }
-    | undefined;
 
   try {
     optionsObject = await resolveGraphqlOptions(
@@ -127,6 +120,22 @@ export async function runHttpQuery(
   if (optionsObject.debug === undefined) {
     optionsObject.debug = debugDefault;
   }
+
+  return processHTTPRequest(optionsObject, request);
+}
+
+export async function processHTTPRequest(
+  optionsObject: GraphQLOptions,
+  request: HttpQueryRequest,
+): Promise<HttpQueryResponse> {
+  let cacheControl:
+    | CacheControlExtensionOptions & {
+        calculateHttpHeaders: boolean;
+        stripFormattedExtensions: boolean;
+      }
+    | undefined;
+
+  let isGetRequest: boolean = false;
   let requestPayload;
 
   switch (request.method) {
