@@ -12,7 +12,6 @@
     "lint": "prettier-check '**/*.{js,ts}'",
     "lint-fix": "prettier '**/*.{js,ts}' --write",
     "test": "jest --verbose",
-    "posttest": "npm run lint",
     "testonly": "npm test",
     "test:ci": "npm run coverage -- --ci --maxWorkers=2  --reporters=default --reporters=jest-junit",
     "coverage": "npm test -- --coverage",
