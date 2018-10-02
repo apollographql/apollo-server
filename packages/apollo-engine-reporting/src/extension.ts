@@ -49,8 +49,18 @@ export class EngineReportingExtension<TContext = any>
     options: EngineReportingOptions,
     addTrace: (signature: string, operationName: string, trace: Trace) => void,
   ) {
+    const filterErrors = (() => {
+      if (options.filterErrors === true) {
+        return (error: GraphQLError) => new GraphQLError('masked', error.nodes);
+      } else if (options.filterErrors) {
+        return options.filterErrors;
+      } else {
+        return (error: GraphQLError) => error;
+      }
+    })();
+
     this.options = {
-      filterErrors: error => error,
+      filterErrors,
       ...options,
     };
     this.addTrace = addTrace;

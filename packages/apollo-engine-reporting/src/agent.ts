@@ -90,7 +90,8 @@ export interface EngineReportingOptions {
   // a filter function to exclude specific errors from being reported by
   // returning null, or you can mask certain details of the error and return the
   // error to be reported.
-  filterErrors?: (err: GraphQLError) => GraphQLError | null;
+  // If set to 'true' instead of a function, it will mask the error details.
+  filterErrors?: ((err: GraphQLError) => GraphQLError | null) | boolean;
 
   /**
    * (Experimental) Creates the client information for operation traces.
