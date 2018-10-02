@@ -246,7 +246,7 @@ const resolvers = {
   Mutation: {
     singleUpload: (parent, args) => {
       return args.file.then(file => {
-        //Contents of Upload scalar: https://github.com/jaydenseric/apollo-upload-server#upload-scalar
+        //Contents of Upload scalar: https://github.com/jaydenseric/graphql-upload#class-graphqlupload
         //file.stream is a node stream that contains the contents of the uploaded file
         //node stream api: https://nodejs.org/api/stream.html
         return file;

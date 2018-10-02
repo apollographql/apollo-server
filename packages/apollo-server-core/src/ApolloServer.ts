@@ -176,9 +176,7 @@ export class ApolloServerBase {
       );
 
       if (this.uploadsConfig) {
-        const {
-          GraphQLUpload,
-        } = require('@apollographql/apollo-upload-server');
+        const { GraphQLUpload } = require('graphql-upload');
         if (resolvers && !resolvers.Upload) {
           resolvers.Upload = GraphQLUpload;
         }

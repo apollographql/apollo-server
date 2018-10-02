@@ -1,4 +1,4 @@
-declare module '@apollographql/apollo-upload-server' {
+declare module 'graphql-upload' {
   import { GraphQLScalarType } from 'graphql';
 
   export const GraphQLUpload: GraphQLScalarType;
@@ -20,8 +20,11 @@ declare module '@apollographql/apollo-upload-server' {
 
   export type Request = any;
 
+  export type Response = any;
+
   export function processRequest(
     request: Request,
+    response: Response,
     options?: ApolloUploadOptions,
   ): Promise<any>;
 }
