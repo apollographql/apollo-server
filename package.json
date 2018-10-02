@@ -85,7 +85,7 @@
     "form-data": "2.3.2",
     "graphql": "14.0.2",
     "graphql-subscriptions": "0.5.8",
-    "graphql-tag": "2.9.2",
+    "graphql-tag": "2.10.0",
     "graphql-tools": "3.1.1",
     "hapi": "17.6.0",
     "husky": "0.14.3",
