@@ -90,7 +90,7 @@
     "hapi": "17.6.0",
     "husky": "0.14.3",
     "jest": "23.6.0",
-    "jest-junit": "5.1.0",
+    "jest-junit": "5.2.0",
     "jest-matcher-utils": "23.6.0",
     "js-sha256": "0.9.0",
     "koa": "2.5.3",
