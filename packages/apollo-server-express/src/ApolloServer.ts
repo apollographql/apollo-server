@@ -16,7 +16,7 @@ import typeis from 'type-is';
 
 import { graphqlExpress } from './expressApollo';
 
-import { processRequest as processFileUploads } from '@apollographql/apollo-upload-server';
+import { processRequest as processFileUploads } from 'graphql-upload';
 
 export { GraphQLOptions, GraphQLExtension } from 'apollo-server-core';
 
@@ -45,7 +45,7 @@ const fileUploadMiddleware = (
 ) => {
   // Note: we use typeis directly instead of via req.is for connect support.
   if (typeis(req, ['multipart/form-data'])) {
-    processFileUploads(req, uploadsConfig)
+    processFileUploads(req, res, uploadsConfig)
       .then(body => {
         req.body = body;
         next();

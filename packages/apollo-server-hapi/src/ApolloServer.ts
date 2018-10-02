@@ -4,7 +4,7 @@ import {
   renderPlaygroundPage,
   RenderPageOptions as PlaygroundRenderPageOptions,
 } from '@apollographql/graphql-playground-html';
-import { processRequest as processFileUploads } from '@apollographql/apollo-upload-server';
+import { processRequest as processFileUploads } from 'graphql-upload';
 
 import { graphqlHapi } from './hapiApollo';
 
@@ -16,10 +16,14 @@ import {
 } from 'apollo-server-core';
 
 function handleFileUploads(uploadsConfig: FileUploadOptions) {
-  return async (request: hapi.Request) => {
+  return async (request: hapi.Request, _h?: hapi.ResponseToolkit) => {
     if (request.mime === 'multipart/form-data') {
       Object.defineProperty(request, 'payload', {
-        value: await processFileUploads(request, uploadsConfig),
+        value: await processFileUploads(
+          request,
+          request.response,
+          uploadsConfig,
+        ),
         writable: false,
       });
     }

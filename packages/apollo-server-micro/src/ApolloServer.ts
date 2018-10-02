@@ -1,5 +1,5 @@
 import { ApolloServerBase, GraphQLOptions } from 'apollo-server-core';
-import { processRequest as processFileUploads } from '@apollographql/apollo-upload-server';
+import { processRequest as processFileUploads } from 'graphql-upload';
 import { ServerResponse } from 'http';
 import { send } from 'micro';
 import { renderPlaygroundPage } from '@apollographql/graphql-playground-html';
@@ -39,7 +39,7 @@ export class ApolloServer extends ApolloServerBase {
 
       await promiseWillStart;
 
-      await this.handleFileUploads(req);
+      await this.handleFileUploads(req, res);
 
       (await this.handleHealthCheck({
         req,
@@ -160,15 +160,15 @@ export class ApolloServer extends ApolloServerBase {
   }
 
   // If file uploads are detected, prepare them for easier handling with
-  // the help of `apollo-upload-server`.
-  private async handleFileUploads(req: MicroRequest) {
+  // the help of `graphql-upload`.
+  private async handleFileUploads(req: MicroRequest, res: ServerResponse) {
     const contentType = req.headers['content-type'];
     if (
       this.uploadsConfig &&
       contentType &&
       contentType.startsWith('multipart/form-data')
     ) {
-      req.filePayload = await processFileUploads(req, this.uploadsConfig);
+      req.filePayload = await processFileUploads(req, res, this.uploadsConfig);
     }
   }
 }

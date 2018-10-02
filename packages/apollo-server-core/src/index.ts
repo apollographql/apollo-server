@@ -42,5 +42,5 @@ export const gql: (
 ) => DocumentNode = gqlTag;
 
 import { GraphQLScalarType } from 'graphql';
-import { GraphQLUpload as UploadScalar } from '@apollographql/apollo-upload-server';
+import { GraphQLUpload as UploadScalar } from 'graphql-upload';
 export const GraphQLUpload = UploadScalar as GraphQLScalarType;
