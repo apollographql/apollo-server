@@ -1,7 +1,5 @@
 # Changelog
 
-All of the packages in the `apollo-server` repo are released with the same version numbers, so a new version of a particular package might not represent an actual change to that package. We generally try to mark changes that affect only one web server integration package with that package name, and don't specify package names for changes that affect most of the packages or which affect shared core packages.
-
 ### vNEXT
 
 - Allow an optional function to resolve the `rootValue`, passing the `DocumentNode` AST to determine the value. [PR #1555](https://github.com/apollographql/apollo-server/pull/1555)
@@ -60,18 +58,18 @@ All of the packages in the `apollo-server` repo are released with the same versi
 
 ### v2.0.1
 
-- Bad build due to Lerna 2 release
+- This version failed to publish fully/correctly and should not be used.
 
-### rc.10
+### v2.0.0-rc.10
 
 - Fix and Export Extension and Playground Types [#1360](https://github.com/apollographql/apollo-server/pull/1360)
 - Pin internal dependencies [#1361](https://github.com/apollographql/apollo-server/pull/1361)
 
-### rc.9
+### v2.0.0-rc.9
 
-Unused RC, due to publication issues
+- This version failed to publish fully/correctly and should not be used.
 
-### rc.8
+### v2.0.0-rc.8
 
 - export GraphQLUpload from integrations [#1322](https://github.com/apollographql/apollo-server/pull/1322)
 - add `cors` to vanilla [#1335](https://github.com/apollographql/apollo-server/pull/1335)
@@ -80,13 +78,13 @@ Unused RC, due to publication issues
 - **breaking**: remove calculate headers as function [#1337](https://github.com/apollographql/apollo-server/pull/1337)
 - **breaking**: remove `formatParams` [#1331](https://github.com/apollographql/apollo-server/pull/1331)
 
-### rc.7
+### v2.0.0-rc.7
 
 - enable engine reporting from lambda [#1313](https://github.com/apollographql/apollo-server/pull/1313)
 - remove flattening of errors [#1288](https://github.com/apollographql/apollo-server/pull/1288)
 - dynamic url in datasourece ([#1277](https://github.com/apollographql/apollo-server/pull/1277))
 
-### rc.6
+### v2.0.0-rc.6
 
 - BREAKING: errors are passed to user extensions, then engine reporting, and finally `formatError` ([#1272](https://github.com/apollographql/apollo-server/pull/1272))
 - `formatError` only called once on validation errors ([#1272](https://github.com/apollographql/apollo-server/pull/1272))
@@ -97,28 +95,28 @@ Unused RC, due to publication issues
 - fix data source + context cloning (7e35305)
 - use fetch instead of Node request for engine-reporting ([#1274](https://github.com/apollographql/apollo-server/pull/1274))
 
-### rc.5
+### v2.0.0-rc.5
 
 - fix formatError to keep prototype of Error ([#1235](https://github.com/apollographql/apollo-server/pull/1235))
 
-### rc.4
+### v2.0.0-rc.4
 
 - Add trailing slash to data source
 - allow body passed to data source
 - new apollo-engine-reporting agent
 
-### rc.3
+### v2.0.0-rc.3
 
 - graphql as peerDependency ([#1232](https://github.com/apollographql/apollo-server/pull/1232))
 - APQ in batches ([#1234](https://github.com/apollographql/apollo-server/pull/1234))
 - APQ hits/misses in traces
 
-### rc.2
+### v2.0.0-rc.2
 
 - Missing apollo-upload-server dependency ([#1221](https://github.com/apollographql/apollo-server/pull/1221))
 - encode trace report over each request in apollo-engine-reporting
 
-### rc.1
+### v2.0.0-rc.1
 
 - BREAKING: remove logFunction ([71a403d](https://github.com/apollographql/apollo-server/pull/1125/commits/71a403dfa38ee050606d3fa32630005e0a98016f)), see [this commit](https://github.com/apollographql/apollo-server/blob/8914b135df9840051fe81cc9224b444cfc5b61ab/packages/apollo-server-core/src/logging.ts) for an implementation
 - move upload option to constructor ([#1204](https://github.com/apollographql/apollo-server/pull/1204))
@@ -133,19 +131,19 @@ Data sources
 - add memcache and redis support ([#1191](https://github.com/apollographql/apollo-server/pull/1191))
 - add patch method ([#1190](https://github.com/apollographql/apollo-server/pull/1190))
 
-### rc.0
+### v2.0.0-rc.0
 
 - Breaking: `registerServer` changed to `server.applyMiddleware` ([3279991](https://github.com/apollographql/apollo-server/pull/1125/commits/327999174cfbcecaa4e401ffd7b2d7148ba0fd65))
 - Breaking: subscriptions enabled with `installSubscriptionHandlers`
 - Add Data Sources ([#1163](https://github.com/apollographql/apollo-server/pull/1163))
 
-### beta.4
+### v2.0.0-beta.4
 
 - Bug fix to allow async context ([#1129](https://github.com/apollographql/apollo-server/pull/1129))
 - logFunction is now an extension ([#1128](https://github.com/apollographql/apollo-server/pull/1128))
 - Allow user defined extensions and include engine reporting ([#1105](https://github.com/apollographql/apollo-server/pull/#105))
 
-### beta.3
+### v2.0.0-beta.3
 
 - remove registerServer configuration from `apollo-server`'s listen ([#1090](https://github.com/apollographql/apollo-server/pull/1090))
 - move healthcheck into variants ([#1086](https://github.com/apollographql/apollo-server/pull/1086))
@@ -153,7 +151,7 @@ Data sources
 - Add reporting to Engine as apollo-engine-reporting ([#1105](https://github.com/apollographql/apollo-server/pull/1105))
 - Allow users to define extensions ([#1105](https://github.com/apollographql/apollo-server/pull/1105))
 
-### beta.2
+### v2.0.0-beta.2
 
 ListenOptions:
 
@@ -212,7 +210,7 @@ ListenOptions:
 
 ### v1.3.0
 
-- **Breaking:** `apollo-server-hapi`: now supports Hapi v17, and no longer supports Hapi v16. (We intend to release a new `apollo-server-hapi16` for users still on Hapi v16.)
+- **Breaking:** `apollo-server-hapi`: now supports Hapi v17, and no longer supports Hapi v16.  For information on running Apollo Server 1.x with Hapi v16, [check this documentation](https://www.apollographql.com/docs/apollo-server/v1/servers/hapi.html#Hapi-16).
 - **New package**: `apollo-server-adonis` supporting the Adonis framework!
 - The `graphqlOptions` parameter to server GraphQL integration functions now accepts context as a function and as an object with a prototype. [PR #679](https://github.com/apollographql/apollo-server/pull/679)
 - `apollo-server-express`: Send Content-Length header.
