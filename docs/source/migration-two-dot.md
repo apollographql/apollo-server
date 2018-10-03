@@ -196,7 +196,7 @@ For many existing instances of Apollo Server, the schema is created at runtime b
 > Note: the string to create these schema will not use the `gql` tag exported from apollo-server.
 
 ```js
-const { ApolloServer, makeExecutableSchema, gql } = require('apollo-server');
+const { ApolloServer, makeExecutableSchema } = require('apollo-server');
 
 //For developer tooling, such as autoformatting, use the following workaround
 const gql = String.raw;
