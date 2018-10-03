@@ -33,7 +33,6 @@
     "@apollographql/apollo-upload-server": "^5.0.3",
     "@apollographql/graphql-playground-html": "^1.6.0",
     "apollo-server-core": "file:../apollo-server-core",
-    "fastify": "1.12.1",
     "fastify-accepts": "^0.5.0",
     "graphql-subscriptions": "^0.5.8",
     "graphql-tools": "^4.0.0"
