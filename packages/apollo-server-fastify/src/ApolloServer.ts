@@ -1,6 +1,7 @@
 import * as fastify from 'fastify';
+import { FastifyReply } from 'fastify';
 import { FastifyInstance } from 'fastify';
-const { parseAll } = require('accept');
+const { parseAll } = require('fastify-accepts');
 import {
   renderPlaygroundPage,
   RenderPageOptions as PlaygroundRenderPageOptions,
@@ -40,7 +41,7 @@ export class ApolloServer extends ApolloServerBase {
     if (!path) path = '/graphql';
 
     await app.addHook(
-      'onRequest',
+      'preHandler',
       async function(
         this: any,
         request: any,
@@ -88,7 +89,10 @@ export class ApolloServer extends ApolloServerBase {
           'PATCH',
         ] as fastify.HTTPMethod[],
         url: '/.well-known/apollo/server-health',
-        handler: async function(request, reply) {
+        handler: async function(
+          request: any,
+          reply: FastifyReply<OutgoingMessage>,
+        ) {
           if (onHealthCheck) {
             try {
               await onHealthCheck(request);

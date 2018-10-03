@@ -52,6 +52,6 @@ describe('fastifyApollo', () => {
 });
 
 // Uncomment this to see the breaking tests
-// describe('integration:Fastify', () => {
-//   testSuite(createApp, destroyApp);
-// });
+describe('integration:Fastify', () => {
+  testSuite(createApp, destroyApp);
+});

@@ -39,10 +39,6 @@ export function graphqlFastify(
       reply
         .type('application/json')
         .code(200)
-        .header(
-          'Content-Length',
-          Buffer.byteLength(JSON.stringify(graphqlResponse), 'utf8'),
-        )
         .send(JSON.parse(graphqlResponse));
     } catch (error) {
       if ('HttpQueryError' !== error.name) {
@@ -76,7 +72,7 @@ export function graphqlFastify(
   app.route({
     method: ['HEAD', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
     url: options.url || '/graphql',
-    handler: async (_, reply) => {
+    handler: async (_: any, reply: FastifyReply<OutgoingMessage>) => {
       reply
         .code(405)
         .header('allow', 'GET, POST')

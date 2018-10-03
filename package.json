@@ -46,6 +46,7 @@
     "apollo-server-env": "file:packages/apollo-server-env",
     "apollo-server-errors": "file:packages/apollo-server-errors",
     "apollo-server-express": "file:packages/apollo-server-express",
+    "apollo-server-fastify": "file:packages/apollo-server-fastify",
     "apollo-server-hapi": "file:packages/apollo-server-hapi",
     "apollo-server-integration-testsuite": "file:packages/apollo-server-integration-testsuite",
     "apollo-server-koa": "file:packages/apollo-server-koa",
