@@ -16,7 +16,7 @@ import {
 } from 'apollo-server-core';
 
 function handleFileUploads(uploadsConfig: FileUploadOptions) {
-  return async (request: hapi.Request, h: hapi.ResponseToolkit) => {
+  return async (request: hapi.Request) => {
     if (request.mime === 'multipart/form-data') {
       Object.defineProperty(request, 'payload', {
         value: await processFileUploads(
