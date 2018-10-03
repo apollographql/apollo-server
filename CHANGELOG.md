@@ -4,6 +4,7 @@
 
 - Allow an optional function to resolve the `rootValue`, passing the `DocumentNode` AST to determine the value. [PR #1555](https://github.com/apollographql/apollo-server/pull/1555)
 - Follow-up on the work in [PR #1516](https://github.com/apollographql/apollo-server/pull/1516) to also fix missing insertion cursor/caret when a custom GraphQL configuration is specified which doesn't specify its own `cursorShape` property. [PR #1607](https://github.com/apollographql/apollo-server/pull/1607)
+- Migrate [@apollographql/apollo-upload-server](https://github.com/apollographql/apollo-upload-server) to [graphql-upload](https://github.com/jaydenseric/graphql-upload) to fix [#1509](https://github.com/apollographql/apollo-server/issues/1509) and [1703](https://github.com/apollographql/apollo-server/issues/1703)
 
 ### v2.1.0
 
