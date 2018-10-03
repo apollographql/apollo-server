@@ -80,7 +80,7 @@ export function graphqlFastify(
     },
   });
 
-  if (next) {
+  if (next && typeof next === 'function') {
     next();
   }
 

@@ -14,7 +14,7 @@
     "url": "https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-fastify"
   },
   "engines": {
-    "node": ">=6"
+    "node": ">=8"
   },
   "keywords": [
     "GraphQL",
