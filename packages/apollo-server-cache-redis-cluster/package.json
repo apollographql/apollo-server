@@ -1,0 +1,25 @@
+{
+  "name": "apollo-server-cache-redis-cluster",
+  "version": "0.0.1",
+  "author": "opensource@apollographql.com",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-cache-redis-cluster"
+  },
+  "homepage": "https://github.com/apollographql/apollo-server#readme",
+  "bugs": {
+    "url": "https://github.com/apollographql/apollo-server/issues"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "engines": {
+    "node": ">=6"
+  },
+  "dependencies": {
+    "apollo-server-caching": "file:../apollo-server-caching",
+    "apollo-server-env": "file:../apollo-server-env",
+    "dataloader": "^1.4.0",
+    "ioredis": "^4.0.0"
+  }
+}

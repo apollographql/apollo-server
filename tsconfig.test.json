@@ -12,6 +12,7 @@
     { "path": "./packages/apollo-server-azure-functions/src/__tests__/" },
     { "path": "./packages/apollo-server-cache-memcached/src/__tests__/" },
     { "path": "./packages/apollo-server-cache-redis/src/__tests__/" },
+    { "path": "./packages/apollo-server-cache-redis-cluster/src/__tests__/" },
     { "path": "./packages/apollo-server-caching/src/__tests__/" },
     { "path": "./packages/apollo-server-cloud-functions/src/__tests__/" },
     { "path": "./packages/apollo-server-core/src/__tests__/" },
