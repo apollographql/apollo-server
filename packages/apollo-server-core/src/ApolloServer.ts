@@ -58,7 +58,7 @@ const NoIntrospection = (context: ValidationContext) => ({
 export class ApolloServerBase {
   public subscriptionsPath?: string;
   public graphqlPath: string = '/graphql';
-  public requestOptions: Partial<GraphQLOptions<any>>;
+  public requestOptions: Partial<GraphQLOptions<any>> = Object.create(null);
 
   private context?: Context | ContextFunction;
   private engineReportingAgent?: EngineReportingAgent;
