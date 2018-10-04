@@ -55,6 +55,27 @@ const NoIntrospection = (context: ValidationContext) => ({
   },
 });
 
+function getEngineServiceId(engine: Config['engine']): string | undefined {
+  const keyFromEnv = process.env.ENGINE_API_KEY || '';
+  if (!(engine || (engine !== false && keyFromEnv))) {
+    return;
+  }
+
+  let engineApiKey: string = '';
+
+  if (typeof engine === 'object' && engine.apiKey) {
+    engineApiKey = engine.apiKey;
+  } else if (keyFromEnv) {
+    engineApiKey = keyFromEnv;
+  }
+
+  if (engineApiKey) {
+    return engineApiKey.split(':', 2)[1];
+  }
+
+  return;
+}
+
 export class ApolloServerBase {
   public subscriptionsPath?: string;
   public graphqlPath: string = '/graphql';
@@ -62,6 +83,7 @@ export class ApolloServerBase {
 
   private context?: Context | ContextFunction;
   private engineReportingAgent?: EngineReportingAgent;
+  private engineServiceId?: string;
   private extensions: Array<() => GraphQLExtension>;
 
   protected schema: GraphQLSchema;
@@ -226,9 +248,15 @@ export class ApolloServerBase {
       () => new FormatErrorExtension(requestOptions.formatError, debug),
     );
 
-    if (engine || (engine !== false && process.env.ENGINE_API_KEY)) {
+    // In an effort to avoid over-exposing the API key itself, extract the
+    // service ID from the API key for plugins which only needs service ID.
+    // The truthyness of this value can also be used in other forks of logic
+    // related to Engine, as is the case with EngineReportingAgent just below.
+    this.engineServiceId = getEngineServiceId(engine);
+
+    if (this.engineServiceId) {
       this.engineReportingAgent = new EngineReportingAgent(
-        engine === true ? {} : engine,
+        typeof engine === 'object' ? engine : Object.create(null),
       );
       // Let's keep this extension second so it wraps everything, except error formatting
       this.extensions.push(() => this.engineReportingAgent!.newExtension());
