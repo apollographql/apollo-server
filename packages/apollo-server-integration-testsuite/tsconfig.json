@@ -8,5 +8,8 @@
     "lib": ["es2017", "esnext.asynciterable", "dom"]
   },
   "include": ["src/**/*"],
-  "exclude": ["**/__tests__", "**/__mocks__"]
+  "exclude": ["**/__tests__", "**/__mocks__"],
+  "references": [
+    { "path": "../apollo-server-core" }
+  ]
 }

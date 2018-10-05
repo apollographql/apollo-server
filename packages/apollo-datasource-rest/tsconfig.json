@@ -5,5 +5,11 @@
     "outDir": "./dist"
   },
   "include": ["src/**/*"],
-  "exclude": ["**/__tests__", "**/__mocks__"]
+  "exclude": ["**/__tests__", "**/__mocks__"],
+  "references": [
+    { "path": "../apollo-datasource" },
+    { "path": "../apollo-server-caching" },
+    { "path": "../apollo-server-env" },
+    { "path": "../apollo-server-errors" }
+  ]
 }

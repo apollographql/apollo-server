@@ -5,5 +5,10 @@
     "outDir": "./dist"
   },
   "include": ["src/**/*"],
-  "exclude": ["**/__tests__", "**/__mocks__"]
+  "exclude": ["**/__tests__", "**/__mocks__"],
+  "references": [
+    { "path": "../apollo-engine-reporting-protobuf" },
+    { "path": "../apollo-server-env" },
+    { "path": "../graphql-extensions" }
+  ]
 }

@@ -5,5 +5,10 @@
     "outDir": "./dist"
   },
   "include": ["src/**/*"],
-  "exclude": ["**/__tests__", "**/__mocks__"]
+  "exclude": ["**/__tests__", "**/__mocks__"],
+  "references": [
+    { "path": "../apollo-server-core" },
+    { "path": "../apollo-server-env" },
+    { "path": "../apollo-server-integration-testsuite" }
+  ]
 }
