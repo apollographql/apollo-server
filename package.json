@@ -4,7 +4,7 @@
   "license": "MIT",
   "repository": "github:apollographql/apollo-server",
   "scripts": {
-    "clean": "git clean -dfqX **/{dist,node_modules}/",
+    "clean": "git clean -dfqX -- ./node_modules **/{dist,node_modules}/",
     "compile": "lerna run compile",
     "release": "npm run clean && npm ci && lerna publish --exact",
     "precommit": "lint-staged",
