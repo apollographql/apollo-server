@@ -9,7 +9,6 @@
   "references": [
     { "path": "../apollo-datasource" },
     { "path": "../apollo-server-caching" },
-    { "path": "../apollo-server-env" },
     { "path": "../apollo-server-errors" }
   ]
 }

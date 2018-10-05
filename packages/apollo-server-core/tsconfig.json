@@ -11,7 +11,6 @@
     { "path": "../apollo-datasource" },
     { "path": "../apollo-engine-reporting" },
     { "path": "../apollo-server-caching" },
-    { "path": "../apollo-server-env" },
     { "path": "../apollo-server-errors" },
     { "path": "../apollo-tracing" },
     { "path": "../graphql-extensions" }

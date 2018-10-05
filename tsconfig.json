@@ -1,17 +1,16 @@
 {
+  "files": [],
   "references": [
     { "path": "./packages/apollo-cache-control" },
     { "path": "./packages/apollo-datasource" },
     { "path": "./packages/apollo-datasource-rest" },
     { "path": "./packages/apollo-engine-reporting" },
-    { "path": "./packages/apollo-engine-reporting-protobuf" },
     { "path": "./packages/apollo-server" },
     { "path": "./packages/apollo-server-cache-memcached" },
     { "path": "./packages/apollo-server-cache-redis" },
     { "path": "./packages/apollo-server-caching" },
     { "path": "./packages/apollo-server-cloudflare" },
     { "path": "./packages/apollo-server-core" },
-    { "path": "./packages/apollo-server-env" },
     { "path": "./packages/apollo-server-errors" },
     { "path": "./packages/apollo-server-express" },
     { "path": "./packages/apollo-server-hapi" },

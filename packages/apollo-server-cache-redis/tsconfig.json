@@ -8,6 +8,5 @@
   "exclude": ["**/__tests__", "**/__mocks__"],
   "references": [
     { "path": "../apollo-server-caching" },
-    { "path": "../apollo-server-env" }
   ]
 }
