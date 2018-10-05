@@ -37,6 +37,7 @@
     "apollo-server-caching": "file:../apollo-server-caching",
     "apollo-server-env": "file:../apollo-server-env",
     "apollo-server-errors": "file:../apollo-server-errors",
+    "apollo-server-plugin-base": "file:../apollo-server-plugin-base",
     "apollo-tracing": "file:../apollo-tracing",
     "graphql-extensions": "file:../graphql-extensions",
     "graphql-subscriptions": "^0.5.8",

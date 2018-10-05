@@ -13,6 +13,11 @@ import {
 import { GraphQLExtension } from 'graphql-extensions';
 import { EngineReportingAgent } from 'apollo-engine-reporting';
 import { InMemoryLRUCache } from 'apollo-server-caching';
+import {
+  ApolloServerPluginBase,
+  PluginEvent,
+  PluginEventServerWillStart,
+} from 'apollo-server-plugin-base';
 
 import {
   SubscriptionServer,
@@ -55,14 +60,37 @@ const NoIntrospection = (context: ValidationContext) => ({
   },
 });
 
+function getEngineServiceId(engine: Config['engine']): string | undefined {
+  const keyFromEnv = process.env.ENGINE_API_KEY || '';
+  if (!(engine || (engine !== false && keyFromEnv))) {
+    return;
+  }
+
+  let engineApiKey: string = '';
+
+  if (typeof engine === 'object' && engine.apiKey) {
+    engineApiKey = engine.apiKey;
+  } else if (keyFromEnv) {
+    engineApiKey = keyFromEnv;
+  }
+
+  if (engineApiKey) {
+    return engineApiKey.split(':', 2)[1];
+  }
+
+  return;
+}
+
 export class ApolloServerBase {
   public subscriptionsPath?: string;
   public graphqlPath: string = '/graphql';
-  public requestOptions: Partial<GraphQLOptions<any>>;
+  public requestOptions: Partial<GraphQLOptions<any>> = Object.create(null);
 
   private context?: Context | ContextFunction;
   private engineReportingAgent?: EngineReportingAgent;
+  private engineServiceId?: string;
   private extensions: Array<() => GraphQLExtension>;
+  protected plugins: ApolloServerPluginBase[] = [];
 
   protected schema: GraphQLSchema;
   protected subscriptionServerOptions?: SubscriptionServerOptions;
@@ -91,8 +119,13 @@ export class ApolloServerBase {
       subscriptions,
       uploads,
       playground,
+      plugins,
       ...requestOptions
     } = config;
+
+    // Plugins will be instantiated if they aren't already, and this.plugins
+    // is populated accordingly.
+    this.ensurePluginInstantiation(plugins);
 
     // While reading process.env is slow, a server should only be constructed
     // once per run, so we place the env check inside the constructor. If env
@@ -251,9 +284,15 @@ export class ApolloServerBase {
       () => new FormatErrorExtension(requestOptions.formatError, debug),
     );
 
-    if (engine || (engine !== false && process.env.ENGINE_API_KEY)) {
+    // In an effort to avoid over-exposing the API key itself, extract the
+    // service ID from the API key for plugins which only needs service ID.
+    // The truthyness of this value can also be used in other forks of logic
+    // related to Engine, as is the case with EngineReportingAgent just below.
+    this.engineServiceId = getEngineServiceId(engine);
+
+    if (this.engineServiceId) {
       this.engineReportingAgent = new EngineReportingAgent(
-        engine === true ? {} : engine,
+        typeof engine === 'object' ? engine : Object.create(null),
       );
       // Let's keep this extension second so it wraps everything, except error formatting
       this.extensions.push(() => this.engineReportingAgent!.newExtension());
@@ -379,6 +418,76 @@ export class ApolloServerBase {
 
   protected supportsUploads(): boolean {
     return false;
+  }
+
+  private ensurePluginInstantiation(plugins?: any[]): void {
+    if (!plugins || !plugins.length) {
+      return;
+    }
+
+    this.plugins = plugins.map((plugin: any) => {
+      // If it's already been instantiated, we can use it as is.
+      if (plugin instanceof ApolloServerPluginBase) {
+        return plugin;
+      }
+
+      // A user-defined type guard might be in order here, but I couldn't quite
+      // figure out the semantics of it.  This seems to do the trick.
+      const isCorrectPluginSubclass = (c: any): boolean =>
+        c.prototype instanceof ApolloServerPluginBase;
+
+      //
+      if (plugin.default && isCorrectPluginSubclass(plugin.default)) {
+        return new plugin.default();
+      } else if (isCorrectPluginSubclass(plugin)) {
+        return new plugin();
+      }
+
+      throw new Error('Invalid plugin definition');
+    });
+  }
+
+  protected async dispatchEventsToPlugins(
+    events: PluginEvent[] | PluginEvent,
+  ): Promise<void> {
+    if (!this.plugins.length) {
+      return;
+    }
+
+    if (!Array.isArray(events)) {
+      events = [events];
+    }
+
+    for (const event of events) {
+      for (const plugin of this.plugins) {
+        if (typeof plugin[event.name] === 'function') {
+          await plugin[event.name](event.args);
+        }
+      }
+    }
+  }
+
+  // Trigger the notification to plugins that we WILL start.
+  protected async triggerEventServerWillStart() {
+    const name = 'serverWillStart';
+    const event: PluginEventServerWillStart = {
+      name,
+      args: {
+        schema: this.schema,
+      },
+    };
+
+    // Set the serviceId for Engine only if Engine is enabled.
+    if (this.engineServiceId) {
+      event.args.engine = {
+        serviceId: this.engineServiceId,
+      };
+    }
+
+    // Plugins can have access to the persisted query, and its cache.
+    event.args.persistedQueries = this.requestOptions.persistedQueries;
+
+    await this.dispatchEventsToPlugins(event);
   }
 
   // This function is used by the integrations to generate the graphQLOptions

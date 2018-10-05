@@ -60,6 +60,7 @@ export interface Config
   engine?: boolean | EngineReportingOptions;
   extensions?: Array<() => GraphQLExtension>;
   cacheControl?: CacheControlExtensionOptions | boolean;
+  plugins?: [];
   persistedQueries?: PersistedQueryOptions | false;
   subscriptions?: Partial<SubscriptionServerOptions> | string | false;
   //https://github.com/jaydenseric/apollo-upload-server#options
