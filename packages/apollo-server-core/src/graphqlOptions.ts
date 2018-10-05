@@ -24,26 +24,19 @@ import { DataSource } from 'apollo-datasource';
  *
  */
 export interface GraphQLServerOptions<
-  TContext =
-    | (() => Promise<Record<string, any>> | Record<string, any>)
-    | Record<string, any>,
-  TRootVal = ((parsedQuery: DocumentNode) => any) | any
+  TContext = Record<string, any>,
+  TRootValue = any
 > {
   schema: GraphQLSchema;
   formatError?: Function;
-  rootValue?: TRootVal;
-  context?: TContext;
+  rootValue?: ((parsedQuery: DocumentNode) => TRootValue) | TRootValue;
+  context?: TContext | (() => never);
   validationRules?: Array<(context: ValidationContext) => any>;
   formatResponse?: Function;
   fieldResolver?: GraphQLFieldResolver<any, TContext>;
   debug?: boolean;
   tracing?: boolean;
-  cacheControl?:
-    | boolean
-    | (CacheControlExtensionOptions & {
-        calculateHttpHeaders?: boolean;
-        stripFormattedExtensions?: boolean;
-      });
+  cacheControl?: boolean | CacheControlExtensionOptions;
   extensions?: Array<() => GraphQLExtension>;
   dataSources?: () => DataSources<TContext>;
   cache?: KeyValueCache;

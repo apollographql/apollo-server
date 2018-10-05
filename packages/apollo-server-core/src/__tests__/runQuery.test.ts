@@ -26,14 +26,14 @@ import { Request } from 'apollo-server-env';
 
 // This is a temporary kludge to ensure we preserve runQuery behavior with the
 // GraphQLRequestProcessor refactoring.
-// These tests will be rewritten as GraphQLRequestProcessor tests afer the
+// These tests will be rewritten as GraphQLRequestProcessor tests after the
 // refactoring is complete.
 
 function runQuery(options: QueryOptions): Promise<GraphQLResponse> {
   const requestProcessor = new GraphQLRequestProcessor({
     schema: options.schema,
     rootValue: options.rootValue,
-    context: options.context,
+    context: options.context || {},
     validationRules: options.validationRules,
     fieldResolver: options.fieldResolver,
 

@@ -114,6 +114,31 @@ export class ApolloServerBase {
         : noIntro;
     }
 
+    if (requestOptions.cacheControl !== false) {
+      if (
+        typeof requestOptions.cacheControl === 'boolean' &&
+        requestOptions.cacheControl === true
+      ) {
+        // cacheControl: true means that the user needs the cache-control
+        // extensions. This means we are running the proxy, so we should not
+        // strip out the cache control extension and not add cache-control headers
+        requestOptions.cacheControl = {
+          stripFormattedExtensions: false,
+          calculateHttpHeaders: false,
+          defaultMaxAge: 0,
+        };
+      } else {
+        // Default behavior is to run default header calculation and return
+        // no cacheControl extensions
+        requestOptions.cacheControl = {
+          stripFormattedExtensions: true,
+          calculateHttpHeaders: true,
+          defaultMaxAge: 0,
+          ...requestOptions.cacheControl,
+        };
+      }
+    }
+
     if (!requestOptions.cache) {
       requestOptions.cache = new InMemoryLRUCache();
     }

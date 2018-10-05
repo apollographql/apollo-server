@@ -20,6 +20,8 @@ import {
   GraphQLExtensionStack,
   enableGraphQLExtensions,
 } from 'graphql-extensions';
+import { KeyValueCache } from 'apollo-server-caching';
+import { DataSource } from 'apollo-datasource';
 import { PersistedQueryOptions } from './';
 import {
   CacheControlExtension,
@@ -40,32 +42,8 @@ export interface GraphQLRequest {
   operationName?: string;
   variables?: { [name: string]: any };
   extensions?: Record<string, any>;
-  httpRequest?: Pick<Request, 'url' | 'method' | 'headers'>;
+  httpRequest: Pick<Request, 'url' | 'method' | 'headers'>;
 }
-
-export interface GraphQLRequestOptions<TContext = any> {
-  schema: GraphQLSchema;
-
-  rootValue?: ((parsedQuery: DocumentNode) => any) | any;
-  context: TContext;
-
-  validationRules?: ValidationRule[];
-  fieldResolver?: GraphQLFieldResolver<any, TContext>;
-
-  debug?: boolean;
-
-  extensions?: Array<() => GraphQLExtension>;
-  queryExtensions?: Record<string, any>;
-  tracing?: boolean;
-  persistedQueries?: PersistedQueryOptions;
-  cacheControl?: CacheControlExtensionOptions;
-
-  formatResponse?: Function;
-}
-
-export type ValidationRule = (context: ValidationContext) => ASTVisitor;
-
-export class InvalidGraphQLRequestError extends Error {}
 
 export interface GraphQLResponse {
   data?: object;
@@ -73,17 +51,78 @@ export interface GraphQLResponse {
   extensions?: Record<string, any>;
 }
 
-export interface GraphQLRequestProcessor {
+export interface GraphQLRequestOptions<TContext> {
+  schema: GraphQLSchema;
+
+  rootValue?: ((parsedQuery: DocumentNode) => any) | any;
+
+  context: TContext;
+
+  cache: KeyValueCache;
+  dataSources?: () => DataSources<TContext>;
+
+  validationRules?: ValidationRule[];
+  fieldResolver?: GraphQLFieldResolver<any, TContext>;
+
+  debug?: boolean;
+
+  extensions?: Array<() => GraphQLExtension>;
+  tracing?: boolean;
+  persistedQueries?: PersistedQueryOptions;
+  cacheControl?: CacheControlExtensionOptions;
+
+  formatError?: Function;
+  formatResponse?: Function;
+}
+
+export type DataSources<TContext> = {
+  [name: string]: DataSource<TContext>;
+};
+
+export type ValidationRule = (context: ValidationContext) => ASTVisitor;
+
+export class InvalidGraphQLRequestError extends Error {}
+
+export interface GraphQLRequestProcessor<TContext> {
   willExecuteOperation?(operation: OperationDefinitionNode): void;
 }
 
-export class GraphQLRequestProcessor {
-  context: any;
-  extensionStack!: GraphQLExtensionStack;
+export class GraphQLRequestProcessor<TContext> {
+  context: TContext;
 
-  constructor(public options: GraphQLRequestOptions) {
-    this.context = options.context || {};
+  extensionStack!: GraphQLExtensionStack;
+  cacheControlExtension?: CacheControlExtension;
+
+  constructor(private options: GraphQLRequestOptions<TContext>) {
+    this.context = this.initializeContext();
     this.initializeExtensions();
+  }
+
+  initializeContext() {
+    const context = cloneObject(this.options.context);
+
+    if (this.options.dataSources) {
+      const dataSources = this.options.dataSources();
+
+      for (const dataSource of Object.values(dataSources)) {
+        if (dataSource.initialize) {
+          dataSource.initialize({
+            context: this.context,
+            cache: this.options.cache,
+          });
+        }
+      }
+
+      if ('dataSources' in context) {
+        throw new Error(
+          'Please use the dataSources config option instead of putting dataSources on the context yourself.',
+        );
+      }
+
+      (context as any).dataSources = dataSources;
+    }
+
+    return context;
   }
 
   initializeExtensions() {
@@ -98,10 +137,12 @@ export class GraphQLRequestProcessor {
     if (this.options.tracing) {
       extensions.push(new TracingExtension());
     }
-    if (this.options.cacheControl === true) {
-      extensions.push(new CacheControlExtension());
-    } else if (this.options.cacheControl) {
-      extensions.push(new CacheControlExtension(this.options.cacheControl));
+
+    if (this.options.cacheControl) {
+      this.cacheControlExtension = new CacheControlExtension(
+        this.options.cacheControl,
+      );
+      extensions.push(this.cacheControlExtension);
     }
 
     this.extensionStack = new GraphQLExtensionStack(extensions);
@@ -116,7 +157,7 @@ export class GraphQLRequestProcessor {
     if (extensions.length > 0) {
       enableGraphQLExtensions(this.options.schema);
     }
-    this.context._extensionStack = this.extensionStack;
+    (this.context as any)._extensionStack = this.extensionStack;
   }
 
   async processRequest(request: GraphQLRequest): Promise<GraphQLResponse> {
@@ -300,7 +341,7 @@ export class GraphQLRequestProcessor {
         typeof this.options.rootValue === 'function'
           ? this.options.rootValue(document)
           : this.options.rootValue,
-      contextValue: this.options.context,
+      contextValue: this.context,
       variableValues: variables,
       operationName,
       fieldResolver: this.options.fieldResolver,
@@ -316,4 +357,8 @@ export class GraphQLRequestProcessor {
       executionDidEnd();
     }
   }
+}
+
+function cloneObject<T extends Object>(object: T): T {
+  return Object.assign(Object.create(Object.getPrototypeOf(object)), object);
 }
