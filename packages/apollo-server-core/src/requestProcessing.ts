@@ -99,6 +99,11 @@ export class GraphQLRequestProcessor<TContext> {
   }
 
   initializeContext() {
+    // FIXME: We currently shallow clone the context for every request,
+    // but that's unlikely to be what people want.
+    // The problem here is that even if you pass in a function for `context`,
+    // this only runs once for a batched request
+    // (in ApolloServer#graphQLServerOptions).
     const context = cloneObject(this.options.context);
 
     if (this.options.dataSources) {
