@@ -1,7 +1,3 @@
 {
-  "extends": "./tsconfig.base",
-  "compilerOptions": {
-    "rootDir": "./packages",
-  },
-  "include": ["**/__tests__", "**/__mocks__"],
+  "extends": "./tsconfig.base"
 }
