@@ -30,7 +30,7 @@ export interface GraphQLServerOptions<
   schema: GraphQLSchema;
   formatError?: Function;
   rootValue?: ((parsedQuery: DocumentNode) => TRootValue) | TRootValue;
-  context?: (() => Promise<TContext> | TContext) | TContext;
+  context?: TContext | (() => never);
   validationRules?: Array<(context: ValidationContext) => any>;
   formatResponse?: Function;
   fieldResolver?: GraphQLFieldResolver<any, TContext>;
