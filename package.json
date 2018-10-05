@@ -113,7 +113,7 @@
     "test-listen": "1.1.0",
     "ts-jest": "23.1.4",
     "tslint": "5.11.0",
-    "typescript": "3.0.3",
+    "typescript": "3.1.1",
     "ws": "6.0.0",
     "yup": "0.26.5"
   },
