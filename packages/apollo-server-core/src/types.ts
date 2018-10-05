@@ -14,6 +14,7 @@ import {
   GraphQLServerOptions as GraphQLOptions,
   PersistedQueryOptions,
 } from './graphqlOptions';
+import { CacheControlExtensionOptions } from 'apollo-cache-control';
 
 export { KeyValueCache } from 'apollo-server-caching';
 
@@ -44,7 +45,6 @@ export interface Config
       | 'validationRules'
       | 'formatResponse'
       | 'fieldResolver'
-      | 'cacheControl'
       | 'tracing'
       | 'dataSources'
       | 'cache'
@@ -59,6 +59,7 @@ export interface Config
   mockEntireSchema?: boolean;
   engine?: boolean | EngineReportingOptions;
   extensions?: Array<() => GraphQLExtension>;
+  cacheControl?: CacheControlExtensionOptions | boolean;
   persistedQueries?: PersistedQueryOptions | false;
   subscriptions?: Partial<SubscriptionServerOptions> | string | false;
   //https://github.com/jaydenseric/apollo-upload-server#options
