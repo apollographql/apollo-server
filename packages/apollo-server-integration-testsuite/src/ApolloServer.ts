@@ -592,7 +592,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
               endpointUrl: `http://localhost:${
                 (engineServer.address() as net.AddressInfo).port
               }`,
-              apiKey: 'fake',
+              apiKey: 'service:my-app:secret',
               maxUncompressedReportSize: 1,
             },
             formatError,
