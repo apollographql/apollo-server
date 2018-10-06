@@ -4,7 +4,7 @@
   "license": "MIT",
   "repository": "github:apollographql/apollo-server",
   "scripts": {
-    "clean": "git clean -dfqX **/{dist,node_modules}/",
+    "clean": "git clean -dfqX -- ./node_modules **/{dist,node_modules}/",
     "compile": "lerna run compile",
     "release": "npm run clean && npm ci && lerna publish --exact",
     "precommit": "lint-staged",
@@ -95,7 +95,7 @@
     "js-sha256": "0.9.0",
     "koa": "2.5.3",
     "koa-multer": "1.0.2",
-    "lerna": "3.4.0",
+    "lerna": "3.4.1",
     "lint-staged": "7.2.2",
     "memcached-mock": "0.1.0",
     "meteor-promise": "0.8.6",
