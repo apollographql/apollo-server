@@ -1,20 +1,24 @@
 {
-  "compilerOptions": {
-    "target": "es2016",
-    "module": "commonjs",
-    "moduleResolution": "node",
-    "esModuleInterop": true,
-    "sourceMap": true,
-    "declaration": true,
-    "declarationMap": true,
-    "removeComments": true,
-    "strict": true,
-    "noImplicitAny": true,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
-    "noUnusedParameters": true,
-    "noUnusedLocals": true,
-    "lib": ["es2017", "esnext.asynciterable"],
-    "types": ["node", "jest"]
-  }
+  "files": [],
+  "references": [
+    { "path": "./packages/apollo-cache-control" },
+    { "path": "./packages/apollo-datasource" },
+    { "path": "./packages/apollo-datasource-rest" },
+    { "path": "./packages/apollo-engine-reporting" },
+    { "path": "./packages/apollo-server" },
+    { "path": "./packages/apollo-server-cache-memcached" },
+    { "path": "./packages/apollo-server-cache-redis" },
+    { "path": "./packages/apollo-server-caching" },
+    { "path": "./packages/apollo-server-cloudflare" },
+    { "path": "./packages/apollo-server-core" },
+    { "path": "./packages/apollo-server-errors" },
+    { "path": "./packages/apollo-server-express" },
+    { "path": "./packages/apollo-server-hapi" },
+    { "path": "./packages/apollo-server-integration-testsuite" },
+    { "path": "./packages/apollo-server-koa" },
+    { "path": "./packages/apollo-server-lambda" },
+    { "path": "./packages/apollo-server-micro" },
+    { "path": "./packages/apollo-tracing" },
+    { "path": "./packages/graphql-extensions" }
+  ]
 }

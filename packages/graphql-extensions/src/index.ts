@@ -20,7 +20,7 @@ export type EndHandler = (...errors: Array<Error>) => void;
 // arguments.
 type StartHandlerInvoker<TContext = any> = (
   ext: GraphQLExtension<TContext>,
-) => void;
+) => EndHandler | void;
 
 // Copied from runQuery in apollo-server-core.
 // XXX Will this work properly if it's an identical interface of the

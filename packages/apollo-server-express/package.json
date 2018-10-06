@@ -4,11 +4,6 @@
   "description": "Production-ready Node.js GraphQL server for Express and Connect",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "scripts": {
-    "clean": "rm -rf dist",
-    "compile": "tsc",
-    "prepare": "npm run clean && npm run compile"
-  },
   "repository": {
     "type": "git",
     "url": "https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-express"
