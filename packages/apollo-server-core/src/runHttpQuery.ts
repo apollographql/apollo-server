@@ -124,7 +124,7 @@ export async function runHttpQuery(
   // a throwing function, which we invoke here to rethrow an HTTP error.
   if (typeof options.context === 'function') {
     try {
-      options.context();
+      (options.context as () => never)();
     } catch (e) {
       e.message = `Context creation failed: ${e.message}`;
       // For errors that are not internal, such as authentication, we
