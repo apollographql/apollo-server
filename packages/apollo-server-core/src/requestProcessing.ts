@@ -1,4 +1,3 @@
-import { Request } from 'apollo-server-env';
 import {
   GraphQLSchema,
   GraphQLFieldResolver,
@@ -37,13 +36,8 @@ import {
 } from 'apollo-server-errors';
 import { createHash } from 'crypto';
 
-export interface GraphQLRequest {
-  query?: string;
-  operationName?: string;
-  variables?: { [name: string]: any };
-  extensions?: Record<string, any>;
-  httpRequest: Pick<Request, 'url' | 'method' | 'headers'>;
-}
+import { GraphQLRequest } from './requestPipelineAPI';
+export { GraphQLRequest };
 
 export interface GraphQLResponse {
   data?: object;

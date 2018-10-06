@@ -4,18 +4,10 @@
   "description": "Apollo Server plugin base classes",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "scripts": {
-    "clean": "rm -rf dist",
-    "compile": "tsc",
-    "prepare": "npm run clean && npm run compile"
-  },
   "keywords": [],
   "author": "Apollo <opensource@apollographql.com>",
   "license": "MIT",
   "engines": {
     "node": ">=6"
-  },
-  "dependencies": {
-    "apollo-server-caching": "file:../apollo-server-caching"
   }
 }
