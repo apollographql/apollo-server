@@ -6,6 +6,7 @@
   "scripts": {
     "clean": "git clean -dfqX -- ./node_modules **/{dist,node_modules}/",
     "compile": "tsc --build",
+    "compile:clean": "tsc --build --clean",
     "watch": "tsc --build --watch",
     "release": "npm run clean && npm ci && lerna publish --exact",
     "precommit": "lint-staged",
