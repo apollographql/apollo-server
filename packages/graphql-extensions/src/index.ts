@@ -1,6 +1,5 @@
 import {
   GraphQLSchema,
-  GraphQLError,
   GraphQLObjectType,
   getNamedType,
   GraphQLField,
@@ -14,6 +13,9 @@ import {
 import { Request } from 'apollo-server-env';
 export { Request } from 'apollo-server-env';
 
+import { GraphQLResponse } from 'apollo-server-core/dist/requestPipelineAPI';
+export { GraphQLResponse };
+
 export type EndHandler = (...errors: Array<Error>) => void;
 // A StartHandlerInvoker is a function that, given a specific GraphQLExtension,
 // finds a specific StartHandler on that extension and calls it with appropriate
@@ -21,15 +23,6 @@ export type EndHandler = (...errors: Array<Error>) => void;
 type StartHandlerInvoker<TContext = any> = (
   ext: GraphQLExtension<TContext>,
 ) => EndHandler | void;
-
-// Copied from runQuery in apollo-server-core.
-// XXX Will this work properly if it's an identical interface of the
-// same name?
-export interface GraphQLResponse {
-  data?: object;
-  errors?: Array<GraphQLError & object>;
-  extensions?: object;
-}
 
 export class GraphQLExtension<TContext = any> {
   public requestDidStart?(o: {

@@ -21,7 +21,7 @@ import {
 
 import { CacheControlExtensionOptions } from 'apollo-cache-control';
 
-import { GraphQLRequestProcessor } from '../requestProcessing';
+import { GraphQLRequest, GraphQLRequestPipeline } from '../requestPipeline';
 import { Request } from 'apollo-server-env';
 
 // This is a temporary kludge to ensure we preserve runQuery behavior with the
@@ -30,10 +30,9 @@ import { Request } from 'apollo-server-env';
 // refactoring is complete.
 
 function runQuery(options: QueryOptions): Promise<GraphQLResponse> {
-  const requestProcessor = new GraphQLRequestProcessor({
+  const requestPipeline = new GraphQLRequestPipeline({
     schema: options.schema,
     rootValue: options.rootValue,
-    context: options.context || {},
     validationRules: options.validationRules,
     fieldResolver: options.fieldResolver,
 
@@ -42,16 +41,21 @@ function runQuery(options: QueryOptions): Promise<GraphQLResponse> {
     cacheControl: options.cacheControl,
 
     formatResponse: options.formatResponse,
-
-    debug: options.debug,
   });
 
-  return requestProcessor.processRequest({
+  const request: GraphQLRequest = {
     query: options.queryString,
     operationName: options.operationName,
     variables: options.variables,
     extensions: options.extensions,
-    httpRequest: options.request,
+    http: options.request,
+  };
+
+  return requestPipeline.processRequest({
+    request,
+    context: options.context || {},
+    debug: options.debug,
+    cache: {} as any,
   });
 }
 

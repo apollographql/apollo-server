@@ -7,5 +7,6 @@
   "include": ["src/**/*"],
   "exclude": ["**/__tests__", "**/__mocks__"],
   "references": [
+    { "path": "../apollo-server-core/tsconfig.requestPipelineAPI.json" },
   ]
 }

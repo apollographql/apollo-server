@@ -5,5 +5,7 @@
     "outDir": "./dist"
   },
   "files": ["src/requestPipelineAPI.ts"],
-  "references": []
+  "references": [
+    { "path": "../apollo-server-caching" }
+  ]
 }

@@ -1,4 +1,4 @@
-import { Request } from 'apollo-server-env';
+import { Request, Headers } from 'apollo-server-env';
 import {
   default as GraphQLOptions,
   resolveGraphqlOptions,
@@ -9,11 +9,11 @@ import {
   PersistedQueryNotFoundError,
 } from 'apollo-server-errors';
 import {
-  GraphQLRequestProcessor,
-  GraphQLRequestOptions,
+  GraphQLRequestPipeline,
   GraphQLRequest,
   InvalidGraphQLRequestError,
-} from './requestProcessing';
+  GraphQLRequestContext,
+} from './requestPipeline';
 import { CacheControlExtensionOptions } from 'apollo-cache-control';
 
 export interface HttpQueryRequest {
@@ -122,6 +122,10 @@ export async function runHttpQuery(
   // FIXME: Errors thrown while resolving the context in
   // ApolloServer#graphQLServerOptions are currently converted to
   // a throwing function, which we invoke here to rethrow an HTTP error.
+  // When we refactor the integration between ApolloServer, the middleware and
+  // runHttpQuery, we should pass the original context function through,
+  // so we can resolve it on every GraphQL request (as opposed to once per HTTP
+  // request, which could be a batch).
   if (typeof options.context === 'function') {
     try {
       (options.context as () => never)();
@@ -141,7 +145,7 @@ export async function runHttpQuery(
     }
   }
 
-  const requestOptions: GraphQLRequestOptions<any> = {
+  const config = {
     schema: options.schema,
     rootValue: options.rootValue,
     context: options.context || {},
@@ -168,11 +172,14 @@ export async function runHttpQuery(
     debug: options.debug,
   };
 
-  return processHTTPRequest(requestOptions, request);
+  return processHTTPRequest(config, request);
 }
 
 export async function processHTTPRequest<TContext>(
-  options: GraphQLRequestOptions<TContext>,
+  options: GraphQLOptions<TContext> & {
+    context: TContext;
+    cache: NonNullable<GraphQLOptions<TContext>['cache']>;
+  },
   httpRequest: HttpQueryRequest,
 ): Promise<HttpQueryResponse> {
   let isGetRequest: boolean = false;
@@ -209,27 +216,45 @@ export async function processHTTPRequest<TContext>(
       );
   }
 
-  function newRequestProcessor() {
-    const requestProcessor = new GraphQLRequestProcessor(options);
+  const requestPipeline = new GraphQLRequestPipeline<TContext>(options);
 
-    // GET operations should only be queries (not mutations). We want to throw
-    // a particular HTTP error in that case.
-    if (isGetRequest) {
-      requestProcessor.willExecuteOperation = operation => {
-        if (operation.operation !== 'query') {
-          throw new HttpQueryError(
-            405,
-            `GET supports only query operation`,
-            false,
-            {
-              Allow: 'POST',
-            },
-          );
-        }
-      };
-    }
+  function buildRequestContext(
+    request: GraphQLRequest,
+  ): GraphQLRequestContext<TContext> {
+    // FIXME: We currently shallow clone the context for every request,
+    // but that's unlikely to be what people want.
+    // We allow passing in a function for `context` to ApolloServer,
+    // but this only runs once for a batched request (because this is resolved
+    // in ApolloServer#graphQLServerOptions, before runHttpQuery is invoked).
+    const context = cloneObject(options.context);
+    return {
+      request,
+      response: {
+        http: {
+          headers: new Headers(),
+        },
+      },
+      context,
+      cache: options.cache,
+      debug: options.debug,
+    };
+  }
 
-    return requestProcessor;
+  // GET operations should only be queries (not mutations). We want to throw
+  // a particular HTTP error in that case.
+  if (isGetRequest) {
+    requestPipeline.willExecuteOperation = operation => {
+      if (operation.operation !== 'query') {
+        throw new HttpQueryError(
+          405,
+          `GET supports only query operation`,
+          false,
+          {
+            Allow: 'POST',
+          },
+        );
+      }
+    };
   }
 
   const responseInit: ApolloServerHttpResponse = {
@@ -250,7 +275,8 @@ export async function processHTTPRequest<TContext>(
       const responses = await Promise.all(
         requests.map(async request => {
           try {
-            return await newRequestProcessor().processRequest(request);
+            const requestContext = buildRequestContext(request);
+            return await requestPipeline.processRequest(requestContext);
           } catch (error) {
             // A batch can contain another query that returns data,
             // so we don't error out the entire request with an HttpError
@@ -267,8 +293,8 @@ export async function processHTTPRequest<TContext>(
       const request = parseGraphQLRequest(httpRequest.request, requestPayload);
 
       try {
-        const requestProcessor = newRequestProcessor();
-        const response = await requestProcessor.processRequest(request);
+        const requestContext = buildRequestContext(request);
+        const response = await requestPipeline.processRequest(requestContext);
 
         // This code is run on parse/validation errors and any other error that
         // doesn't reach GraphQL execution
@@ -277,20 +303,13 @@ export async function processHTTPRequest<TContext>(
           return throwHttpGraphQLError(400, response.errors as any);
         }
 
-        if (
-          requestProcessor.cacheControlExtension &&
-          requestProcessor.cacheControlExtension.options.calculateHttpHeaders
-        ) {
-          const overallCachePolicy = requestProcessor.cacheControlExtension.computeOverallCachePolicy();
+        body = prettyJSONStringify(response);
 
-          if (overallCachePolicy) {
-            responseInit.headers!['Cache-Control'] = `max-age=${
-              overallCachePolicy.maxAge
-            }, ${overallCachePolicy.scope.toLowerCase()}`;
+        if (response.http) {
+          for (const [name, value] of response.http.headers) {
+            responseInit.headers![name] = value;
           }
         }
-
-        body = prettyJSONStringify(response);
       } catch (error) {
         if (error instanceof InvalidGraphQLRequestError) {
           throw new HttpQueryError(400, error.message);
@@ -376,6 +395,10 @@ function parseGraphQLRequest(
     operationName,
     variables,
     extensions,
-    httpRequest,
+    http: httpRequest,
   };
+}
+
+function cloneObject<T extends Object>(object: T): T {
+  return Object.assign(Object.create(Object.getPrototypeOf(object)), object);
 }
