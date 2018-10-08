@@ -472,6 +472,7 @@ export class ApolloServerBase {
 
     return {
       schema: this.schema,
+      plugins: this.plugins,
       extensions: this.extensions,
       context,
       // Allow overrides from options. Be explicit about a couple of them to

@@ -8,6 +8,7 @@ import { GraphQLExtension } from 'graphql-extensions';
 import { CacheControlExtensionOptions } from 'apollo-cache-control';
 import { KeyValueCache } from 'apollo-server-caching';
 import { DataSource } from 'apollo-datasource';
+import { ApolloServerPlugin } from 'apollo-server-plugin-base';
 
 /*
  * GraphQLServerOptions
@@ -41,6 +42,7 @@ export interface GraphQLServerOptions<
   dataSources?: () => DataSources<TContext>;
   cache?: KeyValueCache;
   persistedQueries?: PersistedQueryOptions;
+  plugins?: ApolloServerPlugin[];
 }
 
 export type DataSources<TContext> = {

@@ -10,11 +10,11 @@ export abstract class ApolloServerPlugin {
   ): GraphQLRequestListener<TContext> | void;
 }
 
-type WithRequired<T, K extends keyof T> = T & Required<Pick<T, K>>;
+// type WithRequired<T, K extends keyof T> = T & Required<Pick<T, K>>;
 
 export interface GraphQLRequestListener<TContext> {
-  prepareRequest?(requestContext: GraphQLRequestContext<TContext>): void;
-  executionDidStart?(
-    requestContext: WithRequired<GraphQLRequestContext<TContext>, 'operation'>,
-  ): void;
+  prepareRequest?(
+    requestContext: GraphQLRequestContext<TContext>,
+  ): Promise<void>;
+  executionDidStart?(requestContext: GraphQLRequestContext<TContext>): void;
 }

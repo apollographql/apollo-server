@@ -166,6 +166,8 @@ export async function runHttpQuery(
     formatResponse: options.formatResponse,
 
     debug: options.debug,
+
+    plugins: options.plugins,
   };
 
   return processHTTPRequest(config, request);
