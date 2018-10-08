@@ -280,9 +280,16 @@ export class GraphQLRequestPipeline<TContext> {
     }
 
     function sendResponse(response: GraphQLResponse): GraphQLResponse {
-      return extensionStack.willSendResponse({
-        graphqlResponse: response,
-      }).graphqlResponse;
+      // We override errors, data, and extensions with the passed in response,
+      // but keep other properties (like http)
+      return (requestContext.response = extensionStack.willSendResponse({
+        graphqlResponse: {
+          ...requestContext.response,
+          errors: response.errors,
+          data: response.data,
+          extensions: response.extensions,
+        },
+      }).graphqlResponse);
     }
   }
 

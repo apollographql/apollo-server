@@ -9,7 +9,6 @@ import {
 } from 'graphql';
 
 import { GraphQLExtension, GraphQLResponse } from 'graphql-extensions';
-import { Headers } from 'apollo-server-env';
 
 export interface CacheControlFormat {
   version: 1;
@@ -138,13 +137,10 @@ export class CacheControlExtension<TContext = any>
   }
 
   public willSendResponse?(o: { graphqlResponse: GraphQLResponse }) {
-    if (this.options.calculateHttpHeaders) {
+    if (this.options.calculateHttpHeaders && o.graphqlResponse.http) {
       const overallCachePolicy = this.computeOverallCachePolicy();
 
       if (overallCachePolicy) {
-        if (!o.graphqlResponse.http) {
-          o.graphqlResponse.http = { headers: new Headers() };
-        }
         o.graphqlResponse.http.headers.set(
           'Cache-Control',
           `max-age=${

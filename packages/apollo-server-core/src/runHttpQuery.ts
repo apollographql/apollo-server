@@ -13,6 +13,7 @@ import {
   GraphQLRequest,
   InvalidGraphQLRequestError,
   GraphQLRequestContext,
+  GraphQLResponse,
 } from './requestPipeline';
 import { CacheControlExtensionOptions } from 'apollo-cache-control';
 
@@ -28,11 +29,6 @@ export interface HttpQueryRequest {
     | GraphQLOptions
     | ((...args: Array<any>) => Promise<GraphQLOptions> | GraphQLOptions);
   request: Pick<Request, 'url' | 'method' | 'headers'>;
-}
-
-// The result of a curl does not appear well in the terminal, so we add an extra new line
-function prettyJSONStringify(value: any) {
-  return JSON.stringify(value) + '\n';
 }
 
 export interface ApolloServerHttpResponse {
@@ -287,7 +283,7 @@ export async function processHTTPRequest<TContext>(
         }),
       );
 
-      body = prettyJSONStringify(responses);
+      body = prettyJSONStringify(responses.map(serializeGraphQLResponse));
     } else {
       // We're processing a normal request
       const request = parseGraphQLRequest(httpRequest.request, requestPayload);
@@ -303,13 +299,13 @@ export async function processHTTPRequest<TContext>(
           return throwHttpGraphQLError(400, response.errors as any);
         }
 
-        body = prettyJSONStringify(response);
-
         if (response.http) {
           for (const [name, value] of response.http.headers) {
             responseInit.headers![name] = value;
           }
         }
+
+        body = prettyJSONStringify(serializeGraphQLResponse(response));
       } catch (error) {
         if (error instanceof InvalidGraphQLRequestError) {
           throw new HttpQueryError(400, error.message);
@@ -397,6 +393,23 @@ function parseGraphQLRequest(
     extensions,
     http: httpRequest,
   };
+}
+
+function serializeGraphQLResponse(
+  response: GraphQLResponse,
+): Pick<GraphQLResponse, 'errors' | 'data' | 'extensions'> {
+  // See https://github.com/facebook/graphql/pull/384 for why
+  // errors comes first.
+  return {
+    errors: response.errors,
+    data: response.data,
+    extensions: response.extensions,
+  };
+}
+
+// The result of a curl does not appear well in the terminal, so we add an extra new line
+function prettyJSONStringify(value: any) {
+  return JSON.stringify(value) + '\n';
 }
 
 function cloneObject<T extends Object>(object: T): T {
