@@ -150,7 +150,7 @@ export class GraphQLRequestPipeline<TContext> {
     }
 
     const requestDidEnd = extensionStack.requestDidStart({
-      request: request.http!,
+      request: request.http,
       queryString: request.query,
       operationName: request.operationName,
       variables: request.variables,

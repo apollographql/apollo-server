@@ -11,6 +11,8 @@ export interface GraphQLRequest {
   operationName?: string;
   variables?: { [name: string]: any };
   extensions?: Record<string, any>;
+  // FIXME: This should be optional to support other transports,
+  // but that currently breaks Engine reporting.
   http: Pick<Request, 'url' | 'method' | 'headers'>;
 }
 
