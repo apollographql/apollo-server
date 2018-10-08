@@ -111,7 +111,7 @@
     "subscriptions-transport-ws": "0.9.15",
     "supertest": "3.3.0",
     "test-listen": "1.1.0",
-    "ts-jest": "23.10.3",
+    "ts-jest": "23.10.4",
     "tslint": "5.11.0",
     "typescript": "3.1.1",
     "ws": "6.0.0",
