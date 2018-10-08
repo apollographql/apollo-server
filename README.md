@@ -156,6 +156,36 @@ app.listen({ port: 4000 }, () =>
 
 > Note; `qs-middleware` is only required if running outside of Meteor
 
+### Koa
+
+```js
+const koa = require('koa');
+const { ApolloServer, gql } = require('apollo-server-koa');
+
+// Construct a schema, using GraphQL schema language
+const typeDefs = gql`
+  type Query {
+    hello: String
+  }
+`;
+
+// Provide resolver functions for your schema fields
+const resolvers = {
+  Query: {
+    hello: () => 'Hello world!',
+  },
+};
+
+const server = new ApolloServer({ typeDefs, resolvers });
+
+const app = new Koa();
+server.applyMiddleware({ app });
+
+app.listen({ port: 4000 }, () =>
+  console.log(`🚀 Server ready at http://localhost:4000${server.graphqlPath}`),
+);
+```
+
 ### Hapi
 
 The code below requires Hapi 17 or higher.
