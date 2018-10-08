@@ -8,6 +8,7 @@
   "exclude": ["**/__tests__", "**/__mocks__"],
   "references": [
     { "path": "../apollo-server-plugin-base" },
+    { "path": "../apollo-engine-reporting" },
     { "path": "../apollo-server-caching" }
   ]
 }

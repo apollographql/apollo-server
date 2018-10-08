@@ -1,5 +1,5 @@
 import * as assert from 'assert';
-import { pluginName } from './common';
+import { pluginName, generateOperationHash, getCacheKey } from './common';
 import {
   ApolloServerPlugin,
   GraphQLServiceContext,
@@ -45,13 +45,31 @@ export default class extends ApolloServerPlugin {
   requestDidStart(): GraphQLRequestListener<any> {
     const cache = this.cache;
 
-    if (!this.cache) {
-      throw new Error('Unable to access required cache.');
-    }
-
     return {
-      async prepareRequest() {
-        console.log(cache);
+      async prepareRequest({ request }) {
+        if (!cache) {
+          throw new Error('Unable to access required cache.');
+        }
+
+        // XXX This isn't really right and this totally breaks APQ today, but:
+        //   1) TypeScript seemed to want me to guard against this; and
+        //   2) I'm not touching persistedQueries today.
+        if (!request.query) {
+          throw new Error('Document query was not received.');
+        }
+
+        // XXX This needs to utilize a better cache store and persist the
+        // parsed document to the rest of the request to avoid re-validation.
+        const hash = generateOperationHash(request.query);
+
+        // Try to fetch the operation from the cache of operations we're
+        // currently aware of, which has been populated by the operation
+        // registry.
+        const cacheFetch = await cache.get(getCacheKey(hash));
+
+        if (!cacheFetch) {
+          throw new Error('Execution forbidden.');
+        }
       },
     };
   }
