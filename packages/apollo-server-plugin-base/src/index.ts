@@ -4,7 +4,7 @@ import {
 } from 'apollo-server-core/dist/requestPipelineAPI';
 
 export abstract class ApolloServerPlugin {
-  serverWillStart?(service: GraphQLServiceContext): void;
+  async serverWillStart?(service: GraphQLServiceContext): Promise<void>;
   requestDidStart?<TContext>(
     requestContext: GraphQLRequestContext<TContext>,
   ): GraphQLRequestListener<TContext> | void;
