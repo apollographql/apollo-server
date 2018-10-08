@@ -1104,6 +1104,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
             await map.set(key, val);
           },
           get: async key => map.get(key),
+          delete: async key => map.delete(key),
         };
         app = await createApp({
           graphqlOptions: {
