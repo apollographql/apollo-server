@@ -32,6 +32,7 @@ import {
   ContextFunction,
   SubscriptionServerOptions,
   FileUploadOptions,
+  PluginDefinition,
 } from './types';
 
 import { FormatErrorExtension } from './formatters';
@@ -333,6 +334,22 @@ export class ApolloServerBase {
     this.graphqlPath = path;
   }
 
+  protected async willStart() {
+    await Promise.all(
+      this.plugins.map(
+        plugin =>
+          plugin.serverWillStart &&
+          plugin.serverWillStart({
+            schema: this.schema,
+            engine: {
+              serviceID: this.engineServiceId,
+            },
+            persistedQueries: this.requestOptions.persistedQueries,
+          }),
+      ),
+    );
+  }
+
   public async stop() {
     if (this.subscriptionServer) await this.subscriptionServer.close();
     if (this.engineReportingAgent) {
@@ -416,30 +433,20 @@ export class ApolloServerBase {
     return false;
   }
 
-  private ensurePluginInstantiation(plugins?: any[]): void {
+  private ensurePluginInstantiation(plugins?: PluginDefinition[]): void {
     if (!plugins || !plugins.length) {
       return;
     }
 
-    this.plugins = plugins.map((plugin: any) => {
-      // If it's already been instantiated, we can use it as is.
-      if (plugin instanceof ApolloServerPlugin) {
-        return plugin;
-      }
-
-      // A user-defined type guard might be in order here, but I couldn't quite
-      // figure out the semantics of it.  This seems to do the trick.
-      const isCorrectPluginSubclass = (c: any): boolean =>
-        c.prototype instanceof ApolloServerPlugin;
-
-      //
-      if (plugin.default && isCorrectPluginSubclass(plugin.default)) {
-        return new plugin.default();
-      } else if (isCorrectPluginSubclass(plugin)) {
+    // FIXME: We also want to support default exports and possibly module names
+    // but this requires adjustments to typing (see PluginDefinition type), and
+    // I had to give up on that for now.
+    this.plugins = plugins.map(plugin => {
+      if (typeof plugin === 'function') {
         return new plugin();
+      } else {
+        return plugin as ApolloServerPlugin;
       }
-
-      throw new Error('Invalid plugin definition');
     });
   }
 

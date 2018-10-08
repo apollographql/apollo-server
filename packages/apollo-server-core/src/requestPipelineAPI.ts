@@ -3,8 +3,24 @@
 // depending on the types in it.
 
 import { Request, Headers } from 'apollo-server-env';
-import { ValidationContext, ASTVisitor, GraphQLError } from 'graphql';
+import {
+  GraphQLSchema,
+  ValidationContext,
+  ASTVisitor,
+  GraphQLError,
+  OperationDefinitionNode,
+} from 'graphql';
 import { KeyValueCache } from 'apollo-server-caching';
+
+export interface GraphQLServiceContext {
+  schema: GraphQLSchema;
+  engine: {
+    serviceID?: string;
+  };
+  persistedQueries?: {
+    cache: KeyValueCache;
+  };
+}
 
 export interface GraphQLRequest {
   query?: string;
@@ -31,6 +47,8 @@ export interface GraphQLRequestContext<TContext> {
 
   context: TContext;
   cache: KeyValueCache;
+
+  operation?: OperationDefinitionNode;
 
   debug?: boolean;
 }

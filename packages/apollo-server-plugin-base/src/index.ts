@@ -1,21 +1,20 @@
 import {
+  GraphQLServiceContext,
   GraphQLRequestContext,
-  GraphQLRequest,
 } from 'apollo-server-core/dist/requestPipelineAPI';
-import { OperationDefinitionNode } from 'graphql';
 
 export abstract class ApolloServerPlugin {
-  serverWillStart?(): void;
+  serverWillStart?(service: GraphQLServiceContext): void;
   requestDidStart?<TContext>(
     requestContext: GraphQLRequestContext<TContext>,
-  ): GraphQLRequestListener;
+  ): GraphQLRequestListener<TContext> | void;
 }
 
-export interface GraphQLRequestListener {
-  prepareRequest?(request: GraphQLRequest): void;
-  executionDidStart({
-    operation,
-  }: {
-    operation: OperationDefinitionNode;
-  }): void;
+type WithRequired<T, K extends keyof T> = T & Required<Pick<T, K>>;
+
+export interface GraphQLRequestListener<TContext> {
+  prepareRequest?(requestContext: GraphQLRequestContext<TContext>): void;
+  executionDidStart?(
+    requestContext: WithRequired<GraphQLRequestContext<TContext>, 'operation'>,
+  ): void;
 }
