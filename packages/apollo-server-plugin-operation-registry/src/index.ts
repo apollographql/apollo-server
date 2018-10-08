@@ -28,8 +28,6 @@ export default class extends ApolloServerPlugin {
       );
     }
 
-    console.log('ENGINE', engine);
-
     if (!persistedQueries || !persistedQueries.cache) {
       throw new Error(
         `${pluginName}: Persisted queries must be enabled to use the operation registry.`,
