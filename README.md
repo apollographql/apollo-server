@@ -181,7 +181,10 @@ const server = new ApolloServer({ typeDefs, resolvers });
 const app = new Koa();
 server.applyMiddleware({ app });
 
-app.listen({ port: 4000 }, () =>
+const PORT = 3000;
+const URL = 'localhost';
+
+app.listen(PORT, URL, () =>
   console.log(`🚀 Server ready at http://localhost:4000${server.graphqlPath}`),
 );
 ```
