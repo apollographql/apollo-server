@@ -24,11 +24,6 @@
   "engines": {
     "node": ">=6"
   },
-  "scripts": {
-    "clean": "rm -rf dist",
-    "compile": "tsc",
-    "prepublish": "npm run clean && npm run compile"
-  },
   "dependencies": {
     "@apollographql/graphql-playground-html": "^1.6.0",
     "apollo-server-core": "file:../apollo-server-core",

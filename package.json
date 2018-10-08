@@ -5,10 +5,10 @@
   "repository": "github:apollographql/apollo-server",
   "scripts": {
     "clean": "git clean -dfqX -- ./node_modules **/{dist,node_modules}/",
-    "compile": "lerna run compile",
+    "compile": "tsc --build",
     "release": "npm run clean && npm ci && lerna publish --exact",
     "precommit": "lint-staged",
-    "postinstall": "lerna run prepare",
+    "postinstall": "lerna run prepare && npm run compile",
     "lint": "prettier-check '**/*.{js,ts}'",
     "lint-fix": "prettier '**/*.{js,ts}' --write",
     "test": "jest --verbose",
@@ -111,9 +111,9 @@
     "subscriptions-transport-ws": "0.9.15",
     "supertest": "3.3.0",
     "test-listen": "1.1.0",
-    "ts-jest": "23.1.4",
+    "ts-jest": "23.10.3",
     "tslint": "5.11.0",
-    "typescript": "3.0.3",
+    "typescript": "3.1.1",
     "ws": "6.0.0",
     "yup": "0.26.5"
   },
@@ -122,9 +122,8 @@
     "setupFiles": [
       "<rootDir>/packages/apollo-server-env/dist/index.js"
     ],
-    "transform": {
-      "^.+\\.ts$": "ts-jest"
-    },
+    "preset": "ts-jest",
+    "testMatch": null,
     "testRegex": "/__tests__/.*\\.test\\.(js|ts)$",
     "moduleFileExtensions": [
       "ts",
@@ -134,6 +133,12 @@
       "/node_modules/",
       "/dist/"
     ],
-    "clearMocks": true
+    "clearMocks": true,
+    "globals": {
+      "ts-jest": {
+        "tsConfig": "tsconfig.test.json",
+        "diagnostics": false
+      }
+    }
   }
 }

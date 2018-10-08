@@ -4,11 +4,6 @@
   "description": "A GraphQL extension for cache control",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "scripts": {
-    "clean": "rm -rf dist",
-    "compile": "tsc",
-    "prepare": "npm run clean && npm run compile"
-  },
   "license": "MIT",
   "repository": "apollographql/apollo-cache-control-js",
   "author": "Martijn Walraven <martijn@martijnwalraven.com>",
