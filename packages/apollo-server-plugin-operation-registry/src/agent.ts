@@ -1,9 +1,13 @@
-import { getOperationManifestUrl } from './common';
-import { createHash } from 'crypto';
+import {
+  getOperationManifestUrl,
+  generateServiceIdHash,
+  getCacheKey,
+} from './common';
+
 import fetch, { Response, RequestInit } from 'node-fetch';
 import { KeyValueCache } from 'apollo-server-caching';
 
-const DEFAULT_POLL_SECONDS: number = 2;
+const DEFAULT_POLL_SECONDS: number = 30;
 const SYNC_WARN_TIME_SECONDS: number = 60;
 
 interface AgentOptions {
@@ -26,8 +30,6 @@ interface OperationManifest {
 
 type SignatureStore = Set<string>;
 
-const cacheKey = (signature: string) => `apq:${signature}`;
-
 export default class Agent {
   private timer?: NodeJS.Timer;
   private hashedServiceId?: string;
@@ -41,9 +43,7 @@ export default class Agent {
   private getHashedServiceId(): string {
     return (this.hashedServiceId =
       this.hashedServiceId ||
-      createHash('sha512')
-        .update(this.options.engine.serviceID)
-        .digest('hex'));
+      generateServiceIdHash(this.options.engine.serviceID));
   }
 
   private pollSeconds() {
@@ -88,11 +88,12 @@ export default class Agent {
   }
 
   private async tryUpdate(): Promise<boolean> {
-    this.maybeLog('Checking for manifest changes...');
     const manifestUrl = getOperationManifestUrl(
       this.getHashedServiceId(),
       this.options.schemaHash,
     );
+
+    this.maybeLog(`Checking for manifest changes at ${manifestUrl}`);
 
     const fetchOptions: RequestInit = {
       // GET is what we request, but keep in mind that, when we include and get
@@ -212,7 +213,7 @@ export default class Agent {
       if (!this.lastOperationSignatures.has(signature)) {
         // Newly added operation.
         this.maybeLog(`Incoming manifest ADDs: ${signature}`);
-        this.options.cache.set(cacheKey(signature), document);
+        this.options.cache.set(getCacheKey(signature), document);
       }
     });
 
@@ -222,7 +223,7 @@ export default class Agent {
       if (!incomingOperations.has(signature)) {
         // Remove operations which are no longer present.
         this.maybeLog(`Incoming manifest REMOVEs: ${signature}`);
-        this.options.cache.delete(cacheKey(signature));
+        this.options.cache.delete(getCacheKey(signature));
       }
     });
 
@@ -230,9 +231,5 @@ export default class Agent {
     // actual update.  Particularly important since some cache backings might
     // not actually let us look this up again.
     this.lastOperationSignatures = replacementSignatures;
-  }
-
-  check() {
-    console.log();
   }
 }
