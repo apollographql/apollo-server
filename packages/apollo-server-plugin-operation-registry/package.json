@@ -1,0 +1,23 @@
+{
+  "name": "apollo-server-plugin-operation-registry",
+  "private": true,
+  "version": "0.0.1",
+  "description": "Apollo Server operation registry",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "keywords": [],
+  "author": "Apollo <npm@apollographql.com>",
+  "license": "Copyright (c) Meteor Development Group, Inc.; See LICENSE.md.",
+  "engines": {
+    "node": ">=6"
+  },
+  "dependencies": {
+    "apollo-server-plugin-base": "file:../apollo-server-plugin-base",
+    "apollo-server-caching": "file:../apollo-server-caching",
+    "json-stable-stringify": "1.0.1",
+    "node-fetch": "2.2.0"
+  },
+  "peerDependencies": {
+    "graphql": "^0.12.0 || ^0.13.0 || ^14.0.0"
+  }
+}
