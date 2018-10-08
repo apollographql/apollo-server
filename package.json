@@ -76,6 +76,7 @@
     "@types/node": "10.11.4",
     "@types/redis": "2.8.6",
     "@types/request": "2.47.1",
+    "@types/type-is": "^1.6.2",
     "apollo-fetch": "0.7.0",
     "apollo-link": "1.2.3",
     "apollo-link-http": "1.5.5",
