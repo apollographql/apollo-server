@@ -121,29 +121,5 @@
     "typescript": "3.1.1",
     "ws": "6.1.0",
     "yup": "0.26.5"
-  },
-  "jest": {
-    "testEnvironment": "node",
-    "setupFiles": [
-      "<rootDir>/packages/apollo-server-env/dist/index.js"
-    ],
-    "preset": "ts-jest",
-    "testMatch": null,
-    "testRegex": "/__tests__/.*\\.test\\.(js|ts)$",
-    "moduleFileExtensions": [
-      "ts",
-      "js"
-    ],
-    "testPathIgnorePatterns": [
-      "/node_modules/",
-      "/dist/"
-    ],
-    "clearMocks": true,
-    "globals": {
-      "ts-jest": {
-        "tsConfig": "tsconfig.test.json",
-        "diagnostics": false
-      }
-    }
   }
 }
