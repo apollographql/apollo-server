@@ -28,9 +28,7 @@ export interface GraphQLRequest {
   operationName?: string;
   variables?: { [name: string]: any };
   extensions?: Record<string, any>;
-  // FIXME: This should be optional to support other transports,
-  // but that currently breaks Engine reporting.
-  http: Pick<Request, 'url' | 'method' | 'headers'>;
+  http?: Pick<Request, 'url' | 'method' | 'headers'>;
 }
 
 export interface GraphQLResponse {
@@ -42,7 +40,7 @@ export interface GraphQLResponse {
   };
 }
 
-export interface GraphQLRequestContext<TContext> {
+export interface GraphQLRequestContext<TContext = Record<string, any>> {
   request: GraphQLRequest;
   response?: GraphQLResponse;
 
@@ -50,9 +48,10 @@ export interface GraphQLRequestContext<TContext> {
   cache: KeyValueCache;
 
   document?: DocumentNode;
-  // operationName is set based on the selected operation, so it is defined
-  // even if no request.operationName was passed in.
-  operationName?: string;
+  // `operationName` is set based on the operation AST, so it is defined
+  // even if no `request.operationName` was passed in.
+  // It will be set to `null` for an anonymous operation.
+  operationName?: string | null;
   operation?: OperationDefinitionNode;
 
   debug?: boolean;

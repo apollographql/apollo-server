@@ -174,7 +174,7 @@ export class GraphQLRequestPipeline<TContext> {
     }
 
     const requestDidEnd = extensionStack.requestDidStart({
-      request: request.http,
+      request: request.http!,
       queryString: request.query,
       operationName: request.operationName,
       variables: request.variables,
@@ -200,6 +200,8 @@ export class GraphQLRequestPipeline<TContext> {
           ],
         });
       }
+
+      requestContext.document = document;
 
       const validationDidEnd = await dispatcher.validationDidStart(
         requestContext,
@@ -233,7 +235,7 @@ export class GraphQLRequestPipeline<TContext> {
       // to `buildExecutionContext` in `graphql-js`.
       requestContext.operation = operation || undefined;
       requestContext.operationName =
-        (operation && operation.name && operation.name.value) || '';
+        (operation && operation.name && operation.name.value) || null;
 
       const executionDidEnd = await dispatcher.executionDidStart(
         requestContext,
