@@ -115,57 +115,55 @@ export class GraphQLRequestPipeline<TContext> {
     let persistedQueryHit = false;
     let persistedQueryRegister = false;
 
-    if (!query) {
-      if (extensions && extensions.persistedQuery) {
-        // It looks like we've received an Apollo Persisted Query. Check if we
-        // support them. In an ideal world, we always would, however since the
-        // middleware options are created every request, it does not make sense
-        // to create a default cache here and save a referrence to use across
-        // requests
-        if (
-          !this.config.persistedQueries ||
-          !this.config.persistedQueries.cache
-        ) {
-          throw new PersistedQueryNotSupportedError();
-        } else if (extensions.persistedQuery.version !== 1) {
+    if (extensions && extensions.persistedQuery) {
+      // It looks like we've received an Apollo Persisted Query. Check if we
+      // support them. In an ideal world, we always would, however since the
+      // middleware options are created every request, it does not make sense
+      // to create a default cache here and save a referrence to use across
+      // requests
+      if (
+        !this.config.persistedQueries ||
+        !this.config.persistedQueries.cache
+      ) {
+        throw new PersistedQueryNotSupportedError();
+      } else if (extensions.persistedQuery.version !== 1) {
+        throw new InvalidGraphQLRequestError(
+          'Unsupported persisted query version',
+        );
+      }
+
+      const sha = extensions.persistedQuery.sha256Hash;
+
+      if (query === undefined) {
+        query =
+          (await this.config.persistedQueries.cache.get(`apq:${sha}`)) ||
+          undefined;
+        if (query) {
+          persistedQueryHit = true;
+        } else {
+          throw new PersistedQueryNotFoundError();
+        }
+      } else {
+        const hash = createHash('sha256');
+        const calculatedSha = hash.update(query).digest('hex');
+
+        if (sha !== calculatedSha) {
           throw new InvalidGraphQLRequestError(
-            'Unsupported persisted query version',
+            'provided sha does not match query',
           );
         }
+        persistedQueryRegister = true;
 
-        const sha = extensions.persistedQuery.sha256Hash;
-
-        if (query === undefined) {
-          query =
-            (await this.config.persistedQueries.cache.get(`apq:${sha}`)) ||
-            undefined;
-          if (query) {
-            persistedQueryHit = true;
-          } else {
-            throw new PersistedQueryNotFoundError();
-          }
-        } else {
-          const hash = createHash('sha256');
-          const calculatedSha = hash.update(query).digest('hex');
-
-          if (sha !== calculatedSha) {
-            throw new InvalidGraphQLRequestError(
-              'provided sha does not match query',
-            );
-          }
-          persistedQueryRegister = true;
-
-          // Do the store completely asynchronously
-          (async () => {
-            // We do not wait on the cache storage to complete
-            return (
-              this.config.persistedQueries &&
-              this.config.persistedQueries.cache.set(`apq:${sha}`, query)
-            );
-          })().catch(error => {
-            console.warn(error);
-          });
-        }
+        // Do the store completely asynchronously
+        (async () => {
+          // We do not wait on the cache storage to complete
+          return (
+            this.config.persistedQueries &&
+            this.config.persistedQueries.cache.set(`apq:${sha}`, query)
+          );
+        })().catch(error => {
+          console.warn(error);
+        });
       }
     }
 
