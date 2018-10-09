@@ -3,18 +3,38 @@ import {
   GraphQLRequestContext,
 } from 'apollo-server-core/dist/requestPipelineAPI';
 
+type ValueOrPromise<T> = T | Promise<T>;
+
 export abstract class ApolloServerPlugin {
-  async serverWillStart?(service: GraphQLServiceContext): Promise<void>;
+  serverWillStart?(service: GraphQLServiceContext): ValueOrPromise<void>;
   requestDidStart?<TContext>(
     requestContext: GraphQLRequestContext<TContext>,
   ): GraphQLRequestListener<TContext> | void;
 }
 
-// type WithRequired<T, K extends keyof T> = T & Required<Pick<T, K>>;
+type WithRequired<T, K extends keyof T> = T & Required<Pick<T, K>>;
+export type DidEndHook<TArgs extends any> = (args: TArgs) => void;
 
 export interface GraphQLRequestListener<TContext> {
   prepareRequest?(
     requestContext: GraphQLRequestContext<TContext>,
-  ): Promise<void>;
-  executionDidStart?(requestContext: GraphQLRequestContext<TContext>): void;
+  ): ValueOrPromise<void>;
+  parsingDidStart?(
+    requestContext: GraphQLRequestContext<TContext>,
+  ): DidEndHook<Error> | void;
+  validationDidStart?(
+    requestContext: WithRequired<GraphQLRequestContext<TContext>, 'document'>,
+  ): DidEndHook<Error[]> | void;
+  executionDidStart?(
+    requestContext: WithRequired<
+      GraphQLRequestContext<TContext>,
+      'document' | 'operationName' | 'operation'
+    >,
+  ): DidEndHook<Error> | void;
+  willSendResponse?(
+    requestContext: WithRequired<
+      GraphQLRequestContext<TContext>,
+      'document' | 'operationName' | 'operation' | 'response'
+    >,
+  ): ValueOrPromise<void>;
 }

@@ -38,8 +38,9 @@ import {
   ValidationRule,
 } from './requestPipelineAPI';
 import {
-  GraphQLRequestListener,
   ApolloServerPlugin,
+  GraphQLRequestListener,
+  DidEndHook,
 } from 'apollo-server-plugin-base';
 
 export {
@@ -98,17 +99,14 @@ export class GraphQLRequestPipeline<TContext> {
       }
     }
 
+    const dispatcher = new GraphQLRequestListenerDispatcher(requestListeners);
+
     const extensionStack = this.initializeExtensionStack();
     (requestContext.context as any)._extensionStack = extensionStack;
 
     this.initializeDataSources(requestContext);
 
-    await Promise.all(
-      requestListeners.map(
-        listener =>
-          listener.prepareRequest && listener.prepareRequest(requestContext),
-      ),
-    );
+    await dispatcher.prepareRequest(requestContext);
 
     const request = requestContext.request;
 
@@ -185,11 +183,15 @@ export class GraphQLRequestPipeline<TContext> {
       persistedQueryRegister,
     });
 
+    const parsingDidEnd = await dispatcher.parsingDidStart(requestContext);
+
     try {
       let document: DocumentNode;
       try {
         document = parse(query);
+        parsingDidEnd();
       } catch (syntaxError) {
+        parsingDidEnd(syntaxError);
         return sendResponse({
           errors: [
             fromGraphQLError(syntaxError, {
@@ -199,9 +201,14 @@ export class GraphQLRequestPipeline<TContext> {
         });
       }
 
+      const validationDidEnd = await dispatcher.validationDidStart(
+        requestContext,
+      );
+
       const validationErrors = validate(document);
 
       if (validationErrors.length > 0) {
+        validationDidEnd(validationErrors);
         return sendResponse({
           errors: validationErrors.map(validationError =>
             fromGraphQLError(validationError, {
@@ -210,6 +217,8 @@ export class GraphQLRequestPipeline<TContext> {
           ),
         });
       }
+
+      validationDidEnd();
 
       const operation = getOperationAST(document, request.operationName);
 
@@ -222,12 +231,12 @@ export class GraphQLRequestPipeline<TContext> {
       // FIXME: If we want to guarantee an operation has been set when invoking
       // `executionDidStart`, we need to throw an error above and not leave this
       // to `buildExecutionContext` in `graphql-js`.
-      requestContext.operation = operation as OperationDefinitionNode;
+      requestContext.operation = operation || undefined;
+      requestContext.operationName =
+        (operation && operation.name && operation.name.value) || '';
 
-      requestListeners.forEach(
-        listener =>
-          listener.executionDidStart &&
-          listener.executionDidStart(requestContext),
+      const executionDidEnd = await dispatcher.executionDidStart(
+        requestContext,
       );
 
       let response: GraphQLResponse;
@@ -238,7 +247,9 @@ export class GraphQLRequestPipeline<TContext> {
           request.operationName,
           request.variables,
         )) as GraphQLResponse;
+        executionDidEnd();
       } catch (executionError) {
+        executionDidEnd(executionError);
         return sendResponse({
           errors: [fromGraphQLError(executionError)],
         });
@@ -316,17 +327,21 @@ export class GraphQLRequestPipeline<TContext> {
       }
     }
 
-    function sendResponse(response: GraphQLResponse): GraphQLResponse {
+    async function sendResponse(
+      response: GraphQLResponse,
+    ): Promise<GraphQLResponse> {
       // We override errors, data, and extensions with the passed in response,
       // but keep other properties (like http)
-      return (requestContext.response = extensionStack.willSendResponse({
+      requestContext.response = extensionStack.willSendResponse({
         graphqlResponse: {
           ...requestContext.response,
           errors: response.errors,
           data: response.data,
           extensions: response.extensions,
         },
-      }).graphqlResponse);
+      }).graphqlResponse;
+      await dispatcher.willSendResponse(requestContext);
+      return requestContext.response!;
     }
   }
 
@@ -377,5 +392,77 @@ export class GraphQLRequestPipeline<TContext> {
 
       (context as any).dataSources = dataSources;
     }
+  }
+}
+
+type FunctionPropertyNames<T> = {
+  [K in keyof T]: T[K] extends Function ? K : never
+}[keyof T];
+
+class Dispatcher<T> {
+  constructor(protected targets: T[]) {}
+
+  protected async invokeAsync(
+    methodName: FunctionPropertyNames<Required<T>>,
+    ...args: any[]
+  ) {
+    await Promise.all(
+      this.targets.map(target => {
+        const method = target[methodName];
+        if (method && typeof method === 'function') {
+          return method(...args);
+        }
+      }),
+    );
+  }
+
+  protected invokeDidStart<TArgs extends any[]>(
+    methodName: FunctionPropertyNames<Required<T>>,
+    ...args: any[]
+  ): DidEndHook<TArgs> {
+    const didEndHooks: DidEndHook<TArgs>[] = [];
+
+    for (const target of this.targets) {
+      const method = target[methodName];
+      if (method && typeof method === 'function') {
+        const didEndHook = method(...args);
+        if (didEndHook) {
+          didEndHooks.push(didEndHook);
+        }
+      }
+    }
+
+    return (args: TArgs) => {
+      didEndHooks.reverse();
+
+      for (const didEndHook of didEndHooks) {
+        didEndHook(args);
+      }
+    };
+  }
+}
+
+// FIXME: Properly type the lifecycle hooks in the dispatcher
+class GraphQLRequestListenerDispatcher<TContext>
+  extends Dispatcher<GraphQLRequestListener<TContext>>
+  implements Required<GraphQLRequestListener<TContext>> {
+  async prepareRequest(...args: any[]) {
+    return this.invokeAsync('prepareRequest', ...args);
+  }
+
+  parsingDidStart(...args: any[]): any {
+    return this.invokeDidStart('parsingDidStart', ...args);
+  }
+
+  validationDidStart(...args: any[]): any {
+    return this.invokeDidStart('validationDidStart', ...args);
+  }
+
+  executionDidStart(...args: any[]): any {
+    return this.invokeDidStart('executionDidStart', ...args);
+  }
+
+  async willSendResponse(...args: any[]) {
+    return this.invokeAsync('willSendResponse', ...args);
   }
 }

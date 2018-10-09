@@ -9,6 +9,7 @@ import {
   ASTVisitor,
   GraphQLError,
   OperationDefinitionNode,
+  DocumentNode,
 } from 'graphql';
 import { KeyValueCache } from 'apollo-server-caching';
 
@@ -33,7 +34,7 @@ export interface GraphQLRequest {
 }
 
 export interface GraphQLResponse {
-  data?: object;
+  data?: Record<string, any>;
   errors?: GraphQLError[];
   extensions?: Record<string, any>;
   http?: {
@@ -48,6 +49,10 @@ export interface GraphQLRequestContext<TContext> {
   context: TContext;
   cache: KeyValueCache;
 
+  document?: DocumentNode;
+  // operationName is set based on the selected operation, so it is defined
+  // even if no request.operationName was passed in.
+  operationName?: string;
   operation?: OperationDefinitionNode;
 
   debug?: boolean;
