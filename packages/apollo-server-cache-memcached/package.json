@@ -11,11 +11,6 @@
   "bugs": {
     "url": "https://github.com/apollographql/apollo-server/issues"
   },
-  "scripts": {
-    "clean": "rm -rf dist",
-    "compile": "tsc",
-    "prepare": "npm run clean && npm run compile"
-  },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "engines": {
