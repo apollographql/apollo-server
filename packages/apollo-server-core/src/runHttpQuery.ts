@@ -313,7 +313,7 @@ export async function runHttpQuery(
         context = {} as Record<string, any>;
       } else if (typeof context === 'function') {
         try {
-          context = await context();
+          context = await (context as Function)();
         } catch (e) {
           e.message = `Context creation failed: ${e.message}`;
           // For errors that are not internal, such as authentication, we
@@ -342,11 +342,14 @@ export async function runHttpQuery(
 
         for (const dataSource of Object.values(dataSources)) {
           if (dataSource.initialize) {
-            dataSource.initialize({ context, cache: optionsObject.cache! });
+            dataSource.initialize({
+              context: context!,
+              cache: optionsObject.cache!,
+            });
           }
         }
 
-        if ('dataSources' in context) {
+        if ('dataSources' in context!) {
           throw new Error(
             'Please use the dataSources config option instead of putting dataSources on the context yourself.',
           );
