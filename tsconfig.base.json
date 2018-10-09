@@ -16,7 +16,7 @@
     "noUnusedParameters": true,
     "noUnusedLocals": true,
     "lib": ["es2017", "esnext.asynciterable"],
-    "types": ["node", "jest"],
+    "types": ["node"],
     "baseUrl": ".",
     "paths": {
       "*" : ["types/*"]
