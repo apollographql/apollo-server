@@ -28,7 +28,7 @@
     "@apollographql/graphql-playground-html": "^1.6.0",
     "apollo-server-core": "file:../apollo-server-core",
     "apollo-server-env": "file:../apollo-server-env",
-    "graphql-tools": "^3.0.4"
+    "graphql-tools": "^4.0.0"
   },
   "devDependencies": {
     "apollo-server-integration-testsuite": "file:../apollo-server-integration-testsuite"
