@@ -15,6 +15,7 @@ import { EngineReportingAgent } from 'apollo-engine-reporting';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 
 import { GraphQLUpload } from '@apollographql/apollo-upload-server';
+import { applyMiddleware, FragmentReplacement } from 'graphql-middleware';
 
 import {
   SubscriptionServer,
@@ -65,6 +66,7 @@ export class ApolloServerBase {
   private schema: GraphQLSchema;
   private context?: Context | ContextFunction;
   private engineReportingAgent?: EngineReportingAgent;
+  private middlewareFragmentReplacements: FragmentReplacement[] = [];
   private extensions: Array<() => GraphQLExtension>;
   protected subscriptionServerOptions?: SubscriptionServerOptions;
   protected uploadsConfig?: FileUploadOptions;
@@ -85,6 +87,7 @@ export class ApolloServerBase {
       schemaDirectives,
       typeDefs,
       introspection,
+      middlewares,
       mocks,
       mockEntireSchema,
       extensions,
@@ -245,6 +248,15 @@ export class ApolloServerBase {
       }
     }
 
+    if (middlewares) {
+      const { schema, fragmentReplacements } = applyMiddleware(
+        this.schema,
+        ...middlewares,
+      );
+      this.schema = schema!;
+      this.middlewareFragmentReplacements = fragmentReplacements!;
+    }
+
     this.playgroundOptions = createPlaygroundOptions(playground);
   }
 
@@ -309,7 +321,11 @@ export class ApolloServerBase {
           try {
             context =
               typeof this.context === 'function'
-                ? await this.context({ connection, payload: message.payload })
+                ? await this.context({
+                    connection,
+                    payload: message.payload,
+                    fragmentReplacements: this.middlewareFragmentReplacements,
+                  })
                 : context;
           } catch (e) {
             throw formatApolloErrors([e], {

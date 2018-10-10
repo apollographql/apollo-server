@@ -4,6 +4,8 @@ All of the packages in the `apollo-server` repo are released with the same versi
 
 ### vNEXT
 
+- Add support for GraphQL Middleware [#1603](https://github.com/apollographql/apollo-server/issues/1603) [#1798](https://github.com/apollographql/apollo-server/pull/1798)
+
 ### v2.0.5
 
 - Google Cloud Function support [#1402](https://github.com/apollographql/apollo-server/issues/1402) [#1446](https://github.com/apollographql/apollo-server/pull/1446)
