@@ -184,7 +184,7 @@ export class GraphQLRequestPipeline<TContext> {
       persistedQueryRegister,
     });
 
-    const parsingDidEnd = await dispatcher.invokeDidStart(
+    const parsingDidEnd = await dispatcher.invokeDidStartHook(
       'parsingDidStart',
       requestContext,
     );
@@ -207,7 +207,7 @@ export class GraphQLRequestPipeline<TContext> {
 
       requestContext.document = document;
 
-      const validationDidEnd = await dispatcher.invokeDidStart(
+      const validationDidEnd = await dispatcher.invokeDidStartHook(
         'validationDidStart',
         requestContext as WithRequired<typeof requestContext, 'document'>,
       );
@@ -238,7 +238,7 @@ export class GraphQLRequestPipeline<TContext> {
       requestContext.operationName =
         (operation && operation.name && operation.name.value) || null;
 
-      await dispatcher.invokeAsync(
+      await dispatcher.invokeHookAsync(
         'didResolveOperation',
         requestContext as WithRequired<
           typeof requestContext,
@@ -246,7 +246,7 @@ export class GraphQLRequestPipeline<TContext> {
         >,
       );
 
-      const executionDidEnd = await dispatcher.invokeDidStart(
+      const executionDidEnd = await dispatcher.invokeDidStartHook(
         'executionDidStart',
         requestContext as WithRequired<
           typeof requestContext,
@@ -355,7 +355,7 @@ export class GraphQLRequestPipeline<TContext> {
           extensions: response.extensions,
         },
       }).graphqlResponse;
-      await dispatcher.invokeAsync(
+      await dispatcher.invokeHookAsync(
         'willSendResponse',
         requestContext as WithRequired<typeof requestContext, 'response'>,
       );

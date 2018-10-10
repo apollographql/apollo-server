@@ -11,7 +11,7 @@ type DidEndHook<TArgs extends any[]> = (...args: TArgs) => void;
 export class Dispatcher<T> {
   constructor(protected targets: T[]) {}
 
-  public async invokeAsync<
+  public async invokeHookAsync<
     TMethodName extends FunctionPropertyNames<Required<T>>
   >(
     methodName: TMethodName,
@@ -27,7 +27,7 @@ export class Dispatcher<T> {
     );
   }
 
-  public invokeDidStart<
+  public invokeDidStartHook<
     TMethodName extends FunctionPropertyNames<
       Required<T>,
       ((...args: any[]) => AnyFunction | void)
