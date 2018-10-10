@@ -3,7 +3,6 @@ import {
   GraphQLFieldResolver,
   specifiedRules,
   DocumentNode,
-  OperationDefinitionNode,
   getOperationAST,
   ExecutionArgs,
   ExecutionResult,
@@ -76,15 +75,14 @@ export type DataSources<TContext> = {
   [name: string]: DataSource<TContext>;
 };
 
-export interface GraphQLRequestPipeline<TContext> {
-  willExecuteOperation?(operation: OperationDefinitionNode): void;
-}
-
 type Mutable<T> = { -readonly [P in keyof T]: T[P] };
 
 export class GraphQLRequestPipeline<TContext> {
+  plugins: ApolloServerPlugin[];
+
   constructor(private config: GraphQLRequestPipelineConfig<TContext>) {
     enableGraphQLExtensions(config.schema);
+    this.plugins = config.plugins || [];
   }
 
   async processRequest(
@@ -93,13 +91,11 @@ export class GraphQLRequestPipeline<TContext> {
     const config = this.config;
 
     const requestListeners: GraphQLRequestListener<TContext>[] = [];
-    if (config.plugins) {
-      for (const plugin of config.plugins) {
-        if (!plugin.requestDidStart) continue;
-        const listener = plugin.requestDidStart(requestContext);
-        if (listener) {
-          requestListeners.push(listener);
-        }
+    for (const plugin of this.plugins) {
+      if (!plugin.requestDidStart) continue;
+      const listener = plugin.requestDidStart(requestContext);
+      if (listener) {
+        requestListeners.push(listener);
       }
     }
 
@@ -109,8 +105,6 @@ export class GraphQLRequestPipeline<TContext> {
     (requestContext.context as any)._extensionStack = extensionStack;
 
     this.initializeDataSources(requestContext);
-
-    await dispatcher.invokeAsync('prepareRequest', requestContext);
 
     const request = requestContext.request;
 
@@ -225,21 +219,24 @@ export class GraphQLRequestPipeline<TContext> {
 
       validationDidEnd();
 
+      // FIXME: If we want to guarantee an operation has been set when invoking
+      // `willExecuteOperation` and executionDidStart`, we need to throw an
+      // error here and not leave this to `buildExecutionContext` in
+      // `graphql-js`.
       const operation = getOperationAST(document, request.operationName);
 
-      // If we don't find an operation, we'll leave it to `buildExecutionContext`
-      // in `graphql-js` to throw an appropriate error.
-      if (operation && this.willExecuteOperation) {
-        this.willExecuteOperation(operation);
-      }
-
-      // FIXME: If we want to guarantee an operation has been set when invoking
-      // `executionDidStart`, we need to throw an error above and not leave this
-      // to `buildExecutionContext` in `graphql-js`.
       requestContext.operation = operation || undefined;
       // We'll set `operationName` to `null` for anonymous operations.
       requestContext.operationName =
         (operation && operation.name && operation.name.value) || null;
+
+      await dispatcher.invokeAsync(
+        'didResolveOperation',
+        requestContext as WithRequired<
+          typeof requestContext,
+          'document' | 'operation' | 'operationName'
+        >,
+      );
 
       const executionDidEnd = await dispatcher.invokeDidStart(
         'executionDidStart',

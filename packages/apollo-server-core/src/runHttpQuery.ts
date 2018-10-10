@@ -180,7 +180,6 @@ export async function processHTTPRequest<TContext>(
   },
   httpRequest: HttpQueryRequest,
 ): Promise<HttpQueryResponse> {
-  let isGetRequest: boolean = false;
   let requestPayload;
 
   switch (httpRequest.method) {
@@ -199,7 +198,6 @@ export async function processHTTPRequest<TContext>(
         throw new HttpQueryError(400, 'GET query missing.');
       }
 
-      isGetRequest = true;
       requestPayload = httpRequest.query;
       break;
 
@@ -215,6 +213,32 @@ export async function processHTTPRequest<TContext>(
   }
 
   const requestPipeline = new GraphQLRequestPipeline<TContext>(options);
+
+  // GET operations should only be queries (not mutations). We want to throw
+  // a particular HTTP error in that case.
+  requestPipeline.plugins.push({
+    requestDidStart() {
+      return {
+        didResolveOperation({ request, operation }) {
+          if (!request.http) return;
+
+          if (
+            request.http.method === 'GET' &&
+            operation.operation !== 'query'
+          ) {
+            throw new HttpQueryError(
+              405,
+              `GET supports only query operation`,
+              false,
+              {
+                Allow: 'POST',
+              },
+            );
+          }
+        },
+      };
+    },
+  });
 
   function buildRequestContext(
     request: GraphQLRequest,
@@ -235,23 +259,6 @@ export async function processHTTPRequest<TContext>(
       context,
       cache: options.cache,
       debug: options.debug,
-    };
-  }
-
-  // GET operations should only be queries (not mutations). We want to throw
-  // a particular HTTP error in that case.
-  if (isGetRequest) {
-    requestPipeline.willExecuteOperation = operation => {
-      if (operation.operation !== 'query') {
-        throw new HttpQueryError(
-          405,
-          `GET supports only query operation`,
-          false,
-          {
-            Allow: 'POST',
-          },
-        );
-      }
     };
   }
 

@@ -45,7 +45,8 @@ export interface GraphQLRequestContext<TContext = Record<string, any>> {
   readonly context: TContext;
   readonly cache: KeyValueCache;
 
-  document?: DocumentNode;
+  readonly document?: DocumentNode;
+
   // `operationName` is set based on the operation AST, so it is defined
   // even if no `request.operationName` was passed in.
   // It will be set to `null` for an anonymous operation.
