@@ -184,6 +184,7 @@ export class GraphQLRequestPipeline<TContext> {
       extensions: request.extensions,
       persistedQueryHit,
       persistedQueryRegister,
+      context: requestContext.context,
     });
 
     const parsingDidEnd = await dispatcher.invokeDidStartHook(
@@ -356,6 +357,7 @@ export class GraphQLRequestPipeline<TContext> {
           data: response.data,
           extensions: response.extensions,
         },
+        context: requestContext.context,
       }).graphqlResponse;
       await dispatcher.invokeHookAsync(
         'willSendResponse',
