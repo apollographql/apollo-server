@@ -2,6 +2,7 @@ import { GraphQLSchema, DocumentNode } from 'graphql';
 import { SchemaDirectiveVisitor, IResolvers, IMocks } from 'graphql-tools';
 import { ConnectionContext } from 'subscriptions-transport-ws';
 import WebSocket from 'ws';
+import { IMiddleware, IMiddlewareGenerator } from 'graphql-middleware';
 import { GraphQLExtension } from 'graphql-extensions';
 export { GraphQLExtension } from 'graphql-extensions';
 
@@ -56,6 +57,9 @@ export interface Config
   schemaDirectives?: Record<string, typeof SchemaDirectiveVisitor>;
   context?: Context<any> | ContextFunction<any>;
   introspection?: boolean;
+  middlewares?: (
+    | IMiddleware<any, any, any>
+    | IMiddlewareGenerator<any, any, any>)[];
   mocks?: boolean | IMocks;
   mockEntireSchema?: boolean;
   engine?: boolean | EngineReportingOptions;

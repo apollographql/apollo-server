@@ -35,6 +35,7 @@
     "apollo-server-plugin-base": "file:../apollo-server-plugin-base",
     "apollo-tracing": "file:../apollo-tracing",
     "graphql-extensions": "file:../graphql-extensions",
+    "graphql-middleware": "^1.7.6",
     "graphql-subscriptions": "^1.0.0",
     "graphql-tag": "^2.9.2",
     "graphql-tools": "^4.0.0",
