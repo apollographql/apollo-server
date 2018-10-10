@@ -40,8 +40,10 @@ import {
 import {
   ApolloServerPlugin,
   GraphQLRequestListener,
-  DidEndHook,
+  WithRequired,
 } from 'apollo-server-plugin-base';
+
+import { Dispatcher } from './utils/dispatcher';
 
 export {
   GraphQLRequest,
@@ -78,13 +80,15 @@ export interface GraphQLRequestPipeline<TContext> {
   willExecuteOperation?(operation: OperationDefinitionNode): void;
 }
 
+type Mutable<T> = { -readonly [P in keyof T]: T[P] };
+
 export class GraphQLRequestPipeline<TContext> {
   constructor(private config: GraphQLRequestPipelineConfig<TContext>) {
     enableGraphQLExtensions(config.schema);
   }
 
   async processRequest(
-    requestContext: GraphQLRequestContext<TContext>,
+    requestContext: Mutable<GraphQLRequestContext<TContext>>,
   ): Promise<GraphQLResponse> {
     const config = this.config;
 
@@ -99,14 +103,14 @@ export class GraphQLRequestPipeline<TContext> {
       }
     }
 
-    const dispatcher = new GraphQLRequestListenerDispatcher(requestListeners);
+    const dispatcher = new Dispatcher(requestListeners);
 
     const extensionStack = this.initializeExtensionStack();
     (requestContext.context as any)._extensionStack = extensionStack;
 
     this.initializeDataSources(requestContext);
 
-    await dispatcher.prepareRequest(requestContext);
+    await dispatcher.invokeAsync('prepareRequest', requestContext);
 
     const request = requestContext.request;
 
@@ -181,7 +185,10 @@ export class GraphQLRequestPipeline<TContext> {
       persistedQueryRegister,
     });
 
-    const parsingDidEnd = await dispatcher.parsingDidStart(requestContext);
+    const parsingDidEnd = await dispatcher.invokeDidStart(
+      'parsingDidStart',
+      requestContext,
+    );
 
     try {
       let document: DocumentNode;
@@ -201,8 +208,9 @@ export class GraphQLRequestPipeline<TContext> {
 
       requestContext.document = document;
 
-      const validationDidEnd = await dispatcher.validationDidStart(
-        requestContext,
+      const validationDidEnd = await dispatcher.invokeDidStart(
+        'validationDidStart',
+        requestContext as WithRequired<typeof requestContext, 'document'>,
       );
 
       const validationErrors = validate(document);
@@ -235,8 +243,12 @@ export class GraphQLRequestPipeline<TContext> {
       requestContext.operationName =
         (operation && operation.name && operation.name.value) || null;
 
-      const executionDidEnd = await dispatcher.executionDidStart(
-        requestContext,
+      const executionDidEnd = await dispatcher.invokeDidStart(
+        'executionDidStart',
+        requestContext as WithRequired<
+          typeof requestContext,
+          'document' | 'operation' | 'operationName'
+        >,
       );
 
       let response: GraphQLResponse;
@@ -340,7 +352,10 @@ export class GraphQLRequestPipeline<TContext> {
           extensions: response.extensions,
         },
       }).graphqlResponse;
-      await dispatcher.willSendResponse(requestContext);
+      await dispatcher.invokeAsync(
+        'willSendResponse',
+        requestContext as WithRequired<typeof requestContext, 'response'>,
+      );
       return requestContext.response!;
     }
   }
@@ -392,77 +407,5 @@ export class GraphQLRequestPipeline<TContext> {
 
       (context as any).dataSources = dataSources;
     }
-  }
-}
-
-type FunctionPropertyNames<T> = {
-  [K in keyof T]: T[K] extends Function ? K : never
-}[keyof T];
-
-class Dispatcher<T> {
-  constructor(protected targets: T[]) {}
-
-  protected async invokeAsync(
-    methodName: FunctionPropertyNames<Required<T>>,
-    ...args: any[]
-  ) {
-    await Promise.all(
-      this.targets.map(target => {
-        const method = target[methodName];
-        if (method && typeof method === 'function') {
-          return method(...args);
-        }
-      }),
-    );
-  }
-
-  protected invokeDidStart<TArgs extends any[]>(
-    methodName: FunctionPropertyNames<Required<T>>,
-    ...args: any[]
-  ): DidEndHook<TArgs> {
-    const didEndHooks: DidEndHook<TArgs>[] = [];
-
-    for (const target of this.targets) {
-      const method = target[methodName];
-      if (method && typeof method === 'function') {
-        const didEndHook = method(...args);
-        if (didEndHook) {
-          didEndHooks.push(didEndHook);
-        }
-      }
-    }
-
-    return (args: TArgs) => {
-      didEndHooks.reverse();
-
-      for (const didEndHook of didEndHooks) {
-        didEndHook(args);
-      }
-    };
-  }
-}
-
-// FIXME: Properly type the lifecycle hooks in the dispatcher
-class GraphQLRequestListenerDispatcher<TContext>
-  extends Dispatcher<GraphQLRequestListener<TContext>>
-  implements Required<GraphQLRequestListener<TContext>> {
-  async prepareRequest(...args: any[]) {
-    return this.invokeAsync('prepareRequest', ...args);
-  }
-
-  parsingDidStart(...args: any[]): any {
-    return this.invokeDidStart('parsingDidStart', ...args);
-  }
-
-  validationDidStart(...args: any[]): any {
-    return this.invokeDidStart('validationDidStart', ...args);
-  }
-
-  executionDidStart(...args: any[]): any {
-    return this.invokeDidStart('executionDidStart', ...args);
-  }
-
-  async willSendResponse(...args: any[]) {
-    return this.invokeAsync('willSendResponse', ...args);
   }
 }

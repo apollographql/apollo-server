@@ -2,7 +2,7 @@
 // circular dependency issues from the `apollo-server-plugin-base` package
 // depending on the types in it.
 
-import { Request, Headers } from 'apollo-server-env';
+import { Request, Response } from 'apollo-server-env';
 import {
   GraphQLSchema,
   ValidationContext,
@@ -35,24 +35,22 @@ export interface GraphQLResponse {
   data?: Record<string, any>;
   errors?: GraphQLError[];
   extensions?: Record<string, any>;
-  http?: {
-    headers: Headers;
-  };
+  http?: Pick<Response, 'headers'>;
 }
 
 export interface GraphQLRequestContext<TContext = Record<string, any>> {
-  request: GraphQLRequest;
-  response?: GraphQLResponse;
+  readonly request: GraphQLRequest;
+  readonly response?: GraphQLResponse;
 
-  context: TContext;
-  cache: KeyValueCache;
+  readonly context: TContext;
+  readonly cache: KeyValueCache;
 
   document?: DocumentNode;
   // `operationName` is set based on the operation AST, so it is defined
   // even if no `request.operationName` was passed in.
   // It will be set to `null` for an anonymous operation.
-  operationName?: string | null;
-  operation?: OperationDefinitionNode;
+  readonly operationName?: string | null;
+  readonly operation?: OperationDefinitionNode;
 
   debug?: boolean;
 }
