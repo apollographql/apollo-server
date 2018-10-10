@@ -174,6 +174,8 @@ export class GraphQLRequestPipeline<TContext> {
       throw new InvalidGraphQLRequestError('Must provide query string.');
     }
 
+    requestContext.queryHash = queryHash;
+
     const requestDidEnd = extensionStack.requestDidStart({
       request: request.http!,
       queryString: request.query,
