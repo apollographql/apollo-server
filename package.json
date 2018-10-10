@@ -6,12 +6,14 @@
   "scripts": {
     "clean": "git clean -dfqX -- ./node_modules **/{dist,node_modules}/",
     "compile": "tsc --build",
+    "compile:clean": "tsc --build --clean",
+    "watch": "tsc --build --watch",
     "release": "npm run clean && npm ci && lerna publish --exact",
     "postinstall": "lerna run prepare && npm run compile",
     "lint": "prettier-check '**/*.{js,ts}'",
     "lint-fix": "prettier '**/*.{js,ts}' --write",
     "test": "jest --verbose",
-    "posttest": "npm run lint",
+    "test:watch": "jest --verbose --watch",
     "testonly": "npm test",
     "test:ci": "npm run coverage -- --ci --maxWorkers=2  --reporters=default --reporters=jest-junit",
     "coverage": "npm test -- --coverage",
@@ -50,6 +52,7 @@
     "apollo-server-koa": "file:packages/apollo-server-koa",
     "apollo-server-lambda": "file:packages/apollo-server-lambda",
     "apollo-server-micro": "file:packages/apollo-server-micro",
+    "apollo-server-plugin-base": "file:packages/apollo-server-plugin-base",
     "apollo-tracing": "file:packages/apollo-tracing",
     "graphql-extensions": "file:packages/graphql-extensions"
   },
@@ -72,6 +75,8 @@
     "@types/node": "10.11.6",
     "@types/redis": "2.8.7",
     "@types/request": "2.47.1",
+    "@types/type-is": "^1.6.2",
+    "@types/ws": "^6.0.1",
     "apollo-fetch": "0.7.0",
     "apollo-link": "1.2.3",
     "apollo-link-http": "1.5.5",
@@ -83,7 +88,7 @@
     "fibers": "3.0.0",
     "form-data": "2.3.2",
     "graphql": "14.0.2",
-    "graphql-subscriptions": "0.5.8",
+    "graphql-subscriptions": "1.0.0",
     "graphql-tag": "2.10.0",
     "graphql-tools": "4.0.0",
     "hapi": "17.6.0",
@@ -113,36 +118,7 @@
     "ts-jest": "23.10.4",
     "tslint": "5.11.0",
     "typescript": "3.1.2",
-    "ws": "6.0.0",
+    "ws": "6.1.0",
     "yup": "0.26.5"
-  },
-  "jest": {
-    "testEnvironment": "node",
-    "setupFiles": [
-      "<rootDir>/packages/apollo-server-env/dist/index.js"
-    ],
-    "preset": "ts-jest",
-    "testMatch": null,
-    "testRegex": "/__tests__/.*\\.test\\.(js|ts)$",
-    "moduleFileExtensions": [
-      "ts",
-      "js"
-    ],
-    "testPathIgnorePatterns": [
-      "/node_modules/",
-      "/dist/"
-    ],
-    "clearMocks": true,
-    "globals": {
-      "ts-jest": {
-        "tsConfig": "tsconfig.test.json",
-        "diagnostics": false
-      }
-    }
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
   }
 }
