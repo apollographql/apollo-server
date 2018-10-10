@@ -120,11 +120,8 @@ export class GraphQLRequestPipeline<TContext> {
     let persistedQueryRegister = false;
 
     if (extensions && extensions.persistedQuery) {
-      // It looks like we've received an Apollo Persisted Query. Check if we
-      // support them. In an ideal world, we always would, however since the
-      // middleware options are created every request, it does not make sense
-      // to create a default cache here and save a referrence to use across
-      // requests
+      // It looks like we've received a persisted query. Check if we
+      // support them.
       if (
         !this.config.persistedQueries ||
         !this.config.persistedQueries.cache
@@ -136,34 +133,34 @@ export class GraphQLRequestPipeline<TContext> {
         );
       }
 
-      const sha = extensions.persistedQuery.sha256Hash;
+      const queryHash = extensions.persistedQuery.sha256Hash;
 
       if (query === undefined) {
-        query =
-          (await this.config.persistedQueries.cache.get(`apq:${sha}`)) ||
-          undefined;
+        query = await this.config.persistedQueries.cache.get(
+          `apq:${queryHash}`,
+        );
         if (query) {
           persistedQueryHit = true;
         } else {
           throw new PersistedQueryNotFoundError();
         }
       } else {
-        const hash = createHash('sha256');
-        const calculatedSha = hash.update(query).digest('hex');
+        const calculatedQueryHash = createHash('sha256')
+          .update(query)
+          .digest('hex');
 
-        if (sha !== calculatedSha) {
+        if (queryHash !== calculatedQueryHash) {
           throw new InvalidGraphQLRequestError(
             'provided sha does not match query',
           );
         }
         persistedQueryRegister = true;
 
-        // Do the store completely asynchronously
+        // Store the query asynchronously so we don't block.
         (async () => {
-          // We do not wait on the cache storage to complete
           return (
             this.config.persistedQueries &&
-            this.config.persistedQueries.cache.set(`apq:${sha}`, query)
+            this.config.persistedQueries.cache.set(`apq:${queryHash}`, query)
           );
         })().catch(error => {
           console.warn(error);
@@ -240,6 +237,7 @@ export class GraphQLRequestPipeline<TContext> {
       // `executionDidStart`, we need to throw an error above and not leave this
       // to `buildExecutionContext` in `graphql-js`.
       requestContext.operation = operation || undefined;
+      // We'll set `operationName` to `null` for anonymous operations.
       requestContext.operationName =
         (operation && operation.name && operation.name.value) || null;
 
