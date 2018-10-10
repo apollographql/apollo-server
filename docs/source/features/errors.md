@@ -38,7 +38,7 @@ The response will return:
 
 ![Screenshot demonstrating an error stacktrace and additional](../images/features/error-stacktrace.png)
 
-> To disable stacktraces for production, pass `debug: false` to the Apollo server constructor or set the `NODE_ENV` environment variable to 'production' or 'test'
+> To disable stacktraces for production, pass `debug: false` to the Apollo server constructor or set the `NODE_ENV` environment variable to 'production' or 'test'. Note that this will make the stacktrace unavailable to your application. If you want to log the stacktrace, but not send it in the response to the client, see [Masking and logging errors](#masking-and-logging-errors) below.
 
 ## Codes
 
@@ -118,16 +118,19 @@ new ApolloError(message, code, additionalProperties);
 
 ## Masking and logging errors
 
-The Apollo server constructor accepts a `formatError` function that is run on each error passed back to the client. This can be used to mask errors as well as logging.
-This example demonstrates masking
+The Apollo server constructor accepts a `formatError` function that is run on each error passed back to the client. This can be used to mask errors as well as for logging.
+This example demonstrates masking (or suppressing the stacktrace):
 
-```js line=4-7
+```js line=4-10
 const server = new ApolloServer({
   typeDefs,
   resolvers,
   formatError: error => {
     console.log(error);
     return new Error('Internal server error');
+    // Or, you can delete the exception information
+    // delete error.extensions.exception;
+    // return error;
   },
 });
 

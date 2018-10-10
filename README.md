@@ -115,8 +115,10 @@ const server = new ApolloServer({ typeDefs, resolvers });
 const app = express();
 server.applyMiddleware({ app });
 
-app.listen({ port: 4000 }, () =>
-  console.log(`🚀 Server ready at http://localhost:4000${server.graphqlPath}`),
+const port = 4000;
+
+app.listen({ port }, () =>
+  console.log(`🚀 Server ready at http://localhost:${port}${server.graphqlPath}`),
 );
 ```
 
@@ -149,16 +151,51 @@ const path = '/graphql';
 server.use(query());
 server.applyMiddleware({ app, path });
 
-app.listen({ port: 4000 }, () =>
-  console.log(`🚀 Server ready at http://localhost:4000${server.graphqlPath}`),
+const port = 4000;
+
+app.listen({ port }, () =>
+  console.log(`🚀 Server ready at http://localhost:${port}${server.graphqlPath}`),
 );
 ```
 
 > Note; `qs-middleware` is only required if running outside of Meteor
 
+### Koa
+
+```js
+const koa = require('koa');
+const { ApolloServer, gql } = require('apollo-server-koa');
+
+// Construct a schema, using GraphQL schema language
+const typeDefs = gql`
+  type Query {
+    hello: String
+  }
+`;
+
+// Provide resolver functions for your schema fields
+const resolvers = {
+  Query: {
+    hello: () => 'Hello world!',
+  },
+};
+
+const server = new ApolloServer({ typeDefs, resolvers });
+
+const app = new Koa();
+server.applyMiddleware({ app });
+
+const port = 3000;
+const host = 'localhost';
+
+app.listen(port, host, () =>
+  console.log(`🚀 Server ready at http://${host}:${port}${server.graphqlPath}`),
+);
+```
+
 ### Hapi
 
-The code below requires Hapi 17 or higher.
+> The code below requires Hapi 17 or higher.
 
 ```js
 const { ApolloServer, gql } = require('apollo-server-hapi');
