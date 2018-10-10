@@ -7,7 +7,6 @@
     "clean": "git clean -dfqX -- ./node_modules **/{dist,node_modules}/",
     "compile": "tsc --build",
     "release": "npm run clean && npm ci && lerna publish --exact",
-    "precommit": "lint-staged",
     "postinstall": "lerna run prepare && npm run compile",
     "lint": "prettier-check '**/*.{js,ts}'",
     "lint-fix": "prettier '**/*.{js,ts}' --write",
@@ -139,6 +138,11 @@
         "tsConfig": "tsconfig.test.json",
         "diagnostics": false
       }
+    }
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
     }
   }
 }
