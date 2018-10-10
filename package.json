@@ -7,7 +7,6 @@
     "clean": "git clean -dfqX -- ./node_modules **/{dist,node_modules}/",
     "compile": "tsc --build",
     "release": "npm run clean && npm ci && lerna publish --exact",
-    "precommit": "lint-staged",
     "postinstall": "lerna run prepare && npm run compile",
     "lint": "prettier-check '**/*.{js,ts}'",
     "lint-fix": "prettier '**/*.{js,ts}' --write",
@@ -88,7 +87,7 @@
     "graphql-tag": "2.10.0",
     "graphql-tools": "4.0.0",
     "hapi": "17.6.0",
-    "husky": "0.14.3",
+    "husky": "1.1.1",
     "jest": "23.6.0",
     "jest-junit": "5.2.0",
     "jest-matcher-utils": "23.6.0",
@@ -139,6 +138,11 @@
         "tsConfig": "tsconfig.test.json",
         "diagnostics": false
       }
+    }
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
     }
   }
 }
