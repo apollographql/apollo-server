@@ -115,8 +115,10 @@ const server = new ApolloServer({ typeDefs, resolvers });
 const app = express();
 server.applyMiddleware({ app });
 
-app.listen({ port: 4000 }, () =>
-  console.log(`🚀 Server ready at http://localhost:4000${server.graphqlPath}`),
+const port = 4000;
+
+app.listen({ port }, () =>
+  console.log(`🚀 Server ready at http://localhost:${port}${server.graphqlPath}`),
 );
 ```
 
@@ -149,8 +151,10 @@ const path = '/graphql';
 server.use(query());
 server.applyMiddleware({ app, path });
 
-app.listen({ port: 4000 }, () =>
-  console.log(`🚀 Server ready at http://localhost:4000${server.graphqlPath}`),
+const port = 4000;
+
+app.listen({ port }, () =>
+  console.log(`🚀 Server ready at http://localhost:${port}${server.graphqlPath}`),
 );
 ```
 
@@ -181,17 +185,17 @@ const server = new ApolloServer({ typeDefs, resolvers });
 const app = new Koa();
 server.applyMiddleware({ app });
 
-const PORT = 3000;
-const URL = 'localhost';
+const port = 3000;
+const host = 'localhost';
 
-app.listen(PORT, URL, () =>
-  console.log(`🚀 Server ready at http://localhost:4000${server.graphqlPath}`),
+app.listen(port, host, () =>
+  console.log(`🚀 Server ready at http://${host}:${port}${server.graphqlPath}`),
 );
 ```
 
 ### Hapi
 
-The code below requires Hapi 17 or higher.
+> The code below requires Hapi 17 or higher.
 
 ```js
 const { ApolloServer, gql } = require('apollo-server-hapi');
