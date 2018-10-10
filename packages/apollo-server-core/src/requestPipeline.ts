@@ -51,6 +51,12 @@ export {
   InvalidGraphQLRequestError,
 };
 
+function computeQueryHash(query: string) {
+  return createHash('sha256')
+    .update(query)
+    .digest('hex');
+}
+
 export interface GraphQLRequestPipelineConfig<TContext> {
   schema: GraphQLSchema;
 
@@ -110,6 +116,8 @@ export class GraphQLRequestPipeline<TContext> {
 
     let { query, extensions } = request;
 
+    let queryHash: string;
+
     let persistedQueryHit = false;
     let persistedQueryRegister = false;
 
@@ -127,7 +135,7 @@ export class GraphQLRequestPipeline<TContext> {
         );
       }
 
-      const queryHash = extensions.persistedQuery.sha256Hash;
+      queryHash = extensions.persistedQuery.sha256Hash;
 
       if (query === undefined) {
         query = await this.config.persistedQueries.cache.get(
@@ -139,11 +147,9 @@ export class GraphQLRequestPipeline<TContext> {
           throw new PersistedQueryNotFoundError();
         }
       } else {
-        const calculatedQueryHash = createHash('sha256')
-          .update(query)
-          .digest('hex');
+        const computedQueryHash = computeQueryHash(query);
 
-        if (queryHash !== calculatedQueryHash) {
+        if (queryHash !== computedQueryHash) {
           throw new InvalidGraphQLRequestError(
             'provided sha does not match query',
           );
@@ -160,9 +166,11 @@ export class GraphQLRequestPipeline<TContext> {
           console.warn(error);
         });
       }
-    }
-
-    if (!query) {
+    } else if (query) {
+      // FIXME: We'll compute the APQ query hash to use as our cache key for
+      // now, but this should be replaced with the new operation ID algorithm.
+      queryHash = computeQueryHash(query);
+    } else {
       throw new InvalidGraphQLRequestError('Must provide query string.');
     }
 
