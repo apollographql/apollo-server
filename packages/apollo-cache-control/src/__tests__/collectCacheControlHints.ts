@@ -8,7 +8,7 @@ import {
   CacheControlExtension,
   CacheHint,
   CacheControlExtensionOptions,
-} from '../..';
+} from '../';
 
 export async function collectCacheControlHints(
   schema: GraphQLSchema,
