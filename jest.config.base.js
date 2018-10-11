@@ -1,8 +1,5 @@
 const { defaults } = require("jest-config");
 
-const { pathsToModuleNameMapper } = require("ts-jest/utils");
-const { compilerOptions } = require("./tsconfig.test.base");
-
 module.exports = {
   testEnvironment: "node",
     setupFiles: [
@@ -16,12 +13,10 @@ module.exports = {
       "/dist/"
     ],
     moduleFileExtensions: [...defaults.moduleFileExtensions, "ts", "tsx"],
-    moduleNameMapper: Object.assign({},
-      pathsToModuleNameMapper(compilerOptions.paths, { prefix: '<rootDir>/../../' }),
-      {
-        '^(?!apollo-server-env|apollo-engine-reporting-protobuf)(apollo-(?:server|datasource|cache-control|tracing|engine)[^/]*|graphql-extensions)(?:/dist)?((?:/.*)|$)': '<rootDir>/../../packages/$1/src$2'
-      }
-    ),
+    moduleNameMapper: {
+      '^__mocks__/(.*)$': '<rootDir>/../../__mocks__/$1',
+      '^(?!apollo-server-env|apollo-engine-reporting-protobuf)(apollo-(?:server|datasource|cache-control|tracing|engine)[^/]*|graphql-extensions)(?:/dist)?((?:/.*)|$)': '<rootDir>/../../packages/$1/src$2'
+    },
     clearMocks: true,
     globals: {
       "ts-jest": {

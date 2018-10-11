@@ -4,7 +4,8 @@
     "noEmit": true,
     "types": ["node", "jest"],
     "paths": {
-      "__mocks__/*" : ["__mocks__/*"]
+      "__mocks__/*" : ["__mocks__/*"],
+      "*" : ["types/*"]
     }
   }
 }
