@@ -55,10 +55,25 @@ export default class Agent {
     const pulse = async () => await this.checkForUpdate();
 
     // The first pulse should happen before we start the timer.
-    await pulse();
+    try {
+      await pulse();
+    } catch (err) {
+      console.error(
+        'Apollo Server could not begin serving requests immediately because the operation manifest could not be fetched.  Attempts will continue to fetch the manifest, but all requests will be forbidden until the manifest is fetched.',
+        err.message || err,
+      );
+    }
 
-    // Afterward, keep it going.
-    this.timer = this.timer || setInterval(pulse, this.pollSeconds() * 1000);
+    // Afterward, keep the pulse going.
+    this.timer =
+      this.timer ||
+      setInterval(function() {
+        // Errors in the interval indicate that the manifest might have failed
+        // to update, but we've still got the seed update so we will continue
+        // serving based on the previous manifest until we gain sync again.
+        // These errors will be logged, but not crash the server.
+        pulse().catch(err => console.error(err.message || err));
+      }, this.pollSeconds() * 1000);
   }
 
   private timeSinceLastSuccessfulCheck() {
@@ -117,11 +132,13 @@ export default class Agent {
     try {
       response = await fetch(manifestUrl, fetchOptions);
     } catch (err) {
-      throw new Error(
-        `Unable to fetch operation manifest for ${
-          this.options.schemaHash
-        } in '${this.options.engine.serviceId}'`,
-      );
+      const ourErrorPrefix = `Unable to fetch operation manifest for ${
+        this.options.schemaHash
+      } in '${this.options.engine.serviceID}': ${err}`;
+
+      err.message = `${ourErrorPrefix}: ${err.message}`;
+
+      throw err;
     }
 
     // When the response indicates that the resource hasn't changed, there's
@@ -170,15 +187,10 @@ export default class Agent {
       this.requestInFlight = true;
 
       // If tryUpdate returns true, we can consider this a success.
-      if (this.tryUpdate()) {
+      if (await this.tryUpdate()) {
         // Mark this for reporting and monitoring reasons.
         this.lastSuccessfulCheck = new Date();
       }
-    } catch (err) {
-      // Log the error, but re-throw it so it can bubble up to whoever would
-      // like to handle it if anyone else has called us (we're public!)
-      console.error(err);
-      throw err;
     } finally {
       // Always wrap mark ourselves as finished, even in the event of an error.
       this.requestInFlight = false;
