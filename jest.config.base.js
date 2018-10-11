@@ -16,7 +16,10 @@ module.exports = {
       "/dist/"
     ],
     moduleFileExtensions: [...defaults.moduleFileExtensions, "ts", "tsx"],
-    moduleNameMapper: pathsToModuleNameMapper(compilerOptions.paths, { prefix: '<rootDir>/../../' }),
+    moduleNameMapper: {
+      ...pathsToModuleNameMapper(compilerOptions.paths, { prefix: '<rootDir>/../../' }),
+      '^(?!apollo-server-env|apollo-engine-reporting-protobuf)(apollo-(?:server|datasource|cache-control|tracing|engine)[^/]*|graphql-extensions)(?:/dist)?((?:/.*)|$)': '<rootDir>/../../packages/$1/src$2',
+    },
     clearMocks: true,
     globals: {
       "ts-jest": {
