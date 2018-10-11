@@ -11,9 +11,17 @@ import { GraphQLSchema } from 'graphql/type';
 import { generateSchemaHash } from './schema';
 import { KeyValueCache } from 'apollo-server-caching';
 
+interface Options {
+  debug?: boolean;
+}
+
 export default class extends ApolloServerPlugin {
   private agent?: Agent;
   private cache?: KeyValueCache;
+
+  constructor(public options: Options) {
+    super();
+  }
 
   async serverWillStart({
     schema,
@@ -39,7 +47,13 @@ export default class extends ApolloServerPlugin {
     // the default in-memory store, or other stateful store resource.
     const cache = (this.cache = persistedQueries.cache);
 
-    this.agent = new Agent({ schemaHash, engine, cache, debug: true });
+    this.agent = new Agent({
+      schemaHash,
+      engine,
+      cache,
+      debug: this.options.debug,
+    });
+
     await this.agent.start();
   }
 
