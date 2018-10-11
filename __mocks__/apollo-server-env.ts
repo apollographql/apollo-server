@@ -46,16 +46,16 @@ mockFetch.mockJSONResponseOnce = (
   );
 };
 
-export {
-  mockFetch as fetch,
+const env = {
+  fetch: mockFetch,
   Request,
-  RequestInit,
   Response,
   Body,
-  BodyInit,
   Headers,
-  HeadersInit,
   URL,
   URLSearchParams,
-  URLSearchParamsInit,
 };
+
+jest.doMock('apollo-server-env', () => env);
+
+export = env;
