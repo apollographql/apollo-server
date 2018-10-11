@@ -1,6 +1,6 @@
 {
   "name": "apollo-server-cache-redis",
-  "version": "0.1.3",
+  "version": "0.2.0-alpha.0",
   "author": "opensource@apollographql.com",
   "license": "MIT",
   "repository": {
@@ -10,11 +10,6 @@
   "homepage": "https://github.com/apollographql/apollo-server#readme",
   "bugs": {
     "url": "https://github.com/apollographql/apollo-server/issues"
-  },
-  "scripts": {
-    "clean": "rm -rf dist",
-    "compile": "tsc",
-    "prepare": "npm run clean && npm run compile"
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

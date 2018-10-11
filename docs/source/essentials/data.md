@@ -11,7 +11,9 @@ Resolvers provide the instructions for turning a GraphQL operation into data. Re
 In order to respond to queries, a schema needs to have resolve functions for all fields. This collection of functions is called the "resolver map". This map relates the schema fields and types to a function.
 
 ```js
+
 const { gql } = require('apollo-server');
+const { find, filter } = require('lodash');
 
 const schema = gql`
 type Book {
@@ -53,7 +55,7 @@ The resolver parameters generally follow this naming convention and are describe
 1. `parent`: The object that contains the result returned from the resolver on the parent field, or, in the case of a top-level `Query` field, the `rootValue` passed from the [server configuration](./server.html). This argument enables the nested nature of GraphQL queries.
 2. `args`: An object with the arguments passed into the field in the query. For example, if the field was called with `query{ key(arg: "you meant") }`, the `args` object would be: `{ "arg": "you meant" }`.
 3. `context`: This is an object shared by all resolvers in a particular query, and is used to contain per-request state, including authentication information, dataloader instances, and anything else that should be taken into account when resolving the query. Read [this section](#context) for an explanation of when and how to use context.
-4. `info`: This argument contains information about the execution state of the query, including the field name, path to the field from the root, and more. It's only documented in the [GraphQL.js source code](https://github.com/graphql/graphql-js/blob/c82ff68f52722c20f10da69c9e50a030a1f218ae/src/type/definition.js#L489-L500), but is extended with additional functionality by other modules, like [`apollo-cache-control`](https://github.com/apollographql/apollo-cache-control-js).
+4. `info`: This argument contains information about the execution state of the query, including the field name, path to the field from the root, and more. It's only documented in the [GraphQL.js source code](https://github.com/graphql/graphql-js/blob/c82ff68f52722c20f10da69c9e50a030a1f218ae/src/type/definition.js#L489-L500), but is extended with additional functionality by other modules, like [`apollo-cache-control`](https://github.com/apollographql/apollo-server/tree/master/packages/apollo-cache-control).
 
 In addition to returning GraphQL defined [scalars](./schema.html#scalar), you can return [custom scalars](../features/scalars-enums.html) for special use cases, such as JSON or big integers.
 

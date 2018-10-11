@@ -6,7 +6,7 @@ import express = require('express');
 import bodyParser = require('body-parser');
 import yup = require('yup');
 
-import { Trace } from 'apollo-engine-reporting-protobuf';
+import { FullTracesReport, ITrace } from 'apollo-engine-reporting-protobuf';
 
 import {
   GraphQLSchema,
@@ -480,28 +480,46 @@ export function testApolloServer<AS extends ApolloServerBase>(
     });
 
     describe('lifecycle', () => {
-      async function startEngineServer({ port, check }) {
-        const engine = express();
-        engine.use((req, _res, next) => {
-          // body parser requires a content-type
-          req.headers['content-type'] = 'text/plain';
-          next();
-        });
-        engine.use(
-          bodyParser.raw({
-            inflate: true,
-            type: '*/*',
-          }),
-        );
-        engine.use(check);
-        return await engine.listen(port);
-      }
+      describe('with Engine server', () => {
+        let nodeEnv: string;
 
-      it('validation > engine > extensions > formatError', async () => {
-        return new Promise(async (resolve, reject) => {
-          const nodeEnv = process.env.NODE_ENV;
+        beforeEach(() => {
+          nodeEnv = process.env.NODE_ENV;
           delete process.env.NODE_ENV;
+        });
 
+        let engineServer: http.Server;
+
+        function startEngineServer({ check }): Promise<void> {
+          return new Promise(resolve => {
+            const app = express();
+            app.use((req, _res, next) => {
+              // body parser requires a content-type
+              req.headers['content-type'] = 'text/plain';
+              next();
+            });
+            app.use(
+              bodyParser.raw({
+                inflate: true,
+                type: '*/*',
+              }),
+            );
+            app.use(check);
+            engineServer = app.listen(0, resolve);
+          });
+        }
+
+        afterEach(done => {
+          process.env.NODE_ENV = nodeEnv;
+
+          if (engineServer) {
+            engineServer.close(done);
+          } else {
+            done();
+          }
+        });
+
+        it('validation > engine > extensions > formatError', async () => {
           const throwError = jest.fn(() => {
             throw new Error('nope');
           });
@@ -510,20 +528,23 @@ export function testApolloServer<AS extends ApolloServerBase>(
             // formatError should be called after validation
             expect(formatError).not.toBeCalled();
             // extension should be called after validation
-            expect(extension).not.toBeCalled();
+            expect(willSendResponseInExtension).not.toBeCalled();
             return true;
           });
-          const extension = jest.fn();
+
+          const willSendResponseInExtension = jest.fn();
 
           const formatError = jest.fn(error => {
-            expect(error instanceof Error).toBe(true);
-            // extension should be called before formatError
-            expect(extension).toHaveBeenCalledTimes(1);
-            // validationRules should be called before formatError
-            expect(validationRule).toHaveBeenCalledTimes(1);
-
-            error.message = 'masked';
-            return error;
+            try {
+              expect(error).toBeInstanceOf(Error);
+              // extension should be called before formatError
+              expect(willSendResponseInExtension).toHaveBeenCalledTimes(1);
+              // validationRules should be called before formatError
+              expect(validationRule).toHaveBeenCalledTimes(1);
+            } finally {
+              error.message = 'masked';
+              return error;
+            }
           });
 
           class Extension<TContext = any> extends GraphQLExtension {
@@ -536,11 +557,24 @@ export function testApolloServer<AS extends ApolloServerBase>(
               expect(formatError).not.toBeCalled();
               // validationRules should be called before extensions
               expect(validationRule).toHaveBeenCalledTimes(1);
-              extension();
+              willSendResponseInExtension();
             }
           }
 
-          const port = Math.floor(Math.random() * (65535 - 1025)) + 1025;
+          let engineServerDidStart: Promise<void>;
+
+          const didReceiveTrace = new Promise<ITrace>(resolve => {
+            engineServerDidStart = startEngineServer({
+              check: (req, res) => {
+                const report = FullTracesReport.decode(req.body);
+                const trace = Object.values(report.tracesPerQuery)[0].trace[0];
+                resolve(trace);
+                res.end();
+              },
+            });
+          });
+
+          await engineServerDidStart;
 
           const { url: uri } = await createApolloServer({
             typeDefs: gql`
@@ -558,27 +592,14 @@ export function testApolloServer<AS extends ApolloServerBase>(
             validationRules: [validationRule],
             extensions: [() => new Extension()],
             engine: {
-              endpointUrl: `http://localhost:${port}`,
-              apiKey: 'fake',
+              endpointUrl: `http://localhost:${
+                (engineServer.address() as net.AddressInfo).port
+              }`,
+              apiKey: 'service:my-app:secret',
               maxUncompressedReportSize: 1,
             },
             formatError,
             debug: true,
-          });
-
-          let listener = await startEngineServer({
-            port,
-            check: (req, res) => {
-              const trace = JSON.stringify(Trace.decode(req.body));
-              try {
-                expect(trace).toMatch(/nope/);
-                expect(trace).not.toMatch(/masked/);
-              } catch (e) {
-                reject(e);
-              }
-              res.end();
-              listener.close(resolve);
-            },
           });
 
           const apolloFetch = createApolloFetch({ uri });
@@ -591,10 +612,16 @@ export function testApolloServer<AS extends ApolloServerBase>(
           });
           expect(result.errors).toBeDefined();
           expect(result.errors[0].message).toEqual('masked');
-          expect(formatError).toHaveBeenCalledTimes(1);
-          expect(throwError).toHaveBeenCalledTimes(1);
 
-          process.env.NODE_ENV = nodeEnv;
+          expect(validationRule).toHaveBeenCalledTimes(1);
+          expect(throwError).toHaveBeenCalledTimes(1);
+          expect(formatError).toHaveBeenCalledTimes(1);
+          expect(willSendResponseInExtension).toHaveBeenCalledTimes(1);
+
+          const trace = await didReceiveTrace;
+
+          expect(trace.root!.child![0].error![0].message).toMatch(/nope/);
+          expect(trace.root!.child![0].error![0].message).not.toMatch(/masked/);
         });
       });
 

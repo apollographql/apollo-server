@@ -1,16 +1,9 @@
 {
   "name": "apollo-engine-reporting",
-  "version": "0.0.6",
+  "version": "0.1.0-alpha.0",
   "description": "Send reports about your GraphQL services to Apollo Engine",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "scripts": {
-    "clean": "rm -rf dist",
-    "compile": "tsc",
-    "prepare": "npm run clean && npm run compile",
-    "lint": "prettier -l 'src/**/*.{ts,js}' && tslint -p tsconfig.json 'src/**/*.ts'",
-    "lint-fix": "prettier --write 'src/**/*.{ts,js}' && tslint --fix -p tsconfig.json 'src/**/*.ts'"
-  },
   "license": "MIT",
   "repository": "https://github.com/apollographql/apollo-engine-reporting",
   "author": "Apollo <community@apollographql.com>",

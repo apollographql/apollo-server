@@ -193,15 +193,18 @@ app.listen({ port: 4000 }, () =>
 
 For many existing instances of Apollo Server, the schema is created at runtime before server startup, using `makeExecutableSchema` or `mergeSchemas`. Apollo Server 2 stays backwards compatible with these more complex schemas, accepting it as the `schema` field in the server constructor options. Additionally, Apollo Server 2 exports all of `graphql-tools`, so `makeExecutableSchema` and other functions can be imported directly from Apollo Server.
 
-> Note: the string to create these schema will not use the `gql` tag exported from apollo-server.
-
 ```js
-const { ApolloServer, makeExecutableSchema, gql } = require('apollo-server');
+const {
+  ApolloServer,
+  makeExecutableSchema
+} = require('apollo-server');
 
-//For developer tooling, such as autoformatting, use the following workaround
-const gql = String.raw;
-
-const typeDefs = gql`
+// The `typeDefs` passed into `makeExecutableSchema` are _intentionally_
+// passed in without using the `gql` tag since it requires a `String` and
+// the `gql` tag returns an AST.  When not using `makeExecutableSchema`
+// and passing `typeDefs` into the `ApolloServer` constructor, it's
+// recommended to use the `gql` tag.
+const typeDefs = `
   type Query {
     hello: String
   }

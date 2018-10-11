@@ -1,9 +1,20 @@
 {
-  "extends": "../../tsconfig",
+  "extends": "../../tsconfig.base",
   "compilerOptions": {
     "rootDir": "./src",
     "outDir": "./dist"
   },
   "include": ["src/**/*"],
-  "exclude": ["**/__tests__", "**/__mocks__"]
+  "exclude": ["**/__tests__", "**/__mocks__", "src/requestPipelineAPI.ts"],
+  "references": [
+    { "path": "./tsconfig.requestPipelineAPI.json" },
+    { "path": "../apollo-cache-control" },
+    { "path": "../apollo-datasource" },
+    { "path": "../apollo-engine-reporting" },
+    { "path": "../apollo-server-caching" },
+    { "path": "../apollo-server-errors" },
+    { "path": "../apollo-server-plugin-base" },
+    { "path": "../apollo-tracing" },
+    { "path": "../graphql-extensions" }
+  ]
 }

@@ -1,6 +1,6 @@
 {
   "name": "apollo-server-env",
-  "version": "2.0.3",
+  "version": "2.1.0-alpha.0",
   "author": "opensource@apollographql.com",
   "license": "MIT",
   "repository": {
@@ -11,14 +11,14 @@
   "bugs": {
     "url": "https://github.com/apollographql/apollo-server/issues"
   },
+  "main": "dist/index.js",
+  "browser": "dist/index.browser.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "clean": "rm -rf dist",
     "compile": "tsc && cp src/*.d.ts dist",
     "prepare": "npm run clean && npm run compile"
   },
-  "main": "dist/index.js",
-  "browser": "dist/index.browser.js",
-  "types": "dist/index.d.ts",
   "engines": {
     "node": ">=6"
   },

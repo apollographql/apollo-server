@@ -1,6 +1,5 @@
 import {
   GraphQLSchema,
-  GraphQLError,
   GraphQLObjectType,
   getNamedType,
   GraphQLField,
@@ -14,26 +13,20 @@ import {
 import { Request } from 'apollo-server-env';
 export { Request } from 'apollo-server-env';
 
+import { GraphQLResponse } from 'apollo-server-core/dist/requestPipelineAPI';
+export { GraphQLResponse };
+
 export type EndHandler = (...errors: Array<Error>) => void;
 // A StartHandlerInvoker is a function that, given a specific GraphQLExtension,
 // finds a specific StartHandler on that extension and calls it with appropriate
 // arguments.
 type StartHandlerInvoker<TContext = any> = (
   ext: GraphQLExtension<TContext>,
-) => void;
-
-// Copied from runQuery in apollo-server-core.
-// XXX Will this work properly if it's an identical interface of the
-// same name?
-export interface GraphQLResponse {
-  data?: object;
-  errors?: Array<GraphQLError & object>;
-  extensions?: object;
-}
+) => EndHandler | void;
 
 export class GraphQLExtension<TContext = any> {
   public requestDidStart?(o: {
-    request: Request;
+    request: Pick<Request, 'url' | 'method' | 'headers'>;
     queryString?: string;
     parsedQuery?: DocumentNode;
     operationName?: string;
@@ -73,7 +66,7 @@ export class GraphQLExtensionStack<TContext = any> {
   }
 
   public requestDidStart(o: {
-    request: Request;
+    request: Pick<Request, 'url' | 'method' | 'headers'>;
     queryString?: string;
     parsedQuery?: DocumentNode;
     operationName?: string;
@@ -159,9 +152,13 @@ export class GraphQLExtensionStack<TContext = any> {
     const endHandlers: EndHandler[] = [];
     this.extensions.forEach(extension => {
       // Invoke the start handler, which may return an end handler.
-      const endHandler = startInvoker(extension);
-      if (endHandler) {
-        endHandlers.push(endHandler);
+      try {
+        const endHandler = startInvoker(extension);
+        if (endHandler) {
+          endHandlers.push(endHandler);
+        }
+      } catch (error) {
+        console.error(error);
       }
     });
     return (...errors: Array<Error>) => {
@@ -169,7 +166,13 @@ export class GraphQLExtensionStack<TContext = any> {
       // first handler in the stack "surrounds" the entire event's process
       // (helpful for tracing/reporting!)
       endHandlers.reverse();
-      endHandlers.forEach(endHandler => endHandler(...errors));
+      for (const endHandler of endHandlers) {
+        try {
+          endHandler(...errors);
+        } catch (error) {
+          console.error(error);
+        }
+      }
     };
   }
 }

@@ -1,12 +1,16 @@
 {
-  "extends": "../../tsconfig",
+  "extends": "../../tsconfig.base",
   "compilerOptions": {
     "rootDir": "./src",
     "outDir": "./dist",
     "noImplicitAny": false,
     "strictNullChecks": false,
-    "lib": ["es2017", "esnext.asynciterable", "dom"]
+    "lib": ["es2017", "esnext.asynciterable", "dom"],
+    "types": ["node", "jest"]
   },
   "include": ["src/**/*"],
-  "exclude": ["**/__tests__", "**/__mocks__"]
+  "exclude": ["**/__tests__", "**/__mocks__"],
+  "references": [
+    { "path": "../apollo-server-core" }
+  ]
 }
