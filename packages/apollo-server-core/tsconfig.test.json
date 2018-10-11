@@ -3,6 +3,7 @@
   "include": ["src/**/__tests__", "src/**/__mocks__"],
   "references": [
     { "path": "./tsconfig.json" },
+    { "path": "./tsconfig.requestPipelineAPI.json" },
     { "path": "../apollo-server-integration-testsuite" }
   ]
 }
