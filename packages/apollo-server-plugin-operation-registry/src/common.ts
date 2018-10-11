@@ -9,6 +9,17 @@ import {
 
 const envOverrideOperationManifest = 'APOLLO_OPERATION_MANIFEST_BASE_URL';
 
+// XXX This function is not currently invoked when the hashed APQ value
+// (`extensions.persistedQuery.sha256Hash`) is set, but would
+// be called if we're provided a (string) `query` (so when APQ is a miss,
+// or not enabled at all).
+//
+// Since the `hideLiterals` and `sortAST` methods both require a
+// `DocumentNode`, we'll have to call a `parse` here on the `query` string
+// and make the necessary transformations.
+//
+// Lastly, we will remove the `hideLiterals` portion of this once the
+// `apollo` CLI properly warns about including/using string literals.
 function formatOperationForHashing(operation: string): string {
   return printWithReducedWhitespace(
     sortAST(hideLiterals(parse(operation))),

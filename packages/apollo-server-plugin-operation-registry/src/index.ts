@@ -5,6 +5,7 @@ import {
   GraphQLServiceContext,
   GraphQLRequestListener,
 } from 'apollo-server-plugin-base';
+import { ForbiddenError, ApolloError } from 'apollo-server-errors';
 import Agent from './agent';
 import { GraphQLSchema } from 'graphql/type';
 import { generateSchemaHash } from './schema';
@@ -43,32 +44,32 @@ export default class extends ApolloServerPlugin {
   }
 
   requestDidStart(): GraphQLRequestListener<any> {
-    const cache = this.cache;
-
+    const plugin = this;
     return {
-      async prepareRequest({ request }) {
-        if (!cache) {
-          throw new Error('Unable to access required cache.');
+      async didResolveOperation({ request: { query }, queryHash }) {
+        // This shouldn't happen under normal operation since `cache` will be
+        // set in `serverWillStart` and `requestDidStart` (this) comes after.
+        if (!plugin.cache) {
+          throw new Error('Unable to access cache.');
         }
 
-        // XXX This isn't really right and this totally breaks APQ today, but:
-        //   1) TypeScript seemed to want me to guard against this; and
-        //   2) I'm not touching persistedQueries today.
-        if (!request.query) {
-          throw new Error('Document query was not received.');
-        }
+        const hash = query
+          ? generateOperationHash(query) // If we received a `query`, hash it!
+          : queryHash; // Otherwise, we'll use the APQ `queryHash`.
 
-        // XXX This needs to utilize a better cache store and persist the
-        // parsed document to the rest of the request to avoid re-validation.
-        const hash = generateOperationHash(request.query);
+        // If the document itself was missing and we didn't receive a
+        // `queryHash` (the persisted query `sha256Hash` from the APQ
+        // `extensions`), then we have nothing to work with.
+        if (!hash) {
+          throw new ApolloError('No document.');
+        }
 
         // Try to fetch the operation from the cache of operations we're
         // currently aware of, which has been populated by the operation
         // registry.
-        const cacheFetch = await cache.get(getCacheKey(hash));
-
+        const cacheFetch = await plugin.cache.get(getCacheKey(hash));
         if (!cacheFetch) {
-          throw new Error('Execution forbidden.');
+          throw new ForbiddenError('Execution forbidden');
         }
       },
     };
