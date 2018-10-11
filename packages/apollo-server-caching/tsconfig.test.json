@@ -1,7 +1,0 @@
-{
-  "extends": "../../tsconfig.test.base",
-  "include": ["src/**/__tests__", "src/**/__mocks__", "../../__mocks__"],
-  "references": [
-    { "path": "./tsconfig.json" }
-  ]
-}
