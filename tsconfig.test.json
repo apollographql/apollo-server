@@ -1,6 +1,7 @@
 {
   "extends": "./tsconfig.base",
   "files": [],
+  "include": [],
   "references": [
     { "path": "./packages/apollo-cache-control/tsconfig.test.json" },
     { "path": "./packages/apollo-datasource/tsconfig.test.json" },
