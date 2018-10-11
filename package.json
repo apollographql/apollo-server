@@ -5,9 +5,9 @@
   "repository": "github:apollographql/apollo-server",
   "scripts": {
     "clean": "git clean -dfqX -- ./node_modules **/{dist,node_modules}/",
-    "compile": "tsc --build",
-    "compile:clean": "tsc --build --clean",
-    "watch": "tsc --build --watch",
+    "compile": "tsc --build tsconfig.build.json",
+    "compile:clean": "tsc --build tsconfig.build.json --clean",
+    "watch": "tsc --build tsconfig.build.json --watch",
     "release": "npm run clean && npm ci && lerna publish --exact",
     "postinstall": "lerna run prepare && npm run compile",
     "lint": "prettier-check '**/*.{js,ts}'",
@@ -120,5 +120,10 @@
     "typescript": "3.1.2",
     "ws": "6.1.0",
     "yup": "0.26.5"
+  },
+  "jest": {
+    "projects": [
+      "<rootDir>/packages/*"
+    ]
   }
 }

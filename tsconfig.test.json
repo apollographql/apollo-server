@@ -1,6 +1,25 @@
 {
   "extends": "./tsconfig.base",
-  "compilerOptions": {
-    "types": ["node", "jest"],
-  }
+  "files": [],
+  "references": [
+    { "path": "./packages/apollo-cache-control/tsconfig.test.json" },
+    { "path": "./packages/apollo-datasource/tsconfig.test.json" },
+    { "path": "./packages/apollo-datasource-rest/tsconfig.test.json" },
+    { "path": "./packages/apollo-engine-reporting/tsconfig.test.json" },
+    { "path": "./packages/apollo-server/tsconfig.test.json" },
+    { "path": "./packages/apollo-server-cache-memcached/tsconfig.test.json" },
+    { "path": "./packages/apollo-server-cache-redis/tsconfig.test.json" },
+    { "path": "./packages/apollo-server-caching/tsconfig.test.json" },
+    { "path": "./packages/apollo-server-cloudflare/tsconfig.test.json" },
+    { "path": "./packages/apollo-server-core/tsconfig.test.json" },
+    { "path": "./packages/apollo-server-errors/tsconfig.test.json" },
+    { "path": "./packages/apollo-server-express/tsconfig.test.json" },
+    { "path": "./packages/apollo-server-hapi/tsconfig.test.json" },
+    { "path": "./packages/apollo-server-koa/tsconfig.test.json" },
+    { "path": "./packages/apollo-server-lambda/tsconfig.test.json" },
+    { "path": "./packages/apollo-server-micro/tsconfig.test.json" },
+    { "path": "./packages/apollo-server-plugin-base/tsconfig.test.json" },
+    { "path": "./packages/apollo-tracing/tsconfig.test.json" },
+    { "path": "./packages/graphql-extensions/tsconfig.test.json" },
+  ]
 }

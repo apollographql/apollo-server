@@ -6,7 +6,7 @@ const { compilerOptions } = require("./tsconfig.base");
 module.exports = {
   testEnvironment: "node",
     setupFiles: [
-      "<rootDir>/packages/apollo-server-env/dist/index.js"
+      "<rootDir>/../apollo-server-env/dist/index.js"
     ],
     preset: "ts-jest",
     testMatch: null,
@@ -24,7 +24,7 @@ module.exports = {
     clearMocks: true,
     globals: {
       "ts-jest": {
-        tsConfig: "tsconfig.test.json",
+        tsConfig: "<rootDir>/tsconfig.test.json",
         diagnostics: false
       }
     }
