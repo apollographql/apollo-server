@@ -1,5 +1,7 @@
 {
-  "extends": "./tsconfig.base",
+  "compilerOptions": {
+    "composite": true
+  },
   "files": [],
   "include": [],
   "references": [
