@@ -15,6 +15,7 @@
     "noFallthroughCasesInSwitch": true,
     "noUnusedParameters": true,
     "noUnusedLocals": true,
+    "forceConsistentCasingInFileNames": true,
     "lib": ["es2017", "esnext.asynciterable"],
     "types": ["node"],
     "baseUrl": ".",
