@@ -1,5 +1,3 @@
 const config = require('../../jest.config.base');
 
-module.exports = {
-  ...config,
-};
+module.exports = Object.assign({}, config);
