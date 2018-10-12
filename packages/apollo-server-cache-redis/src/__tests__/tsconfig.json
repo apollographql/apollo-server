@@ -2,7 +2,7 @@
   "extends": "../../../../tsconfig.test.base",
   "include": ["**/*"],
   "references": [
-    { "path": "../../tsconfig.json" },
-    { "path": "../../../apollo-server-caching/src/__tests__/tsconfig.json" }
+    { "path": "../../" },
+    { "path": "../../../apollo-server-caching/src/__tests__/" }
   ]
 }
