@@ -14,7 +14,7 @@
     "lint-fix": "prettier '**/*.{js,ts}' --write",
     "test": "jest --verbose",
     "test:clean": "jest --clearCache",
-    "test:watch": "jest --verbose --watch",
+    "test:watch": "jest --verbose --watchAll",
     "testonly": "npm test",
     "test:ci": "npm run coverage -- --ci --maxWorkers=2  --reporters=default --reporters=jest-junit",
     "coverage": "npm test -- --coverage",
