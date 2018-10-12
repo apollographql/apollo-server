@@ -7,7 +7,8 @@ import {
   sortAST,
 } from 'apollo-engine-reporting';
 
-const envOverrideOperationManifest = 'APOLLO_OPERATION_MANIFEST_BASE_URL';
+export const envOverrideOperationManifest =
+  'APOLLO_OPERATION_MANIFEST_BASE_URL';
 
 // XXX This function is not currently invoked when the hashed APQ value
 // (`extensions.persistedQuery.sha256Hash`) is set, but would

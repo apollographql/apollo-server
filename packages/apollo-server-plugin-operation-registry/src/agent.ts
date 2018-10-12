@@ -39,8 +39,19 @@ export default class Agent {
   private lastOperationSignatures: SignatureStore = new Set();
   private options: AgentOptions = Object.create(null);
 
-  constructor(options?: AgentOptions) {
+  constructor(options: AgentOptions) {
     Object.assign(this.options, options);
+
+    if (!this.options.schemaHash) {
+      throw new Error('`schemaHash` must be passed to the Agent.');
+    }
+
+    if (
+      typeof this.options.engine !== 'object' ||
+      typeof this.options.engine.serviceID !== 'string'
+    ) {
+      throw new Error('`engine.serviceID` must be passed to the Agent.');
+    }
   }
 
   private getHashedServiceId(): string {
@@ -77,6 +88,12 @@ export default class Agent {
         // These errors will be logged, but not crash the server.
         pulse().catch(err => console.error(err.message || err));
       }, this.pollSeconds() * 1000);
+  }
+
+  public stop() {
+    if (this.timer) {
+      clearInterval(this.timer);
+    }
   }
 
   private timeSinceLastSuccessfulCheck() {
@@ -163,7 +180,7 @@ export default class Agent {
       throw new Error(`Unexpected 'Content-Type' header: ${contentType}`);
     }
 
-    this.updateManifest(await response.json());
+    await this.updateManifest(await response.json());
 
     // Save the ETag of the manifest we just received so we can avoid fetching
     // the same manifest again.
