@@ -14,7 +14,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "engines": {
-    "node": ">=6"
+    "node": ">=8.5"
   },
   "dependencies": {
     "apollo-server-caching": "file:../apollo-server-caching",

@@ -21,7 +21,7 @@
   },
   "homepage": "https://github.com/apollographql/apollo-server#readme",
   "engines": {
-    "node": ">=6"
+    "node": ">=8.5"
   },
   "dependencies": {
     "@types/ws": "^5.1.2",

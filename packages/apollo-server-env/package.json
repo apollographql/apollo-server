@@ -20,7 +20,7 @@
     "prepare": "npm run clean && npm run compile"
   },
   "engines": {
-    "node": ">=6"
+    "node": ">=8.5"
   },
   "dependencies": {
     "node-fetch": "^2.1.2",

@@ -22,7 +22,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "engines": {
-    "node": ">=6"
+    "node": ">=8.5"
   },
   "dependencies": {
     "@apollographql/graphql-playground-html": "^1.6.0",
