@@ -18,9 +18,11 @@ interface Options {
 export default class extends ApolloServerPlugin {
   private agent?: Agent;
   private cache?: KeyValueCache;
+  private options: Options = Object.create(null);
 
-  constructor(public options: Options) {
+  constructor(options?: Options) {
     super();
+    Object.assign(this.options, options);
   }
 
   async serverWillStart({

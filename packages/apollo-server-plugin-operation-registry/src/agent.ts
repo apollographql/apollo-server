@@ -37,8 +37,11 @@ export default class Agent {
   private lastSuccessfulCheck?: Date;
   private lastSuccessfulETag?: string;
   private lastOperationSignatures: SignatureStore = new Set();
+  private options: AgentOptions = Object.create(null);
 
-  constructor(private options: AgentOptions) {}
+  constructor(options?: AgentOptions) {
+    Object.assign(this.options, options);
+  }
 
   private getHashedServiceId(): string {
     return (this.hashedServiceId =
