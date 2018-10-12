@@ -1,0 +1,9 @@
+{
+  "extends": "../../../../tsconfig.test.base",
+  "include": ["**/*"],
+  "references": [
+    { "path": "../../" },
+    { "path": "../../tsconfig.requestPipelineAPI.json" },
+    { "path": "../../../apollo-server-integration-testsuite" }
+  ]
+}

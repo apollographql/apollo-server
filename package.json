@@ -5,15 +5,16 @@
   "repository": "github:apollographql/apollo-server",
   "scripts": {
     "clean": "git clean -dfqX -- ./node_modules **/{dist,node_modules}/",
-    "compile": "tsc --build",
-    "compile:clean": "tsc --build --clean",
-    "watch": "tsc --build --watch",
+    "compile": "tsc --build tsconfig.build.json",
+    "compile:clean": "tsc --build tsconfig.build.json --clean",
+    "watch": "tsc --build tsconfig.build.json --watch",
     "release": "npm run clean && npm ci && lerna publish --exact",
     "postinstall": "lerna run prepare && npm run compile",
     "lint": "prettier-check '**/*.{js,ts}'",
     "lint-fix": "prettier '**/*.{js,ts}' --write",
     "test": "jest --verbose",
-    "test:watch": "jest --verbose --watch",
+    "test:clean": "jest --clearCache",
+    "test:watch": "jest --verbose --watchAll",
     "testonly": "npm test",
     "test:ci": "npm run coverage -- --ci --maxWorkers=2  --reporters=default --reporters=jest-junit",
     "coverage": "npm test -- --coverage",
@@ -73,10 +74,13 @@
     "@types/micro": "7.3.2",
     "@types/multer": "1.3.7",
     "@types/node": "10.11.7",
+    "@types/node-fetch": "^2.1.2",
     "@types/redis": "2.8.7",
     "@types/request": "2.47.1",
-    "@types/type-is": "1.6.2",
-    "@types/ws": "6.0.1",
+    "@types/request-promise": "^4.1.42",
+    "@types/test-listen": "^1.1.0",
+    "@types/type-is": "^1.6.2",
+    "@types/ws": "^6.0.1",
     "apollo-fetch": "0.7.0",
     "apollo-link": "1.2.3",
     "apollo-link-http": "1.5.5",
@@ -117,8 +121,13 @@
     "test-listen": "1.1.0",
     "ts-jest": "23.10.4",
     "tslint": "5.11.0",
-    "typescript": "3.1.2",
+    "typescript": "next",
     "ws": "6.1.0",
     "yup": "0.26.5"
+  },
+  "jest": {
+    "projects": [
+      "<rootDir>/packages/*"
+    ]
   }
 }

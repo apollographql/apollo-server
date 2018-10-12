@@ -160,7 +160,7 @@ function policyResponseFrom(response: Response) {
 
 function headersToObject(headers: Headers) {
   const object = Object.create(null);
-  for (const [name, value] of headers as Headers) {
+  for (const [name, value] of headers) {
     object[name] = value;
   }
   return object;

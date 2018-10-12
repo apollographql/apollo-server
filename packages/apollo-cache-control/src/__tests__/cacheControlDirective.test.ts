@@ -1,11 +1,11 @@
-import { buildSchema } from 'graphql';
+import { buildSchemaWithCacheControlSupport } from './cacheControlSupport';
 
 import { CacheScope } from '../';
-import { collectCacheControlHints } from './test-utils/helpers';
+import { collectCacheControlHints } from './collectCacheControlHints';
 
 describe('@cacheControl directives', () => {
   it('should set maxAge: 0 and no scope for a field without cache hints', async () => {
-    const schema = buildSchema(`
+    const schema = buildSchemaWithCacheControlSupport(`
       type Query {
         droid(id: ID!): Droid
       }
@@ -31,7 +31,7 @@ describe('@cacheControl directives', () => {
   });
 
   it('should set maxAge to the default and no scope for a field without cache hints', async () => {
-    const schema = buildSchema(`
+    const schema = buildSchemaWithCacheControlSupport(`
       type Query {
         droid(id: ID!): Droid
       }
@@ -58,7 +58,7 @@ describe('@cacheControl directives', () => {
   });
 
   it('should set the specified maxAge from a cache hint on the field', async () => {
-    const schema = buildSchema(`
+    const schema = buildSchemaWithCacheControlSupport(`
       type Query {
         droid(id: ID!): Droid @cacheControl(maxAge: 60)
       }
@@ -85,7 +85,7 @@ describe('@cacheControl directives', () => {
   });
 
   it('should set the specified maxAge for a field from a cache hint on the target type', async () => {
-    const schema = buildSchema(`
+    const schema = buildSchemaWithCacheControlSupport(`
       type Query {
         droid(id: ID!): Droid
       }
@@ -112,7 +112,7 @@ describe('@cacheControl directives', () => {
   });
 
   it('should overwrite the default maxAge when maxAge=0 is specified on the type', async () => {
-    const schema = buildSchema(`
+    const schema = buildSchemaWithCacheControlSupport(`
       type Query {
         droid(id: ID!): Droid
       }
@@ -139,7 +139,7 @@ describe('@cacheControl directives', () => {
   });
 
   it('should override the maxAge from the target type with that specified on a field', async () => {
-    const schema = buildSchema(`
+    const schema = buildSchemaWithCacheControlSupport(`
       type Query {
         droid(id: ID!): Droid @cacheControl(maxAge: 120)
       }
@@ -166,7 +166,7 @@ describe('@cacheControl directives', () => {
   });
 
   it('should override the maxAge from the target type with that specified on a field, keeping the scope', async () => {
-    const schema = buildSchema(`
+    const schema = buildSchemaWithCacheControlSupport(`
       type Query {
         droid(id: ID!): Droid @cacheControl(maxAge: 120)
       }
@@ -197,7 +197,7 @@ describe('@cacheControl directives', () => {
   });
 
   it('should override the scope from the target type with that specified on a field', async () => {
-    const schema = buildSchema(`
+    const schema = buildSchemaWithCacheControlSupport(`
       type Query {
         droid(id: ID!): Droid @cacheControl(scope: PRIVATE)
       }
