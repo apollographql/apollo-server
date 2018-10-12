@@ -20,8 +20,8 @@ function handleFileUploads(uploadsConfig: FileUploadOptions) {
     if (request.mime === 'multipart/form-data') {
       Object.defineProperty(request, 'payload', {
         value: await processFileUploads(
-          request,
-          request.response,
+          request.raw.req,
+          request.raw.res,
           uploadsConfig,
         ),
         writable: false,

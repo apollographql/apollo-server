@@ -18,6 +18,7 @@
     { "path": "./packages/apollo-server-koa" },
     { "path": "./packages/apollo-server-lambda" },
     { "path": "./packages/apollo-server-micro" },
+    { "path": "./packages/apollo-server-plugin-base" },
     { "path": "./packages/apollo-tracing" },
     { "path": "./packages/graphql-extensions" }
   ]
