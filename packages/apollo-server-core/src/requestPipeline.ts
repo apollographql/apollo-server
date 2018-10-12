@@ -35,7 +35,7 @@ import {
   GraphQLRequestContext,
   InvalidGraphQLRequestError,
   ValidationRule,
-} from './requestPipelineAPI';
+} from '../dist/requestPipelineAPI';
 import {
   ApolloServerPlugin,
   GraphQLRequestListener,
