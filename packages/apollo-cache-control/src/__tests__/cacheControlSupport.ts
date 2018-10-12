@@ -3,7 +3,7 @@ import { makeExecutableSchema } from 'graphql-tools';
 
 type FirstArg<F> = F extends (arg: infer A) => any ? A : never;
 
-export function augmentTypeDefsWithCacheControlSupport(typeDefs) {
+export function augmentTypeDefsWithCacheControlSupport(typeDefs: string) {
   return (
     `
   enum CacheControlScope {
@@ -24,7 +24,7 @@ export function buildSchemaWithCacheControlSupport(source: string) {
 }
 
 export function makeExecutableSchemaWithCacheControlSupport(
-  options: FirstArg<typeof makeExecutableSchema>,
+  options: FirstArg<typeof makeExecutableSchema> & { typeDefs: string },
 ) {
   return makeExecutableSchema({
     ...options,
