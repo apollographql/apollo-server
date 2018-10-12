@@ -24,6 +24,12 @@ export type ContextFunction<T = any> = (
   context: Context<T>,
 ) => Promise<Context<T>>;
 
+type ValueOrPromise<T> = T | Promise<T>;
+
+export type ServerOptionsFunction<HandlerArguments extends any[]> = (
+  ...args: HandlerArguments
+) => ValueOrPromise<GraphQLOptions>;
+
 export interface SubscriptionServerOptions {
   path: string;
   keepAlive?: number;
