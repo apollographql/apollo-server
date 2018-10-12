@@ -6,7 +6,10 @@ import { KeyValueCache, InMemoryLRUCache } from 'apollo-server-caching';
 import { CacheOptions } from './RESTDataSource';
 
 export class HTTPCache {
-  constructor(private keyValueCache: KeyValueCache = new InMemoryLRUCache()) {}
+  constructor(
+    private keyValueCache: KeyValueCache = new InMemoryLRUCache(),
+    private httpFetch: typeof fetch = fetch,
+  ) {}
 
   async fetch(
     request: Request,
@@ -21,7 +24,7 @@ export class HTTPCache {
 
     const entry = await this.keyValueCache.get(`httpcache:${cacheKey}`);
     if (!entry) {
-      const response = await fetch(request);
+      const response = await this.httpFetch(request);
 
       const policy = new CachePolicy(
         policyRequestFrom(request),
@@ -61,7 +64,7 @@ export class HTTPCache {
       const revalidationRequest = new Request(request, {
         headers: revalidationHeaders,
       });
-      const revalidationResponse = await fetch(revalidationRequest);
+      const revalidationResponse = await this.httpFetch(revalidationRequest);
 
       const { policy: revalidatedPolicy, modified } = policy.revalidatedPolicy(
         policyRequestFrom(revalidationRequest),

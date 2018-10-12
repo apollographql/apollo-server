@@ -4,6 +4,7 @@
 
 - Allow an optional function to resolve the `rootValue`, passing the `DocumentNode` AST to determine the value. [PR #1555](https://github.com/apollographql/apollo-server/pull/1555)
 - Follow-up on the work in [PR #1516](https://github.com/apollographql/apollo-server/pull/1516) to also fix missing insertion cursor/caret when a custom GraphQL configuration is specified which doesn't specify its own `cursorShape` property. [PR #1607](https://github.com/apollographql/apollo-server/pull/1607)
+- Allow an optional parameter to the `RESTDataSource` constructor which takes a `node-fetch`-compatible `fetch` implementation that will be used for HTTP calls instead of the default fetch. [PR #1807](https://github.com/apollographql/apollo-server/pull/1807)
 
 ### v2.1.0
 
