@@ -88,7 +88,7 @@
     "body-parser": "1.18.3",
     "codecov": "3.1.0",
     "connect": "3.6.6",
-    "express": "4.16.3",
+    "express": "4.16.4",
     "fibers": "3.0.0",
     "form-data": "2.3.2",
     "graphql": "14.0.2",
