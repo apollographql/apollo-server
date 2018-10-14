@@ -119,7 +119,7 @@ By implementing the `Node` interface as the foundation for `Post` and `Author`, 
 
 <h3 id="global-ids">Global Ids</h3>
 
-When using the `Node` interface, we will want to create schema unique `id` fields. The most common way to do this is to take the `id` from the datasource and join it with the type name where it is being exposed (i.e `Post:1`, `Author:1`). In doing so, even though the database `id` is the same for the first Post and first Author, the client can refetch each sucessfully!
+When using the `Node` interface, we will want to create schema unique `id` fields. The most common way to do this is to take the `id` from the datasource and join it with the type name where it is being exposed (i.e `Post:1`, `Author:1`). In doing so, even though the database `id` is the same for the first Post and first Author, the client can refetch each successfully!
 
 Global Ids are often encoded into a base64 string after joined together. This is for consistency but also to denote that the client shouldn't try to parse and use the information as the shape of the `id` may change over time with schema revisions, but the uniqueness of it will not.
 
