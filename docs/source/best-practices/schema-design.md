@@ -151,7 +151,7 @@ query GetAuthor($authorId: ID!) {
 }
 ```
 
-Using the `Node` interface can remove a ton of uneccessary fields on the `Query` type, as well as solve common patterns like data fetching for routing. Say we had a route showing content our user has liked: `/favorites` and then we wanted to drill down into those likes: `/favorites/:id` to show more information. Instead of creating a route for each kind of liked content (i.e `/favories/authors/:id`, `/favorites/posts/:id`), we can use the `node` field to request any type of liked content:
+Using the `Node` interface can remove a ton of unnecessary fields on the `Query` type, as well as solve common patterns like data fetching for routing. Say we had a route showing content our user has liked: `/favorites` and then we wanted to drill down into those likes: `/favorites/:id` to show more information. Instead of creating a route for each kind of liked content (i.e `/favories/authors/:id`, `/favorites/posts/:id`), we can use the `node` field to request any type of liked content:
 
 ```graphql
 query GetLikedContent($id: ID!){
