@@ -1,8 +1,15 @@
 import {
   GraphQLServiceContext,
   GraphQLRequestContext,
+  GraphQLRequest,
+  GraphQLResponse,
 } from 'apollo-server-core/dist/requestPipelineAPI';
-export { GraphQLServiceContext, GraphQLRequestContext };
+export {
+  GraphQLServiceContext,
+  GraphQLRequestContext,
+  GraphQLRequest,
+  GraphQLResponse,
+};
 
 type ValueOrPromise<T> = T | Promise<T>;
 
