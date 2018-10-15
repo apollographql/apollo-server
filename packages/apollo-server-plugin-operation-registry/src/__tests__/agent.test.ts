@@ -148,7 +148,7 @@ describe('Agent', () => {
         consoleSpy.mockRestore();
       });
 
-      it('populates the cache', async () => {
+      it('populates the manifest store', async () => {
         const consoleSpy = jest
           .spyOn(global.console, 'debug')
           .mockImplementation(() => {});
