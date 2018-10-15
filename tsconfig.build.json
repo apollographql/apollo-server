@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    "composite": true
+  },
+  "files": [],
+  "include": [],
+  "references": [
+    { "path": "./packages/apollo-cache-control" },
+    { "path": "./packages/apollo-datasource" },
+    { "path": "./packages/apollo-datasource-rest" },
+    { "path": "./packages/apollo-engine-reporting" },
+    { "path": "./packages/apollo-server" },
+    { "path": "./packages/apollo-server-cache-memcached" },
+    { "path": "./packages/apollo-server-cache-redis" },
+    { "path": "./packages/apollo-server-caching" },
+    { "path": "./packages/apollo-server-cloudflare" },
+    { "path": "./packages/apollo-server-core" },
+    { "path": "./packages/apollo-server-errors" },
+    { "path": "./packages/apollo-server-express" },
+    { "path": "./packages/apollo-server-hapi" },
+    { "path": "./packages/apollo-server-koa" },
+    { "path": "./packages/apollo-server-lambda" },
+    { "path": "./packages/apollo-server-micro" },
+    { "path": "./packages/apollo-server-plugin-base" },
+    { "path": "./packages/apollo-tracing" },
+    { "path": "./packages/graphql-extensions" },
+  ]
+}

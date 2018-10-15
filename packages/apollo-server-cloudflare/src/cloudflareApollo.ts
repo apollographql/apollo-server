@@ -1,5 +1,6 @@
 import {
   GraphQLOptions,
+  ServerOptionsFunction,
   HttpQueryError,
   runHttpQuery,
 } from 'apollo-server-core';
@@ -11,7 +12,11 @@ import { Request, Response, URL } from 'apollo-server-env';
 // - simple, fast and secure
 //
 
-export function graphqlCloudflare(options: GraphQLOptions) {
+export type CloudflareOptionsFunction = ServerOptionsFunction<[Request]>;
+
+export function graphqlCloudflare(
+  options: GraphQLOptions | CloudflareOptionsFunction,
+) {
   if (!options) {
     throw new Error('Apollo Server requires options.');
   }

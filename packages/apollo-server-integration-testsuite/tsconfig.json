@@ -5,8 +5,7 @@
     "outDir": "./dist",
     "noImplicitAny": false,
     "strictNullChecks": false,
-    "lib": ["es2017", "esnext.asynciterable", "dom"],
-    "types": ["node", "jest"]
+    "types": ["node", "jest", "apollo-server-env/dist/global"]
   },
   "include": ["src/**/*"],
   "exclude": ["**/__tests__", "**/__mocks__"],

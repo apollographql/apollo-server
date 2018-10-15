@@ -13,7 +13,7 @@ export class RedisCache implements KeyValueCache {
   private loader: DataLoader<string, string>;
 
   constructor(options: Redis.ClientOpts) {
-    const client = Redis.createClient(options);
+    const client = Redis.createClient(options) as any;
 
     // promisify client calls for convenience
     client.mget = promisify(client.mget).bind(client);
