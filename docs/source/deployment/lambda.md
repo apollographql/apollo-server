@@ -130,7 +130,7 @@ The resulting S3 buckets and Lambda functions can be viewed and managed after lo
 
 ## Getting request info
 
-To read information about the current request from the API Gateway event `(HTTP headers, HTTP method, body, path, ...)` or the current Lambda Context `(Function Name, Function Version, awsRequestId, time remaning, ...)`, use the options function. This way, they can be passed to your schema resolvers via the context option.
+To read information about the current request from the API Gateway event `(HTTP headers, HTTP method, body, path, ...)` or the current Lambda Context `(Function Name, Function Version, awsRequestId, time remaining, ...)`, use the options function. This way, they can be passed to your schema resolvers via the context option.
 
 ```js
 const { ApolloServer, gql } = require('apollo-server-lambda');
