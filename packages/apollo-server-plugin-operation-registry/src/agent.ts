@@ -246,12 +246,8 @@ export default class Agent {
     const incomingOperations: Map<string, string> = new Map();
     const replacementSignatures: SignatureStore = new Set();
 
-    for (const operation of manifest.operations) {
-      incomingOperations.set(operation.signature, operation.document);
-    }
-
-    // Loop through each operation in the current manifest.
-    incomingOperations.forEach((document, signature) => {
+    for (const { signature, document } of manifest.operations) {
+      incomingOperations.set(signature, document);
       // Keep track of each operation in this manifest so we can store it
       // for comparison after the next fetch.
       replacementSignatures.add(signature);
@@ -264,17 +260,17 @@ export default class Agent {
         this.maybeLog(`Incoming manifest ADDs: ${signature}`);
         this.options.cache.set(getCacheKey(signature), document);
       }
-    });
+    }
 
     // Explicitly purge items which have been removed since our last
     // successful fetch of the manifest.
-    this.lastOperationSignatures.forEach(signature => {
+    for (const signature of this.lastOperationSignatures) {
       if (!incomingOperations.has(signature)) {
         // Remove operations which are no longer present.
         this.maybeLog(`Incoming manifest REMOVEs: ${signature}`);
         this.options.cache.delete(getCacheKey(signature));
       }
-    });
+    }
 
     // Save the ones from this fetch, so we know what to remove on the next
     // actual update.  Particularly important since some cache backings might
