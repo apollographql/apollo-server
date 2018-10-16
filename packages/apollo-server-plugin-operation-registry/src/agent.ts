@@ -33,7 +33,7 @@ type SignatureStore = Set<string>;
 export default class Agent {
   private timer?: NodeJS.Timer;
   private hashedServiceId?: string;
-  private requestInFlight: boolean = false;
+  private requestInFlight: Promise<void> | null = null;
   private lastSuccessfulCheck?: Date;
   private lastSuccessfulETag?: string;
   private lastOperationSignatures: SignatureStore = new Set();
@@ -52,6 +52,10 @@ export default class Agent {
     ) {
       throw new Error('`engine.serviceID` must be passed to the Agent.');
     }
+  }
+
+  async requestPending() {
+    return this.requestInFlight;
   }
 
   private getHashedServiceId(): string {
@@ -199,22 +203,30 @@ export default class Agent {
 
     // Don't check again if we're already in-flight.
     if (this.requestInFlight) {
-      return;
+      return this.requestInFlight;
     }
 
-    try {
-      // Prevent other requests from crossing paths.
-      this.requestInFlight = true;
+    const promise = Promise.resolve();
 
-      // If tryUpdate returns true, we can consider this a success.
-      if (await this.tryUpdate()) {
+    // Prevent other requests from crossing paths.
+    this.requestInFlight = promise;
+
+    const resetRequestInFlight = () => (this.requestInFlight = null);
+
+    return promise
+      .then(() => this.tryUpdate())
+      .then(result => {
         // Mark this for reporting and monitoring reasons.
         this.lastSuccessfulCheck = new Date();
-      }
-    } finally {
-      // Always wrap mark ourselves as finished, even in the event of an error.
-      this.requestInFlight = false;
-    }
+        resetRequestInFlight();
+        return result;
+      })
+      .catch(err => {
+        // We don't want to handle any errors, but we do want to erase the
+        // current Promise reference.
+        resetRequestInFlight();
+        throw err;
+      });
   }
 
   public async updateManifest(manifest: OperationManifest) {
