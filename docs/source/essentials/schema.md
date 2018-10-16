@@ -240,7 +240,7 @@ This makes SDL-generation even easier since many GraphQL tools (like GraphQL Pla
 
 Introspection is an **optional** feature, enabled by default during development, which allows clients (which are frequently developers, building an application) to automatically discover the types implemented within a GraphQL schema.
 
-By allowing the consumer of the API to see the full possibilities that an API can, developers can easily add new fields to existing queries.
+By allowing the consumer of the API to view the full possibilities of the API, developers can easily write new queries, or add new fields to existing ones.
 
 <h2 id="next-steps">Next steps</h2>
 
