@@ -35,6 +35,10 @@ export default class Agent {
   private hashedServiceId?: string;
   private requestInFlight: Promise<void> | null = null;
   private lastSuccessfulCheck?: Date;
+
+  // Only exposed for testing.
+  public _timesChecked: number = 0;
+
   private lastSuccessfulETag?: string;
   private lastOperationSignatures: SignatureStore = new Set();
   private options: AgentOptions = Object.create(null);
@@ -133,6 +137,7 @@ export default class Agent {
     );
 
     this.maybeLog(`Checking for manifest changes at ${manifestUrl}`);
+    this._timesChecked++;
 
     const fetchOptions: RequestInit = {
       // GET is what we request, but keep in mind that, when we include and get
