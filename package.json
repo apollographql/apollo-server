@@ -94,7 +94,7 @@
     "graphql": "14.0.2",
     "graphql-subscriptions": "1.0.0",
     "graphql-tag": "2.10.0",
-    "graphql-tools": "4.0.1",
+    "graphql-tools": "4.0.2",
     "hapi": "17.6.0",
     "husky": "1.1.2",
     "jest": "23.6.0",
