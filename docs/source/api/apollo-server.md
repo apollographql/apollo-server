@@ -365,3 +365,7 @@ addMockFunctionsToSchema({
 *  `maskErrorDetails`: boolean
 
    Set to true to remove error details from the traces sent to Apollo's servers. Defaults to false.
+
+*  `proxyUrl`: string
+
+    URL to proxy metrics reporting requests through.
