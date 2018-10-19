@@ -254,7 +254,7 @@ export class ApolloServerBase {
       });
     }
 
-    if (mocks || typeof mockEntireSchema !== 'undefined') {
+    if (mocks || (typeof mockEntireSchema !== 'undefined' && mocks !== false)) {
       addMockFunctionsToSchema({
         schema: this.schema,
         mocks:
