@@ -17,7 +17,7 @@ GraphQL offers similar authentication and authorization mechanics as REST and ot
 
 **Operation authorization** takes advantage of the flexibility of GraphQL to provide public portions of the schema that don't require any authorization and private portions that require authentication and authorization.
 
-> Authorization within our GraphQL resolvers is a great first line of defense for securing our application. We recommened having similar authorization patterns within our data fetching models to ensure a user is authorized at every level of data fetching and updating.
+> Authorization within our GraphQL resolvers is a great first line of defense for securing our application. We recommended having similar authorization patterns within our data fetching models to ensure a user is authorized at every level of data fetching and updating.
 
 <h2>Authenticating users</h2>
 
@@ -122,7 +122,7 @@ server.listen().then(({ url }) => {
 });
 ```
 
-The benefit of doing operation authorization is that private and public data is more easily managed an enforced. Take for example a schema that allows finding `allTodos` in the app (an administratrative action), seeing any `publicTodos` which requires no authorization, and returning just a single users todos via `myTodos`. Using Apollo Server, we can easiliy build complex authorization models like so:
+The benefit of doing operation authorization is that private and public data is more easily managed an enforced. Take for example a schema that allows finding `allTodos` in the app (an administrative action), seeing any `publicTodos` which requires no authorization, and returning just a single users todos via `myTodos`. Using Apollo Server, we can easily build complex authorization models like so:
 
 ```js
 const { ForbiddenError, AuthenticationError } = require("apollo-server");
@@ -237,7 +237,7 @@ app.post(
   }),
 );
 
-//Depending on the authorization model choosen, you may include some extra middleware here before you instantiate the server
+//Depending on the authorization model chosen, you may include some extra middleware here before you instantiate the server
 
 //Create and start your apollo server
 const server = new ApolloServer({ typeDefs, resolvers, app });
