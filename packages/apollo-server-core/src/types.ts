@@ -14,6 +14,8 @@ import {
   GraphQLServerOptions as GraphQLOptions,
   PersistedQueryOptions,
 } from './graphqlOptions';
+import { CacheControlExtensionOptions } from 'apollo-cache-control';
+import { ApolloServerPlugin } from 'apollo-server-plugin-base';
 
 export { KeyValueCache } from 'apollo-server-caching';
 
@@ -21,6 +23,12 @@ export type Context<T = any> = T;
 export type ContextFunction<T = any> = (
   context: Context<T>,
 ) => Promise<Context<T>>;
+
+type ValueOrPromise<T> = T | Promise<T>;
+
+export type ServerOptionsFunction<HandlerArguments extends any[]> = (
+  ...args: HandlerArguments
+) => ValueOrPromise<GraphQLOptions>;
 
 export interface SubscriptionServerOptions {
   path: string;
@@ -44,7 +52,6 @@ export interface Config
       | 'validationRules'
       | 'formatResponse'
       | 'fieldResolver'
-      | 'cacheControl'
       | 'tracing'
       | 'dataSources'
       | 'cache'
@@ -59,12 +66,18 @@ export interface Config
   mockEntireSchema?: boolean;
   engine?: boolean | EngineReportingOptions;
   extensions?: Array<() => GraphQLExtension>;
+  cacheControl?: CacheControlExtensionOptions | boolean;
+  plugins?: PluginDefinition[];
   persistedQueries?: PersistedQueryOptions | false;
   subscriptions?: Partial<SubscriptionServerOptions> | string | false;
   //https://github.com/jaydenseric/apollo-upload-server#options
   uploads?: boolean | FileUploadOptions;
   playground?: PlaygroundConfig;
 }
+
+export type PluginDefinition =
+  | ApolloServerPlugin
+  | (new () => ApolloServerPlugin);
 
 export interface FileUploadOptions {
   //Max allowed non-file multipart form field size in bytes; enough for your queries (default: 1 MB).

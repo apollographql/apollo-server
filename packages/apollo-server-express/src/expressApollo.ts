@@ -1,29 +1,24 @@
 import express from 'express';
 import {
   GraphQLOptions,
+  ServerOptionsFunction,
   HttpQueryError,
   runHttpQuery,
   convertNodeHttpToRequest,
 } from 'apollo-server-core';
 
-export interface ExpressGraphQLOptionsFunction {
-  (req?: express.Request, res?: express.Response):
-    | GraphQLOptions
-    | Promise<GraphQLOptions>;
-}
+export type ExpressGraphQLOptionsFunction = ServerOptionsFunction<
+  [express.Request, express.Response]
+>;
 
 // Design principles:
 // - there is just one way allowed: POST request with JSON body. Nothing else.
 // - simple, fast and secure
 //
 
-export interface ExpressHandler {
-  (req: express.Request, res: express.Response, next): void;
-}
-
 export function graphqlExpress(
   options: GraphQLOptions | ExpressGraphQLOptionsFunction,
-): ExpressHandler {
+): express.Handler {
   if (!options) {
     throw new Error('Apollo Server requires options.');
   }
@@ -35,11 +30,7 @@ export function graphqlExpress(
     );
   }
 
-  const graphqlHandler = (
-    req: express.Request,
-    res: express.Response,
-    next,
-  ): void => {
+  return (req, res, next): void => {
     runHttpQuery([req, res], {
       method: req.method,
       options: options,
@@ -47,9 +38,11 @@ export function graphqlExpress(
       request: convertNodeHttpToRequest(req),
     }).then(
       ({ graphqlResponse, responseInit }) => {
-        Object.keys(responseInit.headers).forEach(key =>
-          res.setHeader(key, responseInit.headers[key]),
-        );
+        if (responseInit.headers) {
+          for (const [name, value] of Object.entries(responseInit.headers)) {
+            res.setHeader(name, value);
+          }
+        }
         res.write(graphqlResponse);
         res.end();
       },
@@ -59,9 +52,9 @@ export function graphqlExpress(
         }
 
         if (error.headers) {
-          Object.keys(error.headers).forEach(header => {
-            res.setHeader(header, error.headers[header]);
-          });
+          for (const [name, value] of Object.entries(error.headers)) {
+            res.setHeader(name, value);
+          }
         }
 
         res.statusCode = error.statusCode;
@@ -70,6 +63,4 @@ export function graphqlExpress(
       },
     );
   };
-
-  return graphqlHandler;
 }

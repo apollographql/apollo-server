@@ -104,7 +104,7 @@ And the server should return a simple response:
 }
 ```
 
-> GraphQL operations should _also_ be sent directly to `http://localhost:4000/` and Apollo Client should be configured with this endpoint.  Only `GET` requests from a web browser will result the GraphQL Playground interface being served.  Futhermore, by default, GraphQL Playground will only be enabled during development.
+> GraphQL operations should _also_ be sent directly to `http://localhost:4000/` and Apollo Client should be configured with this endpoint.  Only `GET` requests from a web browser will result the GraphQL Playground interface being served.  Furthermore, by default, GraphQL Playground will only be enabled during development.
 
 <h2 id="integrations">Server integrations</h2>
 

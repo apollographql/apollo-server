@@ -280,7 +280,7 @@ const resolvers = {
   Query: {
     favoriteColor: () => 'RED',
     avatar: (root, args) => {
-      // args.favoriteColor is 'RED', 'GREEN', or 'BLUE'
+      // args.borderColor is 'RED', 'GREEN', or 'BLUE'
     },
   }
 };
@@ -318,7 +318,7 @@ const resolvers = {
   Query: {
     favoriteColor: () => '#f00',
     avatar: (root, args) => {
-      // args.favoriteColor is '#f00', '#0f0', or '#00f'
+      // args.borderColor is '#f00', '#0f0', or '#00f'
     },
   }
 };

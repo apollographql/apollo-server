@@ -8,6 +8,7 @@ import { GraphQLExtension } from 'graphql-extensions';
 import { CacheControlExtensionOptions } from 'apollo-cache-control';
 import { KeyValueCache } from 'apollo-server-caching';
 import { DataSource } from 'apollo-datasource';
+import { ApolloServerPlugin } from 'apollo-server-plugin-base';
 
 /*
  * GraphQLServerOptions
@@ -24,30 +25,24 @@ import { DataSource } from 'apollo-datasource';
  *
  */
 export interface GraphQLServerOptions<
-  TContext =
-    | (() => Promise<Record<string, any>> | Record<string, any>)
-    | Record<string, any>,
-  TRootVal = ((parsedQuery: DocumentNode) => any) | any
+  TContext = Record<string, any>,
+  TRootValue = any
 > {
   schema: GraphQLSchema;
   formatError?: Function;
-  rootValue?: TRootVal;
-  context?: TContext;
+  rootValue?: ((parsedQuery: DocumentNode) => TRootValue) | TRootValue;
+  context?: TContext | (() => never);
   validationRules?: Array<(context: ValidationContext) => any>;
   formatResponse?: Function;
   fieldResolver?: GraphQLFieldResolver<any, TContext>;
   debug?: boolean;
   tracing?: boolean;
-  cacheControl?:
-    | boolean
-    | (CacheControlExtensionOptions & {
-        calculateHttpHeaders?: boolean;
-        stripFormattedExtensions?: boolean;
-      });
+  cacheControl?: CacheControlExtensionOptions;
   extensions?: Array<() => GraphQLExtension>;
   dataSources?: () => DataSources<TContext>;
   cache?: KeyValueCache;
   persistedQueries?: PersistedQueryOptions;
+  plugins?: ApolloServerPlugin[];
 }
 
 export type DataSources<TContext> = {
@@ -60,13 +55,13 @@ export interface PersistedQueryOptions {
 
 export default GraphQLServerOptions;
 
-export async function resolveGraphqlOptions(
+export async function resolveGraphqlOptions<HandlerArguments extends any[]>(
   options:
     | GraphQLServerOptions
     | ((
-        ...args: Array<any>
+        ...args: HandlerArguments
       ) => Promise<GraphQLServerOptions> | GraphQLServerOptions),
-  ...args: Array<any>
+  ...args: HandlerArguments
 ): Promise<GraphQLServerOptions> {
   if (typeof options === 'function') {
     return await options(...args);

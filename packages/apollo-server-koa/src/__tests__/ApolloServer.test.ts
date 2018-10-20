@@ -737,7 +737,7 @@ describe('apollo-server-koa', () => {
           resolvers,
           tracing: true,
           engine: {
-            apiKey: 'fake',
+            apiKey: 'service:my-app:secret',
             maxAttempts: 0,
             endpointUrl: 'l',
             reportErrorFunction: () => {},

@@ -1,14 +1,9 @@
 {
   "name": "apollo-server-micro",
-  "version": "2.1.0",
+  "version": "2.2.0-alpha.0",
   "description": "Production-ready Node.js GraphQL server for Micro",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "scripts": {
-    "clean": "rm -rf dist",
-    "compile": "tsc",
-    "prepare": "npm run clean && npm run compile"
-  },
   "repository": {
     "type": "git",
     "url": "https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-micro"
