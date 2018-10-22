@@ -10,7 +10,7 @@ import { KeyValueCache } from 'apollo-server-caching';
 const DEFAULT_POLL_SECONDS: number = 30;
 const SYNC_WARN_TIME_SECONDS: number = 60;
 
-interface AgentOptions {
+export interface AgentOptions {
   debug?: boolean;
   pollSeconds?: number;
   schemaHash: string;
