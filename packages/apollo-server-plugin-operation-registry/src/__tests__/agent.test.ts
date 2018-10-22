@@ -156,7 +156,9 @@ describe('Agent', () => {
         }
 
         let toCleanup;
-        while ((toCleanup = forCleanup.shift())) {
+        // Loop through the `forCleanup` constant and empty it out by popping
+        // individual elements off the end and running the appropriate cleanup.
+        while ((toCleanup = forCleanup.pop())) {
           if (toCleanup.agent) {
             toCleanup.agent.stop();
           }
