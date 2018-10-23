@@ -109,7 +109,6 @@ export class ApolloServer extends ApolloServerBase {
     );
 
     if (!disableHealthCheck) {
-      // uses same path as engine proxy, but is generally useful.
       app.use(
         middlewareFromPath(
           '/.well-known/apollo/server-health',
