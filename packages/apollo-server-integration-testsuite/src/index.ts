@@ -1072,6 +1072,70 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
       });
     });
 
+    describe('request pipeline plugins', () => {
+      describe('lifecycle hooks', () => {
+        it('calls serverWillStart before serving a request', async () => {
+          // We'll use this eventually-assigned function to programmatically
+          // resolve the `serverWillStart` event.
+          let resolveServerWillStart: Function;
+
+          // We'll use this mocked function to determine the order in which
+          // the events we're expecting to happen actually occur and validate
+          // those expectations in various stages of this test.
+          const fn = jest.fn();
+
+          const unawaitedApp = createApp({
+            graphqlOptions: {
+              schema,
+              plugins: [
+                {
+                  serverWillStart() {
+                    fn('zero');
+                    return new Promise(resolve => {
+                      resolveServerWillStart = () => {
+                        fn('one');
+                        resolve();
+                      };
+                    });
+                  },
+                },
+              ],
+            },
+          });
+
+          // Make sure that things were called in the expected order.
+          expect(fn.mock.calls).toEqual([['zero']]);
+
+          resolveServerWillStart();
+
+          // Account for the fact that `createApp` might return a Promise,
+          // and might not, depending on the integration's implementation of
+          // createApp.
+          app = 'then' in unawaitedApp ? await unawaitedApp : unawaitedApp;
+
+          // Intentionally fire off the request asynchronously, without await.
+          const res = request(app)
+            .get('/graphql')
+            .query({
+              query: 'query test{ testString }',
+            })
+            .then(res => {
+              fn('two');
+              return res;
+            });
+
+          // Ensure the request has not gone through.
+          expect(fn.mock.calls).toEqual([['zero'], ['one']]);
+
+          // Now, wait for the request to finish.
+          await res;
+
+          // Finally, ensure that the order we expected was achieved.
+          expect(fn.mock.calls).toEqual([['zero'], ['one'], ['two']]);
+        });
+      });
+    });
+
     describe('Persisted Queries', () => {
       const query = '{testString}';
       const query2 = '{ testString }';
