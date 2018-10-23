@@ -43,6 +43,11 @@ export class ApolloServer extends ApolloServerBase {
   }
 
   public createHandler({ cors }: CreateHandlerOptions = { cors: undefined }) {
+    // We will kick off the `willStart` event once for the server, and then
+    // await it before processing any requests by incorporating its `await` into
+    // the GraphQLServerOptions function which is called before each request.
+    const promiseWillStart = this.willStart();
+
     const corsHeaders = {} as Record<string, any>;
 
     if (cors) {
@@ -132,10 +137,17 @@ export class ApolloServer extends ApolloServerBase {
 
       res.set(corsHeaders);
 
-      graphqlCloudFunction(this.createGraphQLServerOptions.bind(this))(
-        req,
-        res,
-      );
+      graphqlCloudFunction(async () => {
+        // In a world where this `createHandler` was async, we might avoid this
+        // but since we don't want to introduce a breaking change to this API
+        // (by switching it to `async`), we'll leverage the
+        // `GraphQLServerOptions`, which are dynamically built on each request,
+        // to `await` the `promiseWillStart` which we kicked off at the top of
+        // this method to ensure that it runs to completion (which is part of
+        // its contract) prior to processing the request.
+        await promiseWillStart;
+        return this.createGraphQLServerOptions(req, res);
+      })(req, res);
     };
   }
 }

@@ -53,6 +53,8 @@ export class ApolloServer extends ApolloServerBase {
     disableHealthCheck,
     onHealthCheck,
   }: ServerRegistration) {
+    await this.willStart();
+
     if (!path) path = '/graphql';
 
     await app.ext({
