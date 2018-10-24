@@ -1,6 +1,6 @@
 import lambda from 'aws-lambda';
 import { ApolloServerBase } from 'apollo-server-core';
-import { GraphQLOptions, Config } from 'apollo-server-core';
+import { GraphQLOptions, Config, FileUploadOptions } from 'apollo-server-core';
 import {
   renderPlaygroundPage,
   RenderPageOptions as PlaygroundRenderPageOptions,
@@ -17,6 +17,7 @@ export interface CreateHandlerOptions {
     credentials?: boolean;
     maxAge?: number;
   };
+  uploadsConfig?: FileUploadOptions;
 }
 
 export class ApolloServer extends ApolloServerBase {
@@ -43,7 +44,9 @@ export class ApolloServer extends ApolloServerBase {
     return super.graphQLServerOptions({ event, context });
   }
 
-  public createHandler({ cors }: CreateHandlerOptions = { cors: undefined }) {
+  public createHandler(
+    { cors, uploadsConfig }: CreateHandlerOptions = { cors: undefined },
+  ) {
     const corsHeaders: lambda.APIGatewayProxyResult['headers'] = {};
 
     if (cors) {
@@ -156,7 +159,7 @@ export class ApolloServer extends ApolloServerBase {
         );
       };
 
-      graphqlLambda(this.createGraphQLServerOptions.bind(this))(
+      graphqlLambda(this.createGraphQLServerOptions.bind(this), uploadsConfig)(
         event,
         context,
         callbackFilter,

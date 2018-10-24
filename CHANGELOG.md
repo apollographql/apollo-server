@@ -2,6 +2,7 @@
 
 ### vNEXT
 
+- Fix [#1419](https://github.com/apollographql/apollo-server/issues/1419), [#1703](https://github.com/apollographql/apollo-server/issues/1703) file upload using lambda. [PR #1739](https://github.com/apollographql/apollo-server/pull/1739)
 - Allow an optional function to resolve the `rootValue`, passing the `DocumentNode` AST to determine the value. [PR #1555](https://github.com/apollographql/apollo-server/pull/1555)
 - Follow-up on the work in [PR #1516](https://github.com/apollographql/apollo-server/pull/1516) to also fix missing insertion cursor/caret when a custom GraphQL configuration is specified which doesn't specify its own `cursorShape` property. [PR #1607](https://github.com/apollographql/apollo-server/pull/1607)
 
