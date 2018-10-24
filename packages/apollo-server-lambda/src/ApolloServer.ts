@@ -1,6 +1,6 @@
 import lambda from 'aws-lambda';
 import { ApolloServerBase } from 'apollo-server-core';
-import { GraphQLOptions, Config } from 'apollo-server-core';
+import { GraphQLOptions, Config, FileUploadOptions } from 'apollo-server-core';
 import {
   renderPlaygroundPage,
   RenderPageOptions as PlaygroundRenderPageOptions,
@@ -17,6 +17,7 @@ export interface CreateHandlerOptions {
     credentials?: boolean;
     maxAge?: number;
   };
+  uploadsConfig?: FileUploadOptions;
 }
 
 export class ApolloServer extends ApolloServerBase {
