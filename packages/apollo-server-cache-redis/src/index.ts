@@ -46,6 +46,10 @@ export class RedisCache implements KeyValueCache {
     return;
   }
 
+  async delete(key: string): Promise<boolean> {
+    return await this.client.delete(key);
+  }
+
   async flush(): Promise<void> {
     await this.client.flushdb();
   }
