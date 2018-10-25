@@ -13,6 +13,7 @@ import {
 import { GraphQLExtension } from 'graphql-extensions';
 import { EngineReportingAgent } from 'apollo-engine-reporting';
 import { InMemoryLRUCache } from 'apollo-server-caching';
+import { ApolloServerPlugin } from 'apollo-server-plugin-base';
 
 import {
   SubscriptionServer,
@@ -31,6 +32,7 @@ import {
   ContextFunction,
   SubscriptionServerOptions,
   FileUploadOptions,
+  PluginDefinition,
 } from './types';
 
 import { FormatErrorExtension } from './formatters';
@@ -55,14 +57,37 @@ const NoIntrospection = (context: ValidationContext) => ({
   },
 });
 
+function getEngineServiceId(engine: Config['engine']): string | undefined {
+  const keyFromEnv = process.env.ENGINE_API_KEY || '';
+  if (!(engine || (engine !== false && keyFromEnv))) {
+    return;
+  }
+
+  let engineApiKey: string = '';
+
+  if (typeof engine === 'object' && engine.apiKey) {
+    engineApiKey = engine.apiKey;
+  } else if (keyFromEnv) {
+    engineApiKey = keyFromEnv;
+  }
+
+  if (engineApiKey) {
+    return engineApiKey.split(':', 2)[1];
+  }
+
+  return;
+}
+
 export class ApolloServerBase {
   public subscriptionsPath?: string;
   public graphqlPath: string = '/graphql';
-  public requestOptions: Partial<GraphQLOptions<any>>;
+  public requestOptions: Partial<GraphQLOptions<any>> = Object.create(null);
 
   private context?: Context | ContextFunction;
   private engineReportingAgent?: EngineReportingAgent;
+  private engineServiceId?: string;
   private extensions: Array<() => GraphQLExtension>;
+  protected plugins: ApolloServerPlugin[] = [];
 
   protected schema: GraphQLSchema;
   protected subscriptionServerOptions?: SubscriptionServerOptions;
@@ -91,8 +116,13 @@ export class ApolloServerBase {
       subscriptions,
       uploads,
       playground,
+      plugins,
       ...requestOptions
     } = config;
+
+    // Plugins will be instantiated if they aren't already, and this.plugins
+    // is populated accordingly.
+    this.ensurePluginInstantiation(plugins);
 
     // While reading process.env is slow, a server should only be constructed
     // once per run, so we place the env check inside the constructor. If env
@@ -112,6 +142,31 @@ export class ApolloServerBase {
       requestOptions.validationRules = requestOptions.validationRules
         ? requestOptions.validationRules.concat(noIntro)
         : noIntro;
+    }
+
+    if (requestOptions.cacheControl !== false) {
+      if (
+        typeof requestOptions.cacheControl === 'boolean' &&
+        requestOptions.cacheControl === true
+      ) {
+        // cacheControl: true means that the user needs the cache-control
+        // extensions. This means we are running the proxy, so we should not
+        // strip out the cache control extension and not add cache-control headers
+        requestOptions.cacheControl = {
+          stripFormattedExtensions: false,
+          calculateHttpHeaders: false,
+          defaultMaxAge: 0,
+        };
+      } else {
+        // Default behavior is to run default header calculation and return
+        // no cacheControl extensions
+        requestOptions.cacheControl = {
+          stripFormattedExtensions: true,
+          calculateHttpHeaders: true,
+          defaultMaxAge: 0,
+          ...requestOptions.cacheControl,
+        };
+      }
     }
 
     if (!requestOptions.cache) {
@@ -215,21 +270,26 @@ export class ApolloServerBase {
     // or cacheControl.
     this.extensions = [];
 
+    const debugDefault =
+      process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test';
+    const debug =
+      requestOptions.debug !== undefined ? requestOptions.debug : debugDefault;
+
     // Error formatting should happen after the engine reporting agent, so that
     // engine gets the unmasked errors if necessary
-    if (this.requestOptions.formatError) {
-      this.extensions.push(
-        () =>
-          new FormatErrorExtension(
-            this.requestOptions.formatError!,
-            this.requestOptions.debug,
-          ),
-      );
-    }
+    this.extensions.push(
+      () => new FormatErrorExtension(requestOptions.formatError, debug),
+    );
 
-    if (engine || (engine !== false && process.env.ENGINE_API_KEY)) {
+    // In an effort to avoid over-exposing the API key itself, extract the
+    // service ID from the API key for plugins which only needs service ID.
+    // The truthyness of this value can also be used in other forks of logic
+    // related to Engine, as is the case with EngineReportingAgent just below.
+    this.engineServiceId = getEngineServiceId(engine);
+
+    if (this.engineServiceId) {
       this.engineReportingAgent = new EngineReportingAgent(
-        engine === true ? {} : engine,
+        typeof engine === 'object' ? engine : Object.create(null),
       );
       // Let's keep this extension second so it wraps everything, except error formatting
       this.extensions.push(() => this.engineReportingAgent!.newExtension());
@@ -272,6 +332,22 @@ export class ApolloServerBase {
   // integrations do not have paths, such as lambda
   public setGraphQLPath(path: string) {
     this.graphqlPath = path;
+  }
+
+  protected async willStart() {
+    await Promise.all(
+      this.plugins.map(
+        plugin =>
+          plugin.serverWillStart &&
+          plugin.serverWillStart({
+            schema: this.schema,
+            engine: {
+              serviceID: this.engineServiceId,
+            },
+            persistedQueries: this.requestOptions.persistedQueries,
+          }),
+      ),
+    );
   }
 
   public async stop() {
@@ -357,6 +433,23 @@ export class ApolloServerBase {
     return false;
   }
 
+  private ensurePluginInstantiation(plugins?: PluginDefinition[]): void {
+    if (!plugins || !plugins.length) {
+      return;
+    }
+
+    // FIXME: We also want to support default exports and possibly module names
+    // but this requires adjustments to typing (see PluginDefinition type), and
+    // I had to give up on that for now.
+    this.plugins = plugins.map(plugin => {
+      if (typeof plugin === 'function') {
+        return new plugin();
+      } else {
+        return plugin as ApolloServerPlugin;
+      }
+    });
+  }
+
   // This function is used by the integrations to generate the graphQLOptions
   // from an object containing the request and other integration specific
   // options
@@ -379,6 +472,7 @@ export class ApolloServerBase {
 
     return {
       schema: this.schema,
+      plugins: this.plugins,
       extensions: this.extensions,
       context,
       // Allow overrides from options. Be explicit about a couple of them to

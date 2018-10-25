@@ -1,18 +1,20 @@
 import {
   GraphQLOptions,
+  ServerOptionsFunction,
   runHttpQuery,
   convertNodeHttpToRequest,
 } from 'apollo-server-core';
 import { send, json, RequestHandler } from 'micro';
 import url from 'url';
-import { IncomingMessage, ServerResponse } from 'http';
+import { ServerResponse } from 'http';
 
 import { MicroRequest } from './types';
 
 // Allowed Micro Apollo Server options.
-export interface MicroGraphQLOptionsFunction {
-  (req?: IncomingMessage): GraphQLOptions | Promise<GraphQLOptions>;
-}
+
+export type MicroGraphQLOptionsFunction = ServerOptionsFunction<
+  [MicroRequest, ServerResponse]
+>;
 
 // Utility function used to set multiple headers on a response object.
 function setHeaders(res: ServerResponse, headers: Object): void {

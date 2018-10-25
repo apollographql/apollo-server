@@ -1,8 +1,4 @@
-import {
-  advanceTimeBy,
-  mockDate,
-  unmockDate,
-} from '../../../../__mocks__/date';
+import { advanceTimeBy, mockDate, unmockDate } from '__mocks__/date';
 
 export function testKeyValueCache(keyValueCache: any) {
   describe('KeyValueCache Test Suite', () => {

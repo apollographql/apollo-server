@@ -2,24 +2,23 @@
   "name": "apollo-server-monorepo",
   "private": true,
   "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/apollographql/apollo-server.git"
-  },
+  "repository": "github:apollographql/apollo-server",
   "scripts": {
-    "postinstall": "lerna run prepare",
-    "compile": "lerna run compile",
-    "lint": "prettier-check --ignore-path .gitignore \"{docs/{,source/**},.,packages/**,test}/{*.js,*.ts}\"",
-    "lint-fix": "prettier --write --ignore-path .gitignore \"{docs/{,source/**},.,packages/**,test}/{*.js,*.ts}\"",
-    "pretest": "npm run compile",
-    "test": "npm run testonly",
-    "posttest": "npm run lint",
-    "testonly": "jest --verbose",
-    "test:watch": "npm run testonly -- --watch",
-    "test:ci": "npm run testonly -- --ci --maxWorkers=2",
+    "clean": "git clean -dfqX -- ./node_modules **/{dist,node_modules}/",
+    "compile": "tsc --build tsconfig.build.json",
+    "compile:clean": "tsc --build tsconfig.build.json --clean",
+    "watch": "tsc --build tsconfig.build.json --watch",
     "release": "npm run clean && npm ci && lerna publish --exact",
-    "precommit": "lint-staged",
-    "clean": "find . -name \"node_modules\" -exec rm -rf '{}' + && find . -name \"dist\" -exec rm -rf '{}' +"
+    "postinstall": "lerna run prepare && npm run compile",
+    "lint": "prettier-check '**/*.{js,ts}'",
+    "lint-fix": "prettier '**/*.{js,ts}' --write",
+    "test": "jest --verbose",
+    "test:clean": "jest --clearCache",
+    "test:watch": "jest --verbose --watchAll",
+    "testonly": "npm test",
+    "test:ci": "npm run coverage -- --ci --maxWorkers=2  --reporters=default --reporters=jest-junit",
+    "coverage": "npm test -- --coverage",
+    "coverage:upload": "codecov"
   },
   "lint-staged": {
     "*.ts": [
@@ -54,6 +53,7 @@
     "apollo-server-koa": "file:packages/apollo-server-koa",
     "apollo-server-lambda": "file:packages/apollo-server-lambda",
     "apollo-server-micro": "file:packages/apollo-server-micro",
+    "apollo-server-plugin-base": "file:packages/apollo-server-plugin-base",
     "apollo-tracing": "file:packages/apollo-tracing",
     "graphql-extensions": "file:packages/graphql-extensions"
   },
@@ -63,45 +63,52 @@
     "@types/body-parser": "1.17.0",
     "@types/connect": "3.4.32",
     "@types/fibers": "0.0.30",
-    "@types/graphql": "14.0.1",
-    "@types/hapi": "17.0.19",
-    "@types/jest": "23.3.2",
+    "@types/graphql": "14.0.3",
+    "@types/hapi": "17.6.2",
+    "@types/jest": "23.3.5",
     "@types/koa-multer": "1.0.0",
     "@types/koa-router": "7.0.32",
-    "@types/lodash": "4.14.116",
+    "@types/lodash": "4.14.117",
     "@types/lru-cache": "4.1.1",
     "@types/memcached": "2.2.5",
-    "@types/micro": "7.3.2",
+    "@types/micro": "7.3.3",
     "@types/multer": "1.3.7",
-    "@types/node": "10.11.0",
-    "@types/redis": "2.8.6",
+    "@types/node": "10.12.0",
+    "@types/node-fetch": "2.1.2",
+    "@types/redis": "2.8.7",
     "@types/request": "2.47.1",
+    "@types/request-promise": "4.1.42",
+    "@types/test-listen": "1.1.0",
+    "@types/type-is": "1.6.2",
+    "@types/ws": "6.0.1",
     "apollo-fetch": "0.7.0",
     "apollo-link": "1.2.3",
     "apollo-link-http": "1.5.5",
     "apollo-link-persisted-queries": "0.2.1",
     "body-parser": "1.18.3",
+    "codecov": "3.1.0",
     "connect": "3.6.6",
-    "express": "4.16.3",
+    "express": "4.16.4",
     "fibers": "3.0.0",
-    "form-data": "2.3.2",
+    "form-data": "2.3.3",
     "graphql": "14.0.2",
-    "graphql-subscriptions": "0.5.8",
-    "graphql-tag": "2.9.2",
-    "graphql-tools": "3.1.1",
+    "graphql-subscriptions": "1.0.0",
+    "graphql-tag": "2.10.0",
+    "graphql-tools": "4.0.2",
     "hapi": "17.6.0",
-    "husky": "0.14.3",
+    "husky": "1.1.2",
     "jest": "23.6.0",
+    "jest-junit": "5.2.0",
     "jest-matcher-utils": "23.6.0",
     "js-sha256": "0.9.0",
     "koa": "2.5.3",
     "koa-multer": "1.0.2",
-    "lerna": "3.4.0",
+    "lerna": "3.4.3",
     "lint-staged": "7.2.2",
     "memcached-mock": "0.1.0",
     "meteor-promise": "0.8.6",
     "mock-req": "0.2.0",
-    "multer": "1.3.1",
+    "multer": "1.4.1",
     "node-fetch": "2.2.0",
     "prettier": "1.14.3",
     "prettier-check": "2.0.0",
@@ -112,34 +119,15 @@
     "subscriptions-transport-ws": "0.9.15",
     "supertest": "3.3.0",
     "test-listen": "1.1.0",
-    "ts-jest": "23.1.4",
+    "ts-jest": "23.10.4",
     "tslint": "5.11.0",
-    "typescript": "3.0.3",
-    "ws": "6.0.0",
+    "typescript": "next",
+    "ws": "6.1.0",
     "yup": "0.26.5"
   },
   "jest": {
-    "testEnvironment": "node",
-    "setupFiles": [
-      "<rootDir>/packages/apollo-server-env/dist/index.js"
-    ],
-    "transform": {
-      "^.+\\.ts$": "ts-jest"
-    },
-    "testRegex": "/__tests__/.*\\.test\\.(js|ts)$",
-    "moduleFileExtensions": [
-      "ts",
-      "js"
-    ],
-    "testPathIgnorePatterns": [
-      "/node_modules/",
-      "/dist/"
-    ],
-    "clearMocks": true,
-    "globals": {
-      "ts-jest": {
-        "skipBabel": true
-      }
-    }
+    "projects": [
+      "<rootDir>/packages/*"
+    ]
   }
 }

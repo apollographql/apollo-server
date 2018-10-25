@@ -78,6 +78,8 @@ export class ApolloServer extends ApolloServerBase {
 
   // Listen takes the same arguments as http.Server.listen.
   public async listen(...opts: Array<any>): Promise<ServerInfo> {
+    await this.willStart();
+
     // This class is the easy mode for people who don't create their own express
     // object, so we have to create it.
     const app = express();

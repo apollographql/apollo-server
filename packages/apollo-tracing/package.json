@@ -1,14 +1,9 @@
 {
   "name": "apollo-tracing",
-  "version": "0.2.5",
+  "version": "0.3.0-alpha.0",
   "description": "Collect and expose trace data for GraphQL requests",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "scripts": {
-    "clean": "rm -rf dist",
-    "compile": "tsc",
-    "prepare": "npm run clean && npm run compile"
-  },
   "license": "MIT",
   "repository": "apollographql/apollo-tracing-js",
   "author": "Martijn Walraven <martijn@martijnwalraven.com>",

@@ -1,0 +1,11 @@
+{
+  "extends": "../../tsconfig.base",
+  "compilerOptions": {
+    "rootDir": "./src",
+    "outDir": "./dist"
+  },
+  "files": ["src/requestPipelineAPI.ts"],
+  "references": [
+    { "path": "../apollo-server-caching" }
+  ]
+}

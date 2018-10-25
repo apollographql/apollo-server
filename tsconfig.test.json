@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "composite": true
+  },
+  "files": [],
+  "include": [],
+  "references": [
+    { "path": "./packages/apollo-cache-control/src/__tests__/" },
+    { "path": "./packages/apollo-datasource-rest/src/__tests__/" },
+    { "path": "./packages/apollo-engine-reporting/src/__tests__/" },
+    { "path": "./packages/apollo-server/src/__tests__/" },
+    { "path": "./packages/apollo-server-cache-memcached/src/__tests__/" },
+    { "path": "./packages/apollo-server-cache-redis/src/__tests__/" },
+    { "path": "./packages/apollo-server-caching/src/__tests__/" },
+    { "path": "./packages/apollo-server-core/src/__tests__/" },
+    { "path": "./packages/apollo-server-express/src/__tests__/" },
+    { "path": "./packages/apollo-server-hapi/src/__tests__/" },
+    { "path": "./packages/apollo-server-koa/src/__tests__/" },
+    { "path": "./packages/apollo-server-lambda/src/__tests__/" },
+    { "path": "./packages/apollo-server-micro/src/__tests__/" },
+  ]
+}

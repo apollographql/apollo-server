@@ -17,7 +17,7 @@ To accommodate this tight coupling, type definitions and resolvers should be kep
 
 <h2 id="organizing-types">Organizing schema types</h2>
 
-With large schema, defining types in different files and merge them to create the complete schema may become necessary. We accomplish this by importing and exporting schema strings, combining them into arrays as necessary. The following example demonstrates separating the type definitions of [this schema](#first-example-schema) found at the end of the page.
+With large schemas, defining types in different files and merging them to create the complete schema may become necessary. We accomplish this by importing and exporting schema strings, combining them into arrays as necessary. The following example demonstrates separating the type definitions of [this schema](#first-example-schema) found at the end of the page.
 
 ```js
 // comment.js
@@ -36,7 +36,7 @@ The `Post` includes a reference to `Comment`, which is added to the array of typ
 
 ```js
 // post.js
-const typeDefs = `
+const typeDefs = gql`
   type Post {
     id: ID!
     title: String
@@ -57,7 +57,7 @@ Finally the root Query type, which uses Post, is created and passed to the serve
 const Comment = require('./comment');
 const Post = require('./post');
 
-const RootQuery = `
+const RootQuery = gql`
   type Query {
     post(id: ID!): Post
   }
@@ -94,7 +94,7 @@ The `Post` type:
 
 ```js
 // post.js
-const PostModel = jequire('./models/post');
+const PostModel = require('./models/post');
 
 const resolvers = {
   Post: {
@@ -138,9 +138,9 @@ The `extend` keyword provides the ability to add fields to existing types. Using
 
 ```js
 //schema.js
-const bookTypeDefs = `
+const bookTypeDefs = gql`
 extend type Query {
-  books: [Bar]
+  books: [Book]
 }
 
 type Book {
@@ -149,13 +149,13 @@ type Book {
 `;
 
 // These type definitions are often in a separate file
-const authorTypeDefs = `
+const authorTypeDefs = gql`
 extend type Query {
   authors: [Author]
 }
 
 type Author {
-  id: ID
+  id: ID!
 }
 `;
 export const typeDefs = [bookTypeDefs, authorTypeDefs]
@@ -164,7 +164,7 @@ export const typeDefs = [bookTypeDefs, authorTypeDefs]
 ```js
 const {typeDefs, resolvers} = require('./schema');
 
-const rootQuery = `
+const rootQuery = gql`
 "Query can and must be defined once per schema to be extended"
 type Query {
   _empty: String
@@ -184,7 +184,7 @@ server.listen().then(({ url }) => {
 
 <h2 id="descriptions">Documenting a Schema</h2>
 
-In addition to modularization, documentation within the SDL enables the schema to be effective as the single source of truth between client and server. Graphql gui's have built-in support for displaying docstrings with markdown syntax, such as those found in the following schema.
+In addition to modularization, documentation within the SDL enables the schema to be effective as the single source of truth between client and server. GraphQL GUIs have built-in support for displaying docstrings with markdown syntax, such as those found in the following schema.
 
 ```graphql
 """

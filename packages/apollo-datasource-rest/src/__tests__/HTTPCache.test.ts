@@ -1,14 +1,6 @@
-import {
-  fetch,
-  Request,
-  Response,
-} from '../../../../__mocks__/apollo-server-env';
+import { fetch, Request, Response } from '__mocks__/apollo-server-env';
 
-import {
-  mockDate,
-  unmockDate,
-  advanceTimeBy,
-} from '../../../../__mocks__/date';
+import { mockDate, unmockDate, advanceTimeBy } from '__mocks__/date';
 
 import { HTTPCache } from '../HTTPCache';
 

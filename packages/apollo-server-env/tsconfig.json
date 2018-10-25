@@ -1,6 +1,7 @@
 {
-  "extends": "../../tsconfig",
+  "extends": "../../tsconfig.base",
   "compilerOptions": {
+    "composite": false,
     "rootDir": "./src",
     "outDir": "./dist",
     "allowJs": true,

@@ -1,6 +1,6 @@
 {
   "name": "apollo-server-cloud-functions",
-  "version": "2.1.0",
+  "version": "2.2.0-alpha.0",
   "description": "Production-ready Node.js GraphQL server for Google Cloud Functions",
   "keywords": [
     "GraphQL",
@@ -24,16 +24,11 @@
   "engines": {
     "node": ">=6"
   },
-  "scripts": {
-    "clean": "rm -rf dist",
-    "compile": "tsc",
-    "prepublish": "npm run clean && npm run compile"
-  },
   "dependencies": {
     "@apollographql/graphql-playground-html": "^1.6.0",
     "apollo-server-core": "file:../apollo-server-core",
     "apollo-server-env": "file:../apollo-server-env",
-    "graphql-tools": "^3.0.4"
+    "graphql-tools": "^4.0.0"
   },
   "devDependencies": {
     "apollo-server-integration-testsuite": "file:../apollo-server-integration-testsuite"

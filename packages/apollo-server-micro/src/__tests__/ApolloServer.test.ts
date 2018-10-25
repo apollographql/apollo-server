@@ -1,6 +1,7 @@
 import micro from 'micro';
 import listen from 'test-listen';
 import { createApolloFetch } from 'apollo-fetch';
+import { atLeastMajorNodeVersion } from 'apollo-server-integration-testsuite';
 import { gql } from 'apollo-server-core';
 import FormData from 'form-data';
 import fs from 'fs';
@@ -145,49 +146,46 @@ describe('apollo-server-micro', function() {
       });
     });
 
-    describe('file uploads', function() {
-      it('should handle file uploads', async function() {
-        // XXX This is currently a failing test for node 10
-        const NODE_VERSION = process.version.split('.');
-        const NODE_MAJOR_VERSION = parseInt(NODE_VERSION[0].replace(/^v/, ''));
-        if (NODE_MAJOR_VERSION === 10) return;
+    (atLeastMajorNodeVersion(10) ? describe.skip : describe)(
+      'file uploads',
+      function() {
+        it('should handle file uploads', async function() {
+          const apolloServer = new ApolloServer({
+            typeDefs: gql`
+              type File {
+                filename: String!
+                mimetype: String!
+                encoding: String!
+              }
 
-        const apolloServer = new ApolloServer({
-          typeDefs: gql`
-            type File {
-              filename: String!
-              mimetype: String!
-              encoding: String!
-            }
+              type Query {
+                uploads: [File]
+              }
 
-            type Query {
-              uploads: [File]
-            }
-
-            type Mutation {
-              singleUpload(file: Upload!): File!
-            }
-          `,
-          resolvers: {
-            Query: {
-              uploads: () => {},
-            },
-            Mutation: {
-              singleUpload: async (_, args) => {
-                expect((await args.file).stream).toBeDefined();
-                return args.file;
+              type Mutation {
+                singleUpload(file: Upload!): File!
+              }
+            `,
+            resolvers: {
+              Query: {
+                uploads: () => {},
+              },
+              Mutation: {
+                singleUpload: async (_, args) => {
+                  expect((await args.file).stream).toBeDefined();
+                  return args.file;
+                },
               },
             },
-          },
-        });
-        const service = micro(apolloServer.createHandler());
-        const url = await listen(service);
+          });
+          const service = micro(apolloServer.createHandler());
+          const url = await listen(service);
 
-        const body = new FormData();
-        body.append(
-          'operations',
-          JSON.stringify({
-            query: `
+          const body = new FormData();
+          body.append(
+            'operations',
+            JSON.stringify({
+              query: `
               mutation($file: Upload!) {
                 singleUpload(file: $file) {
                   filename
@@ -196,36 +194,37 @@ describe('apollo-server-micro', function() {
                 }
               }
             `,
-            variables: {
-              file: null,
-            },
-          }),
-        );
-        body.append('map', JSON.stringify({ 1: ['variables.file'] }));
-        body.append('1', fs.createReadStream('package.json'));
+              variables: {
+                file: null,
+              },
+            }),
+          );
+          body.append('map', JSON.stringify({ 1: ['variables.file'] }));
+          body.append('1', fs.createReadStream('package.json'));
 
-        try {
-          const resolved = await fetch(`${url}/graphql`, {
-            method: 'POST',
-            body: body as any,
-          });
-          const text = await resolved.text();
-          const response = JSON.parse(text);
+          try {
+            const resolved = await fetch(`${url}/graphql`, {
+              method: 'POST',
+              body: body as any,
+            });
+            const text = await resolved.text();
+            const response = JSON.parse(text);
 
-          expect(response.data.singleUpload).toEqual({
-            filename: 'package.json',
-            encoding: '7bit',
-            mimetype: 'application/json',
-          });
-        } catch (error) {
-          // This error began appearing randomly and seems to be a dev
-          // dependency bug.
-          // https://github.com/jaydenseric/apollo-upload-server/blob/18ecdbc7a1f8b69ad51b4affbd986400033303d4/test.js#L39-L42
-          if (error.code !== 'EPIPE') throw error;
-        }
+            expect(response.data.singleUpload).toEqual({
+              filename: 'package.json',
+              encoding: '7bit',
+              mimetype: 'application/json',
+            });
+          } catch (error) {
+            // This error began appearing randomly and seems to be a dev
+            // dependency bug.
+            // https://github.com/jaydenseric/apollo-upload-server/blob/18ecdbc7a1f8b69ad51b4affbd986400033303d4/test.js#L39-L42
+            if (error.code !== 'EPIPE') throw error;
+          }
 
-        service.close();
-      });
-    });
+          service.close();
+        });
+      },
+    );
   });
 });
