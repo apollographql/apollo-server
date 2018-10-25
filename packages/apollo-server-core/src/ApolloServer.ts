@@ -44,6 +44,8 @@ import {
   PlaygroundRenderPageOptions,
 } from './playground';
 
+import { generateSchemaHash } from './utils/schemaHash';
+
 const NoIntrospection = (context: ValidationContext) => ({
   Field(node: FieldDefinitionNode) {
     if (node.name.value === '__schema' || node.name.value === '__type') {
@@ -87,6 +89,7 @@ export class ApolloServerBase {
   private engineReportingAgent?: EngineReportingAgent;
   private engineServiceId?: string;
   private extensions: Array<() => GraphQLExtension>;
+  private schemaHash: string;
   protected plugins: ApolloServerPlugin[] = [];
 
   protected schema: GraphQLSchema;
@@ -266,6 +269,10 @@ export class ApolloServerBase {
       });
     }
 
+    // The schema hash is a string representation of the shape of the schema
+    // it is used for reporting and can be used for a cache key if needed
+    this.schemaHash = generateSchemaHash(this.schema);
+
     // Note: doRunQuery will add its own extensions if you set tracing,
     // or cacheControl.
     this.extensions = [];
@@ -341,6 +348,7 @@ export class ApolloServerBase {
           plugin.serverWillStart &&
           plugin.serverWillStart({
             schema: this.schema,
+            schemaHash: this.schemaHash,
             engine: {
               serviceID: this.engineServiceId,
             },
