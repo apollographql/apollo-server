@@ -297,6 +297,13 @@ export class ApolloServerBase {
     if (this.engineServiceId) {
       this.engineReportingAgent = new EngineReportingAgent(
         typeof engine === 'object' ? engine : Object.create(null),
+        {
+          schema: this.schema,
+          schemaHash: this.schemaHash,
+          engine: {
+            serviceID: this.engineServiceId,
+          },
+        },
       );
       // Let's keep this extension second so it wraps everything, except error formatting
       this.extensions.push(() => this.engineReportingAgent!.newExtension());
