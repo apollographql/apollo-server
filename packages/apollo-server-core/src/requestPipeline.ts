@@ -164,6 +164,7 @@ export async function processGraphQLRequest<TContext>(
     persistedQueryHit,
     persistedQueryRegister,
     context: requestContext.context,
+    requestContext,
   });
 
   const parsingDidEnd = await dispatcher.invokeDidStartHook(
