@@ -322,6 +322,10 @@ addMockFunctionsToSchema({
 
    The URL of the Engine report ingress server.
 
+*  `requestAgent`: `http.Agent | https.Agent | false`
+
+   HTTP(s) agent to be used on the metrics reporting request to apollo engine endpoint. For more details on the supported configurations, refer to [http.Agent](https://nodejs.org/docs/latest-v10.x/api/http.html#http_class_http_agent) and [https.Agent](https://nodejs.org/docs/latest-v10.x/api/https.html#https_class_https_agent) docs.
+
 *  `debugPrintReports`: boolean
 
    If set, prints all reports as JSON when they are sent.

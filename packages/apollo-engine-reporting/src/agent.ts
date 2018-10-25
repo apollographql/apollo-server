@@ -8,7 +8,7 @@ import {
   Trace,
 } from 'apollo-engine-reporting-protobuf';
 
-import { fetch, Response } from 'apollo-server-env';
+import { fetch, RequestAgent, Response } from 'apollo-server-env';
 import retry from 'async-retry';
 
 import { EngineReportingExtension } from './extension';
@@ -60,6 +60,8 @@ export interface EngineReportingOptions {
   endpointUrl?: string;
   // If set, prints all reports as JSON when they are sent.
   debugPrintReports?: boolean;
+  // HTTP(s) agent to be used on the fetch call to apollo-engine metrics endpoint
+  requestAgent?: RequestAgent | false;
   // Reporting is retried with exponential backoff up to this many times
   // (including the original request). Defaults to 5.
   maxAttempts?: number;
@@ -256,6 +258,7 @@ export class EngineReportingAgent<TContext = any> {
             'content-encoding': 'gzip',
           },
           body: compressed,
+          agent: this.options.requestAgent,
         });
 
         if (curResponse.status >= 500 && curResponse.status < 600) {

@@ -5,6 +5,7 @@
 - Allow an optional function to resolve the `rootValue`, passing the `DocumentNode` AST to determine the value. [PR #1555](https://github.com/apollographql/apollo-server/pull/1555)
 - Follow-up on the work in [PR #1516](https://github.com/apollographql/apollo-server/pull/1516) to also fix missing insertion cursor/caret when a custom GraphQL configuration is specified which doesn't specify its own `cursorShape` property. [PR #1607](https://github.com/apollographql/apollo-server/pull/1607)
 - Allow JSON parsing in `RESTDataSource` of Content Type `application/hal+json`. [PR ##185](https://github.com/apollographql/apollo-server/pull/1853)
+- Add support for custom http(s) agent on apollo-engine-reporting to be used on the network requests to apollo-engine endpoint. [PR #1879](https://github.com/apollographql/apollo-server/pull/1879)
 
 ### v2.1.0
 

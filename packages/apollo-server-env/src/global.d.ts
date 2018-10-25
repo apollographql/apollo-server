@@ -12,6 +12,7 @@ type Headers = import('./fetch').Headers;
 type HeadersInit = import('./fetch').HeadersInit;
 type Body = import('./fetch').Body;
 type Request = import('./fetch').Request;
+type RequestAgent = import('./fetch').RequestAgent;
 type RequestInit = import('./fetch').RequestInit;
 type RequestMode = import('./fetch').RequestMode;
 type RequestCredentials = import('./fetch').RequestCredentials;
