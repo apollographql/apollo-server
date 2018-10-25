@@ -15,6 +15,7 @@ import { KeyValueCache } from 'apollo-server-caching';
 
 export interface GraphQLServiceContext {
   schema: GraphQLSchema;
+  schemaHash: string;
   engine: {
     serviceID?: string;
   };
