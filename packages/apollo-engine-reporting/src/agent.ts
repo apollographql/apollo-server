@@ -12,6 +12,10 @@ import { fetch, RequestAgent, Response } from 'apollo-server-env';
 import retry from 'async-retry';
 
 import { EngineReportingExtension } from './extension';
+import {
+  GraphQLRequestContext,
+  GraphQLServiceContext,
+} from 'apollo-server-core/dist/requestPipelineAPI';
 
 // Override the generated protobuf Traces.encode function so that it will look
 // for Traces that are already encoded to Buffer as well as unencoded
@@ -37,9 +41,14 @@ Traces.encode = function(message, originalWriter) {
 export interface ClientInfo {
   clientName?: string;
   clientVersion?: string;
+  clientId?: string;
 }
 
-export interface EngineReportingOptions {
+export type GenerateClientInfo<TContext> = (
+  requestContext: GraphQLRequestContext<TContext>,
+) => ClientInfo;
+
+export interface EngineReportingOptions<TContext> {
   // API key for the service. Get this from
   // [Engine](https://engine.apollographql.com) by logging in and creating
   // a service. You may also specify this with the `ENGINE_API_KEY`
@@ -90,45 +99,38 @@ export interface EngineReportingOptions {
   sendReportsImmediately?: boolean;
   // To remove the error message from traces, set this to true. Defaults to false
   maskErrorDetails?: boolean;
-
-  /**
-   * (Experimental) Creates the client information for operation traces.
-   *
-   * @remarks This is experimental and subject to change or removal.
-   *
-   * @private
-   *
-   */
-  generateClientInfo?: (
-    o: {
-      context: any;
-      extensions?: Record<string, any>;
-    },
-  ) => ClientInfo;
+  // A human readable name to tag this variant of a schema (i.e. staging, EU)
+  schemaBranch?: string;
+  //Creates the client information for operation traces.
+  generateClientInfo?: GenerateClientInfo<TContext>;
 }
 
-const REPORT_HEADER = new ReportHeader({
+const serviceHeaderDefaults = {
   hostname: os.hostname(),
   // tslint:disable-next-line no-var-requires
   agentVersion: `apollo-engine-reporting@${require('../package.json').version}`,
   runtimeVersion: `node ${process.version}`,
   // XXX not actually uname, but what node has easily.
   uname: `${os.platform()}, ${os.type()}, ${os.release()}, ${os.arch()})`,
-});
+};
 
 // EngineReportingAgent is a persistent object which creates
 // EngineReportingExtensions for each request and sends batches of trace reports
 // to the Engine server.
 export class EngineReportingAgent<TContext = any> {
-  private options: EngineReportingOptions;
+  private options: EngineReportingOptions<TContext>;
   private apiKey: string;
   private report!: FullTracesReport;
   private reportSize!: number;
   private reportTimer: any; // timer typing is weird and node-specific
   private sendReportsImmediately?: boolean;
   private stopped: boolean = false;
+  private REPORT_HEADER: ReportHeader;
 
-  public constructor(options: EngineReportingOptions = {}) {
+  public constructor(
+    options: EngineReportingOptions<TContext> = {},
+    { schemaHash }: GraphQLServiceContext,
+  ) {
     this.options = options;
     this.apiKey = options.apiKey || process.env.ENGINE_API_KEY || '';
     if (!this.apiKey) {
@@ -137,6 +139,12 @@ export class EngineReportingAgent<TContext = any> {
       );
     }
 
+    this.REPORT_HEADER = new ReportHeader({
+      ...serviceHeaderDefaults,
+      schemaHash,
+      schemaTag:
+        options.schemaBranch || process.env.ENGINE_SCHEMA_BRANCH || 'current',
+    });
     this.resetReport();
 
     this.sendReportsImmediately = options.sendReportsImmediately;
@@ -317,7 +325,7 @@ export class EngineReportingAgent<TContext = any> {
   }
 
   private resetReport() {
-    this.report = new FullTracesReport({ header: REPORT_HEADER });
+    this.report = new FullTracesReport({ header: this.REPORT_HEADER });
     this.reportSize = 0;
   }
 }
