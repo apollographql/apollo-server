@@ -164,7 +164,7 @@ app.listen({ port }, () =>
 ### Koa
 
 ```js
-const koa = require('koa');
+const Koa = require('koa');
 const { ApolloServer, gql } = require('apollo-server-koa');
 
 // Construct a schema, using GraphQL schema language
