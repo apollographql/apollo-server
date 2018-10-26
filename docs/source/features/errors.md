@@ -127,7 +127,7 @@ const server = new ApolloServer({
   resolvers,
   formatError: error => {
     console.log(error);
-    return new Error('Internal server error');
+    return toApolloError({ message: 'Internal server error' });
     // Or, you can delete the exception information
     // delete error.extensions.exception;
     // return error;
