@@ -25,6 +25,7 @@
   },
   "dependencies": {
     "@apollographql/apollo-upload-server": "^5.0.3",
+    "@apollographql/graphql-playground-html": "^1.6.4",
     "@types/ws": "^6.0.0",
     "apollo-cache-control": "file:../apollo-cache-control",
     "apollo-datasource": "file:../apollo-datasource",
