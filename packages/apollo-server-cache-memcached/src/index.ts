@@ -32,6 +32,10 @@ export class MemcachedCache implements KeyValueCache {
     return await this.client.get(key);
   }
 
+  async delete(key: string): Promise<boolean> {
+    return await this.client.delete(key);
+  }
+
   async flush(): Promise<void> {
     await this.client.flush();
   }
