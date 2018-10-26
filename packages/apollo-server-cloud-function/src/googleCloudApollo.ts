@@ -1,12 +1,19 @@
 import {
   GraphQLOptions,
+  ServerOptionsFunction,
   HttpQueryError,
   runHttpQuery,
 } from 'apollo-server-core';
 import { Headers } from 'apollo-server-env';
 import { Request, Response } from 'express';
 
-export function graphqlCloudFunction(options: GraphQLOptions): any {
+type CloudFunctionGraphQLOptionsFunction = ServerOptionsFunction<
+  [Request, Response]
+>;
+
+export function graphqlCloudFunction(
+  options: GraphQLOptions | CloudFunctionGraphQLOptionsFunction,
+): any {
   if (!options) {
     throw new Error('Apollo Server requires options.');
   }
