@@ -568,7 +568,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
               check: (req, res) => {
                 const report = FullTracesReport.decode(req.body);
                 const header = report.header;
-                expect(header.schemaTag).toEqual('current');
+                expect(header.schemaTag).toEqual('');
                 expect(header.schemaHash).toBeDefined();
                 const trace = Object.values(report.tracesPerQuery)[0].trace[0];
                 resolve(trace);
