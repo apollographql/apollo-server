@@ -125,7 +125,7 @@ export class EngineReportingAgent<TContext = any> {
   private reportTimer: any; // timer typing is weird and node-specific
   private sendReportsImmediately?: boolean;
   private stopped: boolean = false;
-  private REPORT_HEADER: ReportHeader;
+  private reportHeader: ReportHeader;
 
   public constructor(
     options: EngineReportingOptions<TContext> = {},
@@ -139,11 +139,10 @@ export class EngineReportingAgent<TContext = any> {
       );
     }
 
-    this.REPORT_HEADER = new ReportHeader({
+    this.reportHeader = new ReportHeader({
       ...serviceHeaderDefaults,
       schemaHash,
-      schemaTag:
-        options.schemaBranch || process.env.ENGINE_SCHEMA_BRANCH || 'current',
+      schemaTag: options.schemaBranch || process.env.ENGINE_SCHEMA_BRANCH || '',
     });
     this.resetReport();
 
@@ -325,7 +324,7 @@ export class EngineReportingAgent<TContext = any> {
   }
 
   private resetReport() {
-    this.report = new FullTracesReport({ header: this.REPORT_HEADER });
+    this.report = new FullTracesReport({ header: this.reportHeader });
     this.reportSize = 0;
   }
 }
