@@ -14,6 +14,7 @@ export class ApolloServer extends ApolloServerBase {
   }
 
   public async listen() {
+    await this.willStart();
     const graphql = this.createGraphQLServerOptions.bind(this);
     addEventListener('fetch', (event: FetchEvent) => {
       event.respondWith(graphqlCloudflare(graphql)(event.request));
