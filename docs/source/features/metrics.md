@@ -14,7 +14,7 @@ To set up Apollo Server with Engine, [click here](https://engine.apollographql.c
 ```js line=6-8
 const { ApolloServer } = require("apollo-server");
 
-const server = new ApolloSever({
+const server = new ApolloServer({
   typeDefs,
   resolvers,
   engine: {

@@ -16,6 +16,7 @@ export class RedisCache implements KeyValueCache {
     const client = Redis.createClient(options) as any;
 
     // promisify client calls for convenience
+    client.del = promisify(client.del).bind(client);
     client.mget = promisify(client.mget).bind(client);
     client.set = promisify(client.set).bind(client);
     client.flushdb = promisify(client.flushdb).bind(client);
@@ -44,6 +45,10 @@ export class RedisCache implements KeyValueCache {
       return reply;
     }
     return;
+  }
+
+  async delete(key: string): Promise<boolean> {
+    return await this.client.del(key);
   }
 
   async flush(): Promise<void> {

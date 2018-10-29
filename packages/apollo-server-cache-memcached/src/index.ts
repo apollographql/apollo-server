@@ -12,6 +12,7 @@ export class MemcachedCache implements KeyValueCache {
   constructor(serverLocation: Memcached.Location, options?: Memcached.options) {
     const client = new Memcached(serverLocation, options);
     // promisify client calls for convenience
+    client.del = promisify(client.del).bind(client);
     client.get = promisify(client.get).bind(client);
     client.set = promisify(client.set).bind(client);
     client.flush = promisify(client.flush).bind(client);
@@ -30,6 +31,10 @@ export class MemcachedCache implements KeyValueCache {
 
   async get(key: string): Promise<string | undefined> {
     return await this.client.get(key);
+  }
+
+  async delete(key: string): Promise<boolean> {
+    return await this.client.del(key);
   }
 
   async flush(): Promise<void> {

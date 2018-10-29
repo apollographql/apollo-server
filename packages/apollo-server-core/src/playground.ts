@@ -6,10 +6,10 @@ export {
   RenderPageOptions as PlaygroundRenderPageOptions,
 } from '@apollographql/graphql-playground-html/dist/render-playground-page';
 
-// This specifies the version of GraphQL Playground that will be served
-// from graphql-playground-html, and is passed to renderPlaygroundPage
-// by the integration subclasses
-const playgroundVersion = '1.7.4';
+// This specifies the version of `graphql-playground-react` that will be served
+// from `graphql-playground-html`.  It's passed to ``graphql-playground-html`'s
+// renderPlaygroundPage` via the integration packages' playground configuration.
+const playgroundVersion = '1.7.8';
 
 // https://stackoverflow.com/a/51365037
 type RecursivePartial<T> = {
