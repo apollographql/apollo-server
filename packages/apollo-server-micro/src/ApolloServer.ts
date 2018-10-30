@@ -149,9 +149,9 @@ export class ApolloServer extends ApolloServerBase {
     let handled = false;
     const url = req.url.split('?')[0];
     if (url === this.graphqlPath) {
-      const graphqlHandler = graphqlMicro(
-        this.createGraphQLServerOptions.bind(this),
-      );
+      const graphqlHandler = graphqlMicro(() => {
+        return this.createGraphQLServerOptions(req, res);
+      });
       const responseData = await graphqlHandler(req, res);
       send(res, 200, responseData);
       handled = true;
