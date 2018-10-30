@@ -7,7 +7,7 @@ import {
 import { Headers } from 'apollo-server-env';
 import { Request, Response } from 'express';
 
-type CloudFunctionGraphQLOptionsFunction = ServerOptionsFunction<
+export type CloudFunctionGraphQLOptionsFunction = ServerOptionsFunction<
   [Request, Response]
 >;
 
