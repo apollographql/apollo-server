@@ -1,15 +1,14 @@
 import {
   GraphQLOptions,
-  ServerOptionsFunction,
   HttpQueryError,
   runHttpQuery,
 } from 'apollo-server-core';
 import { Headers } from 'apollo-server-env';
 import { Request, Response } from 'express';
 
-export type CloudFunctionGraphQLOptionsFunction = ServerOptionsFunction<
-  [Request, Response]
->;
+export interface CloudFunctionGraphQLOptionsFunction {
+  (req?: Request, res?: Response): GraphQLOptions | Promise<GraphQLOptions>;
+}
 
 export function graphqlCloudFunction(
   options: GraphQLOptions | CloudFunctionGraphQLOptionsFunction,
