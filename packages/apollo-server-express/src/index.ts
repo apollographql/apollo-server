@@ -29,10 +29,10 @@ export {
 } from './ApolloServer';
 
 // Express middleware
-export * from "./expressApollo"
+export * from './expressApollo';
 
 // Connect middleware.
-export * from "./connectApollo"
+export * from './connectApollo';
 
 export { CorsOptions } from 'cors';
 export { OptionsJson } from 'body-parser';
