@@ -14,7 +14,6 @@ describe('createTestClient', () => {
     }
   `;
 
-  let num = 0;
   const resolvers = {
     Query: {
       test: (_, { echo }) => echo,
@@ -23,7 +22,7 @@ describe('createTestClient', () => {
       },
     },
     Mutation: {
-      increment: () => ++num,
+      increment: () => 1,
     },
   };
 
@@ -66,5 +65,24 @@ describe('createTestClient', () => {
     const client = createTestClient(myTestServer, () => ({ person: 'mary' }));
     const res = await client.query({ query });
     expect(res.data).toEqual({ hello: 'hello mary' });
+  });
+
+  it('allows query documents as input', async () => {
+    const query = gql`
+      {
+        test(echo: "foo")
+      }
+    `;
+    const client = createTestClient(myTestServer);
+    const clientRes = await client.query({ query });
+    expect(clientRes.data).toEqual({ test: 'foo' });
+
+    const mutation = gql`
+      mutation increment {
+        increment
+      }
+    `;
+    const mutationRes = await client.mutate({ mutation });
+    expect(mutationRes.data).toEqual({ increment: 1 });
   });
 });
