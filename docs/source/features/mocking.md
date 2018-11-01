@@ -32,7 +32,7 @@ server.listen().then(({ url }) => {
 
 > Note: If `typeDefs` has custom scalar types, `resolvers` must still contain the `serialize`, `parseValue`, and `parseLiteral` functions
 
-Mocking logic simply looks at the type definitions and returns a string where a string is expected, a number for a number, etc. This provides the right shape of result. By default, when using mocks, any existing resolvers are ignored. See the ["Using existing resolvers with mocks"](./#existing-resolvers) section below for more info on how to change this behavior. 
+Mocking logic simply looks at the type definitions and returns a string where a string is expected, a number for a number, etc. This provides the right shape of result. By default, when using mocks, any existing resolvers are ignored. See the ["Using existing resolvers with mocks"](#existing-resolvers) section below for more info on how to change this behavior. 
 
 For more sophisticated testing, mocks can be customized to a particular data model.
 
