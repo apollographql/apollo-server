@@ -32,7 +32,9 @@ server.listen().then(({ url }) => {
 
 > Note: If `typeDefs` has custom scalar types, `resolvers` must still contain the `serialize`, `parseValue`, and `parseLiteral` functions
 
-Mocking logic simply looks at the type definitions and returns a string where a string is expected, a number for a number, etc. This provides the right shape of result. For more sophisticated testing, mocks can be customized to a particular data model.
+Mocking logic simply looks at the type definitions and returns a string where a string is expected, a number for a number, etc. This provides the right shape of result. By default, when using mocks, any existing resolvers are ignored. See the ["Using existing resolvers with mocks"](#existing-resolvers) section below for more info on how to change this behavior. 
+
+For more sophisticated testing, mocks can be customized to a particular data model.
 
 ## Customizing mocks
 
@@ -143,9 +145,11 @@ const mocks = {
 
 For some more background and flavor on this approach, read the ["Mocking your server with one line of code"](https://medium.com/apollo-stack/mocking-your-server-with-just-one-line-of-code-692feda6e9cd) article on the Apollo blog.
 
-### Using existing resolvers with mocks
+<h3 id="existing-resolvers">Using existing resolvers with mocks</h3>
 
-The default behavior for mocks is to overwrite the resolvers already present in the schema. To keep the existing resolvers, set the `mockEntireSchema` field to false.
+The default behavior for mocks is to overwrite the resolvers already present in the schema. To keep the existing resolvers, set the `mockEntireSchema` option to false.
+
+> Note: mocking resolvers will not work if the `mocks` option is `false`, even if `mockEntireSchema` is true. 
 
 ```js line=26
 const { ApolloServer, gql } = require('apollo-server');
@@ -208,4 +212,4 @@ server.listen().then(({ url }) => {
 
 ## API
 
-Under the hood, Apollo Server uses a library for building GraphQL servers, called `graphql-tools`. The mocking functionality is provided by the function [`addMockFunctionsToSchema`](../api/graphql-tools.html#addMockFunctionsToSchema). The `mocks` object is passed directly to the function and `preserveResolvers` is always true. [`MockList`](../api/graphql-tools.html#MockList) is exported directly from the `graphql-tools` library.
+Under the hood, Apollo Server uses a library for building GraphQL servers, called `graphql-tools`. The mocking functionality is provided by the function [`addMockFunctionsToSchema`](../api/graphql-tools.html#addMockFunctionsToSchema). The `mocks` object is passed directly to the function, and `preserveResolvers` is the inverse of `mockEntireSchema`. [`MockList`](../api/graphql-tools.html#MockList) is exported directly from the `graphql-tools` library.
