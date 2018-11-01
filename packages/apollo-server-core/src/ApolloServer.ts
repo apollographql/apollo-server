@@ -24,6 +24,7 @@ import { formatApolloErrors } from 'apollo-server-errors';
 import {
   GraphQLServerOptions as GraphQLOptions,
   PersistedQueryOptions,
+  resolveGraphqlOptions,
 } from './graphqlOptions';
 
 import {
@@ -45,6 +46,14 @@ import {
 } from './playground';
 
 import { generateSchemaHash } from './utils/schemaHash';
+import {
+  processGraphQLRequest,
+  GraphQLRequestPipelineConfig,
+  GraphQLRequestContext,
+  GraphQLRequest,
+} from './requestPipeline';
+
+import { Headers } from "apollo-server-env";
 
 const NoIntrospection = (context: ValidationContext) => ({
   Field(node: FieldDefinitionNode) {
@@ -503,5 +512,31 @@ export class ApolloServerBase {
     } as GraphQLOptions;
   }
 
-  // public async executeOperation() {}
+  public async executeOperation(request: GraphQLRequest, contextArgs) {
+    let options;
+
+    try {
+      options = await this.graphQLServerOptions(contextArgs);
+    } catch (e) {
+      e.message = `Invalid options provided to ApolloServer: ${e.message}`;
+      throw new Error(e);
+    }
+
+    if (typeof options.context === 'function') {
+      options.context = (options.context as () => never)();
+    }
+
+    const requestCtx: GraphQLRequestContext = {
+      request,
+      context: options.context || {}
+      cache: options.cache!,
+      response: {
+        http: {
+          headers: new Headers(),
+        },
+      },
+    };
+
+    return processGraphQLRequest(options, requestCtx);
+  }
 }
