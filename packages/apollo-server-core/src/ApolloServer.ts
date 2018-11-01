@@ -53,7 +53,7 @@ import {
   GraphQLRequest,
 } from './requestPipeline';
 
-import { Headers } from "apollo-server-env";
+import { Headers } from 'apollo-server-env';
 
 const NoIntrospection = (context: ValidationContext) => ({
   Field(node: FieldDefinitionNode) {
@@ -528,7 +528,7 @@ export class ApolloServerBase {
 
     const requestCtx: GraphQLRequestContext = {
       request,
-      context: options.context || {}
+      context: options.context || {},
       cache: options.cache!,
       response: {
         http: {
