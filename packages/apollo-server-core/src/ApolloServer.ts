@@ -24,7 +24,6 @@ import { formatApolloErrors } from 'apollo-server-errors';
 import {
   GraphQLServerOptions as GraphQLOptions,
   PersistedQueryOptions,
-  resolveGraphqlOptions,
 } from './graphqlOptions';
 
 import {
@@ -48,7 +47,6 @@ import {
 import { generateSchemaHash } from './utils/schemaHash';
 import {
   processGraphQLRequest,
-  GraphQLRequestPipelineConfig,
   GraphQLRequestContext,
   GraphQLRequest,
 } from './requestPipeline';
@@ -512,7 +510,10 @@ export class ApolloServerBase {
     } as GraphQLOptions;
   }
 
-  public async executeOperation(request: GraphQLRequest, contextArgs) {
+  public async executeOperation(
+    request: GraphQLRequest,
+    contextArgs: Record<string, any>,
+  ) {
     let options;
 
     try {
