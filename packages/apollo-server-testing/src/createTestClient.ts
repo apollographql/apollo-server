@@ -10,7 +10,8 @@ const createTestClient = (server: ApolloServerBase, ctxFn: any) => {
   return {
     query: ({ query, ...rest }) =>
       executeOperation({
-        // print the query document if it isn't a string
+        // Convert ASTs, which are produced by `graphql-tag` to
+        // a string using `graphql/language/print`.
         query: typeof query === 'string' ? query : print(query),
         ...rest,
       }),
