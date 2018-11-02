@@ -1,5 +1,1 @@
-const createTestClient = require('./createTestClient');
-
-module.exports = {
-  createTestClient,
-};
+export { default as createTestClient } from './createTestClient';

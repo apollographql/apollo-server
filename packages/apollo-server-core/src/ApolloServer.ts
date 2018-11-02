@@ -529,7 +529,7 @@ export class ApolloServerBase {
 
     const requestCtx: GraphQLRequestContext = {
       request,
-      context: options.context || {},
+      context: options.context || Object.create(null),
       cache: options.cache!,
       response: {
         http: {

@@ -1,5 +1,5 @@
-const { ApolloServerBase, gql } = require('apollo-server-core');
-const createTestClient = require('../createTestClient');
+import { ApolloServerBase, gql } from 'apollo-server-core';
+import createTestClient from '../createTestClient';
 
 describe('createTestClient', () => {
   const typeDefs = gql`
