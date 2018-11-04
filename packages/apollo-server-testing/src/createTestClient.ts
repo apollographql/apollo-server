@@ -1,4 +1,4 @@
-import { ApolloServerBase, gql } from 'apollo-server-core';
+import { ApolloServerBase } from 'apollo-server-core';
 import { print } from 'graphql';
 
 export default (server: ApolloServerBase, ctxFn: (...args: any[]) => any) => {
