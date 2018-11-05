@@ -53,18 +53,11 @@ describe('createTestClient', () => {
     expect(res.data).toEqual({ test: 'wow' });
   });
 
-  it('uses default context function if not overwritten', async () => {
+  it('resolves with context', async () => {
     const query = `{ hello }`;
     const client = createTestClient(myTestServer);
     const res = await client.query({ query });
     expect(res.data).toEqual({ hello: 'hello tom' });
-  });
-
-  it('allows mocking of context', async () => {
-    const query = `{ hello }`;
-    const client = createTestClient(myTestServer, () => ({ person: 'mary' }));
-    const res = await client.query({ query });
-    expect(res.data).toEqual({ hello: 'hello mary' });
   });
 
   it('allows query documents as input', async () => {
