@@ -510,9 +510,7 @@ export class ApolloServerBase {
     } as GraphQLOptions;
   }
 
-  public async executeOperation(
-    request: GraphQLRequest
-  ) {
+  public async executeOperation(request: GraphQLRequest) {
     let options;
 
     try {
