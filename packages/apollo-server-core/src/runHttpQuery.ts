@@ -212,7 +212,12 @@ export async function processHTTPRequest<TContext>(
       );
   }
 
-  options.plugins.push(checkOperationPlugin);
+  // Create a local copy of `options`, based on global options, but maintaining
+  // that appropriate plugins are in place.
+  options = {
+    ...options,
+    plugins: [checkOperationPlugin, ...options.plugins],
+  };
 
   function buildRequestContext(
     request: GraphQLRequest,
