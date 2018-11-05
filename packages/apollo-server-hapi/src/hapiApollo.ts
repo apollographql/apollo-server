@@ -1,8 +1,7 @@
 import Boom from 'boom';
-import { Server, Request, RouteOptions, ResponseToolkit } from 'hapi';
+import { Server, Request, RouteOptions } from 'hapi';
 import {
   GraphQLOptions,
-  ServerOptionsFunction,
   runHttpQuery,
   convertNodeHttpToRequest,
 } from 'apollo-server-core';
@@ -17,9 +16,9 @@ export interface IPlugin {
   register: IRegister;
 }
 
-export type HapiOptionsFunction = ServerOptionsFunction<
-  [Request, ResponseToolkit]
->;
+export interface HapiOptionsFunction {
+  (request?: Request): GraphQLOptions | Promise<GraphQLOptions>;
+}
 
 export interface HapiPluginOptions {
   path: string;
