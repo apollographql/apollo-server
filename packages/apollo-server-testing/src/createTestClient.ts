@@ -1,9 +1,16 @@
 import { ApolloServerBase } from 'apollo-server-core';
-import { print } from 'graphql';
+import { print, DocumentNode } from 'graphql';
 
 export default (server: ApolloServerBase) => {
   const executeOperation = server.executeOperation.bind(server);
-  const test = ({ query, mutation, ...rest }) => {
+  const test = ({
+    query,
+    mutation,
+    ...rest
+  }: {
+    query: string | DocumentNode;
+    mutation: string | DocumentNode;
+  }) => {
     const operation = query || mutation;
     return executeOperation({
       // Convert ASTs, which are produced by `graphql-tag` but not currently

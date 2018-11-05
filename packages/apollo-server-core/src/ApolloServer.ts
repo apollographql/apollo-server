@@ -511,13 +511,12 @@ export class ApolloServerBase {
   }
 
   public async executeOperation(
-    request: GraphQLRequest,
-    contextArgs: Record<string, any>,
+    request: GraphQLRequest
   ) {
     let options;
 
     try {
-      options = await this.graphQLServerOptions(contextArgs);
+      options = await this.graphQLServerOptions();
     } catch (e) {
       e.message = `Invalid options provided to ApolloServer: ${e.message}`;
       throw new Error(e);
