@@ -18,7 +18,7 @@ import {
 import { CacheControlExtensionOptions } from 'apollo-cache-control';
 import { ApolloServerPlugin, WithRequired } from 'apollo-server-plugin-base';
 
-export interface HttpQueryRequest<HandlerArguments extends any[]> {
+export interface HttpQueryRequest {
   method: string;
   // query is either the POST body or the GET query string map.  In the GET
   // case, all values are strings and need to be parsed as JSON; in the POST
@@ -28,7 +28,7 @@ export interface HttpQueryRequest<HandlerArguments extends any[]> {
   query: Record<string, any> | Array<Record<string, any>>;
   options:
     | GraphQLOptions
-    | ((...args: HandlerArguments) => Promise<GraphQLOptions> | GraphQLOptions);
+    | ((...args: Array<any>) => Promise<GraphQLOptions> | GraphQLOptions);
   request: Pick<Request, 'url' | 'method' | 'headers'>;
 }
 
@@ -91,9 +91,9 @@ function throwHttpGraphQLError<E extends Error>(
   );
 }
 
-export async function runHttpQuery<HandlerArguments extends any[]>(
-  handlerArguments: HandlerArguments,
-  request: HttpQueryRequest<HandlerArguments>,
+export async function runHttpQuery(
+  handlerArguments: Array<any>,
+  request: HttpQueryRequest,
 ): Promise<HttpQueryResponse> {
   let options: GraphQLOptions;
   const debugDefault =
@@ -178,7 +178,7 @@ export async function processHTTPRequest<TContext>(
   options: WithRequired<GraphQLOptions<TContext>, 'cache' | 'plugins'> & {
     context: TContext;
   },
-  httpRequest: HttpQueryRequest<any>,
+  httpRequest: HttpQueryRequest,
 ): Promise<HttpQueryResponse> {
   let requestPayload;
 

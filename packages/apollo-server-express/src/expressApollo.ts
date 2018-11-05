@@ -1,15 +1,16 @@
 import express from 'express';
 import {
   GraphQLOptions,
-  ServerOptionsFunction,
   HttpQueryError,
   runHttpQuery,
   convertNodeHttpToRequest,
 } from 'apollo-server-core';
 
-export type ExpressGraphQLOptionsFunction = ServerOptionsFunction<
-  [express.Request, express.Response]
->;
+export interface ExpressGraphQLOptionsFunction {
+  (req?: express.Request, res?: express.Response):
+    | GraphQLOptions
+    | Promise<GraphQLOptions>;
+}
 
 // Design principles:
 // - there is just one way allowed: POST request with JSON body. Nothing else.
