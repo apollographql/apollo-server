@@ -45,6 +45,13 @@ import {
 } from './playground';
 
 import { generateSchemaHash } from './utils/schemaHash';
+import {
+  processGraphQLRequest,
+  GraphQLRequestContext,
+  GraphQLRequest,
+} from './requestPipeline';
+
+import { Headers } from 'apollo-server-env';
 
 const NoIntrospection = (context: ValidationContext) => ({
   Field(node: FieldDefinitionNode) {
@@ -501,5 +508,33 @@ export class ApolloServerBase {
       >,
       ...this.requestOptions,
     } as GraphQLOptions;
+  }
+
+  public async executeOperation(request: GraphQLRequest) {
+    let options;
+
+    try {
+      options = await this.graphQLServerOptions();
+    } catch (e) {
+      e.message = `Invalid options provided to ApolloServer: ${e.message}`;
+      throw new Error(e);
+    }
+
+    if (typeof options.context === 'function') {
+      options.context = (options.context as () => never)();
+    }
+
+    const requestCtx: GraphQLRequestContext = {
+      request,
+      context: options.context || Object.create(null),
+      cache: options.cache!,
+      response: {
+        http: {
+          headers: new Headers(),
+        },
+      },
+    };
+
+    return processGraphQLRequest(options, requestCtx);
   }
 }
