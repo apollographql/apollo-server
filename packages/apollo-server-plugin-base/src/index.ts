@@ -13,7 +13,7 @@ export {
 
 type ValueOrPromise<T> = T | Promise<T>;
 
-export abstract class ApolloServerPlugin {
+export interface ApolloServerPlugin {
   serverWillStart?(service: GraphQLServiceContext): ValueOrPromise<void>;
   requestDidStart?<TContext>(
     requestContext: GraphQLRequestContext<TContext>,
