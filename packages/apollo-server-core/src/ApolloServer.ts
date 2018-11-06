@@ -460,15 +460,11 @@ export class ApolloServerBase {
       return;
     }
 
-    // FIXME: We also want to support default exports and possibly module names
-    // but this requires adjustments to typing (see PluginDefinition type), and
-    // I had to give up on that for now.
     this.plugins = plugins.map(plugin => {
       if (typeof plugin === 'function') {
-        return new plugin();
-      } else {
-        return plugin as ApolloServerPlugin;
+        return plugin();
       }
+      return plugin;
     });
   }
 
