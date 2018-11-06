@@ -171,6 +171,8 @@ export class EngineReportingExtension<TContext = any>
       // now, since the backend does not group by it and Engine frontend will not
       // support it in the short term
       const { clientName, clientVersion, clientReferenceId } = clientInfo;
+      // the backend makes the choice of mapping clientName => clientReferenceId if
+      // no custom reference id is provided
       this.trace.clientVersion = clientVersion || '';
       this.trace.clientReferenceId = clientReferenceId || '';
       this.trace.clientName = clientName || '';
