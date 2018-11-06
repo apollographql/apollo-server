@@ -1,17 +1,11 @@
-import ApolloServerPluginOperationRegistry from '../ApolloServerPluginOperationRegistry';
+import plugin from '../ApolloServerPluginOperationRegistry';
 
 describe.only('Operation registry plugin', () => {
-  it('will instantiate', () => {
-    expect(new ApolloServerPluginOperationRegistry()).toBeInstanceOf(
-      ApolloServerPluginOperationRegistry,
-    );
+  it('will instantiate when not called with options', () => {
+    expect(plugin()()).toHaveProperty('serverWillStart');
   });
 
   it('will instantiate with debug enabled', () => {
-    expect(
-      new ApolloServerPluginOperationRegistry({
-        debug: true,
-      }),
-    ).toBeInstanceOf(ApolloServerPluginOperationRegistry);
+    expect(plugin({ debug: true })()).toHaveProperty('serverWillStart');
   });
 });
