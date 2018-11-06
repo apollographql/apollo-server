@@ -6,7 +6,13 @@ import {
 import { Headers } from 'apollo-server-env';
 import { Request, Response } from 'express';
 
-export function graphqlCloudFunction(options: GraphQLOptions): any {
+export interface CloudFunctionGraphQLOptionsFunction {
+  (req?: Request, res?: Response): GraphQLOptions | Promise<GraphQLOptions>;
+}
+
+export function graphqlCloudFunction(
+  options: GraphQLOptions | CloudFunctionGraphQLOptionsFunction,
+): any {
   if (!options) {
     throw new Error('Apollo Server requires options.');
   }

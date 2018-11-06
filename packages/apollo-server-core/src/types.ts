@@ -24,12 +24,6 @@ export type ContextFunction<T = any> = (
   context: Context<T>,
 ) => Promise<Context<T>>;
 
-type ValueOrPromise<T> = T | Promise<T>;
-
-export type ServerOptionsFunction<HandlerArguments extends any[]> = (
-  ...args: HandlerArguments
-) => ValueOrPromise<GraphQLOptions>;
-
 export interface SubscriptionServerOptions {
   path: string;
   keepAlive?: number;
@@ -64,7 +58,7 @@ export interface Config
   introspection?: boolean;
   mocks?: boolean | IMocks;
   mockEntireSchema?: boolean;
-  engine?: boolean | EngineReportingOptions;
+  engine?: boolean | EngineReportingOptions<Context<any>>;
   extensions?: Array<() => GraphQLExtension>;
   cacheControl?: CacheControlExtensionOptions | boolean;
   plugins?: PluginDefinition[];

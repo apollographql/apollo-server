@@ -44,6 +44,15 @@ import {
   PlaygroundRenderPageOptions,
 } from './playground';
 
+import { generateSchemaHash } from './utils/schemaHash';
+import {
+  processGraphQLRequest,
+  GraphQLRequestContext,
+  GraphQLRequest,
+} from './requestPipeline';
+
+import { Headers } from 'apollo-server-env';
+
 const NoIntrospection = (context: ValidationContext) => ({
   Field(node: FieldDefinitionNode) {
     if (node.name.value === '__schema' || node.name.value === '__type') {
@@ -87,6 +96,7 @@ export class ApolloServerBase {
   private engineReportingAgent?: EngineReportingAgent;
   private engineServiceId?: string;
   private extensions: Array<() => GraphQLExtension>;
+  private schemaHash: string;
   protected plugins: ApolloServerPlugin[] = [];
 
   protected schema: GraphQLSchema;
@@ -254,7 +264,7 @@ export class ApolloServerBase {
       });
     }
 
-    if (mocks || typeof mockEntireSchema !== 'undefined') {
+    if (mocks || (typeof mockEntireSchema !== 'undefined' && mocks !== false)) {
       addMockFunctionsToSchema({
         schema: this.schema,
         mocks:
@@ -265,6 +275,10 @@ export class ApolloServerBase {
           typeof mockEntireSchema === 'undefined' ? false : !mockEntireSchema,
       });
     }
+
+    // The schema hash is a string representation of the shape of the schema
+    // it is used for reporting and can be used for a cache key if needed
+    this.schemaHash = generateSchemaHash(this.schema);
 
     // Note: doRunQuery will add its own extensions if you set tracing,
     // or cacheControl.
@@ -290,6 +304,13 @@ export class ApolloServerBase {
     if (this.engineServiceId) {
       this.engineReportingAgent = new EngineReportingAgent(
         typeof engine === 'object' ? engine : Object.create(null),
+        {
+          schema: this.schema,
+          schemaHash: this.schemaHash,
+          engine: {
+            serviceID: this.engineServiceId,
+          },
+        },
       );
       // Let's keep this extension second so it wraps everything, except error formatting
       this.extensions.push(() => this.engineReportingAgent!.newExtension());
@@ -341,6 +362,7 @@ export class ApolloServerBase {
           plugin.serverWillStart &&
           plugin.serverWillStart({
             schema: this.schema,
+            schemaHash: this.schemaHash,
             engine: {
               serviceID: this.engineServiceId,
             },
@@ -486,5 +508,33 @@ export class ApolloServerBase {
       >,
       ...this.requestOptions,
     } as GraphQLOptions;
+  }
+
+  public async executeOperation(request: GraphQLRequest) {
+    let options;
+
+    try {
+      options = await this.graphQLServerOptions();
+    } catch (e) {
+      e.message = `Invalid options provided to ApolloServer: ${e.message}`;
+      throw new Error(e);
+    }
+
+    if (typeof options.context === 'function') {
+      options.context = (options.context as () => never)();
+    }
+
+    const requestCtx: GraphQLRequestContext = {
+      request,
+      context: options.context || Object.create(null),
+      cache: options.cache!,
+      response: {
+        http: {
+          headers: new Headers(),
+        },
+      },
+    };
+
+    return processGraphQLRequest(options, requestCtx);
   }
 }

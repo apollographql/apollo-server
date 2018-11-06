@@ -13,7 +13,10 @@ import {
 import { Request } from 'apollo-server-env';
 export { Request } from 'apollo-server-env';
 
-import { GraphQLResponse } from 'apollo-server-core/dist/requestPipelineAPI';
+import {
+  GraphQLResponse,
+  GraphQLRequestContext,
+} from 'apollo-server-core/dist/requestPipelineAPI';
 export { GraphQLResponse };
 
 export type EndHandler = (...errors: Array<Error>) => void;
@@ -34,6 +37,7 @@ export class GraphQLExtension<TContext = any> {
     persistedQueryHit?: boolean;
     persistedQueryRegister?: boolean;
     context: TContext;
+    requestContext: GraphQLRequestContext<TContext>;
   }): EndHandler | void;
   public parsingDidStart?(o: { queryString: string }): EndHandler | void;
   public validationDidStart?(): EndHandler | void;
@@ -75,6 +79,7 @@ export class GraphQLExtensionStack<TContext = any> {
     persistedQueryRegister?: boolean;
     context: TContext;
     extensions?: Record<string, any>;
+    requestContext: GraphQLRequestContext<TContext>;
   }): EndHandler {
     return this.handleDidStart(
       ext => ext.requestDidStart && ext.requestDidStart(o),

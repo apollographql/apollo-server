@@ -22,6 +22,13 @@ export function testKeyValueCache(keyValueCache: any) {
       expect(await keyValueCache.get('missing')).toBeUndefined();
     });
 
+    it('can do a basic set and delete', async () => {
+      await keyValueCache.set('hello', 'world');
+      expect(await keyValueCache.get('hello')).toBe('world');
+      await keyValueCache.delete('hello');
+      expect(await keyValueCache.get('hello')).toBeUndefined();
+    });
+
     it('is able to expire keys based on ttl', async () => {
       await keyValueCache.set('short', 's', { ttl: 1 });
       await keyValueCache.set('long', 'l', { ttl: 5 });

@@ -1,15 +1,16 @@
 import lambda from 'aws-lambda';
 import {
   GraphQLOptions,
-  ServerOptionsFunction,
   HttpQueryError,
   runHttpQuery,
 } from 'apollo-server-core';
 import { Headers } from 'apollo-server-env';
 
-export type LambdaGraphQLOptionsFunction = ServerOptionsFunction<
-  [lambda.APIGatewayProxyEvent, lambda.Context]
->;
+export interface LambdaGraphQLOptionsFunction {
+  (event: lambda.APIGatewayProxyEvent, context: lambda.Context):
+    | GraphQLOptions
+    | Promise<GraphQLOptions>;
+}
 
 export function graphqlLambda(
   options: GraphQLOptions | LambdaGraphQLOptionsFunction,

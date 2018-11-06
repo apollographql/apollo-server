@@ -30,8 +30,14 @@ export class ApolloServer extends ApolloServerBase {
     disableHealthCheck,
     onHealthCheck,
   }: ServerRegistration = {}) {
+    // We'll kick off the `willStart` right away, so hopefully it'll finish
+    // before the first request comes in.
+    const promiseWillStart = this.willStart();
+
     return async (req, res) => {
       this.graphqlPath = path || '/graphql';
+
+      await promiseWillStart;
 
       await this.handleFileUploads(req);
 
@@ -143,9 +149,9 @@ export class ApolloServer extends ApolloServerBase {
     let handled = false;
     const url = req.url.split('?')[0];
     if (url === this.graphqlPath) {
-      const graphqlHandler = graphqlMicro(
-        this.createGraphQLServerOptions.bind(this),
-      );
+      const graphqlHandler = graphqlMicro(() => {
+        return this.createGraphQLServerOptions(req, res);
+      });
       const responseData = await graphqlHandler(req, res);
       send(res, 200, responseData);
       handled = true;
