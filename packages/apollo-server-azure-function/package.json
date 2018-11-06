@@ -1,8 +1,14 @@
 {
 	"name": "apollo-server-azure-function",
-	"version": "2.2.0-alpha.3",
+	"version": "2.2.0-alpha.4",
 	"description": "Production-ready Node.js GraphQL server for Azure Functions",
-	"keywords": [ "GraphQL", "Apollo", "Server", "Azure", "Javascript" ],
+	"keywords": [
+		"GraphQL",
+		"Apollo",
+		"Server",
+		"Azure",
+		"Javascript"
+	],
 	"author": "opensource@apollographql.com",
 	"license": "MIT",
 	"repository": {
