@@ -111,7 +111,7 @@
     "meteor-promise": "0.8.6",
     "mock-req": "0.2.0",
     "multer": "1.4.1",
-    "node-fetch": "2.2.0",
+    "node-fetch": "2.2.1",
     "prettier": "1.14.3",
     "prettier-check": "2.0.0",
     "qs-middleware": "1.0.3",
