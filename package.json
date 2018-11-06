@@ -70,7 +70,7 @@
     "@types/json-stable-stringify": "1.0.32",
     "@types/koa-multer": "1.0.0",
     "@types/koa-router": "7.0.33",
-    "@types/lodash": "4.14.117",
+    "@types/lodash": "4.14.118",
     "@types/lru-cache": "4.1.1",
     "@types/memcached": "2.2.5",
     "@types/micro": "7.3.3",
