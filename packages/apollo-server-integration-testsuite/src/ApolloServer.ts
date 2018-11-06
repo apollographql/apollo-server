@@ -601,7 +601,8 @@ export function testApolloServer<AS extends ApolloServerBase>(
               apiKey: 'service:my-app:secret',
               maxUncompressedReportSize: 1,
               generateClientInfo: () => ({
-                clientId: 'testing',
+                clientName: 'testing',
+                clientReferenceId: '1234',
                 clientVersion: 'v1.0.1',
               }),
             },
@@ -627,7 +628,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
           const trace = await didReceiveTrace;
 
-          expect(trace.clientId).toMatch(/testing/);
+          expect(trace.clientReferenceId).toMatch(/1234/);
           expect(trace.clientName).toMatch(/testing/);
           expect(trace.clientVersion).toEqual('v1.0.1');
 
