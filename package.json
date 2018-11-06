@@ -40,6 +40,7 @@
     "apollo-engine-reporting": "file:packages/apollo-engine-reporting",
     "apollo-engine-reporting-protobuf": "file:packages/apollo-engine-reporting-protobuf",
     "apollo-server": "file:packages/apollo-server",
+    "apollo-server-azure-function": "file:packages/apollo-server-azure-function",
     "apollo-server-cache-memcached": "file:packages/apollo-server-cache-memcached",
     "apollo-server-cache-redis": "file:packages/apollo-server-cache-redis",
     "apollo-server-caching": "file:packages/apollo-server-caching",
