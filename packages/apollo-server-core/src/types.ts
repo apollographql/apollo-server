@@ -17,6 +17,9 @@ import {
 import { CacheControlExtensionOptions } from 'apollo-cache-control';
 import { ApolloServerPlugin } from 'apollo-server-plugin-base';
 
+import { GraphQLSchemaModule } from '@apollographql/apollo-tools';
+export { GraphQLSchemaModule };
+
 export { KeyValueCache } from 'apollo-server-caching';
 
 export type Context<T = any> = T;
@@ -54,6 +57,7 @@ export interface Config
       | 'dataSources'
       | 'cache'
     > {
+  modules?: GraphQLSchemaModule[];
   typeDefs?: DocumentNode | Array<DocumentNode>;
   resolvers?: IResolvers;
   schema?: GraphQLSchema;

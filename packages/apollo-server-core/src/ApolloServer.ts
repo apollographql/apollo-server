@@ -52,6 +52,7 @@ import {
 } from './requestPipeline';
 
 import { Headers } from 'apollo-server-env';
+import { buildServiceDefinition } from '../../../../apollo-tooling/packages/apollo-tools/lib';
 
 const NoIntrospection = (context: ValidationContext) => ({
   Field(node: FieldDefinitionNode) {
@@ -117,6 +118,7 @@ export class ApolloServerBase {
       resolvers,
       schema,
       schemaDirectives,
+      modules,
       typeDefs,
       introspection,
       mocks,
@@ -215,10 +217,16 @@ export class ApolloServerBase {
 
     if (schema) {
       this.schema = schema;
+    } else if (modules) {
+      const { schema, errors } = buildServiceDefinition(modules);
+      if (errors && errors.length > 0) {
+        throw new Error(errors.map(error => error.message).join('\n\n'));
+      }
+      this.schema = schema!;
     } else {
       if (!typeDefs) {
         throw Error(
-          'Apollo Server requires either an existing schema or typeDefs',
+          'Apollo Server requires either an existing schema, modules or typeDefs',
         );
       }
 

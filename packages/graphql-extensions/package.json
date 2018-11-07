@@ -13,6 +13,9 @@
   "engines": {
     "node": ">=6.0"
   },
+  "dependencies": {
+    "@apollographql/apollo-tools": "^0.2.0"
+  },
   "devDependencies": {
     "apollo-server-core": "file:../apollo-server-core",
     "apollo-server-env": "file:../apollo-server-env"
