@@ -8,7 +8,6 @@ import {
 import { ForbiddenError, ApolloError } from 'apollo-server-errors';
 import Agent from './agent';
 import { GraphQLSchema } from 'graphql/type';
-import { generateSchemaHash } from './schema';
 import { KeyValueCache } from 'apollo-server-caching';
 
 interface Options {
@@ -22,11 +21,11 @@ export default function plugin(options: Options = Object.create(null)) {
   return (): ApolloServerPlugin => ({
     async serverWillStart({
       schema,
+      schemaHash,
       engine,
       persistedQueries,
     }: GraphQLServiceContext): Promise<void> {
       assert.ok(schema instanceof GraphQLSchema);
-      const schemaHash = await generateSchemaHash(schema);
 
       if (!engine || !engine.serviceID) {
         throw new Error(
