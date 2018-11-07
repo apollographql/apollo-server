@@ -369,3 +369,17 @@ addMockFunctionsToSchema({
 *  `maskErrorDetails`: boolean
 
    Set to true to remove error details from the traces sent to Apollo's servers. Defaults to false.
+
+*  `generateClientInfo`: (GraphQLRequestContext) => ClientInfo **AS 2.2**
+
+   Creates a client context(`ClientInfo`) based on the request pipeline's
+   context, which contains values like the `request`, `response`, `cache`, and
+   `context`. This generated client information will be provided to Apollo
+   Engine and can be used to filter metrics. `ClientInfo` can contain a
+   `clientName`, `clientVersion`, and `clientReferenceId`. While all of these
+   fields are optional, `clientName` and `clientVersion` should be specified.
+   For some use cases, the `clientReferenceId` can be used as a unique
+   identifier for a client name. These `clientReferenceId`s should have a one
+   to one relationship to a client name and are used to correlate with other
+   systems, such as client ownership or team identity.
+
