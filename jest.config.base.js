@@ -1,5 +1,19 @@
 const { defaults } = require("jest-config");
 
+const testPathIgnorePatterns = [
+  "/node_modules/",
+  "/dist/"
+];
+
+const NODE_MAJOR_VERSION = parseInt(
+  process.versions.node.split('.', 1)[0],
+  10,
+);
+
+if (NODE_MAJOR_VERSION < 8) {
+  testPathIgnorePatterns.push("/packages/apollo-server-adonis")
+}
+
 module.exports = {
   testEnvironment: "node",
     setupFiles: [
@@ -8,10 +22,7 @@ module.exports = {
     preset: "ts-jest",
     testMatch: null,
     testRegex: "/__tests__/.*\\.test\\.(js|ts)$",
-    testPathIgnorePatterns: [
-      "/node_modules/",
-      "/dist/"
-    ],
+    testPathIgnorePatterns,
     moduleFileExtensions: [...defaults.moduleFileExtensions, "ts", "tsx"],
     moduleNameMapper: {
       '^__mocks__/(.*)$': '<rootDir>/../../__mocks__/$1',
