@@ -10,6 +10,7 @@
     { "path": "./packages/apollo-datasource-rest" },
     { "path": "./packages/apollo-engine-reporting" },
     { "path": "./packages/apollo-server" },
+    { "path": "./packages/apollo-server-adonis" },
     { "path": "./packages/apollo-server-azure-functions" },
     { "path": "./packages/apollo-server-cache-memcached" },
     { "path": "./packages/apollo-server-cache-redis" },

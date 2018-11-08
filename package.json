@@ -40,6 +40,7 @@
     "apollo-engine-reporting": "file:packages/apollo-engine-reporting",
     "apollo-engine-reporting-protobuf": "file:packages/apollo-engine-reporting-protobuf",
     "apollo-server": "file:packages/apollo-server",
+    "apollo-server-adonis": "file:packages/apollo-server-adonis",
     "apollo-server-azure-functions": "file:packages/apollo-server-azure-functions",
     "apollo-server-cache-memcached": "file:packages/apollo-server-cache-memcached",
     "apollo-server-cache-redis": "file:packages/apollo-server-cache-redis",
@@ -60,6 +61,10 @@
     "graphql-extensions": "file:packages/graphql-extensions"
   },
   "devDependencies": {
+    "@adonisjs/bodyparser": "^2.0.9",
+    "@adonisjs/fold": "^4.0.9",
+    "@adonisjs/framework": "^5.0.12",
+    "@adonisjs/sink": "^1.0.17",
     "@types/async-retry": "1.2.1",
     "@types/aws-lambda": "8.10.15",
     "@types/body-parser": "1.17.0",

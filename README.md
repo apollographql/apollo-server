@@ -90,6 +90,7 @@ Often times, Apollo Server needs to be run with a particular integration. To sta
 - `azure-function`
 - `cloud-function`
 - `cloudflare`
+- `adonis`
 
 
 If a framework is not on this list and it should be supported, please open a PR.
@@ -262,6 +263,32 @@ const resolvers = {
 const server = new ApolloServer({ typeDefs, resolvers });
 
 exports.graphqlHandler = server.createHandler();
+```
+
+### Adonis
+
+```js
+// start/routes.js
+const Route = use('Route')
+const { ApolloServer, gql } = require('apollo-server-adonis');
+
+// Construct a schema, using GraphQL schema language
+const typeDefs = gql`
+  type Query {
+    hello: String
+  }
+`;
+
+// Provide resolver functions for your schema fields
+const resolvers = {
+  Query: {
+    hello: () => 'Hello world!',
+  },
+};
+
+const server = new ApolloServer({ typeDefs, resolvers });
+
+server.registerRoutes({ router: Route });
 ```
 
 ## Apollo Server Development
