@@ -41,7 +41,7 @@ Traces.encode = function(message, originalWriter) {
 export interface ClientInfo {
   clientName?: string;
   clientVersion?: string;
-  clientId?: string;
+  clientReferenceId?: string;
 }
 
 export type GenerateClientInfo<TContext> = (
@@ -100,7 +100,7 @@ export interface EngineReportingOptions<TContext> {
   // To remove the error message from traces, set this to true. Defaults to false
   maskErrorDetails?: boolean;
   // A human readable name to tag this variant of a schema (i.e. staging, EU)
-  schemaBranch?: string;
+  schemaTag?: string;
   //Creates the client information for operation traces.
   generateClientInfo?: GenerateClientInfo<TContext>;
 }
@@ -142,7 +142,7 @@ export class EngineReportingAgent<TContext = any> {
     this.reportHeader = new ReportHeader({
       ...serviceHeaderDefaults,
       schemaHash,
-      schemaTag: options.schemaBranch || process.env.ENGINE_SCHEMA_BRANCH || '',
+      schemaTag: options.schemaTag || process.env.ENGINE_SCHEMA_TAG || '',
     });
     this.resetReport();
 

@@ -24,11 +24,9 @@ export type ContextFunction<T = any> = (
   context: Context<T>,
 ) => Promise<Context<T>>;
 
-type ValueOrPromise<T> = T | Promise<T>;
-
-export type ServerOptionsFunction<HandlerArguments extends any[]> = (
-  ...args: HandlerArguments
-) => ValueOrPromise<GraphQLOptions>;
+// A plugin can return an interface that matches `ApolloServerPlugin`, or a
+// factory function that returns `ApolloServerPlugin`.
+export type PluginDefinition = ApolloServerPlugin | (() => ApolloServerPlugin);
 
 export interface SubscriptionServerOptions {
   path: string;
@@ -74,10 +72,6 @@ export interface Config
   uploads?: boolean | FileUploadOptions;
   playground?: PlaygroundConfig;
 }
-
-export type PluginDefinition =
-  | ApolloServerPlugin
-  | (new () => ApolloServerPlugin);
 
 export interface FileUploadOptions {
   //Max allowed non-file multipart form field size in bytes; enough for your queries (default: 1 MB).

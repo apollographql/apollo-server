@@ -87,7 +87,10 @@ Often times, Apollo Server needs to be run with a particular integration. To sta
 - `koa`
 - `hapi`
 - `lambda`
+- `azure-function`
+- `cloud-function`
 - `cloudflare`
+
 
 If a framework is not on this list and it should be supported, please open a PR.
 

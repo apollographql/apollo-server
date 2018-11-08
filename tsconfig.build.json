@@ -10,6 +10,7 @@
     { "path": "./packages/apollo-datasource-rest" },
     { "path": "./packages/apollo-engine-reporting" },
     { "path": "./packages/apollo-server" },
+    { "path": "./packages/apollo-server-azure-functions" },
     { "path": "./packages/apollo-server-cache-memcached" },
     { "path": "./packages/apollo-server-cache-redis" },
     { "path": "./packages/apollo-server-caching" },
@@ -22,6 +23,7 @@
     { "path": "./packages/apollo-server-lambda" },
     { "path": "./packages/apollo-server-micro" },
     { "path": "./packages/apollo-server-plugin-base" },
+    { "path": "./packages/apollo-server-testing" },
     { "path": "./packages/apollo-tracing" },
     { "path": "./packages/graphql-extensions" },
   ]
