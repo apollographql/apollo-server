@@ -5,10 +5,7 @@ const testPathIgnorePatterns = [
   "/dist/"
 ];
 
-const NODE_MAJOR_VERSION = parseInt(
-  process.versions.node.split('.', 1)[0],
-  10,
-);
+const NODE_MAJOR_VERSION = parseInt(process.versions.node.split('.', 1)[0], 10);
 
 if (NODE_MAJOR_VERSION < 8) {
   testPathIgnorePatterns.push("/packages/apollo-server-adonis")
