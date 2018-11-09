@@ -664,33 +664,29 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
         });
       });
 
-      it(
-        'can handle batch requests in parallel',
-        async function() {
-          const parallels = 100;
-          const delayPerReq = 40;
+      it('can handle batch requests in parallel', async function() {
+        const parallels = 100;
+        const delayPerReq = 40;
 
-          app = await createApp();
-          const expected = Array(parallels).fill({
-            data: { testStringWithDelay: 'it works' },
-          });
-          const req = request(app)
-            .post('/graphql')
-            .send(
-              Array(parallels).fill({
-                query: `query test($delay: Int!) { testStringWithDelay(delay: $delay) }`,
-                operationName: 'test',
-                variables: { delay: delayPerReq },
-              }),
-            );
-          return req.then(res => {
-            expect(res.status).toEqual(200);
-            expect(res.body).toEqual(expected);
-          });
-        },
-        // this test will fail due to timeout if running serially.
-        3000,
-      );
+        app = await createApp();
+        const expected = Array(parallels).fill({
+          data: { testStringWithDelay: 'it works' },
+        });
+        const req = request(app)
+          .post('/graphql')
+          .send(
+            Array(parallels).fill({
+              query: `query test($delay: Int!) { testStringWithDelay(delay: $delay) }`,
+              operationName: 'test',
+              variables: { delay: delayPerReq },
+            }),
+          );
+        return req.then(res => {
+          expect(res.status).toEqual(200);
+          expect(res.body).toEqual(expected);
+        });
+      }, // this test will fail due to timeout if running serially.
+      3000);
 
       it('clones batch context', async () => {
         app = await createApp({
