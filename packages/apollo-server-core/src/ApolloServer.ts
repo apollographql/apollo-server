@@ -52,7 +52,7 @@ import {
 } from './requestPipeline';
 
 import { Headers } from 'apollo-server-env';
-import { buildServiceDefinition } from '../../../../apollo-tooling/packages/apollo-tools/lib';
+import { buildServiceDefinition } from '@apollographql/apollo-tools';
 
 const NoIntrospection = (context: ValidationContext) => ({
   Field(node: FieldDefinitionNode) {
