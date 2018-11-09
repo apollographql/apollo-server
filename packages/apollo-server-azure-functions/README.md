@@ -19,7 +19,7 @@ For more information about azure functions development model in general, refer t
 Example index.js:
 
 ```js
-const { gql, ApolloServer } = require("apollo-server-azure-function");
+const { gql, ApolloServer } = require("apollo-server-azure-functions");
 
 // Construct a schema, using GraphQL schema language
 const typeDefs = gql`
@@ -71,7 +71,7 @@ It is important to set output binding name to '$return' for apollo-server-azure-
 To enable CORS the response HTTP headers need to be modified. To accomplish this use the `cors` option.
 
 ```js
-const { ApolloServer, gql } = require('apollo-server-azure-function');
+const { ApolloServer, gql } = require('apollo-server-azure-functions');
 
 // Construct a schema, using GraphQL schema language
 const typeDefs = gql`
@@ -103,7 +103,7 @@ module.exports = server.createHandler({
 To enable CORS response for requests with credentials (cookies, http authentication) the allow origin header must equal the request origin and the allow credential header must be set to true.
 
 ```js
-const { ApolloServer, gql } = require('apollo-server-azure-function');
+const { ApolloServer, gql } = require('apollo-server-azure-functions');
 
 // Construct a schema, using GraphQL schema language
 const typeDefs = gql`
