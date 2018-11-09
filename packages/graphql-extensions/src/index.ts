@@ -208,8 +208,8 @@ function wrapField(field: GraphQLField<any, any>): void {
     // So we can use that to share our `whenObjectResolved` promise across
     // all field resolvers for the same object.
     const parentPath = info.path.prev as ResponsePath & {
-      __fields: Record<string, ReadonlyArray<FieldNode>>;
-      __whenObjectResolved: Promise<any>;
+      __fields?: Record<string, ReadonlyArray<FieldNode>>;
+      __whenObjectResolved?: Promise<any>;
     };
 
     const extensionStack = context && context._extensionStack;
@@ -228,11 +228,19 @@ function wrapField(field: GraphQLField<any, any>): void {
     let whenObjectResolved: Promise<any> | undefined;
 
     if (parentPath && resolveObject) {
+      if (!parentPath.__fields) {
+        parentPath.__fields = {};
+      }
+
+      parentPath.__fields[info.fieldName] = info.fieldNodes;
+
       whenObjectResolved = parentPath.__whenObjectResolved;
       if (!whenObjectResolved) {
-        whenObjectResolved = (async () => {
-          return resolveObject(source, context, info);
-        })();
+        // Use `Promise.resolve().then()` to delay executing
+        // `resolveObject()` so we can collect all the fields first.
+        whenObjectResolved = Promise.resolve().then(() => {
+          return resolveObject(source, parentPath.__fields!, context, info);
+        });
         parentPath.__whenObjectResolved = whenObjectResolved;
       }
     }
