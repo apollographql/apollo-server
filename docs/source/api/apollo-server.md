@@ -380,8 +380,14 @@ addMockFunctionsToSchema({
    name.  The default function will use the `clientInfo` field inside of
    GraphQL Query `extensions`.
 
-   For some advanced cases, the `clientReferenceId` can be used as a unique
-   identifier for a client name. These clientReferenceIds should have a one
-   to one relationship to a client name and are used to correlate with other
-   systems, such as client ownership or team identity.
+   For advanced use cases when you already have an opaque string to identify
+   your client (e.g. an API key, x509 certificate, or team codename), use the
+   `clientReferenceId` field to add a reference to its internal identity. This
+   client reference ID will not be displayed in the UI but will be available
+   for cross-correspondence, so names and reference ids should have a one to
+   one relationship.
+
+   > [WARNING] If you specify a `clientReferenceId`, Engine will treat the
+   > `clientName` as a secondary lookup, so changing a `clientName` may result
+   > in an unwanted experience.
 
