@@ -50,11 +50,11 @@ const server = new ApolloServer({
     generateClientInfo: ({
       request
     }) => {
-      const extensions = request.extensions;
-      if(extensions) {
+      const headers = request.http & request.http.headers;
+      if(headers) {
         return {
-          clientName: extensions.clientName,
-          clientVersion: extensions.clientVersion,
+          clientName: headers['apollo-client-name'],
+          clientVersion: headers['apollo-client-version'],
         };
       } else {
         return {
@@ -70,6 +70,9 @@ server.listen().then(({ url }) => {
   console.log(`🚀  Server ready at ${url}`);
 });
 ```
+
+> Note: the default implementation looks at `clientInfo` field in the
+> `extensions` of the GraphQL request
 
 ## Logging
 
