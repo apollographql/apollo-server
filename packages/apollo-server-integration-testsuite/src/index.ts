@@ -685,8 +685,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           expect(res.status).toEqual(200);
           expect(res.body).toEqual(expected);
         });
-      }, // this test will fail due to timeout if running serially.
-      3000);
+      }, 3000); // this test will fail due to timeout if running serially.
 
       it('clones batch context', async () => {
         app = await createApp({
