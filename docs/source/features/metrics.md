@@ -34,6 +34,46 @@ The API key can also be set with the `ENGINE_API_KEY` environment variable. Sett
 ENGINE_API_KEY=YOUR_API_KEY node start-server.js
 ```
 
+### Client Awareness
+
+Apollo Engine accepts metrics annotated with client information. The Engine UI
+is then able to filter metrics and usage patterns by these names and versions. To provide metrics to the Engine, pass a `generateClientInfo` function into the `ApolloServer` constructor, like so:
+
+```js line=8-23
+const { ApolloServer } = require("apollo-server");
+
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  engine: {
+    apiKey: "YOUR API KEY HERE",
+    generateClientInfo: ({
+      request
+    }) => {
+      const headers = request.http & request.http.headers;
+      if(headers) {
+        return {
+          clientName: headers['apollo-client-name'],
+          clientVersion: headers['apollo-client-version'],
+        };
+      } else {
+        return {
+          clientName: "Unknown Client",
+          clientVersion: "Unversioned",
+        };
+      }
+    },
+  }
+});
+
+server.listen().then(({ url }) => {
+  console.log(`🚀  Server ready at ${url}`);
+});
+```
+
+> Note: the default implementation looks at `clientInfo` field in the
+> `extensions` of the GraphQL request
+
 ## Logging
 
 Apollo Server provides two ways to log a server: per input, response, and errors or periodically throughout a request's lifecycle. Treating the GraphQL execution as a black box by logging the inputs and outputs of the system allows developers to diagnose issues quickly without being mired by lower level logs. Once a problem has been found at a high level, the lower level logs enable accurate tracing of how a request was handled.
