@@ -2,18 +2,20 @@ import { ApolloServerBase } from 'apollo-server-core';
 import { print, DocumentNode } from 'graphql';
 
 type StringOrAst = string | DocumentNode;
-interface QueryOrMutation {
-  query?: StringOrAst;
-  mutation?: StringOrAst;
-}
+
+// A query must not come with a mutation (and vice versa).
+type Query = { query: StringOrAst; mutation?: undefined };
+type Mutation = { mutation: StringOrAst; query?: undefined };
 
 export default (server: ApolloServerBase) => {
   const executeOperation = server.executeOperation.bind(server);
-  const test = ({ query, mutation, ...args }: QueryOrMutation) => {
+  const test = ({ query, mutation, ...args }: Query | Mutation) => {
     const operation = query || mutation;
 
     if ((!query && !mutation) || (query && mutation)) {
-      throw new Error('Either `query` or `mutation` must be passed');
+      throw new Error(
+        'Either `query` or `mutation` must be passed, but not both.',
+      );
     }
 
     return executeOperation({
