@@ -46,17 +46,17 @@ export interface SubscriptionServerOptions {
 // fields that are not specific to a single integration
 export interface Config
   extends Pick<
-      GraphQLOptions<Context<any>>,
-      | 'formatError'
-      | 'debug'
-      | 'rootValue'
-      | 'validationRules'
-      | 'formatResponse'
-      | 'fieldResolver'
-      | 'tracing'
-      | 'dataSources'
-      | 'cache'
-    > {
+    GraphQLOptions<Context<any>>,
+    | 'formatError'
+    | 'debug'
+    | 'rootValue'
+    | 'validationRules'
+    | 'formatResponse'
+    | 'fieldResolver'
+    | 'tracing'
+    | 'dataSources'
+    | 'cache'
+  > {
   modules?: GraphQLSchemaModule[];
   typeDefs?: DocumentNode | Array<DocumentNode>;
   resolvers?: IResolvers;
