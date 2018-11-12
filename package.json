@@ -118,7 +118,7 @@
     "prettier": "1.15.1",
     "prettier-check": "2.0.0",
     "qs-middleware": "1.0.3",
-    "redis-mock": "0.37.0",
+    "redis-mock": "0.39.0",
     "request": "2.88.0",
     "request-promise": "4.2.2",
     "subscriptions-transport-ws": "0.9.15",
