@@ -62,9 +62,9 @@ If the project is already pushed to GitHub, it may be easier to setup automatic 
 
 On the Heroku dashboard, click on the name of the app that will be deployed from GitHub.
 
-Then, on the app deatail page, there is a tab bar at the top, with a "Deploy" option. On that page, the deployment method can be chosen and setup to integrate with GitHub.
+Then, on the app detail page, there is a tab bar at the top, with a "Deploy" option. On that page, the deployment method can be chosen and setup to integrate with GitHub.
 
-![github deployment instructons](../images/deployment/heroku/heroku-github-instructions.png)
+![github deployment instructions](../images/deployment/heroku/heroku-github-instructions.png)
 
 <h2 id="env-vars" title="Environment variables"> Configuring environment variables</h2>
 

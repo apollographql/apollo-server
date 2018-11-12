@@ -15,8 +15,9 @@ import {
 } from 'graphql-extensions';
 import { Trace, google } from 'apollo-engine-reporting-protobuf';
 
-import { EngineReportingOptions, ClientInfo } from './agent';
+import { EngineReportingOptions, GenerateClientInfo } from './agent';
 import { defaultSignature } from './signature';
+import { GraphQLRequestContext } from 'apollo-server-core/dist/requestPipelineAPI';
 
 // EngineReportingExtension is the per-request GraphQLExtension which creates a
 // trace (in protobuf Trace format) for a single request. When the request is
@@ -32,21 +33,16 @@ export class EngineReportingExtension<TContext = any>
   private operationName?: string;
   private queryString?: string;
   private documentAST?: DocumentNode;
-  private options: EngineReportingOptions;
+  private options: EngineReportingOptions<TContext>;
   private addTrace: (
     signature: string,
     operationName: string,
     trace: Trace,
   ) => void;
-  private generateClientInfo: (
-    o: {
-      context: any;
-      extensions?: Record<string, any>;
-    },
-  ) => ClientInfo;
+  private generateClientInfo: GenerateClientInfo<TContext>;
 
   public constructor(
-    options: EngineReportingOptions,
+    options: EngineReportingOptions<TContext>,
     addTrace: (signature: string, operationName: string, trace: Trace) => void,
   ) {
     this.options = {
@@ -61,7 +57,8 @@ export class EngineReportingExtension<TContext = any>
       options.generateClientInfo ||
       // Default to using the clientInfo field of the request's extensions, when
       // the ClientInfo fields are undefined, we send the empty string
-      (({ extensions }) => (extensions && extensions.clientInfo) || {});
+      (({ request }) =>
+        (request.extensions && request.extensions.clientInfo) || {});
   }
 
   public requestDidStart(o: {
@@ -71,8 +68,9 @@ export class EngineReportingExtension<TContext = any>
     variables?: Record<string, any>;
     persistedQueryHit?: boolean;
     persistedQueryRegister?: boolean;
-    context: any;
+    context: TContext;
     extensions?: Record<string, any>;
+    requestContext: GraphQLRequestContext<TContext>;
   }): EndHandler {
     this.trace.startTime = dateToTimestamp(new Date());
     this.startHrTime = process.hrtime();
@@ -167,15 +165,18 @@ export class EngineReportingExtension<TContext = any>
       });
     }
 
-    // While clientAddress could be a part of the protobuf, we'll ignore it for
-    // now, since the backend does not group by it and Engine frontend will not
-    // support it in the short term
-    const { clientName, clientVersion } = this.generateClientInfo({
-      context: o.context,
-      extensions: o.extensions,
-    });
-    this.trace.clientName = clientName || '';
-    this.trace.clientVersion = clientVersion || '';
+    const clientInfo = this.generateClientInfo(o.requestContext);
+    if (clientInfo) {
+      // While clientAddress could be a part of the protobuf, we'll ignore it for
+      // now, since the backend does not group by it and Engine frontend will not
+      // support it in the short term
+      const { clientName, clientVersion, clientReferenceId } = clientInfo;
+      // the backend makes the choice of mapping clientName => clientReferenceId if
+      // no custom reference id is provided
+      this.trace.clientVersion = clientVersion || '';
+      this.trace.clientReferenceId = clientReferenceId || '';
+      this.trace.clientName = clientName || '';
+    }
 
     return () => {
       this.trace.durationNs = durationHrTimeToNanos(

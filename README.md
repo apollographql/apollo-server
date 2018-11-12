@@ -84,9 +84,13 @@ server.listen().then(({ url }) => {
 Often times, Apollo Server needs to be run with a particular integration. To start, run `npm install --save apollo-server-<integration>` where `<integration>` is one of the following:
 
 - `express`
+- `koa`
 - `hapi`
 - `lambda`
+- `azure-function`
+- `cloud-function`
 - `cloudflare`
+
 
 If a framework is not on this list and it should be supported, please open a PR.
 
@@ -163,7 +167,7 @@ app.listen({ port }, () =>
 ### Koa
 
 ```js
-const koa = require('koa');
+const Koa = require('koa');
 const { ApolloServer, gql } = require('apollo-server-koa');
 
 // Construct a schema, using GraphQL schema language

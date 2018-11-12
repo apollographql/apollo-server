@@ -4,10 +4,10 @@ import {
   GraphQLTypeResolver,
   GraphQLIsTypeOfFn,
 } from 'graphql';
-import { makeExecutableSchema } from 'graphql-tools';
+import { makeExecutableSchemaWithCacheControlSupport } from './cacheControlSupport';
 
 import { CacheScope } from '../';
-import { collectCacheControlHints } from './test-utils/helpers';
+import { collectCacheControlHints } from './collectCacheControlHints';
 
 export interface GraphQLResolvers {
   [fieldName: string]: (() => any) | GraphQLResolverObject | GraphQLScalarType;
@@ -49,7 +49,10 @@ describe('dynamic cache control', () => {
       },
     };
 
-    const schema = makeExecutableSchema({ typeDefs, resolvers });
+    const schema = makeExecutableSchemaWithCacheControlSupport({
+      typeDefs,
+      resolvers,
+    });
 
     const hints = await collectCacheControlHints(
       schema,
@@ -90,7 +93,10 @@ describe('dynamic cache control', () => {
       },
     };
 
-    const schema = makeExecutableSchema({ typeDefs, resolvers });
+    const schema = makeExecutableSchemaWithCacheControlSupport({
+      typeDefs,
+      resolvers,
+    });
 
     const hints = await collectCacheControlHints(
       schema,
@@ -135,7 +141,10 @@ describe('dynamic cache control', () => {
       },
     };
 
-    const schema = makeExecutableSchema({ typeDefs, resolvers });
+    const schema = makeExecutableSchemaWithCacheControlSupport({
+      typeDefs,
+      resolvers,
+    });
 
     const hints = await collectCacheControlHints(
       schema,

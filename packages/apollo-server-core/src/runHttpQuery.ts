@@ -9,13 +9,14 @@ import {
   PersistedQueryNotFoundError,
 } from 'apollo-server-errors';
 import {
-  GraphQLRequestPipeline,
+  processGraphQLRequest,
   GraphQLRequest,
   InvalidGraphQLRequestError,
   GraphQLRequestContext,
   GraphQLResponse,
 } from './requestPipeline';
 import { CacheControlExtensionOptions } from 'apollo-cache-control';
+import { ApolloServerPlugin, WithRequired } from 'apollo-server-plugin-base';
 
 export interface HttpQueryRequest {
   method: string;
@@ -167,16 +168,15 @@ export async function runHttpQuery(
 
     debug: options.debug,
 
-    plugins: options.plugins,
+    plugins: options.plugins || [],
   };
 
   return processHTTPRequest(config, request);
 }
 
 export async function processHTTPRequest<TContext>(
-  options: GraphQLOptions<TContext> & {
+  options: WithRequired<GraphQLOptions<TContext>, 'cache' | 'plugins'> & {
     context: TContext;
-    cache: NonNullable<GraphQLOptions<TContext>['cache']>;
   },
   httpRequest: HttpQueryRequest,
 ): Promise<HttpQueryResponse> {
@@ -212,33 +212,12 @@ export async function processHTTPRequest<TContext>(
       );
   }
 
-  const requestPipeline = new GraphQLRequestPipeline<TContext>(options);
-
-  // GET operations should only be queries (not mutations). We want to throw
-  // a particular HTTP error in that case.
-  requestPipeline.plugins.push({
-    requestDidStart() {
-      return {
-        didResolveOperation({ request, operation }) {
-          if (!request.http) return;
-
-          if (
-            request.http.method === 'GET' &&
-            operation.operation !== 'query'
-          ) {
-            throw new HttpQueryError(
-              405,
-              `GET supports only query operation`,
-              false,
-              {
-                Allow: 'POST',
-              },
-            );
-          }
-        },
-      };
-    },
-  });
+  // Create a local copy of `options`, based on global options, but maintaining
+  // that appropriate plugins are in place.
+  options = {
+    ...options,
+    plugins: [checkOperationPlugin, ...options.plugins],
+  };
 
   function buildRequestContext(
     request: GraphQLRequest,
@@ -281,7 +260,7 @@ export async function processHTTPRequest<TContext>(
         requests.map(async request => {
           try {
             const requestContext = buildRequestContext(request);
-            return await requestPipeline.processRequest(requestContext);
+            return await processGraphQLRequest(options, requestContext);
           } catch (error) {
             // A batch can contain another query that returns data,
             // so we don't error out the entire request with an HttpError
@@ -299,7 +278,7 @@ export async function processHTTPRequest<TContext>(
 
       try {
         const requestContext = buildRequestContext(request);
-        const response = await requestPipeline.processRequest(requestContext);
+        const response = await processGraphQLRequest(options, requestContext);
 
         // This code is run on parse/validation errors and any other error that
         // doesn't reach GraphQL execution
@@ -403,6 +382,29 @@ function parseGraphQLRequest(
     http: httpRequest,
   };
 }
+
+// GET operations should only be queries (not mutations). We want to throw
+// a particular HTTP error in that case.
+const checkOperationPlugin: ApolloServerPlugin = {
+  requestDidStart() {
+    return {
+      didResolveOperation({ request, operation }) {
+        if (!request.http) return;
+
+        if (request.http.method === 'GET' && operation.operation !== 'query') {
+          throw new HttpQueryError(
+            405,
+            `GET supports only query operation`,
+            false,
+            {
+              Allow: 'POST',
+            },
+          );
+        }
+      },
+    };
+  },
+};
 
 function serializeGraphQLResponse(
   response: GraphQLResponse,

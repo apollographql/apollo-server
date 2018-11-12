@@ -84,6 +84,9 @@ export class ApolloServer extends ApolloServerBase {
     return true;
   }
 
+  // TODO: While `express` is not Promise-aware, this should become `async` in
+  // a major release in order to align the API with other integrations (e.g.
+  // Hapi) which must be `async`.
   public applyMiddleware({
     app,
     path,
@@ -94,8 +97,24 @@ export class ApolloServer extends ApolloServerBase {
   }: ServerRegistration) {
     if (!path) path = '/graphql';
 
+    // Despite the fact that this `applyMiddleware` function is `async` in
+    // other integrations (e.g. Hapi), currently it is not for Express (@here).
+    // That should change in a future version, but that would be a breaking
+    // change right now (see comment above this method's declaration above).
+    //
+    // That said, we do need to await the `willStart` lifecycle event which
+    // can perform work prior to serving a request.  Since Express doesn't
+    // natively support Promises yet, we'll do this via a middleware that
+    // calls `next` when the `willStart` finishes.  We'll kick off the
+    // `willStart` right away, so hopefully it'll finish before the first
+    // request comes in, but we won't call `next` on this middleware until it
+    // does. (And we'll take care to surface any errors via the `.catch`-able.)
+    const promiseWillStart = this.willStart();
+    app.use(path, (_req, _res, next) => {
+      promiseWillStart.then(() => next()).catch(next);
+    });
+
     if (!disableHealthCheck) {
-      // uses same path as engine proxy, but is generally useful.
       app.use('/.well-known/apollo/server-health', (req, res) => {
         // Response follows https://tools.ietf.org/html/draft-inadarei-api-health-check-01
         res.type('application/health+json');
@@ -169,11 +188,9 @@ export class ApolloServer extends ApolloServerBase {
           return;
         }
       }
-      return graphqlExpress(this.createGraphQLServerOptions.bind(this))(
-        req,
-        res,
-        next,
-      );
+      return graphqlExpress(() => {
+        return this.createGraphQLServerOptions(req, res);
+      })(req, res, next);
     });
   }
 }

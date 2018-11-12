@@ -567,6 +567,9 @@ export function testApolloServer<AS extends ApolloServerBase>(
             engineServerDidStart = startEngineServer({
               check: (req, res) => {
                 const report = FullTracesReport.decode(req.body);
+                const header = report.header;
+                expect(header.schemaTag).toEqual('');
+                expect(header.schemaHash).toBeDefined();
                 const trace = Object.values(report.tracesPerQuery)[0].trace[0];
                 resolve(trace);
                 res.end();
@@ -597,6 +600,11 @@ export function testApolloServer<AS extends ApolloServerBase>(
               }`,
               apiKey: 'service:my-app:secret',
               maxUncompressedReportSize: 1,
+              generateClientInfo: () => ({
+                clientName: 'testing',
+                clientReferenceId: '1234',
+                clientVersion: 'v1.0.1',
+              }),
             },
             formatError,
             debug: true,
@@ -619,6 +627,10 @@ export function testApolloServer<AS extends ApolloServerBase>(
           expect(willSendResponseInExtension).toHaveBeenCalledTimes(1);
 
           const trace = await didReceiveTrace;
+
+          expect(trace.clientReferenceId).toMatch(/1234/);
+          expect(trace.clientName).toMatch(/testing/);
+          expect(trace.clientVersion).toEqual('v1.0.1');
 
           expect(trace.root!.child![0].error![0].message).toMatch(/nope/);
           expect(trace.root!.child![0].error![0].message).not.toMatch(/masked/);

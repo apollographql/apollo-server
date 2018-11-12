@@ -1,4 +1,4 @@
-import { fetch, Request, URL } from '../../../../__mocks__/apollo-server-env';
+import { fetch, Request, URL } from '__mocks__/apollo-server-env';
 
 import {
   ApolloError,
@@ -385,6 +385,27 @@ describe('RESTDataSource', () => {
       fetch.mockJSONResponseOnce(
         { foo: 'bar' },
         { 'Content-Type': 'application/json' },
+      );
+
+      const data = await dataSource.getFoo();
+
+      expect(data).toEqual({ foo: 'bar' });
+    });
+
+    it('returns data as parsed JSON when Content-Type is application/hal+json', async () => {
+      const dataSource = new class extends RESTDataSource {
+        baseURL = 'https://api.example.com';
+
+        getFoo() {
+          return this.get('foo');
+        }
+      }();
+
+      dataSource.httpCache = httpCache;
+
+      fetch.mockJSONResponseOnce(
+        { foo: 'bar' },
+        { 'Content-Type': 'application/hal+json' },
       );
 
       const data = await dataSource.getFoo();
