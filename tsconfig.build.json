@@ -14,6 +14,7 @@
     { "path": "./packages/apollo-server-cache-memcached" },
     { "path": "./packages/apollo-server-cache-redis" },
     { "path": "./packages/apollo-server-caching" },
+    { "path": "./packages/apollo-server-cloud-functions" },
     { "path": "./packages/apollo-server-cloudflare" },
     { "path": "./packages/apollo-server-core" },
     { "path": "./packages/apollo-server-errors" },
