@@ -45,6 +45,7 @@
     "apollo-server-cache-memcached": "file:packages/apollo-server-cache-memcached",
     "apollo-server-cache-redis": "file:packages/apollo-server-cache-redis",
     "apollo-server-caching": "file:packages/apollo-server-caching",
+    "apollo-server-cloud-functions": "file:packages/apollo-server-cloud-functions",
     "apollo-server-cloudflare": "file:packages/apollo-server-cloudflare",
     "apollo-server-core": "file:packages/apollo-server-core",
     "apollo-server-env": "file:packages/apollo-server-env",
