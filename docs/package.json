@@ -15,7 +15,7 @@
     "hexo-renderer-less": "0.2.0",
     "hexo-renderer-marked": "0.3.2",
     "hexo-server": "0.3.3",
-    "meteor-theme-hexo": "1.0.16"
+    "meteor-theme-hexo": "2.0.1"
   },
   "scripts": {
     "start": "npm run build && chexo apollo-hexo-config -- server",
