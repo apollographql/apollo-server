@@ -14,9 +14,16 @@ export function generateSchemaHash(schema: GraphQLSchema): string {
   // indicates that one or more of its resolvers is behaving in an asynchronous
   // manner.  This is not the expected behavior of a introspection query
   // which does not have any asynchronous resolvers.
-  if (result && typeof result.then === 'function') {
+  if (
+    result &&
+    typeof (result as PromiseLike<typeof result>).then === 'function'
+  ) {
     throw new Error(
-      'The introspection query is resolving asynchronously; execution of an introspection query is not expected to return a `Promise`.',
+      [
+        'The introspection query is resolving asynchronously; execution of an introspection query is not expected to return a `Promise`.',
+        '',
+        'Wrapped type resolvers should maintain the existing execution dynamics of the resolvers they wrap (i.e. async vs sync) or introspection types should be excluded from wrapping by checking them with `graphql/type`s, `isIntrospectionType` predicate function prior to wrapping.',
+      ].join('\n'),
     );
   }
 
