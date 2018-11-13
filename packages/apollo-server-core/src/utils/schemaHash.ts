@@ -5,8 +5,6 @@ import stableStringify from 'json-stable-stringify';
 import { GraphQLSchema } from 'graphql/type';
 import { createHash } from 'crypto';
 
-const hasOwn = Object.prototype.hasOwnProperty;
-
 export function generateSchemaHash(schema: GraphQLSchema): string {
   const introspectionQuery = getIntrospectionQuery();
   const documentAST = parse(introspectionQuery);
@@ -16,7 +14,7 @@ export function generateSchemaHash(schema: GraphQLSchema): string {
   // indicates that one or more of its resolvers is behaving in an asynchronous
   // manner.  This is not the expected behavior of a introspection query
   // which does not have any asynchronous resolvers.
-  if (hasOwn.call(result, 'then')) {
+  if (result && typeof result.then === 'function') {
     throw new Error(
       'The introspection query is resolving asynchronously; execution of an introspection query is not expected to return a `Promise`.',
     );
