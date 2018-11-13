@@ -26,6 +26,7 @@ sidebar_categories:
     - features/directives
     - features/creating-directives
     - features/test-utils
+    - features/file-uploads
   # Schema stitching:
   #   - features/schema-stitching
   #   - features/remote-schemas
@@ -37,6 +38,7 @@ sidebar_categories:
     - deployment/lambda
     - deployment/now
   Related Guides:
+    - best-practices/access-control
     - title: Monitoring
       href: https://www.apollographql.com/docs/guides/monitoring.html
     - title: Versioning
