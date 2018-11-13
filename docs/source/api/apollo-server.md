@@ -322,6 +322,10 @@ addMockFunctionsToSchema({
 
    The URL of the Engine report ingress server.
 
+*  `requestAgent`: `http.Agent | https.Agent | false`
+
+   HTTP(s) agent to be used for Apollo Engine metrics reporting.  This accepts either an [`http.Agent`](https://nodejs.org/docs/latest-v10.x/api/http.html#http_class_http_agent) or [`https.Agent`](https://nodejs.org/docs/latest-v10.x/api/https.html#https_class_https_agent) and behaves the same as the `agent` parameter to Node.js' [`http.request`](https://nodejs.org/docs/latest-v8.x/api/http.html#http_http_request_options_callback).
+
 *  `debugPrintReports`: boolean
 
    If set, prints all reports as JSON when they are sent.
@@ -365,3 +369,25 @@ addMockFunctionsToSchema({
 *  `maskErrorDetails`: boolean
 
    Set to true to remove error details from the traces sent to Apollo's servers. Defaults to false.
+
+*  `generateClientInfo`: (GraphQLRequestContext) => ClientInfo **AS 2.2**
+
+   Creates a client context(ClientInfo) based on the request pipeline's
+   context, which contains values like the request, response, cache, and
+   context. This generated client information will be provided to Apollo
+   Engine and can be used to filter metrics. Set `clientName` to identify a
+   particular client. Use `clientVersion` to specify a version for a client
+   name.  The default function will use the `clientInfo` field inside of
+   GraphQL Query `extensions`.
+
+   For advanced use cases when you already have an opaque string to identify
+   your client (e.g. an API key, x509 certificate, or team codename), use the
+   `clientReferenceId` field to add a reference to its internal identity. This
+   client reference ID will not be displayed in the UI but will be available
+   for cross-correspondence, so names and reference ids should have a one to
+   one relationship.
+
+   > [WARNING] If you specify a `clientReferenceId`, Engine will treat the
+   > `clientName` as a secondary lookup, so changing a `clientName` may result
+   > in an unwanted experience.
+

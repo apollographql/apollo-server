@@ -1,9 +1,12 @@
-import { Agent } from 'http';
+import { Agent as HttpAgent } from 'http';
+import { Agent as HttpsAgent } from 'https';
 
 export declare function fetch(
   input?: RequestInfo,
   init?: RequestInit,
 ): Promise<Response>;
+
+export type RequestAgent = HttpAgent | HttpsAgent;
 
 export type RequestInfo = Request | string;
 
@@ -58,7 +61,7 @@ export interface RequestInit {
   timeout?: number;
   compress?: boolean;
   size?: number;
-  agent?: Agent;
+  agent?: RequestAgent | false;
 
   // Cloudflare Workers accept a `cf` property to control Cloudflare features
   // See https://developers.cloudflare.com/workers/reference/cloudflare-features/

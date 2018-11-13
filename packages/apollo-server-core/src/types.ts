@@ -17,6 +17,9 @@ import {
 import { CacheControlExtensionOptions } from 'apollo-cache-control';
 import { ApolloServerPlugin } from 'apollo-server-plugin-base';
 
+import { GraphQLSchemaModule } from '@apollographql/apollo-tools';
+export { GraphQLSchemaModule };
+
 export { KeyValueCache } from 'apollo-server-caching';
 
 export type Context<T = any> = T;
@@ -24,11 +27,9 @@ export type ContextFunction<T = any> = (
   context: Context<T>,
 ) => Promise<Context<T>>;
 
-type ValueOrPromise<T> = T | Promise<T>;
-
-export type ServerOptionsFunction<HandlerArguments extends any[]> = (
-  ...args: HandlerArguments
-) => ValueOrPromise<GraphQLOptions>;
+// A plugin can return an interface that matches `ApolloServerPlugin`, or a
+// factory function that returns `ApolloServerPlugin`.
+export type PluginDefinition = ApolloServerPlugin | (() => ApolloServerPlugin);
 
 export interface SubscriptionServerOptions {
   path: string;
@@ -45,17 +46,18 @@ export interface SubscriptionServerOptions {
 // fields that are not specific to a single integration
 export interface Config
   extends Pick<
-      GraphQLOptions<Context<any>>,
-      | 'formatError'
-      | 'debug'
-      | 'rootValue'
-      | 'validationRules'
-      | 'formatResponse'
-      | 'fieldResolver'
-      | 'tracing'
-      | 'dataSources'
-      | 'cache'
-    > {
+    GraphQLOptions<Context<any>>,
+    | 'formatError'
+    | 'debug'
+    | 'rootValue'
+    | 'validationRules'
+    | 'formatResponse'
+    | 'fieldResolver'
+    | 'tracing'
+    | 'dataSources'
+    | 'cache'
+  > {
+  modules?: GraphQLSchemaModule[];
   typeDefs?: DocumentNode | Array<DocumentNode>;
   resolvers?: IResolvers;
   schema?: GraphQLSchema;
@@ -64,7 +66,7 @@ export interface Config
   introspection?: boolean;
   mocks?: boolean | IMocks;
   mockEntireSchema?: boolean;
-  engine?: boolean | EngineReportingOptions;
+  engine?: boolean | EngineReportingOptions<Context<any>>;
   extensions?: Array<() => GraphQLExtension>;
   cacheControl?: CacheControlExtensionOptions | boolean;
   plugins?: PluginDefinition[];
@@ -74,10 +76,6 @@ export interface Config
   uploads?: boolean | FileUploadOptions;
   playground?: PlaygroundConfig;
 }
-
-export type PluginDefinition =
-  | ApolloServerPlugin
-  | (new () => ApolloServerPlugin);
 
 export interface FileUploadOptions {
   //Max allowed non-file multipart form field size in bytes; enough for your queries (default: 1 MB).

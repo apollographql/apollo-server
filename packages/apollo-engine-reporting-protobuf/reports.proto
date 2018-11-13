@@ -147,11 +147,12 @@ message Trace {
 
 	Details details = 6;
 
-	// Note: engineproxy always sets these to "none". apollo-engine-reporting
-	// should allow for them to be set by the user.
+	// Note: engineproxy always sets client_name, client_version, and client_address to "none".
+	// apollo-engine-reporting allows for them to be set by the user.
 	string client_name = 7;
 	string client_version = 8;
 	string client_address = 9;
+	string client_reference_id = 23;
 
 	HTTP http = 10;
 
@@ -175,6 +176,13 @@ message Trace {
 	reserved 12, 13, 1, 2;
 }
 
+// The `service` value embedded within the header key is not guaranteed to contain an actual service,
+// and, in most cases, the service information is trusted to come from upstream processing. If the
+// service _is_ specified in this header, then it is checked to match the context that is reporting it.
+// Otherwise, the service information is deduced from the token context of the reporter and then sent
+// along via other mechanisms (in Kafka, the `ReportKafkaKey). The other information (hostname,
+// agent_version, etc.) is sent by the Apollo Engine Reporting agent, but we do not currently save that
+// information to any of our persistent storage.
 message ReportHeader {
 	string service = 3;
 	// eg "host-01.example.com"
@@ -188,6 +196,10 @@ message ReportHeader {
 	string runtime_version = 8;
 	// eg "Linux box 4.6.5-1-ec2 #1 SMP Mon Aug 1 02:31:38 PDT 2016 x86_64 GNU/Linux"
 	string uname = 9;
+	// eg "current", "prod"
+	string schema_tag = 10;
+	// The hex representation of the sha512 of the introspection response
+	string schema_hash = 11;
 }
 
 message PathErrorStats {
@@ -201,6 +213,13 @@ message ClientNameStats {
 	// (See docs/histograms.md for the histogram format.)
 	repeated int64 latency_count = 1;
 	reserved 2; // removed: repeated uint64 error_count = 2;
+	// These per-version fields were used to understand what versions contributed to this sample
+	// when we were implementing the aggregation of this information ourselves using BigTable.
+	// However, since the per-version stats don't separate out latency, it makes more sense to
+	// have stats reported with contextual information so we can have the specific breakdown we're
+	// looking for. These fields are somewhat misleading as we never actually do any per-version
+	// awareness with anything reporting in the legacy "per_client_name" stats, and instead use
+	// "query_stats_with_context" to have more contextual information.
 	map<string, uint64> requests_count_per_version = 3; // required
 	map<string, uint64> cache_hits_per_version = 4;
 	map<string, uint64> persisted_query_hits_per_version = 10;
@@ -212,6 +231,35 @@ message ClientNameStats {
 	repeated int64 public_cache_ttl_count = 8;
 	// TTL histograms for cache misses for the private cache.
 	repeated int64 private_cache_ttl_count = 9;
+}
+
+message QueryLatencyStats {
+	repeated int64 latency_count = 1;
+	uint64 request_count = 2;
+	uint64 cache_hits = 3;
+	uint64 persisted_query_hits = 4;
+	uint64 persisted_query_misses = 5;
+	repeated int64 cache_latency_count = 6;
+	PathErrorStats root_error_stats = 7;
+	uint64 requests_with_errors_count = 8;
+	repeated int64 public_cache_ttl_count = 9;
+	repeated int64 private_cache_ttl_count = 10;
+}
+
+message StatsContext {
+	string client_reference_id = 1;
+	string client_name = 2;
+	string client_version = 3;
+}
+
+message ContextualizedQueryLatencyStats {
+	QueryLatencyStats query_latency_stats = 1;
+	StatsContext context = 2;
+}
+
+message ContextualizedTypeStats {
+	StatsContext context = 1;
+	map<string, TypeStat> per_type_stat = 2;
 }
 
 message FieldStat {
@@ -231,10 +279,17 @@ message TypeStat {
 }
 
 message QueryStats {
-	map<string, ClientNameStats> per_client_name = 1; // required
-	repeated TypeStat per_type = 2; // deprecated; use per_type_stat instead
+	// Either per_client_name (for back-compat) or query_stats_with_context must be specified. If both are
+	// specified, then query_stats_with_context will be used and per_client_name will be ignored. Although
+	// the fields in ClientNameStats mention things "per-version," the information in the "per-version"
+	// fields will only ever be over the default version, the empty String: "", if arrived at via the
+	// FullTracesAggregator.
+	map<string, ClientNameStats> per_client_name = 1; // deprecated; use stats_with_context instead
+	repeated ContextualizedQueryLatencyStats query_stats_with_context = 4;
+	repeated TypeStat per_type = 2; // deprecated; use type_stats_with_context instead
 	// Key is the parent type, e.g. "User" for User.email:String!
-	map<string, TypeStat> per_type_stat = 3;
+	map<string, TypeStat> per_type_stat = 3; // deprecated; use type_stats_with_context instead
+	repeated ContextualizedTypeStats type_stats_with_context = 5;
 }
 
 // Top-level message type for the server-side traces endpoint

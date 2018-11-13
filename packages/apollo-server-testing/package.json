@@ -1,0 +1,32 @@
+{
+  "name": "apollo-server-testing",
+  "version": "2.2.1",
+  "description": "Test utils for apollo-server",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-testing"
+  },
+  "keywords": [
+    "GraphQL",
+    "Apollo",
+    "Server",
+    "Javascript"
+  ],
+  "author": "Jonas Helfer <jonas@helfer.email>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/apollographql/apollo-server/issues"
+  },
+  "homepage": "https://github.com/apollographql/apollo-server#readme",
+  "engines": {
+    "node": ">=6"
+  },
+  "dependencies": {
+    "apollo-server-core": "file:../apollo-server-core"
+  },
+  "peerDependencies": {
+    "graphql": "^0.12.0 || ^0.13.0 || ^14.0.0"
+  }
+}

@@ -44,6 +44,16 @@ import {
   PlaygroundRenderPageOptions,
 } from './playground';
 
+import { generateSchemaHash } from './utils/schemaHash';
+import {
+  processGraphQLRequest,
+  GraphQLRequestContext,
+  GraphQLRequest,
+} from './requestPipeline';
+
+import { Headers } from 'apollo-server-env';
+import { buildServiceDefinition } from '@apollographql/apollo-tools';
+
 const NoIntrospection = (context: ValidationContext) => ({
   Field(node: FieldDefinitionNode) {
     if (node.name.value === '__schema' || node.name.value === '__type') {
@@ -87,6 +97,7 @@ export class ApolloServerBase {
   private engineReportingAgent?: EngineReportingAgent;
   private engineServiceId?: string;
   private extensions: Array<() => GraphQLExtension>;
+  private schemaHash: string;
   protected plugins: ApolloServerPlugin[] = [];
 
   protected schema: GraphQLSchema;
@@ -107,6 +118,7 @@ export class ApolloServerBase {
       resolvers,
       schema,
       schemaDirectives,
+      modules,
       typeDefs,
       introspection,
       mocks,
@@ -198,17 +210,23 @@ export class ApolloServerBase {
         //default we enable them if supported by the integration
       } else if (uploads) {
         throw new Error(
-          'This implementation of ApolloServer does not support file uploads because the environmnet cannot accept multi-part forms',
+          'This implementation of ApolloServer does not support file uploads because the environment cannot accept multi-part forms',
         );
       }
     }
 
     if (schema) {
       this.schema = schema;
+    } else if (modules) {
+      const { schema, errors } = buildServiceDefinition(modules);
+      if (errors && errors.length > 0) {
+        throw new Error(errors.map(error => error.message).join('\n\n'));
+      }
+      this.schema = schema!;
     } else {
       if (!typeDefs) {
         throw Error(
-          'Apollo Server requires either an existing schema or typeDefs',
+          'Apollo Server requires either an existing schema, modules or typeDefs',
         );
       }
 
@@ -254,7 +272,7 @@ export class ApolloServerBase {
       });
     }
 
-    if (mocks || typeof mockEntireSchema !== 'undefined') {
+    if (mocks || (typeof mockEntireSchema !== 'undefined' && mocks !== false)) {
       addMockFunctionsToSchema({
         schema: this.schema,
         mocks:
@@ -265,6 +283,10 @@ export class ApolloServerBase {
           typeof mockEntireSchema === 'undefined' ? false : !mockEntireSchema,
       });
     }
+
+    // The schema hash is a string representation of the shape of the schema
+    // it is used for reporting and can be used for a cache key if needed
+    this.schemaHash = generateSchemaHash(this.schema);
 
     // Note: doRunQuery will add its own extensions if you set tracing,
     // or cacheControl.
@@ -290,6 +312,13 @@ export class ApolloServerBase {
     if (this.engineServiceId) {
       this.engineReportingAgent = new EngineReportingAgent(
         typeof engine === 'object' ? engine : Object.create(null),
+        {
+          schema: this.schema,
+          schemaHash: this.schemaHash,
+          engine: {
+            serviceID: this.engineServiceId,
+          },
+        },
       );
       // Let's keep this extension second so it wraps everything, except error formatting
       this.extensions.push(() => this.engineReportingAgent!.newExtension());
@@ -341,6 +370,7 @@ export class ApolloServerBase {
           plugin.serverWillStart &&
           plugin.serverWillStart({
             schema: this.schema,
+            schemaHash: this.schemaHash,
             engine: {
               serviceID: this.engineServiceId,
             },
@@ -438,15 +468,11 @@ export class ApolloServerBase {
       return;
     }
 
-    // FIXME: We also want to support default exports and possibly module names
-    // but this requires adjustments to typing (see PluginDefinition type), and
-    // I had to give up on that for now.
     this.plugins = plugins.map(plugin => {
       if (typeof plugin === 'function') {
-        return new plugin();
-      } else {
-        return plugin as ApolloServerPlugin;
+        return plugin();
       }
+      return plugin;
     });
   }
 
@@ -486,5 +512,33 @@ export class ApolloServerBase {
       >,
       ...this.requestOptions,
     } as GraphQLOptions;
+  }
+
+  public async executeOperation(request: GraphQLRequest) {
+    let options;
+
+    try {
+      options = await this.graphQLServerOptions();
+    } catch (e) {
+      e.message = `Invalid options provided to ApolloServer: ${e.message}`;
+      throw new Error(e);
+    }
+
+    if (typeof options.context === 'function') {
+      options.context = (options.context as () => never)();
+    }
+
+    const requestCtx: GraphQLRequestContext = {
+      request,
+      context: options.context || Object.create(null),
+      cache: options.cache!,
+      response: {
+        http: {
+          headers: new Headers(),
+        },
+      },
+    };
+
+    return processGraphQLRequest(options, requestCtx);
   }
 }
