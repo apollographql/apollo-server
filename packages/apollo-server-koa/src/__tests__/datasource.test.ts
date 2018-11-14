@@ -1,7 +1,7 @@
-import * as Koa from 'koa';
-import * as KoaRouter from 'koa-router';
+import Koa from 'koa';
+import KoaRouter from 'koa-router';
 
-import * as http from 'http';
+import http from 'http';
 
 import { RESTDataSource } from 'apollo-datasource-rest';
 

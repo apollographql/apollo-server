@@ -1,4 +1,4 @@
-import * as Boom from 'boom';
+import Boom from 'boom';
 import { Server, Request, RouteOptions } from 'hapi';
 import {
   GraphQLOptions,

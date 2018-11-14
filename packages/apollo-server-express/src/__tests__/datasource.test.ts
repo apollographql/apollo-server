@@ -1,6 +1,6 @@
-import * as express from 'express';
+import express from 'express';
 
-import * as http from 'http';
+import http from 'http';
 
 import { RESTDataSource } from 'apollo-datasource-rest';
 

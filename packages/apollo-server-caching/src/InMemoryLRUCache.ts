@@ -1,4 +1,4 @@
-import * as LRU from 'lru-cache';
+import LRU from 'lru-cache';
 import { KeyValueCache } from './KeyValueCache';
 
 export class InMemoryLRUCache implements KeyValueCache {
@@ -17,5 +17,8 @@ export class InMemoryLRUCache implements KeyValueCache {
   }
   async set(key: string, value: string) {
     this.store.set(key, value);
+  }
+  async delete(key: string) {
+    this.store.del(key);
   }
 }

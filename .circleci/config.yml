@@ -39,7 +39,15 @@ common_test_steps: &common_test_steps
           # This should cache the npm cache instead of node_modules, which is needed because
           # npm ci actually removes node_modules before installing to guarantee a clean slate.
           - ~/.npm
-    - run: npm run test:ci
+    - run:
+        command: npm run test:ci
+        environment:
+          JEST_JUNIT_OUTPUT: "reports/junit/js-test-results.xml"
+    - run: npm run coverage:upload
+    - store_test_results:
+        path: reports/junit
+    - store_artifacts:
+        path: reports/junit
 
 # Important! When adding a new job to `jobs`, make sure to define when it
 # executes by also adding it to the `workflows` section below!
@@ -47,6 +55,8 @@ jobs:
   # Platform tests, each with the same tests but different platform or version.
   # The docker tag represents the Node.js version and the full list is available
   # at https://hub.docker.com/r/circleci/node/.
+
+  # NODE: Note certain tests are currently being skipped for Node.js 6.
   Node.js 6:
     docker: [{ image: 'circleci/node:6' }]
     <<: *common_test_steps
@@ -55,6 +65,7 @@ jobs:
     docker: [{ image: 'circleci/node:8' }]
     <<: *common_test_steps
 
+  # NODE: Note certain tests are currently being skipped for Node.js 10.
   Node.js 10:
     docker: [{ image: 'circleci/node:10' }]
     <<: *common_test_steps

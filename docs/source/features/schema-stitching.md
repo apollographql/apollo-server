@@ -151,7 +151,7 @@ Combining existing root fields is a great start, but in practice we will often w
 To add this ability to navigate between types, we need to _extend_ existing types with new fields that translate between the types:
 
 ```js
-const linkTypeDefs = gql`
+const linkTypeDefs = `
   extend type User {
     chirps: [Chirp]
   }

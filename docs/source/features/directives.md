@@ -28,31 +28,61 @@ GraphQL provides several default directives: [`@deprecated`](http://facebook.git
 
 ## Using custom schema directives
 
-Import the implementation of the directive, then pass it to Apollo server via the `schemaDirectives` argument, which is an object that maps directive names to directive implementations:
+To use a custom schema directive, pass the implemented class to Apollo Server via the `schemaDirectives` argument, which is an object that maps directive names to directive implementations:
 
 ```js
-const { ApolloServer, gql } = require('apollo-server');
-const { RenameDirective } = require('rename-directive-package');
+const { ApolloServer, gql, SchemaDirectiveVisitor } = require('apollo-server');
+const { defaultFieldResolver } = require('graphql');
 
+// Create (or import) a custom schema directive
+class UpperCaseDirective extends SchemaDirectiveVisitor {
+  visitFieldDefinition(field) {
+    const { resolve = defaultFieldResolver } = field;
+    field.resolve = async function (...args) {
+      const result = await resolve.apply(this, args);
+      if (typeof result === 'string') {
+        return result.toUpperCase();
+      }
+      return result;
+    };
+  }
+}
+
+// Construct a schema, using GraphQL schema language
 const typeDefs = gql`
-type Person @rename(to: "Human") {
-  name: String!
-  currentDateMinusDateOfBirth: Int @rename(to: "age")
-}`;
+  directive @upper on FIELD_DEFINITION
 
-//Create and start your apollo server
+  type Query {
+    hello: String @upper
+  }
+`;
+
+// Provide resolver functions for your schema fields
+const resolvers = {
+  Query: {
+    hello: (root, args, context) => {
+      return 'Hello world!';
+    },
+  },
+};
+
+// Add directive to the ApolloServer constructor
 const server = new ApolloServer({
   typeDefs,
   resolvers,
   schemaDirectives: {
-    rename: RenameDirective,
-  },
-  app,
+    upper: UpperCaseDirective,
+  }
 });
 
 server.listen().then(({ url }) => {
-  console.log(`🚀 Server ready at ${url}`);
+  console.log(`🚀 Server ready at ${url}`)
 });
+
 ```
 
-The implementation of `RenameDirective` takes care of changing the resolver and modifying the schema if necessary. To learn how to implement your own schema directives, read through [this section](./creating-directives.html).
+The implementation of `UpperCaseDirective` takes care of changing the resolver and modifying the schema if necessary.
+
+## Building your own
+
+To learn how to implement your own schema directives, read [this guide](./creating-directives.html).

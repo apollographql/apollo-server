@@ -7,6 +7,7 @@ export {
   GraphQLOptions,
   GraphQLExtension,
   Config,
+  GraphQLSchemaModule,
   // Errors
   ApolloError,
   toApolloError,

@@ -5,7 +5,7 @@ description: Securing our app and serving our users
 
 <h2 id="auth-background">Background: Authentication vs. Authorization</h2>
 
-**Authentication** describes a process where an application proves the identity of a user, meaning they user they are attempting to be from the client is the user making the request on the server. In most systems, a user and server share a handshake and token that uniquely pairs them together, ensuring both sides know they are communicating with their intended target.
+**Authentication** describes a process where an application proves the identity of a user, meaning someone claiming to be a certain user through the client is the actual user that has permission to make a request to the server. In most systems, a user and server share a handshake and token that uniquely pairs them together, ensuring both sides know they are communicating with their intended target.
 
 **Authorization** defines what a user, such as admin or user, is allowed to do. Generally a server will authenticate users and provide them an authorization role that permits the user to perform a subset of all possible operations, such as read and not write.
 
@@ -17,7 +17,7 @@ GraphQL offers similar authentication and authorization mechanics as REST and ot
 
 **Operation authorization** takes advantage of the flexibility of GraphQL to provide public portions of the schema that don't require any authorization and private portions that require authentication and authorization.
 
-> Authorization within our GraphQL resolvers is a great first line of defense for securing our application. We recommened having similar authorization patterns within our data fetching models to ensure a user is authorized at every level of data fetching and updating.
+> Authorization within our GraphQL resolvers is a great first line of defense for securing our application. We recommended having similar authorization patterns within our data fetching models to ensure a user is authorized at every level of data fetching and updating.
 
 <h2>Authenticating users</h2>
 
@@ -122,7 +122,7 @@ server.listen().then(({ url }) => {
 });
 ```
 
-The benefit of doing operation authorization is that private and public data is more easily managed an enforced. Take for example a schema that allows finding `allTodos` in the app (an administratrative action), seeing any `publicTodos` which requires no authorization, and returning just a single users todos via `myTodos`. Using Apollo Server, we can easiliy build complex authorization models like so:
+The benefit of doing operation authorization is that private and public data is more easily managed an enforced. Take for example a schema that allows finding `allTodos` in the app (an administrative action), seeing any `publicTodos` which requires no authorization, and returning just a single users todos via `myTodos`. Using Apollo Server, we can easily build complex authorization models like so:
 
 ```js
 const { ForbiddenError, AuthenticationError } = require("apollo-server");
@@ -237,7 +237,7 @@ app.post(
   }),
 );
 
-//Depending on the authorization model choosen, you may include some extra middleware here before you instantiate the server
+//Depending on the authorization model chosen, you may include some extra middleware here before you instantiate the server
 
 //Create and start your apollo server
 const server = new ApolloServer({ typeDefs, resolvers, app });

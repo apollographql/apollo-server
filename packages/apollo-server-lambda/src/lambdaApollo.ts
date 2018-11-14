@@ -1,4 +1,4 @@
-import * as lambda from 'aws-lambda';
+import lambda from 'aws-lambda';
 import {
   GraphQLOptions,
   HttpQueryError,

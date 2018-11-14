@@ -1,4 +1,4 @@
-import * as express from 'express';
+import express from 'express';
 import { ApolloServer } from '../ApolloServer';
 import testSuite, {
   schema as Schema,

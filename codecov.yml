@@ -1,0 +1,16 @@
+coverage:
+  status:
+    project:
+      default:
+        threshold: 1%
+    patch:
+      default:
+        # We should raise this, but we want to evaluate how
+        # this looks in practice, first.  We can do that for now
+        # by observing the status checks on the PRs themselves.
+        target: 0%
+
+# The charts can still be viewed by clicking on the status
+# checks, but they create a fair amount of noise by default.
+comment: off
+

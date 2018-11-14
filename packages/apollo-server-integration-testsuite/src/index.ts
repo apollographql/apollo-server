@@ -12,6 +12,8 @@ import {
   GraphQLScalarType,
   introspectionQuery,
   BREAK,
+  DocumentNode,
+  getOperationAST,
 } from 'graphql';
 
 import request = require('supertest');
@@ -20,6 +22,14 @@ import { GraphQLOptions, Config } from 'apollo-server-core';
 import gql from 'graphql-tag';
 
 export * from './ApolloServer';
+
+const NODE_MAJOR_VERSION: number = parseInt(
+  process.versions.node.split('.', 1)[0],
+  10,
+);
+export function atLeastMajorNodeVersion(desiredVersion: number): boolean {
+  return NODE_MAJOR_VERSION >= desiredVersion;
+}
 
 const QueryRootType = new GraphQLObjectType({
   name: 'QueryRoot',
@@ -654,33 +664,28 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
         });
       });
 
-      it(
-        'can handle batch requests in parallel',
-        async function() {
-          const parallels = 100;
-          const delayPerReq = 40;
+      it('can handle batch requests in parallel', async function() {
+        const parallels = 100;
+        const delayPerReq = 40;
 
-          app = await createApp();
-          const expected = Array(parallels).fill({
-            data: { testStringWithDelay: 'it works' },
-          });
-          const req = request(app)
-            .post('/graphql')
-            .send(
-              Array(parallels).fill({
-                query: `query test($delay: Int!) { testStringWithDelay(delay: $delay) }`,
-                operationName: 'test',
-                variables: { delay: delayPerReq },
-              }),
-            );
-          return req.then(res => {
-            expect(res.status).toEqual(200);
-            expect(res.body).toEqual(expected);
-          });
-        },
-        // this test will fail due to timeout if running serially.
-        3000,
-      );
+        app = await createApp();
+        const expected = Array(parallels).fill({
+          data: { testStringWithDelay: 'it works' },
+        });
+        const req = request(app)
+          .post('/graphql')
+          .send(
+            Array(parallels).fill({
+              query: `query test($delay: Int!) { testStringWithDelay(delay: $delay) }`,
+              operationName: 'test',
+              variables: { delay: delayPerReq },
+            }),
+          );
+        return req.then(res => {
+          expect(res.status).toEqual(200);
+          expect(res.body).toEqual(expected);
+        });
+      }, 3000); // this test will fail due to timeout if running serially.
 
       it('clones batch context', async () => {
         app = await createApp({
@@ -839,6 +844,40 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
         return req.then(res => {
           expect(res.status).toEqual(200);
           expect(res.body.data.testRootValue).toEqual(expected);
+        });
+      });
+
+      it('passes the rootValue function result to the resolver', async () => {
+        const expectedQuery = 'query: it passes rootValue';
+        const expectedMutation = 'mutation: it passes rootValue';
+        app = await createApp({
+          graphqlOptions: {
+            schema,
+            rootValue: (documentNode: DocumentNode) => {
+              const op = getOperationAST(documentNode, undefined);
+              return op.operation === 'query'
+                ? expectedQuery
+                : expectedMutation;
+            },
+          },
+        });
+        const queryReq = request(app)
+          .post('/graphql')
+          .send({
+            query: 'query test{ testRootValue }',
+          });
+        return queryReq.then(res => {
+          expect(res.status).toEqual(200);
+          expect(res.body.data.testRootValue).toEqual(expectedQuery);
+        });
+        const mutationReq = request(app)
+          .post('/graphql')
+          .send({
+            query: 'mutation test{ testMutation(echo: "ping") }',
+          });
+        return mutationReq.then(res => {
+          expect(res.status).toEqual(200);
+          expect(res.body.data.testRootValue).toEqual(expectedMutation);
         });
       });
 
@@ -1028,6 +1067,80 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
       });
     });
 
+    describe('request pipeline plugins', () => {
+      describe('lifecycle hooks', () => {
+        it('calls serverWillStart before serving a request', async () => {
+          // We'll use this eventually-assigned function to programmatically
+          // resolve the `serverWillStart` event.
+          let resolveServerWillStart: Function;
+
+          // We'll use this mocked function to determine the order in which
+          // the events we're expecting to happen actually occur and validate
+          // those expectations in various stages of this test.
+          const fn = jest.fn();
+
+          // We want this to create the app as fast as `createApp` will allow.
+          // for integrations whose `applyMiddleware` currently returns a
+          // Promise we want them to resolve at whatever eventual pace they
+          // will so we can make sure that things are happening in order.
+          const unawaitedApp = createApp({
+            graphqlOptions: {
+              schema,
+              plugins: [
+                {
+                  serverWillStart() {
+                    fn('zero');
+                    return new Promise(resolve => {
+                      resolveServerWillStart = () => {
+                        fn('one');
+                        resolve();
+                      };
+                    });
+                  },
+                },
+              ],
+            },
+          });
+
+          // Make sure that things were called in the expected order.
+          expect(fn.mock.calls).toEqual([['zero']]);
+
+          resolveServerWillStart();
+
+          // Account for the fact that `createApp` might return a Promise,
+          // and might not, depending on the integration's implementation of
+          // createApp.  This is entirely to account for the fact that
+          // non-async implementations of `applyMiddleware` leverage a
+          // middleware as the technique for yielding to `startWillStart`
+          // hooks while their `async` counterparts simply `await` those same
+          // hooks.  In a future where we make the behavior of `applyMiddleware`
+          // the same across all integrations, this should be changed to simply
+          // `await unawaitedApp`.
+          app = 'then' in unawaitedApp ? await unawaitedApp : unawaitedApp;
+
+          // Intentionally fire off the request asynchronously, without await.
+          const res = request(app)
+            .get('/graphql')
+            .query({
+              query: 'query test{ testString }',
+            })
+            .then(res => {
+              fn('two');
+              return res;
+            });
+
+          // Ensure the request has not gone through.
+          expect(fn.mock.calls).toEqual([['zero'], ['one']]);
+
+          // Now, wait for the request to finish.
+          await res;
+
+          // Finally, ensure that the order we expected was achieved.
+          expect(fn.mock.calls).toEqual([['zero'], ['one'], ['two']]);
+        });
+      });
+    });
+
     describe('Persisted Queries', () => {
       const query = '{testString}';
       const query2 = '{ testString }';
@@ -1060,6 +1173,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
             await map.set(key, val);
           },
           get: async key => map.get(key),
+          delete: async key => map.delete(key),
         };
         app = await createApp({
           graphqlOptions: {

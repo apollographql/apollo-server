@@ -2,9 +2,9 @@
 // an express app for you instead of applyMiddleware (which you might not even
 // use with express). The dependency is unused otherwise, so don't worry if
 // you're not using express or your version doesn't quite match up.
-import * as express from 'express';
-import * as http from 'http';
-import * as net from 'net';
+import express from 'express';
+import http from 'http';
+import net from 'net';
 import {
   ApolloServer as ApolloServerBase,
   CorsOptions,
@@ -78,6 +78,8 @@ export class ApolloServer extends ApolloServerBase {
 
   // Listen takes the same arguments as http.Server.listen.
   public async listen(...opts: Array<any>): Promise<ServerInfo> {
+    await this.willStart();
+
     // This class is the easy mode for people who don't create their own express
     // object, so we have to create it.
     const app = express();
