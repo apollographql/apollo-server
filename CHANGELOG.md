@@ -2,6 +2,12 @@
 
 ### vNEXT
 
+- When `generateClientInfo` is not used to define the client name, client version and
+client reference ID, Apollo Server will now default to the values present in the HTTP headers
+of the request (`apollographql-client-name`, `apollographql-client-reference-id` and
+`apollographql-client-version` respectively).  As a last resort, when those headers are not set,
+the query extensions' `clientInfo` values will be used. [PR #1960](https://github.com/apollographql/apollo-server/pull/1960)
+
 ### v2.2.2
 
 - Fixed TypeScript 2.2 compatibility via updated `apollo-tooling` dependency. [Issue #1951](https://github.com/apollographql/apollo-server/issues/1951) [`26d6c739`](https://github.com/apollographql/apollo-server/commit/26d6c739505b3112694e641c272c748ce38ba86b)
