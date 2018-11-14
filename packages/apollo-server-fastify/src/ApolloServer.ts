@@ -11,15 +11,14 @@ import { graphqlFastify } from './fastifyApollo';
 
 export { GraphQLOptions, GraphQLExtension } from 'apollo-server-core';
 import { ApolloServerBase, GraphQLOptions } from 'apollo-server-core';
-import { IncomingMessage, OutgoingMessage, ServerResponse } from 'http';
+import { IncomingMessage, OutgoingMessage } from 'http';
 
 export class ApolloServer extends ApolloServerBase {
   async createGraphQLServerOptions(
     request: fastify.FastifyRequest<IncomingMessage>,
     reply: fastify.FastifyReply<OutgoingMessage>,
   ): Promise<GraphQLOptions> {
-    const options = await super.graphQLServerOptions({ request, reply });
-    return options;
+    return await super.graphQLServerOptions({ request, reply });
   }
 
   protected supportsSubscriptions(): boolean {
@@ -42,10 +41,10 @@ export class ApolloServer extends ApolloServerBase {
 
     await app.addHook(
       'preHandler',
-      async function(
+      function (
         this: any,
         request: any,
-        response: ServerResponse,
+        reply: FastifyReply<OutgoingMessage>,
         next: any,
       ) {
         if (request.path !== path) {
@@ -69,10 +68,11 @@ export class ApolloServer extends ApolloServerBase {
               ...this.playgroundOptions,
             };
 
-            response.setHeader('Content-Type', 'text/html');
-            return response.end(
-              renderPlaygroundPage(playgroundRenderPageOptions),
-            );
+            reply
+              .type('text/html')
+              .send(
+                renderPlaygroundPage(playgroundRenderPageOptions)
+              );
           }
         }
         return next();
@@ -89,7 +89,7 @@ export class ApolloServer extends ApolloServerBase {
           'PATCH',
         ] as fastify.HTTPMethod[],
         url: '/.well-known/apollo/server-health',
-        handler: async function(
+        handler: async function (
           request: any,
           reply: FastifyReply<OutgoingMessage>,
         ) {
