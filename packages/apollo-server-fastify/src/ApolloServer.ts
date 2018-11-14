@@ -41,7 +41,7 @@ export class ApolloServer extends ApolloServerBase {
 
     await app.addHook(
       'preHandler',
-      function (
+      function(
         this: any,
         request: any,
         reply: FastifyReply<OutgoingMessage>,
@@ -70,9 +70,7 @@ export class ApolloServer extends ApolloServerBase {
 
             reply
               .type('text/html')
-              .send(
-                renderPlaygroundPage(playgroundRenderPageOptions)
-              );
+              .send(renderPlaygroundPage(playgroundRenderPageOptions));
           }
         }
         return next();
@@ -89,7 +87,7 @@ export class ApolloServer extends ApolloServerBase {
           'PATCH',
         ] as fastify.HTTPMethod[],
         url: '/.well-known/apollo/server-health',
-        handler: async function (
+        handler: async function(
           request: any,
           reply: FastifyReply<OutgoingMessage>,
         ) {
