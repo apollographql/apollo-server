@@ -2,13 +2,28 @@
 
 ### vNEXT
 
-- Fix mocks configuration to allow disabling of mocks by using `mocks: false`, even if `mockEntireSchema` is `true` [PR #1835](https://github.com/apollographql/apollo-server/pull/1835)
-- Update `graphql-playground-html` to 1.7.8
+### v2.2.2
+
+- Fixed TypeScript 2.2 compatibility via updated `apollo-tooling` dependency. [Issue #1951](https://github.com/apollographql/apollo-server/issues/1951) [`26d6c739`](https://github.com/apollographql/apollo-server/commit/26d6c739505b3112694e641c272c748ce38ba86b)
+- Throw a more specific error when asynchronous introspection query behavior is detected. [PR #1955](https://github.com/apollographql/apollo-server/pull/1955)
+
+### v2.2.1
+
+- Added support for an array of `modules` on the `ApolloServer` constructor options.  Each element of the `modules` can point to a module which exports `typeDefs` and `resolvers`.  These modules can be used in lieu of, or in combination with, directly specifying `schema` or `typeDefs`/`resolvers` on the constructor options.  This provides greater modularity and improved organization for logic which might be limited to a specific service. [`8f6481e6`](https://github.com/apollographql/apollo-server/commit/8f6481e60f8418738f9ebbe9d5ab5e7e2ce4d319).
+- Added `resolveObject` support to query execution.  [`bb67584`](https://github.com/apollographql/apollo-server/commit/bb67584a224843a5b2509c2ebdd94e616fe6227c).
+- Fix broken `apollo-server-cloud-functions` in 2.2.0 caused by missing TypeScript project references which resulted in the package not being published to npm in compiled form. [PR #1948](https://github.com/apollographql/apollo-server/pull/1948)
+
+### v2.2.0
+
+- New request pipeline, including support for plugins which can implement lifecycle hooks at various stages of a request. [PR #1795](https://github.com/apollographql/apollo-server/pull/1795).
+- Introduce new `apollo-server-testing` utilities. [PR #1909](https://github.com/apollographql/apollo-server/pull/1909)
+- Fix mocks configuration to allow disabling of mocks by using `mocks: false`, even if `mockEntireSchema` is `true`. [PR #1835](https://github.com/apollographql/apollo-server/pull/1835)
+- Update `graphql-playground-html` to 1.7.8. [PR #1855](https://github.com/apollographql/apollo-server/pull/1855)
+- Make Azure Functions support naming consistent with original [npm package](https://www.npmjs.com/package/apollo-server-azure-functions). [PR #1948](https://github.com/apollographql/apollo-server/pull/1948)
 - Allow an optional function to resolve the `rootValue`, passing the `DocumentNode` AST to determine the value. [PR #1555](https://github.com/apollographql/apollo-server/pull/1555)
 - Follow-up on the work in [PR #1516](https://github.com/apollographql/apollo-server/pull/1516) to also fix missing insertion cursor/caret when a custom GraphQL configuration is specified which doesn't specify its own `cursorShape` property. [PR #1607](https://github.com/apollographql/apollo-server/pull/1607)
 - Azure functions support [Issue #1752](https://github.com/apollographql/apollo-server/issue/1752) [PR #1753](https://github.com/apollographql/apollo-server/pull/1753)
-- Make Azure Functions support naming consistent with original [npm package](https://www.npmjs.com/package/apollo-server-azure-functions)
-- Allow JSON parsing in `RESTDataSource` of Content Type `application/hal+json`. [PR ##185](https://github.com/apollographql/apollo-server/pull/1853)
+- Allow JSON parsing in `RESTDataSource` of Content Type `application/hal+json`. [PR #185](https://github.com/apollographql/apollo-server/pull/1853)
 - Add support for a `requestAgent` configuration parameter within the `engine` configuration.  This can be utilized when a proxy is necessary to transmit tracing and metrics data to Apollo Engine.  It accepts either an [`http.Agent`](https://nodejs.org/docs/latest-v8.x/api/http.html#http_class_http_agent) or [`https.Agent`](https://nodejs.org/docs/latest-v8.x/api/https.html#https_class_https_agent) and behaves the same as the `agent` parameter to Node.js' [`http.request`](https://nodejs.org/docs/latest-v8.x/api/http.html#http_http_request_options_callback). [PR #1879](https://github.com/apollographql/apollo-server/pull/1879)
 
 ### v2.1.0
