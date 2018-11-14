@@ -25,10 +25,10 @@ the query extensions' `clientInfo` values will be used. [PR #1960](https://githu
 - Introduce new `apollo-server-testing` utilities. [PR #1909](https://github.com/apollographql/apollo-server/pull/1909)
 - Fix mocks configuration to allow disabling of mocks by using `mocks: false`, even if `mockEntireSchema` is `true`. [PR #1835](https://github.com/apollographql/apollo-server/pull/1835)
 - Update `graphql-playground-html` to 1.7.8. [PR #1855](https://github.com/apollographql/apollo-server/pull/1855)
-- Make Azure Functions support naming consistent with original [npm package](https://www.npmjs.com/package/apollo-server-azure-functions). [PR #1948](https://github.com/apollographql/apollo-server/pull/1948)
+- Bring back Azure functions support [Issue #1752](https://github.com/apollographql/apollo-server/issue/1752) [PR #1753](https://github.com/apollographql/apollo-server/pull/1753)
 - Allow an optional function to resolve the `rootValue`, passing the `DocumentNode` AST to determine the value. [PR #1555](https://github.com/apollographql/apollo-server/pull/1555)
 - Follow-up on the work in [PR #1516](https://github.com/apollographql/apollo-server/pull/1516) to also fix missing insertion cursor/caret when a custom GraphQL configuration is specified which doesn't specify its own `cursorShape` property. [PR #1607](https://github.com/apollographql/apollo-server/pull/1607)
-- Azure functions support [Issue #1752](https://github.com/apollographql/apollo-server/issue/1752) [PR #1753](https://github.com/apollographql/apollo-server/pull/1753)
+- Azure functions support [Issue #1752](https://github.com/apollographql/apollo-server/issue/1752) [PR #1753](https://github.com/apollographql/apollo-server/pull/1753) [PR #1948](https://github.com/apollographql/apollo-server/pull/1948)
 - Allow JSON parsing in `RESTDataSource` of Content Type `application/hal+json`. [PR #185](https://github.com/apollographql/apollo-server/pull/1853)
 - Add support for a `requestAgent` configuration parameter within the `engine` configuration.  This can be utilized when a proxy is necessary to transmit tracing and metrics data to Apollo Engine.  It accepts either an [`http.Agent`](https://nodejs.org/docs/latest-v8.x/api/http.html#http_class_http_agent) or [`https.Agent`](https://nodejs.org/docs/latest-v8.x/api/https.html#https_class_https_agent) and behaves the same as the `agent` parameter to Node.js' [`http.request`](https://nodejs.org/docs/latest-v8.x/api/http.html#http_http_request_options_callback). [PR #1879](https://github.com/apollographql/apollo-server/pull/1879)
 
