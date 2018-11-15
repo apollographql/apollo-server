@@ -181,6 +181,47 @@ describe('apollo-server-express', () => {
       });
     });
 
+    it('can allow custom path for playground and GraphQL API', async () => {
+      const { url: uri, playgroundUrl } = await createServer(
+        {
+          typeDefs,
+          resolvers,
+        },
+        {
+          path: '/gq',
+          playgroundPath: '/playground',
+        },
+      );
+      expect(uri).not.toEqual(playgroundUrl);
+
+      const apolloFetch = createApolloFetch({ uri });
+      const result = await apolloFetch({ query: '{hello}' });
+
+      expect(result.data).toEqual({ hello: 'hi' });
+
+      return new Promise<http.Server>((resolve, reject) => {
+        request(
+          {
+            url: playgroundUrl,
+            method: 'GET',
+            headers: {
+              accept:
+                'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+            },
+          },
+          (error, response, body) => {
+            if (error) {
+              reject(error);
+            } else {
+              expect(body).toMatch('GraphQLPlayground');
+              expect(response.statusCode).toEqual(200);
+              resolve();
+            }
+          },
+        );
+      });
+    });
+
     const playgroundPartialOptionsTest = async () => {
       const defaultQuery = 'query { foo { bar } }';
       const endpoint = '/fumanchupacabra';

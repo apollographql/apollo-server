@@ -65,6 +65,13 @@ export function createServerInfo<AS extends ApolloServerBase>(
     pathname: server.graphqlPath,
   });
 
+  serverInfo.playgroundUrl = require('url').format({
+    protocol: 'http',
+    hostname: hostForUrl,
+    port: serverInfo.port,
+    pathname: server.playgroundPath,
+  });
+
   return serverInfo;
 }
 
@@ -104,6 +111,7 @@ export interface ServerInfo<AS extends ApolloServerBase> {
   address: string;
   family: string;
   url: string;
+  playgroundUrl: string;
   port: number | string;
   server: AS;
   httpServer: http.Server;

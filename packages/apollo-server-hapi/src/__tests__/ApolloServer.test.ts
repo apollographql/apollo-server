@@ -74,7 +74,7 @@ const port = 5555;
           typeDefs,
           resolvers,
         });
-        app = new Server({ port });
+        app = new Server({ port, host: 'localhost' });
 
         await server.applyMiddleware({ app });
         await app.start();
@@ -108,7 +108,7 @@ const port = 5555;
           resolvers,
           introspection: false,
         });
-        app = new Server({ port });
+        app = new Server({ port, host: 'localhost' });
 
         await server.applyMiddleware({ app });
         await app.start();
@@ -156,7 +156,7 @@ const port = 5555;
           typeDefs,
           resolvers,
         });
-        app = new Server({ port });
+        app = new Server({ port, host: 'localhost' });
 
         await server.applyMiddleware({ app });
         await app.start();
@@ -188,14 +188,58 @@ const port = 5555;
         });
       });
 
+      it('can allow custom path for playground and GraphQL API', async () => {
+        server = new ApolloServer({
+          typeDefs,
+          resolvers,
+        });
+        app = new Server({ port, host: 'localhost' });
+
+        await server.applyMiddleware({
+          app,
+          path: '/gq',
+          playgroundPath: '/playground',
+        });
+        await app.start();
+
+        httpServer = app.listener;
+        const uri = app.info.uri + '/gq';
+        const playgroundUrl = app.info.uri + '/playground';
+
+        const apolloFetch = createApolloFetch({ uri });
+        const result = await apolloFetch({ query: '{hello}' });
+
+        expect(result.data).toEqual({ hello: 'hi' });
+
+        return new Promise<http.Server>((resolve, reject) => {
+          request(
+            {
+              url: playgroundUrl,
+              method: 'GET',
+              headers: {
+                accept:
+                  'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+              },
+            },
+            (error, response, body) => {
+              if (error) {
+                reject(error);
+              } else {
+                expect(body).toMatch('GraphQLPlayground');
+                expect(response.statusCode).toEqual(200);
+                resolve();
+              }
+            },
+          );
+        });
+      });
+
       it('accepts cors configuration', async () => {
         server = new ApolloServer({
           typeDefs,
           resolvers,
         });
-        app = new Server({
-          port,
-        });
+        app = new Server({ port, host: 'localhost' });
 
         await server.applyMiddleware({
           app,
@@ -233,9 +277,7 @@ const port = 5555;
           typeDefs,
           resolvers,
         });
-        app = new Server({
-          port,
-        });
+        app = new Server({ port, host: 'localhost' });
 
         await server.applyMiddleware({
           app,
@@ -284,7 +326,7 @@ const port = 5555;
           resolvers,
           context,
         });
-        app = new Server({ port });
+        app = new Server({ port, host: 'localhost' });
 
         await server.applyMiddleware({ app });
         await app.start();
@@ -309,7 +351,7 @@ const port = 5555;
             typeDefs,
             resolvers,
           });
-          app = new Server({ port });
+          app = new Server({ port, host: 'localhost' });
 
           await server.applyMiddleware({ app });
           await app.start();
@@ -341,7 +383,7 @@ const port = 5555;
             typeDefs,
             resolvers,
           });
-          app = new Server({ port });
+          app = new Server({ port, host: 'localhost' });
 
           await server.applyMiddleware({
             app,
@@ -379,7 +421,7 @@ const port = 5555;
             resolvers,
           });
 
-          app = new Server({ port });
+          app = new Server({ port, host: 'localhost' });
 
           await server.applyMiddleware({
             app,
@@ -519,7 +561,7 @@ const port = 5555;
             },
           });
 
-          app = new Server({ port });
+          app = new Server({ port, host: 'localhost' });
 
           await server.applyMiddleware({
             app,
@@ -564,7 +606,7 @@ const port = 5555;
             },
           });
 
-          app = new Server({ port });
+          app = new Server({ port, host: 'localhost' });
 
           await server.applyMiddleware({
             app,
@@ -611,7 +653,7 @@ const port = 5555;
             },
           });
 
-          app = new Server({ port });
+          app = new Server({ port, host: 'localhost' });
 
           await server.applyMiddleware({
             app,
@@ -655,7 +697,7 @@ const port = 5555;
             },
           });
 
-          app = new Server({ port });
+          app = new Server({ port, host: 'localhost' });
 
           await server.applyMiddleware({
             app,
