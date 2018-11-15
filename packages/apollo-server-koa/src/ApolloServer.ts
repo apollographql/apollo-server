@@ -20,6 +20,7 @@ import { GraphQLOptions, FileUploadOptions } from 'apollo-server-core';
 export interface ServerRegistration {
   app: Koa;
   path?: string;
+  playgroundPath?: string;
   cors?: corsMiddleware.Options | boolean;
   bodyParserConfig?: bodyParser.Options | boolean;
   onHealthCheck?: (ctx: Koa.Context) => Promise<any>;
@@ -81,12 +82,14 @@ export class ApolloServer extends ApolloServerBase {
   public applyMiddleware({
     app,
     path,
+    playgroundPath,
     cors,
     bodyParserConfig,
     disableHealthCheck,
     onHealthCheck,
   }: ServerRegistration) {
     if (!path) path = '/graphql';
+    if (!playgroundPath) playgroundPath = path;
 
     // Despite the fact that this `applyMiddleware` function is `async` in
     // other integrations (e.g. Hapi), currently it is not for Koa (@here).
@@ -139,6 +142,7 @@ export class ApolloServer extends ApolloServerBase {
     }
 
     this.graphqlPath = path;
+    this.playgroundPath = playgroundPath;
 
     if (cors === true) {
       app.use(middlewareFromPath(path, corsMiddleware()));
@@ -156,9 +160,23 @@ export class ApolloServer extends ApolloServerBase {
       app.use(middlewareFromPath(path, uploadsMiddleware));
     }
 
+    const playgroundRenderPageOptions:
+      | PlaygroundRenderPageOptions
+      | undefined = this.playgroundOptions
+      ? {
+          endpoint: path,
+          subscriptionEndpoint: this.subscriptionsPath,
+          ...this.playgroundOptions,
+        }
+      : undefined;
+
     app.use(
       middlewareFromPath(path, (ctx: Koa.Context, next: Function) => {
-        if (this.playgroundOptions && ctx.request.method === 'GET') {
+        if (
+          playgroundRenderPageOptions &&
+          path === playgroundPath &&
+          ctx.request.method === 'GET'
+        ) {
           // perform more expensive content-type check only if necessary
           const accept = accepts(ctx.req);
           const types = accept.types() as string[];
@@ -168,11 +186,6 @@ export class ApolloServer extends ApolloServerBase {
             ) === 'text/html';
 
           if (prefersHTML) {
-            const playgroundRenderPageOptions: PlaygroundRenderPageOptions = {
-              endpoint: path,
-              subscriptionEndpoint: this.subscriptionsPath,
-              ...this.playgroundOptions,
-            };
             ctx.set('Content-Type', 'text/html');
             const playground = renderPlaygroundPage(
               playgroundRenderPageOptions,
@@ -186,6 +199,16 @@ export class ApolloServer extends ApolloServerBase {
         })(ctx, next);
       }),
     );
+
+    if (playgroundRenderPageOptions && path !== playgroundPath) {
+      app.use(
+        middlewareFromPath(playgroundPath, (ctx: Koa.Context) => {
+          ctx.set('Content-Type', 'text/html');
+          const playground = renderPlaygroundPage(playgroundRenderPageOptions);
+          ctx.body = playground;
+        }),
+      );
+    }
   }
 }
 
