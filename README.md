@@ -152,7 +152,7 @@ const server = new ApolloServer({ typeDefs, resolvers });
 const app = connect();
 const path = '/graphql';
 
-server.use(query());
+app.use(query());
 server.applyMiddleware({ app, path });
 
 const port = 4000;
