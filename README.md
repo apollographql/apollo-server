@@ -235,6 +235,29 @@ new ApolloServer({
 })
 ```
 
+## Fastify
+
+```js
+const { ApolloServer, gql } = require('apollo-server-fastify');
+const fastify = require('fastify');
+
+async function StartServer() {
+  const server = new ApolloServer({ typeDefs, resolvers });
+
+  const app = fastify();
+
+  await server.applyMiddleware({
+    app,
+  });
+
+  await server.installSubscriptionHandlers(app.server);
+
+  await app.listen(3000);
+}
+
+StartServer().catch(error => console.log(error));
+```
+
 ### AWS Lambda
 
 Apollo Server can be run on Lambda and deployed with AWS Serverless Application Model (SAM). It requires an API Gateway with Lambda Proxy Integration.
