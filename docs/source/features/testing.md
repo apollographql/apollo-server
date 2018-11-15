@@ -1,6 +1,6 @@
 ---
-title: Test Utilities
-description: Making apollo-server easier to test
+title: Integration testing
+description: Utilities for testing Apollo Server
 ---
 
 Testing `apollo-server` can be done in many ways. The `apollo-server-testing` package provides tooling to make testing easier and accessible to users of all of the `apollo-server` integrations.
