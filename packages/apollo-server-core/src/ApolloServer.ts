@@ -91,6 +91,7 @@ function getEngineServiceId(engine: Config['engine']): string | undefined {
 export class ApolloServerBase {
   public subscriptionsPath?: string;
   public graphqlPath: string = '/graphql';
+  public playgroundPath: string = this.graphqlPath;
   public requestOptions: Partial<GraphQLOptions<any>> = Object.create(null);
 
   private context?: Context | ContextFunction;
