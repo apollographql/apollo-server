@@ -77,72 +77,90 @@ A possible query for these result could appear as follows. This query demonstrat
 
 ## Interface type
 
-An `Interface` type provides the ability to describe fields that are shared across different types. It is best used to show that all types implementing an interface always contain the interface's fields. In other words, it is the semantic opposite of a union. For example, in this example `Vehicle` interface type is used by members `Airplane` and `Car`:
+Interfaces are a powerful way to build and use GraphQL schemas through the use of _abstract types_. Abstract types can't be used directly in schema, but can be used as building blocks for creating explicit types.
 
+Consider an example where different types of books share a common set of attributes, such as _text books_ and _coloring books_. A simple foundation for these books might be represented as the following `interface`:
+
+```graphql
+interface Book {
+  title: String
+  author: Author
+}
 ```
-interface Vehicle {
-  maxSpeed: Int
+
+We won't be able to directly use this interface to query for a book, but we can use it to implement concrete types. Imagine a screen within an application which needs to display a feed of all books, without regard to their (more specific) type. To create such functionality, we could define the following:
+
+```graphql
+type TextBook implements Book {
+  title: String
+  author: Author
+  classes: [Class]
 }
 
-type Airplane implements Vehicle {
-  maxSpeed: Int
-  wingspan: Int
-}
-
-type Car implements Vehicle {
-  maxSpeed: Int
-  licensePlate: String
+type ColoringBook implements Book {
+  title: String
+  author: Author
+  colors: [Color]
 }
 
 type Query {
-  vehicle: Vehicle
+  schoolBooks: [Book]
 }
 ```
 
-Similarly to the `Union`, `Interface` requires an extra `__resolveType` field in the resolver map.
+In this example, we've used the `Book` interface as the foundation for the `TextBook` and `ColoringBook` types. Then, a `schoolBooks` field simply expresses that it returns a list of books (i.e. `[Book]`).
+
+Similarly to the `Union`, `Interface` requires an extra `__resolveType` field in the resolver map to determine which type the interface should resolve to.
 
 ```js
 const resolvers = {
-  Vehicle: {
-    __resolveType(obj, context, info){
-      if(obj.wingspan){
-        return 'Airplane';
+  Book: {
+    __resolveType(book, context, info){
+      if(book.classes){
+        return 'TextBook';
       }
 
-      if(obj.licensePlate){
-        return 'Car';
+      if(book.colors){
+        return 'ColoringBook';
       }
 
       return null;
     },
   },
   Query: {
-    vehicle: () => { ... }
+    schoolBooks: () => { ... }
   },
 };
-
-const server = new ApolloServer({
-  typeDefs,
-  resolvers,
-});
-
-server.listen().then(({ url }) => {
-  console.log(`🚀 Server ready at ${url}`)
-});
 ```
 
-A possible query could appear as follows. Notice that `maxSpeed` is shared, so it can be included directly:
+Implementing the book feed example is now simplified since we've removed the need to worry about what kind of `Book`s will be returned. A query against this schema, which could return _text books_ and _coloring_ books, might look like:
 
 ```graphql
-{
-  vehicle {
-    maxSpeed
+query GetBooks {
+  schoolBooks {
+    title
+    author
+  }
+}
+```
 
-    ... on Car {
-			licensePlate
+This is really helpful for feeds of common content, user role systems, and more!
+
+Furthermore, if we need to return fields which are only provided by either `TextBook`s or `ColoringBook`s (not both) we can request fragments from the abstract types in the query. Those fragments will be filled in only as appropriate; in the case of the example, only coloring books will be returned with `colors`, and only textbooks will have `classes`:
+
+```graphql
+query GetBooks {
+  schoolBooks {
+    title
+    ... on TextBook {
+      classes {
+        name
+      }
     }
-    ... on Airplane {
-      wingspan
+    ... on ColoringBook {
+      colors {
+        name
+      }
     }
   }
 }
