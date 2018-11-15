@@ -3,7 +3,7 @@ title: Understanding schema concepts
 sidebar_title: Writing a schema
 ---
 
-> Estimated time: About 8 minutes.
+> Estimated time: About 10 minutes.
 
 A GraphQL schema is at the center of any GraphQL server implementation and describes the functionality available to the clients which connect to it.
 
@@ -258,7 +258,7 @@ If you use the conventions above, you won't need to have any extra logic in your
 
 <h2 id="design-for-client">Design for client needs</h2>
 
-GraphQL schemas are at their best when they are designed around the needs of client applications.  When a team is building their first GraphQL schema, they might be tempted to create literal mappings on top of existing database collections or tables using CRUD-like root fields. While this literal database-to-schema mapping may be a fast way to get up and running, we strongly suggest avoiding it and instead building the schema around based on how the GraphQL API will be used by the front-end.
+GraphQL schemas are at their best when they are designed around the needs of client applications.  When a team is building their first GraphQL schema, they might be tempted to create literal mappings on top of existing database collections or tables using CRUD-like root fields. While this literal database-to-schema mapping may be a fast way to get up and running, we strongly suggest avoiding it and instead building the schema based on how the GraphQL API will be used by the front-end.
 
 If a database has fields or relationships that the client doesn't yet need, don’t include them in the schema up front. Adding fields later is much easier than removing them, so add fields to your API as your clients need them rather than exposing all of the possible data up front. This is especially useful because GraphQL allows you to create associations between your data that don't exist in the underlying data, enabling you to move complex data manipulation logic out of your clients.
 
@@ -357,7 +357,7 @@ While it's not mandatory to return the object which has been updated, the inclus
 
 As with queries, it's best to design mutations with the client in mind and in response to a user's action.  In simple cases, this might only result in changes to a single document, however in many cases there will be updates to multiple documents from different resources, for example, a `likePost` mutation might update the total likes for a user as well as their post.
 
-In order to provide a consistent shape of response data, we recommend adopting a pattern which returns a standardized response format which supports returning any number of documents from each resource which was modified.  We'll outline a recommended patterns for this in the next section.
+In order to provide a consistent shape of response data, we recommend adopting a pattern which returns a standardized response format which supports returning any number of documents from each resource which was modified.  We'll outline a recommended pattern for this in the next section.
 
 <h3 id="mutation-responses">Responses</h3>
 
