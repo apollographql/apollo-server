@@ -49,6 +49,7 @@ export class ApolloServer extends ApolloServerBase {
     app,
     cors,
     path,
+    playgroundPath,
     route,
     disableHealthCheck,
     onHealthCheck,
@@ -56,6 +57,17 @@ export class ApolloServer extends ApolloServerBase {
     await this.willStart();
 
     if (!path) path = '/graphql';
+    if (!playgroundPath) playgroundPath = path;
+
+    const playgroundRenderPageOptions:
+      | PlaygroundRenderPageOptions
+      | undefined = this.playgroundOptions
+      ? {
+          endpoint: path,
+          subscriptionEndpoint: this.subscriptionsPath,
+          ...this.playgroundOptions,
+        }
+      : undefined;
 
     await app.ext({
       type: 'onRequest',
@@ -68,7 +80,11 @@ export class ApolloServer extends ApolloServerBase {
           await handleFileUploads(this.uploadsConfig)(request);
         }
 
-        if (this.playgroundOptions && request.method === 'get') {
+        if (
+          playgroundRenderPageOptions &&
+          path === playgroundPath &&
+          request.method === 'get'
+        ) {
           // perform more expensive content-type check only if necessary
           const accept = parseAll(request.headers);
           const types = accept.mediaTypes as string[];
@@ -78,13 +94,6 @@ export class ApolloServer extends ApolloServerBase {
             ) === 'text/html';
 
           if (prefersHTML) {
-            const playgroundRenderPageOptions: PlaygroundRenderPageOptions = {
-              endpoint: path,
-              subscriptionEndpoint: this.subscriptionsPath,
-              version: this.playgroundVersion,
-              ...this.playgroundOptions,
-            };
-
             return h
               .response(renderPlaygroundPage(playgroundRenderPageOptions))
               .type('text/html')
@@ -94,6 +103,18 @@ export class ApolloServer extends ApolloServerBase {
         return h.continue;
       }.bind(this),
     });
+
+    if (playgroundRenderPageOptions && path !== playgroundPath) {
+      await app.route({
+        method: '*',
+        path: playgroundPath,
+        handler: async function(_request, h) {
+          return h
+            .response(renderPlaygroundPage(playgroundRenderPageOptions))
+            .type('text/html');
+        },
+      });
+    }
 
     if (!disableHealthCheck) {
       await app.route({
@@ -135,12 +156,14 @@ export class ApolloServer extends ApolloServerBase {
     });
 
     this.graphqlPath = path;
+    this.playgroundPath = playgroundPath;
   }
 }
 
 export interface ServerRegistration {
   app?: hapi.Server;
   path?: string;
+  playgroundPath?: string;
   cors?: boolean | hapi.RouteOptionsCors;
   route?: hapi.RouteOptions;
   onHealthCheck?: (request: hapi.Request) => Promise<any>;
