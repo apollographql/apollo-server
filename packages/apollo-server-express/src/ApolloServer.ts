@@ -29,6 +29,7 @@ export interface ServerRegistration {
   // users).
   app: express.Application;
   path?: string;
+  playgroundPath?: string;
   cors?: corsMiddleware.CorsOptions | boolean;
   bodyParserConfig?: OptionsJson | boolean;
   onHealthCheck?: (req: express.Request) => Promise<any>;
@@ -90,12 +91,14 @@ export class ApolloServer extends ApolloServerBase {
   public applyMiddleware({
     app,
     path,
+    playgroundPath,
     cors,
     bodyParserConfig,
     disableHealthCheck,
     onHealthCheck,
   }: ServerRegistration) {
     if (!path) path = '/graphql';
+    if (!playgroundPath) playgroundPath = path;
 
     // Despite the fact that this `applyMiddleware` function is `async` in
     // other integrations (e.g. Hapi), currently it is not for Express (@here).
@@ -140,6 +143,7 @@ export class ApolloServer extends ApolloServerBase {
 
     // XXX multiple paths?
     this.graphqlPath = path;
+    this.playgroundPath = playgroundPath;
 
     // Note that we don't just pass all of these handlers to a single app.use call
     // for 'connect' compatibility.
@@ -159,12 +163,26 @@ export class ApolloServer extends ApolloServerBase {
       app.use(path, uploadsMiddleware);
     }
 
+    const playgroundRenderPageOptions:
+      | PlaygroundRenderPageOptions
+      | undefined = this.playgroundOptions
+      ? {
+          endpoint: path,
+          subscriptionEndpoint: this.subscriptionsPath,
+          ...this.playgroundOptions,
+        }
+      : undefined;
+
     // Note: if you enable playground in production and expect to be able to see your
     // schema, you'll need to manually specify `introspection: true` in the
     // ApolloServer constructor; by default, the introspection query is only
     // enabled in dev.
     app.use(path, (req, res, next) => {
-      if (this.playgroundOptions && req.method === 'GET') {
+      if (
+        playgroundRenderPageOptions &&
+        path === playgroundPath &&
+        req.method === 'GET'
+      ) {
         // perform more expensive content-type check only if necessary
         // XXX We could potentially move this logic into the GuiOptions lambda,
         // but I don't think it needs any overriding
@@ -176,11 +194,6 @@ export class ApolloServer extends ApolloServerBase {
           ) === 'text/html';
 
         if (prefersHTML) {
-          const playgroundRenderPageOptions: PlaygroundRenderPageOptions = {
-            endpoint: path,
-            subscriptionEndpoint: this.subscriptionsPath,
-            ...this.playgroundOptions,
-          };
           res.setHeader('Content-Type', 'text/html');
           const playground = renderPlaygroundPage(playgroundRenderPageOptions);
           res.write(playground);
@@ -192,6 +205,15 @@ export class ApolloServer extends ApolloServerBase {
         return this.createGraphQLServerOptions(req, res);
       })(req, res, next);
     });
+
+    if (playgroundRenderPageOptions && path !== playgroundPath) {
+      app.use(playgroundPath, (_req, res) => {
+        res.setHeader('Content-Type', 'text/html');
+        const playground = renderPlaygroundPage(playgroundRenderPageOptions);
+        res.write(playground);
+        res.end();
+      });
+    }
   }
 }
 
