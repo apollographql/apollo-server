@@ -16,11 +16,5 @@
         "version-2"
       ]
     }
-  ],
-  "packageRules": [
-    {
-      "packageNames": ["lint-staged"],
-      "allowedVersions": "<7"
-    }
   ]
 }
