@@ -60,7 +60,7 @@ const typeDefs = gql`
 // Provide resolver functions for your schema fields
 const resolvers = {
   Query: {
-    hello: (root, args, context) => {
+    hello: (parent, args, context) => {
       return 'Hello world!';
     },
   },

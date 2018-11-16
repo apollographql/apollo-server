@@ -99,13 +99,13 @@ const queryType = new GraphQLObjectType({
     },
     testContextValue: {
       type: GraphQLString,
-      resolve(_root, _args, context) {
+      resolve(_parent, _args, context) {
         return context.s + ' works';
       },
     },
     testArgumentValue: {
       type: GraphQLInt,
-      resolve(_root, args) {
+      resolve(_parent, args) {
         return args['base'] + 5;
       },
       args: {
@@ -388,7 +388,7 @@ describe('runQuery', () => {
             fields: {
               testString: {
                 type: GraphQLString,
-                resolve(_root, _args, context) {
+                resolve(_parent, _args, context) {
                   expect(context._extensionStack).toBeInstanceOf(
                     GraphQLExtensionStack,
                   );

@@ -29,7 +29,7 @@ const typeDefs = gql`
 
 const resolvers = {
   Query: {
-    posts: (root, { authorId }, { Post }) => Post.findByAuthorId(authorId),
+    posts: (parent, { authorId }, { Post }) => Post.findByAuthorId(authorId),
   },
 };
 
