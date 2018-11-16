@@ -1,12 +1,5 @@
 {
-  "extends": [":pinOnlyDevDependencies"],
-  "semanticCommits": true,
-  "timezone": "America/Los_Angeles",
-  "schedule": ["after 6pm and before 8am on every weekday"],
-  "rebaseStalePrs": true,
-  "prCreation": "not-pending",
-  "automerge": "minor",
-  "labels": ["tooling", "dependencies"],
+  "extends": ["apollo-open-source"],
   "pathRules": [
     {
       "paths": ["docs/package.json"],
