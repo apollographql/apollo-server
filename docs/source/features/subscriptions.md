@@ -73,7 +73,7 @@ const server = new ApolloServer({
   context: async ({ req, connection }) => {
     if (connection) {
       // check connection for metadata
-      return {};
+      return connection.context;
     } else {
       // check from req
       const token = req.headers.authorization || "";
@@ -83,6 +83,8 @@ const server = new ApolloServer({
   },
 });
 ```
+
+> `connection` contains various metadata, found [here](https://github.com/apollographql/subscriptions-transport-ws/blob/88970eaf6d2e3f68f98696de00631acf4062c088/src/server.ts#L312-L321). 
 
 As you can see Apollo Server 2.0 allows realtime data without invasive changes to existing code.
 For a full working example please have a look to [this repo](https://github.com/daniele-zurico/apollo2-subscriptions-how-to) provided by [Daniele Zurico](https://github.com/daniele-zurico/apollo2-subscriptions-how-to)
