@@ -31,7 +31,7 @@ const typeDefs = gql`
 
 const resolvers = {
   Query: {
-    sayHello(root, args, context) {
+    sayHello(parent, args, context) {
       return 'Hello World!';
     },
   },
@@ -82,7 +82,7 @@ const typeDefs = gql`
 
 const resolvers = {
   Query: {
-    sayHello(root, args, context) {
+    sayHello(parent, args, context) {
       return 'Hello World!';
     },
   },
@@ -132,7 +132,7 @@ const typeDefs = gql`
 
 const resolvers = {
   Query: {
-    sayHello(root, args, context) {
+    sayHello(parent, args, context) {
       return 'Hello World!';
     },
   },
@@ -184,7 +184,7 @@ const typeDefs = gql`
 
 const resolvers = {
   Query: {
-    sayHello(root, args, context) {
+    sayHello(parent, args, context) {
       return 'Hello World!';
     },
   },
