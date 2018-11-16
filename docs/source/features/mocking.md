@@ -138,7 +138,7 @@ The mock functions on fields are actually just GraphQL resolvers, which can use 
 const mocks = {
   Person: () => ({
     // the number of friends in the list now depends on numPages
-    paginatedFriends: (root, args, context, info) => new MockList(args.numPages * PAGE_SIZE),
+    paginatedFriends: (parent, args, context, info) => new MockList(args.numPages * PAGE_SIZE),
   }),
 };
 ```

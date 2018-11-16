@@ -279,7 +279,7 @@ const typeDefs = gql`
 const resolvers = {
   Query: {
     favoriteColor: () => 'RED',
-    avatar: (root, args) => {
+    avatar: (parent, args) => {
       // args.borderColor is 'RED', 'GREEN', or 'BLUE'
     },
   }
@@ -317,7 +317,7 @@ const resolvers = {
   },
   Query: {
     favoriteColor: () => '#f00',
-    avatar: (root, args) => {
+    avatar: (parent, args) => {
       // args.borderColor is '#f00', '#0f0', or '#00f'
     },
   }
