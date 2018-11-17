@@ -86,6 +86,7 @@ Often times, Apollo Server needs to be run with a particular integration. To sta
 - `apollo-server-express`
 - `apollo-server-koa`
 - `apollo-server-hapi`
+- `apollo-server-fastify`
 - `apollo-server-lambda`
 - `apollo-server-azure-functions`
 - `apollo-server-cloud-functions`
@@ -239,23 +240,19 @@ new ApolloServer({
 
 ```js
 const { ApolloServer, gql } = require('apollo-server-fastify');
-const fastify = require('fastify');
+const { typeDefs, resolvers } = require('./module');
 
-async function StartServer() {
-  const server = new ApolloServer({ typeDefs, resolvers });
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+});
 
-  const app = fastify();
+const app = require('fastify')();
 
-  await server.applyMiddleware({
-    app,
-  });
-
-  await server.installSubscriptionHandlers(app.server);
-
+(async function () { 
+  app.register(await server.createHandler());
   await app.listen(3000);
-}
-
-StartServer().catch(error => console.log(error));
+})();
 ```
 
 ### AWS Lambda

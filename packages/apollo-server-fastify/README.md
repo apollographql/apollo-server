@@ -15,23 +15,19 @@ npm install apollo-server-fastify
 
 ```js
 const { ApolloServer, gql } = require('apollo-server-fastify');
-const fastify = require('fastify');
+const { typeDefs, resolvers } = require('./module');
 
-async function StartServer() {
-  const server = new ApolloServer({ typeDefs, resolvers });
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+});
 
-  const app = fastify();
+const app = require('fastify')();
 
-  await server.createHandler({
-    app,
-  });
-
-  await server.installSubscriptionHandlers(app.server);
-
+(async function () { 
+  app.register(await server.createHandler());
   await app.listen(3000);
-}
-
-StartServer().catch(error => console.log(error));
+})();
 ```
 
 ## Principles
