@@ -14,10 +14,9 @@ async function createApp(options: CreateAppOptions = {}) {
     (options.graphqlOptions as Config) || { schema: Schema },
   );
 
-  (async function() {
-    app.register(await server.createHandler());
-    await app.listen();
-  })();
+  app.register(await server.createHandler());
+  await app.listen();
+
   return app.server;
 }
 
