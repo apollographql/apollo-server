@@ -13,8 +13,11 @@ async function createApp(options: CreateAppOptions = {}) {
   const server = new ApolloServer(
     (options.graphqlOptions as Config) || { schema: Schema },
   );
-  await server.applyMiddleware({ app });
-  await app.listen();
+
+  (async function() {
+    app.register(await server.createHandler());
+    await app.listen();
+  })();
   return app.server;
 }
 

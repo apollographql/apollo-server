@@ -22,7 +22,7 @@ async function StartServer() {
 
   const app = fastify();
 
-  await server.applyMiddleware({
+  await server.createHandler({
     app,
   });
 

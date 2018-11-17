@@ -48,7 +48,6 @@ restAPI.get('/id/:id', (req, res) => {
   restCalls++;
   res.header('Content-Type', 'application/json');
   res.header('Cache-Control', 'max-age=2000, public');
-  // res.write(JSON.stringify());
   res.send({ id });
 });
 
@@ -57,7 +56,6 @@ restAPI.get('/str/:id', (req, res) => {
   restCalls++;
   res.header('Content-Type', 'text/plain');
   res.header('Cache-Control', 'max-age=2000, public');
-  // res.write(id);
   res.send(id);
 });
 
@@ -81,7 +79,6 @@ describe('apollo-server-fastify', () => {
 
   afterEach(async () => {
     await server.stop();
-    // await httpServer.close();
     await new Promise(resolve => app.close(() => resolve()));
   });
 
@@ -95,7 +92,7 @@ describe('apollo-server-fastify', () => {
     });
     app = fastify();
 
-    await server.applyMiddleware({ app });
+    app.register(await server.createHandler());
     await app.listen(6667);
     const { url: uri } = createServerInfo(server, app.server);
 
@@ -123,7 +120,7 @@ describe('apollo-server-fastify', () => {
     });
     app = fastify();
 
-    server.applyMiddleware({ app });
+    app.register(await server.createHandler());
     await app.listen(6668);
     const { url: uri } = createServerInfo(server, app.server);
 

@@ -5,14 +5,13 @@ import {
   PlaygroundRenderPageOptions,
 } from 'apollo-server-core';
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import { IncomingMessage, OutgoingMessage } from 'http';
+import { IncomingMessage, OutgoingMessage, Server } from 'http';
 import { processRequest as processFileUploads } from '@apollographql/apollo-upload-server';
 import { graphqlFastify } from './fastifyApollo';
 
 const fastJson = require('fast-json-stringify');
 
 export interface ServerRegistration {
-  app: FastifyInstance;
   path?: string;
   cors?: object | boolean;
   onHealthCheck?: (req: FastifyRequest<IncomingMessage>) => Promise<any>;
@@ -37,61 +36,61 @@ export class ApolloServer extends ApolloServerBase {
     return true;
   }
 
-  public async applyMiddleware({
-    app,
+  public async createHandler({
     path,
     cors,
     disableHealthCheck,
     onHealthCheck,
-  }: ServerRegistration) {
+  }: ServerRegistration = {}) {
+    this.graphqlPath = path ? path : '/graphql';
     await this.willStart();
 
-    if (!path) path = '/graphql';
+    return async (
+      app: FastifyInstance<Server, IncomingMessage, OutgoingMessage>,
+    ) => {
+      if (!disableHealthCheck) {
+        app.get('/.well-known/apollo/server-health', async (req, res) => {
+          // Response follows https://tools.ietf.org/html/draft-inadarei-api-health-check-01
+          res.type('application/health+json');
 
-    this.graphqlPath = path;
-
-    app.register(require('fastify-accepts'));
-
-    if (!disableHealthCheck) {
-      app.get('/.well-known/apollo/server-health', async (req, res) => {
-        // Response follows https://tools.ietf.org/html/draft-inadarei-api-health-check-01
-        res.type('application/health+json');
-
-        if (onHealthCheck) {
-          try {
-            await onHealthCheck(req);
+          if (onHealthCheck) {
+            try {
+              await onHealthCheck(req);
+              res.send(stringifyHealthCheck({ status: 'pass' }));
+            } catch (e) {
+              res.status(503).send(stringifyHealthCheck({ status: 'fail' }));
+            }
+          } else {
             res.send(stringifyHealthCheck({ status: 'pass' }));
-          } catch (e) {
-            res.status(503).send(stringifyHealthCheck({ status: 'fail' }));
           }
-        } else {
-          res.send(stringifyHealthCheck({ status: 'pass' }));
-        }
-      });
-    }
-
-    if (cors === true) {
-      app.register(require('fastify-cors'));
-    } else if (cors !== false) {
-      app.register(require('fastify-cors'), cors);
-    }
-
-    app.register(
-      async instance => {
-        instance.setNotFoundHandler((_request, reply) => {
-          reply.code(405);
-          reply.header('allow', 'GET, POST');
-          reply.send();
         });
+      }
 
-        instance.addContentTypeParser(
-          'multipart',
-          async (request: IncomingMessage) =>
-            processFileUploads(request, this.uploadsConfig),
-        );
+      app.register(
+        async instance => {
+          instance.register(require('fastify-accepts'));
 
-        instance.register(graphqlFastify, {
-          route: {
+          if (cors === true) {
+            instance.register(require('fastify-cors'));
+          } else if (cors !== false) {
+            instance.register(require('fastify-cors'), cors);
+          }
+
+          instance.setNotFoundHandler((_request, reply) => {
+            reply.code(405);
+            reply.header('allow', 'GET, POST');
+            reply.send();
+          });
+
+          instance.addContentTypeParser(
+            'multipart',
+            async (request: IncomingMessage) =>
+              processFileUploads(request, this.uploadsConfig),
+          );
+
+          instance.route({
+            method: ['GET', 'POST'],
+            url: '/',
             beforeHandler: (
               req: FastifyRequest<IncomingMessage>,
               reply: FastifyReply<OutgoingMessage>,
@@ -113,7 +112,7 @@ export class ApolloServer extends ApolloServerBase {
 
                 if (prefersHTML) {
                   const playgroundRenderPageOptions: PlaygroundRenderPageOptions = {
-                    endpoint: path,
+                    endpoint: this.graphqlPath,
                     subscriptionEndpoint: this.subscriptionsPath,
                     ...this.playgroundOptions,
                   };
@@ -127,19 +126,19 @@ export class ApolloServer extends ApolloServerBase {
               }
               done();
             },
-          },
-          graphqlOptions: this.graphQLServerOptions.bind(this),
-        });
-      },
-      {
-        prefix: path,
-      },
-    );
+            handler: await graphqlFastify(this.graphQLServerOptions.bind(this)),
+          });
+        },
+        {
+          prefix: this.graphqlPath,
+        },
+      );
+    };
   }
 }
 
 export const registerServer = () => {
   throw new Error(
-    'Please use server.applyMiddleware instead of registerServer. This warning will be removed in the next release',
+    'Please use server.createHandler instead of registerServer. This warning will be removed in the next release',
   );
 };
