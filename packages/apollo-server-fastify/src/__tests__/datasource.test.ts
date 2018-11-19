@@ -92,7 +92,7 @@ describe('apollo-server-fastify', () => {
     });
     app = fastify();
 
-    app.register(await server.createHandler());
+    app.register(server.createHandler());
     await app.listen(6667);
     const { url: uri } = createServerInfo(server, app.server);
 
@@ -120,7 +120,7 @@ describe('apollo-server-fastify', () => {
     });
     app = fastify();
 
-    app.register(await server.createHandler());
+    app.register(server.createHandler());
     await app.listen(6668);
     const { url: uri } = createServerInfo(server, app.server);
 

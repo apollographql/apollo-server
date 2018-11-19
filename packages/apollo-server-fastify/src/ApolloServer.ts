@@ -36,18 +36,20 @@ export class ApolloServer extends ApolloServerBase {
     return true;
   }
 
-  public async createHandler({
+  public createHandler({
     path,
     cors,
     disableHealthCheck,
     onHealthCheck,
   }: ServerRegistration = {}) {
     this.graphqlPath = path ? path : '/graphql';
-    await this.willStart();
+    const promiseWillStart = this.willStart();
 
     return async (
       app: FastifyInstance<Server, IncomingMessage, OutgoingMessage>,
     ) => {
+      await promiseWillStart;
+
       if (!disableHealthCheck) {
         app.get('/.well-known/apollo/server-health', async (req, res) => {
           // Response follows https://tools.ietf.org/html/draft-inadarei-api-health-check-01

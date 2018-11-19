@@ -40,7 +40,7 @@ describe('apollo-server-fastify', () => {
     async options => {
       server = new ApolloServer(options);
       app = fastify();
-      app.register(await server.createHandler());
+      app.register(server.createHandler());
       await app.listen(port);
       return createServerInfo(server, app.server);
     },
@@ -64,7 +64,7 @@ describe('apollo-server-fastify', () => {
     server = new ApolloServer(serverOptions);
     app = fastify();
 
-    app.register(await server.createHandler(options));
+    app.register(server.createHandler(options));
     await app.listen(port);
 
     return createServerInfo(server, app.server);
