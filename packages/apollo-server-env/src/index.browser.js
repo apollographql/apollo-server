@@ -13,7 +13,7 @@ if (!global.process) {
 if (!global.process.env) {
   global.process.env = {
     // app is a global available on fly.io
-    NODE_ENV: app ? app.env : 'production',
+    NODE_ENV: typeof app !== 'undefined' ? app.env : 'production',
   };
 }
 

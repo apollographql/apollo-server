@@ -18,4 +18,7 @@ export class InMemoryLRUCache implements KeyValueCache {
   async set(key: string, value: string) {
     this.store.set(key, value);
   }
+  async delete(key: string) {
+    this.store.del(key);
+  }
 }

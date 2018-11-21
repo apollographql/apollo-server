@@ -8,7 +8,7 @@ import {
   responsePathAsArray,
 } from 'graphql';
 
-import { GraphQLExtension } from 'graphql-extensions';
+import { GraphQLExtension, GraphQLResponse } from 'graphql-extensions';
 
 export interface CacheControlFormat {
   version: 1;
@@ -27,6 +27,10 @@ export enum CacheScope {
 
 export interface CacheControlExtensionOptions {
   defaultMaxAge?: number;
+  // FIXME: We should replace these with
+  // more appropriately named options.
+  calculateHttpHeaders?: boolean;
+  stripFormattedExtensions?: boolean;
 }
 
 declare module 'graphql/type/definition' {
@@ -42,7 +46,7 @@ export class CacheControlExtension<TContext = any>
   implements GraphQLExtension<TContext> {
   private defaultMaxAge: number;
 
-  constructor(options: CacheControlExtensionOptions = {}) {
+  constructor(public options: CacheControlExtensionOptions = {}) {
     this.defaultMaxAge = options.defaultMaxAge || 0;
   }
 
@@ -117,7 +121,9 @@ export class CacheControlExtension<TContext = any>
     }
   }
 
-  format(): [string, CacheControlFormat] {
+  format(): [string, CacheControlFormat] | undefined {
+    if (this.options.stripFormattedExtensions) return;
+
     return [
       'cacheControl',
       {
@@ -128,6 +134,44 @@ export class CacheControlExtension<TContext = any>
         })),
       },
     ];
+  }
+
+  public willSendResponse?(o: { graphqlResponse: GraphQLResponse }) {
+    if (this.options.calculateHttpHeaders && o.graphqlResponse.http) {
+      const overallCachePolicy = this.computeOverallCachePolicy();
+
+      if (overallCachePolicy) {
+        o.graphqlResponse.http.headers.set(
+          'Cache-Control',
+          `max-age=${
+            overallCachePolicy.maxAge
+          }, ${overallCachePolicy.scope.toLowerCase()}`,
+        );
+      }
+    }
+  }
+
+  computeOverallCachePolicy(): Required<CacheHint> | undefined {
+    let lowestMaxAge: number | undefined = undefined;
+    let scope: CacheScope = CacheScope.Public;
+
+    for (const hint of this.hints.values()) {
+      if (hint.maxAge) {
+        lowestMaxAge = lowestMaxAge
+          ? Math.min(lowestMaxAge, hint.maxAge)
+          : hint.maxAge;
+      }
+      if (hint.scope === CacheScope.Private) {
+        scope = CacheScope.Private;
+      }
+    }
+
+    return lowestMaxAge
+      ? {
+          maxAge: lowestMaxAge,
+          scope,
+        }
+      : undefined;
   }
 }
 

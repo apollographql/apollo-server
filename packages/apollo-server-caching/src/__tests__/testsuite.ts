@@ -1,8 +1,4 @@
-import {
-  advanceTimeBy,
-  mockDate,
-  unmockDate,
-} from '../../../../__mocks__/date';
+import { advanceTimeBy, mockDate, unmockDate } from '__mocks__/date';
 
 export function testKeyValueCache(keyValueCache: any) {
   describe('KeyValueCache Test Suite', () => {
@@ -24,6 +20,13 @@ export function testKeyValueCache(keyValueCache: any) {
       await keyValueCache.set('hello', 'world');
       expect(await keyValueCache.get('hello')).toBe('world');
       expect(await keyValueCache.get('missing')).toBeUndefined();
+    });
+
+    it('can do a basic set and delete', async () => {
+      await keyValueCache.set('hello', 'world');
+      expect(await keyValueCache.get('hello')).toBe('world');
+      await keyValueCache.delete('hello');
+      expect(await keyValueCache.get('hello')).toBeUndefined();
     });
 
     it('is able to expire keys based on ttl', async () => {

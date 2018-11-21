@@ -1,5 +1,5 @@
 {
-  "extends": "../../tsconfig",
+  "extends": "../../tsconfig.base",
   "compilerOptions": {
     "rootDir": "./src",
     "outDir": "./dist",
@@ -8,5 +8,8 @@
     "strictNullChecks": false
   },
   "include": ["src/**/*"],
-  "exclude": ["**/__tests__", "**/__mocks__"]
+  "exclude": ["**/__tests__", "**/__mocks__"],
+  "references": [
+    { "path": "../apollo-server-core" },
+  ]
 }

@@ -25,7 +25,7 @@ const schema = makeExecutableSchema({
   resolvers,
 });
 
-const rootResolveFunction = (root, args, context, info) => {
+const rootResolveFunction = (parent, args, context, info) => {
   //perform action before any other resolvers
 };
 
@@ -411,7 +411,7 @@ RenameTypes(
 
 ### Modifying root fields
 
-* `TransformRootFields(transformer: RootTransformer)`: Given a transformer, abritrarily transform root fields. The `transformer` can return a `GraphQLFieldConfig` definition, a object with new `name` and a `field`, `null` to remove the field, or `undefined` to leave the field unchanged.
+* `TransformRootFields(transformer: RootTransformer)`: Given a transformer, arbitrarily transform root fields. The `transformer` can return a `GraphQLFieldConfig` definition, a object with new `name` and a `field`, `null` to remove the field, or `undefined` to leave the field unchanged.
 
 ```ts
 TransformRootFields(transformer: RootTransformer)

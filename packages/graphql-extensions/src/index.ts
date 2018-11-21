@@ -1,6 +1,5 @@
 import {
   GraphQLSchema,
-  GraphQLError,
   GraphQLObjectType,
   getNamedType,
   GraphQLField,
@@ -9,10 +8,20 @@ import {
   GraphQLResolveInfo,
   ExecutionArgs,
   DocumentNode,
+  ResponsePath,
+  FieldNode,
 } from 'graphql';
 
 import { Request } from 'apollo-server-env';
 export { Request } from 'apollo-server-env';
+
+import {
+  GraphQLResponse,
+  GraphQLRequestContext,
+} from 'apollo-server-core/dist/requestPipelineAPI';
+export { GraphQLResponse };
+
+import { GraphQLObjectResolver } from '@apollographql/apollo-tools';
 
 export type EndHandler = (...errors: Array<Error>) => void;
 // A StartHandlerInvoker is a function that, given a specific GraphQLExtension,
@@ -20,20 +29,11 @@ export type EndHandler = (...errors: Array<Error>) => void;
 // arguments.
 type StartHandlerInvoker<TContext = any> = (
   ext: GraphQLExtension<TContext>,
-) => void;
-
-// Copied from runQuery in apollo-server-core.
-// XXX Will this work properly if it's an identical interface of the
-// same name?
-export interface GraphQLResponse {
-  data?: object;
-  errors?: Array<GraphQLError & object>;
-  extensions?: object;
-}
+) => EndHandler | void;
 
 export class GraphQLExtension<TContext = any> {
   public requestDidStart?(o: {
-    request: Request;
+    request: Pick<Request, 'url' | 'method' | 'headers'>;
     queryString?: string;
     parsedQuery?: DocumentNode;
     operationName?: string;
@@ -41,6 +41,7 @@ export class GraphQLExtension<TContext = any> {
     persistedQueryHit?: boolean;
     persistedQueryRegister?: boolean;
     context: TContext;
+    requestContext: GraphQLRequestContext<TContext>;
   }): EndHandler | void;
   public parsingDidStart?(o: { queryString: string }): EndHandler | void;
   public validationDidStart?(): EndHandler | void;
@@ -73,7 +74,7 @@ export class GraphQLExtensionStack<TContext = any> {
   }
 
   public requestDidStart(o: {
-    request: Request;
+    request: Pick<Request, 'url' | 'method' | 'headers'>;
     queryString?: string;
     parsedQuery?: DocumentNode;
     operationName?: string;
@@ -82,6 +83,7 @@ export class GraphQLExtensionStack<TContext = any> {
     persistedQueryRegister?: boolean;
     context: TContext;
     extensions?: Record<string, any>;
+    requestContext: GraphQLRequestContext<TContext>;
   }): EndHandler {
     return this.handleDidStart(
       ext => ext.requestDidStart && ext.requestDidStart(o),
@@ -159,9 +161,13 @@ export class GraphQLExtensionStack<TContext = any> {
     const endHandlers: EndHandler[] = [];
     this.extensions.forEach(extension => {
       // Invoke the start handler, which may return an end handler.
-      const endHandler = startInvoker(extension);
-      if (endHandler) {
-        endHandlers.push(endHandler);
+      try {
+        const endHandler = startInvoker(extension);
+        if (endHandler) {
+          endHandlers.push(endHandler);
+        }
+      } catch (error) {
+        console.error(error);
       }
     });
     return (...errors: Array<Error>) => {
@@ -169,7 +175,13 @@ export class GraphQLExtensionStack<TContext = any> {
       // first handler in the stack "surrounds" the entire event's process
       // (helpful for tracing/reporting!)
       endHandlers.reverse();
-      endHandlers.forEach(endHandler => endHandler(...errors));
+      for (const endHandler of endHandlers) {
+        try {
+          endHandler(...errors);
+        } catch (error) {
+          console.error(error);
+        }
+      }
     };
   }
 }
@@ -191,6 +203,15 @@ function wrapField(field: GraphQLField<any, any>): void {
   const fieldResolver = field.resolve;
 
   field.resolve = (source, args, context, info) => {
+    // This is a bit of a hack, but since `ResponsePath` is a linked list,
+    // a new object gets created every time a path segment is added.
+    // So we can use that to share our `whenObjectResolved` promise across
+    // all field resolvers for the same object.
+    const parentPath = info.path.prev as ResponsePath & {
+      __fields?: Record<string, ReadonlyArray<FieldNode>>;
+      __whenObjectResolved?: Promise<any>;
+    };
+
     const extensionStack = context && context._extensionStack;
     const handler =
       (extensionStack &&
@@ -199,12 +220,53 @@ function wrapField(field: GraphQLField<any, any>): void {
         /* do nothing */
       });
 
-    // If no resolver has been defined for a field, use the default field resolver
-    // (which matches the behavior of graphql-js when there is no explicit resolve function defined).
+    const resolveObject: GraphQLObjectResolver<
+      any,
+      any
+    > = (info.parentType as any).resolveObject;
+
+    let whenObjectResolved: Promise<any> | undefined;
+
+    if (parentPath && resolveObject) {
+      if (!parentPath.__fields) {
+        parentPath.__fields = {};
+      }
+
+      parentPath.__fields[info.fieldName] = info.fieldNodes;
+
+      whenObjectResolved = parentPath.__whenObjectResolved;
+      if (!whenObjectResolved) {
+        // Use `Promise.resolve().then()` to delay executing
+        // `resolveObject()` so we can collect all the fields first.
+        whenObjectResolved = Promise.resolve().then(() => {
+          return resolveObject(source, parentPath.__fields!, context, info);
+        });
+        parentPath.__whenObjectResolved = whenObjectResolved;
+      }
+    }
+
     try {
-      const result = (fieldResolver ||
+      // If no resolver has been defined for a field, use either the configured
+      // field resolver or the default field resolver
+      // (which matches the behavior of graphql-js when there is no explicit
+      // resolve function defined).
+      // XXX: Can't this be pulled up to the top of `wrapField` and only
+      // assigned once? It seems `extensionStack.fieldResolver` isn't set
+      // anywhere?
+      const actualFieldResolver =
+        fieldResolver ||
         (extensionStack && extensionStack.fieldResolver) ||
-        defaultFieldResolver)(source, args, context, info);
+        defaultFieldResolver;
+
+      let result: any;
+      if (whenObjectResolved) {
+        result = whenObjectResolved.then((resolvedObject: any) => {
+          return actualFieldResolver(resolvedObject, args, context, info);
+        });
+      } else {
+        result = actualFieldResolver(source, args, context, info);
+      }
+
       // Call the stack's handlers either immediately (if result is not a
       // Promise) or once the Promise is done. Then return that same
       // maybe-Promise value.

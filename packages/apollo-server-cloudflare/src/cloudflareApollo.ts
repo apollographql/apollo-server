@@ -11,7 +11,13 @@ import { Request, Response, URL } from 'apollo-server-env';
 // - simple, fast and secure
 //
 
-export function graphqlCloudflare(options: GraphQLOptions) {
+export interface CloudflareOptionsFunction {
+  (req?: Request): GraphQLOptions | Promise<GraphQLOptions>;
+}
+
+export function graphqlCloudflare(
+  options: GraphQLOptions | CloudflareOptionsFunction,
+) {
   if (!options) {
     throw new Error('Apollo Server requires options.');
   }

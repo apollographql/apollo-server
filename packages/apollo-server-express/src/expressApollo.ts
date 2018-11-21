@@ -17,13 +17,9 @@ export interface ExpressGraphQLOptionsFunction {
 // - simple, fast and secure
 //
 
-export interface ExpressHandler {
-  (req: express.Request, res: express.Response, next): void;
-}
-
 export function graphqlExpress(
   options: GraphQLOptions | ExpressGraphQLOptionsFunction,
-): ExpressHandler {
+): express.Handler {
   if (!options) {
     throw new Error('Apollo Server requires options.');
   }
@@ -35,11 +31,7 @@ export function graphqlExpress(
     );
   }
 
-  const graphqlHandler = (
-    req: express.Request,
-    res: express.Response,
-    next,
-  ): void => {
+  return (req, res, next): void => {
     runHttpQuery([req, res], {
       method: req.method,
       options: options,
@@ -47,9 +39,11 @@ export function graphqlExpress(
       request: convertNodeHttpToRequest(req),
     }).then(
       ({ graphqlResponse, responseInit }) => {
-        Object.keys(responseInit.headers).forEach(key =>
-          res.setHeader(key, responseInit.headers[key]),
-        );
+        if (responseInit.headers) {
+          for (const [name, value] of Object.entries(responseInit.headers)) {
+            res.setHeader(name, value);
+          }
+        }
         res.write(graphqlResponse);
         res.end();
       },
@@ -59,9 +53,9 @@ export function graphqlExpress(
         }
 
         if (error.headers) {
-          Object.keys(error.headers).forEach(header => {
-            res.setHeader(header, error.headers[header]);
-          });
+          for (const [name, value] of Object.entries(error.headers)) {
+            res.setHeader(name, value);
+          }
         }
 
         res.statusCode = error.statusCode;
@@ -70,6 +64,4 @@ export function graphqlExpress(
       },
     );
   };
-
-  return graphqlHandler;
 }
