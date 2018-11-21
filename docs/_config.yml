@@ -27,6 +27,7 @@ sidebar_categories:
     - features/creating-directives
     - features/authentication
     - features/testing
+    - features/plugins
   # Schema stitching:
   #   - features/schema-stitching
   #   - features/remote-schemas
