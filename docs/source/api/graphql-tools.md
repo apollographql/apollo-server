@@ -25,7 +25,7 @@ const schema = makeExecutableSchema({
   resolvers,
 });
 
-const rootResolveFunction = (root, args, context, info) => {
+const rootResolveFunction = (parent, args, context, info) => {
   //perform action before any other resolvers
 };
 

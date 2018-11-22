@@ -87,7 +87,7 @@ Luckily, GraphQL offers very granular control over data. In GraphQL servers, ind
 For our first example, let’s look at a resolver that’s only accessible with a valid user:
 
 ```js
-users: (root, args, context) => {
+users: (parent, args, context) => {
  // In this case, we'll pretend there is no data when
  // we're not logged in. Another option would be to
  // throw an error.
@@ -104,7 +104,7 @@ One choice to make when building out our resolvers is what an unauthorized field
 Now let’s expand that example a little further, and only allow users with an `admin` role to look at our user list. After all, we probably don’t want just anyone to have access to all our users.
 
 ```js
-users: (root, args, context) => {
+users: (parent, args, context) => {
  if (!context.user || !context.user.roles.includes('admin')) return null;
  return context.models.User.getAll();
 }

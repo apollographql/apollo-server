@@ -126,7 +126,7 @@ const queryType = new GraphQLObjectType({
     },
     testContext: {
       type: GraphQLString,
-      resolve(_root, _args, context) {
+      resolve(_parent, _args, context) {
         if (context.otherField) {
           return 'unexpected';
         }
