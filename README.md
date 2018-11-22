@@ -81,18 +81,15 @@ server.listen().then(({ url }) => {
 
 ## Integrations
 
-Often times, Apollo Server needs to be run with a particular integration. To start, run `npm install --save apollo-server-<integration>` where `<integration>` is one of the following:
+Often times, Apollo Server needs to be run with a particular integration. To start, run `npm install --save apollo-server-<integration>` where `apollo-server-<integration>` is one of the following:
 
-- `express`
-- `koa`
-- `hapi`
-- `lambda`
-- `azure-function`
-- `cloud-function`
-- `cloudflare`
-
-
-If a framework is not on this list and it should be supported, please open a PR.
+- `apollo-server-express`
+- `apollo-server-koa`
+- `apollo-server-hapi`
+- `apollo-server-lambda`
+- `apollo-server-azure-functions`
+- `apollo-server-cloud-functions`
+- `apollo-server-cloudflare`
 
 ### Express
 
