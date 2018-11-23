@@ -100,7 +100,7 @@
     "graphql-subscriptions": "1.0.0",
     "graphql-tag": "2.10.0",
     "graphql-tools": "4.0.3",
-    "hapi": "17.7.0",
+    "hapi": "17.8.1",
     "husky": "1.2.0",
     "jest": "23.6.0",
     "jest-junit": "5.2.0",
