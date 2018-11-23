@@ -7,6 +7,7 @@ client reference ID, Apollo Server will now default to the values present in the
 of the request (`apollographql-client-name`, `apollographql-client-reference-id` and
 `apollographql-client-version` respectively).  As a last resort, when those headers are not set,
 the query extensions' `clientInfo` values will be used. [PR #1960](https://github.com/apollographql/apollo-server/pull/1960)
+- Add `text/json` to the list of `Content-Type` header responses that will be deserialized to json, and allow adding types to the list in the `RESTDataSource` constructor, e.g.: `this.jsonContentTypes.push('application/custom+json');`. [PR #2013](https://github.com/apollographql/apollo-server/pull/2013)
 
 ### v2.2.2
 

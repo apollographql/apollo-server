@@ -371,47 +371,35 @@ describe('RESTDataSource', () => {
   });
 
   describe('response parsing', () => {
-    it('returns data as parsed JSON when Content-Type is application/json', async () => {
-      const dataSource = new class extends RESTDataSource {
-        baseURL = 'https://api.example.com';
+    const jsonContentTypes = [
+      'application/json',
+      'application/json; charset=utf-8',
+      'application/hal+json',
+      'text/json',
+    ];
+    it.each(jsonContentTypes)(
+      'returns data as parsed JSON when Content-Type is %s',
+      async () => {
+        const dataSource = new class extends RESTDataSource {
+          baseURL = 'https://api.example.com';
 
-        getFoo() {
-          return this.get('foo');
-        }
-      }();
+          getFoo() {
+            return this.get('foo');
+          }
+        }();
 
-      dataSource.httpCache = httpCache;
+        dataSource.httpCache = httpCache;
 
-      fetch.mockJSONResponseOnce(
-        { foo: 'bar' },
-        { 'Content-Type': 'application/json' },
-      );
+        fetch.mockJSONResponseOnce(
+          { foo: 'bar' },
+          { 'Content-Type': 'application/json' },
+        );
 
-      const data = await dataSource.getFoo();
+        const data = await dataSource.getFoo();
 
-      expect(data).toEqual({ foo: 'bar' });
-    });
-
-    it('returns data as parsed JSON when Content-Type is application/hal+json', async () => {
-      const dataSource = new class extends RESTDataSource {
-        baseURL = 'https://api.example.com';
-
-        getFoo() {
-          return this.get('foo');
-        }
-      }();
-
-      dataSource.httpCache = httpCache;
-
-      fetch.mockJSONResponseOnce(
-        { foo: 'bar' },
-        { 'Content-Type': 'application/hal+json' },
-      );
-
-      const data = await dataSource.getFoo();
-
-      expect(data).toEqual({ foo: 'bar' });
-    });
+        expect(data).toEqual({ foo: 'bar' });
+      },
+    );
 
     it('returns data as a string when Content-Type is text/plain', async () => {
       const dataSource = new class extends RESTDataSource {

@@ -47,6 +47,7 @@ export abstract class RESTDataSource<TContext = any> extends DataSource {
   httpCache!: HTTPCache;
   context!: TContext;
   memoizedResults = new Map<string, Promise<any>>();
+  jsonContentTypes = ['application/json', 'application/hal+json', 'text/json'];
 
   initialize(config: DataSourceConfig<TContext>): void {
     this.context = config.context;
@@ -106,8 +107,7 @@ export abstract class RESTDataSource<TContext = any> extends DataSource {
     const contentType = response.headers.get('Content-Type');
     if (
       contentType &&
-      (contentType.startsWith('application/json') ||
-        contentType.startsWith('application/hal+json'))
+      this.jsonContentTypes.some(c => contentType.startsWith(c))
     ) {
       return response.json();
     } else {
