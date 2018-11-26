@@ -2,6 +2,8 @@
 
 ### vNEXT
 
+### v2.2.3
+
 - When `generateClientInfo` is not used to define the client name, client version and
 client reference ID, Apollo Server will now default to the values present in the HTTP headers
 of the request (`apollographql-client-name`, `apollographql-client-reference-id` and
