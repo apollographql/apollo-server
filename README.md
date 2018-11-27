@@ -283,3 +283,8 @@ npm link
 cd ~/myApp
 npm link apollo-server-<integration>
 ```
+
+## Maintainers
+
+- [@martijnwalraven](https://github.com/martijnwalraven) (Apollo)
+- [@abernix](https://github.com/abernix) (Apollo)
