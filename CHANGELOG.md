@@ -2,6 +2,8 @@
 
 ### vNEXT
 
+- Fix GraphQL Playground documentation scrolling bug in Safari by updating to latest (rebased) fork of `graphql-playground-html`. [PR #2037](https://github.com/apollographql/apollo-server/pull/2037)
+
 ### v2.2.3
 
 - When `generateClientInfo` is not used to define the client name, client version and
