@@ -2,6 +2,8 @@
 
 ### vNEXT
 
+- Fix GraphQL Playground documentation scrolling bug in Safari.
+
 ### v2.2.3
 
 - When `generateClientInfo` is not used to define the client name, client version and
