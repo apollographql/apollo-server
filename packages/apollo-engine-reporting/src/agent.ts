@@ -35,6 +35,10 @@ Traces.encode = function(message, originalWriter) {
       writer.bytes(encodedTraces[i]);
     }
   }
+  // To ensure that we only add the encoded Traces once, we remove them. This
+  // prevents multiple reporting in the case when there are multiple instances
+  // of a-e-r in a single project.
+  delete (message as any).encodedTraces;
   return writer;
 };
 
