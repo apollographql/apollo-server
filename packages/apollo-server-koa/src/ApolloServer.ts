@@ -6,13 +6,15 @@ import {
   renderPlaygroundPage,
   RenderPageOptions as PlaygroundRenderPageOptions,
 } from '@apollographql/graphql-playground-html';
-import { ApolloServerBase, formatApolloErrors } from 'apollo-server-core';
+import {
+  ApolloServerBase,
+  formatApolloErrors,
+  processFileUploads,
+} from 'apollo-server-core';
 import accepts from 'accepts';
 import typeis from 'type-is';
 
 import { graphqlKoa } from './koaApollo';
-
-import { processRequest as processFileUploads } from 'graphql-upload';
 
 export { GraphQLOptions, GraphQLExtension } from 'apollo-server-core';
 import { GraphQLOptions, FileUploadOptions } from 'apollo-server-core';
@@ -138,7 +140,7 @@ export class ApolloServer extends ApolloServerBase {
     }
 
     let uploadsMiddleware;
-    if (this.uploadsConfig) {
+    if (this.uploadsConfig && typeof processFileUploads === 'function') {
       uploadsMiddleware = fileUploadMiddleware(this.uploadsConfig, this);
     }
 

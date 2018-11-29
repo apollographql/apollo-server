@@ -10,13 +10,12 @@ import {
   FileUploadOptions,
   ApolloServerBase,
   formatApolloErrors,
+  processFileUploads,
 } from 'apollo-server-core';
 import accepts from 'accepts';
 import typeis from 'type-is';
 
 import { graphqlExpress } from './expressApollo';
-
-import { processRequest as processFileUploads } from 'graphql-upload';
 
 export { GraphQLOptions, GraphQLExtension } from 'apollo-server-core';
 
@@ -44,7 +43,10 @@ const fileUploadMiddleware = (
   next: express.NextFunction,
 ) => {
   // Note: we use typeis directly instead of via req.is for connect support.
-  if (typeis(req, ['multipart/form-data'])) {
+  if (
+    typeof processFileUploads === 'function' &&
+    typeis(req, ['multipart/form-data'])
+  ) {
     processFileUploads(req, res, uploadsConfig)
       .then(body => {
         req.body = body;
@@ -134,7 +136,7 @@ export class ApolloServer extends ApolloServerBase {
     }
 
     let uploadsMiddleware;
-    if (this.uploadsConfig) {
+    if (this.uploadsConfig && typeof processFileUploads === 'function') {
       uploadsMiddleware = fileUploadMiddleware(this.uploadsConfig, this);
     }
 

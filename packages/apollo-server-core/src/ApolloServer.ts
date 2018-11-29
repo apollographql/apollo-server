@@ -14,6 +14,7 @@ import { GraphQLExtension } from 'graphql-extensions';
 import { EngineReportingAgent } from 'apollo-engine-reporting';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import { ApolloServerPlugin } from 'apollo-server-plugin-base';
+import supportsUploadsInNode from './utils/supportsUploadsInNode';
 
 import {
   SubscriptionServer,
@@ -201,6 +202,14 @@ export class ApolloServerBase {
 
     if (uploads !== false) {
       if (this.supportsUploads()) {
+        if (!supportsUploadsInNode) {
+          printNodeFileUploadsMessage();
+          throw new Error(
+            '`graphql-upload` is no longer supported on Node.js < v8.5.0.  ' +
+              'See https://bit.ly/gql-upload-node-6.',
+          );
+        }
+
         if (uploads === true || typeof uploads === 'undefined') {
           this.uploadsConfig = {};
         } else {
@@ -539,4 +548,33 @@ export class ApolloServerBase {
 
     return processGraphQLRequest(options, requestCtx);
   }
+}
+
+function printNodeFileUploadsMessage() {
+  console.error(
+    [
+      '*****************************************************************',
+      '*                                                               *',
+      '* ERROR! Manual intervention is necessary for Node.js < v8.5.0! *',
+      '*                                                               *',
+      '*****************************************************************',
+      '',
+      'The third-party `graphql-upload` package, which is used to implement',
+      'file uploads in Apollo Server 2.x, no longer supports Node.js LTS',
+      'versions prior to Node.js v8.5.0.',
+      '',
+      'If this server DOES NOT USE file uploads, it is necessary to add:',
+      '',
+      '  uploads: false,',
+      '',
+      'to the options for Apollo Server and re-deploy to disable file uploads',
+      'and continue using this version of Node.js.',
+      '',
+      'Deployments which need file upload capabilities should update to',
+      'Node.js >= v8.5.0 to continue using newer Apollo Server versions.',
+      '',
+      'For more information, see https://bit.ly/gql-upload-node-6.',
+      '',
+    ].join('\n'),
+  );
 }
