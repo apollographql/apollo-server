@@ -2,6 +2,8 @@
 
 ### vNEXT
 
+### v2.2.5
+
 - Follow-up on the update to `graphql-playground-html` in previous release by also bumping the minor version of the `graphql-playground-react` dependency to `1.7.10` — which is the version requested from the from the CDN bundle by `graphql-playground-html`. [PR #2037](https://github.com/apollographql/apollo-server/pull/2037)
 
 ### v2.2.4
