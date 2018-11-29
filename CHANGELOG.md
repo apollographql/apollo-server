@@ -1,7 +1,6 @@
 # Changelog
 
 ### vNEXT
-- Update docs for apollo-server-micro [PR #2045](https://github.com/apollographql/apollo-server/pull/2045)
 
 ### v2.2.5
 
