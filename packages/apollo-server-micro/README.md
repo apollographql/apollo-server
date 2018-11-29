@@ -195,7 +195,6 @@ const graphqlPath = '/data';
 const graphqlHandler = apolloServer.createHandler({ path: graphqlPath });
 module.exports = router(
   get('/', (req, res) => 'Welcome!'),
-  options(graphqlPath, graphqlHandler),
   post(graphqlPath, graphqlHandler),
   get(graphqlPath, graphqlHandler),
 );
