@@ -17,3 +17,6 @@ junit.xml
 
 # Node modules
 node_modules/
+
+# Mac OS
+.DS_Store
