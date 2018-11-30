@@ -89,6 +89,9 @@ function getEngineServiceId(engine: Config['engine']): string | undefined {
   return;
 }
 
+const forbidUploadsForTesting =
+  process && process.env.NODE_ENV === 'test' && !supportsUploadsInNode;
+
 export class ApolloServerBase {
   public subscriptionsPath?: string;
   public graphqlPath: string = '/graphql';
@@ -200,7 +203,7 @@ export class ApolloServerBase {
     this.requestOptions = requestOptions as GraphQLOptions;
     this.context = context;
 
-    if (uploads !== false) {
+    if (uploads !== false && !forbidUploadsForTesting) {
       if (this.supportsUploads()) {
         if (!supportsUploadsInNode) {
           printNodeFileUploadsMessage();
