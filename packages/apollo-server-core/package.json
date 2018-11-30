@@ -39,7 +39,7 @@
     "graphql-subscriptions": "^1.0.0",
     "graphql-tag": "^2.9.2",
     "graphql-tools": "^4.0.0",
-    "graphql-upload": "^8.0.0",
+    "graphql-upload": "^8.0.2",
     "json-stable-stringify": "^1.0.1",
     "lodash": "^4.17.10",
     "subscriptions-transport-ws": "^0.9.11",
