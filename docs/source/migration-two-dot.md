@@ -288,7 +288,7 @@ Apollo Server 2 removes the `logFunction` to reduce the exposure of internal imp
 
 <h2 id="graphiql">Replacing GraphiQL</h2>
 
-Apollo Server 2 ships with GraphQL Playground instead of GraphiQL and collocates the gui with the endpoint. GraphQL playground can be customized in the following manner.
+Apollo Server 2 ships with GraphQL Playground instead of GraphiQL and collocates the GUI with the endpoint. GraphQL playground can be customized in the following manner.
 
 ```js
 const { ApolloServer, gql } = require('apollo-server-express');
@@ -297,11 +297,7 @@ const server = new ApolloServer({
   // These will be defined for both new or existing servers
   typeDefs,
   resolvers,
-});
-
-server.applyMiddleware({
-  app, // app is from an existing express app
-  gui: {
+  playground: {
     endpoint?: string
     subscriptionEndpoint?: string
     tabs: [
@@ -313,7 +309,11 @@ server.applyMiddleware({
         headers?: { [key: string]: string }
       },
     ],
-  }
+  },
+});
+
+server.applyMiddleware({
+  app, // app is from an existing express app
 });
 
 app.listen({ port: 4000 }, () =>
