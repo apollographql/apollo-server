@@ -5,9 +5,10 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "prepare": "npm run pbjs && npm run pbts",
-    "pbjs": "bash -c 'mkdir -p dist && pbjs --target static-module --out dist/index.js --wrap commonjs --force-number <(grep -v \"package mdg.engine.proto\" reports.proto)'",
-    "pbts": "pbts -o dist/index.d.ts dist/index.js"
+    "compile": "tsc && cp src/protobuf* dist",
+    "prepare": "npm run pbjs && npm run pbts && npm run compile",
+    "pbjs": "bash -c 'pbjs --target static-module --out src/protobuf.js --wrap commonjs --force-number <(grep -v \"package mdg.engine.proto\" reports.proto)'",
+    "pbts": "pbts -o src/protobuf.d.ts src/protobuf.js"
   },
   "repository": {
     "type": "git",
