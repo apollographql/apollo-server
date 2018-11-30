@@ -427,48 +427,47 @@ describe('apollo-server-express', () => {
         });
       });
     });
-    // NODE: Intentionally skip file upload tests on Node.js 10.
-    // Also skip Node.js 6, but only because `graphql-upload`
+    // NODE: Skip Node.js 6, but only because `graphql-upload`
     // doesn't support it.
-    (NODE_MAJOR_VERSION === 10 || NODE_MAJOR_VERSION === 6
-      ? describe.skip
-      : describe)('file uploads', () => {
-      it('enabled uploads', async () => {
-        const { port } = await createServer({
-          typeDefs: gql`
-            type File {
-              filename: String!
-              mimetype: String!
-              encoding: String!
-            }
+    (NODE_MAJOR_VERSION === 6 ? describe.skip : describe)(
+      'file uploads',
+      () => {
+        it('enabled uploads', async () => {
+          const { port } = await createServer({
+            typeDefs: gql`
+              type File {
+                filename: String!
+                mimetype: String!
+                encoding: String!
+              }
 
-            type Query {
-              uploads: [File]
-            }
+              type Query {
+                uploads: [File]
+              }
 
-            type Mutation {
-              singleUpload(file: Upload!): File!
-            }
-          `,
-          resolvers: {
-            Query: {
-              uploads: () => {},
-            },
-            Mutation: {
-              singleUpload: async (_, args) => {
-                expect((await args.file).stream).toBeDefined();
-                return args.file;
+              type Mutation {
+                singleUpload(file: Upload!): File!
+              }
+            `,
+            resolvers: {
+              Query: {
+                uploads: () => {},
+              },
+              Mutation: {
+                singleUpload: async (_, args) => {
+                  expect((await args.file).stream).toBeDefined();
+                  return args.file;
+                },
               },
             },
-          },
-        });
+          });
 
-        const body = new FormData();
+          const body = new FormData();
 
-        body.append(
-          'operations',
-          JSON.stringify({
-            query: `
+          body.append(
+            'operations',
+            JSON.stringify({
+              query: `
               mutation($file: Upload!) {
                 singleUpload(file: $file) {
                   filename
@@ -477,35 +476,36 @@ describe('apollo-server-express', () => {
                 }
               }
             `,
-            variables: {
-              file: null,
-            },
-          }),
-        );
+              variables: {
+                file: null,
+              },
+            }),
+          );
 
-        body.append('map', JSON.stringify({ 1: ['variables.file'] }));
-        body.append('1', fs.createReadStream('package.json'));
+          body.append('map', JSON.stringify({ 1: ['variables.file'] }));
+          body.append('1', fs.createReadStream('package.json'));
 
-        try {
-          const resolved = await fetch(`http://localhost:${port}/graphql`, {
-            method: 'POST',
-            body: body as any,
-          });
-          const text = await resolved.text();
-          const response = JSON.parse(text);
+          try {
+            const resolved = await fetch(`http://localhost:${port}/graphql`, {
+              method: 'POST',
+              body: body as any,
+            });
+            const text = await resolved.text();
+            const response = JSON.parse(text);
 
-          expect(response.data.singleUpload).toEqual({
-            filename: 'package.json',
-            encoding: '7bit',
-            mimetype: 'application/json',
-          });
-        } catch (error) {
-          // This error began appearing randomly and seems to be a dev dependency bug.
-          // https://github.com/jaydenseric/apollo-upload-server/blob/18ecdbc7a1f8b69ad51b4affbd986400033303d4/test.js#L39-L42
-          if (error.code !== 'EPIPE') throw error;
-        }
-      });
-    });
+            expect(response.data.singleUpload).toEqual({
+              filename: 'package.json',
+              encoding: '7bit',
+              mimetype: 'application/json',
+            });
+          } catch (error) {
+            // This error began appearing randomly and seems to be a dev dependency bug.
+            // https://github.com/jaydenseric/apollo-upload-server/blob/18ecdbc7a1f8b69ad51b4affbd986400033303d4/test.js#L39-L42
+            if (error.code !== 'EPIPE') throw error;
+          }
+        });
+      },
+    );
 
     describe('errors', () => {
       it('returns thrown context error as a valid graphql result', async () => {
