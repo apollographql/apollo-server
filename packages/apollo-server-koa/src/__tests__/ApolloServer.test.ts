@@ -11,7 +11,7 @@ import { gql, AuthenticationError, Config } from 'apollo-server-core';
 import { ApolloServer, ServerRegistration } from '../ApolloServer';
 
 import {
-  atLeastMajorNodeVersion,
+  NODE_MAJOR_VERSION,
   testApolloServer,
   createServerInfo,
 } from 'apollo-server-integration-testsuite';
@@ -323,8 +323,8 @@ describe('apollo-server-koa', () => {
         });
       });
     });
-    // NODE: Intentionally skip file upload tests on Node.js 10 or higher.
-    (atLeastMajorNodeVersion(10) ? describe.skip : describe)(
+    // NODE: Intentionally skip file upload tests on Node.js 10.
+    (NODE_MAJOR_VERSION === 10 ? describe.skip : describe)(
       'file uploads',
       () => {
         it('enabled uploads', async () => {

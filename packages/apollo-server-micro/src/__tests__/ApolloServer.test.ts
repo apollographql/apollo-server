@@ -1,7 +1,7 @@
 import micro from 'micro';
 import listen from 'test-listen';
 import { createApolloFetch } from 'apollo-fetch';
-import { atLeastMajorNodeVersion } from 'apollo-server-integration-testsuite';
+import { NODE_MAJOR_VERSION } from 'apollo-server-integration-testsuite';
 import { gql } from 'apollo-server-core';
 import FormData from 'form-data';
 import fs from 'fs';
@@ -146,7 +146,8 @@ describe('apollo-server-micro', function() {
       });
     });
 
-    (atLeastMajorNodeVersion(10) ? describe.skip : describe)(
+    // NODE: Intentionally skip file upload tests on Node.js 10.
+    (NODE_MAJOR_VERSION === 10 ? describe.skip : describe)(
       'file uploads',
       function() {
         it('should handle file uploads', async function() {

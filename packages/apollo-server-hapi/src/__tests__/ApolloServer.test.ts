@@ -1,5 +1,5 @@
 import {
-  atLeastMajorNodeVersion,
+  NODE_MAJOR_VERSION,
   testApolloServer,
   createServerInfo,
 } from 'apollo-server-integration-testsuite';
@@ -16,7 +16,7 @@ import { ApolloServer } from '../ApolloServer';
 const port = 5555;
 
 // NODE: Intentionally skip for Node.js < 8 since Hapi 17 doesn't support those.
-(atLeastMajorNodeVersion(8) ? describe : describe.skip)(
+(NODE_MAJOR_VERSION < 8 ? describe.skip : describe)(
   'apollo-server-hapi',
   () => {
     let server: ApolloServer;
