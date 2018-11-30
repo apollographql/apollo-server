@@ -2,6 +2,8 @@
 
 ### vNEXT
 
+- `apollo-server-micro`: Set the `Content-type` to `text/html` for GraphQL Playground. [PR #2026](https://github.com/apollographql/apollo-server/pull/2026)
+
 ### v2.2.5
 
 - Follow-up on the update to `graphql-playground-html` in previous release by also bumping the minor version of the `graphql-playground-react` dependency to `1.7.10` — which is the version requested from the from the CDN bundle by `graphql-playground-html`. [PR #2037](https://github.com/apollographql/apollo-server/pull/2037)
@@ -17,7 +19,6 @@ client reference ID, Apollo Server will now default to the values present in the
 of the request (`apollographql-client-name`, `apollographql-client-reference-id` and
 `apollographql-client-version` respectively).  As a last resort, when those headers are not set,
 the query extensions' `clientInfo` values will be used. [PR #1960](https://github.com/apollographql/apollo-server/pull/1960)
-- Set content type of playground index.html to text/html. [PR #2026](https://github.com/apollographql/apollo-server/pull/2026)
 
 ### v2.2.2
 
