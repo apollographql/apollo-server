@@ -3,6 +3,7 @@
 ### vNEXT
 
 - Apollo Engine Reporting: include encodedTraces only once to prevent duplicates with multiple instances of apollo-engine-reporting [PR #2040](https://github.com/apollographql/apollo-server/pull/2040)
+- `apollo-server-micro`: Set the `Content-type` to `text/html` for GraphQL Playground. [PR #2026](https://github.com/apollographql/apollo-server/pull/2026)
 
 ### v2.2.5
 
