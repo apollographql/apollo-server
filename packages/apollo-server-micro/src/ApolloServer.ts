@@ -130,6 +130,7 @@ export class ApolloServer extends ApolloServerBase {
           subscriptionEndpoint: this.subscriptionsPath,
           ...this.playgroundOptions,
         };
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
         send(res, 200, renderPlaygroundPage(middlewareOptions));
         handled = true;
       }
