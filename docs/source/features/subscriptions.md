@@ -144,7 +144,7 @@ In case of an authentication error, the Promise will be rejected, which prevents
 
 <h2 id="wss">Securing Subscriptions with WSS</h2>
 
-Subscriptions can be configured to over SSL/WSS. See [example server](../essentials/server.html#ssl).
+Subscriptions can be configured to over SSL/WSS. See [example server](../essentials/server.md#ssltls-support).
 
 <h2 id="subscription-filters">Subscription Filters</h2>
 
