@@ -1,4 +1,4 @@
-import * as protobuf from './protobuf';
+const protobuf = require('./protobuf');
 
 // Override the generated protobuf Traces.encode function so that it will look
 // for Traces that are already encoded to Buffer as well as unencoded
@@ -11,7 +11,7 @@ import * as protobuf from './protobuf';
 const originalTracesEncode = protobuf.Traces.encode;
 protobuf.Traces.encode = function(message, originalWriter) {
   const writer = originalTracesEncode(message, originalWriter);
-  const encodedTraces = (message as any).encodedTraces;
+  const encodedTraces = message.encodedTraces;
   if (encodedTraces != null && encodedTraces.length) {
     for (let i = 0; i < encodedTraces.length; ++i) {
       writer.uint32(/* id 1, wireType 2 =*/ 10);
@@ -21,4 +21,4 @@ protobuf.Traces.encode = function(message, originalWriter) {
   return writer;
 };
 
-export = protobuf;
+module.exports = protobuf;
