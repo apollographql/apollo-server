@@ -21,4 +21,4 @@ protobuf.Traces.encode = function(message, originalWriter) {
   return writer;
 };
 
-export * from './protobuf';
+export = protobuf;
