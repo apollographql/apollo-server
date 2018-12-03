@@ -82,3 +82,10 @@ export function getOperationManifestUrl(
 ): string {
   return [urlOperationManifestBase, hashedServiceId, schemaHash].join('/');
 }
+
+export function hashForLogging(hash: string): string {
+  if (typeof hash !== 'string') {
+    return '<non-string>';
+  }
+  return hash.substring(0, 8);
+}

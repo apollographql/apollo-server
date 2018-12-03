@@ -1,5 +1,10 @@
 import * as assert from 'assert';
-import { pluginName, generateOperationHash, getCacheKey } from './common';
+import {
+  pluginName,
+  generateOperationHash,
+  getCacheKey,
+  hashForLogging,
+} from './common';
 import {
   ApolloServerPlugin,
   GraphQLServiceContext,
@@ -99,7 +104,10 @@ export default function plugin(options: Options = Object.create(null)) {
             throw new ApolloError('No document.');
           }
 
-          logger.debug(`Looking up operation in local registry.`);
+          // The hashes are quite long and it seems we can get by with a substr.
+          const logHash = hashForLogging(hash);
+
+          logger.debug(`${logHash}: Looking up operation in local registry.`);
 
           // Try to fetch the operation from the cache of operations we're
           // currently aware of, which has been populated by the operation
@@ -109,12 +117,14 @@ export default function plugin(options: Options = Object.create(null)) {
           // If we have a hit, we'll return immediately, signaling that we're
           // not intending to block this request.
           if (cacheFetch) {
-            logger.debug(`Permitting operation found in local registry.`);
+            logger.debug(
+              `${logHash}: Permitting operation found in local registry.`,
+            );
             return;
           }
 
           logger.debug(
-            `Denying operation since it's missing from the local registry.`,
+            `${logHash}: Denying operation since it's missing from the local registry.`,
           );
           throw new ForbiddenError('Execution forbidden');
         },
