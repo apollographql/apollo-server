@@ -169,8 +169,8 @@ export class EngineReportingAgent<TContext = any> {
       this.report.tracesPerQuery[statsReportKey] = new Traces();
       (this.report.tracesPerQuery[statsReportKey] as any).encodedTraces = [];
     }
-    // See comment on our override of Traces.encode to learn more about this
-    // strategy.
+    // See comment on our override of Traces.encode inside of
+    // apollo-engine-reporting-protobuf to learn more about this strategy.
     (this.report.tracesPerQuery[statsReportKey] as any).encodedTraces.push(
       encodedTrace,
     );
