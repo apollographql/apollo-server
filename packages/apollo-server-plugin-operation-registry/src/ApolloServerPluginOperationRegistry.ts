@@ -36,6 +36,11 @@ export default function plugin(options: Options = Object.create(null)) {
     logger.enableAll();
   }
 
+  // Options shouldn't be changed after the plugin has been initiated.
+  // If this proves to be necessary in the future, we can relax this at that
+  // time depending on the usecase.
+  Object.freeze(options);
+
   return (): ApolloServerPlugin => ({
     async serverWillStart({
       schema,
