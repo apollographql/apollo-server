@@ -21,24 +21,22 @@ const getRequiredAgentOptions = (
     cache = defaultCache(),
     schemaHash = genericSchemaHash,
     serviceID = genericServiceID,
-    debug = false,
+    ...addlOptions
   }: {
     cache?: KeyValueCache;
     schemaHash?: string;
     serviceID?: string;
-    debug?: boolean;
   } = {
     cache: defaultCache(),
     schemaHash: genericSchemaHash,
     serviceID: genericServiceID,
-    debug: false,
   },
 ): AgentOptions => ({
   schemaHash,
   engine: { serviceID },
   cache,
   pollSeconds,
-  debug,
+  ...addlOptions,
 });
 
 interface ManifestRecord {
@@ -218,10 +216,21 @@ describe('Agent', () => {
 
       it('logs debug updates to the manifest on startup', async () => {
         nockGoodManifestABC();
-        const consoleDebugMock = (console.debug = jest.fn());
-        await createAgent({ debug: true }).start();
+        const relevantLogs: any = [];
+        const logger = {
+          debug: jest.fn().mockImplementation((...args: any[]) => {
+            if (
+              typeof args[0] === 'string' &&
+              (args[0].match(/Checking for manifest changes/) ||
+                args[0].match(/Incoming manifest ADDs/))
+            ) {
+              relevantLogs.push(args);
+            }
+          }),
+        };
+        await createAgent({ logger }).start();
 
-        expect(consoleDebugMock.mock.calls[0][0]).toBe(
+        expect(relevantLogs[0][0]).toBe(
           `Checking for manifest changes at ${urlResolve(
             fakeBaseUrl,
             pathForServiceAndSchema(genericServiceID, genericSchemaHash),
@@ -229,19 +238,19 @@ describe('Agent', () => {
         );
 
         // Console should indicate the records have been added in order.
-        expect(consoleDebugMock.mock.calls[1][0]).toBe(
+        expect(relevantLogs[1][0]).toBe(
           `Incoming manifest ADDs: ${sampleManifestRecords.a.signature}`,
         );
-        expect(consoleDebugMock.mock.calls[2][0]).toBe(
+        expect(relevantLogs[2][0]).toBe(
           `Incoming manifest ADDs: ${sampleManifestRecords.b.signature}`,
         );
-        expect(consoleDebugMock.mock.calls[3][0]).toBe(
+        expect(relevantLogs[3][0]).toBe(
           `Incoming manifest ADDs: ${sampleManifestRecords.c.signature}`,
         );
 
-        expect(consoleDebugMock.mock.calls.length).toBe(4);
+        expect(relevantLogs.length).toBe(4);
 
-        consoleDebugMock.mockRestore();
+        logger.debug.mockRestore();
       });
 
       it('populates the manifest store after starting', async () => {

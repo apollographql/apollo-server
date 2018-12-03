@@ -16,6 +16,7 @@
     "apollo-server-errors": "file:../apollo-server-errors",
     "apollo-server-plugin-base": "file:../apollo-server-plugin-base",
     "fast-json-stable-stringify": "2.0.0",
+    "loglevel": "1.6.1",
     "node-fetch": "2.2.0"
   },
   "peerDependencies": {

@@ -9,6 +9,7 @@ import { ForbiddenError, ApolloError } from 'apollo-server-errors';
 import Agent from './agent';
 import { GraphQLSchema } from 'graphql/type';
 import { KeyValueCache } from 'apollo-server-caching';
+import loglevel from 'loglevel';
 
 interface Options {
   debug?: boolean;
@@ -18,6 +19,14 @@ export default function plugin(options: Options = Object.create(null)) {
   let agent: Agent;
   let cache: KeyValueCache;
 
+  // Setup logging facilities, scoped under the appropriate name.
+  const logger = loglevel.getLogger(`apollo-server:${pluginName}`);
+
+  // Enable debugging if the `debug` option is true.
+  if (options.debug === true) {
+    logger.enableAll();
+  }
+
   return (): ApolloServerPlugin => ({
     async serverWillStart({
       schema,
@@ -25,18 +34,27 @@ export default function plugin(options: Options = Object.create(null)) {
       engine,
       persistedQueries,
     }: GraphQLServiceContext): Promise<void> {
+      logger.debug('Initializing operation registry plugin.');
+
       assert.ok(schema instanceof GraphQLSchema);
 
       if (!engine || !engine.serviceID) {
-        throw new Error(
-          `${pluginName}: The Engine API key must be set to use the operation registry.`,
-        );
+        const messageEngineConfigurationRequired =
+          'The Engine API key must be set to use the operation registry.';
+        throw new Error(`${pluginName}: ${messageEngineConfigurationRequired}`);
       }
 
+      logger.debug(
+        `Operation registry is configured for '${
+          engine.serviceID
+        }'.  The schema hash is ${schemaHash}.`,
+      );
+
       if (!persistedQueries || !persistedQueries.cache) {
-        throw new Error(
-          `${pluginName}: Persisted queries must be enabled to use the operation registry.`,
-        );
+        const messagePersistedQueriesRequired =
+          'Persisted queries must be enabled to use the operation registry.';
+        logger.error(messagePersistedQueriesRequired);
+        throw new Error(`${pluginName}: ${messagePersistedQueriesRequired}`);
       }
 
       // We currently use which ever store is in place for persisted queries,
@@ -45,11 +63,13 @@ export default function plugin(options: Options = Object.create(null)) {
       // those ejected operations will no longer be permitted!
       cache = persistedQueries.cache;
 
+      logger.debug('Initializing operation registry agent...');
+
       agent = new Agent({
         schemaHash,
         engine,
         cache,
-        debug: options.debug,
+        logger,
       });
 
       await agent.start();
@@ -75,13 +95,24 @@ export default function plugin(options: Options = Object.create(null)) {
             throw new ApolloError('No document.');
           }
 
+          logger.debug(`Looking up operation in local registry.`);
+
           // Try to fetch the operation from the cache of operations we're
           // currently aware of, which has been populated by the operation
           // registry.
           const cacheFetch = await cache.get(getCacheKey(hash));
-          if (!cacheFetch) {
-            throw new ForbiddenError('Execution forbidden');
+
+          // If we have a hit, we'll return immediately, signaling that we're
+          // not intending to block this request.
+          if (cacheFetch) {
+            logger.debug(`Permitting operation found in local registry.`);
+            return;
           }
+
+          logger.debug(
+            `Denying operation since it's missing from the local registry.`,
+          );
+          throw new ForbiddenError('Execution forbidden');
         },
       };
     },
