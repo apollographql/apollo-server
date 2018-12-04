@@ -2,6 +2,8 @@
 
 ### vNEXT
 
+### v2.2.6
+
 - `apollo-server-micro`: Set the `Content-type` to `text/html` for GraphQL Playground. [PR #2026](https://github.com/apollographql/apollo-server/pull/2026)
 
 ### v2.2.5
