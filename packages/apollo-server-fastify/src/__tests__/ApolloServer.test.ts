@@ -29,7 +29,7 @@ const resolvers = {
   },
 };
 
-const port = 8888;
+const port = 9999;
 
 describe('apollo-server-fastify', () => {
   let server: ApolloServer;
