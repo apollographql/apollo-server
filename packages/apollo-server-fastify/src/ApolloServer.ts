@@ -84,11 +84,7 @@ export class ApolloServer extends ApolloServerBase {
             reply.send();
           });
 
-          if (
-            this.uploadsConfig &&
-            typeof processFileUploads !== 'undefined' &&
-            typeof processFileUploads === 'function'
-          ) {
+          if (typeof processFileUploads === 'function' && this.uploadsConfig) {
             instance.addContentTypeParser(
               'multipart',
               async (request: IncomingMessage) =>
