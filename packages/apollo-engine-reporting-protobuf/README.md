@@ -1,18 +1,24 @@
-# apollo-engine-reporting-protobuf
+# `apollo-engine-reporting-protobuf`
 
-This contains generated Javascript/TypeScript code for the protobuf definitions
-for the Engine reporting API.
+> **Note:** The Apollo Engine reporting API is subject to change.  We strongly
+> encourage developers to contact Apollo Engine support to discuss their use
+> case prior to building their own reporting agent using this module.
 
-The Engine reporting API is currently subject to change at any time; do not rely
-on this to build your own client.
+This module provides JavaScript/TypeScript
+[Protocol buffer](https://developers.google.com/protocol-buffers/) definitions
+for the Apollo Engine reporting API.  These definitions are generated for
+consumption from the `reports.proto` file which is defined internally within
+Apollo.
 
 ## Development
 
-Currently this package generates a majority of its code with
+Currently, this package generates a majority of its code with
 [`protobufjs`](https://www.npmjs.com/package/protobufjs) based on the
-`reports.proto` file. The output is generated with the `prepare` command.
-Normally `prepare` is performed by the root package.json with a `postinstall`
-hook. If the code in this package needs to change, you should run `npx lerna
-run prepare` in the root of this monorepo to generate the code changes. Running
-the command in the root enables the `protobuf` binaries, `pbjs` and `pbts`, to
-resolve correctly.
+`reports.proto` file. The output is generated with the `prepare` npm script.
+
+The root of the repository provides the `devDependencies` necessary to build
+these definitions (e.g. `pbjs`, `pbts`, `protobuf`, etc.) and the the `prepare`
+npm script is invoked programmatically via the monorepo tooling (e.g. Lerna)
+thanks to _this_ module's `postinstall` script.   Therefore, when making
+changes to this module, `npx lerna run prepare` should be run from the **root**
+of this monorepo in order to update the definitions in _this_ module.
