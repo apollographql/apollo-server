@@ -2,6 +2,8 @@
 
 ### vNEXT
 
+### v2.2.7-alpha.0
+
 - `apollo-engine-reporting`: When multiple instances of `apollo-engine-reporting` are loaded (an uncommon edge case), ensure that `encodedTraces` are handled only once rather than once per loaded instance. [PR #2040](https://github.com/apollographql/apollo-server/pull/2040)
 
 ### v2.2.6
