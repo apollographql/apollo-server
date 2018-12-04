@@ -12,6 +12,11 @@ Apollo.
 
 ## Development
 
+> **Note:** Due to a dependency on Unix tools (e.g. `bash`, `grep`, etc.), the
+> development of this module requires a Unix system.  There is no reason why
+> this can't be avoided, the time just hasn't been taken to make those changes.
+> We'd happily accept a PR which makes the appropriate changes!
+
 Currently, this package generates a majority of its code with
 [`protobufjs`](https://www.npmjs.com/package/protobufjs) based on the
 `reports.proto` file. The output is generated with the `prepare` npm script.
