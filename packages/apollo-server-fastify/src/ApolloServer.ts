@@ -3,10 +3,10 @@ import { Accepts } from 'accepts';
 import {
   ApolloServerBase,
   PlaygroundRenderPageOptions,
+  processFileUploads,
 } from 'apollo-server-core';
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { IncomingMessage, OutgoingMessage, Server } from 'http';
-import { processRequest as processFileUploads } from '@apollographql/apollo-upload-server';
 import { graphqlFastify } from './fastifyApollo';
 
 const fastJson = require('fast-json-stringify');
@@ -84,11 +84,22 @@ export class ApolloServer extends ApolloServerBase {
             reply.send();
           });
 
-          instance.addContentTypeParser(
-            'multipart',
-            async (request: IncomingMessage) =>
-              processFileUploads(request, this.uploadsConfig),
-          );
+          if (
+            this.uploadsConfig &&
+            typeof processFileUploads !== 'undefined' &&
+            typeof processFileUploads === 'function'
+          ) {
+            instance.addContentTypeParser(
+              'multipart',
+              async (request: IncomingMessage) =>
+                // This extra function guarding is being mandated by TypeScript.
+                // It certainly shouldn't be possible for this parse to even
+                // be present unless `processFileUploads` was a function when
+                // the handler was added (initially at server startup).
+                typeof processFileUploads === 'function' &&
+                processFileUploads(request, this.uploadsConfig),
+            );
+          }
 
           instance.route({
             method: ['GET', 'POST'],
