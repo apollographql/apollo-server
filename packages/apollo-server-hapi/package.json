@@ -1,6 +1,6 @@
 {
   "name": "apollo-server-hapi",
-  "version": "2.2.6",
+  "version": "2.2.7-alpha.0",
   "description": "Production-ready Node.js GraphQL server for Hapi",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
