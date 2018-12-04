@@ -1,6 +1,16 @@
 # Changelog
 
-### vNEXT
+### v2.3.0-alpha
+
+- **BREAKING FOR NODE.JS <= 8.5.0 ONLY**: To continue using Apollo Server 2.x in versions of Node.js prior to v8.5.0, file uploads must be disabled by setting `uploads: false` on the `ApolloServer` constructor options.  Without explicitly disabling file-uploads, the server will `throw` at launch (with instructions and a link to our documentation).
+
+  This early deprecation is due to changes in the third-party `graphql-upload` package which Apollo Server utilizes to implement out-of-the-box file upload functionality.  While, in general, Apollo Server 2.x aims to support all Node.js versions which were under an LTS policy at the time of its release, we felt this required an exception.  By `throw`-ing when `uploads` is not explicitly set to `false`, we aim to make it clear immediately (rather than surprisingly) that this deprecation has taken effect.
+
+  While Node.js 6.x is covered by a [Long Term Support agreement by the Node.js Foundation](https://github.com/nodejs/Release#release-schedule) until April 2019, there are substantial performance (e.g. [V8](https://v8.dev/) improvements) and language changes (e.g. "modern" ECMAScript support) offered by newer Node.js engines (e.g. 8.x, 10.x).  We encourage _all users_ of Apollo Server to update to newer LTS versions of Node.js prior to the "end-of-life" dates for their current server version.
+
+  **We intend to drop support for Node.js 6.x in the next major version of Apollo Server.**
+  
+### v2.2.7-beta.0
 
 ### v2.2.7-alpha.0
 
