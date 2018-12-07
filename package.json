@@ -126,7 +126,7 @@
     "test-listen": "1.1.0",
     "ts-jest": "23.10.5",
     "tslint": "5.11.0",
-    "typescript": "3.2.1",
+    "typescript": "3.2.2",
     "ws": "6.1.0",
     "yup": "0.26.5"
   },
