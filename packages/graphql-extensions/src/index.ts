@@ -49,14 +49,20 @@ export class GraphQLExtension<TContext = any> {
     executionArgs: ExecutionArgs;
   }): EndHandler | void;
 
-  public willSendResponse?(o: Promise<{
-    graphqlResponse: GraphQLResponse;
-    context: TContext;
-  }> | {
-    graphqlResponse: GraphQLResponse;
-    context: TContext;
-  }): Promise<{ graphqlResponse: GraphQLResponse; context: TContext } | void> |
-    { graphqlResponse: GraphQLResponse; context: TContext } | void
+  public willSendResponse?(
+    o:
+      | Promise<{
+          graphqlResponse: GraphQLResponse;
+          context: TContext;
+        }>
+      | {
+          graphqlResponse: GraphQLResponse;
+          context: TContext;
+        },
+  ):
+    | Promise<{ graphqlResponse: GraphQLResponse; context: TContext } | void>
+    | { graphqlResponse: GraphQLResponse; context: TContext }
+    | void;
 
   public willResolveField?(
     source: any,
@@ -112,36 +118,40 @@ export class GraphQLExtensionStack<TContext = any> {
     );
   }
 
-  public willSendResponse(o: Promise<{
-    graphqlResponse: GraphQLResponse;
-    context: TContext;
-  }> | {
-    graphqlResponse: GraphQLResponse;
-    context: TContext;
-  }): Promise<{ graphqlResponse: GraphQLResponse; context: TContext }> | {
-    graphqlResponse: GraphQLResponse;
-    context: TContext;
-  } {
-
+  public willSendResponse(
+    o:
+      | Promise<{
+          graphqlResponse: GraphQLResponse;
+          context: TContext;
+        }>
+      | {
+          graphqlResponse: GraphQLResponse;
+          context: TContext;
+        },
+  ):
+    | Promise<{ graphqlResponse: GraphQLResponse; context: TContext }>
+    | {
+        graphqlResponse: GraphQLResponse;
+        context: TContext;
+      } {
     // Reverse the array, since this is functions as an end handler
 
-    return [...this.extensions].reverse().reduce((promiseChain, currentTask) => {
-      if(currentTask.willSendResponse) {
-        let possiblyAPromise = currentTask.willSendResponse(promiseChain)
-        if(possiblyAPromise && isPromise(possiblyAPromise)){
-          return possiblyAPromise.then(res => res || promiseChain)
+    return [...this.extensions]
+      .reverse()
+      .reduce((promiseChain, currentTask) => {
+        if (currentTask.willSendResponse) {
+          let possiblyAPromise = currentTask.willSendResponse(promiseChain);
+          if (possiblyAPromise && isPromise(possiblyAPromise)) {
+            return possiblyAPromise.then(res => res || promiseChain);
+          } else if (possiblyAPromise) {
+            return possiblyAPromise;
+          } else {
+            return promiseChain;
+          }
+        } else {
+          return promiseChain;
         }
-        else if(possiblyAPromise) {
-          return possiblyAPromise
-        }
-        else {
-          return promiseChain
-        }
-      }
-      else {
-        return promiseChain
-      }
-    }, o);
+      }, o);
   }
 
   public willResolveField(

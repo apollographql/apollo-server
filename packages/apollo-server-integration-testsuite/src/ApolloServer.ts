@@ -641,7 +641,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             throw new Error('nope');
           });
 
-          const validationRule = jest.fn( () => {
+          const validationRule = jest.fn(() => {
             // formatError should be called after validation
             expect(formatError).not.toBeCalled();
             // extension should be called after validation
@@ -653,7 +653,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
           const formatError = jest.fn(async error => {
             try {
-              await new Promise(resolve => setTimeout(resolve, 500))
+              await new Promise(resolve => setTimeout(resolve, 500));
               expect(error).toBeInstanceOf(Error);
               // extension should be called before formatError
               expect(willSendResponseInExtension).toHaveBeenCalledTimes(1);
@@ -699,9 +699,9 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
           const { url: uri } = await createApolloServer({
             typeDefs: gql`
-                type Query {
-                    error: String
-                }
+              type Query {
+                error: String
+              }
             `,
             resolvers: {
               Query: {
@@ -715,7 +715,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             engine: {
               endpointUrl: `http://localhost:${
                 (engineServer.address() as net.AddressInfo).port
-                }`,
+              }`,
               apiKey: 'service:my-app:secret',
               maxUncompressedReportSize: 1,
               generateClientInfo: () => ({

@@ -251,24 +251,25 @@ export function formatApolloErrors(
   if (!formatter) {
     return enrichedErrors;
   }
-  if(isPromise(formatter)) {
-    return Promise.all(enrichedErrors.map(async error => {
-      try {
-        return await formatter(error);
-      } catch (err) {
-        if (debug) {
-          return enrichError(err, debug);
-        } else {
-          // obscure error
-          const newError = fromGraphQLError(
-            new GraphQLError('Internal server error'),
-          );
-          return enrichError(newError, debug);
+  if (isPromise(formatter)) {
+    return Promise.all(
+      enrichedErrors.map(async error => {
+        try {
+          return await formatter(error);
+        } catch (err) {
+          if (debug) {
+            return enrichError(err, debug);
+          } else {
+            // obscure error
+            const newError = fromGraphQLError(
+              new GraphQLError('Internal server error'),
+            );
+            return enrichError(newError, debug);
+          }
         }
-      }
-    }));
-  }
-  else {
+      }),
+    );
+  } else {
     return enrichedErrors.map(error => {
       try {
         return formatter(error);
@@ -283,6 +284,6 @@ export function formatApolloErrors(
           return enrichError(newError, debug);
         }
       }
-    })
+    });
   }
 }

@@ -18,7 +18,7 @@ import { Trace, google } from 'apollo-engine-reporting-protobuf';
 import { EngineReportingOptions, GenerateClientInfo } from './agent';
 import { defaultSignature } from './signature';
 import { GraphQLRequestContext } from 'apollo-server-core/dist/requestPipelineAPI';
-import {isPromise} from "apollo-server-errors";
+import { isPromise } from 'apollo-server-errors';
 
 const clientNameHeaderKey = 'apollographql-client-name';
 const clientReferenceIdHeaderKey = 'apollographql-client-reference-id';
@@ -276,9 +276,13 @@ export class EngineReportingExtension<TContext = any>
     };
   }
 
-  public willSendResponse(o: { graphqlResponse: GraphQLResponse } | Promise<{ graphqlResponse: GraphQLResponse }>) {
+  public willSendResponse(
+    o:
+      | { graphqlResponse: GraphQLResponse }
+      | Promise<{ graphqlResponse: GraphQLResponse }>,
+  ) {
     if (!isPromise(o)) {
-      const {errors} = o.graphqlResponse;
+      const { errors } = o.graphqlResponse;
       if (errors) {
         errors.forEach((error: GraphQLError) => {
           // By default, put errors on the root node.
@@ -292,23 +296,22 @@ export class EngineReportingExtension<TContext = any>
 
           // Always send the trace errors, so that the UI acknowledges that there is an error.
           const errorInfo = this.options.maskErrorDetails
-            ? {message: '<masked>'}
+            ? { message: '<masked>' }
             : {
-              message: error.message,
-              location: (error.locations || []).map(
-                ({line, column}) => new Trace.Location({line, column}),
-              ),
-              json: JSON.stringify(error),
-            };
+                message: error.message,
+                location: (error.locations || []).map(
+                  ({ line, column }) => new Trace.Location({ line, column }),
+                ),
+                json: JSON.stringify(error),
+              };
 
           node!.error!.push(new Trace.Error(errorInfo));
         });
       }
-      return
-    }
-    else {
+      return;
+    } else {
       return o.then(p => {
-        const {errors} = p.graphqlResponse;
+        const { errors } = p.graphqlResponse;
         if (errors) {
           errors.forEach((error: GraphQLError) => {
             // By default, put errors on the root node.
@@ -322,20 +325,20 @@ export class EngineReportingExtension<TContext = any>
 
             // Always send the trace errors, so that the UI acknowledges that there is an error.
             const errorInfo = this.options.maskErrorDetails
-              ? {message: '<masked>'}
+              ? { message: '<masked>' }
               : {
-                message: error.message,
-                location: (error.locations || []).map(
-                  ({line, column}) => new Trace.Location({line, column}),
-                ),
-                json: JSON.stringify(error),
-              };
+                  message: error.message,
+                  location: (error.locations || []).map(
+                    ({ line, column }) => new Trace.Location({ line, column }),
+                  ),
+                  json: JSON.stringify(error),
+                };
 
             node!.error!.push(new Trace.Error(errorInfo));
           });
         }
-        return
-      })
+        return;
+      });
     }
   }
 
