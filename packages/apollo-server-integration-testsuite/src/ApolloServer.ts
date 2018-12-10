@@ -635,6 +635,124 @@ export function testApolloServer<AS extends ApolloServerBase>(
           expect(trace.root!.child![0].error![0].message).toMatch(/nope/);
           expect(trace.root!.child![0].error![0].message).not.toMatch(/masked/);
         });
+
+        it('validation > engine > extensions > asyncFormatError', async () => {
+          const throwError = jest.fn(() => {
+            throw new Error('nope');
+          });
+
+          const validationRule = jest.fn( () => {
+            // formatError should be called after validation
+            expect(formatError).not.toBeCalled();
+            // extension should be called after validation
+            expect(willSendResponseInExtension).not.toBeCalled();
+            return true;
+          });
+
+          const willSendResponseInExtension = jest.fn();
+
+          const formatError = jest.fn(async error => {
+            try {
+              await new Promise(resolve => setTimeout(resolve, 500))
+              expect(error).toBeInstanceOf(Error);
+              // extension should be called before formatError
+              expect(willSendResponseInExtension).toHaveBeenCalledTimes(1);
+              // validationRules should be called before formatError
+              expect(validationRule).toHaveBeenCalledTimes(1);
+            } finally {
+              error.message = 'masked';
+              return error;
+            }
+          });
+
+          class Extension<TContext = any> extends GraphQLExtension {
+            willSendResponse(o: {
+              graphqlResponse: GraphQLResponse;
+              context: TContext;
+            }) {
+              expect(o.graphqlResponse.errors.length).toEqual(1);
+              // formatError should be called after extensions
+              expect(formatError).not.toBeCalled();
+              // validationRules should be called before extensions
+              expect(validationRule).toHaveBeenCalledTimes(1);
+              willSendResponseInExtension();
+            }
+          }
+
+          let engineServerDidStart: Promise<void>;
+
+          const didReceiveTrace = new Promise<ITrace>(resolve => {
+            engineServerDidStart = startEngineServer({
+              check: (req, res) => {
+                const report = FullTracesReport.decode(req.body);
+                const header = report.header;
+                expect(header.schemaTag).toEqual('');
+                expect(header.schemaHash).toBeDefined();
+                const trace = Object.values(report.tracesPerQuery)[0].trace[0];
+                resolve(trace);
+                res.end();
+              },
+            });
+          });
+
+          await engineServerDidStart;
+
+          const { url: uri } = await createApolloServer({
+            typeDefs: gql`
+                type Query {
+                    error: String
+                }
+            `,
+            resolvers: {
+              Query: {
+                error: () => {
+                  throwError();
+                },
+              },
+            },
+            validationRules: [validationRule],
+            extensions: [() => new Extension()],
+            engine: {
+              endpointUrl: `http://localhost:${
+                (engineServer.address() as net.AddressInfo).port
+                }`,
+              apiKey: 'service:my-app:secret',
+              maxUncompressedReportSize: 1,
+              generateClientInfo: () => ({
+                clientName: 'testing',
+                clientReferenceId: '1234',
+                clientVersion: 'v1.0.1',
+              }),
+            },
+            formatError,
+            debug: true,
+          });
+
+          const apolloFetch = createApolloFetch({ uri });
+
+          const result = await apolloFetch({
+            query: `{error}`,
+          });
+          expect(result.data).toEqual({
+            error: null,
+          });
+          expect(result.errors).toBeDefined();
+          expect(result.errors[0].message).toEqual('masked');
+
+          expect(validationRule).toHaveBeenCalledTimes(1);
+          expect(throwError).toHaveBeenCalledTimes(1);
+          expect(formatError).toHaveBeenCalledTimes(1);
+          expect(willSendResponseInExtension).toHaveBeenCalledTimes(1);
+
+          const trace = await didReceiveTrace;
+
+          expect(trace.clientReferenceId).toMatch(/1234/);
+          expect(trace.clientName).toMatch(/testing/);
+          expect(trace.clientVersion).toEqual('v1.0.1');
+
+          expect(trace.root!.child![0].error![0].message).toMatch(/nope/);
+          expect(trace.root!.child![0].error![0].message).not.toMatch(/masked/);
+        });
       });
 
       it('errors thrown in extensions call formatError and are wrapped', async () => {
