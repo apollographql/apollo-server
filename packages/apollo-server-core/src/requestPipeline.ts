@@ -330,7 +330,7 @@ export async function processGraphQLRequest<TContext>(
   ): Promise<GraphQLResponse> {
     // We override errors, data, and extensions with the passed in response,
     // but keep other properties (like http)
-    requestContext.response = extensionStack.willSendResponse({
+    requestContext.response = (await extensionStack.willSendResponse({
       graphqlResponse: {
         ...requestContext.response,
         errors: response.errors,
@@ -338,7 +338,7 @@ export async function processGraphQLRequest<TContext>(
         extensions: response.extensions,
       },
       context: requestContext.context,
-    }).graphqlResponse;
+    })).graphqlResponse;
     await dispatcher.invokeHookAsync(
       'willSendResponse',
       requestContext as WithRequired<typeof requestContext, 'response'>,

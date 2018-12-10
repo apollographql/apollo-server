@@ -438,10 +438,10 @@ export class ApolloServerBase {
                 ? await this.context({ connection, payload: message.payload })
                 : context;
           } catch (e) {
-            throw formatApolloErrors([e], {
+            throw (await formatApolloErrors([e], {
               formatter: this.requestOptions.formatError,
               debug: this.requestOptions.debug,
-            })[0];
+            }))[0];
           }
 
           return { ...connection, context };

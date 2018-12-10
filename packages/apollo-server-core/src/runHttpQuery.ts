@@ -69,16 +69,16 @@ export class HttpQueryError extends Error {
 /**
  * If options is specified, then the errors array will be formatted
  */
-function throwHttpGraphQLError<E extends Error>(
+async function throwHttpGraphQLError<E extends Error>(
   statusCode: number,
   errors: Array<E>,
   options?: Pick<GraphQLOptions, 'debug' | 'formatError'>,
-): never {
+): Promise<never> | never {
   throw new HttpQueryError(
     statusCode,
     prettyJSONStringify({
       errors: options
-        ? formatApolloErrors(errors, {
+        ? await formatApolloErrors(errors, {
             debug: options.debug,
             formatter: options.formatError,
           })
@@ -110,7 +110,7 @@ export async function runHttpQuery(
     if (!debugDefault) {
       e.warning = `To remove the stacktrace, set the NODE_ENV environment variable to production if the options creation can fail`;
     }
-    return throwHttpGraphQLError(500, [e], { debug: debugDefault });
+    return await throwHttpGraphQLError(500, [e], { debug: debugDefault });
   }
   if (options.debug === undefined) {
     options.debug = debugDefault;
@@ -135,9 +135,9 @@ export async function runHttpQuery(
         e.extensions.code &&
         e.extensions.code !== 'INTERNAL_SERVER_ERROR'
       ) {
-        return throwHttpGraphQLError(400, [e], options);
+        return await throwHttpGraphQLError(400, [e], options);
       } else {
-        return throwHttpGraphQLError(500, [e], options);
+        return await throwHttpGraphQLError(500, [e], options);
       }
     }
   }
@@ -265,7 +265,7 @@ export async function processHTTPRequest<TContext>(
             // A batch can contain another query that returns data,
             // so we don't error out the entire request with an HttpError
             return {
-              errors: formatApolloErrors([error], options),
+              errors: await formatApolloErrors([error], options),
             };
           }
         }),
@@ -284,7 +284,7 @@ export async function processHTTPRequest<TContext>(
         // doesn't reach GraphQL execution
         if (response.errors && typeof response.data === 'undefined') {
           // don't include options, since the errors have already been formatted
-          return throwHttpGraphQLError(400, response.errors as any);
+          return await throwHttpGraphQLError(400, response.errors as any);
         }
 
         if (response.http) {
@@ -301,7 +301,7 @@ export async function processHTTPRequest<TContext>(
           error instanceof PersistedQueryNotSupportedError ||
           error instanceof PersistedQueryNotFoundError
         ) {
-          return throwHttpGraphQLError(200, [error], options);
+          return await throwHttpGraphQLError(200, [error], options);
         } else {
           throw error;
         }
@@ -311,7 +311,7 @@ export async function processHTTPRequest<TContext>(
     if (error instanceof HttpQueryError) {
       throw error;
     }
-    return throwHttpGraphQLError(500, [error], options);
+    return await throwHttpGraphQLError(500, [error], options);
   }
 
   responseInit.headers!['Content-Length'] = Buffer.byteLength(

@@ -49,10 +49,14 @@ export class GraphQLExtension<TContext = any> {
     executionArgs: ExecutionArgs;
   }): EndHandler | void;
 
-  public willSendResponse?(o: {
+  public willSendResponse?(o: Promise<{
     graphqlResponse: GraphQLResponse;
     context: TContext;
-  }): void | { graphqlResponse: GraphQLResponse; context: TContext };
+  }> | {
+    graphqlResponse: GraphQLResponse;
+    context: TContext;
+  }): Promise<{ graphqlResponse: GraphQLResponse; context: TContext } | void> |
+    { graphqlResponse: GraphQLResponse; context: TContext } | void
 
   public willResolveField?(
     source: any,
@@ -108,21 +112,36 @@ export class GraphQLExtensionStack<TContext = any> {
     );
   }
 
-  public willSendResponse(o: {
+  public willSendResponse(o: Promise<{
     graphqlResponse: GraphQLResponse;
     context: TContext;
-  }): { graphqlResponse: GraphQLResponse; context: TContext } {
-    let reference = o;
+  }> | {
+    graphqlResponse: GraphQLResponse;
+    context: TContext;
+  }): Promise<{ graphqlResponse: GraphQLResponse; context: TContext }> | {
+    graphqlResponse: GraphQLResponse;
+    context: TContext;
+  } {
+
     // Reverse the array, since this is functions as an end handler
-    [...this.extensions].reverse().forEach(extension => {
-      if (extension.willSendResponse) {
-        const result = extension.willSendResponse(reference);
-        if (result) {
-          reference = result;
+
+    return [...this.extensions].reverse().reduce((promiseChain, currentTask) => {
+      if(currentTask.willSendResponse) {
+        let possiblyAPromise = currentTask.willSendResponse(promiseChain)
+        if(possiblyAPromise && isPromise(possiblyAPromise)){
+          return possiblyAPromise.then(res => res || promiseChain)
+        }
+        else if(possiblyAPromise) {
+          return possiblyAPromise
+        }
+        else {
+          return promiseChain
         }
       }
-    });
-    return reference;
+      else {
+        return promiseChain
+      }
+    }, o);
   }
 
   public willResolveField(
@@ -282,7 +301,7 @@ function wrapField(field: GraphQLField<any, any>): void {
   };
 }
 
-function isPromise(x: any): boolean {
+function isPromise(x: any): x is Promise<any> {
   return x && typeof x.then === 'function';
 }
 

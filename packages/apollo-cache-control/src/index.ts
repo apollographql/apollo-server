@@ -9,6 +9,7 @@ import {
 } from 'graphql';
 
 import { GraphQLExtension, GraphQLResponse } from 'graphql-extensions';
+import {isPromise} from "apollo-server-errors";
 
 export interface CacheControlFormat {
   version: 1;
@@ -136,18 +137,38 @@ export class CacheControlExtension<TContext = any>
     ];
   }
 
-  public willSendResponse?(o: { graphqlResponse: GraphQLResponse }) {
-    if (this.options.calculateHttpHeaders && o.graphqlResponse.http) {
-      const overallCachePolicy = this.computeOverallCachePolicy();
+  public willSendResponse?(o: { graphqlResponse: GraphQLResponse } | Promise<{ graphqlResponse: GraphQLResponse }>) {
+    if(!isPromise(o)) {
+      if (this.options.calculateHttpHeaders && o.graphqlResponse.http) {
+        const overallCachePolicy = this.computeOverallCachePolicy();
 
-      if (overallCachePolicy) {
-        o.graphqlResponse.http.headers.set(
-          'Cache-Control',
-          `max-age=${
-            overallCachePolicy.maxAge
-          }, ${overallCachePolicy.scope.toLowerCase()}`,
-        );
+        if (overallCachePolicy) {
+          o.graphqlResponse.http.headers.set(
+            'Cache-Control',
+            `max-age=${
+              overallCachePolicy.maxAge
+              }, ${overallCachePolicy.scope.toLowerCase()}`,
+          );
+        }
       }
+      return
+    }
+    else {
+      return o.then(p => {
+        if (this.options.calculateHttpHeaders && p.graphqlResponse.http) {
+          const overallCachePolicy = this.computeOverallCachePolicy();
+
+          if (overallCachePolicy) {
+            p.graphqlResponse.http.headers.set(
+              'Cache-Control',
+              `max-age=${
+                overallCachePolicy.maxAge
+                }, ${overallCachePolicy.scope.toLowerCase()}`,
+            );
+          }
+        }
+        return
+      })
     }
   }
 
