@@ -9,7 +9,10 @@ import {
 } from 'graphql';
 
 import { GraphQLExtension, GraphQLResponse } from 'graphql-extensions';
-import { isPromise } from 'apollo-server-errors';
+
+function isPromise(x: any): x is Promise<any> {
+  return x && typeof x.then === 'function';
+}
 
 export interface CacheControlFormat {
   version: 1;

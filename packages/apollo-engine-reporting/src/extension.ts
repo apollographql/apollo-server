@@ -18,7 +18,10 @@ import { Trace, google } from 'apollo-engine-reporting-protobuf';
 import { EngineReportingOptions, GenerateClientInfo } from './agent';
 import { defaultSignature } from './signature';
 import { GraphQLRequestContext } from 'apollo-server-core/dist/requestPipelineAPI';
-import { isPromise } from 'apollo-server-errors';
+
+function isPromise(x: any): x is Promise<any> {
+  return x && typeof x.then === 'function';
+}
 
 const clientNameHeaderKey = 'apollographql-client-name';
 const clientReferenceIdHeaderKey = 'apollographql-client-reference-id';
