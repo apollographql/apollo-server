@@ -13,19 +13,20 @@ The `Union` type indicates that a field can return more than one object type, bu
 const { gql } = require('apollo-server');
 
 const typeDefs = gql`
-union Result = Book | Author
+  union Result = Book | Author
 
-type Book {
-  title: String
-}
+  type Book {
+    title: String
+  }
 
-type Author {
-  name: String
-}
+  type Author {
+    name: String
+  }
 
-type Query {
-  search: [Result]
-}`;
+  type Query {
+    search: [Result]
+  }
+`;
 ```
 
 Since a query requesting a union field, a query being made on a field which is union-typed must specify the object types containing the fields it wants. This ambiguity is solved by an extra `__resolveType` field in the resolver map. `__resolveType` defines the type of the result is out of the available options to GraphQL execution environment.

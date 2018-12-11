@@ -16,18 +16,18 @@ const { gql } = require('apollo-server');
 const { find, filter } = require('lodash');
 
 const schema = gql`
-type Book {
-  title: String
-  author: Author
-}
+  type Book {
+    title: String
+    author: Author
+  }
 
-type Author {
-  books: [Book]
-}
+  type Author {
+    books: [Book]
+  }
 
-type Query {
-  author: Author
-}
+  type Query {
+    author: Author
+  }
 `;
 
 const resolvers = {
