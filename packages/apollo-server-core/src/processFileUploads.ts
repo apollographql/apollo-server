@@ -1,3 +1,5 @@
+/// <reference path="./types/graphql-upload.d.ts" />
+
 import supportsUploadsInNode from './utils/supportsUploadsInNode';
 
 // We'll memoize this function once at module load time since it should never
