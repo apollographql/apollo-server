@@ -133,7 +133,7 @@ export async function runHttpQuery(
       if (
         !e.extensions ||
         !e.extensions.code ||
-        !e.extensions.code === 'INTERNAL_SERVER_ERROR'
+        e.extensions.code === 'INTERNAL_SERVER_ERROR'
       ) {
         return throwHttpGraphQLError(500, [e], options);
       } else {
