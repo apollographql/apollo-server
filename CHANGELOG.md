@@ -1,6 +1,6 @@
 # Changelog
 
-### v2.3.0-alpha
+### v2.3.0
 
 - **BREAKING FOR NODE.JS <= 8.5.0 ONLY**: To continue using Apollo Server 2.x in versions of Node.js prior to v8.5.0, file uploads must be disabled by setting `uploads: false` on the `ApolloServer` constructor options.  Without explicitly disabling file-uploads, the server will `throw` at launch (with instructions and a link to our documentation).
 
@@ -10,9 +10,7 @@
 
   **We intend to drop support for Node.js 6.x in the next major version of Apollo Server.**
   
-### v2.2.7-beta.0
-
-### v2.2.7-alpha.0
+### v2.2.7
 
 - `apollo-engine-reporting`: When multiple instances of `apollo-engine-reporting` are loaded (an uncommon edge case), ensure that `encodedTraces` are handled only once rather than once per loaded instance. [PR #2040](https://github.com/apollographql/apollo-server/pull/2040)
 
