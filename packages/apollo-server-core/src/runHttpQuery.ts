@@ -131,13 +131,20 @@ export async function runHttpQuery(
       // For errors that are not internal, such as authentication, we
       // should provide a 400 response
       if (
-        e.extensions &&
-        e.extensions.code &&
-        e.extensions.code !== 'INTERNAL_SERVER_ERROR'
+        !e.extensions ||
+        !e.extensions.code ||
+        !e.extensions.code === 'INTERNAL_SERVER_ERROR'
       ) {
-        return throwHttpGraphQLError(400, [e], options);
-      } else {
         return throwHttpGraphQLError(500, [e], options);
+      } else {
+        switch(e.extensions.code) {
+          case 'UNAUTHENTICATED':
+            return throwHttpGraphQLError(401, [e], options);
+          case 'FORBIDDEN': 
+            return throwHttpGraphQLError(403, [e], options);
+          default:
+            return throwHttpGraphQLError(400, [e], options);
+        }
       }
     }
   }
