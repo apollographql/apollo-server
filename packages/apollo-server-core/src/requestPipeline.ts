@@ -135,15 +135,9 @@ export async function processGraphQLRequest<TContext>(
 
       persistedQueryRegister = true;
 
-      // Store the query asynchronously so we don't block.
-      (async () => {
-        return (
-          config.persistedQueries &&
-          config.persistedQueries.cache.set(`apq:${queryHash}`, query)
-        );
-      })().catch(error => {
-        console.warn(error);
-      });
+      Promise.resolve(
+        config.persistedQueries.cache.set(`apq:${queryHash}`, query),
+      ).catch(console.warn);
     }
   } else if (query) {
     // FIXME: We'll compute the APQ query hash to use as our cache key for
