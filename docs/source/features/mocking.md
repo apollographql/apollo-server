@@ -15,9 +15,9 @@ This example demonstrates mocking a GraphQL schema with just one line of code, u
 const { ApolloServer, gql } = require('apollo-server');
 
 const typeDefs = gql`
-type Query {
-  hello: String
-}
+  type Query {
+    hello: String
+  }
 `;
 
 const server = new ApolloServer({
@@ -32,7 +32,7 @@ server.listen().then(({ url }) => {
 
 > Note: If `typeDefs` has custom scalar types, `resolvers` must still contain the `serialize`, `parseValue`, and `parseLiteral` functions
 
-Mocking logic simply looks at the type definitions and returns a string where a string is expected, a number for a number, etc. This provides the right shape of result. By default, when using mocks, any existing resolvers are ignored. See the ["Using existing resolvers with mocks"](#existing-resolvers) section below for more info on how to change this behavior. 
+Mocking logic simply looks at the type definitions and returns a string where a string is expected, a number for a number, etc. This provides the right shape of result. By default, when using mocks, any existing resolvers are ignored. See the ["Using existing resolvers with mocks"](#existing-resolvers) section below for more info on how to change this behavior.
 
 For more sophisticated testing, mocks can be customized to a particular data model.
 
@@ -44,10 +44,10 @@ In addition to a boolean, `mocks` can be an object that describes custom mocking
 const { ApolloServer, gql } = require('apollo-server');
 
 const typeDefs = gql`
-type Query {
-  hello: String
-  resolved: String
-}
+  type Query {
+    hello: String
+    resolved: String
+  }
 `;
 
 const resolvers = {
@@ -149,16 +149,16 @@ For some more background and flavor on this approach, read the ["Mocking your se
 
 The default behavior for mocks is to overwrite the resolvers already present in the schema. To keep the existing resolvers, set the `mockEntireSchema` option to false.
 
-> Note: mocking resolvers will not work if the `mocks` option is `false`, even if `mockEntireSchema` is true. 
+> Note: mocking resolvers will not work if the `mocks` option is `false`, even if `mockEntireSchema` is true.
 
 ```js line=26
 const { ApolloServer, gql } = require('apollo-server');
 
 const typeDefs = gql`
-type Query {
-  hello: String
-  resolved: String
-}
+  type Query {
+    hello: String
+    resolved: String
+  }
 `;
 
 const resolvers = {

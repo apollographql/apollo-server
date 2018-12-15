@@ -53,10 +53,11 @@ In order to apply this implementation to a schema that contains `@deprecated` di
 const { ApolloServer, gql } = require("apollo-server");
 
 const typeDefs = gql`
-type ExampleType {
-  newField: String
-  oldField: String @deprecated(reason: "Use \`newField\`.")
-}`;
+  type ExampleType {
+    newField: String
+    oldField: String @deprecated(reason: "Use \`newField\`.")
+  }
+`;
 
 const server = new ApolloServer({
   typeDefs,
@@ -96,11 +97,12 @@ const { ApolloServer, gql, SchemaDirectiveVisitor } = require("apollo-server");
 const { defaultFieldResolver } = require("graphql");
 
 const typeDefs = gql`
-directive @upper on FIELD_DEFINITION
+  directive @upper on FIELD_DEFINITION
 
-type Query {
-  hello: String @upper
-}`;
+  type Query {
+    hello: String @upper
+  }
+`;
 
 class UpperCaseDirective extends SchemaDirectiveVisitor {
   visitFieldDefinition(field) {
@@ -138,11 +140,12 @@ Suppose you've defined an object type that corresponds to a [REST](https://en.wi
 const { ApolloServer, gql, SchemaDirectiveVisitor } = require("apollo-server");
 
 const typeDefs = gql`
-directive @rest(url: String) on FIELD_DEFINITION
+  directive @rest(url: String) on FIELD_DEFINITION
 
-type Query {
-  people: [Person] @rest(url: "/api/v1/people")
-}`;
+  type Query {
+    people: [Person] @rest(url: "/api/v1/people")
+  }
+`;
 
 class RestDirective extends SchemaDirectiveVisitor {
   public visitFieldDefinition(field) {
@@ -173,13 +176,14 @@ Suppose your resolver returns a `Date` object but you want to return a formatted
 const { ApolloServer, gql, SchemaDirectiveVisitor } = require("apollo-server");
 
 const typeDefs = gql`
-directive @date(format: String) on FIELD_DEFINITION
+  directive @date(format: String) on FIELD_DEFINITION
 
-scalar Date
+  scalar Date
 
-type Post {
-  published: Date @date(format: "mmmm d, yyyy")
-}`;
+  type Post {
+    published: Date @date(format: "mmmm d, yyyy")
+  }
+`;
 
 class DateFormatDirective extends SchemaDirectiveVisitor {
   visitFieldDefinition(field) {
@@ -214,15 +218,16 @@ const formatDate = require("dateformat");
 const { defaultFieldResolver, GraphQLString } = require("graphql");
 
 const typeDefs = gql`
-directive @date(
-  defaultFormat: String = "mmmm d, yyyy"
-) on FIELD_DEFINITION
+  directive @date(
+    defaultFormat: String = "mmmm d, yyyy"
+  ) on FIELD_DEFINITION
 
-scalar Date
+  scalar Date
 
-type Query {
-  today: Date @date
-}`;
+  type Query {
+    today: Date @date
+  }
+`;
 
 class FormattableDateDirective extends SchemaDirectiveVisitor {
   public visitFieldDefinition(field) {
@@ -292,11 +297,12 @@ Here's how you might make sure `translate` is used to localize the `greeting` fi
 const { ApolloServer, gql, SchemaDirectiveVisitor } = require("apollo-server");
 
 const typeDefs = gql`
-directive @intl on FIELD_DEFINITION
+  directive @intl on FIELD_DEFINITION
 
-type Query {
-  greeting: String @intl
-}`;
+  type Query {
+    greeting: String @intl
+  }
+`;
 
 class IntlDirective extends SchemaDirectiveVisitor {
   visitFieldDefinition(field, details) {
@@ -519,27 +525,28 @@ const { GraphQLID } = require("graphql");
 const { createHash } = require("crypto");
 
 const typeDefs = gql`
-directive @uniqueID(
-  # The name of the new ID field, "uid" by default:
-  name: String = "uid"
+  directive @uniqueID(
+    # The name of the new ID field, "uid" by default:
+    name: String = "uid"
 
-  # Which fields to include in the new ID:
-  from: [String] = ["id"]
-) on OBJECT
+    # Which fields to include in the new ID:
+    from: [String] = ["id"]
+  ) on OBJECT
 
-# Since this type just uses the default values of name and from,
-# we don't have to pass any arguments to the directive:
-type Location @uniqueID {
-  id: Int
-  address: String
-}
+  # Since this type just uses the default values of name and from,
+  # we don't have to pass any arguments to the directive:
+  type Location @uniqueID {
+    id: Int
+    address: String
+  }
 
-# This type uses both the person's name and the personID field,
-# in addition to the "Person" type name, to construct the ID:
-type Person @uniqueID(from: ["name", "personID"]) {
-  personID: Int
-  name: String
-}`;
+  # This type uses both the person's name and the personID field,
+  # in addition to the "Person" type name, to construct the ID:
+  type Person @uniqueID(from: ["name", "personID"]) {
+    personID: Int
+    name: String
+  }
+`;
 
 class UniqueIdDirective extends SchemaDirectiveVisitor {
   visitObject(type) {
