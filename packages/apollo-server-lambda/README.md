@@ -20,7 +20,7 @@ To deploy the AWS Lambda function we must create a Cloudformation Template and a
 In a file named `graphql.js`, place the following code:
 
 ```js
-const { ApolloServer, gql } = require('apollo-server-lambda');
+const { ApolloServer, gql, defaultPlaygroundOptions } = require('apollo-server-lambda');
 
 // Construct a schema, using GraphQL schema language
 const typeDefs = gql`
@@ -39,6 +39,7 @@ const resolvers = {
 const server = new ApolloServer({
   typeDefs,
   resolvers,
+  playground: defaultPlaygroundOptions // optional, if you want the graphql playground
 });
 
 exports.handler = server.createHandler();
