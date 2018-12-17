@@ -14,6 +14,8 @@
 
   **We intend to drop support for Node.js 6.x in the next major version of Apollo Server.**
   
+  For more information, see [PR #2054](https://github.com/apollographql/apollo-server/pull/2054).
+  
 ### v2.2.7
 
 - `apollo-engine-reporting`: When multiple instances of `apollo-engine-reporting` are loaded (an uncommon edge case), ensure that `encodedTraces` are handled only once rather than once per loaded instance. [PR #2040](https://github.com/apollographql/apollo-server/pull/2040)
