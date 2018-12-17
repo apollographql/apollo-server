@@ -14,7 +14,7 @@
 
   **We intend to drop support for Node.js 6.x in the next major version of Apollo Server.**
   
-  For more information, see [PR #2054](https://github.com/apollographql/apollo-server/pull/2054).
+  For more information, see [PR #2054](https://github.com/apollographql/apollo-server/pull/2054) and [our documentation](https://www.apollographql.com/docs/apollo-server/v2/migration-file-uploads.html).
   
 ### v2.2.7
 
