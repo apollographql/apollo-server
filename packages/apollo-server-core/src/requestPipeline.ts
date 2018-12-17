@@ -191,7 +191,9 @@ export async function processGraphQLRequest<TContext>(
 
     const validationErrors = validate(document);
 
-    if (validationErrors.length > 0) {
+    if (validationErrors.length === 0) {
+      validationDidEnd();
+    } else {
       validationDidEnd(validationErrors);
       return sendResponse({
         errors: validationErrors.map(validationError =>
@@ -201,8 +203,6 @@ export async function processGraphQLRequest<TContext>(
         ),
       });
     }
-
-    validationDidEnd();
 
     // FIXME: If we want to guarantee an operation has been set when invoking
     // `willExecuteOperation` and executionDidStart`, we need to throw an
