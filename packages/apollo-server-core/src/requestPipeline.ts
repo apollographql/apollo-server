@@ -22,6 +22,7 @@ import {
 } from 'apollo-cache-control';
 import { TracingExtension } from 'apollo-tracing';
 import {
+  ApolloError,
   fromGraphQLError,
   SyntaxError,
   ValidationError,
@@ -173,13 +174,7 @@ export async function processGraphQLRequest<TContext>(
       parsingDidEnd();
     } catch (syntaxError) {
       parsingDidEnd(syntaxError);
-      return sendResponse({
-        errors: [
-          fromGraphQLError(syntaxError, {
-            errorClass: SyntaxError,
-          }),
-        ],
-      });
+      return sendErrorResponse(syntaxError, SyntaxError);
     }
 
     requestContext.document = document;
@@ -195,13 +190,7 @@ export async function processGraphQLRequest<TContext>(
       validationDidEnd();
     } else {
       validationDidEnd(validationErrors);
-      return sendResponse({
-        errors: validationErrors.map(validationError =>
-          fromGraphQLError(validationError, {
-            errorClass: ValidationError,
-          }),
-        ),
-      });
+      return sendErrorResponse(validationErrors, ValidationError);
     }
 
     // FIXME: If we want to guarantee an operation has been set when invoking
@@ -242,9 +231,7 @@ export async function processGraphQLRequest<TContext>(
       executionDidEnd();
     } catch (executionError) {
       executionDidEnd(executionError);
-      return sendResponse({
-        errors: [fromGraphQLError(executionError)],
-      });
+      return sendErrorResponse(executionError);
     }
 
     const formattedExtensions = extensionStack.format();
@@ -338,6 +325,27 @@ export async function processGraphQLRequest<TContext>(
       requestContext as WithRequired<typeof requestContext, 'response'>,
     );
     return requestContext.response!;
+  }
+
+  function sendErrorResponse(
+    errorOrErrors: ReadonlyArray<GraphQLError> | GraphQLError,
+    errorClass?: typeof ApolloError,
+  ) {
+    // If a single error is passed, it should still be encapsulated in an array.
+    const errors = Array.isArray(errorOrErrors)
+      ? errorOrErrors
+      : [errorOrErrors];
+
+    return sendResponse({
+      errors: errors.map(err =>
+        fromGraphQLError(
+          err,
+          errorClass && {
+            errorClass,
+          },
+        ),
+      ),
+    });
   }
 
   function initializeRequestListenerDispatcher(): Dispatcher<
