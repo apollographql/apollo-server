@@ -39,4 +39,7 @@ export class InMemoryLRUCache<V = string> implements KeyValueCache<V> {
   async delete(key: string) {
     this.store.del(key);
   }
+  async flush(): Promise<void> {
+    this.store.reset();
+  }
 }
