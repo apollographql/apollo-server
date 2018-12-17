@@ -6,7 +6,7 @@ import {
 } from 'graphql';
 import { GraphQLExtension } from 'graphql-extensions';
 import { CacheControlExtensionOptions } from 'apollo-cache-control';
-import { KeyValueCache } from 'apollo-server-caching';
+import { KeyValueCache, InMemoryLRUCache } from 'apollo-server-caching';
 import { DataSource } from 'apollo-datasource';
 import { ApolloServerPlugin } from 'apollo-server-plugin-base';
 
@@ -43,6 +43,7 @@ export interface GraphQLServerOptions<
   cache?: KeyValueCache;
   persistedQueries?: PersistedQueryOptions;
   plugins?: ApolloServerPlugin[];
+  documentStore?: InMemoryLRUCache<DocumentNode>;
 }
 
 export type DataSources<TContext> = {
