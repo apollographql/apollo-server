@@ -3,7 +3,7 @@ import Redis from 'redis';
 import { promisify } from 'util';
 import DataLoader from 'dataloader';
 
-export class RedisCache implements KeyValueCache {
+export class RedisCache implements KeyValueCache<string> {
   // FIXME: Replace any with proper promisified type
   readonly client: any;
   readonly defaultSetOptions = {
@@ -31,11 +31,11 @@ export class RedisCache implements KeyValueCache {
 
   async set(
     key: string,
-    data: string,
+    value: string,
     options?: { ttl?: number },
   ): Promise<void> {
     const { ttl } = Object.assign({}, this.defaultSetOptions, options);
-    await this.client.set(key, data, 'EX', ttl);
+    await this.client.set(key, value, 'EX', ttl);
   }
 
   async get(key: string): Promise<string | undefined> {
