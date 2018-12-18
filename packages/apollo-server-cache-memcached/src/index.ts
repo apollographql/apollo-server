@@ -22,11 +22,11 @@ export class MemcachedCache implements KeyValueCache {
 
   async set(
     key: string,
-    data: string,
+    value: string,
     options?: { ttl?: number },
   ): Promise<void> {
     const { ttl } = Object.assign({}, this.defaultSetOptions, options);
-    await this.client.set(key, data, ttl);
+    await this.client.set(key, value, ttl);
   }
 
   async get(key: string): Promise<string | undefined> {

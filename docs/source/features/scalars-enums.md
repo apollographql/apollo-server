@@ -36,17 +36,15 @@ const { ApolloServer, gql } = require('apollo-server');
 const GraphQLJSON = require('graphql-type-json');
 
 const schemaString = gql`
+  scalar JSON
 
-scalar JSON
+  type Foo {
+    aField: JSON
+  }
 
-type Foo {
-  aField: JSON
-}
-
-type Query {
-  foo: Foo
-}
-
+  type Query {
+    foo: Foo
+  }
 `;
 
 const resolveFunctions = {
@@ -92,17 +90,15 @@ const myCustomScalarType = new GraphQLScalarType({
 });
 
 const schemaString = gql`
+  scalar MyCustomScalar
 
-scalar MyCustomScalar
+  type Foo {
+    aField: MyCustomScalar
+  }
 
-type Foo {
-  aField: MyCustomScalar
-}
-
-type Query {
-  foo: Foo
-}
-
+  type Query {
+    foo: Foo
+  }
 `;
 
 const resolverFunctions = {
@@ -127,11 +123,12 @@ The goal is to define a `Date` data type for returning `Date` values from the da
 The following is the implementation of the `Date` data type. First, the schema:
 
 ```js
-const typeDefs = gql`scalar Date
+const typeDefs = gql`
+  scalar Date
 
-type MyType {
-   created: Date
-}
+  type MyType {
+    created: Date
+  }
 `
 ```
 
@@ -172,11 +169,12 @@ server.listen().then(({ url }) => {
 In this example, we follow the [official GraphQL documentation](http://graphql.org/docs/api-reference-type-system/) for the scalar datatype, which demonstrates how to validate a database field that should only contain odd numbers in GraphQL. First, the schema:
 
 ```js
-const typeDefs = gql`scalar Odd
+const typeDefs = gql`
+  scalar Odd
 
-type MyType {
+  type MyType {
     oddValue: Odd
-}
+  }
 `
 ```
 
