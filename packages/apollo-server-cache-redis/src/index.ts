@@ -31,11 +31,11 @@ export class RedisCache implements KeyValueCache<string> {
 
   async set(
     key: string,
-    data: string,
+    value: string,
     options?: { ttl?: number },
   ): Promise<void> {
     const { ttl } = Object.assign({}, this.defaultSetOptions, options);
-    await this.client.set(key, data, 'EX', ttl);
+    await this.client.set(key, value, 'EX', ttl);
   }
 
   async get(key: string): Promise<string | undefined> {
