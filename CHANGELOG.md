@@ -1,5 +1,9 @@
 # Changelog
 
+### v2.4.0-alpha
+
+- Implement an in-memory cache store to save parsed and validated documents and provide performance benefits for successful executions of the same document. [PR #2111](https://github.com/apollographql/apollo-server/pull/2111)
+
 ### v2.3.1
 
 - Provide types for `graphql-upload` in a location where they can be accessed by TypeScript consumers of `apollo-server` packages. [ccf935f9](https://github.com/apollographql/apollo-server/commit/ccf935f9) [Issue #2092](https://github.com/apollographql/apollo-server/issues/2092)
