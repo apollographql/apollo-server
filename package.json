@@ -70,7 +70,6 @@
     "@types/graphql": "14.0.3",
     "@types/hapi": "17.8.2",
     "@types/jest": "23.3.10",
-    "@types/json-stable-stringify": "1.0.32",
     "@types/koa-multer": "1.0.0",
     "@types/koa-router": "7.0.35",
     "@types/lodash": "4.14.119",
