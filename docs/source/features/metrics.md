@@ -14,7 +14,7 @@ To set up Apollo Server with Engine, [click here](https://engine.apollographql.c
 ```js line=6-8
 const { ApolloServer } = require("apollo-server");
 
-const server = new ApolloSever({
+const server = new ApolloServer({
   typeDefs,
   resolvers,
   engine: {
@@ -33,6 +33,46 @@ The API key can also be set with the `ENGINE_API_KEY` environment variable. Sett
 #Replace YOUR_API_KEY with the api key for you service in the Engine UI
 ENGINE_API_KEY=YOUR_API_KEY node start-server.js
 ```
+
+### Client Awareness
+
+Apollo Engine accepts metrics annotated with client information. The Engine UI
+is then able to filter metrics and usage patterns by these names and versions. To provide metrics to the Engine, pass a `generateClientInfo` function into the `ApolloServer` constructor, like so:
+
+```js line=8-23
+const { ApolloServer } = require("apollo-server");
+
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  engine: {
+    apiKey: "YOUR API KEY HERE",
+    generateClientInfo: ({
+      request
+    }) => {
+      const headers = request.http & request.http.headers;
+      if(headers) {
+        return {
+          clientName: headers['apollo-client-name'],
+          clientVersion: headers['apollo-client-version'],
+        };
+      } else {
+        return {
+          clientName: "Unknown Client",
+          clientVersion: "Unversioned",
+        };
+      }
+    },
+  }
+});
+
+server.listen().then(({ url }) => {
+  console.log(`🚀  Server ready at ${url}`);
+});
+```
+
+> Note: the default implementation looks at `clientInfo` field in the
+> `extensions` of the GraphQL request
 
 ## Logging
 

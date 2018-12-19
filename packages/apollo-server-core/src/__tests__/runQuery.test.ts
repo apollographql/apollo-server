@@ -9,8 +9,6 @@ import {
   GraphQLNonNull,
   parse,
   DocumentNode,
-  ValidationContext,
-  GraphQLFieldResolver,
 } from 'graphql';
 
 import {
@@ -19,10 +17,9 @@ import {
   GraphQLResponse,
 } from 'graphql-extensions';
 
-import { CacheControlExtensionOptions } from 'apollo-cache-control';
-
 import { processGraphQLRequest, GraphQLRequest } from '../requestPipeline';
 import { Request } from 'apollo-server-env';
+import { GraphQLOptions, Context as GraphQLContext } from 'apollo-server-core';
 
 // This is a temporary kludge to ensure we preserve runQuery behavior with the
 // GraphQLRequestProcessor refactoring.
@@ -46,25 +43,26 @@ function runQuery(options: QueryOptions): Promise<GraphQLResponse> {
   });
 }
 
-interface QueryOptions {
-  schema: GraphQLSchema;
-
+interface QueryOptions
+  extends Pick<
+    GraphQLOptions<GraphQLContext<any>>,
+    | 'cacheControl'
+    | 'context'
+    | 'debug'
+    | 'extensions'
+    | 'fieldResolver'
+    | 'formatError'
+    | 'formatResponse'
+    | 'rootValue'
+    | 'schema'
+    | 'tracing'
+    | 'validationRules'
+  > {
   queryString?: string;
   parsedQuery?: DocumentNode;
-
-  rootValue?: any;
-  context?: any;
   variables?: { [key: string]: any };
   operationName?: string;
-  validationRules?: Array<(context: ValidationContext) => any>;
-  fieldResolver?: GraphQLFieldResolver<any, any>;
-  formatError?: Function;
-  formatResponse?: Function;
-  debug?: boolean;
-  tracing?: boolean;
-  cacheControl?: CacheControlExtensionOptions;
   request: Pick<Request, 'url' | 'method' | 'headers'>;
-  extensions?: Array<() => GraphQLExtension>;
 }
 
 const queryType = new GraphQLObjectType({
@@ -99,13 +97,13 @@ const queryType = new GraphQLObjectType({
     },
     testContextValue: {
       type: GraphQLString,
-      resolve(_root, _args, context) {
+      resolve(_parent, _args, context) {
         return context.s + ' works';
       },
     },
     testArgumentValue: {
       type: GraphQLInt,
-      resolve(_root, args) {
+      resolve(_parent, args) {
         return args['base'] + 5;
       },
       args: {
@@ -388,7 +386,7 @@ describe('runQuery', () => {
             fields: {
               testString: {
                 type: GraphQLString,
-                resolve(_root, _args, context) {
+                resolve(_parent, _args, context) {
                   expect(context._extensionStack).toBeInstanceOf(
                     GraphQLExtensionStack,
                   );

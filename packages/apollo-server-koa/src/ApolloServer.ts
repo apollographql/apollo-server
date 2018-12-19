@@ -6,13 +6,15 @@ import {
   renderPlaygroundPage,
   RenderPageOptions as PlaygroundRenderPageOptions,
 } from '@apollographql/graphql-playground-html';
-import { ApolloServerBase, formatApolloErrors } from 'apollo-server-core';
+import {
+  ApolloServerBase,
+  formatApolloErrors,
+  processFileUploads,
+} from 'apollo-server-core';
 import accepts from 'accepts';
 import typeis from 'type-is';
 
 import { graphqlKoa } from './koaApollo';
-
-import { processRequest as processFileUploads } from '@apollographql/apollo-upload-server';
 
 export { GraphQLOptions, GraphQLExtension } from 'apollo-server-core';
 import { GraphQLOptions, FileUploadOptions } from 'apollo-server-core';
@@ -32,7 +34,11 @@ const fileUploadMiddleware = (
 ) => async (ctx: Koa.Context, next: Function) => {
   if (typeis(ctx.req, ['multipart/form-data'])) {
     try {
-      ctx.request.body = await processFileUploads(ctx.req, uploadsConfig);
+      ctx.request.body = await processFileUploads(
+        ctx.req,
+        ctx.res,
+        uploadsConfig,
+      );
       return next();
     } catch (error) {
       if (error.status && error.expose) ctx.status = error.status;
@@ -74,6 +80,10 @@ export class ApolloServer extends ApolloServerBase {
     return true;
   }
 
+  // TODO: While Koa is Promise-aware, this API hasn't been historically, even
+  // though other integration's (e.g. Hapi) implementations of this method
+  // are `async`.  Therefore, this should become `async` in a major release in
+  // order to align the API with other integrations.
   public applyMiddleware({
     app,
     path,
@@ -84,8 +94,27 @@ export class ApolloServer extends ApolloServerBase {
   }: ServerRegistration) {
     if (!path) path = '/graphql';
 
+    // Despite the fact that this `applyMiddleware` function is `async` in
+    // other integrations (e.g. Hapi), currently it is not for Koa (@here).
+    // That should change in a future version, but that would be a breaking
+    // change right now (see comment above this method's declaration above).
+    //
+    // That said, we do need to await the `willStart` lifecycle event which
+    // can perform work prior to serving a request.  While we could do this
+    // via awaiting in a Koa middleware, well kick off `willStart` right away,
+    // so hopefully it'll finish before the first request comes in.  We won't
+    // call `next` until it's ready, which will effectively yield until that
+    // work has finished.  Any errors will be surfaced to Koa through its own
+    // native Promise-catching facilities.
+    const promiseWillStart = this.willStart();
+    app.use(
+      middlewareFromPath(path, async (_ctx: Koa.Context, next: Function) => {
+        await promiseWillStart;
+        return next();
+      }),
+    );
+
     if (!disableHealthCheck) {
-      // uses same path as engine proxy, but is generally useful.
       app.use(
         middlewareFromPath(
           '/.well-known/apollo/server-health',
@@ -111,7 +140,7 @@ export class ApolloServer extends ApolloServerBase {
     }
 
     let uploadsMiddleware;
-    if (this.uploadsConfig) {
+    if (this.uploadsConfig && typeof processFileUploads === 'function') {
       uploadsMiddleware = fileUploadMiddleware(this.uploadsConfig, this);
     }
 
@@ -158,10 +187,9 @@ export class ApolloServer extends ApolloServerBase {
             return;
           }
         }
-        return graphqlKoa(this.createGraphQLServerOptions.bind(this))(
-          ctx,
-          next,
-        );
+        return graphqlKoa(() => {
+          return this.createGraphQLServerOptions(ctx);
+        })(ctx, next);
       }),
     );
   }

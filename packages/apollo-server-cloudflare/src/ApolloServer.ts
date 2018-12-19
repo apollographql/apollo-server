@@ -14,9 +14,13 @@ export class ApolloServer extends ApolloServerBase {
   }
 
   public async listen() {
-    const graphql = this.createGraphQLServerOptions.bind(this);
+    await this.willStart();
     addEventListener('fetch', (event: FetchEvent) => {
-      event.respondWith(graphqlCloudflare(graphql)(event.request));
+      event.respondWith(
+        graphqlCloudflare(() => {
+          return this.createGraphQLServerOptions(event.request);
+        })(event.request),
+      );
     });
     return await { url: '', port: null };
   }

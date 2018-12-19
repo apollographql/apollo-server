@@ -1,5 +1,8 @@
-import { ApolloServerBase, GraphQLOptions } from 'apollo-server-core';
-import { processRequest as processFileUploads } from '@apollographql/apollo-upload-server';
+import {
+  ApolloServerBase,
+  GraphQLOptions,
+  processFileUploads,
+} from 'apollo-server-core';
 import { ServerResponse } from 'http';
 import { send } from 'micro';
 import { renderPlaygroundPage } from '@apollographql/graphql-playground-html';
@@ -30,10 +33,18 @@ export class ApolloServer extends ApolloServerBase {
     disableHealthCheck,
     onHealthCheck,
   }: ServerRegistration = {}) {
+    // We'll kick off the `willStart` right away, so hopefully it'll finish
+    // before the first request comes in.
+    const promiseWillStart = this.willStart();
+
     return async (req, res) => {
       this.graphqlPath = path || '/graphql';
 
-      await this.handleFileUploads(req);
+      await promiseWillStart;
+
+      if (typeof processFileUploads === 'function') {
+        await this.handleFileUploads(req, res);
+      }
 
       (await this.handleHealthCheck({
         req,
@@ -124,6 +135,7 @@ export class ApolloServer extends ApolloServerBase {
           subscriptionEndpoint: this.subscriptionsPath,
           ...this.playgroundOptions,
         };
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
         send(res, 200, renderPlaygroundPage(middlewareOptions));
         handled = true;
       }
@@ -143,9 +155,9 @@ export class ApolloServer extends ApolloServerBase {
     let handled = false;
     const url = req.url.split('?')[0];
     if (url === this.graphqlPath) {
-      const graphqlHandler = graphqlMicro(
-        this.createGraphQLServerOptions.bind(this),
-      );
+      const graphqlHandler = graphqlMicro(() => {
+        return this.createGraphQLServerOptions(req, res);
+      });
       const responseData = await graphqlHandler(req, res);
       send(res, 200, responseData);
       handled = true;
@@ -154,15 +166,19 @@ export class ApolloServer extends ApolloServerBase {
   }
 
   // If file uploads are detected, prepare them for easier handling with
-  // the help of `apollo-upload-server`.
-  private async handleFileUploads(req: MicroRequest) {
+  // the help of `graphql-upload`.
+  private async handleFileUploads(req: MicroRequest, res: ServerResponse) {
+    if (typeof processFileUploads !== 'function') {
+      return;
+    }
+
     const contentType = req.headers['content-type'];
     if (
       this.uploadsConfig &&
       contentType &&
       contentType.startsWith('multipart/form-data')
     ) {
-      req.filePayload = await processFileUploads(req, this.uploadsConfig);
+      req.filePayload = await processFileUploads(req, res, this.uploadsConfig);
     }
   }
 }

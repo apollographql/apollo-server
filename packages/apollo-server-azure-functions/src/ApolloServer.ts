@@ -1,11 +1,16 @@
-import { ApolloServerBase, GraphQLOptions, Config } from 'apollo-server-core';
+import {
+  HttpContext,
+  FunctionRequest,
+  FunctionResponse,
+} from './azureFunctions';
+import { ApolloServerBase } from 'apollo-server-core';
+import { GraphQLOptions, Config } from 'apollo-server-core';
 import {
   renderPlaygroundPage,
   RenderPageOptions as PlaygroundRenderPageOptions,
 } from '@apollographql/graphql-playground-html';
-import { Request, Response } from 'express';
 
-import { graphqlCloudFunction } from './googleCloudApollo';
+import { graphqlAzureFunction } from './azureFunctionApollo';
 
 export interface CreateHandlerOptions {
   cors?: {
@@ -36,14 +41,19 @@ export class ApolloServer extends ApolloServerBase {
   // provides typings for the integration specific behavior, ideally this would
   // be propagated with a generic to the super class
   createGraphQLServerOptions(
-    req: Request,
-    res: Response,
+    request: FunctionRequest,
+    context: HttpContext,
   ): Promise<GraphQLOptions> {
-    return super.graphQLServerOptions({ req, res });
+    return super.graphQLServerOptions({ request, context });
   }
 
   public createHandler({ cors }: CreateHandlerOptions = { cors: undefined }) {
-    const corsHeaders = {} as Record<string, any>;
+    // We will kick off the `willStart` event once for the server, and then
+    // await it before processing any requests by incorporating its `await` into
+    // the GraphQLServerOptions function which is called before each request.
+    const promiseWillStart = this.willStart();
+
+    const corsHeaders: FunctionResponse['headers'] = {};
 
     if (cors) {
       if (cors.methods) {
@@ -82,60 +92,74 @@ export class ApolloServer extends ApolloServerBase {
       }
     }
 
-    return (req: Request, res: Response) => {
-      // Handle both the root of the GCF endpoint and /graphql
-      // With bare endpoints, GCF sets request params' path to null.
-      // The check for '' is included in case that behaviour changes
-      if (req.path && !['', '/', '/graphql'].includes(req.path)) {
-        res.status(404).end();
-        return;
-      }
-
-      if (cors) {
+    return (context: HttpContext, req: FunctionRequest) => {
+      if (cors && cors.origin) {
         if (typeof cors.origin === 'string') {
-          res.set('Access-Control-Allow-Origin', cors.origin);
+          corsHeaders['Access-Control-Allow-Origin'] = cors.origin;
         } else if (
           typeof cors.origin === 'boolean' ||
           (Array.isArray(cors.origin) &&
-            cors.origin.includes(req.get('origin') || ''))
+            cors.origin.includes(
+              req.headers['Origin'] || req.headers['origin'],
+            ))
         ) {
-          res.set('Access-Control-Allow-Origin', req.get('origin'));
+          corsHeaders['Access-Control-Allow-Origin'] =
+            req.headers['Origin'] || req.headers['origin'];
         }
 
         if (!cors.allowedHeaders) {
-          res.set(
-            'Access-Control-Allow-Headers',
-            req.get('Access-Control-Request-Headers'),
-          );
+          corsHeaders['Access-Control-Allow-Headers'] =
+            req.headers['Access-Control-Request-Headers'];
         }
       }
 
       if (req.method === 'OPTIONS') {
-        res.status(204).send('');
+        context.done(null, {
+          body: '',
+          status: 204,
+          headers: corsHeaders,
+        });
         return;
       }
 
       if (this.playgroundOptions && req.method === 'GET') {
-        const acceptHeader = req.headers['accept'] as string;
+        const acceptHeader = req.headers['Accept'] || req.headers['accept'];
         if (acceptHeader && acceptHeader.includes('text/html')) {
+          const path = req.originalUrl || '/';
+
           const playgroundRenderPageOptions: PlaygroundRenderPageOptions = {
-            endpoint: req.get('referer'),
+            endpoint: path,
             ...this.playgroundOptions,
           };
-
-          res
-            .status(200)
-            .send(renderPlaygroundPage(playgroundRenderPageOptions));
+          const body = renderPlaygroundPage(playgroundRenderPageOptions);
+          context.done(null, {
+            body: body,
+            status: 200,
+            headers: {
+              'Content-Type': 'text/html',
+              ...corsHeaders,
+            },
+          });
           return;
         }
       }
 
-      res.set(corsHeaders);
-
-      graphqlCloudFunction(this.createGraphQLServerOptions.bind(this))(
-        req,
-        res,
-      );
+      const callbackFilter = (error?: any, output?: FunctionResponse) => {
+        context.done(
+          error,
+          output && {
+            ...output,
+            headers: {
+              ...output.headers,
+              ...corsHeaders,
+            },
+          },
+        );
+      };
+      graphqlAzureFunction(async () => {
+        await promiseWillStart;
+        return this.createGraphQLServerOptions(req, context);
+      })(context, req, callbackFilter);
     };
   }
 }
