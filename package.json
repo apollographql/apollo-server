@@ -68,7 +68,7 @@
     "@types/connect": "3.4.32",
     "@types/fibers": "0.0.30",
     "@types/graphql": "14.0.3",
-    "@types/hapi": "17.8.1",
+    "@types/hapi": "17.8.2",
     "@types/jest": "23.3.10",
     "@types/json-stable-stringify": "1.0.32",
     "@types/koa-multer": "1.0.0",
