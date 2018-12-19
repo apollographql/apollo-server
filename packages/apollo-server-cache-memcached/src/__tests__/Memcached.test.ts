@@ -2,6 +2,13 @@
 jest.mock('memcached', () => require('memcached-mock'));
 
 import { MemcachedCache } from '../index';
-import { testKeyValueCache } from '../../../apollo-server-caching/src/__tests__/testsuite';
+import {
+  testKeyValueCache_Basics,
+  testKeyValueCache_Expiration,
+} from '../../../apollo-server-caching/src/__tests__/testsuite';
 
-testKeyValueCache(new MemcachedCache('localhost'));
+describe('Memcached', () => {
+  const cache = new MemcachedCache('localhost');
+  testKeyValueCache_Basics(cache);
+  testKeyValueCache_Expiration(cache);
+});
