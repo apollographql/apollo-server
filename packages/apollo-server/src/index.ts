@@ -24,12 +24,17 @@ export interface ServerInfo {
 }
 
 export class ApolloServer extends ApolloServerBase {
+  public express: express.Express;
   private httpServer?: http.Server;
   private cors?: CorsOptions | boolean;
 
-  constructor(config: Config & { cors?: CorsOptions | boolean }) {
+  constructor(config: Config & {
+    cors?: CorsOptions | boolean,
+    express?: express.Express,
+  }) {
     super(config);
     this.cors = config && config.cors;
+    this.express = (config && config.express) || (express && express());
   }
 
   private createServerInfo(
@@ -82,7 +87,7 @@ export class ApolloServer extends ApolloServerBase {
 
     // This class is the easy mode for people who don't create their own express
     // object, so we have to create it.
-    const app = express();
+    const app = this.express;
 
     // provide generous values for the getting started experience
     super.applyMiddleware({
