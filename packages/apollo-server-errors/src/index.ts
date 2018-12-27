@@ -1,5 +1,7 @@
 import { GraphQLError } from 'graphql';
 
+type Context<T = any> = T;
+
 export class ApolloError extends Error implements GraphQLError {
   public extensions: Record<string, any>;
   readonly name;
@@ -216,7 +218,7 @@ export function formatApolloErrors(
     formatter?: Function;
     debug?: boolean;
   },
-  context?,
+  context?: Context,
 ): Array<ApolloError> {
   if (!options) {
     return errors.map(error => enrichError(error));
