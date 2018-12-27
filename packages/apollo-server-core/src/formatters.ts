@@ -23,7 +23,7 @@ export class FormatErrorExtension<TContext = any> extends GraphQLExtension {
           errors: formatApolloErrors(o.graphqlResponse.errors, {
             formatter: this.formatError,
             debug: this.debug,
-          }),
+          }, o.context),
         },
       };
     }
