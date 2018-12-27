@@ -216,7 +216,7 @@ export function formatApolloErrors(
     formatter?: Function;
     debug?: boolean;
   },
-  context?
+  context?,
 ): Array<ApolloError> {
   if (!options) {
     return errors.map(error => enrichError(error));

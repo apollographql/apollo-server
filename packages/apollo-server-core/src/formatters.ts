@@ -20,10 +20,14 @@ export class FormatErrorExtension<TContext = any> extends GraphQLExtension {
         ...o,
         graphqlResponse: {
           ...o.graphqlResponse,
-          errors: formatApolloErrors(o.graphqlResponse.errors, {
-            formatter: this.formatError,
-            debug: this.debug,
-          }, o.context),
+          errors: formatApolloErrors(
+            o.graphqlResponse.errors,
+            {
+              formatter: this.formatError,
+              debug: this.debug,
+            },
+            o.context,
+          ),
         },
       };
     }
