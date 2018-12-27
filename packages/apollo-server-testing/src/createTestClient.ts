@@ -11,7 +11,7 @@ type Options = { context?: Context | ContextFunction };
 type Query = { query: StringOrAst; mutation?: undefined };
 type Mutation = { mutation: StringOrAst; query?: undefined };
 
-export default (server: ApolloServerBase, options: Options) => {
+export default (server: ApolloServerBase, options: Options = {}) => {
   const executeOperation = server.executeOperation.bind(server);
   // Override default context behaviour if context option is provided.
   if (options.context) server.requestOptions.context = options.context;
