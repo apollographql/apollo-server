@@ -79,3 +79,35 @@ describe('createTestClient', () => {
     expect(mutationRes.data).toEqual({ increment: 1 });
   });
 });
+
+describe('createTestClient options', () => {
+  const typeDefs = gql`
+    type Query {
+      person: String
+    }
+  `;
+
+  const resolvers = {
+    Query: {
+      person: (_, __, { person }) => person,
+    },
+  };
+
+  const server = new ApolloServerBase({
+    typeDefs,
+    context: { person: 'tom' },
+    resolvers,
+  });
+
+  it('context option should update context passed to resolvers', async () => {
+    const client = createTestClient(server, { context: { person: 'lisa' } });
+    expect(server.requestOptions.context).toEqual({ person: 'lisa' });
+    const query = gql`
+      query {
+        person
+      }
+    `;
+    const { data } = await client.query({ query });
+    expect(data.person).toEqual('lisa');
+  });
+});
