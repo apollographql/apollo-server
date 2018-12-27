@@ -216,6 +216,7 @@ export function formatApolloErrors(
     formatter?: Function;
     debug?: boolean;
   },
+  context?
 ): Array<ApolloError> {
   if (!options) {
     return errors.map(error => enrichError(error));
@@ -250,7 +251,7 @@ export function formatApolloErrors(
 
   return enrichedErrors.map(error => {
     try {
-      return formatter(error);
+      return formatter(error, context);
     } catch (err) {
       if (debug) {
         return enrichError(err, debug);
