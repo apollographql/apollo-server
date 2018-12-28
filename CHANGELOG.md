@@ -3,6 +3,7 @@
 ### vNEXT
 
 - Switch from `json-stable-stringify` to `fast-json-stable-stringify`. [PR #2065](https://github.com/apollographql/apollo-server/pull/2065)
+- Fix 'has no default export' errors in TS types. [PR #2143](https://github.com/apollographql/apollo-server/pull/2143)
 
 ### v2.3.1
 
