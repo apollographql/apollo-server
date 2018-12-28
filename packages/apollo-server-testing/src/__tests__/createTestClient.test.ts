@@ -99,7 +99,10 @@ describe('createTestClient options', () => {
     resolvers,
   });
 
-  const client = createTestClient(server, { context: { person: 'lisa' } });
+  const client = createTestClient(server);
+  const contextClient = createTestClient(server, {
+    context: { person: 'lisa' },
+  });
 
   it('context option should have updated context passed to resolvers', async () => {
     const query = gql`
@@ -107,7 +110,7 @@ describe('createTestClient options', () => {
         person
       }
     `;
-    const { data } = await client.query({ query });
+    const { data } = await contextClient.query({ query });
     expect(data.person).toEqual('lisa');
   });
 
@@ -117,10 +120,26 @@ describe('createTestClient options', () => {
         person
       }
     `;
+    const { data } = await contextClient.query({
+      query,
+      context: { person: 'ben' },
+    });
+    expect(data.person).toEqual('ben');
+    // Perform a query without context to get the default context passed to the options.
+    const { data: noContextData } = await contextClient.query({ query });
+    expect(noContextData.person).toEqual('lisa');
+  });
+
+  it('default context should be reapplied when options context is not provided', async () => {
+    const query = gql`
+      query {
+        person
+      }
+    `;
     const { data } = await client.query({ query, context: { person: 'ben' } });
     expect(data.person).toEqual('ben');
     // Perform a query without context to get the default context passed to the options.
     const { data: noContextData } = await client.query({ query });
-    expect(noContextData.person).toEqual('lisa');
+    expect(noContextData.person).toEqual('tom');
   });
 });

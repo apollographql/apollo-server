@@ -21,7 +21,7 @@ type Mutation = {
 
 export default (
   server: ApolloServerBase,
-  options: Options = { context: server.requestOptions.context },
+  options: Options = { context: server.context },
 ) => {
   const executeOperation = server.executeOperation.bind(server);
   const test = ({
@@ -33,8 +33,6 @@ export default (
     const operation = query || mutation;
     // Override mutation / query specific context.
     if (context) server.requestOptions.context = context;
-    // Reapply default context or context provided in the options.
-    else if (options.context) server.requestOptions.context = options.context;
     if ((!query && !mutation) || (query && mutation)) {
       throw new Error(
         'Either `query` or `mutation` must be passed, but not both.',
