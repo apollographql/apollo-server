@@ -96,8 +96,8 @@ export class ApolloServerBase {
   public subscriptionsPath?: string;
   public graphqlPath: string = '/graphql';
   public requestOptions: Partial<GraphQLOptions<any>> = Object.create(null);
+  public context?: Context | ContextFunction;
 
-  private context?: Context | ContextFunction;
   private engineReportingAgent?: EngineReportingAgent;
   private engineServiceId?: string;
   private extensions: Array<() => GraphQLExtension>;
