@@ -3,7 +3,7 @@
 // use with express). The dependency is unused otherwise, so don't worry if
 // you're not using express or your version doesn't quite match up.
 import express from 'express';
-import http from 'http';
+import * as http from 'http';
 import net from 'net';
 import {
   ApolloServer as ApolloServerBase,
