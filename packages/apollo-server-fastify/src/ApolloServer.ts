@@ -1,14 +1,15 @@
 import { renderPlaygroundPage } from '@apollographql/graphql-playground-html';
 import { Accepts } from 'accepts';
 import {
-  ApolloServerBase,
+  ApolloServerBase, FileUploadOptions, formatApolloErrors,
   PlaygroundRenderPageOptions,
-  processFileUploads,
+  processFileUploads
 } from 'apollo-server-core';
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { IncomingMessage, OutgoingMessage, Server } from 'http';
 import { graphqlFastify } from './fastifyApollo';
 
+const kMultipart = Symbol('multipart');
 const fastJson = require('fast-json-stringify');
 
 export interface ServerRegistration {
@@ -26,6 +27,33 @@ const stringifyHealthCheck = fastJson({
     },
   },
 });
+
+const fileUploadMiddleware = (
+  uploadsConfig: FileUploadOptions,
+  server: ApolloServerBase,
+) => (
+  req: FastifyRequest<IncomingMessage>,
+  reply: FastifyReply<OutgoingMessage>,
+  done: (err: Error | null, body?: any) => void
+) => {
+  if ((req.req as any)[kMultipart] && typeof processFileUploads === 'function') {
+    processFileUploads(req.req, reply.res, uploadsConfig)
+      .then(body => {
+        req.body = body;
+        done(null);
+      })
+      .catch(error => {
+        if (error.status && error.expose) reply.status(error.status);
+
+        throw formatApolloErrors([error], {
+          formatter: server.requestOptions.formatError,
+          debug: server.requestOptions.debug,
+        });
+      });
+  } else {
+    done(null);
+  }
+};
 
 export class ApolloServer extends ApolloServerBase {
   protected supportsSubscriptions(): boolean {
@@ -84,23 +112,8 @@ export class ApolloServer extends ApolloServerBase {
             reply.send();
           });
 
-          if (typeof processFileUploads === 'function' && this.uploadsConfig) {
-            instance.addContentTypeParser(
-              'multipart',
-              async (request: IncomingMessage) =>
-                // This extra function guarding is being mandated by TypeScript.
-                // It certainly shouldn't be possible for this parse to even
-                // be present unless `processFileUploads` was a function when
-                // the handler was added (initially at server startup).
-                typeof processFileUploads === 'function' &&
-                processFileUploads(request, this.uploadsConfig),
-            );
-          }
-
-          instance.route({
-            method: ['GET', 'POST'],
-            url: '/',
-            beforeHandler: (
+          const beforeHandlers = [
+            (
               req: FastifyRequest<IncomingMessage>,
               reply: FastifyReply<OutgoingMessage>,
               done: () => void,
@@ -134,7 +147,24 @@ export class ApolloServer extends ApolloServerBase {
                 }
               }
               done();
-            },
+            }
+          ];
+
+          if (typeof processFileUploads === 'function' && this.uploadsConfig) {
+            instance.addContentTypeParser(
+              'multipart',
+              (request: IncomingMessage, done: (err: Error | null, body?: any) => void) => {
+                (request as any)[kMultipart] = true;
+                done(null);
+              }
+            );
+            beforeHandlers.push(fileUploadMiddleware(this.uploadsConfig, this));
+          }
+
+          instance.route({
+            method: ['GET', 'POST'],
+            url: '/',
+            beforeHandler: beforeHandlers,
             handler: await graphqlFastify(this.graphQLServerOptions.bind(this)),
           });
         },
