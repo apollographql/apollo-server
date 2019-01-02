@@ -1,9 +1,11 @@
 import { renderPlaygroundPage } from '@apollographql/graphql-playground-html';
 import { Accepts } from 'accepts';
 import {
-  ApolloServerBase, FileUploadOptions, formatApolloErrors,
+  ApolloServerBase,
+  FileUploadOptions,
+  formatApolloErrors,
   PlaygroundRenderPageOptions,
-  processFileUploads
+  processFileUploads,
 } from 'apollo-server-core';
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { IncomingMessage, OutgoingMessage, Server } from 'http';
@@ -34,9 +36,12 @@ const fileUploadMiddleware = (
 ) => (
   req: FastifyRequest<IncomingMessage>,
   reply: FastifyReply<OutgoingMessage>,
-  done: (err: Error | null, body?: any) => void
+  done: (err: Error | null, body?: any) => void,
 ) => {
-  if ((req.req as any)[kMultipart] && typeof processFileUploads === 'function') {
+  if (
+    (req.req as any)[kMultipart] &&
+    typeof processFileUploads === 'function'
+  ) {
     processFileUploads(req.req, reply.res, uploadsConfig)
       .then(body => {
         req.body = body;
@@ -147,16 +152,19 @@ export class ApolloServer extends ApolloServerBase {
                 }
               }
               done();
-            }
+            },
           ];
 
           if (typeof processFileUploads === 'function' && this.uploadsConfig) {
             instance.addContentTypeParser(
               'multipart',
-              (request: IncomingMessage, done: (err: Error | null, body?: any) => void) => {
+              (
+                request: IncomingMessage,
+                done: (err: Error | null, body?: any) => void,
+              ) => {
                 (request as any)[kMultipart] = true;
                 done(null);
-              }
+              },
             );
             beforeHandlers.push(fileUploadMiddleware(this.uploadsConfig, this));
           }
