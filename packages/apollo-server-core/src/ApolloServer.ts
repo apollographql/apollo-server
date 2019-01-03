@@ -9,6 +9,7 @@ import {
   GraphQLFieldResolver,
   ValidationContext,
   FieldDefinitionNode,
+  GraphQLSchemaConfig,
 } from 'graphql';
 import { GraphQLExtension } from 'graphql-extensions';
 import { EngineReportingAgent } from 'apollo-engine-reporting';
@@ -44,6 +45,7 @@ import {
   createPlaygroundOptions,
   PlaygroundRenderPageOptions,
 } from './playground';
+import GraphQLDeferDirective from './GraphQLDeferDirective';
 
 import { generateSchemaHash } from './utils/schemaHash';
 import {
@@ -228,7 +230,20 @@ export class ApolloServerBase {
     }
 
     if (schema) {
-      this.schema = schema;
+
+      // TODO: @defer directive should be added by default
+      const newDirectives = schema.getDirectives().slice();
+      newDirectives.push(GraphQLDeferDirective);
+      const newSchemaConfig: GraphQLSchemaConfig = {
+          query: schema.getQueryType(),
+          mutation: schema.getMutationType(),
+          subscription: schema.getSubscriptionType(),
+          types: Object.values(schema.getTypeMap()),
+          directives: newDirectives,
+          astNode: schema.astNode,
+      };
+      this.schema = new GraphQLSchema(newSchemaConfig);
+
     } else if (modules) {
       const { schema, errors } = buildServiceDefinition(modules);
       if (errors && errors.length > 0) {
@@ -241,7 +256,6 @@ export class ApolloServerBase {
           'Apollo Server requires either an existing schema, modules or typeDefs',
         );
       }
-
       let augmentedTypeDefs = Array.isArray(typeDefs) ? typeDefs : [typeDefs];
 
       // We augment the typeDefs with the @cacheControl directive and associated
@@ -259,6 +273,12 @@ export class ApolloServerBase {
           ) on FIELD_DEFINITION | OBJECT | INTERFACE
         `,
       );
+
+      const deferDirectiveDef = gql`
+          directive @defer(if: Boolean = true) on FIELD
+      `;
+
+      augmentedTypeDefs.push(deferDirectiveDef);
 
       if (this.uploadsConfig) {
         const { GraphQLUpload } = require('graphql-upload');

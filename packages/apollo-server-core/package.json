@@ -41,6 +41,7 @@
     "graphql-tag": "^2.9.2",
     "graphql-tools": "^4.0.0",
     "graphql-upload": "^8.0.2",
+    "iterall": "^1.2.2",
     "lodash": "^4.17.10",
     "subscriptions-transport-ws": "^0.9.11",
     "ws": "^6.0.0"

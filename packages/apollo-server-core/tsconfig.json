@@ -2,10 +2,11 @@
   "extends": "../../tsconfig.base",
   "compilerOptions": {
     "rootDir": "./src",
-    "outDir": "./dist"
+    "outDir": "./dist",
+    "noImplicitAny": false
   },
   "include": ["src/**/*"],
-  "exclude": ["**/__tests__", "**/__mocks__", "src/requestPipelineAPI.ts"],
+  "exclude": ["**/__tests__", "**/__mocks__", "src/requestPipelineAPI.ts", "src/runQuery.ts"],
   "references": [
     { "path": "./tsconfig.requestPipelineAPI.json" },
     { "path": "../apollo-cache-control" },

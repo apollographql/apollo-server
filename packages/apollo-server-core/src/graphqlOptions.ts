@@ -22,6 +22,7 @@ import { ApolloServerPlugin } from 'apollo-server-plugin-base';
  * - (optional) fieldResolver: a custom default field resolver
  * - (optional) debug: a boolean that will print additional debug logging if execution errors occur
  * - (optional) extensions: an array of functions which create GraphQLExtensions (each GraphQLExtension object is used for one request)
+ * - (optional) enableDefer: a boolean that will enable deferred responses
  *
  */
 export interface GraphQLServerOptions<
@@ -43,6 +44,7 @@ export interface GraphQLServerOptions<
   cache?: KeyValueCache;
   persistedQueries?: PersistedQueryOptions;
   plugins?: ApolloServerPlugin[];
+  enableDefer?: boolean;
 }
 
 export type DataSources<TContext> = {

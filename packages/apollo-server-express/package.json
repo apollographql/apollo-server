@@ -37,6 +37,7 @@
     "cors": "^2.8.4",
     "graphql-subscriptions": "^1.0.0",
     "graphql-tools": "^4.0.0",
+    "iterall": "^1.2.2",
     "type-is": "^1.6.16"
   },
   "devDependencies": {

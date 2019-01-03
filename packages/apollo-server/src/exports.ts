@@ -16,6 +16,7 @@ export {
   AuthenticationError,
   ForbiddenError,
   UserInputError,
+  GraphQLDeferDirective,
   // playground
   defaultPlaygroundOptions,
   PlaygroundConfig,

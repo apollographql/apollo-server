@@ -4,7 +4,6 @@ import {
   specifiedRules,
   DocumentNode,
   getOperationAST,
-  ExecutionArgs,
   ExecutionResult,
   GraphQLError,
 } from 'graphql';
@@ -33,6 +32,7 @@ import { createHash } from 'crypto';
 import {
   GraphQLRequest,
   GraphQLResponse,
+  DeferredGraphQLResponse,
   GraphQLRequestContext,
   InvalidGraphQLRequestError,
   ValidationRule,
@@ -44,18 +44,37 @@ import {
 } from 'apollo-server-plugin-base';
 
 import { Dispatcher } from './utils/dispatcher';
+import { CannotDeferNonNullableFields } from './validationRules/CannotDeferNonNullableFields';
 
 export {
   GraphQLRequest,
   GraphQLResponse,
+  DeferredGraphQLResponse,
   GraphQLRequestContext,
   InvalidGraphQLRequestError,
 };
+
+import {
+  execute as executeWithDefer,
+  ExecutionArgs,
+  isDeferredExecutionResult,
+  ExecutionPatchResult,
+  DeferredExecutionResult,
+} from './execute';
 
 function computeQueryHash(query: string) {
   return createHash('sha256')
     .update(query)
     .digest('hex');
+}
+
+export function isDeferredGraphQLResponse(
+    result: any,
+): result is DeferredGraphQLResponse {
+  return (
+      (<DeferredGraphQLResponse>result).initialResponse !== undefined &&
+      (<DeferredGraphQLResponse>result).deferredPatches !== undefined
+  );
 }
 
 export interface GraphQLRequestPipelineConfig<TContext> {
@@ -76,6 +95,7 @@ export interface GraphQLRequestPipelineConfig<TContext> {
   formatResponse?: Function;
 
   plugins?: ApolloServerPlugin[];
+  enableDefer?: boolean;
 }
 
 export type DataSources<TContext> = {
@@ -87,7 +107,8 @@ type Mutable<T> = { -readonly [P in keyof T]: T[P] };
 export async function processGraphQLRequest<TContext>(
   config: GraphQLRequestPipelineConfig<TContext>,
   requestContext: Mutable<GraphQLRequestContext<TContext>>,
-): Promise<GraphQLResponse> {
+): Promise<GraphQLResponse | DeferredGraphQLResponse> {
+
   let cacheControlExtension: CacheControlExtension | undefined;
   const extensionStack = initializeExtensionStack();
   (requestContext.context as any)._extensionStack = extensionStack;
@@ -167,8 +188,11 @@ export async function processGraphQLRequest<TContext>(
     requestContext,
   );
 
+  let isDeferred = false;
+
   try {
     let document: DocumentNode;
+
     try {
       document = parse(query);
       parsingDidEnd();
@@ -221,33 +245,66 @@ export async function processGraphQLRequest<TContext>(
     );
 
     let response: GraphQLResponse;
+    let result: ExecutionResult | DeferredExecutionResult;
+    let patches: AsyncIterable<ExecutionPatchResult> | undefined;
+    let isDeferred = false;
 
     try {
-      response = (await execute(
+      result = (await execute(
         document,
         request.operationName,
         request.variables,
-      )) as GraphQLResponse;
-      executionDidEnd();
+      ));
+
+      isDeferred = isDeferredExecutionResult(result);
+
+      if (isDeferred) {
+        response = ((result as DeferredExecutionResult).initialResult) as GraphQLResponse;
+        patches = (result as DeferredExecutionResult).deferredPatches;
+      } else {
+        response = result as GraphQLResponse;
+      }
+
+      const formattedExtensions = extensionStack.format();
+      if (Object.keys(formattedExtensions).length > 0) {
+        response.extensions = formattedExtensions;
+      }
+
+      // `formatResponse` format fallback for TS2722: Cannot invoke an object which is possibly 'undefined'.
+      const formatResponse = config.formatResponse || ((x: GraphQLResponse):GraphQLResponse => x);
+
+      response = formatResponse(response, {
+        context: requestContext.context,
+      });
+
+      let output: GraphQLResponse | DeferredGraphQLResponse;
+
+      if (isDeferred) {
+        executionDidEnd();
+        output = {
+          initialResponse: response,
+          deferredPatches: patches!,
+          requestDidEnd,
+        };
+
+      } else {
+
+        executionDidEnd();
+        output = response;
+      }
+
+      return sendResponse(output);
+
     } catch (executionError) {
       executionDidEnd(executionError);
       return sendErrorResponse(executionError);
     }
 
-    const formattedExtensions = extensionStack.format();
-    if (Object.keys(formattedExtensions).length > 0) {
-      response.extensions = formattedExtensions;
-    }
-
-    if (config.formatResponse) {
-      response = config.formatResponse(response, {
-        context: requestContext.context,
-      });
-    }
-
-    return sendResponse(response);
   } finally {
-    requestDidEnd();
+
+    if (!isDeferred) {
+      requestDidEnd();
+    }
   }
 
   function parse(query: string): DocumentNode {
@@ -263,7 +320,7 @@ export async function processGraphQLRequest<TContext>(
   }
 
   function validate(document: DocumentNode): ReadonlyArray<GraphQLError> {
-    let rules = specifiedRules;
+    let rules = specifiedRules.concat([CannotDeferNonNullableFields]);
     if (config.validationRules) {
       rules = rules.concat(config.validationRules);
     }
@@ -281,7 +338,7 @@ export async function processGraphQLRequest<TContext>(
     document: DocumentNode,
     operationName: GraphQLRequest['operationName'],
     variables: GraphQLRequest['variables'],
-  ): Promise<ExecutionResult> {
+  ): Promise<ExecutionResult | DeferredExecutionResult> {
     const executionArgs: ExecutionArgs = {
       schema: config.schema,
       document,
@@ -293,6 +350,7 @@ export async function processGraphQLRequest<TContext>(
       variableValues: variables,
       operationName,
       fieldResolver: config.fieldResolver,
+      enableDefer: config.enableDefer,
     };
 
     const executionDidEnd = extensionStack.executionDidStart({
@@ -300,30 +358,53 @@ export async function processGraphQLRequest<TContext>(
     });
 
     try {
-      return graphql.execute(executionArgs);
+      return executeWithDefer(executionArgs);
     } finally {
       executionDidEnd();
     }
   }
 
   async function sendResponse(
-    response: GraphQLResponse,
-  ): Promise<GraphQLResponse> {
-    // We override errors, data, and extensions with the passed in response,
-    // but keep other properties (like http)
-    requestContext.response = extensionStack.willSendResponse({
-      graphqlResponse: {
-        ...requestContext.response,
-        errors: response.errors,
-        data: response.data,
-        extensions: response.extensions,
-      },
-      context: requestContext.context,
-    }).graphqlResponse;
-    await dispatcher.invokeHookAsync(
-      'willSendResponse',
-      requestContext as WithRequired<typeof requestContext, 'response'>,
-    );
+    response: GraphQLResponse | DeferredGraphQLResponse,
+  ): Promise<GraphQLResponse | DeferredGraphQLResponse> {
+
+    if (isDeferredGraphQLResponse(response)) {
+      const initialResponse = (response as DeferredGraphQLResponse).initialResponse;
+      const requestContextInitialResponse = requestContext.response ?
+          (requestContext.response as DeferredGraphQLResponse).initialResponse : undefined;
+
+      const r = extensionStack.willSendResponse({
+        graphqlResponse: {
+          ...requestContextInitialResponse,
+          errors: initialResponse.errors,
+          data: initialResponse.data,
+          extensions: initialResponse.extensions,
+        },
+        context: requestContext.context,
+      });
+
+      requestContext.response = {
+        ...(response as DeferredGraphQLResponse),
+        initialResponse: r.graphqlResponse,
+      } as DeferredGraphQLResponse;
+
+    } else {
+      // We override errors, data, and extensions with the passed in response,
+      // but keep other properties (like http)
+      requestContext.response = extensionStack.willSendResponse({
+        graphqlResponse: {
+          ...requestContext.response,
+          errors: response.errors,
+          data: response.data,
+          extensions: response.extensions,
+        },
+        context: requestContext.context,
+      }).graphqlResponse;
+      await dispatcher.invokeHookAsync(
+          'willSendResponse',
+          requestContext as WithRequired<typeof requestContext, 'response'>,
+      );
+    }
     return requestContext.response!;
   }
 

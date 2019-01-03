@@ -30,7 +30,8 @@
     "apollo-server-core": "file:../apollo-server-core",
     "boom": "^7.1.0",
     "graphql-subscriptions": "^1.0.0",
-    "graphql-tools": "^4.0.0"
+    "graphql-tools": "^4.0.0",
+    "iterall": "^1.2.2"
   },
   "devDependencies": {
     "apollo-server-integration-testsuite": "file:../apollo-server-integration-testsuite"

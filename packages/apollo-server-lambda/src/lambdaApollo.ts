@@ -52,10 +52,13 @@ export function graphqlLambda(
       },
     }).then(
       ({ graphqlResponse, responseInit }) => {
+        const body = graphqlResponse || '';
+        const headers = responseInit.headers || undefined;
+
         callback(null, {
-          body: graphqlResponse,
+          body,
           statusCode: 200,
-          headers: responseInit.headers,
+          headers,
         });
       },
       (error: HttpQueryError) => {
