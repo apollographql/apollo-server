@@ -107,7 +107,7 @@
     "js-sha256": "0.9.0",
     "koa": "2.6.2",
     "koa-multer": "1.0.2",
-    "lerna": "3.8.5",
+    "lerna": "3.9.0",
     "lint-staged": "8.1.0",
     "memcached-mock": "0.1.0",
     "meteor-promise": "0.8.7",
