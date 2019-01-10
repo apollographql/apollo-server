@@ -369,6 +369,10 @@ addMockFunctionsToSchema({
 *  `maskErrorDetails`: boolean
 
    Set to true to remove error details from the traces sent to Apollo's servers. Defaults to false.
+   
+*  `schemaTag`: String
+
+   A human readable name to tag this variant of a schema (i.e. staging, EU)
 
 *  `generateClientInfo`: (GraphQLRequestContext) => ClientInfo **AS 2.2**
 
