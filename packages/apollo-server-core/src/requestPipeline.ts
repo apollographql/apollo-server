@@ -84,6 +84,8 @@ export type DataSources<TContext> = {
 
 type Mutable<T> = { -readonly [P in keyof T]: T[P] };
 
+let cache: { [key: string]: DocumentNode } = {};
+
 export async function processGraphQLRequest<TContext>(
   config: GraphQLRequestPipelineConfig<TContext>,
   requestContext: Mutable<GraphQLRequestContext<TContext>>,
@@ -168,29 +170,42 @@ export async function processGraphQLRequest<TContext>(
   );
 
   try {
-    let document: DocumentNode;
-    try {
-      document = parse(query);
-      parsingDidEnd();
-    } catch (syntaxError) {
-      parsingDidEnd(syntaxError);
-      return sendErrorResponse(syntaxError, SyntaxError);
-    }
+    let document: DocumentNode = cache[query];
+    if (!document) {
+      try {
+        document = parse(query);
+        parsingDidEnd();
+      } catch (syntaxError) {
+        parsingDidEnd(syntaxError);
+        return sendErrorResponse(syntaxError, SyntaxError);
+      }
 
-    requestContext.document = document;
+      requestContext.document = document;
 
-    const validationDidEnd = await dispatcher.invokeDidStartHook(
-      'validationDidStart',
-      requestContext as WithRequired<typeof requestContext, 'document'>,
-    );
+      const validationDidEnd = await dispatcher.invokeDidStartHook(
+        'validationDidStart',
+        requestContext as WithRequired<typeof requestContext, 'document'>,
+      );
 
-    const validationErrors = validate(document);
+      const validationErrors = validate(document);
 
-    if (validationErrors.length === 0) {
-      validationDidEnd();
+      if (validationErrors.length === 0) {
+        validationDidEnd();
+      } else {
+        validationDidEnd(validationErrors);
+        return sendErrorResponse(validationErrors, ValidationError);
+      }
+
+      // If the query is parsed and validated correctly, cache the result
+      // in memory to speed up the next requests
+      cache[query] = document;
     } else {
-      validationDidEnd(validationErrors);
-      return sendErrorResponse(validationErrors, ValidationError);
+      parsingDidEnd();
+      const validationDidEnd = await dispatcher.invokeDidStartHook(
+        'validationDidStart',
+        requestContext as WithRequired<typeof requestContext, 'document'>,
+      );
+      validationDidEnd();
     }
 
     // FIXME: If we want to guarantee an operation has been set when invoking
