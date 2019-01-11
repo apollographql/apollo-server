@@ -69,7 +69,7 @@
     "@types/fibers": "0.0.30",
     "@types/graphql": "14.0.4",
     "@types/hapi": "17.8.2",
-    "@types/jest": "23.3.11",
+    "@types/jest": "23.3.12",
     "@types/koa-multer": "1.0.0",
     "@types/koa-router": "7.0.37",
     "@types/lodash": "4.14.119",
@@ -107,7 +107,7 @@
     "js-sha256": "0.9.0",
     "koa": "2.6.2",
     "koa-multer": "1.0.2",
-    "lerna": "3.8.5",
+    "lerna": "3.10.5",
     "lint-staged": "8.1.0",
     "memcached-mock": "0.1.0",
     "meteor-promise": "0.8.7",
@@ -124,10 +124,10 @@
     "supertest": "3.3.0",
     "test-listen": "1.1.0",
     "ts-jest": "23.10.5",
-    "tslint": "5.12.0",
+    "tslint": "5.12.1",
     "typescript": "3.2.2",
     "ws": "6.1.2",
-    "yup": "0.26.5"
+    "yup": "0.26.7"
   },
   "jest": {
     "projects": [
