@@ -1,9 +1,10 @@
-import { GraphQLSchema, DocumentNode } from 'graphql';
+import { GraphQLSchema } from 'graphql';
 import {
   SchemaDirectiveVisitor,
   IResolvers,
   IMocks,
   GraphQLParseOptions,
+  ITypeDefinitions,
 } from 'graphql-tools';
 import { ValueOrPromise } from 'apollo-server-env';
 import { ConnectionContext } from 'subscriptions-transport-ws';
@@ -67,7 +68,7 @@ type BaseConfig = Pick<
 // fields that are not specific to a single integration
 export interface Config extends BaseConfig {
   modules?: GraphQLSchemaModule[];
-  typeDefs?: DocumentNode | Array<DocumentNode>;
+  typeDefs?: ITypeDefinitions;
   parseOptions?: GraphQLParseOptions;
   resolvers?: IResolvers;
   schema?: GraphQLSchema;
