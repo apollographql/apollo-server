@@ -1,7 +1,7 @@
 import { parse } from 'graphql/language';
 import { execute, ExecutionResult } from 'graphql/execution';
 import { getIntrospectionQuery, IntrospectionSchema } from 'graphql/utilities';
-import stableStringify from 'json-stable-stringify';
+import stableStringify from 'fast-json-stable-stringify';
 import { GraphQLSchema } from 'graphql/type';
 import { createHash } from 'crypto';
 

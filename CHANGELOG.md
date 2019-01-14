@@ -1,8 +1,9 @@
 # Changelog
 
-### v2.4.0-alpha
+### vNEXT
 
-- Implement an in-memory cache store to save parsed and validated documents and provide performance benefits for successful executions of the same document. [PR #2111](https://github.com/apollographql/apollo-server/pull/2111)
+- Implement an in-memory cache store to save parsed and validated documents and provide performance benefits for successful executions of the same document. [PR #2111](https://github.com/apollographql/apollo-server/pull/2111) (`2.4.0-alpha.0`)
+- Switch from `json-stable-stringify` to `fast-json-stable-stringify`. [PR #2065](https://github.com/apollographql/apollo-server/pull/2065)
 
 ### v2.3.1
 
