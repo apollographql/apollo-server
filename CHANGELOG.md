@@ -4,7 +4,7 @@
 
 - Switch from `json-stable-stringify` to `fast-json-stable-stringify`. [PR #2065](https://github.com/apollographql/apollo-server/pull/2065)
 
-- Make `trace` in RESTDataSource protected so it can be overrriden.
+- Expose `trace` in RESTDataSource as protected method so it can be overrriden. [PR #2182](https://github.com/apollographql/apollo-server/pull/2182)
 
 ### v2.3.1
 
