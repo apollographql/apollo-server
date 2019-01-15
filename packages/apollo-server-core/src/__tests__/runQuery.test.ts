@@ -508,6 +508,12 @@ describe('runQuery', () => {
       return '{\n' + query + '}';
     }
 
+    // This should use the same logic as the calculation in InMemoryLRUCache:
+    // https://github.com/apollographql/apollo-server/blob/94b98ff3/packages/apollo-server-caching/src/InMemoryLRUCache.ts#L23
+    function approximateObjectSize<T>(obj: T): number {
+      return Buffer.byteLength(JSON.stringify(obj), 'utf8');
+    }
+
     it('validates each time when the documentStore is not present', async () => {
       expect.assertions(4);
 
@@ -564,8 +570,8 @@ describe('runQuery', () => {
       // size of the two smaller queries.  All three of these queries will never
       // fit into this cache, so we'll roll through them all.
       const maxSize =
-        JSON.stringify(parse(querySmall1)).length +
-        JSON.stringify(parse(querySmall2)).length;
+        approximateObjectSize(parse(querySmall1)) +
+        approximateObjectSize(parse(querySmall2));
 
       const documentStore = new InMemoryLRUCache<DocumentNode>({ maxSize });
 

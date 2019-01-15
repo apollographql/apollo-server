@@ -13,14 +13,14 @@ export class InMemoryLRUCache<V = string> implements KeyValueCache<V> {
           return item.length;
         }
 
-        // If it's an object, we'll use the length to get an approximate,
-        // relative size of what it would take to store it.  It's certainly not
-        // 100% accurate, but it's a very, very fast implementation and it
+        // If it's an object, we'll use JSON.stringify+Buffer.byteLength to
+        // approximate the size of what it would take to store.  It's certainly
+        // not 100% accurate, but it should be a fast implementation which
         // doesn't require bringing in other dependencies or logic which we need
         // to maintain.  In the future, we might consider something like:
         // npm.im/object-sizeof, but this should be sufficient for now.
         if (typeof item === 'object') {
-          return JSON.stringify(item).length;
+          return Buffer.byteLength(JSON.stringify(item), 'utf8');
         }
 
         // Go with the lru-cache default "naive" size, in lieu anything better:
