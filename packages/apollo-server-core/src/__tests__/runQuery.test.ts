@@ -600,8 +600,8 @@ describe('runQuery', () => {
       expect(parsingDidStart.mock.calls.length).toBe(5);
       expect(validationDidStart.mock.calls.length).toBe(5);
 
-      // Finally, make sure that the large query is gone (it  should be, after
-      // the last two have take its spot again.)
+      // Finally, make sure that the large query is gone (it should be, after
+      // the last two have taken its spot again.)
       await runRequest({ plugins, documentStore, queryString: queryLarge });
       expect(parsingDidStart.mock.calls.length).toBe(6);
       expect(validationDidStart.mock.calls.length).toBe(6);
