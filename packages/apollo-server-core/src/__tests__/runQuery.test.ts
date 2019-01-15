@@ -573,7 +573,10 @@ describe('runQuery', () => {
         approximateObjectSize(parse(querySmall1)) +
         approximateObjectSize(parse(querySmall2));
 
-      const documentStore = new InMemoryLRUCache<DocumentNode>({ maxSize });
+      const documentStore = new InMemoryLRUCache<DocumentNode>({
+        maxSize,
+        sizeCalculator: approximateObjectSize,
+      });
 
       await runRequest({ plugins, documentStore, queryString: querySmall1 });
       expect(parsingDidStart.mock.calls.length).toBe(1);

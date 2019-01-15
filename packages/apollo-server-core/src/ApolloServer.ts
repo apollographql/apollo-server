@@ -93,6 +93,10 @@ function getEngineServiceId(engine: Config['engine']): string | undefined {
 const forbidUploadsForTesting =
   process && process.env.NODE_ENV === 'test' && !supportsUploadsInNode;
 
+function approximateObjectSize<T>(obj: T): number {
+  return Buffer.byteLength(JSON.stringify(obj), 'utf8');
+}
+
 export class ApolloServerBase {
   public subscriptionsPath?: string;
   public graphqlPath: string = '/graphql';
@@ -496,13 +500,14 @@ export class ApolloServerBase {
   }
 
   private initializeDocumentStore(): void {
-    this.documentStore = new InMemoryLRUCache({
+    this.documentStore = new InMemoryLRUCache<DocumentNode>({
       // Create ~about~ a 30MiB InMemoryLRUCache.  This is less than precise
       // since the technique to calculate the size of a DocumentNode is
       // only using JSON.stringify on the DocumentNode (and thus doesn't account
       // for unicode characters, etc.), but it should do a reasonable job at
       // providing a caching document store for most operations.
       maxSize: Math.pow(2, 20) * 30,
+      sizeCalculator: approximateObjectSize,
     });
   }
 
