@@ -169,22 +169,20 @@ export async function processGraphQLRequest<TContext>(
     // operation in order to lookup a previously parsed-and-validated operation
     // from that.  A failure to retrieve anything from the cache simply means
     // we're guaranteed to do the parsing and validation ourselves.
-    let document: DocumentNode | undefined;
-
     if (config.documentStore) {
-      document = await config.documentStore.get(queryHash);
+      requestContext.document = await config.documentStore.get(queryHash);
     }
 
     // If we still don't have a document, we'll need to parse and validate it.
     // With success, we'll attempt to save it into the store for future use.
-    if (!document) {
+    if (!requestContext.document) {
       const parsingDidEnd = await dispatcher.invokeDidStartHook(
         'parsingDidStart',
         requestContext,
       );
 
       try {
-        requestContext.document = document = parse(query);
+        requestContext.document = parse(query);
         parsingDidEnd();
       } catch (syntaxError) {
         parsingDidEnd(syntaxError);
@@ -196,7 +194,7 @@ export async function processGraphQLRequest<TContext>(
         requestContext as WithRequired<typeof requestContext, 'document'>,
       );
 
-      const validationErrors = validate(document);
+      const validationErrors = validate(requestContext.document);
 
       if (validationErrors.length === 0) {
         validationDidEnd();
@@ -218,8 +216,10 @@ export async function processGraphQLRequest<TContext>(
         // While it shouldn't normally be necessary to wrap this `Promise` in a
         // `Promise.resolve` invocation, it seems that the underlying cache store
         // is returning a non-native `Promise` (e.g. Bluebird, etc.).
-        Promise.resolve(config.documentStore.set(queryHash, document)).catch(
-          err => console.warn('Could not store validated document.', err),
+        Promise.resolve(
+          config.documentStore.set(queryHash, requestContext.document),
+        ).catch(err =>
+          console.warn('Could not store validated document.', err),
         );
       }
     }
@@ -228,7 +228,10 @@ export async function processGraphQLRequest<TContext>(
     // `willExecuteOperation` and executionDidStart`, we need to throw an
     // error here and not leave this to `buildExecutionContext` in
     // `graphql-js`.
-    const operation = getOperationAST(document, request.operationName);
+    const operation = getOperationAST(
+      requestContext.document,
+      request.operationName,
+    );
 
     requestContext.operation = operation || undefined;
     // We'll set `operationName` to `null` for anonymous operations.
@@ -255,7 +258,7 @@ export async function processGraphQLRequest<TContext>(
 
     try {
       response = (await execute(
-        document,
+        requestContext.document,
         request.operationName,
         request.variables,
       )) as GraphQLResponse;
