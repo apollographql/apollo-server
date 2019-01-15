@@ -170,7 +170,14 @@ export async function processGraphQLRequest<TContext>(
     // parsed-and-validated operation.  Failure to retrieve anything from the
     // cache just means we're committed to doing the parsing and validation.
     if (config.documentStore) {
-      requestContext.document = await config.documentStore.get(queryHash);
+      try {
+        requestContext.document = await config.documentStore.get(queryHash);
+      } catch (err) {
+        console.warn(
+          'An error occurred while attempting to read from the documentStore.',
+          err,
+        );
+      }
     }
 
     // If we still don't have a document, we'll need to parse and validate it.
