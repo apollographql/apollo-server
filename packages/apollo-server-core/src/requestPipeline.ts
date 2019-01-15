@@ -165,10 +165,10 @@ export async function processGraphQLRequest<TContext>(
   });
 
   try {
-    // If we're configured with a document store, we'll utilize the hash of the
-    // operation in order to lookup a previously parsed-and-validated operation
-    // from that.  A failure to retrieve anything from the cache simply means
-    // we're guaranteed to do the parsing and validation ourselves.
+    // If we're configured with a document store (by default, we are), we'll
+    // utilize the operation's hash to lookup the AST from the previously
+    // parsed-and-validated operation.  Failure to retrieve anything from the
+    // cache just means we're committed to doing the parsing and validation.
     if (config.documentStore) {
       requestContext.document = await config.documentStore.get(queryHash);
     }

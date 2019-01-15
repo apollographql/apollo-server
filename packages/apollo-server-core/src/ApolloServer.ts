@@ -115,9 +115,9 @@ export class ApolloServerBase {
   // the default version is specified in playground.ts
   protected playgroundOptions?: PlaygroundRenderPageOptions;
 
-  // An optionally defined store that, when enabled (default), will store the
-  // parsed and validated versions of operations in-memory, allowing subsequent
-  // parse and validates on the same operation to be executed immediately.
+  // A store that, when enabled (default), will store the parsed and validated
+  // versions of operations in-memory, allowing subsequent parses/validates
+  // on the same operation to be executed immediately.
   private documentStore?: InMemoryLRUCache<DocumentNode>;
 
   // The constructor should be universal across all environments. All environment specific behavior should be set by adding or overriding methods
