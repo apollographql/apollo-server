@@ -268,7 +268,7 @@ export abstract class RESTDataSource<TContext = any> extends DataSource {
     request: Request,
     fn: () => Promise<TResult>,
   ): Promise<TResult> {
-    const label = `${request.method || 'GET'} ${request.url}`
+    const label = `${request.method || 'GET'} ${request.url}`;
 
     if (process && process.env && process.env.NODE_ENV === 'development') {
       // We're not using console.time because that isn't supported on Cloudflare
