@@ -210,7 +210,7 @@ export async function processGraphQLRequest<TContext>(
         // `Promise` which is resolved (or rejected), eventually, based on the
         // success or failure (respectively) of the cache save attempt.  While
         // it's certainly possible to `await` this `Promise`, we don't care about
-        // whether or not its successful at this point.  We'll instead proceed
+        // whether or not it's successful at this point.  We'll instead proceed
         // to serve the rest of the request and just hope that this works out.
         // If it doesn't work, the next request will have another opportunity to
         // try again.  Errors will surface as warnings, as appropriate.
