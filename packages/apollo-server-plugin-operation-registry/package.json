@@ -15,7 +15,7 @@
     "apollo-server-caching": "file:../apollo-server-caching",
     "apollo-server-errors": "file:../apollo-server-errors",
     "apollo-server-plugin-base": "file:../apollo-server-plugin-base",
-    "json-stable-stringify": "1.0.1",
+    "fast-json-stable-stringify": "2.0.0",
     "node-fetch": "2.2.0"
   },
   "peerDependencies": {
