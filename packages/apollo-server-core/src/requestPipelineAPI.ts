@@ -39,6 +39,16 @@ export interface GraphQLResponse {
   http?: Pick<Response, 'headers'>;
 }
 
+export interface GraphQLRequestMetrics {
+  persistedQueryHit?: boolean;
+  persistedQueryRegister?: boolean;
+  // XXX I thought about making this an augmentation either from
+  // apollo-engine-reporting or apollo-server-plugin-response-cache but that
+  // seemed to mean that one of those packages would have to depend on the
+  // other, which seemed wrong.  Happy to hear there's a better way.
+  responseCacheHit?: boolean;
+}
+
 export interface GraphQLRequestContext<TContext = Record<string, any>> {
   readonly request: GraphQLRequest;
   readonly response?: GraphQLResponse;
@@ -50,12 +60,15 @@ export interface GraphQLRequestContext<TContext = Record<string, any>> {
   readonly queryHash?: string;
 
   readonly document?: DocumentNode;
+  readonly documentText?: string;
 
   // `operationName` is set based on the operation AST, so it is defined
   // even if no `request.operationName` was passed in.
   // It will be set to `null` for an anonymous operation.
   readonly operationName?: string | null;
   readonly operation?: OperationDefinitionNode;
+
+  readonly metrics?: GraphQLRequestMetrics;
 
   debug?: boolean;
 }

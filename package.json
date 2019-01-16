@@ -58,6 +58,7 @@
     "apollo-server-lambda": "file:packages/apollo-server-lambda",
     "apollo-server-micro": "file:packages/apollo-server-micro",
     "apollo-server-plugin-base": "file:packages/apollo-server-plugin-base",
+    "apollo-server-plugin-response-cache": "file:packages/apollo-server-plugin-response-cache",
     "apollo-server-testing": "file:packages/apollo-server-testing",
     "apollo-tracing": "file:packages/apollo-tracing",
     "graphql-extensions": "file:packages/graphql-extensions"
