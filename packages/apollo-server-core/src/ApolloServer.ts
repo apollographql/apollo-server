@@ -500,15 +500,31 @@ export class ApolloServerBase {
   }
 
   private initializeDocumentStore(): void {
-    this.documentStore = new InMemoryLRUCache<DocumentNode>({
+    let disposedInLastCycle = 0;
+    const maxSize = Math.pow(2, 20) * 30;
+    const documentStore = (this.documentStore = new InMemoryLRUCache<
+      DocumentNode
+    >({
       // Create ~about~ a 30MiB InMemoryLRUCache.  This is less than precise
       // since the technique to calculate the size of a DocumentNode is
       // only using JSON.stringify on the DocumentNode (and thus doesn't account
       // for unicode characters, etc.), but it should do a reasonable job at
       // providing a caching document store for most operations.
-      maxSize: Math.pow(2, 20) * 30,
+      maxSize,
       sizeCalculator: approximateObjectSize,
-    });
+      onDispose() {
+        disposedInLastCycle += 1;
+      },
+    }));
+
+    setInterval(async () => {
+      const currentDocumentStoreSize = await documentStore.getTotalSize();
+      const percent = Math.round((currentDocumentStoreSize / maxSize) * 100);
+      console.debug(
+        `[documentStore] ${currentDocumentStoreSize} / ${maxSize} (${percent}%). Disposed of ${disposedInLastCycle} documents this interval.`,
+      );
+      disposedInLastCycle = 0;
+    }, 60000);
   }
 
   // This function is used by the integrations to generate the graphQLOptions
