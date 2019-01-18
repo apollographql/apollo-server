@@ -30,11 +30,11 @@ server.listen().then(({ url }) => {
 The API key can also be set with the `ENGINE_API_KEY` environment variable. Setting an environment variable can be done in commandline as seen below or with the [dotenv npm package](https://www.npmjs.com/package/dotenv).
 
 ```bash
-#Replace YOUR_API_KEY with the api key for you service in the Engine UI
+# Replace YOUR_API_KEY with the API key provided within Apollo Engine.
 ENGINE_API_KEY=YOUR_API_KEY node start-server.js
 ```
 
-### Client Awareness
+### Client awareness
 
 Apollo Engine accepts metrics annotated with client information. The Engine UI
 is then able to filter metrics and usage patterns by these names and versions. To provide metrics to the Engine, pass a `generateClientInfo` function into the `ApolloServer` constructor, like so:
@@ -78,9 +78,11 @@ server.listen().then(({ url }) => {
 
 Apollo Server provides two ways to log a server: per input, response, and errors or periodically throughout a request's lifecycle. Treating the GraphQL execution as a black box by logging the inputs and outputs of the system allows developers to diagnose issues quickly without being mired by lower level logs. Once a problem has been found at a high level, the lower level logs enable accurate tracing of how a request was handled.
 
-### High Level Logging
+### High-level logging
 
-To log, Apollo Server provides: `formatError` and `formatResponse`. This example uses `console.log` to record the information, servers can use other more sophisticated tools.
+Apollo Server allows `formatError` and `formatResponse` configuration options which can be defined as callback-functions which receive `error` or `response` arguments respectively.
+
+For the sake of simplicity, these examples use `console.log` to output error and debugging information though a more complete example might utilize existing logging or error-reporting facilities.
 
 ```js
 const server = new ApolloServer({
@@ -101,7 +103,7 @@ server.listen().then(({ url }) => {
 });
 ```
 
-### Granular Logs
+### Granular logs
 
 For more advanced cases, Apollo Server provides an experimental api that accepts an array of `graphql-extensions` to the `extensions` field. These extensions receive a variety of lifecycle calls for each phase of a GraphQL request and can keep state, such as the request headers.
 
