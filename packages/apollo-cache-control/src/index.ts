@@ -156,7 +156,7 @@ export class CacheControlExtension<TContext = any>
     let scope: CacheScope = CacheScope.Public;
 
     for (const hint of this.hints.values()) {
-      if (hint.maxAge) {
+      if (hint.maxAge !== undefined) {
         lowestMaxAge = lowestMaxAge
           ? Math.min(lowestMaxAge, hint.maxAge)
           : hint.maxAge;
