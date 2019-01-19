@@ -69,7 +69,7 @@
     "@types/fast-json-stable-stringify": "^2.0.0",
     "@types/fibers": "0.0.30",
     "@types/graphql": "14.0.5",
-    "@types/hapi": "17.8.2",
+    "@types/hapi": "17.8.4",
     "@types/jest": "23.3.12",
     "@types/koa-multer": "1.0.0",
     "@types/koa-router": "7.0.38",
