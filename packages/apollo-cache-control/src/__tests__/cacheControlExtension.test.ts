@@ -17,6 +17,10 @@ describe('CacheControlExtension', () => {
       key: 'subTest',
       prev: responsePath,
     };
+    const responseSubSubPath: ResponsePath = {
+      key: 'subSubTest',
+      prev: responseSubPath,
+    };
 
     it('returns undefined without cache hints', () => {
       const cachePolicy = cacheControlExtension.computeOverallCachePolicy();
@@ -34,6 +38,7 @@ describe('CacheControlExtension', () => {
     it('returns undefined if any cache hint has a maxAge of 0', () => {
       cacheControlExtension.addHint(responsePath, { maxAge: 120 });
       cacheControlExtension.addHint(responseSubPath, { maxAge: 0 });
+      cacheControlExtension.addHint(responseSubSubPath, { maxAge: 20 });
 
       const cachePolicy = cacheControlExtension.computeOverallCachePolicy();
       expect(cachePolicy).toBeUndefined();
