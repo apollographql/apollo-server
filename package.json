@@ -122,7 +122,7 @@
     "request": "2.88.0",
     "request-promise": "4.2.2",
     "subscriptions-transport-ws": "0.9.15",
-    "supertest": "3.4.1",
+    "supertest": "3.4.2",
     "test-listen": "1.1.0",
     "ts-jest": "23.10.5",
     "tslint": "5.12.1",
