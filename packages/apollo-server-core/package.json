@@ -24,7 +24,7 @@
     "node": ">=6"
   },
   "dependencies": {
-    "@apollographql/apollo-tools": "^0.2.6",
+    "@apollographql/apollo-tools": "^0.3.0",
     "@apollographql/graphql-playground-html": "^1.6.6",
     "@types/ws": "^6.0.0",
     "apollo-cache-control": "file:../apollo-cache-control",
@@ -35,12 +35,12 @@
     "apollo-server-errors": "file:../apollo-server-errors",
     "apollo-server-plugin-base": "file:../apollo-server-plugin-base",
     "apollo-tracing": "file:../apollo-tracing",
+    "fast-json-stable-stringify": "^2.0.0",
     "graphql-extensions": "file:../graphql-extensions",
     "graphql-subscriptions": "^1.0.0",
     "graphql-tag": "^2.9.2",
     "graphql-tools": "^4.0.0",
     "graphql-upload": "^8.0.2",
-    "json-stable-stringify": "^1.0.1",
     "lodash": "^4.17.10",
     "subscriptions-transport-ws": "^0.9.11",
     "ws": "^6.0.0"
