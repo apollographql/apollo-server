@@ -44,6 +44,7 @@ client reference ID, Apollo Server will now default to the values present in the
 of the request (`apollographql-client-name`, `apollographql-client-reference-id` and
 `apollographql-client-version` respectively).  As a last resort, when those headers are not set,
 the query extensions' `clientInfo` values will be used. [PR #1960](https://github.com/apollographql/apollo-server/pull/1960)
+- Added `apollo-server-fastify` integration ([@rkorrelboom](https://github.com/rkorrelboom) in [#1971](https://github.com/apollostack/apollo-server/pull/1971))
 
 ### v2.2.2
 
