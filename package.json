@@ -72,7 +72,7 @@
     "@types/hapi": "17.8.5",
     "@types/jest": "23.3.13",
     "@types/koa-multer": "1.0.0",
-    "@types/koa-router": "7.0.38",
+    "@types/koa-router": "7.0.39",
     "@types/lodash": "4.14.120",
     "@types/lru-cache": "4.1.1",
     "@types/memcached": "2.2.5",
