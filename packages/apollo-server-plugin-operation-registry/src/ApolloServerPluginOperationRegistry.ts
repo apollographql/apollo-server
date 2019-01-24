@@ -10,6 +10,7 @@ import Agent from './agent';
 import { GraphQLSchema } from 'graphql/type';
 import { KeyValueCache } from 'apollo-server-caching';
 import loglevel from 'loglevel';
+import loglevelDebug from 'loglevel-debug';
 
 interface Options {
   debug?: boolean;
@@ -22,7 +23,10 @@ export default function plugin(options: Options = Object.create(null)) {
   // Setup logging facilities, scoped under the appropriate name.
   const logger = loglevel.getLogger(`apollo-server:${pluginName}`);
 
-  // Enable debugging if the `debug` option is true.
+  // Support DEBUG environment variable, à la https://npm.im/debug/.
+  loglevelDebug(logger);
+
+  // And also support the `debug` option, if it's truthy.
   if (options.debug === true) {
     logger.enableAll();
   }
