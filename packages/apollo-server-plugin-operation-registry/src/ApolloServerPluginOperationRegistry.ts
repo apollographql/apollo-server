@@ -13,7 +13,7 @@ import {
 import { ForbiddenError, ApolloError } from 'apollo-server-errors';
 import Agent from './agent';
 import { GraphQLSchema } from 'graphql/type';
-import { KeyValueCache } from 'apollo-server-caching';
+import { KeyValueCache, InMemoryLRUCache } from 'apollo-server-caching';
 import loglevel from 'loglevel';
 import loglevelDebug from 'loglevel-debug';
 
@@ -66,11 +66,9 @@ export default function plugin(options: Options = Object.create(null)) {
         throw new Error(`${pluginName}: ${messagePersistedQueriesRequired}`);
       }
 
-      // We currently use which ever store is in place for persisted queries,
-      // be that the default in-memory store, or other stateful store resource.
-      // That said, if this backing store ejects items, it should be noted that
-      // those ejected operations will no longer be permitted!
-      store = persistedQueries.cache;
+      // An LRU store with no `maxSize` is effectively an InMemoryStore and
+      // exactly what we want for this purpose.
+      store = new InMemoryLRUCache({ maxSize: Infinity });
 
       logger.debug('Initializing operation registry agent...');
 
