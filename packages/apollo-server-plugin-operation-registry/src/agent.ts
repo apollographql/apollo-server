@@ -275,8 +275,8 @@ export default class Agent {
     }
 
     // Save the ones from this fetch, so we know what to remove on the next
-    // actual update.  Particularly important since some cache backings might
-    // not actually let us look this up again.
+    // actual update.  Particularly important since a future distributed
+    // store might not actually let us look this up again.
     this.lastOperationSignatures = replacementSignatures;
   }
 }
