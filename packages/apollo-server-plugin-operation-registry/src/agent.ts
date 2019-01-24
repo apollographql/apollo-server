@@ -8,7 +8,7 @@ import {
 import loglevel from 'loglevel';
 
 import fetch, { Response, RequestInit } from 'node-fetch';
-import { KeyValueCache } from 'apollo-server-caching';
+import { InMemoryLRUCache } from 'apollo-server-caching';
 
 const DEFAULT_POLL_SECONDS: number = 30;
 const SYNC_WARN_TIME_SECONDS: number = 60;
@@ -18,7 +18,7 @@ export interface AgentOptions {
   pollSeconds?: number;
   schemaHash: string;
   engine: any;
-  store: KeyValueCache;
+  store: InMemoryLRUCache;
 }
 
 interface Operation {

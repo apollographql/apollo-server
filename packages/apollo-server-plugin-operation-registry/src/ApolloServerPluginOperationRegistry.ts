@@ -13,7 +13,7 @@ import {
 import { ForbiddenError, ApolloError } from 'apollo-server-errors';
 import Agent from './agent';
 import { GraphQLSchema } from 'graphql/type';
-import { KeyValueCache, InMemoryLRUCache } from 'apollo-server-caching';
+import { InMemoryLRUCache } from 'apollo-server-caching';
 import loglevel from 'loglevel';
 import loglevelDebug from 'loglevel-debug';
 
@@ -23,7 +23,7 @@ interface Options {
 
 export default function plugin(options: Options = Object.create(null)) {
   let agent: Agent;
-  let store: KeyValueCache;
+  let store: InMemoryLRUCache;
 
   // Setup logging facilities, scoped under the appropriate name.
   const logger = loglevel.getLogger(`apollo-server:${pluginName}`);
