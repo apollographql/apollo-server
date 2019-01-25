@@ -35,7 +35,7 @@ type SignatureStore = Set<string>;
 
 export default class Agent {
   private timer?: NodeJS.Timer;
-  private log: loglevel.Logger;
+  private logger: loglevel.Logger;
   private hashedServiceId?: string;
   private requestInFlight: Promise<void> | null = null;
   private lastSuccessfulCheck?: Date;
@@ -50,7 +50,7 @@ export default class Agent {
   constructor(options: AgentOptions) {
     Object.assign(this.options, options);
 
-    this.log = this.options.logger || loglevel.getLogger(pluginName);
+    this.logger = this.options.logger || loglevel.getLogger(pluginName);
 
     if (!this.options.schemaHash) {
       throw new Error('`schemaHash` must be passed to the Agent.');
@@ -79,7 +79,7 @@ export default class Agent {
   }
 
   async start() {
-    this.log.debug('Starting operation registry agent...');
+    this.logger.debug('Starting operation registry agent...');
 
     // This is what we'll trigger at a regular interval.
     const pulse = async () => await this.checkForUpdate();
@@ -138,7 +138,7 @@ export default class Agent {
       this.options.schemaHash,
     );
 
-    this.log.debug(`Checking for manifest changes at ${manifestUrl}`);
+    this.logger.debug(`Checking for manifest changes at ${manifestUrl}`);
     this._timesChecked++;
 
     const fetchOptions: RequestInit = {
@@ -176,7 +176,7 @@ export default class Agent {
     // no need to do any other work.  Returning true indicates that this is
     // a successful fetch and that we can be assured the manifest is current.
     if (response.status === 304) {
-      this.log.debug(
+      this.logger.debug(
         'The published manifest was the same as the previous attempt.',
       );
       return false;
@@ -259,7 +259,7 @@ export default class Agent {
       // for debugging.
       if (!this.lastOperationSignatures.has(signature)) {
         // Newly added operation.
-        this.log.debug(`Incoming manifest ADDs: ${signature}`);
+        this.logger.debug(`Incoming manifest ADDs: ${signature}`);
         this.options.cache.set(getCacheKey(signature), document);
       }
     }
@@ -269,7 +269,7 @@ export default class Agent {
     for (const signature of this.lastOperationSignatures) {
       if (!incomingOperations.has(signature)) {
         // Remove operations which are no longer present.
-        this.log.debug(`Incoming manifest REMOVEs: ${signature}`);
+        this.logger.debug(`Incoming manifest REMOVEs: ${signature}`);
         this.options.cache.delete(getCacheKey(signature));
       }
     }
