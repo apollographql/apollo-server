@@ -1,13 +1,13 @@
 import nock from 'nock';
 import { InMemoryLRUCache, KeyValueCache } from 'apollo-server-caching';
-import { envOverrideOperationManifest, getCacheKey } from '../common';
+import { envOverrideOperationManifest, getStoreKey } from '../common';
 import { resolve as urlResolve } from 'url';
 import { createHash } from 'crypto';
 import { AgentOptions } from '../agent';
 
 const fakeBaseUrl = 'https://myfakehost/';
 
-const defaultCache = () => new InMemoryLRUCache();
+const defaultStore = () => new InMemoryLRUCache();
 
 const genericSchemaHash = 'abc123';
 const genericServiceID = 'test-service';
@@ -18,23 +18,23 @@ const pollSeconds = 60;
 // generic options above.
 const getRequiredAgentOptions = (
   {
-    cache = defaultCache(),
+    store = defaultStore(),
     schemaHash = genericSchemaHash,
     serviceID = genericServiceID,
     ...addlOptions
   }: {
-    cache?: KeyValueCache;
+    store?: KeyValueCache;
     schemaHash?: string;
     serviceID?: string;
   } = {
-    cache: defaultCache(),
+    store: defaultStore(),
     schemaHash: genericSchemaHash,
     serviceID: genericServiceID,
   },
 ): AgentOptions => ({
   schemaHash,
   engine: { serviceID },
-  cache,
+  store,
   pollSeconds,
   ...addlOptions,
 });
@@ -128,23 +128,23 @@ describe('Agent', () => {
       );
     });
 
-    describe('manifest checking and cache populating', () => {
+    describe('manifest checking and store populating', () => {
       const forCleanup: {
-        cache?: KeyValueCache;
+        store?: KeyValueCache;
         agent?: import('../agent').default;
       }[] = [];
 
       function createAgent({ ...args } = {}) {
         const options = getRequiredAgentOptions({ ...args });
 
-        // We never actually let the Agent construct its own default cache
-        // since we need to pluck the cache out to instrument it with spies.
-        const cache = options.cache;
+        // We never actually let the Agent construct its own default store
+        // since we need to pluck the store out to instrument it with spies.
+        const store = options.store;
         const agent = new Agent(options);
 
-        // Save all agents and caches we've created so we can properly
+        // Save all agents and stores we've created so we can properly
         // stop them and clean them up.
-        forCleanup.push({ agent, cache });
+        forCleanup.push({ agent, store });
         return agent;
       }
 
@@ -192,24 +192,24 @@ describe('Agent', () => {
         );
       }
 
-      function expectCacheSpyOperationEach(
+      function expectStoreSpyOperationEach(
         spy: jest.SpyInstance,
         letters: string[],
       ) {
         letters.forEach(letter => {
           const { signature, document } = sampleManifestRecords[letter];
-          expect(spy).toHaveBeenCalledWith(getCacheKey(signature), document);
+          expect(spy).toHaveBeenCalledWith(getStoreKey(signature), document);
         });
       }
 
-      async function expectCacheHasOperationEach(
-        cache: KeyValueCache,
+      async function expectStoreHasOperationEach(
+        store: KeyValueCache,
         letters: string[],
       ) {
         for (const letter of letters) {
           const { signature, document } = sampleManifestRecords[letter];
           await expect(
-            cache.get(getCacheKey(signature)),
+            store.get(getStoreKey(signature)),
           ).resolves.toStrictEqual(document);
         }
       }
@@ -255,30 +255,30 @@ describe('Agent', () => {
 
       it('populates the manifest store after starting', async () => {
         nockGoodManifestABC();
-        const cache = defaultCache();
-        const cacheSetSpy = jest.spyOn(cache, 'set');
-        await createAgent({ cache }).start();
+        const store = defaultStore();
+        const storeSetSpy = jest.spyOn(store, 'set');
+        await createAgent({ store }).start();
 
         // There are three operations in the manifest above.
-        expect(cacheSetSpy).toHaveBeenCalledTimes(3);
-        expectCacheSpyOperationEach(cacheSetSpy, ['a', 'b', 'c']);
-        await expectCacheHasOperationEach(cache, ['a', 'b', 'c']);
+        expect(storeSetSpy).toHaveBeenCalledTimes(3);
+        expectStoreSpyOperationEach(storeSetSpy, ['a', 'b', 'c']);
+        await expectStoreHasOperationEach(store, ['a', 'b', 'c']);
 
-        cacheSetSpy.mockRestore();
+        storeSetSpy.mockRestore();
       });
 
       it('starts polling successfully', async () => {
         nockGoodManifestABC();
-        const cache = defaultCache();
-        const cacheSetSpy = jest.spyOn(cache, 'set');
-        const cacheDeleteSpy = jest.spyOn(cache, 'delete');
-        const agent = createAgent({ cache });
+        const store = defaultStore();
+        const storeSetSpy = jest.spyOn(store, 'set');
+        const storeDeleteSpy = jest.spyOn(store, 'delete');
+        const agent = createAgent({ store });
         jest.useFakeTimers();
         await agent.start();
 
         // Three additions, no deletions.
-        expect(cacheSetSpy).toBeCalledTimes(3);
-        expect(cacheDeleteSpy).toBeCalledTimes(0);
+        expect(storeSetSpy).toBeCalledTimes(3);
+        expect(storeDeleteSpy).toBeCalledTimes(0);
 
         // Only the initial start-up check should have happened by now.
         expect(agent._timesChecked).toBe(1);
@@ -309,8 +309,8 @@ describe('Agent', () => {
         // there should be no actual update.
         expect(agent._timesChecked).toBe(2);
 
-        expect(cacheSetSpy).toBeCalledTimes(3);
-        expect(cacheDeleteSpy).toBeCalledTimes(0);
+        expect(storeSetSpy).toBeCalledTimes(3);
+        expect(storeDeleteSpy).toBeCalledTimes(0);
       });
 
       it('continues polling even after initial failure', async () => {
@@ -318,15 +318,15 @@ describe('Agent', () => {
           genericServiceID,
           genericSchemaHash,
         );
-        const cache = defaultCache();
-        const cacheSetSpy = jest.spyOn(cache, 'set');
-        const cacheDeleteSpy = jest.spyOn(cache, 'delete');
-        const agent = createAgent({ cache });
+        const store = defaultStore();
+        const storeSetSpy = jest.spyOn(store, 'set');
+        const storeDeleteSpy = jest.spyOn(store, 'delete');
+        const agent = createAgent({ store });
         jest.useFakeTimers();
         await agent.start();
 
-        expect(cacheSetSpy).toBeCalledTimes(0);
-        expect(cacheDeleteSpy).toBeCalledTimes(0);
+        expect(storeSetSpy).toBeCalledTimes(0);
+        expect(storeDeleteSpy).toBeCalledTimes(0);
 
         // Only the initial start-up check should have happened by now.
         expect(agent._timesChecked).toBe(1);
@@ -351,43 +351,43 @@ describe('Agent', () => {
 
         // Now the times checked should have gone up.
         expect(agent._timesChecked).toBe(2);
-        expect(cacheSetSpy).toBeCalledTimes(0);
+        expect(storeSetSpy).toBeCalledTimes(0);
       });
 
       it('purges operations which are removed from the manifest', async () => {
-        const cache = defaultCache();
-        const cacheSetSpy = jest.spyOn(cache, 'set');
-        const cacheDeleteSpy = jest.spyOn(cache, 'delete');
+        const store = defaultStore();
+        const storeSetSpy = jest.spyOn(store, 'set');
+        const storeDeleteSpy = jest.spyOn(store, 'delete');
 
         // Intentionally not calling start, since we're not testing intervals.
-        const agent = createAgent({ cache });
-        expect(cacheSetSpy).toBeCalledTimes(0);
+        const agent = createAgent({ store });
+        expect(storeSetSpy).toBeCalledTimes(0);
 
         nockGoodManifestABC(); // Starting with ABC.
         await agent.checkForUpdate();
         expect(agent._timesChecked).toBe(1);
-        expect(cacheSetSpy).toBeCalledTimes(3);
-        expect(cacheDeleteSpy).toBeCalledTimes(0);
-        await expectCacheHasOperationEach(cache, ['a', 'b', 'c']);
+        expect(storeSetSpy).toBeCalledTimes(3);
+        expect(storeDeleteSpy).toBeCalledTimes(0);
+        await expectStoreHasOperationEach(store, ['a', 'b', 'c']);
 
         nockGoodManifestAB(); // Just AB in this manifest.
         await agent.checkForUpdate();
         expect(agent._timesChecked).toBe(2);
-        expect(cacheSetSpy).toBeCalledTimes(3); // no new sets.
-        expect(cacheDeleteSpy).toBeCalledTimes(1);
+        expect(storeSetSpy).toBeCalledTimes(3); // no new sets.
+        expect(storeDeleteSpy).toBeCalledTimes(1);
         await expect(
           // Ensure that 'C' is gone!
-          cache.get(getCacheKey(sampleManifestRecords.c.signature)),
+          store.get(getStoreKey(sampleManifestRecords.c.signature)),
         ).resolves.toBeUndefined();
 
         nockGoodManifestA(); // Just A in this manifest.
         await agent.checkForUpdate();
         expect(agent._timesChecked).toBe(3);
-        expect(cacheSetSpy).toBeCalledTimes(3); // no new sets.
-        expect(cacheDeleteSpy).toBeCalledTimes(2); // one more deletion
+        expect(storeSetSpy).toBeCalledTimes(3); // no new sets.
+        expect(storeDeleteSpy).toBeCalledTimes(2); // one more deletion
         await expect(
           // Ensure that 'B' is gone!
-          cache.get(getCacheKey(sampleManifestRecords.b.signature)),
+          store.get(getStoreKey(sampleManifestRecords.b.signature)),
         ).resolves.toBeUndefined();
       });
     });

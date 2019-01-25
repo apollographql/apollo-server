@@ -1,7 +1,7 @@
 import {
   getOperationManifestUrl,
   generateServiceIdHash,
-  getCacheKey,
+  getStoreKey,
   pluginName,
 } from './common';
 
@@ -18,7 +18,7 @@ export interface AgentOptions {
   pollSeconds?: number;
   schemaHash: string;
   engine: any;
-  cache: KeyValueCache;
+  store: KeyValueCache;
 }
 
 interface Operation {
@@ -260,7 +260,7 @@ export default class Agent {
       if (!this.lastOperationSignatures.has(signature)) {
         // Newly added operation.
         this.logger.debug(`Incoming manifest ADDs: ${signature}`);
-        this.options.cache.set(getCacheKey(signature), document);
+        this.options.store.set(getStoreKey(signature), document);
       }
     }
 
@@ -270,7 +270,7 @@ export default class Agent {
       if (!incomingOperations.has(signature)) {
         // Remove operations which are no longer present.
         this.logger.debug(`Incoming manifest REMOVEs: ${signature}`);
-        this.options.cache.delete(getCacheKey(signature));
+        this.options.store.delete(getStoreKey(signature));
       }
     }
 

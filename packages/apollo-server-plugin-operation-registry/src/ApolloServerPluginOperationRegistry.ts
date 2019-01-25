@@ -2,7 +2,7 @@ import * as assert from 'assert';
 import {
   pluginName,
   generateOperationHash,
-  getCacheKey,
+  getStoreKey,
   hashForLogging,
 } from './common';
 import {
@@ -23,7 +23,7 @@ interface Options {
 
 export default function plugin(options: Options = Object.create(null)) {
   let agent: Agent;
-  let cache: KeyValueCache;
+  let store: KeyValueCache;
 
   // Setup logging facilities, scoped under the appropriate name.
   const logger = loglevel.getLogger(`apollo-server:${pluginName}`);
@@ -70,14 +70,14 @@ export default function plugin(options: Options = Object.create(null)) {
       // be that the default in-memory store, or other stateful store resource.
       // That said, if this backing store ejects items, it should be noted that
       // those ejected operations will no longer be permitted!
-      cache = persistedQueries.cache;
+      store = persistedQueries.cache;
 
       logger.debug('Initializing operation registry agent...');
 
       agent = new Agent({
         schemaHash,
         engine,
-        cache,
+        store,
         logger,
       });
 
@@ -87,10 +87,10 @@ export default function plugin(options: Options = Object.create(null)) {
     requestDidStart(): GraphQLRequestListener<any> {
       return {
         async didResolveOperation({ request: { query }, queryHash }) {
-          // This shouldn't happen under normal operation since `cache` will be
+          // This shouldn't happen under normal operation since `store` will be
           // set in `serverWillStart` and `requestDidStart` (this) comes after.
-          if (!cache) {
-            throw new Error('Unable to access cache.');
+          if (!store) {
+            throw new Error('Unable to access store.');
           }
 
           const hash = query
@@ -109,14 +109,14 @@ export default function plugin(options: Options = Object.create(null)) {
 
           logger.debug(`${logHash}: Looking up operation in local registry.`);
 
-          // Try to fetch the operation from the cache of operations we're
+          // Try to fetch the operation from the store of operations we're
           // currently aware of, which has been populated by the operation
           // registry.
-          const cacheFetch = await cache.get(getCacheKey(hash));
+          const storeFetch = await store.get(getStoreKey(hash));
 
           // If we have a hit, we'll return immediately, signaling that we're
           // not intending to block this request.
-          if (cacheFetch) {
+          if (storeFetch) {
             logger.debug(
               `${logHash}: Permitting operation found in local registry.`,
             );
