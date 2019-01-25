@@ -1,6 +1,5 @@
 export const pluginName: string = require('../package.json').name;
 import { createHash } from 'crypto';
-import { parse } from 'graphql/language/parser';
 import { visit } from 'graphql/language/visitor';
 import {
   DocumentNode,
@@ -46,9 +45,9 @@ export function hideCertainLiterals(ast: DocumentNode): DocumentNode {
 //
 // Lastly, we will remove the `hideCertainLiterals` portion of this once the
 // `apollo` CLI properly warns about including/using string literals.
-function formatOperationForHashing(operation: string): string {
+function formatDocumentForHashing(document: DocumentNode): string {
   return printWithReducedWhitespace(
-    sortAST(hideCertainLiterals(parse(operation))),
+    sortAST(hideCertainLiterals(document)),
   ).trim();
 }
 
@@ -70,9 +69,9 @@ export function generateServiceIdHash(serviceId: string): string {
     .digest('hex');
 }
 
-export function generateOperationHash(operationString: string): string {
+export function generateNormalizedDocumentHash(document: DocumentNode): string {
   return createHash('sha256')
-    .update(formatOperationForHashing(operationString))
+    .update(formatDocumentForHashing(document))
     .digest('hex');
 }
 

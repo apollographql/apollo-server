@@ -1,7 +1,7 @@
 import * as assert from 'assert';
 import {
   pluginName,
-  generateOperationHash,
+  generateNormalizedDocumentHash,
   getStoreKey,
   hashForLogging,
 } from './common';
@@ -84,16 +84,14 @@ export default function plugin(options: Options = Object.create(null)) {
 
     requestDidStart(): GraphQLRequestListener<any> {
       return {
-        async didResolveOperation({ request: { query }, queryHash }) {
+        async didResolveOperation({ document }) {
           // This shouldn't happen under normal operation since `store` will be
           // set in `serverWillStart` and `requestDidStart` (this) comes after.
           if (!store) {
             throw new Error('Unable to access store.');
           }
 
-          const hash = query
-            ? generateOperationHash(query) // If we received a `query`, hash it!
-            : queryHash; // Otherwise, we'll use the APQ `queryHash`.
+          const hash = generateNormalizedDocumentHash(document);
 
           // If the document itself was missing and we didn't receive a
           // `queryHash` (the persisted query `sha256Hash` from the APQ
