@@ -44,6 +44,7 @@ import {
 } from 'apollo-server-plugin-base';
 
 import { Dispatcher } from './utils/dispatcher';
+import { KeyValueCache } from 'apollo-server-caching';
 
 export {
   GraphQLRequest,
@@ -102,6 +103,7 @@ export async function processGraphQLRequest<TContext>(
 
   let queryHash: string;
 
+  let persistedQueryCache: KeyValueCache | undefined;
   let persistedQueryHit = false;
   let persistedQueryRegister = false;
 
@@ -116,10 +118,14 @@ export async function processGraphQLRequest<TContext>(
       );
     }
 
+    // We'll store a reference to the persisted query cache so we can actually
+    // do the write at a later point in the request pipeline processing.
+    persistedQueryCache = config.persistedQueries.cache;
+
     queryHash = extensions.persistedQuery.sha256Hash;
 
     if (query === undefined) {
-      query = await config.persistedQueries.cache.get(`apq:${queryHash}`);
+      query = await persistedQueryCache.get(`apq:${queryHash}`);
       if (query) {
         persistedQueryHit = true;
       } else {
@@ -134,11 +140,11 @@ export async function processGraphQLRequest<TContext>(
         );
       }
 
+      // We won't write to the persisted query cache until later.
+      // Defering the writing gives plugins the ability to "win" from use of
+      // the cache, but also have their say in whether or not the cache is
+      // written to (by interrupting the request with an error).
       persistedQueryRegister = true;
-
-      Promise.resolve(
-        config.persistedQueries.cache.set(`apq:${queryHash}`, query),
-      ).catch(console.warn);
     }
   } else if (query) {
     // FIXME: We'll compute the APQ query hash to use as our cache key for
@@ -211,6 +217,16 @@ export async function processGraphQLRequest<TContext>(
         'document' | 'operation' | 'operationName'
       >,
     );
+
+    // Now that we've gone through the pre-execution phases of the request
+    // pipeline, and given plugins appropriate ability to object (by throwing
+    // an error) and not actually write, we'll write to the cache if it was
+    // determined earlier in the request pipeline that we should do so.
+    if (persistedQueryRegister && persistedQueryCache) {
+      Promise.resolve(persistedQueryCache.set(`apq:${queryHash}`, query)).catch(
+        console.warn,
+      );
+    }
 
     const executionDidEnd = await dispatcher.invokeDidStartHook(
       'executionDidStart',
