@@ -2,6 +2,7 @@
 
 ### vNEXT
 
+* `apollo-server-core`: Added a function wrapper to `validationRules` for dynamic validation [PR#2232](https://github.com/apollographql/apollo-server/pull/2232)
 * `apollo-server-core`: Add persisted queries [PR#1149](https://github.com/apollographql/apollo-server/pull/1149)
 * `apollo-server-core`: added `BadUserInputError`
 * `apollo-server-core`: **breaking** gql is exported from gql-tag and ApolloServer requires a DocumentNode [PR#1146](https://github.com/apollographql/apollo-server/pull/1146)
