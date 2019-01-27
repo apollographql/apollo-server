@@ -1,14 +1,10 @@
-import {
-  GraphQLSchema,
-  ValidationContext,
-  GraphQLFieldResolver,
-  DocumentNode,
-} from 'graphql';
+import { GraphQLSchema, GraphQLFieldResolver, DocumentNode } from 'graphql';
 import { GraphQLExtension } from 'graphql-extensions';
 import { CacheControlExtensionOptions } from 'apollo-cache-control';
 import { KeyValueCache } from 'apollo-server-caching';
 import { DataSource } from 'apollo-datasource';
-import { ApolloServerPlugin } from 'apollo-server-plugin-base';
+import { ApolloServerPlugin, GraphQLRequest } from 'apollo-server-plugin-base';
+import { ValidationRule } from 'graphql/validation/ValidationContext';
 
 /*
  * GraphQLServerOptions
@@ -24,6 +20,10 @@ import { ApolloServerPlugin } from 'apollo-server-plugin-base';
  * - (optional) extensions: an array of functions which create GraphQLExtensions (each GraphQLExtension object is used for one request)
  *
  */
+export type ValidationRulesFunction = (
+  request: GraphQLRequest,
+) => ValidationRule[];
+
 export interface GraphQLServerOptions<
   TContext = Record<string, any>,
   TRootValue = any
@@ -32,7 +32,7 @@ export interface GraphQLServerOptions<
   formatError?: Function;
   rootValue?: ((parsedQuery: DocumentNode) => TRootValue) | TRootValue;
   context?: TContext | (() => never);
-  validationRules?: Array<(context: ValidationContext) => any>;
+  validationRules?: ValidationRule[] | ValidationRulesFunction;
   formatResponse?: Function;
   fieldResolver?: GraphQLFieldResolver<any, TContext>;
   debug?: boolean;

@@ -1,4 +1,5 @@
 import { makeExecutableSchema, addMockFunctionsToSchema } from 'graphql-tools';
+import { ValidationRule } from 'graphql/validation/ValidationContext';
 import { Server as HttpServer } from 'http';
 import {
   execute,
@@ -9,6 +10,7 @@ import {
   GraphQLFieldResolver,
   ValidationContext,
   FieldDefinitionNode,
+  ASTVisitor,
 } from 'graphql';
 import { GraphQLExtension } from 'graphql-extensions';
 import { EngineReportingAgent } from 'apollo-engine-reporting';
@@ -25,6 +27,7 @@ import { formatApolloErrors } from 'apollo-server-errors';
 import {
   GraphQLServerOptions as GraphQLOptions,
   PersistedQueryOptions,
+  ValidationRulesFunction,
 } from './graphqlOptions';
 
 import {
@@ -55,18 +58,19 @@ import {
 import { Headers } from 'apollo-server-env';
 import { buildServiceDefinition } from '@apollographql/apollo-tools';
 
-const NoIntrospection = (context: ValidationContext) => ({
-  Field(node: FieldDefinitionNode) {
-    if (node.name.value === '__schema' || node.name.value === '__type') {
-      context.reportError(
-        new GraphQLError(
-          'GraphQL introspection is not allowed by Apollo Server, but the query contained __schema or __type. To enable introspection, pass introspection: true to ApolloServer in production',
-          [node],
-        ),
-      );
-    }
-  },
-});
+const NoIntrospection: ValidationRule = (context: ValidationContext) =>
+  ({
+    Field(node: FieldDefinitionNode) {
+      if (node.name.value === '__schema' || node.name.value === '__type') {
+        context.reportError(
+          new GraphQLError(
+            'GraphQL introspection is not allowed by Apollo Server, but the query contained __schema or __type. To enable introspection, pass introspection: true to ApolloServer in production',
+            [node],
+          ),
+        );
+      }
+    },
+  } as ASTVisitor);
 
 function getEngineServiceId(engine: Config['engine']): string | undefined {
   const keyFromEnv = process.env.ENGINE_API_KEY || '';
@@ -154,10 +158,19 @@ export class ApolloServerBase {
       (typeof introspection === 'boolean' && !introspection) ||
       (introspection === undefined && !isDev)
     ) {
-      const noIntro = [NoIntrospection];
-      requestOptions.validationRules = requestOptions.validationRules
-        ? requestOptions.validationRules.concat(noIntro)
-        : noIntro;
+      let rules: ValidationRule[] | ValidationRulesFunction = [NoIntrospection];
+      if (requestOptions.validationRules) {
+        if (typeof requestOptions.validationRules === 'function') {
+          rules = req => [
+            ...(rules as ValidationRule[]),
+            ...(requestOptions.validationRules as ValidationRulesFunction)(req),
+          ];
+        } else {
+          rules = [...rules, ...requestOptions.validationRules];
+        }
+      }
+
+      requestOptions.validationRules = rules;
     }
 
     if (requestOptions.cacheControl !== false) {
