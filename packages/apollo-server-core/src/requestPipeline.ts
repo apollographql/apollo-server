@@ -63,7 +63,9 @@ export interface GraphQLRequestPipelineConfig<TContext> {
   schema: GraphQLSchema;
 
   rootValue?: ((document: DocumentNode) => any) | any;
-  validationRules?: ValidationRule[];
+  validationRules?:
+    | ValidationRule[]
+    | ((request: GraphQLRequest) => ValidationRule[]);
   fieldResolver?: GraphQLFieldResolver<any, TContext>;
 
   dataSources?: () => DataSources<TContext>;
@@ -190,7 +192,7 @@ export async function processGraphQLRequest<TContext>(
       requestContext as WithRequired<typeof requestContext, 'document'>,
     );
 
-    const validationErrors = validate(document);
+    const validationErrors = validate(document, request);
 
     if (validationErrors.length === 0) {
       validationDidEnd();
@@ -278,10 +280,18 @@ export async function processGraphQLRequest<TContext>(
     }
   }
 
-  function validate(document: DocumentNode): ReadonlyArray<GraphQLError> {
+  function validate(
+    document: DocumentNode,
+    request: GraphQLRequest,
+  ): ReadonlyArray<GraphQLError> {
     let rules = specifiedRules;
     if (config.validationRules) {
-      rules = rules.concat(config.validationRules);
+      rules = [
+        ...rules,
+        ...(typeof config.validationRules === 'function'
+          ? config.validationRules(request)
+          : config.validationRules),
+      ];
     }
 
     const validationDidEnd = extensionStack.validationDidStart();
