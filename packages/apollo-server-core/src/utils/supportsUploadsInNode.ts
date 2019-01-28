@@ -13,9 +13,11 @@ const supportsUploadsInNode = (() => {
     if (nodeMajor < 8 || (nodeMajor === 8 && nodeMinor < 5)) {
       return false;
     }
+    return true;
   }
 
-  return true;
+  // not node
+  return false;
 })();
 
 export default supportsUploadsInNode;
