@@ -106,7 +106,7 @@
     "jest-junit": "5.2.0",
     "jest-matcher-utils": "23.6.0",
     "js-sha256": "0.9.0",
-    "koa": "2.6.2",
+    "koa": "2.7.0",
     "koa-multer": "1.0.2",
     "lerna": "3.10.7",
     "lint-staged": "8.1.0",
