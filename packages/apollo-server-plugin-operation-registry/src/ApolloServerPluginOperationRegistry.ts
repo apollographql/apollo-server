@@ -19,7 +19,6 @@ import loglevelDebug from 'loglevel-debug';
 
 interface Options {
   debug?: boolean;
-  forbidUnregisteredOperations?: boolean;
 }
 
 export default function plugin(options: Options = Object.create(null)) {
@@ -123,12 +122,6 @@ export default function plugin(options: Options = Object.create(null)) {
               `${logHash}: Permitting operation found in local registry.`,
             );
             return;
-          }
-
-          // If the forbidding of operations isn't enabled, we can just return
-          // since this will only be used for stats.
-          if (!options.forbidUnregisteredOperations) {
-            logger.debug(`${logHash}: Not found in local registry.  Denying.`);
           }
 
           logger.debug(
