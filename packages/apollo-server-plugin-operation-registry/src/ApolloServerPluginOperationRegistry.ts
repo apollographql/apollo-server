@@ -9,6 +9,7 @@ import {
   ApolloServerPlugin,
   GraphQLServiceContext,
   GraphQLRequestListener,
+  GraphQLRequestContext,
 } from 'apollo-server-plugin-base';
 import { ForbiddenError, ApolloError } from 'apollo-server-errors';
 import Agent from './agent';
@@ -17,9 +18,15 @@ import { InMemoryLRUCache } from 'apollo-server-caching';
 import loglevel from 'loglevel';
 import loglevelDebug from 'loglevel-debug';
 
+type ForbidUnregisteredOperationsPredicate = (
+  requestContext: GraphQLRequestContext,
+) => boolean;
+
 interface Options {
   debug?: boolean;
-  forbidUnregisteredOperations?: boolean;
+  forbidUnregisteredOperations?:
+    | boolean
+    | ForbidUnregisteredOperationsPredicate;
 }
 
 export default function plugin(options: Options = Object.create(null)) {
@@ -90,7 +97,8 @@ export default function plugin(options: Options = Object.create(null)) {
 
     requestDidStart(): GraphQLRequestListener<any> {
       return {
-        async didResolveOperation({ document }) {
+        async didResolveOperation(requestContext) {
+          const document = requestContext.document;
           // This shouldn't happen under normal operation since `store` will be
           // set in `serverWillStart` and `requestDidStart` (this) comes after.
           if (!store) {
@@ -125,16 +133,65 @@ export default function plugin(options: Options = Object.create(null)) {
             return;
           }
 
+          // If the `forbidUnregisteredOperations` option is set explicitly to
+          // a boolean option, we'll use that option as the default.  In the
+          // event that it is instead a predicate function (which can return
+          // true or false dynamically based on, for example, the context) then
+          // we will default to `true` and let the execution of the function
+          // decide whether not it should be disabled based on an explicit
+          // return value from the function.  In the event of an error, or if
+          // the function does not return a value, we will fail-safe to
+          // forbidding unregistered operations.
+          let forbidUnregisteredOperations: boolean =
+            typeof options.forbidUnregisteredOperations === 'boolean'
+              ? options.forbidUnregisteredOperations
+              : typeof options.forbidUnregisteredOperations !== 'undefined';
+
+          if (typeof options.forbidUnregisteredOperations === 'function') {
+            logger.debug(
+              `${logHash}: Calling 'forbidUnregisteredOperations' predicate function with requestContext...`,
+            );
+
+            try {
+              const predicateResult = options.forbidUnregisteredOperations(
+                requestContext,
+              );
+
+              logger.debug(
+                `${logHash}: The 'forbidUnregisteredOperations' predicate function returned ${predicateResult}`,
+              );
+
+              // If we've received a boolean back from the predicate function,
+              // we will use that value.  However, if we receive no return value
+              // (indicate a mis-use), then we will resort back to the default
+              // enforcement mode; an explicit boolean `false` is required to
+              // disable enforcement when a predicate function is in use.
+              if (typeof predicateResult === 'boolean') {
+                forbidUnregisteredOperations = predicateResult;
+              }
+            } catch (err) {
+              // If an error occurs within the forbidUnregisteredOperations
+              // predicate function, we should assume that the implementor
+              // had a security-wise intention and remain in enforcement mode.
+              logger.error(
+                `${logHash}: An error occurred within the 'forbidUnregisteredOperations' predicate function: ${err}`,
+              );
+            }
+          }
+
           // If the forbidding of operations isn't enabled, we can just return
           // since this will only be used for stats.
-          if (!options.forbidUnregisteredOperations) {
-            logger.debug(`${logHash}: Not found in local registry.  Denying.`);
+          if (forbidUnregisteredOperations) {
+            logger.debug(
+              `${logHash}: Execution denied because 'forbidUnregisteredOperations' was enabled for this request and the operation was not found in the local operation registry.`,
+            );
+
+            throw new ForbiddenError('Execution forbidden');
           }
 
           logger.debug(
-            `${logHash}: Denying operation since it's missing from the local registry.`,
+            `${logHash}: Execution permitted because there was no match found in the local operation registry, but 'forbidUnregisteredOperations' was not enabled for this request.`,
           );
-          throw new ForbiddenError('Execution forbidden');
         },
       };
     },
