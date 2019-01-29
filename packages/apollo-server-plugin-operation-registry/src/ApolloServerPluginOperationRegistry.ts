@@ -190,7 +190,7 @@ export default function plugin(options: Options = Object.create(null)) {
           }
 
           logger.debug(
-            `${logHash}: Execution permitted because there was no match found in the local operation registry, but 'forbidUnregisteredOperations' was not enabled for this request.`,
+            `${logHash}: Execution permitted without a matching entry in the local operation registry because 'forbidUnregisteredOperations' was not enabled for this request.`,
           );
         },
       };
