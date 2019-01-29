@@ -6,7 +6,7 @@ module.exports = {
         root: __dirname,
         subtitle: 'Apollo Server',
         description: 'A guide to using Apollo Server.',
-        basePath: '/platform',
+        basePath: '/docs/platform',
         sidebarCategories: {
           null: [
             'index',
