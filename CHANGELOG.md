@@ -2,6 +2,8 @@
 
 ### vNEXT
 
+- Avoid traversing `graphql-uploads` module tree in run-time environments which aren't Node.js. [PR #2235](https://github.com/apollographql/apollo-server/pull/2235)
+
 ### v2.3.2
 
 - Switch from `json-stable-stringify` to `fast-json-stable-stringify`. [PR #2065](https://github.com/apollographql/apollo-server/pull/2065)
