@@ -2,6 +2,8 @@
 
 ### vNEXT
 
+- `apollo-server` (only): Stop double-invocation of `serverWillStart` life-cycle event.  (More specific integrations - e.g. Express, Koa, Hapi, etc. - were unaffected.) [PR #2239](https://github.com/apollographql/apollo-server/pull/2239)
+
 ### v2.3.2
 
 - Switch from `json-stable-stringify` to `fast-json-stable-stringify`. [PR #2065](https://github.com/apollographql/apollo-server/pull/2065)
