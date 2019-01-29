@@ -15,7 +15,7 @@ import { GraphQLExtension } from 'graphql-extensions';
 import { EngineReportingAgent } from 'apollo-engine-reporting';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import { ApolloServerPlugin } from 'apollo-server-plugin-base';
-import supportsUploadsInNode from './utils/supportsUploadsInNode';
+import runtimeSupportsUploads from './utils/runtimeSupportsUploads';
 
 import {
   SubscriptionServer,
@@ -91,7 +91,7 @@ function getEngineServiceId(engine: Config['engine']): string | undefined {
 }
 
 const forbidUploadsForTesting =
-  process && process.env.NODE_ENV === 'test' && !supportsUploadsInNode;
+  process && process.env.NODE_ENV === 'test' && !runtimeSupportsUploads;
 
 function approximateObjectSize<T>(obj: T): number {
   return Buffer.byteLength(JSON.stringify(obj), 'utf8');
@@ -218,7 +218,7 @@ export class ApolloServerBase {
 
     if (uploads !== false && !forbidUploadsForTesting) {
       if (this.supportsUploads()) {
-        if (!supportsUploadsInNode) {
+        if (!runtimeSupportsUploads) {
           printNodeFileUploadsMessage();
           throw new Error(
             '`graphql-upload` is no longer supported on Node.js < v8.5.0.  ' +
