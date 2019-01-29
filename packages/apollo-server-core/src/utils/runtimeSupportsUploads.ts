@@ -16,7 +16,8 @@ const runtimeSupportsUploads = (() => {
     return true;
   }
 
-  // not node
+  // If we haven't matched any of the above criteria, we'll remain unsupported
+  // for this mysterious environment until a pull-request proves us otherwise.
   return false;
 })();
 
