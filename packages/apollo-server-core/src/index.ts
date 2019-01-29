@@ -41,7 +41,7 @@ export const gql: (
   ...substitutions: any[]
 ) => DocumentNode = gqlTag;
 
-import supportsUploadsInNode from './utils/supportsUploadsInNode';
+import runtimeSupportsUploads from './utils/runtimeSupportsUploads';
 import { GraphQLScalarType } from 'graphql';
 export { default as processFileUploads } from './processFileUploads';
 
@@ -53,6 +53,6 @@ export { default as processFileUploads } from './processFileUploads';
 // experimental ECMAScript modules), this conditional export is necessary
 // to avoid modern ECMAScript from failing to parse by versions of Node.js
 // which don't support it (yet — eg. Node.js 6 and async/await).
-export const GraphQLUpload = supportsUploadsInNode
+export const GraphQLUpload = runtimeSupportsUploads
   ? (require('graphql-upload').GraphQLUpload as GraphQLScalarType)
   : undefined;

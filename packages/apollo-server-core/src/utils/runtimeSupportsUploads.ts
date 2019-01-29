@@ -1,4 +1,4 @@
-const supportsUploadsInNode = (() => {
+const runtimeSupportsUploads = (() => {
   if (
     process &&
     process.release &&
@@ -20,4 +20,4 @@ const supportsUploadsInNode = (() => {
   return false;
 })();
 
-export default supportsUploadsInNode;
+export default runtimeSupportsUploads;
