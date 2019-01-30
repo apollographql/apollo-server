@@ -27,3 +27,5 @@ export {
   registerServer,
   ServerRegistration,
 } from './ApolloServer';
+
+export { graphqlKoa } from './koaApollo';
