@@ -9,6 +9,7 @@ import {
   ApolloServerPlugin,
   GraphQLServiceContext,
   GraphQLRequestListener,
+  GraphQLRequestContext,
 } from 'apollo-server-plugin-base';
 import { ForbiddenError, ApolloError } from 'apollo-server-errors';
 import Agent from './agent';
@@ -17,24 +18,18 @@ import { InMemoryLRUCache } from 'apollo-server-caching';
 import loglevel from 'loglevel';
 import loglevelDebug from 'loglevel-debug';
 
-type FirstArg<F> = F extends (arg: infer A) => any ? A : never;
-
-export type ForbidUnregisteredOperationsPredicate<TContext> = (
-  requestContext: FirstArg<
-    GraphQLRequestListener<TContext>['didResolveOperation']
-  >,
+type ForbidUnregisteredOperationsPredicate = (
+  requestContext: GraphQLRequestContext,
 ) => boolean;
 
-interface Options<TContext> {
+interface Options {
   debug?: boolean;
   forbidUnregisteredOperations?:
     | boolean
-    | ForbidUnregisteredOperationsPredicate<TContext>;
+    | ForbidUnregisteredOperationsPredicate;
 }
 
-export default function plugin<TContext>(
-  options: Options<TContext> = Object.create(null),
-) {
+export default function plugin(options: Options = Object.create(null)) {
   let agent: Agent;
   let store: InMemoryLRUCache;
 
