@@ -11,7 +11,7 @@
     "node": ">=6"
   },
   "dependencies": {
-    "lodash": "^4.17.10"
+    "lodash.sortby": "^4.7.0"
   },
   "devDependencies": {},
   "peerDependencies": {

@@ -16,7 +16,11 @@ import {
 } from 'graphql/language/ast';
 import { print } from 'graphql/language/printer';
 import { separateOperations } from 'graphql/utilities';
-import { sortBy, ListIteratee } from 'lodash';
+// We'll only fetch the `ListIteratee` type from the `@types/lodash`, but get
+// `sortBy` from the modularized version of the package to avoid bringing in
+// all of `lodash`.
+import { ListIteratee } from 'lodash';
+import sortBy from 'lodash.sortby';
 
 // Replace numeric, string, list, and object literals with "empty"
 // values. Leaves enums alone (since there's no consistent "zero" enum). This
