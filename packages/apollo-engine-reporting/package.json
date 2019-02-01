@@ -15,7 +15,6 @@
     "apollo-server-core": "file:../apollo-server-core",
     "apollo-server-env": "file:../apollo-server-env",
     "async-retry": "^1.2.1",
-    "graphql-extensions": "file:../graphql-extensions",
-    "lodash": "^4.17.10"
+    "graphql-extensions": "file:../graphql-extensions"
   }
 }
