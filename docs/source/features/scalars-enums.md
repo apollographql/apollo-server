@@ -105,7 +105,7 @@ const resolverFunctions = {
   MyCustomScalar: myCustomScalarType
 };
 
-const server = new ApolloServer({ typeDefs: schemaString, resolvers: resolveFunctions });
+const server = new ApolloServer({ typeDefs: schemaString, resolvers: resolverFunctions });
 
 server.listen().then(({ url }) => {
   console.log(`🚀 Server ready at ${url}`)
