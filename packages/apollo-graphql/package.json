@@ -1,6 +1,6 @@
 {
   "name": "apollo-graphql",
-  "version": "0.0.0",
+  "version": "0.0.1-alpha.0",
   "description": "Apollo GraphQL utility library",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -10,7 +10,6 @@
   "engines": {
     "node": ">=6"
   },
-  "devDependencies": {},
   "peerDependencies": {
     "graphql": "^14.0.0"
   }
