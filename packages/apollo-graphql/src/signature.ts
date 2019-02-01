@@ -230,7 +230,7 @@ export function printWithReducedWhitespace(ast: DocumentNode): string {
 // The default signature function consists of removing unused definitions
 // and whitespace.
 // XXX consider caching somehow
-export function defaultSignature(
+export function defaultEngineReportingSignature(
   ast: DocumentNode,
   operationName: string,
 ): string {

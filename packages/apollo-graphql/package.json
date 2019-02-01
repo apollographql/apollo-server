@@ -10,6 +10,9 @@
   "engines": {
     "node": ">=6"
   },
+  "dependencies": {
+    "lodash": "^4.17.10"
+  },
   "devDependencies": {},
   "peerDependencies": {
     "graphql": "^14.0.0"
