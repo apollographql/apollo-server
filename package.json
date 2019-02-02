@@ -88,7 +88,7 @@
     "@types/ws": "6.0.1",
     "apollo-fetch": "0.7.0",
     "apollo-link": "1.2.8",
-    "apollo-link-http": "1.5.9",
+    "apollo-link-http": "1.5.11",
     "apollo-link-persisted-queries": "0.2.2",
     "body-parser": "1.18.3",
     "codecov": "3.1.0",
