@@ -16,7 +16,7 @@ import {
 import { Trace, google } from 'apollo-engine-reporting-protobuf';
 
 import { EngineReportingOptions, GenerateClientInfo } from './agent';
-import { defaultSignature } from './signature';
+import { defaultEngineReportingSignature } from 'apollo-graphql';
 import { GraphQLRequestContext } from 'apollo-server-core/dist/requestPipelineAPI';
 
 const clientNameHeaderKey = 'apollographql-client-name';
@@ -214,7 +214,7 @@ export class EngineReportingExtension<TContext = any>
       let signature;
       if (this.documentAST) {
         const calculateSignature =
-          this.options.calculateSignature || defaultSignature;
+          this.options.calculateSignature || defaultEngineReportingSignature;
         signature = calculateSignature(this.documentAST, operationName);
       } else if (this.queryString) {
         // We didn't get an AST, possibly because of a parse failure. Let's just
