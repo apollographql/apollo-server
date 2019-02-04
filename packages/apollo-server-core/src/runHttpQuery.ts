@@ -135,6 +135,11 @@ export async function runHttpQuery(
         e.extensions.code &&
         e.extensions.code !== 'INTERNAL_SERVER_ERROR'
       ) {
+        if (e.extensions.code === 'UNAUTHENTICATED') {
+          return throwHttpGraphQLError(401, [e], options);
+        } else if (e.extensions.code === 'FORBIDDEN') {
+          return throwHttpGraphQLError(403, [e], options);
+        }
         return throwHttpGraphQLError(400, [e], options);
       } else {
         return throwHttpGraphQLError(500, [e], options);
