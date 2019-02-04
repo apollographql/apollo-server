@@ -303,8 +303,10 @@ addMockFunctionsToSchema({
 
 *  `calculateSignature`: (ast: DocumentNode, operationName: string) => string
 
-   Specify the function for creating a signature for a query. See signature.ts
-   for details.
+   Specify the function for creating a signature for a query.
+
+   > See [`apollo-graphql`'s `signature.ts`](https://npm.im/apollo-graphql)
+   > for more information on how the default signature is generated.
 
 *  `reportIntervalMs`: number
 
