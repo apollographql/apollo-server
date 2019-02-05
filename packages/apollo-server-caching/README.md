@@ -16,7 +16,9 @@ export interface KeyValueCache {
 }
 ```
 
-## Running test suite
+## Testing cache implementations
+
+### Test helpers
 
 You can export and run a jest test suite from `apollo-server-caching` to test your implementation:
 
@@ -27,5 +29,16 @@ import YourKeyValueCache from '../src/YourKeyValueCache';
 import { testKeyValueCache } from 'apollo-server-caching';
 testKeyValueCache(new MemcachedCache('localhost'));
 ```
+
+The default `testKeyValueCache` helper will run all key-value store tests on the specified store, including basic `get` and `set` functionality, along with time-based expunging rules.
+
+Some key-value cache implementations may not be able to support the full suite of tests (for example, some tests might not be able to expire based on time).  For those cases, there are more granular implementations which can be used:
+
+* `testKeyValueCache_Basic`
+* `testKeyValueCache_Expiration`
+
+For more details, consult the [source for `apollo-server-caching`](./src/__tests__/testsuite.ts).
+
+### Running tests
 
 Run tests with `jest --verbose`

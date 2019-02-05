@@ -1,19 +1,9 @@
 import { advanceTimeBy, mockDate, unmockDate } from '__mocks__/date';
 
-export function testKeyValueCache(keyValueCache: any) {
-  describe('KeyValueCache Test Suite', () => {
-    beforeAll(() => {
-      mockDate();
-      jest.useFakeTimers();
-    });
-
+export function testKeyValueCache_Basics(keyValueCache: any) {
+  describe('basic cache functionality', () => {
     beforeEach(() => {
       keyValueCache.flush();
-    });
-
-    afterAll(() => {
-      unmockDate();
-      keyValueCache.close();
     });
 
     it('can do a basic get and set', async () => {
@@ -27,6 +17,24 @@ export function testKeyValueCache(keyValueCache: any) {
       expect(await keyValueCache.get('hello')).toBe('world');
       await keyValueCache.delete('hello');
       expect(await keyValueCache.get('hello')).toBeUndefined();
+    });
+  });
+}
+
+export function testKeyValueCache_Expiration(keyValueCache: any) {
+  describe('time-based cache expunging', () => {
+    beforeAll(() => {
+      mockDate();
+      jest.useFakeTimers();
+    });
+
+    beforeEach(() => {
+      keyValueCache.flush();
+    });
+
+    afterAll(() => {
+      unmockDate();
+      keyValueCache.close();
     });
 
     it('is able to expire keys based on ttl', async () => {
@@ -43,5 +51,12 @@ export function testKeyValueCache(keyValueCache: any) {
       expect(await keyValueCache.get('short')).toBeUndefined();
       expect(await keyValueCache.get('long')).toBeUndefined();
     });
+  });
+}
+
+export function testKeyValueCache(keyValueCache: any) {
+  describe('KeyValueCache Test Suite', () => {
+    testKeyValueCache_Basics(keyValueCache);
+    testKeyValueCache_Expiration(keyValueCache);
   });
 }

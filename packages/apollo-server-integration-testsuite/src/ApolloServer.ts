@@ -978,7 +978,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           });
         });
       });
-      it('disables subscritpions when option set to false', done => {
+      it('disables subscriptions when option set to false', done => {
         const typeDefs = gql`
           type Query {
             "graphql-js forces there to be a query type"
@@ -1025,7 +1025,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           }
 
           const client = new SubscriptionClient(
-            `ws://localhost:${port}${server.subscriptionsPath}`,
+            `ws://localhost:${port}${server.subscriptionsPath || ''}`,
             {},
             WebSocket,
           );

@@ -72,7 +72,7 @@ export interface Config
   plugins?: PluginDefinition[];
   persistedQueries?: PersistedQueryOptions | false;
   subscriptions?: Partial<SubscriptionServerOptions> | string | false;
-  //https://github.com/jaydenseric/apollo-upload-server#options
+  //https://github.com/jaydenseric/graphql-upload#type-uploadoptions
   uploads?: boolean | FileUploadOptions;
   playground?: PlaygroundConfig;
 }

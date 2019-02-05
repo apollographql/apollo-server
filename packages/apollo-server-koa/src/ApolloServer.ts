@@ -6,13 +6,15 @@ import {
   renderPlaygroundPage,
   RenderPageOptions as PlaygroundRenderPageOptions,
 } from '@apollographql/graphql-playground-html';
-import { ApolloServerBase, formatApolloErrors } from 'apollo-server-core';
+import {
+  ApolloServerBase,
+  formatApolloErrors,
+  processFileUploads,
+} from 'apollo-server-core';
 import accepts from 'accepts';
 import typeis from 'type-is';
 
 import { graphqlKoa } from './koaApollo';
-
-import { processRequest as processFileUploads } from '@apollographql/apollo-upload-server';
 
 export { GraphQLOptions, GraphQLExtension } from 'apollo-server-core';
 import { GraphQLOptions, FileUploadOptions } from 'apollo-server-core';
@@ -32,7 +34,11 @@ const fileUploadMiddleware = (
 ) => async (ctx: Koa.Context, next: Function) => {
   if (typeis(ctx.req, ['multipart/form-data'])) {
     try {
-      ctx.request.body = await processFileUploads(ctx.req, uploadsConfig);
+      ctx.request.body = await processFileUploads(
+        ctx.req,
+        ctx.res,
+        uploadsConfig,
+      );
       return next();
     } catch (error) {
       if (error.status && error.expose) ctx.status = error.status;
@@ -134,7 +140,7 @@ export class ApolloServer extends ApolloServerBase {
     }
 
     let uploadsMiddleware;
-    if (this.uploadsConfig) {
+    if (this.uploadsConfig && typeof processFileUploads === 'function') {
       uploadsMiddleware = fileUploadMiddleware(this.uploadsConfig, this);
     }
 
