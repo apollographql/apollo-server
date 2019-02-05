@@ -21,6 +21,9 @@
 - Fix: Serialize arrays as JSON on fetch in `RESTDataSource`. [PR #2219](https://github.com/apollographql/apollo-server/pull/2219)
 - Fix: The `privateHeaders` configuration for `apollo-engine-reporting` now allows headers to be specified using any case and lower-cases them prior to comparison. [PR #2276](https://github.com/apollographql/apollo-server/pull/2276)
 - Fix broken `apollo-server-azure-functions` TypeScript definitions. [PR #2287](https://github.com/apollographql/apollo-server/pull/2287)
+- Fix: Skip loading `util.promifisy` polyfil in node >= 8 [PR #2278](https://github.com/apollographql/apollo-server/pull/2278)
+- Lazy load `apollo-engine-reporting` and `subscriptions-transport-ws` in core [PR #2278](https://github.com/apollographql/apollo-server/pull/2278)
+- disable `apollo-upload` in when running in AWS Lambda [PR #2278](https://github.com/apollographql/apollo-server/pull/2278)
 
 ### v2.3.3
 

@@ -21,8 +21,8 @@ import { ApolloServerPlugin } from 'apollo-server-plugin-base';
 import runtimeSupportsUploads from './utils/runtimeSupportsUploads';
 
 import {
-  SubscriptionServer,
-  ExecutionParams,
+  SubscriptionServer as _SubscriptionServer,
+  ExecutionParams as _ExecutionParams,
 } from 'subscriptions-transport-ws';
 
 import { formatApolloErrors } from 'apollo-server-errors';
@@ -117,7 +117,7 @@ export class ApolloServerBase {
   protected uploadsConfig?: FileUploadOptions;
 
   // set by installSubscriptionHandlers.
-  private subscriptionServer?: SubscriptionServer;
+  private subscriptionServer?: _SubscriptionServer;
 
   // the default version is specified in playground.ts
   protected playgroundOptions?: PlaygroundRenderPageOptions;
@@ -228,7 +228,7 @@ export class ApolloServerBase {
           printNodeFileUploadsMessage();
           throw new Error(
             '`graphql-upload` is no longer supported on Node.js < v8.5.0.  ' +
-              'See https://bit.ly/gql-upload-node-6.',
+            'See https://bit.ly/gql-upload-node-6.',
           );
         }
 
@@ -342,6 +342,7 @@ export class ApolloServerBase {
     this.engineServiceId = getEngineServiceId(engine);
 
     if (this.engineServiceId) {
+      // Lazyily require to reduece unused load time
       const { EngineReportingAgent } = require('apollo-engine-reporting');
       this.engineReportingAgent = new EngineReportingAgent(
         typeof engine === 'object' ? engine : Object.create(null),
@@ -433,7 +434,7 @@ export class ApolloServerBase {
         );
       }
     }
-
+    const { SubscriptionServer } = require('subscriptions-transport-ws');
     const {
       onDisconnect,
       onConnect,
@@ -452,7 +453,7 @@ export class ApolloServerBase {
         onDisconnect: onDisconnect,
         onOperation: async (
           message: { payload: any },
-          connection: ExecutionParams,
+          connection: _ExecutionParams,
         ) => {
           connection.formatResponse = (value: ExecutionResult) => ({
             ...value,
