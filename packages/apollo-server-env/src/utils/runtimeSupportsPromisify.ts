@@ -1,7 +1,4 @@
-const runtimeSupportsUploads = (() => {
-  if (process.env.AWS_EXECUTION_ENV !== undefined) {
-    return false;
-  }
+const runtimeSupportsPromisify = (() => {
   if (
     process &&
     process.release &&
@@ -9,14 +6,14 @@ const runtimeSupportsUploads = (() => {
     process.versions &&
     typeof process.versions.node === 'string'
   ) {
-    const [nodeMajor, nodeMinor] = process.versions.node
-      .split('.', 2)
+    const [nodeMajor] = process.versions.node
+      .split('.', 1)
       .map(segment => parseInt(segment, 10));
 
-    if (nodeMajor < 8 || (nodeMajor === 8 && nodeMinor < 5)) {
-      return false;
+    if (nodeMajor >= 8) {
+      return true;
     }
-    return true;
+    return false;
   }
 
   // If we haven't matched any of the above criteria, we'll remain unsupported
@@ -24,4 +21,4 @@ const runtimeSupportsUploads = (() => {
   return false;
 })();
 
-export default runtimeSupportsUploads;
+export default runtimeSupportsPromisify;
