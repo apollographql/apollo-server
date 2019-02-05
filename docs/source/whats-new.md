@@ -220,6 +220,9 @@ For additional information, check out the [guide on configuring GraphQL playgrou
 
 For server integrations that support file uploads(express, hapi, koa, etc), Apollo Server enables file uploads by default. To enable file uploads, reference the `Upload` type in the schema passed to the Apollo Server construction.
 
+***Warning***
+This feature is incompatible with schema stitching. Related issue [671](https://github.com/apollographql/graphql-tools/issues/671)
+
 ```js
 const { ApolloServer, gql } = require('apollo-server');
 
