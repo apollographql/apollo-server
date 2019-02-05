@@ -1,6 +1,9 @@
 # Changelog
 
 ### vNEXT
+- Fix: Skip loading `util.promifisy` polyfil in node >= 8 [PR #2278](https://github.com/apollographql/apollo-server/pull/2278)
+- Lazy load `apollo-engine-reporting` and `subscriptions-transport-ws` in core [PR #2278](https://github.com/apollographql/apollo-server/pull/2278)
+- disable `apollo-upload` in when running in AWS Lambda [PR #2278](https://github.com/apollographql/apollo-server/pull/2278)
 
 ### v2.4.8
 
