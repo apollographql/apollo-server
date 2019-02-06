@@ -52,7 +52,7 @@ const server = new ApolloServer({
 > **Types:** If you're using TypeScript to develop a custom plugin, the `apollo-server-plugin-base` module exports [the `ApolloServerPlugin` interface](https://github.com/apollographql/apollo-server/blob/master/packages/apollo-server-plugin-base/src/index.ts) for plugins to utilize.
 
 
-A plugin defines the life-cycle events it wishes to act upon using an object which maps events (specific events are defined in further detail later in this document) to the functions that implement them.
+A plugin defines the lifecycle events it wishes to act upon using an object which maps events (specific events are defined in further detail later in this document) to the functions that implement them.
 
 For example, here is a very simple plugin, defined as an object literal, which implements a `requestDidStart` event:
 
@@ -144,17 +144,17 @@ And again, this could be used as a plugin by defining it in the `plugins` array:
 
 ## Events
 
-There are two main categories of events: server life-cycle events and request life-cycle events.
+There are two main categories of events: server lifecycle events and request lifecycle events.
 
-As the names imply, server life-cycle events are those which might not be directly related to a specific request.  Instead, these events are more generally aimed at providing integrations for the server as a whole, rather than integrations which apply per request.
+As the names imply, server lifecycle events are those which might not be directly related to a specific request.  Instead, these events are more generally aimed at providing integrations for the server as a whole, rather than integrations which apply per request.
 
-On the other hand, request life-cycle events are those which are specifically coupled to a specific request.  The organization of plugin event registration aims to make it simple to couple request life-cycle events with server life-cycle events by nesting the request life-cycle events within appropriate server life-cycle events.  For example, the definition of request life-cycle events is done as an extension of the `requestDidStart` server life-cycle event.  This will be explained further below.
+On the other hand, request lifecycle events are those which are specifically coupled to a specific request.  The organization of plugin event registration aims to make it simple to couple request lifecycle events with server lifecycle events by nesting the request lifecycle events within appropriate server lifecycle events.  For example, the definition of request lifecycle events is done as an extension of the `requestDidStart` server lifecycle event.  This will be explained further below.
 
-### Server life-cycle events
+### Server lifecycle events
 
-Server life-cycle events are custom integration points which generally cover the life-cycle of the server, rather than focusing on a specific request.  Specific server life-cycle events may expose additional events which are relevant to that portion of their life-cycle, but these are intended to be the most high-level events which represent the super-set of all events which occur will occur within Apollo Server.
+Server lifecycle events are custom integration points which generally cover the lifecycle of the server, rather than focusing on a specific request.  Specific server lifecycle events may expose additional events which are relevant to that portion of their lifecycle, but these are intended to be the most high-level events which represent the super-set of all events which occur will occur within Apollo Server.
 
-In the case that an event exposes additional events, the additional events are coupled to the server life-cycle event in order to provide a focused context which allows developers to couple related logic together.  This will be explored more concisely in the `requestDidStart` server life-cycle event below.
+In the case that an event exposes additional events, the additional events are coupled to the server lifecycle event in order to provide a focused context which allows developers to couple related logic together.  This will be explored more concisely in the `requestDidStart` server lifecycle event below.
 
 ### `serverWillStart`
 
@@ -178,9 +178,9 @@ const server = new ApolloServer({
 
 ### `requestDidStart`
 
-This event is emitted when the server has begun fulfilling a request.  This life-cycle may return an object which implements request life-cycle events, as necessary.
+This event is emitted when the server has begun fulfilling a request.  This lifecycle may return an object which implements request lifecycle events, as necessary.
 
-The `requestDidStart` event can return an object which implements the `GraphQLRequestListener` interface in order to define more specific [request- life-cycle events](#Request-life-cycle-events) &mdash; e.g. `parsingDidStart`, `didResolveOperation` `willSendResponse`, etc.  By including these as a subset of `requestDidStart`, plugin specific request scope can be created and used by the more granular events.
+The `requestDidStart` event can return an object which implements the `GraphQLRequestListener` interface in order to define more specific [request- lifecycle events](#Request-lifecycle-events) &mdash; e.g. `parsingDidStart`, `didResolveOperation` `willSendResponse`, etc.  By including these as a subset of `requestDidStart`, plugin specific request scope can be created and used by the more granular events.
 
 ```js
 const server = new ApolloServer({
@@ -194,14 +194,14 @@ const server = new ApolloServer({
       requestDidStart(requestContext) {
 
         /* Request-specific scope can be created here and
-           used in more granular life-cycle events below. */
+           used in more granular lifecycle events below. */
 
         return {
 
           parsingDidStart(requestContext) {
-            /* This `parsingDidStart` life-cycle event is
+            /* This `parsingDidStart` lifecycle event is
                called when parsing begins, but scoped within the
-               `requestDidStart` server life-cycle event. */
+               `requestDidStart` server lifecycle event. */
           },
 
         }
@@ -213,15 +213,15 @@ const server = new ApolloServer({
 })
 ```
 
-If there are no specific request life-cycle events to implement, `requestDidStart` should not return anything.
+If there are no specific request lifecycle events to implement, `requestDidStart` should not return anything.
 
-### Request life-cycle events
+### Request lifecycle events
 
-Request life-cycle events must be implemented by returning an object which defines their behavior from the `requestDidStart` server life-cycle event.  By maintaining this structure, coupling logic, and defining plugin-specific request scope becomes semantic and co-located.
+Request lifecycle events must be implemented by returning an object which defines their behavior from the `requestDidStart` server lifecycle event.  By maintaining this structure, coupling logic, and defining plugin-specific request scope becomes semantic and co-located.
 
-> **Types:** The `apollo-server-plugin-base` module exports [the `GraphQLRequestListener` interface](https://github.com/apollographql/apollo-server/blob/master/packages/apollo-server-plugin-base/src/index.ts) which defines the shape of request life-cycle events.  It's recommended to use this interface when building custom plugins in TypeScript which implement granular request life-cycle events via `requestDidStart`.
+> **Types:** The `apollo-server-plugin-base` module exports [the `GraphQLRequestListener` interface](https://github.com/apollographql/apollo-server/blob/master/packages/apollo-server-plugin-base/src/index.ts) which defines the shape of request lifecycle events.  It's recommended to use this interface when building custom plugins in TypeScript which implement granular request lifecycle events via `requestDidStart`.
 
-For example, to implement any of the request life-cycle events, an object should be returned from `requestDidStart` as such:
+For example, to implement any of the request lifecycle events, an object should be returned from `requestDidStart` as such:
 
 ```js
 const server = new ApolloServer({
@@ -231,7 +231,7 @@ const server = new ApolloServer({
     {
       requestDidStart(requestContext) {
         /* Plugin-specific request scope can be created here and
-           used in more granular life-cycle events below. */
+           used in more granular lifecycle events below. */
         return {
 
           parsingDidStart(requestContext) {
@@ -246,7 +246,7 @@ const server = new ApolloServer({
 
           },
 
-          /* ... any additional request life-cycle events... */
+          /* ... any additional request lifecycle events... */
 
         }
       }
@@ -259,7 +259,7 @@ const server = new ApolloServer({
 
 ### `parsingDidStart`
 
-The `parsingDidStart` request life-cycle event will receive the request context as the first argument.  At this stage, the `document` AST may not be defined since the parsing may not succeed.
+The `parsingDidStart` request lifecycle event will receive the request context as the first argument.  At this stage, the `document` AST may not be defined since the parsing may not succeed.
 
 #### TypeScript signature
 
@@ -271,7 +271,7 @@ parsingDidStart?(
 
 ### `validationDidStart`
 
-The `validationDidStart` request life-cycle event will receive the request context as the first argument.  Since parsing would have been successful prior to validation, the `document` AST will be present.
+The `validationDidStart` request lifecycle event will receive the request context as the first argument.  Since parsing would have been successful prior to validation, the `document` AST will be present.
 
 #### TypeScript signature
 
@@ -283,7 +283,7 @@ validationDidStart?(
 
 ### `didResolveOperation`
 
-The `didResolveOperation` request life-cycle event is triggered after the operation to be executed has been successfully retrieved from the `document` AST by `graphql`'s `getOperationAST`.  This focusing of execution which identifies the correct operation is important when a `document` contains multiple operations.  At this stage, in addition to the `document` the `operationName` (`String`) and `operation` (AST) will be present on the context.
+The `didResolveOperation` request lifecycle event is triggered after the operation to be executed has been successfully retrieved from the `document` AST by `graphql`'s `getOperationAST`.  This focusing of execution which identifies the correct operation is important when a `document` contains multiple operations.  At this stage, in addition to the `document` the `operationName` (`String`) and `operation` (AST) will be present on the context.
 
 If the operation is anonymous (e.g. the operation is `query { ... }` rather than `query NamedQuery { ... }`, then `operationName` will be `null`.
 
