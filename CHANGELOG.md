@@ -5,6 +5,8 @@
 - Implement an in-memory cache store to save parsed and validated documents and provide performance benefits for successful executions of the same document. [PR #2111](https://github.com/apollographql/apollo-server/pull/2111) (`2.4.0-alpha.0`)
 - New `apollo-server-fastify` integration ([@rkorrelboom](https://github.com/rkorrelboom) in [#1971](https://github.com/apollostack/apollo-server/pull/1971))
 
+- Fix: Serialize arrays as JSON on fetch in `RESTDataSource`. [PR #2219](https://github.com/apollographql/apollo-server/pull/2219)
+
 ### v2.3.3
 
 - `apollo-server` (only): Stop double-invocation of `serverWillStart` life-cycle event.  (More specific integrations - e.g. Express, Koa, Hapi, etc. - were unaffected.) [PR #2239](https://github.com/apollographql/apollo-server/pull/2239)
