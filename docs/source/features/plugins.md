@@ -138,7 +138,6 @@ And again, this could be used as a plugin by defining it in the `plugins` array:
   /* ... any additional ApolloServer configuration. ... */
 ```
 
-> **Note:** Currently the `pluginInfo` is undefined, but future additions to the plugin API will enable this functionality.  For now, the factory function facilities are in place to use, but `pluginInfo` is simply not available.
 
 ## Events
 
