@@ -48,6 +48,16 @@ const server = new ApolloServer({
 })
 ```
 
+## Events
+
+There are two main categories of events: server lifecycle events and request lifecycle events.
+
+As the names imply, server lifecycle events are those which might not be directly related to a specific request.  Instead, these events are more generally aimed at providing integrations for the server as a whole, rather than integrations which apply per request.
+
+On the other hand, request lifecycle events are those which are specifically coupled to a specific request.  The organization of plugin event registration aims to make it simple to couple request lifecycle events with server lifecycle events by nesting the request lifecycle events within appropriate server lifecycle events.  For example, the definition of request lifecycle events is done as an extension of the `requestDidStart` server lifecycle event.
+
+For more details and specific events, see the APIs for [server lifecycle events](#Server-lifecycle-events) and [request lifecycle events](#Request-lifecycle-events) later in this guide.
+
 ## Definition
 
 > **Types:** If you're using TypeScript to develop a custom plugin, the `apollo-server-plugin-base` module exports [the `ApolloServerPlugin` interface](https://github.com/apollographql/apollo-server/blob/master/packages/apollo-server-plugin-base/src/index.ts) for plugins to utilize.
@@ -140,16 +150,7 @@ And again, this could be used as a plugin by defining it in the `plugins` array:
   /* ... any additional ApolloServer configuration. ... */
 ```
 
-
-## Events
-
-There are two main categories of events: server lifecycle events and request lifecycle events.
-
-As the names imply, server lifecycle events are those which might not be directly related to a specific request.  Instead, these events are more generally aimed at providing integrations for the server as a whole, rather than integrations which apply per request.
-
-On the other hand, request lifecycle events are those which are specifically coupled to a specific request.  The organization of plugin event registration aims to make it simple to couple request lifecycle events with server lifecycle events by nesting the request lifecycle events within appropriate server lifecycle events.  For example, the definition of request lifecycle events is done as an extension of the `requestDidStart` server lifecycle event.  This will be explained further below.
-
-### Server lifecycle events
+## Server lifecycle events
 
 Server lifecycle events are custom integration points which generally cover the lifecycle of the server, rather than focusing on a specific request.  Specific server lifecycle events may expose additional events which are relevant to that portion of their lifecycle, but these are intended to be the most high-level events which represent the super-set of all events which occur will occur within Apollo Server.
 
@@ -214,7 +215,7 @@ const server = new ApolloServer({
 
 If there are no specific request lifecycle events to implement, `requestDidStart` should not return anything.
 
-### Request lifecycle events
+## Request lifecycle events
 
 Request lifecycle events must be implemented by returning an object which defines their behavior from the `requestDidStart` server lifecycle event.  By maintaining this structure, coupling logic, and defining plugin-specific request scope becomes semantic and co-located.
 
