@@ -18,7 +18,7 @@ The `plugins` array is an array of plugins.  They might be provided as a module 
 
 An example of Apollo Server which installed three plugins might look like:
 
-```js line=2-3,16-17,19-20,21-25
+```js line=2-3,16-17,19-20,22-25
 const { ApolloServer } = require('apollo-server');
 const ApolloServerOperationRegistry =
   require('apollo-server-plugin-operation-registry');
