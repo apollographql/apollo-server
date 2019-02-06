@@ -18,8 +18,10 @@ The `plugins` array is an array of plugins.  They might be provided as a module 
 
 An example of Apollo Server which installed three plugins might look like:
 
-```js
+```js line=2-3,16-17,19-20,21-25
 const { ApolloServer } = require('apollo-server');
+const ApolloServerOperationRegistry =
+  require('apollo-server-plugin-operation-registry');
 
 /* Note: This example doesn't provide `typeDefs` or `resolvers`,
          both of which are necessary to start the server. */
@@ -32,8 +34,8 @@ const server = new ApolloServer({
   /* Plugins are defined within this array and initialized sequentially. */
   plugins: [
 
-    /* A plugin installed from the npm registry. */
-    require('apollo-server-operation-registry')({ /* options */ }),
+    /* A plugin imported from a package. (require'd above) */
+    ApolloServerOperationRegistry({ /* options */ }),
 
     /* A plugin which is defined locally. */
     require('./localPluginModule'),
