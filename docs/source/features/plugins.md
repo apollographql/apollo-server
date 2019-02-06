@@ -15,7 +15,6 @@ Plugins for Apollo Server can be specified using the `plugins` configuration par
 
 The `plugins` array is an array of plugins.  They might be provided as a module (and optionally published to a registry — e.g. npm) or defined in-line within the `ApolloServer` constructor.  Plugins should be defined correctly and the requirements of building a plugin are explained in the plugin [definition](#definition) section below.
 
-> **Note:** If a plugin is provided by a package published to a registry (for example, npm), that package must be installed using `npm install <plugin>` or `yarn add <plugin>` prior to use.  In-line plugins or plugins which reside locally do not need to be installed.
 
 An example of Apollo Server which installed three plugins might look like:
 
@@ -112,8 +111,7 @@ And finally, advanced cases can implement the `ApolloServerPlugin` interface via
 module.exports = (options) => {
   /* ...Plugin specific implementation... */
 
-  return (pluginInfo) => {
-    console.log('The pluginInfo was', pluginInfo);
+  return () => {
 
     return {
       requestDidStart() {
