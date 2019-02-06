@@ -49,7 +49,7 @@ const server = new ApolloServer({
 
 ## Definition
 
-> **Types:** To facilitate plugin development, the `apollo-server-plugin-base` module exports [the `ApolloServerPlugin` interface](https://github.com/apollographql/apollo-server/blob/master/packages/apollo-server-plugin-base/src/index.ts) for plugins to utilize.  It's recommended to use this interafce when building custom plugins.
+> **Types:** If you're using TypeScript to develop a custom plugin, the `apollo-server-plugin-base` module exports [the `ApolloServerPlugin` interface](https://github.com/apollographql/apollo-server/blob/master/packages/apollo-server-plugin-base/src/index.ts) for plugins to utilize.
 
 
 A plugin defines the life-cycle events it wishes to act upon using an object which maps events (specific events are defined in further detail later in this document) to the functions that implement them.
@@ -219,7 +219,7 @@ If there are no specific request life-cycle events to implement, `requestDidStar
 
 Request life-cycle events must be implemented by returning an object which defines their behavior from the `requestDidStart` server life-cycle event.  By maintaining this structure, coupling logic, and defining plugin-specific request scope becomes semantic and co-located.
 
-> **Types:** The `apollo-server-plugin-base` module exports [the `GraphQLRequestListener` interface](https://github.com/apollographql/apollo-server/blob/master/packages/apollo-server-plugin-base/src/index.ts) which defines the shape of request life-cycle events.  It's recommended to use this interafce when building custom plugins which implement granular request life-cycle events via `requestDidStart`.
+> **Types:** The `apollo-server-plugin-base` module exports [the `GraphQLRequestListener` interface](https://github.com/apollographql/apollo-server/blob/master/packages/apollo-server-plugin-base/src/index.ts) which defines the shape of request life-cycle events.  It's recommended to use this interface when building custom plugins in TypeScript which implement granular request life-cycle events via `requestDidStart`.
 
 For example, to implement any of the request life-cycle events, an object should be returned from `requestDidStart` as such:
 
