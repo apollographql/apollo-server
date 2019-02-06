@@ -129,7 +129,10 @@ export class EngineReportingExtension<TContext = any>
           // We assume that most users only have a few private headers, or will
           // just set privateHeaders to true; we can change this linear-time
           // operation if it causes real performance issues.
-          this.options.privateHeaders.includes(key.toLowerCase())
+          this.options.privateHeaders.some(privateHeader => {
+            // Headers are case-insensitive, and should be compared as such.
+            return privateHeader.toLowerCase() === key.toLowerCase();
+          })
         ) {
           continue;
         }
