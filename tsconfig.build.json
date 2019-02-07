@@ -20,7 +20,6 @@
     { "path": "./packages/apollo-server-core" },
     { "path": "./packages/apollo-server-errors" },
     { "path": "./packages/apollo-server-express" },
-    { "path": "./packages/apollo-server-fastify" },
     { "path": "./packages/apollo-server-hapi" },
     { "path": "./packages/apollo-server-koa" },
     { "path": "./packages/apollo-server-lambda" },
