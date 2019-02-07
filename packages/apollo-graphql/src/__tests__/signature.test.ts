@@ -13,7 +13,7 @@ import {
 // breaks if you turn it off in tests.
 disableFragmentWarnings();
 
-describe('aggressive signature', () => {
+describe.only('aggressive signature', () => {
   function aggressive(ast: DocumentNode, operationName: string): string {
     return printWithReducedWhitespace(
       removeAliases(
@@ -105,6 +105,29 @@ describe('aggressive signature', () => {
         }
       `,
       output: '{user{name...Bar}}fragment Bar on User{asd}',
+    },
+    {
+      name: 'fragments out of order',
+      operationName: '',
+      input: gql`
+        fragment Bar on User {
+          asd
+        }
+
+        {
+          user {
+            name
+            ...Bar
+            ...Baz
+          }
+        }
+
+        fragment Baz on User {
+          jkl
+        }
+      `,
+      output:
+        '{user{name...Bar...Baz}}fragment Bar on User{asd}fragment Baz on User{jkl}',
     },
     {
       name: 'full test',
