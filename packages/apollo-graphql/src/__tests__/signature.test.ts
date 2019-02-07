@@ -130,6 +130,29 @@ describe.only('aggressive signature', () => {
         '{user{name...Bar...Baz}}fragment Bar on User{asd}fragment Baz on User{jkl}',
     },
     {
+      name: 'fragments in order',
+      operationName: '',
+      input: gql`
+        {
+          user {
+            name
+            ...Bar
+            ...Baz
+          }
+        }
+
+        fragment Bar on User {
+          asd
+        }
+
+        fragment Baz on User {
+          jkl
+        }
+      `,
+      output:
+        '{user{name...Bar...Baz}}fragment Bar on User{asd}fragment Baz on User{jkl}',
+    },
+    {
       name: 'full test',
       operationName: 'Foo',
       input: gql`
