@@ -125,11 +125,14 @@ export class EngineReportingExtension<TContext = any>
       for (const [key, value] of o.request.headers) {
         if (
           this.options.privateHeaders &&
-          typeof this.options.privateHeaders === 'object' &&
+          Array.isArray(this.options.privateHeaders) &&
           // We assume that most users only have a few private headers, or will
           // just set privateHeaders to true; we can change this linear-time
           // operation if it causes real performance issues.
-          this.options.privateHeaders.includes(key.toLowerCase())
+          this.options.privateHeaders.some(privateHeader => {
+            // Headers are case-insensitive, and should be compared as such.
+            return privateHeader.toLowerCase() === key.toLowerCase();
+          })
         ) {
           continue;
         }
@@ -164,7 +167,7 @@ export class EngineReportingExtension<TContext = any>
       Object.keys(o.variables).forEach(name => {
         if (
           this.options.privateVariables &&
-          typeof this.options.privateVariables === 'object' &&
+          Array.isArray(this.options.privateVariables) &&
           // We assume that most users will have only a few private variables,
           // or will just set privateVariables to true; we can change this
           // linear-time operation if it causes real performance issues.
