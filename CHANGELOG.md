@@ -4,7 +4,6 @@
 
 - Implement an in-memory cache store to save parsed and validated documents and provide performance benefits for successful executions of the same document. [PR #2111](https://github.com/apollographql/apollo-server/pull/2111) (`2.4.0-alpha.0`)
 - New `apollo-server-fastify` integration ([@rkorrelboom](https://github.com/rkorrelboom) in [#1971](https://github.com/apollostack/apollo-server/pull/1971))
-
 - Fix: Serialize arrays as JSON on fetch in `RESTDataSource`. [PR #2219](https://github.com/apollographql/apollo-server/pull/2219)
 - Fix: The `privateHeaders` configuration for `apollo-engine-reporting` now allows headers to be specified using any case and lower-cases them prior to comparison. [PR #2276](https://github.com/apollographql/apollo-server/pull/2276)
 
