@@ -218,11 +218,12 @@ export abstract class RESTDataSource<TContext = any> extends DataSource {
       url.searchParams.append(name, value);
     }
 
-    // We accept arbitrary objects as body and serialize them as JSON
+    // We accept arbitrary objects and arrays as body and serialize them as JSON
     if (
       options.body !== undefined &&
       options.body !== null &&
       (options.body.constructor === Object ||
+        Array.isArray(options.body) ||
         ((options.body as any).toJSON &&
           typeof (options.body as any).toJSON === 'function'))
     ) {
