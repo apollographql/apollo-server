@@ -110,8 +110,8 @@ describe.only('aggressive signature', () => {
       name: 'fragments out of order',
       operationName: '',
       input: gql`
-        fragment Bar on User {
-          asd
+        fragment Baz on User {
+          jkl
         }
 
         {
@@ -120,6 +120,29 @@ describe.only('aggressive signature', () => {
             ...Bar
             ...Baz
           }
+        }
+
+        fragment Bar on User {
+          asd
+        }
+      `,
+      output:
+        '{user{name...Bar...Baz}}fragment Bar on User{asd}fragment Baz on User{jkl}',
+    },
+    {
+      name: 'fragments in order',
+      operationName: '',
+      input: gql`
+        {
+          user {
+            name
+            ...Bar
+            ...Baz
+          }
+        }
+
+        fragment Bar on User {
+          asd
         }
 
         fragment Baz on User {
@@ -151,6 +174,52 @@ describe.only('aggressive signature', () => {
       `,
       output:
         '{user{name...Bar...Baz}}fragment Bar on User{asd}fragment Baz on User{jkl}',
+    },
+    {
+      name: 'with a subscription',
+      operationName: '',
+      input: gql`
+        fragment Bar on User {
+          asd
+        }
+
+        fragment Baz on User {
+          jkl
+        }
+
+        subscription A {
+          user {
+            name
+            ...Bar
+            ...Baz
+          }
+        }
+      `,
+      output:
+        'subscription A{user{name...Bar...Baz}}' +
+        'fragment Bar on User{asd}fragment Baz on User{jkl}',
+    },
+    {
+      name: 'with a mutation',
+      operationName: '',
+      input: gql`
+        mutation A {
+          user {
+            name
+            ...Bar
+            ...Baz
+          }
+        }
+        fragment Baz on User {
+          jkl
+        }
+        fragment Bar on User {
+          asd
+        }
+      `,
+      output:
+        'mutation A{user{name...Bar...Baz}}' +
+        'fragment Bar on User{asd}fragment Baz on User{jkl}',
     },
     {
       name: 'full test',
