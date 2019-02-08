@@ -1,27 +1,11 @@
-import { DocumentNode } from 'graphql';
 import { default as gql, disableFragmentWarnings } from 'graphql-tag';
-
-import {
-  printWithReducedWhitespace,
-  hideLiterals,
-  dropUnusedDefinitions,
-  sortAST,
-  removeAliases,
-} from '../transforms';
+import { defaultEngineReportingSignature } from '../signature';
 
 // The gql duplicate fragment warning feature really is just warnings; nothing
 // breaks if you turn it off in tests.
 disableFragmentWarnings();
 
-describe.only('aggressive signature', () => {
-  function aggressive(ast: DocumentNode, operationName: string): string {
-    return printWithReducedWhitespace(
-      removeAliases(
-        hideLiterals(sortAST(dropUnusedDefinitions(ast, operationName))),
-      ),
-    );
-  }
-
+describe('defaultEngineReportingSignature', () => {
   const cases = [
     // Test cases borrowed from optics-agent-js.
     {
@@ -257,7 +241,9 @@ describe.only('aggressive signature', () => {
   ];
   cases.forEach(({ name, operationName, input, output }) => {
     test(name, () => {
-      expect(aggressive(input, operationName)).toEqual(output);
+      expect(defaultEngineReportingSignature(input, operationName)).toEqual(
+        output,
+      );
     });
   });
 });
