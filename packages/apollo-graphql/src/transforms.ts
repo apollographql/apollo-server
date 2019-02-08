@@ -13,6 +13,7 @@ import {
   FragmentDefinitionNode,
   ObjectValueNode,
   ListValueNode,
+  ASTNode,
 } from 'graphql/language/ast';
 import { print } from 'graphql/language/printer';
 import { separateOperations } from 'graphql/utilities';
@@ -94,13 +95,37 @@ function sorted<T>(
   return undefined;
 }
 
+// Predicate for filtering and type checking operation definitions (query, mutation, subscription)
+// Similar to graphql's isExecutableDefinitionNode
+function isOperationDefinitionNode(
+  node: ASTNode,
+): node is OperationDefinitionNode {
+  return node.kind === 'OperationDefinition';
+}
+
+// Predicate for filtering and type checking fragment definitions
+// Similar to graphql's isExecutableDefinitionNode
+function isFragmentDefinitionNode(
+  node: ASTNode,
+): node is FragmentDefinitionNode {
+  return node.kind === 'FragmentDefinition';
+}
+
 // sortAST sorts most multi-child nodes alphabetically. Using this as part of
 // your signature calculation function may make it easier to tell the difference
 // between queries that are similar to each other, and if for some reason your
 // GraphQL client generates query strings with elements in nondeterministic
 // order, it can make sure the queries are treated as identical.
 export function sortAST(ast: DocumentNode): DocumentNode {
-  return visit(ast, {
+  const [operation] = ast.definitions.filter(isOperationDefinitionNode);
+  const fragments = ast.definitions.filter(isFragmentDefinitionNode);
+
+  const astWithSortedDefinitions = {
+    ...ast,
+    definitions: [operation, ...sortBy(fragments, 'name.value')],
+  };
+
+  return visit(astWithSortedDefinitions, {
     OperationDefinition(
       node: OperationDefinitionNode,
     ): OperationDefinitionNode {
