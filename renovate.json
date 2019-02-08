@@ -2,6 +2,7 @@
   "extends": [
     "apollo-open-source"
   ],
+  "automerge": false,
   "packageRules": [
     {
       "paths": [
