@@ -30,7 +30,7 @@ export class Dispatcher<T> {
   public invokeDidStartHook<
     TMethodName extends FunctionPropertyNames<
       Required<T>,
-      ((...args: any[]) => AnyFunction | void)
+      (...args: any[]) => AnyFunction | void
     >,
     TEndHookArgs extends Args<ReturnType<AsFunction<T[TMethodName]>>>
   >(

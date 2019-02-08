@@ -2,7 +2,23 @@
 
 ### vNEXT
 
+### v2.4.0
+
+- Implement an in-memory cache store to save parsed and validated documents and provide performance benefits for repeat executions of the same document. [PR #2111](https://github.com/apollographql/apollo-server/pull/2111) (`>=2.4.0-alpha.0`)
+- Fix: Serialize arrays as JSON on fetch in `RESTDataSource`. [PR #2219](https://github.com/apollographql/apollo-server/pull/2219)
+- Fix: The `privateHeaders` configuration for `apollo-engine-reporting` now allows headers to be specified using any case and lower-cases them prior to comparison. [PR #2276](https://github.com/apollographql/apollo-server/pull/2276)
+
+### v2.3.3
+
+- `apollo-server` (only): Stop double-invocation of `serverWillStart` life-cycle event.  (More specific integrations - e.g. Express, Koa, Hapi, etc. - were unaffected.) [PR #2239](https://github.com/apollographql/apollo-server/pull/2239)
+- Avoid traversing `graphql-upload` module tree in run-time environments which aren't Node.js. [PR #2235](https://github.com/apollographql/apollo-server/pull/2235)
+
+### v2.3.2
+
 - Switch from `json-stable-stringify` to `fast-json-stable-stringify`. [PR #2065](https://github.com/apollographql/apollo-server/pull/2065)
+- Fix cache hints of `maxAge: 0` to mean "uncachable". [#2197](https://github.com/apollographql/apollo-server/pull/2197)
+- Apply `defaultMaxAge` to scalar fields on the root object. [#2210](https://github.com/apollographql/apollo-server/pull/2210)
+- Don't write to the persisted query cache until execution will begin. [PR #2227](https://github.com/apollographql/apollo-server/pull/2227)
 
 ### v2.3.1
 
@@ -17,9 +33,9 @@
   While Node.js 6.x is covered by a [Long Term Support agreement by the Node.js Foundation](https://github.com/nodejs/Release#release-schedule) until April 2019, there are substantial performance (e.g. [V8](https://v8.dev/) improvements) and language changes (e.g. "modern" ECMAScript support) offered by newer Node.js engines (e.g. 8.x, 10.x).  We encourage _all users_ of Apollo Server to update to newer LTS versions of Node.js prior to the "end-of-life" dates for their current server version.
 
   **We intend to drop support for Node.js 6.x in the next major version of Apollo Server.**
-  
+
   For more information, see [PR #2054](https://github.com/apollographql/apollo-server/pull/2054) and [our documentation](https://www.apollographql.com/docs/apollo-server/v2/migration-file-uploads.html).
-  
+
 ### v2.2.7
 
 - `apollo-engine-reporting`: When multiple instances of `apollo-engine-reporting` are loaded (an uncommon edge case), ensure that `encodedTraces` are handled only once rather than once per loaded instance. [PR #2040](https://github.com/apollographql/apollo-server/pull/2040)
