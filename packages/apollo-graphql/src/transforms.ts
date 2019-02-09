@@ -79,46 +79,27 @@ export function dropUnusedDefinitions(
   return separated;
 }
 
-// Like lodash's sortBy, but sorted(undefined) === undefined rather than []. It
-// is a stable non-in-place sort.
-function sorted<T>(
-  items: ReadonlyArray<T> | undefined,
-  ...iteratees: Array<ListIteratee<T>>
-): Array<T> | undefined {
-  if (items) {
-    return sortBy(items, ...iteratees);
-  }
-  return undefined;
-}
-
-// Predicate for filtering and type checking operation definitions (query, mutation, subscription)
-// Similar to graphql's isExecutableDefinitionNode
-function isOperationDefinitionNode(
-  node: ASTNode,
-): node is OperationDefinitionNode {
-  return node.kind === 'OperationDefinition';
-}
-
-// Predicate for filtering and type checking fragment definitions
-// Similar to graphql's isExecutableDefinitionNode
-function isFragmentDefinitionNode(
-  node: ASTNode,
-): node is FragmentDefinitionNode {
-  return node.kind === 'FragmentDefinition';
-}
-
-// sortAST sorts most multi-child nodes alphabetically. Using this as part of
-// your signature calculation function may make it easier to tell the difference
-// between queries that are similar to each other, and if for some reason your
-// GraphQL client generates query strings with elements in nondeterministic
-// order, it can make sure the queries are treated as identical.
-export function sortAST(ast: DocumentNode): DocumentNode {
-  const [operation] = ast.definitions.filter(isOperationDefinitionNode);
-  const fragments = ast.definitions.filter(isFragmentDefinitionNode);
-
+// lexicographicSortOperations sorts most multi-child nodes alphabetically.
+// Using this as part of your signature calculation function may make it easier
+// to tell the difference between queries that are similar to each other, and if
+// for some reason your GraphQL client generates query strings with elements in
+// nondeterministic order, it can make sure the queries are treated as identical.
+export function lexicographicSortOperations(ast: DocumentNode): DocumentNode {
+  // Sort by kind (fragment/operation), operation type (query/mutation/subscription), then name.
+  //
+  // XXX
+  // The last sorting iteratee deterministically sorts unnamed operations.
+  // Caveat: The sorting value is just the stringified version of the non-sorted
+  // subtree. For our use case, this should be ok.
   const astWithSortedDefinitions = {
     ...ast,
-    definitions: [operation, ...sortBy(fragments, 'name.value')],
+    definitions: sortBy(
+      ast.definitions,
+      'kind',
+      'operation',
+      'name.value',
+      value => JSON.stringify(value),
+    ),
   };
 
   return visit(astWithSortedDefinitions, {

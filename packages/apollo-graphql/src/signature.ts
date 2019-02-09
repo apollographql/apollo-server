@@ -22,8 +22,8 @@
 // - hideLiterals, which replaces all numeric and string literals as well
 //   as list and object input values with "empty" values
 // - removeAliases, which removes field aliasing from the query
-// - sortAST, which sorts the children of most multi-child nodes
-//   consistently
+// - lexicographicSortOperations, which sorts the children of most multi-child
+//   nodes consistently
 // - printWithReducedWhitespace, a variant on graphql-js's 'print'
 //   which gets rid of unneeded whitespace
 //
@@ -49,7 +49,7 @@ import {
   printWithReducedWhitespace,
   dropUnusedDefinitions,
   removeAliases,
-  sortAST,
+  lexicographicSortOperations,
   hideLiterals,
 } from './transforms';
 
@@ -61,7 +61,7 @@ export function defaultEngineReportingSignature(
   operationName: string,
 ): string {
   return printWithReducedWhitespace(
-    sortAST(
+    lexicographicSortOperations(
       removeAliases(hideLiterals(dropUnusedDefinitions(ast, operationName))),
     ),
   );
