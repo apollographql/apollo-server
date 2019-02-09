@@ -1,4 +1,7 @@
 {
+  "rulesDirectory": [
+    "tslint-no-focused-test"
+  ],
   "rules": {
     "ban": false,
     "class-name": true,
@@ -43,6 +46,7 @@
     "no-duplicate-variable": true,
     "no-empty": true,
     "no-eval": true,
+    "no-focused-test": true,
     "no-inferrable-types": false,
     "no-internal-module": true,
     "no-null-keyword": false,
