@@ -85,24 +85,26 @@ export function dropUnusedDefinitions(
 // for some reason your GraphQL client generates query strings with elements in
 // nondeterministic order, it can make sure the queries are treated as identical.
 export function lexicographicSortOperations(ast: DocumentNode): DocumentNode {
-  // Sort by kind (fragment/operation), operation type (query/mutation/subscription), then name.
-  //
-  // XXX
-  // The last sorting iteratee deterministically sorts unnamed operations.
-  // Caveat: The sorting value is just the stringified version of the non-sorted
-  // subtree. For our use case, this should be ok.
-  const astWithSortedDefinitions = {
-    ...ast,
-    definitions: sortBy(
-      ast.definitions,
-      'kind',
-      'operation',
-      'name.value',
-      value => JSON.stringify(value),
-    ),
-  };
-
-  return visit(astWithSortedDefinitions, {
+  return visit(ast, {
+    Document(node: DocumentNode): DocumentNode {
+      // Sort by kind (fragment/operation), operation type (query/mutation/subscription), then name.
+      //
+      // XXX
+      // The last sorting iteratee deterministically sorts unnamed operations.
+      // Caveat: The sorting value is just the stringified version of the non-sorted
+      // subtree. For our use case, this should be ok.
+      return {
+        ...node,
+        // Use sortBy because 'definitions' is not optional.
+        definitions: sortBy(
+          ast.definitions,
+          'kind',
+          'operation',
+          'name.value',
+          definition => JSON.stringify(definition),
+        ),
+      };
+    },
     OperationDefinition(
       node: OperationDefinitionNode,
     ): OperationDefinitionNode {
