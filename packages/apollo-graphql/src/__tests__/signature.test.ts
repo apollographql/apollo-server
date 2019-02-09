@@ -88,7 +88,7 @@ describe('defaultEngineReportingSignature', () => {
           jkl
         }
       `,
-      output: '{user{name...Bar}}fragment Bar on User{asd}',
+      output: 'fragment Bar on User{asd}{user{name...Bar}}',
     },
     {
       name: 'fragments out of order',
@@ -111,7 +111,8 @@ describe('defaultEngineReportingSignature', () => {
         }
       `,
       output:
-        '{user{name...Bar...Baz}}fragment Bar on User{asd}fragment Baz on User{jkl}',
+        'fragment Bar on User{asd}fragment Baz on User{jkl}' +
+        '{user{name...Bar...Baz}}',
     },
     {
       name: 'fragments in order',
@@ -134,33 +135,11 @@ describe('defaultEngineReportingSignature', () => {
         }
       `,
       output:
-        '{user{name...Bar...Baz}}fragment Bar on User{asd}fragment Baz on User{jkl}',
+        'fragment Bar on User{asd}fragment Baz on User{jkl}' +
+        '{user{name...Bar...Baz}}',
     },
     {
-      name: 'fragments in order',
-      operationName: '',
-      input: gql`
-        {
-          user {
-            name
-            ...Bar
-            ...Baz
-          }
-        }
-
-        fragment Bar on User {
-          asd
-        }
-
-        fragment Baz on User {
-          jkl
-        }
-      `,
-      output:
-        '{user{name...Bar...Baz}}fragment Bar on User{asd}fragment Baz on User{jkl}',
-    },
-    {
-      name: 'with a subscription',
+      name: 'with multiple operations (and no operation name specified)',
       operationName: '',
       input: gql`
         fragment Bar on User {
@@ -169,6 +148,14 @@ describe('defaultEngineReportingSignature', () => {
 
         fragment Baz on User {
           jkl
+        }
+
+        query C {
+          dfg
+        }
+
+        query D {
+          dfg
         }
 
         subscription A {
@@ -178,16 +165,36 @@ describe('defaultEngineReportingSignature', () => {
             ...Baz
           }
         }
+
+        mutation B {
+          abc
+        }
       `,
       output:
-        'subscription A{user{name...Bar...Baz}}' +
-        'fragment Bar on User{asd}fragment Baz on User{jkl}',
+        'fragment Bar on User{asd}fragment Baz on User{jkl}' +
+        'mutation B{abc}' +
+        'query C{dfg}query D{dfg}' +
+        'subscription A{user{name...Bar...Baz}}',
+    },
+    {
+      name: 'with multiple queries, and one specified',
+      operationName: 'A',
+      input: gql`
+        {
+          asd
+        }
+
+        query A {
+          jkl
+        }
+      `,
+      output: 'query A{jkl}',
     },
     {
       name: 'with a mutation',
-      operationName: '',
+      operationName: 'TheMutation',
       input: gql`
-        mutation A {
+        mutation TheMutation {
           user {
             name
             ...Bar
@@ -202,8 +209,8 @@ describe('defaultEngineReportingSignature', () => {
         }
       `,
       output:
-        'mutation A{user{name...Bar...Baz}}' +
-        'fragment Bar on User{asd}fragment Baz on User{jkl}',
+        'fragment Bar on User{asd}fragment Baz on User{jkl}' +
+        'mutation TheMutation{user{name...Bar...Baz}}',
     },
     {
       name: 'full test',
@@ -235,8 +242,8 @@ describe('defaultEngineReportingSignature', () => {
         }
       `,
       output:
-        'query Foo($a:Boolean,$b:Int){user(age:0,name:""){name tz...Bar...on User{bee hello}}}' +
-        'fragment Bar on User{age@skip(if:$a)...Nested}fragment Nested on User{blah}',
+        'fragment Bar on User{age@skip(if:$a)...Nested}fragment Nested on User{blah}' +
+        'query Foo($a:Boolean,$b:Int){user(age:0,name:""){name tz...Bar...on User{bee hello}}}',
     },
   ];
   cases.forEach(({ name, operationName, input, output }) => {
