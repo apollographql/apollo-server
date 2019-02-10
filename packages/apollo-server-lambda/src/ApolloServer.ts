@@ -18,6 +18,7 @@ export interface CreateHandlerOptions {
     credentials?: boolean;
     maxAge?: number;
   };
+  uploadsConfig?: FileUploadOptions;
 }
 
 export class ApolloServer extends ApolloServerBase {
