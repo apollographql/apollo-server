@@ -1,6 +1,7 @@
 # Changelog
 
 ### vNEXT
+- Fix [#1419](https://github.com/apollographql/apollo-server/issues/1419), [#1703](https://github.com/apollographql/apollo-server/issues/1703) file upload using lambda. [PR #1739](https://github.com/apollographql/apollo-server/pull/1739)
 
 ### v2.3.3
 

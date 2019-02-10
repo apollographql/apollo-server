@@ -1,10 +1,11 @@
 import lambda from 'aws-lambda';
-import { ApolloServerBase } from 'apollo-server-core';
-import { GraphQLOptions, Config, FileUploadOptions } from 'apollo-server-core';
+import { ApolloServerBase, formatApolloErrors } from 'apollo-server-core';
+import { GraphQLOptions, Config, FileUploadOptions, processFileUploads } from 'apollo-server-core';
 import {
   renderPlaygroundPage,
   RenderPageOptions as PlaygroundRenderPageOptions,
 } from '@apollographql/graphql-playground-html';
+import stream, { Stream } from 'stream';
 
 import { graphqlLambda } from './lambdaApollo';
 
@@ -17,7 +18,6 @@ export interface CreateHandlerOptions {
     credentials?: boolean;
     maxAge?: number;
   };
-  uploadsConfig?: FileUploadOptions;
 }
 
 export class ApolloServer extends ApolloServerBase {
@@ -146,33 +146,81 @@ export class ApolloServer extends ApolloServerBase {
         }
       }
 
-      const callbackFilter: lambda.APIGatewayProxyCallback = (
-        error,
-        result,
-      ) => {
-        callback(
+      const makeCallbackFilter = (doneFn: any): lambda.APIGatewayProxyCallback => {
+        return (
           error,
-          result && {
-            ...result,
-            headers: {
-              ...result.headers,
-              ...corsHeaders,
+          result,
+        ) => {
+          doneFn()
+          callback(
+            error,
+            result && {
+              ...result,
+              headers: {
+                ...result.headers,
+                ...corsHeaders,
+              },
             },
-          },
-        );
-      };
+          );
+        };
+      }
 
-      graphqlLambda(async () => {
-        // In a world where this `createHandler` was async, we might avoid this
-        // but since we don't want to introduce a breaking change to this API
-        // (by switching it to `async`), we'll leverage the
-        // `GraphQLServerOptions`, which are dynamically built on each request,
-        // to `await` the `promiseWillStart` which we kicked off at the top of
-        // this method to ensure that it runs to completion (which is part of
-        // its contract) prior to processing the request.
-        await promiseWillStart;
-        return this.createGraphQLServerOptions(event, context);
-      })(event, context, callbackFilter);
+      const response = new Stream.Writable();
+
+      fileUploadProcess(event, response, this.uploadsConfig || {})
+        .then((body: any) => {
+          event.body = body;
+          graphqlLambda(async () => {
+            // In a world where this `createHandler` was async, we might avoid this
+            // but since we don't want to introduce a breaking change to this API
+            // (by switching it to `async`), we'll leverage the
+            // `GraphQLServerOptions`, which are dynamically built on each request,
+            // to `await` the `promiseWillStart` which we kicked off at the top of
+            // this method to ensure that it runs to completion (which is part of
+            // its contract) prior to processing the request.
+            await promiseWillStart;
+            return this.createGraphQLServerOptions(event, context);
+          })(event, context, makeCallbackFilter(() => { response.end() }));
+        })
+        .catch(error => {
+          throw formatApolloErrors([error], {
+            formatter: this.requestOptions.formatError,
+            debug: this.requestOptions.debug,
+          });
+        });
     };
   }
 }
+
+
+const fileUploadProcess = (
+  event: any,
+  response: any,
+  uploadsConfig: FileUploadOptions,
+) => {
+  return new Promise((resolve, reject) => {
+    const contentType =
+      event.headers['content-type'] || event.headers['Content-Type'];
+
+    if (typeof processFileUploads === 'function' && contentType && contentType.startsWith('multipart/form-data')) {
+      const request = new stream.Readable() as any;
+      request.push(
+        Buffer.from(event.body, event.isBase64Encoded ? 'base64' : 'ascii'),
+      );
+      request.push(null);
+      request.headers = event.headers;
+      request.headers['content-type'] = contentType;
+
+      processFileUploads(request, response, uploadsConfig)
+        .then(body => {
+          resolve(body);
+        })
+        .catch(error => {
+          reject(error)
+        });
+    }
+    else {
+      resolve(event.body)
+    }
+  })
+};
