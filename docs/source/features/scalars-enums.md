@@ -105,7 +105,7 @@ const resolverFunctions = {
   MyCustomScalar: myCustomScalarType
 };
 
-const server = new ApolloServer({ typeDefs: schemaString, resolvers: resolveFunctions });
+const server = new ApolloServer({ typeDefs: schemaString, resolvers: resolverFunctions });
 
 server.listen().then(({ url }) => {
   console.log(`🚀 Server ready at ${url}`)
@@ -292,7 +292,7 @@ server.listen().then(({ url }) => {
 
 <h3 id="internal-values">Internal values</h3>
 
-Sometimes a backend forces a different value for an enum internally than in the public API. In this exmple the API contains `RED`, however in resolvers we use `#f00` instead. The `resolvers` argument to `ApolloServer` allows the addition custom values to enums that only exist internally:
+Sometimes a backend forces a different value for an enum internally than in the public API. In this example the API contains `RED`, however in resolvers we use `#f00` instead. The `resolvers` argument to `ApolloServer` allows the addition of custom values to enums that only exist internally:
 
 ```js
 const resolvers = {

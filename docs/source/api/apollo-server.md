@@ -171,7 +171,7 @@ The `applyMiddleware` method is provided by the `apollo-server-{integration}` pa
 
     Pass the integration-specific cors options. False removes the cors middleware and true uses the defaults.
 
-  * `bodyParser`: <`Object` | `boolean`> ([express](https://github.com/expressjs/body-parser#body-parser))
+  * `bodyParserConfig`: <`Object` | `boolean`> ([express](https://github.com/expressjs/body-parser#body-parser))
 
     Pass the body-parser options. False removes the body parser middleware and true uses the defaults.
 
@@ -303,8 +303,10 @@ addMockFunctionsToSchema({
 
 *  `calculateSignature`: (ast: DocumentNode, operationName: string) => string
 
-   Specify the function for creating a signature for a query. See signature.ts
-   for details.
+   Specify the function for creating a signature for a query.
+
+   > See [`apollo-graphql`'s `signature.ts`](https://npm.im/apollo-graphql)
+   > for more information on how the default signature is generated.
 
 *  `reportIntervalMs`: number
 

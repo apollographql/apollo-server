@@ -44,6 +44,7 @@ import {
 } from 'apollo-server-plugin-base';
 
 import { Dispatcher } from './utils/dispatcher';
+import { InMemoryLRUCache, KeyValueCache } from 'apollo-server-caching';
 
 export {
   GraphQLRequest,
@@ -76,6 +77,7 @@ export interface GraphQLRequestPipelineConfig<TContext> {
   formatResponse?: Function;
 
   plugins?: ApolloServerPlugin[];
+  documentStore?: InMemoryLRUCache<DocumentNode>;
 }
 
 export type DataSources<TContext> = {
@@ -102,6 +104,7 @@ export async function processGraphQLRequest<TContext>(
 
   let queryHash: string;
 
+  let persistedQueryCache: KeyValueCache | undefined;
   let persistedQueryHit = false;
   let persistedQueryRegister = false;
 
@@ -116,10 +119,14 @@ export async function processGraphQLRequest<TContext>(
       );
     }
 
+    // We'll store a reference to the persisted query cache so we can actually
+    // do the write at a later point in the request pipeline processing.
+    persistedQueryCache = config.persistedQueries.cache;
+
     queryHash = extensions.persistedQuery.sha256Hash;
 
     if (query === undefined) {
-      query = await config.persistedQueries.cache.get(`apq:${queryHash}`);
+      query = await persistedQueryCache.get(`apq:${queryHash}`);
       if (query) {
         persistedQueryHit = true;
       } else {
@@ -134,11 +141,11 @@ export async function processGraphQLRequest<TContext>(
         );
       }
 
+      // We won't write to the persisted query cache until later.
+      // Defering the writing gives plugins the ability to "win" from use of
+      // the cache, but also have their say in whether or not the cache is
+      // written to (by interrupting the request with an error).
       persistedQueryRegister = true;
-
-      Promise.resolve(
-        config.persistedQueries.cache.set(`apq:${queryHash}`, query),
-      ).catch(console.warn);
     }
   } else if (query) {
     // FIXME: We'll compute the APQ query hash to use as our cache key for
@@ -162,42 +169,81 @@ export async function processGraphQLRequest<TContext>(
     requestContext,
   });
 
-  const parsingDidEnd = await dispatcher.invokeDidStartHook(
-    'parsingDidStart',
-    requestContext,
-  );
-
   try {
-    let document: DocumentNode;
-    try {
-      document = parse(query);
-      parsingDidEnd();
-    } catch (syntaxError) {
-      parsingDidEnd(syntaxError);
-      return sendErrorResponse(syntaxError, SyntaxError);
+    // If we're configured with a document store (by default, we are), we'll
+    // utilize the operation's hash to lookup the AST from the previously
+    // parsed-and-validated operation.  Failure to retrieve anything from the
+    // cache just means we're committed to doing the parsing and validation.
+    if (config.documentStore) {
+      try {
+        requestContext.document = await config.documentStore.get(queryHash);
+      } catch (err) {
+        console.warn(
+          'An error occurred while attempting to read from the documentStore.',
+          err,
+        );
+      }
     }
 
-    requestContext.document = document;
+    // If we still don't have a document, we'll need to parse and validate it.
+    // With success, we'll attempt to save it into the store for future use.
+    if (!requestContext.document) {
+      const parsingDidEnd = await dispatcher.invokeDidStartHook(
+        'parsingDidStart',
+        requestContext,
+      );
 
-    const validationDidEnd = await dispatcher.invokeDidStartHook(
-      'validationDidStart',
-      requestContext as WithRequired<typeof requestContext, 'document'>,
-    );
+      try {
+        requestContext.document = parse(query);
+        parsingDidEnd();
+      } catch (syntaxError) {
+        parsingDidEnd(syntaxError);
+        return sendErrorResponse(syntaxError, SyntaxError);
+      }
 
-    const validationErrors = validate(document);
+      const validationDidEnd = await dispatcher.invokeDidStartHook(
+        'validationDidStart',
+        requestContext as WithRequired<typeof requestContext, 'document'>,
+      );
 
-    if (validationErrors.length === 0) {
-      validationDidEnd();
-    } else {
-      validationDidEnd(validationErrors);
-      return sendErrorResponse(validationErrors, ValidationError);
+      const validationErrors = validate(requestContext.document);
+
+      if (validationErrors.length === 0) {
+        validationDidEnd();
+      } else {
+        validationDidEnd(validationErrors);
+        return sendErrorResponse(validationErrors, ValidationError);
+      }
+
+      if (config.documentStore) {
+        // The underlying cache store behind the `documentStore` returns a
+        // `Promise` which is resolved (or rejected), eventually, based on the
+        // success or failure (respectively) of the cache save attempt.  While
+        // it's certainly possible to `await` this `Promise`, we don't care about
+        // whether or not it's successful at this point.  We'll instead proceed
+        // to serve the rest of the request and just hope that this works out.
+        // If it doesn't work, the next request will have another opportunity to
+        // try again.  Errors will surface as warnings, as appropriate.
+        //
+        // While it shouldn't normally be necessary to wrap this `Promise` in a
+        // `Promise.resolve` invocation, it seems that the underlying cache store
+        // is returning a non-native `Promise` (e.g. Bluebird, etc.).
+        Promise.resolve(
+          config.documentStore.set(queryHash, requestContext.document),
+        ).catch(err =>
+          console.warn('Could not store validated document.', err),
+        );
+      }
     }
 
     // FIXME: If we want to guarantee an operation has been set when invoking
     // `willExecuteOperation` and executionDidStart`, we need to throw an
     // error here and not leave this to `buildExecutionContext` in
     // `graphql-js`.
-    const operation = getOperationAST(document, request.operationName);
+    const operation = getOperationAST(
+      requestContext.document,
+      request.operationName,
+    );
 
     requestContext.operation = operation || undefined;
     // We'll set `operationName` to `null` for anonymous operations.
@@ -212,6 +258,16 @@ export async function processGraphQLRequest<TContext>(
       >,
     );
 
+    // Now that we've gone through the pre-execution phases of the request
+    // pipeline, and given plugins appropriate ability to object (by throwing
+    // an error) and not actually write, we'll write to the cache if it was
+    // determined earlier in the request pipeline that we should do so.
+    if (persistedQueryRegister && persistedQueryCache) {
+      Promise.resolve(persistedQueryCache.set(`apq:${queryHash}`, query)).catch(
+        console.warn,
+      );
+    }
+
     const executionDidEnd = await dispatcher.invokeDidStartHook(
       'executionDidStart',
       requestContext as WithRequired<
@@ -224,7 +280,7 @@ export async function processGraphQLRequest<TContext>(
 
     try {
       response = (await execute(
-        document,
+        requestContext.document,
         request.operationName,
         request.variables,
       )) as GraphQLResponse;
