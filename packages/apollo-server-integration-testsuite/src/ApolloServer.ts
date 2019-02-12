@@ -1276,7 +1276,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
       const books = [{ title: 'H', author: 'J' }];
 
-      it('reports a total duration that is longer than the durations of its constituent resolvers', async () => {
+      it('reports a total duration that is longer than the duration of its resolvers', async () => {
         const resolvers = {
           Query: {
             books: () =>
@@ -1297,9 +1297,21 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
         const tracing: TracingFormat = result.extensions.tracing;
 
-        tracing.execution.resolvers.forEach(resolver =>
-          expect(resolver.duration).toBeLessThan(tracing.duration),
-        );
+        let earliestStartOffset = tracing.execution.resolvers
+          .map(resolver => resolver.startOffset)
+          .reduce((currentEarliestOffset, nextOffset) =>
+            Math.min(currentEarliestOffset, nextOffset),
+          );
+
+        let latestEndOffset = tracing.execution.resolvers
+          .map(resolver => resolver.startOffset + resolver.duration)
+          .reduce((currentLatestEndOffset, nextEndOffset) =>
+            Math.min(currentLatestEndOffset, nextEndOffset),
+          );
+
+        let resolverDuration = latestEndOffset - earliestStartOffset;
+
+        expect(resolverDuration).not.toBeGreaterThan(tracing.duration);
       });
     });
   });
