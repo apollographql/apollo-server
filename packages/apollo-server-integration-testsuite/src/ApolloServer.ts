@@ -1269,21 +1269,30 @@ export function testApolloServer<AS extends ApolloServerBase>(
           author: String
         }
 
+        type Movie {
+          title: String
+        }
+
         type Query {
           books: [Book]
+          movies: [Movie]
         }
       `;
 
-      const books = [{ title: 'H', author: 'J' }];
+      const resolvers = {
+        Query: {
+          books: () =>
+            new Promise(resolve =>
+              setTimeout(() => resolve([{ title: 'H', author: 'J' }]), 10),
+            ),
+          movies: () =>
+            new Promise(resolve =>
+              setTimeout(() => resolve([{ title: 'H' }]), 12),
+            ),
+        },
+      };
 
       it('reports a total duration that is longer than the duration of its resolvers', async () => {
-        const resolvers = {
-          Query: {
-            books: () =>
-              new Promise(resolve => setTimeout(() => resolve(books), 10)),
-          },
-        };
-
         const { url: uri } = await createApolloServer({
           typeDefs,
           resolvers,
