@@ -7,7 +7,10 @@ import {
   FloatValueNode,
   StringValueNode,
 } from 'graphql/language/ast';
-import { printWithReducedWhitespace, sortAST } from 'apollo-engine-reporting';
+import {
+  printWithReducedWhitespace,
+  sortAST,
+} from 'apollo-graphql/dist/transforms';
 
 export const envOverrideOperationManifest =
   'APOLLO_OPERATION_MANIFEST_BASE_URL';

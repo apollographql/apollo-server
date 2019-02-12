@@ -11,7 +11,7 @@
     "node": ">=6"
   },
   "dependencies": {
-    "apollo-engine-reporting": "0.2.2",
+    "apollo-graphql": "0.1.0",
     "apollo-server-caching": "0.3.0",
     "apollo-server-errors": "2.2.0",
     "apollo-server-plugin-base": "0.3.0",
