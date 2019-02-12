@@ -1,6 +1,7 @@
 # Changelog
 
 ### vNEXT
+- Fix inaccurate total duration in apollo-tracing [PR #2298](https://github.com/apollographql/apollo-server/pull/2298)
 
 ### v2.4.0
 

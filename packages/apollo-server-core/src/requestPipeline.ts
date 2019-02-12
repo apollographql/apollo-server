@@ -356,7 +356,7 @@ export async function processGraphQLRequest<TContext>(
     });
 
     try {
-      return graphql.execute(executionArgs);
+      return await graphql.execute(executionArgs);
     } finally {
       executionDidEnd();
     }
