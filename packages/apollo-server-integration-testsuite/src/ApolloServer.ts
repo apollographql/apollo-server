@@ -37,6 +37,7 @@ import {
   ApolloServerBase,
 } from 'apollo-server-core';
 import { GraphQLExtension, GraphQLResponse } from 'graphql-extensions';
+import { TracingFormat } from 'apollo-tracing';
 
 export function createServerInfo<AS extends ApolloServerBase>(
   server: AS,
@@ -1258,6 +1259,47 @@ export function testApolloServer<AS extends ApolloServerBase>(
           expect(result.data).toEqual({ testString: 'test string' });
           done();
         }, done.fail);
+      });
+    });
+
+    describe('Tracing', () => {
+      const typeDefs = gql`
+        type Book {
+          title: String
+          author: String
+        }
+
+        type Query {
+          books: [Book]
+        }
+      `;
+
+      const books = [{ title: 'H', author: 'J' }];
+
+      it('reports a total duration that is longer than the durations of its constituent resolvers', async () => {
+        const resolvers = {
+          Query: {
+            books: () =>
+              new Promise(resolve => setTimeout(() => resolve(books), 10)),
+          },
+        };
+
+        const { url: uri } = await createApolloServer({
+          typeDefs,
+          resolvers,
+          tracing: true,
+        });
+
+        const apolloFetch = createApolloFetch({ uri });
+        const result = await apolloFetch({
+          query: `{ books { title author } }`,
+        });
+
+        const tracing: TracingFormat = result.extensions.tracing;
+
+        tracing.execution.resolvers.forEach(resolver =>
+          expect(resolver.duration).toBeLessThan(tracing.duration),
+        );
       });
     });
   });
