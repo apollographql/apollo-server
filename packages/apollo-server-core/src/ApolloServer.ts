@@ -1,4 +1,8 @@
-import { makeExecutableSchema, addMockFunctionsToSchema, GraphQLParseOptions } from 'graphql-tools';
+import {
+  makeExecutableSchema,
+  addMockFunctionsToSchema,
+  GraphQLParseOptions,
+} from 'graphql-tools';
 import { Server as HttpServer } from 'http';
 import {
   execute,
