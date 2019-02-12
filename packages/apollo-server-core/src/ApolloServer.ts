@@ -1,4 +1,8 @@
-import { makeExecutableSchema, addMockFunctionsToSchema } from 'graphql-tools';
+import {
+  makeExecutableSchema,
+  addMockFunctionsToSchema,
+  GraphQLParseOptions,
+} from 'graphql-tools';
 import { Server as HttpServer } from 'http';
 import {
   execute,
@@ -123,6 +127,8 @@ export class ApolloServerBase {
   // on the same operation to be executed immediately.
   private documentStore?: InMemoryLRUCache<DocumentNode>;
 
+  private parseOptions: GraphQLParseOptions;
+
   // The constructor should be universal across all environments. All environment specific behavior should be set by adding or overriding methods
   constructor(config: Config) {
     if (!config) throw new Error('ApolloServer requires options.');
@@ -133,6 +139,7 @@ export class ApolloServerBase {
       schemaDirectives,
       modules,
       typeDefs,
+      parseOptions = {},
       introspection,
       mocks,
       mockEntireSchema,
@@ -291,8 +298,11 @@ export class ApolloServerBase {
         typeDefs: augmentedTypeDefs,
         schemaDirectives,
         resolvers,
+        parseOptions,
       });
     }
+
+    this.parseOptions = parseOptions;
 
     if (mocks || (typeof mockEntireSchema !== 'undefined' && mocks !== false)) {
       addMockFunctionsToSchema({
@@ -546,6 +556,7 @@ export class ApolloServerBase {
         any,
         any
       >,
+      parseOptions: this.parseOptions,
       ...this.requestOptions,
     } as GraphQLOptions;
   }
