@@ -29,7 +29,6 @@ import {
   PersistedQueryNotSupportedError,
   PersistedQueryNotFoundError,
 } from 'apollo-server-errors';
-import { createHash } from 'crypto';
 import {
   GraphQLRequest,
   GraphQLResponse,
@@ -54,8 +53,10 @@ export {
   InvalidGraphQLRequestError,
 };
 
+import createSHA from './utils/createSHA';
+
 function computeQueryHash(query: string) {
-  return createHash('sha256')
+  return createSHA('sha256')
     .update(query)
     .digest('hex');
 }
@@ -362,7 +363,7 @@ export async function processGraphQLRequest<TContext>(
     });
 
     try {
-      return graphql.execute(executionArgs);
+      return await graphql.execute(executionArgs);
     } finally {
       executionDidEnd();
     }

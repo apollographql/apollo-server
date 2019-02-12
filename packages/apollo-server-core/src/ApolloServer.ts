@@ -16,7 +16,6 @@ import {
   DocumentNode,
 } from 'graphql';
 import { GraphQLExtension } from 'graphql-extensions';
-import { EngineReportingAgent } from 'apollo-engine-reporting';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import { ApolloServerPlugin } from 'apollo-server-plugin-base';
 import runtimeSupportsUploads from './utils/runtimeSupportsUploads';
@@ -107,7 +106,7 @@ export class ApolloServerBase {
   public requestOptions: Partial<GraphQLOptions<any>> = Object.create(null);
 
   private context?: Context | ContextFunction;
-  private engineReportingAgent?: EngineReportingAgent;
+  private engineReportingAgent?: import('apollo-engine-reporting').EngineReportingAgent;
   private engineServiceId?: string;
   private extensions: Array<() => GraphQLExtension>;
   private schemaHash: string;
@@ -343,6 +342,7 @@ export class ApolloServerBase {
     this.engineServiceId = getEngineServiceId(engine);
 
     if (this.engineServiceId) {
+      const { EngineReportingAgent } = require('apollo-engine-reporting');
       this.engineReportingAgent = new EngineReportingAgent(
         typeof engine === 'object' ? engine : Object.create(null),
         {
