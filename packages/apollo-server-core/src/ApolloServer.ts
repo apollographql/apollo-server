@@ -293,14 +293,7 @@ export class ApolloServerBase {
         typeDefs: augmentedTypeDefs,
         schemaDirectives,
         resolvers,
-        parseOptions: {
-          // Since ApolloServer does not use the location/token information the
-          // graphql/language/parser attaches to the schema, we can save some
-          // memory (and potentially some parsing time) with this default.
-          noLocation: true,
-          // Other options can be passed into the ApolloServerBase constructor.
-          ...parseOptions,
-        },
+        parseOptions,
       });
     }
 
