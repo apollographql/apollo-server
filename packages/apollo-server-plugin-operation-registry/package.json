@@ -11,10 +11,10 @@
     "node": ">=6"
   },
   "dependencies": {
-    "apollo-engine-reporting": "file:../apollo-engine-reporting",
-    "apollo-server-caching": "file:../apollo-server-caching",
-    "apollo-server-errors": "file:../apollo-server-errors",
-    "apollo-server-plugin-base": "file:../apollo-server-plugin-base",
+    "apollo-engine-reporting": "0.2.2",
+    "apollo-server-caching": "0.3.0",
+    "apollo-server-errors": "2.2.0",
+    "apollo-server-plugin-base": "0.3.0",
     "fast-json-stable-stringify": "2.0.0",
     "loglevel": "1.6.1",
     "loglevel-debug": "0.0.1",
