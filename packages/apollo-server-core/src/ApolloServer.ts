@@ -25,6 +25,8 @@ import {
   ExecutionParams,
 } from 'subscriptions-transport-ws';
 
+import WebSocket from 'ws';
+
 import { formatApolloErrors } from 'apollo-server-errors';
 import {
   GraphQLServerOptions as GraphQLOptions,
@@ -421,7 +423,7 @@ export class ApolloServerBase {
     }
   }
 
-  public installSubscriptionHandlers(server: HttpServer) {
+  public installSubscriptionHandlers(server: HttpServer | WebSocket.Server) {
     if (!this.subscriptionServerOptions) {
       if (this.supportsSubscriptions()) {
         throw Error(
@@ -481,10 +483,12 @@ export class ApolloServerBase {
         },
         keepAlive,
       },
-      {
-        server,
-        path,
-      },
+      server instanceof WebSocket.Server
+        ? server
+        : {
+            server,
+            path,
+          },
     );
   }
 

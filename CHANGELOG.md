@@ -2,6 +2,8 @@
 
 ### vNEXT
 
+- Allow passing a `WebSocket.Server` to `ApolloServer.installSubscriptionHandlers` [PR #2314](https://github.com/apollographql/apollo-server/pull/2314)
+
 ### v2.4.1
 
 - Fix inaccurate total duration in apollo-tracing [PR #2298](https://github.com/apollographql/apollo-server/pull/2298)
