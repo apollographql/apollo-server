@@ -1,4 +1,8 @@
-import { makeExecutableSchema, addMockFunctionsToSchema } from 'graphql-tools';
+import {
+  makeExecutableSchema,
+  addMockFunctionsToSchema,
+  GraphQLParseOptions,
+} from 'graphql-tools';
 import { Server as HttpServer } from 'http';
 import {
   execute,
@@ -12,7 +16,6 @@ import {
   DocumentNode,
 } from 'graphql';
 import { GraphQLExtension } from 'graphql-extensions';
-import { EngineReportingAgent } from 'apollo-engine-reporting';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import { ApolloServerPlugin } from 'apollo-server-plugin-base';
 import runtimeSupportsUploads from './utils/runtimeSupportsUploads';
@@ -103,7 +106,7 @@ export class ApolloServerBase {
   public requestOptions: Partial<GraphQLOptions<any>> = Object.create(null);
 
   private context?: Context | ContextFunction;
-  private engineReportingAgent?: EngineReportingAgent;
+  private engineReportingAgent?: import('apollo-engine-reporting').EngineReportingAgent;
   private engineServiceId?: string;
   private extensions: Array<() => GraphQLExtension>;
   private schemaHash: string;
@@ -124,6 +127,8 @@ export class ApolloServerBase {
   // on the same operation to be executed immediately.
   private documentStore?: InMemoryLRUCache<DocumentNode>;
 
+  private parseOptions: GraphQLParseOptions;
+
   // The constructor should be universal across all environments. All environment specific behavior should be set by adding or overriding methods
   constructor(config: Config) {
     if (!config) throw new Error('ApolloServer requires options.');
@@ -134,6 +139,7 @@ export class ApolloServerBase {
       schemaDirectives,
       modules,
       typeDefs,
+      parseOptions = {},
       introspection,
       mocks,
       mockEntireSchema,
@@ -292,8 +298,11 @@ export class ApolloServerBase {
         typeDefs: augmentedTypeDefs,
         schemaDirectives,
         resolvers,
+        parseOptions,
       });
     }
+
+    this.parseOptions = parseOptions;
 
     if (mocks || (typeof mockEntireSchema !== 'undefined' && mocks !== false)) {
       addMockFunctionsToSchema({
@@ -333,6 +342,7 @@ export class ApolloServerBase {
     this.engineServiceId = getEngineServiceId(engine);
 
     if (this.engineServiceId) {
+      const { EngineReportingAgent } = require('apollo-engine-reporting');
       this.engineReportingAgent = new EngineReportingAgent(
         typeof engine === 'object' ? engine : Object.create(null),
         {
@@ -546,6 +556,7 @@ export class ApolloServerBase {
         any,
         any
       >,
+      parseOptions: this.parseOptions,
       ...this.requestOptions,
     } as GraphQLOptions;
   }
