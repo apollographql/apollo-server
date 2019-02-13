@@ -37,6 +37,7 @@ import {
   ApolloServerBase,
 } from 'apollo-server-core';
 import { GraphQLExtension, GraphQLResponse } from 'graphql-extensions';
+import { TracingFormat } from 'apollo-tracing';
 
 export function createServerInfo<AS extends ApolloServerBase>(
   server: AS,
@@ -1258,6 +1259,68 @@ export function testApolloServer<AS extends ApolloServerBase>(
           expect(result.data).toEqual({ testString: 'test string' });
           done();
         }, done.fail);
+      });
+    });
+
+    describe('Tracing', () => {
+      const typeDefs = gql`
+        type Book {
+          title: String
+          author: String
+        }
+
+        type Movie {
+          title: String
+        }
+
+        type Query {
+          books: [Book]
+          movies: [Movie]
+        }
+      `;
+
+      const resolvers = {
+        Query: {
+          books: () =>
+            new Promise(resolve =>
+              setTimeout(() => resolve([{ title: 'H', author: 'J' }]), 10),
+            ),
+          movies: () =>
+            new Promise(resolve =>
+              setTimeout(() => resolve([{ title: 'H' }]), 12),
+            ),
+        },
+      };
+
+      it('reports a total duration that is longer than the duration of its resolvers', async () => {
+        const { url: uri } = await createApolloServer({
+          typeDefs,
+          resolvers,
+          tracing: true,
+        });
+
+        const apolloFetch = createApolloFetch({ uri });
+        const result = await apolloFetch({
+          query: `{ books { title author } }`,
+        });
+
+        const tracing: TracingFormat = result.extensions.tracing;
+
+        const earliestStartOffset = tracing.execution.resolvers
+          .map(resolver => resolver.startOffset)
+          .reduce((currentEarliestOffset, nextOffset) =>
+            Math.min(currentEarliestOffset, nextOffset),
+          );
+
+        const latestEndOffset = tracing.execution.resolvers
+          .map(resolver => resolver.startOffset + resolver.duration)
+          .reduce((currentLatestEndOffset, nextEndOffset) =>
+            Math.min(currentLatestEndOffset, nextEndOffset),
+          );
+
+        const resolverDuration = latestEndOffset - earliestStartOffset;
+
+        expect(resolverDuration).not.toBeGreaterThan(tracing.duration);
       });
     });
   });
