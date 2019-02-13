@@ -1306,19 +1306,19 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
         const tracing: TracingFormat = result.extensions.tracing;
 
-        let earliestStartOffset = tracing.execution.resolvers
+        const earliestStartOffset = tracing.execution.resolvers
           .map(resolver => resolver.startOffset)
           .reduce((currentEarliestOffset, nextOffset) =>
             Math.min(currentEarliestOffset, nextOffset),
           );
 
-        let latestEndOffset = tracing.execution.resolvers
+        const latestEndOffset = tracing.execution.resolvers
           .map(resolver => resolver.startOffset + resolver.duration)
           .reduce((currentLatestEndOffset, nextEndOffset) =>
             Math.min(currentLatestEndOffset, nextEndOffset),
           );
 
-        let resolverDuration = latestEndOffset - earliestStartOffset;
+        const resolverDuration = latestEndOffset - earliestStartOffset;
 
         expect(resolverDuration).not.toBeGreaterThan(tracing.duration);
       });
