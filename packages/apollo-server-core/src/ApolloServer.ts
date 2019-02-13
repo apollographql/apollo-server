@@ -477,7 +477,10 @@ export class ApolloServerBase {
             })[0];
           }
 
-          return { ...connection, context: { ...connection.context, ...context } };
+          return {
+            ...connection,
+            context: { ...connection.context, ...context },
+          };
         },
         keepAlive,
       },
