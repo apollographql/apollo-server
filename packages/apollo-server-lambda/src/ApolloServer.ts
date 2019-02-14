@@ -1,6 +1,11 @@
 import lambda from 'aws-lambda';
 import { ApolloServerBase, formatApolloErrors } from 'apollo-server-core';
-import { GraphQLOptions, Config, FileUploadOptions, processFileUploads } from 'apollo-server-core';
+import {
+  GraphQLOptions,
+  Config,
+  FileUploadOptions,
+  processFileUploads,
+} from 'apollo-server-core';
 import {
   renderPlaygroundPage,
   RenderPageOptions as PlaygroundRenderPageOptions,
@@ -147,12 +152,11 @@ export class ApolloServer extends ApolloServerBase {
         }
       }
 
-      const makeCallbackFilter = (doneFn: any): lambda.APIGatewayProxyCallback => {
-        return (
-          error,
-          result,
-        ) => {
-          doneFn()
+      const makeCallbackFilter = (
+        doneFn: any,
+      ): lambda.APIGatewayProxyCallback => {
+        return (error, result) => {
+          doneFn();
           callback(
             error,
             result && {
@@ -164,7 +168,7 @@ export class ApolloServer extends ApolloServerBase {
             },
           );
         };
-      }
+      };
 
       const response = new Stream.Writable();
 
@@ -181,7 +185,13 @@ export class ApolloServer extends ApolloServerBase {
             // its contract) prior to processing the request.
             await promiseWillStart;
             return this.createGraphQLServerOptions(event, context);
-          })(event, context, makeCallbackFilter(() => { response.end() }));
+          })(
+            event,
+            context,
+            makeCallbackFilter(() => {
+              response.end();
+            }),
+          );
         })
         .catch(error => {
           throw formatApolloErrors([error], {
@@ -193,7 +203,6 @@ export class ApolloServer extends ApolloServerBase {
   }
 }
 
-
 const fileUploadProcess = (
   event: any,
   response: any,
@@ -203,7 +212,11 @@ const fileUploadProcess = (
     const contentType =
       event.headers['content-type'] || event.headers['Content-Type'];
 
-    if (typeof processFileUploads === 'function' && contentType && contentType.startsWith('multipart/form-data')) {
+    if (
+      typeof processFileUploads === 'function' &&
+      contentType &&
+      contentType.startsWith('multipart/form-data')
+    ) {
       const request = new stream.Readable() as any;
       request.push(
         Buffer.from(event.body, event.isBase64Encoded ? 'base64' : 'ascii'),
@@ -217,11 +230,10 @@ const fileUploadProcess = (
           resolve(body);
         })
         .catch(error => {
-          reject(error)
+          reject(error);
         });
+    } else {
+      resolve(event.body);
     }
-    else {
-      resolve(event.body)
-    }
-  })
+  });
 };
