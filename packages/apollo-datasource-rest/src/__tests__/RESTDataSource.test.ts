@@ -268,6 +268,31 @@ describe('RESTDataSource', () => {
       );
     });
 
+    it('serializes a request body that is an array as JSON', async () => {
+      const dataSource = new class extends RESTDataSource {
+        baseURL = 'https://api.example.com';
+
+        postFoo(foo) {
+          return this.post('foo', foo);
+        }
+      }();
+
+      dataSource.httpCache = httpCache;
+
+      fetch.mockJSONResponseOnce();
+
+      await dataSource.postFoo(['foo', 'bar']);
+
+      expect(fetch.mock.calls.length).toEqual(1);
+      expect(fetch.mock.calls[0][0].url).toEqual('https://api.example.com/foo');
+      expect(fetch.mock.calls[0][0].body).toEqual(
+        JSON.stringify(['foo', 'bar']),
+      );
+      expect(fetch.mock.calls[0][0].headers.get('Content-Type')).toEqual(
+        'application/json',
+      );
+    });
+
     it('serializes a request body that has a toJSON method as JSON', async () => {
       const dataSource = new class extends RESTDataSource {
         baseURL = 'https://api.example.com';
