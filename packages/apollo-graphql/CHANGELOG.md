@@ -1,4 +1,0 @@
-# Change Log
-
-### vNEXT
-

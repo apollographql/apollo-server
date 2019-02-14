@@ -9,7 +9,6 @@
     { "path": "./packages/apollo-datasource" },
     { "path": "./packages/apollo-datasource-rest" },
     { "path": "./packages/apollo-engine-reporting" },
-    { "path": "./packages/apollo-graphql" },
     { "path": "./packages/apollo-server" },
     { "path": "./packages/apollo-server-azure-functions" },
     { "path": "./packages/apollo-server-cache-memcached" },

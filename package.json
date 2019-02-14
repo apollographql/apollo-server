@@ -40,7 +40,6 @@
     "apollo-datasource-rest": "file:packages/apollo-datasource-rest",
     "apollo-engine-reporting": "file:packages/apollo-engine-reporting",
     "apollo-engine-reporting-protobuf": "file:packages/apollo-engine-reporting-protobuf",
-    "apollo-graphql": "file:packages/apollo-graphql",
     "apollo-server": "file:packages/apollo-server",
     "apollo-server-azure-functions": "file:packages/apollo-server-azure-functions",
     "apollo-server-cache-memcached": "file:packages/apollo-server-cache-memcached",
