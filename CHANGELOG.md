@@ -2,6 +2,8 @@
 
 ### vNEXT
 
+- Move `apollo-graphql` package to the `apollo-tooling` repository [PR #2316](https://github.com/apollographql/apollo-server/pull/2316)
+
 ### v2.4.1
 
 - Fix inaccurate total duration in apollo-tracing [PR #2298](https://github.com/apollographql/apollo-server/pull/2298)
@@ -9,7 +11,6 @@
 - Allow passing `parseOptions` to `ApolloServerBase` constructor. [PR #2289](https://github.com/apollographql/apollo-server/pull/2289)
 - Rename `azureFunctions.d.ts` to `azureFunctions.ts`. [PR #2287](https://github.com/apollographql/apollo-server/pull/2287)
 - Require `apollo-engine-reporting` only if `EngineReportingAgent` used. [PR #2305](https://github.com/apollographql/apollo-server/pull/2305)
-- Move `apollo-graphql` package to the `apollo-tooling` repository [PR #2316](https://github.com/apollographql/apollo-server/pull/2316)
 
 ### v2.4.0
 
