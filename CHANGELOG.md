@@ -2,6 +2,7 @@
 
 ### vNEXT
 
+- `apollo-server-fastify` is now on Apollo Server and lives within the `apollo-server` repository.  This is being introduced in a _patch_ version, however it's a _major_ version bump from the last time `apollo-server-fastify` was published under `1.0.2`.  [PR #1971](https://github.com/apollostack/apollo-server/pull/1971)
 - Move `apollo-graphql` package to the `apollo-tooling` repository [PR #2316](https://github.com/apollographql/apollo-server/pull/2316)
 
 ### v2.4.1
@@ -70,7 +71,6 @@ client reference ID, Apollo Server will now default to the values present in the
 of the request (`apollographql-client-name`, `apollographql-client-reference-id` and
 `apollographql-client-version` respectively).  As a last resort, when those headers are not set,
 the query extensions' `clientInfo` values will be used. [PR #1960](https://github.com/apollographql/apollo-server/pull/1960)
-- Added `apollo-server-fastify` integration ([@rkorrelboom](https://github.com/rkorrelboom) in [#1971](https://github.com/apollostack/apollo-server/pull/1971))
 
 ### v2.2.2
 
