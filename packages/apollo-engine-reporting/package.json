@@ -12,10 +12,10 @@
   },
   "dependencies": {
     "apollo-engine-reporting-protobuf": "file:../apollo-engine-reporting-protobuf",
-    "apollo-graphql": "file:../apollo-graphql",
     "apollo-server-core": "file:../apollo-server-core",
     "apollo-server-env": "file:../apollo-server-env",
+    "graphql-extensions": "file:../graphql-extensions",
     "async-retry": "^1.2.1",
-    "graphql-extensions": "file:../graphql-extensions"
+    "apollo-graphql": "^0.1.0"
   }
 }
