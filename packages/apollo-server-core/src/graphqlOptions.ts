@@ -55,13 +55,13 @@ export interface PersistedQueryOptions {
 
 export default GraphQLServerOptions;
 
-export async function resolveGraphqlOptions<HandlerArguments extends any[]>(
+export async function resolveGraphqlOptions(
   options:
     | GraphQLServerOptions
     | ((
-        ...args: HandlerArguments
+        ...args: Array<any>
       ) => Promise<GraphQLServerOptions> | GraphQLServerOptions),
-  ...args: HandlerArguments
+  ...args: Array<any>
 ): Promise<GraphQLServerOptions> {
   if (typeof options === 'function') {
     return await options(...args);

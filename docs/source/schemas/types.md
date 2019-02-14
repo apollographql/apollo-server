@@ -92,9 +92,9 @@ In Apollo server, a resolver that returns an enum can use the direct string repr
 
 ```js
 const schema = gql`
-type Query {
-  genre: Genre
-}
+  type Query {
+    genre: Genre
+  }
 `;
 
 const resolvers = {
@@ -110,9 +110,9 @@ Lists are defined with as type modifier that wraps object types, scalars, and en
 
 ```js
 const schema = gql`
-type Query {
-  todos: [String]
-}
+  type Query {
+    todos: [String]
+  }
 `;
 
 const resolvers = {
@@ -132,9 +132,9 @@ Using the exclamation mark to declare a field as non-nullable simplifies the con
 
 ```js
 const schema = gql`
-type Query {
-  genre: String!
-}
+  type Query {
+    genre: String!
+  }
 `;
 
 const resolvers = {

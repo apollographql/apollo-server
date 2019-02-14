@@ -2,6 +2,7 @@ import { ApolloServer } from '../ApolloServer';
 import testSuite, {
   schema as Schema,
   CreateAppOptions,
+  NODE_MAJOR_VERSION
 } from 'apollo-server-integration-testsuite';
 import { Config } from 'apollo-server-core';
 import url from 'url';
@@ -79,7 +80,7 @@ const typeDefs = gql`
 
 const resolvers = {
   Query: {
-    uploads: () => {},
+    uploads: () => { },
     helloWorld: () => 'hi',
   },
   Mutation: {
@@ -90,47 +91,52 @@ const resolvers = {
   },
 };
 
-describe('file uploads', () => {
-  it('enabled uploads', async () => {
-    const app = await createLambda({
-      graphqlOptions: {
-        typeDefs,
-        resolvers,
-      },
-    });
+// NODE: Skip Node.js 6, but only because `graphql-upload`
+// doesn't support it.
+(NODE_MAJOR_VERSION === 6 ? describe.skip : describe)(
+  'file uploads',
+  () => {
+    it('enabled uploads', async () => {
+      const app = await createLambda({
+        graphqlOptions: {
+          typeDefs,
+          resolvers,
+        },
+      });
 
-    const expected = {
-      filename: 'package.json',
-      encoding: '7bit',
-      mimetype: 'application/json',
-    };
+      const expected = {
+        filename: 'package.json',
+        encoding: '7bit',
+        mimetype: 'application/json',
+      };
 
-    const req = request(app)
-      .post('/graphql')
-      .type('form')
-      .field(
-        'operations',
-        JSON.stringify({
-          query: `
-          mutation($file: Upload!) {
-            singleUpload(file: $file) {
-              filename
-              encoding
-              mimetype
+      const req = request(app)
+        .post('/graphql')
+        .type('form')
+        .field(
+          'operations',
+          JSON.stringify({
+            query: `
+            mutation($file: Upload!) {
+              singleUpload(file: $file) {
+                filename
+                encoding
+                mimetype
+              }
             }
-          }
-        `,
-          variables: {
-            file: null,
-          },
-        }),
-      )
-      .field('map', JSON.stringify({ 1: ['variables.file'] }))
-      .attach('1', 'package.json');
+          `,
+            variables: {
+              file: null,
+            },
+          }),
+        )
+        .field('map', JSON.stringify({ 1: ['variables.file'] }))
+        .attach('1', 'package.json');
 
-    return req.then((res: any) => {
-      expect(res.status).toEqual(200);
-      expect(res.body.data.singleUpload).toEqual(expected);
+      return req.then((res: any) => {
+        expect(res.status).toEqual(200);
+        expect(res.body.data.singleUpload).toEqual(expected);
+      });
     });
-  });
-});
+  },
+);

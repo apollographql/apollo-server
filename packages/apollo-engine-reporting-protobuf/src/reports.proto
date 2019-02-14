@@ -1,0 +1,397 @@
+syntax = "proto3";
+
+package mdg.engine.proto;
+
+import "google/protobuf/timestamp.proto";
+
+option optimize_for = SPEED;
+
+message Trace {
+	message CachePolicy {
+		enum Scope {
+			UNKNOWN = 0;
+			PUBLIC = 1;
+			PRIVATE = 2;
+		}
+
+		Scope scope = 1;
+		int64 max_age_ns = 2; // use 0 for absent, -1 for 0
+	}
+
+	message Details {
+		// The variables associated with this query (unless the reporting agent is
+		// configured to keep them all private). Values are JSON: ie, strings are
+		// enclosed in double quotes, etc.  The value of a private variable is
+		// the empty string.
+		map<string, string> variables_json = 4;
+		// Deprecated. Engineproxy did not encode variable values as JSON, so you
+		// couldn't tell numbers from numeric strings. Send variables_json instead.
+		map<string, bytes> variables = 1;
+		// Optional: this is the original full query before the signature algorithm
+		// is applied.  Engineproxy always sent this in all traces, which meant that
+		// literal-masking done by the signature algorithm didn't fully hide
+		// sensitive data from Engine servers. apollo-engine-reporting does not
+		// include this by default.  (The Engine frontend does not currently show
+		// this field.)
+		string raw_query = 2;
+		// Don't include this in traces inside a FullTracesReport; the operation
+		// name for these traces comes from the key of the traces_per_query map.
+		string operation_name = 3;
+	}
+
+	message Error {
+		string message = 1; // required
+		repeated Location location = 2;
+		uint64 time_ns = 3;
+		string json = 4;
+	}
+
+	message HTTP {
+		message Values {
+			repeated string value = 1;
+		}
+
+		enum Method {
+			UNKNOWN = 0;
+			OPTIONS = 1;
+			GET = 2;
+			HEAD = 3;
+			POST = 4;
+			PUT = 5;
+			DELETE = 6;
+			TRACE = 7;
+			CONNECT = 8;
+			PATCH = 9;
+		}
+		Method method = 1;
+		string host = 2;
+		string path = 3;
+
+		// Should exclude manual blacklist ("Auth" by default)
+		map<string, Values> request_headers = 4;
+		map<string, Values> response_headers = 5;
+
+		uint32 status_code = 6;
+
+		bool secure = 8; // TLS was used
+		string protocol = 9; // by convention "HTTP/1.0", "HTTP/1.1", "HTTP/2" or "h2"
+	}
+
+	message Location {
+		uint32 line = 1;
+		uint32 column = 2;
+	}
+
+	message Node {
+		// The name of the field (for Nodes representing a resolver call) or
+		// the index in a list (for intermediate Nodes representing elements of
+		// a list).  Note that nodes representing indexes (and the root node)
+		// don't contain all Node fields (eg types and times).
+		oneof id {
+			string field_name = 1;
+			uint32 index = 2;
+		}
+
+		// The field's return type; e.g. "String!" for User.email:String!
+		string type = 3;
+
+		// The field's parent type; e.g. "User" for User.email:String!
+		string parent_type = 13;
+
+		CachePolicy cache_policy = 5;
+
+		// relative to the trace's start_time, in ns
+		uint64 start_time = 8;
+		// relative to the trace's start_time, in ns
+		uint64 end_time = 9;
+
+		repeated Error error = 11;
+		repeated Node child = 12;
+
+		reserved 4;
+	}
+
+	// Wallclock time when the trace began.
+	google.protobuf.Timestamp start_time = 4; // required
+	// Wallclock time when the trace ended.
+	google.protobuf.Timestamp end_time = 3; // required
+	// High precision duration of the trace; may not equal end_time-start_time
+	// (eg, if your machine's clock changed during the trace).
+	uint64 duration_ns = 11; // required
+
+	// These fields are specific to engineproxy.
+	google.protobuf.Timestamp origin_reported_start_time = 15;
+	google.protobuf.Timestamp origin_reported_end_time = 16;
+	uint64 origin_reported_duration_ns = 17;
+
+	// In addition to details.raw_query, we include a "signature" of the query,
+	// which can be normalized: for example, you may want to discard aliases, drop
+	// unused operations and fragments, sort fields, etc. The most important thing
+	// here is that the signature match the signature in StatsReports. In
+	// StatsReports signatures show up as the key in the per_query map (with the
+	// operation name prepended).  The signature should be a valid GraphQL query.
+	// All traces must have a signature; if this Trace is in a FullTracesReport
+	// that signature is in the key of traces_per_query rather than in this field.
+	// Engineproxy provides the signature in legacy_signature_needs_resigning
+	// instead.
+	string signature = 19;
+
+	// Older agents (eg the Go engineproxy) relied to some degree on the Engine
+	// backend to run their own semi-compatible implementation of a specific
+	// variant of query signatures. The backend won't do that for new agents, but
+	// we keep this old field around to ensure that queries only get new IDs when
+	// you upgrade to the new agent, not just when we make backend changes
+	// to minimize backend-side signature calculation. Deprecated and ignored
+	// in FullTracesReports.
+	string legacy_signature_needs_resigning = 5;
+
+	Details details = 6;
+
+	// Note: engineproxy always sets client_name, client_version, and client_address to "none".
+	// apollo-engine-reporting allows for them to be set by the user.
+	string client_name = 7;
+	string client_version = 8;
+	string client_address = 9;
+	string client_reference_id = 23;
+
+	HTTP http = 10;
+
+	CachePolicy cache_policy = 18;
+
+	Node root = 14;
+
+	// Was this response served from a full query response cache?  (In that case
+	// the node tree will have no resolvers.)
+	bool full_query_cache_hit = 20;
+
+	// Was this query specified successfully as a persisted query hash?
+	bool persisted_query_hit = 21;
+	// Did this query contain both a full query string and a persisted query hash?
+	// (This typically means that a previous request was rejected as an unknown
+	// persisted query.)
+	bool persisted_query_register = 22;
+
+	// removed: Node parse = 12; Node validate = 13;
+	//          Id128 server_id = 1; Id128 client_id = 2;
+	reserved 12, 13, 1, 2;
+}
+
+// The `service` value embedded within the header key is not guaranteed to contain an actual service,
+// and, in most cases, the service information is trusted to come from upstream processing. If the
+// service _is_ specified in this header, then it is checked to match the context that is reporting it.
+// Otherwise, the service information is deduced from the token context of the reporter and then sent
+// along via other mechanisms (in Kafka, the `ReportKafkaKey). The other information (hostname,
+// agent_version, etc.) is sent by the Apollo Engine Reporting agent, but we do not currently save that
+// information to any of our persistent storage.
+message ReportHeader {
+	string service = 3;
+	// eg "host-01.example.com"
+	string hostname = 5;
+
+	// eg "engineproxy 0.1.0"
+	string agent_version = 6; // required
+	// eg "prod-4279-20160804T065423Z-5-g3cf0aa8" (taken from `git describe --tags`)
+	string service_version = 7;
+	// eg "node v4.6.0"
+	string runtime_version = 8;
+	// eg "Linux box 4.6.5-1-ec2 #1 SMP Mon Aug 1 02:31:38 PDT 2016 x86_64 GNU/Linux"
+	string uname = 9;
+	// eg "current", "prod"
+	string schema_tag = 10;
+	// The hex representation of the sha512 of the introspection response
+	string schema_hash = 11;
+}
+
+message PathErrorStats {
+	map<string, PathErrorStats> children = 1;
+	uint64 errors_count = 4;
+	uint64 requests_with_errors_count = 5;
+}
+
+message ClientNameStats {
+	// Duration histogram for non-cache-hit queries.
+	// (See docs/histograms.md for the histogram format.)
+	repeated int64 latency_count = 1;
+	reserved 2; // removed: repeated uint64 error_count = 2;
+	// These per-version fields were used to understand what versions contributed to this sample
+	// when we were implementing the aggregation of this information ourselves using BigTable.
+	// However, since the per-version stats don't separate out latency, it makes more sense to
+	// have stats reported with contextual information so we can have the specific breakdown we're
+	// looking for. These fields are somewhat misleading as we never actually do any per-version
+	// awareness with anything reporting in the legacy "per_client_name" stats, and instead use
+	// "query_stats_with_context" to have more contextual information.
+	map<string, uint64> requests_count_per_version = 3; // required
+	map<string, uint64> cache_hits_per_version = 4;
+	map<string, uint64> persisted_query_hits_per_version = 10;
+	map<string, uint64> persisted_query_misses_per_version = 11;
+	repeated int64 cache_latency_count = 5; // Duration histogram; see docs/histograms.md
+	PathErrorStats root_error_stats = 6;
+	uint64 requests_with_errors_count = 7;
+	// TTL histograms for cache misses for the public cache.
+	repeated int64 public_cache_ttl_count = 8;
+	// TTL histograms for cache misses for the private cache.
+	repeated int64 private_cache_ttl_count = 9;
+}
+
+message QueryLatencyStats {
+	repeated int64 latency_count = 1;
+	uint64 request_count = 2;
+	uint64 cache_hits = 3;
+	uint64 persisted_query_hits = 4;
+	uint64 persisted_query_misses = 5;
+	repeated int64 cache_latency_count = 6;
+	PathErrorStats root_error_stats = 7;
+	uint64 requests_with_errors_count = 8;
+	repeated int64 public_cache_ttl_count = 9;
+	repeated int64 private_cache_ttl_count = 10;
+}
+
+message StatsContext {
+	string client_reference_id = 1;
+	string client_name = 2;
+	string client_version = 3;
+}
+
+message ContextualizedQueryLatencyStats {
+	QueryLatencyStats query_latency_stats = 1;
+	StatsContext context = 2;
+}
+
+message ContextualizedTypeStats {
+	StatsContext context = 1;
+	map<string, TypeStat> per_type_stat = 2;
+}
+
+message FieldStat {
+	string name = 2; // deprecated; only set when stored in TypeStat.field
+	string return_type = 3; // required; eg "String!" for User.email:String!
+	uint64 errors_count = 4;
+	uint64 count = 5;
+	uint64 requests_with_errors_count = 6;
+	repeated int64 latency_count = 8; // Duration histogram; see docs/histograms.md
+}
+
+message TypeStat {
+	string name = 1; // deprecated; only set when stored in QueryStats.per_type
+	repeated FieldStat field = 2;  // deprecated; use per_field_stat instead
+	// Key is (eg) "email" for User.email:String!
+	map<string, FieldStat> per_field_stat = 3;
+}
+
+message QueryStats {
+	// Either per_client_name (for back-compat) or query_stats_with_context must be specified. If both are
+	// specified, then query_stats_with_context will be used and per_client_name will be ignored. Although
+	// the fields in ClientNameStats mention things "per-version," the information in the "per-version"
+	// fields will only ever be over the default version, the empty String: "", if arrived at via the
+	// FullTracesAggregator.
+	map<string, ClientNameStats> per_client_name = 1; // deprecated; use stats_with_context instead
+	repeated ContextualizedQueryLatencyStats query_stats_with_context = 4;
+	repeated TypeStat per_type = 2; // deprecated; use type_stats_with_context instead
+	// Key is the parent type, e.g. "User" for User.email:String!
+	map<string, TypeStat> per_type_stat = 3; // deprecated; use type_stats_with_context instead
+	repeated ContextualizedTypeStats type_stats_with_context = 5;
+}
+
+// Top-level message type for the server-side traces endpoint
+message TracesReport {
+	ReportHeader header = 1; // required
+	repeated Trace trace = 2; // required
+}
+
+message Field {
+	string name = 2; // required; eg "email" for User.email:String!
+	string return_type = 3; // required; eg "String!" for User.email:String!
+}
+
+message Type {
+	string name = 1; // required; eg "User" for User.email:String!
+	repeated Field field = 2;
+}
+
+message MemStats {
+	uint64 total_bytes = 1; // MemStats.Sys
+	uint64 stack_bytes = 2; // MemStats.StackSys
+	uint64 heap_bytes = 3; // MemStats.HeapSys
+	uint64 heap_released_bytes = 13; // MemStats.HeapReleased
+	uint64 gc_overhead_bytes = 4; // MemStats.GCSys
+
+	uint64 stack_used_bytes = 5; // MemStats.StackInuse
+	uint64 heap_allocated_bytes = 6; // MemStats.HeapAlloc
+	uint64 heap_allocated_objects = 7; // MemStats.HeapObjects
+
+	uint64 heap_allocated_bytes_delta = 8; // MemStats.TotalAlloc delta
+	uint64 heap_allocated_objects_delta = 9; // MemStats.Mallocs delta
+	uint64 heap_freed_objects_delta = 10; // MemStats.Frees delta
+
+	uint64 gc_stw_ns_delta = 11; // MemStats.PauseTotalNs delta
+	uint64 gc_count_delta = 12; // MemStats.NumGC delta
+}
+
+message TimeStats {
+	uint64 uptime_ns = 1;
+	uint64 real_ns_delta = 2;
+	uint64 user_ns_delta = 3;
+	uint64 sys_ns_delta = 4;
+}
+
+// Top-level message type for the server-side stats endpoint
+message StatsReport {
+	ReportHeader header = 1; // required
+
+	// These fields are about properties of the engineproxy and are not generated
+	// from FullTracesReports.
+	MemStats mem_stats = 2;
+	TimeStats time_stats = 3;
+
+	// Beginning of the period over which stats are collected.
+	google.protobuf.Timestamp start_time = 8;
+	// End of the period of which stats are collected.
+	google.protobuf.Timestamp end_time = 9;
+	// Only used to interpret mem_stats and time_stats; not generated from
+	// FullTracesReports.
+	uint64 realtime_duration = 10;
+
+
+	// Maps from query descriptor to QueryStats. Required unless
+	// legacy_per_query_missing_operation_name is set. The keys are strings of the
+	// form `# operationName\nsignature` (literal hash and space), with
+	// operationName - if there is no operation name.
+	map<string, QueryStats> per_query = 14;
+
+	// Older agents (Go engineproxy) didn't explicitly include the operation name
+	// in the key of this map, and the server had to parse it out (after a
+	// re-signing operation). The key here is just the query
+	// signature. Deprecated.
+	map<string, QueryStats> legacy_per_query_implicit_operation_name = 12;
+
+	// Deprecated: it was useful in Optics where we had access to the whole schema
+	// but has not been ever used in Engine.  apollo-engine-reporting will not
+	// send it.
+	repeated Type type = 13;
+}
+
+// This is the top-level message used by the new traces ingress. This
+// is designed for the apollo-engine-reporting TypeScript agent and will
+// eventually be documented as a public ingress API. This message consists
+// solely of traces; the equivalent of the StatsReport is automatically
+// generated server-side from this message.  Agents should send traces
+// for all requests in this report.  Generally, buffering up until a large
+// size has been reached (say, 4MB) or 5-10 seconds has passed is appropriate.
+message FullTracesReport {
+	ReportHeader header = 1;
+
+	// key is statsReportKey (# operationName\nsignature) Note that the nested
+	// traces will *not* have a signature or details.operationName (because the
+	// key is adequate).
+	//
+	// We also assume that traces don't have
+	// legacy_per_query_implicit_operation_name, and we don't require them to have
+	// details.raw_query (which would consume a lot of space and has privacy/data
+	// access issues, and isn't currently exposed by our app anyway).
+	map<string, Traces> traces_per_query = 5;
+}
+
+// Just a sequence of traces with the same statsReportKey.
+message Traces {
+	repeated Trace trace = 1;
+}

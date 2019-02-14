@@ -8,38 +8,26 @@ import {
   Trace,
 } from 'apollo-engine-reporting-protobuf';
 
-import { fetch, Response } from 'apollo-server-env';
+import { fetch, RequestAgent, Response } from 'apollo-server-env';
 import retry from 'async-retry';
 
 import { EngineReportingExtension } from './extension';
-
-// Override the generated protobuf Traces.encode function so that it will look
-// for Traces that are already encoded to Buffer as well as unencoded
-// Traces. This amortizes the protobuf encoding time over each generated Trace
-// instead of bunching it all up at once at sendReport time. In load tests, this
-// change improved p99 end-to-end HTTP response times by a factor of 11 without
-// a casually noticeable effect on p50 times. This also makes it easier for us
-// to implement maxUncompressedReportSize as we know the encoded size of traces
-// as we go.
-const originalTracesEncode = Traces.encode;
-Traces.encode = function(message, originalWriter) {
-  const writer = originalTracesEncode(message, originalWriter);
-  const encodedTraces = (message as any).encodedTraces;
-  if (encodedTraces != null && encodedTraces.length) {
-    for (let i = 0; i < encodedTraces.length; ++i) {
-      writer.uint32(/* id 1, wireType 2 =*/ 10);
-      writer.bytes(encodedTraces[i]);
-    }
-  }
-  return writer;
-};
+import {
+  GraphQLRequestContext,
+  GraphQLServiceContext,
+} from 'apollo-server-core/dist/requestPipelineAPI';
 
 export interface ClientInfo {
   clientName?: string;
   clientVersion?: string;
+  clientReferenceId?: string;
 }
 
-export interface EngineReportingOptions {
+export type GenerateClientInfo<TContext> = (
+  requestContext: GraphQLRequestContext<TContext>,
+) => ClientInfo;
+
+export interface EngineReportingOptions<TContext> {
   // API key for the service. Get this from
   // [Engine](https://engine.apollographql.com) by logging in and creating
   // a service. You may also specify this with the `ENGINE_API_KEY`
@@ -60,6 +48,8 @@ export interface EngineReportingOptions {
   endpointUrl?: string;
   // If set, prints all reports as JSON when they are sent.
   debugPrintReports?: boolean;
+  // HTTP(s) agent to be used on the fetch call to apollo-engine metrics endpoint
+  requestAgent?: RequestAgent | false;
   // Reporting is retried with exponential backoff up to this many times
   // (including the original request). Defaults to 5.
   maxAttempts?: number;
@@ -88,45 +78,38 @@ export interface EngineReportingOptions {
   sendReportsImmediately?: boolean;
   // To remove the error message from traces, set this to true. Defaults to false
   maskErrorDetails?: boolean;
-
-  /**
-   * (Experimental) Creates the client information for operation traces.
-   *
-   * @remarks This is experimental and subject to change or removal.
-   *
-   * @private
-   *
-   */
-  generateClientInfo?: (
-    o: {
-      context: any;
-      extensions?: Record<string, any>;
-    },
-  ) => ClientInfo;
+  // A human readable name to tag this variant of a schema (i.e. staging, EU)
+  schemaTag?: string;
+  //Creates the client information for operation traces.
+  generateClientInfo?: GenerateClientInfo<TContext>;
 }
 
-const REPORT_HEADER = new ReportHeader({
+const serviceHeaderDefaults = {
   hostname: os.hostname(),
   // tslint:disable-next-line no-var-requires
   agentVersion: `apollo-engine-reporting@${require('../package.json').version}`,
   runtimeVersion: `node ${process.version}`,
   // XXX not actually uname, but what node has easily.
   uname: `${os.platform()}, ${os.type()}, ${os.release()}, ${os.arch()})`,
-});
+};
 
 // EngineReportingAgent is a persistent object which creates
 // EngineReportingExtensions for each request and sends batches of trace reports
 // to the Engine server.
 export class EngineReportingAgent<TContext = any> {
-  private options: EngineReportingOptions;
+  private options: EngineReportingOptions<TContext>;
   private apiKey: string;
   private report!: FullTracesReport;
   private reportSize!: number;
   private reportTimer: any; // timer typing is weird and node-specific
   private sendReportsImmediately?: boolean;
   private stopped: boolean = false;
+  private reportHeader: ReportHeader;
 
-  public constructor(options: EngineReportingOptions = {}) {
+  public constructor(
+    options: EngineReportingOptions<TContext> = {},
+    { schemaHash }: GraphQLServiceContext,
+  ) {
     this.options = options;
     this.apiKey = options.apiKey || process.env.ENGINE_API_KEY || '';
     if (!this.apiKey) {
@@ -135,6 +118,11 @@ export class EngineReportingAgent<TContext = any> {
       );
     }
 
+    this.reportHeader = new ReportHeader({
+      ...serviceHeaderDefaults,
+      schemaHash,
+      schemaTag: options.schemaTag || process.env.ENGINE_SCHEMA_TAG || '',
+    });
     this.resetReport();
 
     this.sendReportsImmediately = options.sendReportsImmediately;
@@ -181,8 +169,8 @@ export class EngineReportingAgent<TContext = any> {
       this.report.tracesPerQuery[statsReportKey] = new Traces();
       (this.report.tracesPerQuery[statsReportKey] as any).encodedTraces = [];
     }
-    // See comment on our override of Traces.encode to learn more about this
-    // strategy.
+    // See comment on our override of Traces.encode inside of
+    // apollo-engine-reporting-protobuf to learn more about this strategy.
     (this.report.tracesPerQuery[statsReportKey] as any).encodedTraces.push(
       encodedTrace,
     );
@@ -256,6 +244,7 @@ export class EngineReportingAgent<TContext = any> {
             'content-encoding': 'gzip',
           },
           body: compressed,
+          agent: this.options.requestAgent,
         });
 
         if (curResponse.status >= 500 && curResponse.status < 600) {
@@ -314,7 +303,7 @@ export class EngineReportingAgent<TContext = any> {
   }
 
   private resetReport() {
-    this.report = new FullTracesReport({ header: REPORT_HEADER });
+    this.report = new FullTracesReport({ header: this.reportHeader });
     this.reportSize = 0;
   }
 }

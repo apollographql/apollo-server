@@ -15,8 +15,13 @@ import {
 } from 'graphql-extensions';
 import { Trace, google } from 'apollo-engine-reporting-protobuf';
 
-import { EngineReportingOptions, ClientInfo } from './agent';
-import { defaultSignature } from './signature';
+import { EngineReportingOptions, GenerateClientInfo } from './agent';
+import { defaultEngineReportingSignature } from 'apollo-graphql';
+import { GraphQLRequestContext } from 'apollo-server-core/dist/requestPipelineAPI';
+
+const clientNameHeaderKey = 'apollographql-client-name';
+const clientReferenceIdHeaderKey = 'apollographql-client-reference-id';
+const clientVersionHeaderKey = 'apollographql-client-version';
 
 // EngineReportingExtension is the per-request GraphQLExtension which creates a
 // trace (in protobuf Trace format) for a single request. When the request is
@@ -32,21 +37,16 @@ export class EngineReportingExtension<TContext = any>
   private operationName?: string;
   private queryString?: string;
   private documentAST?: DocumentNode;
-  private options: EngineReportingOptions;
+  private options: EngineReportingOptions<TContext>;
   private addTrace: (
     signature: string,
     operationName: string,
     trace: Trace,
   ) => void;
-  private generateClientInfo: (
-    o: {
-      context: any;
-      extensions?: Record<string, any>;
-    },
-  ) => ClientInfo;
+  private generateClientInfo: GenerateClientInfo<TContext>;
 
   public constructor(
-    options: EngineReportingOptions,
+    options: EngineReportingOptions<TContext>,
     addTrace: (signature: string, operationName: string, trace: Trace) => void,
   ) {
     this.options = {
@@ -59,9 +59,32 @@ export class EngineReportingExtension<TContext = any>
     this.nodes.set(responsePathAsString(undefined), root);
     this.generateClientInfo =
       options.generateClientInfo ||
-      // Default to using the clientInfo field of the request's extensions, when
-      // the ClientInfo fields are undefined, we send the empty string
-      (({ extensions }) => (extensions && extensions.clientInfo) || {});
+      // Default to using the `apollo-client-x` header fields if present.
+      // If none are present, fallback on the `clientInfo` query extension
+      // for backwards compatibility.
+      // The default value if neither header values nor query extension is
+      // set is the empty String for all fields (as per protobuf defaults)
+      (({ request }) => {
+        if (
+          request.http &&
+          request.http.headers &&
+          (request.http.headers.get(clientNameHeaderKey) ||
+            request.http.headers.get(clientVersionHeaderKey) ||
+            request.http.headers.get(clientReferenceIdHeaderKey))
+        ) {
+          return {
+            clientName: request.http.headers.get(clientNameHeaderKey),
+            clientVersion: request.http.headers.get(clientVersionHeaderKey),
+            clientReferenceId: request.http.headers.get(
+              clientReferenceIdHeaderKey,
+            ),
+          };
+        } else if (request.extensions && request.extensions.clientInfo) {
+          return request.extensions.clientInfo;
+        } else {
+          return {};
+        }
+      });
   }
 
   public requestDidStart(o: {
@@ -71,8 +94,9 @@ export class EngineReportingExtension<TContext = any>
     variables?: Record<string, any>;
     persistedQueryHit?: boolean;
     persistedQueryRegister?: boolean;
-    context: any;
+    context: TContext;
     extensions?: Record<string, any>;
+    requestContext: GraphQLRequestContext<TContext>;
   }): EndHandler {
     this.trace.startTime = dateToTimestamp(new Date());
     this.startHrTime = process.hrtime();
@@ -167,15 +191,18 @@ export class EngineReportingExtension<TContext = any>
       });
     }
 
-    // While clientAddress could be a part of the protobuf, we'll ignore it for
-    // now, since the backend does not group by it and Engine frontend will not
-    // support it in the short term
-    const { clientName, clientVersion } = this.generateClientInfo({
-      context: o.context,
-      extensions: o.extensions,
-    });
-    this.trace.clientName = clientName || '';
-    this.trace.clientVersion = clientVersion || '';
+    const clientInfo = this.generateClientInfo(o.requestContext);
+    if (clientInfo) {
+      // While clientAddress could be a part of the protobuf, we'll ignore it for
+      // now, since the backend does not group by it and Engine frontend will not
+      // support it in the short term
+      const { clientName, clientVersion, clientReferenceId } = clientInfo;
+      // the backend makes the choice of mapping clientName => clientReferenceId if
+      // no custom reference id is provided
+      this.trace.clientVersion = clientVersion || '';
+      this.trace.clientReferenceId = clientReferenceId || '';
+      this.trace.clientName = clientName || '';
+    }
 
     return () => {
       this.trace.durationNs = durationHrTimeToNanos(
@@ -187,7 +214,7 @@ export class EngineReportingExtension<TContext = any>
       let signature;
       if (this.documentAST) {
         const calculateSignature =
-          this.options.calculateSignature || defaultSignature;
+          this.options.calculateSignature || defaultEngineReportingSignature;
         signature = calculateSignature(this.documentAST, operationName);
       } else if (this.queryString) {
         // We didn't get an AST, possibly because of a parse failure. Let's just
