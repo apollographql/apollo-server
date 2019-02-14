@@ -1,1 +1,0 @@
-export { defaultEngineReportingSignature } from './signature';

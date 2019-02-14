@@ -29,7 +29,6 @@ import {
   PersistedQueryNotSupportedError,
   PersistedQueryNotFoundError,
 } from 'apollo-server-errors';
-import { createHash } from 'crypto';
 import {
   GraphQLRequest,
   GraphQLResponse,
@@ -45,6 +44,7 @@ import {
 
 import { Dispatcher } from './utils/dispatcher';
 import { InMemoryLRUCache, KeyValueCache } from 'apollo-server-caching';
+import { GraphQLParseOptions } from 'graphql-tools';
 
 export {
   GraphQLRequest,
@@ -53,8 +53,10 @@ export {
   InvalidGraphQLRequestError,
 };
 
+import createSHA from './utils/createSHA';
+
 function computeQueryHash(query: string) {
-  return createHash('sha256')
+  return createSHA('sha256')
     .update(query)
     .digest('hex');
 }
@@ -78,6 +80,8 @@ export interface GraphQLRequestPipelineConfig<TContext> {
 
   plugins?: ApolloServerPlugin[];
   documentStore?: InMemoryLRUCache<DocumentNode>;
+
+  parseOptions?: GraphQLParseOptions;
 }
 
 export type DataSources<TContext> = {
@@ -194,7 +198,7 @@ export async function processGraphQLRequest<TContext>(
       );
 
       try {
-        requestContext.document = parse(query);
+        requestContext.document = parse(query, config.parseOptions);
         parsingDidEnd();
       } catch (syntaxError) {
         parsingDidEnd(syntaxError);
@@ -306,13 +310,16 @@ export async function processGraphQLRequest<TContext>(
     requestDidEnd();
   }
 
-  function parse(query: string): DocumentNode {
+  function parse(
+    query: string,
+    parseOptions?: GraphQLParseOptions,
+  ): DocumentNode {
     const parsingDidEnd = extensionStack.parsingDidStart({
       queryString: query,
     });
 
     try {
-      return graphql.parse(query);
+      return graphql.parse(query, parseOptions);
     } finally {
       parsingDidEnd();
     }
@@ -356,7 +363,7 @@ export async function processGraphQLRequest<TContext>(
     });
 
     try {
-      return graphql.execute(executionArgs);
+      return await graphql.execute(executionArgs);
     } finally {
       executionDidEnd();
     }

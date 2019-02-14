@@ -1,5 +1,10 @@
 import { GraphQLSchema, DocumentNode } from 'graphql';
-import { SchemaDirectiveVisitor, IResolvers, IMocks } from 'graphql-tools';
+import {
+  SchemaDirectiveVisitor,
+  IResolvers,
+  IMocks,
+  GraphQLParseOptions,
+} from 'graphql-tools';
 import { ConnectionContext } from 'subscriptions-transport-ws';
 import WebSocket from 'ws';
 import { GraphQLExtension } from 'graphql-extensions';
@@ -42,23 +47,25 @@ export interface SubscriptionServerOptions {
   onDisconnect?: (websocket: WebSocket, context: ConnectionContext) => any;
 }
 
+type BaseConfig = Pick<
+  GraphQLOptions<Context<any>>,
+  | 'formatError'
+  | 'debug'
+  | 'rootValue'
+  | 'validationRules'
+  | 'formatResponse'
+  | 'fieldResolver'
+  | 'tracing'
+  | 'dataSources'
+  | 'cache'
+>;
+
 // This configuration is shared between all integrations and should include
 // fields that are not specific to a single integration
-export interface Config
-  extends Pick<
-    GraphQLOptions<Context<any>>,
-    | 'formatError'
-    | 'debug'
-    | 'rootValue'
-    | 'validationRules'
-    | 'formatResponse'
-    | 'fieldResolver'
-    | 'tracing'
-    | 'dataSources'
-    | 'cache'
-  > {
+export interface Config extends BaseConfig {
   modules?: GraphQLSchemaModule[];
   typeDefs?: DocumentNode | Array<DocumentNode>;
+  parseOptions?: GraphQLParseOptions;
   resolvers?: IResolvers;
   schema?: GraphQLSchema;
   schemaDirectives?: Record<string, typeof SchemaDirectiveVisitor>;
