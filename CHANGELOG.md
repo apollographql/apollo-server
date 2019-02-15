@@ -2,6 +2,19 @@
 
 ### vNEXT
 
+### v2.4.2
+
+- `apollo-server-fastify` is now on Apollo Server and lives within the `apollo-server` repository.  This is being introduced in a _patch_ version, however it's a _major_ version bump from the last time `apollo-server-fastify` was published under `1.0.2`.  [PR #1971](https://github.com/apollostack/apollo-server/pull/1971)
+- Move `apollo-graphql` package to the `apollo-tooling` repository [PR #2316](https://github.com/apollographql/apollo-server/pull/2316)
+
+### v2.4.1
+
+- Fix inaccurate total duration in apollo-tracing [PR #2298](https://github.com/apollographql/apollo-server/pull/2298)
+- Avoid importing entire `crypto` dependency tree if not in Node.js. [PR #2304](https://github.com/apollographql/apollo-server/pull/2304)
+- Allow passing `parseOptions` to `ApolloServerBase` constructor. [PR #2289](https://github.com/apollographql/apollo-server/pull/2289)
+- Rename `azureFunctions.d.ts` to `azureFunctions.ts`. [PR #2287](https://github.com/apollographql/apollo-server/pull/2287)
+- Require `apollo-engine-reporting` only if `EngineReportingAgent` used. [PR #2305](https://github.com/apollographql/apollo-server/pull/2305)
+
 ### v2.4.0
 
 - Implement an in-memory cache store to save parsed and validated documents and provide performance benefits for repeat executions of the same document. [PR #2111](https://github.com/apollographql/apollo-server/pull/2111) (`>=2.4.0-alpha.0`)
