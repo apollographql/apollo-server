@@ -81,6 +81,10 @@ export interface ApolloServerExpressConfig extends Config {
 }
 
 export class ApolloServer extends ApolloServerBase {
+  constructor(config: ApolloServerExpressConfig) {
+    super(config);
+  }
+
   // This translates the arguments from the middleware into graphQL options It
   // provides typings for the integration specific behavior, ideally this would
   // be propagated with a generic to the super class
