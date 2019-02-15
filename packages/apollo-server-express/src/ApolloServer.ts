@@ -1,5 +1,5 @@
 import express from 'express';
-import corsMiddleware from 'cors';
+import corsMiddleware, { CorsOptions } from 'cors';
 import { json, OptionsJson } from 'body-parser';
 import {
   renderPlaygroundPage,
@@ -11,6 +11,9 @@ import {
   ApolloServerBase,
   formatApolloErrors,
   processFileUploads,
+  ContextFunction,
+  Context,
+  Config,
 } from 'apollo-server-core';
 import accepts from 'accepts';
 import typeis from 'type-is';
@@ -66,6 +69,16 @@ const fileUploadMiddleware = (
     next();
   }
 };
+
+interface ExpressContext {
+  req: express.Request;
+  res: express.Response;
+}
+
+export interface ApolloServerExpressConfig extends Config {
+  cors?: CorsOptions | boolean;
+  context?: ContextFunction<ExpressContext> | Context<ExpressContext>;
+}
 
 export class ApolloServer extends ApolloServerBase {
   // This translates the arguments from the middleware into graphQL options It

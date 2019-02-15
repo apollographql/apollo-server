@@ -8,8 +8,8 @@ import net from 'net';
 import {
   ApolloServer as ApolloServerBase,
   CorsOptions,
+  ApolloServerExpressConfig,
 } from 'apollo-server-express';
-import { Config } from 'apollo-server-core';
 
 export * from './exports';
 
@@ -27,7 +27,7 @@ export class ApolloServer extends ApolloServerBase {
   private httpServer?: http.Server;
   private cors?: CorsOptions | boolean;
 
-  constructor(config: Config & { cors?: CorsOptions | boolean }) {
+  constructor(config: ApolloServerExpressConfig) {
     super(config);
     this.cors = config && config.cors;
   }
