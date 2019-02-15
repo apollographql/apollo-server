@@ -30,7 +30,7 @@ export { KeyValueCache } from 'apollo-server-caching';
 export type Context<T = any> = T;
 export type ContextFunction<T = any> = (
   context: Context<T>,
-) => Promise<Context<T>>;
+) => Context<T> | Promise<Context<T>>;
 
 // A plugin can return an interface that matches `ApolloServerPlugin`, or a
 // factory function that returns `ApolloServerPlugin`.
