@@ -3,7 +3,7 @@ Copyright (c) 2018- Meteor Development Group, Inc.
 The following sets forth attribution notices for third party software that may
 be contained in portions of this package.
 
-### `json-stable-stringify`
+### `fast-json-stable-stringify`
 
 ```
 This software is released under the MIT license:
