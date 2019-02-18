@@ -71,7 +71,7 @@
     "@types/fibers": "0.0.30",
     "@types/graphql": "14.0.7",
     "@types/hapi": "17.8.5",
-    "@types/jest": "24.0.5",
+    "@types/jest": "24.0.6",
     "@types/koa-multer": "1.0.0",
     "@types/koa-router": "7.0.39",
     "@types/lodash": "4.14.121",
