@@ -158,6 +158,7 @@ export async function runHttpQuery(
       | CacheControlExtensionOptions
       | undefined,
     dataSources: options.dataSources,
+    documentStore: options.documentStore,
 
     extensions: options.extensions,
     persistedQueries: options.persistedQueries,

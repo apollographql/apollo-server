@@ -1,4 +1,8 @@
-import { makeExecutableSchema, addMockFunctionsToSchema } from 'graphql-tools';
+import {
+  makeExecutableSchema,
+  addMockFunctionsToSchema,
+  GraphQLParseOptions,
+} from 'graphql-tools';
 import { Server as HttpServer } from 'http';
 import {
   execute,
@@ -9,12 +13,12 @@ import {
   GraphQLFieldResolver,
   ValidationContext,
   FieldDefinitionNode,
+  DocumentNode,
 } from 'graphql';
 import { GraphQLExtension } from 'graphql-extensions';
-import { EngineReportingAgent } from 'apollo-engine-reporting';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import { ApolloServerPlugin } from 'apollo-server-plugin-base';
-import supportsUploadsInNode from './utils/supportsUploadsInNode';
+import runtimeSupportsUploads from './utils/runtimeSupportsUploads';
 
 import {
   SubscriptionServer,
@@ -90,7 +94,11 @@ function getEngineServiceId(engine: Config['engine']): string | undefined {
 }
 
 const forbidUploadsForTesting =
-  process && process.env.NODE_ENV === 'test' && !supportsUploadsInNode;
+  process && process.env.NODE_ENV === 'test' && !runtimeSupportsUploads;
+
+function approximateObjectSize<T>(obj: T): number {
+  return Buffer.byteLength(JSON.stringify(obj), 'utf8');
+}
 
 export class ApolloServerBase {
   public subscriptionsPath?: string;
@@ -98,7 +106,7 @@ export class ApolloServerBase {
   public requestOptions: Partial<GraphQLOptions<any>> = Object.create(null);
 
   private context?: Context | ContextFunction;
-  private engineReportingAgent?: EngineReportingAgent;
+  private engineReportingAgent?: import('apollo-engine-reporting').EngineReportingAgent;
   private engineServiceId?: string;
   private extensions: Array<() => GraphQLExtension>;
   private schemaHash: string;
@@ -114,6 +122,13 @@ export class ApolloServerBase {
   // the default version is specified in playground.ts
   protected playgroundOptions?: PlaygroundRenderPageOptions;
 
+  // A store that, when enabled (default), will store the parsed and validated
+  // versions of operations in-memory, allowing subsequent parses/validates
+  // on the same operation to be executed immediately.
+  private documentStore?: InMemoryLRUCache<DocumentNode>;
+
+  private parseOptions: GraphQLParseOptions;
+
   // The constructor should be universal across all environments. All environment specific behavior should be set by adding or overriding methods
   constructor(config: Config) {
     if (!config) throw new Error('ApolloServer requires options.');
@@ -124,6 +139,7 @@ export class ApolloServerBase {
       schemaDirectives,
       modules,
       typeDefs,
+      parseOptions = {},
       introspection,
       mocks,
       mockEntireSchema,
@@ -135,6 +151,9 @@ export class ApolloServerBase {
       plugins,
       ...requestOptions
     } = config;
+
+    // Initialize the document store.  This cannot currently be disabled.
+    this.initializeDocumentStore();
 
     // Plugins will be instantiated if they aren't already, and this.plugins
     // is populated accordingly.
@@ -205,7 +224,7 @@ export class ApolloServerBase {
 
     if (uploads !== false && !forbidUploadsForTesting) {
       if (this.supportsUploads()) {
-        if (!supportsUploadsInNode) {
+        if (!runtimeSupportsUploads) {
           printNodeFileUploadsMessage();
           throw new Error(
             '`graphql-upload` is no longer supported on Node.js < v8.5.0.  ' +
@@ -279,8 +298,11 @@ export class ApolloServerBase {
         typeDefs: augmentedTypeDefs,
         schemaDirectives,
         resolvers,
+        parseOptions,
       });
     }
+
+    this.parseOptions = parseOptions;
 
     if (mocks || (typeof mockEntireSchema !== 'undefined' && mocks !== false)) {
       addMockFunctionsToSchema({
@@ -320,6 +342,7 @@ export class ApolloServerBase {
     this.engineServiceId = getEngineServiceId(engine);
 
     if (this.engineServiceId) {
+      const { EngineReportingAgent } = require('apollo-engine-reporting');
       this.engineReportingAgent = new EngineReportingAgent(
         typeof engine === 'object' ? engine : Object.create(null),
         {
@@ -486,6 +509,18 @@ export class ApolloServerBase {
     });
   }
 
+  private initializeDocumentStore(): void {
+    this.documentStore = new InMemoryLRUCache<DocumentNode>({
+      // Create ~about~ a 30MiB InMemoryLRUCache.  This is less than precise
+      // since the technique to calculate the size of a DocumentNode is
+      // only using JSON.stringify on the DocumentNode (and thus doesn't account
+      // for unicode characters, etc.), but it should do a reasonable job at
+      // providing a caching document store for most operations.
+      maxSize: Math.pow(2, 20) * 30,
+      sizeCalculator: approximateObjectSize,
+    });
+  }
+
   // This function is used by the integrations to generate the graphQLOptions
   // from an object containing the request and other integration specific
   // options
@@ -509,6 +544,7 @@ export class ApolloServerBase {
     return {
       schema: this.schema,
       plugins: this.plugins,
+      documentStore: this.documentStore,
       extensions: this.extensions,
       context,
       // Allow overrides from options. Be explicit about a couple of them to
@@ -520,6 +556,7 @@ export class ApolloServerBase {
         any,
         any
       >,
+      parseOptions: this.parseOptions,
       ...this.requestOptions,
     } as GraphQLOptions;
   }
