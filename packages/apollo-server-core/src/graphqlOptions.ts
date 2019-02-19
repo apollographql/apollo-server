@@ -10,6 +10,7 @@ import { KeyValueCache, InMemoryLRUCache } from 'apollo-server-caching';
 import { DataSource } from 'apollo-datasource';
 import { ApolloServerPlugin } from 'apollo-server-plugin-base';
 import { GraphQLParseOptions } from 'graphql-tools';
+import { ApolloError } from 'apollo-server-errors';
 
 /*
  * GraphQLServerOptions
@@ -31,7 +32,7 @@ export interface GraphQLServerOptions<
   TRootValue = any
 > {
   schema: GraphQLSchema;
-  formatError?: Function;
+  formatError?: (error: ApolloError) => ApolloError;
   rootValue?: ((parsedQuery: DocumentNode) => TRootValue) | TRootValue;
   context?: TContext | (() => never);
   validationRules?: Array<(context: ValidationContext) => any>;

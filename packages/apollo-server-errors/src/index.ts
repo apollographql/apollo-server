@@ -213,7 +213,7 @@ export class UserInputError extends ApolloError {
 export function formatApolloErrors(
   errors: Array<Error>,
   options?: {
-    formatter?: Function;
+    formatter?: (error: ApolloError) => ApolloError;
     debug?: boolean;
   },
 ): Array<ApolloError> {

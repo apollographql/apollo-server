@@ -75,7 +75,7 @@ export interface GraphQLRequestPipelineConfig<TContext> {
   persistedQueries?: PersistedQueryOptions;
   cacheControl?: CacheControlExtensionOptions;
 
-  formatError?: Function;
+  formatError?: (error: ApolloError) => ApolloError;
   formatResponse?: Function;
 
   plugins?: ApolloServerPlugin[];
