@@ -164,6 +164,12 @@ export class ApolloServer extends ApolloServerBase {
 
     app.use(
       middlewareFromPath(path, (ctx: Koa.Context, next: Function) => {
+        if (ctx.request.method === 'OPTIONS') {
+          ctx.status = 204;
+          ctx.body = '';
+          return;
+        }
+
         if (this.playgroundOptions && ctx.request.method === 'GET') {
           // perform more expensive content-type check only if necessary
           const accept = accepts(ctx.req);
@@ -187,6 +193,7 @@ export class ApolloServer extends ApolloServerBase {
             return;
           }
         }
+
         return graphqlKoa(() => {
           return this.createGraphQLServerOptions(ctx);
         })(ctx, next);
