@@ -2,6 +2,8 @@
 
 ### vNEXT
 
+### v2.4.3
+
 - `apollo-server-lambda`: Fix typings which triggered "Module has no default export" errors. [PR #2230](https://github.com/apollographql/apollo-server/pull/2230)
 - `apollo-server-koa`: Support OPTIONS requests [PR #2288](https://github.com/apollographql/apollo-server/pull/2288)
 - Add `req` and `res` typings to the `ContextFunction` argument for apollo-server and apollo-server-express. Update `ContextFunction` return type to allow returning a value syncronously. [PR #2330](https://github.com/apollographql/apollo-server/pull/2330)
