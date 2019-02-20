@@ -1,12 +1,13 @@
 import { GraphQLExtension, GraphQLResponse } from 'graphql-extensions';
-import { formatApolloErrors, ApolloError } from 'apollo-server-errors';
+import { formatApolloErrors } from 'apollo-server-errors';
+import { GraphQLError, GraphQLFormattedError } from 'graphql';
 
 export class FormatErrorExtension<TContext = any> extends GraphQLExtension {
-  private formatError?: (error: ApolloError) => ApolloError;
+  private formatError?: (error: GraphQLError) => GraphQLFormattedError;
   private debug: boolean;
 
   public constructor(
-    formatError?: (error: ApolloError) => ApolloError,
+    formatError?: (error: GraphQLError) => GraphQLFormattedError,
     debug: boolean = false,
   ) {
     super();

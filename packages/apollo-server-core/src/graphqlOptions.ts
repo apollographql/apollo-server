@@ -3,6 +3,8 @@ import {
   ValidationContext,
   GraphQLFieldResolver,
   DocumentNode,
+  GraphQLError,
+  GraphQLFormattedError,
 } from 'graphql';
 import { GraphQLExtension } from 'graphql-extensions';
 import { CacheControlExtensionOptions } from 'apollo-cache-control';
@@ -10,7 +12,6 @@ import { KeyValueCache, InMemoryLRUCache } from 'apollo-server-caching';
 import { DataSource } from 'apollo-datasource';
 import { ApolloServerPlugin } from 'apollo-server-plugin-base';
 import { GraphQLParseOptions } from 'graphql-tools';
-import { ApolloError } from 'apollo-server-errors';
 
 /*
  * GraphQLServerOptions
@@ -32,7 +33,7 @@ export interface GraphQLServerOptions<
   TRootValue = any
 > {
   schema: GraphQLSchema;
-  formatError?: (error: ApolloError) => ApolloError;
+  formatError?: (error: GraphQLError) => GraphQLFormattedError;
   rootValue?: ((parsedQuery: DocumentNode) => TRootValue) | TRootValue;
   context?: TContext | (() => never);
   validationRules?: Array<(context: ValidationContext) => any>;
