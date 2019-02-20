@@ -1,4 +1,9 @@
-import * as lambda from 'aws-lambda';
+import {
+  APIGatewayProxyCallback,
+  APIGatewayProxyEvent,
+  APIGatewayProxyResult,
+  Context as LambdaContext,
+} from 'aws-lambda';
 import { ApolloServerBase } from 'apollo-server-core';
 import { GraphQLOptions, Config } from 'apollo-server-core';
 import {
@@ -37,8 +42,8 @@ export class ApolloServer extends ApolloServerBase {
   // provides typings for the integration specific behavior, ideally this would
   // be propagated with a generic to the super class
   createGraphQLServerOptions(
-    event: lambda.APIGatewayProxyEvent,
-    context: lambda.Context,
+    event: APIGatewayProxyEvent,
+    context: LambdaContext,
   ): Promise<GraphQLOptions> {
     return super.graphQLServerOptions({ event, context });
   }
@@ -49,7 +54,7 @@ export class ApolloServer extends ApolloServerBase {
     // the GraphQLServerOptions function which is called before each request.
     const promiseWillStart = this.willStart();
 
-    const corsHeaders: lambda.APIGatewayProxyResult['headers'] = {};
+    const corsHeaders: APIGatewayProxyResult['headers'] = {};
 
     if (cors) {
       if (cors.methods) {
@@ -89,9 +94,9 @@ export class ApolloServer extends ApolloServerBase {
     }
 
     return (
-      event: lambda.APIGatewayProxyEvent,
-      context: lambda.Context,
-      callback: lambda.APIGatewayProxyCallback,
+      event: APIGatewayProxyEvent,
+      context: LambdaContext,
+      callback: APIGatewayProxyCallback,
     ) => {
       if (cors && cors.origin) {
         if (typeof cors.origin === 'string') {
@@ -145,10 +150,7 @@ export class ApolloServer extends ApolloServerBase {
         }
       }
 
-      const callbackFilter: lambda.APIGatewayProxyCallback = (
-        error,
-        result,
-      ) => {
+      const callbackFilter: APIGatewayProxyCallback = (error, result) => {
         callback(
           error,
           result && {
