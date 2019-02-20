@@ -1,22 +1,29 @@
 import { ApolloServerBase } from 'apollo-server-core';
 import { print, DocumentNode } from 'graphql';
 
-type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
-
 type StringOrAst = string | DocumentNode;
 
 // A query must not come with a mutation (and vice versa).
-type Query = { query: StringOrAst; mutation?: undefined };
-type Mutation = { mutation: StringOrAst; query?: undefined };
+type Query = {
+  query: StringOrAst;
+  mutation?: undefined;
+  variables?: {
+    [name: string]: any;
+  };
+  operationName?: string;
+};
+type Mutation = {
+  mutation: StringOrAst;
+  query?: undefined;
+  variables?: {
+    [name: string]: any;
+  };
+  operationName?: string;
+};
 
 export default (server: ApolloServerBase) => {
   const executeOperation = server.executeOperation.bind(server);
-  const test = ({
-    query,
-    mutation,
-    ...args
-  }: (Query | Mutation) &
-    Omit<Parameters<typeof server.executeOperation>[0], 'query'>) => {
+  const test = ({ query, mutation, ...args }: Query | Mutation) => {
     const operation = query || mutation;
 
     if (!operation || (query && mutation)) {
