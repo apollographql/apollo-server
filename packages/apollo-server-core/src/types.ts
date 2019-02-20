@@ -6,7 +6,9 @@ import {
   GraphQLParseOptions,
 } from 'graphql-tools';
 import { ConnectionContext } from 'subscriptions-transport-ws';
-import WebSocket from 'ws';
+// The types for `ws` use `export = WebSocket`, so we'll use the
+// matching `import =` to bring in its sole export.
+import WebSocket = require('ws');
 import { GraphQLExtension } from 'graphql-extensions';
 export { GraphQLExtension } from 'graphql-extensions';
 
@@ -30,7 +32,7 @@ export { KeyValueCache } from 'apollo-server-caching';
 export type Context<T = any> = T;
 export type ContextFunction<T = any> = (
   context: Context<T>,
-) => Promise<Context<T>>;
+) => Context<T> | Promise<Context<T>>;
 
 // A plugin can return an interface that matches `ApolloServerPlugin`, or a
 // factory function that returns `ApolloServerPlugin`.

@@ -1,5 +1,5 @@
 import express from 'express';
-import corsMiddleware from 'cors';
+import corsMiddleware, { CorsOptions } from 'cors';
 import { json, OptionsJson } from 'body-parser';
 import {
   renderPlaygroundPage,
@@ -11,6 +11,9 @@ import {
   ApolloServerBase,
   formatApolloErrors,
   processFileUploads,
+  ContextFunction,
+  Context,
+  Config,
 } from 'apollo-server-core';
 import accepts from 'accepts';
 import typeis from 'type-is';
@@ -67,7 +70,21 @@ const fileUploadMiddleware = (
   }
 };
 
+interface ExpressContext {
+  req: express.Request;
+  res: express.Response;
+}
+
+export interface ApolloServerExpressConfig extends Config {
+  cors?: CorsOptions | boolean;
+  context?: ContextFunction<ExpressContext> | Context<ExpressContext>;
+}
+
 export class ApolloServer extends ApolloServerBase {
+  constructor(config: ApolloServerExpressConfig) {
+    super(config);
+  }
+
   // This translates the arguments from the middleware into graphQL options It
   // provides typings for the integration specific behavior, ideally this would
   // be propagated with a generic to the super class

@@ -5,6 +5,10 @@
   "automerge": false,
   "packageRules": [
     {
+      "packageNames": ["@types/node"],
+      "allowedVersions": "8.x"
+    },
+    {
       "paths": [
         "docs/package.json"
       ],
