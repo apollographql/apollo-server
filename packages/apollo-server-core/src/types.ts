@@ -6,7 +6,9 @@ import {
   GraphQLParseOptions,
 } from 'graphql-tools';
 import { ConnectionContext } from 'subscriptions-transport-ws';
-import * as WebSocket from 'ws';
+// The types for `ws` use `export = WebSocket`, so we'll use the
+// matching `import =` to bring in its sole export.
+import WebSocket = require('ws');
 import { GraphQLExtension } from 'graphql-extensions';
 export { GraphQLExtension } from 'graphql-extensions';
 
