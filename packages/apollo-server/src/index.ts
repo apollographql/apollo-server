@@ -4,7 +4,6 @@
 // you're not using express or your version doesn't quite match up.
 import express from 'express';
 import http from 'http';
-import net from 'net';
 import {
   ApolloServer as ApolloServerBase,
   CorsOptions,
@@ -37,7 +36,7 @@ export class ApolloServer extends ApolloServerBase {
     subscriptionsPath?: string,
   ): ServerInfo {
     const serverInfo: any = {
-      ...(server.address() as net.AddressInfo),
+      ...server.address(),
       server,
       subscriptionsPath,
     };
