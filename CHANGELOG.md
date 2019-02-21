@@ -2,7 +2,9 @@
 
 ### vNEXT
 
-- `apollo-server-express`: Export `ExpressContext`
+### v2.4.5
+
+- `apollo-server-express`: Export `ExpressContext` [PR #2352](https://github.com/apollographql/apollo-server/pull/2352)
 
 ### v2.4.4
 
