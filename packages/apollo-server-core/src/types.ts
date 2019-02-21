@@ -29,10 +29,10 @@ export { GraphQLSchemaModule };
 
 export { KeyValueCache } from 'apollo-server-caching';
 
-export type ContextFunction<T = any> = (
-  context: Context<T>,
-) => Context<T> | Promise<Context<T>>;
 export type Context<T = object> = T;
+export type ContextFunction<FunctionParams = any, ContextContent = object> = (
+  context: FunctionParams,
+) => Context<ContextContent> | Promise<Context<ContextContent>>;
 
 // A plugin can return an interface that matches `ApolloServerPlugin`, or a
 // factory function that returns `ApolloServerPlugin`.
