@@ -7,8 +7,12 @@ import FormData from 'form-data';
 import fs from 'fs';
 import { createApolloFetch } from 'apollo-fetch';
 
-import { gql, AuthenticationError, Config } from 'apollo-server-core';
-import { ApolloServer, ServerRegistration } from '../ApolloServer';
+import { gql, AuthenticationError } from 'apollo-server-core';
+import {
+  ApolloServer,
+  ApolloServerExpressConfig,
+  ServerRegistration,
+} from '../ApolloServer';
 
 import {
   NODE_MAJOR_VERSION,
@@ -57,7 +61,7 @@ describe('apollo-server-express', () => {
   let httpServer: http.Server;
 
   async function createServer(
-    serverOptions: Config,
+    serverOptions: ApolloServerExpressConfig,
     options: Partial<ServerRegistration> = {},
   ) {
     server = new ApolloServer(serverOptions);
