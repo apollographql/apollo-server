@@ -22,11 +22,11 @@ export interface ServerInfo {
   server: http.Server;
 }
 
-export class ApolloServer extends ApolloServerBase {
+export class ApolloServer<Ctx = any> extends ApolloServerBase {
   private httpServer?: http.Server;
   private cors?: CorsOptions | boolean;
 
-  constructor(config: ApolloServerExpressConfig) {
+  constructor(config: ApolloServerExpressConfig<Ctx>) {
     super(config);
     this.cors = config && config.cors;
   }

@@ -75,13 +75,13 @@ interface ExpressContext {
   res: express.Response;
 }
 
-export interface ApolloServerExpressConfig extends Config {
+export interface ApolloServerExpressConfig<C> extends Config {
   cors?: CorsOptions | boolean;
-  context?: ContextFunction<ExpressContext> | Context<ExpressContext>;
+  context?: ContextFunction<ExpressContext, C> | Context<C>;
 }
 
-export class ApolloServer extends ApolloServerBase {
-  constructor(config: ApolloServerExpressConfig) {
+export class ApolloServer<Ctx = any> extends ApolloServerBase {
+  constructor(config: ApolloServerExpressConfig<Ctx>) {
     super(config);
   }
 
