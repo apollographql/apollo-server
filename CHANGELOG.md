@@ -2,6 +2,8 @@
 
 ### vNEXT
 
+- Separate type parameters for input and output in ContextFunction. [PR #2346](https://github.com/apollographql/apollo-server/pull/2346) [Issue #1593](https://github.com/apollographql/apollo-server/issues/1593)
+
 ### v2.4.3
 
 - `apollo-server-lambda`: Fix typings which triggered "Module has no default export" errors. [PR #2230](https://github.com/apollographql/apollo-server/pull/2230)
