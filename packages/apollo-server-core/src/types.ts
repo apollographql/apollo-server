@@ -30,9 +30,12 @@ export { GraphQLSchemaModule };
 export { KeyValueCache } from 'apollo-server-caching';
 
 export type Context<T = any> = T;
-export type ContextFunction<T = any> = (
-  context: Context<T>,
-) => Context<T> | Promise<Context<T>>;
+export type ContextFunction<
+  T_IncomingContext = any,
+  T_OutgoingContext = any
+> = (
+  context: Context<T_IncomingContext>,
+) => Context<T_OutgoingContext> | Promise<Context<T_OutgoingContext>>;
 
 // A plugin can return an interface that matches `ApolloServerPlugin`, or a
 // factory function that returns `ApolloServerPlugin`.
@@ -71,7 +74,7 @@ export interface Config extends BaseConfig {
   resolvers?: IResolvers;
   schema?: GraphQLSchema;
   schemaDirectives?: Record<string, typeof SchemaDirectiveVisitor>;
-  context?: Context<any> | ContextFunction<any>;
+  context?: Context<any> | ContextFunction<any, any>;
   introspection?: boolean;
   mocks?: boolean | IMocks;
   mockEntireSchema?: boolean;

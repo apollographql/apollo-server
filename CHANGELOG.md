@@ -3,6 +3,9 @@
 ### vNEXT
 
 - `apollo-server-express`: Export `ExpressContext`
+- `apollo-server-express`: Fix so you can return anything in `context`
+- `apollo-server-express`: Ability to specify a context interface to `ApolloServerExpressConfig`
+- `apollo-server-core`: Update `ContextFunction` to allow both an incoming and outcoming context
 
 ### v2.4.3
 

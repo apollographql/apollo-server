@@ -60,8 +60,8 @@ describe('apollo-server-express', () => {
   let app: express.Application;
   let httpServer: http.Server;
 
-  async function createServer(
-    serverOptions: ApolloServerExpressConfig,
+  async function createServer<T_OutgoingContext = any>(
+    serverOptions: ApolloServerExpressConfig<T_OutgoingContext>,
     options: Partial<ServerRegistration> = {},
   ) {
     server = new ApolloServer(serverOptions);
@@ -84,6 +84,34 @@ describe('apollo-server-express', () => {
   describe('constructor', () => {
     it('accepts typeDefs and resolvers', () => {
       return createServer({ typeDefs, resolvers });
+    });
+    describe('context', () => {
+      it('can be any value', () => {
+        return createServer({
+          typeDefs,
+          resolvers,
+          context: { userId: '1123' },
+        });
+      });
+      it('can be inferred by interface', () => {
+        interface MyContext {
+          token: string | null;
+        }
+
+        return createServer<MyContext>({
+          typeDefs,
+          resolvers,
+          context: ({ req }) => {
+            const token =
+              req.headers.authorization &&
+              req.headers.authorization.split(' ')[1];
+
+            return {
+              token: token || null,
+            };
+          },
+        });
+      });
     });
   });
 
