@@ -2,6 +2,8 @@
 
 ### vNEXT
 
+- `apollo-server-express`: Export `ExpressContext`
+
 ### v2.4.3
 
 - `apollo-server-lambda`: Fix typings which triggered "Module has no default export" errors. [PR #2230](https://github.com/apollographql/apollo-server/pull/2230)
