@@ -1,6 +1,7 @@
 # Changelog
 
 ### vNEXT
+- Fix typing for ContextFunction incorrectly requiring the context object the function produces to match the parameters of the function [PR #2350](https://github.com/apollographql/apollo-server/pull/2350)
 
 ### v2.4.3
 
