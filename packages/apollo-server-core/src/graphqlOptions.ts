@@ -3,6 +3,8 @@ import {
   ValidationContext,
   GraphQLFieldResolver,
   DocumentNode,
+  GraphQLError,
+  GraphQLFormattedError,
 } from 'graphql';
 import { GraphQLExtension } from 'graphql-extensions';
 import { CacheControlExtensionOptions } from 'apollo-cache-control';
@@ -31,7 +33,7 @@ export interface GraphQLServerOptions<
   TRootValue = any
 > {
   schema: GraphQLSchema;
-  formatError?: Function;
+  formatError?: (error: GraphQLError) => GraphQLFormattedError;
   rootValue?: ((parsedQuery: DocumentNode) => TRootValue) | TRootValue;
   context?: TContext | (() => never);
   validationRules?: Array<(context: ValidationContext) => any>;

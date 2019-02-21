@@ -7,6 +7,7 @@ import {
   ExecutionArgs,
   ExecutionResult,
   GraphQLError,
+  GraphQLFormattedError,
 } from 'graphql';
 import * as graphql from 'graphql';
 import {
@@ -75,7 +76,7 @@ export interface GraphQLRequestPipelineConfig<TContext> {
   persistedQueries?: PersistedQueryOptions;
   cacheControl?: CacheControlExtensionOptions;
 
-  formatError?: Function;
+  formatError?: (error: GraphQLError) => GraphQLFormattedError;
   formatResponse?: Function;
 
   plugins?: ApolloServerPlugin[];
