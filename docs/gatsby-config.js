@@ -1,7 +1,7 @@
 module.exports = {
   __experimentalThemes: [
     {
-      resolve: 'gatsby-theme-apollo',
+      resolve: 'gatsby-theme-apollo-docs',
       options: {
         root: __dirname,
         subtitle: 'Apollo Server',
