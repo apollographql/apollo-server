@@ -70,7 +70,7 @@ const fileUploadMiddleware = (
   }
 };
 
-interface ExpressContext {
+export interface ExpressContext {
   req: express.Request;
   res: express.Response;
 }
