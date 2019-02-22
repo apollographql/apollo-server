@@ -2,6 +2,10 @@
 
 ### vNEXT
 
+### v2.4.6
+
+- Allow Node.js-like runtimes to identify as Node.js as well. [PR #2357](https://github.com/apollographql/apollo-server/pull/2357) [Issue #2356](https://github.com/apollographql/apollo-server/issue/2356)
+
 ### v2.4.5
 
 - `apollo-server-express`: Export `ExpressContext` [PR #2352](https://github.com/apollographql/apollo-server/pull/2352)
