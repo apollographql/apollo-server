@@ -1,7 +1,7 @@
-import isNode from './isNode';
+import isNodeLike from './isNodeLike';
 
 const runtimeSupportsUploads = (() => {
-  if (isNode) {
+  if (isNodeLike) {
     const [nodeMajor, nodeMinor] = process.versions.node
       .split('.', 2)
       .map(segment => parseInt(segment, 10));
