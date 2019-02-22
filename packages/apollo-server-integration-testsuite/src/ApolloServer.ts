@@ -822,6 +822,63 @@ export function testApolloServer<AS extends ApolloServerBase>(
         process.env.NODE_ENV = nodeEnv;
       });
 
+      describe('context field', () => {
+        const typeDefs = gql`
+          type Query {
+            hello: String
+          }
+        `;
+
+        const resolvers = {
+          Query: {
+            hello: () => 'hi',
+          },
+        };
+
+        describe('as a function', () => {
+          it('can accept and return `req`', async () => {
+            expect(
+              await createApolloServer({
+                typeDefs,
+                resolvers,
+                context: ({ req }) => ({ req }),
+              }),
+            ).not.toThrow;
+          });
+
+          it('can accept nothing and return an empty object', async () => {
+            expect(
+              await createApolloServer({
+                typeDefs,
+                resolvers,
+                context: () => ({}),
+              }),
+            ).not.toThrow;
+          });
+        });
+        describe('as an object', () => {
+          it('can be an empty object', async () => {
+            expect(
+              await createApolloServer({
+                typeDefs,
+                resolvers,
+                context: {},
+              }),
+            ).not.toThrow;
+          });
+
+          it('can contain arbitrary values', async () => {
+            expect(
+              await createApolloServer({
+                typeDefs,
+                resolvers,
+                context: { value: 'arbitrary' },
+              }),
+            ).not.toThrow;
+          });
+        });
+      });
+
       it('propogates error codes in production', async () => {
         const nodeEnv = process.env.NODE_ENV;
         process.env.NODE_ENV = 'production';
