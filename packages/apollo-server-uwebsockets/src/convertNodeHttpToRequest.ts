@@ -18,6 +18,6 @@ export function convertNodeHttpToRequest(req: HttpRequest): Request {
 
   return new Request(req.getQuery(), {
     headers,
-    method: req.getMethod(),
+    method: req.getMethod().toUpperCase(),
   });
 }

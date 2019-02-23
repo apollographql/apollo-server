@@ -1,12 +1,11 @@
 import {
   ApolloServerBase,
   GraphQLOptions,
-  processFileUploads,
+  Config
 } from 'apollo-server-core';
 import { renderPlaygroundPage } from '@apollographql/graphql-playground-html';
-import { TemplatedApp as UWebSocketsApp, HttpRequest, HttpResponse } from 'uWebSockets.js'
+import { TemplatedApp as UWebSocketsApp, HttpRequest, } from 'uWebSockets.js'
 
-import { RequestHandler } from './types'
 import { graphql, graphqlPlayground, healthCheck, } from './uWebSocketsApollo';
 
 
@@ -19,13 +18,18 @@ export interface ServerRegistration {
 }
 
 export class ApolloServer extends ApolloServerBase {
+  constructor(options: Config) {
+    super(options);
+  }
+
   // Extract Apollo Server options from the request.
   async createGraphQLServerOptions(
-    res: HttpResponse,
-    req: HttpRequest,
+    /* res: HttpResponse,
+     req: HttpRequest,*/
   ): Promise<GraphQLOptions> {
+    // console.log('Creating server options', req, res)
     // Note: This is what get's passed to the `context` creator
-    return super.graphQLServerOptions({ req, res });
+    return super.graphQLServerOptions({ /*req, res*/ });
   }
 
   public async attachHandlers({
@@ -41,8 +45,10 @@ export class ApolloServer extends ApolloServerBase {
     await this.willStart()
 
     // Handle incoming GraphQL requests using Apollo Server.
-    const graphqlHandler = graphql(this.createGraphQLServerOptions)
+    const graphqlHandler = graphql(() => this.createGraphQLServerOptions())
     app.post(this.graphqlPath, graphqlHandler)
+    // TODO Support queries over GET
+    // app.get(this.graphqlPath, graphqlHandler)
 
     if (this.playgroundOptions) {
       // If the `playgroundOptions` are set, register a `graphql-playground` instance
@@ -56,7 +62,8 @@ export class ApolloServer extends ApolloServerBase {
 
       const graphqlPlaygroundHandler = graphqlPlayground(middlewareOptions, renderPlaygroundPage)
 
-      app.get('/*', graphqlPlaygroundHandler)
+      // TODO make this a wildcard
+      app.get('/', graphqlPlaygroundHandler)
     }
 
     if (!disableHealthCheck) {

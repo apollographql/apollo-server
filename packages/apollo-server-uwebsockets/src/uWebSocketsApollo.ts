@@ -3,7 +3,7 @@ import {
   runHttpQuery,
 } from 'apollo-server-core';
 import url from 'url';
-import { parseAll } from 'accept';
+// import { parseAll } from 'accept';
 import { HttpRequest, HttpResponse } from 'uWebSockets.js'
 
 import { RequestHandler } from './types'
@@ -30,11 +30,20 @@ export function graphql(
   }
 
   const graphqlHandler = async (res: HttpResponse, req: HttpRequest) => {
+    // Can't return or yield from here without responding or attaching an abort handler
+    res.onAborted(() => {
+      (res as any).aborted = true;
+      console.log('ABORTED')
+    });
+
+    const method = req.getMethod().toUpperCase()
+    const request = convertNodeHttpToRequest(req)
+
     let query;
 
     try {
       query =
-        req.getMethod() === 'POST'
+        req.getMethod().toUpperCase() === 'POST'
           ? await json(res)
           : url.parse(req.getUrl(), true).query;
     } catch (error) {
@@ -42,12 +51,16 @@ export function graphql(
     }
 
     try {
-      const { graphqlResponse, responseInit } = await runHttpQuery([req, res], {
-        method: req.getMethod(),
+      const { graphqlResponse, responseInit } = await runHttpQuery([/*req, res*/], {
+        method,
         options,
         query,
-        request: convertNodeHttpToRequest(req),
+        request,
       });
+
+      if ((res as any).aborted) {
+        return
+      }
 
       // Successfuly reply with a response
       setHeaders(res, responseInit.headers);
@@ -55,6 +68,10 @@ export function graphql(
 
       return
     } catch (error) {
+      if ((res as any).aborted) {
+        return
+      }
+
       if ('HttpQueryError' === error.name && error.headers) {
         setHeaders(res, error.headers);
       }
@@ -77,9 +94,9 @@ export function graphqlPlayground(
   middlewareOptions: any,
   renderPlaygroundPage: (options: any) => string
 ): RequestHandler {
-  return async (
+  return (
     res: HttpResponse,
-    req: HttpRequest,
+    /* req: HttpRequest,*/
   ) => {
     // https://github.com/uNetworking/uWebSockets.js/issues/70
     // const accept = parseAll(req.headers);
@@ -109,6 +126,15 @@ export function healthCheck(
     res: HttpResponse,
     req: HttpRequest,
   ) => {
+    // Can't return or yield from here without responding or attaching an abort handler
+    res.onAborted(() => {
+      (res as any).aborted = true;
+    });
+
+    if ((res as any).aborted) {
+      return
+    }
+
     // Response follows
     // https://tools.ietf.org/html/draft-inadarei-api-health-check-01
     res.writeHeader('Content-Type', 'application/health+json');
@@ -117,10 +143,18 @@ export function healthCheck(
       try {
         await onHealthCheck(req);
       } catch (error) {
+        if ((res as any).aborted) {
+          return
+        }
+
         res.writeStatus('503')
         res.end(JSON.stringify({ status: 'fail' }))
         return
       }
+    }
+
+    if ((res as any).aborted) {
+      return
     }
 
     res.writeStatus('200')

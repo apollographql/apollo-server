@@ -12,8 +12,11 @@ export function json(res: HttpResponse) {
     let buffer;
 
     // Register data cb
-    res.onData((res, ab, isLast) => {
-      let chunk = Buffer.from(ab);
+    // NOTE: Typings are wrong here (says the first param is `res`)
+    res.onData((ab, isLast) => {
+      // console.log(ab)
+      // console.log(typeof ab)
+      let chunk = Buffer.from(ab as any);
       if (isLast) {
         let json;
         if (buffer) {
@@ -42,12 +45,6 @@ export function json(res: HttpResponse) {
           buffer = Buffer.concat([chunk]);
         }
       }
-    });
-
-    /* (REQUIRED) Register error cb */
-    res.onAborted(() => {
-      /* Request was prematurely aborted or invalid or missing, stop reading */
-      console.log('Invalid JSON or no data at all!');
     });
   })
 }
