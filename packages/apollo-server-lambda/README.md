@@ -91,7 +91,7 @@ aws cloudformation package \
 
 #### 5. Deploy the API
 
-The will create the Lambda Function and API Gateway for GraphQL. We use the stack-name `prod` to mean production but any stack name can be used.
+This will create the Lambda Function and API Gateway for GraphQL. We use the stack-name `prod` to mean production but any stack name can be used.
 
 ```
 aws cloudformation deploy \
