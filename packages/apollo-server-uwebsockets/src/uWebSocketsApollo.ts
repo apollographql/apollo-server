@@ -62,8 +62,14 @@ export function graphql(
         return
       }
 
-      // Successfuly reply with a response
-      setHeaders(res, responseInit.headers);
+      // Note: `responseInit.headers` includes content-type and content-length headers
+      // uWS automatically adds a content-length header, adding duplicates causes issues
+      // setHeaders(res, responseInit.headers);
+
+      res.writeHeader('Content-Type', responseInit.headers['Content-Type'])
+      res.writeHeader('Vary', 'Accept-Encoding, Origin')
+      res.writeHeader('Status', '200')
+      res.writeStatus('200')
       res.end(graphqlResponse)
 
       return
@@ -135,10 +141,6 @@ export function healthCheck(
       return
     }
 
-    // Response follows
-    // https://tools.ietf.org/html/draft-inadarei-api-health-check-01
-    res.writeHeader('Content-Type', 'application/health+json');
-
     if (onHealthCheck) {
       try {
         await onHealthCheck(req);
@@ -147,8 +149,14 @@ export function healthCheck(
           return
         }
 
+        // Note: `writeStatus` must be called before `writeHeader` otherwise status
+        // will be set to `200`
         res.writeStatus('503')
+        // Response follows
+        // https://tools.ietf.org/html/draft-inadarei-api-health-check-01
+        res.writeHeader('Content-Type', 'application/health+json');
         res.end(JSON.stringify({ status: 'fail' }))
+
         return
       }
     }
@@ -158,6 +166,9 @@ export function healthCheck(
     }
 
     res.writeStatus('200')
+    // Response follows
+    // https://tools.ietf.org/html/draft-inadarei-api-health-check-01
+    res.writeHeader('Content-Type', 'application/health+json');
     res.end(JSON.stringify({ status: 'pass' }))
   }
 }

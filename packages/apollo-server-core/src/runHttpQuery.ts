@@ -27,8 +27,8 @@ export interface HttpQueryRequest {
   // 'extensions', etc.
   query: Record<string, any> | Array<Record<string, any>>;
   options:
-    | GraphQLOptions
-    | ((...args: Array<any>) => Promise<GraphQLOptions> | GraphQLOptions);
+  | GraphQLOptions
+  | ((...args: Array<any>) => Promise<GraphQLOptions> | GraphQLOptions);
   request: Pick<Request, 'url' | 'method' | 'headers'>;
 }
 
@@ -79,9 +79,9 @@ function throwHttpGraphQLError<E extends Error>(
     prettyJSONStringify({
       errors: options
         ? formatApolloErrors(errors, {
-            debug: options.debug,
-            formatter: options.formatError,
-          })
+          debug: options.debug,
+          formatter: options.formatError,
+        })
         : errors,
     }),
     true,
@@ -350,11 +350,11 @@ function parseGraphQLRequest(
       throw new HttpQueryError(
         400,
         "GraphQL queries must be strings. It looks like you're sending the " +
-          'internal graphql-js representation of a parsed query in your ' +
-          'request instead of a request in the GraphQL query language. You ' +
-          'can convert an AST to a string using the `print` function from ' +
-          '`graphql`, or use a client like `apollo-client` which converts ' +
-          'the internal representation to a string for you.',
+        'internal graphql-js representation of a parsed query in your ' +
+        'request instead of a request in the GraphQL query language. You ' +
+        'can convert an AST to a string using the `print` function from ' +
+        '`graphql`, or use a client like `apollo-client` which converts ' +
+        'the internal representation to a string for you.',
       );
     } else {
       throw new HttpQueryError(400, 'GraphQL queries must be strings.');

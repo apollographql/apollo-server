@@ -50,6 +50,14 @@ export class ApolloServer extends ApolloServerBase {
     // TODO Support queries over GET
     // app.get(this.graphqlPath, graphqlHandler)
 
+    if (!disableHealthCheck) {
+      // If health checking is enabled, trigger the `onHealthCheck`
+      // function when the health check URL is requested.
+      const healthCheckHandler = healthCheck(onHealthCheck)
+
+      app.get('/.well-known/apollo/server-health', healthCheckHandler)
+    }
+
     if (this.playgroundOptions) {
       // If the `playgroundOptions` are set, register a `graphql-playground` instance
       // (not available in production) that is then used to handle all
@@ -62,27 +70,19 @@ export class ApolloServer extends ApolloServerBase {
 
       const graphqlPlaygroundHandler = graphqlPlayground(middlewareOptions, renderPlaygroundPage)
 
-      // TODO make this a wildcard
+      // TODO make this a wildcard or this.graphqlPath?
       app.get('/', graphqlPlaygroundHandler)
-    }
-
-    if (!disableHealthCheck) {
-      // If health checking is enabled, trigger the `onHealthCheck`
-      // function when the health check URL is requested.
-      const healthCheckHandler = healthCheck(onHealthCheck)
-
-      app.get('/.well-known/apollo/server-health', healthCheckHandler)
     }
 
     // Catch-all route to return 404's
     app.any('/*', (res) => {
       res.writeStatus('404')
-      res.close()
+      res.end('Not Found')
     })
   }
   // This integration supports file uploads.
   protected supportsUploads(): boolean {
-    return false;
+    return true;
   }
 
   // This integration supports subscriptions.

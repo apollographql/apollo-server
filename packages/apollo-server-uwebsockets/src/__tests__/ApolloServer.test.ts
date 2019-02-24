@@ -1,5 +1,4 @@
-import micro from 'micro';
-import listen from 'test-listen';
+import { App, TemplatedApp, us_listen_socket_close } from 'uWebSockets.js'
 import { createApolloFetch } from 'apollo-fetch';
 import { NODE_MAJOR_VERSION } from 'apollo-server-integration-testsuite';
 import { gql } from 'apollo-server-core';
@@ -21,42 +20,59 @@ const resolvers = {
   },
 };
 
+const listen = (app: TemplatedApp, hostname = 'localhost', port: number = 5001): Promise<{ uri: string, socket: any }> => new Promise((resolve, reject) => {
+  app.listen(port, (token) => token ? resolve({ uri: `http://${hostname}:${port}`, socket: token }) : reject())
+})
+
 async function createServer(options: object = {}): Promise<any> {
   const apolloServer = new ApolloServer({ typeDefs, resolvers });
-  const service = micro(apolloServer.createHandler(options));
-  const uri = await listen(service);
+  const app = App({})
+
+  apolloServer.attachHandlers({ app, ...options })
+
+  const { uri, socket } = await listen(app)
+
   return {
-    service,
+    service: {
+      ...app,
+
+      close() {
+        us_listen_socket_close(socket)
+      }
+    },
     uri,
   };
 }
 
-describe('apollo-server-micro', function() {
-  describe('constructor', function() {
-    it('should accepts typeDefs and resolvers', function() {
+describe('apollo-server-uwebsockets', function () {
+  describe('constructor', function () {
+    it('should accepts typeDefs and resolvers', function () {
       const apolloServer = new ApolloServer({ typeDefs, resolvers });
       expect(apolloServer).toBeDefined();
     });
   });
 
-  describe('#createHandler', function() {
-    describe('querying', function() {
+  describe('#attachHandlers', function () {
+    describe('querying', function () {
       it(
         'should be queryable using the default /graphql path, if no path ' +
-          'is provided',
-        async function() {
+        'is provided',
+        async function () {
           const { service, uri } = await createServer();
+
           const apolloFetch = createApolloFetch({ uri: `${uri}/graphql` });
           const result = await apolloFetch({ query: '{hello}' });
+
           expect(result.data.hello).toEqual('hi');
+
           service.close();
         },
       );
 
       it(
         'should only be queryable at the default /graphql path, if no path ' +
-          'is provided',
-        async function() {
+        'is provided',
+        async function () {
           const { service, uri } = await createServer();
           const apolloFetch = createApolloFetch({ uri: `${uri}/nopath` });
           let errorThrown = false;
@@ -70,7 +86,7 @@ describe('apollo-server-micro', function() {
         },
       );
 
-      it('should be queryable using a custom path', async function() {
+      it('should be queryable using a custom path', async function () {
         const { service, uri } = await createServer({ path: '/data' });
         const apolloFetch = createApolloFetch({ uri: `${uri}/data` });
         const result = await apolloFetch({ query: '{hello}' });
@@ -80,8 +96,8 @@ describe('apollo-server-micro', function() {
 
       it(
         'should render a GraphQL playground when a browser sends in a ' +
-          'request',
-        async function() {
+        'request',
+        async function () {
           const nodeEnv = process.env.NODE_ENV;
           delete process.env.NODE_ENV;
 
@@ -102,15 +118,15 @@ describe('apollo-server-micro', function() {
       );
     });
 
-    describe('health checks', function() {
-      it('should create a healthcheck endpoint', async function() {
+    describe('health checks', function () {
+      it('should create a healthcheck endpoint', async function () {
         const { service, uri } = await createServer();
         const body = await rp(`${uri}/.well-known/apollo/server-health`);
         expect(body).toEqual(JSON.stringify({ status: 'pass' }));
         service.close();
       });
 
-      it('should support a health check callback', async function() {
+      it('should support a health check callback', async function () {
         const { service, uri } = await createServer({
           async onHealthCheck() {
             throw Error("can't connect to DB");
@@ -123,20 +139,21 @@ describe('apollo-server-micro', function() {
         } catch (err) {
           error = err;
         }
+
         expect(error).toBeDefined();
         expect(error.statusCode).toEqual(503);
         expect(error.error).toEqual(JSON.stringify({ status: 'fail' }));
         service.close();
       });
 
-      it('should be able to disable the health check', async function() {
+      it('should be able to disable the health check', async function () {
         const { service, uri } = await createServer({
           disableHealthCheck: true,
         });
 
         let error;
         try {
-          await rp(`${uri}/.well-known/apollo/server-health`);
+          await rp(`${uri}/.well-known/apollo/server-health`)
         } catch (err) {
           error = err;
         }
@@ -151,8 +168,9 @@ describe('apollo-server-micro', function() {
     // doesn't support it.
     (NODE_MAJOR_VERSION === 6 ? describe.skip : describe)(
       'file uploads',
-      function() {
-        it('should handle file uploads', async function() {
+      function () {
+        it('should handle file uploads', async function () {
+          const app = App({})
           const apolloServer = new ApolloServer({
             typeDefs: gql`
               type File {
@@ -171,7 +189,7 @@ describe('apollo-server-micro', function() {
             `,
             resolvers: {
               Query: {
-                uploads: () => {},
+                uploads: () => { },
               },
               Mutation: {
                 singleUpload: async (_, args) => {
@@ -181,8 +199,10 @@ describe('apollo-server-micro', function() {
               },
             },
           });
-          const service = micro(apolloServer.createHandler());
-          const url = await listen(service);
+
+          apolloServer.attachHandlers({ app })
+
+          const { uri, socket } = await listen(app);
 
           const body = new FormData();
           body.append(
@@ -206,7 +226,7 @@ describe('apollo-server-micro', function() {
           body.append('1', fs.createReadStream('package.json'));
 
           try {
-            const resolved = await fetch(`${url}/graphql`, {
+            const resolved = await fetch(`${uri}/graphql`, {
               method: 'POST',
               body: body as any,
             });
@@ -225,7 +245,7 @@ describe('apollo-server-micro', function() {
             if (error.code !== 'EPIPE') throw error;
           }
 
-          service.close();
+          us_listen_socket_close(socket)
         });
       },
     );
