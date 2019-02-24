@@ -7,16 +7,18 @@ import { IncomingMessage, ServerResponse } from 'http'
 import { App, TemplatedApp, us_listen_socket_close } from 'uWebSockets.js'
 import request from 'request'
 
-import { ApolloServer } from '../ApolloServer';
+const fp = require('find-free-port')
 
-const port = 8080
+import { ApolloServer } from '../ApolloServer';
 
 let listenerToken: any
 
 // Note: There doesn't seem to be a good way of reliablly discarding
-// `App` instances right now, so we'll reuse the same one
+// `App` instances right now, so we'll attach to random free ports...
 async function createApp(options: CreateAppOptions = {}) {
   const app = App({})
+
+  const [port] = await fp(3000)
 
   const apollo = new ApolloServer(
     (options.graphqlOptions as Config) || { schema: Schema },
@@ -36,7 +38,7 @@ async function createApp(options: CreateAppOptions = {}) {
   };
 }
 
-function destroyApp(app: TemplatedApp) {
+function destroyApp(app: any) {
   if (listenerToken) {
     us_listen_socket_close(listenerToken)
     listenerToken = null
@@ -52,5 +54,5 @@ describe('uWebSocketsApollo', function () {
 });
 
 describe('integration:uWebSockets', function () {
-  testSuite(createApp, destroyApp);
+  testSuite(createApp);
 });
