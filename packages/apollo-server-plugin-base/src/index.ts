@@ -25,10 +25,10 @@ export type WithRequired<T, K extends keyof T> = T & Required<Pick<T, K>>;
 export interface GraphQLRequestListener<TContext = Record<string, any>> {
   parsingDidStart?(
     requestContext: GraphQLRequestContext<TContext>,
-  ): (err?: Error) => void | void;
+  ): ((err?: Error) => void) | void;
   validationDidStart?(
     requestContext: WithRequired<GraphQLRequestContext<TContext>, 'document'>,
-  ): (err?: ReadonlyArray<Error>) => void | void;
+  ): ((err?: ReadonlyArray<Error>) => void) | void;
   didResolveOperation?(
     requestContext: WithRequired<
       GraphQLRequestContext<TContext>,
@@ -40,7 +40,7 @@ export interface GraphQLRequestListener<TContext = Record<string, any>> {
       GraphQLRequestContext<TContext>,
       'document' | 'operationName' | 'operation'
     >,
-  ): (err?: Error) => void | void;
+  ): ((err?: Error) => void) | void;
   willSendResponse?(
     requestContext: WithRequired<GraphQLRequestContext<TContext>, 'response'>,
   ): ValueOrPromise<void>;
