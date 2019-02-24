@@ -44,11 +44,11 @@ export class ApolloServer extends ApolloServerBase {
     //const promiseWillStart = this.willStart()
     await this.willStart()
 
-    // Handle incoming GraphQL requests using Apollo Server.
+    // Handle incoming GraphQL requests via POST or GET using Apollo Server.
     const graphqlHandler = graphql(() => this.createGraphQLServerOptions())
+
     app.post(this.graphqlPath, graphqlHandler)
-    // TODO Support queries over GET
-    // app.get(this.graphqlPath, graphqlHandler)
+    app.get(this.graphqlPath, graphqlHandler)
 
     if (!disableHealthCheck) {
       // If health checking is enabled, trigger the `onHealthCheck`
@@ -74,10 +74,23 @@ export class ApolloServer extends ApolloServerBase {
       app.get('/', graphqlPlaygroundHandler)
     }
 
-    // Catch-all route to return 404's
-    app.any('/*', (res) => {
-      res.writeStatus('404')
-      res.end('Not Found')
+    // Catch-all route to return 404 or 405s
+    app.any('/*', (res, req) => {
+
+      res.onAborted(() => {
+        /* TODO */
+      })
+
+      const method = req.getMethod().toUpperCase()
+
+      if (method !== 'POST' && method !== 'GET') {
+        res.writeStatus('405')
+        res.writeHeader('allow', 'GET, POST')
+        res.end('Method Not Allowed')
+      } else {
+        res.writeStatus('404')
+        res.end('Not Found')
+      }
     })
   }
   // This integration supports file uploads.

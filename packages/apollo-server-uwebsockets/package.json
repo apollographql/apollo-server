@@ -30,6 +30,7 @@
     "uWebSockets.js": "uNetworking/uWebSockets.js#v15.2.0"
   },
   "devDependencies": {
-    "apollo-server-integration-testsuite": "file:../apollo-server-integration-testsuite"
+    "apollo-server-integration-testsuite": "file:../apollo-server-integration-testsuite",
+    "request": "^2.88.0"
   }
 }

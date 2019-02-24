@@ -36,16 +36,20 @@ export function graphql(
       console.log('ABORTED')
     });
 
+    // Note: We need to make sure we do everything we need to with `req`
+    // synchronously before it goes away
     const method = req.getMethod().toUpperCase()
     const request = convertNodeHttpToRequest(req)
 
     let query;
 
     try {
-      query =
-        req.getMethod().toUpperCase() === 'POST'
-          ? await json(res)
-          : url.parse(req.getUrl(), true).query;
+      // Handle reading queries from both request bodys and query params
+      if (method === 'POST') {
+        query = await json(res)
+      } else {
+        query = url.parse(req.getQuery(), true).query;
+      }
     } catch (error) {
       // Do nothing; `query` stays `undefined`
     }
@@ -66,30 +70,34 @@ export function graphql(
       // uWS automatically adds a content-length header, adding duplicates causes issues
       // setHeaders(res, responseInit.headers);
 
+      res.writeStatus('200')
       res.writeHeader('Content-Type', responseInit.headers['Content-Type'])
       res.writeHeader('Vary', 'Accept-Encoding, Origin')
       res.writeHeader('Status', '200')
-      res.writeStatus('200')
       res.end(graphqlResponse)
 
       return
     } catch (error) {
+      // console.log('(maybe) runHttpQuery error:', error)
+
       if ((res as any).aborted) {
         return
-      }
-
-      if ('HttpQueryError' === error.name && error.headers) {
-        setHeaders(res, error.headers);
       }
 
       if (!error.statusCode) {
         error.statusCode = 500;
       }
+      // Make sure we pass a string to `writeStatus`
+      res.writeStatus(error.statusCode + '')
 
-      res.writeStatus(error.statusCode)
+      // Make sure we set headers after setting status
+      if ('HttpQueryError' === error.name && error.headers) {
+        setHeaders(res, error.headers);
+      }
+
       res.end(error.message)
 
-      return undefined;
+      return
     }
   };
 
@@ -119,8 +127,8 @@ export function graphqlPlayground(
     //   res.end(renderPlaygroundPage(middlewareOptions))
     // }
 
-    res.writeHeader('Content-Type', 'text/html; charset=utf-8');
     res.writeStatus('200')
+    res.writeHeader('Content-Type', 'text/html; charset=utf-8');
     res.end(renderPlaygroundPage(middlewareOptions))
   }
 }
