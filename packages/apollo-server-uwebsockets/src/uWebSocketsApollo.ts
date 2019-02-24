@@ -110,23 +110,7 @@ export function graphqlPlayground(
 ): RequestHandler {
   return (
     res: HttpResponse,
-    /* req: HttpRequest,*/
   ) => {
-    // https://github.com/uNetworking/uWebSockets.js/issues/70
-    // const accept = parseAll(req.headers);
-    // const types = accept.mediaTypes as string[];
-
-    // const prefersHTML =
-    //   types.find(
-    //     (x: string) => x === 'text/html' || x === 'application/json',
-    //   ) === 'text/html';
-
-    // if (prefersHTML) {
-    //   res.writeHeader('Content-Type', 'text/html; charset=utf-8');
-    //   res.writeStatus('200')
-    //   res.end(renderPlaygroundPage(middlewareOptions))
-    // }
-
     res.writeStatus('200')
     res.writeHeader('Content-Type', 'text/html; charset=utf-8');
     res.end(renderPlaygroundPage(middlewareOptions))
