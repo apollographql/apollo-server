@@ -2,6 +2,8 @@
 
 ### vNEXT
 
+- `apollo-server-plugin-base` fix GraphQLRequestListener type definitions [PR #2368](https://github.com/apollographql/apollo-server/pull/2368)
+
 ### v2.4.6
 
 - Allow Node.js-like runtimes to identify as Node.js as well. [PR #2357](https://github.com/apollographql/apollo-server/pull/2357) [Issue #2356](https://github.com/apollographql/apollo-server/issue/2356)
