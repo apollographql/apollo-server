@@ -2,7 +2,7 @@
 
 ### vNEXT
 
-- Fix ApolloServerExpressConfig typing incorrectly including cors as part of constructor options [PR #2373](https://github.com/apollographql/apollo-server/pull/2373)
+- Fix `ApolloServerExpressConfig` typing incorrectly including `cors` as part of its constructor options. [PR #2373](https://github.com/apollographql/apollo-server/pull/2373)
 
 ### v2.4.6
 
