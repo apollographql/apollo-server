@@ -159,10 +159,6 @@ The `applyMiddleware` method is provided by the `apollo-server-{integration}` pa
 
     Pass an instance of the server integration here.
 
-  * `server`: <`ApolloServer`> _(required)_
-
-    Pass the instance of Apollo Server
-
   * `path` : <`String`>
 
     Specify a custom path. It defaults to `/graphql` if no path is specified.
