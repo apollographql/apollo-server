@@ -2,6 +2,8 @@
 
 ### vNEXT
 
+- Fix `ApolloServerExpressConfig` typing incorrectly including `cors` as part of its constructor options. [PR #2373](https://github.com/apollographql/apollo-server/pull/2373)
+
 ### v2.4.6
 
 - Allow Node.js-like runtimes to identify as Node.js as well. [PR #2357](https://github.com/apollographql/apollo-server/pull/2357) [Issue #2356](https://github.com/apollographql/apollo-server/issue/2356)
