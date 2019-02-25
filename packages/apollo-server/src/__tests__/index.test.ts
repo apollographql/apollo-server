@@ -24,6 +24,51 @@ describe('apollo-server', () => {
     it('accepts typeDefs and mocks', () => {
       expect(() => new ApolloServer({ typeDefs, mocks: true })).not.toThrow;
     });
+
+    describe('context field', () => {
+      describe('as a function', () => {
+        it('can accept and return `req`', () => {
+          expect(
+            new ApolloServer({
+              typeDefs,
+              resolvers,
+              context: ({ req }) => ({ req }),
+            }),
+          ).not.toThrow;
+        });
+
+        it('can accept nothing and return an empty object', () => {
+          expect(
+            new ApolloServer({
+              typeDefs,
+              resolvers,
+              context: () => ({}),
+            }),
+          ).not.toThrow;
+        });
+      });
+    });
+    describe('as an object', () => {
+      it('can be an empty object', () => {
+        expect(
+          new ApolloServer({
+            typeDefs,
+            resolvers,
+            context: {},
+          }),
+        ).not.toThrow;
+      });
+
+      it('can contain arbitrary values', () => {
+        expect(
+          new ApolloServer({
+            typeDefs,
+            resolvers,
+            context: { value: 'arbitrary' },
+          }),
+        ).not.toThrow;
+      });
+    });
   });
 
   describe('without registerServer', () => {

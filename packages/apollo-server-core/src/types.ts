@@ -29,10 +29,10 @@ export { GraphQLSchemaModule };
 
 export { KeyValueCache } from 'apollo-server-caching';
 
-export type Context<T = any> = T;
-export type ContextFunction<T = any> = (
-  context: Context<T>,
-) => Context<T> | Promise<Context<T>>;
+export type Context<T = object> = T;
+export type ContextFunction<FunctionParams = any, ProducedContext = object> = (
+  context: FunctionParams,
+) => Context<ProducedContext> | Promise<Context<ProducedContext>>;
 
 // A plugin can return an interface that matches `ApolloServerPlugin`, or a
 // factory function that returns `ApolloServerPlugin`.
@@ -50,7 +50,7 @@ export interface SubscriptionServerOptions {
 }
 
 type BaseConfig = Pick<
-  GraphQLOptions<Context<any>>,
+  GraphQLOptions<Context>,
   | 'formatError'
   | 'debug'
   | 'rootValue'
@@ -71,11 +71,11 @@ export interface Config extends BaseConfig {
   resolvers?: IResolvers;
   schema?: GraphQLSchema;
   schemaDirectives?: Record<string, typeof SchemaDirectiveVisitor>;
-  context?: Context<any> | ContextFunction<any>;
+  context?: Context | ContextFunction;
   introspection?: boolean;
   mocks?: boolean | IMocks;
   mockEntireSchema?: boolean;
-  engine?: boolean | EngineReportingOptions<Context<any>>;
+  engine?: boolean | EngineReportingOptions<Context>;
   extensions?: Array<() => GraphQLExtension>;
   cacheControl?: CacheControlExtensionOptions | boolean;
   plugins?: PluginDefinition[];

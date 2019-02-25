@@ -1,4 +1,4 @@
-import { GraphQLError } from 'graphql';
+import { GraphQLError, GraphQLFormattedError } from 'graphql';
 
 type Context<T = any> = T;
 
@@ -215,7 +215,7 @@ export class UserInputError extends ApolloError {
 export function formatApolloErrors(
   errors: Array<Error>,
   options?: {
-    formatter?: Function;
+    formatter?: (error: GraphQLError) => GraphQLFormattedError;
     debug?: boolean;
   },
   context?: Context,

@@ -9,7 +9,7 @@ While in the most basic sense, you could have a GraphQL server return a single, 
 
 ## Core scalar types
 
-Scalar types represent the leaves of an operation and alway resolve to concrete data. The default, scalar types which GraphQL offers are:
+Scalar types represent the leaves of an operation and always resolve to concrete data. The default, scalar types which GraphQL offers are:
 
 * `Int`: Signed 32‐bit integer
 * `Float`: Signed double-precision floating-point value

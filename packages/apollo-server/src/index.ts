@@ -26,7 +26,11 @@ export class ApolloServer extends ApolloServerBase {
   private httpServer?: http.Server;
   private cors?: CorsOptions | boolean;
 
-  constructor(config: ApolloServerExpressConfig) {
+  constructor(
+    config: ApolloServerExpressConfig & {
+      cors?: CorsOptions | boolean;
+    },
+  ) {
     super(config);
     this.cors = config && config.cors;
   }
