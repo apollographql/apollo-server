@@ -12,9 +12,9 @@ Apollo Server is a community-maintained open-source GraphQL server. It works wit
 
 Apollo Server is built with the following principles in mind:
 
-- **By the community, for the community**: Apollo Server's development is driven by the needs of developers
-- **Simplicity**: by keeping things simple, Apollo Server is easier to use, easier to contribute to, and more secure
-- **Performance**: Apollo Server is well-tested and production-ready - no modifications needed
+- **By the community, for the community**: Apollo Server's development is driven by the needs of developers.
+- **Simplicity**: By keeping things simple, Apollo Server is easier to use, easier to contribute to, and more secure.
+- **Performance**: Apollo Server is well-tested and production-ready.
 
 Anyone is welcome to contribute to Apollo Server, just read [CONTRIBUTING.md](./CONTRIBUTING.md), take a look at the [roadmap](./ROADMAP.md) and make your first PR!
 
