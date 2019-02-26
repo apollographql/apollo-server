@@ -223,7 +223,7 @@ async function StartServer() {
 StartServer().catch(error => console.log(error));
 ```
 
-## Fastify
+### Fastify
 
 ```js
 const { ApolloServer, gql } = require('apollo-server-fastify');
@@ -268,7 +268,7 @@ const server = new ApolloServer({ typeDefs, resolvers });
 exports.graphqlHandler = server.createHandler();
 ```
 
-### Context
+## Context
 
 The context is created for each request. The following code snippet shows the creation of a context. The arguments are the `request`, the request, and `h`, the response toolkit.
 
