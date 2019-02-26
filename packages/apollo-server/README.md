@@ -24,8 +24,8 @@ Apollo Server is super easy to set up. Just `npm install apollo-server-<integrat
 
 There are two installation patterns:
 
-* **[Standalone](#Installation-standalone)**: To get started without integrating with an existing web framework, use the `apollo-server` package.
-* **[Integrations](#Installation-integrations)**: For applications which have already use a web framework (e.g. `express`, `koa`, `hapi`, etc.), use the appropriate Apollo Server integration package.
+* **[Standalone](#installation-standalone)**: To get started without integrating with an existing web framework, use the `apollo-server` package.
+* **[Integrations](#installation-integrations)**: For applications which have already use a web framework (e.g. `express`, `koa`, `hapi`, etc.), use the appropriate Apollo Server integration package.
 
 ### Installation: Standalone
 
