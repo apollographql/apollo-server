@@ -1,5 +1,5 @@
 # <a href='https://www.apollographql.com/'><img src='https://user-images.githubusercontent.com/841294/53402609-b97a2180-39ba-11e9-8100-812bab86357c.png' height='100' alt='Apollo Server'></a>
-## GraphQL Server for Express, Connect, Hapi, Cloudflare workers, and more
+## GraphQL Server for Express, Koa, Hapi, Lambda, and more.
 
 [![npm version](https://badge.fury.io/js/apollo-server-core.svg)](https://badge.fury.io/js/apollo-server-core)
 [![Build Status](https://circleci.com/gh/apollographql/apollo-server.svg?style=svg)](https://circleci.com/gh/apollographql/apollo-server)
