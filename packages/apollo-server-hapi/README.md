@@ -9,7 +9,7 @@ description: Setting up Apollo Server with Hapi
 This is the Hapi integration of Apollo Server. Apollo Server is a community-maintained open-source Apollo Server that works with many Node.js HTTP server frameworks. [Read the docs](https://www.apollographql.com/docs/apollo-server/). [Read the CHANGELOG.](https://github.com/apollographql/apollo-server/blob/master/CHANGELOG.md)
 
 ```sh
-npm install apollo-server-hapi@rc
+npm install apollo-server-hapi
 ```
 
 ## Usage

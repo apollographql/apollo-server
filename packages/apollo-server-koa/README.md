@@ -9,7 +9,7 @@ description: Setting up Apollo Server with Koa
 This is the Koa integration of GraphQL Server. Apollo Server is a community-maintained open-source GraphQL server that works with many Node.js HTTP server frameworks. [Read the docs](https://www.apollographql.com/docs/apollo-server/). [Read the CHANGELOG.](https://github.com/apollographql/apollo-server/blob/master/CHANGELOG.md)
 
 ```sh
-npm install apollo-server-koa@rc graphql
+npm install apollo-server-koa graphql
 ```
 
 ## Koa
