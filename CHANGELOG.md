@@ -4,7 +4,7 @@
 
 ### v2.4.7
 
-- Fix `ApolloServerExpressConfig` typing which incorrectly included `cors` as part of its constructor options. [PR #2373](https://github.com/apollographql/apollo-server/pull/2373)
+- Fix typings which incorrectly included `cors` as part of the constructor options for `apollo-server-express` (it should be defined via `applyMiddleware`) but, conversely, inadvertently omitted the perfectly valid `cors` option from the `apollo-server` constructor (where `applyMiddleware` is not used/available). [PR #2373](https://github.com/apollographql/apollo-server/pull/2373) [Issue #1882](https://github.com/apollographql/apollo-server/issues/1882)
 
 ### v2.4.6
 
