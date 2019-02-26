@@ -91,6 +91,7 @@ The following web frameworks have Apollo Server integrations, and each of these 
 - [Micro](https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-micro)
 - [Azure Functions](https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-azure-functions)
 - [Google Cloud Functions](https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-cloud-functions)
+- [Cloudflare](https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-cloudflare)
 
 See the links above for more details on a specific integration.
 
