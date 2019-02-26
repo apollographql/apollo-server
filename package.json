@@ -8,7 +8,7 @@
     "compile": "tsc --build tsconfig.build.json",
     "compile:clean": "tsc --build tsconfig.build.json --clean",
     "watch": "tsc --build tsconfig.build.json --watch",
-    "release": "npm run clean && npm ci && lerna publish --exact",
+    "release": "npm run clean && npm ci && lerna publish --exact --force-publish=apollo-server-core",
     "postinstall": "lerna run prepare && npm run compile",
     "lint": "prettier-check '**/*.{js,ts}'",
     "lint-fix": "prettier '**/*.{js,ts}' --write",
