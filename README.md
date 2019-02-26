@@ -27,7 +27,7 @@ Apollo Server is super easy to set up. Just `npm install apollo-server-<integrat
 
 ### Installation
 
-Run `npm install --save apollo-server-<integration>` and you're good to go!
+Run `npm install apollo-server-<integration>` and you're good to go!
 
 ```js
 const { ApolloServer, gql } = require('apollo-server');
@@ -82,7 +82,7 @@ server.listen().then(({ url }) => {
 
 ## Integrations
 
-Often times, Apollo Server needs to be run with a particular integration. To start, run `npm install --save apollo-server-<integration>` where `apollo-server-<integration>` is one of the following:
+Often times, Apollo Server needs to be run with a particular integration. To start, run `npm install apollo-server-<integration>` where `apollo-server-<integration>` is one of the following:
 
 - `apollo-server-express`
 - `apollo-server-koa`
