@@ -223,20 +223,6 @@ async function StartServer() {
 StartServer().catch(error => console.log(error));
 ```
 
-### Context
-
-The context is created for each request. The following code snippet shows the creation of a context. The arguments are the `request`, the request, and `h`, the response toolkit.
-
-```js
-new ApolloServer({
-  typeDefs,
-  resolvers,
-  context: async ({ request, h }) => {
-    return { ... };
-  },
-})
-```
-
 ## Fastify
 
 ```js
@@ -280,6 +266,20 @@ const resolvers = {
 const server = new ApolloServer({ typeDefs, resolvers });
 
 exports.graphqlHandler = server.createHandler();
+```
+
+### Context
+
+The context is created for each request. The following code snippet shows the creation of a context. The arguments are the `request`, the request, and `h`, the response toolkit.
+
+```js
+new ApolloServer({
+  typeDefs,
+  resolvers,
+  context: async ({ request, h }) => {
+    return { ... };
+  },
+})
 ```
 
 ## Apollo Server Development
