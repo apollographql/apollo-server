@@ -7,10 +7,6 @@
 
 Apollo Server is a community-maintained open-source GraphQL server. It works with pretty much all Node.js HTTP server frameworks, and we're happy to take PRs for more! Apollo Server works with any GraphQL schema built with [GraphQL.js](https://github.com/graphql/graphql-js), so you can build your schema with that directly or with a convenience library such as [graphql-tools](https://www.apollographql.com/docs/graphql-tools/).
 
-## Documentation
-
-[Read the docs!](https://www.apollographql.com/docs/apollo-server/v2)
-
 ## Principles
 
 Apollo Server is built with the following principles in mind:
@@ -121,6 +117,12 @@ new ApolloServer({
   },
 })
 ```
+
+## Documentation
+
+The [Apollo Server documentation](https://apollographql.com/docs/apollo-server/) contains many of the details which are necessary to get started with both GraphQL and Apollo Server.
+
+The raw source content of that documentation is available within the `docs/` directory of this monorepo, but the _Edit on GitHub_ buttons at the bottom of each page can be used to contribute suggestions or improvements to the published content.
 
 ## Apollo Server Development
 
