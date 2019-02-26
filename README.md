@@ -25,9 +25,18 @@ Anyone is welcome to contribute to Apollo Server, just read [CONTRIBUTING.md](./
 
 Apollo Server is super easy to set up. Just `npm install apollo-server-<integration>`, write a GraphQL schema, and then use one of the following snippets to get started. For more info, read the [Apollo Server docs](https://www.apollographql.com/docs/apollo-server/v2).
 
-### Installation
+There are two installation patterns:
 
-Run `npm install apollo-server-<integration>` and you're good to go!
+* **[Standalone](#Installation-standalone)**: To get started without integrating with an existing web framework, use the `apollo-server` package.
+* **[Integrations](#Installation-integrations)**: For applications which have already use a web framework (e.g. `express`, `koa`, `hapi`, etc.), use the appropriate Apollo Server integration package.
+
+### Installation: Standalone
+
+In a new project, install the `apollo-server` and `graphql` dependencies using:
+
+    npm install apollo-server graphql
+
+Then, create an `index.js` which defines the schema and its functionality (i.e. resolvers):
 
 ```js
 const { ApolloServer, gql } = require('apollo-server');
@@ -51,222 +60,42 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
 });
-```
-
-While we recommend the use [schema-definition language (SDL)](https://www.apollographql.com/docs/apollo-server/essentials/schema.html#sdl) for defining a GraphQL schema since we feel it's more human-readable and language-agnostic, Apollo Server can be configured with a `GraphQLSchema` object:
-
-```js
-const { ApolloServer, gql } = require('apollo-server');
-const { GraphQLSchema, GraphQLObjectType, GraphQLString } = require('graphql');
-
-// The GraphQL schema
-const schema = new GraphQLSchema({
-  query: new GraphQLObjectType({
-    name: 'Query',
-    fields: {
-      hello: {
-        type: GraphQLString,
-        description: 'A simple type for getting started!',
-        resolve: () => 'world',
-      },
-    },
-  }),
-});
-
-const server = new ApolloServer({ schema });
 
 server.listen().then(({ url }) => {
   console.log(`🚀 Server ready at ${url}`);
 });
 ```
 
-## Integrations
+> Due to its human-readability, we recommend using [schema-definition language (SDL)](https://www.apollographql.com/docs/apollo-server/essentials/schema.html#sdl) to define a GraphQL schema but [a `GraphQLSchema` object from `graphql-js`](https://github.com/graphql/graphql-js/#using-graphqljs) can also be specified in place of `typeDefs` and `resolvers` using the `schema` property:
+>
+> ```js
+> const server = new ApolloServer({
+>   schema: ...
+> });
+> ```
 
-Often times, Apollo Server needs to be run with a particular integration. To start, run `npm install apollo-server-<integration>` where `apollo-server-<integration>` is one of the following:
+Finally, start the server using `node index.js` and open your web-browser to the URL which is output on the console.
 
-- `apollo-server-express`
-- `apollo-server-koa`
-- `apollo-server-hapi`
-- `apollo-server-fastify`
-- `apollo-server-lambda`
-- `apollo-server-azure-functions`
-- `apollo-server-cloud-functions`
-- `apollo-server-cloudflare`
+For more details, check out the Apollo Server [Getting Started guide](https://www.apollographql.com/docs/apollo-server/getting-started.html) of the documentation, or for a more comprehensive understanding, see the [fullstack tutorial](https://www.apollographql.com/docs/tutorial/introduction.html).
 
-### Express
+For questions, the [Apollo commuinty on Spectrum.chat](https://spectrum.chat) is a great place to get assistance.
 
-```js
-const express = require('express');
-const { ApolloServer, gql } = require('apollo-server-express');
+## Installation: Integrations
 
-// Construct a schema, using GraphQL schema language
-const typeDefs = gql`
-  type Query {
-    hello: String
-  }
-`;
+While the standalone installation above can be used without making a decision about which web framework to use, the Apollo Server integration packages are paired with specific web frameworks (e.g. Express, Koa, hapi).
 
-// Provide resolver functions for your schema fields
-const resolvers = {
-  Query: {
-    hello: () => 'Hello world!',
-  },
-};
+The following web frameworks have Apollo Server integrations, and each of these linked integrations has its own installation instructions and examples on its package `README.md`:
 
-const server = new ApolloServer({ typeDefs, resolvers });
+- [Express](https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-express) _(Most popular)_
+- [Koa](https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-koa)
+- [Hapi](https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-hapi)
+- [Fastify](https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-fastify)
+- [Amazon Lambda](https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-lambda)
+- [Micro](https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-micro)
+- [Azure Functions](https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-azure-functions)
+- [Google Cloud Functions](https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-cloud-functions)
 
-const app = express();
-server.applyMiddleware({ app });
-
-const port = 4000;
-
-app.listen({ port }, () =>
-  console.log(`🚀 Server ready at http://localhost:${port}${server.graphqlPath}`),
-);
-```
-
-### Connect
-
-```js
-const connect = require('connect');
-const { ApolloServer, gql } = require('apollo-server-express');
-const query = require('qs-middleware');
-
-// Construct a schema, using GraphQL schema language
-const typeDefs = gql`
-  type Query {
-    hello: String
-  }
-`;
-
-// Provide resolver functions for your schema fields
-const resolvers = {
-  Query: {
-    hello: () => 'Hello world!',
-  },
-};
-
-const server = new ApolloServer({ typeDefs, resolvers });
-
-const app = connect();
-const path = '/graphql';
-
-app.use(query());
-server.applyMiddleware({ app, path });
-
-const port = 4000;
-
-app.listen({ port }, () =>
-  console.log(`🚀 Server ready at http://localhost:${port}${server.graphqlPath}`),
-);
-```
-
-> Note; `qs-middleware` is only required if running outside of Meteor
-
-### Koa
-
-```js
-const Koa = require('koa');
-const { ApolloServer, gql } = require('apollo-server-koa');
-
-// Construct a schema, using GraphQL schema language
-const typeDefs = gql`
-  type Query {
-    hello: String
-  }
-`;
-
-// Provide resolver functions for your schema fields
-const resolvers = {
-  Query: {
-    hello: () => 'Hello world!',
-  },
-};
-
-const server = new ApolloServer({ typeDefs, resolvers });
-
-const app = new Koa();
-server.applyMiddleware({ app });
-
-const port = 3000;
-const host = 'localhost';
-
-app.listen(port, host, () =>
-  console.log(`🚀 Server ready at http://${host}:${port}${server.graphqlPath}`),
-);
-```
-
-### Hapi
-
-> The code below requires Hapi 17 or higher.
-
-```js
-const { ApolloServer, gql } = require('apollo-server-hapi');
-const Hapi = require('hapi');
-
-async function StartServer() {
-  const server = new ApolloServer({ typeDefs, resolvers });
-
-  const app = new Hapi.server({
-    port: 4000,
-  });
-
-  await server.applyMiddleware({
-    app,
-  });
-
-  await server.installSubscriptionHandlers(app.listener);
-
-  await app.start();
-}
-
-StartServer().catch(error => console.log(error));
-```
-
-### Fastify
-
-```js
-const { ApolloServer, gql } = require('apollo-server-fastify');
-const { typeDefs, resolvers } = require('./module');
-
-const server = new ApolloServer({
-  typeDefs,
-  resolvers,
-});
-
-const app = require('fastify')();
-
-(async function () {
-  app.register(server.createHandler());
-  await app.listen(3000);
-})();
-```
-
-### AWS Lambda
-
-Apollo Server can be run on Lambda and deployed with AWS Serverless Application Model (SAM). It requires an API Gateway with Lambda Proxy Integration.
-
-```js
-const { ApolloServer, gql } = require('apollo-server-lambda');
-
-// Construct a schema, using GraphQL schema language
-const typeDefs = gql`
-  type Query {
-    hello: String
-  }
-`;
-
-// Provide resolver functions for your schema fields
-const resolvers = {
-  Query: {
-    hello: () => 'Hello world!',
-  },
-};
-
-const server = new ApolloServer({ typeDefs, resolvers });
-
-exports.graphqlHandler = server.createHandler();
-```
+See the links above for more details on a specific integration.
 
 ## Context
 
