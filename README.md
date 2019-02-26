@@ -125,9 +125,9 @@ The [Apollo Server documentation](https://apollographql.com/docs/apollo-server/)
 
 The raw source content of that documentation is available within the `docs/` directory of this monorepo, but the _Edit on GitHub_ buttons at the bottom of each page can be used to contribute suggestions or improvements to the published content.
 
-## Apollo Server Development
+## Development
 
-If you want to develop Apollo Server locally you must follow the following instructions:
+If you want to develop or contribute to Apollo Server itself, we suggest the following:
 
 - Fork this repository
 
@@ -147,6 +147,8 @@ npm link
 cd ~/myApp
 npm link apollo-server-<integration>
 ```
+
+For more help with contributing, visit the _Contributing_ channel on the [Apollo community in Spectrum.chat](https://spectrum.chat/apollo).
 
 ## Maintainers
 
