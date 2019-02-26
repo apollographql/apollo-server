@@ -1,4 +1,4 @@
-# GraphQL Server for Express, Connect, Hapi, Cloudflare workers, and more
+## GraphQL Server for Express, Connect, Hapi, Cloudflare workers, and more
 
 [![npm version](https://badge.fury.io/js/apollo-server-core.svg)](https://badge.fury.io/js/apollo-server-core)
 [![Build Status](https://circleci.com/gh/apollographql/apollo-server.svg?style=svg)](https://circleci.com/gh/apollographql/apollo-server)
