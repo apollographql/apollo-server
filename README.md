@@ -99,14 +99,25 @@ See the links above for more details on a specific integration.
 
 ## Context
 
-The context is created for each request. The following code snippet shows the creation of a context. The arguments are the `request`, the request, and `h`, the response toolkit.
+A request context is available for each request.  When `context` is defined as a function, it will be called on each request and receive an object containing a `req` property which represents the request.
+
+By returning an object from the `context` function, it will be available as the third positional paramter of the resolvers:
 
 ```js
 new ApolloServer({
   typeDefs,
-  resolvers,
-  context: async ({ request, h }) => {
-    return { ... };
+  resolvers: {
+    Query: {
+      books: (parent, args, context, info) => {
+        console.log(context.myProperty); // Will be `true`!
+        return books;
+      },
+    }
+  },
+  context: async ({ req }) => {
+    return {
+      myProperty: true
+    };
   },
 })
 ```
