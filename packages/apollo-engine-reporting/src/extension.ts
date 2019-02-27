@@ -266,7 +266,7 @@ export class EngineReportingExtension<TContext = any>
     }
 
     const path = info.path;
-    const node = this.newNode(path);
+    const node = this.newNode(path, info);
     node.type = info.returnType.toString();
     node.parentType = info.parentType.toString();
     node.startTime = durationHrTimeToNanos(process.hrtime(this.startHrTime));
@@ -307,13 +307,16 @@ export class EngineReportingExtension<TContext = any>
     }
   }
 
-  private newNode(path: ResponsePath): Trace.Node {
+  private newNode(path: ResponsePath, info?: GraphQLResolveInfo): Trace.Node {
     const node = new Trace.Node();
     const id = path.key;
     if (typeof id === 'number') {
       node.index = id;
+    } else if (!info || id === info.fieldName) {
+      node.originalFieldName = id;
     } else {
-      node.fieldName = id;
+      node.originalFieldName = info.fieldName;
+      node.alias = id;
     }
     this.nodes.set(responsePathAsString(path), node);
     const parentNode = this.ensureParentNode(path);
