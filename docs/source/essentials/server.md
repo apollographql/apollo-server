@@ -145,7 +145,7 @@ Apollo Server works great in "serverless" environments such as Amazon Lambda and
 
 <h3 id="ssl">SSL/TLS Support</h3>
 
-If you require an HTTPS connection to your Apollo Server, you can use the `https` module with `apollo-server-express`. Subscriptions can also go through an encrypted WSS socket.
+If you require an HTTPS connection to your Apollo Server, you can use the `https` module with `apollo-server-express`. Subscriptions can also go through an encrypted WebSocket (WSS)
 
 Here is an example of using HTTPS in production and HTTP in development, with subscriptions:
 
