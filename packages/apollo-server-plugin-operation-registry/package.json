@@ -8,7 +8,7 @@
   "author": "Apollo <npm@apollographql.com>",
   "license": "Copyright (c) Meteor Development Group, Inc.; See LICENSE.md.",
   "engines": {
-    "node": ">=6"
+    "node": ">=8"
   },
   "dependencies": {
     "apollo-graphql": "0.1.0",
