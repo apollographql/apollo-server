@@ -43,6 +43,7 @@ const resolvers = {
   },
 };
 ```
+Here, the Query for `author` is automatically resolved via the `Author` query (note the difference in case `a` vs. `A`), to return a list of books by that author
 
 Note that you don't have to put all of your resolvers in one object. Refer to the ["modularizing the schema"](/docs/graphql-tools/generate-schema.html#modularizing) section to learn how to combine multiple resolver maps into one.
 
