@@ -1,6 +1,6 @@
 [build]
   base    = "docs/"
   publish = "docs/public/"
-  command = "gatsby build --prefix-paths && mkdir -p apollo-server && mv public/* apollo-server && mv apollo-server public/"
+  command = "git status && gatsby build --prefix-paths && mkdir -p apollo-server && mv public/* apollo-server && mv apollo-server public/"
 [build.environment]
   NPM_VERSION = "6"
