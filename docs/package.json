@@ -3,11 +3,11 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "develop": "gatsby develop",
+    "develop": "gatsby develop --prefix-paths",
     "start": "npm run develop"
   },
   "dependencies": {
     "gatsby": "^2.0.103",
-    "gatsby-theme-apollo-docs": "0.0.56"
+    "gatsby-theme-apollo-docs": "0.0.71"
   }
 }
