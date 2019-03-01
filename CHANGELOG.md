@@ -2,6 +2,8 @@
 
 ### vNEXT
 
+- `apollo-server-fastify`: **breaking** - upgrade to fastify version 2
+
 ### v2.4.8
 
 - No functional changes in this version.  The patch version has been bumped to fix the `README.md` displayed on the [npm package for `apollo-server`](https://npm.im/apollo-server) as a result of a broken publish.  Apologies for the additional noise!
