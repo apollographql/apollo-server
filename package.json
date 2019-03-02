@@ -113,7 +113,7 @@
     "koa": "2.7.0",
     "koa-multer": "1.0.2",
     "lerna": "3.13.1",
-    "lint-staged": "8.1.4",
+    "lint-staged": "8.1.5",
     "memcached-mock": "0.1.0",
     "meteor-promise": "0.8.7",
     "mock-req": "0.2.0",
