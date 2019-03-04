@@ -8,7 +8,7 @@ module.exports = {
         description: 'A guide to using Apollo Server',
         contentDir: 'source',
         basePath: '/docs/apollo-server',
-        gitHubRepo: 'apollographql/apollo-server',
+        githubRepo: 'apollographql/apollo-server',
         sidebarCategories: {
           null: [
             'index',
