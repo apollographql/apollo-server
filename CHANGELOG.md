@@ -1,6 +1,7 @@
 # Changelog
 
 ### vNEXT
+- `apollo-engine-reporting`, `apollo-engine-reporting-protobuf`: Send the original field name instead of its alias. Update protobuf. [PR #2401](https://github.com/apollographql/apollo-server/pull/2401)
 
 ### v2.4.8
 
