@@ -9,6 +9,10 @@ module.exports = {
         contentDir: 'source',
         basePath: '/docs/apollo-server',
         githubRepo: 'apollographql/apollo-server',
+        versions: [
+          '2',
+          '1'
+        ],
         sidebarCategories: {
           null: [
             'index',
