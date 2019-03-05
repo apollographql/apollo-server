@@ -10,7 +10,7 @@ import {
 import {
   printWithReducedWhitespace,
   sortAST,
-} from 'apollo-graphql/dist/transforms';
+} from 'apollo-graphql/lib/transforms';
 
 export const envOverrideOperationManifest =
   'APOLLO_OPERATION_MANIFEST_BASE_URL';
