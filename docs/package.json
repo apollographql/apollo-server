@@ -1,10 +1,6 @@
 {
-  "name": "apollo-server-docs",
-  "version": "0.0.0",
-  "private": true,
   "scripts": {
-    "develop": "gatsby develop --prefix-paths",
-    "start": "npm run develop"
+    "start": "gatsby develop --prefix-paths"
   },
   "dependencies": {
     "gatsby": "^2.0.103",
