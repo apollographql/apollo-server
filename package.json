@@ -75,7 +75,7 @@
     "@types/koa-multer": "1.0.0",
     "@types/koa-router": "7.0.40",
     "@types/lodash": "4.14.122",
-    "@types/lodash.sortby": "4.7.5",
+    "@types/lodash.sortby": "4.7.6",
     "@types/lru-cache": "4.1.2",
     "@types/memcached": "2.2.6",
     "@types/micro": "7.3.3",
