@@ -25,6 +25,10 @@ describe('apollo-server', () => {
       expect(() => new ApolloServer({ typeDefs, mocks: true })).not.toThrow;
     });
 
+    // These tests are duplicates of ones in apollo-server-integration-testsuite
+    // We don't actually expect Jest to do much here, the purpose of these
+    // tests is to make sure our typings are correct, and to trigger a
+    // compile error if they aren't
     describe('context field', () => {
       describe('as a function', () => {
         it('can accept and return `req`', () => {
