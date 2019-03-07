@@ -5,9 +5,9 @@ import {
   DocumentNode,
   getOperationAST,
   ExecutionArgs,
-  ExecutionResult,
   GraphQLError,
   GraphQLFormattedError,
+  ExecutionResult,
 } from 'graphql';
 import * as graphql from 'graphql';
 import {
@@ -36,6 +36,7 @@ import {
   GraphQLRequestContext,
   InvalidGraphQLRequestError,
   ValidationRule,
+  GraphQLExecutor,
 } from '../dist/requestPipelineAPI';
 import {
   ApolloServerPlugin,
@@ -73,6 +74,7 @@ export interface GraphQLRequestPipelineConfig<TContext> {
 
   rootValue?: ((document: DocumentNode) => any) | any;
   validationRules?: ValidationRule[];
+  executor?: GraphQLExecutor;
   fieldResolver?: GraphQLFieldResolver<any, TContext>;
 
   dataSources?: () => DataSources<TContext>;
@@ -301,11 +303,10 @@ export async function processGraphQLRequest<TContext>(
     let response: GraphQLResponse;
 
     try {
-      response = (await execute(
-        requestContext.document,
-        request.operationName,
-        request.variables,
-      )) as GraphQLResponse;
+      response = await execute(requestContext as WithRequired<
+        typeof requestContext,
+        'document' | 'operation' | 'operationName'
+      >);
       executionDidEnd();
     } catch (executionError) {
       executionDidEnd(executionError);
@@ -359,10 +360,13 @@ export async function processGraphQLRequest<TContext>(
   }
 
   async function execute(
-    document: DocumentNode,
-    operationName: GraphQLRequest['operationName'],
-    variables: GraphQLRequest['variables'],
+    requestContext: WithRequired<
+      GraphQLRequestContext<TContext>,
+      'document' | 'operationName' | 'operation'
+    >,
   ): Promise<ExecutionResult> {
+    const { request, document } = requestContext;
+
     const executionArgs: ExecutionArgs = {
       schema: config.schema,
       document,
@@ -371,8 +375,8 @@ export async function processGraphQLRequest<TContext>(
           ? config.rootValue(document)
           : config.rootValue,
       contextValue: requestContext.context,
-      variableValues: variables,
-      operationName,
+      variableValues: request.variables,
+      operationName: request.operationName,
       fieldResolver: config.fieldResolver,
     };
 
@@ -381,7 +385,11 @@ export async function processGraphQLRequest<TContext>(
     });
 
     try {
-      return await graphql.execute(executionArgs);
+      if (config.executor) {
+        return await config.executor(requestContext);
+      } else {
+        return await graphql.execute(executionArgs);
+      }
     } finally {
       executionDidEnd();
     }

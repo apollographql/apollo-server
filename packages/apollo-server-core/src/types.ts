@@ -56,6 +56,7 @@ type BaseConfig = Pick<
   | 'debug'
   | 'rootValue'
   | 'validationRules'
+  | 'executor'
   | 'formatResponse'
   | 'fieldResolver'
   | 'tracing'
