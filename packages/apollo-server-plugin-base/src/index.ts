@@ -1,3 +1,5 @@
+import { ValueOrPromise, WithRequired } from 'apollo-server-env';
+export { WithRequired };
 import {
   GraphQLServiceContext,
   GraphQLRequestContext,
@@ -11,16 +13,12 @@ export {
   GraphQLResponse,
 };
 
-type ValueOrPromise<T> = T | Promise<T>;
-
 export interface ApolloServerPlugin {
   serverWillStart?(service: GraphQLServiceContext): ValueOrPromise<void>;
   requestDidStart?<TContext>(
     requestContext: GraphQLRequestContext<TContext>,
   ): GraphQLRequestListener<TContext> | void;
 }
-
-export type WithRequired<T, K extends keyof T> = T & Required<Pick<T, K>>;
 
 export interface GraphQLRequestListener<TContext = Record<string, any>> {
   parsingDidStart?(
