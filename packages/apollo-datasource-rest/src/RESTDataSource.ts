@@ -7,6 +7,7 @@ import {
   URL,
   URLSearchParams,
   URLSearchParamsInit,
+  ValueOrPromise,
 } from 'apollo-server-env';
 
 import { DataSource, DataSourceConfig } from 'apollo-datasource';
@@ -40,8 +41,6 @@ export interface CacheOptions {
 
 export type Body = BodyInit | object;
 export { Request };
-
-type ValueOrPromise<T> = T | Promise<T>;
 
 export abstract class RESTDataSource<TContext = any> extends DataSource {
   httpCache!: HTTPCache;
