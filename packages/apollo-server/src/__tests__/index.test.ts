@@ -87,7 +87,7 @@ describe('apollo-server', () => {
         resolvers,
       });
 
-      const { url: uri } = await server.listen();
+      const { url: uri } = await server.listen({ port: 0 });
       const apolloFetch = createApolloFetch({ uri });
       const result = await apolloFetch({ query: '{hello}' });
 
@@ -104,7 +104,7 @@ describe('apollo-server', () => {
         resolvers,
       });
 
-      const { url } = await server.listen();
+      const { url } = await server.listen({ port: 0 });
       return new Promise((resolve, reject) => {
         request(
           {
@@ -135,7 +135,7 @@ describe('apollo-server', () => {
         resolvers,
       });
 
-      const { url: uri } = await server.listen();
+      const { url: uri } = await server.listen({ port: 0 });
 
       const apolloFetch = createApolloFetch({ uri }).useAfter(
         (response, next) => {
@@ -155,7 +155,7 @@ describe('apollo-server', () => {
         cors: { origin: 'localhost' },
       });
 
-      const { url: uri } = await server.listen();
+      const { url: uri } = await server.listen({ port: 0 });
 
       const apolloFetch = createApolloFetch({ uri }).useAfter(
         (response, next) => {
@@ -174,7 +174,7 @@ describe('apollo-server', () => {
         resolvers,
       });
 
-      const { port } = await server.listen();
+      const { port } = await server.listen({ port: 0 });
       return new Promise((resolve, reject) => {
         request(
           {

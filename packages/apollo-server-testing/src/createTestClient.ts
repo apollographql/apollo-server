@@ -4,15 +4,29 @@ import { print, DocumentNode } from 'graphql';
 type StringOrAst = string | DocumentNode;
 
 // A query must not come with a mutation (and vice versa).
-type Query = { query: StringOrAst; mutation?: undefined };
-type Mutation = { mutation: StringOrAst; query?: undefined };
+type Query = {
+  query: StringOrAst;
+  mutation?: undefined;
+  variables?: {
+    [name: string]: any;
+  };
+  operationName?: string;
+};
+type Mutation = {
+  mutation: StringOrAst;
+  query?: undefined;
+  variables?: {
+    [name: string]: any;
+  };
+  operationName?: string;
+};
 
 export default (server: ApolloServerBase) => {
   const executeOperation = server.executeOperation.bind(server);
   const test = ({ query, mutation, ...args }: Query | Mutation) => {
     const operation = query || mutation;
 
-    if ((!query && !mutation) || (query && mutation)) {
+    if (!operation || (query && mutation)) {
       throw new Error(
         'Either `query` or `mutation` must be passed, but not both.',
       );

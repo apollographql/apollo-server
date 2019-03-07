@@ -1,4 +1,6 @@
-import { ResponsePath } from 'graphql';
+import { ResponsePath, GraphQLError } from 'graphql';
+import { GraphQLResponse } from 'graphql-extensions';
+import { Headers } from 'apollo-server-env';
 import { CacheControlExtension, CacheScope } from '../';
 
 describe('CacheControlExtension', () => {
@@ -6,6 +8,53 @@ describe('CacheControlExtension', () => {
 
   beforeEach(() => {
     cacheControlExtension = new CacheControlExtension();
+  });
+
+  describe('willSendResponse', () => {
+    let graphqlResponse: GraphQLResponse;
+
+    beforeEach(() => {
+      cacheControlExtension.options.calculateHttpHeaders = true;
+      cacheControlExtension.computeOverallCachePolicy = () => ({
+        maxAge: 300,
+        scope: CacheScope.Public,
+      });
+      graphqlResponse = {
+        http: {
+          headers: new Headers(),
+        },
+        data: { test: 'test' },
+      };
+    });
+
+    it('sets cache-control header', () => {
+      cacheControlExtension.willSendResponse &&
+        cacheControlExtension.willSendResponse({ graphqlResponse });
+      expect(graphqlResponse.http!.headers.get('Cache-Control')).toBe(
+        'max-age=300, public',
+      );
+    });
+
+    const shouldNotSetCacheControlHeader = () => {
+      cacheControlExtension.willSendResponse &&
+        cacheControlExtension.willSendResponse({ graphqlResponse });
+      expect(graphqlResponse.http!.headers.get('Cache-Control')).toBeNull();
+    };
+
+    it('does not set cache-control header if calculateHttpHeaders is set to false', () => {
+      cacheControlExtension.options.calculateHttpHeaders = false;
+      shouldNotSetCacheControlHeader();
+    });
+
+    it('does not set cache-control header if graphqlResponse has errors', () => {
+      graphqlResponse.errors = [new GraphQLError('Test Error')];
+      shouldNotSetCacheControlHeader();
+    });
+
+    it('does not set cache-control header if there is no overall cache policy', () => {
+      cacheControlExtension.computeOverallCachePolicy = () => undefined;
+      shouldNotSetCacheControlHeader();
+    });
   });
 
   describe('computeOverallCachePolicy', () => {

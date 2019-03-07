@@ -18,6 +18,12 @@
       "path": "./packages/apollo-engine-reporting"
     },
     {
+      "path": "./packages/apollo-federation"
+    },
+    {
+      "path": "./packages/apollo-gateway"
+    },
+    {
       "path": "./packages/apollo-server"
     },
     {
@@ -63,10 +69,10 @@
       "path": "./packages/apollo-server-micro"
     },
     {
-      "path": "./packages/apollo-server-uwebsockets"
+      "path": "./packages/apollo-server-plugin-base"
     },
     {
-      "path": "./packages/apollo-server-plugin-base"
+      "path": "./packages/apollo-server-plugin-response-cache"
     },
     {
       "path": "./packages/apollo-server-testing"
@@ -77,5 +83,8 @@
     {
       "path": "./packages/graphql-extensions"
     },
+    {
+      "path": "./packages/apollo-server-uwebsockets"
+    }
   ]
 }

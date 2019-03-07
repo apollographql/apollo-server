@@ -56,5 +56,8 @@
     {
       "path": "./packages/apollo-server-uwebsockets/src/__tests__/"
     },
+    {
+      "path": "./packages/apollo-server-plugin-response-cache/src/__tests__/"
+    },
   ]
 }
