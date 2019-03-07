@@ -4,12 +4,11 @@ import {
   HttpQueryError,
   runHttpQuery,
 } from 'apollo-server-core';
-import { Headers } from 'apollo-server-env';
+import { Headers, ValueOrPromise } from 'apollo-server-env';
 
 export interface LambdaGraphQLOptionsFunction {
   (event: lambda.APIGatewayProxyEvent, context: lambda.Context):
-    | GraphQLOptions
-    | Promise<GraphQLOptions>;
+    | ValueOrPromise<GraphQLOptions>;
 }
 
 export function graphqlLambda(

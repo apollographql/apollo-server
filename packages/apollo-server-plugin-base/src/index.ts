@@ -1,5 +1,4 @@
 import { ValueOrPromise, WithRequired } from 'apollo-server-env';
-export { WithRequired };
 import {
   GraphQLServiceContext,
   GraphQLRequestContext,
