@@ -6,7 +6,7 @@ module.exports = {
         root: __dirname,
         subtitle: 'Apollo Server',
         description: 'A guide to using Apollo Server',
-        contentDir: 'source',
+        contentDir: 'docs/source',
         basePath: '/docs/apollo-server',
         githubRepo: 'apollographql/apollo-server',
         versions: ['1', '2'],
