@@ -11,8 +11,9 @@ import {
 import { Headers, ValueOrPromise } from 'apollo-server-env';
 
 export interface AzureFunctionGraphQLOptionsFunction {
-  (request: FunctionRequest, context: HttpContext):
-    ValueOrPromise<GraphQLOptions>;
+  (request: FunctionRequest, context: HttpContext): ValueOrPromise<
+    GraphQLOptions
+  >;
 }
 
 export interface AzureFunctionHandler {

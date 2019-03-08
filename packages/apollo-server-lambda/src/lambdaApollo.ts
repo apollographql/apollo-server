@@ -7,8 +7,9 @@ import {
 import { Headers, ValueOrPromise } from 'apollo-server-env';
 
 export interface LambdaGraphQLOptionsFunction {
-  (event: lambda.APIGatewayProxyEvent, context: lambda.Context):
-    | ValueOrPromise<GraphQLOptions>;
+  (event: lambda.APIGatewayProxyEvent, context: lambda.Context): ValueOrPromise<
+    GraphQLOptions
+  >;
 }
 
 export function graphqlLambda(

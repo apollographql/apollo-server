@@ -65,9 +65,7 @@ export default GraphQLServerOptions;
 export async function resolveGraphqlOptions(
   options:
     | GraphQLServerOptions
-    | ((
-        ...args: Array<any>
-      ) => ValueOrPromise<GraphQLServerOptions>),
+    | ((...args: Array<any>) => ValueOrPromise<GraphQLServerOptions>),
   ...args: Array<any>
 ): Promise<GraphQLServerOptions> {
   if (typeof options === 'function') {
