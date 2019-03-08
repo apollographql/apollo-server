@@ -1,3 +1,5 @@
+import { ValueOrPromise } from 'apollo-server-env';
+
 export type Context = {
   invocationId: string;
   bindingData: any;
@@ -147,5 +149,5 @@ export type HttpContext = Context & {
 };
 
 export interface FunctionHandler {
-  (context: HttpContext, request: FunctionRequest): void | Promise<void>;
+  (context: HttpContext, request: FunctionRequest): ValueOrPromise<void>;
 }

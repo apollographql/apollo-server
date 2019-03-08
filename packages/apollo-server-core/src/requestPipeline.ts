@@ -40,8 +40,8 @@ import {
 import {
   ApolloServerPlugin,
   GraphQLRequestListener,
-  WithRequired,
 } from 'apollo-server-plugin-base';
+import { WithRequired } from 'apollo-server-env';
 
 import { Dispatcher } from './utils/dispatcher';
 import { InMemoryLRUCache, KeyValueCache } from 'apollo-server-caching';

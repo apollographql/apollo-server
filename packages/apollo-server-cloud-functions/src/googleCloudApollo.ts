@@ -3,11 +3,11 @@ import {
   HttpQueryError,
   runHttpQuery,
 } from 'apollo-server-core';
-import { Headers } from 'apollo-server-env';
+import { Headers, ValueOrPromise } from 'apollo-server-env';
 import { Request, Response } from 'express';
 
 export interface CloudFunctionGraphQLOptionsFunction {
-  (req?: Request, res?: Response): GraphQLOptions | Promise<GraphQLOptions>;
+  (req?: Request, res?: Response): ValueOrPromise<GraphQLOptions>;
 }
 
 export function graphqlCloudFunction(
