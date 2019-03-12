@@ -1,5 +1,5 @@
 import LRU from 'lru-cache';
-import { KeyValueCache } from './KeyValueCache';
+import { TestableKeyValueCache } from './KeyValueCache';
 
 function defaultLengthCalculation(item: any) {
   if (Array.isArray(item) || typeof item === 'string') {
@@ -11,7 +11,7 @@ function defaultLengthCalculation(item: any) {
   return 1;
 }
 
-export class InMemoryLRUCache<V = string> implements KeyValueCache<V> {
+export class InMemoryLRUCache<V = string> implements TestableKeyValueCache<V> {
   private store: LRU.Cache<string, V>;
 
   // FIXME: Define reasonable default max size of the cache
@@ -41,6 +41,9 @@ export class InMemoryLRUCache<V = string> implements KeyValueCache<V> {
   async delete(key: string) {
     this.store.del(key);
   }
+
+  // Drops all data from the cache. This should only be used by test suites ---
+  // production code should never drop all data from an end user cache.
   async flush(): Promise<void> {
     this.store.reset();
   }
