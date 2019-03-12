@@ -53,7 +53,7 @@ const createAzureFunction = (options: CreateAppOptions = {}) => {
 describe('integration:AzureFunctions', () => {
   testSuite(createAzureFunction);
 
-  it('can append CORS headers to GET request', () => {
+  it('can append CORS headers to GET request', async () => {
     const server = new ApolloServer({ schema: Schema });
     const handler = server.createHandler({
       cors: {
@@ -78,30 +78,35 @@ describe('integration:AzureFunctions', () => {
       query: query,
       headers: {},
     };
-    const context = {
-      done(error, result) {
-        if (error) throw error;
-        expect(result.status).toEqual(200);
-        expect(result.body).toEqual(expectedResult);
-        expect(result.headers['Access-Control-Allow-Origin']).toEqual(
-          'CORSOrigin',
-        );
-        expect(result.headers['Access-Control-Allow-Methods']).toEqual(
-          'GET,POST,PUT',
-        );
-        expect(result.headers['Access-Control-Allow-Headers']).toEqual(
-          'AllowedCORSHeader1,AllowedCORSHeader1',
-        );
-        expect(result.headers['Access-Control-Expose-Headers']).toEqual(
-          'ExposedCORSHeader1,ExposedCORSHeader2',
-        );
-        expect(result.headers['Access-Control-Allow-Credentials']).toEqual(
-          'true',
-        );
-        expect(result.headers['Access-Control-Max-Age']).toEqual(42);
-      },
-    };
+    const context: any = {};
+    const p = new Promise((resolve, reject) => {
+      context.done = (error: Error, result: any) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(result);
+        }
+      };
+    });
     handler(context as any, request as any);
+    const result: any = await p;
+
+    expect(result.status).toEqual(200);
+    expect(result.body).toEqual(
+      JSON.stringify({ data: expectedResult }) + '\n',
+    );
+    expect(result.headers['Access-Control-Allow-Origin']).toEqual('CORSOrigin');
+    expect(result.headers['Access-Control-Allow-Methods']).toEqual(
+      'GET,POST,PUT',
+    );
+    expect(result.headers['Access-Control-Allow-Headers']).toEqual(
+      'AllowedCORSHeader1,AllowedCORSHeader1',
+    );
+    expect(result.headers['Access-Control-Expose-Headers']).toEqual(
+      'ExposedCORSHeader1,ExposedCORSHeader2',
+    );
+    expect(result.headers['Access-Control-Allow-Credentials']).toEqual('true');
+    expect(result.headers['Access-Control-Max-Age']).toEqual(42);
   });
 
   it('can handle OPTIONS request with CORS headers', () => {
