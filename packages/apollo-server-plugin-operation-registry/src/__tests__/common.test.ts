@@ -5,9 +5,9 @@ describe('common', () => {
     expect(common.getStoreKey('abc123')).toStrictEqual('apq:abc123');
   });
 
-  it('uses the v2 manifest prefix', () => {
+  it('uses the v2 manifest suffix', () => {
     expect(
       common.getOperationManifestUrl('aServiceId', 'aSchemaHash'),
-    ).toStrictEqual('v2/aServiceId/aSchemaHash');
+    ).toStrictEqual('aServiceId/aSchemaHash.v2.json');
   });
 });
