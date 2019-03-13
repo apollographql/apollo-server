@@ -105,7 +105,21 @@ export default function plugin(options: Options = Object.create(null)) {
           }
 
           const hash = operationHash(
-            defaultOperationRegistrySignature(document),
+            defaultOperationRegistrySignature(
+              document,
+
+              // XXX The `operationName` is set from the AST, not from the
+              // request `operationName`.  If `operationName` is `null`,
+              // then the operation is anonymous.  However, it's not possible
+              // to register anonymous operations from the `apollo` CLI.
+              // We could fail early, however, we still want to abide by the
+              // desires of `forbidUnregisteredOperations`, so we'll allow
+              // this hash be generated anyway.  The hash cannot be in the
+              // manifest, so this would be okay and allow this code to remain
+              // less conditional-y, eventually forbidding the operation when
+              // the has is not found and `forbidUnregisteredOperations` is on.
+              requestContext.operationName || '',
+            ),
           );
 
           // If the document itself was missing and we didn't receive a
