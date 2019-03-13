@@ -12,7 +12,7 @@ import {
   GraphQLSchema,
   ValidationContext,
   ASTVisitor,
-  GraphQLError,
+  GraphQLFormattedError,
   OperationDefinitionNode,
   DocumentNode,
   ExecutionResult,
@@ -42,7 +42,7 @@ export type VariableValues = { [name: string]: any };
 
 export interface GraphQLResponse {
   data?: Record<string, any>;
-  errors?: GraphQLError[];
+  errors?: ReadonlyArray<GraphQLFormattedError>;
   extensions?: Record<string, any>;
   http?: Pick<Response, 'headers'>;
 }

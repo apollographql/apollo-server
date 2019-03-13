@@ -8,11 +8,7 @@ import {
   ExecutionArgs,
   GraphQLError,
 } from 'graphql';
-import {
-  GraphQLExtension,
-  GraphQLResponse,
-  EndHandler,
-} from 'graphql-extensions';
+import { GraphQLExtension, EndHandler } from 'graphql-extensions';
 import { Trace, google } from 'apollo-engine-reporting-protobuf';
 
 import { EngineReportingOptions, GenerateClientInfo } from './agent';
@@ -279,8 +275,7 @@ export class EngineReportingExtension<TContext = any>
     };
   }
 
-  public willSendResponse(o: { graphqlResponse: GraphQLResponse }) {
-    const { errors } = o.graphqlResponse;
+  public didEncounterErrors(errors: GraphQLError[]) {
     if (errors) {
       errors.forEach((error: GraphQLError) => {
         // By default, put errors on the root node.
