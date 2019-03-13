@@ -117,7 +117,7 @@ export default function plugin(options: Options = Object.create(null)) {
               // this hash be generated anyway.  The hash cannot be in the
               // manifest, so this would be okay and allow this code to remain
               // less conditional-y, eventually forbidding the operation when
-              // the has is not found and `forbidUnregisteredOperations` is on.
+              // the hash is not found and `forbidUnregisteredOperations` is on.
               requestContext.operationName || '',
             ),
           );
