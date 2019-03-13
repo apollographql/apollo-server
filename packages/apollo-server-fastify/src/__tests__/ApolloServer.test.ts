@@ -76,13 +76,13 @@ describe('apollo-server-fastify', () => {
     if (httpServer) await httpServer.close();
   });
 
-  describe('constructor', async () => {
+  describe('constructor', () => {
     it('accepts typeDefs and resolvers', () => {
       return createServer({ typeDefs, resolvers });
     });
   });
 
-  describe('applyMiddleware', async () => {
+  describe('applyMiddleware', () => {
     it('can be queried', async () => {
       const { url: uri } = await createServer({
         typeDefs,
