@@ -11,6 +11,8 @@ import {
 import { fetch, RequestAgent, Response } from 'apollo-server-env';
 import retry from 'async-retry';
 
+import { ApolloServerPlugin } from 'apollo-server-plugin-base';
+
 import { EngineReportingExtension } from './extension';
 import {
   GraphQLRequestContext,
@@ -96,7 +98,8 @@ const serviceHeaderDefaults = {
 // EngineReportingAgent is a persistent object which creates
 // EngineReportingExtensions for each request and sends batches of trace reports
 // to the Engine server.
-export class EngineReportingAgent<TContext = any> {
+export class EngineReportingAgent<TContext = any>
+  implements ApolloServerPlugin {
   private options: EngineReportingOptions<TContext>;
   private apiKey: string;
   private report!: FullTracesReport;
@@ -145,10 +148,11 @@ export class EngineReportingAgent<TContext = any> {
     }
   }
 
-  public newExtension(): EngineReportingExtension<TContext> {
-    return new EngineReportingExtension<TContext>(
-      this.options,
+  public requestDidStart(requestContext: GraphQLRequestContext<any>) {
+    return new EngineReportingExtension<any>(
+      this.options as EngineReportingOptions<any>,
       this.addTrace.bind(this),
+      requestContext,
     );
   }
 

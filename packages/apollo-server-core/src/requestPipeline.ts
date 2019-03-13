@@ -29,6 +29,7 @@ import {
   ValidationError,
   PersistedQueryNotSupportedError,
   PersistedQueryNotFoundError,
+  formatApolloErrors,
 } from 'apollo-server-errors';
 import {
   GraphQLRequest,
@@ -102,10 +103,11 @@ export async function processGraphQLRequest<TContext>(
   requestContext: Mutable<GraphQLRequestContext<TContext>>,
 ): Promise<GraphQLResponse> {
   let cacheControlExtension: CacheControlExtension | undefined;
-  const extensionStack = initializeExtensionStack();
+  const {
+    dispatcher,
+    extensionStack,
+  } = initializeRequestListenerDispatcherAndExtensionStack();
   (requestContext.context as any)._extensionStack = extensionStack;
-
-  const dispatcher = initializeRequestListenerDispatcher();
 
   initializeDataSources();
 
@@ -116,8 +118,8 @@ export async function processGraphQLRequest<TContext>(
   let queryHash: string;
 
   let persistedQueryCache: KeyValueCache | undefined;
-  let persistedQueryHit = false;
-  let persistedQueryRegister = false;
+  requestContext.persistedQueryHit = false;
+  requestContext.persistedQueryRegister = false;
 
   if (extensions && extensions.persistedQuery) {
     // It looks like we've received a persisted query. Check if we
@@ -150,7 +152,7 @@ export async function processGraphQLRequest<TContext>(
     if (query === undefined) {
       query = await persistedQueryCache.get(queryHash);
       if (query) {
-        persistedQueryHit = true;
+        requestContext.persistedQueryHit = true;
       } else {
         throw new PersistedQueryNotFoundError();
       }
@@ -167,7 +169,7 @@ export async function processGraphQLRequest<TContext>(
       // Defering the writing gives plugins the ability to "win" from use of
       // the cache, but also have their say in whether or not the cache is
       // written to (by interrupting the request with an error).
-      persistedQueryRegister = true;
+      requestContext.persistedQueryRegister = true;
     }
   } else if (query) {
     // FIXME: We'll compute the APQ query hash to use as our cache key for
@@ -177,6 +179,7 @@ export async function processGraphQLRequest<TContext>(
     throw new InvalidGraphQLRequestError('Must provide query string.');
   }
 
+  requestContext.originalDocumentString = query;
   requestContext.queryHash = queryHash;
 
   const requestDidEnd = extensionStack.requestDidStart({
@@ -185,8 +188,8 @@ export async function processGraphQLRequest<TContext>(
     operationName: request.operationName,
     variables: request.variables,
     extensions: request.extensions,
-    persistedQueryHit,
-    persistedQueryRegister,
+    persistedQueryHit: requestContext.persistedQueryHit,
+    persistedQueryRegister: requestContext.persistedQueryRegister,
     context: requestContext.context,
     requestContext,
   });
@@ -279,17 +282,15 @@ export async function processGraphQLRequest<TContext>(
         'document' | 'operation' | 'operationName'
       >,
     );
-
     // Now that we've gone through the pre-execution phases of the request
     // pipeline, and given plugins appropriate ability to object (by throwing
     // an error) and not actually write, we'll write to the cache if it was
     // determined earlier in the request pipeline that we should do so.
-    if (persistedQueryRegister && persistedQueryCache) {
+    if (requestContext.persistedQueryRegister && persistedQueryCache) {
       Promise.resolve(persistedQueryCache.set(queryHash, query)).catch(
         console.warn,
       );
     }
-
     const executionDidEnd = await dispatcher.invokeDidStartHook(
       'executionDidStart',
       requestContext as WithRequired<
@@ -301,11 +302,14 @@ export async function processGraphQLRequest<TContext>(
     let response: GraphQLResponse;
 
     try {
-      response = (await execute(
+      const result = await execute(
         requestContext.document,
         request.operationName,
         request.variables,
-      )) as GraphQLResponse;
+      );
+
+      response = await formatResult(result);
+
       executionDidEnd();
     } catch (executionError) {
       executionDidEnd(executionError);
@@ -408,7 +412,7 @@ export async function processGraphQLRequest<TContext>(
     return requestContext.response!;
   }
 
-  function sendErrorResponse(
+  async function sendErrorResponse(
     errorOrErrors: ReadonlyArray<GraphQLError> | GraphQLError,
     errorClass?: typeof ApolloError,
   ) {
@@ -417,40 +421,70 @@ export async function processGraphQLRequest<TContext>(
       ? errorOrErrors
       : [errorOrErrors];
 
-    return sendResponse({
-      errors: errors.map(err =>
-        fromGraphQLError(
-          err,
-          errorClass && {
-            errorClass,
-          },
+    return sendResponse(
+      await formatResult({
+        errors: errors.map(err =>
+          fromGraphQLError(
+            err,
+            errorClass && {
+              errorClass,
+            },
+          ),
         ),
-      ),
-    });
+      }),
+    );
   }
 
-  function initializeRequestListenerDispatcher(): Dispatcher<
-    GraphQLRequestListener
-  > {
+  async function formatResult(
+    result: ExecutionResult,
+  ): Promise<GraphQLResponse> {
+    if (!result.errors) {
+      return { data: result.data };
+    }
+    // We give plugins (say, reporting) the chance to see errors before they are
+    // formatted.
+    requestContext.errors = result.errors;
+    await dispatcher.invokeHookAsync(
+      'didEncounterErrors',
+      requestContext as WithRequired<typeof requestContext, 'errors'>,
+    );
+    return {
+      ...result,
+      errors: formatApolloErrors(result.errors, {
+        formatter: config.formatError,
+        debug: requestContext.debug,
+      }),
+    };
+  }
+
+  function initializeRequestListenerDispatcherAndExtensionStack(): {
+    dispatcher: Dispatcher<GraphQLRequestListener>;
+    extensionStack: GraphQLExtensionStack<TContext>;
+  } {
     const requestListeners: GraphQLRequestListener<TContext>[] = [];
+    const requestListenerExtensions: GraphQLExtension<TContext>[] = [];
     if (config.plugins) {
       for (const plugin of config.plugins) {
         if (!plugin.requestDidStart) continue;
         const listener = plugin.requestDidStart(requestContext);
         if (listener) {
           requestListeners.push(listener);
+          if (listener.__graphqlExtension) {
+            requestListenerExtensions.push(listener.__graphqlExtension());
+          }
         }
       }
     }
-    return new Dispatcher(requestListeners);
-  }
+    const dispatcher = new Dispatcher(requestListeners);
 
-  function initializeExtensionStack(): GraphQLExtensionStack<TContext> {
     enableGraphQLExtensions(config.schema);
 
     // If custom extension factories were provided, create per-request extension
-    // objects.
-    const extensions = config.extensions ? config.extensions.map(f => f()) : [];
+    // objects. Also include any extensions that came from plugins.
+    const extensions = [
+      ...(config.extensions ? config.extensions.map(f => f()) : []),
+      ...requestListenerExtensions,
+    ];
 
     if (config.tracing) {
       extensions.push(new TracingExtension());
@@ -461,7 +495,8 @@ export async function processGraphQLRequest<TContext>(
       extensions.push(cacheControlExtension);
     }
 
-    return new GraphQLExtensionStack(extensions);
+    const extensionStack = new GraphQLExtensionStack(extensions);
+    return { dispatcher, extensionStack };
   }
 
   function initializeDataSources() {

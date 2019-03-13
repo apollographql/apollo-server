@@ -12,6 +12,7 @@
   },
   "devDependencies": {
     "apollo-server-core": "file:../apollo-server-core",
+    "graphql-extensions": "file:../graphql-extensions",
     "apollo-server-env": "file:../apollo-server-env"
   },
   "peerDependencies": {

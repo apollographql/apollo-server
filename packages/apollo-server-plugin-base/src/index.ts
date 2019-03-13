@@ -1,4 +1,5 @@
 import { ValueOrPromise, WithRequired } from 'apollo-server-env';
+import { GraphQLExtension } from 'graphql-extensions';
 import {
   GraphQLServiceContext,
   GraphQLRequestContext,
@@ -20,6 +21,15 @@ export interface ApolloServerPlugin {
 }
 
 export interface GraphQLRequestListener<TContext = Record<string, any>> {
+  didResolveDocument?(
+    requestContext: WithRequired<
+      GraphQLRequestContext<TContext>,
+      | 'originalDocumentString'
+      | 'queryHash'
+      | 'persistedQueryHit'
+      | 'persistedQueryRegister'
+    >,
+  ): ValueOrPromise<void>;
   parsingDidStart?(
     requestContext: GraphQLRequestContext<TContext>,
   ): (err?: Error) => void | void;
@@ -38,7 +48,17 @@ export interface GraphQLRequestListener<TContext = Record<string, any>> {
       'document' | 'operationName' | 'operation'
     >,
   ): (err?: Error) => void | void;
+  // Notably, these errors are the original GraphQLErrors, before being formatted
+  // by hooks.
+  didEncounterErrors?(
+    requestContext: WithRequired<GraphQLRequestContext<TContext>, 'errors'>,
+  ): ValueOrPromise<void>;
   willSendResponse?(
     requestContext: WithRequired<GraphQLRequestContext<TContext>, 'response'>,
   ): ValueOrPromise<void>;
+
+  // If this is provided, apollo-server will install the returned object as a
+  // graphql-extension extension. This is primarily intended for implementing
+  // the willResolveField hook which does not yet exist in the plugin API.
+  __graphqlExtension?(): GraphQLExtension<TContext>;
 }

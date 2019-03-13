@@ -1,21 +1,17 @@
-import { Request } from 'apollo-server-env';
+import { WithRequired } from 'apollo-server-env';
 
 import {
   GraphQLResolveInfo,
   responsePathAsArray,
   ResponsePath,
   DocumentNode,
-  ExecutionArgs,
   GraphQLError,
 } from 'graphql';
-import {
-  GraphQLExtension,
-  GraphQLResponse,
-  EndHandler,
-} from 'graphql-extensions';
+import { GraphQLExtension } from 'graphql-extensions';
+import { GraphQLRequestListener } from 'apollo-server-plugin-base';
 import { Trace, google } from 'apollo-engine-reporting-protobuf';
 
-import { EngineReportingOptions, GenerateClientInfo } from './agent';
+import { EngineReportingOptions, ClientInfo } from './agent';
 import { defaultEngineReportingSignature } from 'apollo-graphql';
 import { GraphQLRequestContext } from 'apollo-server-core/dist/requestPipelineAPI';
 
@@ -23,19 +19,24 @@ const clientNameHeaderKey = 'apollographql-client-name';
 const clientReferenceIdHeaderKey = 'apollographql-client-reference-id';
 const clientVersionHeaderKey = 'apollographql-client-version';
 
-// EngineReportingExtension is the per-request GraphQLExtension which creates a
-// trace (in protobuf Trace format) for a single request. When the request is
-// done, it passes the Trace back to its associated EngineReportingAgent via the
-// addTrace callback in its constructor. This class isn't for direct use; its
-// constructor is a private API for communicating with EngineReportingAgent.
-// Its public methods all implement the GraphQLExtension interface.
+// EngineReportingExtension is the per-request GraphQLRequestListener which
+// creates a trace (in protobuf Trace format) for a single request. When the
+// request is done, it passes the Trace back to its associated
+// EngineReportingAgent via the addTrace callback in its constructor. This class
+// isn't for direct use; its constructor is a private API for communicating with
+// EngineReportingAgent.
+//
+// Its public methods all implement the GraphQLRequestListener interface. As a
+// bit of a hack, it also provides a GraphQLExtension which implements the
+// willResolveField API which isn't yet part of the GraphQLRequestListener
+// interface.
 export class EngineReportingExtension<TContext = any>
-  implements GraphQLExtension<TContext> {
+  implements GraphQLRequestListener<TContext> {
   public trace = new Trace();
   private nodes = new Map<string, Trace.Node>();
   private startHrTime!: [number, number];
   private operationName?: string;
-  private queryString?: string;
+  private originalDocumentString?: string;
   private documentAST?: DocumentNode;
   private options: EngineReportingOptions<TContext>;
   private addTrace: (
@@ -43,74 +44,33 @@ export class EngineReportingExtension<TContext = any>
     operationName: string,
     trace: Trace,
   ) => void;
-  private generateClientInfo: GenerateClientInfo<TContext>;
 
   public constructor(
     options: EngineReportingOptions<TContext>,
     addTrace: (signature: string, operationName: string, trace: Trace) => void,
+    requestContext: GraphQLRequestContext<TContext>,
   ) {
     this.options = {
       maskErrorDetails: false,
       ...options,
     };
     this.addTrace = addTrace;
-    const root = new Trace.Node();
-    this.trace.root = root;
-    this.nodes.set(responsePathAsString(undefined), root);
-    this.generateClientInfo =
-      options.generateClientInfo ||
-      // Default to using the `apollo-client-x` header fields if present.
-      // If none are present, fallback on the `clientInfo` query extension
-      // for backwards compatibility.
-      // The default value if neither header values nor query extension is
-      // set is the empty String for all fields (as per protobuf defaults)
-      (({ request }) => {
-        if (
-          request.http &&
-          request.http.headers &&
-          (request.http.headers.get(clientNameHeaderKey) ||
-            request.http.headers.get(clientVersionHeaderKey) ||
-            request.http.headers.get(clientReferenceIdHeaderKey))
-        ) {
-          return {
-            clientName: request.http.headers.get(clientNameHeaderKey),
-            clientVersion: request.http.headers.get(clientVersionHeaderKey),
-            clientReferenceId: request.http.headers.get(
-              clientReferenceIdHeaderKey,
-            ),
-          };
-        } else if (request.extensions && request.extensions.clientInfo) {
-          return request.extensions.clientInfo;
-        } else {
-          return {};
-        }
-      });
-  }
 
-  public requestDidStart(o: {
-    request: Request;
-    queryString?: string;
-    parsedQuery?: DocumentNode;
-    variables?: Record<string, any>;
-    persistedQueryHit?: boolean;
-    persistedQueryRegister?: boolean;
-    context: TContext;
-    extensions?: Record<string, any>;
-    requestContext: GraphQLRequestContext<TContext>;
-  }): EndHandler {
     this.trace.startTime = dateToTimestamp(new Date());
     this.startHrTime = process.hrtime();
 
-    // Generally, we'll get queryString here and not parsedQuery; we only get
-    // parsedQuery if you're using an OperationStore. In normal cases we'll get
-    // our documentAST in the execution callback after it is parsed.
-    this.queryString = o.queryString;
-    this.documentAST = o.parsedQuery;
+    const root = new Trace.Node();
+    this.trace.root = root;
+    this.nodes.set(responsePathAsString(undefined), root);
 
+    const request = requestContext.request;
+
+    const httpRequest = request.http!;
     this.trace.http = new Trace.HTTP({
       method:
-        Trace.HTTP.Method[o.request.method as keyof typeof Trace.HTTP.Method] ||
-        Trace.HTTP.Method.UNKNOWN,
+        Trace.HTTP.Method[
+          httpRequest.method as keyof typeof Trace.HTTP.Method
+        ] || Trace.HTTP.Method.UNKNOWN,
       // Host and path are not used anywhere on the backend, so let's not bother
       // trying to parse request.url to get them, which is a potential
       // source of bugs because integrations have different behavior here.
@@ -122,7 +82,7 @@ export class EngineReportingExtension<TContext = any>
       path: null,
     });
     if (this.options.privateHeaders !== true) {
-      for (const [key, value] of o.request.headers) {
+      for (const [key, value] of httpRequest.headers) {
         if (
           this.options.privateHeaders &&
           Array.isArray(this.options.privateHeaders) &&
@@ -148,23 +108,17 @@ export class EngineReportingExtension<TContext = any>
             });
         }
       }
-
-      if (o.persistedQueryHit) {
-        this.trace.persistedQueryHit = true;
-      }
-      if (o.persistedQueryRegister) {
-        this.trace.persistedQueryRegister = true;
-      }
     }
 
-    if (this.options.privateVariables !== true && o.variables) {
+    if (this.options.privateVariables !== true && request.variables) {
       // Note: we explicitly do *not* include the details.rawQuery field. The
       // Engine web app currently does nothing with this other than store it in
       // the database and offer it up via its GraphQL API, and sending it means
       // that using calculateSignature to hide sensitive data in the query
       // string is ineffective.
+      const variables = request.variables;
       this.trace.details = new Trace.Details();
-      Object.keys(o.variables).forEach(name => {
+      Object.keys(variables).forEach(name => {
         if (
           this.options.privateVariables &&
           Array.isArray(this.options.privateVariables) &&
@@ -180,7 +134,7 @@ export class EngineReportingExtension<TContext = any>
         } else {
           try {
             this.trace.details!.variablesJson![name] = JSON.stringify(
-              o.variables![name],
+              variables[name],
             );
           } catch (e) {
             // This probably means that the value contains a circular reference,
@@ -194,7 +148,32 @@ export class EngineReportingExtension<TContext = any>
       });
     }
 
-    const clientInfo = this.generateClientInfo(o.requestContext);
+    let clientInfo: ClientInfo = {};
+    if (options.generateClientInfo) {
+      clientInfo = options.generateClientInfo(requestContext);
+    } else if (
+      request.http &&
+      request.http.headers &&
+      (request.http.headers.get(clientNameHeaderKey) ||
+        request.http.headers.get(clientVersionHeaderKey) ||
+        request.http.headers.get(clientReferenceIdHeaderKey))
+    ) {
+      // Default to using the `apollo-client-x` header fields if present.
+      // If none are present, fallback on the `clientInfo` query extension
+      // for backwards compatibility.
+      // The default value if neither header values nor query extension is
+      // set is the empty String for all fields (as per protobuf defaults)
+      clientInfo = {
+        clientName: request.http.headers.get(clientNameHeaderKey) || undefined,
+        clientVersion:
+          request.http.headers.get(clientVersionHeaderKey) || undefined,
+        clientReferenceId:
+          request.http.headers.get(clientReferenceIdHeaderKey) || undefined,
+      };
+    } else if (request.extensions && request.extensions.clientInfo) {
+      clientInfo = request.extensions.clientInfo;
+    }
+
     if (clientInfo) {
       // While clientAddress could be a part of the protobuf, we'll ignore it for
       // now, since the backend does not group by it and Engine frontend will not
@@ -206,105 +185,130 @@ export class EngineReportingExtension<TContext = any>
       this.trace.clientReferenceId = clientReferenceId || '';
       this.trace.clientName = clientName || '';
     }
+  }
 
-    return () => {
-      this.trace.durationNs = durationHrTimeToNanos(
-        process.hrtime(this.startHrTime),
-      );
-      this.trace.endTime = dateToTimestamp(new Date());
+  public async didResolveDocument(
+    requestContext: WithRequired<
+      GraphQLRequestContext<TContext>,
+      | 'originalDocumentString'
+      | 'queryHash'
+      | 'persistedQueryHit'
+      | 'persistedQueryRegister'
+    >,
+  ) {
+    if (requestContext.persistedQueryHit) {
+      this.trace.persistedQueryHit = true;
+    }
+    if (requestContext.persistedQueryRegister) {
+      this.trace.persistedQueryRegister = true;
+    }
 
-      const operationName = this.operationName || '';
-      let signature;
-      if (this.documentAST) {
-        const calculateSignature =
-          this.options.calculateSignature || defaultEngineReportingSignature;
-        signature = calculateSignature(this.documentAST, operationName);
-      } else if (this.queryString) {
-        // We didn't get an AST, possibly because of a parse failure. Let's just
-        // use the full query string.
-        //
-        // XXX This does mean that even if you use a calculateSignature which
-        //     hides literals, you might end up sending literals for queries
-        //     that fail parsing or validation. Provide some way to mask them
-        //     anyway?
-        signature = this.queryString;
-      } else {
-        // This shouldn't happen: one of those options must be passed to runQuery.
-        throw new Error('No queryString or parsedQuery?');
+    // Generally, we'll get queryString here and not parsedQuery; we only get
+    // parsedQuery if you're using an OperationStore. In normal cases we'll get
+    // our documentAST in the execution callback after it is parsed.
+    this.originalDocumentString = requestContext.originalDocumentString;
+  }
+
+  public async didResolveOperation(
+    requestContext: WithRequired<
+      GraphQLRequestContext<TContext>,
+      'document' | 'operationName' | 'operation'
+    >,
+  ) {
+    this.operationName = requestContext.operationName || '';
+    this.documentAST = requestContext.document;
+  }
+
+  // This is a hacky workaround for the fact that the schema decoration done by
+  // graphql-extensions doesn't know about the plugin API yet.
+  public __graphqlExtension(): GraphQLExtension {
+    const requestListener = this;
+    return {
+      willResolveField(
+        _source: any,
+        _args: { [argName: string]: any },
+        _context: TContext,
+        info: GraphQLResolveInfo,
+      ): ((error: Error | null, result: any) => void) | void {
+        const path = info.path;
+        const node = requestListener.newNode(path);
+        node.type = info.returnType.toString();
+        node.parentType = info.parentType.toString();
+        node.startTime = durationHrTimeToNanos(
+          process.hrtime(requestListener.startHrTime),
+        );
+
+        return () => {
+          node.endTime = durationHrTimeToNanos(
+            process.hrtime(requestListener.startHrTime),
+          );
+          // We could save the error into the trace here, but it won't have all
+          // the information that graphql-js adds to it later, like 'locations'.
+        };
+      },
+    };
+  }
+
+  public didEncounterErrors(
+    requestContext: WithRequired<GraphQLRequestContext<TContext>, 'errors'>,
+  ) {
+    requestContext.errors.forEach((error: GraphQLError) => {
+      // By default, put errors on the root node.
+      let node = this.nodes.get('');
+      if (error.path) {
+        const specificNode = this.nodes.get(error.path.join('.'));
+        if (specificNode) {
+          node = specificNode;
+        }
       }
 
-      this.addTrace(signature, operationName, this.trace);
-    };
+      // Always send the trace errors, so that the UI acknowledges that there is an error.
+      const errorInfo = this.options.maskErrorDetails
+        ? { message: '<masked>' }
+        : {
+            message: error.message,
+            location: (error.locations || []).map(
+              ({ line, column }) => new Trace.Location({ line, column }),
+            ),
+            json: JSON.stringify(error),
+          };
+
+      node!.error!.push(new Trace.Error(errorInfo));
+    });
   }
 
-  public executionDidStart(o: { executionArgs: ExecutionArgs }) {
-    // If the operationName is explicitly provided, save it. If there's just one
-    // named operation, the client doesn't have to provide it, but we still want
-    // to know the operation name so that the server can identify the query by
-    // it without having to parse a signature.
-    //
-    // Fortunately, in the non-error case, we can just pull this out of
-    // the first call to willResolveField's `info` argument.  In an
-    // error case (eg, the operationName isn't found, or there are more
-    // than one operation and no specified operationName) it's OK to continue
-    // to file this trace under the empty operationName.
-    if (o.executionArgs.operationName) {
-      this.operationName = o.executionArgs.operationName;
+  public willSendResponse(
+    _requestContext: WithRequired<GraphQLRequestContext<TContext>, 'response'>,
+  ) {
+    // XXX Is it safe to use willSendReponse to do this finalization, vs
+    // something that's more explicitly part of a try/final in requestPipeline
+    // (eg, a new requestDidEnd callback?)
+    this.trace.durationNs = durationHrTimeToNanos(
+      process.hrtime(this.startHrTime),
+    );
+    this.trace.endTime = dateToTimestamp(new Date());
+
+    const operationName = this.operationName || '';
+    let signature;
+    if (this.documentAST) {
+      const calculateSignature =
+        this.options.calculateSignature || defaultEngineReportingSignature;
+      signature = calculateSignature(this.documentAST, operationName);
+    } else if (this.originalDocumentString) {
+      // We didn't get an AST, possibly because of a parse failure. Let's just
+      // use the full query string.
+      //
+      // XXX This does mean that even if you use a calculateSignature which
+      //     hides literals, you might end up sending literals for queries
+      //     that fail parsing or validation. Provide some way to mask them
+      //     anyway?
+      signature = this.originalDocumentString;
+    } else {
+      // This shouldn't happen: we should have got to didResolveDocument.
+      throw new Error('No originalDocumentString?');
     }
-    this.documentAST = o.executionArgs.document;
-  }
 
-  public willResolveField(
-    _source: any,
-    _args: { [argName: string]: any },
-    _context: TContext,
-    info: GraphQLResolveInfo,
-  ): ((error: Error | null, result: any) => void) | void {
-    if (this.operationName === undefined) {
-      this.operationName =
-        (info.operation.name && info.operation.name.value) || '';
-    }
-
-    const path = info.path;
-    const node = this.newNode(path);
-    node.type = info.returnType.toString();
-    node.parentType = info.parentType.toString();
-    node.startTime = durationHrTimeToNanos(process.hrtime(this.startHrTime));
-
-    return () => {
-      node.endTime = durationHrTimeToNanos(process.hrtime(this.startHrTime));
-      // We could save the error into the trace here, but it won't have all
-      // the information that graphql-js adds to it later, like 'locations'.
-    };
-  }
-
-  public willSendResponse(o: { graphqlResponse: GraphQLResponse }) {
-    const { errors } = o.graphqlResponse;
-    if (errors) {
-      errors.forEach((error: GraphQLError) => {
-        // By default, put errors on the root node.
-        let node = this.nodes.get('');
-        if (error.path) {
-          const specificNode = this.nodes.get(error.path.join('.'));
-          if (specificNode) {
-            node = specificNode;
-          }
-        }
-
-        // Always send the trace errors, so that the UI acknowledges that there is an error.
-        const errorInfo = this.options.maskErrorDetails
-          ? { message: '<masked>' }
-          : {
-              message: error.message,
-              location: (error.locations || []).map(
-                ({ line, column }) => new Trace.Location({ line, column }),
-              ),
-              json: JSON.stringify(error),
-            };
-
-        node!.error!.push(new Trace.Error(errorInfo));
-      });
-    }
+    this.addTrace(signature, operationName, this.trace);
   }
 
   private newNode(path: ResponsePath): Trace.Node {

@@ -7,9 +7,10 @@ import {
   GraphQLSchema,
   ValidationContext,
   ASTVisitor,
-  GraphQLError,
+  GraphQLFormattedError,
   OperationDefinitionNode,
   DocumentNode,
+  GraphQLError,
 } from 'graphql';
 import { KeyValueCache } from 'apollo-server-caching';
 
@@ -34,13 +35,14 @@ export interface GraphQLRequest {
 
 export interface GraphQLResponse {
   data?: Record<string, any>;
-  errors?: GraphQLError[];
+  errors?: GraphQLFormattedError[];
   extensions?: Record<string, any>;
   http?: Pick<Response, 'headers'>;
 }
 
 export interface GraphQLRequestContext<TContext = Record<string, any>> {
   readonly request: GraphQLRequest;
+  readonly errors?: ReadonlyArray<GraphQLError>;
   readonly response?: GraphQLResponse;
 
   readonly context: TContext;
@@ -50,12 +52,16 @@ export interface GraphQLRequestContext<TContext = Record<string, any>> {
   readonly queryHash?: string;
 
   readonly document?: DocumentNode;
+  readonly originalDocumentString?: string;
 
   // `operationName` is set based on the operation AST, so it is defined
   // even if no `request.operationName` was passed in.
   // It will be set to `null` for an anonymous operation.
   readonly operationName?: string | null;
   readonly operation?: OperationDefinitionNode;
+
+  readonly persistedQueryHit?: boolean;
+  readonly persistedQueryRegister?: boolean;
 
   debug?: boolean;
 }
