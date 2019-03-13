@@ -13,6 +13,7 @@ import { DataSource } from 'apollo-datasource';
 import { ApolloServerPlugin } from 'apollo-server-plugin-base';
 import { GraphQLParseOptions } from 'graphql-tools';
 import { ValueOrPromise } from 'apollo-server-env';
+import { GraphQLExecutor } from '../dist/requestPipelineAPI';
 
 /*
  * GraphQLServerOptions
@@ -22,6 +23,7 @@ import { ValueOrPromise } from 'apollo-server-env';
  * - (optional) rootValue: rootValue passed to GraphQL execution, or a function to resolving the rootValue from the DocumentNode
  * - (optional) context: the context passed to GraphQL execution
  * - (optional) validationRules: extra validation rules applied to requests
+ * - (optional) executor: an additional GraphQLExecutor that runs between plugin executors and the default executor
  * - (optional) formatResponse: a function applied to each graphQL execution result
  * - (optional) fieldResolver: a custom default field resolver
  * - (optional) debug: a boolean that will print additional debug logging if execution errors occur
@@ -38,6 +40,7 @@ export interface GraphQLServerOptions<
   rootValue?: ((parsedQuery: DocumentNode) => TRootValue) | TRootValue;
   context?: TContext | (() => never);
   validationRules?: Array<(context: ValidationContext) => any>;
+  executor?: GraphQLExecutor;
   formatResponse?: Function;
   fieldResolver?: GraphQLFieldResolver<any, TContext>;
   debug?: boolean;

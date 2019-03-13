@@ -2,7 +2,12 @@
 // circular dependency issues from the `apollo-server-plugin-base` package
 // depending on the types in it.
 
-import { Request, Response } from 'apollo-server-env';
+import {
+  Request,
+  Response,
+  ValueOrPromise,
+  WithRequired,
+} from 'apollo-server-env';
 import {
   GraphQLSchema,
   ValidationContext,
@@ -11,6 +16,7 @@ import {
   OperationDefinitionNode,
   DocumentNode,
   GraphQLError,
+  ExecutionResult,
 } from 'graphql';
 import { KeyValueCache } from 'apollo-server-caching';
 
@@ -73,3 +79,10 @@ export interface GraphQLRequestContext<TContext = Record<string, any>> {
 export type ValidationRule = (context: ValidationContext) => ASTVisitor;
 
 export class InvalidGraphQLRequestError extends Error {}
+
+export type GraphQLExecutor<TContext = Record<string, any>> = (
+  requestContext: WithRequired<
+    GraphQLRequestContext<TContext>,
+    'document' | 'operationName' | 'operation'
+  >,
+) => ValueOrPromise<ExecutionResult | null>;

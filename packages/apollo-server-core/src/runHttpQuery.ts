@@ -148,6 +148,7 @@ export async function runHttpQuery(
     rootValue: options.rootValue,
     context: options.context || {},
     validationRules: options.validationRules,
+    executor: options.executor,
     fieldResolver: options.fieldResolver,
 
     // FIXME: Use proper option types to ensure this

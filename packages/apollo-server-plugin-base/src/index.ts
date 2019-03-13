@@ -5,6 +5,7 @@ import {
   GraphQLRequestContext,
   GraphQLRequest,
   GraphQLResponse,
+  GraphQLExecutor,
 } from 'apollo-server-core/dist/requestPipelineAPI';
 export {
   GraphQLServiceContext,
@@ -39,6 +40,7 @@ export interface GraphQLRequestListener<TContext = Record<string, any>> {
       'document' | 'operationName' | 'operation'
     >,
   ): ValueOrPromise<void>;
+  executor?: GraphQLExecutor<TContext>;
   executionDidStart?(
     requestContext: WithRequired<
       GraphQLRequestContext<TContext>,

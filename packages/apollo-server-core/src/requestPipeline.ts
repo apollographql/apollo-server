@@ -37,6 +37,7 @@ import {
   GraphQLRequestContext,
   InvalidGraphQLRequestError,
   ValidationRule,
+  GraphQLExecutor,
 } from '../dist/requestPipelineAPI';
 import {
   ApolloServerPlugin,
@@ -74,6 +75,7 @@ export interface GraphQLRequestPipelineConfig<TContext> {
 
   rootValue?: ((document: DocumentNode) => any) | any;
   validationRules?: ValidationRule[];
+  executor?: GraphQLExecutor;
   fieldResolver?: GraphQLFieldResolver<any, TContext>;
 
   dataSources?: () => DataSources<TContext>;
@@ -304,11 +306,10 @@ export async function processGraphQLRequest<TContext>(
     let response: GraphQLResponse;
 
     try {
-      const result = await execute(
-        requestContext.document,
-        request.operationName,
-        request.variables,
-      );
+      const result = await execute(requestContext as WithRequired<
+        typeof requestContext,
+        'document' | 'operation' | 'operationName'
+      >);
 
       response = await formatResult(result);
 
@@ -365,10 +366,39 @@ export async function processGraphQLRequest<TContext>(
   }
 
   async function execute(
-    document: DocumentNode,
-    operationName: GraphQLRequest['operationName'],
-    variables: GraphQLRequest['variables'],
+    requestContext: WithRequired<
+      GraphQLRequestContext<TContext>,
+      'document' | 'operationName' | 'operation'
+    >,
   ): Promise<ExecutionResult> {
+    const executors: GraphQLExecutor<TContext>[] = [];
+    if (config.executor) {
+      executors.push(config.executor);
+    }
+    dispatcher.requestListeners.forEach(requestListener => {
+      if (requestListener.executor) {
+        executors.push(requestListener.executor.bind(requestListener));
+      }
+    });
+    executors.push(defaultExecutor);
+
+    for (const executor of executors) {
+      const result = await executor(requestContext);
+      if (result) {
+        return result;
+      }
+    }
+    throw new Error('defaultExecutor should never return null!');
+  }
+
+  async function defaultExecutor(
+    requestContext: WithRequired<
+      GraphQLRequestContext<TContext>,
+      'document' | 'operationName' | 'operation'
+    >,
+  ): Promise<ExecutionResult | null> {
+    const { request, document } = requestContext;
+
     const executionArgs: ExecutionArgs = {
       schema: config.schema,
       document,
@@ -377,11 +407,14 @@ export async function processGraphQLRequest<TContext>(
           ? config.rootValue(document)
           : config.rootValue,
       contextValue: requestContext.context,
-      variableValues: variables,
-      operationName,
+      variableValues: request.variables,
+      operationName: request.operationName,
       fieldResolver: config.fieldResolver,
     };
 
+    // Note: the old GraphQLExtension executionDidStart hook (whose argument
+    // matches graphql-js exactly) is being left specific to the graphql-js
+    // execution, whereas the plugin executionDidStart hook wraps all executors.
     const executionDidEnd = extensionStack.executionDidStart({
       executionArgs,
     });
