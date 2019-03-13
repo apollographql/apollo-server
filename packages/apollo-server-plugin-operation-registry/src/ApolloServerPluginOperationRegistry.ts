@@ -1,16 +1,15 @@
 import * as assert from 'assert';
-import {
-  pluginName,
-  generateNormalizedDocumentHash,
-  getStoreKey,
-  hashForLogging,
-} from './common';
+import { pluginName, getStoreKey, hashForLogging } from './common';
 import {
   ApolloServerPlugin,
   GraphQLServiceContext,
   GraphQLRequestListener,
   GraphQLRequestContext,
 } from 'apollo-server-plugin-base';
+import {
+  operationHash,
+  defaultOperationRegistrySignature,
+} from 'apollo-graphql';
 import { ForbiddenError, ApolloError } from 'apollo-server-errors';
 import Agent from './agent';
 import { GraphQLSchema } from 'graphql/type';
@@ -105,7 +104,9 @@ export default function plugin(options: Options = Object.create(null)) {
             throw new Error('Unable to access store.');
           }
 
-          const hash = generateNormalizedDocumentHash(document);
+          const hash = operationHash(
+            defaultOperationRegistrySignature(document),
+          );
 
           // If the document itself was missing and we didn't receive a
           // `queryHash` (the persisted query `sha256Hash` from the APQ
