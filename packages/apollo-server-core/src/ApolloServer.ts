@@ -43,8 +43,6 @@ import {
   PluginDefinition,
 } from './types';
 
-import { FormatErrorExtension } from './formatters';
-
 import { gql } from './index';
 
 import {
@@ -330,17 +328,6 @@ export class ApolloServerBase {
     // Note: doRunQuery will add its own extensions if you set tracing,
     // or cacheControl.
     this.extensions = [];
-
-    const debugDefault =
-      process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test';
-    const debug =
-      requestOptions.debug !== undefined ? requestOptions.debug : debugDefault;
-
-    // Error formatting should happen after the engine reporting agent, so that
-    // engine gets the unmasked errors if necessary
-    this.extensions.push(
-      () => new FormatErrorExtension(requestOptions.formatError, debug),
-    );
 
     // In an effort to avoid over-exposing the API key itself, extract the
     // service ID from the API key for plugins which only needs service ID.

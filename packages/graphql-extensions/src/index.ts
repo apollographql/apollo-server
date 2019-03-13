@@ -10,6 +10,7 @@ import {
   DocumentNode,
   ResponsePath,
   FieldNode,
+  GraphQLError,
 } from 'graphql';
 
 import { Request } from 'apollo-server-env';
@@ -48,6 +49,8 @@ export class GraphQLExtension<TContext = any> {
   public executionDidStart?(o: {
     executionArgs: ExecutionArgs;
   }): EndHandler | void;
+
+  public didEncounterErrors?(errors: ReadonlyArray<GraphQLError>): void;
 
   public willSendResponse?(o: {
     graphqlResponse: GraphQLResponse;
@@ -106,6 +109,14 @@ export class GraphQLExtensionStack<TContext = any> {
     return this.handleDidStart(
       ext => ext.executionDidStart && ext.executionDidStart(o),
     );
+  }
+
+  public didEncounterErrors(errors: ReadonlyArray<GraphQLError>) {
+    this.extensions.forEach(extension => {
+      if (extension.didEncounterErrors) {
+        extension.didEncounterErrors(errors);
+      }
+    });
   }
 
   public willSendResponse(o: {

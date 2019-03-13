@@ -554,9 +554,9 @@ export function testApolloServer<AS extends ApolloServerBase>(
               context: TContext;
             }) {
               expect(o.graphqlResponse.errors.length).toEqual(1);
-              // formatError should be called after extensions
-              expect(formatError).not.toBeCalled();
-              // validationRules should be called before extensions
+              // formatError should be called before willSendResponse
+              expect(formatError).toHaveBeenCalledTimes(1);
+              // validationRule should be called before willSendResponse
               expect(validationRule).toHaveBeenCalledTimes(1);
               willSendResponseInExtension();
             }
