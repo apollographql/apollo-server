@@ -26,8 +26,9 @@ export function getOperationManifestUrl(
   hashedServiceId: string,
   schemaHash: string,
 ): string {
-  return [urlOperationManifestBase, 'v2', hashedServiceId, schemaHash].join(
-    '/',
+  return (
+    [urlOperationManifestBase, hashedServiceId, schemaHash].join('/') +
+    '.v2.json'
   );
 }
 
