@@ -124,7 +124,7 @@ describe('Agent', () => {
 
     it('correctly prepared the test environment', () => {
       expect(getOperationManifestUrl('abc123', 'def456')).toStrictEqual(
-        urlResolve(fakeBaseUrl, '/abc123/def456'),
+        urlResolve(fakeBaseUrl, '/abc123/def456.v2.json'),
       );
     });
 
@@ -409,7 +409,7 @@ function hashedServiceId(serviceID: string) {
 }
 
 function pathForServiceAndSchema(serviceID: string, schemaHash: string) {
-  return `/${hashedServiceId(serviceID)}/${schemaHash}`;
+  return `/${hashedServiceId(serviceID)}/${schemaHash}.v2.json`;
 }
 
 function nockManifestForServiceAndSchema(
