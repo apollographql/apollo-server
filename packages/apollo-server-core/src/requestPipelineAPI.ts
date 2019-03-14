@@ -40,6 +40,11 @@ export interface GraphQLResponse {
   http?: Pick<Response, 'headers'>;
 }
 
+export interface GraphQLRequestMetrics {
+  persistedQueryHit?: boolean;
+  persistedQueryRegister?: boolean;
+}
+
 export interface GraphQLRequestContext<TContext = Record<string, any>> {
   readonly request: GraphQLRequest;
   readonly errors?: ReadonlyArray<GraphQLError>;
@@ -52,7 +57,7 @@ export interface GraphQLRequestContext<TContext = Record<string, any>> {
   readonly queryHash?: string;
 
   readonly document?: DocumentNode;
-  readonly originalDocumentString?: string;
+  readonly documentText?: string;
 
   // `operationName` is set based on the operation AST, so it is defined
   // even if no `request.operationName` was passed in.
@@ -60,8 +65,7 @@ export interface GraphQLRequestContext<TContext = Record<string, any>> {
   readonly operationName?: string | null;
   readonly operation?: OperationDefinitionNode;
 
-  readonly persistedQueryHit?: boolean;
-  readonly persistedQueryRegister?: boolean;
+  readonly metrics?: GraphQLRequestMetrics;
 
   debug?: boolean;
 }

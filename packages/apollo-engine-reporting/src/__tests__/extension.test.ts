@@ -62,10 +62,11 @@ test('trace construction', async () => {
         clientName: 'testing suite',
       },
     },
-    originalDocumentString: query,
+    documentText: query,
     operationName: 'q',
     context: {},
     cache: new InMemoryLRUCache(),
+    metrics: {},
   };
   const reportingExtension = new EngineReportingExtension(
     {},
@@ -76,7 +77,7 @@ test('trace construction', async () => {
     reportingExtension.__graphqlExtension(),
   ]);
 
-  await reportingExtension.didResolveDocument(requestContext as any);
+  await reportingExtension.didResolveDocumentText(requestContext as any);
   await reportingExtension.didResolveOperation(requestContext as any);
   await graphql({
     schema,

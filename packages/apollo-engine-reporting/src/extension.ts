@@ -36,7 +36,7 @@ export class EngineReportingExtension<TContext = any>
   private nodes = new Map<string, Trace.Node>();
   private startHrTime!: [number, number];
   private operationName?: string;
-  private originalDocumentString?: string;
+  private documentText?: string;
   private documentAST?: DocumentNode;
   private options: EngineReportingOptions<TContext>;
   private addTrace: (
@@ -187,26 +187,23 @@ export class EngineReportingExtension<TContext = any>
     }
   }
 
-  public async didResolveDocument(
+  public async didResolveDocumentText(
     requestContext: WithRequired<
       GraphQLRequestContext<TContext>,
-      | 'originalDocumentString'
-      | 'queryHash'
-      | 'persistedQueryHit'
-      | 'persistedQueryRegister'
+      'documentText' | 'queryHash' | 'metrics'
     >,
   ) {
-    if (requestContext.persistedQueryHit) {
+    if (requestContext.metrics.persistedQueryHit) {
       this.trace.persistedQueryHit = true;
     }
-    if (requestContext.persistedQueryRegister) {
+    if (requestContext.metrics.persistedQueryRegister) {
       this.trace.persistedQueryRegister = true;
     }
 
     // Generally, we'll get queryString here and not parsedQuery; we only get
     // parsedQuery if you're using an OperationStore. In normal cases we'll get
     // our documentAST in the execution callback after it is parsed.
-    this.originalDocumentString = requestContext.originalDocumentString;
+    this.documentText = requestContext.documentText;
   }
 
   public async didResolveOperation(
@@ -294,7 +291,7 @@ export class EngineReportingExtension<TContext = any>
       const calculateSignature =
         this.options.calculateSignature || defaultEngineReportingSignature;
       signature = calculateSignature(this.documentAST, operationName);
-    } else if (this.originalDocumentString) {
+    } else if (this.documentText) {
       // We didn't get an AST, possibly because of a parse failure. Let's just
       // use the full query string.
       //
@@ -302,10 +299,10 @@ export class EngineReportingExtension<TContext = any>
       //     hides literals, you might end up sending literals for queries
       //     that fail parsing or validation. Provide some way to mask them
       //     anyway?
-      signature = this.originalDocumentString;
+      signature = this.documentText;
     } else {
-      // This shouldn't happen: we should have got to didResolveDocument.
-      throw new Error('No originalDocumentString?');
+      // This shouldn't happen: we should have got to didResolveDocumentText.
+      throw new Error('No documentText?');
     }
 
     this.addTrace(signature, operationName, this.trace);

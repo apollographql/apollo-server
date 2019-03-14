@@ -109,6 +109,10 @@ export async function processGraphQLRequest<TContext>(
   } = initializeRequestListenerDispatcherAndExtensionStack();
   (requestContext.context as any)._extensionStack = extensionStack;
 
+  if (!requestContext.metrics) {
+    requestContext.metrics = {};
+  }
+
   initializeDataSources();
 
   const request = requestContext.request;
@@ -118,8 +122,8 @@ export async function processGraphQLRequest<TContext>(
   let queryHash: string;
 
   let persistedQueryCache: KeyValueCache | undefined;
-  requestContext.persistedQueryHit = false;
-  requestContext.persistedQueryRegister = false;
+  requestContext.metrics.persistedQueryHit = false;
+  requestContext.metrics.persistedQueryRegister = false;
 
   if (extensions && extensions.persistedQuery) {
     // It looks like we've received a persisted query. Check if we
@@ -152,7 +156,7 @@ export async function processGraphQLRequest<TContext>(
     if (query === undefined) {
       query = await persistedQueryCache.get(queryHash);
       if (query) {
-        requestContext.persistedQueryHit = true;
+        requestContext.metrics.persistedQueryHit = true;
       } else {
         throw new PersistedQueryNotFoundError();
       }
@@ -169,7 +173,7 @@ export async function processGraphQLRequest<TContext>(
       // Defering the writing gives plugins the ability to "win" from use of
       // the cache, but also have their say in whether or not the cache is
       // written to (by interrupting the request with an error).
-      requestContext.persistedQueryRegister = true;
+      requestContext.metrics.persistedQueryRegister = true;
     }
   } else if (query) {
     // FIXME: We'll compute the APQ query hash to use as our cache key for
@@ -179,7 +183,7 @@ export async function processGraphQLRequest<TContext>(
     throw new InvalidGraphQLRequestError('Must provide query string.');
   }
 
-  requestContext.originalDocumentString = query;
+  requestContext.documentText = query;
   requestContext.queryHash = queryHash;
 
   const requestDidEnd = extensionStack.requestDidStart({
@@ -188,8 +192,8 @@ export async function processGraphQLRequest<TContext>(
     operationName: request.operationName,
     variables: request.variables,
     extensions: request.extensions,
-    persistedQueryHit: requestContext.persistedQueryHit,
-    persistedQueryRegister: requestContext.persistedQueryRegister,
+    persistedQueryHit: requestContext.metrics.persistedQueryHit,
+    persistedQueryRegister: requestContext.metrics.persistedQueryRegister,
     context: requestContext.context,
     requestContext,
   });
@@ -286,7 +290,7 @@ export async function processGraphQLRequest<TContext>(
     // pipeline, and given plugins appropriate ability to object (by throwing
     // an error) and not actually write, we'll write to the cache if it was
     // determined earlier in the request pipeline that we should do so.
-    if (requestContext.persistedQueryRegister && persistedQueryCache) {
+    if (requestContext.metrics.persistedQueryRegister && persistedQueryCache) {
       Promise.resolve(persistedQueryCache.set(queryHash, query)).catch(
         console.warn,
       );

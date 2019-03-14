@@ -21,13 +21,10 @@ export interface ApolloServerPlugin {
 }
 
 export interface GraphQLRequestListener<TContext = Record<string, any>> {
-  didResolveDocument?(
+  didResolveDocumentText?(
     requestContext: WithRequired<
       GraphQLRequestContext<TContext>,
-      | 'originalDocumentString'
-      | 'queryHash'
-      | 'persistedQueryHit'
-      | 'persistedQueryRegister'
+      'documentText' | 'queryHash' | 'metrics'
     >,
   ): ValueOrPromise<void>;
   parsingDidStart?(
