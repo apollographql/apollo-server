@@ -8,6 +8,7 @@
   "exclude": ["**/__tests__", "**/__mocks__"],
   "references": [
     { "path": "../graphql-extensions" },
-    { "path": "../apollo-server-core/tsconfig.requestPipelineAPI.json" }
+    { "path": "../apollo-server-core/tsconfig.requestPipelineAPI.json" },
+    { "path": "../apollo-server-plugin-base" },
   ]
 }
