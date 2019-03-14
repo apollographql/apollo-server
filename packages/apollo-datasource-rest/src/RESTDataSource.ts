@@ -104,9 +104,10 @@ export abstract class RESTDataSource<TContext = any> extends DataSource {
   protected parseBody(response: Response): Promise<object | string> {
     const contentType = response.headers.get('Content-Type');
     if (
-      contentType &&
-      (contentType.startsWith('application/json') ||
-        contentType.startsWith('application/hal+json'))
+      response.status !== 204 ||
+      (contentType &&
+        (contentType.startsWith('application/json') ||
+          contentType.startsWith('application/hal+json')))
     ) {
       return response.json();
     } else {
