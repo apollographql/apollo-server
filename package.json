@@ -89,7 +89,7 @@
     "@types/type-is": "1.6.2",
     "@types/ws": "6.0.1",
     "apollo-fetch": "0.7.0",
-    "apollo-link": "1.2.10",
+    "apollo-link": "1.2.11",
     "apollo-link-http": "1.5.13",
     "apollo-link-persisted-queries": "0.2.2",
     "body-parser": "1.18.3",
