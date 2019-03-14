@@ -103,10 +103,8 @@ export async function processGraphQLRequest<TContext>(
   requestContext: Mutable<GraphQLRequestContext<TContext>>,
 ): Promise<GraphQLResponse> {
   let cacheControlExtension: CacheControlExtension | undefined;
-  const {
-    dispatcher,
-    extensionStack,
-  } = initializeRequestListenerDispatcherAndExtensionStack();
+  const dispatcher = initializeRequestListenerDispatcher();
+  const extensionStack = initializeExtensionStack();
   (requestContext.context as any)._extensionStack = extensionStack;
 
   if (!requestContext.metrics) {
@@ -461,30 +459,30 @@ export async function processGraphQLRequest<TContext>(
     };
   }
 
-  function initializeRequestListenerDispatcherAndExtensionStack(): {
-    dispatcher: Dispatcher<GraphQLRequestListener>;
-    extensionStack: GraphQLExtensionStack<TContext>;
-  } {
+  function initializeRequestListenerDispatcher(): Dispatcher<
+    GraphQLRequestListener<TContext>
+  > {
     const requestListeners: GraphQLRequestListener<TContext>[] = [];
-    const requestListenerExtensions: GraphQLExtension<TContext>[] = [];
     if (config.plugins) {
       for (const plugin of config.plugins) {
         if (!plugin.requestDidStart) continue;
         const listener = plugin.requestDidStart(requestContext);
         if (listener) {
           requestListeners.push(listener);
-          if (listener.__graphqlExtension) {
-            requestListenerExtensions.push(listener.__graphqlExtension());
-          }
         }
       }
     }
-    const dispatcher = new Dispatcher(requestListeners);
+    return new Dispatcher(requestListeners);
+  }
 
+  function initializeExtensionStack(): GraphQLExtensionStack<TContext> {
     enableGraphQLExtensions(config.schema);
 
     // If custom extension factories were provided, create per-request extension
     // objects. Also include any extensions that came from plugins.
+    const requestListenerExtensions = dispatcher.requestListeners
+      .filter(rl => rl.__graphqlExtension)
+      .map(rl => rl.__graphqlExtension!());
     const extensions = [
       ...(config.extensions ? config.extensions.map(f => f()) : []),
       ...requestListenerExtensions,
@@ -499,8 +497,7 @@ export async function processGraphQLRequest<TContext>(
       extensions.push(cacheControlExtension);
     }
 
-    const extensionStack = new GraphQLExtensionStack(extensions);
-    return { dispatcher, extensionStack };
+    return new GraphQLExtensionStack(extensions);
   }
 
   function initializeDataSources() {

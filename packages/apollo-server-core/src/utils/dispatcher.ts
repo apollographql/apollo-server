@@ -9,7 +9,7 @@ type UnwrapPromise<T> = T extends Promise<infer U> ? U : T;
 type DidEndHook<TArgs extends any[]> = (...args: TArgs) => void;
 
 export class Dispatcher<T> {
-  constructor(protected targets: T[]) {}
+  constructor(public requestListeners: T[]) {}
 
   public async invokeHookAsync<
     TMethodName extends FunctionPropertyNames<Required<T>>
@@ -18,7 +18,7 @@ export class Dispatcher<T> {
     ...args: Args<T[TMethodName]>
   ): Promise<UnwrapPromise<ReturnType<AsFunction<T[TMethodName]>>>[]> {
     return await Promise.all(
-      this.targets.map(target => {
+      this.requestListeners.map(target => {
         const method = target[methodName];
         if (method && typeof method === 'function') {
           return method.apply(target, args);
@@ -39,7 +39,7 @@ export class Dispatcher<T> {
   ): DidEndHook<TEndHookArgs> {
     const didEndHooks: DidEndHook<TEndHookArgs>[] = [];
 
-    for (const target of this.targets) {
+    for (const target of this.requestListeners) {
       const method = target[methodName];
       if (method && typeof method === 'function') {
         const didEndHook = method.apply(target, args);
