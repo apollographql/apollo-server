@@ -209,7 +209,7 @@ describe('apollo-server-express', () => {
       const paths = url.split('/');
       const rewiredEndpoint = `${samplePath}/${paths.pop()}`;
 
-      return new Promise<http.Server>((resolve, reject) => {
+      await new Promise<http.Server>((resolve, reject) => {
         request(
           {
             url: paths.join('/') + rewiredEndpoint,
@@ -232,6 +232,8 @@ describe('apollo-server-express', () => {
           },
         );
       });
+      await rewiredServer.stop();
+      await httpRewiredServer.close();
     });
 
     const playgroundPartialOptionsTest = async () => {
