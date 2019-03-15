@@ -75,7 +75,7 @@ Finally, start the server using `node index.js` and open your web-browser to the
 
 For more details, check out the Apollo Server [Getting Started guide](https://www.apollographql.com/docs/apollo-server/getting-started.html) of the documentation, or for a more comprehensive understanding, see the [fullstack tutorial](https://www.apollographql.com/docs/tutorial/introduction.html).
 
-For questions, the [Apollo commuinty on Spectrum.chat](https://spectrum.chat) is a great place to get assistance.
+For questions, the [Apollo community on Spectrum.chat](https://spectrum.chat) is a great place to get assistance.
 
 ## Installation: Integrations
 
