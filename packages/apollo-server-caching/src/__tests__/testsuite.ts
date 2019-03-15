@@ -1,9 +1,10 @@
 import { advanceTimeBy, mockDate, unmockDate } from '__mocks__/date';
+import { TestableKeyValueCache } from '../';
 
-export function testKeyValueCache_Basics(keyValueCache: any) {
+export function testKeyValueCache_Basics(keyValueCache: TestableKeyValueCache) {
   describe('basic cache functionality', () => {
     beforeEach(() => {
-      keyValueCache.flush();
+      keyValueCache.flush && keyValueCache.flush();
     });
 
     it('can do a basic get and set', async () => {
@@ -21,7 +22,9 @@ export function testKeyValueCache_Basics(keyValueCache: any) {
   });
 }
 
-export function testKeyValueCache_Expiration(keyValueCache: any) {
+export function testKeyValueCache_Expiration(
+  keyValueCache: TestableKeyValueCache,
+) {
   describe('time-based cache expunging', () => {
     beforeAll(() => {
       mockDate();
@@ -29,12 +32,12 @@ export function testKeyValueCache_Expiration(keyValueCache: any) {
     });
 
     beforeEach(() => {
-      keyValueCache.flush();
+      keyValueCache.flush && keyValueCache.flush();
     });
 
     afterAll(() => {
       unmockDate();
-      keyValueCache.close();
+      keyValueCache.close && keyValueCache.close();
     });
 
     it('is able to expire keys based on ttl', async () => {
@@ -54,7 +57,7 @@ export function testKeyValueCache_Expiration(keyValueCache: any) {
   });
 }
 
-export function testKeyValueCache(keyValueCache: any) {
+export function testKeyValueCache(keyValueCache: TestableKeyValueCache) {
   describe('KeyValueCache Test Suite', () => {
     testKeyValueCache_Basics(keyValueCache);
     testKeyValueCache_Expiration(keyValueCache);

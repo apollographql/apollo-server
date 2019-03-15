@@ -26,7 +26,7 @@ Here, we'll take the [graphql-type-json](https://github.com/taion/graphql-type-j
 Add the `graphql-type-json` package to the project's dependencies :
 
 ```shell
-$ npm install --save graphql-type-json
+$ npm install graphql-type-json
 ```
 
 In code, require the type defined by in the npm package and use it :
