@@ -239,7 +239,7 @@ export default class Agent {
   public async updateManifest(manifest: OperationManifest) {
     if (
       !manifest ||
-      manifest.version !== 1 ||
+      manifest.version !== 2 ||
       !Array.isArray(manifest.operations)
     ) {
       throw new Error('Invalid manifest format.');
