@@ -264,3 +264,15 @@ export function formatApolloErrors(
     }
   }) as Array<ApolloError>;
 }
+
+export function hasPersistedQueryError(errors: Array<Error>): boolean {
+  try {
+    return errors.some(
+      error =>
+        error instanceof PersistedQueryNotFoundError ||
+        error instanceof PersistedQueryNotSupportedError,
+    );
+  } catch (err) {
+    return false;
+  }
+}
