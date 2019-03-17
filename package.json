@@ -125,7 +125,7 @@
     "redis-mock": "0.43.0",
     "request": "2.88.0",
     "request-promise": "4.2.4",
-    "subscriptions-transport-ws": "0.9.15",
+    "subscriptions-transport-ws": "0.9.16",
     "supertest": "3.4.2",
     "test-listen": "1.1.0",
     "ts-jest": "24.0.0",
