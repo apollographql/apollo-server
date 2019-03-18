@@ -479,7 +479,7 @@ describe('RESTDataSource', () => {
         baseURL = 'https://api.example.com';
 
         getFoo() {
-          return this.get('foo');
+          return this.get('');
         }
       }();
 
