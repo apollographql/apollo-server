@@ -1,5 +1,5 @@
 import nock from 'nock';
-import { InMemoryLRUCache, KeyValueCache } from 'apollo-server-caching';
+import { InMemoryLRUCache } from 'apollo-server-caching';
 import { envOverrideOperationManifest, getStoreKey } from '../common';
 import { resolve as urlResolve } from 'url';
 import { createHash } from 'crypto';
@@ -23,7 +23,7 @@ const getRequiredAgentOptions = (
     serviceID = genericServiceID,
     ...addlOptions
   }: {
-    store?: KeyValueCache;
+    store?: InMemoryLRUCache;
     schemaHash?: string;
     serviceID?: string;
   } = {
@@ -130,7 +130,7 @@ describe('Agent', () => {
 
     describe('manifest checking and store populating', () => {
       const forCleanup: {
-        store?: KeyValueCache;
+        store?: InMemoryLRUCache;
         agent?: import('../agent').default;
       }[] = [];
 
@@ -203,7 +203,7 @@ describe('Agent', () => {
       }
 
       async function expectStoreHasOperationEach(
-        store: KeyValueCache,
+        store: InMemoryLRUCache,
         letters: string[],
       ) {
         for (const letter of letters) {

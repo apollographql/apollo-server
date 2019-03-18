@@ -14,7 +14,7 @@ const urlOperationManifestBase: string = ((): string => {
   return desiredUrl.replace(/\/$/, '');
 })();
 
-export const getStoreKey = (signature: string) => `apq:${signature}`;
+export const getStoreKey = (signature: string) => `${signature}`;
 
 export function generateServiceIdHash(serviceId: string): string {
   return createHash('sha512')
