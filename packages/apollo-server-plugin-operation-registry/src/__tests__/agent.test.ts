@@ -425,7 +425,7 @@ function nockSuccessfulManifestForServiceAndSchema(
   operations: ManifestRecord[],
 ) {
   return nockManifestForServiceAndSchema(serviceID, schemaHash).reply(200, {
-    version: 1,
+    version: 2,
     operations,
   });
 }
