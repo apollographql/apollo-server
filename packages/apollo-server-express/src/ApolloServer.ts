@@ -181,7 +181,9 @@ export class ApolloServer extends ApolloServerBase {
     // TODO: how to ensure path to node_modules will always resolve, e.g. when used as a dependency or npm link?
     app.use(
       '/graphql-playground-react',
-      express.static('node_modules/graphql-playground-react/'),
+      express.static(
+        require.resolve('graphql-playground-react/package.json').slice(0, -12),
+      ),
     );
 
     // Note: if you enable playground in production and expect to be able to see your
