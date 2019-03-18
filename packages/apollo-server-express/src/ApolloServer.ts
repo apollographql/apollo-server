@@ -178,7 +178,6 @@ export class ApolloServer extends ApolloServerBase {
     }
 
     // mount graphql-playground-react on localhost so that it can be used offline
-    // TODO: how to ensure path to node_modules will always resolve, e.g. when used as a dependency or npm link?
     app.use(
       '/graphql-playground-react',
       express.static(
