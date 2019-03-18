@@ -9,7 +9,7 @@ While in the most basic sense, you could have a GraphQL server return a single, 
 
 ## Core scalar types
 
-Scalar types represent the leaves of an operation and alway resolve to concrete data. The default, scalar types which GraphQL offers are:
+Scalar types represent the leaves of an operation and always resolve to concrete data. The default, scalar types which GraphQL offers are:
 
 * `Int`: Signed 32‐bit integer
 * `Float`: Signed double-precision floating-point value
@@ -92,9 +92,9 @@ In Apollo server, a resolver that returns an enum can use the direct string repr
 
 ```js
 const schema = gql`
-type Query {
-  genre: Genre
-}
+  type Query {
+    genre: Genre
+  }
 `;
 
 const resolvers = {
@@ -110,9 +110,9 @@ Lists are defined with as type modifier that wraps object types, scalars, and en
 
 ```js
 const schema = gql`
-type Query {
-  todos: [String]
-}
+  type Query {
+    todos: [String]
+  }
 `;
 
 const resolvers = {
@@ -132,9 +132,9 @@ Using the exclamation mark to declare a field as non-nullable simplifies the con
 
 ```js
 const schema = gql`
-type Query {
-  genre: String!
-}
+  type Query {
+    genre: String!
+  }
 `;
 
 const resolvers = {

@@ -3,12 +3,16 @@ import {
   ValidationContext,
   GraphQLFieldResolver,
   DocumentNode,
+  GraphQLError,
+  GraphQLFormattedError,
 } from 'graphql';
 import { GraphQLExtension } from 'graphql-extensions';
 import { CacheControlExtensionOptions } from 'apollo-cache-control';
-import { KeyValueCache } from 'apollo-server-caching';
+import { KeyValueCache, InMemoryLRUCache } from 'apollo-server-caching';
 import { DataSource } from 'apollo-datasource';
 import { ApolloServerPlugin } from 'apollo-server-plugin-base';
+import { GraphQLParseOptions } from 'graphql-tools';
+import { ValueOrPromise } from 'apollo-server-env';
 
 /*
  * GraphQLServerOptions
@@ -22,6 +26,7 @@ import { ApolloServerPlugin } from 'apollo-server-plugin-base';
  * - (optional) fieldResolver: a custom default field resolver
  * - (optional) debug: a boolean that will print additional debug logging if execution errors occur
  * - (optional) extensions: an array of functions which create GraphQLExtensions (each GraphQLExtension object is used for one request)
+ * - (optional) parseOptions: options to pass when parsing schemas and queries
  *
  */
 export interface GraphQLServerOptions<
@@ -29,7 +34,7 @@ export interface GraphQLServerOptions<
   TRootValue = any
 > {
   schema: GraphQLSchema;
-  formatError?: Function;
+  formatError?: (error: GraphQLError) => GraphQLFormattedError;
   rootValue?: ((parsedQuery: DocumentNode) => TRootValue) | TRootValue;
   context?: TContext | (() => never);
   validationRules?: Array<(context: ValidationContext) => any>;
@@ -43,6 +48,8 @@ export interface GraphQLServerOptions<
   cache?: KeyValueCache;
   persistedQueries?: PersistedQueryOptions;
   plugins?: ApolloServerPlugin[];
+  documentStore?: InMemoryLRUCache<DocumentNode>;
+  parseOptions?: GraphQLParseOptions;
 }
 
 export type DataSources<TContext> = {
@@ -55,13 +62,11 @@ export interface PersistedQueryOptions {
 
 export default GraphQLServerOptions;
 
-export async function resolveGraphqlOptions<HandlerArguments extends any[]>(
+export async function resolveGraphqlOptions(
   options:
     | GraphQLServerOptions
-    | ((
-        ...args: HandlerArguments
-      ) => Promise<GraphQLServerOptions> | GraphQLServerOptions),
-  ...args: HandlerArguments
+    | ((...args: Array<any>) => ValueOrPromise<GraphQLServerOptions>),
+  ...args: Array<any>
 ): Promise<GraphQLServerOptions> {
   if (typeof options === 'function') {
     return await options(...args);

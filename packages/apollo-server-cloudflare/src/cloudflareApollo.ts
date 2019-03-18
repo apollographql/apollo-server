@@ -1,18 +1,19 @@
 import {
   GraphQLOptions,
-  ServerOptionsFunction,
   HttpQueryError,
   runHttpQuery,
 } from 'apollo-server-core';
 
-import { Request, Response, URL } from 'apollo-server-env';
+import { Request, Response, URL, ValueOrPromise } from 'apollo-server-env';
 
 // Design principles:
 // - You can issue a GET or POST with your query.
 // - simple, fast and secure
 //
 
-export type CloudflareOptionsFunction = ServerOptionsFunction<[Request]>;
+export interface CloudflareOptionsFunction {
+  (req?: Request): ValueOrPromise<GraphQLOptions>;
+}
 
 export function graphqlCloudflare(
   options: GraphQLOptions | CloudflareOptionsFunction,

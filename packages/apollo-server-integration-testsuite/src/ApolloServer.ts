@@ -37,6 +37,7 @@ import {
   ApolloServerBase,
 } from 'apollo-server-core';
 import { GraphQLExtension, GraphQLResponse } from 'graphql-extensions';
+import { TracingFormat } from 'apollo-tracing';
 
 export function createServerInfo<AS extends ApolloServerBase>(
   server: AS,
@@ -567,6 +568,9 @@ export function testApolloServer<AS extends ApolloServerBase>(
             engineServerDidStart = startEngineServer({
               check: (req, res) => {
                 const report = FullTracesReport.decode(req.body);
+                const header = report.header;
+                expect(header.schemaTag).toEqual('');
+                expect(header.schemaHash).toBeDefined();
                 const trace = Object.values(report.tracesPerQuery)[0].trace[0];
                 resolve(trace);
                 res.end();
@@ -597,6 +601,11 @@ export function testApolloServer<AS extends ApolloServerBase>(
               }`,
               apiKey: 'service:my-app:secret',
               maxUncompressedReportSize: 1,
+              generateClientInfo: () => ({
+                clientName: 'testing',
+                clientReferenceId: '1234',
+                clientVersion: 'v1.0.1',
+              }),
             },
             formatError,
             debug: true,
@@ -619,6 +628,10 @@ export function testApolloServer<AS extends ApolloServerBase>(
           expect(willSendResponseInExtension).toHaveBeenCalledTimes(1);
 
           const trace = await didReceiveTrace;
+
+          expect(trace.clientReferenceId).toMatch(/1234/);
+          expect(trace.clientName).toMatch(/testing/);
+          expect(trace.clientVersion).toEqual('v1.0.1');
 
           expect(trace.root!.child![0].error![0].message).toMatch(/nope/);
           expect(trace.root!.child![0].error![0].message).not.toMatch(/masked/);
@@ -677,136 +690,194 @@ export function testApolloServer<AS extends ApolloServerBase>(
         expect(formatError).toHaveBeenCalledTimes(1);
       });
 
-      it('defers context eval with thunk until after options creation', async () => {
-        const uniqueContext = { key: 'major' };
+      describe('context field', () => {
         const typeDefs = gql`
           type Query {
             hello: String
           }
         `;
+
         const resolvers = {
           Query: {
-            hello: (_parent, _args, context) => {
-              expect(context).toEqual(Promise.resolve(uniqueContext));
-              return 'hi';
-            },
+            hello: () => 'hi',
           },
         };
-        const spy = jest.fn(() => ({}));
-        const { url: uri } = await createApolloServer({
-          typeDefs,
-          resolvers,
-          context: spy,
-        });
 
-        const apolloFetch = createApolloFetch({ uri });
-
-        expect(spy).not.toBeCalled();
-
-        await apolloFetch({ query: '{hello}' });
-        expect(spy).toHaveBeenCalledTimes(1);
-        await apolloFetch({ query: '{hello}' });
-        expect(spy).toHaveBeenCalledTimes(2);
-      });
-
-      it('allows context to be async function', async () => {
-        const uniqueContext = { key: 'major' };
-        const spy = jest.fn(() => 'hi');
-        const typeDefs = gql`
-          type Query {
-            hello: String
-          }
-        `;
-        const resolvers = {
-          Query: {
-            hello: (_parent, _args, context) => {
-              expect(context.key).toEqual('major');
-              return spy();
+        it('defers context eval with thunk until after options creation', async () => {
+          const uniqueContext = { key: 'major' };
+          const typeDefs = gql`
+            type Query {
+              hello: String
+            }
+          `;
+          const resolvers = {
+            Query: {
+              hello: (_parent, _args, context) => {
+                expect(context).toEqual(Promise.resolve(uniqueContext));
+                return 'hi';
+              },
             },
-          },
-        };
-        const { url: uri } = await createApolloServer({
-          typeDefs,
-          resolvers,
-          context: async () => uniqueContext,
+          };
+          const spy = jest.fn(() => ({}));
+          const { url: uri } = await createApolloServer({
+            typeDefs,
+            resolvers,
+            context: spy,
+          });
+
+          const apolloFetch = createApolloFetch({ uri });
+
+          expect(spy).not.toBeCalled();
+
+          await apolloFetch({ query: '{hello}' });
+          expect(spy).toHaveBeenCalledTimes(1);
+          await apolloFetch({ query: '{hello}' });
+          expect(spy).toHaveBeenCalledTimes(2);
         });
 
-        const apolloFetch = createApolloFetch({ uri });
-
-        expect(spy).not.toBeCalled();
-        await apolloFetch({ query: '{hello}' });
-        expect(spy).toHaveBeenCalledTimes(1);
-      });
-
-      it('clones the context for every request', async () => {
-        const uniqueContext = { key: 'major' };
-        const spy = jest.fn(() => 'hi');
-        const typeDefs = gql`
-          type Query {
-            hello: String
-          }
-        `;
-        const resolvers = {
-          Query: {
-            hello: (_parent, _args, context) => {
-              expect(context.key).toEqual('major');
-              context.key = 'minor';
-              return spy();
+        it('clones the context for every request', async () => {
+          const uniqueContext = { key: 'major' };
+          const spy = jest.fn(() => 'hi');
+          const typeDefs = gql`
+            type Query {
+              hello: String
+            }
+          `;
+          const resolvers = {
+            Query: {
+              hello: (_parent, _args, context) => {
+                expect(context.key).toEqual('major');
+                context.key = 'minor';
+                return spy();
+              },
             },
-          },
-        };
-        const { url: uri } = await createApolloServer({
-          typeDefs,
-          resolvers,
-          context: uniqueContext,
+          };
+          const { url: uri } = await createApolloServer({
+            typeDefs,
+            resolvers,
+            context: uniqueContext,
+          });
+
+          const apolloFetch = createApolloFetch({ uri });
+
+          expect(spy).not.toBeCalled();
+
+          await apolloFetch({ query: '{hello}' });
+          expect(spy).toHaveBeenCalledTimes(1);
+          await apolloFetch({ query: '{hello}' });
+          expect(spy).toHaveBeenCalledTimes(2);
         });
 
-        const apolloFetch = createApolloFetch({ uri });
+        describe('as a function', () => {
+          it('can accept and return `req`', async () => {
+            expect(
+              await createApolloServer({
+                typeDefs,
+                resolvers,
+                context: ({ req }) => ({ req }),
+              }),
+            ).not.toThrow;
+          });
 
-        expect(spy).not.toBeCalled();
+          it('can accept nothing and return an empty object', async () => {
+            expect(
+              await createApolloServer({
+                typeDefs,
+                resolvers,
+                context: () => ({}),
+              }),
+            ).not.toThrow;
+          });
 
-        await apolloFetch({ query: '{hello}' });
-        expect(spy).toHaveBeenCalledTimes(1);
-        await apolloFetch({ query: '{hello}' });
-        expect(spy).toHaveBeenCalledTimes(2);
-      });
+          it('can be an async function', async () => {
+            const uniqueContext = { key: 'major' };
+            const spy = jest.fn(() => 'hi');
+            const typeDefs = gql`
+              type Query {
+                hello: String
+              }
+            `;
+            const resolvers = {
+              Query: {
+                hello: (_parent, _args, context) => {
+                  expect(context.key).toEqual('major');
+                  return spy();
+                },
+              },
+            };
+            const { url: uri } = await createApolloServer({
+              typeDefs,
+              resolvers,
+              context: async () => uniqueContext,
+            });
 
-      it('returns thrown context error as a valid graphql result', async () => {
-        const nodeEnv = process.env.NODE_ENV;
-        delete process.env.NODE_ENV;
-        const typeDefs = gql`
-          type Query {
-            hello: String
-          }
-        `;
-        const resolvers = {
-          Query: {
-            hello: () => {
-              throw Error('never get here');
-            },
-          },
-        };
-        const { url: uri } = await createApolloServer({
-          typeDefs,
-          resolvers,
-          context: () => {
-            throw new AuthenticationError('valid result');
-          },
+            const apolloFetch = createApolloFetch({ uri });
+
+            expect(spy).not.toBeCalled();
+            await apolloFetch({ query: '{hello}' });
+            expect(spy).toHaveBeenCalledTimes(1);
+          });
+
+          it('returns thrown context error as a valid graphql result', async () => {
+            const nodeEnv = process.env.NODE_ENV;
+            delete process.env.NODE_ENV;
+            const typeDefs = gql`
+              type Query {
+                hello: String
+              }
+            `;
+            const resolvers = {
+              Query: {
+                hello: () => {
+                  throw Error('never get here');
+                },
+              },
+            };
+            const { url: uri } = await createApolloServer({
+              typeDefs,
+              resolvers,
+              context: () => {
+                throw new AuthenticationError('valid result');
+              },
+            });
+
+            const apolloFetch = createApolloFetch({ uri });
+
+            const result = await apolloFetch({ query: '{hello}' });
+            expect(result.errors.length).toEqual(1);
+            expect(result.data).toBeUndefined();
+
+            const e = result.errors[0];
+            expect(e.message).toMatch('valid result');
+            expect(e.extensions).toBeDefined();
+            expect(e.extensions.code).toEqual('UNAUTHENTICATED');
+            expect(e.extensions.exception.stacktrace).toBeDefined();
+
+            process.env.NODE_ENV = nodeEnv;
+          });
         });
 
-        const apolloFetch = createApolloFetch({ uri });
+        describe('as an object', () => {
+          it('can be an empty object', async () => {
+            expect(
+              await createApolloServer({
+                typeDefs,
+                resolvers,
+                context: {},
+              }),
+            ).not.toThrow;
+          });
 
-        const result = await apolloFetch({ query: '{hello}' });
-        expect(result.errors.length).toEqual(1);
-        expect(result.data).toBeUndefined();
-
-        const e = result.errors[0];
-        expect(e.message).toMatch('valid result');
-        expect(e.extensions).toBeDefined();
-        expect(e.extensions.code).toEqual('UNAUTHENTICATED');
-        expect(e.extensions.exception.stacktrace).toBeDefined();
-
-        process.env.NODE_ENV = nodeEnv;
+          it('can contain arbitrary values', async () => {
+            expect(
+              await createApolloServer({
+                typeDefs,
+                resolvers,
+                context: { value: 'arbitrary' },
+              }),
+            ).not.toThrow;
+          });
+        });
       });
 
       it('propogates error codes in production', async () => {
@@ -966,7 +1037,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           });
         });
       });
-      it('disables subscritpions when option set to false', done => {
+      it('disables subscriptions when option set to false', done => {
         const typeDefs = gql`
           type Query {
             "graphql-js forces there to be a query type"
@@ -1013,7 +1084,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           }
 
           const client = new SubscriptionClient(
-            `ws://localhost:${port}${server.subscriptionsPath}`,
+            `ws://localhost:${port}${server.subscriptionsPath || ''}`,
             {},
             WebSocket,
           );
@@ -1246,6 +1317,68 @@ export function testApolloServer<AS extends ApolloServerBase>(
           expect(result.data).toEqual({ testString: 'test string' });
           done();
         }, done.fail);
+      });
+    });
+
+    describe('Tracing', () => {
+      const typeDefs = gql`
+        type Book {
+          title: String
+          author: String
+        }
+
+        type Movie {
+          title: String
+        }
+
+        type Query {
+          books: [Book]
+          movies: [Movie]
+        }
+      `;
+
+      const resolvers = {
+        Query: {
+          books: () =>
+            new Promise(resolve =>
+              setTimeout(() => resolve([{ title: 'H', author: 'J' }]), 10),
+            ),
+          movies: () =>
+            new Promise(resolve =>
+              setTimeout(() => resolve([{ title: 'H' }]), 12),
+            ),
+        },
+      };
+
+      it('reports a total duration that is longer than the duration of its resolvers', async () => {
+        const { url: uri } = await createApolloServer({
+          typeDefs,
+          resolvers,
+          tracing: true,
+        });
+
+        const apolloFetch = createApolloFetch({ uri });
+        const result = await apolloFetch({
+          query: `{ books { title author } }`,
+        });
+
+        const tracing: TracingFormat = result.extensions.tracing;
+
+        const earliestStartOffset = tracing.execution.resolvers
+          .map(resolver => resolver.startOffset)
+          .reduce((currentEarliestOffset, nextOffset) =>
+            Math.min(currentEarliestOffset, nextOffset),
+          );
+
+        const latestEndOffset = tracing.execution.resolvers
+          .map(resolver => resolver.startOffset + resolver.duration)
+          .reduce((currentLatestEndOffset, nextEndOffset) =>
+            Math.min(currentLatestEndOffset, nextEndOffset),
+          );
+
+        const resolverDuration = latestEndOffset - earliestStartOffset;
+
+        expect(resolverDuration).not.toBeGreaterThan(tracing.duration);
       });
     });
   });

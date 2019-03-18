@@ -1,3 +1,4 @@
+import { ValueOrPromise, WithRequired } from 'apollo-server-env';
 import {
   GraphQLServiceContext,
   GraphQLRequestContext,
@@ -11,25 +12,20 @@ export {
   GraphQLResponse,
 };
 
-type ValueOrPromise<T> = T | Promise<T>;
-
-export abstract class ApolloServerPlugin {
+export interface ApolloServerPlugin {
   serverWillStart?(service: GraphQLServiceContext): ValueOrPromise<void>;
   requestDidStart?<TContext>(
     requestContext: GraphQLRequestContext<TContext>,
   ): GraphQLRequestListener<TContext> | void;
 }
 
-export type WithRequired<T, K extends keyof T> = T & Required<Pick<T, K>>;
-export type DidEndHook<TArgs extends any[]> = (...args: TArgs) => void;
-
 export interface GraphQLRequestListener<TContext = Record<string, any>> {
   parsingDidStart?(
     requestContext: GraphQLRequestContext<TContext>,
-  ): DidEndHook<[Error?]> | void;
+  ): (err?: Error) => void | void;
   validationDidStart?(
     requestContext: WithRequired<GraphQLRequestContext<TContext>, 'document'>,
-  ): DidEndHook<[ReadonlyArray<Error>?]> | void;
+  ): (err?: ReadonlyArray<Error>) => void | void;
   didResolveOperation?(
     requestContext: WithRequired<
       GraphQLRequestContext<TContext>,
@@ -41,7 +37,7 @@ export interface GraphQLRequestListener<TContext = Record<string, any>> {
       GraphQLRequestContext<TContext>,
       'document' | 'operationName' | 'operation'
     >,
-  ): DidEndHook<[Error?]> | void;
+  ): (err?: Error) => void | void;
   willSendResponse?(
     requestContext: WithRequired<GraphQLRequestContext<TContext>, 'response'>,
   ): ValueOrPromise<void>;

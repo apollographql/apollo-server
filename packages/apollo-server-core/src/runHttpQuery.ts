@@ -1,4 +1,4 @@
-import { Request, Headers } from 'apollo-server-env';
+import { Request, Headers, ValueOrPromise } from 'apollo-server-env';
 import {
   default as GraphQLOptions,
   resolveGraphqlOptions,
@@ -16,9 +16,10 @@ import {
   GraphQLResponse,
 } from './requestPipeline';
 import { CacheControlExtensionOptions } from 'apollo-cache-control';
-import { ApolloServerPlugin, WithRequired } from 'apollo-server-plugin-base';
+import { ApolloServerPlugin } from 'apollo-server-plugin-base';
+import { WithRequired } from 'apollo-server-env';
 
-export interface HttpQueryRequest<HandlerArguments extends any[]> {
+export interface HttpQueryRequest {
   method: string;
   // query is either the POST body or the GET query string map.  In the GET
   // case, all values are strings and need to be parsed as JSON; in the POST
@@ -28,7 +29,7 @@ export interface HttpQueryRequest<HandlerArguments extends any[]> {
   query: Record<string, any> | Array<Record<string, any>>;
   options:
     | GraphQLOptions
-    | ((...args: HandlerArguments) => Promise<GraphQLOptions> | GraphQLOptions);
+    | ((...args: Array<any>) => ValueOrPromise<GraphQLOptions>);
   request: Pick<Request, 'url' | 'method' | 'headers'>;
 }
 
@@ -91,9 +92,9 @@ function throwHttpGraphQLError<E extends Error>(
   );
 }
 
-export async function runHttpQuery<HandlerArguments extends any[]>(
-  handlerArguments: HandlerArguments,
-  request: HttpQueryRequest<HandlerArguments>,
+export async function runHttpQuery(
+  handlerArguments: Array<any>,
+  request: HttpQueryRequest,
 ): Promise<HttpQueryResponse> {
   let options: GraphQLOptions;
   const debugDefault =
@@ -158,6 +159,7 @@ export async function runHttpQuery<HandlerArguments extends any[]>(
       | CacheControlExtensionOptions
       | undefined,
     dataSources: options.dataSources,
+    documentStore: options.documentStore,
 
     extensions: options.extensions,
     persistedQueries: options.persistedQueries,
@@ -178,7 +180,7 @@ export async function processHTTPRequest<TContext>(
   options: WithRequired<GraphQLOptions<TContext>, 'cache' | 'plugins'> & {
     context: TContext;
   },
-  httpRequest: HttpQueryRequest<any>,
+  httpRequest: HttpQueryRequest,
 ): Promise<HttpQueryResponse> {
   let requestPayload;
 
@@ -212,7 +214,12 @@ export async function processHTTPRequest<TContext>(
       );
   }
 
-  options.plugins.push(checkOperationPlugin);
+  // Create a local copy of `options`, based on global options, but maintaining
+  // that appropriate plugins are in place.
+  options = {
+    ...options,
+    plugins: [checkOperationPlugin, ...options.plugins],
+  };
 
   function buildRequestContext(
     request: GraphQLRequest,

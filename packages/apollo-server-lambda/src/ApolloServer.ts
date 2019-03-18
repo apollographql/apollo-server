@@ -1,4 +1,9 @@
-import lambda from 'aws-lambda';
+import {
+  APIGatewayProxyCallback,
+  APIGatewayProxyEvent,
+  APIGatewayProxyResult,
+  Context as LambdaContext,
+} from 'aws-lambda';
 import { ApolloServerBase } from 'apollo-server-core';
 import { GraphQLOptions, Config } from 'apollo-server-core';
 import {
@@ -37,14 +42,19 @@ export class ApolloServer extends ApolloServerBase {
   // provides typings for the integration specific behavior, ideally this would
   // be propagated with a generic to the super class
   createGraphQLServerOptions(
-    event: lambda.APIGatewayProxyEvent,
-    context: lambda.Context,
+    event: APIGatewayProxyEvent,
+    context: LambdaContext,
   ): Promise<GraphQLOptions> {
     return super.graphQLServerOptions({ event, context });
   }
 
   public createHandler({ cors }: CreateHandlerOptions = { cors: undefined }) {
-    const corsHeaders: lambda.APIGatewayProxyResult['headers'] = {};
+    // We will kick off the `willStart` event once for the server, and then
+    // await it before processing any requests by incorporating its `await` into
+    // the GraphQLServerOptions function which is called before each request.
+    const promiseWillStart = this.willStart();
+
+    const corsHeaders: APIGatewayProxyResult['headers'] = {};
 
     if (cors) {
       if (cors.methods) {
@@ -84,9 +94,9 @@ export class ApolloServer extends ApolloServerBase {
     }
 
     return (
-      event: lambda.APIGatewayProxyEvent,
-      context: lambda.Context,
-      callback: lambda.APIGatewayProxyCallback,
+      event: APIGatewayProxyEvent,
+      context: LambdaContext,
+      callback: APIGatewayProxyCallback,
     ) => {
       if (cors && cors.origin) {
         if (typeof cors.origin === 'string') {
@@ -140,10 +150,7 @@ export class ApolloServer extends ApolloServerBase {
         }
       }
 
-      const callbackFilter: lambda.APIGatewayProxyCallback = (
-        error,
-        result,
-      ) => {
+      const callbackFilter: APIGatewayProxyCallback = (error, result) => {
         callback(
           error,
           result && {
@@ -156,11 +163,17 @@ export class ApolloServer extends ApolloServerBase {
         );
       };
 
-      graphqlLambda(this.createGraphQLServerOptions.bind(this))(
-        event,
-        context,
-        callbackFilter,
-      );
+      graphqlLambda(async () => {
+        // In a world where this `createHandler` was async, we might avoid this
+        // but since we don't want to introduce a breaking change to this API
+        // (by switching it to `async`), we'll leverage the
+        // `GraphQLServerOptions`, which are dynamically built on each request,
+        // to `await` the `promiseWillStart` which we kicked off at the top of
+        // this method to ensure that it runs to completion (which is part of
+        // its contract) prior to processing the request.
+        await promiseWillStart;
+        return this.createGraphQLServerOptions(event, context);
+      })(event, context, callbackFilter);
     };
   }
 }
