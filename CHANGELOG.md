@@ -2,6 +2,8 @@
 
 ### vNEXT
 
+- Allow `GraphQLRequestListener` callbacks in plugins to depend on `this`. [PR #2470](https://github.com/apollographql/apollo-server/pull/2470)
+
 ### v2.4.8
 
 - No functional changes in this version.  The patch version has been bumped to fix the `README.md` displayed on the [npm package for `apollo-server`](https://npm.im/apollo-server) as a result of a broken publish.  Apologies for the additional noise!
