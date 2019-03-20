@@ -307,7 +307,7 @@ export async function processGraphQLRequest<TContext>(
         'executionDidStart',
         requestContext as WithRequired<
           typeof requestContext,
-          'document' | 'operation' | 'operationName'
+          'document' | 'operation' | 'operationName' | 'metrics'
         >,
       );
 
