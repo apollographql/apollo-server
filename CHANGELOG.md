@@ -3,6 +3,7 @@
 ### vNEXT
 
 - Add cache-control: no-cache header to both PersistedQueryNotSupportedError and PersistedQueryNotFoundError responses as these should never be cached. [PR #2452](https://github.com/apollographql/apollo-server/pull/2452)
+- Allow `GraphQLRequestListener` callbacks in plugins to depend on `this`. [PR #2470](https://github.com/apollographql/apollo-server/pull/2470)
 
 ### v2.4.8
 
