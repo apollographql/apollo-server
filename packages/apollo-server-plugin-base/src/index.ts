@@ -40,7 +40,7 @@ export interface GraphQLRequestListener<TContext = Record<string, any>> {
   responseForOperation?(
     requestContext: WithRequired<
       GraphQLRequestContext<TContext>,
-      'document' | 'operationName' | 'operation'
+      'document' | 'operationName' | 'operation' | 'metrics'
     >,
   ): ValueOrPromise<GraphQLResponse | null>;
   executionDidStart?(
