@@ -123,10 +123,8 @@ export class EngineReportingExtension<TContext = any>
     });
     // Default to all headers are private; == checks for null and undefined
     if (
-      !(
-        this.options.privateHeaders == null ||
-        this.options.privateHeaders === true
-      )
+      Array.isArray(this.options.privateHeaders) ||
+      [null, undefined, true].includes(this.options.privateHeaders)
     ) {
       for (const [key, value] of o.request.headers) {
         if (
@@ -165,8 +163,8 @@ export class EngineReportingExtension<TContext = any>
 
     // Default: all variables are private; == checks for both null and undefined
     if (
-      (!this.options.privateVariables == null ||
-        this.options.privateVariables !== true) &&
+      (Array.isArray(this.options.privateVariables) ||
+        [null, undefined, true].includes(this.options.privateVariables)) &&
       o.variables
     ) {
       // Note: we explicitly do *not* include the details.rawQuery field. The
