@@ -42,10 +42,6 @@ export interface GraphQLResponse {
 export interface GraphQLRequestMetrics {
   persistedQueryHit?: boolean;
   persistedQueryRegister?: boolean;
-  // XXX I thought about making this an augmentation either from
-  // apollo-engine-reporting or apollo-server-plugin-response-cache but that
-  // seemed to mean that one of those packages would have to depend on the
-  // other, which seemed wrong.  Happy to hear there's a better way.
   responseCacheHit?: boolean;
 }
 

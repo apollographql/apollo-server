@@ -173,8 +173,6 @@ export default function plugin(
             const value: CacheValue = JSON.parse(serializedValue);
             // Use cache policy from the cache (eg, to calculate HTTP response
             // headers).
-            // XXX Another alternative would be to directly set the
-            // cache-control HTTP header here.
             requestContext.overallCachePolicy = value.cachePolicy;
             requestContext.metrics.responseCacheHit = true;
             age = Math.round((+new Date() - value.cacheTime) / 1000);
