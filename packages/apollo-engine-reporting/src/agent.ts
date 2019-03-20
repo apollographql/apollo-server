@@ -62,11 +62,13 @@ export interface EngineReportingOptions<TContext> {
   // A case-sensitive list of names of variables whose values should not be sent
   // to Apollo servers, or 'true' to leave out all variables. In the former
   // case, the report will indicate that each private variable was redacted; in
-  // the latter case, no variables are sent at all.
+  // the latter case, no variables are sent at all. Defaults to 'true' to send
+  // no variables to Apollo servers.
   privateVariables?: Array<String> | boolean;
   // A case-insensitive list of names of HTTP headers whose values should not be
   // sent to Apollo servers, or 'true' to leave out all HTTP headers. Unlike
-  // with privateVariables, names of dropped headers are not reported.
+  // with privateVariables, names of dropped headers are not reported. Defaults
+  // to 'true' to send no variables to Apollo servers.
   privateHeaders?: Array<String> | boolean;
   // By default, EngineReportingAgent listens for the 'SIGINT' and 'SIGTERM'
   // signals, stops, sends a final report, and re-sends the signal to
