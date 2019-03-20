@@ -28,7 +28,7 @@ import {
   VERSION,
 } from 'apollo-link-persisted-queries';
 
-import { createApolloFetch } from 'apollo-fetch';
+import { createApolloFetch, GraphQLRequest } from 'apollo-fetch';
 import {
   AuthenticationError,
   UserInputError,
@@ -1493,10 +1493,16 @@ export function testApolloServer<AS extends ApolloServerBase>(
           }
           return value;
         }
+        // Just for the typing.
+        function doFetch(
+          options: GraphQLRequest & { headers?: Record<string, string> },
+        ) {
+          return apolloFetch(options as any);
+        }
 
         const basicQuery = '{ cached }';
         const fetch = async () => {
-          const result = await apolloFetch({
+          const result = await doFetch({
             query: basicQuery,
           });
           expect(result.data.cached).toBe('value:cached');
@@ -1558,7 +1564,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
         // For now, caching is based on the original document text, not the AST,
         // so this should be a cache miss.
         {
-          const result = await apolloFetch({
+          const result = await doFetch({
             query: '{       cached           }',
           });
           expect(result.data.cached).toBe('value:cached');
@@ -1567,7 +1573,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
         // This definitely should be a cache miss because the output is different.
         {
-          const result = await apolloFetch({
+          const result = await doFetch({
             query: '{alias: cached}',
           });
           expect(result.data.alias).toBe('value:cached');
@@ -1577,7 +1583,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
         // Reading both a cached and uncached data should not get cached (it's a
         // full response cache).
         {
-          const result = await apolloFetch({
+          const result = await doFetch({
             query: '{cached uncached}',
           });
           expect(result.data.cached).toBe('value:cached');
@@ -1590,7 +1596,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
         // Just double-checking that it didn't get cached.
         {
-          const result = await apolloFetch({
+          const result = await doFetch({
             query: '{cached uncached}',
           });
           expect(result.data.cached).toBe('value:cached');
@@ -1603,35 +1609,35 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
         // Let's just remind ourselves that the basic query is cacheable.
         {
-          await apolloFetch({ query: basicQuery });
+          await doFetch({ query: basicQuery });
           expectCacheHit('cached');
         }
 
         // But if we give it some extra cache key data, it'll be cached separately.
         {
-          const result = await apolloFetch({
+          const result = await doFetch({
             query: basicQuery,
             headers: { 'extra-cache-key-data': 'foo' },
-          } as any);
+          });
           expect(result.data.cached).toBe('value:cached');
           expectCacheMiss('cached');
         }
 
         // But if we give it the same extra cache key data twice, it's a hit.
         {
-          const result = await apolloFetch({
+          const result = await doFetch({
             query: basicQuery,
             headers: { 'extra-cache-key-data': 'foo' },
-          } as any);
+          });
           expect(result.data.cached).toBe('value:cached');
           expectCacheHit('cached');
         }
 
         // Without a session ID, private fields won't be cached.
         {
-          const result = await apolloFetch({
+          const result = await doFetch({
             query: '{private}',
-          } as any);
+          });
           expect(result.data.private).toBe('value:private');
           expectCacheMiss('private');
           // Note that the HTTP header calculator doesn't know about session
@@ -1645,9 +1651,9 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
         // See?
         {
-          const result = await apolloFetch({
+          const result = await doFetch({
             query: '{private}',
-          } as any);
+          });
           expect(result.data.private).toBe('value:private');
           expectCacheMiss('private');
           expect(httpHeader(result, 'cache-control')).toBe(
@@ -1655,9 +1661,144 @@ export function testApolloServer<AS extends ApolloServerBase>(
           );
         }
 
-        // XXX test actually setting sessionId
-        // XXX test shouldReadFromCache
-        // XXX test shouldWriteToCache
+        // OK, how about with a session ID.  First try should be a miss.
+        {
+          const result = await doFetch({
+            query: '{private}',
+            headers: { 'session-id': 'foo' },
+          });
+          expect(result.data.private).toBe('value:private');
+          expectCacheMiss('private');
+          expect(httpHeader(result, 'cache-control')).toBe(
+            'max-age=9, private',
+          );
+        }
+
+        // But next try should be a hit.
+        {
+          const result = await doFetch({
+            query: '{private}',
+            headers: { 'session-id': 'foo' },
+          });
+          expect(result.data.private).toBe('value:private');
+          expectCacheHit('private');
+          expect(httpHeader(result, 'cache-control')).toBe(
+            'max-age=9, private',
+          );
+        }
+
+        // But a different session ID should be a miss again.
+        {
+          const result = await doFetch({
+            query: '{private}',
+            headers: { 'session-id': 'bar' },
+          });
+          expect(result.data.private).toBe('value:private');
+          expectCacheMiss('private');
+          expect(httpHeader(result, 'cache-control')).toBe(
+            'max-age=9, private',
+          );
+        }
+
+        // As should be no session.
+        {
+          const result = await doFetch({
+            query: '{private}',
+          });
+          expect(result.data.private).toBe('value:private');
+          expectCacheMiss('private');
+          expect(httpHeader(result, 'cache-control')).toBe(
+            'max-age=9, private',
+          );
+        }
+
+        // Let's remind ourselves once again that the basic (public) query is *still* cached.
+        {
+          const result = await doFetch({ query: basicQuery });
+          expectCacheHit('cached');
+          expect(httpHeader(result, 'cache-control')).toBe(
+            'max-age=10, public',
+          );
+        }
+
+        // If you're logged in, though, you get your own cache shared with all
+        // other authenticated users (the "authenticated public" cache), so this
+        // is a miss. It's still a public cache, though, for the HTTP header.
+        // XXX Does that makes sense? Maybe this should be private, or maybe we
+        // should drop the entire "authenticated public" concept.
+        {
+          const result = await doFetch({
+            query: basicQuery,
+            headers: { 'session-id': 'bar' },
+          });
+          expect(result.data.cached).toBe('value:cached');
+          expectCacheMiss('cached');
+          expect(httpHeader(result, 'cache-control')).toBe(
+            'max-age=10, public',
+          );
+        }
+
+        // See, this other session sees it!
+        {
+          const result = await doFetch({
+            query: basicQuery,
+            headers: { 'session-id': 'baz' },
+          });
+          expect(result.data.cached).toBe('value:cached');
+          expectCacheHit('cached');
+          expect(httpHeader(result, 'cache-control')).toBe(
+            'max-age=10, public',
+          );
+          expect(httpHeader(result, 'age')).toBe('0');
+        }
+
+        // Let's continue to remind ourselves that the basic (public) query is *still* cached.
+        {
+          const result = await doFetch({ query: basicQuery });
+          expectCacheHit('cached');
+          expect(httpHeader(result, 'cache-control')).toBe(
+            'max-age=10, public',
+          );
+        }
+
+        // But what if we specifically ask to not read from the cache?
+        {
+          const result = await doFetch({
+            query: basicQuery,
+            headers: { 'no-read-from-cache': 'y' },
+          });
+          expect(result.data.cached).toBe('value:cached');
+          expectCacheMiss('cached');
+          expect(httpHeader(result, 'cache-control')).toBe(
+            'max-age=10, public',
+          );
+        }
+
+        // Let's expire the cache, and run again, not writing to the cache.
+        advanceTimeBy(15 * 1000);
+        {
+          const result = await doFetch({
+            query: basicQuery,
+            headers: { 'no-write-to-cache': 'y' },
+          });
+          expect(result.data.cached).toBe('value:cached');
+          expectCacheMiss('cached');
+          expect(httpHeader(result, 'cache-control')).toBe(
+            'max-age=10, public',
+          );
+        }
+
+        // And now verify that in fact we did not write!
+        {
+          const result = await doFetch({
+            query: basicQuery,
+          });
+          expect(result.data.cached).toBe('value:cached');
+          expectCacheMiss('cached');
+          expect(httpHeader(result, 'cache-control')).toBe(
+            'max-age=10, public',
+          );
+        }
       });
     });
   });
