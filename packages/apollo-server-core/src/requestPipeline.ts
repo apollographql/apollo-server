@@ -110,7 +110,7 @@ export async function processGraphQLRequest<TContext>(
   initializeDataSources();
 
   if (!requestContext.metrics) {
-    requestContext.metrics = {};
+    requestContext.metrics = Object.create(null);
   }
 
   const request = requestContext.request;
