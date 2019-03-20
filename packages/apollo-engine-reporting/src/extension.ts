@@ -121,7 +121,13 @@ export class EngineReportingExtension<TContext = any>
       host: null,
       path: null,
     });
-    if (this.options.privateHeaders !== true) {
+    // Default to all headers are private; == checks for null and undefined
+    if (
+      !(
+        this.options.privateHeaders == null ||
+        this.options.privateHeaders === true
+      )
+    ) {
       for (const [key, value] of o.request.headers) {
         if (
           this.options.privateHeaders &&
