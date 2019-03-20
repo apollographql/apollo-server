@@ -131,7 +131,7 @@ export class CacheControlExtension<TContext = any>
   }
 
   format(): [string, CacheControlFormat] | undefined {
-    // We should have to explicitly ask leave the formatted extension in, or
+    // We should have to explicitly ask to leave the formatted extension in, or
     // pass the old-school `cacheControl: true` (as interpreted by
     // apollo-server-core/ApolloServer), in order to include the
     // engineproxy-aimed extensions. Specifically, we want users of
