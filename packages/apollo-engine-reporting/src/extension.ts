@@ -157,7 +157,12 @@ export class EngineReportingExtension<TContext = any>
       }
     }
 
-    if (this.options.privateVariables !== true && o.variables) {
+    // Default: all variables are private; == checks for both null and undefined
+    if (
+      (!this.options.privateVariables == null ||
+        this.options.privateVariables !== true) &&
+      o.variables
+    ) {
       // Note: we explicitly do *not* include the details.rawQuery field. The
       // Engine web app currently does nothing with this other than store it in
       // the database and offer it up via its GraphQL API, and sending it means
