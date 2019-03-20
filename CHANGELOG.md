@@ -3,6 +3,8 @@
 ### vNEXT
 
 - Allow `GraphQLRequestListener` callbacks in plugins to depend on `this`. [PR #2470](https://github.com/apollographql/apollo-server/pull/2470)
+- Default `privateVariables` and `privateHeaders` to 'true' to prevent sending potential PII to Apollo's cloud service
+unless users explicitly specify these options. [PR #2472](https://github.com/apollographql/apollo-server/pull/2472)
 
 ### v2.4.8
 
