@@ -2,9 +2,13 @@
 
 ### vNEXT
 
-### v2.4.9
+### v2.4.10
 
 - `apollo-server-koa`: Expose `server.getMiddleware()` function for getting access to koa middleware directly. [PR #2435](https://github.com/apollographql/apollo-server/pull/2435)
+
+### v2.4.9
+
+- Allow `GraphQLRequestListener` callbacks in plugins to depend on `this`. [PR #2470](https://github.com/apollographql/apollo-server/pull/2470)
 
 ### v2.4.8
 
