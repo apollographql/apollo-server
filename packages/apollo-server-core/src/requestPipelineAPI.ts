@@ -60,7 +60,7 @@ export interface GraphQLRequestContext<TContext = Record<string, any>> {
   readonly queryHash?: string;
 
   readonly document?: DocumentNode;
-  readonly documentText?: string;
+  readonly source?: string;
 
   // `operationName` is set based on the operation AST, so it is defined
   // even if no `request.operationName` was passed in.

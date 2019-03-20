@@ -4,7 +4,7 @@ import {
   GraphQLRequestContext,
 } from 'apollo-server-plugin-base';
 import { KeyValueCache, PrefixingKeyValueCache } from 'apollo-server-caching';
-import { WithRequired, ValueOrPromise } from 'apollo-server-env';
+import { ValueOrPromise } from 'apollo-server-env';
 import { CacheHint, CacheScope } from 'apollo-cache-control';
 
 // XXX This should use createSHA from apollo-server-core in order to work on
@@ -95,7 +95,7 @@ function sha(s: string) {
 }
 
 interface BaseCacheKey {
-  documentText: string;
+  source: string;
   operationName: string | null;
   variables: { [name: string]: any };
   extra: any;
@@ -150,12 +150,9 @@ export default function plugin(
 
       return {
         async responseForOperation(
-          requestContext: WithRequired<
-            GraphQLRequestContext<any>,
-            'document' | 'operationName' | 'operation'
-          >,
+          requestContext,
         ): Promise<GraphQLResponse | null> {
-          requestContext.metrics!.responseCacheHit = false;
+          requestContext.metrics.responseCacheHit = false;
 
           if (!isGraphQLQuery(requestContext)) {
             return null;
@@ -179,7 +176,7 @@ export default function plugin(
             // XXX Another alternative would be to directly set the
             // cache-control HTTP header here.
             requestContext.overallCachePolicy = value.cachePolicy;
-            requestContext.metrics!.responseCacheHit = true;
+            requestContext.metrics.responseCacheHit = true;
             age = Math.round((+new Date() - value.cacheTime) / 1000);
             return { data: value.data };
           }
@@ -194,7 +191,7 @@ export default function plugin(
           }
 
           baseCacheKey = {
-            documentText: requestContext.documentText!,
+            source: requestContext.source!,
             operationName: requestContext.operationName,
             // Defensive copy just in case it somehow gets mutated.
             variables: { ...(requestContext.request.variables || {}) },
@@ -225,13 +222,11 @@ export default function plugin(
           }
         },
 
-        async willSendResponse(
-          requestContext: WithRequired<GraphQLRequestContext<any>, 'response'>,
-        ) {
+        async willSendResponse(requestContext) {
           if (!isGraphQLQuery(requestContext)) {
             return;
           }
-          if (requestContext.metrics!.responseCacheHit) {
+          if (requestContext.metrics.responseCacheHit) {
             // Never write back to the cache what we just read from it. But do set the Age header!
             const http = requestContext.response.http;
             if (http && age !== null) {
