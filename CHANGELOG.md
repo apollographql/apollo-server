@@ -3,6 +3,7 @@
 ### vNEXT
 
 - Allow `GraphQLRequestListener` callbacks in plugins to depend on `this`. [PR #2470](https://github.com/apollographql/apollo-server/pull/2470)
+- `apollo-server-core`: Pass request object to `context` callback function when invoking the `executeOperation` method. [PR #2478](https://github.com/apollographql/apollo-server/pull/2478)
 
 ### v2.4.8
 

@@ -572,7 +572,7 @@ export class ApolloServerBase {
     let options;
 
     try {
-      options = await this.graphQLServerOptions();
+      options = await this.graphQLServerOptions({ req: request });
     } catch (e) {
       e.message = `Invalid options provided to ApolloServer: ${e.message}`;
       throw new Error(e);
