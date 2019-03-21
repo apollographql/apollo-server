@@ -6,7 +6,7 @@
   "types": "dist/index.d.ts",
   "keywords": [],
   "author": "Apollo <npm@apollographql.com>",
-  "license": "Copyright (c) Meteor Development Group, Inc.; See LICENSE.md.",
+  "license": "SEE LICENSE IN LICENSE.md",
   "engines": {
     "node": ">=8"
   },
