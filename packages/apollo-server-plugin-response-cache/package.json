@@ -1,6 +1,6 @@
 {
   "name": "apollo-server-plugin-response-cache",
-  "version": "0.0.0-alpha.1",
+  "version": "0.1.0-alpha.0",
   "description": "Apollo Server full query response cache",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -21,8 +21,8 @@
   "dependencies": {
     "apollo-cache-control": "file:../apollo-cache-control",
     "apollo-server-caching": "file:../apollo-server-caching",
-    "apollo-server-plugin-base": "file:../apollo-server-plugin-base",
-    "apollo-server-env": "file:../apollo-server-env"
+    "apollo-server-env": "file:../apollo-server-env",
+    "apollo-server-plugin-base": "file:../apollo-server-plugin-base"
   },
   "peerDependencies": {
     "graphql": "^0.12.0 || ^0.13.0 || ^14.0.0"
