@@ -98,7 +98,7 @@ new ApolloServer({
 
 * `tracing`, `cacheControl`: <`Boolean`>
 
-  Add tracing or cacheControl meta data to the GraphQL response
+  If set to true, adds tracing or cacheControl meta data to the GraphQL response. This is primarily intended for use with the deprecated Engine proxy.  `cacheControl` can also be set to an object to specify arguments to the `apollo-cache-control` package, including `defaultMaxAge`, `calculateHttpHeaders`, and `stripFormattedExtensions`.
 
 * `formatError`, `formatResponse`: <`Function`>
 

@@ -21,24 +21,44 @@ export interface ApolloServerPlugin {
 
 export interface GraphQLRequestListener<TContext = Record<string, any>> {
   parsingDidStart?(
-    requestContext: GraphQLRequestContext<TContext>,
+    requestContext: WithRequired<
+      GraphQLRequestContext<TContext>,
+      'metrics' | 'source'
+    >,
   ): (err?: Error) => void | void;
   validationDidStart?(
-    requestContext: WithRequired<GraphQLRequestContext<TContext>, 'document'>,
+    requestContext: WithRequired<
+      GraphQLRequestContext<TContext>,
+      'metrics' | 'source' | 'document'
+    >,
   ): (err?: ReadonlyArray<Error>) => void | void;
   didResolveOperation?(
     requestContext: WithRequired<
       GraphQLRequestContext<TContext>,
-      'document' | 'operationName' | 'operation'
+      'metrics' | 'source' | 'document' | 'operationName' | 'operation'
     >,
   ): ValueOrPromise<void>;
+  // If this hook is defined, it is invoked immediately before GraphQL execution
+  // would take place. If its return value resolves to a non-null
+  // GraphQLResponse, that result is used instead of executing the query.
+  // Hooks from different plugins are invoked in series and the first non-null
+  // response is used.
+  responseForOperation?(
+    requestContext: WithRequired<
+      GraphQLRequestContext<TContext>,
+      'metrics' | 'source' | 'document' | 'operationName' | 'operation'
+    >,
+  ): ValueOrPromise<GraphQLResponse | null>;
   executionDidStart?(
     requestContext: WithRequired<
       GraphQLRequestContext<TContext>,
-      'document' | 'operationName' | 'operation'
+      'metrics' | 'source' | 'document' | 'operationName' | 'operation'
     >,
   ): (err?: Error) => void | void;
   willSendResponse?(
-    requestContext: WithRequired<GraphQLRequestContext<TContext>, 'response'>,
+    requestContext: WithRequired<
+      GraphQLRequestContext<TContext>,
+      'metrics' | 'response'
+    >,
   ): ValueOrPromise<void>;
 }

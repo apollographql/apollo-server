@@ -18,6 +18,7 @@ sidebar_categories:
     - features/mocking
     - features/errors
     - features/data-sources
+    - features/caching
     - features/subscriptions
     - features/metrics
     - features/graphql-playground
