@@ -15,7 +15,7 @@ import {
   GraphQLFormattedError,
   OperationDefinitionNode,
   DocumentNode,
-  ExecutionResult,
+  GraphQLError,
 } from 'graphql';
 import { KeyValueCache } from 'apollo-server-caching';
 
@@ -77,4 +77,10 @@ export type GraphQLExecutor<TContext = Record<string, any>> = (
     GraphQLRequestContext<TContext>,
     'document' | 'operationName' | 'operation'
   >,
-) => ValueOrPromise<ExecutionResult>;
+) => ValueOrPromise<GraphQLExecutionResult>;
+
+export type GraphQLExecutionResult = {
+  data?: Record<string, any>;
+  errors?: ReadonlyArray<GraphQLError>;
+  extensions?: Record<string, any>;
+};

@@ -7,7 +7,6 @@ import {
   ExecutionArgs,
   GraphQLError,
   GraphQLFormattedError,
-  ExecutionResult,
 } from 'graphql';
 import * as graphql from 'graphql';
 import {
@@ -38,6 +37,7 @@ import {
   InvalidGraphQLRequestError,
   ValidationRule,
   GraphQLExecutor,
+  GraphQLExecutionResult,
 } from '../dist/requestPipelineAPI';
 import {
   ApolloServerPlugin,
@@ -375,7 +375,7 @@ export async function processGraphQLRequest<TContext>(
       GraphQLRequestContext<TContext>,
       'document' | 'operationName' | 'operation'
     >,
-  ): Promise<ExecutionResult> {
+  ): Promise<GraphQLExecutionResult> {
     const { request, document } = requestContext;
 
     const executionArgs: ExecutionArgs = {
