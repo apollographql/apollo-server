@@ -1,6 +1,6 @@
 ---
 title: Caching
-description: Automatically set HTTP cache headers! Save full responses in a cache!
+description: Automatically set HTTP cache headers and save full responses in a cache.
 ---
 
 Production apps often rely on caching for scalability.
@@ -18,9 +18,7 @@ You can define cache hints *statically* in your schema and *dynamically* in your
 
 ### Adding cache hints statically in your schema
 
-The easiest way to add cache hints is directly in your schema using the `@cacheControl` directive. Apollo Server automatically adds the definition of the `@cacheControl` directive to your schema when you create a new `ApolloServer` object with `typeDefs` and `resolvers`.
-
-You can apply `@cacheControl` to an individual field or to a type. Hints on a type apply to all fields that *return* objects of that type (not to the fields inside that type). Hints on fields override hints specified on the target type.  `@cacheControl` can specify `maxAge` (in seconds, like in an HTTP `Cache-Control` header) and `scope`, which can be `PUBLIC` (the default) or `PRIVATE`.
+The easiest way to add cache hints is directly in your schema using the `@cacheControl` directive. Apollo Server automatically adds the definition of the `@cacheControl` directive to your schema when you create a new `ApolloServer` object with `typeDefs` and `resolvers`. Hints look like this:
 
 ```graphql
 type Post @cacheControl(maxAge: 240) {
@@ -28,9 +26,30 @@ type Post @cacheControl(maxAge: 240) {
   title: String
   author: Author
   votes: Int @cacheControl(maxAge: 30)
+  comments: [Comment]
   readByCurrentUser: Boolean! @cacheControl(scope: PRIVATE)
 }
+
+type Comment @cacheControl(maxAge: 1000) {
+  post: Post!
+}
+
+type Query {
+  latestPost: Post @cacheControl(maxAge: 10)
+}
 ```
+
+You can apply `@cacheControl` to an individual field or to a type.
+
+Hints on a field describe the cache policy for that field itself; for example, `Post.votes` can be cached for 30 seconds.
+
+Hints on a type apply to all fields that *return* objects of that type (possibly wrapped in lists and non-null specifiers). For example, the hint `@cacheControl(maxAge: 240)` on `Post` applies to the field `Comment.post`, and the hint `@cacheControl(maxAge:1000)` on `Comment` applies to the field `Post.comments`.
+
+Hints on fields override hints specified on the target type. For example, the hint `@cacheControl(maxAge: 10)` on `Query.latestPost` takes precedence over the hint `@cacheControl(maxAge: 240)` on `Post`.
+
+See [below](#default-maxage) for the semantics of fields which don't have `maxAge` set on them (statically or dynamically).
+
+`@cacheControl` can specify `maxAge` (in seconds, like in an HTTP `Cache-Control` header) and `scope`, which can be `PUBLIC` (the default) or `PRIVATE`.
 
 
 ### Adding cache hints dynamically in your resolvers
