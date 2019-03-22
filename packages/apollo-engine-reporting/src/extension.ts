@@ -1,4 +1,4 @@
-import { Request } from 'apollo-server-env';
+import { Request, WithRequired } from 'apollo-server-env';
 
 import {
   GraphQLResolveInfo,
@@ -93,7 +93,7 @@ export class EngineReportingExtension<TContext = any>
     variables?: Record<string, any>;
     context: TContext;
     extensions?: Record<string, any>;
-    requestContext: GraphQLRequestContext<TContext>;
+    requestContext: WithRequired<GraphQLRequestContext<TContext>, 'metrics'>;
   }): EndHandler {
     this.trace.startTime = dateToTimestamp(new Date());
     this.startHrTime = process.hrtime();
@@ -146,10 +146,10 @@ export class EngineReportingExtension<TContext = any>
         }
       }
 
-      if (o.requestContext.metrics!.persistedQueryHit) {
+      if (o.requestContext.metrics.persistedQueryHit) {
         this.trace.persistedQueryHit = true;
       }
-      if (o.requestContext.metrics!.persistedQueryRegister) {
+      if (o.requestContext.metrics.persistedQueryRegister) {
         this.trace.persistedQueryRegister = true;
       }
     }
@@ -210,7 +210,7 @@ export class EngineReportingExtension<TContext = any>
       );
       this.trace.endTime = dateToTimestamp(new Date());
 
-      this.trace.fullQueryCacheHit = !!o.requestContext.metrics!
+      this.trace.fullQueryCacheHit = !!o.requestContext.metrics
         .responseCacheHit;
 
       const operationName = this.operationName || '';
