@@ -1,8 +1,9 @@
 # Changelog
 
-### vNEXT
+### v2.5.0
 
 - Allow `GraphQLRequestListener` callbacks in plugins to depend on `this`. [PR #2470](https://github.com/apollographql/apollo-server/pull/2470)
+- Move shared TypeScript utility types `WithRequired` and `ValueOrPromise` into `apollo-server-env`. [PR #2415](https://github.com/apollographql/apollo-server/pull/2415) [PR #2417](https://github.com/apollographql/apollo-server/pull/2417)
 
 ### v2.4.8
 
