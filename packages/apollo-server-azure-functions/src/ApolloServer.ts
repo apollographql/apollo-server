@@ -1,8 +1,8 @@
 import {
-  HttpContext,
-  FunctionRequest,
-  FunctionResponse,
-} from './azureFunctions';
+  Context,
+  HttpRequest
+} from '@azure/functions';
+import { HttpResponse } from 'azure-functions-ts-essentials';
 import { ApolloServerBase } from 'apollo-server-core';
 import { GraphQLOptions, Config } from 'apollo-server-core';
 import {
@@ -41,8 +41,8 @@ export class ApolloServer extends ApolloServerBase {
   // provides typings for the integration specific behavior, ideally this would
   // be propagated with a generic to the super class
   createGraphQLServerOptions(
-    request: FunctionRequest,
-    context: HttpContext,
+    request: HttpRequest,
+    context: Context,
   ): Promise<GraphQLOptions> {
     return super.graphQLServerOptions({ request, context });
   }
@@ -53,7 +53,7 @@ export class ApolloServer extends ApolloServerBase {
     // the GraphQLServerOptions function which is called before each request.
     const promiseWillStart = this.willStart();
 
-    const corsHeaders: FunctionResponse['headers'] = {};
+    const corsHeaders: HttpResponse['headers'] = {};
 
     if (cors) {
       if (cors.methods) {
@@ -92,7 +92,7 @@ export class ApolloServer extends ApolloServerBase {
       }
     }
 
-    return (context: HttpContext, req: FunctionRequest) => {
+    return (context: Context, req: HttpRequest) => {
       if (cors && cors.origin) {
         if (typeof cors.origin === 'string') {
           corsHeaders['Access-Control-Allow-Origin'] = cors.origin;
@@ -144,7 +144,7 @@ export class ApolloServer extends ApolloServerBase {
         }
       }
 
-      const callbackFilter = (error?: any, output?: FunctionResponse) => {
+      const callbackFilter = (error?: any, output?: HttpResponse) => {
         context.done(
           error,
           output && {
