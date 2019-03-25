@@ -2,6 +2,7 @@
 
 ### vNEXT
 
+* `apollo-server-core`: Handle Errors with circular references gracefully [PR#2490](https://github.com/apollographql/apollo-server/pull/2490)
 * `apollo-server-core`: Add persisted queries [PR#1149](https://github.com/apollographql/apollo-server/pull/1149)
 * `apollo-server-core`: added `BadUserInputError`
 * `apollo-server-core`: **breaking** gql is exported from gql-tag and ApolloServer requires a DocumentNode [PR#1146](https://github.com/apollographql/apollo-server/pull/1146)

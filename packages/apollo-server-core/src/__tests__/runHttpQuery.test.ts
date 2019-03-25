@@ -2,8 +2,14 @@
 import MockReq = require('mock-req');
 
 import { GraphQLSchema, GraphQLObjectType, GraphQLString } from 'graphql';
+import { FormatErrorExtension } from '../formatters';
 
-import { runHttpQuery, HttpQueryError } from '../runHttpQuery';
+import {
+  runHttpQuery,
+  HttpQueryError,
+  HttpQueryResponse,
+  HttpQueryRequest,
+} from '../runHttpQuery';
 
 const queryType = new GraphQLObjectType({
   name: 'QueryType',
@@ -12,6 +18,16 @@ const queryType = new GraphQLObjectType({
       type: GraphQLString,
       resolve() {
         return 'it works';
+      },
+    },
+    circularFailure: {
+      type: GraphQLString,
+      resolve() {
+        // Errors that have circular references are surprisingly common. Many
+        // HTTP client libraries throw errors that include circular references
+        const error = new Error('Self referencing failure');
+        (error as any).circle = error;
+        throw error;
       },
     },
   },
@@ -44,6 +60,31 @@ describe('runHttpQuery', () => {
         expect(err.statusCode).toEqual(400);
         expect(err.message).toEqual('Must provide query string.');
       });
+    });
+
+    it('handles errors with circular references gracefully', () => {
+      const failingRequest: HttpQueryRequest = Object.assign(
+        {},
+        mockQueryRequest,
+        {
+          options: {
+            schema,
+            extensions: [() => new FormatErrorExtension(undefined, true)],
+          },
+          query: {
+            query: '{circularFailure}',
+          },
+        },
+      );
+
+      return runHttpQuery([], failingRequest).then(
+        (response: HttpQueryResponse) => {
+          const parsed = JSON.parse(response.graphqlResponse);
+          expect(parsed.errors).toHaveLength(1);
+          expect(parsed.errors[0].message).toBe('Self referencing failure');
+          expect(parsed.errors[0].path).toEqual(['circularFailure']);
+        },
+      );
     });
   });
 });

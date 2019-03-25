@@ -18,6 +18,8 @@ import {
 import { CacheControlExtensionOptions } from 'apollo-cache-control';
 import { ApolloServerPlugin } from 'apollo-server-plugin-base';
 import { WithRequired } from 'apollo-server-env';
+import stableStringify from 'fast-json-stable-stringify';
+import safeStringify from 'json-stringify-safe';
 
 export interface HttpQueryRequest {
   method: string;
@@ -422,7 +424,15 @@ function serializeGraphQLResponse(
 
 // The result of a curl does not appear well in the terminal, so we add an extra new line
 function prettyJSONStringify(value: any) {
-  return JSON.stringify(value) + '\n';
+  try {
+    return stableStringify(value) + '\n';
+  } catch (e) {
+    // Some Errors thrown from some libraries include circular references and it
+    // causes "Converting circular structure to JSON" errors. As a fallback,
+    // retry with a safer version of stringify that is designed to handle
+    // circular references gracefully
+    return safeStringify(value) + '\n';
+  }
 }
 
 function cloneObject<T extends Object>(object: T): T {
