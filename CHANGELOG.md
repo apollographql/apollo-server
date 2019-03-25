@@ -3,6 +3,7 @@
 ### vNEXT
 
 - Allow `GraphQLRequestListener` callbacks in plugins to depend on `this`. [PR #2470](https://github.com/apollographql/apollo-server/pull/2470)
+- Allow human-readable `maxAge` arguments in the `@cacheControl` directive. [PR #2489](https://github.com/apollographql/apollo-server/pull/2489)
 
 ### v2.4.8
 
