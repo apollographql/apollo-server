@@ -11,8 +11,10 @@
     "node": ">=6.0"
   },
   "dependencies": {
+    "@types/ms": "^0.7.30",
     "apollo-server-env": "file:../apollo-server-env",
-    "graphql-extensions": "file:../graphql-extensions"
+    "graphql-extensions": "file:../graphql-extensions",
+    "ms": "^2.1.1"
   },
   "peerDependencies": {
     "graphql": "^0.12.0 || ^0.13.0 || ^14.0.0"

@@ -7,6 +7,7 @@ import {
   ResponsePath,
   responsePathAsArray,
 } from 'graphql';
+import ms from 'ms';
 
 import { GraphQLExtension, GraphQLResponse } from 'graphql-extensions';
 
@@ -205,6 +206,10 @@ function cacheHintFromDirectives(
       maxAgeArgument.value &&
       maxAgeArgument.value.kind === 'IntValue'
         ? parseInt(maxAgeArgument.value.value)
+        : maxAgeArgument &&
+          maxAgeArgument.value &&
+          maxAgeArgument.value.kind === 'StringValue'
+        ? ms(maxAgeArgument.value.value) / 1000
         : undefined,
     scope:
       scopeArgument &&

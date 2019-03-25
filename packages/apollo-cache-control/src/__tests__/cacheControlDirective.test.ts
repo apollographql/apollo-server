@@ -130,6 +130,33 @@ describe('@cacheControl directives', () => {
     expect(hints).toContainEqual({ path: ['droid'], maxAge: 60 });
   });
 
+  it('should allow specifying a human-readable maxAge', async () => {
+    const schema = buildSchemaWithCacheControlSupport(`
+      type Query {
+        droid(id: ID!): Droid
+      }
+
+      type Droid @cacheControl(maxAge: "1m") {
+        id: ID!
+        name: String!
+      }
+    `);
+
+    const hints = await collectCacheControlHints(
+      schema,
+      `
+        query {
+          droid(id: 2001) {
+            name
+          }
+        }
+      `,
+      { defaultMaxAge: 10 },
+    );
+
+    expect(hints).toContainEqual({ path: ['droid'], maxAge: 60 });
+  });
+
   it('should overwrite the default maxAge when maxAge=0 is specified on the type', async () => {
     const schema = buildSchemaWithCacheControlSupport(`
       type Query {
