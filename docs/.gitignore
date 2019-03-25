@@ -7,3 +7,4 @@ public/*
 .deploy*/
 docs.json
 _multiconfig.yml
+.cache
