@@ -11,15 +11,11 @@ module.exports = {
         githubRepo: 'apollographql/apollo-server',
         versions: ['1', '2'],
         sidebarCategories: {
-          null: [
-            'index',
-            'getting-started',
-            'whats-new'
-          ],
+          null: ['index', 'getting-started', 'whats-new'],
           Essentials: [
             'essentials/schema',
             'essentials/server',
-            'essentials/data'
+            'essentials/data',
           ],
           Features: [
             'features/mocking',
@@ -33,7 +29,7 @@ module.exports = {
             'features/directives',
             'features/creating-directives',
             'features/authentication',
-            'features/testing'
+            'features/testing',
           ],
           // 'Schema stitching': [
           //   'features/schema-stitching',
@@ -45,19 +41,16 @@ module.exports = {
             // 'deployment/index',
             'deployment/heroku',
             'deployment/lambda',
-            'deployment/now'
+            'deployment/now',
           ],
-          'API Reference': [
-            'api/apollo-server',
-            'api/graphql-tools'
-          ],
+          'API Reference': ['api/apollo-server', 'api/graphql-tools'],
           Migration: [
             'migration-two-dot',
             'migration-engine',
-            'migration-file-uploads'
-          ]
-        }
-      }
-    }
-  ]
+            'migration-file-uploads',
+          ],
+        },
+      },
+    },
+  ],
 };
