@@ -3,7 +3,7 @@
     "start": "gatsby develop --prefix-paths"
   },
   "dependencies": {
-    "gatsby": "2.2.11",
+    "gatsby": "2.2.13",
     "gatsby-theme-apollo-docs": "0.2.37"
   }
 }
