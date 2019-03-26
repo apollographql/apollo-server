@@ -1,7 +1,4 @@
-import {
-  Context,
-  HttpRequest
-} from '@azure/functions';
+import { Context, HttpRequest } from '@azure/functions';
 import { HttpResponse } from 'azure-functions-ts-essentials';
 import { ApolloServerBase } from 'apollo-server-core';
 import { GraphQLOptions, Config } from 'apollo-server-core';
@@ -114,7 +111,7 @@ export class ApolloServer extends ApolloServerBase {
       }
 
       if (req.method === 'OPTIONS') {
-        context.done("", {
+        context.done('', {
           body: '',
           status: 204,
           headers: corsHeaders,
@@ -132,7 +129,7 @@ export class ApolloServer extends ApolloServerBase {
             ...this.playgroundOptions,
           };
           const body = renderPlaygroundPage(playgroundRenderPageOptions);
-          context.done("", {
+          context.done('', {
             body: body,
             status: 200,
             headers: {

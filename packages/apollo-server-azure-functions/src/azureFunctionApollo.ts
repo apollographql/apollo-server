@@ -1,7 +1,4 @@
-import {
-  Context,
-  HttpRequest
-} from '@azure/functions';
+import { Context, HttpRequest } from '@azure/functions';
 import { HttpResponse } from 'azure-functions-ts-essentials';
 import {
   GraphQLOptions,
@@ -11,9 +8,7 @@ import {
 import { Headers, ValueOrPromise } from 'apollo-server-env';
 
 export interface AzureFunctionGraphQLOptionsFunction {
-  (request: HttpRequest, context: Context): ValueOrPromise<
-    GraphQLOptions
-  >;
+  (request: HttpRequest, context: Context): ValueOrPromise<GraphQLOptions>;
 }
 
 export interface AzureFunctionHandler {
