@@ -57,7 +57,7 @@ export function graphqlAzureFunction(
           ? request.body
           : request.query,
       request: {
-        url: request.originalUrl,
+        url: request.url,
         method: request.method,
         headers: new Headers(request.headers),
       },

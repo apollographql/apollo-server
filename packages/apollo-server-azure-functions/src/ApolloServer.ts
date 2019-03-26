@@ -114,7 +114,7 @@ export class ApolloServer extends ApolloServerBase {
       }
 
       if (req.method === 'OPTIONS') {
-        context.done(null, {
+        context.done("", {
           body: '',
           status: 204,
           headers: corsHeaders,
@@ -125,14 +125,14 @@ export class ApolloServer extends ApolloServerBase {
       if (this.playgroundOptions && req.method === 'GET') {
         const acceptHeader = req.headers['Accept'] || req.headers['accept'];
         if (acceptHeader && acceptHeader.includes('text/html')) {
-          const path = req.originalUrl || '/';
+          const path = req.url || '/';
 
           const playgroundRenderPageOptions: PlaygroundRenderPageOptions = {
             endpoint: path,
             ...this.playgroundOptions,
           };
           const body = renderPlaygroundPage(playgroundRenderPageOptions);
-          context.done(null, {
+          context.done("", {
             body: body,
             status: 200,
             headers: {
