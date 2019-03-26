@@ -1,4 +1,3 @@
-import { ValueOrPromise, WithRequired } from 'apollo-server-env';
 import {
   GraphQLServiceContext,
   GraphQLRequestContext,
@@ -11,6 +10,11 @@ export {
   GraphQLRequest,
   GraphQLResponse,
 };
+
+// These are copied from apollo-server-env so that we don't need to have a strict
+// non-dev dependency on anything from this package.
+export type ValueOrPromise<T> = T | Promise<T>;
+export type WithRequired<T, K extends keyof T> = T & Required<Pick<T, K>>;
 
 export interface ApolloServerPlugin {
   serverWillStart?(service: GraphQLServiceContext): ValueOrPromise<void>;
