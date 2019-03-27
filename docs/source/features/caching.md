@@ -148,3 +148,8 @@ The plugin allows you to define a few more hooks to affect cache behavior for a 
 - `shouldWriteToCache`: if this hook returns false, the plugin will not write responses to the cache.
 
 In addition to the [`Cache-Control` HTTP header](#http-cache-headers), the response cache plugin will also set the `Age` HTTP header to the number of seconds the value has bee sitting in the cache.
+
+
+## Compatibility
+
+Setting cache hints is currently incompatible with the `graphql-tools` implementation of schema stitching, because cache hints are not appropriately communicated from one service to the other.
