@@ -1,5 +1,4 @@
-import { Context, HttpRequest } from '@azure/functions';
-import { HttpResponse } from 'azure-functions-ts-essentials';
+import { Context, HttpRequest, AzureFunction } from '@azure/functions';
 import {
   GraphQLOptions,
   HttpQueryError,
@@ -11,17 +10,9 @@ export interface AzureFunctionGraphQLOptionsFunction {
   (request: HttpRequest, context: Context): ValueOrPromise<GraphQLOptions>;
 }
 
-export interface AzureFunctionHandler {
-  (
-    context: Context,
-    request: HttpRequest,
-    callback: (err?: any, output?: HttpResponse) => void,
-  ): void;
-}
-
 export function graphqlAzureFunction(
   options: GraphQLOptions | AzureFunctionGraphQLOptionsFunction,
-): AzureFunctionHandler {
+): AzureFunction {
   if (!options) {
     throw new Error('Apollo Server requires options.');
   }
@@ -32,7 +23,7 @@ export function graphqlAzureFunction(
     );
   }
 
-  const graphqlHandler: AzureFunctionHandler = (
+  const graphqlHandler: AzureFunction = (
     context,
     request,
     callback,
