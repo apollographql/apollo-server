@@ -23,11 +23,7 @@ export function graphqlAzureFunction(
     );
   }
 
-  const graphqlHandler: AzureFunction = (
-    context,
-    request,
-    callback,
-  ): void => {
+  const graphqlHandler: AzureFunction = (context, request, callback): void => {
     if (request.method === 'POST' && !request.body) {
       callback(null, {
         body: 'POST body missing.',
