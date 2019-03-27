@@ -76,14 +76,14 @@ export function throwHttpGraphQLError<E extends Error>(
   errors: Array<E>,
   options?: Pick<GraphQLOptions, 'debug' | 'formatError'>,
 ): never {
-  const defualtHeaders = { 'Content-Type': 'application/json' };
+  const defaultHeaders = { 'Content-Type': 'application/json' };
   // force no-cache on PersistedQuery errors
   const headers = hasPersistedQueryError(errors)
     ? {
-        ...defualtHeaders,
+        ...defaultHeaders,
         'Cache-Control': 'private, no-cache, must-revalidate',
       }
-    : defualtHeaders;
+    : defaultHeaders;
   throw new HttpQueryError(
     statusCode,
     prettyJSONStringify({
