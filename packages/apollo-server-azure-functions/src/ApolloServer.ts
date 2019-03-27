@@ -111,7 +111,7 @@ export class ApolloServer extends ApolloServerBase {
       }
 
       if (req.method === 'OPTIONS') {
-        context.done('', {
+        context.done(null, {
           body: '',
           status: 204,
           headers: corsHeaders,
@@ -129,7 +129,7 @@ export class ApolloServer extends ApolloServerBase {
             ...this.playgroundOptions,
           };
           const body = renderPlaygroundPage(playgroundRenderPageOptions);
-          context.done('', {
+          context.done(null, {
             body: body,
             status: 200,
             headers: {
