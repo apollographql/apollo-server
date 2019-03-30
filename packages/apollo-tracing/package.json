@@ -15,6 +15,6 @@
     "graphql-extensions": "file:../graphql-extensions"
   },
   "peerDependencies": {
-    "graphql": "0.10.x - 14.1.x"
+    "graphql": "0.10.x - 14.2.x"
   }
 }
