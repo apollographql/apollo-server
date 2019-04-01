@@ -3,6 +3,7 @@
 ### vNEXT
 
 - Allow `GraphQLRequestListener` callbacks in plugins to depend on `this`. [PR #2470](https://github.com/apollographql/apollo-server/pull/2470)
+- `apollo-datasource-rest`: Allow custom `Content-Type` header to be set, instead of always defaulting to `application/json`
 
 ### v2.4.8
 
