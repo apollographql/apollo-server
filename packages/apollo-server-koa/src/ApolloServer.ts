@@ -1,6 +1,6 @@
-import Koa from 'koa';
-import corsMiddleware from '@koa/cors';
-import bodyParser from 'koa-bodyparser';
+import * as Koa from 'koa';
+import * as corsMiddleware from '@koa/cors';
+import * as bodyParser from 'koa-bodyparser';
 import compose from 'koa-compose';
 import {
   renderPlaygroundPage,
