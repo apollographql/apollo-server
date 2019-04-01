@@ -1,5 +1,5 @@
-import express from 'express';
-import corsMiddleware from 'cors';
+import * as express from 'express';
+import * as corsMiddleware from 'cors';
 import { json, OptionsJson } from 'body-parser';
 import {
   renderPlaygroundPage,
