@@ -12,7 +12,7 @@ export default (server: ApolloServerBase) => {
   const test = ({ query, mutation, ...args }: Query | Mutation) => {
     const operation = query || mutation;
 
-    if ((!query && !mutation) || (query && mutation)) {
+    if (!operation || (query && mutation)) {
       throw new Error(
         'Either `query` or `mutation` must be passed, but not both.',
       );
