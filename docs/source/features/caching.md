@@ -16,6 +16,8 @@ For each request, Apollo Server combines all the cache hints from all the querie
 
 You can define cache hints *statically* in your schema and *dynamically* in your resolvers.
 
+> **Important note on compatibility:** Setting cache hints is currently incompatible with the `graphql-tools` implementation of schema stitching, because cache hints are not appropriately communicated from one service to the other.
+
 ### Adding cache hints statically in your schema
 
 The easiest way to add cache hints is directly in your schema using the `@cacheControl` directive. Apollo Server automatically adds the definition of the `@cacheControl` directive to your schema when you create a new `ApolloServer` object with `typeDefs` and `resolvers`. Hints look like this:
