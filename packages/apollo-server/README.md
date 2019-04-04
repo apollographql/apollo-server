@@ -18,13 +18,13 @@ Apollo Server is built with the following principles in mind:
 
 Anyone is welcome to contribute to Apollo Server, just read [CONTRIBUTING.md](./CONTRIBUTING.md), take a look at the [roadmap](./ROADMAP.md) and make your first PR!
 
-## Getting Started
+## Getting started
 
-Apollo Server is super easy to setup:
+To get started with Apollo Server:
 
 * Install with `npm install apollo-server-<integration>`
 * Write a GraphQL schema
-* Use one of the following snippets to get started.
+* Use one of the following snippets
 
 There are two ways to install Apollo Server:
 
@@ -35,7 +35,7 @@ For more info, please refer to the [Apollo Server docs](https://www.apollographq
 
 ### Installation: Standalone
 
-First, install the `apollo-server` and `graphql` dependencies using:
+In a new project, install the `apollo-server` and `graphql` dependencies using:
 
     npm install apollo-server graphql
 
@@ -81,9 +81,13 @@ Finally, start the server using `node index.js` and go to the URL returned on th
 
 For more details, check out the Apollo Server [Getting Started guide](https://www.apollographql.com/docs/apollo-server/getting-started.html) and the [fullstack tutorial](https://www.apollographql.com/docs/tutorial/introduction.html).
 
+For questions, the [Apollo community on Spectrum.chat](https://spectrum.chat) is a great place to get help.
+
 ## Installation: Integrations
 
-While the standalone setup is quite straightforward--as it does not require a web framework--the integration packages have their own instructions (with respective examples). Please refer to the following guides to combine Apollo Server with a specific web framework.
+While the standalone installation above can be used without making a decision about which web framework to use, the Apollo Server integration packages are paired with specific web frameworks (e.g. Express, Koa, hapi).
+
+The following web frameworks have Apollo Server integrations, and each of these linked integrations has its own installation instructions and examples on its package `README.md`:
 
 - [Express](https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-express) _(Most popular)_
 - [Koa](https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-koa)
@@ -122,9 +126,9 @@ new ApolloServer({
 
 ## Documentation
 
-The [Apollo Server documentation](https://apollographql.com/docs/apollo-server/) contains much more to get started with GraphQL and Apollo Server.
+The [Apollo Server documentation](https://apollographql.com/docs/apollo-server/) contains additional details on how to get started with GraphQL and Apollo Server.
 
-The raw source of said documentation is available within the `docs/` directory of this monorepo--to contribute, please use the _Edit on GitHub_ buttons at the bottom of each page.
+The raw Markdown source of the documentation is available within the `docs/` directory of this monorepo--to contribute, please use the _Edit on GitHub_ buttons at the bottom of each page.
 
 ## Development
 
@@ -132,7 +136,7 @@ If you wish to develop or contribute to Apollo Server, we suggest the following:
 
 - Fork this repository
 
-- Install Apollo Server
+- Install the Apollo Server project on your computer
 
 ```
 git clone https://github.com/[your-user]/apollo-server
@@ -142,7 +146,7 @@ cd packages/apollo-server-<integration>/
 npm link
 ```
 
-- Share your local Apollo Server application
+- Install your local Apollo Server in the other App
 
 ```
 cd ~/myApp
