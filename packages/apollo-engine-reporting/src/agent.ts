@@ -259,14 +259,14 @@ export class EngineReportingAgent<TContext = any> {
         factor: 2,
       },
     ).catch((err: Error) => {
-      throw new Error(`Error sending report to Engine servers: ${err}`);
+      throw new Error(`Error sending report to Apollo Engine servers: ${err}`);
     });
 
     if (response.status < 200 || response.status >= 300) {
       // Note that we don't expect to see a 3xx here because request follows
       // redirects.
       throw new Error(
-        `Error sending report to Engine servers (HTTP status ${
+        `Error sending report to Apollo Engine servers (HTTP status ${
           response.status
         }): ${await response.text()}`,
       );
