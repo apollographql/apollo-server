@@ -58,6 +58,7 @@
     "apollo-server-lambda": "file:packages/apollo-server-lambda",
     "apollo-server-micro": "file:packages/apollo-server-micro",
     "apollo-server-plugin-base": "file:packages/apollo-server-plugin-base",
+    "apollo-server-plugin-response-cache": "file:packages/apollo-server-plugin-response-cache",
     "apollo-server-testing": "file:packages/apollo-server-testing",
     "apollo-tracing": "file:packages/apollo-tracing",
     "graphql-extensions": "file:packages/graphql-extensions"
@@ -126,7 +127,7 @@
     "request": "2.88.0",
     "request-promise": "4.2.4",
     "subscriptions-transport-ws": "0.9.16",
-    "supertest": "3.4.2",
+    "supertest": "4.0.2",
     "test-listen": "1.1.0",
     "ts-jest": "24.0.1",
     "tslint": "5.14.0",

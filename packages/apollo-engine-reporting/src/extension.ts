@@ -1,11 +1,10 @@
-import { Request } from 'apollo-server-env';
+import { Request, WithRequired } from 'apollo-server-env';
 
 import {
   GraphQLResolveInfo,
   responsePathAsArray,
   ResponsePath,
   DocumentNode,
-  ExecutionArgs,
   GraphQLError,
 } from 'graphql';
 import {
@@ -34,7 +33,7 @@ export class EngineReportingExtension<TContext = any>
   public trace = new Trace();
   private nodes = new Map<string, Trace.Node>();
   private startHrTime!: [number, number];
-  private operationName?: string;
+  private operationName?: string | null;
   private queryString?: string;
   private documentAST?: DocumentNode;
   private options: EngineReportingOptions<TContext>;
@@ -92,11 +91,9 @@ export class EngineReportingExtension<TContext = any>
     queryString?: string;
     parsedQuery?: DocumentNode;
     variables?: Record<string, any>;
-    persistedQueryHit?: boolean;
-    persistedQueryRegister?: boolean;
     context: TContext;
     extensions?: Record<string, any>;
-    requestContext: GraphQLRequestContext<TContext>;
+    requestContext: WithRequired<GraphQLRequestContext<TContext>, 'metrics'>;
   }): EndHandler {
     this.trace.startTime = dateToTimestamp(new Date());
     this.startHrTime = process.hrtime();
@@ -149,10 +146,10 @@ export class EngineReportingExtension<TContext = any>
         }
       }
 
-      if (o.persistedQueryHit) {
+      if (o.requestContext.metrics.persistedQueryHit) {
         this.trace.persistedQueryHit = true;
       }
-      if (o.persistedQueryRegister) {
+      if (o.requestContext.metrics.persistedQueryRegister) {
         this.trace.persistedQueryRegister = true;
       }
     }
@@ -213,6 +210,9 @@ export class EngineReportingExtension<TContext = any>
       );
       this.trace.endTime = dateToTimestamp(new Date());
 
+      this.trace.fullQueryCacheHit = !!o.requestContext.metrics
+        .responseCacheHit;
+
       const operationName = this.operationName || '';
       let signature;
       if (this.documentAST) {
@@ -237,21 +237,13 @@ export class EngineReportingExtension<TContext = any>
     };
   }
 
-  public executionDidStart(o: { executionArgs: ExecutionArgs }) {
-    // If the operationName is explicitly provided, save it. If there's just one
-    // named operation, the client doesn't have to provide it, but we still want
-    // to know the operation name so that the server can identify the query by
-    // it without having to parse a signature.
-    //
-    // Fortunately, in the non-error case, we can just pull this out of
-    // the first call to willResolveField's `info` argument.  In an
-    // error case (eg, the operationName isn't found, or there are more
-    // than one operation and no specified operationName) it's OK to continue
-    // to file this trace under the empty operationName.
-    if (o.executionArgs.operationName) {
-      this.operationName = o.executionArgs.operationName;
-    }
-    this.documentAST = o.executionArgs.document;
+  public didResolveOperation(o: {
+    requestContext: GraphQLRequestContext<TContext>;
+  }) {
+    const { requestContext } = o;
+
+    this.operationName = requestContext.operationName;
+    this.documentAST = requestContext.document;
   }
 
   public willResolveField(
@@ -260,11 +252,6 @@ export class EngineReportingExtension<TContext = any>
     _context: TContext,
     info: GraphQLResolveInfo,
   ): ((error: Error | null, result: any) => void) | void {
-    if (this.operationName === undefined) {
-      this.operationName =
-        (info.operation.name && info.operation.name.value) || '';
-    }
-
     const path = info.path;
     const node = this.newNode(path);
     node.type = info.returnType.toString();
