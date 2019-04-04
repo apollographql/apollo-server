@@ -21,5 +21,6 @@
     { "path": "./packages/apollo-server-koa/src/__tests__/" },
     { "path": "./packages/apollo-server-lambda/src/__tests__/" },
     { "path": "./packages/apollo-server-micro/src/__tests__/" },
+    { "path": "./packages/apollo-server-plugin-response-cache/src/__tests__/" },
   ]
 }

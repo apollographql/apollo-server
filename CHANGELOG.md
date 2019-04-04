@@ -1,10 +1,14 @@
 # Changelog
 
-### vNEXT
+### v3.x
 
-- Allow `GraphQLRequestListener` callbacks in plugins to depend on `this`. [PR #2470](https://github.com/apollographql/apollo-server/pull/2470)
 - Default `privateVariables` and `privateHeaders` to 'true' to prevent sending potential PII to Apollo's cloud service
 unless users explicitly specify these options. [PR #2472](https://github.com/apollographql/apollo-server/pull/2472)
+
+### v2.5.0
+
+- New plugin package `apollo-server-plugin-response-cache` implementing a full query response cache based on `apollo-cache-control` hints. The implementation added a few hooks and context fields; see the PR for details. There is a slight change to `cacheControl` object: previously, `cacheControl.stripFormattedExtensions` defaulted to false if you did not provide a `cacheControl` option object, but defaulted to true if you provided (eg) `cacheControl: {defaultMaxAge: 10}`. Now `stripFormattedExtensions` defaults to false unless explicitly provided as `true`, or if you use the legacy boolean `cacheControl: true`. [PR #2437](https://github.com/apollographql/apollo-server/pull/2437)
+- Allow `GraphQLRequestListener` callbacks in plugins to depend on `this`. [PR #2470](https://github.com/apollographql/apollo-server/pull/2470)
 
 ### v2.4.8
 
