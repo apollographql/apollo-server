@@ -49,6 +49,10 @@ export class GraphQLExtension<TContext = any> {
     executionArgs: ExecutionArgs;
   }): EndHandler | void;
 
+  public didResolveOperation?(o: {
+    requestContext: GraphQLRequestContext<TContext>;
+  }): void;
+
   public willSendResponse?(o: {
     graphqlResponse: GraphQLResponse;
     context: TContext;
@@ -106,6 +110,16 @@ export class GraphQLExtensionStack<TContext = any> {
     return this.handleDidStart(
       ext => ext.executionDidStart && ext.executionDidStart(o),
     );
+  }
+
+  public didResolveOperation(o: {
+    requestContext: GraphQLRequestContext<TContext>;
+  }) {
+    this.extensions.forEach(extension => {
+      if (extension.didResolveOperation) {
+        extension.didResolveOperation(o);
+      }
+    });
   }
 
   public willSendResponse(o: {
