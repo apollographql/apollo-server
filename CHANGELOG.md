@@ -2,6 +2,7 @@
 
 ### v2.5.0
 
+- Support `@azure/functions` to enable Apollo Server [Typescript development in Azure Functions](https://azure.microsoft.com/en-us/blog/improving-the-typescript-support-in-azure-functions/).
 - Add cache-control: no-cache header to both PersistedQueryNotSupportedError and PersistedQueryNotFoundError responses as these should never be cached. [PR #2452](https://github.com/apollographql/apollo-server/pull/2452)
 - `apollo-datasource-rest`: Don't attempt to parse "204 No Content" responses as JSON. [PR #2446](https://github.com/apollographql/apollo-server/pull/2446)
 - `apollo-server-express`: Fix Playground URL when Apollo Server is mounted inside of another Express app by utilizing `req.originalUrl`. [PR #2451](https://github.com/apollographql/apollo-server/pull/2451)
