@@ -89,11 +89,11 @@ const resolvers = {
   Query: {
     allTodos: (_, _, context) => {
       if (!context.scope) {
-        throw AuthenticationError("You must be logged in to see all todos");
+        throw new AuthenticationError("You must be logged in to see all todos");
       }
 
       if (context.scope !== "ADMIN") {
-        throw ForbiddenError("You must be an administrator to see all todos");
+        throw new ForbiddenError("You must be an administrator to see all todos");
       }
 
       return context.Todos.getAllTodos();
