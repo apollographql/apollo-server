@@ -3,7 +3,16 @@ import MockReq = require('mock-req');
 
 import { GraphQLSchema, GraphQLObjectType, GraphQLString } from 'graphql';
 
-import { runHttpQuery, HttpQueryError } from '../runHttpQuery';
+import {
+  runHttpQuery,
+  HttpQueryError,
+  throwHttpGraphQLError,
+} from '../runHttpQuery';
+import {
+  PersistedQueryNotFoundError,
+  PersistedQueryNotSupportedError,
+  ForbiddenError,
+} from 'apollo-server-errors';
 
 const queryType = new GraphQLObjectType({
   name: 'QueryType',
@@ -44,6 +53,38 @@ describe('runHttpQuery', () => {
         expect(err.statusCode).toEqual(400);
         expect(err.message).toEqual('Must provide query string.');
       });
+    });
+  });
+
+  describe('throwHttpGraphQLError', () => {
+    it('should add no-cache headers if error is of type PersistedQueryNotSupportedError', () => {
+      try {
+        throwHttpGraphQLError(200, [new PersistedQueryNotSupportedError()]);
+      } catch (err) {
+        expect(err.headers).toEqual({
+          'Content-Type': 'application/json',
+          'Cache-Control': 'private, no-cache, must-revalidate',
+        });
+      }
+    });
+
+    it('should add no-cache headers if error is of type PersistedQueryNotFoundError', () => {
+      try {
+        throwHttpGraphQLError(200, [new PersistedQueryNotFoundError()]);
+      } catch (err) {
+        expect(err.headers).toEqual({
+          'Content-Type': 'application/json',
+          'Cache-Control': 'private, no-cache, must-revalidate',
+        });
+      }
+    });
+
+    it('should not add no-cache headers if error is not a PersitedQuery error', () => {
+      try {
+        throwHttpGraphQLError(200, [new ForbiddenError('401')]);
+      } catch (err) {
+        expect(err.headers).toEqual({ 'Content-Type': 'application/json' });
+      }
     });
   });
 });
