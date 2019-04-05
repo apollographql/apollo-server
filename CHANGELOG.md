@@ -5,7 +5,6 @@
 - `apollo-server-express`: Fix Playground URL when Apollo Server is mounted inside of another Express app by utilizing `req.originalUrl`. [PR #2451](https://github.com/apollographql/apollo-server/pull/2451)
 - New plugin package `apollo-server-plugin-response-cache` implementing a full query response cache based on `apollo-cache-control` hints. The implementation added a few hooks and context fields; see the PR for details. There is a slight change to `cacheControl` object: previously, `cacheControl.stripFormattedExtensions` defaulted to false if you did not provide a `cacheControl` option object, but defaulted to true if you provided (eg) `cacheControl: {defaultMaxAge: 10}`. Now `stripFormattedExtensions` defaults to false unless explicitly provided as `true`, or if you use the legacy boolean `cacheControl: true`. [PR #2437](https://github.com/apollographql/apollo-server/pull/2437)
 - Allow `GraphQLRequestListener` callbacks in plugins to depend on `this`. [PR #2470](https://github.com/apollographql/apollo-server/pull/2470)
-- Move shared TypeScript utility types `WithRequired` and `ValueOrPromise` into `apollo-server-env`. [PR #2415](https://github.com/apollographql/apollo-server/pull/2415) [PR #2417](https://github.com/apollographql/apollo-server/pull/2417)
 
 ### v2.4.8
 
