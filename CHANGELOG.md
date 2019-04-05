@@ -2,6 +2,7 @@
 
 ### v2.5.0
 
+- `apollo-datasource-rest`: Don't attempt to parse "204 No Content" responses as JSON. [PR #2446](https://github.com/apollographql/apollo-server/pull/2446)
 - Add cache-control: no-cache header to both PersistedQueryNotSupportedError and PersistedQueryNotFoundError responses as these should never be cached. [PR #2452](https://github.com/apollographql/apollo-server/pull/2452)
 - New plugin package `apollo-server-plugin-response-cache` implementing a full query response cache based on `apollo-cache-control` hints. The implementation added a few hooks and context fields; see the PR for details. There is a slight change to `cacheControl` object: previously, `cacheControl.stripFormattedExtensions` defaulted to false if you did not provide a `cacheControl` option object, but defaulted to true if you provided (eg) `cacheControl: {defaultMaxAge: 10}`. Now `stripFormattedExtensions` defaults to false unless explicitly provided as `true`, or if you use the legacy boolean `cacheControl: true`. [PR #2437](https://github.com/apollographql/apollo-server/pull/2437)
 
