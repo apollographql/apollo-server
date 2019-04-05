@@ -4,7 +4,7 @@
   "license": "MIT",
   "repository": "github:apollographql/apollo-server",
   "scripts": {
-    "clean": "git clean -dfqX -- ./node_modules **/{dist,node_modules}/",
+    "clean": "git clean -dfqX -- ./node_modules **/{dist,node_modules}/ ./packages/*/tsconfig.tsbuildinfo",
     "compile": "tsc --build tsconfig.build.json",
     "compile:clean": "tsc --build tsconfig.build.json --clean",
     "watch": "tsc --build tsconfig.build.json --watch",
