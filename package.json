@@ -129,7 +129,7 @@
     "supertest": "4.0.2",
     "test-listen": "1.1.0",
     "ts-jest": "24.0.2",
-    "tslint": "5.14.0",
+    "tslint": "5.15.0",
     "typescript": "3.4.1",
     "ws": "6.2.1",
     "yup": "0.27.0"
