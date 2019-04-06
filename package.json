@@ -93,7 +93,7 @@
     "apollo-link-http": "1.5.14",
     "apollo-link-persisted-queries": "0.2.2",
     "body-parser": "1.18.3",
-    "codecov": "3.2.0",
+    "codecov": "3.3.0",
     "connect": "3.6.6",
     "express": "4.16.4",
     "fastify": "1.14.4",
