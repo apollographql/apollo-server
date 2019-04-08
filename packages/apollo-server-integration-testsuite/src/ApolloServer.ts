@@ -718,6 +718,42 @@ export function testApolloServer<AS extends ApolloServerBase>(
             apolloFetch = createApolloFetch({ uri });
           };
 
+          it('does not expose stack', async () => {
+            throwError.mockImplementationOnce(() => {
+              throw new Error('how do I stack up?');
+            });
+
+            await setupApolloServerAndFetchPair();
+
+            const result = await apolloFetch({
+              query: `{fieldWhichWillError}`,
+            });
+            expect(result.data).toEqual({
+              fieldWhichWillError: null,
+            });
+            expect(result.errors).toBeDefined();
+
+            // The original error message should still be sent to the client.
+            expect(result.errors[0].message).toEqual('how do I stack up?');
+            expect(throwError).toHaveBeenCalledTimes(1);
+
+            const reports = await engineServer.promiseOfReports;
+            expect(reports.length).toBe(1);
+            const trace = Object.values(reports[0].tracesPerQuery)[0].trace[0];
+
+            // There should be no error at the root, our error is a child.
+            expect(trace.root.error).toStrictEqual([]);
+
+            // There should only be one child.
+            expect(trace.root.child.length).toBe(1);
+
+            // The error should not have the stack in it.
+            expect(trace.root.child[0].error[0]).not.toHaveProperty('stack');
+            expect(
+              JSON.parse(trace.root.child[0].error[0].json),
+            ).not.toHaveProperty('stack');
+          });
+
           describe('error munging', () => {
             describe('filterErrors', () => {
               it('new error', async () => {
