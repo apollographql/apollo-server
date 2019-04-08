@@ -3,7 +3,7 @@
 ### vNEXT
 
 - Allow `GraphQLRequestListener` callbacks in plugins to depend on `this`. [PR #2470](https://github.com/apollographql/apollo-server/pull/2470)
-- Add option to filter errors from being reported [#1639](https://github.com/apollographql/apollo-server/pull/1639)
+- Add `rewriteError` option to `EngineReportingOptions` (i.e. the `engine` property of the `ApolloServer` constructor).  When defined as a `function`, it will receive an `err` property as its first argument which can be used to manipulate (e.g. redaction) an error prior to sending it to Apollo Engine by modifying, e.g., its `message` property.  The error can also be suppressed from reporting entirely by returning an explicit `null` value. [PR #1639](https://github.com/apollographql/apollo-server/pull/1639)
 
 ### v2.4.8
 
