@@ -364,7 +364,7 @@ addMockFunctionsToSchema({
    'sendReport()' on other signals if you'd like. Note that 'sendReport()'
    does not run synchronously so it cannot work usefully in an 'exit' handler.
 
-*  `filterErrors`: (err: GraphQLError) => GraphQLError | null
+*  `rewriteError`: (err: GraphQLError) => GraphQLError | null
 
    By default, all errors are reported to Apollo Engine.  This function
    can be used to exclude specific errors from being reported.  This function
