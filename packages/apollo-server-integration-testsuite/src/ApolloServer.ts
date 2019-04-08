@@ -6,7 +6,7 @@ import express = require('express');
 import bodyParser = require('body-parser');
 import yup = require('yup');
 
-import { FullTracesReport, ITrace } from 'apollo-engine-reporting-protobuf';
+import { FullTracesReport } from 'apollo-engine-reporting-protobuf';
 
 import {
   GraphQLSchema,
