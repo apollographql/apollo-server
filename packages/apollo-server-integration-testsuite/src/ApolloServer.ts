@@ -28,7 +28,7 @@ import {
   VERSION,
 } from 'apollo-link-persisted-queries';
 
-import { createApolloFetch } from 'apollo-fetch';
+import { createApolloFetch, ApolloFetch } from 'apollo-fetch';
 import {
   AuthenticationError,
   UserInputError,
@@ -680,6 +680,251 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
           expect(trace.root!.child![0].error![0].message).toMatch(/nope/);
           expect(trace.root!.child![0].error![0].message).not.toMatch(/masked/);
+        });
+
+        describe('validation > engine', () => {
+          let throwError: jest.Mock;
+          let apolloFetch: ApolloFetch;
+
+          beforeEach(async () => {
+            throwError = jest.fn();
+          });
+
+          const setupApolloServerAndFetchPair = async (
+            engineOptions: Partial<EngineReportingOptions<any>> = {},
+          ) => {
+            const { url: uri } = await createApolloServer({
+              typeDefs: gql`
+                type Query {
+                  fieldWhichWillError: String
+                }
+              `,
+              resolvers: {
+                Query: {
+                  fieldWhichWillError: () => {
+                    throwError();
+                  },
+                },
+              },
+              engine: {
+                ...engineServer.engineOptions(),
+                apiKey: 'service:my-app:secret',
+                maxUncompressedReportSize: 1,
+                ...engineOptions,
+              },
+              debug: true,
+            });
+
+            apolloFetch = createApolloFetch({ uri });
+          };
+
+          describe('error munging', () => {
+            describe('filterErrors', () => {
+              it('new error', async () => {
+                throwError.mockImplementationOnce(() => {
+                  throw new Error('filterErrors nope');
+                });
+
+                await setupApolloServerAndFetchPair({
+                  filterErrors: () =>
+                    new GraphQLError('rewritten as a new error'),
+                });
+
+                const result = await apolloFetch({
+                  query: `{fieldWhichWillError}`,
+                });
+                expect(result.data).toEqual({
+                  fieldWhichWillError: null,
+                });
+                expect(result.errors).toBeDefined();
+
+                // The original error message should be sent to the client.
+                expect(result.errors[0].message).toEqual('filterErrors nope');
+                expect(throwError).toHaveBeenCalledTimes(1);
+
+                const reports = await engineServer.promiseOfReports;
+                expect(reports.length).toBe(1);
+                const trace = Object.values(reports[0].tracesPerQuery)[0]
+                  .trace[0];
+                // There should be no error at the root, our error is a child.
+                expect(trace.root.error).toStrictEqual([]);
+
+                // There should only be one child.
+                expect(trace.root.child.length).toBe(1);
+
+                // The child should maintain the path, but have its message
+                // rewritten.
+                expect(trace.root.child[0].error).toMatchObject([
+                  {
+                    json:
+                      '{"message":"rewritten as a new error","locations":[{"line":1,"column":2}],"path":["fieldWhichWillError"]}',
+                    message: 'rewritten as a new error',
+                    location: [{ column: 2, line: 1 }],
+                  },
+                ]);
+              });
+
+              it('modified error', async () => {
+                throwError.mockImplementationOnce(() => {
+                  throw new Error('filterErrors mod nope');
+                });
+
+                await setupApolloServerAndFetchPair({
+                  filterErrors: err => {
+                    err.message = 'rewritten as a modified error';
+                    return err;
+                  },
+                });
+
+                const result = await apolloFetch({
+                  query: `{fieldWhichWillError}`,
+                });
+                expect(result.data).toEqual({
+                  fieldWhichWillError: null,
+                });
+                expect(result.errors).toBeDefined();
+                expect(result.errors[0].message).toEqual(
+                  'filterErrors mod nope',
+                );
+                expect(throwError).toHaveBeenCalledTimes(1);
+
+                const reports = await engineServer.promiseOfReports;
+                expect(reports.length).toBe(1);
+                const trace = Object.values(reports[0].tracesPerQuery)[0]
+                  .trace[0];
+                // There should be no error at the root, our error is a child.
+                expect(trace.root.error).toStrictEqual([]);
+
+                // There should only be one child.
+                expect(trace.root.child.length).toBe(1);
+
+                // The child should maintain the path, but have its message
+                // rewritten.
+                expect(trace.root.child[0].error).toMatchObject([
+                  {
+                    json:
+                      '{"message":"rewritten as a modified error","locations":[{"line":1,"column":2}],"path":["fieldWhichWillError"]}',
+                    message: 'rewritten as a modified error',
+                    location: [{ column: 2, line: 1 }],
+                  },
+                ]);
+              });
+
+              it('nulled error', async () => {
+                throwError.mockImplementationOnce(() => {
+                  throw new Error('filterErrors null nope');
+                });
+
+                await setupApolloServerAndFetchPair({
+                  filterErrors: () => null,
+                });
+
+                const result = await apolloFetch({
+                  query: `{fieldWhichWillError}`,
+                });
+                expect(result.data).toEqual({
+                  fieldWhichWillError: null,
+                });
+                expect(result.errors).toBeDefined();
+                expect(result.errors[0].message).toEqual(
+                  'filterErrors null nope',
+                );
+                expect(throwError).toHaveBeenCalledTimes(1);
+
+                const reports = await engineServer.promiseOfReports;
+                expect(reports.length).toBe(1);
+                const trace = Object.values(reports[0].tracesPerQuery)[0]
+                  .trace[0];
+
+                // There should be no error at the root, our error is a child.
+                expect(trace.root.error).toStrictEqual([]);
+
+                // There should only be one child.
+                expect(trace.root.child.length).toBe(1);
+
+                // There should be no error in the trace for this property!
+                expect(trace.root.child[0].error).toStrictEqual([]);
+              });
+            });
+
+            it('undefined error', async () => {
+              throwError.mockImplementationOnce(() => {
+                throw new Error('filterErrors undefined whoops');
+              });
+
+              await setupApolloServerAndFetchPair({
+                filterErrors: () => undefined,
+              });
+
+              const result = await apolloFetch({
+                query: `{fieldWhichWillError}`,
+              });
+              expect(result.data).toEqual({
+                fieldWhichWillError: null,
+              });
+              expect(result.errors).toBeDefined();
+              expect(result.errors[0].message).toEqual(
+                'filterErrors undefined whoops',
+              );
+              expect(throwError).toHaveBeenCalledTimes(1);
+
+              const reports = await engineServer.promiseOfReports;
+              expect(reports.length).toBe(1);
+              const trace = Object.values(reports[0].tracesPerQuery)[0]
+                .trace[0];
+
+              // There should be no error at the root, our error is a child.
+              expect(trace.root.error).toStrictEqual([]);
+
+              // There should only be one child.
+              expect(trace.root.child.length).toBe(1);
+
+              // The child should maintain the path, but have its message
+              // rewritten.
+              expect(trace.root.child[0].error).toMatchObject([
+                {
+                  json:
+                    '{"message":"filterErrors undefined whoops","locations":[{"line":1,"column":2}],"path":["fieldWhichWillError"]}',
+                  message: 'filterErrors undefined whoops',
+                  location: [{ column: 2, line: 1 }],
+                },
+              ]);
+            });
+
+            it('maskErrorDetails', async () => {
+              throwError.mockImplementationOnce(() => {
+                throw new Error('maskErrorDetails nope');
+              });
+
+              await setupApolloServerAndFetchPair({
+                maskErrorDetails: true,
+              });
+
+              const result = await apolloFetch({
+                query: `{fieldWhichWillError}`,
+              });
+
+              expect(result.data).toEqual({
+                fieldWhichWillError: null,
+              });
+              expect(result.errors).toBeDefined();
+              expect(result.errors[0].message).toEqual('maskErrorDetails nope');
+
+              expect(throwError).toHaveBeenCalledTimes(1);
+
+              const reports = await engineServer.promiseOfReports;
+              expect(reports.length).toBe(1);
+              const trace = Object.values(reports[0].tracesPerQuery)[0]
+                .trace[0];
+
+              expect(trace.root.error).toMatchObject([
+                {
+                  json: '{"message":"<masked>"}',
+                  message: '<masked>',
+                },
+              ]);
+            });
+          });
         });
       });
 
