@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "start": "gatsby develop --prefix-paths"
+    "start": "gatsby develop"
   },
   "dependencies": {
     "gatsby": "2.3.14",
