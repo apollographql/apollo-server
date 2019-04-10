@@ -43,6 +43,7 @@ import ApolloServerPluginResponseCache from 'apollo-server-plugin-response-cache
 import { GraphQLRequestContext } from 'apollo-server-plugin-base';
 
 import { mockDate, unmockDate, advanceTimeBy } from '__mocks__/date';
+import { EngineReportingOptions } from 'apollo-engine-reporting';
 
 export function createServerInfo<AS extends ApolloServerBase>(
   server: AS,
@@ -456,12 +457,12 @@ export function testApolloServer<AS extends ApolloServerBase>(
         const { url: uri } = await createApolloServer({
           typeDefs: gql`
             type Query {
-              error: String
+              fieldWhichWillError: String
             }
           `,
           resolvers: {
             Query: {
-              error: () => {
+              fieldWhichWillError: () => {
                 return throwError();
               },
             },
@@ -474,9 +475,9 @@ export function testApolloServer<AS extends ApolloServerBase>(
         const apolloFetch = createApolloFetch({ uri });
 
         const result = await apolloFetch({
-          query: '{error}',
+          query: '{fieldWhichWillError}',
         });
-        expect(result.data).toEqual({ error: null });
+        expect(result.data).toEqual({ fieldWhichWillError: null });
         expect(result.errors).toBeDefined();
         expect(result.errors[0].extensions.code).toEqual('BAD_USER_INPUT');
         expect(result.errors[0].message).toEqual('User Input Error');
@@ -488,41 +489,101 @@ export function testApolloServer<AS extends ApolloServerBase>(
     describe('lifecycle', () => {
       describe('with Engine server', () => {
         let nodeEnv: string;
+        let engineServer: EngineMockServer;
 
-        beforeEach(() => {
-          nodeEnv = process.env.NODE_ENV;
-          delete process.env.NODE_ENV;
-        });
+        class EngineMockServer {
+          private app: express.Application;
+          private server: http.Server;
+          private reports: FullTracesReport[] = [];
+          public readonly promiseOfReports: Promise<FullTracesReport[]>;
 
-        let engineServer: http.Server;
+          constructor() {
+            let reportResolver: (reports: FullTracesReport[]) => void;
+            this.promiseOfReports = new Promise<FullTracesReport[]>(resolve => {
+              reportResolver = resolve;
+            });
 
-        function startEngineServer({ check }): Promise<void> {
-          return new Promise(resolve => {
-            const app = express();
-            app.use((req, _res, next) => {
+            this.app = express();
+            this.app.use((req, _res, next) => {
               // body parser requires a content-type
               req.headers['content-type'] = 'text/plain';
               next();
             });
-            app.use(
+            this.app.use(
               bodyParser.raw({
                 inflate: true,
                 type: '*/*',
               }),
             );
-            app.use(check);
-            engineServer = app.listen(0, resolve);
-          });
+
+            this.app.use((req, res) => {
+              const report = FullTracesReport.decode(req.body);
+              this.reports.push(report);
+              res.end();
+
+              // Resolve any outstanding Promises with our new report data.
+              reportResolver(this.reports);
+            });
+          }
+
+          async listen(): Promise<http.Server> {
+            return await new Promise(resolve => {
+              const server = (this.server = this.app.listen(
+                0,
+                // Intentionally IPv4.
+                '127.0.0.1',
+                () => {
+                  resolve(server);
+                },
+              ));
+            });
+          }
+
+          async stop(): Promise<void> {
+            if (!this.server) {
+              return;
+            }
+
+            return new Promise(resolve => {
+              this.server && this.server.close(resolve);
+            });
+          }
+
+          public engineOptions(): Partial<EngineReportingOptions<any>> {
+            return {
+              endpointUrl: this.getUrl(),
+            };
+          }
+
+          private getUrl(): string {
+            if (!this.server) {
+              throw new Error('must listen before getting URL');
+            }
+            const {
+              family,
+              address,
+              port,
+            } = this.server.address() as net.AddressInfo;
+
+            if (family !== 'IPv4') {
+              throw new Error(`The family was unexpectedly ${family}.`);
+            }
+            const { URL } = require('url');
+            return new URL(`http://${address}:${port}`).toString();
+          }
         }
+
+        beforeEach(async () => {
+          nodeEnv = process.env.NODE_ENV;
+          delete process.env.NODE_ENV;
+          engineServer = new EngineMockServer();
+          return await engineServer.listen();
+        });
 
         afterEach(done => {
           process.env.NODE_ENV = nodeEnv;
 
-          if (engineServer) {
-            engineServer.close(done);
-          } else {
-            done();
-          }
+          (engineServer.stop() || Promise.resolve()).then(done);
         });
 
         it('validation > engine > extensions > formatError', async () => {
@@ -567,33 +628,15 @@ export function testApolloServer<AS extends ApolloServerBase>(
             }
           }
 
-          let engineServerDidStart: Promise<void>;
-
-          const didReceiveTrace = new Promise<ITrace>(resolve => {
-            engineServerDidStart = startEngineServer({
-              check: (req, res) => {
-                const report = FullTracesReport.decode(req.body);
-                const header = report.header;
-                expect(header.schemaTag).toEqual('');
-                expect(header.schemaHash).toBeDefined();
-                const trace = Object.values(report.tracesPerQuery)[0].trace[0];
-                resolve(trace);
-                res.end();
-              },
-            });
-          });
-
-          await engineServerDidStart;
-
           const { url: uri } = await createApolloServer({
             typeDefs: gql`
               type Query {
-                error: String
+                fieldWhichWillError: String
               }
             `,
             resolvers: {
               Query: {
-                error: () => {
+                fieldWhichWillError: () => {
                   throwError();
                 },
               },
@@ -601,9 +644,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             validationRules: [validationRule],
             extensions: [() => new Extension()],
             engine: {
-              endpointUrl: `http://localhost:${
-                (engineServer.address() as net.AddressInfo).port
-              }`,
+              ...engineServer.engineOptions(),
               apiKey: 'service:my-app:secret',
               maxUncompressedReportSize: 1,
               generateClientInfo: () => ({
@@ -619,10 +660,10 @@ export function testApolloServer<AS extends ApolloServerBase>(
           const apolloFetch = createApolloFetch({ uri });
 
           const result = await apolloFetch({
-            query: `{error}`,
+            query: `{fieldWhichWillError}`,
           });
           expect(result.data).toEqual({
-            error: null,
+            fieldWhichWillError: null,
           });
           expect(result.errors).toBeDefined();
           expect(result.errors[0].message).toEqual('masked');
@@ -632,7 +673,11 @@ export function testApolloServer<AS extends ApolloServerBase>(
           expect(formatError).toHaveBeenCalledTimes(1);
           expect(willSendResponseInExtension).toHaveBeenCalledTimes(1);
 
-          const trace = await didReceiveTrace;
+          const reports = await engineServer.promiseOfReports;
+
+          expect(reports.length).toBe(1);
+
+          const trace = Object.values(reports[0].tracesPerQuery)[0].trace[0];
 
           expect(trace.clientReferenceId).toMatch(/1234/);
           expect(trace.clientName).toMatch(/testing/);
@@ -671,12 +716,12 @@ export function testApolloServer<AS extends ApolloServerBase>(
         const { url: uri } = await createApolloServer({
           typeDefs: gql`
             type Query {
-              error: String
+              fieldWhichWillError: String
             }
           `,
           resolvers: {
             Query: {
-              error: () => {},
+              fieldWhichWillError: () => {},
             },
           },
           extensions: [() => new Extension()],
@@ -687,7 +732,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
         const apolloFetch = createApolloFetch({ uri });
 
         const result = await apolloFetch({
-          query: `{error}`,
+          query: `{fieldWhichWillError}`,
         });
         expect(result.data).toBeUndefined();
         expect(result.errors).toBeDefined();
@@ -892,12 +937,12 @@ export function testApolloServer<AS extends ApolloServerBase>(
         const { url: uri } = await createApolloServer({
           typeDefs: gql`
             type Query {
-              error: String
+              fieldWhichWillError: String
             }
           `,
           resolvers: {
             Query: {
-              error: () => {
+              fieldWhichWillError: () => {
                 throw new AuthenticationError('we the best music');
               },
             },
@@ -906,9 +951,9 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
         const apolloFetch = createApolloFetch({ uri });
 
-        const result = await apolloFetch({ query: `{error}` });
+        const result = await apolloFetch({ query: `{fieldWhichWillError}` });
         expect(result.data).toBeDefined();
-        expect(result.data).toEqual({ error: null });
+        expect(result.data).toEqual({ fieldWhichWillError: null });
 
         expect(result.errors).toBeDefined();
         expect(result.errors.length).toEqual(1);
@@ -925,12 +970,12 @@ export function testApolloServer<AS extends ApolloServerBase>(
         const { url: uri } = await createApolloServer({
           typeDefs: gql`
             type Query {
-              error: String!
+              fieldWhichWillError: String!
             }
           `,
           resolvers: {
             Query: {
-              error: () => {
+              fieldWhichWillError: () => {
                 throw new AuthenticationError('we the best music');
               },
             },
@@ -939,7 +984,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
         const apolloFetch = createApolloFetch({ uri });
 
-        const result = await apolloFetch({ query: `{error}` });
+        const result = await apolloFetch({ query: `{fieldWhichWillError}` });
         expect(result.data).toBeNull();
 
         expect(result.errors).toBeDefined();
