@@ -28,7 +28,7 @@ import {
   VERSION,
 } from 'apollo-link-persisted-queries';
 
-import { createApolloFetch, GraphQLRequest } from 'apollo-fetch';
+import { createApolloFetch, ApolloFetch, GraphQLRequest } from 'apollo-fetch';
 import {
   AuthenticationError,
   UserInputError,
@@ -586,6 +586,11 @@ export function testApolloServer<AS extends ApolloServerBase>(
           (engineServer.stop() || Promise.resolve()).then(done);
         });
 
+        // TODO(jesse) This test block can be merged with another that will
+        // appear in a separate describe/it block after a branch merges
+        // that hasn't quite become a PR yet: abernix/finish-pr-1639.  It's
+        // intentionally separate right now because of the guaranteed merge
+        // conflict.
         it('validation > engine > extensions > formatError', async () => {
           const throwError = jest.fn(() => {
             throw new Error('nope');
@@ -685,6 +690,72 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
           expect(trace.root!.child![0].error![0].message).toMatch(/nope/);
           expect(trace.root!.child![0].error![0].message).not.toMatch(/masked/);
+        });
+
+        describe('validation > engine > traces', () => {
+          let apolloFetch: ApolloFetch;
+
+          const setupApolloServerAndFetchPair = async (
+            engineOptions: Partial<EngineReportingOptions<any>> = {},
+          ) => {
+            const { url: uri } = await createApolloServer({
+              typeDefs: gql`
+                type Query {
+                  justAField: String
+                }
+              `,
+              resolvers: {
+                Query: {
+                  justAField: () => 'a string',
+                },
+              },
+              engine: {
+                ...engineServer.engineOptions(),
+                apiKey: 'service:my-app:secret',
+                maxUncompressedReportSize: 1,
+                ...engineOptions,
+              },
+              debug: true,
+            });
+
+            apolloFetch = createApolloFetch({ uri });
+          };
+
+          it('sets the trace key to operationName when it is defined', async () => {
+            await setupApolloServerAndFetchPair();
+
+            const result = await apolloFetch({
+              query: `query AnOperationName {justAField}`,
+            });
+            expect(result.data).toEqual({
+              justAField: 'a string',
+            });
+            expect(result.errors).not.toBeDefined();
+
+            const reports = await engineServer.promiseOfReports;
+            expect(reports.length).toBe(1);
+
+            expect(Object.keys(reports[0].tracesPerQuery)[0]).toMatch(
+              /^# AnOperationName\n/,
+            );
+          });
+
+          it('sets the trace key to "-" when operationName is undefined', async () => {
+            await setupApolloServerAndFetchPair();
+
+            const result = await apolloFetch({
+              query: `{justAField}`,
+            });
+            expect(result.data).toEqual({
+              justAField: 'a string',
+            });
+            expect(result.errors).not.toBeDefined();
+
+            const reports = await engineServer.promiseOfReports;
+            expect(reports.length).toBe(1);
+
+            expect(Object.keys(reports[0].tracesPerQuery)[0]).toMatch(/^# -\n/);
+          });
         });
       });
 
