@@ -16,8 +16,8 @@ describe('createTestClient', () => {
 
   const resolvers = {
     Query: {
-      test: (_, { echo }) => echo,
-      hello: (_, __, { person }) => {
+      test: (_: any, { echo }: any) => echo,
+      hello: (_: any, __: any, { person }: any) => {
         return `hello ${person}`;
       },
     },
