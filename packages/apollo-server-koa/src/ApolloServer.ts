@@ -84,8 +84,7 @@ export class ApolloServer extends ApolloServerBase {
   }
 
   public applyMiddleware({ app, ...rest }: ServerRegistration) {
-    const middleware = this.getMiddleware(rest);
-    app.use(middleware);
+    app.use(this.getMiddleware(rest));
   }
 
   // TODO: While Koa is Promise-aware, this API hasn't been historically, even
@@ -98,7 +97,7 @@ export class ApolloServer extends ApolloServerBase {
     bodyParserConfig,
     disableHealthCheck,
     onHealthCheck,
-  }: GetMiddlewareOptions): Middleware {
+  }: GetMiddlewareOptions = {}): Middleware {
     if (!path) path = '/graphql';
 
     // Despite the fact that this `applyMiddleware` function is `async` in
