@@ -13,7 +13,7 @@ To define a custom scalar, add it to the schema string with the following notati
 scalar MyCustomScalar
 ```
 
-Afterwards, define the behavior of a `MyCustomScalar` custom scalar by passing an instance of the [`GraphQLScalarType`](http://graphql.org/graphql-js/type/#graphqlscalartype) class in the [resolver map](https://www.apollographql.com/docs/graphql-tools/resolvers.html#Resolver-map). This instance can be defined with a [dependency](#Using-a-package) or in [source code](#graphqlscalartype).
+Afterwards, define the behavior of a `MyCustomScalar` custom scalar by passing an instance of the [`GraphQLScalarType`](http://graphql.org/graphql-js/type/#graphqlscalartype) class in the [resolver map](https://www.apollographql.com/docs/graphql-tools/resolvers.html#Resolver-map). This instance can be defined with a [dependency](#using-a-package) or in [source code](#graphqlscalartype).
 
 For more information about GraphQL's type system, please refer to the [official documentation](http://graphql.org/graphql-js/type/) or to the [Learning GraphQL](https://github.com/mugli/learning-graphql/blob/master/7.%20Deep%20Dive%20into%20GraphQL%20Type%20System.md) tutorial.
 
