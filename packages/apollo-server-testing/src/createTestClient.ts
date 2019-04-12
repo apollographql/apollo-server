@@ -1,15 +1,33 @@
 import { ApolloServerBase } from 'apollo-server-core';
 import { print, DocumentNode } from 'graphql';
+import { GraphQLResponse } from 'graphql-extensions';
 
 type StringOrAst = string | DocumentNode;
+type Variables = { [name: string]: any };
 
-// A query must not come with a mutation (and vice versa).
-type Query = { query: StringOrAst; mutation?: undefined };
-type Mutation = { mutation: StringOrAst; query?: undefined };
+type QueryOptions = {
+  query: StringOrAst;
+  variables?: Variables;
+};
+
+type MutationOptions = {
+  mutation: StringOrAst;
+  variables?: Variables;
+};
+
+type QueryXorMutationOptions = (
+  | { query: StringOrAst; mutation?: never }
+  | { mutation: StringOrAst; query?: never }) & { variables?: Variables };
 
 export default (server: ApolloServerBase) => {
-  const executeOperation = server.executeOperation.bind(server);
-  const test = ({ query, mutation, ...args }: Query | Mutation) => {
+  function test(options: QueryOptions): Promise<GraphQLResponse>;
+  function test(options: MutationOptions): Promise<GraphQLResponse>;
+  function test({
+    query,
+    mutation,
+    variables,
+  }: QueryXorMutationOptions): Promise<GraphQLResponse> {
+    const executeOperation = server.executeOperation.bind(server);
     const operation = query || mutation;
 
     if (!operation || (query && mutation)) {
@@ -22,9 +40,9 @@ export default (server: ApolloServerBase) => {
       // Convert ASTs, which are produced by `graphql-tag` but not currently
       // used by `executeOperation`, to a String using `graphql/language/print`.
       query: typeof operation === 'string' ? operation : print(operation),
-      ...args,
+      variables,
     });
-  };
+  }
 
   return { query: test, mutate: test };
 };
