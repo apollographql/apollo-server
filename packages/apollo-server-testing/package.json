@@ -8,6 +8,9 @@
     "type": "git",
     "url": "https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-testing"
   },
+  "scripts": {
+    "test": "../../node_modules/.bin/jest"
+  },
   "keywords": [
     "GraphQL",
     "Apollo",
