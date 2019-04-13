@@ -5,9 +5,7 @@
   "editor.wordWrapColumn": 80,
   "files.trimTrailingWhitespace": true,
   "files.insertFinalNewline": true,
-  "files.exclude": {
-    "**/.git": true,
-    "**/.DS_Store": true,
+  "search.exclude": {
     "**/node_modules/": true,
     "**/dist/": true,
     "coverage": true,
