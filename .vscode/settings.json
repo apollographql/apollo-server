@@ -5,11 +5,5 @@
   "editor.wordWrapColumn": 80,
   "files.trimTrailingWhitespace": true,
   "files.insertFinalNewline": true,
-  "search.exclude": {
-    "**/node_modules/": true,
-    "**/dist/": true,
-    "coverage": true,
-    "coverage.lcov": true
-  },
   "typescript.tsdk": "./node_modules/typescript/lib"
 }
