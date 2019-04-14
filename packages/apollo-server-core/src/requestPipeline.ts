@@ -352,7 +352,7 @@ export async function processGraphQLRequest<TContext>(
       } else {
         requestContext.overallCachePolicy = cacheControlExtension.computeOverallCachePolicy();
       }
-
+    }
 
     const formattedExtensions = extensionStack.format();
     if (Object.keys(formattedExtensions).length > 0) {
