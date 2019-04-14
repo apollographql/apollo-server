@@ -5,7 +5,6 @@ import {
   DocumentNode,
   getOperationAST,
   ExecutionArgs,
-  ExecutionResult,
   GraphQLError,
   GraphQLFormattedError,
 } from 'graphql';
@@ -29,6 +28,7 @@ import {
   ValidationError,
   PersistedQueryNotSupportedError,
   PersistedQueryNotFoundError,
+  formatApolloErrors,
 } from 'apollo-server-errors';
 import {
   GraphQLRequest,
@@ -36,6 +36,8 @@ import {
   GraphQLRequestContext,
   InvalidGraphQLRequestError,
   ValidationRule,
+  GraphQLExecutor,
+  GraphQLExecutionResult,
 } from '../dist/requestPipelineAPI';
 import {
   ApolloServerPlugin,
@@ -73,6 +75,7 @@ export interface GraphQLRequestPipelineConfig<TContext> {
 
   rootValue?: ((document: DocumentNode) => any) | any;
   validationRules?: ValidationRule[];
+  executor?: GraphQLExecutor;
   fieldResolver?: GraphQLFieldResolver<any, TContext>;
 
   dataSources?: () => DataSources<TContext>;
@@ -316,11 +319,20 @@ export async function processGraphQLRequest<TContext>(
       );
 
       try {
-        response = (await execute(
-          requestContext.document,
-          request.operationName,
-          request.variables,
-        )) as GraphQLResponse;
+        const result = await execute(requestContext as WithRequired<
+          typeof requestContext,
+          'document' | 'operation' | 'operationName'
+        >);
+
+        if (result.errors) {
+          extensionStack.didEncounterErrors(result.errors);
+        }
+
+        response = {
+          ...result,
+          errors: result.errors ? formatErrors(result.errors) : undefined,
+        };
+
         executionDidEnd();
       } catch (executionError) {
         executionDidEnd(executionError);
@@ -395,10 +407,13 @@ export async function processGraphQLRequest<TContext>(
   }
 
   async function execute(
-    document: DocumentNode,
-    operationName: GraphQLRequest['operationName'],
-    variables: GraphQLRequest['variables'],
-  ): Promise<ExecutionResult> {
+    requestContext: WithRequired<
+      GraphQLRequestContext<TContext>,
+      'document' | 'operationName' | 'operation'
+    >,
+  ): Promise<GraphQLExecutionResult> {
+    const { request, document } = requestContext;
+
     const executionArgs: ExecutionArgs = {
       schema: config.schema,
       document,
@@ -407,8 +422,8 @@ export async function processGraphQLRequest<TContext>(
           ? config.rootValue(document)
           : config.rootValue,
       contextValue: requestContext.context,
-      variableValues: variables,
-      operationName,
+      variableValues: request.variables,
+      operationName: request.operationName,
       fieldResolver: config.fieldResolver,
     };
 
@@ -417,7 +432,11 @@ export async function processGraphQLRequest<TContext>(
     });
 
     try {
-      return await graphql.execute(executionArgs);
+      if (config.executor) {
+        return await config.executor(requestContext);
+      } else {
+        return await graphql.execute(executionArgs);
+      }
     } finally {
       executionDidEnd();
     }
@@ -454,14 +473,25 @@ export async function processGraphQLRequest<TContext>(
       : [errorOrErrors];
 
     return sendResponse({
-      errors: errors.map(err =>
-        fromGraphQLError(
-          err,
-          errorClass && {
-            errorClass,
-          },
+      errors: formatErrors(
+        errors.map(err =>
+          fromGraphQLError(
+            err,
+            errorClass && {
+              errorClass,
+            },
+          ),
         ),
       ),
+    });
+  }
+
+  function formatErrors(
+    errors: ReadonlyArray<GraphQLError>,
+  ): ReadonlyArray<GraphQLFormattedError> {
+    return formatApolloErrors(errors, {
+      formatter: config.formatError,
+      debug: requestContext.debug,
     });
   }
 

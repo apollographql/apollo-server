@@ -211,7 +211,7 @@ export class UserInputError extends ApolloError {
 }
 
 export function formatApolloErrors(
-  errors: Array<Error>,
+  errors: ReadonlyArray<Error>,
   options?: {
     formatter?: (error: GraphQLError) => GraphQLFormattedError;
     debug?: boolean;

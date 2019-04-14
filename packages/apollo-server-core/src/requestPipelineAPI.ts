@@ -2,14 +2,20 @@
 // circular dependency issues from the `apollo-server-plugin-base` package
 // depending on the types in it.
 
-import { Request, Response } from 'apollo-server-env';
+import {
+  Request,
+  Response,
+  ValueOrPromise,
+  WithRequired,
+} from 'apollo-server-env';
 import {
   GraphQLSchema,
   ValidationContext,
   ASTVisitor,
-  GraphQLError,
+  GraphQLFormattedError,
   OperationDefinitionNode,
   DocumentNode,
+  GraphQLError,
 } from 'graphql';
 import { KeyValueCache } from 'apollo-server-caching';
 
@@ -27,14 +33,16 @@ export interface GraphQLServiceContext {
 export interface GraphQLRequest {
   query?: string;
   operationName?: string;
-  variables?: { [name: string]: any };
+  variables?: VariableValues;
   extensions?: Record<string, any>;
   http?: Pick<Request, 'url' | 'method' | 'headers'>;
 }
 
+export type VariableValues = { [name: string]: any };
+
 export interface GraphQLResponse {
   data?: Record<string, any>;
-  errors?: GraphQLError[];
+  errors?: ReadonlyArray<GraphQLFormattedError>;
   extensions?: Record<string, any>;
   http?: Pick<Response, 'headers'>;
 }
@@ -72,3 +80,16 @@ export interface GraphQLRequestContext<TContext = Record<string, any>> {
 export type ValidationRule = (context: ValidationContext) => ASTVisitor;
 
 export class InvalidGraphQLRequestError extends Error {}
+
+export type GraphQLExecutor<TContext = Record<string, any>> = (
+  requestContext: WithRequired<
+    GraphQLRequestContext<TContext>,
+    'document' | 'operationName' | 'operation'
+  >,
+) => ValueOrPromise<GraphQLExecutionResult>;
+
+export type GraphQLExecutionResult = {
+  data?: Record<string, any>;
+  errors?: ReadonlyArray<GraphQLError>;
+  extensions?: Record<string, any>;
+};
