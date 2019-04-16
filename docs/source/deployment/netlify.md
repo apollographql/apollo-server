@@ -1,20 +1,20 @@
 ---
-title: Deploy a fullstack Apollo app with Netlify
+title: Deploying Apollo Server to Netlify
 sidebar_title: Netlify
 description: How to run your API using Netlify Functions on AWS Lambda
 ---
 
-[Netlify functions](https://www.netlify.com/docs/functions/), is a new way to deploy server-side code to AWS Lambda alongside your frontend, right from GitHub. In this guide, I'll show you why Netlify's functions is a great way to run your whole Apollo app.
+[Netlify Functions](https://www.netlify.com/docs/functions/) allow deploying server-side code, directly from GitHub, to AWS Lambda.  This guide demonstrates how to use Netlify Functions to deploy a GraphQL server and how a React application (built with `create-react-app`) can consume data from that server.
 
 1. Use the same platform to deploy your frontend and API code.
 2. Deploy previews of both your frontend and API on every pull request.
-3. No need to worry about scaling containers due to a serverless architecture.
+3. No need to worry about scaling containers due to a "serverless" infrastructure.
 
 We'll set up a "Hello World" API and frontend for an Apollo app on Netlify. Let's get started!
 
 ## Download and Run the Netlify Starter Kit
 
-Download and run the [official Netlify create-react-app and Lambda starter kit](https://github.com/netlify/create-react-app-lambda). This will set us up with a base for our frontend and API code.
+Download and run the [official Netlify `create-react-app` and Lambda starter kit](https://github.com/netlify/create-react-app-lambda). This will set us up with a base for our frontend and API code.
 
 
 ```bash
@@ -25,12 +25,12 @@ npm install
 
 Let’s take a quick look at the file structure here:
 
-* **package.json:** our dependencies, shared between client and server code. You can also split them up into separate directories later, depending on your preference.
-* **netlify.toml:** configuration for Netlify and the Netlify functions.
-* **src/:** code for our React app.
-* **src/lambda/:** code that will be deployed to Lambda by Netlify.
+* **package.json:** This application's dependencies, shared between client and server code. You can also split them up into separate directories later, depending on your preference.
+* **netlify.toml:** The configuration for Netlify.
+* **src/:** The source code for the React frontend app.
+* **src/lambda/:** The server source code that will be deployed to Netlify Functions.
 
-In `package.json`, you’ll find scripts to run the frontend and lambda code:
+In `package.json`, you'll find scripts to run the frontend and lambda code:
 
 ```js
 "scripts": {
@@ -44,23 +44,24 @@ In `package.json`, you’ll find scripts to run the frontend and lambda code:
 Run the code to see that everything is working. We have to open two terminal windows to run the frontend and functions at the same time:
 
 ```bash
-# In the first terminal
+# In the first terminal, run the local development server.
+# This emulates the Netlify Functions runtime environment.
 npm run start:lambda
-# In the second terminal
+# In the second terminal, start the React frontend application.
 npm start
 ```
 
-If everything looks like it started correctly, let’s add a GraphQL API with Apollo Server!
+If everything looks like it started correctly, let's add a GraphQL API with Apollo Server!
 
 ### Setting up Apollo Server
 
-Netlify functions run on AWS Lambda, so we can use the `apollo-server-lambda` package to easily integrate Apollo Server for our API layer. Let’s install the packages we need for that:
+Netlify Functions run on AWS Lambda, so we can use the `apollo-server-lambda` package to easily integrate Apollo Server for our API layer. Let’s install the packages we need for that:
 
 ```bash
 npm install --save apollo-server-lambda graphql
 ```
 
-Now, we can create a “Hello world” GraphQL API. Let’s put that in a new file in the lambda folder, at `src/lambda/graphql.js`:
+Now, we can create a "Hello world" GraphQL API. Let's put that in a new file in the `lambda` folder, at `src/lambda/graphql.js`:
 
 ```js
 // src/lambda/graphql.js
@@ -74,7 +75,7 @@ const typeDefs = gql`
 
 const resolvers = {
   Query: {
-    hello: (root, args, context) => {
+    hello: (parent, args, context) => {
       return "Hello, world!";
     }
   }
@@ -88,18 +89,18 @@ const server = new ApolloServer({
 exports.handler = server.createHandler();
 ```
 
-Now, make sure you’ve run `npm run start:lambda`, and navigate to `localhost:9000/graphql` in your browser. You should see GraphQL Playground, where you can run queries against your API!
+Now, make sure you've run `npm run start:lambda`, and navigate to `localhost:9000/graphql` in your browser. You should see GraphQL Playground, where you can run queries against your API!
 
 <div style="text-align:center">
 ![Local GraphQL Server](../images/graphql.png)
 <br></br>
 </div>
 
-If you can see GraphQL Playground and run a simple query, you’ve done everything properly! It’s pretty neat that getting an API up and running was just a few lines of code. Now let’s add Apollo to our frontend.
+If you can see GraphQL Playground and run a simple query, you've done everything properly. Now, let's add Apollo Client to the frontend.
 
 ### Adding Apollo Client to React
 
-Open up `src/App.js`. Let’s convert this file to load a simple query from the API we just set up. First, let’s install Apollo Client and the React integration, and we’ll use the `apollo-boost` package to get started easily:
+Open up `src/App.js`. Let's convert this file to load a simple query from the API we just set up. First, let's install Apollo Client and the React integration, and we’ll use the `apollo-boost` package to get started easily:
 
 ```bash
 npm install --save apollo-boost react-apollo
@@ -117,7 +118,7 @@ const client = new ApolloClient({
 
 The way that the starter kit and Netlify are set up, any requests that start with `.netlify/functions` are automatically redirected to the Lambda functions in our project. So since we created our API with the filename `graphql.js`, we can call it with `.netlify/functions/graphql` from our frontend.
 
-Let’s replace the LambdaDemo component from the starter kit with a new one that uses Apollo to query our API:
+Let's replace the LambdaDemo component from the starter kit with a new one that uses Apollo to query our API:
 
 ```js
 import { gql } from "apollo-boost";
@@ -139,7 +140,7 @@ const LambdaDemo = () => (
 );
 ```
 
-If we’ve got everything set up correctly, we’ll see the greeting that we wrote in our resolver show up in the frontend:
+If we've got everything set up correctly, we'll see the greeting that we wrote in our resolver show up in the frontend:
 
 <div style="text-align:center">
 ![React Frontend](../images/welcometoreact.png)
@@ -150,13 +151,14 @@ Sweet, now we’ve connected our client to our API, and the only thing left is t
 
 ### Deploying to Netlify
 
-The best way to deploy to Netlify is to set it up to deploy automatically from a GitHub repository. Therefore, create a new repository and push the code there.
+Netlify can deploy automatically from a linked GitHub repository, so we'll use that technique for the rest of this tutorial which will allow each `git push` to automatically deploy. To enable this, first [create a new, empty repository on GitHub](https://help.github.com/articles/create-a-repo/).
 
 To start the project, we cloned the Netlify starter kit. If we want the local repository to point to our new GitHub repo instead of the starter kit, we need to change the `origin`, like this:
 
 ```bash
-# Replace the URL with the one to your repository, example:
-git remote set-url origin git@github.com:stubailo/apollo-netlify-lambda-app.git
+# Replace the following URL with the appropriate URL obtained when
+# creating the new GitHub repository in the previous step!
+git remote set-url origin git@github.com:username/repository.git
 ```
 
 Now, commit and push:
