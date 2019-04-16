@@ -14,9 +14,9 @@ When an error occurs in Apollo server both inside and outside of resolvers, each
 The first step to improving the usability of a server is providing the error stack trace by default. The following example demonstrates the response returned from Apollo server with a resolver that throws a node [`SystemError`](https://nodejs.org/api/errors.html#errors_system_errors).
 
 ```js line=14-16
-const { 
-  ApolloServer, 
-  gql, 
+const {
+  ApolloServer,
+  gql,
 } = require('apollo-server');
 
 const typeDefs = gql`
@@ -45,10 +45,10 @@ The response will return:
 In addition to stacktraces, Apollo Server's exported errors specify a human-readable string in the `code` field of `extensions` that enables the client to perform corrective actions. In addition to improving the client experience, the `code` field allows the server to categorize errors. For example, an `AuthenticationError` sets the code to `UNAUTHENTICATED`, which enables the client to reauthenticate and would generally be ignored as a server anomaly.
 
 ```js line=4,15-17
-const { 
-  ApolloServer, 
-  gql, 
-  AuthenticationError, 
+const {
+  ApolloServer,
+  gql,
+  AuthenticationError,
 } = require('apollo-server');
 
 const typeDefs = gql`
@@ -72,13 +72,13 @@ The response will return:
 
 ## Augmenting error details
 
-When clients provide bad input, you may want to return additional information 
-like a localized message for each field or argument that was invalid. The 
+When clients provide bad input, you may want to return additional information
+like a localized message for each field or argument that was invalid. The
 following example demonstrates how you can use `UserInputError` to augment
 your error messages with additional details.
 
 ```js line=15-21
-const { 
+const {
   ApolloServer,
   UserInputError,
   gql,
@@ -114,23 +114,25 @@ application, you can use the base `ApolloError` class.
 
 ```js
 new ApolloError(message, code, additionalProperties);
-``` 
+```
 
 ## Masking and logging errors
 
-The Apollo server constructor accepts a `formatError` function that is run on each error passed back to the client. This can be used to mask errors as well as for logging.
-This example demonstrates masking (or suppressing the stacktrace):
+The Apollo server constructor accepts a `rewriteError` function that is run on each error passed back to the client or trace reporting. This can be used to mask errors as well as for logging. This example demonstrates masking (or suppressing the error):
 
-```js line=4-10
+```js line=4-12
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  formatError: error => {
+  rewriteError: error => {
     console.log(error);
-    return new Error('Internal server error');
-    // Or, you can delete the exception information
-    // delete error.extensions.exception;
-    // return error;
+    return new GraphQLError('rewritten as a new error');
+
+    //Or, you can delete the exception information
+    return null
+
+    //Or return the original error
+    return error;
   },
 });
 

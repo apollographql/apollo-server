@@ -186,7 +186,7 @@ export class EngineReportingAgent<TContext = any> {
     if (
       this.sendReportsImmediately ||
       this.reportSize >=
-      (this.options.maxUncompressedReportSize || 4 * 1024 * 1024)
+        (this.options.maxUncompressedReportSize || 4 * 1024 * 1024)
     ) {
       this.sendReportAndReportErrors();
     }
@@ -273,7 +273,7 @@ export class EngineReportingAgent<TContext = any> {
       // redirects.
       throw new Error(
         `Error sending report to Apollo Engine servers (HTTP status ${
-        response.status
+          response.status
         }): ${await response.text()}`,
       );
     }
