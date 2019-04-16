@@ -1,6 +1,5 @@
 ---
-title: Deploying Apollo Server to Netlify
-sidebar_title: Netlify
+title: Deploying with Netlify Functions
 description: How to run your API using Netlify Functions on AWS Lambda
 ---
 
