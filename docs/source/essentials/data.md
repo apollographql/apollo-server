@@ -99,7 +99,7 @@ Every resolver function is called according to the nesting of the query. To unde
 
 The context is how you access your shared connections and fetchers in resolvers to get data.
 
-The `context` is the third argument passed to every resolver. It is useful for passing things that any resolver may need, like [authentication scope](https://blog.apollographql.com/authorization-in-graphql-452b1c402a9), database connections, and custom fetch functions. Additionally, if you're using [dataloaders to batch requests](../best-practices/performance.html#Batching-data-lookups)  across resolvers, you can attach them to the `context` as well.
+The `context` is the third argument passed to every resolver. It is useful for passing things that any resolver may need, like [authentication scope](https://blog.apollographql.com/authorization-in-graphql-452b1c402a9), database connections, and custom fetch functions. Additionally, if you're using [dataloaders to batch requests](../features/data-sources#what-about-dataloader)  across resolvers, you can attach them to the `context` as well.
 
 As a best practice, `context` should be the same for all resolvers, no matter the particular query or mutation, and resolvers should never modify it. This ensures consistency across resolvers, and helps increase development velocity.
 
