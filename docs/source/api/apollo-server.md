@@ -372,7 +372,7 @@ addMockFunctionsToSchema({
    
 *  `schemaTag`: String
 
-   A human readable name to tag this variant of a schema (i.e. staging, EU)
+   A human readable name to tag this variant of a schema (i.e. staging, EU). Setting this value will cause metrics to be segmented in the Apollo Platform's UI. Additionally schema validation with a schema tag will only check metrics associate with the same string.
 
 *  `generateClientInfo`: (GraphQLRequestContext) => ClientInfo **AS 2.2**
 
