@@ -6,26 +6,32 @@
 [![Join the community on Spectrum](https://withspectrum.github.io/badge/badge.svg)](https://spectrum.chat/apollo)
 
 
-Apollo Server is a community-maintained open-source GraphQL server. It works with pretty much all Node.js HTTP server frameworks, and we're happy to take PRs for more! Apollo Server works with any GraphQL schema built with [GraphQL.js](https://github.com/graphql/graphql-js), so you can build your schema with that directly or with a convenience library such as [graphql-tools](https://www.apollographql.com/docs/graphql-tools/).
+Apollo Server is a community-maintained open-source GraphQL server. It works with pretty much all Node.js HTTP server frameworks, and we're happy to take PRs to add more! Apollo Server works with any GraphQL schema built with [GraphQL.js](https://github.com/graphql/graphql-js)--so you may build your schema with that or a convenience library such as [graphql-tools](https://www.apollographql.com/docs/graphql-tools/).
 
 ## Principles
 
 Apollo Server is built with the following principles in mind:
 
-- **By the community, for the community**: Apollo Server's development is driven by the needs of developers.
-- **Simplicity**: By keeping things simple, Apollo Server is easier to use, easier to contribute to, and more secure.
-- **Performance**: Apollo Server is well-tested and production-ready.
+- **By the community, for the community**: Its development is driven by the needs of developers.
+- **Simplicity**: By keeping things simple, it is more secure and easier to implement and contribute.
+- **Performance**: It is well-tested and production-ready.
 
 Anyone is welcome to contribute to Apollo Server, just read [CONTRIBUTING.md](./CONTRIBUTING.md), take a look at the [roadmap](./ROADMAP.md) and make your first PR!
 
 ## Getting started
 
-Apollo Server is super easy to set up. Just `npm install apollo-server-<integration>`, write a GraphQL schema, and then use one of the following snippets to get started. For more info, read the [Apollo Server docs](https://www.apollographql.com/docs/apollo-server/v2).
+To get started with Apollo Server:
 
-There are two installation patterns:
+* Install with `npm install apollo-server-<integration>`
+* Write a GraphQL schema
+* Use one of the following snippets
 
-* **[Standalone](#installation-standalone)**: To get started without integrating with an existing web framework, use the `apollo-server` package.
-* **[Integrations](#installation-integrations)**: For applications which have already use a web framework (e.g. `express`, `koa`, `hapi`, etc.), use the appropriate Apollo Server integration package.
+There are two ways to install Apollo Server:
+
+* **[Standalone](#installation-standalone)**: For applications that do not require an existing web framework, use the `apollo-server` package.
+* **[Integrations](#installation-integrations)**: For applications with a web framework (e.g. `express`, `koa`, `hapi`, etc.), use the appropriate Apollo Server integration package.
+
+For more info, please refer to the [Apollo Server docs](https://www.apollographql.com/docs/apollo-server/v2).
 
 ### Installation: Standalone
 
@@ -63,7 +69,7 @@ server.listen().then(({ url }) => {
 });
 ```
 
-> Due to its human-readability, we recommend using [schema-definition language (SDL)](https://www.apollographql.com/docs/apollo-server/essentials/schema.html#sdl) to define a GraphQL schema but [a `GraphQLSchema` object from `graphql-js`](https://github.com/graphql/graphql-js/#using-graphqljs) can also be specified in place of `typeDefs` and `resolvers` using the `schema` property:
+> Due to its human-readability, we recommend using [schema-definition language (SDL)](https://www.apollographql.com/docs/apollo-server/essentials/schema.html#sdl) to define a GraphQL schema--[a `GraphQLSchema` object from `graphql-js`](https://github.com/graphql/graphql-js/#using-graphqljs) can also be specified instead of `typeDefs` and `resolvers` using the `schema` property:
 >
 > ```js
 > const server = new ApolloServer({
@@ -71,11 +77,11 @@ server.listen().then(({ url }) => {
 > });
 > ```
 
-Finally, start the server using `node index.js` and open your web-browser to the URL which is output on the console.
+Finally, start the server using `node index.js` and go to the URL returned on the console.
 
-For more details, check out the Apollo Server [Getting Started guide](https://www.apollographql.com/docs/apollo-server/getting-started.html) of the documentation, or for a more comprehensive understanding, see the [fullstack tutorial](https://www.apollographql.com/docs/tutorial/introduction.html).
+For more details, check out the Apollo Server [Getting Started guide](https://www.apollographql.com/docs/apollo-server/getting-started.html) and the [fullstack tutorial](https://www.apollographql.com/docs/tutorial/introduction.html).
 
-For questions, the [Apollo commuinty on Spectrum.chat](https://spectrum.chat) is a great place to get assistance.
+For questions, the [Apollo community on Spectrum.chat](https://spectrum.chat) is a great place to get help.
 
 ## Installation: Integrations
 
@@ -93,13 +99,11 @@ The following web frameworks have Apollo Server integrations, and each of these 
 - [Google Cloud Functions](https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-cloud-functions)
 - [Cloudflare](https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-cloudflare) _(Experimental)_
 
-See the links above for more details on a specific integration.
-
 ## Context
 
-A request context is available for each request.  When `context` is defined as a function, it will be called on each request and receive an object containing a `req` property which represents the request.
+A request context is available for each request.  When `context` is defined as a function, it will be called on each request and will receive an object containing a `req` property, which represents the request itself.
 
-By returning an object from the `context` function, it will be available as the third positional paramter of the resolvers:
+By returning an object from the `context` function, it will be available as the third positional parameter of the resolvers:
 
 ```js
 new ApolloServer({
@@ -122,17 +126,17 @@ new ApolloServer({
 
 ## Documentation
 
-The [Apollo Server documentation](https://apollographql.com/docs/apollo-server/) contains many of the details which are necessary to get started with both GraphQL and Apollo Server.
+The [Apollo Server documentation](https://apollographql.com/docs/apollo-server/) contains additional details on how to get started with GraphQL and Apollo Server.
 
-The raw source content of that documentation is available within the `docs/` directory of this monorepo, but the _Edit on GitHub_ buttons at the bottom of each page can be used to contribute suggestions or improvements to the published content.
+The raw Markdown source of the documentation is available within the `docs/` directory of this monorepo--to contribute, please use the _Edit on GitHub_ buttons at the bottom of each page.
 
 ## Development
 
-If you want to develop or contribute to Apollo Server itself, we suggest the following:
+If you wish to develop or contribute to Apollo Server, we suggest the following:
 
 - Fork this repository
 
-- Install the Apollo Server project in your computer
+- Install the Apollo Server project on your computer
 
 ```
 git clone https://github.com/[your-user]/apollo-server
@@ -142,14 +146,17 @@ cd packages/apollo-server-<integration>/
 npm link
 ```
 
-- Install your local Apollo Server in other App
+- Install your local Apollo Server in the other App
 
 ```
 cd ~/myApp
 npm link apollo-server-<integration>
 ```
 
-For more help with contributing, visit the _Contributing_ channel on the [Apollo community in Spectrum.chat](https://spectrum.chat/apollo).
+## Community
+
+Are you stuck? Want to contribute? Come visit us in the [Apollo community on Spectrum.chat!](https://spectrum.chat)
+
 
 ## Maintainers
 
