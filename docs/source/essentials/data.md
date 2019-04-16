@@ -16,18 +16,18 @@ const { gql } = require('apollo-server');
 const { find, filter } = require('lodash');
 
 const schema = gql`
-type Book {
-  title: String
-  author: Author
-}
+  type Book {
+    title: String
+    author: Author
+  }
 
-type Author {
-  books: [Book]
-}
+  type Author {
+    books: [Book]
+  }
 
-type Query {
-  author: Author
-}
+  type Query {
+    author: Author
+  }
 `;
 
 const resolvers = {
@@ -86,7 +86,7 @@ query {
 }
 ```
 
-Every GraphQL query is a tree of function calls in the server. So the `obj` contains the result of parent resolver, in this case:
+Every GraphQL query is a tree of function calls in the server. So the `parent` contains the result of parent resolver, in this case:
 
 1. `parent` in `Query.getAuthor` will be whatever the server configuration passed for `rootValue`.
 2. `parent` in `Author.name` and `Author.posts` will be the result from `getAuthor`, likely an Author object from the backend.

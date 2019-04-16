@@ -38,6 +38,8 @@ describe('runHttpQuery', () => {
       const noQueryRequest = Object.assign({}, mockQueryRequest, {
         query: 'foo',
       });
+
+      expect.assertions(2);
       return runHttpQuery([], noQueryRequest).catch((err: HttpQueryError) => {
         expect(err.statusCode).toEqual(400);
         expect(err.message).toEqual('Must provide query string.');

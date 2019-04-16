@@ -10,13 +10,15 @@ import {
   FileUploadOptions,
   ApolloServerBase,
   formatApolloErrors,
+  processFileUploads,
+  ContextFunction,
+  Context,
+  Config,
 } from 'apollo-server-core';
 import accepts from 'accepts';
 import typeis from 'type-is';
 
 import { graphqlExpress } from './expressApollo';
-
-import { processRequest as processFileUploads } from '@apollographql/apollo-upload-server';
 
 export { GraphQLOptions, GraphQLExtension } from 'apollo-server-core';
 
@@ -44,8 +46,11 @@ const fileUploadMiddleware = (
   next: express.NextFunction,
 ) => {
   // Note: we use typeis directly instead of via req.is for connect support.
-  if (typeis(req, ['multipart/form-data'])) {
-    processFileUploads(req, uploadsConfig)
+  if (
+    typeof processFileUploads === 'function' &&
+    typeis(req, ['multipart/form-data'])
+  ) {
+    processFileUploads(req, res, uploadsConfig)
       .then(body => {
         req.body = body;
         next();
@@ -65,7 +70,20 @@ const fileUploadMiddleware = (
   }
 };
 
+export interface ExpressContext {
+  req: express.Request;
+  res: express.Response;
+}
+
+export interface ApolloServerExpressConfig extends Config {
+  context?: ContextFunction<ExpressContext, Context> | Context;
+}
+
 export class ApolloServer extends ApolloServerBase {
+  constructor(config: ApolloServerExpressConfig) {
+    super(config);
+  }
+
   // This translates the arguments from the middleware into graphQL options It
   // provides typings for the integration specific behavior, ideally this would
   // be propagated with a generic to the super class
@@ -134,7 +152,7 @@ export class ApolloServer extends ApolloServerBase {
     }
 
     let uploadsMiddleware;
-    if (this.uploadsConfig) {
+    if (this.uploadsConfig && typeof processFileUploads === 'function') {
       uploadsMiddleware = fileUploadMiddleware(this.uploadsConfig, this);
     }
 

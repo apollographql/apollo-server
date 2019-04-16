@@ -21,7 +21,7 @@ export class Dispatcher<T> {
       this.targets.map(target => {
         const method = target[methodName];
         if (method && typeof method === 'function') {
-          return method(...args);
+          return method.apply(target, args);
         }
       }),
     );
@@ -30,7 +30,7 @@ export class Dispatcher<T> {
   public invokeDidStartHook<
     TMethodName extends FunctionPropertyNames<
       Required<T>,
-      ((...args: any[]) => AnyFunction | void)
+      (...args: any[]) => AnyFunction | void
     >,
     TEndHookArgs extends Args<ReturnType<AsFunction<T[TMethodName]>>>
   >(
@@ -42,7 +42,7 @@ export class Dispatcher<T> {
     for (const target of this.targets) {
       const method = target[methodName];
       if (method && typeof method === 'function') {
-        const didEndHook = method(...args);
+        const didEndHook = method.apply(target, args);
         if (didEndHook) {
           didEndHooks.push(didEndHook);
         }

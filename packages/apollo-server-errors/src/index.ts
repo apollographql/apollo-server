@@ -1,4 +1,4 @@
-import { GraphQLError } from 'graphql';
+import { GraphQLError, GraphQLFormattedError } from 'graphql';
 
 export class ApolloError extends Error implements GraphQLError {
   public extensions: Record<string, any>;
@@ -213,7 +213,7 @@ export class UserInputError extends ApolloError {
 export function formatApolloErrors(
   errors: Array<Error>,
   options?: {
-    formatter?: Function;
+    formatter?: (error: GraphQLError) => GraphQLFormattedError;
     debug?: boolean;
   },
 ): Array<ApolloError> {

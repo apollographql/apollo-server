@@ -1,4 +1,8 @@
-import { makeExecutableSchema, addMockFunctionsToSchema } from 'graphql-tools';
+import {
+  makeExecutableSchema,
+  addMockFunctionsToSchema,
+  GraphQLParseOptions,
+} from 'graphql-tools';
 import { Server as HttpServer } from 'http';
 import {
   execute,
@@ -9,11 +13,15 @@ import {
   GraphQLFieldResolver,
   ValidationContext,
   FieldDefinitionNode,
+  DocumentNode,
 } from 'graphql';
 import { GraphQLExtension } from 'graphql-extensions';
-import { EngineReportingAgent } from 'apollo-engine-reporting';
-import { InMemoryLRUCache } from 'apollo-server-caching';
+import {
+  InMemoryLRUCache,
+  PrefixingKeyValueCache,
+} from 'apollo-server-caching';
 import { ApolloServerPlugin } from 'apollo-server-plugin-base';
+import runtimeSupportsUploads from './utils/runtimeSupportsUploads';
 
 import {
   SubscriptionServer,
@@ -49,6 +57,7 @@ import {
   processGraphQLRequest,
   GraphQLRequestContext,
   GraphQLRequest,
+  APQ_CACHE_PREFIX,
 } from './requestPipeline';
 
 import { Headers } from 'apollo-server-env';
@@ -88,13 +97,20 @@ function getEngineServiceId(engine: Config['engine']): string | undefined {
   return;
 }
 
+const forbidUploadsForTesting =
+  process && process.env.NODE_ENV === 'test' && !runtimeSupportsUploads;
+
+function approximateObjectSize<T>(obj: T): number {
+  return Buffer.byteLength(JSON.stringify(obj), 'utf8');
+}
+
 export class ApolloServerBase {
   public subscriptionsPath?: string;
   public graphqlPath: string = '/graphql';
   public requestOptions: Partial<GraphQLOptions<any>> = Object.create(null);
 
   private context?: Context | ContextFunction;
-  private engineReportingAgent?: EngineReportingAgent;
+  private engineReportingAgent?: import('apollo-engine-reporting').EngineReportingAgent;
   private engineServiceId?: string;
   private extensions: Array<() => GraphQLExtension>;
   private schemaHash: string;
@@ -110,6 +126,13 @@ export class ApolloServerBase {
   // the default version is specified in playground.ts
   protected playgroundOptions?: PlaygroundRenderPageOptions;
 
+  // A store that, when enabled (default), will store the parsed and validated
+  // versions of operations in-memory, allowing subsequent parses/validates
+  // on the same operation to be executed immediately.
+  private documentStore?: InMemoryLRUCache<DocumentNode>;
+
+  private parseOptions: GraphQLParseOptions;
+
   // The constructor should be universal across all environments. All environment specific behavior should be set by adding or overriding methods
   constructor(config: Config) {
     if (!config) throw new Error('ApolloServer requires options.');
@@ -120,6 +143,7 @@ export class ApolloServerBase {
       schemaDirectives,
       modules,
       typeDefs,
+      parseOptions = {},
       introspection,
       mocks,
       mockEntireSchema,
@@ -131,6 +155,9 @@ export class ApolloServerBase {
       plugins,
       ...requestOptions
     } = config;
+
+    // Initialize the document store.  This cannot currently be disabled.
+    this.initializeDocumentStore();
 
     // Plugins will be instantiated if they aren't already, and this.plugins
     // is populated accordingly.
@@ -186,11 +213,14 @@ export class ApolloServerBase {
     }
 
     if (requestOptions.persistedQueries !== false) {
-      if (!requestOptions.persistedQueries) {
-        requestOptions.persistedQueries = {
-          cache: requestOptions.cache!,
-        };
-      }
+      requestOptions.persistedQueries = {
+        cache: new PrefixingKeyValueCache(
+          (requestOptions.persistedQueries &&
+            requestOptions.persistedQueries.cache) ||
+            requestOptions.cache!,
+          APQ_CACHE_PREFIX,
+        ),
+      };
     } else {
       // the user does not want to use persisted queries, so we remove the field
       delete requestOptions.persistedQueries;
@@ -199,8 +229,16 @@ export class ApolloServerBase {
     this.requestOptions = requestOptions as GraphQLOptions;
     this.context = context;
 
-    if (uploads !== false) {
+    if (uploads !== false && !forbidUploadsForTesting) {
       if (this.supportsUploads()) {
+        if (!runtimeSupportsUploads) {
+          printNodeFileUploadsMessage();
+          throw new Error(
+            '`graphql-upload` is no longer supported on Node.js < v8.5.0.  ' +
+              'See https://bit.ly/gql-upload-node-6.',
+          );
+        }
+
         if (uploads === true || typeof uploads === 'undefined') {
           this.uploadsConfig = {};
         } else {
@@ -249,9 +287,7 @@ export class ApolloServerBase {
       );
 
       if (this.uploadsConfig) {
-        const {
-          GraphQLUpload,
-        } = require('@apollographql/apollo-upload-server');
+        const { GraphQLUpload } = require('graphql-upload');
         if (resolvers && !resolvers.Upload) {
           resolvers.Upload = GraphQLUpload;
         }
@@ -269,8 +305,11 @@ export class ApolloServerBase {
         typeDefs: augmentedTypeDefs,
         schemaDirectives,
         resolvers,
+        parseOptions,
       });
     }
+
+    this.parseOptions = parseOptions;
 
     if (mocks || (typeof mockEntireSchema !== 'undefined' && mocks !== false)) {
       addMockFunctionsToSchema({
@@ -310,6 +349,7 @@ export class ApolloServerBase {
     this.engineServiceId = getEngineServiceId(engine);
 
     if (this.engineServiceId) {
+      const { EngineReportingAgent } = require('apollo-engine-reporting');
       this.engineReportingAgent = new EngineReportingAgent(
         typeof engine === 'object' ? engine : Object.create(null),
         {
@@ -476,6 +516,18 @@ export class ApolloServerBase {
     });
   }
 
+  private initializeDocumentStore(): void {
+    this.documentStore = new InMemoryLRUCache<DocumentNode>({
+      // Create ~about~ a 30MiB InMemoryLRUCache.  This is less than precise
+      // since the technique to calculate the size of a DocumentNode is
+      // only using JSON.stringify on the DocumentNode (and thus doesn't account
+      // for unicode characters, etc.), but it should do a reasonable job at
+      // providing a caching document store for most operations.
+      maxSize: Math.pow(2, 20) * 30,
+      sizeCalculator: approximateObjectSize,
+    });
+  }
+
   // This function is used by the integrations to generate the graphQLOptions
   // from an object containing the request and other integration specific
   // options
@@ -499,6 +551,7 @@ export class ApolloServerBase {
     return {
       schema: this.schema,
       plugins: this.plugins,
+      documentStore: this.documentStore,
       extensions: this.extensions,
       context,
       // Allow overrides from options. Be explicit about a couple of them to
@@ -510,6 +563,7 @@ export class ApolloServerBase {
         any,
         any
       >,
+      parseOptions: this.parseOptions,
       ...this.requestOptions,
     } as GraphQLOptions;
   }
@@ -541,4 +595,33 @@ export class ApolloServerBase {
 
     return processGraphQLRequest(options, requestCtx);
   }
+}
+
+function printNodeFileUploadsMessage() {
+  console.error(
+    [
+      '*****************************************************************',
+      '*                                                               *',
+      '* ERROR! Manual intervention is necessary for Node.js < v8.5.0! *',
+      '*                                                               *',
+      '*****************************************************************',
+      '',
+      'The third-party `graphql-upload` package, which is used to implement',
+      'file uploads in Apollo Server 2.x, no longer supports Node.js LTS',
+      'versions prior to Node.js v8.5.0.',
+      '',
+      'Deployments which NEED file upload capabilities should update to',
+      'Node.js >= v8.5.0 to continue using uploads.',
+      '',
+      'If this server DOES NOT NEED file uploads and wishes to continue',
+      'using this version of Node.js, uploads can be disabled by adding:',
+      '',
+      '  uploads: false,',
+      '',
+      '...to the options for Apollo Server and re-deploying the server.',
+      '',
+      'For more information, see https://bit.ly/gql-upload-node-6.',
+      '',
+    ].join('\n'),
+  );
 }

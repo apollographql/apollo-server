@@ -1,9 +1,20 @@
 {
-  "extends": ["apollo-open-source"],
-  "pathRules": [
+  "extends": [
+    "apollo-open-source"
+  ],
+  "automerge": false,
+  "packageRules": [
     {
-      "paths": ["docs/package.json"],
-      "extends": ["apollo-docs"],
+      "packageNames": ["@types/node"],
+      "allowedVersions": "8.x"
+    },
+    {
+      "paths": [
+        "docs/package.json"
+      ],
+      "extends": [
+        "apollo-docs"
+      ],
       "baseBranches": [
         "master",
         "version-2"

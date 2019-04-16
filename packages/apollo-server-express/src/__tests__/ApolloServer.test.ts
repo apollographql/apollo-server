@@ -7,11 +7,15 @@ import FormData from 'form-data';
 import fs from 'fs';
 import { createApolloFetch } from 'apollo-fetch';
 
-import { gql, AuthenticationError, Config } from 'apollo-server-core';
-import { ApolloServer, ServerRegistration } from '../ApolloServer';
+import { gql, AuthenticationError } from 'apollo-server-core';
+import {
+  ApolloServer,
+  ApolloServerExpressConfig,
+  ServerRegistration,
+} from '../ApolloServer';
 
 import {
-  atLeastMajorNodeVersion,
+  NODE_MAJOR_VERSION,
   testApolloServer,
   createServerInfo,
 } from 'apollo-server-integration-testsuite';
@@ -57,7 +61,7 @@ describe('apollo-server-express', () => {
   let httpServer: http.Server;
 
   async function createServer(
-    serverOptions: Config,
+    serverOptions: ApolloServerExpressConfig,
     options: Partial<ServerRegistration> = {},
   ) {
     server = new ApolloServer(serverOptions);
@@ -427,8 +431,9 @@ describe('apollo-server-express', () => {
         });
       });
     });
-    // NODE: Intentionally skip file upload tests on Node.js 10 or higher.
-    (atLeastMajorNodeVersion(10) ? describe.skip : describe)(
+    // NODE: Skip Node.js 6, but only because `graphql-upload`
+    // doesn't support it.
+    (NODE_MAJOR_VERSION === 6 ? describe.skip : describe)(
       'file uploads',
       () => {
         it('enabled uploads', async () => {

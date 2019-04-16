@@ -218,7 +218,9 @@ For additional information, check out the [guide on configuring GraphQL playgrou
 
 ### File Uploads
 
-For server integrations that support file uploads(express, hapi, koa, etc), Apollo Server enables file uploads by default. To enable file uploads, reference the `Upload` type in the schema passed to the Apollo Server construction.
+> Note: This feature is incompatible with `graphql-tools`' schema stitching.  See [this issue](https://github.com/apollographql/graphql-tools/issues/671) for additional details.
+
+For server integrations that support file uploads (e.g. Express, hapi, Koa), Apollo Server enables file uploads by default. To enable file uploads, reference the `Upload` type in the schema passed to the Apollo Server construction.
 
 ```js
 const { ApolloServer, gql } = require('apollo-server');
@@ -246,7 +248,7 @@ const resolvers = {
   Mutation: {
     singleUpload: (parent, args) => {
       return args.file.then(file => {
-        //Contents of Upload scalar: https://github.com/jaydenseric/apollo-upload-server#upload-scalar
+        //Contents of Upload scalar: https://github.com/jaydenseric/graphql-upload#class-graphqlupload
         //file.stream is a node stream that contains the contents of the uploaded file
         //node stream api: https://nodejs.org/api/stream.html
         return file;
