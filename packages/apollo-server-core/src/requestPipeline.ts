@@ -7,6 +7,7 @@ import {
   ExecutionArgs,
   ExecutionResult,
   GraphQLError,
+  GraphQLFormattedError,
 } from 'graphql';
 import * as graphql from 'graphql';
 import {
@@ -29,7 +30,6 @@ import {
   PersistedQueryNotSupportedError,
   PersistedQueryNotFoundError,
 } from 'apollo-server-errors';
-import { createHash } from 'crypto';
 import {
   GraphQLRequest,
   GraphQLResponse,
@@ -40,11 +40,16 @@ import {
 import {
   ApolloServerPlugin,
   GraphQLRequestListener,
-  WithRequired,
 } from 'apollo-server-plugin-base';
+import { WithRequired } from 'apollo-server-env';
 
 import { Dispatcher } from './utils/dispatcher';
-import { InMemoryLRUCache, KeyValueCache } from 'apollo-server-caching';
+import {
+  InMemoryLRUCache,
+  KeyValueCache,
+  PrefixingKeyValueCache,
+} from 'apollo-server-caching';
+import { GraphQLParseOptions } from 'graphql-tools';
 
 export {
   GraphQLRequest,
@@ -53,8 +58,12 @@ export {
   InvalidGraphQLRequestError,
 };
 
+import createSHA from './utils/createSHA';
+
+export const APQ_CACHE_PREFIX = 'apq:';
+
 function computeQueryHash(query: string) {
-  return createHash('sha256')
+  return createSHA('sha256')
     .update(query)
     .digest('hex');
 }
@@ -73,11 +82,13 @@ export interface GraphQLRequestPipelineConfig<TContext> {
   persistedQueries?: PersistedQueryOptions;
   cacheControl?: CacheControlExtensionOptions;
 
-  formatError?: Function;
+  formatError?: (error: GraphQLError) => GraphQLFormattedError;
   formatResponse?: Function;
 
   plugins?: ApolloServerPlugin[];
   documentStore?: InMemoryLRUCache<DocumentNode>;
+
+  parseOptions?: GraphQLParseOptions;
 }
 
 export type DataSources<TContext> = {
@@ -123,10 +134,21 @@ export async function processGraphQLRequest<TContext>(
     // do the write at a later point in the request pipeline processing.
     persistedQueryCache = config.persistedQueries.cache;
 
+    // This is a bit hacky, but if `config` came from direct use of the old
+    // apollo-server 1.0-style middleware (graphqlExpress etc, not via the
+    // ApolloServer class), it won't have been converted to
+    // PrefixingKeyValueCache yet.
+    if (!(persistedQueryCache instanceof PrefixingKeyValueCache)) {
+      persistedQueryCache = new PrefixingKeyValueCache(
+        persistedQueryCache,
+        APQ_CACHE_PREFIX,
+      );
+    }
+
     queryHash = extensions.persistedQuery.sha256Hash;
 
     if (query === undefined) {
-      query = await persistedQueryCache.get(`apq:${queryHash}`);
+      query = await persistedQueryCache.get(queryHash);
       if (query) {
         persistedQueryHit = true;
       } else {
@@ -194,7 +216,7 @@ export async function processGraphQLRequest<TContext>(
       );
 
       try {
-        requestContext.document = parse(query);
+        requestContext.document = parse(query, config.parseOptions);
         parsingDidEnd();
       } catch (syntaxError) {
         parsingDidEnd(syntaxError);
@@ -263,7 +285,7 @@ export async function processGraphQLRequest<TContext>(
     // an error) and not actually write, we'll write to the cache if it was
     // determined earlier in the request pipeline that we should do so.
     if (persistedQueryRegister && persistedQueryCache) {
-      Promise.resolve(persistedQueryCache.set(`apq:${queryHash}`, query)).catch(
+      Promise.resolve(persistedQueryCache.set(queryHash, query)).catch(
         console.warn,
       );
     }
@@ -306,13 +328,16 @@ export async function processGraphQLRequest<TContext>(
     requestDidEnd();
   }
 
-  function parse(query: string): DocumentNode {
+  function parse(
+    query: string,
+    parseOptions?: GraphQLParseOptions,
+  ): DocumentNode {
     const parsingDidEnd = extensionStack.parsingDidStart({
       queryString: query,
     });
 
     try {
-      return graphql.parse(query);
+      return graphql.parse(query, parseOptions);
     } finally {
       parsingDidEnd();
     }
@@ -356,7 +381,7 @@ export async function processGraphQLRequest<TContext>(
     });
 
     try {
-      return graphql.execute(executionArgs);
+      return await graphql.execute(executionArgs);
     } finally {
       executionDidEnd();
     }

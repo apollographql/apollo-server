@@ -2,11 +2,54 @@
 
 ### vNEXT
 
+- Allow `GraphQLRequestListener` callbacks in plugins to depend on `this`. [PR #2470](https://github.com/apollographql/apollo-server/pull/2470)
+
+### v2.4.8
+
+- No functional changes in this version.  The patch version has been bumped to fix the `README.md` displayed on the [npm package for `apollo-server`](https://npm.im/apollo-server) as a result of a broken publish.  Apologies for the additional noise!
+
+### v2.4.7
+
+- Fix typings which incorrectly included `cors` as part of the constructor options for `apollo-server-express` (it should be defined via `applyMiddleware`) but, conversely, inadvertently omitted the perfectly valid `cors` option from the `apollo-server` constructor (where `applyMiddleware` is not used/available). [PR #2373](https://github.com/apollographql/apollo-server/pull/2373) [Issue #1882](https://github.com/apollographql/apollo-server/issues/1882)
+
+### v2.4.6
+
+- Allow Node.js-like runtimes to identify as Node.js as well. [PR #2357](https://github.com/apollographql/apollo-server/pull/2357) [Issue #2356](https://github.com/apollographql/apollo-server/issue/2356)
+
+### v2.4.5
+
+- `apollo-server-express`: Export `ExpressContext` [PR #2352](https://github.com/apollographql/apollo-server/pull/2352)
+
+### v2.4.4
+
+- Fix typing for ContextFunction incorrectly requiring the context object the function produces to match the parameters of the function [PR #2350](https://github.com/apollographql/apollo-server/pull/2350)
+
+### v2.4.3
+
+- `apollo-server-lambda`: Fix typings which triggered "Module has no default export" errors. [PR #2230](https://github.com/apollographql/apollo-server/pull/2230)
+- `apollo-server-koa`: Support OPTIONS requests [PR #2288](https://github.com/apollographql/apollo-server/pull/2288)
+- Add `req` and `res` typings to the `ContextFunction` argument for apollo-server and apollo-server-express. Update `ContextFunction` return type to allow returning a value syncronously. [PR #2330](https://github.com/apollographql/apollo-server/pull/2330)
+- Type the `formatError` function to accept an GraphQLError as an argument and return a GraphQLFormattedError [PR #2343](https://github.com/apollographql/apollo-server/pull/2343)
+
+### v2.4.2
+
+- `apollo-server-fastify` is now on Apollo Server and lives within the `apollo-server` repository.  This is being introduced in a _patch_ version, however it's a _major_ version bump from the last time `apollo-server-fastify` was published under `1.0.2`.  [PR #1971](https://github.com/apollostack/apollo-server/pull/1971)
+- Move `apollo-graphql` package to the `apollo-tooling` repository [PR #2316](https://github.com/apollographql/apollo-server/pull/2316)
+
+### v2.4.1
+
+- Fix inaccurate total duration in apollo-tracing [PR #2298](https://github.com/apollographql/apollo-server/pull/2298)
+- Avoid importing entire `crypto` dependency tree if not in Node.js. [PR #2304](https://github.com/apollographql/apollo-server/pull/2304)
+- Allow passing `parseOptions` to `ApolloServerBase` constructor. [PR #2289](https://github.com/apollographql/apollo-server/pull/2289)
+- Rename `azureFunctions.d.ts` to `azureFunctions.ts`. [PR #2287](https://github.com/apollographql/apollo-server/pull/2287)
+- Require `apollo-engine-reporting` only if `EngineReportingAgent` used. [PR #2305](https://github.com/apollographql/apollo-server/pull/2305)
+
 ### v2.4.0
 
 - Implement an in-memory cache store to save parsed and validated documents and provide performance benefits for repeat executions of the same document. [PR #2111](https://github.com/apollographql/apollo-server/pull/2111) (`>=2.4.0-alpha.0`)
 - Fix: Serialize arrays as JSON on fetch in `RESTDataSource`. [PR #2219](https://github.com/apollographql/apollo-server/pull/2219)
 - Fix: The `privateHeaders` configuration for `apollo-engine-reporting` now allows headers to be specified using any case and lower-cases them prior to comparison. [PR #2276](https://github.com/apollographql/apollo-server/pull/2276)
+- Fix broken `apollo-server-azure-functions` TypeScript definitions. [PR #2287](https://github.com/apollographql/apollo-server/pull/2287)
 
 ### v2.3.3
 
