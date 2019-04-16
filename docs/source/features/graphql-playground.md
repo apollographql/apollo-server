@@ -7,9 +7,7 @@ description: Visually exploring an Apollo Server
 
 In development, Apollo Server enables GraphQL Playground on the same URL as the GraphQL server itself (e.g. `http://localhost:4000/graphql`) and automatically serves the GUI to web browsers.  When `NODE_ENV` is set to `production`, GraphQL Playground (as well as introspection) is disabled as a production best-practice.
 
-<div align="center">
 ![GraphQL Playground](../images/graphql-playground.png)
-</div>
 
 ## Configuring Playground
 
