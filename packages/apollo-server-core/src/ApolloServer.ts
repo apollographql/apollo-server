@@ -16,7 +16,10 @@ import {
   DocumentNode,
 } from 'graphql';
 import { GraphQLExtension } from 'graphql-extensions';
-import { InMemoryLRUCache } from 'apollo-server-caching';
+import {
+  InMemoryLRUCache,
+  PrefixingKeyValueCache,
+} from 'apollo-server-caching';
 import { ApolloServerPlugin } from 'apollo-server-plugin-base';
 import runtimeSupportsUploads from './utils/runtimeSupportsUploads';
 
@@ -54,6 +57,7 @@ import {
   processGraphQLRequest,
   GraphQLRequestContext,
   GraphQLRequest,
+  APQ_CACHE_PREFIX,
 } from './requestPipeline';
 
 import { Headers } from 'apollo-server-env';
@@ -209,11 +213,14 @@ export class ApolloServerBase {
     }
 
     if (requestOptions.persistedQueries !== false) {
-      if (!requestOptions.persistedQueries) {
-        requestOptions.persistedQueries = {
-          cache: requestOptions.cache!,
-        };
-      }
+      requestOptions.persistedQueries = {
+        cache: new PrefixingKeyValueCache(
+          (requestOptions.persistedQueries &&
+            requestOptions.persistedQueries.cache) ||
+            requestOptions.cache!,
+          APQ_CACHE_PREFIX,
+        ),
+      };
     } else {
       // the user does not want to use persisted queries, so we remove the field
       delete requestOptions.persistedQueries;

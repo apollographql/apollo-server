@@ -1,5 +1,5 @@
 import express from 'express';
-import corsMiddleware, { CorsOptions } from 'cors';
+import corsMiddleware from 'cors';
 import { json, OptionsJson } from 'body-parser';
 import {
   renderPlaygroundPage,
@@ -70,13 +70,12 @@ const fileUploadMiddleware = (
   }
 };
 
-interface ExpressContext {
+export interface ExpressContext {
   req: express.Request;
   res: express.Response;
 }
 
 export interface ApolloServerExpressConfig extends Config {
-  cors?: CorsOptions | boolean;
   context?: ContextFunction<ExpressContext, Context> | Context;
 }
 

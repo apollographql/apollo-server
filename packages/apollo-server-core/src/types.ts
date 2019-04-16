@@ -5,6 +5,7 @@ import {
   IMocks,
   GraphQLParseOptions,
 } from 'graphql-tools';
+import { ValueOrPromise } from 'apollo-server-env';
 import { ConnectionContext } from 'subscriptions-transport-ws';
 // The types for `ws` use `export = WebSocket`, so we'll use the
 // matching `import =` to bring in its sole export.
@@ -32,7 +33,7 @@ export { KeyValueCache } from 'apollo-server-caching';
 export type Context<T = object> = T;
 export type ContextFunction<FunctionParams = any, ProducedContext = object> = (
   context: FunctionParams,
-) => Context<ProducedContext> | Promise<Context<ProducedContext>>;
+) => ValueOrPromise<Context<ProducedContext>>;
 
 // A plugin can return an interface that matches `ApolloServerPlugin`, or a
 // factory function that returns `ApolloServerPlugin`.
