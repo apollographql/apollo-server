@@ -30,6 +30,7 @@ module.exports = {
             'features/creating-directives',
             'features/authentication',
             'features/testing',
+            'features/apq',
           ],
           // 'Schema stitching': [
           //   'features/schema-stitching',
@@ -43,6 +44,7 @@ module.exports = {
             'deployment/lambda',
             'deployment/now',
             'deployment/netlify',
+            'deployment/azure-functions',
           ],
           'API Reference': ['api/apollo-server', 'api/graphql-tools'],
           Migration: [
