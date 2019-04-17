@@ -43,8 +43,8 @@ module.exports = {
             'deployment/heroku',
             'deployment/lambda',
             'deployment/now',
+            'deployment/netlify',
             'deployment/azure-functions',
-            // 'deployment/netlify',
           ],
           'API Reference': ['api/apollo-server', 'api/graphql-tools'],
           Migration: [
