@@ -30,6 +30,7 @@ module.exports = {
             'features/creating-directives',
             'features/authentication',
             'features/testing',
+            'features/apq',
           ],
           // 'Schema stitching': [
           //   'features/schema-stitching',
