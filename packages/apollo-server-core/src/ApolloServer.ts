@@ -109,7 +109,7 @@ export class ApolloServerBase {
   public graphqlPath: string = '/graphql';
   public requestOptions: Partial<GraphQLOptions<any>> = Object.create(null);
 
-  private context?: Context | ContextFunction;
+  protected context?: Context | ContextFunction;
   private engineReportingAgent?: import('apollo-engine-reporting').EngineReportingAgent;
   private engineServiceId?: string;
   private extensions: Array<() => GraphQLExtension>;
@@ -121,7 +121,7 @@ export class ApolloServerBase {
   protected uploadsConfig?: FileUploadOptions;
 
   // set by installSubscriptionHandlers.
-  private subscriptionServer?: SubscriptionServer;
+  protected subscriptionServer?: SubscriptionServer;
 
   // the default version is specified in playground.ts
   protected playgroundOptions?: PlaygroundRenderPageOptions;
