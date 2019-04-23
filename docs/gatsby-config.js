@@ -31,6 +31,8 @@ module.exports = {
             'features/authentication',
             'features/testing',
             'features/apq',
+            'features/health-checks',
+            'features/file-uploads',
           ],
           // 'Schema stitching': [
           //   'features/schema-stitching',
