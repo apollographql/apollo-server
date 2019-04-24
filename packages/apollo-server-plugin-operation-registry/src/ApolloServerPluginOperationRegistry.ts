@@ -26,6 +26,7 @@ interface Options {
   forbidUnregisteredOperations?:
     | boolean
     | ForbidUnregisteredOperationsPredicate;
+  dryRun?: boolean;
 }
 
 export default function plugin(options: Options = Object.create(null)) {
@@ -34,6 +35,7 @@ export default function plugin(options: Options = Object.create(null)) {
 
   // Setup logging facilities, scoped under the appropriate name.
   const logger = loglevel.getLogger(`apollo-server:${pluginName}`);
+  const dryRunPrefix = '[DRYRUN]';
 
   // Support DEBUG environment variable, à la https://npm.im/debug/.
   loglevelDebug(logger);
@@ -41,6 +43,14 @@ export default function plugin(options: Options = Object.create(null)) {
   // And also support the `debug` option, if it's truthy.
   if (options.debug === true) {
     logger.enableAll();
+  }
+
+  // Notify about logging as a result of dryRun === true
+  if (options.dryRun === true) {
+    logger.enableAll();
+    logger.debug(
+      `${dryRunPrefix} Operation registry logging enabled because options.dryRun is true.`,
+    );
   }
 
   // Options shouldn't be changed after the plugin has been initiated.
@@ -198,14 +208,25 @@ export default function plugin(options: Options = Object.create(null)) {
           // since this will only be used for stats.
           if (forbidUnregisteredOperations) {
             logger.debug(
-              `${logHash}: Execution denied because 'forbidUnregisteredOperations' was enabled for this request and the operation was not found in the local operation registry.`,
+              `${options.dryRun &&
+                dryRunPrefix} ${logHash}: Execution denied because 'forbidUnregisteredOperations' was enabled for this request and the operation was not found in the local operation registry.`,
             );
 
-            throw new ForbiddenError('Execution forbidden');
+            if (!options.dryRun) {
+              throw new ForbiddenError('Execution forbidden');
+            } else {
+              logger.debug(
+                `${dryRunPrefix} ${logHash}: Operation ${
+                  requestContext.operationName
+                } would have been forbidden.`,
+              );
+            }
           }
 
           logger.debug(
-            `${logHash}: Execution permitted without a matching entry in the local operation registry because 'forbidUnregisteredOperations' was not enabled for this request.`,
+            `${logHash}: Execution of operation ${
+              requestContext.operationName
+            } permitted without a matching entry in the local operation registry because 'forbidUnregisteredOperations' was not enabled for this request.`,
           );
         },
       };
