@@ -439,6 +439,28 @@ describe('RESTDataSource', () => {
       expect(data).toEqual('');
     });
 
+    it('returns when status code is 204 with Content-Type application/json and no Content-Length', async () => {
+      const dataSource = new class extends RESTDataSource {
+        baseURL = 'https://api.example.com';
+
+        getFoo() {
+          return this.get('foo');
+        }
+      }();
+
+      dataSource.httpCache = httpCache;
+
+      fetch.mockResponseOnce(
+        undefined,
+        { 'Content-Type': 'application/json', 'Content-Length': '' },
+        204,
+      );
+
+      const data = await dataSource.getFoo();
+
+      expect(data).toEqual('');
+    });
+
     it('returns data as parsed JSON when Content-Type is application/hal+json', async () => {
       const dataSource = new class extends RESTDataSource {
         baseURL = 'https://api.example.com';
