@@ -18,7 +18,7 @@ module.exports = {
             value: '2',
             ref: 'HEAD',
             default: true,
-          }
+          },
         ],
         sidebarCategories: {
           null: ['index', 'getting-started', 'whats-new'],
