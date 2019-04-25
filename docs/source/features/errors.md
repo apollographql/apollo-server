@@ -125,7 +125,7 @@ This example demonstrates masking (or suppressing the stacktrace):
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  formatError: error => {
+  formatError: (error, context) => {
     console.log(error);
     return new Error('Internal server error');
     // Or, you can delete the exception information
