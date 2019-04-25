@@ -103,12 +103,11 @@ export abstract class RESTDataSource<TContext = any> extends DataSource {
 
   protected parseBody(response: Response): Promise<object | string> {
     const contentType = response.headers.get('Content-Type');
-    const contentLength = response.headers.get('Content-Length');
     if (
+      response.status !== 204 &&
       contentType &&
       (contentType.startsWith('application/json') ||
-        contentType.startsWith('application/hal+json')) &&
-      parseInt(contentLength as string, 10) > 0
+        contentType.startsWith('application/hal+json'))
     ) {
       return response.json();
     } else {

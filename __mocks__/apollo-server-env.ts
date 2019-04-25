@@ -29,9 +29,7 @@ mockFetch.mockResponseOnce = (
   return mockFetch.mockImplementationOnce(async () => {
     return new Response(data, {
       status,
-      headers: Object.assign({
-        'Content-Length': Buffer.byteLength(data as string | ArrayBuffer || '')
-      }, headers),
+      headers,
     });
   });
 };
