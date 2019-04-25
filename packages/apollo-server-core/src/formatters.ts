@@ -3,7 +3,10 @@ import { formatApolloErrors } from 'apollo-server-errors';
 import { GraphQLError, GraphQLFormattedError } from 'graphql';
 
 export class FormatErrorExtension<TContext = any> extends GraphQLExtension {
-  private formatError?: (error: GraphQLError, context: TContext) => GraphQLFormattedError;
+  private formatError?: (
+    error: GraphQLError,
+    context: TContext,
+  ) => GraphQLFormattedError;
   private debug: boolean;
 
   public constructor(
@@ -25,7 +28,9 @@ export class FormatErrorExtension<TContext = any> extends GraphQLExtension {
         graphqlResponse: {
           ...o.graphqlResponse,
           errors: formatApolloErrors(o.graphqlResponse.errors, {
-            formatter: this.formatError ? (error: GraphQLError) => this.formatError!(error, o.context) : undefined,
+            formatter: this.formatError
+              ? (error: GraphQLError) => this.formatError!(error, o.context)
+              : undefined,
             debug: this.debug,
           }),
         },
