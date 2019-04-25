@@ -2,7 +2,7 @@
 
 ### v2.4.9
 
-- add `context` in `formatError` where it can use in the error exception handling. [PR #2470](https://github.com/apollographql/apollo-server/pull/2470)
+- add `context` in `formatError` where it can use in the error exception handling. [PR #2470](https://github.com/apollographql/apollo-server/pull/2608)
 
 ### v2.4.8
 
