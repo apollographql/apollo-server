@@ -4,6 +4,6 @@
   },
   "dependencies": {
     "gatsby": "2.3.30",
-    "gatsby-theme-apollo-docs": "0.3.2"
+    "gatsby-theme-apollo-docs": "0.3.3"
   }
 }
