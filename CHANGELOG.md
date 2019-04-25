@@ -3,7 +3,7 @@
 ### vNEXT
 
 - Allow `GraphQLRequestListener` callbacks in plugins to depend on `this`. [PR #2470](https://github.com/apollographql/apollo-server/pull/2470)
-- Handle a TTL value of 0 as not cachable. [PR #2588](https://github.com/apollographql/apollo-server/pull/2588)
+- `apollo-datasource-rest`: Correctly allow a TTL value of `0` to represent "not-cacheable". [PR #2588](https://github.com/apollographql/apollo-server/pull/2588)
 
 ### v2.4.8
 
