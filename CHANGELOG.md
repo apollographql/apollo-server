@@ -1,8 +1,12 @@
 # Changelog
 
+### vNEXT
+
+- Allow `GraphQLRequestListener` callbacks in plugins to depend on `this`. [PR #2470](https://github.com/apollographql/apollo-server/pull/2470)
+
 ### v2.4.9
 
-- add `context` in `formatError` where it can use in the error exception handling. [PR #2470](https://github.com/apollographql/apollo-server/pull/2608)
+- add `context` in `formatError` where it can use in the error exception handling. [PR #2608](https://github.com/apollographql/apollo-server/pull/2608)
 
 ### v2.4.8
 
@@ -34,7 +38,7 @@
 ### v2.4.2
 
 - `apollo-server-fastify` is now on Apollo Server and lives within the `apollo-server` repository.  This is being introduced in a _patch_ version, however it's a _major_ version bump from the last time `apollo-server-fastify` was published under `1.0.2`.  [PR #1971](https://github.com/apollostack/apollo-server/pull/1971)
-- Move `apollo-graphql` package to the `apollo-tooling` b n [PR #2316](https://github.com/apollographql/apollo-server/pull/2316)
+- Move `apollo-graphql` package to the `apollo-tooling` repository [PR #2316](https://github.com/apollographql/apollo-server/pull/2316)
 
 ### v2.4.1
 
