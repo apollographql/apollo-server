@@ -487,7 +487,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
     });
 
     describe('lifecycle', () => {
-      describe('with Engine server', () => {
+      describe('for Apollo Engine', () => {
         let nodeEnv: string;
         let engineServer: EngineMockServer;
 
@@ -586,113 +586,114 @@ export function testApolloServer<AS extends ApolloServerBase>(
           (engineServer.stop() || Promise.resolve()).then(done);
         });
 
-        // TODO(jesse) This test block can be merged with another that will
-        // appear in a separate describe/it block after a branch merges
-        // that hasn't quite become a PR yet: abernix/finish-pr-1639.  It's
-        // intentionally separate right now because of the guaranteed merge
-        // conflict.
-        it('validation > engine > extensions > formatError', async () => {
-          const throwError = jest.fn(() => {
-            throw new Error('nope');
-          });
+        describe('extensions', () => {
+          // While it's been broken down quite a bit, this test is still
+          // overloaded and is a prime candidate for de-composition!
+          it('calls formatError and other overloaded client identity tests', async () => {
+            const throwError = jest.fn(() => {
+              throw new Error('nope');
+            });
 
-          const validationRule = jest.fn(() => {
-            // formatError should be called after validation
-            expect(formatError).not.toBeCalled();
-            // extension should be called after validation
-            expect(willSendResponseInExtension).not.toBeCalled();
-            return true;
-          });
+            const validationRule = jest.fn(() => {
+              // formatError should be called after validation
+              expect(formatError).not.toBeCalled();
+              // extension should be called after validation
+              expect(willSendResponseInExtension).not.toBeCalled();
+              return true;
+            });
 
-          const willSendResponseInExtension = jest.fn();
+            const willSendResponseInExtension = jest.fn();
 
-          const formatError = jest.fn(error => {
-            try {
-              expect(error).toBeInstanceOf(Error);
-              // extension should be called before formatError
-              expect(willSendResponseInExtension).toHaveBeenCalledTimes(1);
-              // validationRules should be called before formatError
-              expect(validationRule).toHaveBeenCalledTimes(1);
-            } finally {
-              error.message = 'masked';
-              return error;
-            }
-          });
-
-          class Extension<TContext = any> extends GraphQLExtension {
-            willSendResponse(o: {
-              graphqlResponse: GraphQLResponse;
-              context: TContext;
-            }) {
-              expect(o.graphqlResponse.errors.length).toEqual(1);
-              // formatError should be called before willSendResponse
-              expect(formatError).toHaveBeenCalledTimes(1);
-              // validationRule should be called before willSendResponse
-              expect(validationRule).toHaveBeenCalledTimes(1);
-              willSendResponseInExtension();
-            }
-          }
-
-          const { url: uri } = await createApolloServer({
-            typeDefs: gql`
-              type Query {
-                fieldWhichWillError: String
+            const formatError = jest.fn(error => {
+              try {
+                expect(error).toBeInstanceOf(Error);
+                // extension should be called before formatError
+                expect(willSendResponseInExtension).toHaveBeenCalledTimes(1);
+                // validationRules should be called before formatError
+                expect(validationRule).toHaveBeenCalledTimes(1);
+              } finally {
+                error.message = 'masked';
+                return error;
               }
-            `,
-            resolvers: {
-              Query: {
-                fieldWhichWillError: () => {
-                  throwError();
+            });
+
+            class Extension<TContext = any> extends GraphQLExtension {
+              willSendResponse(o: {
+                graphqlResponse: GraphQLResponse;
+                context: TContext;
+              }) {
+                expect(o.graphqlResponse.errors.length).toEqual(1);
+                // formatError should be called before willSendResponse
+                expect(formatError).toHaveBeenCalledTimes(1);
+                // validationRule should be called before willSendResponse
+                expect(validationRule).toHaveBeenCalledTimes(1);
+                willSendResponseInExtension();
+              }
+            }
+
+            const { url: uri } = await createApolloServer({
+              typeDefs: gql`
+                type Query {
+                  fieldWhichWillError: String
+                }
+              `,
+              resolvers: {
+                Query: {
+                  fieldWhichWillError: () => {
+                    throwError();
+                  },
                 },
               },
-            },
-            validationRules: [validationRule],
-            extensions: [() => new Extension()],
-            engine: {
-              ...engineServer.engineOptions(),
-              apiKey: 'service:my-app:secret',
-              maxUncompressedReportSize: 1,
-              generateClientInfo: () => ({
-                clientName: 'testing',
-                clientReferenceId: '1234',
-                clientVersion: 'v1.0.1',
-              }),
-            },
-            formatError,
-            debug: true,
+              validationRules: [validationRule],
+              extensions: [() => new Extension()],
+              engine: {
+                ...engineServer.engineOptions(),
+                apiKey: 'service:my-app:secret',
+                maxUncompressedReportSize: 1,
+                generateClientInfo: () => ({
+                  clientName: 'testing',
+                  clientReferenceId: '1234',
+                  clientVersion: 'v1.0.1',
+                }),
+              },
+              formatError,
+              debug: true,
+            });
+
+            const apolloFetch = createApolloFetch({ uri });
+
+            const result = await apolloFetch({
+              query: `{fieldWhichWillError}`,
+            });
+            expect(result.data).toEqual({
+              fieldWhichWillError: null,
+            });
+            expect(result.errors).toBeDefined();
+            expect(result.errors[0].message).toEqual('masked');
+
+            expect(validationRule).toHaveBeenCalledTimes(1);
+            expect(throwError).toHaveBeenCalledTimes(1);
+            expect(formatError).toHaveBeenCalledTimes(1);
+            expect(willSendResponseInExtension).toHaveBeenCalledTimes(1);
+
+            const reports = await engineServer.promiseOfReports;
+
+            expect(reports.length).toBe(1);
+
+            const trace = Object.values(reports[0].tracesPerQuery)[0].trace[0];
+
+            expect(trace.clientReferenceId).toMatch(/1234/);
+            expect(trace.clientName).toMatch(/testing/);
+            expect(trace.clientVersion).toEqual('v1.0.1');
+
+            expect(trace.root!.child![0].error![0].message).toMatch(/nope/);
+            expect(trace.root!.child![0].error![0].message).not.toMatch(
+              /masked/,
+            );
           });
-
-          const apolloFetch = createApolloFetch({ uri });
-
-          const result = await apolloFetch({
-            query: `{fieldWhichWillError}`,
-          });
-          expect(result.data).toEqual({
-            fieldWhichWillError: null,
-          });
-          expect(result.errors).toBeDefined();
-          expect(result.errors[0].message).toEqual('masked');
-
-          expect(validationRule).toHaveBeenCalledTimes(1);
-          expect(throwError).toHaveBeenCalledTimes(1);
-          expect(formatError).toHaveBeenCalledTimes(1);
-          expect(willSendResponseInExtension).toHaveBeenCalledTimes(1);
-
-          const reports = await engineServer.promiseOfReports;
-
-          expect(reports.length).toBe(1);
-
-          const trace = Object.values(reports[0].tracesPerQuery)[0].trace[0];
-
-          expect(trace.clientReferenceId).toMatch(/1234/);
-          expect(trace.clientName).toMatch(/testing/);
-          expect(trace.clientVersion).toEqual('v1.0.1');
-
-          expect(trace.root!.child![0].error![0].message).toMatch(/nope/);
-          expect(trace.root!.child![0].error![0].message).not.toMatch(/masked/);
         });
 
-        describe('validation > engine', () => {
+        describe('traces', () => {
           let throwError: jest.Mock;
           let apolloFetch: ApolloFetch;
 
@@ -707,6 +708,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
               typeDefs: gql`
                 type Query {
                   fieldWhichWillError: String
+                  justAField: String
                 }
               `,
               resolvers: {
@@ -714,6 +716,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
                   fieldWhichWillError: () => {
                     throwError();
                   },
+                  justAField: () => 'a string',
                 },
               },
               engine: {
@@ -762,6 +765,42 @@ export function testApolloServer<AS extends ApolloServerBase>(
             expect(
               JSON.parse(trace.root.child[0].error[0].json),
             ).not.toHaveProperty('stack');
+          });
+
+          it('sets the trace key to operationName when it is defined', async () => {
+            await setupApolloServerAndFetchPair();
+
+            const result = await apolloFetch({
+              query: `query AnOperationName {justAField}`,
+            });
+            expect(result.data).toEqual({
+              justAField: 'a string',
+            });
+            expect(result.errors).not.toBeDefined();
+
+            const reports = await engineServer.promiseOfReports;
+            expect(reports.length).toBe(1);
+
+            expect(Object.keys(reports[0].tracesPerQuery)[0]).toMatch(
+              /^# AnOperationName\n/,
+            );
+          });
+
+          it('sets the trace key to "-" when operationName is undefined', async () => {
+            await setupApolloServerAndFetchPair();
+
+            const result = await apolloFetch({
+              query: `{justAField}`,
+            });
+            expect(result.data).toEqual({
+              justAField: 'a string',
+            });
+            expect(result.errors).not.toBeDefined();
+
+            const reports = await engineServer.promiseOfReports;
+            expect(reports.length).toBe(1);
+
+            expect(Object.keys(reports[0].tracesPerQuery)[0]).toMatch(/^# -\n/);
           });
 
           describe('error munging', () => {
@@ -937,7 +976,9 @@ export function testApolloServer<AS extends ApolloServerBase>(
               ]);
             });
 
-            it('maskErrorDetails', async () => {
+            // This is deprecated, but we'll test it until it's removed in
+            // Apollo Server 3.x.
+            it('maskErrorDetails (legacy)', async () => {
               throwError.mockImplementationOnce(() => {
                 throw new Error('maskErrorDetails nope');
               });
@@ -970,72 +1011,6 @@ export function testApolloServer<AS extends ApolloServerBase>(
                 },
               ]);
             });
-          });
-        });
-
-        describe('validation > engine > traces', () => {
-          let apolloFetch: ApolloFetch;
-
-          const setupApolloServerAndFetchPair = async (
-            engineOptions: Partial<EngineReportingOptions<any>> = {},
-          ) => {
-            const { url: uri } = await createApolloServer({
-              typeDefs: gql`
-                type Query {
-                  justAField: String
-                }
-              `,
-              resolvers: {
-                Query: {
-                  justAField: () => 'a string',
-                },
-              },
-              engine: {
-                ...engineServer.engineOptions(),
-                apiKey: 'service:my-app:secret',
-                maxUncompressedReportSize: 1,
-                ...engineOptions,
-              },
-              debug: true,
-            });
-
-            apolloFetch = createApolloFetch({ uri });
-          };
-
-          it('sets the trace key to operationName when it is defined', async () => {
-            await setupApolloServerAndFetchPair();
-
-            const result = await apolloFetch({
-              query: `query AnOperationName {justAField}`,
-            });
-            expect(result.data).toEqual({
-              justAField: 'a string',
-            });
-            expect(result.errors).not.toBeDefined();
-
-            const reports = await engineServer.promiseOfReports;
-            expect(reports.length).toBe(1);
-
-            expect(Object.keys(reports[0].tracesPerQuery)[0]).toMatch(
-              /^# AnOperationName\n/,
-            );
-          });
-
-          it('sets the trace key to "-" when operationName is undefined', async () => {
-            await setupApolloServerAndFetchPair();
-
-            const result = await apolloFetch({
-              query: `{justAField}`,
-            });
-            expect(result.data).toEqual({
-              justAField: 'a string',
-            });
-            expect(result.errors).not.toBeDefined();
-
-            const reports = await engineServer.promiseOfReports;
-            expect(reports.length).toBe(1);
-
-            expect(Object.keys(reports[0].tracesPerQuery)[0]).toMatch(/^# -\n/);
           });
         });
       });
