@@ -1,4 +1,4 @@
-import { Request } from 'apollo-server-env';
+import { Request, WithRequired } from 'apollo-server-env';
 
 import {
   GraphQLResolveInfo,
@@ -8,11 +8,7 @@ import {
   ExecutionArgs,
   GraphQLError,
 } from 'graphql';
-import {
-  GraphQLExtension,
-  GraphQLResponse,
-  EndHandler,
-} from 'graphql-extensions';
+import { GraphQLExtension, EndHandler } from 'graphql-extensions';
 import { Trace, google } from 'apollo-engine-reporting-protobuf';
 
 import { EngineReportingOptions, GenerateClientInfo } from './agent';
@@ -47,7 +43,7 @@ export class EngineReportingExtension<TContext = any>
   public trace = new Trace();
   private nodes = new Map<string, Trace.Node>();
   private startHrTime!: [number, number];
-  private operationName?: string;
+  private operationName?: string | null;
   private queryString?: string;
   private documentAST?: DocumentNode;
   private options: EngineReportingOptions<TContext>;
@@ -104,11 +100,9 @@ export class EngineReportingExtension<TContext = any>
     queryString?: string;
     parsedQuery?: DocumentNode;
     variables?: Record<string, any>;
-    persistedQueryHit?: boolean;
-    persistedQueryRegister?: boolean;
     context: TContext;
     extensions?: Record<string, any>;
-    requestContext: GraphQLRequestContext<TContext>;
+    requestContext: WithRequired<GraphQLRequestContext<TContext>, 'metrics'>;
   }): EndHandler {
     this.trace.startTime = dateToTimestamp(new Date());
     this.startHrTime = process.hrtime();
@@ -161,10 +155,10 @@ export class EngineReportingExtension<TContext = any>
         }
       }
 
-      if (o.persistedQueryHit) {
+      if (o.requestContext.metrics.persistedQueryHit) {
         this.trace.persistedQueryHit = true;
       }
-      if (o.persistedQueryRegister) {
+      if (o.requestContext.metrics.persistedQueryRegister) {
         this.trace.persistedQueryRegister = true;
       }
     }
@@ -224,6 +218,9 @@ export class EngineReportingExtension<TContext = any>
         process.hrtime(this.startHrTime),
       );
       this.trace.endTime = dateToTimestamp(new Date());
+
+      this.trace.fullQueryCacheHit = !!o.requestContext.metrics
+        .responseCacheHit;
 
       const operationName = this.operationName || '';
       let signature;
@@ -290,9 +287,7 @@ export class EngineReportingExtension<TContext = any>
     };
   }
 
-  public willSendResponse(o: { graphqlResponse: GraphQLResponse }) {
-    const { errors } = o.graphqlResponse;
-
+  public didEncounterErrors(errors: GraphQLError[]) {
     // This life-cycle method is only invoked to capture errors.
     if (!errors) {
       return;
