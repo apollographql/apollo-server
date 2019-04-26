@@ -50,7 +50,7 @@ const server = new ApolloServer({
     generateClientInfo: ({
       request
     }) => {
-      const headers = request.http & request.http.headers;
+      const headers = request.http && request.http.headers;
       if(headers) {
         return {
           clientName: headers['apollo-client-name'],

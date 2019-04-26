@@ -116,7 +116,10 @@ export class HTTPCache {
       return response;
     }
 
-    let ttl = ttlOverride || Math.round(policy.timeToLive() / 1000);
+    let ttl =
+      ttlOverride === undefined
+        ? Math.round(policy.timeToLive() / 1000)
+        : ttlOverride;
     if (ttl <= 0) return response;
 
     // If a response can be revalidated, we don't want to remove it from the cache right after it expires.
