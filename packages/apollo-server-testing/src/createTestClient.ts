@@ -4,8 +4,22 @@ import { print, DocumentNode } from 'graphql';
 type StringOrAst = string | DocumentNode;
 
 // A query must not come with a mutation (and vice versa).
-type Query = { query: StringOrAst; mutation?: undefined };
-type Mutation = { mutation: StringOrAst; query?: undefined };
+type Query = {
+  query: StringOrAst;
+  mutation?: undefined;
+  variables?: {
+    [name: string]: any;
+  };
+  operationName?: string;
+};
+type Mutation = {
+  mutation: StringOrAst;
+  query?: undefined;
+  variables?: {
+    [name: string]: any;
+  };
+  operationName?: string;
+};
 
 export default (server: ApolloServerBase) => {
   const executeOperation = server.executeOperation.bind(server);

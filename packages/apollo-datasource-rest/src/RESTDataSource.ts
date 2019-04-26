@@ -201,7 +201,7 @@ export abstract class RESTDataSource<TContext = any> extends DataSource {
     }
 
     if (!(init.headers && init.headers instanceof Headers)) {
-      init.headers = new Headers(init.headers);
+      init.headers = new Headers(init.headers || Object.create(null));
     }
 
     const options = init as RequestOptions;
