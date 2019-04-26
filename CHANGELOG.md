@@ -66,6 +66,9 @@
 - Apply `defaultMaxAge` to scalar fields on the root object. [#2210](https://github.com/apollographql/apollo-server/pull/2210)
 - Don't write to the persisted query cache until execution will begin. [PR #2227](https://github.com/apollographql/apollo-server/pull/2227)
 
+- `apollo-server-azure-functions`: Added Azure Functions documentation and deployment examples [PR #2131](https://github.com/apollographql/apollo-server/pull/2131),
+[Issue #2092](https://github.com/apollographql/apollo-server/issues/2092)
+
 ### v2.3.1
 
 - Provide types for `graphql-upload` in a location where they can be accessed by TypeScript consumers of `apollo-server` packages. [ccf935f9](https://github.com/apollographql/apollo-server/commit/ccf935f9) [Issue #2092](https://github.com/apollographql/apollo-server/issues/2092)
