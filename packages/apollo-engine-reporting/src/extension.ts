@@ -288,11 +288,6 @@ export class EngineReportingExtension<TContext = any>
   }
 
   public didEncounterErrors(errors: GraphQLError[]) {
-    // This life-cycle method is only invoked to capture errors.
-    if (!errors) {
-      return;
-    }
-
     errors.forEach(err => {
       // In terms of reporting, errors can be re-written by the user by
       // utilizing the `rewriteError` parameter.  This allows changing
