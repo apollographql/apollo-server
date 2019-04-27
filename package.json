@@ -84,7 +84,7 @@
     "@types/node-fetch": "2.3.2",
     "@types/redis": "2.8.12",
     "@types/request": "2.48.1",
-    "@types/request-promise": "4.1.42",
+    "@types/request-promise": "4.1.43",
     "@types/test-listen": "1.1.0",
     "@types/type-is": "1.6.2",
     "@types/ws": "6.0.1",
