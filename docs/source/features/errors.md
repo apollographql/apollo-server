@@ -219,7 +219,7 @@ const server = new ApolloServer({
     rewriteError(err) {
       // Using a more stable, known error property (e.g. `err.code`) would be
       // more defensive, however checking the `message` might serve most needs!
-      if (err.message && err.message.match(/^Known error message/) {
+      if (err.message && err.message.startsWith("Known error message")) {
         return null;
       }
 
