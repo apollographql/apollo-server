@@ -369,8 +369,10 @@ addMockFunctionsToSchema({
    By default, all errors are reported to Apollo Engine.  This function
    can be used to exclude specific errors from being reported.  This function
    receives a copy of the `GraphQLError` and can manipulate it for the
-   purposes of Apollo Engine reporting.  The modified error should be returned
-   or the function should return `null` to avoid reporting the error entirely.
+   purposes of Apollo Engine reporting.  The modified error (e.g. after changing
+   the `err.message` property) should be returned or the function should return
+   an explicit `null` to avoid reporting the error entirely.  It is not
+   permissable to return `undefined`.
 
 *  `generateClientInfo`: (GraphQLRequestContext) => ClientInfo **AS 2.2**
 
