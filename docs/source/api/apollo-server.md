@@ -373,6 +373,10 @@ addMockFunctionsToSchema({
    the `err.message` property) should be returned or the function should return
    an explicit `null` to avoid reporting the error entirely.  It is not
    permissable to return `undefined`.
+   
+*  `schemaTag`: String
+
+   A human-readable name to tag this variant of a schema (i.e. staging, EU). Setting this value will cause metrics to be segmented in the Apollo Platform's UI. Additionally schema validation with a schema tag will only check metrics associate with the same string.
 
 *  `generateClientInfo`: (GraphQLRequestContext) => ClientInfo **AS 2.2**
 

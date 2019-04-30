@@ -9,7 +9,17 @@ module.exports = {
         contentDir: 'docs/source',
         basePath: '/docs/apollo-server',
         githubRepo: 'apollographql/apollo-server',
-        versions: ['1', '2'],
+        versions: [
+          {
+            value: '1',
+            ref: 'version-1',
+          },
+          {
+            value: '2',
+            ref: 'HEAD',
+            default: true,
+          },
+        ],
         sidebarCategories: {
           null: ['index', 'getting-started', 'whats-new'],
           Essentials: [
@@ -30,6 +40,9 @@ module.exports = {
             'features/creating-directives',
             'features/authentication',
             'features/testing',
+            'features/apq',
+            'features/health-checks',
+            'features/file-uploads',
           ],
           // 'Schema stitching': [
           //   'features/schema-stitching',
@@ -42,6 +55,8 @@ module.exports = {
             'deployment/heroku',
             'deployment/lambda',
             'deployment/now',
+            'deployment/netlify',
+            'deployment/azure-functions',
           ],
           'API Reference': ['api/apollo-server', 'api/graphql-tools'],
           Migration: [
