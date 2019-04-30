@@ -127,7 +127,7 @@ The Apollo server constructor accepts a `formatError` function that is run on ea
 > `rewriteError` function in the _For Apollo Engine reporting_ section below
 > if this behavior is desired.
 
-This example demonstrates throwing a different error when the error's message starts with `Database Error:`:
+This example demonstrates throwing a different error when the error's message starts with `Database Error: `:
 
 ```js line=4-10
 const server = new ApolloServer({
@@ -135,7 +135,7 @@ const server = new ApolloServer({
   resolvers,
   formatError: (err) => {
     // Don't give the specific errors to the client.
-    if (err.message.startsWith("Database Error")) {
+    if (err.message.startsWith("Database Error: ")) {
       return new Error('Internal server error');
     }
     
