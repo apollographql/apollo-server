@@ -475,13 +475,13 @@ describe('RESTDataSource', () => {
     });
 
     it('returns data as a string when response status code is 204 no content', async () => {
-      const dataSource = new class extends RESTDataSource {
+      const dataSource = new (class extends RESTDataSource {
         baseURL = 'https://api.example.com';
 
         getFoo() {
           return this.get('');
         }
-      }();
+      })();
 
       dataSource.httpCache = httpCache;
 
