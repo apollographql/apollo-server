@@ -28,6 +28,7 @@ module.exports = {
             'essentials/data',
           ],
           Features: [
+            'features/caching',
             'features/mocking',
             'features/errors',
             'features/data-sources',
