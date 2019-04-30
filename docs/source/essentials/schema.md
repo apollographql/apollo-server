@@ -11,7 +11,7 @@ The core building block within a schema is the "type".  Types provide a wide-ran
 
 * Create relationships between types (e.g. between a `Book` and an `Author`).
 * Define which data-fetching (querying) and data-manipulation (mutating) operations can be executed by the client.
-* If desired, self-explain what capabilities are available to the client (via introspection).
+* If desired, self-explain what capabilities are available to the client via introspection.
 
 By the end of this page, we hope to have explained the power of types and how they relate to a GraphQL server.
 
