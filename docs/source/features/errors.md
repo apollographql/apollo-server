@@ -127,19 +127,21 @@ The Apollo server constructor accepts a `formatError` function that is run on ea
 > `rewriteError` function in the _For Apollo Engine reporting_ section below
 > if this behavior is desired.
 
-This example demonstrates masking (or suppressing the stacktrace) which is
-returned to the client:
+This example demonstrates throwing a different error when the error's message starts with `Database Error:`:
 
 ```js line=4-10
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  formatError: error => {
-    console.log(error);
-    return new Error('Internal server error');
-    // Or, you can delete the exception information
-    // delete error.extensions.exception;
-    // return error;
+  formatError: (err) => {
+    // Don't give the specific errors to the client.
+    if (err.message.startsWith("Database Error")) {
+      return new Error('Internal server error');
+    }
+    
+    // Otherwise return the original error.  The error can also
+    // be manipulated in other ways, so long as it's returned.
+    return error;
   },
 });
 
