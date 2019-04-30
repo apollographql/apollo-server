@@ -364,13 +364,19 @@ addMockFunctionsToSchema({
    'sendReport()' on other signals if you'd like. Note that 'sendReport()'
    does not run synchronously so it cannot work usefully in an 'exit' handler.
 
-*  `maskErrorDetails`: boolean
+*  `rewriteError`: (err: GraphQLError) => GraphQLError | null
 
-   Set to true to remove error details from the traces sent to Apollo's servers. Defaults to false.
+   By default, all errors are reported to Apollo Engine.  This function
+   can be used to exclude specific errors from being reported.  This function
+   receives a copy of the `GraphQLError` and can manipulate it for the
+   purposes of Apollo Engine reporting.  The modified error (e.g. after changing
+   the `err.message` property) should be returned or the function should return
+   an explicit `null` to avoid reporting the error entirely.  It is not
+   permissable to return `undefined`.
    
 *  `schemaTag`: String
 
-   A human readable name to tag this variant of a schema (i.e. staging, EU). Setting this value will cause metrics to be segmented in the Apollo Platform's UI. Additionally schema validation with a schema tag will only check metrics associate with the same string.
+   A human-readable name to tag this variant of a schema (i.e. staging, EU). Setting this value will cause metrics to be segmented in the Apollo Platform's UI. Additionally schema validation with a schema tag will only check metrics associate with the same string.
 
 *  `generateClientInfo`: (GraphQLRequestContext) => ClientInfo **AS 2.2**
 
@@ -392,4 +398,3 @@ addMockFunctionsToSchema({
    > [WARNING] If you specify a `clientReferenceId`, Engine will treat the
    > `clientName` as a secondary lookup, so changing a `clientName` may result
    > in an unwanted experience.
-

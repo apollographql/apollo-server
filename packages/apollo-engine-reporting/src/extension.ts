@@ -19,6 +19,19 @@ const clientNameHeaderKey = 'apollographql-client-name';
 const clientReferenceIdHeaderKey = 'apollographql-client-reference-id';
 const clientVersionHeaderKey = 'apollographql-client-version';
 
+// (DEPRECATE)
+// This special type is used internally to this module to implement the
+// `maskErrorDetails` (https://github.com/apollographql/apollo-server/pull/1615)
+// functionality in the exact form it was originally implemented — which didn't
+// have the result matching the interface provided by `GraphQLError` but instead
+// just had a `message` property set to `<masked>`.  Since `maskErrorDetails`
+// is now slated for deprecation (with its behavior superceded by the more
+// robust `rewriteError` functionality, this GraphQLErrorOrMaskedErrorObject`
+// should be removed when that deprecation is completed in a major release.
+type GraphQLErrorOrMaskedErrorObject =
+  | GraphQLError
+  | (Partial<GraphQLError> & Pick<GraphQLError, 'message'>);
+
 // EngineReportingExtension is the per-request GraphQLExtension which creates a
 // trace (in protobuf Trace format) for a single request. When the request is
 // done, it passes the Trace back to its associated EngineReportingAgent via the
@@ -46,7 +59,6 @@ export class EngineReportingExtension<TContext = any>
     addTrace: (signature: string, operationName: string, trace: Trace) => void,
   ) {
     this.options = {
-      maskErrorDetails: false,
       ...options,
     };
     this.addTrace = addTrace;
@@ -276,31 +288,105 @@ export class EngineReportingExtension<TContext = any>
   }
 
   public didEncounterErrors(errors: GraphQLError[]) {
-    if (errors) {
-      errors.forEach((error: GraphQLError) => {
-        // By default, put errors on the root node.
-        let node = this.nodes.get('');
-        if (error.path) {
-          const specificNode = this.nodes.get(error.path.join('.'));
-          if (specificNode) {
-            node = specificNode;
-          }
-        }
+    errors.forEach(err => {
+      // In terms of reporting, errors can be re-written by the user by
+      // utilizing the `rewriteError` parameter.  This allows changing
+      // the message or stack to remove potentially sensitive information.
+      // Returning `null` will result in the error not being reported at all.
+      const errorForReporting = this.rewriteError(err);
 
-        // Always send the trace errors, so that the UI acknowledges that there is an error.
-        const errorInfo = this.options.maskErrorDetails
-          ? { message: '<masked>' }
-          : {
-              message: error.message,
-              location: (error.locations || []).map(
-                ({ line, column }) => new Trace.Location({ line, column }),
-              ),
-              json: JSON.stringify(error),
-            };
+      if (errorForReporting === null) {
+        return;
+      }
 
-        node!.error!.push(new Trace.Error(errorInfo));
-      });
+      this.addError(errorForReporting);
+    });
+  }
+
+  private rewriteError(
+    err: GraphQLError,
+  ): GraphQLErrorOrMaskedErrorObject | null {
+    // (DEPRECATE)
+    // This relatively basic representation of an error is an artifact
+    // introduced by https://github.com/apollographql/apollo-server/pull/1615.
+    // Interesting, the implementation of that feature didn't actually
+    // accomplish what the requestor had desired.  This functionality is now
+    // being superceded by the `rewriteError` function, which is a more dynamic
+    // implementation which multiple Engine users have been interested in.
+    // When this `maskErrorDetails` is officially deprecated, this
+    // `rewriteError` method can be changed to return `GraphQLError | null`,
+    // and as noted in its definition, `GraphQLErrorOrMaskedErrorObject` can be
+    // removed.
+    if (this.options.maskErrorDetails) {
+      return {
+        message: '<masked>',
+      };
     }
+
+    if (typeof this.options.rewriteError === 'function') {
+      // Before passing the error to the user-provided `rewriteError` function,
+      // we'll make a shadow copy of the error so the user is free to change
+      // the object as they see fit.
+
+      // At this stage, this error is only for the purposes of reporting, but
+      // this is even more important since this is still a reference to the
+      // original error object and changing it would also change the error which
+      // is returned in the response to the client.
+
+      // For the clone, we'll create a new object which utilizes the exact same
+      // prototype of the error being reported.
+      const clonedError = Object.assign(
+        Object.create(Object.getPrototypeOf(err)),
+        err,
+      );
+
+      const rewrittenError = this.options.rewriteError(clonedError);
+
+      // Returning an explicit `null` means the user is requesting that, in
+      // terms of Engine reporting, the error be buried.
+      if (rewrittenError === null) {
+        return null;
+      }
+
+      // We don't want users to be inadvertently not reporting errors, so if
+      // they haven't returned an explicit `GraphQLError` (or `null`, handled
+      // above), then we'll report the error as usual.
+      if (!(rewrittenError instanceof GraphQLError)) {
+        return err;
+      }
+
+      return new GraphQLError(
+        rewrittenError.message,
+        err.nodes,
+        err.source,
+        err.positions,
+        err.path,
+        err.originalError,
+        err.extensions,
+      );
+    }
+    return err;
+  }
+
+  private addError(error: GraphQLErrorOrMaskedErrorObject): void {
+    // By default, put errors on the root node.
+    let node = this.nodes.get('');
+    if (error.path) {
+      const specificNode = this.nodes.get(error.path.join('.'));
+      if (specificNode) {
+        node = specificNode;
+      }
+    }
+
+    node!.error!.push(
+      new Trace.Error({
+        message: error.message,
+        location: (error.locations || []).map(
+          ({ line, column }) => new Trace.Location({ line, column }),
+        ),
+        json: JSON.stringify(error),
+      }),
+    );
   }
 
   private newNode(path: ResponsePath): Trace.Node {
