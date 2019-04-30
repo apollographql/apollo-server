@@ -141,7 +141,7 @@ const server = new ApolloServer({
     
     // Otherwise return the original error.  The error can also
     // be manipulated in other ways, so long as it's returned.
-    return error;
+    return err;
   },
 });
 
