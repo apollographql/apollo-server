@@ -119,7 +119,7 @@ export class ApolloServer extends ApolloServerBase {
       }
 
       if (event.httpMethod === 'OPTIONS') {
-        context.callbackWaitsForEmptyEventLoop = false
+        context.callbackWaitsForEmptyEventLoop = false;
         return callback(null, {
           body: '',
           statusCode: 204,
