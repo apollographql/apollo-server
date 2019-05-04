@@ -107,7 +107,7 @@
     "husky": "2.2.0",
     "jest": "24.7.1",
     "jest-config": "24.7.1",
-    "jest-junit": "6.3.0",
+    "jest-junit": "6.4.0",
     "jest-matcher-utils": "24.7.0",
     "js-sha256": "0.9.0",
     "koa": "2.7.0",
