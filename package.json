@@ -106,7 +106,7 @@
     "hapi": "17.8.5",
     "husky": "2.2.0",
     "jest": "24.8.0",
-    "jest-config": "24.7.1",
+    "jest-config": "24.8.0",
     "jest-junit": "6.4.0",
     "jest-matcher-utils": "24.7.0",
     "js-sha256": "0.9.0",
