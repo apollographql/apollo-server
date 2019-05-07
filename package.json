@@ -34,7 +34,7 @@
     "node": ">=6"
   },
   "dependencies": {
-    "@apollographql/apollo-tools": "^0.3.3",
+    "@apollographql/apollo-tools": "^0.3.6-alpha.1",
     "apollo-cache-control": "file:packages/apollo-cache-control",
     "apollo-datasource": "file:packages/apollo-datasource",
     "apollo-datasource-rest": "file:packages/apollo-datasource-rest",
@@ -58,11 +58,13 @@
     "apollo-server-lambda": "file:packages/apollo-server-lambda",
     "apollo-server-micro": "file:packages/apollo-server-micro",
     "apollo-server-plugin-base": "file:packages/apollo-server-plugin-base",
+    "apollo-server-plugin-response-cache": "file:packages/apollo-server-plugin-response-cache",
     "apollo-server-testing": "file:packages/apollo-server-testing",
     "apollo-tracing": "file:packages/apollo-tracing",
     "graphql-extensions": "file:packages/graphql-extensions"
   },
   "devDependencies": {
+    "@azure/functions": "^1.0.2-beta2",
     "@types/async-retry": "1.4.1",
     "@types/aws-lambda": "8.10.25",
     "@types/body-parser": "1.17.0",
@@ -92,6 +94,7 @@
     "apollo-link": "1.2.11",
     "apollo-link-http": "1.5.14",
     "apollo-link-persisted-queries": "0.2.2",
+    "azure-functions-ts-essentials": "^1.3.2",
     "body-parser": "1.19.0",
     "codecov": "3.3.0",
     "connect": "3.6.6",

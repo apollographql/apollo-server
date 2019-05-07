@@ -473,6 +473,24 @@ describe('RESTDataSource', () => {
 
       expect(data).toEqual('bar');
     });
+
+    it('returns data as a string when response status code is 204 no content', async () => {
+      const dataSource = new (class extends RESTDataSource {
+        baseURL = 'https://api.example.com';
+
+        getFoo() {
+          return this.get('');
+        }
+      })();
+
+      dataSource.httpCache = httpCache;
+
+      fetch.mockResponseOnce('', { 'Content-Type': 'application/json' }, 204);
+
+      const data = await dataSource.getFoo();
+
+      expect(data).toEqual('');
+    });
   });
 
   describe('memoization', () => {

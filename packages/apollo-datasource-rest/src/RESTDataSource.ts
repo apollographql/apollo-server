@@ -104,6 +104,9 @@ export abstract class RESTDataSource<TContext = any> extends DataSource {
   protected parseBody(response: Response): Promise<object | string> {
     const contentType = response.headers.get('Content-Type');
     if (
+      // As one might expect, a "204 No Content" is empty! This means there
+      // isn't enough to `JSON.parse`, and trying will result in an error.
+      response.status !== 204 &&
       contentType &&
       (contentType.startsWith('application/json') ||
         contentType.startsWith('application/hal+json'))

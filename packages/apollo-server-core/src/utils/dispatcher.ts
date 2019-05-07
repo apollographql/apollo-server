@@ -27,6 +27,25 @@ export class Dispatcher<T> {
     );
   }
 
+  public async invokeHooksUntilNonNull<
+    TMethodName extends FunctionPropertyNames<Required<T>>
+  >(
+    methodName: TMethodName,
+    ...args: Args<T[TMethodName]>
+  ): Promise<UnwrapPromise<ReturnType<AsFunction<T[TMethodName]>>> | null> {
+    for (const target of this.targets) {
+      const method = target[methodName];
+      if (!(method && typeof method === 'function')) {
+        continue;
+      }
+      const value = await method.apply(target, args);
+      if (value !== null) {
+        return value;
+      }
+    }
+    return null;
+  }
+
   public invokeDidStartHook<
     TMethodName extends FunctionPropertyNames<
       Required<T>,
