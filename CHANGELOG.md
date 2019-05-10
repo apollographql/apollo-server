@@ -1,5 +1,7 @@
 # Changelog
 
+- extensions: add setParsed to ensure we get an operation signature and capture errors in extensions when they occur in unexpected locations [PR#2659](https://github.com/apollographql/apollo-server/pull/2659)
+
 ### v2.5.0
 
 #### New

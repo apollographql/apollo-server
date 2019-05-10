@@ -43,6 +43,7 @@ export class GraphQLExtension<TContext = any> {
     context: TContext;
     requestContext: GraphQLRequestContext<TContext>;
   }): EndHandler | void;
+  public setParsedDocument?(parsedDocument: DocumentNode): void;
   public parsingDidStart?(o: { queryString: string }): EndHandler | void;
   public validationDidStart?(): EndHandler | void;
   public executionDidStart?(o: {
@@ -99,6 +100,12 @@ export class GraphQLExtensionStack<TContext = any> {
       ext => ext.parsingDidStart && ext.parsingDidStart(o),
     );
   }
+  public setParsedDocument(parsedDocument: DocumentNode): void {
+    this.handleDidStart(
+      ext => ext.setParsedDocument && ext.setParsedDocument(parsedDocument),
+    );
+  }
+
   public validationDidStart(): EndHandler {
     return this.handleDidStart(
       ext => ext.validationDidStart && ext.validationDidStart(),
