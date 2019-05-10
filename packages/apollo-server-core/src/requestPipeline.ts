@@ -216,9 +216,14 @@ export async function processGraphQLRequest<TContext>(
       }
     }
 
-    // If we still don't have a document, we'll need to parse and validate it.
-    // With success, we'll attempt to save it into the store for future use.
-    if (!requestContext.document) {
+    if (requestContext.document) {
+      extensionStack.setParsedDocumentAndOperationName(
+        requestContext.document,
+        request.operationName,
+      );
+    } else {
+      // If we still don't have a document, we'll need to parse and validate it.
+      // With success, we'll attempt to save it into the store for future use.
       const parsingDidEnd = await dispatcher.invokeDidStartHook(
         'parsingDidStart',
         requestContext as WithRequired<
@@ -229,6 +234,10 @@ export async function processGraphQLRequest<TContext>(
 
       try {
         requestContext.document = parse(query, config.parseOptions);
+        extensionStack.setParsedDocumentAndOperationName(
+          requestContext.document,
+          request.operationName,
+        );
         parsingDidEnd();
       } catch (syntaxError) {
         parsingDidEnd(syntaxError);
@@ -372,6 +381,11 @@ export async function processGraphQLRequest<TContext>(
     }
 
     return sendResponse(response);
+  } catch (error) {
+    // an error was thrown during the parse, validate, execute phases, so we
+    // need to report the errors
+    extensionStack.didEncounterErrors([error]);
+    throw error;
   } finally {
     requestDidEnd();
   }
