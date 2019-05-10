@@ -217,7 +217,10 @@ export async function processGraphQLRequest<TContext>(
     }
 
     if (requestContext.document) {
-      extensionStack.setParsedDocument(requestContext.document);
+      extensionStack.setParsedDocumentAndOperationName(
+        requestContext.document,
+        request.operationName,
+      );
     } else {
       // If we still don't have a document, we'll need to parse and validate it.
       // With success, we'll attempt to save it into the store for future use.
@@ -231,7 +234,10 @@ export async function processGraphQLRequest<TContext>(
 
       try {
         requestContext.document = parse(query, config.parseOptions);
-        extensionStack.setParsedDocument(requestContext.document);
+        extensionStack.setParsedDocumentAndOperationName(
+          requestContext.document,
+          request.operationName,
+        );
         parsingDidEnd();
       } catch (syntaxError) {
         parsingDidEnd(syntaxError);

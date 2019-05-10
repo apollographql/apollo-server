@@ -95,8 +95,14 @@ export class EngineReportingExtension<TContext = any>
       });
   }
 
-  public setParsedDocument(parsedDocument: DocumentNode) {
+  public setParsedDocumentAndOperationName(
+    parsedDocument: DocumentNode,
+    operationName: string | undefined,
+  ) {
     this.documentAST = parsedDocument;
+    if (operationName) {
+      this.operationName = operationName;
+    }
   }
 
   public requestDidStart(o: {
