@@ -95,6 +95,10 @@ export class EngineReportingExtension<TContext = any>
       });
   }
 
+  public setParsedDocument(parsedDocument: DocumentNode) {
+    this.documentAST = parsedDocument;
+  }
+
   public requestDidStart(o: {
     request: Request;
     queryString?: string;
