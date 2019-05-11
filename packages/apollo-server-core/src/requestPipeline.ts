@@ -197,7 +197,10 @@ export async function processGraphQLRequest<TContext>(
     context: requestContext.context,
     persistedQueryHit: metrics.persistedQueryHit,
     persistedQueryRegister: metrics.persistedQueryRegister,
-    requestContext,
+    requestContext: requestContext as WithRequired<
+      typeof requestContext,
+      'metrics' | 'queryHash'
+    >,
   });
 
   try {
