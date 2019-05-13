@@ -2,6 +2,8 @@
 
 ### v2.6.0
 
+* `apollo-server-lambda`: Set `callbackWaitsForEmptyEventLoop` to `false` for `OPTIONS` requests to return as soon as the `callback` is triggered instead of waiting for the event loop to empty. [PR #2638](https://github.com/apollographql/apollo-server/pull/2638)
+
 ### v2.5.0
 
 #### New
