@@ -66,33 +66,7 @@ export class EngineReportingExtension<TContext = any>
     this.trace.root = root;
     this.nodes.set(responsePathAsString(undefined), root);
     this.generateClientInfo =
-      options.generateClientInfo ||
-      // Default to using the `apollo-client-x` header fields if present.
-      // If none are present, fallback on the `clientInfo` query extension
-      // for backwards compatibility.
-      // The default value if neither header values nor query extension is
-      // set is the empty String for all fields (as per protobuf defaults)
-      (({ request }) => {
-        if (
-          request.http &&
-          request.http.headers &&
-          (request.http.headers.get(clientNameHeaderKey) ||
-            request.http.headers.get(clientVersionHeaderKey) ||
-            request.http.headers.get(clientReferenceIdHeaderKey))
-        ) {
-          return {
-            clientName: request.http.headers.get(clientNameHeaderKey),
-            clientVersion: request.http.headers.get(clientVersionHeaderKey),
-            clientReferenceId: request.http.headers.get(
-              clientReferenceIdHeaderKey,
-            ),
-          };
-        } else if (request.extensions && request.extensions.clientInfo) {
-          return request.extensions.clientInfo;
-        } else {
-          return {};
-        }
-      });
+      options.generateClientInfo || defaultGenerateClientInfo;
   }
 
   public requestDidStart(o: {
@@ -452,4 +426,29 @@ function dateToTimestamp(date: Date): google.protobuf.Timestamp {
 // ever trying to store durations in a single number.
 function durationHrTimeToNanos(hrtime: [number, number]) {
   return hrtime[0] * 1e9 + hrtime[1];
+}
+
+function defaultGenerateClientInfo({ request }: GraphQLRequestContext) {
+  // Default to using the `apollo-client-x` header fields if present.
+  // If none are present, fallback on the `clientInfo` query extension
+  // for backwards compatibility.
+  // The default value if neither header values nor query extension is
+  // set is the empty String for all fields (as per protobuf defaults)
+  if (
+    request.http &&
+    request.http.headers &&
+    (request.http.headers.get(clientNameHeaderKey) ||
+      request.http.headers.get(clientVersionHeaderKey) ||
+      request.http.headers.get(clientReferenceIdHeaderKey))
+  ) {
+    return {
+      clientName: request.http.headers.get(clientNameHeaderKey),
+      clientVersion: request.http.headers.get(clientVersionHeaderKey),
+      clientReferenceId: request.http.headers.get(clientReferenceIdHeaderKey),
+    };
+  } else if (request.extensions && request.extensions.clientInfo) {
+    return request.extensions.clientInfo;
+  } else {
+    return {};
+  }
 }
