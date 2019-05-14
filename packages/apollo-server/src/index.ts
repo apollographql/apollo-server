@@ -29,10 +29,12 @@ export class ApolloServer extends ApolloServerBase {
   constructor(
     config: ApolloServerExpressConfig & {
       cors?: CorsOptions | boolean;
+      onHealthCheck?: (req: express.Request) => Promise<any>;
     },
   ) {
     super(config);
     this.cors = config && config.cors;
+    this.onHealthCheck = config && config.onHealthCheck;
   }
 
   private createServerInfo(
@@ -90,6 +92,7 @@ export class ApolloServer extends ApolloServerBase {
       app,
       path: '/',
       bodyParserConfig: { limit: '50mb' },
+      onHealthCheck: this.onHealthCheck,
       cors:
         typeof this.cors !== 'undefined'
           ? this.cors
