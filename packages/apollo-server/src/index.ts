@@ -25,6 +25,7 @@ export interface ServerInfo {
 export class ApolloServer extends ApolloServerBase {
   private httpServer?: http.Server;
   private cors?: CorsOptions | boolean;
+  private onHealthCheck?: (req: express.Request) => Promise<any>;
 
   constructor(
     config: ApolloServerExpressConfig & {
