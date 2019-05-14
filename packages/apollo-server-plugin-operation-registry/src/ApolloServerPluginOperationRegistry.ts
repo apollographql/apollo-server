@@ -132,9 +132,6 @@ export default function plugin(options: Options = Object.create(null)) {
             ),
           );
 
-          // If the document itself was missing and we didn't receive a
-          // `queryHash` (the persisted query `sha256Hash` from the APQ
-          // `extensions`), then we have nothing to work with.
           if (!hash) {
             throw new ApolloError('No document.');
           }
