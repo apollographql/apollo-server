@@ -191,14 +191,12 @@ export class CacheControlExtension<TContext = any>
       }
     }
 
-    // If maxAge is 0, then we consider it uncacheable so it doesn't matter what
-    // the scope was.
-    return lowestMaxAge
-      ? {
-          maxAge: lowestMaxAge,
-          scope,
-        }
-      : undefined;
+    // Max-age 0 is needed, older browsers cache requests without
+    // headers indicating it should not be cached.
+    return {
+      maxAge: lowestMaxAge || 0,
+      scope,
+    };
   }
 }
 
