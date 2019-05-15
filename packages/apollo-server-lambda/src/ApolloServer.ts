@@ -109,10 +109,14 @@ export class ApolloServer extends ApolloServerBase {
       // twice since it's not accessible to us otherwise, right now.
       const eventHeaders = new Headers(event.headers);
 
+      // Make a request-specific copy of the CORS headers, based on the server
+      // global CORS headers we've set above.
+      const requestCorsHeaders = new Headers(corsHeaders);
+
       if (cors && cors.origin) {
         const requestOrigin = eventHeaders.get('origin');
         if (typeof cors.origin === 'string') {
-          corsHeaders.set('access-control-allow-origin', cors.origin);
+          requestCorsHeaders.set('access-control-allow-origin', cors.origin);
         } else if (
           requestOrigin &&
           (typeof cors.origin === 'boolean' ||
@@ -120,14 +124,14 @@ export class ApolloServer extends ApolloServerBase {
               requestOrigin &&
               cors.origin.includes(requestOrigin)))
         ) {
-          corsHeaders.set('access-control-allow-origin', requestOrigin);
+          requestCorsHeaders.set('access-control-allow-origin', requestOrigin);
         }
 
         const requestAccessControlRequestHeaders = eventHeaders.get(
           'access-control-request-headers',
         );
         if (!cors.allowedHeaders && requestAccessControlRequestHeaders) {
-          corsHeaders.set(
+          requestCorsHeaders.set(
             'access-control-allow-headers',
             requestAccessControlRequestHeaders,
           );
@@ -140,7 +144,7 @@ export class ApolloServer extends ApolloServerBase {
           body: '',
           statusCode: 204,
           headers: {
-            ...corsHeaders,
+            ...requestCorsHeaders,
           },
         });
       }
@@ -163,7 +167,7 @@ export class ApolloServer extends ApolloServerBase {
             statusCode: 200,
             headers: {
               'Content-Type': 'text/html',
-              ...corsHeaders,
+              ...requestCorsHeaders,
             },
           });
         }
@@ -176,7 +180,7 @@ export class ApolloServer extends ApolloServerBase {
             ...result,
             headers: {
               ...result.headers,
-              ...corsHeaders,
+              ...requestCorsHeaders,
             },
           },
         );
