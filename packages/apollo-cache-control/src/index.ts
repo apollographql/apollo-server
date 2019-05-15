@@ -42,6 +42,13 @@ declare module 'graphql/type/definition' {
   }
 }
 
+declare module 'apollo-server-core/dist/requestPipelineAPI' {
+  interface GraphQLRequestContext<TContext> {
+    // Not readonly: plugins can set it.
+    overallCachePolicy?: Required<CacheHint> | undefined;
+  }
+}
+
 export class CacheControlExtension<TContext = any>
   implements GraphQLExtension<TContext> {
   private defaultMaxAge: number;
@@ -51,6 +58,7 @@ export class CacheControlExtension<TContext = any>
   }
 
   private hints: Map<ResponsePath, CacheHint> = new Map();
+  private overallCachePolicyOverride?: Required<CacheHint>;
 
   willResolveField(
     _source: any,
@@ -123,7 +131,14 @@ export class CacheControlExtension<TContext = any>
   }
 
   format(): [string, CacheControlFormat] | undefined {
-    if (this.options.stripFormattedExtensions) return;
+    // We should have to explicitly ask to leave the formatted extension in, or
+    // pass the old-school `cacheControl: true` (as interpreted by
+    // apollo-server-core/ApolloServer), in order to include the
+    // engineproxy-aimed extensions. Specifically, we want users of
+    // apollo-server-plugin-response-cache to be able to specify
+    // `cacheControl: {defaultMaxAge: 600}` without accidentally turning on the
+    // extension formatting.
+    if (this.options.stripFormattedExtensions !== false) return;
 
     return [
       'cacheControl',
@@ -152,7 +167,15 @@ export class CacheControlExtension<TContext = any>
     }
   }
 
+  public overrideOverallCachePolicy(overallCachePolicy: Required<CacheHint>) {
+    this.overallCachePolicyOverride = overallCachePolicy;
+  }
+
   computeOverallCachePolicy(): Required<CacheHint> | undefined {
+    if (this.overallCachePolicyOverride) {
+      return this.overallCachePolicyOverride;
+    }
+
     let lowestMaxAge: number | undefined = undefined;
     let scope: CacheScope = CacheScope.Public;
 

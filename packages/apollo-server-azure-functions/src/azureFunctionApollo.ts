@@ -1,8 +1,4 @@
-import {
-  HttpContext,
-  FunctionRequest,
-  FunctionResponse,
-} from './azureFunctions';
+import { Context, HttpRequest, AzureFunction } from '@azure/functions';
 import {
   GraphQLOptions,
   HttpQueryError,
@@ -11,22 +7,12 @@ import {
 import { Headers, ValueOrPromise } from 'apollo-server-env';
 
 export interface AzureFunctionGraphQLOptionsFunction {
-  (request: FunctionRequest, context: HttpContext): ValueOrPromise<
-    GraphQLOptions
-  >;
-}
-
-export interface AzureFunctionHandler {
-  (
-    context: HttpContext,
-    request: FunctionRequest,
-    callback: (err?: any, output?: FunctionResponse) => void,
-  ): void;
+  (request: HttpRequest, context: Context): ValueOrPromise<GraphQLOptions>;
 }
 
 export function graphqlAzureFunction(
   options: GraphQLOptions | AzureFunctionGraphQLOptionsFunction,
-): AzureFunctionHandler {
+): AzureFunction {
   if (!options) {
     throw new Error('Apollo Server requires options.');
   }
@@ -37,11 +23,7 @@ export function graphqlAzureFunction(
     );
   }
 
-  const graphqlHandler: AzureFunctionHandler = (
-    context,
-    request,
-    callback,
-  ): void => {
+  const graphqlHandler: AzureFunction = (context, request, callback): void => {
     if (request.method === 'POST' && !request.body) {
       callback(null, {
         body: 'POST body missing.',
@@ -57,7 +39,7 @@ export function graphqlAzureFunction(
           ? request.body
           : request.query,
       request: {
-        url: request.originalUrl,
+        url: request.url,
         method: request.method,
         headers: new Headers(request.headers),
       },

@@ -10,10 +10,10 @@ import {
   DocumentNode,
   ResponsePath,
   FieldNode,
+  GraphQLError,
 } from 'graphql';
 
 import { Request } from 'apollo-server-env';
-export { Request } from 'apollo-server-env';
 
 import {
   GraphQLResponse,
@@ -43,11 +43,20 @@ export class GraphQLExtension<TContext = any> {
     context: TContext;
     requestContext: GraphQLRequestContext<TContext>;
   }): EndHandler | void;
+  public setParsedDocumentAndOperationName?(
+    parsedDocument: DocumentNode,
+    operationName: string | undefined,
+  ): void;
   public parsingDidStart?(o: { queryString: string }): EndHandler | void;
   public validationDidStart?(): EndHandler | void;
   public executionDidStart?(o: {
     executionArgs: ExecutionArgs;
   }): EndHandler | void;
+
+  public didResolveOperation?(o: {
+    requestContext: GraphQLRequestContext<TContext>;
+  }): void;
+  public didEncounterErrors?(errors: ReadonlyArray<GraphQLError>): void;
 
   public willSendResponse?(o: {
     graphqlResponse: GraphQLResponse;
@@ -94,6 +103,17 @@ export class GraphQLExtensionStack<TContext = any> {
       ext => ext.parsingDidStart && ext.parsingDidStart(o),
     );
   }
+  public setParsedDocumentAndOperationName(
+    parsedDocument: DocumentNode,
+    operationName: string | undefined,
+  ): void {
+    this.handleDidStart(
+      ext =>
+        ext.setParsedDocumentAndOperationName &&
+        ext.setParsedDocumentAndOperationName(parsedDocument, operationName),
+    );
+  }
+
   public validationDidStart(): EndHandler {
     return this.handleDidStart(
       ext => ext.validationDidStart && ext.validationDidStart(),
@@ -106,6 +126,23 @@ export class GraphQLExtensionStack<TContext = any> {
     return this.handleDidStart(
       ext => ext.executionDidStart && ext.executionDidStart(o),
     );
+  }
+
+  public didResolveOperation(o: {
+    requestContext: GraphQLRequestContext<TContext>;
+  }) {
+    this.extensions.forEach(extension => {
+      if (extension.didResolveOperation) {
+        extension.didResolveOperation(o);
+      }
+    });
+  }
+  public didEncounterErrors(errors: ReadonlyArray<GraphQLError>) {
+    this.extensions.forEach(extension => {
+      if (extension.didEncounterErrors) {
+        extension.didEncounterErrors(errors);
+      }
+    });
   }
 
   public willSendResponse(o: {

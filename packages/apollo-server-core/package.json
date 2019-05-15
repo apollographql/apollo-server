@@ -1,6 +1,6 @@
 {
   "name": "apollo-server-core",
-  "version": "2.4.8",
+  "version": "2.5.0",
   "description": "Core engine for Apollo GraphQL server",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -24,7 +24,7 @@
     "node": ">=6"
   },
   "dependencies": {
-    "@apollographql/apollo-tools": "^0.3.3",
+    "@apollographql/apollo-tools": "^0.3.6",
     "@apollographql/graphql-playground-html": "^1.6.6",
     "@types/ws": "^6.0.0",
     "apollo-cache-control": "file:../apollo-cache-control",

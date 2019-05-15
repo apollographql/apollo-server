@@ -1,6 +1,6 @@
 {
   "name": "graphql-extensions",
-  "version": "0.5.7",
+  "version": "0.6.0",
   "description": "Add extensions to GraphQL servers",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -14,7 +14,7 @@
     "node": ">=6.0"
   },
   "dependencies": {
-    "@apollographql/apollo-tools": "^0.3.3"
+    "@apollographql/apollo-tools": "^0.3.6"
   },
   "devDependencies": {
     "apollo-server-core": "file:../apollo-server-core",
