@@ -24,6 +24,7 @@ export interface GraphQLServiceContext {
   schemaHash: string;
   engine: {
     serviceID?: string;
+    apiKeyHash?: string;
   };
   persistedQueries?: {
     cache: KeyValueCache;
