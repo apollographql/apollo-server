@@ -107,7 +107,7 @@
     "graphql-tag": "2.10.1",
     "graphql-tools": "4.0.4",
     "hapi": "17.8.5",
-    "husky": "2.2.0",
+    "husky": "2.3.0",
     "jest": "24.8.0",
     "jest-config": "24.8.0",
     "jest-junit": "6.4.0",
