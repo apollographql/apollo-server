@@ -99,7 +99,7 @@
     "codecov": "3.5.0",
     "connect": "3.7.0",
     "express": "4.17.0",
-    "fastify": "1.14.6",
+    "fastify": "2.3.0",
     "fibers": "3.1.1",
     "form-data": "2.3.3",
     "graphql": "14.3.0",
