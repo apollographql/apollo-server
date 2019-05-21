@@ -11,11 +11,12 @@ const defaultStore = () => new InMemoryLRUCache();
 
 const genericSchemaHash = 'abc123';
 const genericServiceID = 'test-service';
+const genericApiKeyHash = 'someapikeyhash123';
 const pollSeconds = 60;
 
 const defaultAgentOptions: AgentOptions = {
   schemaHash: genericSchemaHash,
-  engine: { serviceID: genericServiceID },
+  engine: { serviceID: genericServiceID, apiKeyHash: genericApiKeyHash },
   store: defaultStore(),
   pollSeconds,
 };
