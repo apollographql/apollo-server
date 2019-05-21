@@ -13,31 +13,12 @@ const genericSchemaHash = 'abc123';
 const genericServiceID = 'test-service';
 const pollSeconds = 60;
 
-// Utility function for building the required options to pass to the Agent
-// constructor.  These can be overridden when necessary, but default to the
-// generic options above.
-const getRequiredAgentOptions = (
-  {
-    store = defaultStore(),
-    schemaHash = genericSchemaHash,
-    serviceID = genericServiceID,
-    ...addlOptions
-  }: {
-    store?: InMemoryLRUCache;
-    schemaHash?: string;
-    serviceID?: string;
-  } = {
-    store: defaultStore(),
-    schemaHash: genericSchemaHash,
-    serviceID: genericServiceID,
-  },
-): AgentOptions => ({
-  schemaHash,
-  engine: { serviceID },
-  store,
+const defaultAgentOptions: AgentOptions = {
+  schemaHash: genericSchemaHash,
+  engine: { serviceID: genericServiceID },
+  store: defaultStore(),
   pollSeconds,
-  ...addlOptions,
-});
+};
 
 interface ManifestRecord {
   signature: string;
@@ -69,17 +50,17 @@ describe('Agent', () => {
   describe('Basic', () => {
     const Agent = require('../agent').default;
     it('instantiates with proper options', () => {
-      expect(new Agent({ ...getRequiredAgentOptions() })).toBeInstanceOf(Agent);
+      expect(new Agent({ ...defaultAgentOptions })).toBeInstanceOf(Agent);
     });
 
     it('instantiates with debug enabled', () => {
-      expect(
-        new Agent({ ...getRequiredAgentOptions(), debug: true }),
-      ).toBeInstanceOf(Agent);
+      expect(new Agent({ ...defaultAgentOptions, debug: true })).toBeInstanceOf(
+        Agent,
+      );
     });
 
     it('fails to instantiate when `schemaHash` is not passed', () => {
-      const { schemaHash, ...remainingOptions } = getRequiredAgentOptions();
+      const { schemaHash, ...remainingOptions } = defaultAgentOptions;
       expect(() => {
         // @ts-ignore: Intentionally not passing the parameter we need.
         new Agent(remainingOptions);
@@ -135,7 +116,7 @@ describe('Agent', () => {
       }[] = [];
 
       function createAgent({ ...args } = {}) {
-        const options = getRequiredAgentOptions({ ...args });
+        const options = { ...defaultAgentOptions, ...args };
 
         // We never actually let the Agent construct its own default store
         // since we need to pluck the store out to instrument it with spies.
