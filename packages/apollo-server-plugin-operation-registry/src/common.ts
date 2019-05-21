@@ -22,13 +22,12 @@ export function generateServiceIdHash(serviceId: string): string {
     .digest('hex');
 }
 
-export function getOperationManifestUrl(
-  hashedServiceId: string,
+export function getLegacyOperationManifestUrl(
+  hashedGraphId: string,
   schemaHash: string,
 ): string {
   return (
-    [urlOperationManifestBase, hashedServiceId, schemaHash].join('/') +
-    '.v2.json'
+    [urlOperationManifestBase, hashedGraphId, schemaHash].join('/') + '.v2.json'
   );
 }
 
