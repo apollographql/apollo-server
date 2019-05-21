@@ -246,7 +246,10 @@ export async function processGraphQLRequest<TContext>(
 
       const validationDidEnd = await dispatcher.invokeDidStartHook(
         'validationDidStart',
-        requestContext as WithRequired<typeof requestContext, 'document'>,
+        requestContext as WithRequired<
+          typeof requestContext,
+          'document' | 'source' | 'metrics'
+        >,
       );
 
       const validationErrors = validate(requestContext.document);
@@ -297,7 +300,7 @@ export async function processGraphQLRequest<TContext>(
       'didResolveOperation',
       requestContext as WithRequired<
         typeof requestContext,
-        'document' | 'operation' | 'operationName'
+        'document' | 'source' | 'operation' | 'operationName' | 'metrics'
       >,
     );
 
@@ -315,7 +318,7 @@ export async function processGraphQLRequest<TContext>(
       'responseForOperation',
       requestContext as WithRequired<
         typeof requestContext,
-        'document' | 'operation' | 'operationName'
+        'document' | 'source' | 'operation' | 'operationName' | 'metrics'
       >,
     );
     if (response == null) {
@@ -323,7 +326,7 @@ export async function processGraphQLRequest<TContext>(
         'executionDidStart',
         requestContext as WithRequired<
           typeof requestContext,
-          'document' | 'operation' | 'operationName' | 'metrics'
+          'document' | 'source' | 'operation' | 'operationName' | 'metrics'
         >,
       );
 
@@ -472,7 +475,10 @@ export async function processGraphQLRequest<TContext>(
     }).graphqlResponse;
     await dispatcher.invokeHookAsync(
       'willSendResponse',
-      requestContext as WithRequired<typeof requestContext, 'response'>,
+      requestContext as WithRequired<
+        typeof requestContext,
+        'metrics' | 'response'
+      >,
     );
     return requestContext.response!;
   }
