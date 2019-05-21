@@ -41,6 +41,13 @@ export function getStorageSecretUrl(
   return `${urlStorageSecretBase}/${graphId}/${apiKeyHash}/storage-secret.json`;
 }
 
+export function getOperationManifestUrl(
+  graphId: string,
+  storageSecret: string,
+): string {
+  return `${urlOperationManifestBase}/${graphId}/${storageSecret}/manifest.v2.json`;
+}
+
 export function getLegacyOperationManifestUrl(
   hashedGraphId: string,
   schemaHash: string,
