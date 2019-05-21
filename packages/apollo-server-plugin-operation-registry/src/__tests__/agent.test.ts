@@ -72,7 +72,7 @@ describe('Agent', () => {
   describe('fetches', () => {
     let originalEnvApolloOpManifestBaseUrl: string | undefined;
     let Agent: typeof import('../agent').default;
-    let getOperationManifestUrl: typeof import('../common').getOperationManifestUrl;
+    let getLegacyOperationManifestUrl: typeof import('../common').getLegacyOperationManifestUrl;
 
     beforeAll(() => {
       // Override the tests URL with the one we want to mock/nock/test.
@@ -85,7 +85,8 @@ describe('Agent', () => {
 
       // Store these on the local scope after we've reset the modules.
       Agent = require('../agent').default;
-      getOperationManifestUrl = require('../common').getOperationManifestUrl;
+      getLegacyOperationManifestUrl = require('../common')
+        .getLegacyOperationManifestUrl;
     });
 
     afterAll(() => {
@@ -105,7 +106,7 @@ describe('Agent', () => {
     });
 
     it('correctly prepared the test environment', () => {
-      expect(getOperationManifestUrl('abc123', 'def456')).toStrictEqual(
+      expect(getLegacyOperationManifestUrl('abc123', 'def456')).toStrictEqual(
         urlResolve(fakeBaseUrl, '/abc123/def456.v2.json'),
       );
     });

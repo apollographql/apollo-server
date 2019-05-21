@@ -1,5 +1,5 @@
 import {
-  getOperationManifestUrl,
+  getLegacyOperationManifestUrl,
   generateServiceIdHash,
   getStoreKey,
   pluginName,
@@ -140,7 +140,7 @@ export default class Agent {
   }
 
   private async tryUpdate(): Promise<boolean> {
-    const manifestUrl = getOperationManifestUrl(
+    const manifestUrl = getLegacyOperationManifestUrl(
       this.getHashedServiceId(),
       this.options.schemaHash,
     );
