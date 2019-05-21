@@ -4,11 +4,23 @@ import { createHash } from 'crypto';
 export const envOverrideOperationManifest =
   'APOLLO_OPERATION_MANIFEST_BASE_URL';
 
+export const envOverrideStorageSecretBaseUrl = 'APOLLO_STORAGE_SECRET_BASE_URL';
+
 // Generate and cache our desired operation manifest URL.
 const urlOperationManifestBase: string = ((): string => {
   const desiredUrl =
     process.env[envOverrideOperationManifest] ||
     'https://storage.googleapis.com/engine-op-manifest-storage-prod/';
+
+  // Make sure it has NO trailing slash.
+  return desiredUrl.replace(/\/$/, '');
+})();
+
+// Generate and cache our desired storage secret URL.
+const urlStorageSecretBase: string = ((): string => {
+  const desiredUrl =
+    process.env[envOverrideStorageSecretBaseUrl] ||
+    'https://storage.googleapis.com/engine-partial-schema-prod/';
 
   // Make sure it has NO trailing slash.
   return desiredUrl.replace(/\/$/, '');
@@ -20,6 +32,13 @@ export function generateServiceIdHash(serviceId: string): string {
   return createHash('sha512')
     .update(serviceId)
     .digest('hex');
+}
+
+export function getStorageSecretUrl(
+  graphId: string,
+  apiKeyHash: string,
+): string {
+  return `${urlStorageSecretBase}/${graphId}/${apiKeyHash}/storage-secret.json`;
 }
 
 export function getLegacyOperationManifestUrl(
