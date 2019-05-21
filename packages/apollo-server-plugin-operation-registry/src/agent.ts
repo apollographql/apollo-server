@@ -62,6 +62,13 @@ export default class Agent {
     ) {
       throw new Error('`engine.serviceID` must be passed to the Agent.');
     }
+
+    if (
+      typeof this.options.engine !== 'object' ||
+      typeof this.options.engine.apiKeyHash !== 'string'
+    ) {
+      throw new Error('`engine.apiKeyHash` must be passed to the Agent.');
+    }
   }
 
   async requestPending() {
