@@ -43,7 +43,7 @@ export default class Agent {
   // Only exposed for testing.
   public _timesChecked: number = 0;
 
-  private lastSuccessfulETag?: string;
+  private lastSuccessfulManifestETag?: string;
   private lastOperationSignatures: SignatureStore = new Set();
   private readonly options: AgentOptions = Object.create(null);
 
@@ -162,8 +162,10 @@ export default class Agent {
     // By saving and providing our last known ETag, we can allow the storage
     // provider to return us a `304 Not Modified` header rather than the full
     // response.
-    if (this.lastSuccessfulETag) {
-      fetchOptions.headers = { 'If-None-Match': this.lastSuccessfulETag };
+    if (this.lastSuccessfulManifestETag) {
+      fetchOptions.headers = {
+        'If-None-Match': this.lastSuccessfulManifestETag,
+      };
     }
 
     let response: Response;
@@ -204,7 +206,7 @@ export default class Agent {
     // the same manifest again.
     const receivedETag = response.headers.get('etag');
     if (receivedETag) {
-      this.lastSuccessfulETag = JSON.parse(receivedETag);
+      this.lastSuccessfulManifestETag = JSON.parse(receivedETag);
     }
 
     // True is good!
