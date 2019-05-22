@@ -159,14 +159,7 @@ export default class Agent {
     return storageSecret;
   }
 
-  private async tryUpdate(): Promise<void> {
-    await this.fetchAndUpdateStorageSecret();
-
-    const manifestUrl = getLegacyOperationManifestUrl(
-      this.getHashedServiceId(),
-      this.options.schemaHash,
-    );
-
+  private async fetchManifest(manifestUrl: string): Promise<OperationManifest> {
     this.logger.debug(`Checking for manifest changes at ${manifestUrl}`);
     this._timesChecked++;
 
@@ -196,7 +189,20 @@ export default class Agent {
       throw new Error(`Unexpected 'Content-Type' header: ${contentType}`);
     }
 
-    await this.updateManifest(await response.json());
+    return response.json();
+  }
+
+  private async tryUpdate(): Promise<void> {
+    await this.fetchAndUpdateStorageSecret();
+
+    const legacyManifestUrl = getLegacyOperationManifestUrl(
+      this.getHashedServiceId(),
+      this.options.schemaHash,
+    );
+
+    const manifest = await this.fetchManifest(legacyManifestUrl);
+
+    await this.updateManifest(manifest);
   }
 
   public async checkForUpdate() {
