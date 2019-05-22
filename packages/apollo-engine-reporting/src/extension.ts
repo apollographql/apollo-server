@@ -199,12 +199,18 @@ export class EngineReportingExtension<TContext = any>
       this.trace.fullQueryCacheHit = !!o.requestContext.metrics
         .responseCacheHit;
 
-      const operationName = this.operationName || '';
+      // If the `operationName` was not already set elsewhere, for example,
+      // through the `executionDidStart` or the `willResolveField` hooks, then
+      // we'll resort to using the `operationName` which was requested to be
+      // executed by the client.
+      const operationName =
+        this.operationName || o.requestContext.operationName || '';
+      const documentAST = this.documentAST || o.requestContext.document;
 
       this.addTrace({
         operationName,
         queryHash,
-        documentAST: this.documentAST,
+        documentAST,
         queryString: this.queryString || '',
         trace: this.trace,
       });
