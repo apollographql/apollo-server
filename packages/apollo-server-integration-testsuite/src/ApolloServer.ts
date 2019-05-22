@@ -703,6 +703,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
           const setupApolloServerAndFetchPair = async (
             engineOptions: Partial<EngineReportingOptions<any>> = {},
+            constructorOptions: Partial<CreateServerFunc<AS>> = {},
           ) => {
             const { url: uri } = await createApolloServer({
               typeDefs: gql`
@@ -726,6 +727,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
                 ...engineOptions,
               },
               debug: true,
+              ...constructorOptions,
             });
 
             apolloFetch = createApolloFetch({ uri });
@@ -801,6 +803,37 @@ export function testApolloServer<AS extends ApolloServerBase>(
             expect(reports.length).toBe(1);
 
             expect(Object.keys(reports[0].tracesPerQuery)[0]).toMatch(/^# -\n/);
+          });
+
+          it("doesn't resort to query body signature on `didResolveOperation` error", async () => {
+            await setupApolloServerAndFetchPair(Object.create(null), {
+              plugins: [
+                {
+                  requestDidStart() {
+                    return {
+                      didResolveOperation() {
+                        throw new Error('known_error');
+                      },
+                    };
+                  },
+                },
+              ],
+            });
+
+            const result = await apolloFetch({
+              query: `{ aliasedField: justAField }`,
+            });
+
+            expect(result.errors).toBeDefined();
+            expect(result.errors[0].extensions).toBeDefined();
+            expect(result.errors[0].message).toEqual('known_error');
+
+            const reports = await engineServer.promiseOfReports;
+            expect(reports.length).toBe(1);
+
+            expect(Object.keys(reports[0].tracesPerQuery)[0]).not.toEqual(
+              '# -\n{ aliasedField: justAField }',
+            );
           });
 
           describe('error munging', () => {
