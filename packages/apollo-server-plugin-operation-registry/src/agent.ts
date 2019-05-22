@@ -40,7 +40,6 @@ export default class Agent {
   private timer?: NodeJS.Timer;
   private logger: loglevel.Logger;
   private hashedServiceId?: string;
-  private storageSecret?: string;
   private requestInFlight: Promise<any> | null = null;
   private lastSuccessfulCheck?: Date;
 
@@ -170,10 +169,7 @@ export default class Agent {
       throw new Error(`Unexpected status: ${responseText}`);
     }
 
-    const storageSecret = await response.json();
-    this.storageSecret = storageSecret;
-
-    return storageSecret;
+    return await response.json();
   }
 
   private async fetchManifest(manifestUrl: string): Promise<OperationManifest> {
