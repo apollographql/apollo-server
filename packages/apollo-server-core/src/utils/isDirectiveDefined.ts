@@ -1,12 +1,4 @@
-import {
-  DocumentNode,
-  DefinitionNode,
-  DirectiveDefinitionNode,
-} from 'graphql/language';
-
-const isDirectiveNode = (
-  node: DefinitionNode,
-): node is DirectiveDefinitionNode => node.kind === 'DirectiveDefinition';
+import { DocumentNode, Kind } from 'graphql/language';
 
 export const isDirectiveDefined = (
   typeDefs: DocumentNode[],
@@ -15,6 +7,7 @@ export const isDirectiveDefined = (
   typeDefs.some(typeDef =>
     typeDef.definitions.some(
       definition =>
-        isDirectiveNode(definition) && definition.name.value === directiveName,
+        definition.kind === Kind.DIRECTIVE_DEFINITION &&
+        definition.name.value === directiveName,
     ),
   );
