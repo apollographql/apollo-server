@@ -99,7 +99,7 @@ export default class Agent {
       await pulse();
     } catch (err) {
       console.error(
-        'Apollo Server could not begin serving requests immediately because the operation manifest could not be fetched.  Attempts will continue to fetch the manifest, but all requests will be forbidden until the manifest is fetched.',
+        'The operation manifest could not be fetched.  Retries will continue, but requests will be forbidden until the manifest is fetched.',
         err.message || err,
       );
     }
@@ -148,11 +148,27 @@ export default class Agent {
       this.options.engine.apiKeyHash,
     );
 
-    const [response] = await fetchIfNoneMatch(storageSecretUrl, this.logger, {
-      method: 'GET',
-      // More than three times our polling interval be long enough to wait.
-      timeout: this.pollSeconds() * 3 /* times */ * 1000 /* ms */,
-    });
+    const [response, wasCached] = await fetchIfNoneMatch(
+      storageSecretUrl,
+      this.logger,
+      {
+        method: 'GET',
+        // More than three times our polling interval be long enough to wait.
+        timeout: this.pollSeconds() * 3 /* times */ * 1000 /* ms */,
+      },
+    );
+
+    if (wasCached) {
+      this.logger.debug(
+        'The storage secret was the same as the previous attempt.',
+      );
+    }
+
+    if (!response.ok) {
+      const responseText = await response.text();
+      // For other unknown errors.
+      throw new Error(`Unexpected status: ${responseText}`);
+    }
 
     const storageSecret = await response.json();
     this.storageSecret = storageSecret;
@@ -165,29 +181,58 @@ export default class Agent {
 
     let responseToReturn: Response;
     try {
-      let [response] = await fetchIfNoneMatch(manifestUrl, this.logger, {
-        // GET is what we request, but keep in mind that, when we include and get
-        // a match on the `If-None-Match` header we'll get an early return with a
-        // status code 304.
-        method: 'GET',
+      let [response, wasCached] = await fetchIfNoneMatch(
+        manifestUrl,
+        this.logger,
+        {
+          // GET is what we request, but keep in mind that, when we include and get
+          // a match on the `If-None-Match` header we'll get an early return with a
+          // status code 304.
+          method: 'GET',
 
-        // More than three times our polling interval be long enough to wait.
-        timeout: this.pollSeconds() * 3 /* times */ * 1000 /* ms */,
-      });
+          // More than three times our polling interval be long enough to wait.
+          timeout: this.pollSeconds() * 3 /* times */ * 1000 /* ms */,
+        },
+      );
+
       responseToReturn = response;
+
+      // When the response indicates that the resource hasn't changed, there's
+      // no need to do any other work.
+      if (wasCached) {
+        this.logger.debug(
+          'The published manifest was the same as the previous attempt.',
+        );
+        return response.json();
+      }
+
+      if (!response.ok) {
+        const responseText = await response.text();
+
+        // The response error code only comes in XML, but we don't have an XML
+        // parser handy, so we'll just match the string.
+        if (responseText.includes('<Code>AccessDenied</Code>')) {
+          throw new Error(
+            `No manifest found.  Ensure this server's schema has been published with 'apollo service:push' and that operations have been registered with 'apollo client:push'.`,
+          );
+        }
+
+        // For other unknown errors.
+        throw new Error(`Unexpected status: ${responseText}`);
+      }
+
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType !== 'application/json') {
+        throw new Error(`Unexpected 'Content-Type' header: ${contentType}`);
+      }
     } catch (err) {
       const ourErrorPrefix = `Unable to fetch operation manifest for ${
         this.options.schemaHash
       } in '${this.options.engine.serviceID}': ${err}`;
 
-      err.message = `${ourErrorPrefix}: ${err.message}`;
+      err.message = `${ourErrorPrefix}: ${err}`;
 
       throw err;
-    }
-
-    const contentType = responseToReturn.headers.get('content-type');
-    if (contentType && contentType !== 'application/json') {
-      throw new Error(`Unexpected 'Content-Type' header: ${contentType}`);
     }
 
     return responseToReturn.json();
