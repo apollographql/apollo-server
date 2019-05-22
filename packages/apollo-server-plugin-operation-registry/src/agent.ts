@@ -40,7 +40,7 @@ export default class Agent {
   private logger: loglevel.Logger;
   private hashedServiceId?: string;
   private storageSecret?: string;
-  private requestInFlight: Promise<void> | null = null;
+  private requestInFlight: Promise<any> | null = null;
   private lastSuccessfulCheck?: Date;
 
   // Only exposed for testing.
@@ -208,15 +208,12 @@ export default class Agent {
       return this.requestInFlight;
     }
 
-    const promise = Promise.resolve();
-
     // Prevent other requests from crossing paths.
-    this.requestInFlight = promise;
+    this.requestInFlight = this.tryUpdate();
 
     const resetRequestInFlight = () => (this.requestInFlight = null);
 
-    return promise
-      .then(() => this.tryUpdate())
+    return this.requestInFlight
       .then(result => {
         // Mark this for reporting and monitoring reasons.
         this.lastSuccessfulCheck = new Date();
