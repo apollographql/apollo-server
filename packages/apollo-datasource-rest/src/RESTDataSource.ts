@@ -224,7 +224,7 @@ export abstract class RESTDataSource<TContext = any> extends DataSource {
     if (
       options.body !== undefined &&
       options.body !== null &&
-      (options.body.constructor === Object ||
+      (options.body instanceof Object ||
         Array.isArray(options.body) ||
         ((options.body as any).toJSON &&
           typeof (options.body as any).toJSON === 'function'))
