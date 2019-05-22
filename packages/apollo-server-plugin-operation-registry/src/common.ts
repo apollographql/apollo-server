@@ -7,7 +7,7 @@ export const envOverrideOperationManifest =
 export const envOverrideStorageSecretBaseUrl = 'APOLLO_STORAGE_SECRET_BASE_URL';
 
 // Generate and cache our desired operation manifest URL.
-const urlOperationManifestBase: string = ((): string => {
+export const urlOperationManifestBase: string = ((): string => {
   const desiredUrl =
     process.env[envOverrideOperationManifest] ||
     'https://storage.googleapis.com/engine-op-manifest-storage-prod/';
