@@ -228,11 +228,13 @@ export class EngineReportingAgent<TContext = any> {
       throw new Error('No queryString or parsedQuery?');
     }
 
+    const cacheKey = signatureCacheKey(queryHash, operationName);
+
     // If we didn't have the signature in the cache, we'll resort to
     // calculating it asynchronously.  The `addTrace` method will
     // `await` the `signature` if it's a Promise, prior to putting it
     // on the stack of traces to deliver to the cloud.
-    const cachedSignature = await this.signatureCache.get(queryHash);
+    const cachedSignature = await this.signatureCache.get(cacheKey);
 
     if (cachedSignature) {
       return cachedSignature;
@@ -253,7 +255,7 @@ export class EngineReportingAgent<TContext = any> {
       defaultEngineReportingSignature)(documentAST, operationName);
 
     // Intentionally not awaited so the cache can be written to at leisure.
-    this.signatureCache.set(queryHash, generatedSignature);
+    this.signatureCache.set(cacheKey, generatedSignature);
 
     return generatedSignature;
   }
@@ -471,4 +473,8 @@ function createSignatureCache(): InMemoryLRUCache<string> {
       }
     },
   });
+}
+
+export function signatureCacheKey(queryHash: string, operationName: string) {
+  return `${queryHash}${operationName && ':' + operationName}`;
 }
