@@ -11,8 +11,11 @@ import {
 import { GraphQLExtension, EndHandler } from 'graphql-extensions';
 import { Trace, google } from 'apollo-engine-reporting-protobuf';
 
-import { EngineReportingOptions, GenerateClientInfo } from './agent';
-import { defaultEngineReportingSignature } from 'apollo-graphql';
+import {
+  EngineReportingOptions,
+  GenerateClientInfo,
+  AddTraceArgs,
+} from './agent';
 import { GraphQLRequestContext } from 'apollo-server-core/dist/requestPipelineAPI';
 
 const clientNameHeaderKey = 'apollographql-client-name';
@@ -47,16 +50,12 @@ export class EngineReportingExtension<TContext = any>
   private queryString?: string;
   private documentAST?: DocumentNode;
   private options: EngineReportingOptions<TContext>;
-  private addTrace: (
-    signature: string,
-    operationName: string,
-    trace: Trace,
-  ) => void;
+  private addTrace: (args: AddTraceArgs) => Promise<void>;
   private generateClientInfo: GenerateClientInfo<TContext>;
 
   public constructor(
     options: EngineReportingOptions<TContext>,
-    addTrace: (signature: string, operationName: string, trace: Trace) => void,
+    addTrace: (args: AddTraceArgs) => Promise<void>,
   ) {
     this.options = {
       ...options,
@@ -76,7 +75,10 @@ export class EngineReportingExtension<TContext = any>
     variables?: Record<string, any>;
     context: TContext;
     extensions?: Record<string, any>;
-    requestContext: WithRequired<GraphQLRequestContext<TContext>, 'metrics'>;
+    requestContext: WithRequired<
+      GraphQLRequestContext<TContext>,
+      'metrics' | 'queryHash'
+    >;
   }): EndHandler {
     this.trace.startTime = dateToTimestamp(new Date());
     this.startHrTime = process.hrtime();
@@ -84,6 +86,7 @@ export class EngineReportingExtension<TContext = any>
     // Generally, we'll get queryString here and not parsedQuery; we only get
     // parsedQuery if you're using an OperationStore. In normal cases we'll get
     // our documentAST in the execution callback after it is parsed.
+    const queryHash = o.requestContext.queryHash;
     this.queryString = o.queryString;
     this.documentAST = o.parsedQuery;
 
@@ -197,26 +200,14 @@ export class EngineReportingExtension<TContext = any>
         .responseCacheHit;
 
       const operationName = this.operationName || '';
-      let signature;
-      if (this.documentAST) {
-        const calculateSignature =
-          this.options.calculateSignature || defaultEngineReportingSignature;
-        signature = calculateSignature(this.documentAST, operationName);
-      } else if (this.queryString) {
-        // We didn't get an AST, possibly because of a parse failure. Let's just
-        // use the full query string.
-        //
-        // XXX This does mean that even if you use a calculateSignature which
-        //     hides literals, you might end up sending literals for queries
-        //     that fail parsing or validation. Provide some way to mask them
-        //     anyway?
-        signature = this.queryString;
-      } else {
-        // This shouldn't happen: one of those options must be passed to runQuery.
-        throw new Error('No queryString or parsedQuery?');
-      }
 
-      this.addTrace(signature, operationName, this.trace);
+      this.addTrace({
+        operationName,
+        queryHash,
+        documentAST: this.documentAST,
+        queryString: this.queryString || '',
+        trace: this.trace,
+      });
     };
   }
 
