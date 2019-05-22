@@ -2,7 +2,8 @@
 
 # vNEXT
 
-- extensions: add setParsed to ensure we get an operation signature and capture errors in extensions when they occur in unexpected locations [PR#2659](https://github.com/apollographql/apollo-server/pull/2659)
+- extensions: Add setParsed to ensure we get an operation signature and capture errors in extensions when they occur in unexpected locations [PR#2659](https://github.com/apollographql/apollo-server/pull/2659)
+- core: Expose SHA-256 hex hash digest of the Engine API key to plugins, when available, as `engine.apiKeyHash`. [PR# 2685](https://github.com/apollographql/apollo-server/pull/2685)
 
 ### v2.5.0
 
