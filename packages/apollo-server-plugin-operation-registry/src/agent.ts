@@ -181,7 +181,7 @@ export default class Agent {
     return storageSecret;
   }
 
-  private async tryUpdate(): Promise<boolean> {
+  private async tryUpdate(): Promise<void> {
     await this.fetchAndUpdateStorageSecret();
 
     const manifestUrl = getLegacyOperationManifestUrl(
@@ -232,7 +232,7 @@ export default class Agent {
       this.logger.debug(
         'The published manifest was the same as the previous attempt.',
       );
-      return false;
+      return;
     }
 
     if (!response.ok) {
@@ -252,9 +252,6 @@ export default class Agent {
     if (receivedETag) {
       this.lastSuccessfulManifestETag = JSON.parse(receivedETag);
     }
-
-    // True is good!
-    return true;
   }
 
   public async checkForUpdate() {
