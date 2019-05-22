@@ -180,45 +180,34 @@ describe('Agent', () => {
       });
 
       // Each nock is good for exactly one request!
-      function nockLegacyGoodManifestABC() {
-        return nockSuccessfulManifestForServiceAndSchema(
-          genericServiceID,
-          genericSchemaHash,
-          [
-            sampleManifestRecords.a,
-            sampleManifestRecords.b,
-            sampleManifestRecords.c,
-          ],
-        );
+      function nockLegacyGoodManifest(
+        operations: ManifestRecord[] = [
+          sampleManifestRecords.a,
+          sampleManifestRecords.b,
+          sampleManifestRecords.c,
+        ],
+      ) {
+        return nockBase()
+          .get(pathForServiceAndSchema(genericServiceID, genericSchemaHash))
+          .reply(200, {
+            version: 2,
+            operations,
+          });
       }
 
-      function nockGoodManifestABCUnderStorageSecret() {
+      function nockGoodManifestsUnderStorageSecret(
+        operations: ManifestRecord[] = [
+          sampleManifestRecords.a,
+          sampleManifestRecords.b,
+          sampleManifestRecords.c,
+        ],
+      ) {
         return nockBase()
           .get(genericOperationManifestUrl)
           .reply(200, {
             version: 2,
-            operations: [
-              sampleManifestRecords.a,
-              sampleManifestRecords.b,
-              sampleManifestRecords.c,
-            ],
+            operations,
           });
-      }
-
-      function nockGoodManifestAB() {
-        return nockSuccessfulManifestForServiceAndSchema(
-          genericServiceID,
-          genericSchemaHash,
-          [sampleManifestRecords.a, sampleManifestRecords.b],
-        );
-      }
-
-      function nockGoodManifestA() {
-        return nockSuccessfulManifestForServiceAndSchema(
-          genericServiceID,
-          genericSchemaHash,
-          [sampleManifestRecords.a],
-        );
       }
 
       function nockStorageSecret() {
@@ -256,7 +245,7 @@ describe('Agent', () => {
 
       it('logs debug updates to the manifest on startup', async () => {
         nockStorageSecret();
-        nockLegacyGoodManifestABC();
+        nockLegacyGoodManifest();
         const relevantLogs: any = [];
         const logger = {
           debug: jest.fn().mockImplementation((...args: any[]) => {
@@ -306,7 +295,7 @@ describe('Agent', () => {
 
       it('populates the manifest store after starting', async () => {
         nockStorageSecret();
-        nockGoodManifestABCUnderStorageSecret();
+        nockGoodManifestsUnderStorageSecret();
         const store = defaultStore();
         const storeSetSpy = jest.spyOn(store, 'set');
         await createAgent({ store }).start();
@@ -321,7 +310,7 @@ describe('Agent', () => {
 
       it('starts polling successfully', async () => {
         nockStorageSecret();
-        nockGoodManifestABCUnderStorageSecret();
+        nockGoodManifestsUnderStorageSecret();
         const store = defaultStore();
         const storeSetSpy = jest.spyOn(store, 'set');
         const storeDeleteSpy = jest.spyOn(store, 'delete');
@@ -345,9 +334,7 @@ describe('Agent', () => {
 
         // Now, we'll expect another request to go out, so we'll nock it.
         nockStorageSecret();
-        nockBase()
-          .get(genericOperationManifestUrl)
-          .reply(304);
+        nockGetReply(genericOperationManifestUrl, 304);
 
         // If we move forward the last remaining millisecond, we should trigger
         // and end up with a successful sync.
@@ -368,12 +355,10 @@ describe('Agent', () => {
 
       it('continues polling even after initial failure', async () => {
         nockStorageSecret();
-        nockBase()
-          .get(genericOperationManifestUrl)
-          .reply(500);
-        nockLegacyFailedManifestForServiceAndSchema(
-          genericServiceID,
-          genericSchemaHash,
+        nockGetReply(genericOperationManifestUrl, 500);
+        nockGetReply(
+          pathForServiceAndSchema(genericServiceID, genericSchemaHash),
+          500,
         );
         const store = defaultStore();
         const storeSetSpy = jest.spyOn(store, 'set');
@@ -398,7 +383,7 @@ describe('Agent', () => {
 
         // Now, we'll expect another GOOD request to fulfill, so we'll nock it.
         nockStorageSecret();
-        nockGoodManifestABCUnderStorageSecret();
+        nockGoodManifestsUnderStorageSecret();
 
         // If we move forward the last remaining millisecond, we should trigger
         // and end up with a successful sync.
@@ -424,7 +409,7 @@ describe('Agent', () => {
         expect(storeSetSpy).toBeCalledTimes(0);
 
         nockStorageSecret();
-        nockLegacyGoodManifestABC(); // Starting with ABC.
+        nockLegacyGoodManifest(); // Starting with ABC.
         await agent.checkForUpdate();
         expect(agent._timesChecked).toBe(1);
         expect(storeSetSpy).toBeCalledTimes(3);
@@ -432,7 +417,10 @@ describe('Agent', () => {
         await expectStoreHasOperationEach(store, ['a', 'b', 'c']);
 
         nockStorageSecret();
-        nockGoodManifestAB(); // Just AB in this manifest.
+        nockLegacyGoodManifest([
+          sampleManifestRecords.a,
+          sampleManifestRecords.b,
+        ]); // Just AB in this manifest.
         await agent.checkForUpdate();
         expect(agent._timesChecked).toBe(2);
         expect(storeSetSpy).toBeCalledTimes(3); // no new sets.
@@ -443,7 +431,7 @@ describe('Agent', () => {
         ).resolves.toBeUndefined();
 
         nockStorageSecret();
-        nockGoodManifestA(); // Just A in this manifest.
+        nockLegacyGoodManifest([sampleManifestRecords.a]); // Just A in this manifest.
         await agent.checkForUpdate();
         expect(agent._timesChecked).toBe(3);
         expect(storeSetSpy).toBeCalledTimes(3); // no new sets.
@@ -461,8 +449,10 @@ function nockBase() {
   return nock(fakeBaseUrl);
 }
 
-function nockManifestAtPath(path: string = '') {
-  return nockBase().get(path);
+function nockGetReply(relativePath: string, statusCode: number, body?: any) {
+  return nockBase()
+    .get(relativePath)
+    .reply(statusCode, body);
 }
 
 function hashedServiceId(serviceID: string) {
@@ -473,29 +463,4 @@ function hashedServiceId(serviceID: string) {
 
 function pathForServiceAndSchema(serviceID: string, schemaHash: string) {
   return `/${hashedServiceId(serviceID)}/${schemaHash}.v2.json`;
-}
-
-function nockManifestForServiceAndSchema(
-  serviceID: string,
-  schemaHash: string,
-) {
-  return nockManifestAtPath(pathForServiceAndSchema(serviceID, schemaHash));
-}
-
-function nockSuccessfulManifestForServiceAndSchema(
-  serviceID: string,
-  schemaHash: string,
-  operations: ManifestRecord[],
-) {
-  return nockManifestForServiceAndSchema(serviceID, schemaHash).reply(200, {
-    version: 2,
-    operations,
-  });
-}
-
-function nockLegacyFailedManifestForServiceAndSchema(
-  serviceID: string,
-  schemaHash: string,
-) {
-  return nockManifestForServiceAndSchema(serviceID, schemaHash).reply(500);
 }
