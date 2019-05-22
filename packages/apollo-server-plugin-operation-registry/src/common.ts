@@ -17,7 +17,7 @@ const urlOperationManifestBase: string = ((): string => {
 })();
 
 // Generate and cache our desired storage secret URL.
-const urlStorageSecretBase: string = ((): string => {
+export const urlStorageSecretBase: string = ((): string => {
   const desiredUrl =
     process.env[envOverrideStorageSecretBaseUrl] ||
     'https://storage.googleapis.com/engine-partial-schema-prod/';
