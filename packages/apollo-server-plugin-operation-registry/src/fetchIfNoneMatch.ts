@@ -4,7 +4,7 @@ import { Logger } from 'loglevel';
 const urlCachedResponseMap: { [url: string]: Response } = {};
 
 /**
- * @returns {[Response, boolean]} The boolean denotes whether the response was cached
+ * @returns {[Response, wasCached]}
  */
 export async function fetchIfNoneMatch(
   url: string,
