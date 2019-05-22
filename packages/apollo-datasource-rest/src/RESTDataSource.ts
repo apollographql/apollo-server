@@ -109,7 +109,7 @@ export abstract class RESTDataSource<TContext = any> extends DataSource {
       response.status !== 204 &&
       contentType &&
       (contentType.startsWith('application/json') ||
-        contentType.startsWith('application/hal+json')) ||
+        contentType.startsWith('application/hal+json') ||
         contentType.startsWith('application/ld+json'))
     ) {
       return response.json();
