@@ -8,8 +8,9 @@ import {
 
 import loglevel from 'loglevel';
 
-import fetch, { Response, RequestInit } from 'node-fetch';
+import { Response } from 'node-fetch';
 import { InMemoryLRUCache } from 'apollo-server-caching';
+import { fetchIfNoneMatch } from './fetchIfNoneMatch';
 
 const DEFAULT_POLL_SECONDS: number = 30;
 const SYNC_WARN_TIME_SECONDS: number = 60;
@@ -45,8 +46,6 @@ export default class Agent {
   // Only exposed for testing.
   public _timesChecked: number = 0;
 
-  private lastSuccessfulManifestETag?: string;
-  private lastSuccessfulStorageSecretETag?: string;
   private lastOperationSignatures: SignatureStore = new Set();
   private readonly options: AgentOptions = Object.create(null);
 
@@ -144,36 +143,15 @@ export default class Agent {
 
   private async fetchAndUpdateStorageSecret(): Promise<string> {
     const storageSecretUrl = getStorageSecretUrl(
-      this.options.engine.serviceId,
+      this.options.engine.serviceID,
       this.options.engine.apiKeyHash,
     );
 
-    const response = await fetch(storageSecretUrl, {
+    const response = await fetchIfNoneMatch(storageSecretUrl, this.logger, {
       method: 'GET',
       // More than three times our polling interval be long enough to wait.
       timeout: this.pollSeconds() * 3 /* times */ * 1000 /* ms */,
-      headers: {
-        'If-None-Match': this.lastSuccessfulStorageSecretETag || '',
-      },
     });
-
-    if (response.status === 304) {
-      this.logger.debug(
-        'The storage secret was the same as the previous attempt.',
-      );
-      return this.storageSecret as 'string';
-    }
-
-    if (!response.ok) {
-      throw new Error(
-        `Could not fetch storage secret ${await response.text()}`,
-      );
-    }
-
-    const receivedETag = response.headers.get('etag');
-    if (receivedETag) {
-      this.lastSuccessfulManifestETag = JSON.parse(receivedETag);
-    }
 
     const storageSecret = await response.json();
     this.storageSecret = storageSecret;
@@ -192,29 +170,17 @@ export default class Agent {
     this.logger.debug(`Checking for manifest changes at ${manifestUrl}`);
     this._timesChecked++;
 
-    const fetchOptions: RequestInit = {
-      // GET is what we request, but keep in mind that, when we include and get
-      // a match on the `If-None-Match` header we'll get an early return with a
-      // status code 304.
-      method: 'GET',
-
-      // More than three times our polling interval be long enough to wait.
-      timeout: this.pollSeconds() * 3 /* times */ * 1000 /* ms */,
-      headers: Object.create(null),
-    };
-
-    // By saving and providing our last known ETag, we can allow the storage
-    // provider to return us a `304 Not Modified` header rather than the full
-    // response.
-    if (this.lastSuccessfulManifestETag) {
-      fetchOptions.headers = {
-        'If-None-Match': this.lastSuccessfulManifestETag,
-      };
-    }
-
     let response: Response;
     try {
-      response = await fetch(manifestUrl, fetchOptions);
+      response = await fetchIfNoneMatch(manifestUrl, this.logger, {
+        // GET is what we request, but keep in mind that, when we include and get
+        // a match on the `If-None-Match` header we'll get an early return with a
+        // status code 304.
+        method: 'GET',
+
+        // More than three times our polling interval be long enough to wait.
+        timeout: this.pollSeconds() * 3 /* times */ * 1000 /* ms */,
+      });
     } catch (err) {
       const ourErrorPrefix = `Unable to fetch operation manifest for ${
         this.options.schemaHash
@@ -225,33 +191,12 @@ export default class Agent {
       throw err;
     }
 
-    // When the response indicates that the resource hasn't changed, there's
-    // no need to do any other work.  Returning true indicates that this is
-    // a successful fetch and that we can be assured the manifest is current.
-    if (response.status === 304) {
-      this.logger.debug(
-        'The published manifest was the same as the previous attempt.',
-      );
-      return;
-    }
-
-    if (!response.ok) {
-      throw new Error(`Could not fetch manifest ${await response.text()}`);
-    }
-
     const contentType = response.headers.get('content-type');
     if (contentType && contentType !== 'application/json') {
       throw new Error(`Unexpected 'Content-Type' header: ${contentType}`);
     }
 
     await this.updateManifest(await response.json());
-
-    // Save the ETag of the manifest we just received so we can avoid fetching
-    // the same manifest again.
-    const receivedETag = response.headers.get('etag');
-    if (receivedETag) {
-      this.lastSuccessfulManifestETag = JSON.parse(receivedETag);
-    }
   }
 
   public async checkForUpdate() {
