@@ -3,6 +3,7 @@ import {
   generateServiceIdHash,
   getStoreKey,
   pluginName,
+  getStorageSecretUrl,
 } from './common';
 
 import loglevel from 'loglevel';
@@ -37,6 +38,7 @@ export default class Agent {
   private timer?: NodeJS.Timer;
   private logger: loglevel.Logger;
   private hashedServiceId?: string;
+  private storageSecret?: string;
   private requestInFlight: Promise<void> | null = null;
   private lastSuccessfulCheck?: Date;
 
@@ -44,6 +46,7 @@ export default class Agent {
   public _timesChecked: number = 0;
 
   private lastSuccessfulManifestETag?: string;
+  private lastSuccessfulStorageSecretETag?: string;
   private lastOperationSignatures: SignatureStore = new Set();
   private readonly options: AgentOptions = Object.create(null);
 
@@ -139,7 +142,48 @@ export default class Agent {
     }
   }
 
+  private async fetchAndUpdateStorageSecret(): Promise<string> {
+    const storageSecretUrl = getStorageSecretUrl(
+      this.options.engine.serviceId,
+      this.options.engine.apiKeyHash,
+    );
+
+    const response = await fetch(storageSecretUrl, {
+      method: 'GET',
+      // More than three times our polling interval be long enough to wait.
+      timeout: this.pollSeconds() * 3 /* times */ * 1000 /* ms */,
+      headers: {
+        'If-None-Match': this.lastSuccessfulStorageSecretETag || '',
+      },
+    });
+
+    if (response.status === 304) {
+      this.logger.debug(
+        'The storage secret was the same as the previous attempt.',
+      );
+      return this.storageSecret as 'string';
+    }
+
+    if (!response.ok) {
+      throw new Error(
+        `Could not fetch storage secret ${await response.text()}`,
+      );
+    }
+
+    const receivedETag = response.headers.get('etag');
+    if (receivedETag) {
+      this.lastSuccessfulManifestETag = JSON.parse(receivedETag);
+    }
+
+    const storageSecret = await response.json();
+    this.storageSecret = storageSecret;
+
+    return storageSecret;
+  }
+
   private async tryUpdate(): Promise<boolean> {
+    await this.fetchAndUpdateStorageSecret();
+
     const manifestUrl = getLegacyOperationManifestUrl(
       this.getHashedServiceId(),
       this.options.schemaHash,
