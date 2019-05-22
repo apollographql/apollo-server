@@ -1,4 +1,8 @@
-import { DocumentNode, DefinitionNode, DirectiveDefinitionNode } from 'graphql';
+import {
+  DocumentNode,
+  DefinitionNode,
+  DirectiveDefinitionNode,
+} from 'graphql/language';
 
 const isDirectiveNode = (
   node: DefinitionNode,
