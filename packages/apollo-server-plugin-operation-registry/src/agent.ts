@@ -148,7 +148,7 @@ export default class Agent {
       this.options.engine.apiKeyHash,
     );
 
-    const response = await fetchIfNoneMatch(storageSecretUrl, this.logger, {
+    const [response] = await fetchIfNoneMatch(storageSecretUrl, this.logger, {
       method: 'GET',
       // More than three times our polling interval be long enough to wait.
       timeout: this.pollSeconds() * 3 /* times */ * 1000 /* ms */,
@@ -163,9 +163,9 @@ export default class Agent {
   private async fetchManifest(manifestUrl: string): Promise<OperationManifest> {
     this.logger.debug(`Checking for manifest changes at ${manifestUrl}`);
 
-    let response: Response;
+    let responseToReturn: Response;
     try {
-      response = await fetchIfNoneMatch(manifestUrl, this.logger, {
+      let [response] = await fetchIfNoneMatch(manifestUrl, this.logger, {
         // GET is what we request, but keep in mind that, when we include and get
         // a match on the `If-None-Match` header we'll get an early return with a
         // status code 304.
@@ -174,6 +174,7 @@ export default class Agent {
         // More than three times our polling interval be long enough to wait.
         timeout: this.pollSeconds() * 3 /* times */ * 1000 /* ms */,
       });
+      responseToReturn = response;
     } catch (err) {
       const ourErrorPrefix = `Unable to fetch operation manifest for ${
         this.options.schemaHash
@@ -184,12 +185,12 @@ export default class Agent {
       throw err;
     }
 
-    const contentType = response.headers.get('content-type');
+    const contentType = responseToReturn.headers.get('content-type');
     if (contentType && contentType !== 'application/json') {
       throw new Error(`Unexpected 'Content-Type' header: ${contentType}`);
     }
 
-    return response.json();
+    return responseToReturn.json();
   }
 
   private async tryUpdate(): Promise<void> {
