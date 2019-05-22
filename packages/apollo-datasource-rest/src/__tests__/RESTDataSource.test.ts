@@ -329,7 +329,7 @@ describe('RESTDataSource', () => {
       );
     });
 
-    it('does not serialize a request body that is not an object', async () => {
+    it('does serialize a request body that is a class instance', async () => {
       const dataSource = new (class extends RESTDataSource {
         baseURL = 'https://api.example.com';
 
@@ -349,8 +349,8 @@ describe('RESTDataSource', () => {
 
       expect(fetch.mock.calls.length).toEqual(1);
       expect(fetch.mock.calls[0][0].url).toEqual('https://api.example.com/foo');
-      expect(fetch.mock.calls[0][0].body).not.toEqual('{}');
-      expect(fetch.mock.calls[0][0].headers.get('Content-Type')).not.toEqual(
+      expect(fetch.mock.calls[0][0].body).toEqual('{}');
+      expect(fetch.mock.calls[0][0].headers.get('Content-Type')).toEqual(
         'application/json',
       );
     });
