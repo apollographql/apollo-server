@@ -4,6 +4,7 @@ import {
   getStoreKey,
   pluginName,
   getStorageSecretUrl,
+  getOperationManifestUrl,
 } from './common';
 
 import loglevel from 'loglevel';
@@ -141,7 +142,7 @@ export default class Agent {
     }
   }
 
-  private async fetchAndUpdateStorageSecret(): Promise<string> {
+  private async fetchAndUpdateStorageSecret(): Promise<string | undefined> {
     const storageSecretUrl = getStorageSecretUrl(
       this.options.engine.serviceID,
       this.options.engine.apiKeyHash,
@@ -193,14 +194,25 @@ export default class Agent {
   }
 
   private async tryUpdate(): Promise<void> {
-    await this.fetchAndUpdateStorageSecret();
+    this.logger.debug(`Checking for storageSecret`);
+    const storageSecret = await this.fetchAndUpdateStorageSecret();
 
     const legacyManifestUrl = getLegacyOperationManifestUrl(
       this.getHashedServiceId(),
       this.options.schemaHash,
     );
 
-    const manifest = await this.fetchManifest(legacyManifestUrl);
+    const manifest = await (storageSecret
+      ? this.fetchManifest(
+          getOperationManifestUrl(this.options.engine.serviceID, storageSecret),
+        ).catch(reason => {
+          this.logger.debug(
+            `Failed to fetch manifest using storage secret. Try using legacy manifest url ${reason.message ||
+              reason}`,
+          );
+          return this.fetchManifest(legacyManifestUrl);
+        })
+      : this.fetchManifest(legacyManifestUrl));
 
     await this.updateManifest(manifest);
   }
