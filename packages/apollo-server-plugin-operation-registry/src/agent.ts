@@ -162,7 +162,6 @@ export default class Agent {
 
   private async fetchManifest(manifestUrl: string): Promise<OperationManifest> {
     this.logger.debug(`Checking for manifest changes at ${manifestUrl}`);
-    this._timesChecked++;
 
     let response: Response;
     try {
@@ -201,6 +200,8 @@ export default class Agent {
       this.getHashedServiceId(),
       this.options.schemaHash,
     );
+
+    this._timesChecked++;
 
     const manifest = await (storageSecret
       ? this.fetchManifest(
