@@ -31,13 +31,13 @@ describe('RESTDataSource', () => {
 
   describe('constructing requests', () => {
     it('interprets paths relative to the base URL', async () => {
-      const dataSource = new class extends RESTDataSource {
+      const dataSource = new (class extends RESTDataSource {
         baseURL = 'https://api.example.com';
 
         getFoo() {
           return this.get('foo');
         }
-      }();
+      })();
 
       dataSource.httpCache = httpCache;
 
@@ -50,13 +50,13 @@ describe('RESTDataSource', () => {
     });
 
     it('interprets paths with a leading slash relative to the base URL', async () => {
-      const dataSource = new class extends RESTDataSource {
+      const dataSource = new (class extends RESTDataSource {
         baseURL = 'https://api.example.com/bar';
 
         getFoo() {
           return this.get('/foo');
         }
-      }();
+      })();
 
       dataSource.httpCache = httpCache;
 
@@ -71,13 +71,13 @@ describe('RESTDataSource', () => {
     });
 
     it('adds a trailing slash to the base URL if needed', async () => {
-      const dataSource = new class extends RESTDataSource {
+      const dataSource = new (class extends RESTDataSource {
         baseURL = 'https://example.com/api';
 
         getFoo() {
           return this.get('foo');
         }
-      }();
+      })();
 
       dataSource.httpCache = httpCache;
 
@@ -90,7 +90,7 @@ describe('RESTDataSource', () => {
     });
 
     it('allows computing a dynamic base URL', async () => {
-      const dataSource = new class extends RESTDataSource {
+      const dataSource = new (class extends RESTDataSource {
         get baseURL() {
           if (this.context.env === 'development') {
             return 'https://api-dev.example.com';
@@ -102,7 +102,7 @@ describe('RESTDataSource', () => {
         getFoo() {
           return this.get('foo');
         }
-      }();
+      })();
 
       dataSource.context = { env: 'development' };
       dataSource.httpCache = httpCache;
@@ -117,7 +117,7 @@ describe('RESTDataSource', () => {
     });
 
     it('allows resolving a base URL asynchronously', async () => {
-      const dataSource = new class extends RESTDataSource {
+      const dataSource = new (class extends RESTDataSource {
         async resolveURL(request: RequestOptions) {
           if (!this.baseURL) {
             this.baseURL = 'https://api.example.com';
@@ -128,7 +128,7 @@ describe('RESTDataSource', () => {
         getFoo() {
           return this.get('foo');
         }
-      }();
+      })();
 
       dataSource.httpCache = httpCache;
 
@@ -140,7 +140,7 @@ describe('RESTDataSource', () => {
     });
 
     it('allows passing in query string parameters', async () => {
-      const dataSource = new class extends RESTDataSource {
+      const dataSource = new (class extends RESTDataSource {
         baseURL = 'https://api.example.com';
 
         getPostsForUser(
@@ -149,7 +149,7 @@ describe('RESTDataSource', () => {
         ) {
           return this.get('posts', Object.assign({ username }, params));
         }
-      }();
+      })();
 
       dataSource.httpCache = httpCache;
 
@@ -168,7 +168,7 @@ describe('RESTDataSource', () => {
     });
 
     it('allows setting default query string parameters', async () => {
-      const dataSource = new class extends RESTDataSource {
+      const dataSource = new (class extends RESTDataSource {
         baseURL = 'https://api.example.com';
 
         willSendRequest(request: RequestOptions) {
@@ -178,7 +178,7 @@ describe('RESTDataSource', () => {
         getFoo() {
           return this.get('foo', { a: 1 });
         }
-      }();
+      })();
 
       dataSource.context = { token: 'secret' };
       dataSource.httpCache = httpCache;
@@ -194,7 +194,7 @@ describe('RESTDataSource', () => {
     });
 
     it('allows setting default fetch options', async () => {
-      const dataSource = new class extends RESTDataSource {
+      const dataSource = new (class extends RESTDataSource {
         baseURL = 'https://api.example.com';
 
         willSendRequest(request: RequestOptions) {
@@ -204,7 +204,7 @@ describe('RESTDataSource', () => {
         getFoo() {
           return this.get('foo');
         }
-      }();
+      })();
 
       dataSource.httpCache = httpCache;
 
@@ -218,7 +218,7 @@ describe('RESTDataSource', () => {
     });
 
     it('allows setting request headers', async () => {
-      const dataSource = new class extends RESTDataSource {
+      const dataSource = new (class extends RESTDataSource {
         baseURL = 'https://api.example.com';
 
         willSendRequest(request: RequestOptions) {
@@ -228,7 +228,7 @@ describe('RESTDataSource', () => {
         getFoo() {
           return this.get('foo');
         }
-      }();
+      })();
 
       dataSource.context = { token: 'secret' };
       dataSource.httpCache = httpCache;
@@ -244,13 +244,13 @@ describe('RESTDataSource', () => {
     });
 
     it('serializes a request body that is an object as JSON', async () => {
-      const dataSource = new class extends RESTDataSource {
+      const dataSource = new (class extends RESTDataSource {
         baseURL = 'https://api.example.com';
 
         postFoo(foo) {
           return this.post('foo', foo);
         }
-      }();
+      })();
 
       dataSource.httpCache = httpCache;
 
@@ -269,13 +269,13 @@ describe('RESTDataSource', () => {
     });
 
     it('serializes a request body that is an array as JSON', async () => {
-      const dataSource = new class extends RESTDataSource {
+      const dataSource = new (class extends RESTDataSource {
         baseURL = 'https://api.example.com';
 
         postFoo(foo) {
           return this.post('foo', foo);
         }
-      }();
+      })();
 
       dataSource.httpCache = httpCache;
 
@@ -294,13 +294,13 @@ describe('RESTDataSource', () => {
     });
 
     it('serializes a request body that has a toJSON method as JSON', async () => {
-      const dataSource = new class extends RESTDataSource {
+      const dataSource = new (class extends RESTDataSource {
         baseURL = 'https://api.example.com';
 
         postFoo(foo) {
           return this.post('foo', foo);
         }
-      }();
+      })();
 
       dataSource.httpCache = httpCache;
 
@@ -330,13 +330,13 @@ describe('RESTDataSource', () => {
     });
 
     it('does not serialize a request body that is not an object', async () => {
-      const dataSource = new class extends RESTDataSource {
+      const dataSource = new (class extends RESTDataSource {
         baseURL = 'https://api.example.com';
 
         postFoo(foo) {
           return this.post('foo', foo);
         }
-      }();
+      })();
 
       dataSource.httpCache = httpCache;
 
@@ -356,7 +356,7 @@ describe('RESTDataSource', () => {
     });
 
     for (const method of ['GET', 'POST', 'PATCH', 'PUT', 'DELETE']) {
-      const dataSource = new class extends RESTDataSource {
+      const dataSource = new (class extends RESTDataSource {
         baseURL = 'https://api.example.com';
 
         getFoo() {
@@ -378,7 +378,7 @@ describe('RESTDataSource', () => {
         deleteFoo() {
           return this.delete('foo');
         }
-      }();
+      })();
 
       it(`allows performing ${method} requests`, async () => {
         dataSource.httpCache = httpCache;
@@ -397,13 +397,13 @@ describe('RESTDataSource', () => {
 
   describe('response parsing', () => {
     it('returns data as parsed JSON when Content-Type is application/json', async () => {
-      const dataSource = new class extends RESTDataSource {
+      const dataSource = new (class extends RESTDataSource {
         baseURL = 'https://api.example.com';
 
         getFoo() {
           return this.get('foo');
         }
-      }();
+      })();
 
       dataSource.httpCache = httpCache;
 
@@ -418,13 +418,13 @@ describe('RESTDataSource', () => {
     });
 
     it('returns data as parsed JSON when Content-Type is application/hal+json', async () => {
-      const dataSource = new class extends RESTDataSource {
+      const dataSource = new (class extends RESTDataSource {
         baseURL = 'https://api.example.com';
 
         getFoo() {
           return this.get('foo');
         }
-      }();
+      })();
 
       dataSource.httpCache = httpCache;
 
@@ -439,13 +439,13 @@ describe('RESTDataSource', () => {
     });
 
     it('returns data as a string when Content-Type is text/plain', async () => {
-      const dataSource = new class extends RESTDataSource {
+      const dataSource = new (class extends RESTDataSource {
         baseURL = 'https://api.example.com';
 
         getFoo() {
           return this.get('foo');
         }
-      }();
+      })();
 
       dataSource.httpCache = httpCache;
 
@@ -457,13 +457,13 @@ describe('RESTDataSource', () => {
     });
 
     it('attempts to return data as a string when no Content-Type header is returned', async () => {
-      const dataSource = new class extends RESTDataSource {
+      const dataSource = new (class extends RESTDataSource {
         baseURL = 'https://api.example.com';
 
         getFoo() {
           return this.get('foo');
         }
-      }();
+      })();
 
       dataSource.httpCache = httpCache;
 
@@ -473,17 +473,35 @@ describe('RESTDataSource', () => {
 
       expect(data).toEqual('bar');
     });
+
+    it('returns data as a string when response status code is 204 no content', async () => {
+      const dataSource = new (class extends RESTDataSource {
+        baseURL = 'https://api.example.com';
+
+        getFoo() {
+          return this.get('');
+        }
+      })();
+
+      dataSource.httpCache = httpCache;
+
+      fetch.mockResponseOnce('', { 'Content-Type': 'application/json' }, 204);
+
+      const data = await dataSource.getFoo();
+
+      expect(data).toEqual('');
+    });
   });
 
   describe('memoization', () => {
     it('deduplicates requests with the same cache key', async () => {
-      const dataSource = new class extends RESTDataSource {
+      const dataSource = new (class extends RESTDataSource {
         baseURL = 'https://api.example.com';
 
         getFoo(id: number) {
           return this.get(`foo/${id}`);
         }
-      }();
+      })();
 
       dataSource.httpCache = httpCache;
 
@@ -498,13 +516,13 @@ describe('RESTDataSource', () => {
     });
 
     it('does not deduplicate requests with a different cache key', async () => {
-      const dataSource = new class extends RESTDataSource {
+      const dataSource = new (class extends RESTDataSource {
         baseURL = 'https://api.example.com';
 
         getFoo(id: number) {
           return this.get(`foo/${id}`);
         }
-      }();
+      })();
 
       dataSource.httpCache = httpCache;
 
@@ -523,13 +541,13 @@ describe('RESTDataSource', () => {
     });
 
     it('does not deduplicate non-GET requests', async () => {
-      const dataSource = new class extends RESTDataSource {
+      const dataSource = new (class extends RESTDataSource {
         baseURL = 'https://api.example.com';
 
         postFoo(id: number) {
           return this.post(`foo/${id}`);
         }
-      }();
+      })();
 
       dataSource.httpCache = httpCache;
 
@@ -542,7 +560,7 @@ describe('RESTDataSource', () => {
     });
 
     it('non-GET request removes memoized request with the same cache key', async () => {
-      const dataSource = new class extends RESTDataSource {
+      const dataSource = new (class extends RESTDataSource {
         baseURL = 'https://api.example.com';
 
         getFoo(id: number) {
@@ -552,7 +570,7 @@ describe('RESTDataSource', () => {
         postFoo(id: number) {
           return this.post(`foo/${id}`);
         }
-      }();
+      })();
 
       dataSource.httpCache = httpCache;
 
@@ -576,7 +594,7 @@ describe('RESTDataSource', () => {
     });
 
     it('allows specifying a custom cache key', async () => {
-      const dataSource = new class extends RESTDataSource {
+      const dataSource = new (class extends RESTDataSource {
         baseURL = 'https://api.example.com';
 
         cacheKeyFor(request: Request) {
@@ -588,7 +606,7 @@ describe('RESTDataSource', () => {
         getFoo(id: number, apiKey: string) {
           return this.get(`foo/${id}`, { api_key: apiKey });
         }
-      }();
+      })();
 
       dataSource.httpCache = httpCache;
 
@@ -608,13 +626,13 @@ describe('RESTDataSource', () => {
 
   describe('error handling', () => {
     it('throws an AuthenticationError when the response status is 401', async () => {
-      const dataSource = new class extends RESTDataSource {
+      const dataSource = new (class extends RESTDataSource {
         baseURL = 'https://api.example.com';
 
         getFoo() {
           return this.get('foo');
         }
-      }();
+      })();
 
       dataSource.httpCache = httpCache;
 
@@ -634,13 +652,13 @@ describe('RESTDataSource', () => {
     });
 
     it('throws a ForbiddenError when the response status is 403', async () => {
-      const dataSource = new class extends RESTDataSource {
+      const dataSource = new (class extends RESTDataSource {
         baseURL = 'https://api.example.com';
 
         getFoo() {
           return this.get('foo');
         }
-      }();
+      })();
 
       dataSource.httpCache = httpCache;
 
@@ -660,13 +678,13 @@ describe('RESTDataSource', () => {
     });
 
     it('throws an ApolloError when the response status is 500', async () => {
-      const dataSource = new class extends RESTDataSource {
+      const dataSource = new (class extends RESTDataSource {
         baseURL = 'https://api.example.com';
 
         getFoo() {
           return this.get('foo');
         }
-      }();
+      })();
 
       dataSource.httpCache = httpCache;
 
@@ -685,13 +703,13 @@ describe('RESTDataSource', () => {
     });
 
     it('puts JSON error responses on the error as an object', async () => {
-      const dataSource = new class extends RESTDataSource {
+      const dataSource = new (class extends RESTDataSource {
         baseURL = 'https://api.example.com';
 
         getFoo() {
           return this.get('foo');
         }
-      }();
+      })();
 
       dataSource.httpCache = httpCache;
 

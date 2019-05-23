@@ -84,6 +84,10 @@ functions:
         path: graphql
         method: post
         cors: true
+    - http:
+        path: graphql
+        method: get
+        cors: true
 ```
 
 ### Running the Serverless Framework
@@ -113,6 +117,7 @@ api keys:
   None
 endpoints:
   POST - https://ujt89xxyn3.execute-api.us-east-1.amazonaws.com/dev/graphql
+  GET - https://ujt89xxyn3.execute-api.us-east-1.amazonaws.com/dev/graphql
 functions:
   graphql: apollo-lambda-dev-graphql
 ```

@@ -43,8 +43,6 @@ import {
   PluginDefinition,
 } from './types';
 
-import { FormatErrorExtension } from './formatters';
-
 import { gql } from './index';
 
 import {
@@ -53,6 +51,7 @@ import {
 } from './playground';
 
 import { generateSchemaHash } from './utils/schemaHash';
+import createSHA from './utils/createSHA';
 import {
   processGraphQLRequest,
   GraphQLRequestContext,
@@ -76,20 +75,18 @@ const NoIntrospection = (context: ValidationContext) => ({
   },
 });
 
-function getEngineServiceId(engine: Config['engine']): string | undefined {
+function getEngineApiKey(engine: Config['engine']): string | undefined {
   const keyFromEnv = process.env.ENGINE_API_KEY || '';
-  if (!(engine || (engine !== false && keyFromEnv))) {
-    return;
-  }
-
-  let engineApiKey: string = '';
-
   if (typeof engine === 'object' && engine.apiKey) {
-    engineApiKey = engine.apiKey;
+    return engine.apiKey;
   } else if (keyFromEnv) {
-    engineApiKey = keyFromEnv;
+    return keyFromEnv;
   }
+  return;
+}
 
+function getEngineServiceId(engine: Config['engine']): string | undefined {
+  const engineApiKey = getEngineApiKey(engine);
   if (engineApiKey) {
     return engineApiKey.split(':', 2)[1];
   }
@@ -112,6 +109,7 @@ export class ApolloServerBase {
   private context?: Context | ContextFunction;
   private engineReportingAgent?: import('apollo-engine-reporting').EngineReportingAgent;
   private engineServiceId?: string;
+  private engineApiKeyHash?: string;
   private extensions: Array<() => GraphQLExtension>;
   private schemaHash: string;
   protected plugins: ApolloServerPlugin[] = [];
@@ -331,22 +329,18 @@ export class ApolloServerBase {
     // or cacheControl.
     this.extensions = [];
 
-    const debugDefault =
-      process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test';
-    const debug =
-      requestOptions.debug !== undefined ? requestOptions.debug : debugDefault;
-
-    // Error formatting should happen after the engine reporting agent, so that
-    // engine gets the unmasked errors if necessary
-    this.extensions.push(
-      () => new FormatErrorExtension(requestOptions.formatError, debug),
-    );
-
     // In an effort to avoid over-exposing the API key itself, extract the
     // service ID from the API key for plugins which only needs service ID.
     // The truthyness of this value can also be used in other forks of logic
     // related to Engine, as is the case with EngineReportingAgent just below.
     this.engineServiceId = getEngineServiceId(engine);
+
+    const apiKey = getEngineApiKey(engine);
+    if (apiKey) {
+      this.engineApiKeyHash = createSHA('sha256')
+        .update(apiKey)
+        .digest('hex');
+    }
 
     if (this.engineServiceId) {
       const { EngineReportingAgent } = require('apollo-engine-reporting');
@@ -413,6 +407,7 @@ export class ApolloServerBase {
             schemaHash: this.schemaHash,
             engine: {
               serviceID: this.engineServiceId,
+              apiKeyHash: this.engineApiKeyHash,
             },
             persistedQueries: this.requestOptions.persistedQueries,
           }),

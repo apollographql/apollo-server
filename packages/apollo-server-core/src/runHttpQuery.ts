@@ -7,6 +7,7 @@ import {
   formatApolloErrors,
   PersistedQueryNotSupportedError,
   PersistedQueryNotFoundError,
+  hasPersistedQueryError,
 } from 'apollo-server-errors';
 import {
   processGraphQLRequest,
@@ -70,11 +71,19 @@ export class HttpQueryError extends Error {
 /**
  * If options is specified, then the errors array will be formatted
  */
-function throwHttpGraphQLError<E extends Error>(
+export function throwHttpGraphQLError<E extends Error>(
   statusCode: number,
   errors: Array<E>,
   options?: Pick<GraphQLOptions, 'debug' | 'formatError'>,
 ): never {
+  const defaultHeaders = { 'Content-Type': 'application/json' };
+  // force no-cache on PersistedQuery errors
+  const headers = hasPersistedQueryError(errors)
+    ? {
+        ...defaultHeaders,
+        'Cache-Control': 'private, no-cache, must-revalidate',
+      }
+    : defaultHeaders;
   throw new HttpQueryError(
     statusCode,
     prettyJSONStringify({
@@ -86,9 +95,7 @@ function throwHttpGraphQLError<E extends Error>(
         : errors,
     }),
     true,
-    {
-      'Content-Type': 'application/json',
-    },
+    headers,
   );
 }
 
@@ -148,6 +155,7 @@ export async function runHttpQuery(
     rootValue: options.rootValue,
     context: options.context || {},
     validationRules: options.validationRules,
+    executor: options.executor,
     fieldResolver: options.fieldResolver,
 
     // FIXME: Use proper option types to ensure this
@@ -280,6 +288,7 @@ export async function processHTTPRequest<TContext>(
 
       try {
         const requestContext = buildRequestContext(request);
+
         const response = await processGraphQLRequest(options, requestContext);
 
         // This code is run on parse/validation errors and any other error that
