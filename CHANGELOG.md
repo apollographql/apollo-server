@@ -2,7 +2,7 @@
 
 # vNEXT
 
-- extensions: add setParsed to ensure we get an operation signature and capture errors in extensions when they occur in unexpected locations [PR#2659](https://github.com/apollographql/apollo-server/pull/2659)
+- `apollo-server`: Support `onHealthCheck` in the `ApolloServer` constructor in the same way as `cors` is supported.  This contrasts with the `-express`, `-hapi`, etc. variations which accept this parameter via their `applyMiddleware` methods and will remain as-is.  [PR #2672](https://github.com/apollographql/apollo-server/pull/2672)
 
 ### v2.5.0
 
