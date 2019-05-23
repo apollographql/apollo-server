@@ -5,11 +5,12 @@ import {
   runHttpQuery,
   convertNodeHttpToRequest,
 } from 'apollo-server-core';
+import { ValueOrPromise } from 'apollo-server-env';
 
 export interface ExpressGraphQLOptionsFunction {
-  (req?: express.Request, res?: express.Response):
-    | GraphQLOptions
-    | Promise<GraphQLOptions>;
+  (req?: express.Request, res?: express.Response): ValueOrPromise<
+    GraphQLOptions
+  >;
 }
 
 // Design principles:

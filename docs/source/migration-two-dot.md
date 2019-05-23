@@ -55,7 +55,7 @@ Check out the following changes for Apollo Server 2.0.
 
 With the middleware option used by Apollo Server 1.0 users, it is necessary to install the 2.0 version of `apollo-server-express`.  To do this, install via the terminal:
 
-    npm install --save apollo-server-express graphql
+    npm install apollo-server-express graphql
 
 The changes are best shown by comparing the before and after of the application.
 
@@ -136,7 +136,7 @@ For these cases, it's possible to remove the existing `apollo-server-{integratio
 
     npm uninstall --save apollo-server-express
 
-    npm install --save apollo-server graphql
+    npm install apollo-server graphql
 
 An implementation with this pattern would look like:
 
@@ -288,7 +288,7 @@ Apollo Server 2 removes the `logFunction` to reduce the exposure of internal imp
 
 <h2 id="graphiql">Replacing GraphiQL</h2>
 
-Apollo Server 2 ships with GraphQL Playground instead of GraphiQL and collocates the gui with the endpoint. GraphQL playground can be customized in the following manner.
+Apollo Server 2 ships with GraphQL Playground instead of GraphiQL and collocates the GUI with the endpoint. GraphQL playground can be customized in the following manner.
 
 ```js
 const { ApolloServer, gql } = require('apollo-server-express');
@@ -297,11 +297,7 @@ const server = new ApolloServer({
   // These will be defined for both new or existing servers
   typeDefs,
   resolvers,
-});
-
-server.applyMiddleware({
-  app, // app is from an existing express app
-  gui: {
+  playground: {
     endpoint?: string
     subscriptionEndpoint?: string
     tabs: [
@@ -313,7 +309,11 @@ server.applyMiddleware({
         headers?: { [key: string]: string }
       },
     ],
-  }
+  },
+});
+
+server.applyMiddleware({
+  app, // app is from an existing express app
 });
 
 app.listen({ port: 4000 }, () =>

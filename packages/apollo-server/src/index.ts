@@ -4,12 +4,11 @@
 // you're not using express or your version doesn't quite match up.
 import express from 'express';
 import http from 'http';
-import net from 'net';
 import {
   ApolloServer as ApolloServerBase,
   CorsOptions,
+  ApolloServerExpressConfig,
 } from 'apollo-server-express';
-import { Config } from 'apollo-server-core';
 
 export * from './exports';
 
@@ -27,7 +26,11 @@ export class ApolloServer extends ApolloServerBase {
   private httpServer?: http.Server;
   private cors?: CorsOptions | boolean;
 
-  constructor(config: Config & { cors?: CorsOptions | boolean }) {
+  constructor(
+    config: ApolloServerExpressConfig & {
+      cors?: CorsOptions | boolean;
+    },
+  ) {
     super(config);
     this.cors = config && config.cors;
   }
@@ -37,7 +40,7 @@ export class ApolloServer extends ApolloServerBase {
     subscriptionsPath?: string,
   ): ServerInfo {
     const serverInfo: any = {
-      ...(server.address() as net.AddressInfo),
+      ...server.address(),
       server,
       subscriptionsPath,
     };
@@ -78,8 +81,6 @@ export class ApolloServer extends ApolloServerBase {
 
   // Listen takes the same arguments as http.Server.listen.
   public async listen(...opts: Array<any>): Promise<ServerInfo> {
-    await this.willStart();
-
     // This class is the easy mode for people who don't create their own express
     // object, so we have to create it.
     const app = express();

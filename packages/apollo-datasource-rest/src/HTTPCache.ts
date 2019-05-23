@@ -2,11 +2,21 @@ import { fetch, Request, Response, Headers } from 'apollo-server-env';
 
 import CachePolicy = require('http-cache-semantics');
 
-import { KeyValueCache, InMemoryLRUCache } from 'apollo-server-caching';
+import {
+  KeyValueCache,
+  InMemoryLRUCache,
+  PrefixingKeyValueCache,
+} from 'apollo-server-caching';
 import { CacheOptions } from './RESTDataSource';
 
 export class HTTPCache {
-  constructor(private keyValueCache: KeyValueCache = new InMemoryLRUCache()) {}
+  private keyValueCache: KeyValueCache;
+  constructor(keyValueCache: KeyValueCache = new InMemoryLRUCache()) {
+    this.keyValueCache = new PrefixingKeyValueCache(
+      keyValueCache,
+      'httpcache:',
+    );
+  }
 
   async fetch(
     request: Request,
@@ -19,7 +29,7 @@ export class HTTPCache {
   ): Promise<Response> {
     const cacheKey = options.cacheKey ? options.cacheKey : request.url;
 
-    const entry = await this.keyValueCache.get(`httpcache:${cacheKey}`);
+    const entry = await this.keyValueCache.get(cacheKey);
     if (!entry) {
       const response = await fetch(request);
 
@@ -106,7 +116,10 @@ export class HTTPCache {
       return response;
     }
 
-    let ttl = ttlOverride || Math.round(policy.timeToLive() / 1000);
+    let ttl =
+      ttlOverride === undefined
+        ? Math.round(policy.timeToLive() / 1000)
+        : ttlOverride;
     if (ttl <= 0) return response;
 
     // If a response can be revalidated, we don't want to remove it from the cache right after it expires.
@@ -122,7 +135,7 @@ export class HTTPCache {
       body,
     });
 
-    await this.keyValueCache.set(`httpcache:${cacheKey}`, entry, {
+    await this.keyValueCache.set(cacheKey, entry, {
       ttl,
     });
 
