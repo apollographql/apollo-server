@@ -3,6 +3,7 @@
 # vNEXT
 
 - `apollo-server`: Support `onHealthCheck` in the `ApolloServer` constructor in the same way as `cors` is supported.  This contrasts with the `-express`, `-hapi`, etc. variations which accept this parameter via their `applyMiddleware` methods and will remain as-is.  [PR #2672](https://github.com/apollographql/apollo-server/pull/2672)
+- core: Expose SHA-256 hex hash digest of the Engine API key to plugins, when available, as `engine.apiKeyHash`. [PR# 2685](https://github.com/apollographql/apollo-server/pull/2685)
 
 ### v2.5.0
 
