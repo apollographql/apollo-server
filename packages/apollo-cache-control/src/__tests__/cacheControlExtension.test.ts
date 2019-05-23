@@ -25,34 +25,35 @@ describe('CacheControlExtension', () => {
         },
         data: { test: 'test' },
       };
-      jest.spyOn(graphqlResponse.http!.headers, 'set');
     });
 
     it('sets cache-control header', () => {
       cacheControlExtension.willSendResponse &&
         cacheControlExtension.willSendResponse({ graphqlResponse });
-      expect(graphqlResponse.http!.headers.set).toHaveBeenCalled();
+      expect(graphqlResponse.http!.headers.get('Cache-Control')).toBe(
+        'max-age=300, public',
+      );
     });
 
     it('does not set cache-control header if graphqlResponse has errors', () => {
       graphqlResponse.errors = [new GraphQLError('Test Error')];
       cacheControlExtension.willSendResponse &&
         cacheControlExtension.willSendResponse({ graphqlResponse });
-      expect(graphqlResponse.http!.headers.set).not.toHaveBeenCalled();
+      expect(graphqlResponse.http!.headers.get('Cache-Control')).toBeNull();
     });
 
     it('does not set cache-control header if there is no data', () => {
       graphqlResponse.data = undefined;
       cacheControlExtension.willSendResponse &&
         cacheControlExtension.willSendResponse({ graphqlResponse });
-      expect(graphqlResponse.http!.headers.set).not.toHaveBeenCalled();
+      expect(graphqlResponse.http!.headers.get('Cache-Control')).toBeNull();
     });
 
     it('does not set cache-control header if there is no overall cache policy', () => {
       cacheControlExtension.computeOverallCachePolicy = () => undefined;
       cacheControlExtension.willSendResponse &&
         cacheControlExtension.willSendResponse({ graphqlResponse });
-      expect(graphqlResponse.http!.headers.set).not.toHaveBeenCalled();
+      expect(graphqlResponse.http!.headers.get('Cache-Control')).toBeNull();
     });
 
     it('does not set cache-control header if the overall cache policy has max-age set to 0', () => {
@@ -62,7 +63,7 @@ describe('CacheControlExtension', () => {
       });
       cacheControlExtension.willSendResponse &&
         cacheControlExtension.willSendResponse({ graphqlResponse });
-      expect(graphqlResponse.http!.headers.set).not.toHaveBeenCalled();
+      expect(graphqlResponse.http!.headers.get('Cache-Control')).toBeNull();
     });
   });
 
