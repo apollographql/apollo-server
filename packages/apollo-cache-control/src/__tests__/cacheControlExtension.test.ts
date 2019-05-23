@@ -35,25 +35,25 @@ describe('CacheControlExtension', () => {
       );
     });
 
-    it('does not set cache-control header if graphqlResponse has errors', () => {
-      graphqlResponse.errors = [new GraphQLError('Test Error')];
+    const shouldNotSetCacheControlHeaders = () => {
       cacheControlExtension.willSendResponse &&
         cacheControlExtension.willSendResponse({ graphqlResponse });
       expect(graphqlResponse.http!.headers.get('Cache-Control')).toBeNull();
+    };
+
+    it('does not set cache-control header if graphqlResponse has errors', () => {
+      graphqlResponse.errors = [new GraphQLError('Test Error')];
+      shouldNotSetCacheControlHeaders();
     });
 
     it('does not set cache-control header if there is no data', () => {
       graphqlResponse.data = undefined;
-      cacheControlExtension.willSendResponse &&
-        cacheControlExtension.willSendResponse({ graphqlResponse });
-      expect(graphqlResponse.http!.headers.get('Cache-Control')).toBeNull();
+      shouldNotSetCacheControlHeaders();
     });
 
     it('does not set cache-control header if there is no overall cache policy', () => {
       cacheControlExtension.computeOverallCachePolicy = () => undefined;
-      cacheControlExtension.willSendResponse &&
-        cacheControlExtension.willSendResponse({ graphqlResponse });
-      expect(graphqlResponse.http!.headers.get('Cache-Control')).toBeNull();
+      shouldNotSetCacheControlHeaders();
     });
 
     it('does not set cache-control header if the overall cache policy has max-age set to 0', () => {
@@ -61,9 +61,7 @@ describe('CacheControlExtension', () => {
         maxAge: 0,
         scope: CacheScope.Public,
       });
-      cacheControlExtension.willSendResponse &&
-        cacheControlExtension.willSendResponse({ graphqlResponse });
-      expect(graphqlResponse.http!.headers.get('Cache-Control')).toBeNull();
+      shouldNotSetCacheControlHeaders();
     });
   });
 
