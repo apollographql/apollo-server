@@ -295,7 +295,10 @@ export async function processHTTPRequest<TContext>(
         // doesn't reach GraphQL execution
         if (response.errors && typeof response.data === 'undefined') {
           // don't include options, since the errors have already been formatted
-          return throwHttpGraphQLError(400, response.errors as any);
+          return throwHttpGraphQLError(
+            (response.http && response.http.status) || 400,
+            response.errors as any,
+          );
         }
 
         if (response.http) {

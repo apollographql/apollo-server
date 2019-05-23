@@ -28,13 +28,19 @@ import {
   VERSION,
 } from 'apollo-link-persisted-queries';
 
-import { createApolloFetch, ApolloFetch, GraphQLRequest } from 'apollo-fetch';
+import {
+  createApolloFetch,
+  ApolloFetch,
+  GraphQLRequest,
+  ParsedResponse,
+} from 'apollo-fetch';
 import {
   AuthenticationError,
   UserInputError,
   gql,
   Config,
   ApolloServerBase,
+  PluginDefinition,
 } from 'apollo-server-core';
 import { Headers } from 'apollo-server-env';
 import { GraphQLExtension, GraphQLResponse } from 'graphql-extensions';
@@ -391,6 +397,62 @@ export function testApolloServer<AS extends ApolloServerBase>(
           });
           expect(result.errors).toBeUndefined();
         });
+      });
+    });
+
+    describe('Plugins', () => {
+      let apolloFetch: ApolloFetch;
+      let apolloFetchResponse: ParsedResponse;
+
+      const setupApolloServerAndFetchPairForPlugins = async (
+        plugins: PluginDefinition[] = [],
+      ) => {
+        const { url: uri } = await createApolloServer({
+          typeDefs: gql`
+            type Query {
+              justAField: String
+            }
+          `,
+          plugins,
+        });
+
+        apolloFetch = createApolloFetch({ uri })
+          // Store the response so we can inspect it.
+          .useAfter(({ response }, next) => {
+            apolloFetchResponse = response;
+            next();
+          });
+      };
+
+      it('returns correct status code for a normal operation', async () => {
+        await setupApolloServerAndFetchPairForPlugins();
+
+        const result = await apolloFetch({ query: '{ justAField }' });
+        expect(result.errors).toBeUndefined();
+        expect(apolloFetchResponse.status).toEqual(200);
+      });
+
+      it('allows setting a custom status code for an error', async () => {
+        await setupApolloServerAndFetchPairForPlugins([
+          {
+            requestDidStart() {
+              return {
+                didResolveOperation() {
+                  throw new Error('known_error');
+                },
+                willSendResponse({ response: { http, errors } }) {
+                  if (errors[0].message === 'known_error') {
+                    http.status = 403;
+                  }
+                },
+              };
+            },
+          },
+        ]);
+
+        const result = await apolloFetch({ query: '{ justAField }' });
+        expect(result.errors).toBeDefined();
+        expect(apolloFetchResponse.status).toEqual(403);
       });
     });
 
