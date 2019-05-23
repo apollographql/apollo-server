@@ -1,7 +1,7 @@
 # Changelog
 
 # vNEXT
-
+- **BREAKING**: Update `apollo-server-cache-redis` to support Redis Standalone, Cluster and Sentinel modes. [PR #1770](https://github.com/apollographql/apollo-server/pull/1770). This is a breaking change on `apollo-server-cache-redis` package since it is now based on [ioredis](https://github.com/luin/ioredis) instead of [node_redis](https://github.com/NodeRedis/node_redis). Although this update is compatible with the most common uses of `apollo-server-cache-redis`, please check the [options supported by ioredis constructor](https://github.com/luin/ioredis/blob/master/API.md#new-redisport-host-options) while updating to this version (which are passed directly from `RedisCache` to the new redis adapter).
 - `apollo-server`: Support `onHealthCheck` in the `ApolloServer` constructor in the same way as `cors` is supported.  This contrasts with the `-express`, `-hapi`, etc. variations which accept this parameter via their `applyMiddleware` methods and will remain as-is.  [PR #2672](https://github.com/apollographql/apollo-server/pull/2672)
 - core: Expose SHA-256 hex hash digest of the Engine API key to plugins, when available, as `engine.apiKeyHash`. [PR# 2685](https://github.com/apollographql/apollo-server/pull/2685)
 - `apollo-datasource-rest`: If another `Content-type` is already set on the response, don't overwrite it with `application/json`, allowing the user's initial `Content-type` to prevail. [PR #2520](https://github.com/apollographql/apollo-server/issues/2035)
@@ -125,7 +125,6 @@ client reference ID, Apollo Server will now default to the values present in the
 of the request (`apollographql-client-name`, `apollographql-client-reference-id` and
 `apollographql-client-version` respectively).  As a last resort, when those headers are not set,
 the query extensions' `clientInfo` values will be used. [PR #1960](https://github.com/apollographql/apollo-server/pull/1960)
-- Update `apollo-server-cache-redis` package to support Redis Standalone, Cluster and Sentinel modes. [PR #1770](https://github.com/apollographql/apollo-server/pull/1770)
 
 ### v2.2.2
 
