@@ -1,4 +1,6 @@
-import { ResponsePath } from 'graphql';
+import { ResponsePath, GraphQLError } from 'graphql';
+import { GraphQLResponse } from 'graphql-extensions';
+import { Headers } from 'apollo-server-env';
 import { CacheControlExtension, CacheScope } from '../';
 
 describe('CacheControlExtension', () => {
@@ -6,6 +8,62 @@ describe('CacheControlExtension', () => {
 
   beforeEach(() => {
     cacheControlExtension = new CacheControlExtension();
+  });
+
+  describe('willSendResponse', () => {
+    let graphqlResponse: GraphQLResponse;
+
+    beforeEach(() => {
+      cacheControlExtension.options.calculateHttpHeaders = true;
+      cacheControlExtension.computeOverallCachePolicy = () => ({
+        maxAge: 300,
+        scope: CacheScope.Public,
+      });
+      graphqlResponse = {
+        http: {
+          headers: new Headers(),
+        },
+        data: { test: 'test' },
+      };
+      jest.spyOn(graphqlResponse.http!.headers, 'set');
+    });
+
+    it('sets cache-control header', () => {
+      cacheControlExtension.willSendResponse &&
+        cacheControlExtension.willSendResponse({ graphqlResponse });
+      expect(graphqlResponse.http!.headers.set).toHaveBeenCalled();
+    });
+
+    it('does not set cache-control header if graphqlResponse has errors', () => {
+      graphqlResponse.errors = [new GraphQLError('Test Error')];
+      cacheControlExtension.willSendResponse &&
+        cacheControlExtension.willSendResponse({ graphqlResponse });
+      expect(graphqlResponse.http!.headers.set).not.toHaveBeenCalled();
+    });
+
+    it('does not set cache-control header if there is no data', () => {
+      graphqlResponse.data = undefined;
+      cacheControlExtension.willSendResponse &&
+        cacheControlExtension.willSendResponse({ graphqlResponse });
+      expect(graphqlResponse.http!.headers.set).not.toHaveBeenCalled();
+    });
+
+    it('does not set cache-control header if there is no overall cache policy', () => {
+      cacheControlExtension.computeOverallCachePolicy = () => undefined;
+      cacheControlExtension.willSendResponse &&
+        cacheControlExtension.willSendResponse({ graphqlResponse });
+      expect(graphqlResponse.http!.headers.set).not.toHaveBeenCalled();
+    });
+
+    it('does not set cache-control header if the overall cache policy has max-age set to 0', () => {
+      cacheControlExtension.computeOverallCachePolicy = () => ({
+        maxAge: 0,
+        scope: CacheScope.Public,
+      });
+      cacheControlExtension.willSendResponse &&
+        cacheControlExtension.willSendResponse({ graphqlResponse });
+      expect(graphqlResponse.http!.headers.set).not.toHaveBeenCalled();
+    });
   });
 
   describe('computeOverallCachePolicy', () => {
