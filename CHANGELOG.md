@@ -3,7 +3,7 @@
 # vNEXT
 
 - core: Expose SHA-256 hex hash digest of the Engine API key to plugins, when available, as `engine.apiKeyHash`. [PR# 2685](https://github.com/apollographql/apollo-server/pull/2685)
-- `apollo-datasource-rest`: Allow custom `Content-Type` header to be set, instead of always defaulting to `application/json` [PR #2520](https://github.com/apollographql/apollo-server/issues/2035)
+- `apollo-datasource-rest`: If another `Content-type` is already set on the response, don't overwrite it with `application/json`, allowing the user's initial `Content-type` to prevail. [PR #2520](https://github.com/apollographql/apollo-server/issues/2035)
 
 ### v2.5.0
 
@@ -22,7 +22,6 @@
 - `apollo-server-express`: Fix Playground URL when Apollo Server is mounted inside of another Express app by utilizing `req.originalUrl`. [PR #2451](https://github.com/apollographql/apollo-server/pull/2451)
 - `apollo-datasource-rest`: Correctly allow a TTL value of `0` to represent "not-cacheable". [PR #2588](https://github.com/apollographql/apollo-server/pull/2588)
 - `apollo-datasource-rest`: Fix `Invalid argument` in IE11, when `this.headers` is `undefined`. [PR #2607](https://github.com/apollographql/apollo-server/pull/2607)
->>>>>>> master
 
 ### v2.4.8
 
