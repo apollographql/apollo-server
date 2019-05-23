@@ -1,6 +1,6 @@
 {
   "name": "apollo-engine-reporting",
-  "version": "1.2.0-alpha.3",
+  "version": "1.2.0-alpha.4",
   "description": "Send reports about your GraphQL services to Apollo Engine",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
