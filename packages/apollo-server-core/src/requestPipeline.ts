@@ -216,14 +216,9 @@ export async function processGraphQLRequest<TContext>(
       }
     }
 
-    if (requestContext.document) {
-      extensionStack.setParsedDocumentAndOperationName(
-        requestContext.document,
-        request.operationName,
-      );
-    } else {
-      // If we still don't have a document, we'll need to parse and validate it.
-      // With success, we'll attempt to save it into the store for future use.
+    // If we still don't have a document, we'll need to parse and validate it.
+    // With success, we'll attempt to save it into the store for future use.
+    if (!requestContext.document) {
       const parsingDidEnd = await dispatcher.invokeDidStartHook(
         'parsingDidStart',
         requestContext as WithRequired<
@@ -234,10 +229,6 @@ export async function processGraphQLRequest<TContext>(
 
       try {
         requestContext.document = parse(query, config.parseOptions);
-        extensionStack.setParsedDocumentAndOperationName(
-          requestContext.document,
-          request.operationName,
-        );
         parsingDidEnd();
       } catch (syntaxError) {
         parsingDidEnd(syntaxError);
@@ -246,7 +237,10 @@ export async function processGraphQLRequest<TContext>(
 
       const validationDidEnd = await dispatcher.invokeDidStartHook(
         'validationDidStart',
-        requestContext as WithRequired<typeof requestContext, 'document'>,
+        requestContext as WithRequired<
+          typeof requestContext,
+          'document' | 'source' | 'metrics'
+        >,
       );
 
       const validationErrors = validate(requestContext.document);
@@ -297,7 +291,7 @@ export async function processGraphQLRequest<TContext>(
       'didResolveOperation',
       requestContext as WithRequired<
         typeof requestContext,
-        'document' | 'operation' | 'operationName'
+        'document' | 'source' | 'operation' | 'operationName' | 'metrics'
       >,
     );
 
@@ -315,7 +309,7 @@ export async function processGraphQLRequest<TContext>(
       'responseForOperation',
       requestContext as WithRequired<
         typeof requestContext,
-        'document' | 'operation' | 'operationName'
+        'document' | 'source' | 'operation' | 'operationName' | 'metrics'
       >,
     );
     if (response == null) {
@@ -323,7 +317,7 @@ export async function processGraphQLRequest<TContext>(
         'executionDidStart',
         requestContext as WithRequired<
           typeof requestContext,
-          'document' | 'operation' | 'operationName' | 'metrics'
+          'document' | 'source' | 'operation' | 'operationName' | 'metrics'
         >,
       );
 
@@ -381,11 +375,6 @@ export async function processGraphQLRequest<TContext>(
     }
 
     return sendResponse(response);
-  } catch (error) {
-    // an error was thrown during the parse, validate, execute phases, so we
-    // need to report the errors
-    extensionStack.didEncounterErrors([error]);
-    throw error;
   } finally {
     requestDidEnd();
   }
@@ -472,7 +461,10 @@ export async function processGraphQLRequest<TContext>(
     }).graphqlResponse;
     await dispatcher.invokeHookAsync(
       'willSendResponse',
-      requestContext as WithRequired<typeof requestContext, 'response'>,
+      requestContext as WithRequired<
+        typeof requestContext,
+        'metrics' | 'response'
+      >,
     );
     return requestContext.response!;
   }
