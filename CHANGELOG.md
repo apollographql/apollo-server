@@ -1,10 +1,13 @@
 # Changelog
 
-# vNEXT
-- **BREAKING**: Update `apollo-server-cache-redis` to support Redis Standalone, Cluster and Sentinel modes. [PR #1770](https://github.com/apollographql/apollo-server/pull/1770). This is a breaking change on `apollo-server-cache-redis` package since it is now based on [ioredis](https://github.com/luin/ioredis) instead of [node_redis](https://github.com/NodeRedis/node_redis). Although this update is compatible with the most common uses of `apollo-server-cache-redis`, please check the [options supported by ioredis constructor](https://github.com/luin/ioredis/blob/master/API.md#new-redisport-host-options) while updating to this version (which are passed directly from `RedisCache` to the new redis adapter).
+### v2.6.0
+
+- `apollo-server-lambda`: Set `callbackWaitsForEmptyEventLoop` to `false` for `OPTIONS` requests to return as soon as the `callback` is triggered instead of waiting for the event loop to empty. [PR #2638](https://github.com/apollographql/apollo-server/pull/2638)
 - `apollo-server`: Support `onHealthCheck` in the `ApolloServer` constructor in the same way as `cors` is supported.  This contrasts with the `-express`, `-hapi`, etc. variations which accept this parameter via their `applyMiddleware` methods and will remain as-is.  [PR #2672](https://github.com/apollographql/apollo-server/pull/2672)
 - core: Expose SHA-256 hex hash digest of the Engine API key to plugins, when available, as `engine.apiKeyHash`. [PR# 2685](https://github.com/apollographql/apollo-server/pull/2685)
 - `apollo-datasource-rest`: If another `Content-type` is already set on the response, don't overwrite it with `application/json`, allowing the user's initial `Content-type` to prevail. [PR #2520](https://github.com/apollographql/apollo-server/issues/2035)
+- `apollo-cache-control`: Do not respond with `Cache-control` headers if the HTTP response contains `errors`. [PR #2715](https://github.com/apollographql/apollo-server/pull/2715)
+- `apollo-server-cache-redis`: **BREAKING FOR USERS OF `apollo-server-cache-redis`** (This is a package that must be updated separately but shares the same `CHANGELOG.md` with Apollo Server itself.)  A new **major** version of this package has been published and updated to support Redis Standalone, Cluster and Sentinel modes.  This is a breaking change since it is now based on [`ioredis`](https://github.com/luin/ioredis) instead of [`node_redis`](https://github.com/NodeRedis/node_redis).  Although this update is compatible with the most common uses of `apollo-server-cache-redis`, please check the [options supported by `ioredis`](https://github.com/luin/ioredis/blob/master/API.md#new-redisport-host-options) while updating to this version.  The constructor options are passed directly from `RedisCache` to the new Redis adapter.  The pre-1.0 versions should continue to work with Apollo Server without modification. [PR #1770](https://github.com/apollographql/apollo-server/pull/1770)
 
 ### v2.5.0
 
@@ -23,6 +26,8 @@
 - `apollo-server-express`: Fix Playground URL when Apollo Server is mounted inside of another Express app by utilizing `req.originalUrl`. [PR #2451](https://github.com/apollographql/apollo-server/pull/2451)
 - `apollo-datasource-rest`: Correctly allow a TTL value of `0` to represent "not-cacheable". [PR #2588](https://github.com/apollographql/apollo-server/pull/2588)
 - `apollo-datasource-rest`: Fix `Invalid argument` in IE11, when `this.headers` is `undefined`. [PR #2607](https://github.com/apollographql/apollo-server/pull/2607)
+
+- Don't add `cacheControl` directive if one has already been defined. [PR #2428](https://github.com/apollographql/apollo-server/pull/2428)
 
 ### v2.4.8
 

@@ -9,7 +9,7 @@ export {
 // This specifies the version of `graphql-playground-react` that will be served
 // from `graphql-playground-html`.  It's passed to ``graphql-playground-html`'s
 // renderPlaygroundPage` via the integration packages' playground configuration.
-const playgroundVersion = '1.7.10';
+const playgroundVersion = '1.7.25';
 
 // https://stackoverflow.com/a/51365037
 type RecursivePartial<T> = {
