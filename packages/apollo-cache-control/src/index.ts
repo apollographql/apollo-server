@@ -153,18 +153,17 @@ export class CacheControlExtension<TContext = any>
   }
 
   public willSendResponse?(o: { graphqlResponse: GraphQLResponse }) {
-    if (this.options.calculateHttpHeaders && o.graphqlResponse.http) {
-      const overallCachePolicy = this.computeOverallCachePolicy();
+    if (
+      !this.options.calculateHttpHeaders ||
+      !o.graphqlResponse.http ||
+      o.graphqlResponse.errors
+    ) {
+      return;
+    }
 
-      if (
-        o.graphqlResponse.errors ||
-        !o.graphqlResponse.data ||
-        !overallCachePolicy ||
-        overallCachePolicy.maxAge <= 0
-      ) {
-        return;
-      }
+    const overallCachePolicy = this.computeOverallCachePolicy();
 
+    if (overallCachePolicy) {
       o.graphqlResponse.http.headers.set(
         'Cache-Control',
         `max-age=${

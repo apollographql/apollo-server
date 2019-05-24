@@ -35,33 +35,25 @@ describe('CacheControlExtension', () => {
       );
     });
 
-    const shouldNotSetCacheControlHeaders = () => {
+    const shouldNotSetCacheControlHeader = () => {
       cacheControlExtension.willSendResponse &&
         cacheControlExtension.willSendResponse({ graphqlResponse });
       expect(graphqlResponse.http!.headers.get('Cache-Control')).toBeNull();
     };
 
-    it('does not set cache-control header if graphqlResponse has errors', () => {
-      graphqlResponse.errors = [new GraphQLError('Test Error')];
-      shouldNotSetCacheControlHeaders();
+    it('does not set cache-control header if calculateHttpHeaders is set to false', () => {
+      cacheControlExtension.options.calculateHttpHeaders = false;
+      shouldNotSetCacheControlHeader();
     });
 
-    it('does not set cache-control header if there is no data', () => {
-      graphqlResponse.data = undefined;
-      shouldNotSetCacheControlHeaders();
+    it('does not set cache-control header if graphqlResponse has errors', () => {
+      graphqlResponse.errors = [new GraphQLError('Test Error')];
+      shouldNotSetCacheControlHeader();
     });
 
     it('does not set cache-control header if there is no overall cache policy', () => {
       cacheControlExtension.computeOverallCachePolicy = () => undefined;
-      shouldNotSetCacheControlHeaders();
-    });
-
-    it('does not set cache-control header if the overall cache policy has max-age set to 0', () => {
-      cacheControlExtension.computeOverallCachePolicy = () => ({
-        maxAge: 0,
-        scope: CacheScope.Public,
-      });
-      shouldNotSetCacheControlHeaders();
+      shouldNotSetCacheControlHeader();
     });
   });
 
