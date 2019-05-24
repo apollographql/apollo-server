@@ -1,6 +1,6 @@
 {
   "name": "apollo-server-cache-redis",
-  "version": "0.4.0",
+  "version": "1.0.0-alpha.0",
   "author": "opensource@apollographql.com",
   "license": "MIT",
   "repository": {
@@ -14,12 +14,12 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "engines": {
-    "node": ">=6"
+    "node": ">=8"
   },
   "dependencies": {
     "apollo-server-caching": "file:../apollo-server-caching",
     "apollo-server-env": "file:../apollo-server-env",
     "dataloader": "^1.4.0",
-    "redis": "^2.8.0"
+    "ioredis": "^4.0.0"
   }
 }
