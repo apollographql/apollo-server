@@ -236,7 +236,7 @@ export async function processGraphQLRequest<TContext>(
         parsingDidEnd();
       } catch (syntaxError) {
         parsingDidEnd(syntaxError);
-        return sendErrorResponse(syntaxError, SyntaxError);
+        return await sendErrorResponse(syntaxError, SyntaxError);
       }
 
       const validationDidEnd = await dispatcher.invokeDidStartHook(
@@ -253,7 +253,7 @@ export async function processGraphQLRequest<TContext>(
         validationDidEnd();
       } else {
         validationDidEnd(validationErrors);
-        return sendErrorResponse(validationErrors, ValidationError);
+        return await sendErrorResponse(validationErrors, ValidationError);
       }
 
       if (config.documentStore) {
@@ -309,7 +309,7 @@ export async function processGraphQLRequest<TContext>(
       if (err instanceof HttpQueryError) {
         throw err;
       }
-      return sendErrorResponse(err);
+      return await sendErrorResponse(err);
     }
 
     // Now that we've gone through the pre-execution phases of the request
@@ -345,7 +345,7 @@ export async function processGraphQLRequest<TContext>(
         >);
 
         if (result.errors) {
-          extensionStack.didEncounterErrors(result.errors);
+          await didEncounterErrors(result.errors);
         }
 
         response = {
@@ -356,7 +356,7 @@ export async function processGraphQLRequest<TContext>(
         executionDidEnd();
       } catch (executionError) {
         executionDidEnd(executionError);
-        return sendErrorResponse(executionError);
+        return await sendErrorResponse(executionError);
       }
     }
 
@@ -486,7 +486,20 @@ export async function processGraphQLRequest<TContext>(
     return requestContext.response!;
   }
 
-  function sendErrorResponse(
+  async function didEncounterErrors(errors: ReadonlyArray<GraphQLError>) {
+    requestContext.errors = errors;
+    extensionStack.didEncounterErrors(errors);
+
+    return await dispatcher.invokeHookAsync(
+      'didEncounterErrors',
+      requestContext as WithRequired<
+        typeof requestContext,
+        'metrics' | 'source' | 'errors'
+      >,
+    );
+  }
+
+  async function sendErrorResponse(
     errorOrErrors: ReadonlyArray<GraphQLError> | GraphQLError,
     errorClass?: typeof ApolloError,
   ) {
@@ -495,7 +508,7 @@ export async function processGraphQLRequest<TContext>(
       ? errorOrErrors
       : [errorOrErrors];
 
-    extensionStack.didEncounterErrors(errors);
+    await didEncounterErrors(errors);
 
     return sendResponse({
       errors: formatErrors(
