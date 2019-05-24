@@ -100,7 +100,7 @@ describe('apollo-server-koa', () => {
 
     server.applyMiddleware({ app });
     httpServer = await new Promise<http.Server>(resolve => {
-      const s = app.listen({ port: 7778 }, () => resolve(s));
+      const s = app.listen({ port: 0 }, () => resolve(s));
     });
     const { url: uri } = createServerInfo(server, httpServer);
 
@@ -130,7 +130,7 @@ describe('apollo-server-koa', () => {
 
     server.applyMiddleware({ app });
     httpServer = await new Promise<http.Server>(resolve => {
-      const s = app.listen({ port: 7779 }, () => resolve(s));
+      const s = app.listen({ port: 0 }, () => resolve(s));
     });
     const { url: uri } = createServerInfo(server, httpServer);
 

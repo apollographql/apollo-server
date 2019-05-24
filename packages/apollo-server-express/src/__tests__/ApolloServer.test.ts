@@ -32,8 +32,6 @@ const resolvers = {
   },
 };
 
-const port = 6666;
-
 describe('apollo-server-express', () => {
   let server;
   let httpServer;
@@ -43,7 +41,7 @@ describe('apollo-server-express', () => {
       const app = express();
       server.applyMiddleware({ app });
       httpServer = await new Promise<http.Server>(resolve => {
-        const s = app.listen({ port }, () => resolve(s));
+        const s = app.listen({ port: 0 }, () => resolve(s));
       });
       return createServerInfo(server, httpServer);
     },
@@ -70,7 +68,7 @@ describe('apollo-server-express', () => {
     server.applyMiddleware({ ...options, app });
 
     httpServer = await new Promise<http.Server>(resolve => {
-      const l = app.listen({ port }, () => resolve(l));
+      const l = app.listen({ port: 0 }, () => resolve(l));
     });
 
     return createServerInfo(server, httpServer);
@@ -201,7 +199,7 @@ describe('apollo-server-express', () => {
       outerApp.use(samplePath, innerApp);
 
       const httpRewiredServer = await new Promise<http.Server>(resolve => {
-        const l = outerApp.listen({ port }, () => resolve(l));
+        const l = outerApp.listen({ port: 0 }, () => resolve(l));
       });
 
       const { url } = createServerInfo(rewiredServer, httpRewiredServer);
