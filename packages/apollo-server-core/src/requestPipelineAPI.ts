@@ -75,6 +75,14 @@ export interface GraphQLRequestContext<TContext = Record<string, any>> {
   readonly operationName?: string | null;
   readonly operation?: OperationDefinitionNode;
 
+  /**
+   * Unformatted errors which have occurred during the request. Note that these
+   * are present earlier in the request pipeline and differ from **formatted**
+   * errors which are the result of running the user-configurable `formatError`
+   * transformation function over specific errors.
+   */
+  readonly errors?: ReadonlyArray<GraphQLError>;
+
   readonly metrics?: GraphQLRequestMetrics;
 
   debug?: boolean;
