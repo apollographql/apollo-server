@@ -1,18 +1,12 @@
 import fetch, { Response, RequestInit } from 'node-fetch';
-import { Logger } from 'loglevel';
 
-const urlCachedResponseMap: { [url: string]: Response } = {};
+const urlEtagMap: { [url: string]: string | null } = {};
 
-/**
- * @returns {[Response, wasCached]}
- */
 export async function fetchIfNoneMatch(
   url: string,
-  logger: Logger,
   fetchOptions?: RequestInit,
-): Promise<[Response, boolean]> {
-  const cachedResponse = urlCachedResponseMap[url];
-  const previousEtag = cachedResponse && cachedResponse.headers.get('etag');
+): Promise<Response> {
+  const previousEtag = urlEtagMap[url];
 
   const response = await fetch(url, {
     ...fetchOptions,
@@ -22,17 +16,6 @@ export async function fetchIfNoneMatch(
     },
   });
 
-  if (response.status === 304) {
-    logger.debug(
-      `The response for ${url} was the same as the previous attempt.`,
-    );
-    return [cachedResponse.clone(), true];
-  }
-
-  if (!response.ok) {
-    throw new Error(`Fetching ${url} failed with ${await response.text()}`);
-  }
-
-  urlCachedResponseMap[url] = response;
-  return [response.clone(), false];
+  urlEtagMap[url] = response.headers.get('etag');
+  return response;
 }
