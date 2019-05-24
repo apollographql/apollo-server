@@ -248,10 +248,10 @@ export default class Agent {
     const manifest = await (storageSecret
       ? this.fetchManifest(
           getOperationManifestUrl(this.options.engine.serviceID, storageSecret),
-        ).catch(reason => {
+        ).catch(err => {
           this.logger.debug(
-            `Failed to fetch manifest using storage secret. Try using legacy manifest url ${reason.message ||
-              reason}`,
+            `Failed to fetch manifest using storage secret. Try using legacy manifest url ${err.message ||
+              err}`,
           );
           return this.fetchManifest(legacyManifestUrl);
         })
