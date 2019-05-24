@@ -1,0 +1,30 @@
+{
+  "name": "apollo-server-plugin-response-cache",
+  "version": "0.1.0",
+  "description": "Apollo Server full query response cache",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-plugin-response-cache"
+  },
+  "keywords": [],
+  "author": "Apollo <npm@apollographql.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/apollographql/apollo-server/issues"
+  },
+  "homepage": "https://github.com/apollographql/apollo-server#readme",
+  "engines": {
+    "node": ">=6"
+  },
+  "dependencies": {
+    "apollo-cache-control": "file:../apollo-cache-control",
+    "apollo-server-caching": "file:../apollo-server-caching",
+    "apollo-server-env": "file:../apollo-server-env",
+    "apollo-server-plugin-base": "file:../apollo-server-plugin-base"
+  },
+  "peerDependencies": {
+    "graphql": "^0.12.0 || ^0.13.0 || ^14.0.0"
+  }
+}

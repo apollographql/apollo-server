@@ -1,6 +1,6 @@
 import os from 'os';
 import { gzip } from 'zlib';
-import { DocumentNode } from 'graphql';
+import { DocumentNode, GraphQLError } from 'graphql';
 import {
   FullTracesReport,
   ReportHeader,
@@ -17,27 +17,6 @@ import {
   GraphQLServiceContext,
 } from 'apollo-server-core/dist/requestPipelineAPI';
 
-// Override the generated protobuf Traces.encode function so that it will look
-// for Traces that are already encoded to Buffer as well as unencoded
-// Traces. This amortizes the protobuf encoding time over each generated Trace
-// instead of bunching it all up at once at sendReport time. In load tests, this
-// change improved p99 end-to-end HTTP response times by a factor of 11 without
-// a casually noticeable effect on p50 times. This also makes it easier for us
-// to implement maxUncompressedReportSize as we know the encoded size of traces
-// as we go.
-const originalTracesEncode = Traces.encode;
-Traces.encode = function(message, originalWriter) {
-  const writer = originalTracesEncode(message, originalWriter);
-  const encodedTraces = (message as any).encodedTraces;
-  if (encodedTraces != null && encodedTraces.length) {
-    for (let i = 0; i < encodedTraces.length; ++i) {
-      writer.uint32(/* id 1, wireType 2 =*/ 10);
-      writer.bytes(encodedTraces[i]);
-    }
-  }
-  return writer;
-};
-
 export interface ClientInfo {
   clientName?: string;
   clientVersion?: string;
@@ -49,59 +28,103 @@ export type GenerateClientInfo<TContext> = (
 ) => ClientInfo;
 
 export interface EngineReportingOptions<TContext> {
-  // API key for the service. Get this from
-  // [Engine](https://engine.apollographql.com) by logging in and creating
-  // a service. You may also specify this with the `ENGINE_API_KEY`
-  // environment variable; the option takes precedence. __Required__.
+  /**
+   * API key for the service. Get this from
+   * [Engine](https://engine.apollographql.com) by logging in and creating
+   * a service. You may also specify this with the `ENGINE_API_KEY`
+   * environment variable; the option takes precedence. __Required__.
+   */
   apiKey?: string;
-  // Specify the function for creating a signature for a query. See signature.ts
-  // for details.
+  /**
+   * Specify the function for creating a signature for a query. See signature.ts
+   * for details.
+   */
   calculateSignature?: (ast: DocumentNode, operationName: string) => string;
-  // How often to send reports to the Engine server. We'll also send reports
-  // when the report gets big; see maxUncompressedReportSize.
+  /**
+   * How often to send reports to the Engine server. We'll also send reports
+   * when the report gets big; see maxUncompressedReportSize.
+   */
   reportIntervalMs?: number;
-  // We send a report when the report size will become bigger than this size in
-  // bytes (default: 4MB).  (This is a rough limit --- we ignore the size of the
-  // report header and some other top level bytes. We just add up the lengths of
-  // the serialized traces and signatures.)
+  /**
+   * We send a report when the report size will become bigger than this size in
+   * bytes (default: 4MB).  (This is a rough limit --- we ignore the size of the
+   * report header and some other top level bytes. We just add up the lengths of
+   * the serialized traces and signatures.)
+   */
   maxUncompressedReportSize?: number;
-  // The URL of the Engine report ingress server.
+  /**
+   * The URL of the Engine report ingress server.
+   */
   endpointUrl?: string;
-  // If set, prints all reports as JSON when they are sent.
+  /**
+   * If set, prints all reports as JSON when they are sent.
+   */
   debugPrintReports?: boolean;
-  // HTTP(s) agent to be used on the fetch call to apollo-engine metrics endpoint
+  /**
+   * HTTP(s) agent to be used on the fetch call to apollo-engine metrics endpoint
+   */
   requestAgent?: RequestAgent | false;
-  // Reporting is retried with exponential backoff up to this many times
-  // (including the original request). Defaults to 5.
+  /**
+   * Reporting is retried with exponential backoff up to this many times
+   * (including the original request). Defaults to 5.
+   */
   maxAttempts?: number;
-  // Minimum backoff for retries. Defaults to 100ms.
+  /**
+   * Minimum back-off for retries. Defaults to 100ms.
+   */
   minimumRetryDelayMs?: number;
-  // By default, errors that occur when sending trace reports to Engine servers
-  // will be logged to standard error. Specify this function to process errors
-  // in a different way.
+  /**
+   * By default, errors that occur when sending trace reports to Engine servers
+   * will be logged to standard error. Specify this function to process errors
+   * in a different way.
+   */
   reportErrorFunction?: (err: Error) => void;
-  // A case-sensitive list of names of variables whose values should not be sent
-  // to Apollo servers, or 'true' to leave out all variables. In the former
-  // case, the report will indicate that each private variable was redacted; in
-  // the latter case, no variables are sent at all.
+  /**
+   * A case-sensitive list of names of variables whose values should not be sent
+   * to Apollo servers, or 'true' to leave out all variables. In the former
+   * case, the report will indicate that each private variable was redacted; in
+   * the latter case, no variables are sent at all.
+   */
   privateVariables?: Array<String> | boolean;
-  // A case-insensitive list of names of HTTP headers whose values should not be
-  // sent to Apollo servers, or 'true' to leave out all HTTP headers. Unlike
-  // with privateVariables, names of dropped headers are not reported.
+  /**
+   * A case-insensitive list of names of HTTP headers whose values should not be
+   * sent to Apollo servers, or 'true' to leave out all HTTP headers. Unlike
+   * with privateVariables, names of dropped headers are not reported.
+   */
   privateHeaders?: Array<String> | boolean;
-  // By default, EngineReportingAgent listens for the 'SIGINT' and 'SIGTERM'
-  // signals, stops, sends a final report, and re-sends the signal to
-  // itself. Set this to false to disable. You can manually invoke 'stop()' and
-  // 'sendReport()' on other signals if you'd like. Note that 'sendReport()'
-  // does not run synchronously so it cannot work usefully in an 'exit' handler.
+  /**
+   * By default, EngineReportingAgent listens for the 'SIGINT' and 'SIGTERM'
+   * signals, stops, sends a final report, and re-sends the signal to
+   * itself. Set this to false to disable. You can manually invoke 'stop()' and
+   * 'sendReport()' on other signals if you'd like. Note that 'sendReport()'
+   * does not run synchronously so it cannot work usefully in an 'exit' handler.
+   */
   handleSignals?: boolean;
-  // Sends the trace report immediately. This options is useful for stateless environments
+  /**
+   * Sends the trace report immediately. This options is useful for stateless environments
+   */
   sendReportsImmediately?: boolean;
-  // To remove the error message from traces, set this to true. Defaults to false
+  /**
+   * @deprecated Use `rewriteError` instead.
+   * @default false
+   *
+   * To remove the error message from traces, set this to true.
+   */
   maskErrorDetails?: boolean;
-  // A human readable name to tag this variant of a schema (i.e. staging, EU)
+  /**
+   * By default, all errors get reported to Engine servers. You can specify a
+   * a filter function to exclude specific errors from being reported by
+   * returning an explicit `null`, or you can mask certain details of the error
+   * by modifying it and returning the modified error.
+   */
+  rewriteError?: (err: GraphQLError) => GraphQLError | null;
+  /**
+   * A human readable name to tag this variant of a schema (i.e. staging, EU)
+   */
   schemaTag?: string;
-  //Creates the client information for operation traces.
+  /**
+   * Creates the client information for operation traces.
+   */
   generateClientInfo?: GenerateClientInfo<TContext>;
 }
 
@@ -190,8 +213,8 @@ export class EngineReportingAgent<TContext = any> {
       this.report.tracesPerQuery[statsReportKey] = new Traces();
       (this.report.tracesPerQuery[statsReportKey] as any).encodedTraces = [];
     }
-    // See comment on our override of Traces.encode to learn more about this
-    // strategy.
+    // See comment on our override of Traces.encode inside of
+    // apollo-engine-reporting-protobuf to learn more about this strategy.
     (this.report.tracesPerQuery[statsReportKey] as any).encodedTraces.push(
       encodedTrace,
     );
@@ -280,14 +303,14 @@ export class EngineReportingAgent<TContext = any> {
         factor: 2,
       },
     ).catch((err: Error) => {
-      throw new Error(`Error sending report to Engine servers: ${err}`);
+      throw new Error(`Error sending report to Apollo Engine servers: ${err}`);
     });
 
     if (response.status < 200 || response.status >= 300) {
       // Note that we don't expect to see a 3xx here because request follows
       // redirects.
       throw new Error(
-        `Error sending report to Engine servers (HTTP status ${
+        `Error sending report to Apollo Engine servers (HTTP status ${
           response.status
         }): ${await response.text()}`,
       );

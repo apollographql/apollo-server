@@ -20,16 +20,14 @@ import request = require('supertest');
 
 import { GraphQLOptions, Config } from 'apollo-server-core';
 import gql from 'graphql-tag';
+import { ValueOrPromise } from 'apollo-server-env';
 
 export * from './ApolloServer';
 
-const NODE_MAJOR_VERSION: number = parseInt(
+export const NODE_MAJOR_VERSION: number = parseInt(
   process.versions.node.split('.', 1)[0],
   10,
 );
-export function atLeastMajorNodeVersion(desiredVersion: number): boolean {
-  return NODE_MAJOR_VERSION >= desiredVersion;
-}
 
 const QueryRootType = new GraphQLObjectType({
   name: 'QueryRoot',
@@ -192,16 +190,16 @@ export interface CreateAppOptions {
   excludeParser?: boolean;
   graphqlOptions?:
     | GraphQLOptions
-    | { (): GraphQLOptions | Promise<GraphQLOptions> }
+    | { (): ValueOrPromise<GraphQLOptions> }
     | Config;
 }
 
 export interface CreateAppFunc {
-  (options?: CreateAppOptions): any | Promise<any>;
+  (options?: CreateAppOptions): ValueOrPromise<any>;
 }
 
 export interface DestroyAppFunc {
-  (app: any): void | Promise<void>;
+  (app: any): ValueOrPromise<void>;
 }
 
 export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
