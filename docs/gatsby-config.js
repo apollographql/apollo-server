@@ -40,6 +40,7 @@ module.exports = {
             'features/directives',
             'features/creating-directives',
             'features/authentication',
+            'features/plugins',
             'features/testing',
             'features/apq',
             'features/health-checks',
