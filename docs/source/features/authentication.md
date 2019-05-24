@@ -97,7 +97,7 @@ users: (parent, args, context) => {
 }
 ```
 
-This example is a field in our schema named `users` that returns a list of users’ names. The `if` check on the first line of the function looks at the `context` generated from our request, checks for a `user` object, and if one doesn’t exist, returns `null` for the whole field.
+This example is a field in our schema named `users` that returns a list of users’ names. The `if` check on the first line of the function looks at the `context` generated from our request, checks for a `user` object, and if one doesn’t exist, returns `[]` for the whole field.
 
 One choice to make when building out our resolvers is what an unauthorized field should return. In some use cases, returning `null` here is perfectly valid. Alternatives to this would be to return an empty array, `[]` or to throw an error, telling the client that they’re not allowed to access that field. For the sake of simplicity, we just returned `[]` in this example.
 
