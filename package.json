@@ -66,7 +66,7 @@
   "devDependencies": {
     "@azure/functions": "1.0.3",
     "@types/async-retry": "1.4.1",
-    "@types/aws-lambda": "8.10.25",
+    "@types/aws-lambda": "8.10.26",
     "@types/body-parser": "1.17.0",
     "@types/connect": "3.4.32",
     "@types/fast-json-stable-stringify": "2.0.0",
