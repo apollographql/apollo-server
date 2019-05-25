@@ -216,7 +216,10 @@ describe('Agent', () => {
           });
       }
 
-      function nockStorageSecret() {
+      function nockStorageSecret(
+        status = 200,
+        body: any = JSON.stringify(genericStorageSecret),
+      ) {
         return nockBase()
           .get(
             getStorageSecretUrl(genericServiceID, genericApiKeyHash).replace(
@@ -224,7 +227,7 @@ describe('Agent', () => {
               '',
             ),
           )
-          .reply(200, JSON.stringify(genericStorageSecret));
+          .reply(status, body);
       }
 
       function expectStoreSpyOperationEach(
@@ -443,6 +446,49 @@ describe('Agent', () => {
           // Ensure that 'B' is gone!
           store.get(getStoreKey(sampleManifestRecords.b.signature)),
         ).resolves.toBeUndefined();
+      });
+
+      describe('when fetching the storage secret fails', () => {
+        it('will fetch the manifest using the legacy url', async () => {
+          nockStorageSecret(404);
+          nockLegacyGoodManifest();
+
+          const store = defaultStore();
+          const storeSetSpy = jest.spyOn(store, 'set');
+          const storeDeleteSpy = jest.spyOn(store, 'delete');
+          const agent = createAgent({ store });
+          jest.useFakeTimers();
+          await agent.start();
+
+          // Three additions, no deletions.
+          expect(storeSetSpy).toBeCalledTimes(3);
+          expect(storeDeleteSpy).toBeCalledTimes(0);
+
+          // Only the initial start-up check should have happened by now.
+          expect(agent._timesChecked).toBe(1);
+        });
+      });
+
+      describe('when fetching the manifest using the storage secret fails', () => {
+        it('will fallback to fetching the manifest using the legacy url', async () => {
+          nockStorageSecret();
+          nockGetReply(genericStorageSecretOperationManifestUrl, 404);
+          nockLegacyGoodManifest();
+
+          const store = defaultStore();
+          const storeSetSpy = jest.spyOn(store, 'set');
+          const storeDeleteSpy = jest.spyOn(store, 'delete');
+          const agent = createAgent({ store });
+          jest.useFakeTimers();
+          await agent.start();
+
+          // Three additions, no deletions.
+          expect(storeSetSpy).toBeCalledTimes(3);
+          expect(storeDeleteSpy).toBeCalledTimes(0);
+
+          // Only the initial start-up check should have happened by now.
+          expect(agent._timesChecked).toBe(1);
+        });
       });
     });
   });
