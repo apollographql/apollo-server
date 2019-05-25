@@ -172,10 +172,11 @@ export default class Agent {
     return await response.json();
   }
 
-  private async fetchManifest(manifestUrl: string): Promise<OperationManifest> {
+  private async fetchManifest(
+    manifestUrl: string,
+  ): Promise<[OperationManifest, boolean]> {
     this.logger.debug(`Checking for manifest changes at ${manifestUrl}`);
 
-    let responseToReturn: Response;
     try {
       let [response, wasCached] = await fetchIfNoneMatch(
         manifestUrl,
@@ -190,17 +191,6 @@ export default class Agent {
           timeout: this.pollSeconds() * 3 /* times */ * 1000 /* ms */,
         },
       );
-
-      responseToReturn = response;
-
-      // When the response indicates that the resource hasn't changed, there's
-      // no need to do any other work.
-      if (wasCached) {
-        this.logger.debug(
-          'The published manifest was the same as the previous attempt.',
-        );
-        return response.json();
-      }
 
       if (!response.ok) {
         const responseText = await response.text();
@@ -221,6 +211,8 @@ export default class Agent {
       if (contentType && contentType !== 'application/json') {
         throw new Error(`Unexpected 'Content-Type' header: ${contentType}`);
       }
+
+      return [await response.json(), wasCached];
     } catch (err) {
       const ourErrorPrefix = `Unable to fetch operation manifest for ${
         this.options.schemaHash
@@ -230,8 +222,6 @@ export default class Agent {
 
       throw err;
     }
-
-    return responseToReturn.json();
   }
 
   private async tryUpdate(): Promise<void> {
@@ -245,7 +235,7 @@ export default class Agent {
 
     this._timesChecked++;
 
-    const manifest = await (storageSecret
+    const [manifest, wasCached] = await (storageSecret
       ? this.fetchManifest(
           getOperationManifestUrl(this.options.engine.serviceID, storageSecret),
         ).catch(err => {
@@ -256,6 +246,10 @@ export default class Agent {
           return this.fetchManifest(legacyManifestUrl);
         })
       : this.fetchManifest(legacyManifestUrl));
+
+    if (wasCached) {
+      return;
+    }
 
     await this.updateManifest(manifest);
   }
