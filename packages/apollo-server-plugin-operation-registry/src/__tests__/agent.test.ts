@@ -18,6 +18,10 @@ const genericStorageSecret = 'someStorageSecret';
 const genericServiceID = 'test-service';
 const genericApiKeyHash = 'someapikeyhash123';
 const pollSeconds = 60;
+const genericLegacyOperationManifestUrl = pathForServiceAndSchema(
+  genericServiceID,
+  genericSchemaHash,
+);
 
 const defaultAgentOptions: AgentOptions = {
   schemaHash: genericSchemaHash,
@@ -83,7 +87,7 @@ describe('Agent', () => {
     let getStorageSecretUrl: typeof import('../common').getStorageSecretUrl;
     let urlStorageSecretBase: string;
     let urlOperationManifestBase: string;
-    let genericOperationManifestUrl: string;
+    let genericStorageSecretOperationManifestUrl: string;
 
     beforeAll(() => {
       // Override the tests URL with the one we want to mock/nock/test.
@@ -107,7 +111,7 @@ describe('Agent', () => {
       urlStorageSecretBase = require('../common').urlStorageSecretBase;
       urlOperationManifestBase = require('../common').urlOperationManifestBase;
 
-      genericOperationManifestUrl = getOperationManifestUrl(
+      genericStorageSecretOperationManifestUrl = getOperationManifestUrl(
         genericServiceID,
         genericStorageSecret,
       ).replace(new RegExp(`^${urlOperationManifestBase}`), '');
@@ -190,7 +194,7 @@ describe('Agent', () => {
         ],
       ) {
         return nockBase()
-          .get(pathForServiceAndSchema(genericServiceID, genericSchemaHash))
+          .get(genericLegacyOperationManifestUrl)
           .reply(200, {
             version: 2,
             operations,
@@ -205,7 +209,7 @@ describe('Agent', () => {
         ],
       ) {
         return nockBase()
-          .get(genericOperationManifestUrl)
+          .get(genericStorageSecretOperationManifestUrl)
           .reply(200, {
             version: 2,
             operations,
@@ -336,7 +340,7 @@ describe('Agent', () => {
 
         // Now, we'll expect another request to go out, so we'll nock it.
         nockStorageSecret();
-        nockGetReply(genericOperationManifestUrl, 304);
+        nockGetReply(genericStorageSecretOperationManifestUrl, 304);
 
         // If we move forward the last remaining millisecond, we should trigger
         // and end up with a successful sync.
@@ -357,11 +361,8 @@ describe('Agent', () => {
 
       it('continues polling even after initial failure', async () => {
         nockStorageSecret();
-        nockGetReply(genericOperationManifestUrl, 500);
-        nockGetReply(
-          pathForServiceAndSchema(genericServiceID, genericSchemaHash),
-          500,
-        );
+        nockGetReply(genericStorageSecretOperationManifestUrl, 500);
+        nockGetReply(genericLegacyOperationManifestUrl, 500);
         const store = defaultStore();
         const storeSetSpy = jest.spyOn(store, 'set');
         const storeDeleteSpy = jest.spyOn(store, 'delete');
