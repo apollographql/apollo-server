@@ -166,7 +166,9 @@ describe('Agent', () => {
 
       afterEach(() => {
         if (!nock.isDone()) {
-          throw new Error('Not all nock interceptors were used!');
+          throw new Error(
+            `Not all nock interceptors were used! Pending mocks: ${nock.pendingMocks()}`,
+          );
         }
 
         let toCleanup;
