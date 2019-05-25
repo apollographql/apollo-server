@@ -42,6 +42,7 @@ export default class Agent {
   private hashedServiceId?: string;
   private requestInFlight: Promise<any> | null = null;
   private lastSuccessfulCheck?: Date;
+  private storageSecret?: string;
 
   // Only exposed for testing.
   public _timesChecked: number = 0;
@@ -147,84 +148,62 @@ export default class Agent {
       this.options.engine.apiKeyHash,
     );
 
-    const [response, wasCached] = await fetchIfNoneMatch(
-      storageSecretUrl,
-      this.logger,
-      {
-        method: 'GET',
-        // More than three times our polling interval be long enough to wait.
-        timeout: this.pollSeconds() * 3 /* times */ * 1000 /* ms */,
-      },
-    );
+    const response = await fetchIfNoneMatch(storageSecretUrl, {
+      method: 'GET',
+      // More than three times our polling interval be long enough to wait.
+      timeout: this.pollSeconds() * 3 /* times */ * 1000 /* ms */,
+    });
 
-    if (wasCached) {
+    if (response.status === 304) {
       this.logger.debug(
         'The storage secret was the same as the previous attempt.',
       );
+      return this.storageSecret;
     }
 
     if (!response.ok) {
       const responseText = await response.text();
+      this.logger.debug(`Could not fetch storage secret ${responseText}`);
+      return;
+    }
+
+    this.storageSecret = await response.json();
+
+    return this.storageSecret;
+  }
+
+  private async fetchManifest(manifestUrl: string): Promise<Response> {
+    this.logger.debug(`Checking for manifest changes at ${manifestUrl}`);
+
+    let response = await fetchIfNoneMatch(manifestUrl, {
+      // GET is what we request, but keep in mind that, when we include and get
+      // a match on the `If-None-Match` header we'll get an early return with a
+      // status code 304.
+      method: 'GET',
+
+      // More than three times our polling interval be long enough to wait.
+      timeout: this.pollSeconds() * 3 /* times */ * 1000 /* ms */,
+    });
+
+    if (!response.ok && response.status !== 304) {
+      const responseText = await response.text();
+
+      // The response error code only comes in XML, but we don't have an XML
+      // parser handy, so we'll just match the string.
+      if (responseText.includes('<Code>AccessDenied</Code>')) {
+        throw new Error(
+          `No manifest found.  Ensure this server's schema has been published with 'apollo service:push' and that operations have been registered with 'apollo client:push'.`,
+        );
+      }
+
       // For other unknown errors.
       throw new Error(`Unexpected status: ${responseText}`);
     }
 
-    return await response.json();
+    return response;
   }
 
-  private async fetchManifest(
-    manifestUrl: string,
-  ): Promise<[OperationManifest, boolean]> {
-    this.logger.debug(`Checking for manifest changes at ${manifestUrl}`);
-
-    try {
-      let [response, wasCached] = await fetchIfNoneMatch(
-        manifestUrl,
-        this.logger,
-        {
-          // GET is what we request, but keep in mind that, when we include and get
-          // a match on the `If-None-Match` header we'll get an early return with a
-          // status code 304.
-          method: 'GET',
-
-          // More than three times our polling interval be long enough to wait.
-          timeout: this.pollSeconds() * 3 /* times */ * 1000 /* ms */,
-        },
-      );
-
-      if (!response.ok) {
-        const responseText = await response.text();
-
-        // The response error code only comes in XML, but we don't have an XML
-        // parser handy, so we'll just match the string.
-        if (responseText.includes('<Code>AccessDenied</Code>')) {
-          throw new Error(
-            `No manifest found.  Ensure this server's schema has been published with 'apollo service:push' and that operations have been registered with 'apollo client:push'.`,
-          );
-        }
-
-        // For other unknown errors.
-        throw new Error(`Unexpected status: ${responseText}`);
-      }
-
-      const contentType = response.headers.get('content-type');
-      if (contentType && contentType !== 'application/json') {
-        throw new Error(`Unexpected 'Content-Type' header: ${contentType}`);
-      }
-
-      return [await response.json(), wasCached];
-    } catch (err) {
-      const ourErrorPrefix = `Unable to fetch operation manifest for ${
-        this.options.schemaHash
-      } in '${this.options.engine.serviceID}': ${err}`;
-
-      err.message = `${ourErrorPrefix}: ${err}`;
-
-      throw err;
-    }
-  }
-
-  private async tryUpdate(): Promise<void> {
+  private async tryUpdate(): Promise<boolean> {
     this.logger.debug(`Checking for storageSecret`);
     const storageSecret = await this.fetchAndUpdateStorageSecret();
 
@@ -235,23 +214,47 @@ export default class Agent {
 
     this._timesChecked++;
 
-    const [manifest, wasCached] = await (storageSecret
-      ? this.fetchManifest(
-          getOperationManifestUrl(this.options.engine.serviceID, storageSecret),
-        ).catch(err => {
-          this.logger.debug(
-            `Failed to fetch manifest using storage secret. Try using legacy manifest url ${err.message ||
-              err}`,
-          );
-          return this.fetchManifest(legacyManifestUrl);
-        })
-      : this.fetchManifest(legacyManifestUrl));
+    let response: Response;
+    try {
+      response = await (storageSecret
+        ? this.fetchManifest(
+            getOperationManifestUrl(
+              this.options.engine.serviceID,
+              storageSecret,
+            ),
+          ).catch(err => {
+            this.logger.debug(
+              `Failed to fetch manifest using storage secret. Try using legacy manifest url ${err.message ||
+                err}`,
+            );
+            return this.fetchManifest(legacyManifestUrl);
+          })
+        : this.fetchManifest(legacyManifestUrl));
 
-    if (wasCached) {
-      return;
+      // When the response indicates that the resource hasn't changed, there's
+      // no need to do any other work.  Returning false is meant to indicate
+      // that there wasn't an update, but there was a successful fetch.
+      if (response.status === 304) {
+        return false;
+      }
+
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType !== 'application/json') {
+        throw new Error(`Unexpected 'Content-Type' header: ${contentType}`);
+      }
+    } catch (err) {
+      const ourErrorPrefix = `Unable to fetch operation manifest for ${
+        this.options.schemaHash
+      } in '${this.options.engine.serviceID}': ${err}`;
+
+      err.message = `${ourErrorPrefix}: ${err}`;
+
+      throw err;
     }
 
-    await this.updateManifest(manifest);
+    await this.updateManifest(await response.json());
+    // True is good!
+    return true;
   }
 
   public async checkForUpdate() {
