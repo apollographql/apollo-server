@@ -3,7 +3,7 @@
     "start": "gatsby develop"
   },
   "dependencies": {
-    "gatsby": "2.5.5",
+    "gatsby": "2.7.1",
     "gatsby-theme-apollo-docs": "0.3.3"
   }
 }
