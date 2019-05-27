@@ -1,9 +1,6 @@
 import isNodeLike from './isNodeLike';
 
 const runtimeSupportsUploads = (() => {
-  if (process.env.AWS_EXECUTION_ENV !== undefined) {
-    return false;
-  }
   if (isNodeLike) {
     const [nodeMajor, nodeMinor] = process.versions.node
       .split('.', 2)

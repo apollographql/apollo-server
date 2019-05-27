@@ -24,8 +24,8 @@ import { ApolloServerPlugin } from 'apollo-server-plugin-base';
 import runtimeSupportsUploads from './utils/runtimeSupportsUploads';
 
 import {
-  SubscriptionServer as _SubscriptionServer,
-  ExecutionParams as _ExecutionParams,
+  SubscriptionServer,
+  ExecutionParams,
 } from 'subscriptions-transport-ws';
 
 import { formatApolloErrors } from 'apollo-server-errors';
@@ -120,7 +120,7 @@ export class ApolloServerBase {
   protected uploadsConfig?: FileUploadOptions;
 
   // set by installSubscriptionHandlers.
-  private subscriptionServer?: _SubscriptionServer;
+  private subscriptionServer?: SubscriptionServer;
 
   // the default version is specified in playground.ts
   protected playgroundOptions?: PlaygroundRenderPageOptions;
@@ -347,7 +347,6 @@ export class ApolloServerBase {
     }
 
     if (this.engineServiceId) {
-      // Lazyily require to reduece unused load time
       const { EngineReportingAgent } = require('apollo-engine-reporting');
       this.engineReportingAgent = new EngineReportingAgent(
         typeof engine === 'object' ? engine : Object.create(null),
@@ -459,7 +458,7 @@ export class ApolloServerBase {
         onDisconnect: onDisconnect,
         onOperation: async (
           message: { payload: any },
-          connection: _ExecutionParams,
+          connection: ExecutionParams,
         ) => {
           connection.formatResponse = (value: ExecutionResult) => ({
             ...value,
