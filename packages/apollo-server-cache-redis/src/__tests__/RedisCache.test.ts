@@ -1,6 +1,4 @@
-// use mock implementations for underlying databases
-jest.mock('redis', () => require('redis-mock'));
-jest.useFakeTimers(); // mocks out setTimeout that is used in redis-mock
+jest.mock('ioredis');
 
 import { RedisCache } from '../index';
 import {

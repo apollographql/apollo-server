@@ -731,28 +731,6 @@ describe('apollo-server-koa', () => {
         expect(result.extensions).toBeDefined();
         expect(result.extensions.tracing).toBeDefined();
       });
-
-      xit('applies tracing extension with engine enabled', async () => {
-        const { url: uri } = await createServer({
-          typeDefs,
-          resolvers,
-          tracing: true,
-          engine: {
-            apiKey: 'service:my-app:secret',
-            maxAttempts: 0,
-            endpointUrl: 'l',
-            reportErrorFunction: () => {},
-          },
-        });
-
-        const apolloFetch = createApolloFetch({ uri });
-        const result = await apolloFetch({
-          query: `{ books { title author } }`,
-        });
-        expect(result.data).toEqual({ books });
-        expect(result.extensions).toBeDefined();
-        expect(result.extensions.tracing).toBeDefined();
-      });
     });
   });
 });

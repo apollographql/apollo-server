@@ -1,9 +1,37 @@
 # Changelog
 
-### vNEXT
-- Fix: Skip loading `util.promifisy` polyfil in node >= 8 [PR #2278](https://github.com/apollographql/apollo-server/pull/2278)
-- Lazy load `apollo-engine-reporting` and `subscriptions-transport-ws` in core [PR #2278](https://github.com/apollographql/apollo-server/pull/2278)
-- disable `apollo-upload` in when running in AWS Lambda [PR #2278](https://github.com/apollographql/apollo-server/pull/2278)
+### v2.6.0
+
+- `apollo-server-core`: Introduce new `didEncounterErrors` life-cycle hook which has access to unformatted `errors` property on the `requestContext`, which is the first positional paramater that this new request life-cycle receives.  [PR #2719](https://github.com/apollographql/apollo-server/pull/2719)
+- `apollo-server-core`: Allow request pipeline life-cycle hooks (i.e. plugins) to modify the response's `http.status` code (an integer) in the event of an error.  When combined with the new `didEncounterErrors` life-cycle hook (see above), this will allow modifying the HTTP status code in the event of an error.  [PR #2714](https://github.com/apollographql/apollo-server/pull/2714)
+- `apollo-server-lambda`: Set `callbackWaitsForEmptyEventLoop` to `false` for `OPTIONS` requests to return as soon as the `callback` is triggered instead of waiting for the event loop to empty. [PR #2638](https://github.com/apollographql/apollo-server/pull/2638)
+- `apollo-server`: Support `onHealthCheck` in the `ApolloServer` constructor in the same way as `cors` is supported.  This contrasts with the `-express`, `-hapi`, etc. variations which accept this parameter via their `applyMiddleware` methods and will remain as-is.  [PR #2672](https://github.com/apollographql/apollo-server/pull/2672)
+- core: Expose SHA-256 hex hash digest of the Engine API key to plugins, when available, as `engine.apiKeyHash`. [PR# 2685](https://github.com/apollographql/apollo-server/pull/2685)
+- `apollo-datasource-rest`: If another `Content-type` is already set on the response, don't overwrite it with `application/json`, allowing the user's initial `Content-type` to prevail. [PR #2520](https://github.com/apollographql/apollo-server/issues/2035)
+- `apollo-cache-control`: Do not respond with `Cache-control` headers if the HTTP response contains `errors`. [PR #2715](https://github.com/apollographql/apollo-server/pull/2715)
+- `apollo-server-core`: Skip loading `util.promifisy` polyfill in Node.js engines >= 8.0 [PR #2278](https://github.com/apollographql/apollo-server/pull/2278)
+- `apollo-server-core`: Lazy load `subscriptions-transport-ws` in core [PR #2278](https://github.com/apollographql/apollo-server/pull/2278)
+- `apollo-server-cache-redis`: **BREAKING FOR USERS OF `apollo-server-cache-redis`** (This is a package that must be updated separately but shares the same `CHANGELOG.md` with Apollo Server itself.)  A new **major** version of this package has been published and updated to support Redis Standalone, Cluster and Sentinel modes.  This is a breaking change since it is now based on [`ioredis`](https://github.com/luin/ioredis) instead of [`node_redis`](https://github.com/NodeRedis/node_redis).  Although this update is compatible with the most common uses of `apollo-server-cache-redis`, please check the [options supported by `ioredis`](https://github.com/luin/ioredis/blob/master/API.md#new-redisport-host-options) while updating to this version.  The constructor options are passed directly from `RedisCache` to the new Redis adapter.  The pre-1.0 versions should continue to work with Apollo Server without modification. [PR #1770](https://github.com/apollographql/apollo-server/pull/1770)
+
+### v2.5.0
+
+#### New
+
+- New plugin package `apollo-server-plugin-response-cache` implementing a full query response cache based on `apollo-cache-control` hints. The implementation added a few hooks and context fields; see the PR for details. There is a slight change to `cacheControl` object: previously, `cacheControl.stripFormattedExtensions` defaulted to false if you did not provide a `cacheControl` option object, but defaulted to true if you provided (eg) `cacheControl: {defaultMaxAge: 10}`. Now `stripFormattedExtensions` defaults to false unless explicitly provided as `true`, or if you use the legacy boolean `cacheControl: true`. For more information, [read the documentation](https://www.apollographql.com/docs/apollo-server/features/caching).  [PR #2437](https://github.com/apollographql/apollo-server/pull/2437)
+- Add `rewriteError` option to `EngineReportingOptions` (i.e. the `engine` property of the `ApolloServer` constructor).  When defined as a `function`, it will receive an `err` property as its first argument which can be used to manipulate (e.g. redaction) an error prior to sending it to Apollo Engine by modifying, e.g., its `message` property.  The error can also be suppressed from reporting entirely by returning an explicit `null` value.  For more information, [read the documentation](https://www.apollographql.com/docs/apollo-server/features/errors#for-apollo-engine-reporting) and the [`EngineReportingOptions` API reference](https://www.apollographql.com/docs/apollo-server/api/apollo-server#enginereportingoptions). [PR #1639](https://github.com/apollographql/apollo-server/pull/1639)
+- `apollo-server-azure-functions`: Support `@azure/functions` to enable Apollo Server [Typescript development in Azure Functions](https://azure.microsoft.com/en-us/blog/improving-the-typescript-support-in-azure-functions/). [PR #2487](https://github.com/apollographql/apollo-server/pull/2487)
+- Allow `GraphQLRequestListener` callbacks in plugins to depend on `this`. [PR #2470](https://github.com/apollographql/apollo-server/pull/2470)
+- `apollo-server-testing`: Add `variables` and `operationName` to `Query` and `Mutation` types. [PR #2307](https://github.com/apollographql/apollo-server/pull/2307) [Issue #2172](https://github.com/apollographql/apollo-server/issue/2172)
+
+#### Bug fixes
+
+- Add `cache-control: no-cache` header to both `PersistedQueryNotSupportedError` and `PersistedQueryNotFoundError` responses as these should never be cached. [PR #2452](https://github.com/apollographql/apollo-server/pull/2452)
+- `apollo-datasource-rest`: Don't attempt to parse "204 No Content" responses as JSON. [PR #2446](https://github.com/apollographql/apollo-server/pull/2446)
+- `apollo-server-express`: Fix Playground URL when Apollo Server is mounted inside of another Express app by utilizing `req.originalUrl`. [PR #2451](https://github.com/apollographql/apollo-server/pull/2451)
+- `apollo-datasource-rest`: Correctly allow a TTL value of `0` to represent "not-cacheable". [PR #2588](https://github.com/apollographql/apollo-server/pull/2588)
+- `apollo-datasource-rest`: Fix `Invalid argument` in IE11, when `this.headers` is `undefined`. [PR #2607](https://github.com/apollographql/apollo-server/pull/2607)
+
+- Don't add `cacheControl` directive if one has already been defined. [PR #2428](https://github.com/apollographql/apollo-server/pull/2428)
 
 ### v2.4.8
 
@@ -63,6 +91,9 @@
 - Fix cache hints of `maxAge: 0` to mean "uncachable". [#2197](https://github.com/apollographql/apollo-server/pull/2197)
 - Apply `defaultMaxAge` to scalar fields on the root object. [#2210](https://github.com/apollographql/apollo-server/pull/2210)
 - Don't write to the persisted query cache until execution will begin. [PR #2227](https://github.com/apollographql/apollo-server/pull/2227)
+
+- `apollo-server-azure-functions`: Added Azure Functions documentation and deployment examples [PR #2131](https://github.com/apollographql/apollo-server/pull/2131),
+[Issue #2092](https://github.com/apollographql/apollo-server/issues/2092)
 
 ### v2.3.1
 

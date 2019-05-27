@@ -1,6 +1,6 @@
 {
   "name": "apollo-engine-reporting-protobuf",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Protobuf format for Apollo Engine",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

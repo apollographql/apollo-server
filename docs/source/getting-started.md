@@ -10,7 +10,7 @@ In this guide, we'll walk you through the process of creating a GraphQL server i
 * Have a basic understanding of the fundamental GraphQL principles.
 * Be able to send a query to the new GraphQL server and see the response using GraphQL Playground.
 
-To be successful, make sure you already have general JavaScript knowledge and a recent version of Node.js installed (6+).
+To be successful, make sure you already have general JavaScript knowledge and a recent version of Node.js installed (8+).
 
 If you want to skip walking through the steps, the [More information](#More-information) section at the bottom has a link to a GitHub repository which can be cloned and run locally, and a Glitch to play around in your browser!
 

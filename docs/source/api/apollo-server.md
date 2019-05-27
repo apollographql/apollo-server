@@ -98,7 +98,7 @@ new ApolloServer({
 
 * `tracing`, `cacheControl`: <`Boolean`>
 
-  Add tracing or cacheControl meta data to the GraphQL response
+  If set to true, adds tracing or cacheControl meta data to the GraphQL response. This is primarily intended for use with the deprecated Engine proxy.  `cacheControl` can also be set to an object to specify arguments to the `apollo-cache-control` package, including `defaultMaxAge`, `calculateHttpHeaders`, and `stripFormattedExtensions`.
 
 * `formatError`, `formatResponse`: <`Function`>
 
@@ -119,7 +119,7 @@ new ApolloServer({
 
 * `engine`: <`EngineReportingOptions`> | boolean
 
-  Provided the `ENGINE_API_KEY` environment variable is set, the engine reporting agent will be started automatically. The API key can also be provided as the `apiKey` field in an object passed as the `engine` field. See the [EngineReportingOptions](#EngineReportingOptions) section for a full description of how to configure the reporting agent, including how to blacklist variables. When using the Engine proxy, this option should be set to false.
+  Provided the `ENGINE_API_KEY` environment variable is set, the engine reporting agent will be started automatically. The API key can also be provided as the `apiKey` field in an object passed as the `engine` field. See the [EngineReportingOptions](#enginereportingoptions) section for a full description of how to configure the reporting agent, including how to blacklist variables. When using the Engine proxy, this option should be set to false.
 
 * `persistedQueries`: <`Object`> | false
 
@@ -364,9 +364,19 @@ addMockFunctionsToSchema({
    'sendReport()' on other signals if you'd like. Note that 'sendReport()'
    does not run synchronously so it cannot work usefully in an 'exit' handler.
 
-*  `maskErrorDetails`: boolean
+*  `rewriteError`: (err: GraphQLError) => GraphQLError | null
 
-   Set to true to remove error details from the traces sent to Apollo's servers. Defaults to false.
+   By default, all errors are reported to Apollo Engine.  This function
+   can be used to exclude specific errors from being reported.  This function
+   receives a copy of the `GraphQLError` and can manipulate it for the
+   purposes of Apollo Engine reporting.  The modified error (e.g. after changing
+   the `err.message` property) should be returned or the function should return
+   an explicit `null` to avoid reporting the error entirely.  It is not
+   permissable to return `undefined`.
+   
+*  `schemaTag`: String
+
+   A human-readable name to tag this variant of a schema (i.e. staging, EU). Setting this value will cause metrics to be segmented in the Apollo Platform's UI. Additionally schema validation with a schema tag will only check metrics associate with the same string.
 
 *  `generateClientInfo`: (GraphQLRequestContext) => ClientInfo **AS 2.2**
 
@@ -388,4 +398,3 @@ addMockFunctionsToSchema({
    > [WARNING] If you specify a `clientReferenceId`, Engine will treat the
    > `clientName` as a secondary lookup, so changing a `clientName` may result
    > in an unwanted experience.
-

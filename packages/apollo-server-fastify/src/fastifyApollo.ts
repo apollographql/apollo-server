@@ -5,12 +5,13 @@ import {
 } from 'apollo-server-core';
 import { FastifyReply, FastifyRequest, RequestHandler } from 'fastify';
 import { IncomingMessage, OutgoingMessage } from 'http';
+import { ValueOrPromise } from 'apollo-server-env';
 
 export async function graphqlFastify(
   options: (
     req?: FastifyRequest<IncomingMessage>,
     res?: FastifyReply<OutgoingMessage>,
-  ) => GraphQLOptions | Promise<GraphQLOptions>,
+  ) => ValueOrPromise<GraphQLOptions>,
 ): Promise<RequestHandler<IncomingMessage, OutgoingMessage>> {
   if (!options) {
     throw new Error('Apollo Server requires options.');
