@@ -439,7 +439,7 @@ export class ApolloServerBase {
         );
       }
     }
-
+    const { SubscriptionServer } = require('subscriptions-transport-ws');
     const {
       onDisconnect,
       onConnect,
