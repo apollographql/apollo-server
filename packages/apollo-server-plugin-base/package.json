@@ -1,6 +1,6 @@
 {
   "name": "apollo-server-plugin-base",
-  "version": "0.5.0-alpha.6",
+  "version": "0.5.0-alpha.7",
   "description": "Apollo Server plugin base classes",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
