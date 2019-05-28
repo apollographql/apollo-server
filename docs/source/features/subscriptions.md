@@ -145,11 +145,11 @@ The example above validates the user's token that is sent with the first initial
 
 In case of an authentication error, the Promise will be rejected, which prevents the client's connection.
 
-<h2 id="wss">Securing Subscriptions with WSS</h2>
+## Securing Subscriptions with WSS
 
 Subscriptions can be configured to over SSL/WSS. See [example server](../essentials/server.html#ssl).
 
-<h2 id="subscription-filters">Subscription Filters</h2>
+## Subscription Filters
 
 Sometimes a client will want to filter out specific events based on context and arguments.
 
@@ -189,7 +189,7 @@ const resolvers = {
 };
 ```
 
-<h2 id="middleware">Subscriptions with Additional Middleware</h2>
+## Subscriptions with Additional Middleware
 
 With an existing HTTP server (created with `createServer`), we can add subscriptions using the `installSubscriptionHandlers`. Additionally, the subscription-capable integrations export `PubSub` and other subscription functionality.
 

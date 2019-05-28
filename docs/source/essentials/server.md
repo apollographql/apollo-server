@@ -6,7 +6,7 @@ title: Building a server
 
 Apollo Server provides an easy way for new, or existing, applications to get running quickly.  Existing applications can take advantage of middleware and new applications can utilize an integrated web server. Both of these servers can be configured with minimal configuration and follow industry best practices.
 
-<h2 id="installation">Installation</h2>
+## Installation
 
 We need to install two packages to use Apollo Server, and a third package when using Apollo Server as middleware in an existing application:
 
@@ -22,7 +22,7 @@ When adding Apollo Server to an existing application, a corresponding HTTP serve
     npm install apollo-server-express graphql
 
 
-<h2 id="creating">Creating a server</h2>
+## Creating a server
 
 The fastest way to get started with GraphQL is by creating a new server. Apollo Server will set an Express server up for you as long as you provide it with `typeDefs`, which is a string representing your GraphQL schema, and `resolvers`, which is a map of functions that implement your schema.
 
@@ -57,7 +57,7 @@ const server = new ApolloServer({
 
 > See the [API Reference](../api/apollo-server.html) for additional options which can be passed to the `ApolloServer` constructor.
 
-<h2 id="starting">Starting a server</h2>
+## Starting a server
 
 At this point, we're ready to start accepting connections to the server.  This is done by calling the `listen` method on the instance of `ApolloServer` which was created in the previous step:
 
@@ -69,7 +69,7 @@ server.listen().then(({ url }) => {
 
 > By default, Apollo Server listens on port 4000.  See the [API reference](../api/apollo-server.html) for additional `listen` options, including how to configure the port.
 
-<h3 id="running">Running the server</h3>
+### Running the server
 
 With the above configuration complete, we can now start the Node application, with Apollo Server, for the first time.  This varies, but assuming a standard `index.js` configuration, might be as simple as `node index.js`.
 
@@ -82,7 +82,7 @@ $ node index.js
 
 At this point, if the message isn't printed to the console, it's possible that something went wrong.  Double-check the previous steps in this guide, and try comparing the configuration to our [pre-configured example on Glitch](https://glitch.com/edit/#!/apollo-launchpad?path=server.js).
 
-<h3 id="running">GraphQL Playground</h3>
+### GraphQL Playground
 
 To explore the newly created GraphQL API, open a browser to the link shown in the console, `http://localhost:4000/`. Apollo Server sets up GraphQL Playground for you so that you can start running queries and exploring schemas quickly.
 
@@ -106,11 +106,11 @@ And the server should return a simple response:
 
 > GraphQL operations should _also_ be sent directly to `http://localhost:4000/` and Apollo Client should be configured with this endpoint.  Only `GET` requests from a web browser will result the GraphQL Playground interface being served.  Furthermore, by default, GraphQL Playground will only be enabled during development.
 
-<h2 id="integrations">Server integrations</h2>
+## Server integrations
 
 Depending on whether we are creating a new application or an existing application, the steps will vary slightly since Apollo Server must adapt to the semantics of existing servers (e.g. Express, Hapi, etc.)
 
-<h3 id="middleware">Middleware</h3>
+### Middleware
 
 Existing applications generally already have middleware in place and Apollo Server works along with those middleware. To integrate with Apollo Server, we'll pass it into the `server.applyMiddleware` method as `app` to add the Apollo Server's middleware.
 
@@ -139,11 +139,11 @@ Hapi follows the same pattern with `apollo-server-express` replaced with `apollo
 
 > When transitioning from `apollo-server` to an integration package, running `npm uninstall apollo-server` will remove the extra dependency.
 
-<h3 id="serverless">Serverless</h3>
+### Serverless
 
 Apollo Server works great in "serverless" environments such as Amazon Lambda and Microsoft Azure Functions.  These implementations have some extra considerations which won't be covered in this guide.
 
-<h3 id="ssl">SSL/TLS Support</h3>
+### SSL/TLS Support
 
 If you require an HTTPS connection to your Apollo Server, you can use the `https` module with `apollo-server-express`. Subscriptions can also go through an encrypted WebSocket (WSS)
 

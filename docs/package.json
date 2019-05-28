@@ -1,6 +1,8 @@
 {
   "scripts": {
-    "start": "gatsby develop"
+    "start": "rm -rf ./cache && gatsby develop",
+    "build": "gatsby build",
+    "serve": "gatsby serve"
   },
   "dependencies": {
     "gatsby": "2.7.1",

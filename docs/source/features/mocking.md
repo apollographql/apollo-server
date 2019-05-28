@@ -145,7 +145,7 @@ const mocks = {
 
 For some more background and flavor on this approach, read the ["Mocking your server with one line of code"](https://medium.com/apollo-stack/mocking-your-server-with-just-one-line-of-code-692feda6e9cd) article on the Apollo blog.
 
-<h3 id="existing-resolvers">Using existing resolvers with mocks</h3>
+### Using existing resolvers with mocks
 
 The default behavior for mocks is to overwrite the resolvers already present in the schema. To keep the existing resolvers, set the `mockEntireSchema` option to false.
 

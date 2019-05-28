@@ -11,7 +11,6 @@ Apollo Server provides a mechanism for server authors to declare fine-grained ca
 
 For each request, Apollo Server combines all the cache hints from all the queried fields and uses it to power several caching features. These features include **HTTP caching headers** for CDNs and browsers, and a GraphQL **full response cache**.
 
-
 ## Defining cache hints
 
 You can define cache hints *statically* in your schema and *dynamically* in your resolvers.
@@ -74,8 +73,7 @@ If you're using TypeScript, you need the following to teach TypeScript that the 
 import 'apollo-cache-control';
 ```
 
-
-<h3 id="default-maxage">Setting a default `maxAge`</h3>
+### Setting a default `maxAge`
 
 By default, root fields (ie, fields on `Query` and `Mutation`) and fields returning object and interface types are considered to have a `maxAge` of 0 (ie, uncacheable) if they don't have a static or dynamic cache hint. (Non-root scalar fields inherit their cacheability from their parent, so that in the common case of an object type with a bunch of strings and numbers which all have the same cacheability, you just need to declare the hint on the object type.)
 
@@ -92,22 +90,19 @@ const server = new ApolloServer({
 }));
 ```
 
-
 ### The overall cache policy
 
 Apollo Server's cache API lets you declare fine-grained cache hints on specific resolvers. Apollo Server then combines these hints into an overall cache policy for the response. The `maxAge` of this policy is the minimum `maxAge` across all fields in your request. As [described above](#default-maxage), the default `maxAge` of all root fields and non-scalar fields is 0, so the overall cache policy for a response will have `maxAge` 0 (ie, uncacheable) unless all root and non-scalar fields in the response have cache hints (or if `defaultMaxAge` is specified).
 
 If the overall cache policy has a non-zero `maxAge`, its scope is `PRIVATE` if any hints have scope `PRIVATE`, and `PUBLIC` otherwise.
 
-
-<h2 id="http-cache-headers">Serving HTTP cache headers</h2>
+## Serving HTTP cache headers
 
 For any response whose overall cache policy has a non-zero `maxAge`, Apollo Server will automatically set the `Cache-Control` HTTP response header to an appropriate value describing the `maxAge` and scope, such as `Cache-Control: max-age=60, private`.  If you run your Apollo Server instance behind a [CDN](https://en.wikipedia.org/wiki/Content_delivery_network) or other caching proxy, it can use this header's value to know how to cache your GraphQL responses.
 
 As many CDNs and caching proxies only cache GET requests (not POST requests) and may have a limit on the size of a GET URL, you may find it helpful to use [automatic persisted queries](https://github.com/apollographql/apollo-link-persisted-queries), especially with the `useGETForHashedQueries` option to `apollo-link-persisted-queries`.
 
 If you don't want to set HTTP cache headers, pass `cacheControl: {calculateHttpHeaders: false}` to `new ApolloServer()`.
-
 
 ## Saving full responses to a cache
 

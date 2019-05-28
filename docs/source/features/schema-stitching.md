@@ -9,7 +9,7 @@ One of the main benefits of GraphQL is that we can query all of our data as part
 
 That's exactly what schema stitching is for. We can create references to all of the remote GraphQL APIs we want to use, and pass them into the  `mergeSchemas` function to create a single API.
 
-<h2 id="remote-schemas" title="Remote schemas">Working with remote schemas</h2>
+## Working with remote schemas
 
 While you can use stitching to combine local schema objects, schema stitching is most useful when you use it to combine multiple GraphQL APIs that run as separate services. To do this, we first need to make a GraphQL schema object for each remote API we want to stitch together.
 
@@ -38,9 +38,7 @@ const executableSchema = makeRemoteExecutableSchema({
 
 Now, let's break down some of the details.
 
-<h3 id="create-link" title="Creating a link">
-  Creating a Link
-</h3>
+### Creating a Link
 
 A Link is a function capable of retrieving GraphQL results. It's the same network layer that Apollo Client uses to handle fetching data. Apollo Link brings with it a large feature set for common use cases. For instance, adding error handling to your request is super easy using the `apollo-link-error` package. You can set headers, batch requests, and even configure your app to retry on failed attempts all by including new links into your request chain.
 
@@ -53,7 +51,7 @@ const fetch = require('node-fetch');
 const link = new HttpLink({ uri: 'http://api.githunt.com/graphql', fetch });
 ```
 
-<h3 id="graphqlContext">GraphQL context</h3>
+### GraphQL context
 
 In GraphQL execution, `context` is often used to pass around information about authentication or other secrets. If you need these inside your Link to call the underlying API, it's easy to pass them through, since they will be included on the `graphqlContext` field.
 
@@ -74,7 +72,7 @@ const link = setContext((request, previousContext) => ({
 
 If you need further details about how to control your requests, read the full details in the [Apollo Link docs](https://www.apollographql.com/docs/link/).
 
-<h2 id="basic-example">Basic example</h2>
+## Basic example
 
 In this example we'll stitch together two very simple schemas. It doesn't matter whether these are local or proxies created with `makeRemoteExecutableSchema`, because the merging itself would be the same.
 
@@ -144,7 +142,7 @@ type Query {
 
 We now have a single schema that supports asking for `userById` and `chirpsByAuthorId` in the same query!
 
-<h3 id="adding-resolvers">Adding resolvers between schemas</h3>
+### Adding resolvers between schemas
 
 Combining existing root fields is a great start, but in practice we will often want to introduce additional fields for working with the relationships between types that came from different subschemas. For example, we might want to go from a particular user to their chirps, or from a chirp to its author. Or we might want to query a `latestChirps` field and then get the author of each of those chirps. If the only way to obtain a chirp's author is to call the `userById(id)` root query field with the `authorId` of a given chirp, and we don't know the chirp's `authorId` until we receive the GraphQL response, then we won't be able to obtain the authors as part of the same query.
 
@@ -230,7 +228,7 @@ const mergedSchema = mergeSchemas({
 });
 ```
 
-<h2 id="using-with-transforms">Using with Transforms</h2>
+## Using with Transforms
 
 Often, when creating a GraphQL gateway that combines multiple existing schemas, we might want to modify one of the schemas. The most common tasks include renaming some of the types, and filtering the root fields. By using [transforms](./schema-transforms.html) with schema stitching, we can easily tweak the subschemas before merging them together.
 
@@ -341,7 +339,7 @@ Notice that `resolvers.Chirp_Chirp` has been renamed from just `Chirp`, but `res
 
 Also, when we call `info.mergeInfo.delegateToSchema` in the `User.chirps` resolvers, we can delegate to the original `chirpsByAuthorId` field, even though it has been filtered out of the final schema. That's because we're delegating to the original `chirpSchema`, which has not been modified by the transforms.
 
-<h2 id="complex-example">Complex example</h2>
+## Complex example
 
 For a more complicated example involving properties and bookings, with implementations of all of the resolvers, check out the Launchpad links below:
 
@@ -349,9 +347,9 @@ For a more complicated example involving properties and bookings, with implement
 * [Booking schema](https://launchpad.graphql.com/41p4j4309)
 * [Merged schema](https://launchpad.graphql.com/q5kq9z15p)
 
-<h2 id="api">API</h2>
+## API
 
-<h3 id="mergeSchemas">mergeSchemas</h3>
+### mergeSchemas
 
 ```ts
 mergeSchemas({

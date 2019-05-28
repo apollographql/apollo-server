@@ -58,7 +58,7 @@ $ now apollographql/graphql-server-example
 
 The `now` command deploys right away and attempts to start the server. This specific example would fail though, due to missing environment variables. They can be added by following the [section](#env-variables) on environment variables.
 
-<h3 id="automatic-github-deploys">Automatic GitHub deployment</h3>
+### Automatic GitHub deployment
 
 [Now](https://zeit.co/now) supports automatic deployment from GitHub on pull requests.
 
@@ -68,7 +68,7 @@ After signing in with GitHub, the [Now](https://zeit.co/now) GitHub app can be a
 
 ![now permissions setup](../images/deployment/zeit/now-github-permissions.png)
 
-<h2 id="env-variables">Setting environment variables</h2>
+## Setting environment variables
 
 The `graphql-server-example` project requires environment variables to enable reporting to Apollo Engine. To deploy to Now with environment variables, the `-e` flag can be used followed by the variables like so:
 
