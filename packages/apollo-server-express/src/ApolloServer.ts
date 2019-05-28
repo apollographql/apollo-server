@@ -11,6 +11,9 @@ import {
   ApolloServerBase,
   formatApolloErrors,
   processFileUploads,
+  ContextFunction,
+  Context,
+  Config,
 } from 'apollo-server-core';
 import accepts from 'accepts';
 import typeis from 'type-is';
@@ -67,7 +70,20 @@ const fileUploadMiddleware = (
   }
 };
 
+export interface ExpressContext {
+  req: express.Request;
+  res: express.Response;
+}
+
+export interface ApolloServerExpressConfig extends Config {
+  context?: ContextFunction<ExpressContext, Context> | Context;
+}
+
 export class ApolloServer extends ApolloServerBase {
+  constructor(config: ApolloServerExpressConfig) {
+    super(config);
+  }
+
   // This translates the arguments from the middleware into graphQL options It
   // provides typings for the integration specific behavior, ideally this would
   // be propagated with a generic to the super class
@@ -179,7 +195,7 @@ export class ApolloServer extends ApolloServerBase {
 
         if (prefersHTML) {
           const playgroundRenderPageOptions: PlaygroundRenderPageOptions = {
-            endpoint: path,
+            endpoint: req.originalUrl,
             subscriptionEndpoint: this.subscriptionsPath,
             ...this.playgroundOptions,
           };

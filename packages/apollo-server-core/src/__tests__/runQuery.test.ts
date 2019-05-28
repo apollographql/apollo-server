@@ -551,8 +551,6 @@ describe('runQuery', () => {
       await runRequest({ plugins, documentStore });
       expect(parsingDidStart.mock.calls.length).toBe(1);
       expect(validationDidStart.mock.calls.length).toBe(1);
-
-      console.log(documentStore);
     });
 
     it("the documentStore calculates the DocumentNode's length by its JSON.stringify'd representation", async () => {

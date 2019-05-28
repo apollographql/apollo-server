@@ -44,6 +44,8 @@ const resolvers = {
 };
 ```
 
+With the resolver map above, the query, `{ author { books } }`, will call the `Query.author` resolver first and pass its result to `Author.books`. The query result will contain the return value of `Author.books` nested under `data.author.books`.
+
 Note that you don't have to put all of your resolvers in one object. Refer to the ["modularizing the schema"](/docs/graphql-tools/generate-schema.html#modularizing) section to learn how to combine multiple resolver maps into one.
 
 <h2 id="type-signature">Resolver type signature</h2>
@@ -86,7 +88,7 @@ query {
 }
 ```
 
-Every GraphQL query is a tree of function calls in the server. So the `obj` contains the result of parent resolver, in this case:
+Every GraphQL query is a tree of function calls in the server. So the `parent` contains the result of parent resolver, in this case:
 
 1. `parent` in `Query.getAuthor` will be whatever the server configuration passed for `rootValue`.
 2. `parent` in `Author.name` and `Author.posts` will be the result from `getAuthor`, likely an Author object from the backend.
@@ -99,7 +101,7 @@ Every resolver function is called according to the nesting of the query. To unde
 
 The context is how you access your shared connections and fetchers in resolvers to get data.
 
-The `context` is the third argument passed to every resolver. It is useful for passing things that any resolver may need, like [authentication scope](https://blog.apollographql.com/authorization-in-graphql-452b1c402a9), database connections, and custom fetch functions. Additionally, if you're using [dataloaders to batch requests](../best-practices/performance.html#Batching-data-lookups)  across resolvers, you can attach them to the `context` as well.
+The `context` is the third argument passed to every resolver. It is useful for passing things that any resolver may need, like [authentication scope](https://blog.apollographql.com/authorization-in-graphql-452b1c402a9), database connections, and custom fetch functions. Additionally, if you're using [dataloaders to batch requests](../features/data-sources#what-about-dataloader)  across resolvers, you can attach them to the `context` as well.
 
 As a best practice, `context` should be the same for all resolvers, no matter the particular query or mutation, and resolvers should never modify it. This ensures consistency across resolvers, and helps increase development velocity.
 

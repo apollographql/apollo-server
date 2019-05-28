@@ -7,8 +7,12 @@ import FormData from 'form-data';
 import fs from 'fs';
 import { createApolloFetch } from 'apollo-fetch';
 
-import { gql, AuthenticationError, Config } from 'apollo-server-core';
-import { ApolloServer, ServerRegistration } from '../ApolloServer';
+import { gql, AuthenticationError } from 'apollo-server-core';
+import {
+  ApolloServer,
+  ApolloServerExpressConfig,
+  ServerRegistration,
+} from '../ApolloServer';
 
 import {
   NODE_MAJOR_VERSION,
@@ -57,7 +61,7 @@ describe('apollo-server-express', () => {
   let httpServer: http.Server;
 
   async function createServer(
-    serverOptions: Config,
+    serverOptions: ApolloServerExpressConfig,
     options: Partial<ServerRegistration> = {},
   ) {
     server = new ApolloServer(serverOptions);
@@ -179,6 +183,57 @@ describe('apollo-server-express', () => {
           },
         );
       });
+    });
+
+    it('renders GraphQL playground using request original url', async () => {
+      const nodeEnv = process.env.NODE_ENV;
+      delete process.env.NODE_ENV;
+      const samplePath = '/innerSamplePath';
+
+      const rewiredServer = new ApolloServer({
+        typeDefs,
+        resolvers,
+      });
+      const innerApp = express();
+      rewiredServer.applyMiddleware({ app: innerApp });
+
+      const outerApp = express();
+      outerApp.use(samplePath, innerApp);
+
+      const httpRewiredServer = await new Promise<http.Server>(resolve => {
+        const l = outerApp.listen({ port }, () => resolve(l));
+      });
+
+      const { url } = createServerInfo(rewiredServer, httpRewiredServer);
+
+      const paths = url.split('/');
+      const rewiredEndpoint = `${samplePath}/${paths.pop()}`;
+
+      await new Promise<http.Server>((resolve, reject) => {
+        request(
+          {
+            url: paths.join('/') + rewiredEndpoint,
+            method: 'GET',
+            headers: {
+              accept:
+                'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+            },
+          },
+          (error, response, body) => {
+            process.env.NODE_ENV = nodeEnv;
+            if (error) {
+              reject(error);
+            } else {
+              expect(body).toMatch(rewiredEndpoint);
+              expect(body).not.toMatch('settings');
+              expect(response.statusCode).toEqual(200);
+              resolve();
+            }
+          },
+        );
+      });
+      await rewiredServer.stop();
+      await httpRewiredServer.close();
     });
 
     const playgroundPartialOptionsTest = async () => {
@@ -825,28 +880,6 @@ describe('apollo-server-express', () => {
           resolvers,
           tracing: true,
           cacheControl: true,
-        });
-
-        const apolloFetch = createApolloFetch({ uri });
-        const result = await apolloFetch({
-          query: `{ books { title author } }`,
-        });
-        expect(result.data).toEqual({ books });
-        expect(result.extensions).toBeDefined();
-        expect(result.extensions.tracing).toBeDefined();
-      });
-
-      xit('applies tracing extension with engine enabled', async () => {
-        const { url: uri } = await createServer({
-          typeDefs,
-          resolvers,
-          tracing: true,
-          engine: {
-            apiKey: 'service:my-app:secret',
-            maxAttempts: 0,
-            endpointUrl: 'l',
-            reportErrorFunction: () => {},
-          },
         });
 
         const apolloFetch = createApolloFetch({ uri });

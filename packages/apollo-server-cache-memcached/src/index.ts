@@ -1,8 +1,8 @@
-import { KeyValueCache } from 'apollo-server-caching';
+import { TestableKeyValueCache } from 'apollo-server-caching';
 import Memcached from 'memcached';
 import { promisify } from 'util';
 
-export class MemcachedCache implements KeyValueCache {
+export class MemcachedCache implements TestableKeyValueCache {
   // FIXME: Replace any with proper promisified type
   readonly client: any;
   readonly defaultSetOptions = {
@@ -37,6 +37,8 @@ export class MemcachedCache implements KeyValueCache {
     return await this.client.del(key);
   }
 
+  // Drops all data from Memcached. This should only be used by test suites ---
+  // production code should never drop all data from an end user cache.
   async flush(): Promise<void> {
     await this.client.flush();
   }

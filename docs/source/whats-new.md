@@ -74,7 +74,7 @@ For more information on automatic persisted queries, check the [APQ section of t
 
 ### CDN integration
 
-Apollo Server works well with a Content-Distribution Network to cache full GraphQL query results. Apollo Server provides `cache-control` headers that a CDN uses to determine how long a request should be cached. For subsequent requests, the result will be served directly from the CDN's cache. A CDN paired with Apollo Server's persisted queries is especially powerful, since GraphQL operations can be shortened and sent with a HTTP GET request. To enable caching and a CDN in Apollo Server, follow the [Performance Guide](https://www.apollographql.com/docs/guides/performance.html#cdn).
+Apollo Server works well with a Content-Distribution Network to cache full GraphQL query results. Apollo Server provides `cache-control` headers that a CDN uses to determine how long a request should be cached. For subsequent requests, the result will be served directly from the CDN's cache. A CDN paired with Apollo Server's persisted queries is especially powerful, since GraphQL operations can be shortened and sent with a HTTP GET request. Read more about [caching in Apollo Server](./features/caching.html).
 
 ### GraphQL errors
 
@@ -89,11 +89,11 @@ const resolvers = {
   Query: {
     allTodos: (_, _, context) => {
       if (!context.scope) {
-        throw AuthenticationError("You must be logged in to see all todos");
+        throw new AuthenticationError("You must be logged in to see all todos");
       }
 
       if (context.scope !== "ADMIN") {
-        throw ForbiddenError("You must be an administrator to see all todos");
+        throw new ForbiddenError("You must be an administrator to see all todos");
       }
 
       return context.Todos.getAllTodos();

@@ -50,7 +50,7 @@ const server = new ApolloServer({
     generateClientInfo: ({
       request
     }) => {
-      const headers = request.http & request.http.headers;
+      const headers = request.http && request.http.headers;
       if(headers) {
         return {
           clientName: headers['apollo-client-name'],
@@ -122,5 +122,4 @@ server.listen().then(({ url }) => {
 });
 ```
 
-For example the `logFunction` from Apollo Server 1 can be implemented as an [extension](https://github.com/apollographql/apollo-server/blob/8914b135df9840051fe81cc9224b444cfc5b61ab/packages/apollo-server-core/src/logging.ts) and could be modified to add additional state or functionality. The example uses a beta of `graphql-extensions`, which can be added to a project with `npm install graphql-extensions@beta`.
-
+For example the `logFunction` from Apollo Server 1 can be implemented as an [extension](https://github.com/apollographql/apollo-server/blob/8914b135df9840051fe81cc9224b444cfc5b61ab/packages/apollo-server-core/src/logging.ts) and could be modified to add additional state or functionality.

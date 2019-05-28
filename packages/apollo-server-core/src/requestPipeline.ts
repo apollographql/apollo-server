@@ -5,8 +5,8 @@ import {
   DocumentNode,
   getOperationAST,
   ExecutionArgs,
-  ExecutionResult,
   GraphQLError,
+  GraphQLFormattedError,
 } from 'graphql';
 import * as graphql from 'graphql';
 import {
@@ -28,6 +28,7 @@ import {
   ValidationError,
   PersistedQueryNotSupportedError,
   PersistedQueryNotFoundError,
+  formatApolloErrors,
 } from 'apollo-server-errors';
 import {
   GraphQLRequest,
@@ -35,15 +36,21 @@ import {
   GraphQLRequestContext,
   InvalidGraphQLRequestError,
   ValidationRule,
+  GraphQLExecutor,
+  GraphQLExecutionResult,
 } from '../dist/requestPipelineAPI';
 import {
   ApolloServerPlugin,
   GraphQLRequestListener,
-  WithRequired,
 } from 'apollo-server-plugin-base';
+import { WithRequired } from 'apollo-server-env';
 
 import { Dispatcher } from './utils/dispatcher';
-import { InMemoryLRUCache, KeyValueCache } from 'apollo-server-caching';
+import {
+  InMemoryLRUCache,
+  KeyValueCache,
+  PrefixingKeyValueCache,
+} from 'apollo-server-caching';
 import { GraphQLParseOptions } from 'graphql-tools';
 
 export {
@@ -54,6 +61,8 @@ export {
 };
 
 import createSHA from './utils/createSHA';
+
+export const APQ_CACHE_PREFIX = 'apq:';
 
 function computeQueryHash(query: string) {
   return createSHA('sha256')
@@ -66,6 +75,7 @@ export interface GraphQLRequestPipelineConfig<TContext> {
 
   rootValue?: ((document: DocumentNode) => any) | any;
   validationRules?: ValidationRule[];
+  executor?: GraphQLExecutor;
   fieldResolver?: GraphQLFieldResolver<any, TContext>;
 
   dataSources?: () => DataSources<TContext>;
@@ -75,7 +85,7 @@ export interface GraphQLRequestPipelineConfig<TContext> {
   persistedQueries?: PersistedQueryOptions;
   cacheControl?: CacheControlExtensionOptions;
 
-  formatError?: Function;
+  formatError?: (error: GraphQLError) => GraphQLFormattedError;
   formatResponse?: Function;
 
   plugins?: ApolloServerPlugin[];
@@ -102,6 +112,11 @@ export async function processGraphQLRequest<TContext>(
 
   initializeDataSources();
 
+  const metrics = requestContext.metrics || Object.create(null);
+  if (!requestContext.metrics) {
+    requestContext.metrics = metrics;
+  }
+
   const request = requestContext.request;
 
   let { query, extensions } = request;
@@ -109,8 +124,8 @@ export async function processGraphQLRequest<TContext>(
   let queryHash: string;
 
   let persistedQueryCache: KeyValueCache | undefined;
-  let persistedQueryHit = false;
-  let persistedQueryRegister = false;
+  metrics.persistedQueryHit = false;
+  metrics.persistedQueryRegister = false;
 
   if (extensions && extensions.persistedQuery) {
     // It looks like we've received a persisted query. Check if we
@@ -127,12 +142,23 @@ export async function processGraphQLRequest<TContext>(
     // do the write at a later point in the request pipeline processing.
     persistedQueryCache = config.persistedQueries.cache;
 
+    // This is a bit hacky, but if `config` came from direct use of the old
+    // apollo-server 1.0-style middleware (graphqlExpress etc, not via the
+    // ApolloServer class), it won't have been converted to
+    // PrefixingKeyValueCache yet.
+    if (!(persistedQueryCache instanceof PrefixingKeyValueCache)) {
+      persistedQueryCache = new PrefixingKeyValueCache(
+        persistedQueryCache,
+        APQ_CACHE_PREFIX,
+      );
+    }
+
     queryHash = extensions.persistedQuery.sha256Hash;
 
     if (query === undefined) {
-      query = await persistedQueryCache.get(`apq:${queryHash}`);
+      query = await persistedQueryCache.get(queryHash);
       if (query) {
-        persistedQueryHit = true;
+        metrics.persistedQueryHit = true;
       } else {
         throw new PersistedQueryNotFoundError();
       }
@@ -149,7 +175,7 @@ export async function processGraphQLRequest<TContext>(
       // Defering the writing gives plugins the ability to "win" from use of
       // the cache, but also have their say in whether or not the cache is
       // written to (by interrupting the request with an error).
-      persistedQueryRegister = true;
+      metrics.persistedQueryRegister = true;
     }
   } else if (query) {
     // FIXME: We'll compute the APQ query hash to use as our cache key for
@@ -160,6 +186,7 @@ export async function processGraphQLRequest<TContext>(
   }
 
   requestContext.queryHash = queryHash;
+  requestContext.source = query;
 
   const requestDidEnd = extensionStack.requestDidStart({
     request: request.http!,
@@ -167,9 +194,9 @@ export async function processGraphQLRequest<TContext>(
     operationName: request.operationName,
     variables: request.variables,
     extensions: request.extensions,
-    persistedQueryHit,
-    persistedQueryRegister,
     context: requestContext.context,
+    persistedQueryHit: metrics.persistedQueryHit,
+    persistedQueryRegister: metrics.persistedQueryRegister,
     requestContext,
   });
 
@@ -194,7 +221,10 @@ export async function processGraphQLRequest<TContext>(
     if (!requestContext.document) {
       const parsingDidEnd = await dispatcher.invokeDidStartHook(
         'parsingDidStart',
-        requestContext,
+        requestContext as WithRequired<
+          typeof requestContext,
+          'metrics' | 'source'
+        >,
       );
 
       try {
@@ -207,7 +237,10 @@ export async function processGraphQLRequest<TContext>(
 
       const validationDidEnd = await dispatcher.invokeDidStartHook(
         'validationDidStart',
-        requestContext as WithRequired<typeof requestContext, 'document'>,
+        requestContext as WithRequired<
+          typeof requestContext,
+          'document' | 'source' | 'metrics'
+        >,
       );
 
       const validationErrors = validate(requestContext.document);
@@ -258,7 +291,7 @@ export async function processGraphQLRequest<TContext>(
       'didResolveOperation',
       requestContext as WithRequired<
         typeof requestContext,
-        'document' | 'operation' | 'operationName'
+        'document' | 'source' | 'operation' | 'operationName' | 'metrics'
       >,
     );
 
@@ -266,32 +299,62 @@ export async function processGraphQLRequest<TContext>(
     // pipeline, and given plugins appropriate ability to object (by throwing
     // an error) and not actually write, we'll write to the cache if it was
     // determined earlier in the request pipeline that we should do so.
-    if (persistedQueryRegister && persistedQueryCache) {
-      Promise.resolve(persistedQueryCache.set(`apq:${queryHash}`, query)).catch(
+    if (metrics.persistedQueryRegister && persistedQueryCache) {
+      Promise.resolve(persistedQueryCache.set(queryHash, query)).catch(
         console.warn,
       );
     }
 
-    const executionDidEnd = await dispatcher.invokeDidStartHook(
-      'executionDidStart',
+    let response: GraphQLResponse | null = await dispatcher.invokeHooksUntilNonNull(
+      'responseForOperation',
       requestContext as WithRequired<
         typeof requestContext,
-        'document' | 'operation' | 'operationName'
+        'document' | 'source' | 'operation' | 'operationName' | 'metrics'
       >,
     );
+    if (response == null) {
+      const executionDidEnd = await dispatcher.invokeDidStartHook(
+        'executionDidStart',
+        requestContext as WithRequired<
+          typeof requestContext,
+          'document' | 'source' | 'operation' | 'operationName' | 'metrics'
+        >,
+      );
 
-    let response: GraphQLResponse;
+      try {
+        const result = await execute(requestContext as WithRequired<
+          typeof requestContext,
+          'document' | 'operation' | 'operationName'
+        >);
 
-    try {
-      response = (await execute(
-        requestContext.document,
-        request.operationName,
-        request.variables,
-      )) as GraphQLResponse;
-      executionDidEnd();
-    } catch (executionError) {
-      executionDidEnd(executionError);
-      return sendErrorResponse(executionError);
+        if (result.errors) {
+          extensionStack.didEncounterErrors(result.errors);
+        }
+
+        response = {
+          ...result,
+          errors: result.errors ? formatErrors(result.errors) : undefined,
+        };
+
+        executionDidEnd();
+      } catch (executionError) {
+        executionDidEnd(executionError);
+        return sendErrorResponse(executionError);
+      }
+    }
+
+    if (cacheControlExtension) {
+      if (requestContext.overallCachePolicy) {
+        // If we read this response from a cache and it already has its own
+        // policy, teach that to cacheControlExtension so that it'll use the
+        // saved policy for HTTP headers. (If cacheControlExtension was a
+        // plugin, it could just read from the requestContext, but it isn't.)
+        cacheControlExtension.overrideOverallCachePolicy(
+          requestContext.overallCachePolicy,
+        );
+      } else {
+        requestContext.overallCachePolicy = cacheControlExtension.computeOverallCachePolicy();
+      }
     }
 
     const formattedExtensions = extensionStack.format();
@@ -300,9 +363,15 @@ export async function processGraphQLRequest<TContext>(
     }
 
     if (config.formatResponse) {
-      response = config.formatResponse(response, {
-        context: requestContext.context,
-      });
+      const formattedResponse: GraphQLResponse | null = config.formatResponse(
+        response,
+        {
+          context: requestContext.context,
+        },
+      );
+      if (formattedResponse != null) {
+        response = formattedResponse;
+      }
     }
 
     return sendResponse(response);
@@ -341,10 +410,13 @@ export async function processGraphQLRequest<TContext>(
   }
 
   async function execute(
-    document: DocumentNode,
-    operationName: GraphQLRequest['operationName'],
-    variables: GraphQLRequest['variables'],
-  ): Promise<ExecutionResult> {
+    requestContext: WithRequired<
+      GraphQLRequestContext<TContext>,
+      'document' | 'operationName' | 'operation'
+    >,
+  ): Promise<GraphQLExecutionResult> {
+    const { request, document } = requestContext;
+
     const executionArgs: ExecutionArgs = {
       schema: config.schema,
       document,
@@ -353,8 +425,8 @@ export async function processGraphQLRequest<TContext>(
           ? config.rootValue(document)
           : config.rootValue,
       contextValue: requestContext.context,
-      variableValues: variables,
-      operationName,
+      variableValues: request.variables,
+      operationName: request.operationName,
       fieldResolver: config.fieldResolver,
     };
 
@@ -363,7 +435,11 @@ export async function processGraphQLRequest<TContext>(
     });
 
     try {
-      return await graphql.execute(executionArgs);
+      if (config.executor) {
+        return await config.executor(requestContext);
+      } else {
+        return await graphql.execute(executionArgs);
+      }
     } finally {
       executionDidEnd();
     }
@@ -385,7 +461,10 @@ export async function processGraphQLRequest<TContext>(
     }).graphqlResponse;
     await dispatcher.invokeHookAsync(
       'willSendResponse',
-      requestContext as WithRequired<typeof requestContext, 'response'>,
+      requestContext as WithRequired<
+        typeof requestContext,
+        'metrics' | 'response'
+      >,
     );
     return requestContext.response!;
   }
@@ -400,14 +479,25 @@ export async function processGraphQLRequest<TContext>(
       : [errorOrErrors];
 
     return sendResponse({
-      errors: errors.map(err =>
-        fromGraphQLError(
-          err,
-          errorClass && {
-            errorClass,
-          },
+      errors: formatErrors(
+        errors.map(err =>
+          fromGraphQLError(
+            err,
+            errorClass && {
+              errorClass,
+            },
+          ),
         ),
       ),
+    });
+  }
+
+  function formatErrors(
+    errors: ReadonlyArray<GraphQLError>,
+  ): ReadonlyArray<GraphQLFormattedError> {
+    return formatApolloErrors(errors, {
+      formatter: config.formatError,
+      debug: requestContext.debug,
     });
   }
 

@@ -1,9 +1,9 @@
-import { KeyValueCache } from 'apollo-server-caching';
+import { TestableKeyValueCache } from 'apollo-server-caching';
 import Redis from 'redis';
 import { promisify } from 'util';
 import DataLoader from 'dataloader';
 
-export class RedisCache implements KeyValueCache<string> {
+export class RedisCache implements TestableKeyValueCache<string> {
   // FIXME: Replace any with proper promisified type
   readonly client: any;
   readonly defaultSetOptions = {
@@ -51,6 +51,8 @@ export class RedisCache implements KeyValueCache<string> {
     return await this.client.del(key);
   }
 
+  // Drops all data from Redis. This should only be used by test suites ---
+  // production code should never drop all data from an end user Redis cache!
   async flush(): Promise<void> {
     await this.client.flushdb();
   }

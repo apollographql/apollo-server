@@ -1,4 +1,4 @@
-import { GraphQLError } from 'graphql';
+import { GraphQLError, GraphQLFormattedError } from 'graphql';
 
 export class ApolloError extends Error implements GraphQLError {
   public extensions: Record<string, any>;
@@ -211,9 +211,9 @@ export class UserInputError extends ApolloError {
 }
 
 export function formatApolloErrors(
-  errors: Array<Error>,
+  errors: ReadonlyArray<Error>,
   options?: {
-    formatter?: Function;
+    formatter?: (error: GraphQLError) => GraphQLFormattedError;
     debug?: boolean;
   },
 ): Array<ApolloError> {
@@ -263,4 +263,14 @@ export function formatApolloErrors(
       }
     }
   }) as Array<ApolloError>;
+}
+
+export function hasPersistedQueryError(errors: Array<Error>): boolean {
+  return Array.isArray(errors)
+    ? errors.some(
+        error =>
+          error instanceof PersistedQueryNotFoundError ||
+          error instanceof PersistedQueryNotSupportedError,
+      )
+    : false;
 }
