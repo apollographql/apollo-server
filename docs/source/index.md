@@ -12,15 +12,15 @@ This server can be queried from any GraphQL client, since it supports all of the
 
 [Contribute to Apollo Server on GitHub.](https://github.com/apollographql/apollo-server)
 
-<h2 id="get-started">Quick start</h2>
+## Quick start
 
 If you want to get started quickly, take a look at the [quick start code snippet](./example.html). This will get you started with a Node.js GraphQL server in about 10 seconds.
 
-<h2 id="tutorial">End-to-end GraphQL server tutorial</h2>
+## End-to-end GraphQL server tutorial
 
 If you're looking to learn about how to connect to different data sources, check out our recently updated tutorial which walks you through building a server from start to finish: [How To Build a GraphQL Server to talk to SQL, MongoDB, and REST](https://blog.apollographql.com/tutorial-building-a-graphql-server-cddaa023c035)
 
-<h2 id="selecting-package">Selecting the right package</h2>
+## Selecting the right package
 
 Apollo Server is actually a family of npm packages, one for each Node.js HTTP server library.
 
@@ -40,23 +40,23 @@ npm install graphql apollo-server-adonis
 
 If you don't see your favorite server there, [file a PR](https://github.com/apollographql/apollo-server)!
 
-<h2 id="features">Features</h2>
+## Features
 
 At the end of the day, Apollo Server is a simple, production-ready solution without too many features. Here's what you can do with it:
 
-* Attach a GraphQL schema to your HTTP server to serve requests
-* Attach GraphQL and GraphiQL via separate middlewares, on different routes
-* Accept queries via GET or POST
-* Support HTTP query batching
-* Support Apollo Tracing to get performance information about your server
-* Support Apollo Cache Control to inform caching gateways such as Apollo Engine
+- Attach a GraphQL schema to your HTTP server to serve requests
+- Attach GraphQL and GraphiQL via separate middlewares, on different routes
+- Accept queries via GET or POST
+- Support HTTP query batching
+- Support Apollo Tracing to get performance information about your server
+- Support Apollo Cache Control to inform caching gateways such as Apollo Engine
 
-<h2 id="principles">Principles</h2>
+## Principles
 
 Apollo Server is built with the following principles in mind:
 
-* **By the community, for the community**: Apollo Server's development is driven by the needs of developers using the library.
-* **Simplicity**: Keeping things simple, for example supporting a limited set of transports, makes Apollo Server easier to use, easier to contribute to, and more secure.
-* **Performance**: Apollo Server is well-tested and production-ready.
+- **By the community, for the community**: Apollo Server's development is driven by the needs of developers using the library.
+- **Simplicity**: Keeping things simple, for example supporting a limited set of transports, makes Apollo Server easier to use, easier to contribute to, and more secure.
+- **Performance**: Apollo Server is well-tested and production-ready.
 
 Anyone is welcome to contribute to Apollo Server, just read [CONTRIBUTING.md](https://github.com/apollographql/apollo-server/blob/master/CONTRIBUTING.md), take a look at the [issues](https://github.com/apollographql/apollo-server/issues) and make your first PR!
