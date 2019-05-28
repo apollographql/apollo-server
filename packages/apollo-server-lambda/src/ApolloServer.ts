@@ -138,13 +138,19 @@ export class ApolloServer extends ApolloServerBase {
         }
       }
 
+      // Convert the `Headers` into an object which can be spread into the
+      // various headers objects below.
+      const requestCorsHeadersObject = Object.fromEntries(
+        Array.from(requestCorsHeaders),
+      );
+
       if (event.httpMethod === 'OPTIONS') {
         context.callbackWaitsForEmptyEventLoop = false;
         return callback(null, {
           body: '',
           statusCode: 204,
           headers: {
-            ...requestCorsHeaders,
+            ...requestCorsHeadersObject,
           },
         });
       }
@@ -167,7 +173,7 @@ export class ApolloServer extends ApolloServerBase {
             statusCode: 200,
             headers: {
               'Content-Type': 'text/html',
-              ...requestCorsHeaders,
+              ...requestCorsHeadersObject,
             },
           });
         }
@@ -180,7 +186,7 @@ export class ApolloServer extends ApolloServerBase {
             ...result,
             headers: {
               ...result.headers,
-              ...requestCorsHeaders,
+              ...requestCorsHeadersObject,
             },
           },
         );
