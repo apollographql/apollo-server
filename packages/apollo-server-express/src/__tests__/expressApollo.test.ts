@@ -1,6 +1,6 @@
 import express from 'express';
 import { ApolloServer, ApolloServerExpressConfig } from '../ApolloServer';
-import { graphqlExpress } from '../expressApollo'
+import { graphqlExpress } from '../expressApollo';
 import testSuite, {
   schema as Schema,
   CreateAppOptions,
@@ -26,7 +26,7 @@ describe('expressApollo', () => {
 
   it('throws error if called with more than one argument', function() {
     expect(() => graphqlExpress({ schema: Schema }, 1)).toThrow(
-      'Apollo Server expects exactly one argument, got 2'
+      'Apollo Server expects exactly one argument, got 2',
     );
   });
 });
