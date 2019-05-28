@@ -74,7 +74,7 @@ For the sake of this example, the following file can just be copied and pasted i
 service: apollo-lambda
 provider:
   name: aws
-  runtime: nodejs6.10
+  runtime: nodejs8.10
 functions:
   graphql:
     # this is formatted as <FILENAME>.<HANDLER>
