@@ -19,7 +19,7 @@ const pubsub = new PubSub();
 
 Subscriptions are another root level type, similar to Query and Mutation. To start, we need to add the `Subscription` type to our schema:
 
-```js line=2-4
+```js{2-4}
 const typeDefs = gql`
   type Subscription {
     postAdded: Post
@@ -42,7 +42,7 @@ const typeDefs = gql`
 
 Inside our resolver map, we add a Subscription resolver that returns an `AsyncIterator`, which listens to the events asynchronously. To generate events in the example, we notified the `pubsub` implementation inside of our Mutation resolver with `publish`. This `publish` call can occur outside of a resolver if required.
 
-```js line=4-9,17
+```js{4-9,17}
 const POST_ADDED = 'POST_ADDED';
 
 const resolvers = {
@@ -170,7 +170,7 @@ When using `withFilter`, provide a filter function. The filter is executed with 
 
 The following definition of the subscription resolver will filter out all of the `commentAdded` events that are not associated with the requested repository:
 
-```js line=8,10-12
+```js{8,10-12}
 const { withFilter } = require('apollo-server');
 
 const resolvers = {
@@ -195,7 +195,7 @@ With an existing HTTP server (created with `createServer`), we can add subscript
 
 For example: with an Express server already running on port 4000 that accepts GraphQL HTTP connections (POST) we can expose the subscriptions:
 
-```js line=12
+```js
 const http = require('http');
 const { ApolloServer } = require('apollo-server-express');
 const express = require('express');
@@ -207,7 +207,7 @@ const server = new ApolloServer({ typeDefs, resolvers });
 server.applyMiddleware({app})
 
 const httpServer = http.createServer(app);
-server.installSubscriptionHandlers(httpServer);
+server.installSubscriptionHandlers(httpServer); // highlight-line
 
 // ⚠️ Pay attention to the fact that we are calling `listen` on the http server variable, and not on `app`.
 httpServer.listen(PORT, () => {

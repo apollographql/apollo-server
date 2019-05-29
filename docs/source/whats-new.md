@@ -50,7 +50,7 @@ This is just the beginning. We have published a [roadmap](https://github.com/apo
 
 A persisted query is an ID or hash that can be sent to the server in place of the GraphQL query string. This smaller signature reduces bandwidth utilization and speeds up client loading times. Apollo Server enables persisted queries without additional server configuration, using an in-memory LRU cache to store the mapping between hash and query string. The persisted query cache can be configured as shown in the following code snippet. To enable persisted queries on the client, follow the [Performance Guide](https://www.apollographql.com/docs/guides/performance.html#Automatic-Persisted-Queries).
 
-```js line=7-12
+```js{7-12}
 const { ApolloServer } = require('apollo-server');
 const { MemcachedCache } = require('apollo-server-cache-memcached');
 
@@ -165,7 +165,7 @@ ENGINE_API_KEY=YOUR_API_KEY node start-server.js
 
 The simplest option is to pass the Engine API Key directly to the Apollo Server constructor.
 
-```js line=6-8
+```js{6-8}
 const { ApolloServer } = require('apollo-server');
 
 const server = new ApolloSever({

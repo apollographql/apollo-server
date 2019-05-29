@@ -13,7 +13,7 @@ Apollo Server 2.0 ships with the `gql` tag for **editor syntax highlighting** an
 
 The `gql` tag parses the query string into an AST  and is now exported from the new `apollo-server` package.
 
-```js line=1,3
+```js{1,3}
 const { ApolloServer, gql } = require('apollo-server');
 
 const typeDefs = gql`

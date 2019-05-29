@@ -13,7 +13,7 @@ When an error occurs in Apollo server both inside and outside of resolvers, each
 
 The first step to improving the usability of a server is providing the error stack trace by default. The following example demonstrates the response returned from Apollo server with a resolver that throws a node [`SystemError`](https://nodejs.org/api/errors.html#errors_system_errors).
 
-```js line=14-16
+```js{14-16}
 const {
   ApolloServer,
   gql,
@@ -44,7 +44,7 @@ The response will return:
 
 In addition to stacktraces, Apollo Server's exported errors specify a human-readable string in the `code` field of `extensions` that enables the client to perform corrective actions. In addition to improving the client experience, the `code` field allows the server to categorize errors. For example, an `AuthenticationError` sets the code to `UNAUTHENTICATED`, which enables the client to reauthenticate and would generally be ignored as a server anomaly.
 
-```js line=4,15-17
+```js{4,15-17}
 const {
   ApolloServer,
   gql,
@@ -77,7 +77,7 @@ like a localized message for each field or argument that was invalid. The
 following example demonstrates how you can use `UserInputError` to augment
 your error messages with additional details.
 
-```js line=15-21
+```js{15-21}
 const {
   ApolloServer,
   UserInputError,
@@ -129,7 +129,7 @@ The Apollo server constructor accepts a `formatError` function that is run on ea
 
 This example demonstrates throwing a different error when the error's message starts with `Database Error: `:
 
-```js line=4-10
+```js{4-10}
 const server = new ApolloServer({
   typeDefs,
   resolvers,
@@ -179,7 +179,7 @@ For example, if the current server is `throw`ing the `AuthenticationError`
 when a mis-typed password is supplied, an implementor can avoid reporting
 this to Apollo Engine by defining `rewriteError` as follows:
 
-```js line=5-15
+```js{5-15}
 const { ApolloServer, AuthenticationError } = require("apollo-server");
 const server = new ApolloServer({
   typeDefs,  // (Not defined in this example)
@@ -212,7 +212,7 @@ adding a `code` property). These properties can be checked when determining
 whether an error should be reported to Apollo Engine using the `rewriteError`
 function as follows:
 
-```js line=5-16
+```js{5-16}
 const { ApolloServer } = require("apollo-server");
 const server = new ApolloServer({
   typeDefs,  // (Not defined in this example)
@@ -251,7 +251,7 @@ error message itself, the `rewriteError` function could be used to make sure
 it it's sent to Apollo Engine and potentially revealed outside its intended
 scope:
 
-```js line=5-11
+```js{5-11}
 const { ApolloServer } = require("apollo-server");
 const server = new ApolloServer({
   typeDefs,  // (Not defined in this example)
