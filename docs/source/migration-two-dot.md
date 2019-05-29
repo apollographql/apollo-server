@@ -38,8 +38,8 @@ Apollo Server 2.0 simplifies implementing a GraphQL server.  Apollo Server 1.0 r
 
 There is a consideration to be made when following the rest of the guide:
 
-* [**Middleware option**](#Middleware): If the application being migrated implements Apollo Server alongside other middleware, there are some packages which can be removed, but adding the `apollo-server-{integration}` package and switching to using the new `applyMiddleware` API should still simplify the setup.  In this case, check the [Middleware](#Middleware) section.
-* [**Stand-alone option**](#Stand-alone): If the application being migrated is only used as a GraphQL server, Apollo Server 2.0 _eliminates the need to run a separate HTTP server_ and allows some dependencies to be removed.  In these cases, the [Stand-alone](#Stand-alone) option will reduce the amount of code necessary for running a GraphQL server.
+* [**Middleware option**](#middleware): If the application being migrated implements Apollo Server alongside other middleware, there are some packages which can be removed, but adding the `apollo-server-{integration}` package and switching to using the new `applyMiddleware` API should still simplify the setup.  In this case, check the [Middleware](#middleware) section.
+* [**Stand-alone option**](#stand-alone): If the application being migrated is only used as a GraphQL server, Apollo Server 2.0 _eliminates the need to run a separate HTTP server_ and allows some dependencies to be removed.  In these cases, the [Stand-alone](#stand-alone) option will reduce the amount of code necessary for running a GraphQL server.
 
 ## Simplified usage
 
@@ -283,7 +283,7 @@ new ApolloServer({
 
 ## Replacing `logFunction`
 
-Apollo Server 2 removes the `logFunction` to reduce the exposure of internal implementation details. The experimental, non-public `graphql-extensions` provides a more structured and flexible way of instrumenting Apollo Server. An explanation of to do more granular logging, can be found in the [metrics section](./features/metrics.html).
+Apollo Server 2 removes the `logFunction` to reduce the exposure of internal implementation details. The experimental, non-public `graphql-extensions` provides a more structured and flexible way of instrumenting Apollo Server. An explanation of to do more granular logging, can be found in the [metrics section](/features/metrics/).
 
 ## Replacing GraphiQL
 

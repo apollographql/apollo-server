@@ -15,9 +15,9 @@ While you can use stitching to combine local schema objects, schema stitching is
 
 There are three steps to create a remote schema:
 
-1. Create an [Apollo Link](#link) that can retrieve results from that schema
-2. Use [`introspectSchema`](#introspectSchema) to get the schema of the remote server
-3. Use [`makeRemoteExecutableSchema`](#makeRemoteExecutableSchema) to create a schema that uses the link to delegate requests to the underlying service
+1. Create an [Apollo Link](#creating-a-link) that can retrieve results from that schema
+2. Use `introspectSchema` to get the schema of the remote server
+3. Use [`makeRemoteExecutableSchema`](#basic-example) to create a schema that uses the link to delegate requests to the underlying service
 
 We’ve chosen to split this functionality up to give you the flexibility to choose when to do the introspection step. For example, you might already have the remote schema information, allowing you to skip the `introspectSchema` step entirely. Here’s a complete example:
 
@@ -230,7 +230,7 @@ const mergedSchema = mergeSchemas({
 
 ## Using with Transforms
 
-Often, when creating a GraphQL gateway that combines multiple existing schemas, we might want to modify one of the schemas. The most common tasks include renaming some of the types, and filtering the root fields. By using [transforms](./schema-transforms.html) with schema stitching, we can easily tweak the subschemas before merging them together.
+Often, when creating a GraphQL gateway that combines multiple existing schemas, we might want to modify one of the schemas. The most common tasks include renaming some of the types, and filtering the root fields. By using [transforms](/features/schema-transforms/) with schema stitching, we can easily tweak the subschemas before merging them together.
 
 Before, when we were simply merging schemas without first transforming them, we would typically delegate directly to one of the merged schemas. Once we add transforms to the mix, there are times when we want to delegate to fields of the new, transformed schemas, and other times when we want to delegate to the original, untransformed schemas.
 
@@ -378,7 +378,7 @@ This is the main function that implements schema stitching. Read below for a des
 
 #### resolvers
 
-`resolvers` accepts resolvers in same format as [makeExecutableSchema](./resolvers.html). It can also take an Array of resolvers. One addition to the resolver format is the possibility to specify a `fragment` for a resolver. The `fragment` must be a GraphQL fragment definition string, specifying which fields from the parent schema are required for the resolver to function properly.
+`resolvers` accepts resolvers in same format as [makeExecutableSchema](/api/graphql-tools/#makeexecutableschemaoptions). It can also take an Array of resolvers. One addition to the resolver format is the possibility to specify a `fragment` for a resolver. The `fragment` must be a GraphQL fragment definition string, specifying which fields from the parent schema are required for the resolver to function properly.
 
 ```js
 resolvers: {
@@ -426,7 +426,7 @@ interface IDelegateToSchemaOptions<TContext = {
 }
 ```
 
-As described in the documentation above, `info.mergeInfo.delegateToSchema` allows delegating to any `GraphQLSchema` object, optionally applying transforms in the process. See [Schema Delegation](./schema-delegation.html) and the [*Using with transforms*](#using-with-transforms) section of this document.
+As described in the documentation above, `info.mergeInfo.delegateToSchema` allows delegating to any `GraphQLSchema` object, optionally applying transforms in the process. See [Schema Delegation](/features/schema-delegation/) and the [*Using with transforms*](#using-with-transforms) section of this document.
 
 #### onTypeConflict
 

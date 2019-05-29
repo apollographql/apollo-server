@@ -9,7 +9,7 @@ description: Deploying your GraphQL server to Zeit Now
 ## Prerequisites
 
 - A [Now](https://zeit.co/now) account
-- The [Now CLI](https://zeit.co/download#now-cli) (unless using [automatic GitHub deployments](#automatic-github-deploys))
+- The [Now CLI](https://zeit.co/download#now-cli) (unless using [automatic GitHub deployments](#automatic-github-deployment))
 
 ## Setting up the project
 
@@ -40,7 +40,7 @@ Deployment to [Now](https://zeit.co/now) for Node.js apps requires a `package.js
 
 If the [Now](https://zeit.co/now) CLI is installed, then running the `now` command from the root directory of the project should deploy the project.
 
-```sh
+```shell
 $ now
 ```
 
@@ -52,11 +52,11 @@ If a GraphQL server project is publically available on GitHub, [Now](https://zei
 
 For example, to deploy Apollo's [graphql-server-example](https://github.com/apollographql/graphql-server-example), the command would be:
 
-```sh
+```shell
 $ now apollographql/graphql-server-example
 ```
 
-The `now` command deploys right away and attempts to start the server. This specific example would fail though, due to missing environment variables. They can be added by following the [section](#env-variables) on environment variables.
+The `now` command deploys right away and attempts to start the server. This specific example would fail though, due to missing environment variables. They can be added by following the [section](#setting-environment-variables) on environment variables.
 
 ### Automatic GitHub deployment
 
@@ -72,7 +72,7 @@ After signing in with GitHub, the [Now](https://zeit.co/now) GitHub app can be a
 
 The `graphql-server-example` project requires environment variables to enable reporting to Apollo Engine. To deploy to Now with environment variables, the `-e` flag can be used followed by the variables like so:
 
-```sh
+```shell
 $ now -e ENGINE_API_KEY=xxxxxxxxx apollographql/graphql-server-example
 ```
 

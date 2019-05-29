@@ -5,7 +5,7 @@ description: Automatically transforming schemas
 
 Schema transforms are a tool for making modified copies of `GraphQLSchema` objects, while preserving the possibility of delegating back to original schema.
 
-Transforms are useful when working with [remote schemas](./remote-schemas.html), building GraphQL gateways that combine multiple schemas, and/or using [schema stitching](./schema-stitching.html) to combine schemas together without conflicts between types or fields.
+Transforms are useful when working with [remote schemas](/features/remote-schemas/), building GraphQL gateways that combine multiple schemas, and/or using [schema stitching](/features/schema-stitching/) to combine schemas together without conflicts between types or fields.
 
 While it's possible to modify a schema by hand, the manual approach requires a deep understanding of all the relationships between `GraphQLSchema` properties, which makes it error-prone and labor-intensive. Transforms provide a generic abstraction over all those details, which improves code quality and saves time, not only now but also in the future, because transforms are designed to be reused again and again.
 

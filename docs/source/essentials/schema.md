@@ -39,7 +39,7 @@ It's important to note that these declarations express the _relationships_ and t
 
 By drawing these logical connections in the schema definition, we can allow the client (which is often a human developer, designing a front-end) to see what data is available and request it in a single optimized query.
 
-GraphQL clients (such as [Apollo Client](/docs/react)) benefit from the precision of GraphQL operations, especially when compared to traditional REST-based approaches, since they can avoid over-fetching and stitching data, which are particularly costly on slow devices or networks.
+GraphQL clients (such as [Apollo Client](https://www.apollographql.com/docs/react)) benefit from the precision of GraphQL operations, especially when compared to traditional REST-based approaches, since they can avoid over-fetching and stitching data, which are particularly costly on slow devices or networks.
 
 ### Scalar types
 
@@ -51,7 +51,7 @@ Scalar types represent the leaves of an operation and always resolve to concrete
 * `Boolean`: true or false
 * `ID` (serialized as `String`): A unique identifier, often used to refetch an object or as the key for a cache. While serialized as a String, ID signifies that it is not intended to be human‐readable
 
-These primitive types cover a majority of use cases. For other use cases, we can create [custom scalar types](../features/scalars-enums.html).
+These primitive types cover a majority of use cases. For other use cases, we can create [custom scalar types](/features/scalars-enums/).
 
 ### Object types
 
@@ -176,7 +176,7 @@ type Mutation {
 }
 ```
 
-This implements a single `addBook` mutation which accepts `title` and `author` as arguments (both `String` types).  We'll go further into arguments (also known as "input types") in [types](../schemas/types.html), but the important thing to note here is that this mutation will return the newly-created `Book` object.
+This implements a single `addBook` mutation which accepts `title` and `author` as arguments (both `String` types).  We'll go further into arguments (also known as "input types") in [types](/essentials/schema/#input-types), but the important thing to note here is that this mutation will return the newly-created `Book` object.
 
 The `Book` object will match the previously-created `Book` type (from above) and, much like the `Query` type, we specify the fields to include in the return object when sending the `mutation`:
 
@@ -516,4 +516,4 @@ Additionally, while it is possible to reuse an `input` type between a query and 
 
 At this point, we hope to have explained the basic information necessary to understand a GraphQL schema.
 
-In the [next step](./server.html), we'll show how to start implementing a simple GraphQL server.
+In the [next step](/essentials/server/), we'll show how to start implementing a simple GraphQL server.

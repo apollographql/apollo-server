@@ -5,7 +5,7 @@ description: A quick rundown of big announcements in the Apollo Server ecosystem
 
 ## 2.0
 
-> To upgrade from Apollo Server 1.x, see the [2.0 migration guide](./migration-two-dot.html).  For a more detailed list of smaller changes, see the Apollo Server [`CHANGELOG`](https://github.com/apollographql/apollo-server/blob/master/CHANGELOG.md).
+> To upgrade from Apollo Server 1.x, see the [2.0 migration guide](/migration-two-dot/).  For a more detailed list of smaller changes, see the Apollo Server [`CHANGELOG`](https://github.com/apollographql/apollo-server/blob/master/CHANGELOG.md).
 
 Apollo Server 2.0 makes building the most powerful and production ready GraphQL app easy. Apollo Server 1.x provided all of the tools necessary to make a great GraphQL backend, allowing the developer to pick and choose from a set of unopinionated tools. Building on 1.x and fully backwards compatible, 2.0's defaults bake in the best practices and patterns gathered from two years of community feedback and iteration. It is an opinionated, production focused, GraphQL server that works with any backend.
 
@@ -74,7 +74,7 @@ For more information on automatic persisted queries, check the [APQ section of t
 
 ### CDN integration
 
-Apollo Server works well with a Content-Distribution Network to cache full GraphQL query results. Apollo Server provides `cache-control` headers that a CDN uses to determine how long a request should be cached. For subsequent requests, the result will be served directly from the CDN's cache. A CDN paired with Apollo Server's persisted queries is especially powerful, since GraphQL operations can be shortened and sent with a HTTP GET request. Read more about [caching in Apollo Server](./features/caching.html).
+Apollo Server works well with a Content-Distribution Network to cache full GraphQL query results. Apollo Server provides `cache-control` headers that a CDN uses to determine how long a request should be cached. For subsequent requests, the result will be served directly from the CDN's cache. A CDN paired with Apollo Server's persisted queries is especially powerful, since GraphQL operations can be shortened and sent with a HTTP GET request. Read more about [caching in Apollo Server](/features/caching/).
 
 ### GraphQL errors
 
@@ -111,7 +111,7 @@ const resolvers = {
 };
 ```
 
-For more information, read about [errors in Apollo Server 2](./features/errors.html).
+For more information, read about [errors in Apollo Server 2](/features/errors/).
 
 ### Schema mocking
 
@@ -150,7 +150,7 @@ server.listen().then(({ url }) => {
 });
 ```
 
-For more information, check out the [feature explanation about mocking](./features/mocking.html).
+For more information, check out the [feature explanation about mocking](/features/mocking/).
 
 ### Performance monitoring
 
@@ -181,7 +181,7 @@ server.listen().then(({ url }) => {
 });
 ```
 
-For more information, check out the details in the [performance monitoring guide](./features/metrics.html).
+For more information, check out the details in the [performance monitoring guide](/features/metrics/).
 
 ### GraphQL Playground
 
@@ -214,7 +214,7 @@ server.listen().then(({ url }) => {
 
 To start in production mode, set the `NODE_ENV` environment variables to `production`. For further customization, the Apollo Server constructor options accepts an `introspection` boolean, which can overwrite the default for the environment.
 
-For additional information, check out the [guide on configuring GraphQL playground](./features/graphql-playground.html).
+For additional information, check out the [guide on configuring GraphQL playground](/features/graphql-playground/).
 
 ### File Uploads
 
@@ -320,7 +320,7 @@ setInterval(
 
 > Note: to disable subscriptions, set `subscriptions` to `false` in the options passed to `listen`.
 
-For more information, check out the [documentation for GraphQL subscriptions](/docs/graphql-subscriptions/).
+For more information, check out the [documentation for GraphQL subscriptions](https://www.apollographql.com/docs/graphql-subscriptions/).
 
 ### Health checks
 

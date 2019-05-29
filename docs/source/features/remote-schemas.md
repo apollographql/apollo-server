@@ -3,13 +3,13 @@ title: Remote schemas
 description: Generate GraphQL schema objects that delegate to a remote server
 ---
 
-It can be valuable to be able to treat remote GraphQL endpoints as if they were local executable schemas. This is especially useful for [schema stitching](./schema-stitching.html), but there may be other use cases.
+It can be valuable to be able to treat remote GraphQL endpoints as if they were local executable schemas. This is especially useful for [schema stitching](/features/schema-stitching/), but there may be other use cases.
 
 Generally, there are three steps to create a remote schema:
 
-1. Create a [link](#link) that can retrieve results from that schema
-2. Use [`introspectSchema`](#introspectSchema) to get the schema of the remote server
-3. Use [`makeRemoteExecutableSchema`](#makeRemoteExecutableSchema) to create a schema that uses the link to delegate requests to the underlying service
+1. Create a [link](#creating-a-link) that can retrieve results from that schema
+2. Use [`introspectSchema`](#introspect-and-delegate-requests) to get the schema of the remote server
+3. Use [`makeRemoteExecutableSchema`](#api) to create a schema that uses the link to delegate requests to the underlying service
 
 ## Creating a Link
 

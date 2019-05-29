@@ -10,8 +10,8 @@ Apollo Server provides an easy way for new, or existing, applications to get run
 
 We need to install two packages to use Apollo Server, and a third package when using Apollo Server as middleware in an existing application:
 
-* [`apollo-server`](//npm.im/apollo-server): The Apollo Server package, which provides most of the functionality.
-* [`graphql`](//npm.im/graphql): A support library, provided by Facebook.  It won't be explicitly used in these examples, but is a required module and shared amongst all GraphQL libraries in the project.
+* [`apollo-server`](https://npm.im/apollo-server): The Apollo Server package, which provides most of the functionality.
+* [`graphql`](https://npm.im/graphql): A support library, provided by Facebook.  It won't be explicitly used in these examples, but is a required module and shared amongst all GraphQL libraries in the project.
 
 To install, run:
 
@@ -55,7 +55,7 @@ const server = new ApolloServer({
 });
 ```
 
-> See the [API Reference](../api/apollo-server.html) for additional options which can be passed to the `ApolloServer` constructor.
+> See the [API Reference][] for additional options which can be passed to the `ApolloServer` constructor.
 
 ## Starting a server
 
@@ -67,7 +67,9 @@ server.listen().then(({ url }) => {
 });
 ```
 
-> By default, Apollo Server listens on port 4000.  See the [API reference](../api/apollo-server.html) for additional `listen` options, including how to configure the port.
+> By default, Apollo Server listens on port 4000.  See the [API reference][] for additional `listen` options, including how to configure the port.
+
+[API reference]: /api/apollo-server/
 
 ### Running the server
 
@@ -201,4 +203,4 @@ server.listen({ port: config.port }, () =>
 
 ## Next steps
 
-Now that the GraphQL server is running, it's time to dive deeper into how we'll fetch data for our types.  We'll get started on that in the [next step](./data.html).
+Now that the GraphQL server is running, it's time to dive deeper into how we'll fetch data for our types.  We'll get started on that in the [next step](/essentials/data/).

@@ -61,7 +61,7 @@ const jsSchema = makeExecutableSchema({
 
 - `typeDefs` is a required argument and should be a GraphQL schema language string or array of GraphQL schema language strings or a function that takes no arguments and returns an array of GraphQL schema language strings. The order of the strings in the array is not important, but it must include a schema definition.
 
-- `resolvers` is an optional argument _(empty object by default)_ and should be an object that follows the pattern explained in the [resolvers documentation](../essentials/data.html).
+- `resolvers` is an optional argument _(empty object by default)_ and should be an object that follows the pattern explained in the [resolvers documentation](/essentials/data/).
 
 - `logger` is an optional argument, which can be used to print errors to the server console that are usually swallowed by GraphQL. The `logger` argument should be an object with a `log` function, eg. `const logger = { log: e => console.log(e) }`
 
@@ -127,7 +127,8 @@ const resolvers = {
 addResolveFunctionsToSchema({ schema, resolvers });
 ```
 
-The `IAddResolveFunctionsToSchemaOptions` object has 4 properties that are described in [`makeExecutableSchema`](/docs/graphql-tools/generate-schema.html#makeExecutableSchema).
+The `IAddResolveFunctionsToSchemaOptions` object has 4 properties that are described in [`makeExecutableSchema`](https://www.apollographql.com/docs/graphql-tools/generate-schema/#makeexecutableschemaoptions).
+
 ```ts
 export interface IAddResolveFunctionsToSchemaOptions {
   schema: GraphQLSchema;
@@ -232,7 +233,7 @@ Also provides the `info.mergeInfo.delegateToSchema` function discussed above.
 
 ### transforms: Array<Transform>
 
-[Transforms](../features/schema-transforms.html) to apply to the query and results. Should be the same transforms that were used to transform the schema, if any. After transformation, `transformedSchema.transforms` contains the transforms that were applied.
+[Transforms](/features/schema-transforms/) to apply to the query and results. Should be the same transforms that were used to transform the schema, if any. After transformation, `transformedSchema.transforms` contains the transforms that were applied.
 
 ### Additional considerations - Aliases
 
@@ -268,7 +269,7 @@ This is the main function that implements schema stitching. Read below for a des
 
 ### resolvers
 
-`resolvers` accepts resolvers in same format as [`makeExecutableSchema`](#makeExecutableSchema). It can also take an Array of resolvers. One addition to the resolver format is the possibility to specify a `fragment` for a resolver. The `fragment` must be a GraphQL fragment definition string, specifying which fields from the parent schema are required for the resolver to function properly.
+`resolvers` accepts resolvers in same format as [`makeExecutableSchema`](#makeexecutableschemaoptions). It can also take an Array of resolvers. One addition to the resolver format is the possibility to specify a `fragment` for a resolver. The `fragment` must be a GraphQL fragment definition string, specifying which fields from the parent schema are required for the resolver to function properly.
 
 ```js
 resolvers: {
@@ -316,7 +317,7 @@ interface IDelegateToSchemaOptions<TContext = {
 }
 ```
 
-As described in the documentation above, `info.mergeInfo.delegateToSchema` allows delegating to any `GraphQLSchema` object, optionally applying transforms in the process. See [Schema Delegation](../features/schema-delegation.html) and the [*Using with transforms*](#using-with-transforms) section of this document.
+As described in the documentation above, `info.mergeInfo.delegateToSchema` allows delegating to any `GraphQLSchema` object, optionally applying transforms in the process. See [Schema Delegation](/features/schema-delegation/) and the [*Using with transforms*](#built-in-transforms) section of this document.
 
 ### onTypeConflict
 
