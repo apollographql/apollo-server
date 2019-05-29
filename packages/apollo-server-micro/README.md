@@ -71,8 +71,8 @@ npm install micro micro-cors apollo-server-micro graphql
 
 2) `index.js`
 
-```js line=1,19
-const cors = require('micro-cors')();
+```js
+const cors = require('micro-cors')(); // highlight-line
 const { ApolloServer, gql } = require('apollo-server-micro');
 
 const typeDefs = gql`
@@ -90,7 +90,7 @@ const resolvers = {
 };
 
 const apolloServer = new ApolloServer({ typeDefs, resolvers });
-module.exports = cors(apolloServer.createHandler());
+module.exports = cors(apolloServer.createHandler()); // highlight-line
 ```
 
 3) `package.json`
@@ -122,7 +122,7 @@ npm install micro apollo-server-micro graphql
 
 2) `index.js`
 
-```js line=18
+```js
 const { ApolloServer, gql } = require('apollo-server-micro');
 
 const typeDefs = gql`
@@ -140,7 +140,7 @@ const resolvers = {
 };
 
 const apolloServer = new ApolloServer({ typeDefs, resolvers });
-module.exports = apolloServer.createHandler({ path: '/data' });
+module.exports = apolloServer.createHandler({ path: '/data' }); // highlight-line
 ```
 
 3) `package.json`
@@ -173,7 +173,7 @@ npm install micro microrouter apollo-server-micro graphql
 
 2) `index.js`
 
-```js line=1,21-26
+```js{1,21-26}
 const { router, get, post, options } = require('microrouter');
 const { ApolloServer, gql } = require('apollo-server-micro');
 
