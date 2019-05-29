@@ -44,19 +44,19 @@ If you don't see your favorite server there, [file a PR](https://github.com/apol
 
 At the end of the day, Apollo Server is a simple, production-ready solution without too many features. Here's what you can do with it:
 
-- Attach a GraphQL schema to your HTTP server to serve requests
-- Attach GraphQL and GraphiQL via separate middlewares, on different routes
-- Accept queries via GET or POST
-- Support HTTP query batching
-- Support Apollo Tracing to get performance information about your server
-- Support Apollo Cache Control to inform caching gateways such as Apollo Engine
+* Attach a GraphQL schema to your HTTP server to serve requests
+* Attach GraphQL and GraphiQL via separate middlewares, on different routes
+* Accept queries via GET or POST
+* Support HTTP query batching
+* Support Apollo Tracing to get performance information about your server
+* Support Apollo Cache Control to inform caching gateways such as Apollo Engine
 
 ## Principles
 
 Apollo Server is built with the following principles in mind:
 
-- **By the community, for the community**: Apollo Server's development is driven by the needs of developers using the library.
-- **Simplicity**: Keeping things simple, for example supporting a limited set of transports, makes Apollo Server easier to use, easier to contribute to, and more secure.
-- **Performance**: Apollo Server is well-tested and production-ready.
+* **By the community, for the community**: Apollo Server's development is driven by the needs of developers using the library.
+* **Simplicity**: Keeping things simple, for example supporting a limited set of transports, makes Apollo Server easier to use, easier to contribute to, and more secure.
+* **Performance**: Apollo Server is well-tested and production-ready.
 
 Anyone is welcome to contribute to Apollo Server, just read [CONTRIBUTING.md](https://github.com/apollographql/apollo-server/blob/master/CONTRIBUTING.md), take a look at the [issues](https://github.com/apollographql/apollo-server/issues) and make your first PR!

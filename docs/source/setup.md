@@ -145,8 +145,8 @@ const GraphQLOptions = {
 
 To see how to use the middleware with your particular JavaScript server, check out the docs for those:
 
-- [Express / Connect](/v1/servers/express/)
-- [Hapi](/v1/servers/hapi/)
-- [Koa](/v1/servers/koa/)
+* [Express / Connect](/v1/servers/express/)
+* [Hapi](/v1/servers/hapi/)
+* [Koa](/v1/servers/koa/)
 
 And more are being added every day!

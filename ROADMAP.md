@@ -6,30 +6,30 @@ This document contains a rough outline of a roadmap and a few designs for future
 
 ### Completed
 
-- Rewrite in TypeScript
-- Simplification of API
-- Express integration
-- Query batching (Express)
-- Query whitelisting / stored queries
-- Hapi integration
-- Koa integration
-- Connect integration
-- Complete rewrite of Apollo Server documentation
+* Rewrite in TypeScript
+* Simplification of API
+* Express integration
+* Query batching (Express)
+* Query whitelisting / stored queries
+* Hapi integration
+* Koa integration
+* Connect integration
+* Complete rewrite of Apollo Server documentation
 
 ### Current
 
-- Performance testing in production setting
+* Performance testing in production setting
 
 ### Next up
 
-- Better GraphQL error handling
-- Support for simple query timeouts
-- Websocket transport
-- GraphQL subscriptions
+* Better GraphQL error handling
+* Support for simple query timeouts
+* Websocket transport
+* GraphQL subscriptions
 
 ### Future
 
-- Support for @defer, @stream and @live directives
+* Support for @defer, @stream and @live directives
 
 ## Proposed designs
 

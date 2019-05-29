@@ -40,8 +40,8 @@ aws s3 mb s3://<bucket name>
 
 This will look for a file called graphql.js with two exports: `graphqlHandler` and `graphiqlHandler`. It creates two API endpoints:
 
-- `/graphql` (GET and POST)
-- `/graphiql` (GET)
+* `/graphql` (GET and POST)
+* `/graphiql` (GET)
 
 In a file called `template.yaml`:
 
