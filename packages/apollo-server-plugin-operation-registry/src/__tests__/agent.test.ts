@@ -254,6 +254,7 @@ describe('Agent', () => {
 
       it('logs debug updates to the manifest on startup', async () => {
         nockStorageSecret();
+        nockBase().get(genericStorageSecretOperationManifestUrl).reply(404);
         nockLegacyGoodManifest();
         const relevantLogs: any = [];
         const logger = {
@@ -365,7 +366,6 @@ describe('Agent', () => {
       it('continues polling even after initial failure', async () => {
         nockStorageSecret();
         nockBase().get(genericStorageSecretOperationManifestUrl).reply(500);
-        nockBase().get(genericLegacyOperationManifestUrl).reply(500);
         const store = defaultStore();
         const storeSetSpy = jest.spyOn(store, 'set');
         const storeDeleteSpy = jest.spyOn(store, 'delete');
@@ -415,7 +415,7 @@ describe('Agent', () => {
         expect(storeSetSpy).toBeCalledTimes(0);
 
         nockStorageSecret();
-        nockLegacyGoodManifest(); // Starting with ABC.
+        nockGoodManifestsUnderStorageSecret(); // Starting with ABC.
         await agent.checkForUpdate();
         expect(agent._timesChecked).toBe(1);
         expect(storeSetSpy).toBeCalledTimes(3);
@@ -423,7 +423,7 @@ describe('Agent', () => {
         await expectStoreHasOperationEach(store, ['a', 'b', 'c']);
 
         nockStorageSecret();
-        nockLegacyGoodManifest([
+        nockGoodManifestsUnderStorageSecret([
           sampleManifestRecords.a,
           sampleManifestRecords.b,
         ]); // Just AB in this manifest.
@@ -437,7 +437,7 @@ describe('Agent', () => {
         ).resolves.toBeUndefined();
 
         nockStorageSecret();
-        nockLegacyGoodManifest([sampleManifestRecords.a]); // Just A in this manifest.
+        nockGoodManifestsUnderStorageSecret([sampleManifestRecords.a]); // Just A in this manifest.
         await agent.checkForUpdate();
         expect(agent._timesChecked).toBe(3);
         expect(storeSetSpy).toBeCalledTimes(3); // no new sets.
