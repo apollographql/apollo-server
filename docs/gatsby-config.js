@@ -1,4 +1,5 @@
 module.exports = {
+  pathPrefix: '/docs/apollo-server',
   __experimentalThemes: [
     {
       resolve: 'gatsby-theme-apollo-docs',
@@ -6,20 +7,11 @@ module.exports = {
         root: __dirname,
         subtitle: 'Apollo Server',
         description: 'A guide to using Apollo Server',
-        contentDir: 'docs/source',
-        basePath: '/docs/apollo-server',
         githubRepo: 'apollographql/apollo-server',
-        versions: [
-          {
-            value: '1',
-            ref: 'version-1',
-          },
-          {
-            value: '2',
-            ref: 'HEAD',
-            default: true,
-          },
-        ],
+        // defaultVersion: 2,
+        // versions: {
+        //   1: 'version-1-mdx',
+        // },
         sidebarCategories: {
           null: ['index', 'getting-started', 'whats-new'],
           Essentials: [

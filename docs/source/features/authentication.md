@@ -9,7 +9,7 @@ At some point (probably pretty early on) when building a GraphQL endpoint, you�
 
 This article will primarily be focusing on how to set up authorization for your schema once you know about the user trying to make the request, but we’ll go through one example of authentication just to get some _context_ for what we’re doing.
 
-<h2 id="context">Putting user info on the context</h2>
+## Putting user info on the context
 
 Before we get into figuring out user permissions, we have to figure out how to recognize a user first. From HTTP headers, to JSON web tokens, there are a number of ways to handle authentication of users, but once you have your user, controlling access looks pretty similar.
 
@@ -51,7 +51,7 @@ The specifics of retrieving a user will look different for each method of authen
 
 In the next section, we’ll look at ways to use the user information we now have to secure your schema.
 
-<h2 id="schema-auth">Schema authorization</h2>
+## Schema authorization
 
 Once we have information about the user making a request, the most basic thing we can do is deny them the ability to run a query at all based on their roles. This is an all-or-nothing approach to authorization that we’ll start with because it’s the simplest. If you choose to block users like this, no fields will be publicly queryable.
 
@@ -78,7 +78,7 @@ context: ({ req }) => {
 
 The only difference from the basic context function is the check for the user. If no user exists or if lookup fails, the function throws an error, and none of the query gets executed.
 
-<h2 id="resolver-auth">Authorization in resolvers</h2>
+## Authorization in resolvers
 
 Schema authorization may be useful in specific instances, but more commonly, GraphQL schemas will have some fields that need to be public. An example of this would be a news site that wants to show article previews to anyone, but restrict the full body of articles to paying customers only.
 
@@ -114,7 +114,7 @@ This example looks almost the same as the previous one, with one addition: it ex
 
 Because our resolvers have access to everything in the context, an important question we need to ask is how much information we want in the context. For example, we don’t need the user’s id, name, or age (at least not yet). It’s best to keep things out of the context until they’re needed, since they’re easy to add back in later.
 
-<h2 id="models-auth">Authorization in data models</h2>
+## Authorization in data models
 
 As our server gets more complex, there will probably be multiple places in the schema that need to fetch the same kind of data. In our last example, you may have noticed the return array was replaced with a call to `context.models.User.getAll()`.
 
@@ -196,7 +196,7 @@ getAll: () => {
 }
 ```
 
-<h2 id="directives-auth">Authorization via Custom Directives</h2>
+## Authorization via Custom Directives
 
 Another way to go about authorization is via GraphQL Schema Directives. A directive is an identifier preceded by a `@` character, optionally followed by a list of named arguments, which can appear after almost any form of syntax in the GraphQL query or schema languages.
 
@@ -224,8 +224,7 @@ The `@auth` directive can be called directly on the type, or on the fields if yo
 
 One way of implementing the `@auth` directive is via the [SchemaDirectiveVisitor](https://www.apollographql.com/docs/graphql-tools/schema-directives.html) class from [graphql-tools](https://github.com/apollographql/graphql-tools). Ben Newman covered creating a sample `@deprecated` and `@rest` directive in this [excellent article](https://blog.apollographql.com/reusable-graphql-schema-directives-131fb3a177d1). You can draw inspiration from these examples.
 
-
-<h2 id="rest-auth">Authorization outside of GraphQL</h2>
+## Authorization outside of GraphQL
 
 If you’re using a REST API that has built-in authorization, like with an HTTP header, you have one more option. Rather than doing any authentication or authorization work in the GraphQL layer (in resolvers/models), it’s possible to simply pass through the headers or cookies to your REST endpoint and let it do the work.
 
