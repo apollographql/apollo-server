@@ -40,9 +40,9 @@ server.listen(PORT, () => console.log(`Listening on ${PORT}`));
 
 Apollo Server is built with the following principles in mind:
 
-* **By the community, for the community**: Apollo Server's development is driven by the needs of developers
-* **Simplicity**: by keeping things simple, Apollo Server is easier to use, easier to contribute to, and more secure
-* **Performance**: Apollo Server is well-tested and production-ready - no modifications needed
+- **By the community, for the community**: Apollo Server's development is driven by the needs of developers
+- **Simplicity**: by keeping things simple, Apollo Server is easier to use, easier to contribute to, and more secure
+- **Performance**: Apollo Server is well-tested and production-ready - no modifications needed
 
 Anyone is welcome to contribute to Apollo Server, just read [CONTRIBUTING.md](https://github.com/apollographql/apollo-server/blob/master/CONTRIBUTING.md), take a look at the [roadmap](https://github.com/apollographql/apollo-server/blob/master/ROADMAP.md) and make your first PR!
 [Read the CHANGELOG.](https://github.com/apollographql/apollo-server/blob/master/CHANGELOG.md)
