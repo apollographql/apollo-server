@@ -457,8 +457,7 @@ describe('Agent', () => {
           const storeSetSpy = jest.spyOn(store, 'set');
           const storeDeleteSpy = jest.spyOn(store, 'delete');
           const agent = createAgent({ store });
-          jest.useFakeTimers();
-          await agent.start();
+          await agent.checkForUpdate();
 
           // Three additions, no deletions.
           expect(storeSetSpy).toBeCalledTimes(3);
@@ -479,8 +478,7 @@ describe('Agent', () => {
           const storeSetSpy = jest.spyOn(store, 'set');
           const storeDeleteSpy = jest.spyOn(store, 'delete');
           const agent = createAgent({ store });
-          jest.useFakeTimers();
-          await agent.start();
+          await agent.checkForUpdate();
 
           // Three additions, no deletions.
           expect(storeSetSpy).toBeCalledTimes(3);
