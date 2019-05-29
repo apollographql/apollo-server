@@ -254,7 +254,9 @@ describe('Agent', () => {
 
       it('logs debug updates to the manifest on startup', async () => {
         nockStorageSecret();
-        nockBase().get(genericStorageSecretOperationManifestUrl).reply(404);
+        nockBase()
+          .get(genericStorageSecretOperationManifestUrl)
+          .reply(404);
         nockLegacyGoodManifest();
         const relevantLogs: any = [];
         const logger = {
@@ -344,7 +346,9 @@ describe('Agent', () => {
 
         // Now, we'll expect another request to go out, so we'll nock it.
         nockStorageSecret();
-        nockBase().get(genericStorageSecretOperationManifestUrl).reply(304);
+        nockBase()
+          .get(genericStorageSecretOperationManifestUrl)
+          .reply(304);
 
         // If we move forward the last remaining millisecond, we should trigger
         // and end up with a successful sync.
@@ -365,7 +369,9 @@ describe('Agent', () => {
 
       it('continues polling even after initial failure', async () => {
         nockStorageSecret();
-        nockBase().get(genericStorageSecretOperationManifestUrl).reply(500);
+        nockBase()
+          .get(genericStorageSecretOperationManifestUrl)
+          .reply(500);
         const store = defaultStore();
         const storeSetSpy = jest.spyOn(store, 'set');
         const storeDeleteSpy = jest.spyOn(store, 'delete');
@@ -471,7 +477,9 @@ describe('Agent', () => {
       describe('when fetching the manifest using the storage secret fails', () => {
         it('will fallback to fetching the manifest using the legacy url', async () => {
           nockStorageSecret();
-          nockBase().get(genericStorageSecretOperationManifestUrl).reply(404);
+          nockBase()
+            .get(genericStorageSecretOperationManifestUrl)
+            .reply(404);
           nockLegacyGoodManifest();
 
           const store = defaultStore();
