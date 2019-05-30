@@ -341,7 +341,7 @@ export class ApolloServerBase {
 
     const apiKey = getEngineApiKey(engine);
     if (apiKey) {
-      this.engineApiKeyHash = createSHA('sha256')
+      this.engineApiKeyHash = createSHA('sha512')
         .update(apiKey)
         .digest('hex');
     }
