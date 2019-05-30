@@ -180,7 +180,7 @@ query ($_representations: [_Any!]!) {
 
 GraphQL execution will then go over each representation in the list, use the `__typename` to match type conditions, build up a merged selection set, and execute it. Here, the inline fragment on `Product` will match and the `reviews` resolver will be called repeatedly with the representation for each product. Since `Product` is part of the `_Entity` union, it can be selected as a return of the `_entities` resolver.
 
-To ensure the required fields are provided and of the right type, we'll wrap the resolver to check the source object properties and perform coerce/decode the input into the expected type for the property (by calling parseValue on the scalar type).
+To ensure the required fields are provided, and of the right type, the source object properties should coerce the input into the expected type for the property (by calling parseValue on the scalar type).
 
 The real resolver will then be able to access the required properties from the (partial) object:
 
@@ -218,7 +218,7 @@ A new scalar called `_FieldSet` is a custom scalar type that is used to represen
 
 ### `Query._entities`
 
-A new field must be added to the query root called `_entities`. This field must return a non-nullable list of `_Entity` types and have a single argument with an argument name of `representations` and type `[_Any!]!` (non-nullable list of non-nullable `_Any` scalars. The `_entities` field on the query root must allow a list of `_Any` scalars which are "representations" of entities from external services. These representations should be validated with the following rules:
+A new field must be added to the query root called `_entities`. This field must return a non-nullable list of `_Entity` types and have a single argument with an argument name of `representations` and type `[_Any!]!` (non-nullable list of non-nullable `_Any` scalars). The `_entities` field on the query root must allow a list of `_Any` scalars which are "representations" of entities from external services. These representations should be validated with the following rules:
 
 * Any representation without a `__typename: String` field is invalid.
 * Representations must contain at least the fields defined in the fieldset of a `@key` directive on the base type.
