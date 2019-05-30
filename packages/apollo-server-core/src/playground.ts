@@ -1,6 +1,7 @@
 import {
   RenderPageOptions as PlaygroundRenderPageOptions,
   Theme,
+  CursorShape,
 } from '@apollographql/graphql-playground-html/dist/render-playground-page';
 export {
   RenderPageOptions as PlaygroundRenderPageOptions,
@@ -29,7 +30,7 @@ export const defaultPlaygroundOptions = {
   settings: {
     'general.betaUpdates': false,
     'editor.theme': 'dark' as Theme,
-    'editor.cursorShape': 'line',
+    'editor.cursorShape': 'line' as CursorShape,
     'editor.reuseHeaders': true,
     'tracing.hideTracingResponse': true,
     'editor.fontSize': 14,
