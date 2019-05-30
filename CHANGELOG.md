@@ -1,5 +1,9 @@
 # Changelog
 
+### v2.5.1
+
+- Upgrade GraphQL Playground to the latest upstream release.  This release also includes a new "Query Plan" panel for displaying the query planning results when running the Apollo Gateway.
+
 ### v2.5.0
 
 #### New
