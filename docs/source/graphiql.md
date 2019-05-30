@@ -5,7 +5,7 @@ description: How to set up GraphiQL with Apollo Server to explore your API with 
 
 Apollo Server allows you to easily use [GraphiQL](https://github.com/graphql/graphiql). Here's how:
 
-<h2 id="graphiqlOptions">Configuring GraphiQL</h2>
+## Configuring GraphiQL
 
 `graphiql<Express/Connect/Hapi/Koa>` accepts the following options object:
 
@@ -26,7 +26,7 @@ Apollo Server's `graphiql` middleware does not run any query passed to it, it si
 To actually execute the query, the user must submit it via the GraphiQL UI, which will
 send the request to the GraphQL endpoint specified with `endpointURL`.
 
-<h2 id="graphiqlExpress">Using with Express</h2>
+## Using with Express
 
 If you are using Express, GraphiQL can be configured as follows:
 
@@ -41,7 +41,7 @@ app.use(
 );
 ```
 
-<h2 id="graphiqlConnect">Using with Connect</h2>
+## Using with Connect
 
 If you are using Connect, GraphiQL can be configured as follows:
 
@@ -56,7 +56,7 @@ app.use(
 );
 ```
 
-<h2 id="graphiqlHapi">Using with Hapi</h2>
+## Using with Hapi
 
 If you are using Hapi, GraphiQL can be configured as follows:
 
@@ -74,7 +74,7 @@ server.register({
 });
 ```
 
-<h2 id="graphiqlKoa">Using with Koa 2</h2>
+## Using with Koa 2
 
 If you are using Koa 2, GraphiQL can be configured as follows:
 
