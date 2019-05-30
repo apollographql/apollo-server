@@ -40,7 +40,7 @@ extend type Product @key(fields: "upc") {
 
 In this example we have a `Review` type with a field called `product` that returns the `Product` type. Since `Product` is an entity that lives in another service, we define a *stub* of that type in this service with just enough information to enable composition. The syntax may look a bit strange at first, so let's unpack it:
 - The `extend` keyword declares that `Product` is an entity defined elsewhere, in this case the product catalog service.
-- The `@key` directive declaires that we'll use a UPC to reference a particular product. This must match the referenced entity's own key as defined in the product catalag service.
+- The `@key` directive declares that we'll use a UPC to reference a particular product. This must match the referenced entity's own key as defined in the product catalog service.
 - The definition of the `upc` field with an `@external` directive declares the type of the `upc` field (`String!`, in this case) that is implemented in another service.
 
 This explicit syntax has several benefits. It is standard GraphQL grammar. It allows us to run the reviews service standalone with a valid schema, including a `Product` type with a single `upc` field. And it provides strong typing information that lets us catch mistakes at schema composition time.
