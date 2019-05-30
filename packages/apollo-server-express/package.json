@@ -26,7 +26,7 @@
     "node": ">=6"
   },
   "dependencies": {
-    "@apollographql/graphql-playground-html": "^1.6.6",
+    "@apollographql/graphql-playground-html": "1.6.19",
     "@types/accepts": "^1.3.5",
     "@types/body-parser": "1.17.0",
     "@types/cors": "^2.8.4",
