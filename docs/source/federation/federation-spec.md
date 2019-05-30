@@ -248,7 +248,7 @@ type Product @key(fields: "upc") @key(fields: "sku") {
 }
 ```
 
-> Note: this relies on support for repeatable directives
+> Note: Repeated directives (in this case, `@key`, used multiple times) require support by the underlying GraphQL implementation.
 
 ### `@provides`
 

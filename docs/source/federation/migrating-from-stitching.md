@@ -150,7 +150,7 @@ extend type Reservation @key(fields: "id") {
 }
 ```
 
-> In order to not break any existing clients, we won't remove the `userId` field until all usage of it is stopped
+> In order to not break any existing clients, we won't remove the `userId` field until all usage of it is stopped.
 
 The important parts to focus on in this guide are the `user` and `userId` fields.
 
@@ -161,7 +161,7 @@ The userId field is in this extension and marked as `@external` simply as a sign
 
 ### Adding resolvers to the federated services
 
-Following the previous steps ensures that the stitching gateway will still work with federatin, but doesn't quite cover everything needed. This step is to write resolvers at the service-level that previously existed at the gateway.
+Following the previous steps ensures that the stitching gateway will still work with federation, but doesn't quite cover everything needed. This step is to write resolvers at the service-level that previously existed at the gateway.
 
 Inside of `mergeSchemas`, we declare `resolvers` that look to a service and manually call an existing field using `delegateToSchema`. And example of one of these resolvers is:
 
@@ -187,7 +187,7 @@ resolvers: {
 }
 ```
 
-This resolver calls `Query.user` on the `userSchema` to lookup a `User` and adds that user to the `Reservation.user` field that was previouly defined at the gateway. This code can all remain. You don't need to remove it from the stitched gateway. In fact, if you did that, the stitched gateway would break.
+This resolver calls `Query.user` on the `userSchema` to lookup a `User` and adds that user to the `Reservation.user` field that was previously defined at the gateway. This code can all remain. You don't need to remove it from the stitched gateway. In fact, if you did that, the stitched gateway would break.
 
 Instead, we just need to _add_ a resolver for `Reservation.user` in the `Users` service.
 
@@ -217,4 +217,4 @@ The `Reservation.user` resolver will receive an `id` (of the reservation) and a 
 
 ### Starting up a new Gateway
 
-Once a service is running independently, you can start up a gatway to sit in front of it. Even if you have only migrated one of your services, you can set up a gateway, and verify it is working. Once it is, you can expand, and keep adding services to your graph, until all services are moved over. Once that is done, the old stitching gateway can be retired.
+Once a service is running independently, you can start up a gateway to sit in front of it. Even if you have only migrated one of your services, you can set up a gateway, and verify it is working. Once it is, you can expand, and keep adding services to your graph, until all services are moved over. Once that is done, the old stitching gateway can be retired.
