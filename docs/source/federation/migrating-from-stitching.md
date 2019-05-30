@@ -5,7 +5,7 @@ description: How to migrate services to Apollo Federation
 
 ## Comparison with schema stitching
 
-If you're familiar with the current schema stitching implementation in `graphql-tools`, you're likely wondering how that compares to federation. There are three major differences between the approaches:
+If you're familiar with the `graphql-tools` schema stitching implementation, you're likely wondering how that compares to federation. There are three major differences between the approaches:
 
 1. With federation, microservices all expose a proper part of the overall graph and can refer directly to types that live in other services, without the need to add foreign keys or superfluous relationship root fields to your schema.
 2. Federation is fully declarative and doesn't require any user code to be running in the gateway.
