@@ -198,6 +198,9 @@ export default class Agent {
 
     if (!storageSecret) {
       this.logger.debug(`No storage secret found`);
+      if (this.options.schemaTag) {
+        throw new Error(`No storage secret found, can't fetch manifest`);
+      }
       return this.fetchLegacyManifest();
     }
 
@@ -214,7 +217,12 @@ export default class Agent {
       storageSecretManifestUrl,
       this.fetchOptions,
     );
-    if (response.status === 404 || response.status === 403) {
+
+    if (
+      (response.status === 404 || response.status === 403) &&
+      // fetching a manifest associated with a schema tag is not supported in legacy
+      !this.options.schemaTag
+    ) {
       return this.fetchLegacyManifest();
     }
     return response;
