@@ -150,7 +150,7 @@ export default class Agent {
 
     const response = await fetchIfNoneMatch(storageSecretUrl, {
       method: 'GET',
-      // More than three times our polling interval be long enough to wait.
+      // More than three times our polling interval should be long enough to wait.
       timeout: this.pollSeconds() * 3 /* times */ * 1000 /* ms */,
     });
 
@@ -178,7 +178,7 @@ export default class Agent {
     // status code 304.
     method: 'GET',
 
-    // More than three times our polling interval be long enough to wait.
+    // More than three times our polling interval should be long enough to wait.
     timeout: this.pollSeconds() * 3 /* times */ * 1000 /* ms */,
   };
 
