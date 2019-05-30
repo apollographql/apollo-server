@@ -1,6 +1,7 @@
 import {
   RenderPageOptions as PlaygroundRenderPageOptions,
   Theme,
+  CursorShape,
 } from '@apollographql/graphql-playground-html/dist/render-playground-page';
 export {
   RenderPageOptions as PlaygroundRenderPageOptions,
@@ -9,7 +10,7 @@ export {
 // This specifies the version of `graphql-playground-react` that will be served
 // from `graphql-playground-html`.  It's passed to ``graphql-playground-html`'s
 // renderPlaygroundPage` via the integration packages' playground configuration.
-const playgroundVersion = '1.7.10';
+const playgroundVersion = '1.7.26';
 
 // https://stackoverflow.com/a/51365037
 type RecursivePartial<T> = {
@@ -29,7 +30,7 @@ export const defaultPlaygroundOptions = {
   settings: {
     'general.betaUpdates': false,
     'editor.theme': 'dark' as Theme,
-    'editor.cursorShape': 'line',
+    'editor.cursorShape': 'line' as CursorShape,
     'editor.reuseHeaders': true,
     'tracing.hideTracingResponse': true,
     'editor.fontSize': 14,
