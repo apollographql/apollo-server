@@ -85,7 +85,7 @@ The first step is to install the federation package:
 npm i @apollo/federation
 ```
 
-Once installed, use the `buildFederatedSchema` utility to modify your existing schema with the needed fields
+Once installed, use the `buildFederatedSchema` utility to modify your existing schema with the needed fields:
 
 ```js
 const { ApolloServer } = require('apollo-server');
