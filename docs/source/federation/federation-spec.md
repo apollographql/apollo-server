@@ -282,7 +282,7 @@ The `@requires` directive is used to annotate the required input fieldset from a
 ```graphql
 # extended from the Users service
 extend type User @key(fields: "id") {
-  id: ID!
+  id: ID! @external
   email: String @external
   reviews: [Review] @requires(fields: "email")
 }
