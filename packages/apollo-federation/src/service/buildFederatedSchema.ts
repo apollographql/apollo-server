@@ -20,6 +20,8 @@ import { serviceField, entitiesField, EntityType } from '../types';
 
 import { printSchema } from './printFederatedSchema';
 
+import 'apollo-server-env';
+
 export function buildFederatedSchema(
   modulesOrSDL: (GraphQLSchemaModule | DocumentNode)[] | DocumentNode,
 ): GraphQLSchema {

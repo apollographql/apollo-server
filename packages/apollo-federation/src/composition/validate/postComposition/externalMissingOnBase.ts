@@ -1,3 +1,4 @@
+import 'apollo-server-env';
 import { GraphQLSchema, isObjectType, GraphQLError } from 'graphql';
 
 import { logServiceAndType, errorWithCode } from '../../utils';

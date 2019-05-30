@@ -1,3 +1,4 @@
+import 'apollo-server-env';
 import 'apollo-env';
 import {
   GraphQLSchema,
