@@ -195,4 +195,4 @@ const gateway = new ApolloGateway({
 
 By leveraging the `buildService` function, we're able to customize how requests are sent to our federated services. In this example, we return a custom `RemoteGraphQLDataSource`. The datasource allows us to modify the outgoing request with information from the Apollo Server `context` before it's sent. Here, we're adding the `user-id` header to pass an authenticated user id to downstream services.
 
-To learn more about `buildService` or `RemoteGraphQLDataSource`, see the [API docs](/api/apollo-gateway/)
+To learn more about `buildService` or `RemoteGraphQLDataSource`, see the [API docs](/api/apollo-gateway/).
