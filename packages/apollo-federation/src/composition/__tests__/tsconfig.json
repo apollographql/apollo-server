@@ -1,5 +1,5 @@
 {
-  "extends": "../../../tsconfig.test",
+  "extends": "../../../../tsconfig.test.base",
   "compilerOptions": {
     "strictNullChecks": false
   },
