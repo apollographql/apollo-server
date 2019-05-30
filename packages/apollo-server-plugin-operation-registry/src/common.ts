@@ -44,8 +44,9 @@ export function getStorageSecretUrl(
 export function getOperationManifestUrl(
   graphId: string,
   storageSecret: string,
+  schemaTag?: string,
 ): string {
-  return `${urlOperationManifestBase}/${graphId}/${storageSecret}/current/manifest.v2.json`;
+  return `${urlOperationManifestBase}/${graphId}/${storageSecret}/${schemaTag}/manifest.v2.json`;
 }
 
 export function getLegacyOperationManifestUrl(

@@ -27,11 +27,13 @@ interface Options {
     | boolean
     | ForbidUnregisteredOperationsPredicate;
   dryRun?: boolean;
+  schemaTag?: string;
 }
 
 export default function plugin(options: Options = Object.create(null)) {
   let agent: Agent;
   let store: InMemoryLRUCache;
+  let schemaTag = options.schemaTag || process.env.ENGINE_SCHEMA_TAG || '';
 
   // Setup logging facilities, scoped under the appropriate name.
   const logger = loglevel.getLogger(`apollo-server:${pluginName}`);
@@ -96,6 +98,7 @@ export default function plugin(options: Options = Object.create(null)) {
 
       agent = new Agent({
         schemaHash,
+        schemaTag,
         engine,
         store,
         logger,

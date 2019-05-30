@@ -22,6 +22,7 @@ export interface AgentOptions {
   schemaHash: string;
   engine: any;
   store: InMemoryLRUCache;
+  schemaTag?: string;
 }
 
 interface Operation {
@@ -203,6 +204,7 @@ export default class Agent {
     const storageSecretManifestUrl = getOperationManifestUrl(
       this.options.engine.serviceID,
       storageSecret,
+      this.options.schemaTag,
     );
 
     this.logger.debug(
