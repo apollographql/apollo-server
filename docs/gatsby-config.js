@@ -8,10 +8,10 @@ module.exports = {
         subtitle: 'Apollo Server',
         description: 'A guide to using Apollo Server',
         githubRepo: 'apollographql/apollo-server',
-        // defaultVersion: 2,
-        // versions: {
-        //   1: 'version-1-mdx',
-        // },
+        defaultVersion: 2,
+        versions: {
+          1: 'version-1-mdx',
+        },
         sidebarCategories: {
           null: ['index', 'getting-started', 'whats-new'],
           Essentials: [
