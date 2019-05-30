@@ -1,0 +1,65 @@
+import gql from 'graphql-tag';
+import { composeServices } from '../../../compose';
+import { requiresFieldsMissingOnBase as validateRequiresFieldsMissingOnBase } from '../';
+
+describe('requiresFieldsMissingOnBase', () => {
+  it('does not warn with proper @requires usage', () => {
+    const serviceA = {
+      typeDefs: gql`
+        type Product @key(fields: "sku") {
+          sku: String!
+        }
+      `,
+      name: 'serviceA',
+    };
+    const serviceB = {
+      typeDefs: gql`
+        extend type Product @key(fields: "sku") {
+          sku: String! @external
+          id: ID!
+          weight: Float! @requires(fields: "sku")
+        }
+      `,
+      name: 'serviceB',
+    };
+
+    const { schema, errors } = composeServices([serviceA, serviceB]);
+    const warnings = validateRequiresFieldsMissingOnBase(schema);
+    expect(warnings).toEqual([]);
+  });
+
+  it('warns when requires selects a field not found on the base type', () => {
+    const serviceA = {
+      typeDefs: gql`
+        type Product @key(fields: "sku") {
+          sku: String!
+        }
+      `,
+      name: 'serviceA',
+    };
+    const serviceB = {
+      typeDefs: gql`
+        extend type Product @key(fields: "sku") {
+          id: ID!
+        }
+      `,
+      name: 'serviceB',
+    };
+    const serviceC = {
+      typeDefs: gql`
+        extend type Product @key(fields: "sku") {
+          id: ID! @external
+          weight: Float! @requires(fields: "id")
+        }
+      `,
+      name: 'serviceC',
+    };
+    const { schema, errors } = composeServices([serviceA, serviceB, serviceC]);
+    const warnings = validateRequiresFieldsMissingOnBase(schema);
+    expect(warnings).toMatchInlineSnapshot(`
+      Array [
+        [GraphQLError: [serviceC] Product.weight -> requires the field \`id\` to be @external. @external fields must exist on the base type, not an extension.],
+      ]
+    `);
+  });
+});

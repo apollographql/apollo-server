@@ -8,7 +8,7 @@ description: Setting up Apollo Server with Google Cloud Functions
 
 This is the Google Cloud Function integration of GraphQL Server. Apollo Server is a community-maintained open-source GraphQL server that works with many Node.js HTTP server frameworks. [Read the docs](https://www.apollographql.com/docs/apollo-server/v2). [Read the CHANGELOG](https://github.com/apollographql/apollo-server/blob/master/CHANGELOG.md).
 
-```sh
+```shell
 npm install apollo-server-cloud-functions graphql
 ```
 
