@@ -26,7 +26,6 @@ export function graphqlExpress(
   }
 
   if (arguments.length > 1) {
-    // TODO: test this
     throw new Error(
       `Apollo Server expects exactly one argument, got ${arguments.length}`,
     );

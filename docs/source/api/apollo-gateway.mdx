@@ -1,0 +1,111 @@
+---
+title: "API Reference: @apollo/gateway"
+description: Apollo Gateway API reference
+---
+
+This API reference documents the exports from the `@apollo/gateway`.
+
+
+## `ApolloGateway`
+
+The core of the federated gateway implementation. For an example, see the ["implementing"](/federation/implementing/) section.
+
+### `constructor(options)`: `ApolloGateway`
+
+#### Parameters
+
+* `options`: `Object`
+
+  * `serviceList`: `ServiceDefinition[]` _(required)_
+
+    An array of service definitions. A service definition contains the `name` and `url` for a federated service.
+
+    ```js{3-6}
+    const gateway = new ApolloGateway({
+      ...
+      serviceList: [
+        { name: 'products', url: 'https://products-service.dev/graphql' },
+        { name: 'reviews', url: 'https://reviews-service.dev/graphql' }
+      ]
+    });
+    ```
+
+  * `buildService`: `(service: ServiceDefinition) => GraphQLDataSource`
+
+    A function to be called for each service in `options.serviceList`.
+    The `service` is provided as an argument, and a `GraphQLDataSource` is expected to be returned.
+    Allows for customizing transports.
+
+    ```js{3-10}
+    const gateway = new ApolloGateway({
+      ...
+      buildService({ name, url }) {
+        return new RemoteGraphQLDataSource({
+          url,
+          willSendRequest({ request, context }) {
+            request.http.headers.set('x-user-id', context.userId);
+          },
+        });
+      },
+    });
+    ```
+
+  * `debug`: `Boolean`
+
+    With debug enabled, the server will log startup errors as well as query plans during incoming requests.
+
+### `ApolloGateway.load()`: `Promise<{ schema: GraphQLSchema, exector: GraphQLExecutor }>`
+
+#### Returns
+
+`Promise` that resolves to an object that contains:
+
+  * `schema`: <`GraphQLSchema`>
+    A composed schema that represents all of the federated schemas
+  * `executor`: <`GraphQLExecutor`>
+    An executor, consumed by `ApolloServer`. Uses the query planner in order to
+    transform a single, incoming request into a set of requests to the federated
+    services.
+
+It's intended that the result of the resolved `Promise` is passed into the constructor of `ApolloServer` like so:
+
+```javascript{6-7}
+...
+(async () => {
+  const { schema, executor } = await gateway.load();
+
+  const server = new ApolloServer({
+    schema,
+    executor
+  });
+  ...
+})();
+```
+
+## RemoteGraphQLDataSource
+
+The `RemoteGraphQLDataSource` export is used to connect to underlying federated services from the gateway. It allows for customizations of its request using the `willSendRequest` function. By default, the `ApolloGateway` creates a new `RemoteGraphQLDataSource` for each service using the `url` from the service definition as its target location.
+
+### `constructor(options)`: `RemoteGraphQLDataSource`
+
+#### Parameters
+
+* `options`: `Object`
+
+  * `url`: `string` _(required)_
+
+    The location of the service to fetch using an HTTP request.
+
+  * `willSendRequest`: `(request: GraphQLRequest) => Promise<void>`
+
+    A function to be called on every fetch to the underlying GraphQL service. This method takes information about the incoming request, as well as the context from Apollo Server, to allow for customizing the request.
+
+    ```js{3-5}
+    new RemoteGraphQLDataSource({
+      url,
+      willSendRequest({ request, context }) {
+        request.http.headers.set('x-user-id', context.userId);
+      },
+    });
+    ```
+

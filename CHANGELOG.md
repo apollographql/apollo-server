@@ -13,6 +13,10 @@
 - `apollo-server-core`: Lazy load `subscriptions-transport-ws` in core [PR #2278](https://github.com/apollographql/apollo-server/pull/2278)
 - `apollo-server-cache-redis`: **BREAKING FOR USERS OF `apollo-server-cache-redis`** (This is a package that must be updated separately but shares the same `CHANGELOG.md` with Apollo Server itself.)  A new **major** version of this package has been published and updated to support Redis Standalone, Cluster and Sentinel modes.  This is a breaking change since it is now based on [`ioredis`](https://github.com/luin/ioredis) instead of [`node_redis`](https://github.com/NodeRedis/node_redis).  Although this update is compatible with the most common uses of `apollo-server-cache-redis`, please check the [options supported by `ioredis`](https://github.com/luin/ioredis/blob/master/API.md#new-redisport-host-options) while updating to this version.  The constructor options are passed directly from `RedisCache` to the new Redis adapter.  The pre-1.0 versions should continue to work with Apollo Server without modification. [PR #1770](https://github.com/apollographql/apollo-server/pull/1770)
 
+### v2.5.1
+
+- Upgrade GraphQL Playground to the latest upstream release.  This release also includes a new "Query Plan" panel for displaying the query planning results when running the Apollo Gateway.
+
 ### v2.5.0
 
 #### New

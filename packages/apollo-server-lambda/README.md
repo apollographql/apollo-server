@@ -8,7 +8,7 @@ description: Setting up Apollo Server with AWS Lambda
 
 This is the AWS Lambda integration of GraphQL Server. Apollo Server is a community-maintained open-source GraphQL server that works with many Node.js HTTP server frameworks. [Read the docs](https://www.apollographql.com/docs/apollo-server/v2). [Read the CHANGELOG](https://github.com/apollographql/apollo-server/blob/master/CHANGELOG.md).
 
-```sh
+```shell
 npm install apollo-server-lambda graphql
 ```
 
@@ -82,7 +82,7 @@ Resources:
 
 This will read and transform the template, created in previous step. Package and upload the artifact to the S3 bucket and generate another template for the deployment.
 
-```sh
+```shell
 aws cloudformation package \
   --template-file template.yaml \
   --output-template-file serverless-output.yaml \
