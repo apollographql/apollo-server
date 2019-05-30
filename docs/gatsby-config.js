@@ -10,7 +10,7 @@ module.exports = {
         githubRepo: 'apollographql/apollo-server',
         defaultVersion: 2,
         versions: {
-          1: 'version-1-mdx',
+          1: 'version-1',
         },
         sidebarCategories: {
           null: ['index', 'getting-started', 'whats-new'],
