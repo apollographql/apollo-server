@@ -56,6 +56,11 @@ const sampleManifestRecords: Record<string, ManifestRecord> = {
   },
 };
 
+const manifest = (...operations: ManifestRecord[]) => ({
+  version: 2,
+  operations,
+});
+
 describe('Agent', () => {
   describe('Basic', () => {
     const Agent = require('../agent').default;
@@ -494,6 +499,33 @@ describe('Agent', () => {
 
           // Only the initial start-up check should have happened by now.
           expect(agent._timesChecked).toBe(1);
+        });
+      });
+
+      describe.only('When given a schemaTag', () => {
+        const schemaTag = 'master';
+        const getOperationManifestRelativeUrl = (
+          ...args: Parameters<typeof getOperationManifestUrl>
+        ) =>
+          getOperationManifestUrl(...args).replace(
+            new RegExp(`^${urlOperationManifestBase}`),
+            '',
+          );
+
+        it('fetches manifests for the corresponding schema tag', async () => {
+          nockStorageSecret();
+          const agent = createAgent({ schemaTag });
+          const nockedManifest = nockBase()
+            .get(
+              getOperationManifestRelativeUrl(
+                genericServiceID,
+                genericStorageSecret,
+                schemaTag,
+              ),
+            )
+            .reply(200, manifest(sampleManifestRecords.a));
+          await agent.checkForUpdate();
+          expect(nockedManifest.isDone()).toBe(true);
         });
       });
     });
