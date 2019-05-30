@@ -11,6 +11,9 @@
     "Server",
     "Javascript"
   ],
+  "engines": {
+    "node": ">=8"
+  },
   "license": "SEE LICENSE IN LICENSE.md",
   "publishConfig": {
     "access": "public"
