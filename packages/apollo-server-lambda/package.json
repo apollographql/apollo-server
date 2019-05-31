@@ -1,6 +1,6 @@
 {
   "name": "apollo-server-lambda",
-  "version": "2.6.0-rc.0",
+  "version": "2.6.0",
   "description": "Production-ready Node.js GraphQL server for AWS Lambda",
   "keywords": [
     "GraphQL",
