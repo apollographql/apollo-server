@@ -14,7 +14,7 @@
     "apollo-graphql": "0.3.1",
     "apollo-server-caching": "^0.4.0",
     "apollo-server-errors": "^2.2.0",
-    "apollo-server-plugin-base": "^0.4.0",
+    "apollo-server-plugin-base": "^0.5.0",
     "fast-json-stable-stringify": "^2.0.0",
     "loglevel": "^1.6.1",
     "loglevel-debug": "^0.0.1",
