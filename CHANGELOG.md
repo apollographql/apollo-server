@@ -1,5 +1,9 @@
 # Changelog
 
+### v2.6.1
+
+- Revert: Don't add `cacheControl` directive if one has already been defined. Presently, although the TypeScript don't suggest it, passing a `String` as `typeDefs` to `ApolloServer` is supported and this would be a breaking change for non-TypeScript users. [PR #2428](https://github.com/apollographql/apollo-server/pull/2428)
+
 ### v2.6.0
 
 - `apollo-server-core`: Introduce new `didEncounterErrors` life-cycle hook which has access to unformatted `errors` property on the `requestContext`, which is the first positional paramater that this new request life-cycle receives.  [PR #2719](https://github.com/apollographql/apollo-server/pull/2719)
@@ -8,6 +12,7 @@
 - `apollo-server`: Support `onHealthCheck` in the `ApolloServer` constructor in the same way as `cors` is supported.  This contrasts with the `-express`, `-hapi`, etc. variations which accept this parameter via their `applyMiddleware` methods and will remain as-is.  [PR #2672](https://github.com/apollographql/apollo-server/pull/2672)
 - core: Expose SHA-512 hex hash digest of the Engine API key to plugins, when available, as `engine.apiKeyHash`. [PR #2685](https://github.com/apollographql/apollo-server/pull/2685) [PR #2736](https://github.com/apollographql/apollo-server/pull/2736)
 - `apollo-datasource-rest`: If another `Content-type` is already set on the response, don't overwrite it with `application/json`, allowing the user's initial `Content-type` to prevail. [PR #2520](https://github.com/apollographql/apollo-server/issues/2035)
+- Don't add `cacheControl` directive if one has already been defined. [PR #2428](https://github.com/apollographql/apollo-server/pull/2428)
 - `apollo-cache-control`: Do not respond with `Cache-control` headers if the HTTP response contains `errors`. [PR #2715](https://github.com/apollographql/apollo-server/pull/2715)
 - `apollo-server-core`: Skip loading `util.promifisy` polyfill in Node.js engines >= 8.0 [PR #2278](https://github.com/apollographql/apollo-server/pull/2278)
 - `apollo-server-core`: Lazy load `subscriptions-transport-ws` in core [PR #2278](https://github.com/apollographql/apollo-server/pull/2278)
