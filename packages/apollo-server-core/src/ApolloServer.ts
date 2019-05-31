@@ -50,9 +50,8 @@ import {
   PlaygroundRenderPageOptions,
 } from './playground';
 
-import { generateSchemaHash } from './utils/schemaHash';
-import { isDirectiveDefined } from './utils/isDirectiveDefined';
 import createSHA from './utils/createSHA';
+import { generateSchemaHash } from './utils/schemaHash';
 import {
   processGraphQLRequest,
   GraphQLRequestContext,
@@ -271,22 +270,19 @@ export class ApolloServerBase {
 
       // We augment the typeDefs with the @cacheControl directive and associated
       // scope enum, so makeExecutableSchema won't fail SDL validation
+      augmentedTypeDefs.push(
+        gql`
+          enum CacheControlScope {
+            PUBLIC
+            PRIVATE
+          }
 
-      if (!isDirectiveDefined(augmentedTypeDefs, 'cacheControl')) {
-        augmentedTypeDefs.push(
-          gql`
-            enum CacheControlScope {
-              PUBLIC
-              PRIVATE
-            }
-
-            directive @cacheControl(
-              maxAge: Int
-              scope: CacheControlScope
-            ) on FIELD_DEFINITION | OBJECT | INTERFACE
-          `,
-        );
-      }
+          directive @cacheControl(
+            maxAge: Int
+            scope: CacheControlScope
+          ) on FIELD_DEFINITION | OBJECT | INTERFACE
+        `,
+      );
 
       if (this.uploadsConfig) {
         const { GraphQLUpload } = require('graphql-upload');
