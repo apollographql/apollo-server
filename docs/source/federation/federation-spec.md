@@ -80,12 +80,12 @@ A federated service should take the `@external` fields and types and create them
 
 ## Resolve requests for entities
 
-Execution of a federated graph requries being able to "enter" into a service at an entity type. To do this, federated services need to do two things:
+Execution of a federated graph requires being able to "enter" into a service at an entity type. To do this, federated services need to do two things:
 
 * Make each entity in the schema part of the `_Entity` union
 * Implement the `_entities` field on the query root
 
-To implement the `_Entity` uniion, each type annotated with `@key` should be added to the `_Entity` union. If no types are annotated with the key directive, then the `_Entity` union should be removed from the schema. For example, given the following partial schema:
+To implement the `_Entity` union, each type annotated with `@key` should be added to the `_Entity` union. If no types are annotated with the key directive, then the `_Entity` union should be removed from the schema. For example, given the following partial schema:
 
 ```graphql
 type Review @key(fields: "id") {
@@ -196,13 +196,13 @@ The real resolver will then be able to access the required properties from the (
 
 ## Schema modifications glossary
 
-### `type Service`
+### `type _Service`
 
-A new object type called `Service` must be created. This type must have an `sdl: String!` field which exposes the SDL of the service's schema
+A new object type called `_Service` must be created. This type must have an `sdl: String!` field which exposes the SDL of the service's schema
 
 ### `Query._service`
 
-A new field must be added to the query root called `_service`. This field must return a non-nullable `Service` type. The `_service` field on the query root must return SDL which includes all of the service's types (after any non-federation transforms), as well as federation directive annotations on the fields and types. The federation schema modifications (i.e. new types and directives) *should not be* included in this SDL.
+A new field must be added to the query root called `_service`. This field must return a non-nullable `_Service` type. The `_service` field on the query root must return SDL which includes all of the service's types (after any non-federation transforms), as well as federation directive annotations on the fields and types. The federation schema modifications (i.e. new types and directives) *should not be* included in this SDL.
 
 ### `union Entity`
 
