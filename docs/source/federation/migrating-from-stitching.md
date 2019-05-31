@@ -201,7 +201,7 @@ Instead, we just need to _add_ a resolver for `Reservation.user` in the `Users` 
 }
 ```
 
-The important thing to know about this resolver is that it receives as a first argument anything that is defined in a `@key` or `@requires` on the type.
+The important thing to know about this resolver is that it receives (as its first argument) anything that is defined in a `@key` on the type plus whatever is defined within `@requires` on the field.
 
 So for the `Reservation.user` that we defined earlier:
 
