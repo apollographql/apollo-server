@@ -196,9 +196,9 @@ The real resolver will then be able to access the required properties from the (
 
 ## Schema modifications glossary
 
-### `type Service`
+### `type _Service`
 
-A new object type called `Service` must be created. This type must have an `sdl: String!` field which exposes the SDL of the service's schema
+A new object type called `_Service` must be created. This type must have an `sdl: String!` field which exposes the SDL of the service's schema
 
 ### `Query._service`
 
