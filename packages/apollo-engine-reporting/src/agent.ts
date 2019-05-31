@@ -16,6 +16,8 @@ import {
   GraphQLRequestContext,
   GraphQLServiceContext,
 } from 'apollo-server-core/dist/requestPipelineAPI';
+import { InMemoryLRUCache } from 'apollo-server-caching';
+import { defaultEngineReportingSignature } from 'apollo-graphql';
 
 export interface ClientInfo {
   clientName?: string;
@@ -128,6 +130,14 @@ export interface EngineReportingOptions<TContext> {
   generateClientInfo?: GenerateClientInfo<TContext>;
 }
 
+export interface AddTraceArgs {
+  trace: Trace;
+  operationName: string;
+  queryHash: string;
+  queryString?: string;
+  documentAST?: DocumentNode;
+}
+
 const serviceHeaderDefaults = {
   hostname: os.hostname(),
   // tslint:disable-next-line no-var-requires
@@ -149,6 +159,7 @@ export class EngineReportingAgent<TContext = any> {
   private sendReportsImmediately?: boolean;
   private stopped: boolean = false;
   private reportHeader: ReportHeader;
+  private signatureCache: InMemoryLRUCache<string>;
 
   public constructor(
     options: EngineReportingOptions<TContext> = {},
@@ -161,6 +172,11 @@ export class EngineReportingAgent<TContext = any> {
         'To use EngineReportingAgent, you must specify an API key via the apiKey option or the ENGINE_API_KEY environment variable.',
       );
     }
+
+    // Since calculating the signature for Engine reporting is potentially an
+    // expensive operation, we'll cache the signatures we generate and re-use
+    // them based on repeated traces for the same `queryHash`.
+    this.signatureCache = createSignatureCache();
 
     this.reportHeader = new ReportHeader({
       ...serviceHeaderDefaults,
@@ -196,7 +212,61 @@ export class EngineReportingAgent<TContext = any> {
     );
   }
 
-  public addTrace(signature: string, operationName: string, trace: Trace) {
+  private async getTraceSignature({
+    queryHash,
+    operationName,
+    documentAST,
+    queryString,
+  }: {
+    queryHash: string;
+    operationName: string;
+    documentAST?: DocumentNode;
+    queryString?: string;
+  }): Promise<string> {
+    if (!documentAST && !queryString) {
+      // This shouldn't happen: one of those options must be passed to runQuery.
+      throw new Error('No queryString or parsedQuery?');
+    }
+
+    const cacheKey = signatureCacheKey(queryHash, operationName);
+
+    // If we didn't have the signature in the cache, we'll resort to
+    // calculating it asynchronously.  The `addTrace` method will
+    // `await` the `signature` if it's a Promise, prior to putting it
+    // on the stack of traces to deliver to the cloud.
+    const cachedSignature = await this.signatureCache.get(cacheKey);
+
+    if (cachedSignature) {
+      return cachedSignature;
+    }
+
+    if (!documentAST) {
+      // We didn't get an AST, possibly because of a parse failure. Let's just
+      // use the full query string.
+      //
+      // XXX This does mean that even if you use a calculateSignature which
+      //     hides literals, you might end up sending literals for queries
+      //     that fail parsing or validation. Provide some way to mask them
+      //     anyway?
+      return queryString as string;
+    }
+
+    const generatedSignature = (this.options.calculateSignature ||
+      defaultEngineReportingSignature)(documentAST, operationName);
+
+    // Intentionally not awaited so the cache can be written to at leisure.
+    this.signatureCache.set(cacheKey, generatedSignature);
+
+    return generatedSignature;
+  }
+
+  public async addTrace({
+    trace,
+    queryHash,
+    documentAST,
+    operationName,
+    queryString,
+  }: AddTraceArgs): Promise<void> {
     // Ignore traces that come in after stop().
     if (this.stopped) {
       return;
@@ -207,6 +277,13 @@ export class EngineReportingAgent<TContext = any> {
       throw new Error(`Error encoding trace: ${protobufError}`);
     }
     const encodedTrace = Trace.encode(trace).finish();
+
+    const signature = await this.getTraceSignature({
+      queryHash,
+      documentAST,
+      queryString,
+      operationName,
+    });
 
     const statsReportKey = `# ${operationName || '-'}\n${signature}`;
     if (!this.report.tracesPerQuery.hasOwnProperty(statsReportKey)) {
@@ -226,7 +303,7 @@ export class EngineReportingAgent<TContext = any> {
       this.reportSize >=
         (this.options.maxUncompressedReportSize || 4 * 1024 * 1024)
     ) {
-      this.sendReportAndReportErrors();
+      await this.sendReportAndReportErrors();
     }
   }
 
@@ -350,4 +427,54 @@ export class EngineReportingAgent<TContext = any> {
     this.report = new FullTracesReport({ header: this.reportHeader });
     this.reportSize = 0;
   }
+}
+
+function createSignatureCache(): InMemoryLRUCache<string> {
+  let lastSignatureCacheWarn: Date;
+  let lastSignatureCacheDisposals: number = 0;
+  return new InMemoryLRUCache<string>({
+    // Calculate the length of cache objects by the JSON.stringify byteLength.
+    sizeCalculator(obj) {
+      return Buffer.byteLength(JSON.stringify(obj), 'utf8');
+    },
+    // 3MiB limit, very much approximately since we can't be sure how V8 might
+    // be storing these strings internally. Though this should be enough to
+    // store a fair amount of operation signatures (~10000?), depending on their
+    // overall complexity. A future version of this might expose some
+    // configuration option to grow the cache, but ideally, we could do that
+    // dynamically based on the resources available to the server, and not add
+    // more configuration surface area. Hopefully the warning message will allow
+    // us to evaluate the need with more validated input from those that receive
+    // it.
+    maxSize: Math.pow(2, 20) * 3,
+    onDispose() {
+      // Count the number of disposals between warning messages.
+      lastSignatureCacheDisposals++;
+
+      // Only show a message warning about the high turnover every 60 seconds.
+      if (
+        !lastSignatureCacheWarn ||
+        new Date().getTime() - lastSignatureCacheWarn.getTime() > 60000
+      ) {
+        // Log the time that we last displayed the message.
+        lastSignatureCacheWarn = new Date();
+        console.warn(
+          [
+            'This server is processing a high number of unique operations.  ',
+            `A total of ${lastSignatureCacheDisposals} records have been `,
+            'ejected from the Engine Reporting signature cache in the past ',
+            'interval.  If you see this warning frequently, please open an ',
+            'issue on the Apollo Server repository.',
+          ].join(''),
+        );
+
+        // Reset the disposal counter for the next message interval.
+        lastSignatureCacheDisposals = 0;
+      }
+    },
+  });
+}
+
+export function signatureCacheKey(queryHash: string, operationName: string) {
+  return `${queryHash}${operationName && ':' + operationName}`;
 }

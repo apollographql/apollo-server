@@ -1,6 +1,6 @@
 {
 	"name": "apollo-server-azure-functions",
-	"version": "2.5.1",
+	"version": "2.6.0",
 	"description": "Production-ready Node.js GraphQL server for Azure Functions",
 	"keywords": [
 		"GraphQL",

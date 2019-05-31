@@ -42,6 +42,12 @@ export interface GraphQLRequestListener<TContext = Record<string, any>> {
       'metrics' | 'source' | 'document' | 'operationName' | 'operation'
     >,
   ): ValueOrPromise<void>;
+  didEncounterErrors?(
+    requestContext: WithRequired<
+      GraphQLRequestContext<TContext>,
+      'metrics' | 'source' | 'errors'
+    >,
+  ): ValueOrPromise<void>;
   // If this hook is defined, it is invoked immediately before GraphQL execution
   // would take place. If its return value resolves to a non-null
   // GraphQLResponse, that result is used instead of executing the query.

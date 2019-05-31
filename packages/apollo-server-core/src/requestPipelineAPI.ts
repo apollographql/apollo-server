@@ -19,6 +19,8 @@ import {
 } from 'graphql';
 import { KeyValueCache } from 'apollo-server-caching';
 
+type Mutable<T> = { -readonly [P in keyof T]: T[P] };
+
 export interface GraphQLServiceContext {
   schema: GraphQLSchema;
   schemaHash: string;
@@ -45,7 +47,7 @@ export interface GraphQLResponse {
   data?: Record<string, any>;
   errors?: ReadonlyArray<GraphQLFormattedError>;
   extensions?: Record<string, any>;
-  http?: Pick<Response, 'headers'>;
+  http?: Pick<Response, 'headers'> & Partial<Pick<Mutable<Response>, 'status'>>;
 }
 
 export interface GraphQLRequestMetrics {
@@ -72,6 +74,14 @@ export interface GraphQLRequestContext<TContext = Record<string, any>> {
   // It will be set to `null` for an anonymous operation.
   readonly operationName?: string | null;
   readonly operation?: OperationDefinitionNode;
+
+  /**
+   * Unformatted errors which have occurred during the request. Note that these
+   * are present earlier in the request pipeline and differ from **formatted**
+   * errors which are the result of running the user-configurable `formatError`
+   * transformation function over specific errors.
+   */
+  readonly errors?: ReadonlyArray<GraphQLError>;
 
   readonly metrics?: GraphQLRequestMetrics;
 

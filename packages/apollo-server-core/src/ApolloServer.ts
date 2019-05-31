@@ -51,6 +51,7 @@ import {
 } from './playground';
 
 import { generateSchemaHash } from './utils/schemaHash';
+import { isDirectiveDefined } from './utils/isDirectiveDefined';
 import createSHA from './utils/createSHA';
 import {
   processGraphQLRequest,
@@ -270,19 +271,22 @@ export class ApolloServerBase {
 
       // We augment the typeDefs with the @cacheControl directive and associated
       // scope enum, so makeExecutableSchema won't fail SDL validation
-      augmentedTypeDefs.push(
-        gql`
-          enum CacheControlScope {
-            PUBLIC
-            PRIVATE
-          }
 
-          directive @cacheControl(
-            maxAge: Int
-            scope: CacheControlScope
-          ) on FIELD_DEFINITION | OBJECT | INTERFACE
-        `,
-      );
+      if (!isDirectiveDefined(augmentedTypeDefs, 'cacheControl')) {
+        augmentedTypeDefs.push(
+          gql`
+            enum CacheControlScope {
+              PUBLIC
+              PRIVATE
+            }
+
+            directive @cacheControl(
+              maxAge: Int
+              scope: CacheControlScope
+            ) on FIELD_DEFINITION | OBJECT | INTERFACE
+          `,
+        );
+      }
 
       if (this.uploadsConfig) {
         const { GraphQLUpload } = require('graphql-upload');
@@ -337,7 +341,7 @@ export class ApolloServerBase {
 
     const apiKey = getEngineApiKey(engine);
     if (apiKey) {
-      this.engineApiKeyHash = createSHA('sha256')
+      this.engineApiKeyHash = createSHA('sha512')
         .update(apiKey)
         .digest('hex');
     }
@@ -435,7 +439,7 @@ export class ApolloServerBase {
         );
       }
     }
-
+    const { SubscriptionServer } = require('subscriptions-transport-ws');
     const {
       onDisconnect,
       onConnect,
