@@ -80,7 +80,7 @@ A federated service should take the `@external` fields and types and create them
 
 ## Resolve requests for entities
 
-Execution of a federated graph requries being able to "enter" into a service at an entity type. To do this, federated services need to do two things:
+Execution of a federated graph requires being able to "enter" into a service at an entity type. To do this, federated services need to do two things:
 
 * Make each entity in the schema part of the `_Entity` union
 * Implement the `_entities` field on the query root
