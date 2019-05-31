@@ -1,5 +1,6 @@
 import { composeAndValidate } from '../composeAndValidate';
 import gql from 'graphql-tag';
+import { printSchema } from 'graphql';
 
 const productsService = {
   name: 'Products',
@@ -101,12 +102,60 @@ it('composes and validates all (24) permutations without error', () => {
     }
 
     expect({ warnings, errors }).toMatchInlineSnapshot(`
-      Object {
-        "errors": Array [],
-        "warnings": Array [],
-      }
-    `);
+                  Object {
+                    "errors": Array [],
+                    "warnings": Array [],
+                  }
+            `);
   });
+});
+
+it('demonstrates a potential bug', () => {
+  const minimalSchema = gql`
+    type Query {
+      hello: String!
+    }
+  `;
+
+  const schemaExtendingTypeWithNoBase = gql`
+    type Query {
+      whatever: String!
+    }
+
+    extend type NotMyType {
+      thisOneIsMine: String!
+    }
+  `;
+
+  const services = [
+    { name: 'minimal', typeDefs: minimalSchema },
+    { name: 'noBase', typeDefs: schemaExtendingTypeWithNoBase },
+  ];
+
+  const { errors, schema } = composeAndValidate(services);
+
+  expect(errors).toHaveLength(0);
+  expect(printSchema(schema)).toMatchInlineSnapshot(`
+    "directive @key(fields: String!) on OBJECT | INTERFACE
+
+    directive @extends on OBJECT
+
+    directive @external on OBJECT | FIELD_DEFINITION
+
+    directive @requires(fields: String!) on FIELD_DEFINITION
+
+    directive @provides(fields: String!) on FIELD_DEFINITION
+
+    type NotMyType {
+      thisOneIsMine: String!
+    }
+
+    type Query {
+      hello: String!
+      whatever: String!
+    }
+    "
+  `);
 });
 
 it.todo('errors on duplicate types where there is a mismatch of field types');
