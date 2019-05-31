@@ -3,7 +3,7 @@ title: Core concepts
 description: How schema composition works
 ---
 
-Apollo federation works through a declarative composition model where services expose their capabilities and together they can be formed into a single graph. This section describes the core concepts in the programming model.
+Apollo Federation works through a declarative composition model where services expose their capabilities and together they can be formed into a single graph. This section describes the core concepts in the programming model.
 
 ## Entities and keys
 
