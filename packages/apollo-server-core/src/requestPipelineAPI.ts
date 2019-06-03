@@ -54,6 +54,8 @@ export interface GraphQLRequestMetrics {
   persistedQueryHit?: boolean;
   persistedQueryRegister?: boolean;
   responseCacheHit?: boolean;
+  forbiddenOperation?: boolean;
+  registeredOperation?: boolean;
 }
 
 export interface GraphQLRequestContext<TContext = Record<string, any>> {
