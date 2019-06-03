@@ -145,17 +145,7 @@ it('treats types with @extends as type extensions', () => {
   };
 
   const { schema, errors } = composeAndValidate([serviceA, serviceB]);
-
-  // Expected:
   expect(errors).toHaveLength(0);
-
-  // Actually:
-  // expect(errors).toMatchInlineSnapshot(`
-  //   Array [
-  //     [GraphQLError: [serviceB] Product.sku -> Found extraneous @external directive. @external cannot be used on base types.],
-  //     [GraphQLError: [serviceB] Product.price -> Found extraneous @requires directive. @requires cannot be used on base types.],
-  //   ]
-  // `);
 
   const product = schema.getType('Product') as GraphQLObjectType;
   expect(product).toMatchInlineSnapshot(`

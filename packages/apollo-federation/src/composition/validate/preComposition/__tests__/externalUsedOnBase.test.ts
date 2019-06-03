@@ -1,6 +1,5 @@
 import gql from 'graphql-tag';
 import { externalUsedOnBase as validateExternalUsedOnBase } from '../';
-import { GraphQLObjectType } from 'graphql';
 
 describe('externalUsedOnBase', () => {
   it('does not warn when no externals directives are defined', () => {
@@ -23,6 +22,7 @@ describe('externalUsedOnBase', () => {
     const warnings = validateExternalUsedOnBase(serviceA);
     expect(warnings).toEqual([]);
   });
+
   it('warns when there is a @external field on a base type', () => {
     const serviceA = {
       typeDefs: gql`
@@ -41,5 +41,21 @@ describe('externalUsedOnBase', () => {
         [GraphQLError: [serviceA] Product.upc -> Found extraneous @external directive. @external cannot be used on base types.],
       ]
     `);
+  });
+
+  it("doesn't warn when there is an @external field on a type definition using an @extends directive", () => {
+    const serviceA = {
+      typeDefs: gql`
+        type Product @extends @key(fields: "sku") {
+          sku: String!
+          upc: String! @external
+          id: ID!
+        }
+      `,
+      name: 'serviceA',
+    };
+
+    const warnings = validateExternalUsedOnBase(serviceA);
+    expect(warnings).toHaveLength(0);
   });
 });

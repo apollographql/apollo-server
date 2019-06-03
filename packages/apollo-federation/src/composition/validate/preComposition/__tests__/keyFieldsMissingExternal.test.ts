@@ -129,4 +129,35 @@ describe('keyFieldsMissingExternal', () => {
       ]
     `);
   });
+
+  it("warns when a @key argument on a type extended via the @extends directive doesn't reference an @external field", () => {
+    const serviceA = {
+      typeDefs: gql`
+        type Car @extends @key(fields: "model { name kit { upc } } year") {
+          model: Model! @external
+          year: String! @external
+        }
+
+        extend type Model {
+          name: String!
+          kit: Kit
+        }
+
+        type Kit {
+          upc: String!
+        }
+      `,
+      name: 'serviceA',
+    };
+
+    const warnings = validateKeyFieldsMissingExternal(serviceA);
+    expect(warnings).toHaveLength(3);
+    expect(warnings).toMatchInlineSnapshot(`
+      Array [
+        [GraphQLError: [serviceA] Model -> A @key directive specifies the \`name\` field which has no matching @external field.],
+        [GraphQLError: [serviceA] Model -> A @key directive specifies the \`kit\` field which has no matching @external field.],
+        [GraphQLError: [serviceA] Kit -> A @key directive specifies the \`upc\` field which has no matching @external field.],
+      ]
+    `);
+  });
 });

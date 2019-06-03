@@ -1,6 +1,5 @@
 import gql from 'graphql-tag';
 import { requiresUsedOnBase as validateRequiresUsedOnBase } from '../';
-import { GraphQLObjectType } from 'graphql';
 
 describe('requiresUsedOnBase', () => {
   it('does not warn when no requires directives are defined', () => {
@@ -42,5 +41,21 @@ describe('requiresUsedOnBase', () => {
         [GraphQLError: [serviceA] Product.upc -> Found extraneous @requires directive. @requires cannot be used on base types.],
       ]
     `);
+  });
+
+  it("doesn't warn when there is a @requires field on a type definition using the @extends directive", () => {
+    const serviceA = {
+      typeDefs: gql`
+        type Product @extends @key(fields: "sku") {
+          sku: String!
+          upc: String! @requires(fields: "sku")
+          id: ID!
+        }
+      `,
+      name: 'serviceA',
+    };
+
+    const warnings = validateRequiresUsedOnBase(serviceA);
+    expect(warnings).toHaveLength(0);
   });
 });

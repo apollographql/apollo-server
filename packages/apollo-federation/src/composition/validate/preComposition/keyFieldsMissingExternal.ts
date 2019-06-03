@@ -53,6 +53,32 @@ export const keyFieldsMissingExternal = ({
 
       keyDirectiveInfoOnTypeExtensions.push(...keyDirectivesInfo);
     },
+    ObjectTypeDefinition(node) {
+      // We only want to continue if this type definition is an extension via
+      // the @extends directive
+      if (findDirectivesOnTypeOrField(node, 'extends').length === 0) {
+        return;
+      }
+
+      const keyDirectivesOnTypeExtension = findDirectivesOnTypeOrField(
+        node,
+        'key',
+      );
+
+      const keyDirectivesInfo = keyDirectivesOnTypeExtension
+        .map(keyDirective =>
+          keyDirective.arguments &&
+          isStringValueNode(keyDirective.arguments[0].value)
+            ? {
+                typeName: node.name.value,
+                keyArgument: keyDirective.arguments[0].value.value,
+              }
+            : null,
+        )
+        .filter(isNotNullOrUndefined);
+
+      keyDirectiveInfoOnTypeExtensions.push(...keyDirectivesInfo);
+    },
   });
 
   // this allows us to build a partial schema
