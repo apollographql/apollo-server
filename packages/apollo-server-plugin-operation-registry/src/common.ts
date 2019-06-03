@@ -38,7 +38,7 @@ export function getStorageSecretUrl(
   graphId: string,
   apiKeyHash: string,
 ): string {
-  return `${urlStorageSecretBase}/${graphId}/${apiKeyHash}/storage-secret.json`;
+  return `${urlStorageSecretBase}/${graphId}/storage-secret/${apiKeyHash}.json`;
 }
 
 export function getOperationManifestUrl(
