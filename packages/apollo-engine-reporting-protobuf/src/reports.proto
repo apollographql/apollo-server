@@ -86,17 +86,10 @@ message Trace {
 		// a list).  Note that nodes representing indexes (and the root node)
 		// don't contain all Node fields (eg types and times).
 		oneof id {
-			// Older versions of Apollo Engine Reporting (AS <= 2.4.8) would set this
-			// key to be the alias if there was an alias and the field name otherwise.
-			// New agents all use the `original_field_name` key, but we support this
-			// id as well for legacy reasons. To specify an
-			// alias, use the alias key.
-			string legacy_field_name_could_be_alias = 1;
-			string original_field_name = 24;
+			string field_name = 1;
 			uint32 index = 2;
 		}
 
-		string alias = 25;
 		// The field's return type; e.g. "String!" for User.email:String!
 		string type = 3;
 
