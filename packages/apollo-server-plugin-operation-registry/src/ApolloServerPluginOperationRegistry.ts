@@ -152,6 +152,9 @@ export default function plugin(options: Options = Object.create(null)) {
             logger.debug(
               `${logHash}: Permitting operation found in local registry.`,
             );
+            if (!options.dryRun) {
+              requestContext.metrics.registeredOperation = true;
+            }
             return;
           }
 
@@ -210,6 +213,7 @@ export default function plugin(options: Options = Object.create(null)) {
             );
 
             if (!options.dryRun) {
+              requestContext.metrics.forbiddenOperation = true;
               throw new ForbiddenError('Execution forbidden');
             } else {
               logger.debug(
