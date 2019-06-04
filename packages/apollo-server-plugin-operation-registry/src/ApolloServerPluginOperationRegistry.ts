@@ -33,7 +33,8 @@ interface Options {
 export default function plugin(options: Options = Object.create(null)) {
   let agent: Agent;
   let store: InMemoryLRUCache;
-  let schemaTag = options.schemaTag || process.env.ENGINE_SCHEMA_TAG || '';
+  let schemaTag =
+    options.schemaTag || process.env.ENGINE_SCHEMA_TAG || 'current';
 
   // Setup logging facilities, scoped under the appropriate name.
   const logger = loglevel.getLogger(`apollo-server:${pluginName}`);
