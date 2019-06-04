@@ -4,7 +4,7 @@ export function deepMerge(target: any, source: any): any {
   if (source === undefined || source === null) return target;
 
   for (const key of Object.keys(source)) {
-    if (source[key] === undefined) continue;
+    if (source[key] === undefined || key === '__proto__') continue;
 
     if (target[key] && isObject(source[key])) {
       deepMerge(target[key], source[key]);
