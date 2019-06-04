@@ -6,6 +6,7 @@ import {
   typeSerializer,
   selectionSetSerializer,
 } from '../../snapshotSerializers';
+import { normalizeTypeDefs } from '../normalize';
 
 expect.addSnapshotSerializer(astSerializer);
 expect.addSnapshotSerializer(typeSerializer);
@@ -718,7 +719,8 @@ describe('composeServices', () => {
         name: 'serviceB',
       };
 
-      const { schema, errors } = composeServices([serviceA, serviceB]);
+      const normalizedServices = normalizeTypeDefs([serviceA, serviceB]);
+      const { schema, errors } = composeServices(normalizedServices);
       expect(errors).toHaveLength(0);
       expect(schema).toBeDefined();
 
@@ -1221,7 +1223,8 @@ describe('composeServices', () => {
           name: 'serviceB',
         };
 
-        const { schema, errors } = composeServices([serviceA, serviceB]);
+        const normalizedServices = normalizeTypeDefs([serviceA, serviceB]);
+        const { schema, errors } = composeServices(normalizedServices);
 
         expect(errors).toHaveLength(0);
 

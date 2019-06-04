@@ -1,6 +1,5 @@
 import gql from 'graphql-tag';
 import { externalUsedOnBase as validateExternalUsedOnBase } from '../';
-import { GraphQLObjectType } from 'graphql';
 
 describe('externalUsedOnBase', () => {
   it('does not warn when no externals directives are defined', () => {
@@ -23,6 +22,7 @@ describe('externalUsedOnBase', () => {
     const warnings = validateExternalUsedOnBase(serviceA);
     expect(warnings).toEqual([]);
   });
+
   it('warns when there is a @external field on a base type', () => {
     const serviceA = {
       typeDefs: gql`

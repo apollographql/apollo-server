@@ -1,6 +1,5 @@
 import gql from 'graphql-tag';
 import { requiresUsedOnBase as validateRequiresUsedOnBase } from '../';
-import { GraphQLObjectType } from 'graphql';
 
 describe('requiresUsedOnBase', () => {
   it('does not warn when no requires directives are defined', () => {
