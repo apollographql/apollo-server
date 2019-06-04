@@ -502,7 +502,7 @@ describe('Agent', () => {
         });
       });
 
-      describe.only('When given a schemaTag', () => {
+      describe('When given a schemaTag', () => {
         const schemaTag = 'master';
         const getOperationManifestRelativeUrl = (
           ...args: Parameters<typeof getOperationManifestUrl>
