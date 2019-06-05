@@ -138,6 +138,12 @@ export class EngineReportingExtension<TContext = any>
       if (o.requestContext.metrics.persistedQueryRegister) {
         this.trace.persistedQueryRegister = true;
       }
+      if (o.requestContext.metrics.forbiddenOperation) {
+        this.trace.forbiddenOperation = true;
+      }
+      if (o.requestContext.metrics.registeredOperation) {
+        this.trace.registeredOperation = true;
+      }
     }
 
     if (this.options.privateVariables !== true && o.variables) {
