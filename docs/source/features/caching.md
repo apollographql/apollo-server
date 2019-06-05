@@ -144,4 +144,4 @@ The plugin allows you to define a few more hooks to affect cache behavior for a 
 - `shouldReadFromCache`: if this hook returns false, the plugin will not read responses from the cache.
 - `shouldWriteToCache`: if this hook returns false, the plugin will not write responses to the cache.
 
-In addition to the [`Cache-Control` HTTP header](#serving-http-cache-headers), the response cache plugin will also set the `Age` HTTP header to the number of seconds the value has bee sitting in the cache.
+In addition to the [`Cache-Control` HTTP header](#serving-http-cache-headers), the response cache plugin will also set the `Age` HTTP header to the number of seconds the value has been sitting in the cache.
