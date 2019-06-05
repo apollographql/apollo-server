@@ -1,4 +1,4 @@
-import { ServiceDefinition, DefaultRootOperationTypeName } from './types';
+import { DefaultRootOperationTypeName } from './types';
 import {
   DocumentNode,
   visit,
@@ -8,13 +8,10 @@ import {
 } from 'graphql';
 import { findDirectivesOnTypeOrField } from './utils';
 
-export function normalizeTypeDefs(serviceList: ServiceDefinition[]) {
-  return serviceList.map(({ name, typeDefs }) => ({
-    name,
-    typeDefs: defaultRootOperationTypes(
-      replaceExtendedDefinitionsWithExtensions(typeDefs),
-    ),
-  }));
+export function normalizeTypeDefs(typeDefs: DocumentNode) {
+  return defaultRootOperationTypes(
+    replaceExtendedDefinitionsWithExtensions(typeDefs),
+  );
 }
 
 export function defaultRootOperationTypes(

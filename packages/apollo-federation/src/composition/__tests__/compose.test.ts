@@ -719,7 +719,12 @@ describe('composeServices', () => {
         name: 'serviceB',
       };
 
-      const normalizedServices = normalizeTypeDefs([serviceA, serviceB]);
+      const normalizedServices = [serviceA, serviceB].map(
+        ({ name, typeDefs }) => ({
+          name,
+          typeDefs: normalizeTypeDefs(typeDefs),
+        }),
+      );
       const { schema, errors } = composeServices(normalizedServices);
       expect(errors).toHaveLength(0);
       expect(schema).toBeDefined();
@@ -1223,7 +1228,12 @@ describe('composeServices', () => {
           name: 'serviceB',
         };
 
-        const normalizedServices = normalizeTypeDefs([serviceA, serviceB]);
+        const normalizedServices = [serviceA, serviceB].map(
+          ({ name, typeDefs }) => ({
+            name,
+            typeDefs: normalizeTypeDefs(typeDefs),
+          }),
+        );
         const { schema, errors } = composeServices(normalizedServices);
 
         expect(errors).toHaveLength(0);

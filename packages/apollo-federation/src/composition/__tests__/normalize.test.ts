@@ -144,31 +144,28 @@ describe('SDL normalization and its respective parts', () => {
 
   describe('normalizeTypeDefs', () => {
     it('integration', () => {
-      const serviceToNormalize = {
-        typeDefs: gql`
-          schema {
-            query: RootQuery
-            mutation: RootMutation
-          }
+      const typeDefsToNormalize = gql`
+        schema {
+          query: RootQuery
+          mutation: RootMutation
+        }
 
-          type RootQuery {
-            product: Product
-          }
+        type RootQuery {
+          product: Product
+        }
 
-          type Product @extends @key(fields: "sku") {
-            sku: String @external
-          }
+        type Product @extends @key(fields: "sku") {
+          sku: String @external
+        }
 
-          type RootMutation {
-            updateProduct: Product
-          }
-        `,
-        name: 'serviceToNormalize',
-      };
+        type RootMutation {
+          updateProduct: Product
+        }
+      `;
 
-      const [normalizedService] = normalizeTypeDefs([serviceToNormalize]);
+      const normalized = normalizeTypeDefs(typeDefsToNormalize);
 
-      expect(normalizedService.typeDefs).toMatchInlineSnapshot(`
+      expect(normalized).toMatchInlineSnapshot(`
         extend type Query {
           product: Product
         }

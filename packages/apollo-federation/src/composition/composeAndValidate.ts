@@ -7,7 +7,11 @@ import { ServiceDefinition } from './types';
 import { normalizeTypeDefs } from './normalize';
 
 export function composeAndValidate(serviceList: ServiceDefinition[]) {
-  const normalizedServiceList = normalizeTypeDefs(serviceList);
+  const normalizedServiceList = serviceList.map(({ name, typeDefs }) => ({
+    name,
+    typeDefs: normalizeTypeDefs(typeDefs),
+  }));
+
   // generate errors or warnings of the individual services
   const errors = validateServicesBeforeComposition(normalizedServiceList);
 
