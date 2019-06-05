@@ -111,11 +111,11 @@ it('composes and validates all (24) permutations without error', () => {
     }
 
     expect({ warnings, errors }).toMatchInlineSnapshot(`
-            Object {
-              "errors": Array [],
-              "warnings": Array [],
-            }
-        `);
+                  Object {
+                    "errors": Array [],
+                    "warnings": Array [],
+                  }
+            `);
   });
 });
 
@@ -149,12 +149,12 @@ it('treats types with @extends as type extensions', () => {
 
   const product = schema.getType('Product') as GraphQLObjectType;
   expect(product).toMatchInlineSnapshot(`
-        type Product {
-          sku: String!
-          upc: String!
-          price: Int!
-        }
-    `);
+            type Product {
+              sku: String!
+              upc: String!
+              price: Int!
+            }
+      `);
 });
 
 it('errors on invalid usages of default operation names', () => {
@@ -199,7 +199,7 @@ it('errors on invalid usages of default operation names', () => {
     Array [
       Object {
         "code": "ROOT_QUERY_USED",
-        "message": "[serviceA] Query -> Found invalid use of default root operation name \`Query\`. Default root operation names (Query, Mutation, Subscription) are disallowed when their respective operation type definition is provided in the schema definition or extension.",
+        "message": "[serviceA] Query -> Found invalid use of default root operation name \`Query\`. \`Query\` is disallowed when \`Schema.query\` is set to a type other than \`Query\`.",
       },
     ]
   `);

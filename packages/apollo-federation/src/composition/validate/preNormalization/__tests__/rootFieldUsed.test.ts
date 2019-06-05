@@ -95,7 +95,7 @@ describe('rootFieldUsed', () => {
       Array [
         Object {
           "code": "ROOT_QUERY_USED",
-          "message": "[serviceA] Query -> Found invalid use of default root operation name \`Query\`. Default root operation names (Query, Mutation, Subscription) are disallowed when their respective operation type definition is provided in the schema definition or extension.",
+          "message": "[serviceA] Query -> Found invalid use of default root operation name \`Query\`. \`Query\` is disallowed when \`Schema.query\` is set to a type other than \`Query\`.",
         },
       ]
     `);
@@ -126,7 +126,7 @@ describe('rootFieldUsed', () => {
       Array [
         Object {
           "code": "ROOT_MUTATION_USED",
-          "message": "[serviceA] Mutation -> Found invalid use of default root operation name \`Mutation\`. Default root operation names (Query, Mutation, Subscription) are disallowed when their respective operation type definition is provided in the schema definition or extension.",
+          "message": "[serviceA] Mutation -> Found invalid use of default root operation name \`Mutation\`. \`Mutation\` is disallowed when \`Schema.mutation\` is set to a type other than \`Mutation\`.",
         },
       ]
     `);

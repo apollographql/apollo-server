@@ -76,15 +76,12 @@ export const rootFieldUsed = ({
       if (
         disallowedTypeNames[node.name.value as DefaultRootOperationTypeName]
       ) {
+        const rootOperationName = node.name.value;
         errors.push(
           errorWithCode(
-            `ROOT_${node.name.value.toUpperCase()}_USED`,
-            logServiceAndType(serviceName, node.name.value) +
-              `Found invalid use of default root operation name \`${
-                node.name.value
-              }\`. Default root operation names (${defaultRootOperationNames.join(
-                ', ',
-              )}) are disallowed when their respective operation type definition is provided in the schema definition or extension.`,
+            `ROOT_${rootOperationName.toUpperCase()}_USED`,
+            logServiceAndType(serviceName, rootOperationName) +
+              `Found invalid use of default root operation name \`${rootOperationName}\`. \`${rootOperationName}\` is disallowed when \`Schema.${rootOperationName.toLowerCase()}\` is set to a type other than \`${rootOperationName}\`.`,
           ),
         );
       }
