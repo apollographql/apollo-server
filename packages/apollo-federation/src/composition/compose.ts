@@ -27,8 +27,6 @@ import {
   parseSelections,
   mapFieldNamesToServiceName,
   stripExternalFieldsFromTypeDefs,
-  defaultRootOperationTypes,
-  replaceExtendedDefinitionsWithExtensions,
 } from './utils';
 import {
   ServiceDefinition,
@@ -101,28 +99,12 @@ export function buildMapsFromServiceList(serviceList: ServiceDefinition[]) {
   const keyDirectivesMap: KeyDirectivesMap = Object.create(null);
 
   for (const { typeDefs, name: serviceName } of serviceList) {
-    // XXX Transform the SDL to use default root operation type names.
-    // This transformation has other related side effects, like dropping invalid
-    // type definitions that use default root operation type names.
-    const typeDefsWithDefaultedRootOperations = defaultRootOperationTypes(
-      typeDefs,
-    );
-
-    // type definitions with the @extends directive should be treated
-    // as type extensions.
-    const typeDefsWithExtendedTypesReplaced = replaceExtendedDefinitionsWithExtensions(
-      typeDefsWithDefaultedRootOperations,
-    );
-
     // Build a new SDL with @external fields removed, as well as information about
     // the fields that were removed.
     const {
       typeDefsWithoutExternalFields,
       strippedFields,
-    } = stripExternalFieldsFromTypeDefs(
-      typeDefsWithExtendedTypesReplaced,
-      serviceName,
-    );
+    } = stripExternalFieldsFromTypeDefs(typeDefs, serviceName);
 
     externalFields.push(...strippedFields);
 

@@ -1,5 +1,10 @@
 import { composeAndValidate } from '../composeAndValidate';
 import gql from 'graphql-tag';
+import { GraphQLObjectType } from 'graphql';
+import { astSerializer, typeSerializer } from '../../snapshotSerializers';
+
+expect.addSnapshotSerializer(astSerializer);
+expect.addSnapshotSerializer(typeSerializer);
 
 const productsService = {
   name: 'Products',
@@ -107,6 +112,44 @@ it('composes and validates all (24) permutations without error', () => {
       }
     `);
   });
+});
+
+it('treats types with @extends as type extensions', () => {
+  const serviceA = {
+    typeDefs: gql`
+      type Query {
+        products: [Product]!
+      }
+
+      type Product @key(fields: "sku") {
+        sku: String!
+        upc: String!
+      }
+    `,
+    name: 'serviceA',
+  };
+
+  const serviceB = {
+    typeDefs: gql`
+      type Product @extends @key(fields: "sku") {
+        sku: String! @external
+        price: Int! @requires(fields: "sku")
+      }
+    `,
+    name: 'serviceB',
+  };
+
+  const { schema, errors } = composeAndValidate([serviceA, serviceB]);
+  expect(errors).toHaveLength(0);
+
+  const product = schema.getType('Product') as GraphQLObjectType;
+  expect(product).toMatchInlineSnapshot(`
+    type Product {
+      sku: String!
+      upc: String!
+      price: Int!
+    }
+  `);
 });
 
 it.todo('errors on duplicate types where there is a mismatch of field types');
