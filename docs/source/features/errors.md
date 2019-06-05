@@ -269,5 +269,5 @@ const server = new ApolloServer({
 In this case, the example error used above would be reported in Apollo Engine as:
 
 ```
-The x-api-key:REDACTED doesn't have sufficient privileges.
+The REDACTED doesn't have sufficient privileges.
 ```
