@@ -84,7 +84,7 @@ export const keyFieldsMissingExternal = ({
               // TODO: find all fields that have @external and suggest them / heursitic match
               errors.push(
                 errorWithCode(
-                  'KEY_FIELDS_MISSNIG_EXTERNAL',
+                  'KEY_FIELDS_MISSING_EXTERNAL',
                   logServiceAndType(serviceName, parentType.name) +
                     `A @key directive specifies a field which is not found in this service. Add a field to this type with @external.`,
                 ),
@@ -99,7 +99,7 @@ export const keyFieldsMissingExternal = ({
             if (externalDirectivesOnField.length === 0) {
               errors.push(
                 errorWithCode(
-                  'KEY_FIELDS_MISSNIG_EXTERNAL',
+                  'KEY_FIELDS_MISSING_EXTERNAL',
                   logServiceAndType(serviceName, parentType.name) +
                     `A @key directive specifies the \`${
                       fieldDef.name

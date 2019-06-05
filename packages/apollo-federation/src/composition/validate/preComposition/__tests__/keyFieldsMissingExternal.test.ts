@@ -73,7 +73,7 @@ describe('keyFieldsMissingExternal', () => {
     expect(warnings).toMatchInlineSnapshot(`
       Array [
         Object {
-          "code": "KEY_FIELDS_MISSNIG_EXTERNAL",
+          "code": "KEY_FIELDS_MISSING_EXTERNAL",
           "message": "[serviceA] Product -> A @key directive specifies the \`sku\` field which has no matching @external field.",
         },
       ]
@@ -101,7 +101,7 @@ describe('keyFieldsMissingExternal', () => {
     expect(warnings).toMatchInlineSnapshot(`
       Array [
         Object {
-          "code": "KEY_FIELDS_MISSNIG_EXTERNAL",
+          "code": "KEY_FIELDS_MISSING_EXTERNAL",
           "message": "[serviceA] Product -> A @key directive specifies a field which is not found in this service. Add a field to this type with @external.",
         },
       ]
@@ -133,15 +133,15 @@ describe('keyFieldsMissingExternal', () => {
     expect(warnings).toMatchInlineSnapshot(`
       Array [
         Object {
-          "code": "KEY_FIELDS_MISSNIG_EXTERNAL",
+          "code": "KEY_FIELDS_MISSING_EXTERNAL",
           "message": "[serviceA] Model -> A @key directive specifies the \`name\` field which has no matching @external field.",
         },
         Object {
-          "code": "KEY_FIELDS_MISSNIG_EXTERNAL",
+          "code": "KEY_FIELDS_MISSING_EXTERNAL",
           "message": "[serviceA] Model -> A @key directive specifies the \`kit\` field which has no matching @external field.",
         },
         Object {
-          "code": "KEY_FIELDS_MISSNIG_EXTERNAL",
+          "code": "KEY_FIELDS_MISSING_EXTERNAL",
           "message": "[serviceA] Kit -> A @key directive specifies the \`upc\` field which has no matching @external field.",
         },
       ]
