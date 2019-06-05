@@ -1,6 +1,9 @@
 import gql from 'graphql-tag';
 import { composeServices } from '../../../compose';
 import { externalUnused as validateExternalUnused } from '../';
+import { graphqlErrorSerializer } from '../../../../snapshotSerializers';
+
+expect.addSnapshotSerializer(graphqlErrorSerializer);
 
 describe('externalUnused', () => {
   it('warns when there is an unused @external field', () => {
@@ -30,7 +33,10 @@ describe('externalUnused', () => {
     const warnings = validateExternalUnused(schema);
     expect(warnings).toMatchInlineSnapshot(`
       Array [
-        [GraphQLError: [serviceB] Product.sku -> is marked as @external but is not used by a @requires, @key, or @provides directive.],
+        Object {
+          "code": "EXTERNAL_UNUSED",
+          "message": "[serviceB] Product.sku -> is marked as @external but is not used by a @requires, @key, or @provides directive.",
+        },
       ]
     `);
   });

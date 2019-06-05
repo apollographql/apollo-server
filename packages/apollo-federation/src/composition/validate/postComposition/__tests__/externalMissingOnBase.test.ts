@@ -1,6 +1,9 @@
 import gql from 'graphql-tag';
 import { composeServices } from '../../../compose';
 import { externalMissingOnBase as validateExternalMissingOnBase } from '../';
+import { graphqlErrorSerializer } from '../../../../snapshotSerializers';
+
+expect.addSnapshotSerializer(graphqlErrorSerializer);
 
 describe('externalMissingOnBase', () => {
   it('warns when an @external field does not have a matching field on the base type', () => {
@@ -40,8 +43,14 @@ describe('externalMissingOnBase', () => {
     const warnings = validateExternalMissingOnBase(schema);
     expect(warnings).toMatchInlineSnapshot(`
       Array [
-        [GraphQLError: [serviceB] Product.id -> marked @external but id was defined in serviceC, not in the service that owns Product (serviceA)],
-        [GraphQLError: [serviceC] Product.test -> marked @external but test is not defined on the base service of Product (serviceA)],
+        Object {
+          "code": "EXTERNAL_MISSING_ON_BASE",
+          "message": "[serviceB] Product.id -> marked @external but id was defined in serviceC, not in the service that owns Product (serviceA)",
+        },
+        Object {
+          "code": "EXTERNAL_MISSING_ON_BASE",
+          "message": "[serviceC] Product.test -> marked @external but test is not defined on the base service of Product (serviceA)",
+        },
       ]
     `);
   });
@@ -70,9 +79,12 @@ describe('externalMissingOnBase', () => {
     const { schema, errors } = composeServices([serviceA, serviceB]);
     const warnings = validateExternalMissingOnBase(schema);
     expect(warnings).toMatchInlineSnapshot(`
-            Array [
-              [GraphQLError: [serviceB] Product.specialId -> marked @external but specialId is not defined on the base service of Product (serviceA)],
-            ]
-        `);
+      Array [
+        Object {
+          "code": "EXTERNAL_MISSING_ON_BASE",
+          "message": "[serviceB] Product.specialId -> marked @external but specialId is not defined on the base service of Product (serviceA)",
+        },
+      ]
+    `);
   });
 });

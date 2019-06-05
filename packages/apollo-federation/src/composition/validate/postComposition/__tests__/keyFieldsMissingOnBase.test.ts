@@ -1,6 +1,9 @@
 import gql from 'graphql-tag';
 import { composeServices } from '../../../compose';
 import { keyFieldsMissingOnBase as validateKeyFieldsMissingOnBase } from '../';
+import { graphqlErrorSerializer } from '../../../../snapshotSerializers';
+
+expect.addSnapshotSerializer(graphqlErrorSerializer);
 
 describe('keyFieldsMissingOnBase', () => {
   it('returns no warnings with proper @key usage', () => {
@@ -67,7 +70,10 @@ describe('keyFieldsMissingOnBase', () => {
     const warnings = validateKeyFieldsMissingOnBase(schema);
     expect(warnings).toMatchInlineSnapshot(`
       Array [
-        [GraphQLError: [serviceA] Product -> A @key selects uid, but Product.uid was either created or overwritten by serviceB, not serviceA],
+        Object {
+          "code": "KEY_FIELDS_MISSING_ON_BASE",
+          "message": "[serviceA] Product -> A @key selects uid, but Product.uid was either created or overwritten by serviceB, not serviceA",
+        },
       ]
     `);
   });

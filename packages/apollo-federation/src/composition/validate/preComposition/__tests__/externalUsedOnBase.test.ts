@@ -1,5 +1,8 @@
 import gql from 'graphql-tag';
 import { externalUsedOnBase as validateExternalUsedOnBase } from '../';
+import { graphqlErrorSerializer } from '../../../../snapshotSerializers';
+
+expect.addSnapshotSerializer(graphqlErrorSerializer);
 
 describe('externalUsedOnBase', () => {
   it('does not warn when no externals directives are defined', () => {
@@ -38,7 +41,10 @@ describe('externalUsedOnBase', () => {
     const warnings = validateExternalUsedOnBase(serviceA);
     expect(warnings).toMatchInlineSnapshot(`
       Array [
-        [GraphQLError: [serviceA] Product.upc -> Found extraneous @external directive. @external cannot be used on base types.],
+        Object {
+          "code": "EXTERNAL_USED_ON_BASE",
+          "message": "[serviceA] Product.upc -> Found extraneous @external directive. @external cannot be used on base types.",
+        },
       ]
     `);
   });

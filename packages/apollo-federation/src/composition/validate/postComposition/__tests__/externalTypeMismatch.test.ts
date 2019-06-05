@@ -1,6 +1,9 @@
 import gql from 'graphql-tag';
 import { externalTypeMismatch as validateExternalTypeMismatch } from '../';
 import { composeServices } from '../../../compose';
+import { graphqlErrorSerializer } from '../../../../snapshotSerializers';
+
+expect.addSnapshotSerializer(graphqlErrorSerializer);
 
 describe('validateExternalDirectivesOnSchema', () => {
   it('warns when the type of an @external field doesnt match the base', () => {
@@ -28,7 +31,10 @@ describe('validateExternalDirectivesOnSchema', () => {
     const warnings = validateExternalTypeMismatch(schema);
     expect(warnings).toMatchInlineSnapshot(`
       Array [
-        [GraphQLError: [serviceB] Product.sku -> Type \`String\` does not match the type of the original field in serviceA (\`String!\`)],
+        Object {
+          "code": "EXTERNAL_TYPE_MISMATCH",
+          "message": "[serviceB] Product.sku -> Type \`String\` does not match the type of the original field in serviceA (\`String!\`)",
+        },
       ]
     `);
   });
@@ -57,9 +63,12 @@ describe('validateExternalDirectivesOnSchema', () => {
     const { schema, errors } = composeServices([serviceA, serviceB]);
     const warnings = validateExternalTypeMismatch(schema);
     expect(warnings).toMatchInlineSnapshot(`
-            Array [
-              [GraphQLError: [serviceB] Product.sku -> the type of the @external field does not exist in the resulting composed schema],
-            ]
-        `);
+      Array [
+        Object {
+          "code": "EXTERNAL_TYPE_MISMATCH",
+          "message": "[serviceB] Product.sku -> the type of the @external field does not exist in the resulting composed schema",
+        },
+      ]
+    `);
   });
 });

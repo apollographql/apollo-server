@@ -1,5 +1,8 @@
 import gql from 'graphql-tag';
 import { rootFieldUsed as validateRootFieldUsed } from '../';
+import { graphqlErrorSerializer } from '../../../../snapshotSerializers';
+
+expect.addSnapshotSerializer(graphqlErrorSerializer);
 
 describe('rootFieldUsed', () => {
   it('has no warnings when no schema definition or extension is provided', () => {
@@ -89,7 +92,10 @@ describe('rootFieldUsed', () => {
     expect(warnings).toHaveLength(1);
     expect(warnings).toMatchInlineSnapshot(`
       Array [
-        [GraphQLError: [serviceA] Query -> Found invalid use of default root operation type \`Query\`. Default root operation type names (Query, Mutation, Subscription) are disallowed when a schema is defined or extended within a service.],
+        Object {
+          "code": "ROOT_Query_USED",
+          "message": "[serviceA] Query -> Found invalid use of default root operation type \`Query\`. Default root operation type names (Query, Mutation, Subscription) are disallowed when a schema is defined or extended within a service.",
+        },
       ]
     `);
   });

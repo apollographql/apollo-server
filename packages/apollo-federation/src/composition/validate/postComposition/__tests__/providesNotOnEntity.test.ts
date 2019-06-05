@@ -1,6 +1,9 @@
 import gql from 'graphql-tag';
 import { composeServices } from '../../../compose';
 import { providesNotOnEntity as validateProvidesNotOnEntity } from '../';
+import { graphqlErrorSerializer } from '../../../../snapshotSerializers';
+
+expect.addSnapshotSerializer(graphqlErrorSerializer);
 
 describe('providesNotOnEntity', () => {
   it('does not warn when @provides used on an entity', () => {
@@ -87,10 +90,13 @@ describe('providesNotOnEntity', () => {
     const { schema, errors } = composeServices([serviceA, serviceB]);
     const warnings = validateProvidesNotOnEntity(schema);
     expect(warnings).toMatchInlineSnapshot(`
-                  Array [
-                    [GraphQLError: [serviceB] Product.lineItem -> uses the @provides directive but \`Product.lineItem\` does not return a type that has a @key. Try adding a @key to the \`LineItem\` type.],
-                  ]
-            `);
+      Array [
+        Object {
+          "code": "PROVIDES_NOT_ON_ENTITY",
+          "message": "[serviceB] Product.lineItem -> uses the @provides directive but \`Product.lineItem\` does not return a type that has a @key. Try adding a @key to the \`LineItem\` type.",
+        },
+      ]
+    `);
   });
 
   it('warns when there is a @provides on a non-object type', () => {
@@ -126,7 +132,10 @@ describe('providesNotOnEntity', () => {
     const warnings = validateProvidesNotOnEntity(schema);
     expect(warnings).toMatchInlineSnapshot(`
       Array [
-        [GraphQLError: [serviceB] Product.category -> uses the @provides directive but \`Product.category\` returns \`Category\`, which is not an Object type. @provides can only be used on Object types with at least one @key.],
+        Object {
+          "code": "PROVIDES_NOT_ON_ENTITY",
+          "message": "[serviceB] Product.category -> uses the @provides directive but \`Product.category\` returns \`Category\`, which is not an Object type. @provides can only be used on Object types with at least one @key.",
+        },
       ]
     `);
   });
