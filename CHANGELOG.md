@@ -1,5 +1,9 @@
 # Changelog
 
+- `apollo-engine-reporting-protobuf`: Update protobuff to include `forbiddenOperations` and `registeredOperations` [PR #2768](https://github.com/apollographql/apollo-server/pull/2768)
+- `apollo-server-core`: Add `forbiddenOperation` and `registeredOperation` to `GraphQLRequestMetrics` type [PR #2768](https://github.com/apollographql/apollo-server/pull/2768)
+- `apollo-engine-reporting`: Set `forbiddenOperation` and `registeredOperation` on trace if the field is true on `requestContext.metrics` [PR #2768](https://github.com/apollographql/apollo-server/pull/2768)
+
 ### v2.6.1
 
 - Revert: Don't add `cacheControl` directive if one has already been defined. Presently, although the TypeScript don't suggest it, passing a `String` as `typeDefs` to `ApolloServer` is supported and this would be a breaking change for non-TypeScript users. [PR #2428](https://github.com/apollographql/apollo-server/pull/2428)
