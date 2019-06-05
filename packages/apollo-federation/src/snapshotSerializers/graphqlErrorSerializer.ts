@@ -6,7 +6,7 @@ export default {
     return value && value instanceof GraphQLError;
   },
 
-  print(value, print) {
+  print(value: GraphQLError, print) {
     return print({
       message: value.message,
       code: value.extensions ? value.extensions.code : 'MISSING_ERROR',
