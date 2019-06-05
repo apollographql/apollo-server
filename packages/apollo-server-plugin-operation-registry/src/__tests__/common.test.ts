@@ -7,7 +7,7 @@ describe('common', () => {
 
   it('uses the v2 manifest suffix', () => {
     expect(
-      common.getOperationManifestUrl('aServiceId', 'aSchemaHash'),
+      common.getLegacyOperationManifestUrl('aServiceId', 'aSchemaHash'),
     ).toMatchInlineSnapshot(
       `"https://storage.googleapis.com/engine-op-manifest-storage-prod/aServiceId/aSchemaHash.v2.json"`,
     );

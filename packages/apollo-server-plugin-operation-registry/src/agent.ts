@@ -1,14 +1,17 @@
 import {
-  getOperationManifestUrl,
+  getLegacyOperationManifestUrl,
   generateServiceIdHash,
   getStoreKey,
   pluginName,
+  getStorageSecretUrl,
+  getOperationManifestUrl,
 } from './common';
 
 import loglevel from 'loglevel';
 
-import fetch, { Response, RequestInit } from 'node-fetch';
+import { Response } from 'node-fetch';
 import { InMemoryLRUCache } from 'apollo-server-caching';
+import { fetchIfNoneMatch } from './fetchIfNoneMatch';
 
 const DEFAULT_POLL_SECONDS: number = 30;
 const SYNC_WARN_TIME_SECONDS: number = 60;
@@ -37,13 +40,13 @@ export default class Agent {
   private timer?: NodeJS.Timer;
   private logger: loglevel.Logger;
   private hashedServiceId?: string;
-  private requestInFlight: Promise<void> | null = null;
+  private requestInFlight: Promise<any> | null = null;
   private lastSuccessfulCheck?: Date;
+  private storageSecret?: string;
 
   // Only exposed for testing.
   public _timesChecked: number = 0;
 
-  private lastSuccessfulETag?: string;
   private lastOperationSignatures: SignatureStore = new Set();
   private readonly options: AgentOptions = Object.create(null);
 
@@ -61,6 +64,13 @@ export default class Agent {
       typeof this.options.engine.serviceID !== 'string'
     ) {
       throw new Error('`engine.serviceID` must be passed to the Agent.');
+    }
+
+    if (
+      typeof this.options.engine !== 'object' ||
+      typeof this.options.engine.apiKeyHash !== 'string'
+    ) {
+      throw new Error('`engine.apiKeyHash` must be passed to the Agent.');
     }
   }
 
@@ -132,50 +142,97 @@ export default class Agent {
     }
   }
 
-  private async tryUpdate(): Promise<boolean> {
-    const manifestUrl = getOperationManifestUrl(
+  private async fetchAndUpdateStorageSecret(): Promise<string | undefined> {
+    const storageSecretUrl = getStorageSecretUrl(
+      this.options.engine.serviceID,
+      this.options.engine.apiKeyHash,
+    );
+
+    const response = await fetchIfNoneMatch(storageSecretUrl, {
+      method: 'GET',
+      // More than three times our polling interval should be long enough to wait.
+      timeout: this.pollSeconds() * 3 /* times */ * 1000 /* ms */,
+    });
+
+    if (response.status === 304) {
+      this.logger.debug(
+        'The storage secret was the same as the previous attempt.',
+      );
+      return this.storageSecret;
+    }
+
+    if (!response.ok) {
+      const responseText = await response.text();
+      this.logger.debug(`Could not fetch storage secret ${responseText}`);
+      return;
+    }
+
+    this.storageSecret = await response.json();
+
+    return this.storageSecret;
+  }
+
+  private fetchOptions = {
+    // GET is what we request, but keep in mind that, when we include and get
+    // a match on the `If-None-Match` header we'll get an early return with a
+    // status code 304.
+    method: 'GET',
+
+    // More than three times our polling interval should be long enough to wait.
+    timeout: this.pollSeconds() * 3 /* times */ * 1000 /* ms */,
+  };
+
+  private async fetchLegacyManifest(): Promise<Response> {
+    const legacyManifestUrl = getLegacyOperationManifestUrl(
       this.getHashedServiceId(),
       this.options.schemaHash,
     );
+    this.logger.debug(`Checking for manifest changes at ${legacyManifestUrl}`);
+    return fetchIfNoneMatch(legacyManifestUrl, this.fetchOptions);
+  }
 
-    this.logger.debug(`Checking for manifest changes at ${manifestUrl}`);
-    this._timesChecked++;
+  private async fetchManifest(): Promise<Response> {
+    this.logger.debug(`Checking for storageSecret`);
+    const storageSecret = await this.fetchAndUpdateStorageSecret();
 
-    const fetchOptions: RequestInit = {
-      // GET is what we request, but keep in mind that, when we include and get
-      // a match on the `If-None-Match` header we'll get an early return with a
-      // status code 304.
-      method: 'GET',
-
-      // More than three times our polling interval be long enough to wait.
-      timeout: this.pollSeconds() * 3 /* times */ * 1000 /* ms */,
-      headers: Object.create(null),
-    };
-
-    // By saving and providing our last known ETag, we can allow the storage
-    // provider to return us a `304 Not Modified` header rather than the full
-    // response.
-    if (this.lastSuccessfulETag) {
-      fetchOptions.headers = { 'If-None-Match': this.lastSuccessfulETag };
+    if (!storageSecret) {
+      this.logger.debug(`No storage secret found`);
+      return this.fetchLegacyManifest();
     }
+
+    const storageSecretManifestUrl = getOperationManifestUrl(
+      this.options.engine.serviceID,
+      storageSecret,
+    );
+
+    this.logger.debug(
+      `Checking for manifest changes at ${storageSecretManifestUrl}`,
+    );
+    const response = await fetchIfNoneMatch(
+      storageSecretManifestUrl,
+      this.fetchOptions,
+    );
+    if (response.status === 404 || response.status === 403) {
+      return this.fetchLegacyManifest();
+    }
+    return response;
+  }
+
+  private async tryUpdate(): Promise<boolean> {
+    this._timesChecked++;
 
     let response: Response;
     try {
-      response = await fetch(manifestUrl, fetchOptions);
-
+      response = await this.fetchManifest();
       // When the response indicates that the resource hasn't changed, there's
       // no need to do any other work.  Returning false is meant to indicate
       // that there wasn't an update, but there was a successful fetch.
       if (response.status === 304) {
-        this.logger.debug(
-          'The published manifest was the same as the previous attempt.',
-        );
         return false;
       }
 
       if (!response.ok) {
         const responseText = await response.text();
-
         // The response error code only comes in XML, but we don't have an XML
         // parser handy, so we'll just match the string.
         if (responseText.includes('<Code>AccessDenied</Code>')) {
@@ -183,7 +240,6 @@ export default class Agent {
             `No manifest found.  Ensure this server's schema has been published with 'apollo service:push' and that operations have been registered with 'apollo client:push'.`,
           );
         }
-
         // For other unknown errors.
         throw new Error(`Unexpected status: ${responseText}`);
       }
@@ -193,9 +249,9 @@ export default class Agent {
         throw new Error(`Unexpected 'Content-Type' header: ${contentType}`);
       }
     } catch (err) {
-      const ourErrorPrefix = `Unable to fetch operation manifest for service '${
-        this.options.engine.serviceID
-      }' and schema '${this.options.schemaHash}'. `;
+      const ourErrorPrefix = `Unable to fetch operation manifest for ${
+        this.options.schemaHash
+      } in '${this.options.engine.serviceID}': ${err}`;
 
       err.message = `${ourErrorPrefix}: ${err}`;
 
@@ -203,14 +259,6 @@ export default class Agent {
     }
 
     await this.updateManifest(await response.json());
-
-    // Save the ETag of the manifest we just received so we can avoid fetching
-    // the same manifest again.
-    const receivedETag = response.headers.get('etag');
-    if (receivedETag) {
-      this.lastSuccessfulETag = JSON.parse(receivedETag);
-    }
-
     // True is good!
     return true;
   }
@@ -224,15 +272,12 @@ export default class Agent {
       return this.requestInFlight;
     }
 
-    const promise = Promise.resolve();
-
     // Prevent other requests from crossing paths.
-    this.requestInFlight = promise;
+    this.requestInFlight = this.tryUpdate();
 
     const resetRequestInFlight = () => (this.requestInFlight = null);
 
-    return promise
-      .then(() => this.tryUpdate())
+    return this.requestInFlight
       .then(result => {
         // Mark this for reporting and monitoring reasons.
         this.lastSuccessfulCheck = new Date();
