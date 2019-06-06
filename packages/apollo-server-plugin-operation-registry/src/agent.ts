@@ -37,6 +37,8 @@ interface OperationManifest {
 
 type SignatureStore = Set<string>;
 
+const manifestNotFoundMessage = `No manifest found.  Ensure this server's schema has been published with 'apollo service:push' and that operations have been registered with 'apollo client:push'.`;
+
 export default class Agent {
   private timer?: NodeJS.Timer;
   private logger: loglevel.Logger;
@@ -184,6 +186,10 @@ export default class Agent {
   };
 
   private async fetchLegacyManifest(): Promise<Response> {
+    this.logger.debug(`Fetching legacy manifest.`);
+    if (this.options.schemaTag !== 'current') {
+      this.logger.warn(`The legacy manifest contains operations registered for the "current" tag, but the specified schema tag is "${this.options.schemaTag}".`);
+    }
     const legacyManifestUrl = getLegacyOperationManifestUrl(
       this.getHashedServiceId(),
       this.options.schemaHash,
@@ -197,10 +203,7 @@ export default class Agent {
     const storageSecret = await this.fetchAndUpdateStorageSecret();
 
     if (!storageSecret) {
-      this.logger.debug(`No storage secret found`);
-      if (this.options.schemaTag) {
-        throw new Error(`No storage secret found, can't fetch manifest`);
-      }
+      this.logger.warn(`No storage secret found`);
       return this.fetchLegacyManifest();
     }
 
@@ -218,11 +221,8 @@ export default class Agent {
       this.fetchOptions,
     );
 
-    if (
-      (response.status === 404 || response.status === 403) &&
-      // fetching a manifest associated with a schema tag is not supported in legacy
-      !this.options.schemaTag
-    ) {
+    if (response.status === 404 || response.status === 403) {
+      this.logger.warn(manifestNotFoundMessage);
       return this.fetchLegacyManifest();
     }
     return response;
@@ -247,7 +247,7 @@ export default class Agent {
         // parser handy, so we'll just match the string.
         if (responseText.includes('<Code>AccessDenied</Code>')) {
           throw new Error(
-            `No manifest found.  Ensure this server's schema has been published with 'apollo service:push' and that operations have been registered with 'apollo client:push'.`,
+            manifestNotFoundMessage,
           );
         }
         // For other unknown errors.
