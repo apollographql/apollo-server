@@ -62,12 +62,8 @@ export const rootFieldUsed = ({
   //  2. the respective default operation type name is used as a regular type
   if (hasSchemaDefinitionOrExtension) {
     visit(typeDefs, {
-      ObjectTypeDefinition(node) {
-        visitType(node);
-      },
-      ObjectTypeExtension(node) {
-        visitType(node);
-      },
+      ObjectTypeDefinition: visitType,
+      ObjectTypeExtension: visitType,
     });
 
     function visitType(
