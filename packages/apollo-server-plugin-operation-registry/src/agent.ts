@@ -37,7 +37,7 @@ interface OperationManifest {
 
 type SignatureStore = Set<string>;
 
-const manifestNotFoundMessage = `No manifest found.  Ensure this server's schema has been published with 'apollo service:push' and that operations have been registered with 'apollo client:push'.`;
+const callToAction = `Ensure this server's schema has been published with 'apollo service:push' and that operations have been registered with 'apollo client:push'.`;
 
 export default class Agent {
   private timer?: NodeJS.Timer;
@@ -188,7 +188,11 @@ export default class Agent {
   private async fetchLegacyManifest(): Promise<Response> {
     this.logger.debug(`Fetching legacy manifest.`);
     if (this.options.schemaTag !== 'current') {
-      this.logger.warn(`The legacy manifest contains operations registered for the "current" tag, but the specified schema tag is "${this.options.schemaTag}".`);
+      this.logger.warn(
+        `The legacy manifest contains operations registered for the "current" tag, but the specified schema tag is "${
+          this.options.schemaTag
+        }".`,
+      );
     }
     const legacyManifestUrl = getLegacyOperationManifestUrl(
       this.getHashedServiceId(),
@@ -222,7 +226,11 @@ export default class Agent {
     );
 
     if (response.status === 404 || response.status === 403) {
-      this.logger.warn(manifestNotFoundMessage);
+      this.logger.warn(
+        `No manifest found for tag "${
+          this.options.schemaTag
+        }" at ${storageSecretManifestUrl}. ${callToAction}`,
+      );
       return this.fetchLegacyManifest();
     }
     return response;
@@ -246,9 +254,7 @@ export default class Agent {
         // The response error code only comes in XML, but we don't have an XML
         // parser handy, so we'll just match the string.
         if (responseText.includes('<Code>AccessDenied</Code>')) {
-          throw new Error(
-            manifestNotFoundMessage,
-          );
+          throw new Error(`No manifest found. ${callToAction}`);
         }
         // For other unknown errors.
         throw new Error(`Unexpected status: ${responseText}`);
