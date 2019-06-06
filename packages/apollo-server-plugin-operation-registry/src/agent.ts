@@ -22,7 +22,7 @@ export interface AgentOptions {
   schemaHash: string;
   engine: any;
   store: InMemoryLRUCache;
-  schemaTag?: string;
+  schemaTag: string;
 }
 
 interface Operation {
