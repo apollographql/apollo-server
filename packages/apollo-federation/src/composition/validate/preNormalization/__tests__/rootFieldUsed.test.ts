@@ -90,11 +90,12 @@ describe('rootFieldUsed', () => {
     const warnings = validateRootFieldUsed(serviceA);
 
     expect(warnings).toHaveLength(1);
+    expect(warnings[0].extensions.code).toEqual('ROOT_QUERY_USED');
     expect(warnings).toMatchInlineSnapshot(`
       Array [
         Object {
-          "code": "ROOT_Query_USED",
-          "message": "[serviceA] Query -> Found invalid use of default root operation type \`Query\`. Default root operation type names (Query, Mutation, Subscription) are disallowed when a schema is defined or extended within a service.",
+          "code": "ROOT_QUERY_USED",
+          "message": "[serviceA] Query -> Found invalid use of default root operation name \`Query\`. Default root operation names (Query, Mutation, Subscription) are disallowed when their respective operation type definition is provided in the schema definition or extension.",
         },
       ]
     `);
@@ -104,15 +105,15 @@ describe('rootFieldUsed', () => {
     const serviceA = {
       typeDefs: gql`
         schema {
-          query: RootQuery
+          mutation: RootMutation
         }
 
-        type RootQuery {
-          product: Product
+        type RootMutation {
+          updateProduct(sku: ID!): Product
         }
 
-        type Query {
-          invalidUseOfQuery: Boolean
+        type Mutation {
+          invalidUseOfMutation: Boolean
         }
       `,
       name: 'serviceA',
@@ -124,8 +125,8 @@ describe('rootFieldUsed', () => {
     expect(warnings).toMatchInlineSnapshot(`
       Array [
         Object {
-          "code": "ROOT_Query_USED",
-          "message": "[serviceA] Query -> Found invalid use of default root operation type \`Query\`. Default root operation type names (Query, Mutation, Subscription) are disallowed when a schema is defined or extended within a service.",
+          "code": "ROOT_MUTATION_USED",
+          "message": "[serviceA] Mutation -> Found invalid use of default root operation name \`Mutation\`. Default root operation names (Query, Mutation, Subscription) are disallowed when their respective operation type definition is provided in the schema definition or extension.",
         },
       ]
     `);
