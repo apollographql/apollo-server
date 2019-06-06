@@ -1,10 +1,15 @@
 import { composeAndValidate } from '../composeAndValidate';
 import gql from 'graphql-tag';
 import { GraphQLObjectType } from 'graphql';
-import { astSerializer, typeSerializer } from '../../snapshotSerializers';
+import {
+  astSerializer,
+  typeSerializer,
+  graphqlErrorSerializer,
+} from '../../snapshotSerializers';
 
 expect.addSnapshotSerializer(astSerializer);
 expect.addSnapshotSerializer(typeSerializer);
+expect.addSnapshotSerializer(graphqlErrorSerializer);
 
 const productsService = {
   name: 'Products',
@@ -106,11 +111,11 @@ it('composes and validates all (24) permutations without error', () => {
     }
 
     expect({ warnings, errors }).toMatchInlineSnapshot(`
-      Object {
-        "errors": Array [],
-        "warnings": Array [],
-      }
-    `);
+                  Object {
+                    "errors": Array [],
+                    "warnings": Array [],
+                  }
+            `);
   });
 });
 
@@ -144,11 +149,59 @@ it('treats types with @extends as type extensions', () => {
 
   const product = schema.getType('Product') as GraphQLObjectType;
   expect(product).toMatchInlineSnapshot(`
-    type Product {
-      sku: String!
-      upc: String!
-      price: Int!
-    }
+            type Product {
+              sku: String!
+              upc: String!
+              price: Int!
+            }
+      `);
+});
+
+it('errors on invalid usages of default operation names', () => {
+  const serviceA = {
+    typeDefs: gql`
+      schema {
+        query: RootQuery
+      }
+
+      type RootQuery {
+        product: Product
+      }
+
+      type Product @key(fields: "id") {
+        id: ID!
+        query: Query
+      }
+
+      type Query {
+        invalidUseOfQuery: Boolean
+      }
+    `,
+    name: 'serviceA',
+  };
+
+  const serviceB = {
+    typeDefs: gql`
+      type Query {
+        validUseOfQuery: Boolean
+      }
+
+      extend type Product @key(fields: "id") {
+        id: ID! @external
+        sku: String
+      }
+    `,
+    name: 'serviceB',
+  };
+
+  const { errors } = composeAndValidate([serviceA, serviceB]);
+  expect(errors).toMatchInlineSnapshot(`
+    Array [
+      Object {
+        "code": "ROOT_QUERY_USED",
+        "message": "[serviceA] Query -> Found invalid use of default root operation name \`Query\`. \`Query\` is disallowed when \`Schema.query\` is set to a type other than \`Query\`.",
+      },
+    ]
   `);
 });
 

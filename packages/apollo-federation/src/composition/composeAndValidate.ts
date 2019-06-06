@@ -2,18 +2,21 @@ import { composeServices } from './compose';
 import {
   validateComposedSchema,
   validateServicesBeforeComposition,
+  validateServicesBeforeNormalization,
 } from './validate';
 import { ServiceDefinition } from './types';
 import { normalizeTypeDefs } from './normalize';
 
 export function composeAndValidate(serviceList: ServiceDefinition[]) {
+  const errors = validateServicesBeforeNormalization(serviceList);
+
   const normalizedServiceList = serviceList.map(({ name, typeDefs }) => ({
     name,
     typeDefs: normalizeTypeDefs(typeDefs),
   }));
 
   // generate errors or warnings of the individual services
-  const errors = validateServicesBeforeComposition(normalizedServiceList);
+  errors.push(...validateServicesBeforeComposition(normalizedServiceList));
 
   // generate a schema and any errors or warnings
   const compositionResult = composeServices(normalizedServiceList);
