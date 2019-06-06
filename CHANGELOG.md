@@ -1,5 +1,9 @@
 # Changelog
 
+### vNext
+
+### v2.6.2
+
 - `apollo-engine-reporting-protobuf`: Update protobuff to include `forbiddenOperations` and `registeredOperations` [PR #2768](https://github.com/apollographql/apollo-server/pull/2768)
 - `apollo-server-core`: Add `forbiddenOperation` and `registeredOperation` to `GraphQLRequestMetrics` type [PR #2768](https://github.com/apollographql/apollo-server/pull/2768)
 - `apollo-engine-reporting`: Set `forbiddenOperation` and `registeredOperation` on trace if the field is true on `requestContext.metrics` [PR #2768](https://github.com/apollographql/apollo-server/pull/2768)
