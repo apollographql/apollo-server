@@ -11,7 +11,7 @@ import {
   defaultOperationRegistrySignature,
 } from 'apollo-graphql';
 import { ForbiddenError, ApolloError } from 'apollo-server-errors';
-import Agent from './agent';
+import Agent, { OperationManifest } from './agent';
 import { GraphQLSchema } from 'graphql/type';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import loglevel from 'loglevel';
@@ -28,6 +28,12 @@ interface Options {
     | ForbidUnregisteredOperationsPredicate;
   dryRun?: boolean;
   schemaTag?: string;
+  onUnregisteredOperation?: (requestContext: GraphQLRequestContext) => void;
+  onForbiddenOperation?: (requestContext: GraphQLRequestContext) => void;
+  onManifestUpdate?: (
+    newManifest: OperationManifest,
+    oldManifest: OperationManifest,
+  ) => void;
 }
 
 export default function plugin(options: Options = Object.create(null)) {
@@ -99,6 +105,7 @@ for observability purposes, but all operations will be permitted.`,
         engine,
         store,
         logger,
+        onManifestUpdate: options.onManifestUpdate,
       });
 
       await agent.start();
@@ -154,6 +161,10 @@ for observability purposes, but all operations will be permitted.`,
             );
             requestContext.metrics.registeredOperation = true;
             return;
+          } else {
+            if (options.onUnregisteredOperation) {
+              options.onUnregisteredOperation(requestContext);
+            }
           }
 
           // If the `forbidUnregisteredOperations` option is set explicitly to
@@ -218,6 +229,9 @@ for observability purposes, but all operations will be permitted.`,
           }
 
           if (shouldForbidOperation) {
+            if (options.onForbiddenOperation) {
+              options.onForbiddenOperation(requestContext);
+            }
             if (!options.dryRun) {
               logger.debug(
                 `${logHash}: Execution denied because 'forbidUnregisteredOperations' was enabled for this request and the operation was not found in the local operation registry.`,

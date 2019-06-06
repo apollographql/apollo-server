@@ -11,6 +11,7 @@ import loglevel from 'loglevel';
 
 import { Response } from 'node-fetch';
 import { InMemoryLRUCache } from 'apollo-server-caching';
+import { GraphQLRequestContext } from 'apollo-server-plugin-base';
 import { fetchIfNoneMatch } from './fetchIfNoneMatch';
 
 const DEFAULT_POLL_SECONDS: number = 30;
@@ -23,14 +24,18 @@ export interface AgentOptions {
   engine: any;
   store: InMemoryLRUCache;
   schemaTag: string;
+  onManifestUpdate?: (
+    newManifest: OperationManifest,
+    oldManifest: OperationManifest,
+  ) => void;
 }
 
-interface Operation {
+export interface Operation {
   signature: string;
   document: string;
 }
 
-interface OperationManifest {
+export interface OperationManifest {
   version: number;
   operations: Array<Operation>;
 }
