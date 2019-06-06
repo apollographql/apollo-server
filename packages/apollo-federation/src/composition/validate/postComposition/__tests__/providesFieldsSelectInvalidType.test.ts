@@ -1,6 +1,9 @@
 import gql from 'graphql-tag';
 import { composeServices } from '../../../compose';
 import { providesFieldsSelectInvalidType as validateprovidesFieldsSelectInvalidType } from '../';
+import { graphqlErrorSerializer } from '../../../../snapshotSerializers';
+
+expect.addSnapshotSerializer(graphqlErrorSerializer);
 
 describe('providesFieldsSelectInvalidType', () => {
   it('returns no warnings with proper @provides usage', () => {
@@ -70,10 +73,13 @@ describe('providesFieldsSelectInvalidType', () => {
 
     const warnings = validateprovidesFieldsSelectInvalidType(schema);
     expect(warnings).toMatchInlineSnapshot(`
-                  Array [
-                    [GraphQLError: [serviceB] Product.price -> A @provides selects Product.ids, which is a list type. A field cannot @provide lists.],
-                  ]
-            `);
+      Array [
+        Object {
+          "code": "PROVIDES_FIELDS_SELECT_INVALID_TYPE",
+          "message": "[serviceB] Product.price -> A @provides selects Product.ids, which is a list type. A field cannot @provide lists.",
+        },
+      ]
+    `);
   });
 
   it('warns if @provides references fields of an interface type', () => {
@@ -107,10 +113,13 @@ describe('providesFieldsSelectInvalidType', () => {
 
     const warnings = validateprovidesFieldsSelectInvalidType(schema);
     expect(warnings).toMatchInlineSnapshot(`
-            Array [
-              [GraphQLError: [serviceB] Product.price -> A @provides selects Product.related, which is an interface type. A field cannot @provide interfaces.],
-            ]
-        `);
+      Array [
+        Object {
+          "code": "PROVIDES_FIELDS_SELECT_INVALID_TYPE",
+          "message": "[serviceB] Product.price -> A @provides selects Product.related, which is an interface type. A field cannot @provide interfaces.",
+        },
+      ]
+    `);
   });
 
   it('warns if @provides references fields of a union type', () => {
@@ -142,7 +151,10 @@ describe('providesFieldsSelectInvalidType', () => {
     const warnings = validateprovidesFieldsSelectInvalidType(schema);
     expect(warnings).toMatchInlineSnapshot(`
       Array [
-        [GraphQLError: [serviceB] Product.weight -> A @provides selects Product.price, which is a union type. A field cannot @provide union types.],
+        Object {
+          "code": "PROVIDES_FIELDS_SELECT_INVALID_TYPE",
+          "message": "[serviceB] Product.weight -> A @provides selects Product.price, which is a union type. A field cannot @provide union types.",
+        },
       ]
     `);
   });

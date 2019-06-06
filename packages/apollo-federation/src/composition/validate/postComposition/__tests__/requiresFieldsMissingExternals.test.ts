@@ -1,6 +1,9 @@
 import gql from 'graphql-tag';
 import { composeServices } from '../../../compose';
 import { requiresFieldsMissingExternal as validateRequiresFieldsMissingExternal } from '../';
+import { graphqlErrorSerializer } from '../../../../snapshotSerializers';
+
+expect.addSnapshotSerializer(graphqlErrorSerializer);
 
 describe('requiresFieldsMissingExternal', () => {
   it('does not warn with proper @requires usage', () => {
@@ -55,7 +58,10 @@ describe('requiresFieldsMissingExternal', () => {
     const warnings = validateRequiresFieldsMissingExternal(schema);
     expect(warnings).toMatchInlineSnapshot(`
       Array [
-        [GraphQLError: [serviceB] Product.price -> requires the field \`id\` to be marked as @external.],
+        Object {
+          "code": "REQUIRES_FIELDS_MISSING_EXTERNAL",
+          "message": "[serviceB] Product.price -> requires the field \`id\` to be marked as @external.",
+        },
       ]
     `);
   });

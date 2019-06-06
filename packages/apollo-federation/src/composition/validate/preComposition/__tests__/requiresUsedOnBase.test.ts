@@ -1,5 +1,8 @@
 import gql from 'graphql-tag';
 import { requiresUsedOnBase as validateRequiresUsedOnBase } from '../';
+import { graphqlErrorSerializer } from '../../../../snapshotSerializers';
+
+expect.addSnapshotSerializer(graphqlErrorSerializer);
 
 describe('requiresUsedOnBase', () => {
   it('does not warn when no requires directives are defined', () => {
@@ -38,7 +41,10 @@ describe('requiresUsedOnBase', () => {
     const warnings = validateRequiresUsedOnBase(serviceA);
     expect(warnings).toMatchInlineSnapshot(`
       Array [
-        [GraphQLError: [serviceA] Product.upc -> Found extraneous @requires directive. @requires cannot be used on base types.],
+        Object {
+          "code": "REQUIRES_USED_ON_BASE",
+          "message": "[serviceA] Product.upc -> Found extraneous @requires directive. @requires cannot be used on base types.",
+        },
       ]
     `);
   });

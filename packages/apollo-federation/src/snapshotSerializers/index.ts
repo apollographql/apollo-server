@@ -1,7 +1,7 @@
-import astSerializer from './astSerializer';
-import selectionSetSerializer from './selectionSetSerializer';
-import typeSerializer from './typeSerializer';
-export { astSerializer, selectionSetSerializer, typeSerializer };
+export { default as astSerializer } from './astSerializer';
+export { default as selectionSetSerializer } from './selectionSetSerializer';
+export { default as typeSerializer } from './typeSerializer';
+export { default as graphqlErrorSerializer } from './graphqlErrorSerializer';
 
 declare global {
   namespace jest {

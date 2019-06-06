@@ -1,6 +1,9 @@
 import gql from 'graphql-tag';
 import { composeServices } from '../../../compose';
 import { keyFieldsSelectInvalidType as validateKeyFieldsSelectInvalidType } from '../';
+import { graphqlErrorSerializer } from '../../../../snapshotSerializers';
+
+expect.addSnapshotSerializer(graphqlErrorSerializer);
 
 describe('keyFieldsSelectInvalidType', () => {
   it('returns no warnings with proper @key usage', () => {
@@ -74,8 +77,14 @@ describe('keyFieldsSelectInvalidType', () => {
     const warnings = validateKeyFieldsSelectInvalidType(schema);
     expect(warnings).toMatchInlineSnapshot(`
       Array [
-        [GraphQLError: [serviceA] Product -> A @key selects Product.myList, which is a list type. Keys cannot select lists.],
-        [GraphQLError: [serviceA] Product -> A @key selects Product.myOptionalList, which is a list type. Keys cannot select lists.],
+        Object {
+          "code": "KEY_FIELDS_SELECT_INVALID_TYPE",
+          "message": "[serviceA] Product -> A @key selects Product.myList, which is a list type. Keys cannot select lists.",
+        },
+        Object {
+          "code": "KEY_FIELDS_SELECT_INVALID_TYPE",
+          "message": "[serviceA] Product -> A @key selects Product.myOptionalList, which is a list type. Keys cannot select lists.",
+        },
       ]
     `);
   });
@@ -111,7 +120,10 @@ describe('keyFieldsSelectInvalidType', () => {
     const warnings = validateKeyFieldsSelectInvalidType(schema);
     expect(warnings).toMatchInlineSnapshot(`
       Array [
-        [GraphQLError: [serviceA] Product -> A @key selects Product.featuredItem, which is an interface type. Keys cannot select interfaces.],
+        Object {
+          "code": "KEY_FIELDS_SELECT_INVALID_TYPE",
+          "message": "[serviceA] Product -> A @key selects Product.featuredItem, which is an interface type. Keys cannot select interfaces.",
+        },
       ]
     `);
   });
@@ -145,7 +157,10 @@ describe('keyFieldsSelectInvalidType', () => {
     const warnings = validateKeyFieldsSelectInvalidType(schema);
     expect(warnings).toMatchInlineSnapshot(`
       Array [
-        [GraphQLError: [serviceA] Product -> A @key selects Product.price, which is a union type. Keys cannot select union types.],
+        Object {
+          "code": "KEY_FIELDS_SELECT_INVALID_TYPE",
+          "message": "[serviceA] Product -> A @key selects Product.price, which is a union type. Keys cannot select union types.",
+        },
       ]
     `);
   });

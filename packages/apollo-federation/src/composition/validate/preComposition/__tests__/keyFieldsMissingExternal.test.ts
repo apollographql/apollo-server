@@ -1,5 +1,8 @@
 import gql from 'graphql-tag';
 import { keyFieldsMissingExternal as validateKeyFieldsMissingExternal } from '../';
+import { graphqlErrorSerializer } from '../../../../snapshotSerializers';
+
+expect.addSnapshotSerializer(graphqlErrorSerializer);
 
 describe('keyFieldsMissingExternal', () => {
   it('has no warnings when @key fields reference an @external field', () => {
@@ -69,7 +72,10 @@ describe('keyFieldsMissingExternal', () => {
     expect(warnings).toHaveLength(1);
     expect(warnings).toMatchInlineSnapshot(`
       Array [
-        [GraphQLError: [serviceA] Product -> A @key directive specifies the \`sku\` field which has no matching @external field.],
+        Object {
+          "code": "KEY_FIELDS_MISSING_EXTERNAL",
+          "message": "[serviceA] Product -> A @key directive specifies the \`sku\` field which has no matching @external field.",
+        },
       ]
     `);
   });
@@ -94,7 +100,10 @@ describe('keyFieldsMissingExternal', () => {
     expect(warnings).toHaveLength(1);
     expect(warnings).toMatchInlineSnapshot(`
       Array [
-        [GraphQLError: [serviceA] Product -> A @key directive specifies a field which is not found in this service. Add a field to this type with @external.],
+        Object {
+          "code": "KEY_FIELDS_MISSING_EXTERNAL",
+          "message": "[serviceA] Product -> A @key directive specifies a field which is not found in this service. Add a field to this type with @external.",
+        },
       ]
     `);
   });
@@ -123,9 +132,18 @@ describe('keyFieldsMissingExternal', () => {
     expect(warnings).toHaveLength(3);
     expect(warnings).toMatchInlineSnapshot(`
       Array [
-        [GraphQLError: [serviceA] Model -> A @key directive specifies the \`name\` field which has no matching @external field.],
-        [GraphQLError: [serviceA] Model -> A @key directive specifies the \`kit\` field which has no matching @external field.],
-        [GraphQLError: [serviceA] Kit -> A @key directive specifies the \`upc\` field which has no matching @external field.],
+        Object {
+          "code": "KEY_FIELDS_MISSING_EXTERNAL",
+          "message": "[serviceA] Model -> A @key directive specifies the \`name\` field which has no matching @external field.",
+        },
+        Object {
+          "code": "KEY_FIELDS_MISSING_EXTERNAL",
+          "message": "[serviceA] Model -> A @key directive specifies the \`kit\` field which has no matching @external field.",
+        },
+        Object {
+          "code": "KEY_FIELDS_MISSING_EXTERNAL",
+          "message": "[serviceA] Kit -> A @key directive specifies the \`upc\` field which has no matching @external field.",
+        },
       ]
     `);
   });

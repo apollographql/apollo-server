@@ -1,6 +1,9 @@
 import gql from 'graphql-tag';
 import { composeServices } from '../../../compose';
 import { requiresFieldsMissingOnBase as validateRequiresFieldsMissingOnBase } from '../';
+import { graphqlErrorSerializer } from '../../../../snapshotSerializers';
+
+expect.addSnapshotSerializer(graphqlErrorSerializer);
 
 describe('requiresFieldsMissingOnBase', () => {
   it('does not warn with proper @requires usage', () => {
@@ -58,7 +61,10 @@ describe('requiresFieldsMissingOnBase', () => {
     const warnings = validateRequiresFieldsMissingOnBase(schema);
     expect(warnings).toMatchInlineSnapshot(`
       Array [
-        [GraphQLError: [serviceC] Product.weight -> requires the field \`id\` to be @external. @external fields must exist on the base type, not an extension.],
+        Object {
+          "code": "REQUIRES_FIELDS_MISSING_ON_BASE",
+          "message": "[serviceC] Product.weight -> requires the field \`id\` to be @external. @external fields must exist on the base type, not an extension.",
+        },
       ]
     `);
   });

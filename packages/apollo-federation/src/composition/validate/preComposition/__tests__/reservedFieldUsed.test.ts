@@ -1,5 +1,8 @@
 import gql from 'graphql-tag';
 import { reservedFieldUsed as validateReservedFieldUsed } from '..';
+import { graphqlErrorSerializer } from '../../../../snapshotSerializers';
+
+expect.addSnapshotSerializer(graphqlErrorSerializer);
 
 describe('reservedFieldUsed', () => {
   it('has no warnings when _service and _entities arent used', () => {
@@ -39,8 +42,14 @@ describe('reservedFieldUsed', () => {
     const warnings = validateReservedFieldUsed(serviceA);
     expect(warnings).toMatchInlineSnapshot(`
       Array [
-        [GraphQLError: [serviceA] Query._service -> _service is a field reserved for federation and can't be used at the Query root.],
-        [GraphQLError: [serviceA] Query._entities -> _entities is a field reserved for federation and can't be used at the Query root.],
+        Object {
+          "code": "RESERVED_FIELD_USED",
+          "message": "[serviceA] Query._service -> _service is a field reserved for federation and can't be used at the Query root.",
+        },
+        Object {
+          "code": "RESERVED_FIELD_USED",
+          "message": "[serviceA] Query._entities -> _entities is a field reserved for federation and can't be used at the Query root.",
+        },
       ]
     `);
   });
@@ -89,12 +98,18 @@ describe('reservedFieldUsed', () => {
 
     expect(schemaDefinitionWarnings).toMatchInlineSnapshot(`
       Array [
-        [GraphQLError: [schemaDefinition] RootQuery._entities -> _entities is a field reserved for federation and can't be used at the Query root.],
+        Object {
+          "code": "RESERVED_FIELD_USED",
+          "message": "[schemaDefinition] RootQuery._entities -> _entities is a field reserved for federation and can't be used at the Query root.",
+        },
       ]
     `);
     expect(schemaExtensionWarnings).toMatchInlineSnapshot(`
       Array [
-        [GraphQLError: [schemaExtension] RootQuery._service -> _service is a field reserved for federation and can't be used at the Query root.],
+        Object {
+          "code": "RESERVED_FIELD_USED",
+          "message": "[schemaExtension] RootQuery._service -> _service is a field reserved for federation and can't be used at the Query root.",
+        },
       ]
     `);
   });
@@ -124,8 +139,14 @@ describe('reservedFieldUsed', () => {
     expect(warnings).toHaveLength(2);
     expect(warnings).toMatchInlineSnapshot(`
       Array [
-        [GraphQLError: [serviceA] RootQuery._service -> _service is a field reserved for federation and can't be used at the Query root.],
-        [GraphQLError: [serviceA] RootQuery._entities -> _entities is a field reserved for federation and can't be used at the Query root.],
+        Object {
+          "code": "RESERVED_FIELD_USED",
+          "message": "[serviceA] RootQuery._service -> _service is a field reserved for federation and can't be used at the Query root.",
+        },
+        Object {
+          "code": "RESERVED_FIELD_USED",
+          "message": "[serviceA] RootQuery._entities -> _entities is a field reserved for federation and can't be used at the Query root.",
+        },
       ]
     `);
   });
