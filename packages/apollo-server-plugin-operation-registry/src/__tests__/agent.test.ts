@@ -274,6 +274,15 @@ describe('Agent', () => {
               relevantLogs.push(args);
             }
           }),
+          warn: jest.fn().mockImplementation((...args: any[]) => {
+            if (
+              typeof args[0] === 'string' &&
+              (args[0].match(/Checking for manifest changes/) ||
+                args[0].match(/Incoming manifest ADDs/))
+            ) {
+              relevantLogs.push(args);
+            }
+          }),
         };
         await createAgent({ logger }).start();
 
