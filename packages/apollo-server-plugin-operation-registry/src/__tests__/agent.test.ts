@@ -28,6 +28,7 @@ const defaultAgentOptions: AgentOptions = {
   engine: { serviceID: genericServiceID, apiKeyHash: genericApiKeyHash },
   store: defaultStore(),
   pollSeconds,
+  schemaTag: 'current',
 };
 
 interface ManifestRecord {
