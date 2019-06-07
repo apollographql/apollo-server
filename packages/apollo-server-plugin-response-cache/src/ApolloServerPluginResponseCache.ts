@@ -129,7 +129,9 @@ function cacheKeyString(key: CacheKey) {
 }
 
 function isGraphQLQuery(requestContext: GraphQLRequestContext<any>) {
-  return requestContext.operation!.operation === 'query';
+  return (
+    requestContext.operation && requestContext.operation.operation === 'query'
+  );
 }
 
 export default function plugin(
