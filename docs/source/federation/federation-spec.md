@@ -8,9 +8,9 @@ description: For implementing federation in other languages
 To make a GraphQL service federation capable, it needs the following:
 
 * Implementation of the federation schema specification
+* Support for fetching service capabilities
 * Implementation of stub type generation for references
 * Implementation of request resolving for entities.
-* Support for fetching service capabilities
 
 ## Federation schema specification
 
@@ -41,7 +41,7 @@ directive @key(fields: _FieldSet!) on OBJECT
 directive @extends on OBJECT
 ```
 
-For more information on these additions, see the [glossary](#schema-modifications-glossary)
+For more information on these additions, see the [glossary](#schema-modifications-glossary).
 
 ## Fetch service capabilities
 
@@ -85,7 +85,7 @@ Execution of a federated graph requires being able to "enter" into a service at 
 * Make each entity in the schema part of the `_Entity` union
 * Implement the `_entities` field on the query root
 
-To implement the `_Entity` union, each type annotated with `@key` should be added to the `_Entity` union. If no types are annotated with the key directive, then the `_Entity` union should be removed from the schema. For example, given the following partial schema:
+To implement the `_Entity` union, each type annotated with `@key` should be added to the `_Entity` union. If no types are annotated with the key directive, then the `_Entity` union and `Query._entities` field should be removed from the schema. For example, given the following partial schema:
 
 ```graphql
 type Review @key(fields: "id") {

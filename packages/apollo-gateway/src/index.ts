@@ -242,7 +242,7 @@ function approximateObjectSize<T>(obj: T): number {
 
 // We can't use transformSchema here because the extension data for query
 // planning would be lost. Instead we set a resolver for each field
-// in order to counteract GraphQLExtensions preventing a defaultFieldResovler
+// in order to counteract GraphQLExtensions preventing a defaultFieldResolver
 // from doing the same job
 function wrapSchemaWithAliasResolver(schema: GraphQLSchema): GraphQLSchema {
   const typeMap = schema.getTypeMap();
