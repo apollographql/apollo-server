@@ -127,9 +127,9 @@ const gateway = new ApolloGateway({
 
 In this example, we provide the `serviceList` option to the `ApolloGateway` constructor, which provides a name and endpoint for each of the federated services.
 
-On startup, the gateway will fetch the service capabilities from the running servers and form an overall composed graph. It will accept incoming request and create query plans to the underlying services in the service list.
+On startup, the gateway will fetch the service capabilities from the running servers and form an overall composed graph. It will accept incoming requests and create query plans which query the underlying services in the service list.
 
-> If there are any composition errors, the `gateway.load()` promise will be rejected with a list of [validation errors](/federation/errors/)
+> If there are any composition errors, the `gateway.load()` promise will be rejected with a list of [validation errors](/federation/errors/).
 
 #### Gateway initialization
 The call to `gateway.load()` returns a `Promise` which resolves to a `schema` and `executor`. These are intended to be passed into the constructor of `ApolloServer`.
