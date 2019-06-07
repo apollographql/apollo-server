@@ -18,7 +18,7 @@ The core of the federated gateway implementation. For an example, see the ["impl
 
   * `serviceList`: `ServiceDefinition[]` _(required)_
 
-    An array of service definitions. A service definition contains the `name` and `url` for a federated service.
+    An array of service definitions. A service definition contains the `name` and `url` for a federated service. The name is an arbitrary unique string and is primarily used for query planner output, error messages, logging, and the like.
 
     ```js{3-6}
     const gateway = new ApolloGateway({
@@ -52,7 +52,7 @@ The core of the federated gateway implementation. For an example, see the ["impl
 
   * `debug`: `Boolean`
 
-    With debug enabled, the server will log startup errors as well as query plans during incoming requests.
+    With debug enabled, the server will log startup messages as well as query plans during incoming requests.
 
 ### `ApolloGateway.load()`: `Promise<{ schema: GraphQLSchema, exector: GraphQLExecutor }>`
 
