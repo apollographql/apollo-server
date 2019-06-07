@@ -125,9 +125,7 @@ const gateway = new ApolloGateway({
 })();
 ```
 
-In this example, we provide two options to the `ApolloGateway` constructor:
-* The `serviceList`, which provides a name and endpoint for each of the federated services.
-* The `debug` flag, which provides some additional logging around gateway startup and query execution. This is useful for troubleshooting, as well as for viewing query plans for incoming requests.
+In this example, we provide the `serviceList` option to the `ApolloGateway` constructor, which provides a name and endpoint for each of the federated services.
 
 On startup, the gateway will fetch the service capabilities from the running servers and form an overall composed graph. It will accept incoming request and create query plans to the underlying services in the service list.
 
