@@ -80,7 +80,7 @@
     "@types/jest": "24.0.13",
     "@types/koa-multer": "1.0.0",
     "@types/koa-router": "7.0.40",
-    "@types/lodash": "4.14.133",
+    "@types/lodash": "4.14.134",
     "@types/lodash.sortby": "4.7.6",
     "@types/loglevel": "1.5.4",
     "@types/lru-cache": "5.1.0",
