@@ -117,7 +117,7 @@ describe('externalUnused', () => {
     expect(warnings).toEqual([]);
   });
 
-  it('does not warn when @external is selected by a @provides used from a child type', () => {
+  it('does not warn when @external is selected by a @provides used from another type', () => {
     const serviceA = {
       typeDefs: gql`
         type User @key(fields: "id") {
@@ -134,7 +134,7 @@ describe('externalUnused', () => {
           author: User @provides(fields: "username")
         }
 
-        type User {
+        extend type User @key(fields: "id") {
           username: String @external
         }
       `,
@@ -145,6 +145,35 @@ describe('externalUnused', () => {
     const warnings = validateExternalUnused(schema);
     expect(warnings).toEqual([]);
   });
+
+  // it('does not warn when @external is selected by a @requires used from another type', () => {
+  //   const serviceA = {
+  //     typeDefs: gql`
+  //       type User @key(fields: "id") {
+  //         id: ID!
+  //         username: String
+  //       }
+  //     `,
+  //     name: 'serviceA',
+  //   };
+
+  //   const serviceB = {
+  //     typeDefs: gql`
+  //       type Review {
+  //         author: User @provides(fields: "username")
+  //       }
+
+  //       extend type User @key(fields: "id") {
+  //         username: String @external
+  //       }
+  //     `,
+  //     name: 'serviceB',
+  //   };
+
+  //   const { schema, errors } = composeServices([serviceA, serviceB]);
+  //   const warnings = validateExternalUnused(schema);
+  //   expect(warnings).toEqual([]);
+  // });
 
   it('does not warn when @external is used on type with multiple @key directives', () => {
     const serviceA = {

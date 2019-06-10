@@ -183,7 +183,6 @@ export function findTypesContainingFieldWithReturnType(
   schema: GraphQLSchema,
   node: GraphQLField<any, any>,
 ): GraphQLObjectType[] {
-  if (!isObjectType(getNamedType(node.type))) return [];
   const returnType = getNamedType(node.type);
   if (!isObjectType(returnType)) return [];
 
@@ -203,4 +202,33 @@ export function findTypesContainingFieldWithReturnType(
     });
   }
   return containingTypes;
+}
+
+export function findFieldsThatReturnType({
+  schema,
+  typeToFind,
+}: {
+  schema: GraphQLSchema;
+  typeToFind: GraphQLNamedType;
+}): GraphQLField<any, any>[] {
+  if (!isObjectType(typeToFind)) return [];
+
+  const fieldsThatReturnType: GraphQLField<any, any>[] = [];
+  const types = schema.getTypeMap();
+
+  for (const [, namedType] of Object.entries(types)) {
+    // for our purposes, only object types have fields that we care about.
+    if (!isObjectType(namedType)) continue;
+
+    const fieldsOnNamedType = namedType.getFields();
+
+    // push fields that have return `typeToFind`
+    Object.values(fieldsOnNamedType).forEach(field => {
+      const fieldReturnType = getNamedType(field.type);
+      if (fieldReturnType === typeToFind) {
+        fieldsThatReturnType.push(field);
+      }
+    });
+  }
+  return fieldsThatReturnType;
 }
