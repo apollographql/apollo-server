@@ -206,3 +206,46 @@ it('errors on invalid usages of default operation names', () => {
 });
 
 it.todo('errors on duplicate types where there is a mismatch of field types');
+
+fit('does not error with duplicate enums', () => {
+  const serviceA = {
+    typeDefs: gql`
+      type Query {
+        products: [Product]!
+      }
+
+      type Product @key(fields: "sku") {
+        sku: String!
+        upc: String!
+        type: ProductType
+      }
+
+      enum ProductType {
+        FURNITURE
+        BOOK
+        DIGITAL
+      }
+    `,
+    name: 'serviceA',
+  };
+
+  const serviceB = {
+    typeDefs: gql`
+      type Product @extends @key(fields: "sku") {
+        sku: String! @external
+        price: Int! @requires(fields: "sku")
+        productType: ProductType
+      }
+
+      enum ProductType {
+        FURNITURE
+        BOOK
+        DIGITAL
+      }
+    `,
+    name: 'serviceB',
+  };
+
+  const { schema, errors } = composeAndValidate([serviceA, serviceB]);
+  expect(errors).toHaveLength(0);
+});
