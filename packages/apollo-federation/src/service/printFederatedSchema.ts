@@ -1,8 +1,10 @@
 /*
  *
- * This is largely a fork of printSchema from graphql-js with added support
- * for federation directives, both in the stripping of defintions and in
- * the preserving of directives
+ * This is largely a fork of printSchema from graphql-js with added support for
+ * federation directives. The default printSchema includes all directive
+ * *definitions* but doesn't include any directive *usages*. This version strips
+ * federation directive definitions (which will be the same in every federated
+ * schema), but keeps all their usages (so the gateway can process them).
  *
  */
 
@@ -38,12 +40,18 @@ import {
 import federationDirectives, { gatherDirectives } from '../directives';
 import { isFederationType } from '../types';
 
+// Federation change: treat the directives defined by the federation spec
+// similarly to the directives defined by the GraphQL spec (ie, don't print
+// their definitions).
 function isSpecifiedDirective(directive: GraphQLDirective): boolean {
   return [...specifiedDirectives, ...federationDirectives].some(
     specifiedDirective => specifiedDirective.name === directive.name,
   );
 }
 
+// Federation change: treat the types defined by the federation spec
+// similarly to the directives defined by the GraphQL spec (ie, don't print
+// their definitions).
 function isDefinedType(type: GraphQLNamedType | GraphQLScalarType): boolean {
   return (
     !isSpecifiedScalarType(type as GraphQLScalarType) &&
@@ -155,6 +163,7 @@ function printScalar(type: GraphQLScalarType): string {
   return printDescription(type) + `scalar ${type.name}`;
 }
 
+// Federation change: *do* print the usages of federation directives.
 function printFederationDirectives(
   type: GraphQLNamedType | GraphQLField<any, any>,
 ): string {
@@ -172,10 +181,12 @@ function printFederationDirectives(
 
 function printObject(type: GraphQLObjectType): string {
   const interfaces = type.getInterfaces();
-  // this is an assumption that an owned type will have fields defined
+  // Federation change: print `extend` keyword on type extensions.
+  //
+  // The implementation assumes that an owned type will have fields defined
   // since that is required for a valid schema. Types that are *only*
   // extensions will not have fields on the astNode since that ast doesn't
-  // exist
+  // exist.
   //
   // XXX revist extension checking
   const isExtension =
@@ -193,10 +204,8 @@ function printObject(type: GraphQLObjectType): string {
 }
 
 function printInterface(type: GraphQLInterfaceType): string {
-  // this is an assumption that an owned type will have fields defined
-  // since that is required for a valid schema. Types that are *only*
-  // extensions will not have fields on the astNode since that ast doesn't
-  // exist
+  // Federation change: print `extend` keyword on type extensions.
+  // See printObject for assumptions made.
   //
   // XXX revist extension checking
   const isExtension =
@@ -249,6 +258,7 @@ function printFields(
       ': ' +
       String(f.type) +
       printDeprecated(f) +
+      // Federation change: print usages of federation directives.
       printFederationDirectives(f),
   );
   return printBlock(fields);
