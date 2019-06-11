@@ -332,30 +332,20 @@ function printDescription(
     | GraphQLEnumValue
     | GraphQLUnionType,
   indentation: string = '',
-  firstInBlock: boolean = true,
+  _firstInBlock: boolean = true,
 ): string {
   if (!def.description) {
     return '';
   }
 
   const lines = descriptionLines(def.description, 120 - indentation.length);
-  return printDescriptionWithComments(lines, indentation, firstInBlock);
-}
-
-function printDescriptionWithComments(
-  lines: string[],
-  indentation: string,
-  firstInBlock: boolean,
-) {
-  let description = indentation && !firstInBlock ? '\n' : '';
-  for (let i = 0; i < lines.length; i++) {
-    if (lines[i] === '') {
-      description += indentation + '#\n';
-    } else {
-      description += indentation + '# ' + lines[i] + '\n';
-    }
+  if (lines.length === 1) {
+    return indentation + `"${lines[0]}"\n`;
+  } else {
+    return (
+      indentation + ['"""', ...lines, '"""'].join('\n' + indentation) + '\n'
+    );
   }
-  return description;
 }
 
 function descriptionLines(description: string, maxLen: number): Array<string> {
