@@ -108,10 +108,12 @@ export interface ApolloServerBaseInt {
   setGraphQLPath(path: string): void;
   stop(): Promise<void>;
   installSubscriptionHandlers(server: HttpServer): void;
-  executeOperation(request: GraphQLRequest): Promise<import("graphql-extensions").GraphQLResponse>;
+  executeOperation(
+    request: GraphQLRequest,
+  ): Promise<import('graphql-extensions').GraphQLResponse>;
 }
 
-export class ApolloServerBase implements ApolloServerBaseInt{
+export class ApolloServerBase implements ApolloServerBaseInt {
   public subscriptionsPath?: string;
   public graphqlPath: string = '/graphql';
   public requestOptions: Partial<GraphQLOptions<any>> = Object.create(null);
