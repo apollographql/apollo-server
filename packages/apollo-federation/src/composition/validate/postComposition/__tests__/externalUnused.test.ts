@@ -32,13 +32,13 @@ describe('externalUnused', () => {
     const { schema, errors } = composeServices([serviceA, serviceB]);
     const warnings = validateExternalUnused(schema);
     expect(warnings).toMatchInlineSnapshot(`
-      Array [
-        Object {
-          "code": "EXTERNAL_UNUSED",
-          "message": "[serviceB] Product.sku -> is marked as @external but is not used by a @requires, @key, or @provides directive.",
-        },
-      ]
-    `);
+                  Array [
+                    Object {
+                      "code": "EXTERNAL_UNUSED",
+                      "message": "[serviceB] Product.sku -> is marked as @external but is not used by a @requires, @key, or @provides directive.",
+                    },
+                  ]
+            `);
   });
 
   it('does not warn when @external is selected by a @key', () => {
@@ -178,5 +178,59 @@ describe('externalUnused', () => {
     const { schema, errors } = composeServices([serviceA, serviceB, serviceC]);
     const warnings = validateExternalUnused(schema);
     expect(warnings).toEqual([]);
+  });
+
+  it('does not warn when @external is used within a nested @requires', () => {
+    const serviceA = {
+      name: 'serviceA',
+      typeDefs: gql`
+        type Product @key(fields: "id") {
+          id: ID!
+          flags: ProductFlags
+        }
+
+        type ProductFlags {
+          isOnSale: Boolean
+          isB2B: Boolean
+        }
+      `,
+    };
+
+    const serviceB = {
+      name: 'serviceB',
+      typeDefs: gql`
+        extend type Product @key(fields: "id") {
+          id: ID! @external
+          flags: ProductFlags @external
+          productPrice: Price @requires(fields: "id flags { isOnSale isB2B }")
+        }
+
+        extend type ProductFlags {
+          isOnSale: Boolean @external
+          isB2B: Boolean @external
+        }
+
+        type Price {
+          regularPrice: Float!
+          salePrice: Float!
+          b2bPrice: Float!
+        }
+      `,
+    };
+
+    const { schema } = composeServices([serviceA, serviceB]);
+    const warnings = validateExternalUnused(schema);
+    expect(warnings).toMatchInlineSnapshot(`
+      Array [
+        Object {
+          "code": "EXTERNAL_UNUSED",
+          "message": "[serviceB] ProductFlags.isOnSale -> is marked as @external but is not used by a @requires, @key, or @provides directive.",
+        },
+        Object {
+          "code": "EXTERNAL_UNUSED",
+          "message": "[serviceB] ProductFlags.isB2B -> is marked as @external but is not used by a @requires, @key, or @provides directive.",
+        },
+      ]
+    `);
   });
 });
