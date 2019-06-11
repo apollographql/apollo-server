@@ -72,7 +72,7 @@ describe('keyFieldsMissingExternal', () => {
 
         enum Color {
           Red
-          Blude
+          Blue
         }
       `,
       name: 'serviceA',
