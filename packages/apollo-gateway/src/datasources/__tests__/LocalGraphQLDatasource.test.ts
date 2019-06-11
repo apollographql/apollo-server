@@ -39,6 +39,6 @@ describe('constructing requests', () => {
       context: { userId: 2 },
     });
 
-    expect(data).toEqual({ me: {name: 'james' }});
+    expect(data).toEqual({ me: { name: 'james' } });
   });
 });
