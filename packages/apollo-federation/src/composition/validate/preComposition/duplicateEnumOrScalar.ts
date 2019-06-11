@@ -1,9 +1,4 @@
-import {
-  visit,
-  GraphQLError,
-  EnumTypeDefinitionNode,
-  ScalarTypeDefinitionNode,
-} from 'graphql';
+import { visit, GraphQLError } from 'graphql';
 import { ServiceDefinition } from '../../types';
 
 import { logServiceAndType, errorWithCode } from '../../utils';
@@ -15,8 +10,8 @@ export const duplicateEnumOrScalar = ({
   const errors: GraphQLError[] = [];
 
   // keep track of every enum and scalar and error if there are ever duplicates
-  const enums: EnumTypeDefinitionNode[] = [];
-  const scalars: ScalarTypeDefinitionNode[] = [];
+  const enums: string[] = [];
+  const scalars: string[] = [];
 
   visit(typeDefs, {
     EnumTypeDefinition(definition) {

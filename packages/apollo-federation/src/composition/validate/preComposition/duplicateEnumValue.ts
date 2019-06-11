@@ -1,4 +1,4 @@
-import { visit, GraphQLError, EnumTypeDefinitionNode } from 'graphql';
+import { visit, GraphQLError } from 'graphql';
 import { ServiceDefinition } from '../../types';
 
 import { logServiceAndType, errorWithCode } from '../../utils';
@@ -9,12 +9,15 @@ export const duplicateEnumValue = ({
 }: ServiceDefinition) => {
   const errors: GraphQLError[] = [];
 
-  const enums: Map<String, String[]> = {};
+  const enums: { [name: string]: string[] } = {};
 
   visit(typeDefs, {
     EnumTypeDefinition(definition) {
       const name = definition.name.value;
-      const enumValues = definition.values.map(value => value.name.value);
+      const enumValues =
+        definition.values && definition.values.map(value => value.name.value);
+
+      if (!enumValues) return definition;
 
       if (enums[name] && enums[name].length) {
         enumValues.map(valueName => {
@@ -38,7 +41,10 @@ export const duplicateEnumValue = ({
     },
     EnumTypeExtension(definition) {
       const name = definition.name.value;
-      const enumValues = definition.values.map(value => value.name.value);
+      const enumValues =
+        definition.values && definition.values.map(value => value.name.value);
+
+      if (!enumValues) return definition;
 
       if (enums[name] && enums[name].length) {
         enumValues.map(valueName => {
