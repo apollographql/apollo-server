@@ -17,7 +17,7 @@ export class LocalGraphQLDataSource implements GraphQLDataSource {
   }
 
   async process<TContext>({
-    request,
+    request, context
   }: Pick<GraphQLRequestContext<TContext>, 'request' | 'context'>): Promise<
     GraphQLResponse
   > {
@@ -26,6 +26,7 @@ export class LocalGraphQLDataSource implements GraphQLDataSource {
       source: request.query!,
       variableValues: request.variables,
       operationName: request.operationName,
+      contextValue: context
     });
   }
 
