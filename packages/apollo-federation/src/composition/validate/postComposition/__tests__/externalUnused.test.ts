@@ -220,17 +220,6 @@ describe('externalUnused', () => {
 
     const { schema } = composeServices([serviceA, serviceB]);
     const warnings = validateExternalUnused(schema);
-    expect(warnings).toMatchInlineSnapshot(`
-      Array [
-        Object {
-          "code": "EXTERNAL_UNUSED",
-          "message": "[serviceB] ProductFlags.isOnSale -> is marked as @external but is not used by a @requires, @key, or @provides directive.",
-        },
-        Object {
-          "code": "EXTERNAL_UNUSED",
-          "message": "[serviceB] ProductFlags.isB2B -> is marked as @external but is not used by a @requires, @key, or @provides directive.",
-        },
-      ]
-    `);
+    expect(warnings).toHaveLength(0);
   });
 });

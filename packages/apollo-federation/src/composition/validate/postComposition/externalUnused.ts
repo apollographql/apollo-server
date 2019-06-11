@@ -6,6 +6,7 @@ import {
   hasMatchingFieldInDirectives,
   errorWithCode,
   findTypesContainingFieldWithReturnType,
+  fieldIsUsedInRequiresFieldSet,
 } from '../../utils';
 
 /**
@@ -39,7 +40,13 @@ export const externalUnused = (schema: GraphQLSchema) => {
             }),
           );
 
-          const hasMatchingProvidesOrRequires = Object.values(allFields).some(
+          const hasRequiresUsage = fieldIsUsedInRequiresFieldSet({
+            schema,
+            fieldNameToMatch: externalFieldName,
+            namedType,
+          });
+
+          const hasMatchingProvides = Object.values(allFields).some(
             maybeProvidesField => {
               const fieldOwner =
                 maybeProvidesField.federation &&
@@ -88,27 +95,17 @@ export const externalUnused = (schema: GraphQLSchema) => {
                 );
               });
 
-              const requiresDirectives = findDirectivesOnTypeOrField(
-                maybeProvidesField.astNode,
-                'requires',
-              );
-
-              return (
-                hasMatchingFieldInDirectives({
-                  directives: providesDirectives,
-                  fieldNameToMatch: externalFieldName,
-                  namedType,
-                }) ||
-                hasMatchingFieldInDirectives({
-                  directives: requiresDirectives,
-                  fieldNameToMatch: externalFieldName,
-                  namedType,
-                })
-              );
+              return hasMatchingFieldInDirectives({
+                directives: providesDirectives,
+                fieldNameToMatch: externalFieldName,
+                namedType,
+              });
             },
           );
 
-          if (!(hasMatchingKeyOnType || hasMatchingProvidesOrRequires)) {
+          if (
+            !(hasMatchingKeyOnType || hasMatchingProvides || hasRequiresUsage)
+          ) {
             errors.push(
               errorWithCode(
                 'EXTERNAL_UNUSED',

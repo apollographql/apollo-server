@@ -183,7 +183,6 @@ export function findTypesContainingFieldWithReturnType(
   schema: GraphQLSchema,
   node: GraphQLField<any, any>,
 ): GraphQLObjectType[] {
-  if (!isObjectType(getNamedType(node.type))) return [];
   const returnType = getNamedType(node.type);
   if (!isObjectType(returnType)) return [];
 
@@ -203,4 +202,44 @@ export function findTypesContainingFieldWithReturnType(
     });
   }
   return containingTypes;
+}
+
+export function fieldIsUsedInRequiresFieldSet({
+  schema,
+  fieldNameToMatch,
+  namedType,
+}: {
+  schema: GraphQLSchema;
+  fieldNameToMatch: string;
+  namedType: GraphQLObjectType;
+}): boolean {
+  let isUsedInFieldSet = false;
+
+  // Gather all requires directives from the schema
+  const requiresDirectives = Object.values(schema.getTypeMap())
+    .filter(isObjectType)
+    .flatMap(objectType => Object.values(objectType.getFields()))
+    .flatMap(field => findDirectivesOnTypeOrField(field.astNode, 'requires'));
+
+  // For each requires directive, try to find a matching field
+  requiresDirectives.forEach(directive => {
+    const fieldSet =
+      directive.arguments && isStringValueNode(directive.arguments[0].value)
+        ? directive.arguments[0].value.value
+        : null;
+
+    const directiveSelectionSet = parse(
+      `fragment __generated on ${namedType.name} { ${fieldSet} }`,
+    );
+
+    visit(directiveSelectionSet, {
+      Field(fieldNode) {
+        if (fieldNameToMatch === fieldNode.name.value) {
+          isUsedInFieldSet = true;
+        }
+      },
+    });
+  });
+
+  return isUsedInFieldSet;
 }
