@@ -29,7 +29,7 @@ export {
 } from './playground';
 
 // ApolloServer Base class
-export { ApolloServerBase } from './ApolloServer';
+export { ApolloServerBase, ApolloServerBaseInt } from './ApolloServer';
 export * from './types';
 export * from './requestPipelineAPI';
 
