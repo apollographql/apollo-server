@@ -138,12 +138,6 @@ export class EngineReportingExtension<TContext = any>
       if (o.requestContext.metrics.persistedQueryRegister) {
         this.trace.persistedQueryRegister = true;
       }
-      if (o.requestContext.metrics.forbiddenOperation) {
-        this.trace.forbiddenOperation = true;
-      }
-      if (o.requestContext.metrics.registeredOperation) {
-        this.trace.registeredOperation = true;
-      }
     }
 
     if (this.options.privateVariables !== true && o.variables) {
@@ -204,6 +198,10 @@ export class EngineReportingExtension<TContext = any>
 
       this.trace.fullQueryCacheHit = !!o.requestContext.metrics
         .responseCacheHit;
+      this.trace.forbiddenOperation = !!o.requestContext.metrics
+        .forbiddenOperation;
+      this.trace.registeredOperation = !!o.requestContext.metrics
+        .registeredOperation;
 
       // If the `operationName` was not already set elsewhere, for example,
       // through the `executionDidStart` or the `willResolveField` hooks, then
