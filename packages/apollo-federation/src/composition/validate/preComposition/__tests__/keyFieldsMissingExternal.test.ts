@@ -51,6 +51,37 @@ describe('keyFieldsMissingExternal', () => {
     expect(warnings).toHaveLength(0);
   });
 
+  it('has no warnings with @deprecated directive usage', () => {
+    const serviceA = {
+      typeDefs: gql`
+        extend type Car @key(fields: "model { name kit { upc } } year") {
+          model: Model! @external
+          year: String! @external
+          color: String! @deprecated(reason: "Use colors instead")
+          colors: Color!
+        }
+
+        extend type Model {
+          name: String! @external
+          kit: Kit @external
+        }
+
+        extend type Kit {
+          upc: String! @external
+        }
+
+        enum Color {
+          Red
+          Blue
+        }
+      `,
+      name: 'serviceA',
+    };
+
+    const warnings = validateKeyFieldsMissingExternal(serviceA);
+    expect(warnings).toHaveLength(0);
+  });
+
   it("warns when a @key argument doesn't reference an @external field", () => {
     const serviceA = {
       typeDefs: gql`
