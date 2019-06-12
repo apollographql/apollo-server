@@ -2,6 +2,7 @@
 
 ### vNext
 
+- `apollo-gateway`: Pass `context` through to the `graphql` command in `LocalGraphQLDatasource` `process` method [PR #2821](https://github.com/apollographql/apollo-server/pull/2821)
 - `apollo-engine-reporting`: Set `forbiddenOperation` and `registeredOperation` later in the request lifecycle [PR #2828](https://github.com/apollographql/apollo-server/pull/2828)
 
 ### v2.6.2
