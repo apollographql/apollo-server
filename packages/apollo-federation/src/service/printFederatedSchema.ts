@@ -186,7 +186,7 @@ function printObject(type: GraphQLObjectType): string {
   return (
     printDescription(type) +
     `${isExtension ? 'extend ' : ''}type ${
-      type.name
+    type.name
     }${implementedInterfaces}${printFederationDirectives(type)}` +
     printFields(type)
   );
@@ -204,7 +204,7 @@ function printInterface(type: GraphQLInterfaceType): string {
   return (
     printDescription(type) +
     `${isExtension ? 'extend ' : ''}interface ${
-      type.name
+    type.name
     }${printFederationDirectives(type)}` +
     printFields(type)
   );
@@ -220,8 +220,8 @@ function printEnum(type: GraphQLEnumType): string {
   const values = type
     .getValues()
     .map(
-      (value, i) =>
-        printDescription(value, '  ', !i) +
+      value =>
+        printDescription(value, '  ') +
         '  ' +
         value.name +
         printDeprecated(value),
@@ -232,7 +232,7 @@ function printEnum(type: GraphQLEnumType): string {
 
 function printInputObject(type: GraphQLInputObjectType): string {
   const fields = Object.values(type.getFields()).map(
-    (f, i) => printDescription(f, '  ', !i) + '  ' + printInputValue(f),
+    f => printDescription(f, '  ') + '  ' + printInputValue(f),
   );
   return printDescription(type) + `input ${type.name}` + printBlock(fields);
 }
@@ -241,8 +241,8 @@ function printFields(
   type: GraphQLInterfaceType | GraphQLObjectType | GraphQLInputObjectType,
 ) {
   const fields = Object.values(type.getFields()).map(
-    (f, i) =>
-      printDescription(f, '  ', !i) +
+    f =>
+      printDescription(f, '  ') +
       '  ' +
       f.name +
       printArgs(f.args, '  ') +
@@ -272,8 +272,8 @@ function printArgs(args: GraphQLArgument[], indentation = '') {
     '(\n' +
     args
       .map(
-        (arg, i) =>
-          printDescription(arg, '  ' + indentation, !i) +
+        arg =>
+          printDescription(arg, '  ' + indentation) +
           '  ' +
           indentation +
           printInputValue(arg),
@@ -332,7 +332,6 @@ function printDescription(
     | GraphQLEnumValue
     | GraphQLUnionType,
   indentation: string = '',
-  _firstInBlock: boolean = true,
 ): string {
   if (!def.description) {
     return '';
