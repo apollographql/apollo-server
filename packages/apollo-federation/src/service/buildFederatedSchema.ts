@@ -35,13 +35,14 @@ export function buildFederatedSchema(
     }),
   );
 
-  // at this point in time, we have a schema to be printed into SDL which is
+  // At this point in time, we have a schema to be printed into SDL which is
   // representative of what the user defined for their schema. This is before
   // we process any of the federation directives and add custom federation types
   // so its the right place to create our service definition sdl.
   //
-  // we have to use a modified printSchema from graphql-js which includes support
-  // for preserving federation directives while removing them from the sdl
+  // We have to use a modified printSchema from graphql-js which includes
+  // support for preserving the *uses* of federation directives while removing
+  // their *definitions* from the sdl.
   const sdl = printSchema(schema);
 
   // Add an empty query root type if none has been defined
