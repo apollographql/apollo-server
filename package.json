@@ -9,7 +9,7 @@
     "compile:clean": "tsc --build tsconfig.build.json --clean",
     "watch": "tsc --build tsconfig.build.json --watch",
     "release": "npm run clean && npm ci && lerna publish --exact --include-merged-tags",
-    "release:server": "npm run release -- --force-publish=apollo-server,apollo-server-azure-functions,apollo-server-cloud-functions,apollo-server-cloudflare,apollo-server-express,apollo-server-fastify,apollo-server-hapi,apollo-server-koa,apollo-server-lambda,apollo-server-micro",
+    "release:server": "npm run release -- --force-publish=apollo-server,apollo-server-azure-functions,apollo-server-cloud-functions,apollo-server-cloudflare,apollo-server-express,apollo-server-fastify,apollo-server-hapi,apollo-server-koa,apollo-server-lambda,apollo-server-micro,apollo-server-testing,apollo-server-integration-testsuite",
     "postinstall": "lerna run prepare && npm run compile",
     "lint": "prettier-check '**/*.{js,ts}'",
     "lint-fix": "prettier '**/*.{js,ts}' --write",
