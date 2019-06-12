@@ -186,7 +186,7 @@ function printObject(type: GraphQLObjectType): string {
   return (
     printDescription(type) +
     `${isExtension ? 'extend ' : ''}type ${
-    type.name
+      type.name
     }${implementedInterfaces}${printFederationDirectives(type)}` +
     printFields(type)
   );
@@ -204,7 +204,7 @@ function printInterface(type: GraphQLInterfaceType): string {
   return (
     printDescription(type) +
     `${isExtension ? 'extend ' : ''}interface ${
-    type.name
+      type.name
     }${printFederationDirectives(type)}` +
     printFields(type)
   );
