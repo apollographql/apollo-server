@@ -28,13 +28,19 @@ import {
   VERSION,
 } from 'apollo-link-persisted-queries';
 
-import { createApolloFetch, ApolloFetch, GraphQLRequest } from 'apollo-fetch';
+import {
+  createApolloFetch,
+  ApolloFetch,
+  GraphQLRequest,
+  ParsedResponse,
+} from 'apollo-fetch';
 import {
   AuthenticationError,
   UserInputError,
   gql,
   Config,
   ApolloServerBase,
+  PluginDefinition,
 } from 'apollo-server-core';
 import { Headers } from 'apollo-server-env';
 import { GraphQLExtension, GraphQLResponse } from 'graphql-extensions';
@@ -394,6 +400,62 @@ export function testApolloServer<AS extends ApolloServerBase>(
       });
     });
 
+    describe('Plugins', () => {
+      let apolloFetch: ApolloFetch;
+      let apolloFetchResponse: ParsedResponse;
+
+      const setupApolloServerAndFetchPairForPlugins = async (
+        plugins: PluginDefinition[] = [],
+      ) => {
+        const { url: uri } = await createApolloServer({
+          typeDefs: gql`
+            type Query {
+              justAField: String
+            }
+          `,
+          plugins,
+        });
+
+        apolloFetch = createApolloFetch({ uri })
+          // Store the response so we can inspect it.
+          .useAfter(({ response }, next) => {
+            apolloFetchResponse = response;
+            next();
+          });
+      };
+
+      it('returns correct status code for a normal operation', async () => {
+        await setupApolloServerAndFetchPairForPlugins();
+
+        const result = await apolloFetch({ query: '{ justAField }' });
+        expect(result.errors).toBeUndefined();
+        expect(apolloFetchResponse.status).toEqual(200);
+      });
+
+      it('allows setting a custom status code for an error', async () => {
+        await setupApolloServerAndFetchPairForPlugins([
+          {
+            requestDidStart() {
+              return {
+                didResolveOperation() {
+                  throw new Error('known_error');
+                },
+                willSendResponse({ response: { http, errors } }) {
+                  if (errors[0].message === 'known_error') {
+                    http.status = 403;
+                  }
+                },
+              };
+            },
+          },
+        ]);
+
+        const result = await apolloFetch({ query: '{ justAField }' });
+        expect(result.errors).toBeDefined();
+        expect(apolloFetchResponse.status).toEqual(403);
+      });
+    });
+
     describe('formatError', () => {
       it('wraps thrown error from validation rules', async () => {
         const throwError = jest.fn(() => {
@@ -703,6 +765,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
           const setupApolloServerAndFetchPair = async (
             engineOptions: Partial<EngineReportingOptions<any>> = {},
+            constructorOptions: Partial<CreateServerFunc<AS>> = {},
           ) => {
             const { url: uri } = await createApolloServer({
               typeDefs: gql`
@@ -726,6 +789,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
                 ...engineOptions,
               },
               debug: true,
+              ...constructorOptions,
             });
 
             apolloFetch = createApolloFetch({ uri });
@@ -801,6 +865,37 @@ export function testApolloServer<AS extends ApolloServerBase>(
             expect(reports.length).toBe(1);
 
             expect(Object.keys(reports[0].tracesPerQuery)[0]).toMatch(/^# -\n/);
+          });
+
+          it("doesn't resort to query body signature on `didResolveOperation` error", async () => {
+            await setupApolloServerAndFetchPair(Object.create(null), {
+              plugins: [
+                {
+                  requestDidStart() {
+                    return {
+                      didResolveOperation() {
+                        throw new Error('known_error');
+                      },
+                    };
+                  },
+                },
+              ],
+            });
+
+            const result = await apolloFetch({
+              query: `{ aliasedField: justAField }`,
+            });
+
+            expect(result.errors).toBeDefined();
+            expect(result.errors[0].extensions).toBeDefined();
+            expect(result.errors[0].message).toEqual('known_error');
+
+            const reports = await engineServer.promiseOfReports;
+            expect(reports.length).toBe(1);
+
+            expect(Object.keys(reports[0].tracesPerQuery)[0]).not.toEqual(
+              '# -\n{ aliasedField: justAField }',
+            );
           });
 
           describe('error munging', () => {

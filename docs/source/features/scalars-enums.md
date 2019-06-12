@@ -5,7 +5,7 @@ description: Add custom scalar and enum types to a schema.
 
 The GraphQL specification includes the following default scalar types: `Int`, `Float`, `String`, `Boolean` and `ID`. While this covers most of the use cases, some need to support custom atomic data types (e.g. `Date`), or add validation to an existing type. To enable this, GraphQL allows custom scalar types. Enumerations are similar to custom scalars with the limitation that their values can only be one of a pre-defined list of strings.
 
-<h2 id="custom-scalars">Custom scalars</h2>
+## Custom scalars
 
 To define a custom scalar, add it to the schema string with the following notation:
 
@@ -13,7 +13,7 @@ To define a custom scalar, add it to the schema string with the following notati
 scalar MyCustomScalar
 ```
 
-Afterwards, define the behavior of a `MyCustomScalar` custom scalar by passing an instance of the [`GraphQLScalarType`](http://graphql.org/graphql-js/type/#graphqlscalartype) class in the [resolver map](https://www.apollographql.com/docs/graphql-tools/resolvers.html#Resolver-map). This instance can be defined with a [dependency](#using-a-package) or in [source code](#graphqlscalartype).
+Afterwards, define the behavior of a `MyCustomScalar` custom scalar by passing an instance of the [`GraphQLScalarType`](http://graphql.org/graphql-js/type/#graphqlscalartype) class in the [resolver map](https://www.apollographql.com/docs/graphql-tools/resolvers.html#Resolver-map). This instance can be defined with a [dependency](#using-a-package) or in [source code](#custom-graphqlscalartype-instance).
 
 For more information about GraphQL's type system, please refer to the [official documentation](http://graphql.org/graphql-js/type/) or to the [Learning GraphQL](https://github.com/mugli/learning-graphql/blob/master/7.%20Deep%20Dive%20into%20GraphQL%20Type%20System.md) tutorial.
 
@@ -60,7 +60,7 @@ server.listen().then(({ url }) => {
 
 Remark : `GraphQLJSON` is a [`GraphQLScalarType`](http://graphql.org/graphql-js/type/#graphqlscalartype) instance.
 
-<h3 id="graphqlscalartype" title="GraphQLScalarType">Custom `GraphQLScalarType` instance</h3>
+### Custom `GraphQLScalarType` instance
 
 Defining a [GraphQLScalarType](http://graphql.org/graphql-js/type/#graphqlscalartype) instance provides more control over the custom scalar and can be added to Apollo server in the following way:
 
@@ -112,7 +112,7 @@ server.listen().then(({ url }) => {
 });
 ```
 
-<h2 id="examples">Custom scalar examples</h2>
+## Custom scalar examples
 
 Let's look at a couple of examples to demonstrate how a custom scalar type can be defined.
 
@@ -211,7 +211,7 @@ server.listen().then(({ url }) => {
 });
 ```
 
-<h2 id="enums">Enums</h2>
+## Enums
 
 An Enum is similar to a scalar type, but it can only be one of several values defined in the schema. Enums are most useful in a situation where the user must pick from a prescribed list of options. Additionally enums improve development velocity, since they will auto-complete in tools like GraphQL Playground.
 
@@ -290,7 +290,7 @@ server.listen().then(({ url }) => {
 });
 ```
 
-<h3 id="internal-values">Internal values</h3>
+### Internal values
 
 Sometimes a backend forces a different value for an enum internally than in the public API. In this example the API contains `RED`, however in resolvers we use `#f00` instead. The `resolvers` argument to `ApolloServer` allows the addition of custom values to enums that only exist internally:
 

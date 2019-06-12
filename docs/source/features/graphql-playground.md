@@ -35,7 +35,7 @@ playground: {
 
 To enable GraphQL Playground in production, introspection and the playground can be enabled explicitly in the following manner.
 
-```js line=7-8
+```js{7-8}
 const { ApolloServer } = require('apollo-server');
 const { typeDefs, resolvers } = require('./schema');
 

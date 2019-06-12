@@ -37,7 +37,7 @@ describe('apollo-server-koa', () => {
       const app = new Koa();
       server.applyMiddleware({ app });
       httpServer = await new Promise<http.Server>(resolve => {
-        const s = app.listen({ port: 7777 }, () => resolve(s));
+        const s = app.listen({ port: 0 }, () => resolve(s));
       });
       return createServerInfo(server, httpServer);
     },
@@ -64,7 +64,7 @@ describe('apollo-server-koa', () => {
     server.applyMiddleware({ ...options, app });
 
     httpServer = await new Promise<http.Server>(resolve => {
-      const l = app.listen({ port: 4000 }, () => resolve(l));
+      const l = app.listen({ port: 0 }, () => resolve(l));
     });
 
     return createServerInfo(server, httpServer);

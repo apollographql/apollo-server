@@ -3,7 +3,7 @@ title: Implementing directives
 description: Implementing custom directives to transform schema types, fields, and arguments
 ---
 
-Before learning how to implement schema directives, [this section](./directives.html) will provide the necessary background on schema directives and their use.
+Before learning how to implement schema directives, [this section](/features/directives/) will provide the necessary background on schema directives and their use.
 
 ## Implementing schema directives
 
@@ -335,7 +335,7 @@ GraphQL is great for internationalization, since a GraphQL server can access unl
 
 Imagine a hypothetical `@auth` directive that takes an argument `requires` of type `Role`, which defaults to `ADMIN`. This `@auth` directive can appear on an `OBJECT` like `User` to set default access permissions for all `User` fields, as well as appearing on individual fields, to enforce field-specific `@auth` restrictions:
 
-```gql
+```graphql
 directive @auth(
   requires: Role = ADMIN,
 ) on OBJECT | FIELD_DEFINITION

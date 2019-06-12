@@ -103,10 +103,12 @@ export abstract class RESTDataSource<TContext = any> extends DataSource {
 
   protected parseBody(response: Response): Promise<object | string> {
     const contentType = response.headers.get('Content-Type');
+    const contentLength = response.headers.get('Content-Length');
     if (
       // As one might expect, a "204 No Content" is empty! This means there
       // isn't enough to `JSON.parse`, and trying will result in an error.
       response.status !== 204 &&
+      contentLength !== '0' &&
       contentType &&
       (contentType.startsWith('application/json') ||
         contentType.startsWith('application/hal+json'))
@@ -230,7 +232,10 @@ export abstract class RESTDataSource<TContext = any> extends DataSource {
           typeof (options.body as any).toJSON === 'function'))
     ) {
       options.body = JSON.stringify(options.body);
-      options.headers.set('Content-Type', 'application/json');
+      // If Content-Type header has not been previously set, set to application/json
+      if (!options.headers.get('Content-Type')) {
+        options.headers.set('Content-Type', 'application/json');
+      }
     }
 
     const request = new Request(String(url), options);
