@@ -32,7 +32,7 @@ server.listen().then(({ url }) => {
 
 > Note: If `typeDefs` has custom scalar types, `resolvers` must still contain the `serialize`, `parseValue`, and `parseLiteral` functions
 
-Mocking logic simply looks at the type definitions and returns a string where a string is expected, a number for a number, etc. This provides the right shape of result. By default, when using mocks, any existing resolvers are ignored. See the ["Using existing resolvers with mocks"](#existing-resolvers) section below for more info on how to change this behavior.
+Mocking logic simply looks at the type definitions and returns a string where a string is expected, a number for a number, etc. This provides the right shape of result. By default, when using mocks, any existing resolvers are ignored. See the ["Using existing resolvers with mocks"](#using-existing-resolvers-with-mocks) section below for more info on how to change this behavior.
 
 For more sophisticated testing, mocks can be customized to a particular data model.
 
@@ -40,7 +40,7 @@ For more sophisticated testing, mocks can be customized to a particular data mod
 
 In addition to a boolean, `mocks` can be an object that describes custom mocking logic, which is structured similarly to `resolvers` with a few extra features aimed at mocking. Namely `mocks` accepts functions for specific types in the schema that are called when that type is expected. By default, the functions in `mocks` will overwrite the resolvers in `resolvers`. In this example `hello` will return `'Hello'` and `resolved` will return `'Resolved'`.
 
-```js line=16-20
+```js{16-20}
 const { ApolloServer, gql } = require('apollo-server');
 
 const typeDefs = gql`
@@ -145,13 +145,13 @@ const mocks = {
 
 For some more background and flavor on this approach, read the ["Mocking your server with one line of code"](https://medium.com/apollo-stack/mocking-your-server-with-just-one-line-of-code-692feda6e9cd) article on the Apollo blog.
 
-<h3 id="existing-resolvers">Using existing resolvers with mocks</h3>
+### Using existing resolvers with mocks
 
 The default behavior for mocks is to overwrite the resolvers already present in the schema. To keep the existing resolvers, set the `mockEntireSchema` option to false.
 
 > Note: mocking resolvers will not work if the `mocks` option is `false`, even if `mockEntireSchema` is true.
 
-```js line=26
+```js
 const { ApolloServer, gql } = require('apollo-server');
 
 const typeDefs = gql`
@@ -177,7 +177,7 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
   mocks,
-  mockEntireSchema: false,
+  mockEntireSchema: false, // highlight-line
 });
 
 server.listen().then(({ url }) => {
@@ -212,4 +212,4 @@ server.listen().then(({ url }) => {
 
 ## API
 
-Under the hood, Apollo Server uses a library for building GraphQL servers, called `graphql-tools`. The mocking functionality is provided by the function [`addMockFunctionsToSchema`](../api/graphql-tools.html#addMockFunctionsToSchema). The `mocks` object is passed directly to the function, and `preserveResolvers` is the inverse of `mockEntireSchema`. [`MockList`](../api/graphql-tools.html#MockList) is exported directly from the `graphql-tools` library.
+Under the hood, Apollo Server uses a library for building GraphQL servers, called `graphql-tools`. The mocking functionality is provided by the function [`addMockFunctionsToSchema`](/api/graphql-tools/#addmockfunctiontoschemaoptions). The `mocks` object is passed directly to the function, and `preserveResolvers` is the inverse of `mockEntireSchema`. [`MockList`](/api/graphql-tools/#mocklistlist-mockfunction) is exported directly from the `graphql-tools` library.

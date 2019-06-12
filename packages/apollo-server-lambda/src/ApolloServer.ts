@@ -138,13 +138,24 @@ export class ApolloServer extends ApolloServerBase {
         }
       }
 
+      // Convert the `Headers` into an object which can be spread into the
+      // various headers objects below.
+      // Note: while Object.fromEntries simplifies this code, it's only currently
+      //       supported in Node 12 (we support >=6)
+      const requestCorsHeadersObject = Array.from(requestCorsHeaders).reduce<
+        Record<string, string>
+      >((headersObject, [key, value]) => {
+        headersObject[key] = value;
+        return headersObject;
+      }, {});
+
       if (event.httpMethod === 'OPTIONS') {
         context.callbackWaitsForEmptyEventLoop = false;
         return callback(null, {
           body: '',
           statusCode: 204,
           headers: {
-            ...requestCorsHeaders,
+            ...requestCorsHeadersObject,
           },
         });
       }
@@ -167,7 +178,7 @@ export class ApolloServer extends ApolloServerBase {
             statusCode: 200,
             headers: {
               'Content-Type': 'text/html',
-              ...requestCorsHeaders,
+              ...requestCorsHeadersObject,
             },
           });
         }
@@ -180,7 +191,7 @@ export class ApolloServer extends ApolloServerBase {
             ...result,
             headers: {
               ...result.headers,
-              ...requestCorsHeaders,
+              ...requestCorsHeadersObject,
             },
           },
         );

@@ -50,8 +50,8 @@ import {
   PlaygroundRenderPageOptions,
 } from './playground';
 
-import { generateSchemaHash } from './utils/schemaHash';
 import createSHA from './utils/createSHA';
+import { generateSchemaHash } from './utils/schemaHash';
 import {
   processGraphQLRequest,
   GraphQLRequestContext,
@@ -337,7 +337,7 @@ export class ApolloServerBase {
 
     const apiKey = getEngineApiKey(engine);
     if (apiKey) {
-      this.engineApiKeyHash = createSHA('sha256')
+      this.engineApiKeyHash = createSHA('sha512')
         .update(apiKey)
         .digest('hex');
     }
@@ -435,7 +435,7 @@ export class ApolloServerBase {
         );
       }
     }
-
+    const { SubscriptionServer } = require('subscriptions-transport-ws');
     const {
       onDisconnect,
       onConnect,

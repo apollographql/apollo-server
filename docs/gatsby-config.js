@@ -1,4 +1,5 @@
 module.exports = {
+  pathPrefix: '/docs/apollo-server',
   __experimentalThemes: [
     {
       resolve: 'gatsby-theme-apollo-docs',
@@ -6,20 +7,11 @@ module.exports = {
         root: __dirname,
         subtitle: 'Apollo Server',
         description: 'A guide to using Apollo Server',
-        contentDir: 'docs/source',
-        basePath: '/docs/apollo-server',
         githubRepo: 'apollographql/apollo-server',
-        versions: [
-          {
-            value: '1',
-            ref: 'version-1',
-          },
-          {
-            value: '2',
-            ref: 'HEAD',
-            default: true,
-          },
-        ],
+        defaultVersion: 2,
+        versions: {
+          1: 'version-1',
+        },
         sidebarCategories: {
           null: ['index', 'getting-started', 'whats-new'],
           Essentials: [
@@ -45,6 +37,16 @@ module.exports = {
             'features/health-checks',
             'features/file-uploads',
           ],
+          Federation: [
+            'federation/introduction',
+            'federation/concerns',
+            'federation/core-concepts',
+            'federation/implementing',
+            'federation/advanced-features',
+            'federation/errors',
+            'federation/migrating-from-stitching',
+            'federation/federation-spec',
+          ],
           // 'Schema stitching': [
           //   'features/schema-stitching',
           //   'features/remote-schemas',
@@ -59,7 +61,12 @@ module.exports = {
             'deployment/netlify',
             'deployment/azure-functions',
           ],
-          'API Reference': ['api/apollo-server', 'api/graphql-tools'],
+          'API Reference': [
+            'api/apollo-server',
+            'api/apollo-federation',
+            'api/apollo-gateway',
+            'api/graphql-tools',
+          ],
           Migration: [
             'migration-two-dot',
             'migration-engine',

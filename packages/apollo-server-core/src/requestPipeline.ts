@@ -61,6 +61,7 @@ export {
 };
 
 import createSHA from './utils/createSHA';
+import { HttpQueryError } from './runHttpQuery';
 
 export const APQ_CACHE_PREFIX = 'apq:';
 
@@ -197,7 +198,10 @@ export async function processGraphQLRequest<TContext>(
     context: requestContext.context,
     persistedQueryHit: metrics.persistedQueryHit,
     persistedQueryRegister: metrics.persistedQueryRegister,
-    requestContext,
+    requestContext: requestContext as WithRequired<
+      typeof requestContext,
+      'metrics' | 'queryHash'
+    >,
   });
 
   try {
@@ -232,7 +236,7 @@ export async function processGraphQLRequest<TContext>(
         parsingDidEnd();
       } catch (syntaxError) {
         parsingDidEnd(syntaxError);
-        return sendErrorResponse(syntaxError, SyntaxError);
+        return await sendErrorResponse(syntaxError, SyntaxError);
       }
 
       const validationDidEnd = await dispatcher.invokeDidStartHook(
@@ -249,7 +253,7 @@ export async function processGraphQLRequest<TContext>(
         validationDidEnd();
       } else {
         validationDidEnd(validationErrors);
-        return sendErrorResponse(validationErrors, ValidationError);
+        return await sendErrorResponse(validationErrors, ValidationError);
       }
 
       if (config.documentStore) {
@@ -287,13 +291,26 @@ export async function processGraphQLRequest<TContext>(
     requestContext.operationName =
       (operation && operation.name && operation.name.value) || null;
 
-    await dispatcher.invokeHookAsync(
-      'didResolveOperation',
-      requestContext as WithRequired<
-        typeof requestContext,
-        'document' | 'source' | 'operation' | 'operationName' | 'metrics'
-      >,
-    );
+    try {
+      await dispatcher.invokeHookAsync(
+        'didResolveOperation',
+        requestContext as WithRequired<
+          typeof requestContext,
+          'document' | 'source' | 'operation' | 'operationName' | 'metrics'
+        >,
+      );
+    } catch (err) {
+      // XXX: The HttpQueryError is special-cased here because we currently
+      // depend on `throw`-ing an error from the `didResolveOperation` hook
+      // we've implemented in `runHttpQuery.ts`'s `checkOperationPlugin`:
+      // https://git.io/fj427.  This could be perceived as a feature, but
+      // for the time-being this just maintains existing behavior for what
+      // happens when `throw`-ing an `HttpQueryError` in `didResolveOperation`.
+      if (err instanceof HttpQueryError) {
+        throw err;
+      }
+      return await sendErrorResponse(err);
+    }
 
     // Now that we've gone through the pre-execution phases of the request
     // pipeline, and given plugins appropriate ability to object (by throwing
@@ -328,7 +345,7 @@ export async function processGraphQLRequest<TContext>(
         >);
 
         if (result.errors) {
-          extensionStack.didEncounterErrors(result.errors);
+          await didEncounterErrors(result.errors);
         }
 
         response = {
@@ -339,7 +356,7 @@ export async function processGraphQLRequest<TContext>(
         executionDidEnd();
       } catch (executionError) {
         executionDidEnd(executionError);
-        return sendErrorResponse(executionError);
+        return await sendErrorResponse(executionError);
       }
     }
 
@@ -469,7 +486,20 @@ export async function processGraphQLRequest<TContext>(
     return requestContext.response!;
   }
 
-  function sendErrorResponse(
+  async function didEncounterErrors(errors: ReadonlyArray<GraphQLError>) {
+    requestContext.errors = errors;
+    extensionStack.didEncounterErrors(errors);
+
+    return await dispatcher.invokeHookAsync(
+      'didEncounterErrors',
+      requestContext as WithRequired<
+        typeof requestContext,
+        'metrics' | 'source' | 'errors'
+      >,
+    );
+  }
+
+  async function sendErrorResponse(
     errorOrErrors: ReadonlyArray<GraphQLError> | GraphQLError,
     errorClass?: typeof ApolloError,
   ) {
@@ -477,6 +507,8 @@ export async function processGraphQLRequest<TContext>(
     const errors = Array.isArray(errorOrErrors)
       ? errorOrErrors
       : [errorOrErrors];
+
+    await didEncounterErrors(errors);
 
     return sendResponse({
       errors: formatErrors(

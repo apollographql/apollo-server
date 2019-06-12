@@ -9,7 +9,7 @@ This basic health check may not be comprehensive enough for some applications an
 
 > **Note:** Alternatively, the `onHealthCheck` can be defined as an `async` function which `throw`s if it encounters an error and returns when conditions are considered normal.
 
-```js  line=10-19
+```js{10-19}
 const { ApolloServer, gql } = require('apollo-server');
 
 // Undefined for brevity.

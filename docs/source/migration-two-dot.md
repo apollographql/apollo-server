@@ -7,13 +7,13 @@ Apollo Server 2.0 dramatically simplifies the API for building a GraphQL server 
 
 While it's possible to migrate an existing server to 2.0 without any changes, we recommend changing to new patterns we're suggesting in order to take advantage of all the latest Apollo Server features, reduce the boilerplate, and enable future flexibility.  To learn how to migrate to 2.0 from version 1.0, please read the following guide.
 
-<h2 id="gql-tag">The `gql` tag</h2>
+## The `gql` tag
 
 Apollo Server 2.0 ships with the `gql` tag for **editor syntax highlighting** and **auto-formatting** with Prettier.  In the future, we will be using it for statically analyzing GraphQL queries, so Apollo Server requires wrapping your schema with `gql`.
 
 The `gql` tag parses the query string into an AST  and is now exported from the new `apollo-server` package.
 
-```js line=1,3
+```js{1,3}
 const { ApolloServer, gql } = require('apollo-server');
 
 const typeDefs = gql`
@@ -30,7 +30,7 @@ const typeDefs = gql`${fs.readFileSync(__dirname.concat('/schema.graphql'), 'utf
 const typeDefs = gql(fs.readFileSync(__dirname.concat('/schema.graphql'), 'utf8'))
 ```
 
-<h2 id="app-deps">Changes to app dependencies</h2>
+## Changes to app dependencies
 
 > Apollo Server 2.0 requires Node.js v6 and higher.
 
@@ -38,10 +38,10 @@ Apollo Server 2.0 simplifies implementing a GraphQL server.  Apollo Server 1.0 r
 
 There is a consideration to be made when following the rest of the guide:
 
-* [**Middleware option**](#Middleware): If the application being migrated implements Apollo Server alongside other middleware, there are some packages which can be removed, but adding the `apollo-server-{integration}` package and switching to using the new `applyMiddleware` API should still simplify the setup.  In this case, check the [Middleware](#Middleware) section.
-* [**Stand-alone option**](#Stand-alone): If the application being migrated is only used as a GraphQL server, Apollo Server 2.0 _eliminates the need to run a separate HTTP server_ and allows some dependencies to be removed.  In these cases, the [Stand-alone](#Stand-alone) option will reduce the amount of code necessary for running a GraphQL server.
+* [**Middleware option**](#middleware): If the application being migrated implements Apollo Server alongside other middleware, there are some packages which can be removed, but adding the `apollo-server-{integration}` package and switching to using the new `applyMiddleware` API should still simplify the setup.  In this case, check the [Middleware](#middleware) section.
+* [**Stand-alone option**](#stand-alone): If the application being migrated is only used as a GraphQL server, Apollo Server 2.0 _eliminates the need to run a separate HTTP server_ and allows some dependencies to be removed.  In these cases, the [Stand-alone](#stand-alone) option will reduce the amount of code necessary for running a GraphQL server.
 
-<h2 id="simple-use">Simplified usage</h2>
+## Simplified usage
 
 Check out the following changes for Apollo Server 2.0.
 
@@ -51,7 +51,7 @@ Check out the following changes for Apollo Server 2.0.
 * You should pass in `typeDefs` and `resolvers` as parameters to an instance of Apollo Server.
 * If the server is only functioning as a GraphQL server, it's no longer necessary to run your own HTTP server (like `express`).
 
-<h2 id="Middleware">Middleware</h2>
+## Middleware
 
 With the middleware option used by Apollo Server 1.0 users, it is necessary to install the 2.0 version of `apollo-server-express`.  To do this, install via the terminal:
 
@@ -59,7 +59,7 @@ With the middleware option used by Apollo Server 1.0 users, it is necessary to i
 
 The changes are best shown by comparing the before and after of the application.
 
-<h3 id="apollo-server-1">Apollo Server 1 (old pattern)</h3>
+## Apollo Server 1 (old pattern)
 
 An example of using Apollo Server 1 with the Express framework:
 
@@ -96,7 +96,7 @@ app.use('/graphql', bodyParser.json(), graphqlExpress({ schema: myGraphQLSchema 
 app.listen(PORT);
 ```
 
-<h3 id="apollo-server-2">Apollo Server 2 (new pattern)</h3>
+### Apollo Server 2 (new pattern)
 
 Now, you can just do this instead:
 
@@ -128,7 +128,7 @@ app.listen({ port: PORT }, () =>
 )
 ```
 
-<h2 id="Stand-alone">Stand-alone</h2>
+## Stand-alone
 
 For starting a production-ready GraphQL server quickly, Apollo Server 2.0 ships with a built-in server, so starting a server (e.g. Express, Koa, etc.) is no longer necessary.
 
@@ -165,8 +165,7 @@ server.listen().then(({ url }) => {
 });
 ```
 
-
-<h2 id="add-middleware">Adding Additional Middleware to Apollo Server 2</h2>
+## Adding Additional Middleware to Apollo Server 2
 
 For middleware that is collocated with the GraphQL endpoint, Apollo Server 2 allows middleware mounted on the same path before `applyMiddleware` is called. For example, this server runs an authentication middleware before GraphQL execution.
 
@@ -189,7 +188,7 @@ app.listen({ port: 4000 }, () =>
 )
 ```
 
-<h2 id="existing-schema">Using an Existing Schema</h2>
+## Using an Existing Schema
 
 For many existing instances of Apollo Server, the schema is created at runtime before server startup, using `makeExecutableSchema` or `mergeSchemas`. Apollo Server 2 stays backwards compatible with these more complex schemas, accepting it as the `schema` field in the server constructor options. Additionally, Apollo Server 2 exports all of `graphql-tools`, so `makeExecutableSchema` and other functions can be imported directly from Apollo Server.
 
@@ -224,7 +223,7 @@ server.listen().then(({ url }) => {
 });
 ```
 
-<h3 id="schema-object-notation">Constructing an Executable Schema Manually</h3>
+### Constructing an Executable Schema Manually
 
 While we recommend the use [schema-definition language (SDL)](https://www.apollographql.com/docs/apollo-server/essentials/schema.html#sdl) for defining a GraphQL schema since we feel it's more human-readable and language-agnostic, Apollo Server 2 also supports schemas which are built with the [`graphql-js`'s `graphql/type` notation](https://graphql.org/graphql-js/type/) by passing a `GraphQLSchema` to the `schema` option of the `ApolloServer` constructor.
 
@@ -260,7 +259,7 @@ server.listen().then(({ url }) => {
 });
 ```
 
-<h2 id="request-headers">Accessing Request Headers</h2>
+## Accessing Request Headers
 
 Apollo Server 1 allowed request headers to be used in the construction of the GraphQL options. Apollo Server 2 allows constructor to create the context based upon the request.
 
@@ -282,11 +281,11 @@ new ApolloServer({
 });
 ```
 
-<h2 id="log-function">Replacing `logFunction`</h2>
+## Replacing `logFunction`
 
-Apollo Server 2 removes the `logFunction` to reduce the exposure of internal implementation details. The experimental, non-public `graphql-extensions` provides a more structured and flexible way of instrumenting Apollo Server. An explanation of to do more granular logging, can be found in the [metrics section](./features/metrics.html).
+Apollo Server 2 removes the `logFunction` to reduce the exposure of internal implementation details. The experimental, non-public `graphql-extensions` provides a more structured and flexible way of instrumenting Apollo Server. An explanation of to do more granular logging, can be found in the [metrics section](/features/metrics/).
 
-<h2 id="graphiql">Replacing GraphiQL</h2>
+## Replacing GraphiQL
 
 Apollo Server 2 ships with GraphQL Playground instead of GraphiQL and collocates the GUI with the endpoint. GraphQL playground can be customized in the following manner.
 

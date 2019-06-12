@@ -491,6 +491,27 @@ describe('RESTDataSource', () => {
 
       expect(data).toEqual('');
     });
+
+    it('returns empty object when response content length is 0', async () => {
+      const dataSource = new (class extends RESTDataSource {
+        baseURL = 'https://api.example.com';
+
+        getFoo() {
+          return this.get('');
+        }
+      })();
+
+      dataSource.httpCache = httpCache;
+
+      fetch.mockResponseOnce('', {
+        'Content-Type': 'application/json',
+        'Content-Length': 0,
+      });
+
+      const data = await dataSource.getFoo();
+
+      expect(data).toEqual('');
+    });
   });
 
   describe('memoization', () => {

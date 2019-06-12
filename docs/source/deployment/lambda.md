@@ -26,7 +26,7 @@ Setting up a project to work with Lambda isn't that different from a typical Nod
 
 First, install the `apollo-server-lambda` package:
 
-```sh
+```shell
 npm install apollo-server-lambda graphql
 ```
 
