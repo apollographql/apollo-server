@@ -97,7 +97,7 @@ export class InvalidGraphQLRequestError extends Error {}
 export type GraphQLExecutor<TContext = Record<string, any>> = (
   requestContext: WithRequired<
     GraphQLRequestContext<TContext>,
-    'document' | 'operationName' | 'operation'
+    'document' | 'operationName' | 'operation' | 'queryHash'
   >,
 ) => ValueOrPromise<GraphQLExecutionResult>;
 

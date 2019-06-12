@@ -220,8 +220,8 @@ function printEnum(type: GraphQLEnumType): string {
   const values = type
     .getValues()
     .map(
-      (value, i) =>
-        printDescription(value, '  ', !i) +
+      value =>
+        printDescription(value, '  ') +
         '  ' +
         value.name +
         printDeprecated(value),
@@ -232,7 +232,7 @@ function printEnum(type: GraphQLEnumType): string {
 
 function printInputObject(type: GraphQLInputObjectType): string {
   const fields = Object.values(type.getFields()).map(
-    (f, i) => printDescription(f, '  ', !i) + '  ' + printInputValue(f),
+    f => printDescription(f, '  ') + '  ' + printInputValue(f),
   );
   return printDescription(type) + `input ${type.name}` + printBlock(fields);
 }
@@ -241,8 +241,8 @@ function printFields(
   type: GraphQLInterfaceType | GraphQLObjectType | GraphQLInputObjectType,
 ) {
   const fields = Object.values(type.getFields()).map(
-    (f, i) =>
-      printDescription(f, '  ', !i) +
+    f =>
+      printDescription(f, '  ') +
       '  ' +
       f.name +
       printArgs(f.args, '  ') +
@@ -272,8 +272,8 @@ function printArgs(args: GraphQLArgument[], indentation = '') {
     '(\n' +
     args
       .map(
-        (arg, i) =>
-          printDescription(arg, '  ' + indentation, !i) +
+        arg =>
+          printDescription(arg, '  ' + indentation) +
           '  ' +
           indentation +
           printInputValue(arg),
@@ -332,30 +332,19 @@ function printDescription(
     | GraphQLEnumValue
     | GraphQLUnionType,
   indentation: string = '',
-  firstInBlock: boolean = true,
 ): string {
   if (!def.description) {
     return '';
   }
 
   const lines = descriptionLines(def.description, 120 - indentation.length);
-  return printDescriptionWithComments(lines, indentation, firstInBlock);
-}
-
-function printDescriptionWithComments(
-  lines: string[],
-  indentation: string,
-  firstInBlock: boolean,
-) {
-  let description = indentation && !firstInBlock ? '\n' : '';
-  for (let i = 0; i < lines.length; i++) {
-    if (lines[i] === '') {
-      description += indentation + '#\n';
-    } else {
-      description += indentation + '# ' + lines[i] + '\n';
-    }
+  if (lines.length === 1) {
+    return indentation + `"${lines[0]}"\n`;
+  } else {
+    return (
+      indentation + ['"""', ...lines, '"""'].join('\n' + indentation) + '\n'
+    );
   }
-  return description;
 }
 
 function descriptionLines(description: string, maxLen: number): Array<string> {
