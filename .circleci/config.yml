@@ -79,20 +79,10 @@ jobs:
       # (speed) --ignore-scripts to skip unnecessary Lerna build during linting.
       - run: npm install --ignore-scripts
       - run: npm run lint
-  Docs:
-    docker: [{ image: 'circleci/node:8' }]
-    steps:
-      # (speed) Intentionally omitted, unnecessary, run_install_desired_npm.
-      - checkout
-      - restore_cache:
-          key: dependency-cache-{{ checksum "./docs/package.json" }}
-      # (speed) Ignore scripts to skip the Lerna build stuff for linting.
-      - run: npm install-test --prefix ./docs
-      - save_cache:
-          key: dependency-cache-{{ checksum "./docs/package.json" }}
-          paths:
-            - ./docs/node_modules
 
+# XXX We used to use this filter to only run a "Docs" job on docs branches.
+#     Now we use it to disable all jobs. It's unclear if there's a simpler way
+#     to do this!
 ignore_doc_branches: &ignore_doc_branches
   filters:
     branches:
@@ -111,4 +101,3 @@ workflows:
           <<: *ignore_doc_branches
       - Linting:
           <<: *ignore_doc_branches
-      - Docs

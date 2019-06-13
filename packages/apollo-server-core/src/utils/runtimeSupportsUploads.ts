@@ -1,11 +1,7 @@
+import isNodeLike from './isNodeLike';
+
 const runtimeSupportsUploads = (() => {
-  if (
-    process &&
-    process.release &&
-    process.release.name === 'node' &&
-    process.versions &&
-    typeof process.versions.node === 'string'
-  ) {
+  if (isNodeLike) {
     const [nodeMajor, nodeMinor] = process.versions.node
       .split('.', 2)
       .map(segment => parseInt(segment, 10));

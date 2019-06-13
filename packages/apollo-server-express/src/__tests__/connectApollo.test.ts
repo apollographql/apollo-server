@@ -1,7 +1,6 @@
 import connect from 'connect';
 import query from 'qs-middleware';
-import { ApolloServer } from '../ApolloServer';
-import { Config } from 'apollo-server-core';
+import { ApolloServer, ApolloServerExpressConfig } from '../ApolloServer';
 
 import testSuite, {
   schema as Schema,
@@ -17,7 +16,7 @@ function createConnectApp(options: CreateAppOptions = {}) {
   // connect is probably already using connect-query or qs-middleware.
   app.use(query());
   const server = new ApolloServer(
-    (options.graphqlOptions as Config) || { schema: Schema },
+    (options.graphqlOptions as ApolloServerExpressConfig) || { schema: Schema },
   );
   // See comment on ServerRegistration.app for its typing.
   server.applyMiddleware({ app: app as any });

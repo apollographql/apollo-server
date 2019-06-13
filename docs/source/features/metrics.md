@@ -11,7 +11,7 @@ Apollo Engine provides an integrated hub for all GraphQL performance data that i
 
 To set up Apollo Server with Engine, [click here](https://engine.apollographql.com/) to get an Engine API key. This API key can be passed directly to the Apollo Server constructor.
 
-```js line=6-8
+```js{6-8}
 const { ApolloServer } = require("apollo-server");
 
 const server = new ApolloServer({
@@ -39,7 +39,7 @@ ENGINE_API_KEY=YOUR_API_KEY node start-server.js
 Apollo Engine accepts metrics annotated with client information. The Engine UI
 is then able to filter metrics and usage patterns by these names and versions. To provide metrics to the Engine, pass a `generateClientInfo` function into the `ApolloServer` constructor, like so:
 
-```js line=8-23
+```js{8-23}
 const { ApolloServer } = require("apollo-server");
 
 const server = new ApolloServer({
@@ -50,7 +50,7 @@ const server = new ApolloServer({
     generateClientInfo: ({
       request
     }) => {
-      const headers = request.http & request.http.headers;
+      const headers = request.http && request.http.headers;
       if(headers) {
         return {
           clientName: headers['apollo-client-name'],
@@ -122,5 +122,4 @@ server.listen().then(({ url }) => {
 });
 ```
 
-For example the `logFunction` from Apollo Server 1 can be implemented as an [extension](https://github.com/apollographql/apollo-server/blob/8914b135df9840051fe81cc9224b444cfc5b61ab/packages/apollo-server-core/src/logging.ts) and could be modified to add additional state or functionality. The example uses a beta of `graphql-extensions`, which can be added to a project with `npm install graphql-extensions@beta`.
-
+For example the `logFunction` from Apollo Server 1 can be implemented as an [extension](https://github.com/apollographql/apollo-server/blob/8914b135df9840051fe81cc9224b444cfc5b61ab/packages/apollo-server-core/src/logging.ts) and could be modified to add additional state or functionality.

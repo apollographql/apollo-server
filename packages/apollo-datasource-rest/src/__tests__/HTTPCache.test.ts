@@ -210,6 +210,21 @@ describe('HTTPCache', () => {
       expect(await response.json()).toEqual({ name: 'Ada Lovelace' });
       expect(response.headers.get('Age')).toEqual('10');
     });
+
+    it('allows disabling caching when the TTL is 0 (falsy)', async () => {
+      fetch.mockJSONResponseOnce(
+        { name: 'Ada Lovelace' },
+        { 'Cache-Control': 'max-age=30' },
+      );
+
+      await httpCache.fetch(new Request('https://api.example.com/people/1'), {
+        cacheOptions: (response: Response, request: Request) => ({
+          ttl: 0,
+        }),
+      });
+
+      expect(store.size).toEqual(0);
+    });
   });
 
   it('allows specifying a custom cache key', async () => {

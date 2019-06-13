@@ -26,6 +26,7 @@ export {
   ApolloServer,
   registerServer,
   ServerRegistration,
+  ApolloServerExpressConfig,
 } from './ApolloServer';
 
 // Express middleware

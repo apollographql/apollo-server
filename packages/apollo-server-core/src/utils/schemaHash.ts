@@ -3,7 +3,7 @@ import { execute, ExecutionResult } from 'graphql/execution';
 import { getIntrospectionQuery, IntrospectionSchema } from 'graphql/utilities';
 import stableStringify from 'fast-json-stable-stringify';
 import { GraphQLSchema } from 'graphql/type';
-import { createHash } from 'crypto';
+import createSHA from './createSHA';
 
 export function generateSchemaHash(schema: GraphQLSchema): string {
   const introspectionQuery = getIntrospectionQuery();
@@ -38,7 +38,7 @@ export function generateSchemaHash(schema: GraphQLSchema): string {
   // layer, varying orders of the properties in the introspection
   const stringifiedSchema = stableStringify(introspectionSchema);
 
-  return createHash('sha512')
+  return createSHA('sha512')
     .update(stringifiedSchema)
     .digest('hex');
 }
