@@ -248,6 +248,83 @@ describe('executeQueryPlan', () => {
             `);
   });
 
+  it('should not duplicate variable definitions', async () => {
+    const query = gql`
+      query Test($first: Int!) {
+        first: topReviews(first: $first) {
+          body
+          author {
+            name
+          }
+        }
+        second: topReviews(first: $first) {
+          body
+          author {
+            name
+          }
+        }
+      }
+    `;
+
+    const operationContext = buildOperationContext(schema, query);
+    const queryPlan = buildQueryPlan(operationContext);
+
+    const requestContext = buildRequestContext();
+    requestContext.request.variables = { first: 3 };
+
+    const response = await executeQueryPlan(
+      queryPlan,
+      serviceMap,
+      requestContext,
+      operationContext,
+    );
+
+    expect(response.data).toMatchInlineSnapshot(`
+      Object {
+        "first": Array [
+          Object {
+            "author": Object {
+              "name": "Ada Lovelace",
+            },
+            "body": "Love it!",
+          },
+          Object {
+            "author": Object {
+              "name": "Ada Lovelace",
+            },
+            "body": "Too expensive.",
+          },
+          Object {
+            "author": Object {
+              "name": "Alan Turing",
+            },
+            "body": "Could be better.",
+          },
+        ],
+        "second": Array [
+          Object {
+            "author": Object {
+              "name": "Ada Lovelace",
+            },
+            "body": "Love it!",
+          },
+          Object {
+            "author": Object {
+              "name": "Ada Lovelace",
+            },
+            "body": "Too expensive.",
+          },
+          Object {
+            "author": Object {
+              "name": "Alan Turing",
+            },
+            "body": "Could be better.",
+          },
+        ],
+      }
+    `);
+  });
+
   it('can execute an introspection query', async () => {
     const operationContext = buildOperationContext(
       schema,
