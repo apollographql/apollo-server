@@ -2,7 +2,6 @@ import {
   GraphQLSchema,
   isObjectType,
   FieldNode,
-  isListType,
   isInterfaceType,
   isNonNullType,
   getNullableType,
@@ -46,19 +45,6 @@ export const keyFieldsSelectInvalidType = (schema: GraphQLSchema) => {
             }
 
             if (matchingField) {
-              if (
-                isListType(matchingField.type) ||
-                (isNonNullType(matchingField.type) &&
-                  isListType(getNullableType(matchingField.type)))
-              ) {
-                errors.push(
-                  errorWithCode(
-                    'KEY_FIELDS_SELECT_INVALID_TYPE',
-                    logServiceAndType(serviceName, typeName) +
-                      `A @key selects ${typeName}.${name}, which is a list type. Keys cannot select lists.`,
-                  ),
-                );
-              }
               if (
                 isInterfaceType(matchingField.type) ||
                 (isNonNullType(matchingField.type) &&
