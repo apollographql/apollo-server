@@ -20,6 +20,10 @@ describe('Composition utility functions', () => {
         type Mutation {
           updateProduct: Product
         }
+
+        extend interface Account @key(fields: "id") {
+          id: ID! @external
+        }
       `;
 
       const {
@@ -37,6 +41,8 @@ describe('Composition utility functions', () => {
         type Mutation {
           updateProduct: Product
         }
+
+        extend interface Account @key(fields: "id")
       `);
 
       expect(strippedFields).toMatchInlineSnapshot(`
@@ -44,6 +50,11 @@ describe('Composition utility functions', () => {
                   Object {
                     "field": sku: String @external,
                     "parentTypeName": "Product",
+                    "serviceName": "serviceA",
+                  },
+                  Object {
+                    "field": id: ID! @external,
+                    "parentTypeName": "Account",
                     "serviceName": "serviceA",
                   },
                 ]
