@@ -25,6 +25,11 @@ export interface ClientInfo {
   clientReferenceId?: string;
 }
 
+export type VariableValueModifierOptions = {
+  variables: Record<string, any>;
+  operationString?: string;
+};
+
 export type GenerateClientInfo<TContext> = (
   requestContext: GraphQLRequestContext<TContext>,
 ) => ClientInfo;
@@ -82,12 +87,34 @@ export interface EngineReportingOptions<TContext> {
    */
   reportErrorFunction?: (err: Error) => void;
   /**
-   * A case-sensitive list of names of variables whose values should not be sent
-   * to Apollo servers, or 'true' to leave out all variables. In the former
+   * [TO-BE-DEPRECATED] A case-sensitive list of names of variables whose values should
+   * not be sent to Apollo servers, or 'true' to leave out all variables. In the former
    * case, the report will indicate that each private variable was redacted; in
    * the latter case, no variables are sent at all.
    */
   privateVariables?: Array<String> | boolean;
+  /**
+   * By default, Apollo Server does not send the values of any GraphQL variables to Apollo's servers, because variable values often contain the private data of your app's users. If you'd like variable values to be included in traces, set this option. This option can take several forms:
+   * - true or false to blocklist or whitelist all variable values
+   * - a custom function for modifying variable values
+   * - a case-sensitive list of names of variables whose values should not be sent to Apollo servers
+   *
+   * Will default to blocklisting all variable values if both this parameter and
+   * the to-be-deprecated `privateVariables` were not set. The report will also
+   * indicate each private variable redacted if set to a boolean or array.
+   *
+   * TODO(helen): Add new flag to the trace details (and modify the protobuf message structure) to indicate the type of modification. Then, add the following description to the docs:
+   * "The report will indicate that variable values were modified by a custom function, or will list all private variables redacted."
+   * TODO(helen): LINK TO EXAMPLE FUNCTION? e.g. a function recursively search for keys to be blocklisted
+   */
+  maskVariableValues?:
+    | {
+        valueModifier: (
+          options: VariableValueModifierOptions,
+        ) => Record<string, any>;
+      }
+    | { privateVariableNames: Array<String> }
+    | { always: boolean };
   /**
    * A case-insensitive list of names of HTTP headers whose values should not be
    * sent to Apollo servers, or 'true' to leave out all HTTP headers. Unlike
