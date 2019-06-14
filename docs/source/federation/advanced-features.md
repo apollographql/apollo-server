@@ -54,7 +54,7 @@ type Organization {
 }
 ```
 
-> Note that although the fields argument is parsed as a selection set, some restrictions apply to make the result suitable as a key. For example, fields shouldn't return lists.
+> Note that although the fields argument is parsed as a selection set, some restrictions apply to make the result suitable as a key. For example, fields shouldn't return unions or interfaces.
 
 ## Computed fields
 
