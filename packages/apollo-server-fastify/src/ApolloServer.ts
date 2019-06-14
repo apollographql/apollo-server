@@ -10,6 +10,7 @@ import {
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { IncomingMessage, OutgoingMessage, Server } from 'http';
 import { graphqlFastify } from './fastifyApollo';
+import { GraphQLOperation } from 'graphql-upload';
 
 const kMultipart = Symbol('multipart');
 const fastJson = require('fast-json-stringify');
@@ -43,11 +44,11 @@ const fileUploadMiddleware = (
     typeof processFileUploads === 'function'
   ) {
     processFileUploads(req.req, reply.res, uploadsConfig)
-      .then(body => {
+      .then((body: GraphQLOperation | GraphQLOperation[]) => {
         req.body = body;
         done(null);
       })
-      .catch(error => {
+      .catch((error: any) => {
         if (error.status && error.expose) reply.status(error.status);
 
         throw formatApolloErrors([error], {
