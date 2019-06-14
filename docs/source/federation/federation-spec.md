@@ -206,7 +206,7 @@ A new field must be added to the query root called `_service`. This field must r
 
 ### `union Entity`
 
-A new union called `_Entity` must be created. This should be a union of all types that use the `@key` directive.
+A new union called `_Entity` must be created. This should be a union of all types that use the `@key` directive, including both types native to the schema and extended types.
 
 ### `scalar _Any`
 
