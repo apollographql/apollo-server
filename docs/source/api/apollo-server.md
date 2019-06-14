@@ -119,7 +119,7 @@ new ApolloServer({
 
 * `engine`: <`EngineReportingOptions`> | boolean
 
-  Provided the `ENGINE_API_KEY` environment variable is set, the engine reporting agent will be started automatically. The API key can also be provided as the `apiKey` field in an object passed as the `engine` field. See the [EngineReportingOptions](#enginereportingoptions) section for a full description of how to configure the reporting agent, including how to blacklist variables. When using the Engine proxy, this option should be set to false.
+  Provided the `ENGINE_API_KEY` environment variable is set, the engine reporting agent will be started automatically. The API key can also be provided as the `apiKey` field in an object passed as the `engine` field. See the [EngineReportingOptions](#enginereportingoptions) section for a full description of how to configure the reporting agent, including how to blocklist variables. When using the Engine proxy, this option should be set to false.
 
 * `persistedQueries`: <`Object`> | false
 
@@ -343,14 +343,31 @@ addMockFunctionsToSchema({
    to standard error. Specify this function to process errors in a different
    way.
 
-*  `privateVariables`: Array<String> | boolean
+*  `privateVariables`: Array<String\> | boolean
 
+   DEPRECATING IN VERSION XX.XX.XX for `maskVariableValues`, which will support the same
+   functionalities but allow for more flexibility.
+   
    A case-sensitive list of names of variables whose values should not be sent
    to Apollo servers, or 'true' to leave out all variables. In the former
    case, the report will indicate that each private variable was redacted in
    the latter case, no variables are sent at all.
+   
+* `maskVariableValues`: { valueModifier: (options: { variables: Record<string, any>, operationString?: string } ) => Record<string, any> }
+                     | { privateVariableNames: Array<String\> }
+                     | { always: boolean }
+    
+    By default, Apollo Server does not send the values of any GraphQL variables to Apollo's servers, because variable values often contain the private data of your app's users. If you'd like variable values to be included in traces, set this option. This option can take several forms:
+    
+    - { always: ... }: true to blocklist, or false to whitelist all variable values
+    - { valueModifier: ... }: a custom function for modifying variable values
+    - { privateVariableNames: ... }: a case-sensitive list of names of variables whose values should not be sent to Apollo servers
 
-*  `privateHeaders`: Array<String> | boolean
+    Defaults to blocklisting all variable values if both this parameter and
+    the to-be-deprecated `privateVariables` are not set. The report will also
+    indicate each private variable redacted if set to { always: ... } or { privateVariableNames: ... }
+
+*  `privateHeaders`: Array<String\> | boolean
 
    A case-insensitive list of names of HTTP headers whose values should not be
    sent to Apollo servers, or 'true' to leave out all HTTP headers. Unlike
