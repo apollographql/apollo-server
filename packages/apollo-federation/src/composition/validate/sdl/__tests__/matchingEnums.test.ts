@@ -18,7 +18,7 @@ import {
 import { normalizeTypeDefs } from '../../../normalize';
 import federationDirectives from '../../../../directives';
 import { ServiceDefinition } from '../../../types';
-import { matchingEnums } from '../matchingEnums';
+import { MatchingEnums } from '../matchingEnums';
 
 expect.addSnapshotSerializer(astSerializer);
 expect.addSnapshotSerializer(typeSerializer);
@@ -72,8 +72,8 @@ describe('matchingEnums', () => {
     const definitionsDocument = createDefinitionsDocumentForServices(
       serviceList,
     );
-    const errors = validateSDL(definitionsDocument, schema, [matchingEnums]);
-    expect(errors).toMatchInlineSnapshot(`Array []`);
+    const errors = validateSDL(definitionsDocument, schema, [MatchingEnums]);
+    expect(errors).toHaveLength(0);
   });
 
   it('errors when enums in separate services dont match', () => {
@@ -100,7 +100,7 @@ describe('matchingEnums', () => {
     const definitionsDocument = createDefinitionsDocumentForServices(
       serviceList,
     );
-    const errors = validateSDL(definitionsDocument, schema, [matchingEnums]);
+    const errors = validateSDL(definitionsDocument, schema, [MatchingEnums]);
     expect(errors).toMatchInlineSnapshot(`
       Array [
         [GraphQLError: The \`ProductCategory\` enum does not have identical values in all services. Groups of services with identical values are: [serviceA], [serviceB]],
@@ -154,7 +154,7 @@ describe('matchingEnums', () => {
     const definitionsDocument = createDefinitionsDocumentForServices(
       serviceList,
     );
-    const errors = validateSDL(definitionsDocument, schema, [matchingEnums]);
+    const errors = validateSDL(definitionsDocument, schema, [MatchingEnums]);
     expect(errors).toMatchInlineSnapshot(`
       Array [
         [GraphQLError: The \`ProductType\` enum does not have identical values in all services. Groups of services with identical values are: [serviceA], [serviceB, serviceC]],
@@ -196,7 +196,7 @@ describe('matchingEnums', () => {
     const definitionsDocument = createDefinitionsDocumentForServices(
       serviceList,
     );
-    const errors = validateSDL(definitionsDocument, schema, [matchingEnums]);
+    const errors = validateSDL(definitionsDocument, schema, [MatchingEnums]);
     expect(errors).toMatchInlineSnapshot(`
       Array [
         [GraphQLError: [serviceA] ProductType -> ProductType is an enum in [serviceA, serviceC], but not in [serviceB]],

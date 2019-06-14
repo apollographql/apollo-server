@@ -1,4 +1,4 @@
 export {
   UniqueTypeNamesWithoutEnumsOrScalars,
 } from './uniqueTypeNamesWithoutEnumsOrScalars';
-export { matchingEnums } from './matchingEnums';
+export { MatchingEnums } from './matchingEnums';

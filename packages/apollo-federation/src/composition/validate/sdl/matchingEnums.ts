@@ -21,7 +21,7 @@ type FederatedEnumDefinition = EnumTypeDefinitionNode & {
   serviceName: string;
 };
 
-export function matchingEnums(context: SDLValidationContext): ASTVisitor {
+export function MatchingEnums(context: SDLValidationContext): ASTVisitor {
   const { definitions } = context.getDocument();
 
   // group all definitions by name
