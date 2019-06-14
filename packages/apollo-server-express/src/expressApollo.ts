@@ -44,8 +44,7 @@ export function graphqlExpress(
             res.setHeader(name, value);
           }
         }
-        res.write(graphqlResponse);
-        res.end();
+        res.send(graphqlResponse);
       },
       (error: HttpQueryError) => {
         if ('HttpQueryError' !== error.name) {
@@ -59,8 +58,7 @@ export function graphqlExpress(
         }
 
         res.statusCode = error.statusCode;
-        res.write(error.message);
-        res.end();
+        res.send(error.message);
       },
     );
   };
