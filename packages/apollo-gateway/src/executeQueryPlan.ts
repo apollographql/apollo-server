@@ -339,14 +339,27 @@ function mapFetchNodeToVariableDefinitions(
   node: FetchNode,
 ): VariableDefinitionNode[] {
   const variableUsage = node.variableUsages;
-  return variableUsage
-    ? variableUsage.map(({ node, type }) => ({
+  if (!variableUsage) {
+    return [];
+  }
+
+  const variableMap = variableUsage.reduce((map, { node, type }) => {
+    const key = `${node.name.value}_${type.toString()}`;
+
+    if (!map.has(key)) {
+      map.set(key, {
         kind: Kind.VARIABLE_DEFINITION,
         variable: node,
         type: astFromType(type),
-      }))
-    : [];
+      });
+    }
+
+    return map;
+  }, new Map<string, VariableDefinitionNode>());
+
+  return Array.from(variableMap.values());
 }
+
 function operationForRootFetch(
   fetch: FetchNode,
   operation: OperationTypeNode = 'query',

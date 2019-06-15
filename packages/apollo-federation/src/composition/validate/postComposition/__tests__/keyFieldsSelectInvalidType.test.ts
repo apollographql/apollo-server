@@ -42,53 +42,6 @@ describe('keyFieldsSelectInvalidType', () => {
     expect(warnings).toHaveLength(0);
   });
 
-  it('warns if @key references fields of a list type', () => {
-    const serviceA = {
-      typeDefs: gql`
-        type Product @key(fields: "myList myOptionalList") {
-          sku: String!
-          myList: [String]!
-          myOptionalList: [String]
-          upc: String!
-          color: Color!
-        }
-
-        type Color {
-          id: ID!
-          value: String!
-        }
-      `,
-      name: 'serviceA',
-    };
-
-    const serviceB = {
-      typeDefs: gql`
-        extend type Product {
-          sku: String! @external
-          price: Int! @requires(fields: "sku")
-        }
-      `,
-      name: 'serviceB',
-    };
-
-    const { schema, errors } = composeServices([serviceA, serviceB]);
-    expect(errors).toHaveLength(0);
-
-    const warnings = validateKeyFieldsSelectInvalidType(schema);
-    expect(warnings).toMatchInlineSnapshot(`
-      Array [
-        Object {
-          "code": "KEY_FIELDS_SELECT_INVALID_TYPE",
-          "message": "[serviceA] Product -> A @key selects Product.myList, which is a list type. Keys cannot select lists.",
-        },
-        Object {
-          "code": "KEY_FIELDS_SELECT_INVALID_TYPE",
-          "message": "[serviceA] Product -> A @key selects Product.myOptionalList, which is a list type. Keys cannot select lists.",
-        },
-      ]
-    `);
-  });
-
   it('warns if @key references fields of an interface type', () => {
     const serviceA = {
       typeDefs: gql`
