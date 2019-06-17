@@ -36,7 +36,7 @@ const fileUploadMiddleware = (
   server: ApolloServerBase,
 ) => (
   req: FastifyRequest<IncomingMessage>,
-  reply: FastifyReply<OutgoingMessage>,
+  reply: FastifyReply<any>,
   done: (err: Error | null, body?: any) => void,
 ) => {
   if (
