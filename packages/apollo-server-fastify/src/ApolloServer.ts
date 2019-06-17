@@ -36,14 +36,14 @@ const fileUploadMiddleware = (
   server: ApolloServerBase,
 ) => (
   req: FastifyRequest<IncomingMessage>,
-  reply: FastifyReply<any>,
+  reply: FastifyReply<OutgoingMessage>,
   done: (err: Error | null, body?: any) => void,
 ) => {
   if (
     (req.req as any)[kMultipart] &&
     typeof processFileUploads === 'function'
   ) {
-    processFileUploads(req.req, reply.res, uploadsConfig)
+    processFileUploads(req.req, reply.res as any, uploadsConfig)
       .then((body: GraphQLOperation | GraphQLOperation[]) => {
         req.body = body;
         done(null);
