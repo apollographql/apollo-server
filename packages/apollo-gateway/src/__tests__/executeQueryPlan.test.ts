@@ -325,6 +325,75 @@ describe('executeQueryPlan', () => {
     `);
   });
 
+  it('should include variables in non-root requests', async () => {
+    const query = gql`
+      query Test($locale: String) {
+        topReviews {
+          body
+          author {
+            name
+            birthDate(locale: $locale)
+          }
+        }
+      }
+    `;
+
+    const operationContext = buildOperationContext(schema, query);
+    const queryPlan = buildQueryPlan(operationContext);
+
+    const requestContext = buildRequestContext();
+    requestContext.request.variables = { locale: 'en-US' };
+
+    const response = await executeQueryPlan(
+      queryPlan,
+      serviceMap,
+      requestContext,
+      operationContext,
+    );
+
+    expect(response.data).toMatchInlineSnapshot(`
+      Object {
+        "topReviews": Array [
+          Object {
+            "author": Object {
+              "birthDate": "12/10/1815",
+              "name": "Ada Lovelace",
+            },
+            "body": "Love it!",
+          },
+          Object {
+            "author": Object {
+              "birthDate": "12/10/1815",
+              "name": "Ada Lovelace",
+            },
+            "body": "Too expensive.",
+          },
+          Object {
+            "author": Object {
+              "birthDate": "6/23/1912",
+              "name": "Alan Turing",
+            },
+            "body": "Could be better.",
+          },
+          Object {
+            "author": Object {
+              "birthDate": "6/23/1912",
+              "name": "Alan Turing",
+            },
+            "body": "Prefer something else.",
+          },
+          Object {
+            "author": Object {
+              "birthDate": "6/23/1912",
+              "name": "Alan Turing",
+            },
+            "body": "Wish I had read this before.",
+          },
+        ],
+      }
+    `);
+  });
+
   it('can execute an introspection query', async () => {
     const operationContext = buildOperationContext(
       schema,
