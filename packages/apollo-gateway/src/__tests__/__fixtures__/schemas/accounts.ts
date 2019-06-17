@@ -65,8 +65,8 @@ export const resolvers: GraphQLResolverMap<any> = {
     birthDate(user, args) {
       return args.locale
         ? new Date(user.birthDate).toLocaleDateString(args.locale, {
-          timeZone: 'Asia/Samarkand', // UTC + 5
-        })
+            timeZone: 'Asia/Samarkand', // UTC + 5
+          })
         : user.birthDate;
     },
   },
