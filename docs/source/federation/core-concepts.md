@@ -167,7 +167,7 @@ There is no need to explictly define `Query` or `Mutation` base types anywhere; 
 
 ## Sharing Types
 
-Some types need to be shared across services. Specifically, it's very useful to share Enum and Scalar types across all services to prevent code duplication.
+Sometimes, Enum or Scalar types are needed in multiple services. Rather than having a single service "own" those types, all services that use them are expected to share ownership of those types.
 
 Defining the same Enum or Scalar across services is supported **as long as the definitions are all identical**.
 
