@@ -43,6 +43,11 @@ const reviewService: ServiceDefinitionModule = {
         return reviews;
       },
     },
+    User: {
+      reviews(user) {
+        return reviews.filter(review => review.authorId === user.id);
+      },
+    },
     Review: {
       author(review) {
         return {
@@ -91,7 +96,9 @@ const userService: ServiceDefinitionModule = {
     },
     User: {
       __resolveReference(reference) {
-        return users.find(user => user.id === reference.id);
+        if (reference.ssn)
+          return users.find(user => user.ssn === reference.ssn);
+        else return users.find(user => user.id === reference.id);
       },
     },
   },
@@ -193,6 +200,116 @@ it('fetches data correctly with multiple @key fields', async () => {
               {
                 ... on User {
                   risk
+                }
+              }
+            },
+          },
+        },
+      },
+    }
+    `);
+});
+
+it('fetches keys as needed to reduce round trip queries', async () => {
+  const query = gql`
+    query {
+      users {
+        risk
+        reviews {
+          body
+        }
+      }
+    }
+  `;
+
+  const { data, queryPlan, errors } = await execute(
+    [userService, reviewService, actuaryService],
+    {
+      query,
+    },
+  );
+  console.log(JSON.stringify(errors, null, 2));
+
+  expect(errors).toBeFalsy();
+
+  expect(data).toEqual({
+    users: [
+      {
+        risk: 0.1111111111111111,
+        reviews: [
+          {
+            body: 'A',
+          },
+        ],
+      },
+      {
+        risk: 0.2222222222222222,
+        reviews: [
+          {
+            body: 'B',
+          },
+        ],
+      },
+      {
+        risk: 0.3333333333333333,
+        reviews: [
+          {
+            body: 'C',
+          },
+        ],
+      },
+      {
+        risk: 0.4444444444444444,
+        reviews: [
+          {
+            body: 'D',
+          },
+        ],
+      },
+    ],
+  });
+
+  expect(queryPlan).toMatchInlineSnapshot(`
+    QueryPlan {
+      Sequence {
+        Fetch(service: "users") {
+          {
+            users {
+              __typename
+              ssn
+              id
+            }
+          }
+        },
+        Parallel {
+          Flatten(path: "users.@") {
+            Fetch(service: "actuary") {
+              {
+                ... on User {
+                  __typename
+                  ssn
+                }
+              } =>
+              {
+                ... on User {
+                  risk
+                }
+              }
+            },
+          },
+          Flatten(path: "users.@") {
+            Fetch(service: "reviews") {
+              {
+                ... on User {
+                  __typename
+                  id
+                }
+              } =>
+              {
+                ... on User {
+                  reviews {
+                    body
+                  }
                 }
               }
             },
