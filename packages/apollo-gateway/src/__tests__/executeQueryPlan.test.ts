@@ -326,6 +326,10 @@ describe('executeQueryPlan', () => {
   });
 
   it('should include variables in non-root requests', async () => {
+
+    expect(Intl.DateTimeFormat().resolvedOptions().timeZone).toBe('America/Los_Angeles')
+    expect(new Date('1815-12-10').toLocaleString('en-US')).toBe('12/9/1815, 4:07:02 PM')
+
     const query = gql`
       query Test($locale: String) {
         topReviews {
