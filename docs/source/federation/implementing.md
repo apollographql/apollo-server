@@ -201,7 +201,7 @@ To learn more about `buildService` or `RemoteGraphQLDataSource`, see the [API do
 
 By default, the gateway will query it's microservices once, at initialization. However, adding support for polling updates is possible by adding a listener to the gateway's `onSchemaChange` event:
 
-```javascript{11,22-26}
+```javascript{22-26}
 const { ApolloServer } = require("apollo-server");
 const { ApolloGateway } = require("@apollo/gateway");
 
