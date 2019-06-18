@@ -121,11 +121,20 @@ export class ApolloServer extends ApolloServerBase {
   }
 
   public async stop() {
+    let warnOutstandingConnections = setInterval(() => {
+      console.log(
+        'Still waiting for outstanding connections to close. ' +
+          '(Are any GraphiQL / GraphQL Playground instances connected?)',
+      );
+    }, 5000);
+
     if (this.httpServer) {
       const httpServer = this.httpServer;
       await new Promise(resolve => httpServer.close(resolve));
       this.httpServer = undefined;
     }
     await super.stop();
+
+    clearTimeout(warnOutstandingConnections);
   }
 }

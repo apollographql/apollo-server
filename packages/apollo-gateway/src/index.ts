@@ -52,6 +52,13 @@ function isLocalConfig(config: GatewayConfig): config is LocalGatewayConfig {
   return 'localServiceList' in config;
 }
 
+export type SchemaChangeCallback = (options: {
+  schema: GraphQLSchema;
+  executor: GraphQLExecutor;
+}) => void;
+
+export type Unsubscriber = () => void;
+
 export class ApolloGateway implements GraphQLService {
   public schema?: GraphQLSchema;
   public isReady: boolean = false;
@@ -59,6 +66,8 @@ export class ApolloGateway implements GraphQLService {
   protected config: GatewayConfig;
   protected logger: Logger;
   protected queryPlanStore?: InMemoryLRUCache<QueryPlan>;
+  private pollingTimer?: NodeJS.Timer;
+  private schemaChangeListeners: Set<SchemaChangeCallback> = new Set();
 
   constructor(config: GatewayConfig) {
     this.config = {
@@ -122,6 +131,44 @@ export class ApolloGateway implements GraphQLService {
 
     this.logger.debug('Schema loaded and ready for execution');
     this.isReady = true;
+  }
+
+  public onSchemaChange(
+    schemaChangeCallback: SchemaChangeCallback,
+  ): Unsubscriber {
+    this.schemaChangeListeners.add(schemaChangeCallback);
+    if (this.schemaChangeListeners.size === 1) {
+      if (!isLocalConfig(this.config)) {
+        this.logger.debug('Starting polling for schema changes');
+        this.startPollingServices();
+      }
+    }
+
+    return () => {
+      this.schemaChangeListeners.delete(schemaChangeCallback);
+      if (this.schemaChangeListeners.size === 0 && this.pollingTimer) {
+        clearInterval(this.pollingTimer);
+        this.pollingTimer = undefined;
+      }
+    };
+  }
+
+  private startPollingServices() {
+    this.pollingTimer = setInterval(async () => {
+      const [services, isNewSchema] = await this.loadServiceDefinitions(
+        this.config,
+      );
+      if (!isNewSchema) {
+        this.logger.debug('No changes to gateway config');
+        return;
+      }
+      if (this.queryPlanStore) this.queryPlanStore.flush();
+      this.logger.debug('Gateway config has changed, updating schema');
+      this.createSchema(services);
+      this.schemaChangeListeners.forEach(cb =>
+        cb({ schema: this.schema!, executor: this.executor }),
+      );
+    }, 10 * 1000);
   }
 
   protected createServices(services: ServiceEndpointDefinition[]) {
@@ -233,6 +280,13 @@ export class ApolloGateway implements GraphQLService {
       maxSize: Math.pow(2, 20) * 30,
       sizeCalculator: approximateObjectSize,
     });
+  }
+
+  public async stop() {
+    if (this.pollingTimer) {
+      clearInterval(this.pollingTimer);
+      this.pollingTimer = undefined;
+    }
   }
 }
 
