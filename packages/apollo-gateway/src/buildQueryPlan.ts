@@ -286,7 +286,20 @@ function splitSubfields(
       } else {
         // We need to fetch the key fields from the parent group first, and then
         // use a dependent fetch from the owning service.
-        const keyFields = context.getKeyFields(parentType, owningService);
+        let keyFields = context.getKeyFields(
+          parentType,
+          parentGroup.serviceName,
+        );
+        if (
+          keyFields.length === 0 ||
+          (keyFields.length === 1 &&
+            keyFields[0].fieldDef.name === '__typename')
+        ) {
+          // Only __typename key found.
+          // In some cases, the parent group does not have any @key directives.
+          // Fall back to owning group's keys
+          keyFields = context.getKeyFields(parentType, owningService);
+        }
         return parentGroup.dependentGroupForService(owningService, keyFields);
       }
     } else {
@@ -310,7 +323,10 @@ function splitSubfields(
       } else {
         // We need to go through the base group first.
 
-        const keyFields = context.getKeyFields(parentType, baseService);
+        const keyFields = context.getKeyFields(
+          parentType,
+          parentGroup.serviceName,
+        );
 
         if (!keyFields) {
           throw new GraphQLError(
