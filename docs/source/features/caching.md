@@ -104,6 +104,8 @@ As many CDNs and caching proxies only cache GET requests (not POST requests) and
 
 If you don't want to set HTTP cache headers, pass `cacheControl: {calculateHttpHeaders: false}` to `new ApolloServer()`.
 
+> **Important note:** If you enable the `cacheControl` [extension](https://github.com/apollographql/apollo-cache-control) enabled, HTTP headers will not be set.
+
 ## Saving full responses to a cache
 
 Apollo Server lets you save cacheable responses to a Redis, Memcached, or in-process cache. Cached responses respect the `maxAge` cache hint.
