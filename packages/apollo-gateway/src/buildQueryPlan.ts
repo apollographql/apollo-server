@@ -784,6 +784,7 @@ export class QueryPlanningContext {
   getKeyFields(
     parentType: GraphQLCompositeType,
     serviceName: string,
+    fetchAll = false,
   ): FieldSet {
     const keyFields: FieldSet = [];
 
@@ -802,12 +803,23 @@ export class QueryPlanningContext {
 
       if (!(keys && keys.length > 0)) continue;
 
-      keyFields.push(
-        ...collectFields(this, possibleType, {
-          kind: Kind.SELECTION_SET,
-          selections: keys[0],
-        }),
-      );
+      if (fetchAll) {
+        keyFields.push(
+          ...keys.flatMap(key =>
+            collectFields(this, possibleType, {
+              kind: Kind.SELECTION_SET,
+              selections: key,
+            }),
+          ),
+        );
+      } else {
+        keyFields.push(
+          ...collectFields(this, possibleType, {
+            kind: Kind.SELECTION_SET,
+            selections: keys[0],
+          }),
+        );
+      }
     }
 
     return keyFields;
@@ -843,7 +855,7 @@ export class QueryPlanningContext {
 
     const providedFields: FieldSet = [];
 
-    providedFields.push(...this.getKeyFields(returnType, serviceName));
+    providedFields.push(...this.getKeyFields(returnType, serviceName, true));
 
     if (fieldDef.federation && fieldDef.federation.provides) {
       providedFields.push(
