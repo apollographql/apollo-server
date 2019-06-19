@@ -25,19 +25,23 @@ export interface ClientInfo {
   clientReferenceId?: string;
 }
 
-export type VariableValueModifierOptions = {
+export type BlocklistValuesBaseOptions =
+  | { exceptNames: Array<String> }
+  | { sendAll: true }
+  | { sendNone: true };
+
+type VariableValueTransformOptions = {
   variables: Record<string, any>;
   operationString?: string;
 };
 
 export type VariableValueOptions =
   | {
-      valueModifier: (
-        options: VariableValueModifierOptions,
+      transform: (
+        options: VariableValueTransformOptions,
       ) => Record<string, any>;
     }
-  | { exceptVariableNames: Array<String> }
-  | { safelistAll: boolean };
+  | BlocklistValuesBaseOptions;
 
 export type GenerateClientInfo<TContext> = (
   requestContext: GraphQLRequestContext<TContext>,
@@ -96,24 +100,18 @@ export interface EngineReportingOptions<TContext> {
    */
   reportErrorFunction?: (err: Error) => void;
   /**
-   * [TO-BE-DEPRECATED] Use sendVariableValues
-   * A case-sensitive list of names of variables whose values should
-   * not be sent to Apollo servers, or 'true' to leave out all variables. In the former
-   * case, the report will indicate that each private variable was redacted; in
-   * the latter case, no variables are sent at all.
-   */
-  privateVariables?: Array<String> | boolean;
-  /**
    * By default, Apollo Server does not send the values of any GraphQL variables to Apollo's servers, because variable
    * values often contain the private data of your app's users. If you'd like variable values to be included in traces, set this option.
    * This option can take several forms:
-   * - { safelistAll: ... }: false to blocklist, or true to safelist all variable values
-   * - { valueModifier: ... }: a custom function for modifying variable values
-   * - { exceptVariableNames: ... }: a case-sensitive list of names of variables whose values should not be sent to Apollo servers
+   * - { sendNone: true }: blocklist all variable values (DEFAULT)
+   * - { sendAll: true}: safelist all variable values
+   * - { transform: ... }: a custom function for modifying variable values. Keys added by the custom function will
+   *    be removed, and keys removed will be added back with an empty value.
+   * - { exceptNames: ... }: a case-sensitive list of names of variables whose values should not be sent to Apollo servers
    *
    * Defaults to blocklisting all variable values if both this parameter and
-   * the to-be-deprecated `privateVariables` are not set. The report will also
-   * indicate each private variable key redacted by { safelistAll: false } or { exceptVariableNames: [...] }.
+   * the to-be-deprecated `privateVariables` are not set. The report will
+   * indicate each private variable key whose value was redacted by { sendNone: true } or { exceptNames: [...] }.
    *
    * TODO(helen): Add new flag to the trace details (and modify the protobuf message structure) to indicate the type of modification. Then, add the following description to the docs:
    * "The report will indicate that variable values were modified by a custom function, or will list all private variables redacted."
@@ -121,22 +119,34 @@ export interface EngineReportingOptions<TContext> {
    */
   sendVariableValues?: VariableValueOptions;
   /**
+   * [DEPRECATED] Use sendVariableValues
+   * Passing an array into privateVariables is equivalent to passing { exceptNames: array } into
+   * sendVariableValues, and passing in `true` or `false` is equivalent to passing { sendNone: true } or
+   * { sendAll: true }, respectively.
+   *
+   * An error will be thrown if both this deprecated option and its replacement, sendVariableValues are defined.
+   */
+  privateVariables?: Array<String> | boolean;
+  /**
    * By default, Apollo Server does not send the list of HTTP headers and values to
    * Apollo's servers, to protect private data of your app's users. If you'd like this information included in traces,
-   * set this option. This option can take two forms:
+   * set this option. This option can take several forms:
    *
-   * - {except: Array<String>} A case-insensitive list of names of HTTP headers whose values should not be
-   * sent to Apollo servers
-   * - {safelistAll: 'true'/'false'} to include or leave out all HTTP headers.
+   * - { sendNone : true } to drop all HTTP request headers (DEFAULT)
+   * - { sendAll : true } to send the values of all HTTP request headers
+   * - { exceptNames: Array<String> } A case-insensitive list of names of HTTP headers whose values should not be
+   *     sent to Apollo servers
    *
    * Unlike with sendVariableValues, names of dropped headers are not reported.
+   * The headers 'authorization', 'cookie', and 'set-cookie' are never reported.
    */
-  sendHeaders?: { except: Array<String> } | { safelistAll: boolean };
+  sendHeaders?: BlocklistValuesBaseOptions;
   /**
-   * [TO-BE-DEPRECATED] Use sendHeaders
-   * A case-insensitive list of names of HTTP headers whose values should not be
-   * sent to Apollo servers, or 'true' to leave out all HTTP headers. Unlike
-   * with privateVariables, names of dropped headers are not reported.
+   * [DEPRECATED] Use sendHeaders
+   * Passing an array into privateHeaders is equivalent to passing { exceptNames: array } into sendHeaders, and
+   * passing `true` or `false` is equivalent to passing in { sendNone: true } and { sendAll: true }, respectively.
+   *
+   * An error will be thrown if both this deprecated option and its replacement, sendHeaders are defined.
    */
   privateHeaders?: Array<String> | boolean;
   /**
@@ -248,6 +258,9 @@ export class EngineReportingAgent<TContext = any> {
         });
       });
     }
+
+    // Handle the legacy options: privateVariables and privateHeaders
+    handleLegacyOptions(this.options);
   }
 
   public newExtension(): EngineReportingExtension<TContext> {
@@ -522,4 +535,51 @@ function createSignatureCache(): InMemoryLRUCache<string> {
 
 export function signatureCacheKey(queryHash: string, operationName: string) {
   return `${queryHash}${operationName && ':' + operationName}`;
+}
+
+// Helper function to modify the EngineReportingOptions if the deprecated fields 'privateVariables' and 'privateHeaders'
+// were set.
+// - Throws an error if both the deprecated option and its replacement (e.g. 'privateVariables' and 'sendVariableValues') were set.
+// - Otherwise, wraps the deprecated option into objects that can be passed to the new replacement field (see the helper
+// function makeBlocklistBaseOptionsFromLegacy), and deletes the deprecated field from the options
+export function handleLegacyOptions(
+  options: EngineReportingOptions<any>,
+): void {
+  // Handle the legacy option: privateVariables
+  if (options.privateVariables != null && options.sendVariableValues) {
+    throw new Error(
+      "You have set both the 'sendVariableValues' and the deprecated 'privateVariables' options. Please only set 'sendVariableValues'.",
+    );
+  } else if (options.privateVariables != null) {
+    options.sendVariableValues = makeBlocklistBaseOptionsFromLegacy(
+      options.privateVariables,
+    );
+    delete options.privateVariables;
+  }
+
+  // Handle the legacy option: privateHeaders
+  if (options.privateHeaders != null && options.sendHeaders) {
+    throw new Error(
+      "You have set both the 'sendHeaders' and the deprecated 'privateHeaders' options. Please only set 'sendHeaders'.",
+    );
+  } else if (options.privateHeaders != null) {
+    options.sendHeaders = makeBlocklistBaseOptionsFromLegacy(
+      options.privateHeaders,
+    );
+    delete options.privateHeaders;
+  }
+}
+
+// This helper wraps non-null inputs from the deprecated options 'privateVariables' and 'privateHeaders' into
+// objects that can be passed to the new replacement options, 'sendVariableValues' and 'sendHeaders'
+function makeBlocklistBaseOptionsFromLegacy(
+  legacyPrivateOption: Array<String> | boolean,
+): BlocklistValuesBaseOptions {
+  return Array.isArray(legacyPrivateOption)
+    ? {
+        exceptNames: legacyPrivateOption,
+      }
+    : legacyPrivateOption
+    ? { sendNone: true }
+    : { sendAll: true };
 }
