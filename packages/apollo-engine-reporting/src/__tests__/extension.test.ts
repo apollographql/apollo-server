@@ -10,7 +10,10 @@ import {
   EngineReportingExtension,
   makeTraceDetails,
   makeTraceDetailsLegacy,
+  makeHTTPRequestHeaders,
+  makeHTTPRequestHeadersLegacy,
 } from '../extension';
+import { Headers } from 'apollo-server-env';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 
 test('trace construction', async () => {
@@ -88,6 +91,9 @@ test('trace construction', async () => {
   // XXX actually write some tests
 });
 
+/**
+ * TESTS FOR sendVariableValues REPORTING OPTION
+ */
 const variables: Record<string, any> = {
   testing: 'testing',
   t2: 2,
@@ -110,18 +116,18 @@ test('check variableJson output for sendVariableValues null or undefined (defaul
   expect(makeTraceDetails(variables, undefined)).toEqual(filteredOutput);
 });
 
-test('check variableJson output for sendVariableValues whitelist type', () => {
+test('check variableJson output for sendVariableValues safelist type', () => {
   // Case 1: No keys/values in variables to be filtered/not filtered
   const emptyOutput = new Trace.Details();
-  expect(makeTraceDetails({}, { always: true })).toEqual(emptyOutput);
-  expect(makeTraceDetails({}, { always: false })).toEqual(emptyOutput);
+  expect(makeTraceDetails({}, { safelistAll: true })).toEqual(emptyOutput);
+  expect(makeTraceDetails({}, { safelistAll: false })).toEqual(emptyOutput);
 
   // Case 2: Filter all variables
   const filteredOutput = new Trace.Details();
   Object.keys(variables).forEach(name => {
     filteredOutput.variablesJson[name] = '';
   });
-  expect(makeTraceDetails(variables, { whitelistAll: false })).toEqual(
+  expect(makeTraceDetails(variables, { safelistAll: false })).toEqual(
     filteredOutput,
   );
 
@@ -130,7 +136,7 @@ test('check variableJson output for sendVariableValues whitelist type', () => {
   Object.keys(variables).forEach(name => {
     nonFilteredOutput.variablesJson[name] = JSON.stringify(variables[name]);
   });
-  expect(makeTraceDetails(variables, { whitelistAll: true })).toEqual(
+  expect(makeTraceDetails(variables, { safelistAll: true })).toEqual(
     nonFilteredOutput,
   );
 });
@@ -171,10 +177,10 @@ test('variableJson output for privacyEnforcer custom function', () => {
   ).toEqual(output);
 });
 
-test('whitelist=False equivalent to Array(all variables)', () => {
+test('safelist=False equivalent to Array(all variables)', () => {
   let privateVariablesArray: string[] = ['testing', 't2'];
   expect(
-    makeTraceDetails(variables, { whitelistAll: false }).variablesJson,
+    makeTraceDetails(variables, { safelistAll: false }).variablesJson,
   ).toEqual(
     makeTraceDetails(variables, { exceptVariableNames: privateVariablesArray })
       .variablesJson,
@@ -214,15 +220,15 @@ test('original keys in variables match the modified keys', () => {
 });
 
 /**
- * Tests for old privateVariables reporting option
+ * Tests to ensure support of the old privateVariables reporting option
  */
 test('test variableJson output for to-be-deprecated privateVariable option', () => {
-  // Case 1: privateVariables == False; same as whitelist all
+  // Case 1: privateVariables == False; same as safelist all
   expect(makeTraceDetailsLegacy({}, false)).toEqual(
-    makeTraceDetails({}, { whitelistAll: false }),
+    makeTraceDetails({}, { safelistAll: false }),
   );
   expect(makeTraceDetailsLegacy(variables, false)).toEqual(
-    makeTraceDetails(variables, { whitelistAll: true }),
+    makeTraceDetails(variables, { safelistAll: true }),
   );
 
   // Case 2: privateVariables is an Array; same as makeTraceDetails
@@ -232,5 +238,82 @@ test('test variableJson output for to-be-deprecated privateVariable option', () 
   ).toEqual(
     makeTraceDetails(variables, { exceptVariableNames: privacyEnforcerArray })
       .variablesJson,
+  );
+});
+
+function makeTestHTTP(): Trace.HTTP {
+  return new Trace.HTTP({
+    method: Trace.HTTP.Method.UNKNOWN,
+    host: null,
+    path: null,
+  });
+}
+
+const headers = new Headers();
+headers.append('name', 'value');
+headers.append('authorization', 'blahblah'); // THIS SHOULD NEVER BE SENT
+
+const headersOutput = { name: new Trace.HTTP.Values({ value: ['value'] }) };
+
+/**
+ * TESTS FOR sendHeaders REPORTING OPTION
+ */
+test('test that sendHeaders defaults to hiding all', () => {
+  const http = makeTestHTTP();
+  makeHTTPRequestHeaders(http, headers, null);
+  expect(http.requestHeaders).toEqual({});
+  makeHTTPRequestHeaders(http, headers, undefined);
+  expect(http.requestHeaders).toEqual({});
+  makeHTTPRequestHeaders(http, headers);
+  expect(http.requestHeaders).toEqual({});
+});
+
+test('test sendHeaders.safelistAll', () => {
+  const httpSafelist = makeTestHTTP();
+  makeHTTPRequestHeaders(httpSafelist, headers, { safelistAll: true });
+  expect(httpSafelist.requestHeaders).toEqual(headersOutput);
+
+  const httpBlocklist = makeTestHTTP();
+  makeHTTPRequestHeaders(httpBlocklist, headers, { safelistAll: false });
+  expect(httpBlocklist.requestHeaders).toEqual({});
+});
+
+test('test sendHeaders.except', () => {
+  const except: String[] = ['name', 'notinheaders'];
+  const http = makeTestHTTP();
+  makeHTTPRequestHeaders(http, headers, { except: except });
+  expect(http.requestHeaders).toEqual({});
+});
+
+/**
+ * And test to ensure support of old privateHeaders ooption
+ */
+test('test legacy privateHeaders boolean / Array ', () => {
+  // Test Array input
+  const except: String[] = ['name', 'notinheaders'];
+  const httpExcept = makeTestHTTP();
+  makeHTTPRequestHeaders(httpExcept, headers, { except: except });
+  const httpPrivateHeadersArray = makeTestHTTP();
+  makeHTTPRequestHeadersLegacy(httpPrivateHeadersArray, headers, except);
+  expect(httpExcept.requestHeaders).toEqual(
+    httpPrivateHeadersArray.requestHeaders,
+  );
+
+  // Test boolean input safelist vs. privateHeaders false
+  const httpSafelist = makeTestHTTP();
+  makeHTTPRequestHeaders(httpSafelist, headers, { safelistAll: true });
+  const httpPrivateHeadersFalse = makeTestHTTP();
+  makeHTTPRequestHeadersLegacy(httpPrivateHeadersFalse, headers, false);
+  expect(httpSafelist.requestHeaders).toEqual(
+    httpPrivateHeadersFalse.requestHeaders,
+  );
+
+  // Test boolean input blocklist vs. privateHeaders true
+  const httpBlocklist = makeTestHTTP();
+  makeHTTPRequestHeaders(httpBlocklist, headers, { safelistAll: false });
+  const httpPrivateHeadersTrue = makeTestHTTP();
+  makeHTTPRequestHeadersLegacy(httpPrivateHeadersTrue, headers, true);
+  expect(httpBlocklist.requestHeaders).toEqual(
+    httpPrivateHeadersTrue.requestHeaders,
   );
 });
