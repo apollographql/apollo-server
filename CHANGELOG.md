@@ -2,9 +2,9 @@
 
 ### vNext
 - `apollo-engine-reporting`: BREAKING CHANGE: By default, send no GraphQL variable values to Apollo's servers instead of sending all variable values. Use the new EngineReportingOption `sendVariableValues` to send some or all variable values, possibly after transforming them. 
-This replaces the `privateVariables` option, which is now deprecated. [PR #2847](https://github.com/apollographql/apollo-server/pull/2847) [PR #2472](https://github.com/apollographql/apollo-server/pull/2472)
-- `apollo-engine-reporting`: BREAKING CHANGE: By default, send no GraphQL headers to Apollo's servers instead of sending all. Use the new EngineReportingOption `sendHeaders` to send some or all headers and their values. 
-A replacement for the 'privateHeaders' option, which is now deprecated. [PR #2847](https://github.com/apollographql/apollo-server/pull/2847)
+This replaces the `privateVariables` option, which is now deprecated. [PR #2847](https://github.com/apollographql/apollo-server/pull/2847)
+- `apollo-engine-reporting`: BREAKING CHANGE: By default, send no GraphQL request headers to Apollo's servers instead of sending all. Use the new EngineReportingOption `sendHeaders` to send some or all headers and their values. 
+This replaces the `privateHeaders` option, which is now deprecated. [PR #2847](https://github.com/apollographql/apollo-server/pull/2847)
 ### v2.6.2
 
 - `apollo-engine-reporting-protobuf`: Update protobuff to include `forbiddenOperations` and `registeredOperations` [PR #2768](https://github.com/apollographql/apollo-server/pull/2768)

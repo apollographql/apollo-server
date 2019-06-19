@@ -16,6 +16,7 @@ import {
   GenerateClientInfo,
   AddTraceArgs,
   VariableValueOptions,
+  BlocklistValuesBaseOptions,
 } from './agent';
 import { GraphQLRequestContext } from 'apollo-server-core/dist/requestPipelineAPI';
 
@@ -106,20 +107,12 @@ export class EngineReportingExtension<TContext = any>
       path: null,
     });
 
-    if (this.options.sendHeaders || this.options.privateHeaders != null) {
-      if (this.options.sendHeaders) {
-        makeHTTPRequestHeaders(
-          this.trace.http,
-          o.request.headers,
-          this.options.sendHeaders,
-        );
-      } else if (this.options.privateHeaders != null) {
-        makeHTTPRequestHeadersLegacy(
-          this.trace.http,
-          o.request.headers,
-          this.options.privateHeaders,
-        );
-      }
+    if (this.options.sendHeaders) {
+      makeHTTPRequestHeaders(
+        this.trace.http,
+        o.request.headers,
+        this.options.sendHeaders,
+      );
 
       if (o.requestContext.metrics.persistedQueryHit) {
         this.trace.persistedQueryHit = true;
@@ -136,24 +129,11 @@ export class EngineReportingExtension<TContext = any>
     }
 
     if (o.variables) {
-      if (
-        this.options.sendVariableValues !== undefined ||
-        this.options.privateVariables == null
-      ) {
-        // The new option sendVariableValues will take precendence over the deprecated privateVariables option
-        this.trace.details = makeTraceDetails(
-          o.variables,
-          this.options.sendVariableValues,
-          o.queryString,
-        );
-      } else {
-        // privateVariables will be DEPRECATED
-        // But keep supporting if it has been set.
-        this.trace.details = makeTraceDetailsLegacy(
-          o.variables,
-          this.options.privateVariables,
-        );
-      }
+      this.trace.details = makeTraceDetails(
+        o.variables,
+        this.options.sendVariableValues,
+        o.queryString,
+      );
     }
 
     const clientInfo = this.generateClientInfo(o.requestContext);
@@ -443,10 +423,10 @@ export function makeTraceDetails(
 ): Trace.Details {
   const details = new Trace.Details();
   const variablesToRecord = (() => {
-    if (sendVariableValues && 'valueModifier' in sendVariableValues) {
+    if (sendVariableValues && 'transform' in sendVariableValues) {
       // Custom function to allow user to specify what variablesJson will look like
       const originalKeys = Object.keys(variables);
-      const modifiedVariables = sendVariableValues.valueModifier({
+      const modifiedVariables = sendVariableValues.transform({
         variables: variables,
         operationString: operationString,
       });
@@ -463,14 +443,13 @@ export function makeTraceDetails(
   // string is ineffective.
   Object.keys(variablesToRecord).forEach(name => {
     if (
-      sendVariableValues == null ||
-      ('safelistAll' in sendVariableValues &&
-        !sendVariableValues.safelistAll) ||
-      ('exceptVariableNames' in sendVariableValues &&
-        // We assume that most users will have only a few private variables,
-        // or will just set privateVariables to true; we can change this
+      !sendVariableValues ||
+      'sendNone' in sendVariableValues ||
+      ('exceptNames' in sendVariableValues &&
+        // We assume that most users will have only a few variables values to hide,
+        // or will just set {sendNone: true}; we can change this
         // linear-time operation if it causes real performance issues.
-        sendVariableValues.exceptVariableNames.includes(name))
+        sendVariableValues.exceptNames.includes(name))
     ) {
       // Special case for private variables. Note that this is a different
       // representation from a variable containing the empty string, as that
@@ -479,7 +458,7 @@ export function makeTraceDetails(
     } else {
       try {
         details.variablesJson![name] =
-          variablesToRecord[name] == null
+          variablesToRecord[name] === undefined
             ? ''
             : JSON.stringify(variablesToRecord[name]);
       } catch (e) {
@@ -492,25 +471,7 @@ export function makeTraceDetails(
       }
     }
   });
-
   return details;
-}
-
-// Creates trace details when privateVariables [DEPRECATED] was set.
-// Wraps privateVariable into a format that can be passed into makeTraceDetails(),
-// which handles the new option sendVariableValues.
-export function makeTraceDetailsLegacy(
-  variables: Record<string, any>,
-  privateVariables: Array<String> | boolean,
-): Trace.Details {
-  const newArguments = Array.isArray(privateVariables)
-    ? {
-        exceptVariableNames: privateVariables,
-      }
-    : {
-        safelistAll: !privateVariables,
-      };
-  return makeTraceDetails(variables, newArguments);
 }
 
 // Helper for makeTraceDetails() to enforce that the keys of a modified 'variables'
@@ -529,22 +490,19 @@ function cleanModifiedVariables(
 export function makeHTTPRequestHeaders(
   http: Trace.IHTTP,
   headers: Headers,
-  sendHeaders?: { except: Array<String> } | { safelistAll: boolean },
+  sendHeaders?: BlocklistValuesBaseOptions,
 ): void {
-  if (sendHeaders == null) {
-    return;
-  }
-  if ('safelistAll' in sendHeaders && !sendHeaders.safelistAll) {
+  if (!sendHeaders || 'sendNone' in sendHeaders) {
     return;
   }
   for (const [key, value] of headers) {
     if (
       sendHeaders &&
-      'except' in sendHeaders &&
-      // We assume that most users only have a few private headers, or will
-      // just set privateHeaders to true; we can change this linear-time
+      'exceptNames' in sendHeaders &&
+      // We assume that most users only have a few headers to hide, or will
+      // just set {sendNone: true} ; we can change this linear-time
       // operation if it causes real performance issues.
-      sendHeaders.except.some(exceptHeader => {
+      sendHeaders.exceptNames.some(exceptHeader => {
         // Headers are case-insensitive, and should be compared as such.
         return exceptHeader.toLowerCase() === key.toLowerCase();
       })
@@ -563,18 +521,4 @@ export function makeHTTPRequestHeaders(
         });
     }
   }
-}
-
-// Creates request headers when privateHeaders [DEPRECATED] was previously set.
-// Wraps privateHeaders into an object that can be passed into makeTraceDetails(),
-// which handles handles the new reporting option sendHeaders.
-export function makeHTTPRequestHeadersLegacy(
-  http: Trace.IHTTP,
-  headers: Headers,
-  privateHeaders: Array<String> | boolean,
-): void {
-  const sendHeaders = Array.isArray(privateHeaders)
-    ? { except: privateHeaders }
-    : { safelistAll: !privateHeaders };
-  makeHTTPRequestHeaders(http, headers, sendHeaders);
 }
