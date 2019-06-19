@@ -1,7 +1,8 @@
 # Changelog
 
 ### vNext
-- `apollo-engine-reporting`: BREAKING CHANGE: By default, send no GraphQL variable values to Apollo's servers instead of sending all variable values. Adding the new EngineReportingOption `maskVariableValues` to send some or all variable values, possibly after transforming them. This replaces the `privateVariables` option, which is now deprecated. [PR #2847](https://github.com/apollographql/apollo-server/pull/2847)
+- `apollo-engine-reporting`: BREAKING CHANGE: By default, send no GraphQL variable values to Apollo's servers instead of sending all variable values. Use the new EngineReportingOption `sendVariableValues` to send some or all variable values, possibly after transforming them. 
+This replaces the `privateVariables` option, which is now deprecated. [PR #2847](https://github.com/apollographql/apollo-server/pull/2847) [PR #2472](https://github.com/apollographql/apollo-server/pull/2472)
 
 ### v2.6.2
 
