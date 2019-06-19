@@ -150,20 +150,20 @@ async function executeFetch<TContext>(
   const entities = Array.isArray(results) ? results : [results];
   if (entities.length < 1) return;
 
-  if (!fetch.requires) {
-    let variables = Object.create(null);
-    if (fetch.variableUsages) {
-      for (const { node, defaultValue } of fetch.variableUsages) {
-        const name = node.name.value;
-        const providedVariables = context.requestContext.request.variables;
-        if (providedVariables && providedVariables[name] !== 'undefined') {
-          variables[name] = providedVariables[name];
-        } else if (defaultValue) {
-          variables[name] = defaultValue;
-        }
+  let variables = Object.create(null);
+  if (fetch.variableUsages) {
+    for (const { node, defaultValue } of fetch.variableUsages) {
+      const name = node.name.value;
+      const providedVariables = context.requestContext.request.variables;
+      if (providedVariables && providedVariables[name] !== 'undefined') {
+        variables[name] = providedVariables[name];
+      } else if (defaultValue) {
+        variables[name] = defaultValue;
       }
     }
+  }
 
+  if (!fetch.requires) {
     const dataReceivedFromService = await sendOperation(
       context,
       operationForRootFetch(fetch, operationType),
@@ -187,10 +187,14 @@ async function executeFetch<TContext>(
       }
     });
 
+    if ('representations' in variables) {
+      throw new Error(`Variables cannot contain key "representations"`);
+    }
+
     const dataReceivedFromService = await sendOperation(
       context,
       operationForEntitiesFetch(fetch),
-      { representations },
+      { ...variables, representations },
     );
 
     if (!dataReceivedFromService) {

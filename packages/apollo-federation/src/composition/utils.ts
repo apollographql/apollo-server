@@ -1,6 +1,7 @@
 import 'apollo-server-env';
 import {
   ObjectTypeDefinitionNode,
+  InterfaceTypeExtensionNode,
   FieldDefinitionNode,
   Kind,
   StringValueNode,
@@ -45,7 +46,10 @@ export function mapFieldNamesToServiceName<Node extends { name: NameNode }>(
 
 export function findDirectivesOnTypeOrField(
   node: Maybe<
-    ObjectTypeDefinitionNode | ObjectTypeExtensionNode | FieldDefinitionNode
+    | ObjectTypeDefinitionNode
+    | ObjectTypeExtensionNode
+    | FieldDefinitionNode
+    | InterfaceTypeExtensionNode
   >,
   directiveName: string,
 ) {
@@ -66,34 +70,53 @@ export function stripExternalFieldsFromTypeDefs(
   const strippedFields: ExternalFieldDefinition[] = [];
 
   const typeDefsWithoutExternalFields = visit(typeDefs, {
-    ObjectTypeExtension(node) {
-      let fields = node.fields;
-      if (fields) {
-        fields = fields.filter(field => {
-          const externalDirectives = findDirectivesOnTypeOrField(
-            field,
-            'external',
-          );
-
-          if (externalDirectives.length > 0) {
-            strippedFields.push({
-              field,
-              parentTypeName: node.name.value,
-              serviceName,
-            });
-            return false;
-          }
-          return true;
-        });
-      }
-      return {
-        ...node,
-        fields,
-      };
-    },
+    ObjectTypeExtension: removeExternalFieldsFromExtensionVisitor(
+      strippedFields,
+      serviceName,
+    ),
+    InterfaceTypeExtension: removeExternalFieldsFromExtensionVisitor(
+      strippedFields,
+      serviceName,
+    ),
   }) as DocumentNode;
 
   return { typeDefsWithoutExternalFields, strippedFields };
+}
+
+/**
+ * Returns a closure that strips fields marked with `@external` and adds them
+ * to an array.
+ * @param collector
+ * @param serviceName
+ */
+function removeExternalFieldsFromExtensionVisitor<
+  T extends InterfaceTypeExtensionNode | ObjectTypeExtensionNode
+>(collector: ExternalFieldDefinition[], serviceName: string) {
+  return (node: T) => {
+    let fields = node.fields;
+    if (fields) {
+      fields = fields.filter(field => {
+        const externalDirectives = findDirectivesOnTypeOrField(
+          field,
+          'external',
+        );
+
+        if (externalDirectives.length > 0) {
+          collector.push({
+            field,
+            parentTypeName: node.name.value,
+            serviceName,
+          });
+          return false;
+        }
+        return true;
+      });
+    }
+    return {
+      ...node,
+      fields,
+    };
+  };
 }
 
 export function parseSelections(source: string) {
