@@ -222,4 +222,49 @@ describe('externalUnused', () => {
     const warnings = validateExternalUnused(schema);
     expect(warnings).toHaveLength(0);
   });
+
+  it('demonstrates an issue with new approach', () => {
+    const serviceA = {
+      name: 'serviceA',
+      typeDefs: gql`
+        type Product @key(fields: "id") {
+          id: ID!
+          flags: ProductFlags
+        }
+
+        type ProductFlags {
+          isOnSale: Boolean
+          isB2B: Boolean
+        }
+      `,
+    };
+
+    const serviceB = {
+      name: 'serviceB',
+      typeDefs: gql`
+        extend type Product @key(fields: "id") {
+          id: ID! @external
+          flags: ProductFlags @external
+          productPrice: Price @requires(fields: "id flags { isOnSale isB2B }")
+        }
+
+        extend type ProductFlags {
+          isOnSale: Boolean @external
+          isB2B: Boolean @external
+          # I broke it (this matches with id from the Product type)
+          id: Boolean @external
+        }
+
+        type Price {
+          regularPrice: Float!
+          salePrice: Float!
+          b2bPrice: Float!
+        }
+      `,
+    };
+
+    const { schema } = composeServices([serviceA, serviceB]);
+    const warnings = validateExternalUnused(schema);
+    expect(warnings).toHaveLength(1);
+  });
 });
