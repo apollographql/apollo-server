@@ -15,11 +15,10 @@ import {
   EngineReportingOptions,
   GenerateClientInfo,
   AddTraceArgs,
-  VariableValueModifier,
-  VariableValueModifierOptions,
+  VariableValueOptions,
 } from './agent';
 import { GraphQLRequestContext } from 'apollo-server-core/dist/requestPipelineAPI';
-import { operation } from 'retry';
+// import { operation } from 'retry';
 
 const clientNameHeaderKey = 'apollographql-client-name';
 const clientReferenceIdHeaderKey = 'apollographql-client-reference-id';
@@ -132,17 +131,17 @@ export class EngineReportingExtension<TContext = any>
 
     if (o.variables) {
       if (
-        this.options.maskVariableValues !== undefined ||
+        this.options.sendVariableValues !== undefined ||
         this.options.privateVariables == null
       ) {
         // The new option maskVariableValues will take precendence over the deprecated privateVariables option
         this.trace.details = makeTraceDetails(
           o.variables,
-          this.options.maskVariableValues,
+          this.options.sendVariableValues,
           o.queryString,
         );
       } else {
-        // DEPRECATED: privateVariables
+        // privateVariables will be DEPRECATED
         // But keep supporting if it has been set.
         this.trace.details = makeTraceDetailsLegacy(
           o.variables,
@@ -421,22 +420,15 @@ function defaultGenerateClientInfo({ request }: GraphQLRequestContext) {
 // If maskVariableValues is null, the policy will default to the 'true' case.
 export function makeTraceDetails(
   variables: Record<string, any>,
-  maskVariableValues?:
-    | {
-        valueModifier: (
-          options: VariableValueModifierOptions,
-        ) => Record<string, any>;
-      }
-    | { privateVariableNames: Array<String> }
-    | { always: boolean },
+  sendVariableValues?: VariableValueOptions,
   operationString?: string,
 ): Trace.Details {
   const details = new Trace.Details();
   const variablesToRecord = (() => {
-    if (maskVariableValues && 'valueModifier' in maskVariableValues) {
+    if (sendVariableValues && 'valueModifier' in sendVariableValues) {
       // Custom function to allow user to specify what variablesJson will look like
       const originalKeys = Object.keys(variables);
-      const modifiedVariables = maskVariableValues.valueModifier({
+      const modifiedVariables = sendVariableValues.valueModifier({
         variables: variables,
         operationString: operationString,
       });
@@ -453,13 +445,14 @@ export function makeTraceDetails(
   // string is ineffective.
   Object.keys(variablesToRecord).forEach(name => {
     if (
-      maskVariableValues == null ||
-      ('always' in maskVariableValues && maskVariableValues.always) ||
-      ('privateVariableNames' in maskVariableValues &&
+      sendVariableValues == null ||
+      ('whitelistAll' in sendVariableValues &&
+        !sendVariableValues.whitelistAll) ||
+      ('exceptVariableNames' in sendVariableValues &&
         // We assume that most users will have only a few private variables,
         // or will just set privateVariables to true; we can change this
         // linear-time operation if it causes real performance issues.
-        maskVariableValues.privateVariableNames.includes(name))
+        sendVariableValues.exceptVariableNames.includes(name))
     ) {
       // Special case for private variables. Note that this is a different
       // representation from a variable containing the empty string, as that
@@ -487,17 +480,17 @@ export function makeTraceDetails(
 
 // Creates trace details when privateVariables [DEPRECATED] was set.
 // Wraps privateVariable into a format that can be passed into makeTraceDetails(),
-// which also handles the new replacement option maskVariableValues.
+// which handles the new option sendVariableValues.
 export function makeTraceDetailsLegacy(
   variables: Record<string, any>,
   privateVariables: Array<String> | boolean,
 ): Trace.Details | undefined {
   const newArguments = Array.isArray(privateVariables)
     ? {
-        privateVariableNames: privateVariables,
+        exceptVariableNames: privateVariables,
       }
     : {
-        always: privateVariables,
+        whitelistAll: !privateVariables,
       };
   return makeTraceDetails(variables, newArguments);
 }

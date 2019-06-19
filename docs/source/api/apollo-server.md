@@ -345,7 +345,7 @@ addMockFunctionsToSchema({
 
 *  `privateVariables`: Array<String\> | boolean
 
-   DEPRECATING IN VERSION XX.XX.XX for `maskVariableValues`, which will support the same
+   DEPRECATING IN VERSION XX.XX.XX for `sendVariableValues`, which will support the same
    functionalities but allow for more flexibility.
    
    A case-sensitive list of names of variables whose values should not be sent
@@ -353,19 +353,19 @@ addMockFunctionsToSchema({
    case, the report will indicate that each private variable was redacted in
    the latter case, no variables are sent at all.
    
-* `maskVariableValues`: { valueModifier: (options: { variables: Record<string, any>, operationString?: string } ) => Record<string, any> }
-                     | { privateVariableNames: Array<String\> }
-                     | { always: boolean }
+* `sendVariableValues`: { valueModifier: (options: { variables: Record<string, any>, operationString?: string } ) => Record<string, any> }
+                     | { exceptVariableNames: Array<String\> }
+                     | { whitelistAll: boolean }
     
     By default, Apollo Server does not send the values of any GraphQL variables to Apollo's servers, because variable values often contain the private data of your app's users. If you'd like variable values to be included in traces, set this option. This option can take several forms:
     
-    - { always: ... }: true to blocklist, or false to whitelist all variable values
+    - { whitelistAll: ... }: false to blocklist, or true to whitelist all variable values
     - { valueModifier: ... }: a custom function for modifying variable values
-    - { privateVariableNames: ... }: a case-sensitive list of names of variables whose values should not be sent to Apollo servers
+    - { exceptVariableNames: ... }: a case-sensitive list of names of variables whose values should not be sent to Apollo servers
 
     Defaults to blocklisting all variable values if both this parameter and
     the to-be-deprecated `privateVariables` are not set. The report will also
-    indicate each private variable redacted if set to { always: ... } or { privateVariableNames: ... }
+    indicate each private variable key redacted by { whitelistAll: false } or { exceptVariableNames: [...] }.
 
 *  `privateHeaders`: Array<String\> | boolean
 

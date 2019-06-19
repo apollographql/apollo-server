@@ -93,7 +93,24 @@ const variables: Record<string, any> = {
   t2: 2,
 };
 
-test('check variableJson output for privacyEnforcer boolean type', () => {
+test('check variableJson output for sendVariableValues null or undefined (default)', () => {
+  // Case 1: No keys/values in variables to be filtered/not filtered
+  const emptyOutput = new Trace.Details();
+  expect(makeTraceDetails({}, null)).toEqual(emptyOutput);
+  expect(makeTraceDetails({}, undefined)).toEqual(emptyOutput);
+  expect(makeTraceDetails({})).toEqual(emptyOutput);
+
+  // Case 2: Filter all variables
+  const filteredOutput = new Trace.Details();
+  Object.keys(variables).forEach(name => {
+    filteredOutput.variablesJson[name] = '';
+  });
+  expect(makeTraceDetails(variables)).toEqual(filteredOutput);
+  expect(makeTraceDetails(variables, null)).toEqual(filteredOutput);
+  expect(makeTraceDetails(variables, undefined)).toEqual(filteredOutput);
+});
+
+test('check variableJson output for sendVariableValues whitelist type', () => {
   // Case 1: No keys/values in variables to be filtered/not filtered
   const emptyOutput = new Trace.Details();
   expect(makeTraceDetails({}, { always: true })).toEqual(emptyOutput);
@@ -104,14 +121,16 @@ test('check variableJson output for privacyEnforcer boolean type', () => {
   Object.keys(variables).forEach(name => {
     filteredOutput.variablesJson[name] = '';
   });
-  expect(makeTraceDetails(variables, { always: true })).toEqual(filteredOutput);
+  expect(makeTraceDetails(variables, { whitelistAll: false })).toEqual(
+    filteredOutput,
+  );
 
   // Case 3: Do not filter variables
   const nonFilteredOutput = new Trace.Details();
   Object.keys(variables).forEach(name => {
     nonFilteredOutput.variablesJson[name] = JSON.stringify(variables[name]);
   });
-  expect(makeTraceDetails(variables, { always: false })).toEqual(
+  expect(makeTraceDetails(variables, { whitelistAll: true })).toEqual(
     nonFilteredOutput,
   );
 });
@@ -123,7 +142,7 @@ test('variableJson output for privacyEnforcer Array type', () => {
     t2: JSON.stringify(2),
   };
   expect(
-    makeTraceDetails(variables, { privateVariableNames: privateVariablesArray })
+    makeTraceDetails(variables, { exceptVariableNames: privateVariablesArray })
       .variablesJson,
   ).toEqual(expectedVariablesJson);
 });
@@ -152,17 +171,22 @@ test('variableJson output for privacyEnforcer custom function', () => {
   ).toEqual(output);
 });
 
-test('privacyEnforcer=True equivalent to privacyEnforcer=Array(all variables)', () => {
+test('whitelist=False equivalent to Array(all variables)', () => {
   let privateVariablesArray: string[] = ['testing', 't2'];
-  expect(makeTraceDetails(variables, { always: true }).variablesJson).toEqual(
-    makeTraceDetails(variables, { privateVariableNames: privateVariablesArray })
+  expect(
+    makeTraceDetails(variables, { whitelistAll: false }).variablesJson,
+  ).toEqual(
+    makeTraceDetails(variables, { exceptVariableNames: privateVariablesArray })
       .variablesJson,
   );
 });
 
 test('original keys in variables match the modified keys', () => {
   const origKeys = Object.keys(variables);
+  const firstKey = origKeys[0];
+  // remove the first key
   const modifiedKeys = Object.keys(variables).slice(1);
+  // add a key
   modifiedKeys.push('new v');
 
   const modifier = (input: {
@@ -180,19 +204,25 @@ test('original keys in variables match the modified keys', () => {
       makeTraceDetails(variables, { valueModifier: modifier }).variablesJson,
     ).sort(),
   ).toEqual(origKeys.sort());
+
+  // expect empty string for keys removed by the custom modifier
+  expect(
+    makeTraceDetails(variables, { valueModifier: modifier }).variablesJson[
+      firstKey
+    ],
+  ).toEqual('');
 });
 
 /**
  * Tests for old privateVariables reporting option
  */
-
 test('test variableJson output for to-be-deprecated privateVariable option', () => {
-  // Case 1: privateVariables == False; same as makeTraceDetails
+  // Case 1: privateVariables == False; same as whitelist all
   expect(makeTraceDetailsLegacy({}, false)).toEqual(
-    makeTraceDetails({}, { always: false }),
+    makeTraceDetails({}, { whitelistAll: false }),
   );
   expect(makeTraceDetailsLegacy(variables, false)).toEqual(
-    makeTraceDetails(variables, { always: false }),
+    makeTraceDetails(variables, { whitelistAll: true }),
   );
 
   // Case 2: privateVariables is an Array; same as makeTraceDetails
@@ -200,25 +230,7 @@ test('test variableJson output for to-be-deprecated privateVariable option', () 
   expect(
     makeTraceDetailsLegacy(variables, privacyEnforcerArray).variablesJson,
   ).toEqual(
-    makeTraceDetails(variables, { privateVariableNames: privacyEnforcerArray })
+    makeTraceDetails(variables, { exceptVariableNames: privacyEnforcerArray })
       .variablesJson,
   );
-});
-
-test('original keys in variables match the modified keys', () => {
-  const origKeys = Object.keys(variables);
-  const modifiedKeys = Object.keys(variables).slice(1);
-  modifiedKeys.push('new v');
-
-  const enforcer = (input: Record<string, any>): Record<string, any> => {
-    let out: Record<string, any> = {};
-    Object.keys(modifiedKeys).map((name: string) => {
-      out[name] = 100;
-    });
-    return out;
-  };
-
-  expect(
-    Object.keys(makeTraceDetails(variables, enforcer).variablesJson).sort(),
-  ).toEqual(origKeys.sort());
 });
