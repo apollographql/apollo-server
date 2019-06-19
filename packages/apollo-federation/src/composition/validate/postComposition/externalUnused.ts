@@ -1,4 +1,10 @@
-import { GraphQLSchema, isObjectType, GraphQLError, Kind } from 'graphql';
+import {
+  GraphQLSchema,
+  isObjectType,
+  GraphQLError,
+  Kind,
+  FieldNode,
+} from 'graphql';
 
 import {
   findDirectivesOnTypeOrField,
@@ -8,6 +14,7 @@ import {
   findFieldsThatReturnType,
   parseSelections,
   isStringValueNode,
+  selectionIncludesField,
 } from '../../utils';
 
 /**
@@ -17,17 +24,17 @@ import {
 export const externalUnused = (schema: GraphQLSchema) => {
   const errors: GraphQLError[] = [];
   const types = schema.getTypeMap();
-  for (const [typeName, namedType] of Object.entries(types)) {
+  for (const [parentTypeName, parentType] of Object.entries(types)) {
     // Only object types have fields
-    if (!isObjectType(namedType)) continue;
+    if (!isObjectType(parentType)) continue;
     // If externals is populated, we need to look at each one and confirm
     // it is used
-    if (namedType.federation && namedType.federation.externals) {
-      const keySelections = namedType.federation.keys;
+    if (parentType.federation && parentType.federation.externals) {
+      const keySelections = parentType.federation.keys;
 
       // loop over every service that has extensions with @external
       for (const [serviceName, externalFieldsForService] of Object.entries(
-        namedType.federation.externals,
+        parentType.federation.externals,
       )) {
         const keysForService = keySelections && keySelections[serviceName];
         // for a single service, loop over the external fields.
@@ -41,7 +48,8 @@ export const externalUnused = (schema: GraphQLSchema) => {
                 .flat()
                 .find(
                   selectedField =>
-                    selectedField.name.value === externalFieldName,
+                    (selectedField as FieldNode).name.value ===
+                    externalFieldName,
                 ),
           );
           if (hasMatchingKeyOnType) continue;
@@ -65,7 +73,7 @@ export const externalUnused = (schema: GraphQLSchema) => {
           */
           const hasMatchingProvidesOnAnotherType = findFieldsThatReturnType({
             schema,
-            typeToFind: namedType,
+            typeToFind: parentType,
           }).some(field => {
             const directivesOnField = findDirectivesOnTypeOrField(
               field.astNode,
@@ -95,8 +103,61 @@ export const externalUnused = (schema: GraphQLSchema) => {
 
           if (hasMatchingProvidesOnAnotherType) continue;
 
+          /**
+           * @external fields can be selected by subfields of a selection on another type
+           *
+           * For example, with these defs, `canWrite` is marked as external and is
+           * referenced by a selection set inside the @requires of User.isAdmin
+           *
+           *    extend type User @key(fields: "id") {
+           *      roles: AccountRoles!
+           *      isAdmin: Boolean! @requires(fields: "roles { canWrite permission { status } }")
+           *    }
+           *    extend type AccountRoles {
+           *      canWrite: Boolean @external
+           *      permission: Permission @external
+           *    }
+           *
+           *    extend type Permission {
+           *      status: String @external
+           *    }
+           *
+           * So, we need to search for fields with requires, then parse the selection sets,
+           * and try to recursively find the external field's PARENT type, then the external field's name
+           */
+          const hasMatchingRequiresOnAnotherType = Object.values(
+            schema.getTypeMap(),
+          ).some(namedType => {
+            if (!isObjectType(namedType)) return false;
+            // for every object type, loop over its fields and find fields
+            // with requires directives
+            return Object.values(namedType.getFields()).some(field => {
+              const directivesOnField = findDirectivesOnTypeOrField(
+                field.astNode,
+                'requires',
+              );
+
+              return directivesOnField.some(directive => {
+                if (!directive.arguments) return false;
+                const selections =
+                  isStringValueNode(directive.arguments[0].value) &&
+                  parseSelections(directive.arguments[0].value.value);
+
+                if (!selections) return false;
+                return selectionIncludesField({
+                  selections: selections,
+                  selectionSetType: namedType,
+                  typeToFind: parentType,
+                  fieldToFind: externalFieldName,
+                });
+              });
+            });
+          });
+
+          if (hasMatchingRequiresOnAnotherType) continue;
+
           const hasMatchingProvidesOrRequiresOnType = Object.values(
-            namedType.getFields(),
+            parentType.getFields(),
           ).some(maybeProvidesField => {
             const fieldOwner =
               maybeProvidesField.federation &&
@@ -120,12 +181,12 @@ export const externalUnused = (schema: GraphQLSchema) => {
               hasMatchingFieldInDirectives({
                 directives: providesDirectives,
                 fieldNameToMatch: externalFieldName,
-                namedType,
+                namedType: parentType,
               }) ||
               hasMatchingFieldInDirectives({
                 directives: requiresDirectives,
                 fieldNameToMatch: externalFieldName,
-                namedType,
+                namedType: parentType,
               })
             );
           });
@@ -135,7 +196,11 @@ export const externalUnused = (schema: GraphQLSchema) => {
           errors.push(
             errorWithCode(
               'EXTERNAL_UNUSED',
-              logServiceAndType(serviceName, typeName, externalFieldName) +
+              logServiceAndType(
+                serviceName,
+                parentTypeName,
+                externalFieldName,
+              ) +
                 `is marked as @external but is not used by a @requires, @key, or @provides directive.`,
             ),
           );

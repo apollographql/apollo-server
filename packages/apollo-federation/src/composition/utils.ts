@@ -19,6 +19,9 @@ import {
   GraphQLObjectType,
   getNamedType,
   GraphQLField,
+  SelectionNode,
+  isEqualType,
+  FieldNode,
 } from 'graphql';
 import Maybe from 'graphql/tsutils/Maybe';
 import { ExternalFieldDefinition } from './types';
@@ -188,10 +191,10 @@ export function findTypesContainingFieldWithReturnType(
 
   const containingTypes: GraphQLObjectType[] = [];
   const types = schema.getTypeMap();
-  for (const [, namedType] of Object.entries(types)) {
+  for (const selectionSetType of Object.values(types)) {
     // Only object types have fields
-    if (!isObjectType(namedType)) continue;
-    const allFields = namedType.getFields();
+    if (!isObjectType(selectionSetType)) continue;
+    const allFields = selectionSetType.getFields();
 
     // only push types that have a field which returns the returnType
     Object.values(allFields).forEach(field => {
@@ -204,6 +207,12 @@ export function findTypesContainingFieldWithReturnType(
   return containingTypes;
 }
 
+/**
+ * Used for finding a field on the `schema` that returns `typeToFind`
+ *
+ * Used in validation of external directives to find uses of a field in a
+ * `@provides` on another type.
+ */
 export function findFieldsThatReturnType({
   schema,
   typeToFind,
@@ -216,11 +225,11 @@ export function findFieldsThatReturnType({
   const fieldsThatReturnType: GraphQLField<any, any>[] = [];
   const types = schema.getTypeMap();
 
-  for (const [, namedType] of Object.entries(types)) {
+  for (const selectionSetType of Object.values(types)) {
     // for our purposes, only object types have fields that we care about.
-    if (!isObjectType(namedType)) continue;
+    if (!isObjectType(selectionSetType)) continue;
 
-    const fieldsOnNamedType = namedType.getFields();
+    const fieldsOnNamedType = selectionSetType.getFields();
 
     // push fields that have return `typeToFind`
     Object.values(fieldsOnNamedType).forEach(field => {
@@ -231,4 +240,72 @@ export function findFieldsThatReturnType({
     });
   }
   return fieldsThatReturnType;
+}
+
+/**
+ * Searches recursively to see if a selection set includes references to
+ * `typeToFind.fieldToFind`.
+ *
+ * Used in validation of external fields to find where/if a field is referenced
+ * in a nested selection set for `@requires`
+ *
+ * For every selection, look at the root of the selection's type.
+ * 1. If it's the type we're looking for, check its fields.
+ *    Return true if field matches. Skip to step 3 if not
+ * 2. If it's not the type we're looking for, skip to step 3
+ * 3. Get the return type for each subselection and run this function on the subselection.
+ */
+export function selectionIncludesField({
+  selections,
+  selectionSetType,
+  typeToFind,
+  fieldToFind,
+}: {
+  selections: readonly SelectionNode[];
+  selectionSetType: GraphQLObjectType; // type which applies to `selections`
+  typeToFind: GraphQLObjectType; // type where the `@external` lives
+  fieldToFind: string;
+}): boolean {
+  for (const selection of selections as FieldNode[]) {
+    const selectionName: string = selection.name.value;
+
+    // if the selected field matches the fieldname we're looking for,
+    // and its type is correct, we're done. Return true;
+    if (
+      selectionName === fieldToFind &&
+      isEqualType(selectionSetType, typeToFind)
+    )
+      return true;
+
+    // if the field selection has a subselection, check each field recursively
+
+    // check to make sure the parent type contains the field
+    const typeIncludesField =
+      selectionName &&
+      Object.keys(selectionSetType.getFields()).includes(selectionName);
+    if (!selectionName || !typeIncludesField) return false;
+
+    // get the return type of the selection
+    const returnType = getNamedType(
+      selectionSetType.getFields()[selectionName].type,
+    );
+    if (!returnType || !isObjectType(returnType)) return false;
+    const subselections =
+      selection.selectionSet && selection.selectionSet.selections;
+
+    // using the return type of a given selection and all the subselections,
+    // recursively search for matching selections. typeToFind and fieldToFind
+    // stay the same
+    if (subselections) {
+      return selectionIncludesField({
+        selectionSetType: returnType,
+        selections: subselections,
+        typeToFind,
+        fieldToFind,
+      });
+    } else {
+      return false;
+    }
+  }
+  return false;
 }
