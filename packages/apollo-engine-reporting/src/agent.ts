@@ -37,7 +37,7 @@ export type VariableValueOptions =
       ) => Record<string, any>;
     }
   | { exceptVariableNames: Array<String> }
-  | { whitelistAll: boolean };
+  | { safelistAll: boolean };
 
 export type GenerateClientInfo<TContext> = (
   requestContext: GraphQLRequestContext<TContext>,
@@ -96,7 +96,8 @@ export interface EngineReportingOptions<TContext> {
    */
   reportErrorFunction?: (err: Error) => void;
   /**
-   * [TO-BE-DEPRECATED] A case-sensitive list of names of variables whose values should
+   * [TO-BE-DEPRECATED] Use sendVariableValues
+   * A case-sensitive list of names of variables whose values should
    * not be sent to Apollo servers, or 'true' to leave out all variables. In the former
    * case, the report will indicate that each private variable was redacted; in
    * the latter case, no variables are sent at all.
@@ -106,13 +107,13 @@ export interface EngineReportingOptions<TContext> {
    * By default, Apollo Server does not send the values of any GraphQL variables to Apollo's servers, because variable
    * values often contain the private data of your app's users. If you'd like variable values to be included in traces, set this option.
    * This option can take several forms:
-   * - { whitelistAll: ... }: false to blocklist, or true to whitelist all variable values
+   * - { safelistAll: ... }: false to blocklist, or true to safelist all variable values
    * - { valueModifier: ... }: a custom function for modifying variable values
    * - { exceptVariableNames: ... }: a case-sensitive list of names of variables whose values should not be sent to Apollo servers
    *
    * Defaults to blocklisting all variable values if both this parameter and
    * the to-be-deprecated `privateVariables` are not set. The report will also
-   * indicate each private variable key redacted by { whitelistAll: false } or { exceptVariableNames: [...] }.
+   * indicate each private variable key redacted by { safelistAll: false } or { exceptVariableNames: [...] }.
    *
    * TODO(helen): Add new flag to the trace details (and modify the protobuf message structure) to indicate the type of modification. Then, add the following description to the docs:
    * "The report will indicate that variable values were modified by a custom function, or will list all private variables redacted."
@@ -120,6 +121,19 @@ export interface EngineReportingOptions<TContext> {
    */
   sendVariableValues?: VariableValueOptions;
   /**
+   * By default, Apollo Server does not send the list of HTTP headers and values to
+   * Apollo's servers, to protect private data of your app's users. If you'd like this information included in traces,
+   * set this option. This option can take two forms:
+   *
+   * - {except: Array<String>} A case-insensitive list of names of HTTP headers whose values should not be
+   * sent to Apollo servers
+   * - {safelistAll: 'true'/'false'} to include or leave out all HTTP headers.
+   *
+   * Unlike with sendVariableValues, names of dropped headers are not reported.
+   */
+  sendHeaders?: { except: Array<String> } | { safelistAll: boolean };
+  /**
+   * [TO-BE-DEPRECATED] Use sendHeaders
    * A case-insensitive list of names of HTTP headers whose values should not be
    * sent to Apollo servers, or 'true' to leave out all HTTP headers. Unlike
    * with privateVariables, names of dropped headers are not reported.

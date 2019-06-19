@@ -1,4 +1,4 @@
-import { Request, WithRequired } from 'apollo-server-env';
+import { Request, Headers, WithRequired } from 'apollo-server-env';
 
 import {
   GraphQLResolveInfo,
@@ -18,7 +18,6 @@ import {
   VariableValueOptions,
 } from './agent';
 import { GraphQLRequestContext } from 'apollo-server-core/dist/requestPipelineAPI';
-// import { operation } from 'retry';
 
 const clientNameHeaderKey = 'apollographql-client-name';
 const clientReferenceIdHeaderKey = 'apollographql-client-reference-id';
@@ -93,32 +92,20 @@ export class EngineReportingExtension<TContext = any>
       host: null,
       path: null,
     });
-    if (this.options.privateHeaders !== true) {
-      for (const [key, value] of o.request.headers) {
-        if (
-          this.options.privateHeaders &&
-          Array.isArray(this.options.privateHeaders) &&
-          // We assume that most users only have a few private headers, or will
-          // just set privateHeaders to true; we can change this linear-time
-          // operation if it causes real performance issues.
-          this.options.privateHeaders.some(privateHeader => {
-            // Headers are case-insensitive, and should be compared as such.
-            return privateHeader.toLowerCase() === key.toLowerCase();
-          })
-        ) {
-          continue;
-        }
 
-        switch (key) {
-          case 'authorization':
-          case 'cookie':
-          case 'set-cookie':
-            break;
-          default:
-            this.trace.http!.requestHeaders![key] = new Trace.HTTP.Values({
-              value: [value],
-            });
-        }
+    if (this.options.sendHeaders || this.options.privateHeaders != null) {
+      if (this.options.sendHeaders) {
+        makeHTTPRequestHeaders(
+          this.trace.http,
+          o.request.headers,
+          this.options.sendHeaders,
+        );
+      } else if (this.options.privateHeaders != null) {
+        makeHTTPRequestHeadersLegacy(
+          this.trace.http,
+          o.request.headers,
+          this.options.privateHeaders,
+        );
       }
 
       if (o.requestContext.metrics.persistedQueryHit) {
@@ -134,7 +121,7 @@ export class EngineReportingExtension<TContext = any>
         this.options.sendVariableValues !== undefined ||
         this.options.privateVariables == null
       ) {
-        // The new option maskVariableValues will take precendence over the deprecated privateVariables option
+        // The new option sendVariableValues will take precendence over the deprecated privateVariables option
         this.trace.details = makeTraceDetails(
           o.variables,
           this.options.sendVariableValues,
@@ -414,10 +401,10 @@ function defaultGenerateClientInfo({ request }: GraphQLRequestContext) {
 // Creates trace details from request variables, given a specification for modifying
 // values of private or sensitive variables.
 // The details include the variables in the request, TODO(helen): and the modifier type.
-// If maskVariableValues is a bool or Array, it will act similarly to
+// If sendVariableValues is {safelistAll: bool} or {exceptVariableNames: Array}, it will act similarly to
 // to the to-be-deprecated options.privateVariables, except that the redacted variable
 // names will still be visible in the UI when 'true.'
-// If maskVariableValues is null, the policy will default to the 'true' case.
+// If sendVariableValues is null, we default to the safeListAll = false case.
 export function makeTraceDetails(
   variables: Record<string, any>,
   sendVariableValues?: VariableValueOptions,
@@ -446,8 +433,8 @@ export function makeTraceDetails(
   Object.keys(variablesToRecord).forEach(name => {
     if (
       sendVariableValues == null ||
-      ('whitelistAll' in sendVariableValues &&
-        !sendVariableValues.whitelistAll) ||
+      ('safelistAll' in sendVariableValues &&
+        !sendVariableValues.safelistAll) ||
       ('exceptVariableNames' in sendVariableValues &&
         // We assume that most users will have only a few private variables,
         // or will just set privateVariables to true; we can change this
@@ -484,13 +471,13 @@ export function makeTraceDetails(
 export function makeTraceDetailsLegacy(
   variables: Record<string, any>,
   privateVariables: Array<String> | boolean,
-): Trace.Details | undefined {
+): Trace.Details {
   const newArguments = Array.isArray(privateVariables)
     ? {
         exceptVariableNames: privateVariables,
       }
     : {
-        whitelistAll: !privateVariables,
+        safelistAll: !privateVariables,
       };
   return makeTraceDetails(variables, newArguments);
 }
@@ -506,4 +493,57 @@ function cleanModifiedVariables(
     cleanedVariables[name] = modifiedVariables[name];
   });
   return cleanedVariables;
+}
+
+export function makeHTTPRequestHeaders(
+  http: Trace.IHTTP,
+  headers: Headers,
+  sendHeaders?: { except: Array<String> } | { safelistAll: boolean },
+): void {
+  if (sendHeaders == null) {
+    return;
+  }
+  if ('safelistAll' in sendHeaders && !sendHeaders.safelistAll) {
+    return;
+  }
+  for (const [key, value] of headers) {
+    if (
+      sendHeaders &&
+      'except' in sendHeaders &&
+      // We assume that most users only have a few private headers, or will
+      // just set privateHeaders to true; we can change this linear-time
+      // operation if it causes real performance issues.
+      sendHeaders.except.some(exceptHeader => {
+        // Headers are case-insensitive, and should be compared as such.
+        return exceptHeader.toLowerCase() === key.toLowerCase();
+      })
+    ) {
+      continue;
+    }
+
+    switch (key) {
+      case 'authorization':
+      case 'cookie':
+      case 'set-cookie':
+        break;
+      default:
+        http!.requestHeaders![key] = new Trace.HTTP.Values({
+          value: [value],
+        });
+    }
+  }
+}
+
+// Creates request headers when privateHeaders [DEPRECATED] was previously set.
+// Wraps privateHeaders into an object that can be passed into makeTraceDetails(),
+// which handles handles the new reporting option sendHeaders.
+export function makeHTTPRequestHeadersLegacy(
+  http: Trace.IHTTP,
+  headers: Headers,
+  privateHeaders: Array<String> | boolean,
+): void {
+  const sendHeaders = Array.isArray(privateHeaders)
+    ? { except: privateHeaders }
+    : { safelistAll: !privateHeaders };
+  makeHTTPRequestHeaders(http, headers, sendHeaders);
 }
