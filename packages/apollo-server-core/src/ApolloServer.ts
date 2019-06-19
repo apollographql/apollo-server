@@ -323,7 +323,7 @@ export class ApolloServerBase {
 
     // The schema hash is a string representation of the shape of the schema
     // it is used for reporting and can be used for a cache key if needed
-    this.schemaHash = generateSchemaHash(this.schema);
+    this.schemaHash = generateSchemaHash(this.schema, parseOptions);
 
     // Note: doRunQuery will add its own extensions if you set tracing,
     // or cacheControl.

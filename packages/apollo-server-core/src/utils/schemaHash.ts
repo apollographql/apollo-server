@@ -1,3 +1,4 @@
+import { GraphQLParseOptions } from 'graphql-tools';
 import { parse } from 'graphql/language';
 import { execute, ExecutionResult } from 'graphql/execution';
 import { getIntrospectionQuery, IntrospectionSchema } from 'graphql/utilities';
@@ -5,9 +6,12 @@ import stableStringify from 'fast-json-stable-stringify';
 import { GraphQLSchema } from 'graphql/type';
 import createSHA from './createSHA';
 
-export function generateSchemaHash(schema: GraphQLSchema): string {
+export function generateSchemaHash(
+  schema: GraphQLSchema,
+  parseOptions: GraphQLParseOptions,
+): string {
   const introspectionQuery = getIntrospectionQuery();
-  const documentAST = parse(introspectionQuery);
+  const documentAST = parse(introspectionQuery, parseOptions);
   const result = execute(schema, documentAST) as ExecutionResult;
 
   // If the execution of an introspection query results in a then-able, it
