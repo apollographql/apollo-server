@@ -145,7 +145,7 @@ export const externalUnused = (schema: GraphQLSchema) => {
 
                 if (!selections) return false;
                 return selectionIncludesField({
-                  selections: selections,
+                  selections,
                   selectionSetType: namedType,
                   typeToFind: parentType,
                   fieldToFind: externalFieldName,
