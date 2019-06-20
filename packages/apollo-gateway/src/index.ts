@@ -19,6 +19,7 @@ import {
 } from './executeQueryPlan';
 
 import { getServiceDefinitionsFromRemoteEndpoint } from './loadServicesFromRemoteEndpoint';
+import { getServiceDefinitionsFromStorage } from './loadServicesFromStorage';
 
 import { serializeQueryPlan, QueryPlan } from './QueryPlan';
 import { GraphQLDataSource } from './datasources/types';
@@ -42,14 +43,24 @@ export interface GatewayConfigBase {
   serviceList?: ServiceEndpointDefinition[];
 }
 
+export interface HostedGatewayConfig extends GatewayConfigBase {
+  secret: string;
+  tag?: string;
+  federationVersion?: number;
+}
+
 export interface LocalGatewayConfig extends GatewayConfigBase {
   localServiceList: ServiceDefinition[];
 }
 
-export type GatewayConfig = GatewayConfigBase | LocalGatewayConfig;
+export type GatewayConfig = GatewayConfigBase | LocalGatewayConfig | HostedGatewayConfig;
 
 function isLocalConfig(config: GatewayConfig): config is LocalGatewayConfig {
   return 'localServiceList' in config;
+}
+
+function isHostedConfig(config: GatewayConfig): config is HostedGatewayConfig {
+  return 'secret' in config;
 }
 
 export class ApolloGateway implements GraphQLService {
@@ -134,8 +145,8 @@ export class ApolloGateway implements GraphQLService {
       this.serviceMap[serviceDef.name] = this.config.buildService
         ? this.config.buildService(serviceDef)
         : new RemoteGraphQLDataSource({
-            url: serviceDef.url,
-          });
+          url: serviceDef.url,
+        });
     }
   }
 
@@ -143,21 +154,34 @@ export class ApolloGateway implements GraphQLService {
     config: GatewayConfig,
   ): Promise<[ServiceDefinition[], boolean]> {
     if (isLocalConfig(config)) return [config.localServiceList, false];
-    if (!config.serviceList)
+
+    if (config.serviceList) {
+      const [
+        remoteServices,
+        isNewService,
+      ] = await getServiceDefinitionsFromRemoteEndpoint({
+        serviceList: config.serviceList,
+      });
+      this.createServices(remoteServices);
+      return [remoteServices, isNewService];
+    }
+    else if (isHostedConfig(config)) {
+      const [
+        remoteServices,
+        isNewService,
+      ] = await getServiceDefinitionsFromStorage({
+        secret: config.secret,
+        graphVariant: config.tag || 'current',
+        federationVersion: config.federationVersion!,
+      });
+      this.createServices(remoteServices);
+      return [remoteServices, isNewService];
+    }
+    else {
       throw new Error(
-        'The gateway requires a service list to be provided in the config',
+        'The gateway requires a service list or secret to be provided in the config',
       );
-
-    const [
-      remoteServices,
-      isNewService,
-    ] = await getServiceDefinitionsFromRemoteEndpoint({
-      serviceList: config.serviceList,
-    });
-
-    this.createServices(remoteServices);
-
-    return [remoteServices, isNewService];
+    }
   }
 
   public executor = async <TContext>(
