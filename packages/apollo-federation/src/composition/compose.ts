@@ -4,7 +4,6 @@ import {
   GraphQLSchema,
   extendSchema,
   Kind,
-  TypeDefinitionNode,
   TypeExtensionNode,
   isTypeDefinitionNode,
   isTypeExtensionNode,
@@ -33,13 +32,14 @@ import {
   ServiceName,
   ExternalFieldDefinition,
   ServiceNameToKeyDirectivesMap,
+  FederatedTypeDefinitionNode,
 } from './types';
 import { validateSDL } from 'graphql/validation/validate';
 import { compositionRules } from './rules';
 
 // Map of all definitions to eventually be passed to extendSchema
 interface DefinitionsMap {
-  [name: string]: TypeDefinitionNode[];
+  [name: string]: FederatedTypeDefinitionNode[];
 }
 // Map of all extensions to eventually be passed to extendSchema
 interface ExtensionsMap {
@@ -157,9 +157,9 @@ export function buildMapsFromServiceList(serviceList: ServiceDefinition[]) {
          * take precedence). If not, create the definitions array and add it to the definitionsMap.
          */
         if (definitionsMap[typeName]) {
-          definitionsMap[typeName].push(definition);
+          definitionsMap[typeName].push({ ...definition, serviceName });
         } else {
-          definitionsMap[typeName] = [definition];
+          definitionsMap[typeName] = [{ ...definition, serviceName }];
         }
       } else if (isTypeExtensionNode(definition)) {
         const typeName = definition.name.value;
@@ -240,6 +240,7 @@ export function buildMapsFromServiceList(serviceList: ServiceDefinition[]) {
           kind: Kind.OBJECT_TYPE_DEFINITION,
           name: { kind: Kind.NAME, value: extensionTypeName },
           fields: [],
+          serviceName: null,
         },
       ];
 
@@ -266,6 +267,7 @@ export function buildSchemaFromDefinitionsAndExtensions({
   extensionsMap: ExtensionsMap;
 }) {
   let errors: GraphQLError[] | undefined = undefined;
+
   let schema = new GraphQLSchema({
     query: undefined,
     directives: [...specifiedDirectives, ...federationDirectives],
