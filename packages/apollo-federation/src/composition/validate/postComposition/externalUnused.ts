@@ -1,10 +1,4 @@
-import {
-  GraphQLSchema,
-  isObjectType,
-  GraphQLError,
-  Kind,
-  FieldNode,
-} from 'graphql';
+import { GraphQLSchema, isObjectType, GraphQLError, Kind } from 'graphql';
 
 import {
   findDirectivesOnTypeOrField,
@@ -30,27 +24,24 @@ export const externalUnused = (schema: GraphQLSchema) => {
     // If externals is populated, we need to look at each one and confirm
     // it is used
     if (parentType.federation && parentType.federation.externals) {
-      const keySelections = parentType.federation.keys;
-
       // loop over every service that has extensions with @external
       for (const [serviceName, externalFieldsForService] of Object.entries(
         parentType.federation.externals,
       )) {
-        const keysForService = keySelections && keySelections[serviceName];
         // for a single service, loop over the external fields.
         for (const { field: externalField } of externalFieldsForService) {
           const externalFieldName = externalField.name.value;
 
           // check the selected fields of every @key provided by `serviceName`
           const hasMatchingKeyOnType = Boolean(
-            keysForService &&
-              keysForService
-                .flat()
-                .find(
-                  selectedField =>
-                    (selectedField as FieldNode).name.value ===
-                    externalFieldName,
-                ),
+            hasMatchingFieldInDirectives({
+              directives: findDirectivesOnTypeOrField(
+                parentType.astNode,
+                'key',
+              ),
+              fieldNameToMatch: externalFieldName,
+              namedType: parentType,
+            }),
           );
           if (hasMatchingKeyOnType) continue;
 
