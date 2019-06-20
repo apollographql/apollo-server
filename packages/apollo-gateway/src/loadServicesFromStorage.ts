@@ -1,6 +1,7 @@
 import { CachedFetcher } from './cachedFetcher';
 import { ServiceDefinition } from '@apollo/federation';
 import { parse } from 'graphql';
+import createSHA from './utilities/createSHA';
 
 export interface LinkFileResult {
   configPath: string;
@@ -30,32 +31,49 @@ export interface ConfigFileResult {
 }
 
 export const envOverrideOperationManifest = 'APOLLO_PARTIAL_SCHEMA_BASE_URL';
+export const envOverrideStorageSecretBaseUrl = 'APOLLO_STORAGE_SECRET_BASE_URL';
+
+const urlFromEnvOrDefault = (envKey: string, fallback: string) =>
+  (process.env[envKey] || fallback).replace(/\/$/, '');
 
 // Generate and cache our desired operation manifest URL.
-const urlPartialSchemaBase = (() => {
-  const desiredUrl =
-    process.env[envOverrideOperationManifest] ||
-    'https://storage.googleapis.com/engine-partial-schema-prod/';
+const urlPartialSchemaBase = urlFromEnvOrDefault(
+  envOverrideOperationManifest,
+  'https://storage.googleapis.com/engine-partial-schema-prod/',
+);
 
-  // Make sure it has NO trailing slash.
-  return desiredUrl.replace(/\/$/, '');
-})();
+export const urlStorageSecretBase: string = urlFromEnvOrDefault(
+  envOverrideStorageSecretBaseUrl,
+  'https://storage.googleapis.com/engine-partial-schema-prod/',
+);
 
 const fetcher = new CachedFetcher();
 let serviceDefinitionList: ServiceDefinition[] = [];
 
+function getStorageSecretUrl(apiKey: string): string {
+  const graphId = apiKey.split(':', 2)[1];
+  const apiKeyHash = createSHA('sha512')
+    .update(apiKey)
+    .digest('hex');
+  return `${urlStorageSecretBase}/${graphId}/storage-secret/${apiKeyHash}.json`;
+}
+
+async function fetchStorageSecret(apiKey: string): Promise<string> {
+  const storageSecretUrl = getStorageSecretUrl(apiKey);
+  const response = await fetcher.fetch(storageSecretUrl);
+  return JSON.parse(response.result);
+}
+
 export async function getServiceDefinitionsFromStorage({
-  secret,
+  apiKey,
   graphVariant,
   federationVersion = 1,
 }: {
-  secret: string;
+  apiKey: string;
   graphVariant: string;
   federationVersion: number;
 }): Promise<[ServiceDefinition[], boolean]> {
-  if (!secret) {
-    throw new Error('No secret provided');
-  }
+  const secret = await fetchStorageSecret(apiKey);
 
   if (!graphVariant) {
     console.warn('No graphVariant specified, defaulting to "current".');

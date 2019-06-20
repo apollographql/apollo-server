@@ -33,18 +33,21 @@ export interface GraphQLService {
 
 export type ServiceEndpointDefinition = Pick<ServiceDefinition, 'name' | 'url'>;
 
-export interface GatewayConfigBase {
+interface GatewayConfigBase {
   debug?: boolean;
   // TODO: expose the query plan in a more flexible JSON format in the future
   // and remove this config option in favor of `exposeQueryPlan`. Playground
   // should cutover to use the new option when it's built.
   __exposeQueryPlanExperimental?: boolean;
   buildService?: (definition: ServiceEndpointDefinition) => GraphQLDataSource;
-  serviceList?: ServiceEndpointDefinition[];
+}
+
+export interface ConcreteGatewayConfig extends GatewayConfigBase {
+  serviceList: ServiceEndpointDefinition[];
 }
 
 export interface HostedGatewayConfig extends GatewayConfigBase {
-  secret: string;
+  apiKey?: string;
   tag?: string;
   federationVersion?: number;
 }
@@ -53,15 +56,25 @@ export interface LocalGatewayConfig extends GatewayConfigBase {
   localServiceList: ServiceDefinition[];
 }
 
-export type GatewayConfig = GatewayConfigBase | LocalGatewayConfig | HostedGatewayConfig;
+export type GatewayConfig =
+  | ConcreteGatewayConfig
+  | LocalGatewayConfig
+  | HostedGatewayConfig;
 
 function isLocalConfig(config: GatewayConfig): config is LocalGatewayConfig {
   return 'localServiceList' in config;
 }
 
 function isHostedConfig(config: GatewayConfig): config is HostedGatewayConfig {
-  return 'secret' in config;
+  return !(isLocalConfig(config) || isConcreteConfig(config));
 }
+
+function isConcreteConfig(
+  config: GatewayConfig,
+): config is ConcreteGatewayConfig {
+  return 'serviceList' in config;
+}
+
 export type SchemaChangeCallback = (options: {
   schema: GraphQLSchema;
   executor: GraphQLExecutor;
@@ -101,6 +114,15 @@ export class ApolloGateway implements GraphQLService {
 
     if (isLocalConfig(config)) {
       this.createSchema(config.localServiceList);
+    }
+
+    if (isHostedConfig(config)) {
+      const apiKey = config.apiKey || process.env['ENGINE_API_KEY'];
+      if (!apiKey) {
+        throw new Error(
+          'The gateway requires either a serviceList, localServiceList, or apiKey to be provided in the config, or ENGINE_API_KEY to be defined in the environment',
+        );
+      }
     }
 
     this.initializeQueryPlanStore();
@@ -185,7 +207,7 @@ export class ApolloGateway implements GraphQLService {
     for (const serviceDef of services) {
       if (!serviceDef.url && !isLocalConfig(this.config)) {
         throw new Error(
-          `Service defintion for service ${serviceDef.name} is missing a url`,
+          `Service definition for service ${serviceDef.name} is missing a url`,
         );
       }
       this.serviceMap[serviceDef.name] = this.config.buildService
@@ -201,33 +223,18 @@ export class ApolloGateway implements GraphQLService {
   ): Promise<[ServiceDefinition[], boolean]> {
     if (isLocalConfig(config)) return [config.localServiceList, false];
 
-    if (config.serviceList) {
-      const [
-        remoteServices,
-        isNewService,
-      ] = await getServiceDefinitionsFromRemoteEndpoint({
+    const [remoteServices, isNewService] = isConcreteConfig(config)
+      ? await getServiceDefinitionsFromRemoteEndpoint({
         serviceList: config.serviceList,
-      });
-      this.createServices(remoteServices);
-      return [remoteServices, isNewService];
-    }
-    else if (isHostedConfig(config)) {
-      const [
-        remoteServices,
-        isNewService,
-      ] = await getServiceDefinitionsFromStorage({
-        secret: config.secret,
+      })
+      : await getServiceDefinitionsFromStorage({
+        apiKey: config.apiKey || process.env['ENGINE_API_KEY']!,
         graphVariant: config.tag || 'current',
         federationVersion: config.federationVersion!,
       });
-      this.createServices(remoteServices);
-      return [remoteServices, isNewService];
-    }
-    else {
-      throw new Error(
-        'The gateway requires a service list or secret to be provided in the config',
-      );
-    }
+
+    this.createServices(remoteServices);
+    return [remoteServices, isNewService];
   }
 
   public executor = async <TContext>(
