@@ -20,8 +20,8 @@
   },
   "dependencies": {
     "@apollo/federation": "file:../apollo-federation",
-    "apollo-env": "^0.5.0",
-    "apollo-graphql": "^0.3.0",
+    "apollo-env": "^0.5.1",
+    "apollo-graphql": "^0.3.2",
     "apollo-server-caching": "file:../apollo-server-caching",
     "apollo-server-core": "file:../apollo-server-core",
     "apollo-server-env": "file:../apollo-server-env",

@@ -36,6 +36,7 @@ directive @external on FIELD_DEFINITION
 directive @requires(fields: _FieldSet!) on FIELD_DEFINITION
 directive @provides(fields: _FieldSet!) on FIELD_DEFINITION
 directive @key(fields: _FieldSet!) on OBJECT
+directive @key(fields: _FieldSet!) on INTERFACE
 
 # this is an optional directive discussed below
 directive @extends on OBJECT
@@ -227,9 +228,10 @@ A new field must be added to the query root called `_entities`. This field must 
 
 ```graphql
 directive @key(fields: _FieldSet!) on OBJECT
+directive @key(fields: _FieldSet!) on INTERFACE
 ```
 
-The `@key` directive is used to indicate a combination of fields that can be used to uniquely identify and fetch an object.
+The `@key` directive is used to indicate a combination of fields that can be used to uniquely identify and fetch an object or interface.
 
 ```graphql
 type Product @key(fields: "upc") {

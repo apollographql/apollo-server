@@ -1,6 +1,6 @@
 {
   "name": "@apollo/federation",
-  "version": "0.6.3",
+  "version": "0.6.4",
   "description": "Apollo Federation Utilities",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -14,8 +14,8 @@
     "access": "public"
   },
   "dependencies": {
-    "apollo-env": "^0.5.0",
-    "apollo-graphql": "^0.3.0",
+    "apollo-env": "^0.5.1",
+    "apollo-graphql": "^0.3.2",
     "apollo-server-env": "file:../apollo-server-env"
   },
   "peerDependencies": {

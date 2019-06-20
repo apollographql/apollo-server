@@ -164,3 +164,49 @@ extend type Query {
 ```
 
 There is no need to explictly define `Query` or `Mutation` base types anywhere; Apollo automatically handles this for you.
+
+## Sharing Types
+
+Sometimes, Enum or Scalar types are needed in multiple services. Rather than having a single service "own" those types, all services that use them are expected to share ownership of those types.
+
+Defining the same Enum or Scalar across services is supported **as long as the definitions are all identical**.
+
+For Enum types, all values must match across services. **Even if a service doesn't use all values in an Enum, they still must be defined in the schema**. Failure to include all enum values in all services that use the Enum will result in a validation error when building the federated schema.
+
+For scalar values, it's important that services **share the same serialization and parsing logic**, since there is no way to validate that logic from the schema level by federation tooling.
+
+In the following example, the Product and User services both use the same ProductCategory enum and Date scalar.
+
+```graphql
+# Product Service
+scalar Date
+
+type Product @key(fields: "sku"){
+  sku: ID!
+  category: ProductCategory
+  dateCreated: Date
+}
+
+enum ProductCategory {
+  FURNITURE
+  BOOK
+  DIGITAL_DOWNLOAD
+}
+
+# User Service
+scalar Date
+
+type User @key(fields: "id"){
+  id: ID!
+  dateCreated: Date
+  favoriteCategory: ProductCategory
+}
+
+enum ProductCategory {
+  FURNITURE
+  BOOK
+  DIGITAL_DOWNLOAD
+}
+```
+
+
