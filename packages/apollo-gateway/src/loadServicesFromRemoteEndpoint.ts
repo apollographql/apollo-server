@@ -8,10 +8,10 @@ let serviceDefinitionMap: Map<string, string> = new Map();
 
 export async function getServiceDefinitionsFromRemoteEndpoint({
   serviceList,
-  headers = {}
+  headers = {},
 }: {
   serviceList: ServiceEndpointDefinition[];
-  headers?: HeadersInit
+  headers?: HeadersInit;
 }): Promise<[ServiceDefinition[], boolean]> {
   if (!serviceList || !serviceList.length) {
     throw new Error(
@@ -59,7 +59,7 @@ export async function getServiceDefinitionsFromRemoteEndpoint({
         .catch(error => {
           console.warn(
             `Encountered error when loading ${service.name} at ${
-            service.url
+              service.url
             }: ${error.message}`,
           );
           return false;

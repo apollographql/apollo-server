@@ -41,7 +41,7 @@ export interface GatewayConfigBase {
   __exposeQueryPlanExperimental?: boolean;
   buildService?: (definition: ServiceEndpointDefinition) => GraphQLDataSource;
   serviceList?: ServiceEndpointDefinition[];
-  introspectionHeaders?: HeadersInit
+  introspectionHeaders?: HeadersInit;
 }
 
 export interface LocalGatewayConfig extends GatewayConfigBase {
@@ -136,8 +136,8 @@ export class ApolloGateway implements GraphQLService {
       this.serviceMap[serviceDef.name] = this.config.buildService
         ? this.config.buildService(serviceDef)
         : new RemoteGraphQLDataSource({
-          url: serviceDef.url,
-        });
+            url: serviceDef.url,
+          });
     }
   }
 
@@ -155,7 +155,9 @@ export class ApolloGateway implements GraphQLService {
       isNewService,
     ] = await getServiceDefinitionsFromRemoteEndpoint({
       serviceList: config.serviceList,
-      ...(config.introspectionHeaders || {})
+      ...(config.introspectionHeaders
+        ? { headers: config.introspectionHeaders }
+        : {}),
     });
 
     this.createServices(remoteServices);
