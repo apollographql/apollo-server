@@ -104,25 +104,25 @@ npm install @apollo/gateway apollo-server graphql
 Now we can create a new service that acts as a gateway to the underlying microservices:
 
 ```javascript{2,4-9,12}
-const { ApolloServer } = require('apollo-server');
+const { ApolloServer } = require("apollo-server");
 const { ApolloGateway } = require("@apollo/gateway");
 
 const gateway = new ApolloGateway({
   serviceList: [
-    { name: 'accounts', url: 'http://localhost:4001' },
+    { name: "accounts", url: "http://localhost:4001/graphql" },
     // more services
   ],
 });
 
-(async () => {
-  const { schema, executor } = await gateway.load();
-
+const startServer = async () => {
+  const { schema, executor } = await gateway.load()
   const server = new ApolloServer({ schema, executor });
-
   server.listen().then(({ url }) => {
     console.log(`🚀 Server ready at ${url}`);
   });
-})();
+}
+
+startServer();
 ```
 
 In this example, we provide the `serviceList` option to the `ApolloGateway` constructor, which provides a name and endpoint for each of the federated services. The name (an arbitrary string) is primarily used for query planner output, error messages, and logging.
@@ -167,7 +167,7 @@ const gateway = new ApolloGateway({
   },
 });
 
-(async () => {
+const startServer = async () => {
   const { schema, executor } = await gateway.load();
 
   const server = new ApolloServer({
@@ -188,9 +188,46 @@ const gateway = new ApolloGateway({
   server.listen().then(({ url }) => {
     console.log(`🚀 Server ready at ${url}`);
   });
-})();
+};
+
+startServer();
 ```
 
 By leveraging the `buildService` function, we're able to customize how requests are sent to our federated services. In this example, we return a custom `RemoteGraphQLDataSource`. The datasource allows us to modify the outgoing request with information from the Apollo Server `context` before it's sent. Here, we're adding the `user-id` header to pass an authenticated user id to downstream services.
 
 To learn more about `buildService` or `RemoteGraphQLDataSource`, see the [API docs](/api/apollo-gateway/).
+
+## Polling for updates
+
+By default, the gateway will query it's microservices once, at initialization. However, adding support for polling updates is possible by adding a listener to the gateway's `onSchemaChange` event:
+
+```javascript{22-26}
+const { ApolloServer } = require("apollo-server");
+const { ApolloGateway } = require("@apollo/gateway");
+
+const gateway = new ApolloGateway({
+  serviceList: [
+    { name: "accounts", url: "http://localhost:4001/graphql" },
+    // more services
+  ],
+});
+
+let server;
+const startServer = async () => {
+  const { schema, executor } = await gateway.load()
+  server = new ApolloServer({ schema, executor });
+  server.listen().then(({ url }) => {
+    console.log(`🚀 Server ready at ${url}`);
+  });
+}
+
+startServer();
+
+gateway.onSchemaChange(async () => {
+  console.log("🔄 Restarting server due to downstream schema change")
+  if (server) await server.stop()
+  startServer()
+});
+```
+
+Here, we add an `onSchemaChange` event listener to the gateway that simply restarts the running server whenever the gateway detects a change in downstream schema.
