@@ -103,12 +103,11 @@ npm install @apollo/gateway apollo-server graphql
 
 Now we can create a new service that acts as a gateway to the underlying microservices:
 
-```javascript{2,4-9,12}
+```javascript
 const { ApolloServer } = require("apollo-server");
 const { createGateway } = require("@apollo/gateway");
 
-
-const startServer = async () => {
+(async () => {
   const gateway = await createGateway({
     serviceList: [
       { name: "accounts", url: "http://localhost:4001/graphql" },
@@ -119,9 +118,7 @@ const startServer = async () => {
   const server = new ApolloServer(gateway);
   const serverInfo = await server.listen();
   console.log(`🚀 Server ready at ${serverInfo.url}`);
-}
-
-startServer();
+})();
 ```
 
 In this example, we provide the `serviceList` option to the `createGateway` function, which provides a name and endpoint for each of the federated services. The name (an arbitrary string) is primarily used for query planner output, error messages, and logging.
@@ -145,11 +142,11 @@ When the gateway receives a new query, it generates a query plan that defines th
 ## Sharing context across services
 For existing services, it's likely that you've already implemented some form of authentication to convert a request into a user, or require some information passed to the service through request headers. `@apollo/gateway` makes it easy to reuse the context feature of Apollo Server to customize what information is sent to underlying services. Let's see what it looks like to pass user information along from the gateway to its services:
 
-```javascript{9-18,24-31}
+```javascript{10-19,24-32}
 import { ApolloServer } from 'apollo-server';
 const { createGateway, RemoteGraphQLDataSource } = require("@apollo/gateway");
 
-const startServer = async () => {
+(async () => {
   const gateway = createGateway({
     serviceList: [
       { name: "accounts", url: "http://localhost:4001/graphql" },
@@ -183,9 +180,7 @@ const startServer = async () => {
 
   const serverInfo = await server.listen();
   console.log(`🚀 Server ready at ${serverInfo.url}`);
-};
-
-startServer();
+})();
 ```
 
 By leveraging the `buildService` function, we're able to customize how requests are sent to our federated services. In this example, we return a custom `RemoteGraphQLDataSource`. The datasource allows us to modify the outgoing request with information from the Apollo Server `context` before it's sent. Here, we're adding the `user-id` header to pass an authenticated user id to downstream services.
