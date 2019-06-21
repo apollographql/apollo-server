@@ -40,6 +40,7 @@ interface GatewayConfigBase {
   // should cutover to use the new option when it's built.
   __exposeQueryPlanExperimental?: boolean;
   buildService?: (definition: ServiceEndpointDefinition) => GraphQLDataSource;
+  onSchemaChange?: SchemaChangeCallback;
 }
 
 export interface ConcreteGatewayConfig extends GatewayConfigBase {
@@ -90,7 +91,6 @@ export class ApolloGateway implements GraphQLService {
   protected logger: Logger;
   protected queryPlanStore?: InMemoryLRUCache<QueryPlan>;
   private pollingTimer?: NodeJS.Timer;
-  private schemaChangeListeners: Set<SchemaChangeCallback> = new Set();
 
   constructor(config: GatewayConfig) {
     this.config = {
@@ -126,6 +126,13 @@ export class ApolloGateway implements GraphQLService {
     }
 
     this.initializeQueryPlanStore();
+
+    if (config.onSchemaChange) {
+      if (!isLocalConfig(this.config)) {
+        this.logger.debug('Starting polling for schema changes');
+        this.startPollingServices();
+      }
+    }
   }
 
   public async load() {
@@ -165,26 +172,6 @@ export class ApolloGateway implements GraphQLService {
     this.isReady = true;
   }
 
-  public onSchemaChange(
-    schemaChangeCallback: SchemaChangeCallback,
-  ): Unsubscriber {
-    this.schemaChangeListeners.add(schemaChangeCallback);
-    if (this.schemaChangeListeners.size === 1) {
-      if (!isLocalConfig(this.config)) {
-        this.logger.debug('Starting polling for schema changes');
-        this.startPollingServices();
-      }
-    }
-
-    return () => {
-      this.schemaChangeListeners.delete(schemaChangeCallback);
-      if (this.schemaChangeListeners.size === 0 && this.pollingTimer) {
-        clearInterval(this.pollingTimer);
-        this.pollingTimer = undefined;
-      }
-    };
-  }
-
   private startPollingServices() {
     this.pollingTimer = setInterval(async () => {
       const [services, isNewSchema] = await this.loadServiceDefinitions(
@@ -197,9 +184,10 @@ export class ApolloGateway implements GraphQLService {
       if (this.queryPlanStore) this.queryPlanStore.flush();
       this.logger.debug('Gateway config has changed, updating schema');
       this.createSchema(services);
-      this.schemaChangeListeners.forEach(cb =>
-        cb({ schema: this.schema!, executor: this.executor }),
-      );
+      this.config.onSchemaChange!({
+        schema: this.schema!,
+        executor: this.executor,
+      });
     }, 10 * 1000);
   }
 
@@ -345,12 +333,9 @@ function wrapSchemaWithAliasResolver(schema: GraphQLSchema): GraphQLSchema {
 }
 
 export async function createGateway(
-  config: GatewayConfig & { onSchemaChange?: SchemaChangeCallback },
+  config: GatewayConfig,
 ): Promise<GraphQLService> {
   const gateway = new ApolloGateway(config);
-  if (config.onSchemaChange) {
-    gateway.onSchemaChange(config.onSchemaChange);
-  }
   await gateway.load();
   return gateway;
 }
