@@ -107,15 +107,16 @@ Now we can create a new service that acts as a gateway to the underlying microse
 const { ApolloServer } = require("apollo-server");
 const { createGateway } = require("@apollo/gateway");
 
-const gateway = createGateway({
-  serviceList: [
-    { name: "accounts", url: "http://localhost:4001/graphql" },
-    { name: "products", url: "http://localhost:4002/graphql" },
-  ]
-})
 
 const startServer = async () => {
-  const server = new ApolloServer(await gateway);
+  const gateway = await createGateway({
+    serviceList: [
+      { name: "accounts", url: "http://localhost:4001/graphql" },
+      { name: "products", url: "http://localhost:4002/graphql" },
+    ]
+  });
+
+  const server = new ApolloServer(gateway);
   const serverInfo = await server.listen();
   console.log(`🚀 Server ready at ${serverInfo.url}`);
 }
@@ -127,10 +128,10 @@ In this example, we provide the `serviceList` option to the `createGateway` func
 
 On startup, the gateway will fetch the service capabilities from the running servers and form an overall composed graph. It will accept incoming requests and create query plans which query the underlying services in the service list.
 
-> If there are any composition errors, the `gateway` promise will be rejected with a list of [validation errors](/federation/errors/).
+> If there are any composition errors, the `createGateway()` promise will be rejected with a list of [validation errors](/federation/errors/).
 
 #### Gateway initialization
-The call to `createGateway()` returns a `Promise` which resolves to a `GraphQLService`. This is intended to be passed into the constructor of `ApolloServer`.
+The call to `createGateway()` returns a `Promise` which resolves to a `GraphQLService`. This is intended to be passed into the constructor of `ApolloServer`. It has two primary components:
 * The `schema` is the final, composed schema which represents all services.
 * The `executor` handles incoming requests. It uses the query planner to manage the various requests to our services that are necessary to construct the final result.
 
@@ -144,30 +145,30 @@ When the gateway receives a new query, it generates a query plan that defines th
 ## Sharing context across services
 For existing services, it's likely that you've already implemented some form of authentication to convert a request into a user, or require some information passed to the service through request headers. `@apollo/gateway` makes it easy to reuse the context feature of Apollo Server to customize what information is sent to underlying services. Let's see what it looks like to pass user information along from the gateway to its services:
 
-```javascript{9-18,27-36}
+```javascript{9-18,24-31}
 import { ApolloServer } from 'apollo-server';
 const { createGateway, RemoteGraphQLDataSource } = require("@apollo/gateway");
 
-const gateway = createGateway({
-  serviceList: [
-    { name: "accounts", url: "http://localhost:4001/graphql" },
-    { name: "products", url: "http://localhost:4002/graphql" },
-  ],
-  buildService({ name, url }) {
-    return new RemoteGraphQLDataSource({
-      url,
-      willSendRequest({ request, context }) {
-        // pass the user's id from the context to underlying services
-        // as a header called `user-id`
-        request.http.headers.set('user-id', context.userId);
-      },
-    });
-  },
-})
-
 const startServer = async () => {
+  const gateway = createGateway({
+    serviceList: [
+      { name: "accounts", url: "http://localhost:4001/graphql" },
+      { name: "products", url: "http://localhost:4002/graphql" },
+    ],
+    buildService({ name, url }) {
+      return new RemoteGraphQLDataSource({
+        url,
+        willSendRequest({ request, context }) {
+          // pass the user's id from the context to underlying services
+          // as a header called `user-id`
+          request.http.headers.set('user-id', context.userId);
+        },
+      });
+    },
+  })
+
   const server = new ApolloServer({
-    ...(await gateway),
+    ...gateway,
     context: ({ req }) => {
       // get the user token from the headers
       const token = req.headers.authorization || '';
@@ -218,4 +219,4 @@ const restartServer = async () => {
 restartServer();
 ```
 
-Here, we add an `onSchemaChange` event listener to the gateway that simply restarts the running server whenever the gateway detects a change in downstream schema.
+Here, we add an `onSchemaChange` event listener to the gateway that simply restarts the running server whenever the gateway detects a change in downstream schema. Note that we have moved the call to `createGateway` such that only one gateway is created.
