@@ -32,7 +32,7 @@ apollo service:push       \
 
 > Each service needs a unique name, this is how you will identify the service for schema updates
 
-To later modify hosted service definitions, simply rerun the `apollo service:push` command with the appropriate URL and service name.
+Modify hosted service definitions by rerunning the `apollo service:push` command with the appropriate URL and service name. The service will be queried for it's new schema, which will then be uploaded to Apollo Engine.
 
 ## Configuring Apollo Gateway
 
