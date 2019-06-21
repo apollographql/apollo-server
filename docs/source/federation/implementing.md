@@ -191,14 +191,16 @@ To learn more about `buildService` or `RemoteGraphQLDataSource`, see the [API do
 
 By default, the gateway will query it's microservices once, at initialization. However, adding support for polling updates is possible by adding a listener to the gateway's `onSchemaChange` event:
 
-```javascript{8,12,14}
+```javascript{10,16}
 const { ApolloServer } = require("apollo-server");
 const { createGateway } = require("@apollo/gateway");
 
 const gateway = createGateway(
   {
-    tag: 'current',
-    apiKey: 'service:jackson-test-microservicelist:2hgmJ1NmNUHdR3Eha8ksIQ',
+    serviceList: [
+      { name: "accounts", url: "http://localhost:4001/graphql" },
+      { name: "products", url: "http://localhost:4002/graphql" },
+    ],
     onSchemaChange: () => restartServer()
   }
 )
@@ -214,4 +216,4 @@ const restartServer = async () => {
 restartServer();
 ```
 
-Here, we add an `onSchemaChange` event listener to the gateway that simply restarts the running server whenever the gateway detects a change in downstream schema. Note that we have moved the call to `createGateway` such that only one gateway is created.
+Here, we add an `onSchemaChange` event listener to the gateway that simply restarts the running server whenever the gateway detects a change in downstream schema. Note that we have moved the call to `createGateway` to the top level, such that only one gateway is created, which is then reused across the servers.
