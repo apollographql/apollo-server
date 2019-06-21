@@ -65,13 +65,8 @@ export const externalUnused = (schema: GraphQLSchema) => {
           const hasMatchingProvidesOnAnotherType = findFieldsThatReturnType({
             schema,
             typeToFind: parentType,
-          }).some(field => {
-            const directivesOnField = findDirectivesOnTypeOrField(
-              field.astNode,
-              'provides',
-            );
-
-            const matchingProvidesDirective = directivesOnField.find(
+          }).some(field =>
+            findDirectivesOnTypeOrField(field.astNode, 'provides').some(
               directive => {
                 if (!directive.arguments) return false;
                 const selections =
@@ -88,9 +83,8 @@ export const externalUnused = (schema: GraphQLSchema) => {
                   )
                 );
               },
-            );
-            return Boolean(matchingProvidesDirective);
-          });
+            ),
+          );
 
           if (hasMatchingProvidesOnAnotherType) continue;
 
@@ -122,67 +116,49 @@ export const externalUnused = (schema: GraphQLSchema) => {
             if (!isObjectType(namedType)) return false;
             // for every object type, loop over its fields and find fields
             // with requires directives
-            return Object.values(namedType.getFields()).some(field => {
-              const directivesOnField = findDirectivesOnTypeOrField(
-                field.astNode,
-                'requires',
-              );
+            return Object.values(namedType.getFields()).some(field =>
+              findDirectivesOnTypeOrField(field.astNode, 'requires').some(
+                directive => {
+                  if (!directive.arguments) return false;
+                  const selections =
+                    isStringValueNode(directive.arguments[0].value) &&
+                    parseSelections(directive.arguments[0].value.value);
 
-              return directivesOnField.some(directive => {
-                if (!directive.arguments) return false;
-                const selections =
-                  isStringValueNode(directive.arguments[0].value) &&
-                  parseSelections(directive.arguments[0].value.value);
-
-                if (!selections) return false;
-                return selectionIncludesField({
-                  selections,
-                  selectionSetType: namedType,
-                  typeToFind: parentType,
-                  fieldToFind: externalFieldName,
-                });
-              });
-            });
+                  if (!selections) return false;
+                  return selectionIncludesField({
+                    selections,
+                    selectionSetType: namedType,
+                    typeToFind: parentType,
+                    fieldToFind: externalFieldName,
+                  });
+                },
+              ),
+            );
           });
 
           if (hasMatchingRequiresOnAnotherType) continue;
 
-          const hasMatchingProvidesOrRequiresOnType = Object.values(
+          const hasMatchingRequiresOnType = Object.values(
             parentType.getFields(),
-          ).some(maybeProvidesField => {
+          ).some(maybeRequiresField => {
             const fieldOwner =
-              maybeProvidesField.federation &&
-              maybeProvidesField.federation.serviceName;
-
+              maybeRequiresField.federation &&
+              maybeRequiresField.federation.serviceName;
             if (fieldOwner !== serviceName) return false;
 
-            // if the provides is located directly on the type
-            // type User { username: String, user: User @provides(fields: "username") }
-            const providesDirectives = findDirectivesOnTypeOrField(
-              maybeProvidesField.astNode,
-              'provides',
-            );
-
             const requiresDirectives = findDirectivesOnTypeOrField(
-              maybeProvidesField.astNode,
+              maybeRequiresField.astNode,
               'requires',
             );
 
-            return (
-              hasMatchingFieldInDirectives({
-                directives: providesDirectives,
-                fieldNameToMatch: externalFieldName,
-                namedType: parentType,
-              }) ||
-              hasMatchingFieldInDirectives({
-                directives: requiresDirectives,
-                fieldNameToMatch: externalFieldName,
-                namedType: parentType,
-              })
-            );
+            return hasMatchingFieldInDirectives({
+              directives: requiresDirectives,
+              fieldNameToMatch: externalFieldName,
+              namedType: parentType,
+            });
           });
 
-          if (hasMatchingProvidesOrRequiresOnType) continue;
+          if (hasMatchingRequiresOnType) continue;
 
           errors.push(
             errorWithCode(
