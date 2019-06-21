@@ -20,15 +20,38 @@ describe('providesFieldsMissingExternal', () => {
 
     const serviceB = {
       typeDefs: gql`
-        extend type Product @key(fields: "sku") {
-          id: ID! @external
-          price: Int! @provides(fields: "id")
+        type User @key(fields: "id") {
+          id: ID!
+          username: String
         }
       `,
       name: 'serviceB',
     };
 
-    const { schema, errors } = composeServices([serviceA, serviceB]);
+    const serviceC = {
+      typeDefs: gql`
+        type Review @key(fields: "id") {
+          id: ID!
+          product: Product @provides(fields: "id")
+          author: User @provides(fields: "username")
+        }
+
+        extend type Product @key(fields: "sku") {
+          sku: String! @external
+          id: ID! @external
+          price: Int!
+        }
+
+        extend type User @key(fields: "id") {
+          id: ID! @external
+          username: String @external
+        }
+      `,
+      name: 'serviceC',
+    };
+
+    const { schema, errors } = composeServices([serviceA, serviceB, serviceC]);
+    expect(errors).toEqual([]);
     const warnings = validateProdivesFieldsMissingExternal(schema);
     expect(warnings).toEqual([]);
   });
@@ -47,20 +70,27 @@ describe('providesFieldsMissingExternal', () => {
 
     const serviceB = {
       typeDefs: gql`
-        extend type Product {
-          price: Int! @provides(fields: "id")
+        type Review @key(fields: "id") {
+          id: ID!
+          product: Product @provides(fields: "id")
+        }
+
+        extend type Product @key(fields: "sku") {
+          sku: String! @external
+          price: Int!
         }
       `,
       name: 'serviceB',
     };
 
     const { schema, errors } = composeServices([serviceA, serviceB]);
+    expect(errors).toEqual([]);
     const warnings = validateProdivesFieldsMissingExternal(schema);
     expect(warnings).toMatchInlineSnapshot(`
       Array [
         Object {
           "code": "PROVIDES_FIELDS_MISSING_EXTERNAL",
-          "message": "[serviceB] Product.price -> provides the field \`id\` and requires Product.id to be marked as @external.",
+          "message": "[serviceB] Review.product -> provides the field \`id\` and requires Product.id to be marked as @external.",
         },
       ]
     `);

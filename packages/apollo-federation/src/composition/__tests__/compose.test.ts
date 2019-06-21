@@ -949,9 +949,12 @@ describe('composeServices', () => {
         expect(errors).toHaveLength(0);
 
         const review = schema.getType('Review') as GraphQLObjectType;
-        expect(
-          review.getFields()['product'].federation.provides,
-        ).toMatchInlineSnapshot(`sku`);
+        expect(review.getFields()['product'].federation).toMatchInlineSnapshot(`
+          Object {
+            "provides": sku,
+            "serviceName": "serviceA",
+          }
+        `);
       });
 
       it('adds @provides information to fields using a nested field set', () => {
@@ -993,6 +996,44 @@ describe('composeServices', () => {
             sku {
               id
             }
+          `);
+      });
+
+      it('adds @provides information for object types within list types', () => {
+        const serviceA = {
+          typeDefs: gql`
+            type Review {
+              products: [Product] @provides(fields: "sku")
+            }
+
+            extend type Product {
+              sku: String @external
+              color: String
+            }
+          `,
+          name: 'serviceA',
+        };
+
+        const serviceB = {
+          typeDefs: gql`
+            type Product @key(fields: "sku") {
+              sku: String!
+              price: Int! @requires(fields: "sku")
+            }
+          `,
+          name: 'serviceB',
+        };
+
+        const { schema, errors } = composeServices([serviceA, serviceB]);
+        expect(errors).toHaveLength(0);
+
+        const review = schema.getType('Review') as GraphQLObjectType;
+        expect(review.getFields()['products'].federation)
+          .toMatchInlineSnapshot(`
+          Object {
+            "provides": sku,
+            "serviceName": "serviceA",
+          }
           `);
       });
     });
