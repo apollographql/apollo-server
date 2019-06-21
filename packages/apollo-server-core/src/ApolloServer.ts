@@ -77,7 +77,9 @@ const NoIntrospection = (context: ValidationContext) => ({
 
 function getEngineApiKey(engine: Config['engine']): string | undefined {
   const keyFromEnv = process.env.ENGINE_API_KEY || '';
-  if (typeof engine === 'object' && engine.apiKey) {
+  if (engine === false) {
+    return;
+  } else if (typeof engine === 'object' && engine.apiKey) {
     return engine.apiKey;
   } else if (keyFromEnv) {
     return keyFromEnv;
