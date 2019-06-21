@@ -105,34 +105,32 @@ Now we can create a new service that acts as a gateway to the underlying microse
 
 ```javascript{2,4-9,12}
 const { ApolloServer } = require("apollo-server");
-const { ApolloGateway } = require("@apollo/gateway");
+const { createGateway } = require("@apollo/gateway");
 
-const gateway = new ApolloGateway({
+const gateway = createGateway({
   serviceList: [
     { name: "accounts", url: "http://localhost:4001/graphql" },
-    // more services
-  ],
-});
+    { name: "products", url: "http://localhost:4002/graphql" },
+  ]
+})
 
 const startServer = async () => {
-  const { schema, executor } = await gateway.load()
-  const server = new ApolloServer({ schema, executor });
-  server.listen().then(({ url }) => {
-    console.log(`🚀 Server ready at ${url}`);
-  });
+  const server = new ApolloServer(await gateway);
+  const serverInfo = await server.listen();
+  console.log(`🚀 Server ready at ${serverInfo.url}`);
 }
 
 startServer();
 ```
 
-In this example, we provide the `serviceList` option to the `ApolloGateway` constructor, which provides a name and endpoint for each of the federated services. The name (an arbitrary string) is primarily used for query planner output, error messages, and logging.
+In this example, we provide the `serviceList` option to the `createGateway` function, which provides a name and endpoint for each of the federated services. The name (an arbitrary string) is primarily used for query planner output, error messages, and logging.
 
 On startup, the gateway will fetch the service capabilities from the running servers and form an overall composed graph. It will accept incoming requests and create query plans which query the underlying services in the service list.
 
-> If there are any composition errors, the `gateway.load()` promise will be rejected with a list of [validation errors](/federation/errors/).
+> If there are any composition errors, the `gateway` promise will be rejected with a list of [validation errors](/federation/errors/).
 
 #### Gateway initialization
-The call to `gateway.load()` returns a `Promise` which resolves to a `schema` and `executor`. These are intended to be passed into the constructor of `ApolloServer`.
+The call to `createGateway()` returns a `Promise` which resolves to a `GraphQLService`. This is intended to be passed into the constructor of `ApolloServer`.
 * The `schema` is the final, composed schema which represents all services.
 * The `executor` handles incoming requests. It uses the query planner to manage the various requests to our services that are necessary to construct the final result.
 
@@ -148,12 +146,12 @@ For existing services, it's likely that you've already implemented some form of 
 
 ```javascript{9-18,27-36}
 import { ApolloServer } from 'apollo-server';
-import { ApolloGateway, RemoteGraphQLDataSource } from '@apollo/gateway';
+const { createGateway, RemoteGraphQLDataSource } = require("@apollo/gateway");
 
-const gateway = new ApolloGateway({
+const gateway = createGateway({
   serviceList: [
-    { name: 'products', url: 'http://localhost:4001' },
-    // other services
+    { name: "accounts", url: "http://localhost:4001/graphql" },
+    { name: "products", url: "http://localhost:4002/graphql" },
   ],
   buildService({ name, url }) {
     return new RemoteGraphQLDataSource({
@@ -165,14 +163,11 @@ const gateway = new ApolloGateway({
       },
     });
   },
-});
+})
 
 const startServer = async () => {
-  const { schema, executor } = await gateway.load();
-
   const server = new ApolloServer({
-    schema,
-    executor,
+    ...(await gateway),
     context: ({ req }) => {
       // get the user token from the headers
       const token = req.headers.authorization || '';
@@ -185,9 +180,8 @@ const startServer = async () => {
     },
   });
 
-  server.listen().then(({ url }) => {
-    console.log(`🚀 Server ready at ${url}`);
-  });
+  const serverInfo = await server.listen();
+  console.log(`🚀 Server ready at ${serverInfo.url}`);
 };
 
 startServer();
@@ -201,33 +195,27 @@ To learn more about `buildService` or `RemoteGraphQLDataSource`, see the [API do
 
 By default, the gateway will query it's microservices once, at initialization. However, adding support for polling updates is possible by adding a listener to the gateway's `onSchemaChange` event:
 
-```javascript{22-26}
+```javascript{8,12,14}
 const { ApolloServer } = require("apollo-server");
-const { ApolloGateway } = require("@apollo/gateway");
+const { createGateway } = require("@apollo/gateway");
 
-const gateway = new ApolloGateway({
-  serviceList: [
-    { name: "accounts", url: "http://localhost:4001/graphql" },
-    // more services
-  ],
-});
+const gateway = createGateway(
+  {
+    tag: 'current',
+    apiKey: 'service:jackson-test-microservicelist:2hgmJ1NmNUHdR3Eha8ksIQ',
+    onSchemaChange: () => restartServer()
+  }
+)
 
 let server;
-const startServer = async () => {
-  const { schema, executor } = await gateway.load()
-  server = new ApolloServer({ schema, executor });
-  server.listen().then(({ url }) => {
-    console.log(`🚀 Server ready at ${url}`);
-  });
+const restartServer = async () => {
+  if (server) await server.stop()
+  server = new ApolloServer(await gateway);
+  const serverInfo = await server.listen();
+  console.log(`🚀 Server ready at ${serverInfo.url}`);
 }
 
-startServer();
-
-gateway.onSchemaChange(async () => {
-  console.log("🔄 Restarting server due to downstream schema change")
-  if (server) await server.stop()
-  startServer()
-});
+restartServer();
 ```
 
 Here, we add an `onSchemaChange` event listener to the gateway that simply restarts the running server whenever the gateway detects a change in downstream schema.
