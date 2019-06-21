@@ -21,9 +21,11 @@
   "dependencies": {
     "@apollo/federation": "file:../apollo-federation",
     "apollo-env": "^0.5.1",
+    "apollo-engine-reporting-protobuf": "file:../apollo-engine-reporting-protobuf",
     "apollo-graphql": "^0.3.3",
     "apollo-server-caching": "file:../apollo-server-caching",
     "apollo-server-env": "file:../apollo-server-env",
+    "apollo-server-types": "file:../apollo-server-types",
     "loglevel": "^1.6.1",
     "loglevel-debug": "^0.0.1",
     "pretty-format": "^24.7.0"

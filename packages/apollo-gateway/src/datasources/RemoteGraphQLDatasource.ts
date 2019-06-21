@@ -37,7 +37,8 @@ export class RemoteGraphQLDataSource implements GraphQLDataSource {
   }: Pick<GraphQLRequestContext<TContext>, 'request' | 'context'>): Promise<
     GraphQLResponse
   > {
-    const headers = new Headers();
+    // Respect incoming http headers (eg, apollo-federation-include-trace).
+    const headers = (request.http && request.http.headers) || new Headers();
     headers.set('Content-Type', 'application/json');
 
     request.http = {

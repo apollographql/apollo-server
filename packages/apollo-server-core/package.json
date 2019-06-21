@@ -30,6 +30,7 @@
     "apollo-cache-control": "file:../apollo-cache-control",
     "apollo-datasource": "file:../apollo-datasource",
     "apollo-engine-reporting": "file:../apollo-engine-reporting",
+    "apollo-engine-reporting-protobuf": "file:../apollo-engine-reporting-protobuf",
     "apollo-server-caching": "file:../apollo-server-caching",
     "apollo-server-env": "file:../apollo-server-env",
     "apollo-server-errors": "file:../apollo-server-errors",
