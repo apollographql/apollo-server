@@ -213,8 +213,8 @@ export class ApolloGateway implements GraphQLService {
       this.serviceMap[serviceDef.name] = this.config.buildService
         ? this.config.buildService(serviceDef)
         : new RemoteGraphQLDataSource({
-            url: serviceDef.url,
-          });
+          url: serviceDef.url,
+        });
     }
   }
 
@@ -225,13 +225,13 @@ export class ApolloGateway implements GraphQLService {
 
     const [remoteServices, isNewService] = isConcreteConfig(config)
       ? await getServiceDefinitionsFromRemoteEndpoint({
-          serviceList: config.serviceList,
-        })
+        serviceList: config.serviceList,
+      })
       : await getServiceDefinitionsFromStorage({
-          apiKey: config.apiKey || process.env['ENGINE_API_KEY']!,
-          graphVariant: config.tag || 'current',
-          federationVersion: config.federationVersion!,
-        });
+        apiKey: config.apiKey || process.env['ENGINE_API_KEY']!,
+        graphVariant: config.tag || 'current',
+        federationVersion: config.federationVersion!,
+      });
 
     this.createServices(remoteServices);
     return [remoteServices, isNewService];
@@ -342,6 +342,17 @@ function wrapSchemaWithAliasResolver(schema: GraphQLSchema): GraphQLSchema {
     }
   });
   return schema;
+}
+
+export async function createGateway(
+  config: GatewayConfig & { onSchemaChange?: SchemaChangeCallback },
+): Promise<GraphQLService> {
+  const gateway = new ApolloGateway(config);
+  if (config.onSchemaChange) {
+    gateway.onSchemaChange(config.onSchemaChange);
+  }
+  await gateway.load();
+  return gateway;
 }
 
 export {
