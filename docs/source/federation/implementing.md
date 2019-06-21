@@ -216,4 +216,4 @@ const restartServer = async () => {
 restartServer();
 ```
 
-Here, we add an `onSchemaChange` event listener to the gateway that simply restarts the running server whenever the gateway detects a change in downstream schema. Note that we have moved the call to `createGateway` to the top level, such that only one gateway is created, which is then reused across the servers.
+Here, we add an `onSchemaChange` event listener to the gateway that simply restarts the running server whenever the gateway detects a change in downstream schema. Note that we have moved the call to `createGateway` to the top level. Here, only one gateway is created, and it is reused across the servers.
