@@ -111,7 +111,7 @@
     "graphql": "14.3.1",
     "graphql-subscriptions": "1.1.0",
     "graphql-tag": "2.10.1",
-    "graphql-tools": "4.0.4",
+    "graphql-tools": "4.0.5",
     "hapi": "17.8.5",
     "husky": "2.4.1",
     "ioredis": "4.10.0",
