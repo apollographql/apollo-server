@@ -134,8 +134,8 @@ export class ApolloGateway implements GraphQLService {
       this.serviceMap[serviceDef.name] = this.config.buildService
         ? this.config.buildService(serviceDef)
         : new RemoteGraphQLDataSource({
-            url: serviceDef.url,
-          });
+          url: serviceDef.url,
+        });
     }
   }
 
@@ -258,6 +258,14 @@ function wrapSchemaWithAliasResolver(schema: GraphQLSchema): GraphQLSchema {
     }
   });
   return schema;
+}
+
+export async function createGateway(
+  config: GatewayConfig,
+): Promise<GraphQLService> {
+  const gateway = new ApolloGateway(config);
+  await gateway.load();
+  return gateway;
 }
 
 export {
