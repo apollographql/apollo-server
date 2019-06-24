@@ -21,6 +21,7 @@ export interface CreateHandlerOptions {
     credentials?: boolean;
     maxAge?: number;
   };
+  async?: boolean;
 }
 
 export class ApolloServer extends ApolloServerBase {
@@ -47,7 +48,9 @@ export class ApolloServer extends ApolloServerBase {
     return super.graphQLServerOptions({ event, context });
   }
 
-  public createHandler({ cors }: CreateHandlerOptions = { cors: undefined }) {
+  public createHandler(
+    { cors, async }: CreateHandlerOptions = { cors: undefined, async: false },
+  ) {
     // We will kick off the `willStart` event once for the server, and then
     // await it before processing any requests by incorporating its `await` into
     // the GraphQLServerOptions function which is called before each request.
@@ -100,7 +103,7 @@ export class ApolloServer extends ApolloServerBase {
     return (
       event: APIGatewayProxyEvent,
       context: LambdaContext,
-      callback: APIGatewayProxyCallback,
+      callback: APIGatewayProxyCallback = () => {},
     ) => {
       // We re-load the headers into a Fetch API-compatible `Headers`
       // interface within `graphqlLambda`, but we still need to respect the
@@ -149,14 +152,20 @@ export class ApolloServer extends ApolloServerBase {
       }, {});
 
       if (event.httpMethod === 'OPTIONS') {
-        context.callbackWaitsForEmptyEventLoop = false;
-        return callback(null, {
+        const result = {
           body: '',
           statusCode: 204,
           headers: {
             ...requestCorsHeadersObject,
           },
-        });
+        };
+
+        if (async) {
+          return Promise.resolve(result);
+        } else {
+          context.callbackWaitsForEmptyEventLoop = false;
+          return callback(null, result);
+        }
       }
 
       if (this.playgroundOptions && event.httpMethod === 'GET') {
@@ -172,41 +181,54 @@ export class ApolloServer extends ApolloServerBase {
             ...this.playgroundOptions,
           };
 
-          return callback(null, {
+          const result = {
             body: renderPlaygroundPage(playgroundRenderPageOptions),
             statusCode: 200,
             headers: {
               'Content-Type': 'text/html',
               ...requestCorsHeadersObject,
             },
-          });
+          };
+
+          if (async) {
+            return Promise.resolve(result);
+          } else {
+            return callback(null, result);
+          }
         }
       }
 
-      const callbackFilter: APIGatewayProxyCallback = (error, result) => {
-        callback(
-          error,
+      if (!async) {
+        // Maintain existing behavior
+        context.callbackWaitsForEmptyEventLoop = false;
+      }
+
+      const resultPromise = promiseWillStart.then(async () => {
+        const options = await this.createGraphQLServerOptions(event, context);
+        const result = await graphqlLambda(options)(event, context);
+
+        return (
           result && {
             ...result,
             headers: {
               ...result.headers,
               ...requestCorsHeadersObject,
             },
-          },
+          }
         );
-      };
+      });
 
-      graphqlLambda(async () => {
-        // In a world where this `createHandler` was async, we might avoid this
-        // but since we don't want to introduce a breaking change to this API
-        // (by switching it to `async`), we'll leverage the
-        // `GraphQLServerOptions`, which are dynamically built on each request,
-        // to `await` the `promiseWillStart` which we kicked off at the top of
-        // this method to ensure that it runs to completion (which is part of
-        // its contract) prior to processing the request.
-        await promiseWillStart;
-        return this.createGraphQLServerOptions(event, context);
-      })(event, context, callbackFilter);
+      if (async) {
+        return resultPromise;
+      } else {
+        resultPromise
+          .then(result => {
+            callback(null, result);
+          })
+          .catch(error => {
+            callback(error);
+          });
+      }
     };
   }
 }

@@ -5,17 +5,16 @@ import {
   runHttpQuery,
 } from 'apollo-server-core';
 import { Headers } from 'apollo-server-env';
-import { ValueOrPromise } from 'apollo-server-types';
 
-export interface LambdaGraphQLOptionsFunction {
-  (event: lambda.APIGatewayProxyEvent, context: lambda.Context): ValueOrPromise<
-    GraphQLOptions
+export interface APIGatewayProxyAsyncHandler {
+  (event: lambda.APIGatewayProxyEvent, context: lambda.Context): Promise<
+    lambda.APIGatewayProxyResult
   >;
 }
 
 export function graphqlLambda(
-  options: GraphQLOptions | LambdaGraphQLOptionsFunction,
-): lambda.APIGatewayProxyHandler {
+  options: GraphQLOptions,
+): APIGatewayProxyAsyncHandler {
   if (!options) {
     throw new Error('Apollo Server requires options.');
   }
@@ -26,48 +25,51 @@ export function graphqlLambda(
     );
   }
 
-  const graphqlHandler: lambda.APIGatewayProxyHandler = (
+  const graphqlHandler: APIGatewayProxyAsyncHandler = async (
     event,
     context,
-    callback,
-  ): void => {
-    context.callbackWaitsForEmptyEventLoop = false;
-
+  ) => {
     if (event.httpMethod === 'POST' && !event.body) {
-      return callback(null, {
+      return {
         body: 'POST body missing.',
         statusCode: 500,
-      });
+      };
     }
-    runHttpQuery([event, context], {
-      method: event.httpMethod,
-      options: options,
-      query:
-        event.httpMethod === 'POST' && event.body
-          ? JSON.parse(event.body)
-          : event.queryStringParameters,
-      request: {
-        url: event.path,
-        method: event.httpMethod,
-        headers: new Headers(event.headers),
-      },
-    }).then(
-      ({ graphqlResponse, responseInit }) => {
-        callback(null, {
-          body: graphqlResponse,
-          statusCode: 200,
-          headers: responseInit.headers,
-        });
-      },
-      (error: HttpQueryError) => {
-        if ('HttpQueryError' !== error.name) return callback(error);
-        callback(null, {
+
+    try {
+      const { graphqlResponse, responseInit } = await runHttpQuery(
+        [event, context],
+        {
+          method: event.httpMethod,
+          options: options,
+          query:
+            event.httpMethod === 'POST' && event.body
+              ? JSON.parse(event.body)
+              : event.queryStringParameters,
+          request: {
+            url: event.path,
+            method: event.httpMethod,
+            headers: new Headers(event.headers),
+          },
+        },
+      );
+
+      return {
+        body: graphqlResponse,
+        statusCode: 200,
+        headers: responseInit.headers,
+      };
+    } catch (error) {
+      if (error instanceof HttpQueryError) {
+        return {
           body: error.message,
           statusCode: error.statusCode,
           headers: error.headers,
-        });
-      },
-    );
+        };
+      }
+
+      throw error;
+    }
   };
 
   return graphqlHandler;
