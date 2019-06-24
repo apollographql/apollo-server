@@ -4,7 +4,6 @@ import {
   GraphQLSchema,
   extendSchema,
   Kind,
-  TypeExtensionNode,
   isTypeDefinitionNode,
   isTypeExtensionNode,
   GraphQLError,
@@ -33,6 +32,7 @@ import {
   ExternalFieldDefinition,
   ServiceNameToKeyDirectivesMap,
   FederatedTypeDefinitionNode,
+  FederatedTypeExtensionNode,
 } from './types';
 import { validateSDL } from 'graphql/validation/validate';
 import { compositionRules } from './rules';
@@ -43,7 +43,7 @@ interface DefinitionsMap {
 }
 // Map of all extensions to eventually be passed to extendSchema
 interface ExtensionsMap {
-  [name: string]: TypeExtensionNode[];
+  [name: string]: FederatedTypeExtensionNode[];
 }
 
 /**
@@ -220,35 +220,26 @@ export function buildMapsFromServiceList(serviceList: ServiceDefinition[]) {
          * and add it to the extensionsMap.
          */
         if (extensionsMap[typeName]) {
-          extensionsMap[typeName].push(definition);
+          extensionsMap[typeName].push({ ...definition, serviceName });
         } else {
-          extensionsMap[typeName] = [definition];
+          extensionsMap[typeName] = [{ ...definition, serviceName }];
         }
       }
     }
   }
 
-  /**
-   * what if an extended type doesn't have a base type?
-   * - Check each of the extensions, and see if there's a corresponding definition
-   * - if so, do nothing. If not, create an empty definition with `null` as the serviceName
-   */
-  for (const extensionTypeName of Object.keys(extensionsMap)) {
-    if (!definitionsMap[extensionTypeName]) {
-      definitionsMap[extensionTypeName] = [
-        {
-          kind: Kind.OBJECT_TYPE_DEFINITION,
-          name: { kind: Kind.NAME, value: extensionTypeName },
-          fields: [],
-          serviceName: null,
-        },
-      ];
-
-      // ideally, the serviceName would be the first extending service, but there's not a reliable way to
-      // trace the extensionNode back to a service since each extension can be overwritten by other extensions
-      typeToServiceMap[extensionTypeName].serviceName = null;
-    }
-  }
+  // We need to have a base definition of Query and potentitally Mutation to
+  // extend later on...
+  const emptyDefinition = (name: string) => ({
+    kind: Kind.OBJECT_TYPE_DEFINITION,
+    name: { kind: Kind.NAME, value: name },
+    fields: [],
+    serviceName: null,
+  });
+  if (!definitionsMap['Query'])
+    definitionsMap['Query'] = [emptyDefinition('Query')];
+  if (extensionsMap['Mutation'] && !definitionsMap['Mutation'])
+    definitionsMap['Mutation'] = [emptyDefinition('Mutation')];
 
   return {
     typeToServiceMap,
@@ -315,6 +306,7 @@ export function addFederationMetadataToSchemaNodes({
     { serviceName: baseServiceName, extensionFieldsToOwningServiceMap },
   ] of Object.entries(typeToServiceMap)) {
     const namedType = schema.getType(typeName) as GraphQLNamedType;
+    if (!namedType) continue;
 
     // Extend each type in the GraphQLSchema with the serviceName that owns it
     // and the key directives that belong to it

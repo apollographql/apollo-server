@@ -39,18 +39,18 @@ describe('composeServices', () => {
     expect(schema).toBeDefined();
 
     expect(schema.getType('User')).toMatchInlineSnapshot(`
-      type User {
-        name: String
-        email: String!
-      }
-    `);
+                  type User {
+                    name: String
+                    email: String!
+                  }
+            `);
 
     expect(schema.getType('Product')).toMatchInlineSnapshot(`
-      type Product {
-        sku: String!
-        name: String!
-      }
-    `);
+                  type Product {
+                    sku: String!
+                    name: String!
+                  }
+            `);
 
     const product = schema.getType('Product') as GraphQLObjectType;
     const user = schema.getType('User') as GraphQLObjectType;
@@ -85,12 +85,12 @@ describe('composeServices', () => {
       expect(schema).toBeDefined();
 
       expect(schema.getType('Product')).toMatchInlineSnapshot(`
-        type Product {
-          sku: String!
-          name: String!
-          price: Int!
-        }
-      `);
+                        type Product {
+                          sku: String!
+                          name: String!
+                          price: Int!
+                        }
+                  `);
 
       const product = schema.getType('Product') as GraphQLObjectType;
 
@@ -124,12 +124,12 @@ describe('composeServices', () => {
       expect(schema).toBeDefined();
 
       expect(schema.getType('Product')).toMatchInlineSnapshot(`
-        type Product {
-          sku: String!
-          name: String!
-          price: Int!
-        }
-      `);
+                        type Product {
+                          sku: String!
+                          name: String!
+                          price: Int!
+                        }
+                  `);
 
       const product = schema.getType('Product') as GraphQLObjectType;
 
@@ -177,13 +177,13 @@ describe('composeServices', () => {
       expect(schema).toBeDefined();
 
       expect(schema.getType('Product')).toMatchInlineSnapshot(`
-        type Product {
-          sku: String!
-          name: String!
-          price: Int!
-          color: String!
-        }
-      `);
+                        type Product {
+                          sku: String!
+                          name: String!
+                          price: Int!
+                          color: String!
+                        }
+                  `);
 
       const product = schema.getType('Product') as GraphQLObjectType;
 
@@ -232,21 +232,21 @@ describe('composeServices', () => {
         serviceC,
       ]);
       expect(errors).toMatchInlineSnapshot(`
-                Array [
-                  [GraphQLError: Field "Product.price" can only be defined once.],
-                ]
-            `);
+                                Array [
+                                  [GraphQLError: Field "Product.price" can only be defined once.],
+                                ]
+                        `);
       expect(schema).toBeDefined();
 
       const product = schema.getType('Product') as GraphQLObjectType;
       expect(product).toMatchInlineSnapshot(`
-        type Product {
-          sku: String!
-          name: String!
-          price: Float!
-          color: String!
-        }
-      `);
+                        type Product {
+                          sku: String!
+                          name: String!
+                          price: Float!
+                          color: String!
+                        }
+                  `);
 
       expect(product.federation.serviceName).toEqual('serviceB');
       expect(product.getFields()['price'].federation.serviceName).toEqual(
@@ -283,50 +283,15 @@ describe('composeServices', () => {
       expect(schema).toBeDefined();
 
       expect(schema.getType('Product')).toMatchInlineSnapshot(`
-        type Product {
-          sku: String!
-          name(type: String): String!
-          price(currency: Curr!): Int!
-        }
-      `);
+                        type Product {
+                          sku: String!
+                          name(type: String): String!
+                          price(currency: Curr!): Int!
+                        }
+                  `);
 
       const product = schema.getType('Product') as GraphQLObjectType;
       expect(product.getFields()['price'].args[0].name).toEqual('currency');
-    });
-
-    it('treats type extensions as a base type definition when none is available', () => {
-      const serviceA = {
-        typeDefs: gql`
-          extend type Product {
-            price: Float!
-          }
-        `,
-        name: 'serviceA',
-      };
-
-      const serviceB = {
-        typeDefs: gql`
-          extend type Product {
-            color: String!
-          }
-        `,
-        name: 'serviceB',
-      };
-
-      const { schema, errors } = composeServices([serviceA, serviceB]);
-      expect(errors).toHaveLength(0);
-      expect(schema).toBeDefined();
-
-      expect(schema.getType('Product')).toMatchInlineSnapshot(`
-        type Product {
-          price: Float!
-          color: String!
-        }
-      `);
-
-      const product = schema.getType('Product') as GraphQLObjectType;
-
-      expect(product.federation.serviceName).toEqual(null);
     });
 
     // This is a limitation of extendSchema currently (this is currently a broken test to demonstrate)
@@ -353,20 +318,20 @@ describe('composeServices', () => {
       const { schema, errors } = composeServices([serviceA, serviceB]);
       expect(schema).toBeDefined();
       expect(errors).toMatchInlineSnapshot(`
-        Array [
-          [GraphQLError: Field "Product.sku" already exists in the schema. It cannot also be defined in this type extension.],
-          [GraphQLError: Field "Product.name" already exists in the schema. It cannot also be defined in this type extension.],
-        ]
-      `);
+                        Array [
+                          [GraphQLError: Field "Product.sku" already exists in the schema. It cannot also be defined in this type extension.],
+                          [GraphQLError: Field "Product.name" already exists in the schema. It cannot also be defined in this type extension.],
+                        ]
+                  `);
 
       const product = schema.getType('Product') as GraphQLObjectType;
 
       expect(product).toMatchInlineSnapshot(`
-        type Product {
-          sku: String!
-          name: String!
-        }
-      `);
+                        type Product {
+                          sku: String!
+                          name: String!
+                        }
+                  `);
       expect(product.getFields()['sku'].federation.serviceName).toEqual(
         'serviceB',
       );
@@ -399,19 +364,19 @@ describe('composeServices', () => {
         const { schema, errors } = composeServices([serviceA, serviceB]);
         expect(schema).toBeDefined();
         expect(errors).toMatchInlineSnapshot(`
-          Array [
-            [GraphQLError: Field "Product.name" already exists in the schema. It cannot also be defined in this type extension.],
-          ]
-        `);
+                              Array [
+                                [GraphQLError: Field "Product.name" already exists in the schema. It cannot also be defined in this type extension.],
+                              ]
+                        `);
 
         const product = schema.getType('Product') as GraphQLObjectType;
 
         expect(product).toMatchInlineSnapshot(`
-          type Product {
-            sku: String!
-            name: String!
-          }
-        `);
+                              type Product {
+                                sku: String!
+                                name: String!
+                              }
+                        `);
         expect(product.getFields()['name'].federation.serviceName).toEqual(
           'serviceB',
         );
@@ -445,20 +410,20 @@ describe('composeServices', () => {
         const { schema, errors } = composeServices([serviceA, serviceB]);
         expect(schema).toBeDefined();
         expect(errors).toMatchInlineSnapshot(`
-          Array [
-            [GraphQLError: Field "Product.sku" already exists in the schema. It cannot also be defined in this type extension.],
-            [GraphQLError: Field "Product.name" already exists in the schema. It cannot also be defined in this type extension.],
-          ]
-        `);
+                              Array [
+                                [GraphQLError: Field "Product.sku" already exists in the schema. It cannot also be defined in this type extension.],
+                                [GraphQLError: Field "Product.name" already exists in the schema. It cannot also be defined in this type extension.],
+                              ]
+                        `);
 
         const product = schema.getType('Product') as GraphQLObjectType;
 
         expect(product).toMatchInlineSnapshot(`
-          type Product {
-            sku: String!
-            name: String!
-          }
-        `);
+                              type Product {
+                                sku: String!
+                                name: String!
+                              }
+                        `);
         expect(product.getFields()['name'].federation.serviceName).toEqual(
           'serviceB',
         );
@@ -489,21 +454,21 @@ describe('composeServices', () => {
         const { schema, errors } = composeServices([serviceA, serviceB]);
         expect(schema).toBeDefined();
         expect(errors).toMatchInlineSnapshot(`
-          Array [
-            [GraphQLError: Field "Product.name" can only be defined once.],
-            [GraphQLError: There can be only one type named "Product".],
-          ]
-        `);
+                              Array [
+                                [GraphQLError: Field "Product.name" can only be defined once.],
+                                [GraphQLError: There can be only one type named "Product".],
+                              ]
+                        `);
 
         const product = schema.getType('Product') as GraphQLObjectType;
 
         expect(product).toMatchInlineSnapshot(`
-          type Product {
-            id: ID!
-            name: String!
-            price: Int!
-          }
-        `);
+                              type Product {
+                                id: ID!
+                                name: String!
+                                price: Int!
+                              }
+                        `);
       });
     });
   });
@@ -603,19 +568,19 @@ describe('composeServices', () => {
 
       const { schema, errors } = composeServices([serviceA, serviceB]);
       expect(errors).toMatchInlineSnapshot(`
-        Array [
-          [GraphQLError: Field "Product.id" already exists in the schema. It cannot also be defined in this type extension.],
-        ]
-      `);
+                        Array [
+                          [GraphQLError: Field "Product.id" already exists in the schema. It cannot also be defined in this type extension.],
+                        ]
+                  `);
       expect(schema).toBeDefined();
 
       expect(schema.getType('Product')).toMatchInlineSnapshot(`
-        type Product implements Item {
-          id: String!
-          sku: String!
-          name: String!
-        }
-      `);
+                        type Product implements Item {
+                          id: String!
+                          sku: String!
+                          name: String!
+                        }
+                  `);
 
       const product = schema.getType('Product') as GraphQLObjectType;
 
@@ -651,15 +616,15 @@ describe('composeServices', () => {
       expect(schema).toBeDefined();
 
       expect(schema.getQueryType()).toMatchInlineSnapshot(`
-        type Query {
-          products: [ID!]
-          people: [ID!]
-        }
-      `);
+                        type Query {
+                          products: [ID!]
+                          people: [ID!]
+                        }
+                  `);
 
       const query = schema.getQueryType();
 
-      expect(query.federation.serviceName).toEqual(null);
+      expect(query.federation.serviceName).toBeUndefined();
     });
 
     it('treats root Query type definition as an extension, not base definitions', () => {
@@ -692,15 +657,15 @@ describe('composeServices', () => {
       expect(schema).toBeDefined();
 
       expect(schema.getType('Query')).toMatchInlineSnapshot(`
-        type Query {
-          products: [ID!]
-          people: [ID!]
-        }
-      `);
+                        type Query {
+                          products: [ID!]
+                          people: [ID!]
+                        }
+                  `);
 
       const query = schema.getType('Query') as GraphQLObjectType;
 
-      expect(query.federation.serviceName).toBeNull();
+      expect(query.federation.serviceName).toBeUndefined();
     });
 
     it('allows extension of the Mutation type with no base type definition', () => {
@@ -732,11 +697,11 @@ describe('composeServices', () => {
       expect(schema).toBeDefined();
 
       expect(schema.getType('Mutation')).toMatchInlineSnapshot(`
-        type Mutation {
-          login(credentials: Credentials!): String
-          logout(username: String!): Boolean
-        }
-      `);
+                        type Mutation {
+                          login(credentials: Credentials!): String
+                          logout(username: String!): Boolean
+                        }
+                  `);
     });
 
     it('treats root Mutations type definition as an extension, not base definitions', () => {
@@ -831,28 +796,28 @@ describe('composeServices', () => {
         const product = schema.getType('Product');
 
         expect(product.federation.externals).toMatchInlineSnapshot(`
-          Object {
-            "serviceB--MISSING": Array [
-              Object {
-                "field": sku: String! @external,
-                "parentTypeName": "Product",
-                "serviceName": "serviceB--MISSING",
-              },
-            ],
-            "serviceC--found": Array [
-              Object {
-                "field": sku: String! @external,
-                "parentTypeName": "Product",
-                "serviceName": "serviceC--found",
-              },
-              Object {
-                "field": upc: String! @external,
-                "parentTypeName": "Product",
-                "serviceName": "serviceC--found",
-              },
-            ],
-          }
-        `);
+                              Object {
+                                "serviceB--MISSING": Array [
+                                  Object {
+                                    "field": sku: String! @external,
+                                    "parentTypeName": "Product",
+                                    "serviceName": "serviceB--MISSING",
+                                  },
+                                ],
+                                "serviceC--found": Array [
+                                  Object {
+                                    "field": sku: String! @external,
+                                    "parentTypeName": "Product",
+                                    "serviceName": "serviceC--found",
+                                  },
+                                  Object {
+                                    "field": upc: String! @external,
+                                    "parentTypeName": "Product",
+                                    "serviceName": "serviceC--found",
+                                  },
+                                ],
+                              }
+                        `);
       });
       it('does not redefine fields with @external when composing', () => {
         const serviceA = {
@@ -882,12 +847,12 @@ describe('composeServices', () => {
         const product = schema.getType('Product') as GraphQLObjectType;
 
         expect(product).toMatchInlineSnapshot(`
-          type Product {
-            sku: String!
-            name: String!
-            price: Int!
-          }
-        `);
+                              type Product {
+                                sku: String!
+                                name: String!
+                                price: Int!
+                              }
+                        `);
         expect(product.getFields()['price'].federation.serviceName).toEqual(
           'serviceB',
         );
@@ -956,10 +921,10 @@ describe('composeServices', () => {
         const product = schema.getType('Product') as GraphQLObjectType;
         expect(product.getFields()['price'].federation.requires)
           .toMatchInlineSnapshot(`
-            sku {
-              id
-            }
-          `);
+                                sku {
+                                  id
+                                }
+                          `);
       });
     });
 
@@ -1035,10 +1000,10 @@ describe('composeServices', () => {
         const review = schema.getType('Review') as GraphQLObjectType;
         expect(review.getFields()['product'].federation.provides)
           .toMatchInlineSnapshot(`
-            sku {
-              id
-            }
-          `);
+                                sku {
+                                  id
+                                }
+                          `);
       });
     });
 
@@ -1069,13 +1034,13 @@ describe('composeServices', () => {
 
         const product = schema.getType('Product') as GraphQLObjectType;
         expect(product.federation.keys).toMatchInlineSnapshot(`
-          Object {
-            "serviceA": Array [
-              sku,
-              upc,
-            ],
-          }
-        `);
+                              Object {
+                                "serviceA": Array [
+                                  sku,
+                                  upc,
+                                ],
+                              }
+                        `);
       });
 
       it('adds @key information to types using selection set notation', () => {
@@ -1110,15 +1075,15 @@ describe('composeServices', () => {
 
         const product = schema.getType('Product') as GraphQLObjectType;
         expect(product.federation.keys).toMatchInlineSnapshot(`
-          Object {
-            "serviceA": Array [
-              color {
-            id
-            value
-          },
-            ],
-          }
-        `);
+                              Object {
+                                "serviceA": Array [
+                                  color {
+                                id
+                                value
+                              },
+                                ],
+                              }
+                        `);
       });
 
       it('preserves @key information with respect to types across different services', () => {
@@ -1153,18 +1118,18 @@ describe('composeServices', () => {
 
         const product = schema.getType('Product') as GraphQLObjectType;
         expect(product.federation.keys).toMatchInlineSnapshot(`
-          Object {
-            "serviceA": Array [
-              color {
-            id
-            value
-          },
-            ],
-            "serviceB": Array [
-              sku,
-            ],
-          }
-        `);
+                              Object {
+                                "serviceA": Array [
+                                  color {
+                                id
+                                value
+                              },
+                                ],
+                                "serviceB": Array [
+                                  sku,
+                                ],
+                              }
+                        `);
       });
     });
 
@@ -1202,12 +1167,12 @@ describe('composeServices', () => {
 
         const product = schema.getType('Product') as GraphQLObjectType;
         expect(product).toMatchInlineSnapshot(`
-          type Product {
-            sku: String!
-            upc: String!
-            price: Int!
-          }
-        `);
+                              type Product {
+                                sku: String!
+                                upc: String!
+                                price: Int!
+                              }
+                        `);
       });
     });
   });
