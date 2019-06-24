@@ -98,8 +98,8 @@ export class ApolloServer extends ApolloServerBase {
         typeof this.cors !== 'undefined'
           ? this.cors
           : {
-            origin: '*',
-          },
+              origin: '*',
+            },
     });
 
     const httpServer = http.createServer(app);
