@@ -1,6 +1,6 @@
 ---
 title: Hosted gateway configurations
-description: Managing gateways at scale # lmao
+description: Managing gateways at scale
 ---
 
 In many cases it is sufficient to define the list of services comprising a federated graph directly within the gateway:
