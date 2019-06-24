@@ -345,6 +345,7 @@ addMockFunctionsToSchema({
    
 * `sendVariableValues`: { transform: (options: { variables: Record<string, any>, operationString?: string } ) => Record<string, any> }
                      | { exceptNames: Array&lt;String&gt; }
+                     | { includeNames: Array&lt;String&gt; }
                      | { sendNone: true }
                      | { sendAll: true }
     
@@ -354,6 +355,7 @@ addMockFunctionsToSchema({
     - { sendAll: true }: safelist all variable values
     - { transform: ... }: a custom function for modifying variable values. Keys added by the custom function will be removed, and keys removed will be added back with an empty value. 
     - { exceptNames: ... }: a case-sensitive list of names of variables whose values should not be sent to Apollo servers
+    - { includeNames: ... }: a case-sensitive list of names of variables whose values will be sent to Apollo Servers
 
    Defaults to blocklisting all variable values if both this parameter and the to-be-deprecated `privateVariables` are not set. 
    The report will indicate each private variable key whose value was redacted by { sendNone: true } or { exceptNames: [...] }.
@@ -368,15 +370,16 @@ addMockFunctionsToSchema({
    
    NOTE: An error will be thrown if both this deprecated option and its replacement, `sendVariableValues` are defined.
     
-* `sendHeaders`: { exceptNames: Array&lt;String&gt; } | { sendAll: boolean } | { sendNone: boolean }
+* `sendHeaders`: { exceptNames: Array&lt;String&gt; } | { includeNames: Array&lt;String&gt; } | { sendAll: boolean } | { sendNone: boolean }
    By default, Apollo Server does not send the list of HTTP request headers and values to
    Apollo's servers, to protect private data of your app's users. If you'd like this information included in traces,
    set this option. This option can take several forms:
    
-   - { exceptNames: Array&lt;String&gt; } A case-insensitive list of names of HTTP headers whose values should not be
+  - { sendNone : true }: drop all HTTP request headers (DEFAULT)
+  - { sendAll : true }: send the values of all HTTP request headers
+   - { exceptNames: ... }: A case-insensitive list of names of HTTP headers whose values should not be
    sent to Apollo servers
-   - { sendNone : true } to drop all HTTP request headers
-   - { sendAll : true } to send the values of all HTTP request headers
+   - { includeNames: ... }: A case-insensitive list of names of HTTP headers whose values will be sent to Apollo servers
   
    Unlike with `sendVariableValues`, names of dropped headers are not reported.
    The headers 'authorization', 'cookie', and 'set-cookie' are never reported.

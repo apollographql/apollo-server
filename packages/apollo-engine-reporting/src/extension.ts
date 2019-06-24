@@ -16,7 +16,7 @@ import {
   GenerateClientInfo,
   AddTraceArgs,
   VariableValueOptions,
-  BlocklistValuesBaseOptions,
+  SendValuesBaseOptions,
 } from './agent';
 import { GraphQLRequestContext } from 'apollo-server-core/dist/requestPipelineAPI';
 
@@ -449,7 +449,9 @@ export function makeTraceDetails(
         // We assume that most users will have only a few variables values to hide,
         // or will just set {sendNone: true}; we can change this
         // linear-time operation if it causes real performance issues.
-        sendVariableValues.exceptNames.includes(name))
+        sendVariableValues.exceptNames.includes(name)) ||
+      ('includeNames' in sendVariableValues &&
+        !sendVariableValues.includeNames.includes(name))
     ) {
       // Special case for private variables. Note that this is a different
       // representation from a variable containing the empty string, as that
@@ -490,22 +492,25 @@ function cleanModifiedVariables(
 export function makeHTTPRequestHeaders(
   http: Trace.IHTTP,
   headers: Headers,
-  sendHeaders?: BlocklistValuesBaseOptions,
+  sendHeaders?: SendValuesBaseOptions,
 ): void {
   if (!sendHeaders || 'sendNone' in sendHeaders) {
     return;
   }
   for (const [key, value] of headers) {
     if (
-      sendHeaders &&
-      'exceptNames' in sendHeaders &&
-      // We assume that most users only have a few headers to hide, or will
-      // just set {sendNone: true} ; we can change this linear-time
-      // operation if it causes real performance issues.
-      sendHeaders.exceptNames.some(exceptHeader => {
-        // Headers are case-insensitive, and should be compared as such.
-        return exceptHeader.toLowerCase() === key.toLowerCase();
-      })
+      ('exceptNames' in sendHeaders &&
+        // We assume that most users only have a few headers to hide, or will
+        // just set {sendNone: true} ; we can change this linear-time
+        // operation if it causes real performance issues.
+        sendHeaders.exceptNames.some(exceptHeader => {
+          // Headers are case-insensitive, and should be compared as such.
+          return exceptHeader.toLowerCase() === key.toLowerCase();
+        })) ||
+      ('includeNames' in sendHeaders &&
+        !sendHeaders.includeNames.some(header => {
+          return header.toLowerCase() === key.toLowerCase();
+        }))
     ) {
       continue;
     }
