@@ -169,6 +169,40 @@ describe('variableJson output for sendVariableValues exceptNames: Array type', (
   });
 });
 
+describe('variableJson output for sendVariableValues includeNames: Array type', () => {
+  it('array contains some values not in keys', () => {
+    const privateVariablesArray: string[] = ['t2', 'notInVariables'];
+    const expectedVariablesJson = {
+      testing: '',
+      t2: JSON.stringify(2),
+    };
+    expect(
+      makeTraceDetails(variables, { includeNames: privateVariablesArray })
+        .variablesJson,
+    ).toEqual(expectedVariablesJson);
+  });
+
+  it('sendAll=true equivalent to includeNames=[all variables]', () => {
+    let privateVariablesArray: string[] = ['testing', 't2'];
+    expect(
+      makeTraceDetails(variables, { sendAll: true }).variablesJson,
+    ).toEqual(
+      makeTraceDetails(variables, { includeNames: privateVariablesArray })
+        .variablesJson,
+    );
+  });
+
+  it('sendNone=true equivalent to includeNames=[]', () => {
+    let privateVariablesArray: string[] = [];
+    expect(
+      makeTraceDetails(variables, { sendNone: true }).variablesJson,
+    ).toEqual(
+      makeTraceDetails(variables, { includeNames: privateVariablesArray })
+        .variablesJson,
+    );
+  });
+});
+
 describe('variableJson output for sendVariableValues transform: custom function type', () => {
   it('test custom function that redacts every variable to some value', () => {
     const modifiedValue = 100;
@@ -278,6 +312,14 @@ describe('tests for the sendHeaders reporting option', () => {
     const http = makeTestHTTP();
     makeHTTPRequestHeaders(http, headers, { exceptNames: except });
     expect(http.requestHeaders).toEqual({});
+  });
+
+  it('test sendHeaders.includeNames', () => {
+    // headers that should never be sent (such as "authorization") should still be removed if in includeHeaders
+    const include: String[] = ['name', 'authorization', 'notinheaders'];
+    const http = makeTestHTTP();
+    makeHTTPRequestHeaders(http, headers, { includeNames: include });
+    expect(http.requestHeaders).toEqual(headersOutput);
   });
 
   it('authorization, cookie, and set-cookie headers should never be sent', () => {

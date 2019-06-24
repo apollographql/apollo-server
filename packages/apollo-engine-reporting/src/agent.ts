@@ -25,7 +25,8 @@ export interface ClientInfo {
   clientReferenceId?: string;
 }
 
-export type BlocklistValuesBaseOptions =
+export type SendValuesBaseOptions =
+  | { includeNames: Array<String> }
   | { exceptNames: Array<String> }
   | { sendAll: true }
   | { sendNone: true };
@@ -41,7 +42,7 @@ export type VariableValueOptions =
         options: VariableValueTransformOptions,
       ) => Record<string, any>;
     }
-  | BlocklistValuesBaseOptions;
+  | SendValuesBaseOptions;
 
 export type GenerateClientInfo<TContext> = (
   requestContext: GraphQLRequestContext<TContext>,
@@ -108,6 +109,7 @@ export interface EngineReportingOptions<TContext> {
    * - { transform: ... }: a custom function for modifying variable values. Keys added by the custom function will
    *    be removed, and keys removed will be added back with an empty value.
    * - { exceptNames: ... }: a case-sensitive list of names of variables whose values should not be sent to Apollo servers
+   * - { includeNames: ... }: A case-sensitive list of names of variables whose values will be sent to Apollo servers
    *
    * Defaults to blocklisting all variable values if both this parameter and
    * the to-be-deprecated `privateVariables` are not set. The report will
@@ -136,11 +138,12 @@ export interface EngineReportingOptions<TContext> {
    * - { sendAll : true } to send the values of all HTTP request headers
    * - { exceptNames: Array<String> } A case-insensitive list of names of HTTP headers whose values should not be
    *     sent to Apollo servers
+   * - { includeNames: Array<String> }: A case-insensitive list of names of HTTP headers whose values will be sent to Apollo servers
    *
    * Unlike with sendVariableValues, names of dropped headers are not reported.
    * The headers 'authorization', 'cookie', and 'set-cookie' are never reported.
    */
-  sendHeaders?: BlocklistValuesBaseOptions;
+  sendHeaders?: SendValuesBaseOptions;
   /**
    * [DEPRECATED] Use sendHeaders
    * Passing an array into privateHeaders is equivalent to passing { exceptNames: array } into sendHeaders, and
@@ -541,7 +544,7 @@ export function signatureCacheKey(queryHash: string, operationName: string) {
 // were set.
 // - Throws an error if both the deprecated option and its replacement (e.g. 'privateVariables' and 'sendVariableValues') were set.
 // - Otherwise, wraps the deprecated option into objects that can be passed to the new replacement field (see the helper
-// function makeBlocklistBaseOptionsFromLegacy), and deletes the deprecated field from the options
+// function makeSendValuesBaseOptionsFromLegacy), and deletes the deprecated field from the options
 export function handleLegacyOptions(
   options: EngineReportingOptions<any>,
 ): void {
@@ -551,7 +554,7 @@ export function handleLegacyOptions(
       "You have set both the 'sendVariableValues' and the deprecated 'privateVariables' options. Please only set 'sendVariableValues'.",
     );
   } else if (options.privateVariables != null) {
-    options.sendVariableValues = makeBlocklistBaseOptionsFromLegacy(
+    options.sendVariableValues = makeSendValuesBaseOptionsFromLegacy(
       options.privateVariables,
     );
     delete options.privateVariables;
@@ -563,7 +566,7 @@ export function handleLegacyOptions(
       "You have set both the 'sendHeaders' and the deprecated 'privateHeaders' options. Please only set 'sendHeaders'.",
     );
   } else if (options.privateHeaders != null) {
-    options.sendHeaders = makeBlocklistBaseOptionsFromLegacy(
+    options.sendHeaders = makeSendValuesBaseOptionsFromLegacy(
       options.privateHeaders,
     );
     delete options.privateHeaders;
@@ -572,9 +575,9 @@ export function handleLegacyOptions(
 
 // This helper wraps non-null inputs from the deprecated options 'privateVariables' and 'privateHeaders' into
 // objects that can be passed to the new replacement options, 'sendVariableValues' and 'sendHeaders'
-function makeBlocklistBaseOptionsFromLegacy(
+function makeSendValuesBaseOptionsFromLegacy(
   legacyPrivateOption: Array<String> | boolean,
-): BlocklistValuesBaseOptions {
+): SendValuesBaseOptions {
   return Array.isArray(legacyPrivateOption)
     ? {
         exceptNames: legacyPrivateOption,
