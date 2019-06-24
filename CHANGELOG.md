@@ -12,6 +12,7 @@
 - `apollo-engine-reporting`: Set `forbiddenOperation` and `registeredOperation` later in the request lifecycle [PR #2828](https://github.com/apollographql/apollo-server/pull/2828)
 - `apollo-server-core`: Add queryHash to GraphQLExecutor for federation [PR #2822](https://github.com/apollographql/apollo-server/pull/2822)
 - `apollo-server-core`: fix setting `engine: false` should ignore `ENGINE_API_KEY` in environment variable [PR #2850](https://github.com/apollographql/apollo-server/pull/2850) (a regression introduced in 2.6.0)
+- `apollo-server-core`: Avoid duplicate `cacheControl` directives being added via `isDirectiveDefined` [PR #2762](https://github.com/apollographql/apollo-server/pull/2762) (was reverted in 2.6.1 because previous implementation released in 2.6.0 broke passing in typedefs as a string)
 
 ### v2.6.2
 
