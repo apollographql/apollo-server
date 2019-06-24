@@ -167,8 +167,8 @@ export class ApolloGateway implements GraphQLService {
       this.serviceMap[serviceDef.name] = this.config.buildService
         ? this.config.buildService(serviceDef)
         : new RemoteGraphQLDataSource({
-          url: serviceDef.url,
-        });
+            url: serviceDef.url,
+          });
     }
   }
 
