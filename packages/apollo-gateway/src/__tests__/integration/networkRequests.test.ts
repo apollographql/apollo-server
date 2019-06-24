@@ -1,5 +1,5 @@
 import nock from 'nock';
-import { createGateway } from '../..';
+import { ApolloGateway } from '../..';
 
 import {
   mockGetRawPartialSchema,
@@ -13,10 +13,10 @@ import {
 it('Queries remote endpoints for their SDLs', async () => {
   mockLocalhostSDLQuery();
 
-  await createGateway({
+  let gateway = new ApolloGateway({
     serviceList: [{ name: 'accounts', url: 'http://localhost:4001/graphql' }],
   });
-
+  await gateway.load();
   expect(nock.isDone()).toBeTruthy();
 });
 
@@ -28,9 +28,9 @@ it('Extracts service definitions from remote storage', async () => {
   mockGetImplementingServices();
   mockGetRawPartialSchema();
 
-  await createGateway({
+  let gateway = new ApolloGateway({
     apiKey: 'service:mdg-private-6077:EgWp3sa01FhGuMJSKIfMVQ',
   });
-
+  await gateway.load();
   expect(nock.isDone()).toBeTruthy();
 });
