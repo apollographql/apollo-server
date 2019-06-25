@@ -286,10 +286,10 @@ function splitSubfields(
       } else {
         // We need to fetch the key fields from the parent group first, and then
         // use a dependent fetch from the owning service.
-        let keyFields = context.getKeyFields(
+        let keyFields = context.getKeyFields({
           parentType,
-          parentGroup.serviceName,
-        );
+          serviceName: parentGroup.serviceName,
+        });
         if (
           keyFields.length === 0 ||
           (keyFields.length === 1 &&
@@ -298,7 +298,10 @@ function splitSubfields(
           // Only __typename key found.
           // In some cases, the parent group does not have any @key directives.
           // Fall back to owning group's keys
-          keyFields = context.getKeyFields(parentType, owningService);
+          keyFields = context.getKeyFields({
+            parentType,
+            serviceName: owningService,
+          });
         }
         return parentGroup.dependentGroupForService(owningService, keyFields);
       }
@@ -323,10 +326,10 @@ function splitSubfields(
       } else {
         // We need to go through the base group first.
 
-        const keyFields = context.getKeyFields(
+        const keyFields = context.getKeyFields({
           parentType,
-          parentGroup.serviceName,
-        );
+          serviceName: parentGroup.serviceName,
+        });
 
         if (!keyFields) {
           throw new GraphQLError(
@@ -781,11 +784,15 @@ export class QueryPlanningContext {
     }
   }
 
-  getKeyFields(
-    parentType: GraphQLCompositeType,
-    serviceName: string,
+  getKeyFields({
+    parentType,
+    serviceName,
     fetchAll = false,
-  ): FieldSet {
+  }: {
+    parentType: GraphQLCompositeType;
+    serviceName: string;
+    fetchAll?: boolean;
+  }): FieldSet {
     const keyFields: FieldSet = [];
 
     keyFields.push({
@@ -832,7 +839,7 @@ export class QueryPlanningContext {
   ): FieldSet {
     const requiredFields: FieldSet = [];
 
-    requiredFields.push(...this.getKeyFields(parentType, serviceName));
+    requiredFields.push(...this.getKeyFields({ parentType, serviceName }));
 
     if (fieldDef.federation && fieldDef.federation.requires) {
       requiredFields.push(
@@ -855,7 +862,13 @@ export class QueryPlanningContext {
 
     const providedFields: FieldSet = [];
 
-    providedFields.push(...this.getKeyFields(returnType, serviceName, true));
+    providedFields.push(
+      ...this.getKeyFields({
+        parentType: returnType,
+        serviceName,
+        fetchAll: true,
+      }),
+    );
 
     if (fieldDef.federation && fieldDef.federation.provides) {
       providedFields.push(
