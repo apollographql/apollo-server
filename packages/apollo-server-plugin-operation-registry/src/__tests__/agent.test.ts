@@ -539,6 +539,28 @@ describe('Agent', () => {
         });
       });
     });
+
+    describe('manifest lifecycle', () => {
+      describe('willUpdateManifest', () => {
+        describe("called with undefined arguments when can't fetch first time", () => {});
+        describe('called with manifest retrieved from gcs', () => {});
+        describe('uses returned manifest', () => {});
+        describe('not called again when manifest remains same', () => {});
+        describe('called with previous manifest when updated', () => {});
+      });
+    });
+  });
+
+  describe('operation lifecycle hooks', () => {
+    describe('onUnregisterOperation', () => {
+      describe('called when unregistered operation received', () => {});
+      describe('not called when registered operation received', () => {});
+    });
+    describe('onForbiddenOperation', () => {
+      describe('called when unregistered operation received and forbidden', () => {});
+      describe('not called when unregistered operation received and unforbidden', () => {});
+      describe('not called when registered operation received', () => {});
+    });
   });
 });
 
