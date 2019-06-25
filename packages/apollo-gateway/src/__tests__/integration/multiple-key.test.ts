@@ -69,7 +69,7 @@ const actuaryService: ServiceDefinitionModule = {
   resolvers: {
     User: {
       risk(user) {
-        return user.ssn[0] / 9;
+        return user.ssn[0] / 10;
       },
     },
   },
@@ -82,10 +82,19 @@ const userService: ServiceDefinitionModule = {
       users: [User!]!
     }
 
-    type User @key(fields: "ssn") @key(fields: "id") {
+    type Group {
+      id: ID
+      name: String
+    }
+
+    type User
+      @key(fields: "ssn")
+      @key(fields: "id")
+      @key(fields: "group { id }") {
       id: ID!
       ssn: ID!
       name: String!
+      group: Group
     }
   `,
   resolvers: {
@@ -95,6 +104,7 @@ const userService: ServiceDefinitionModule = {
       },
     },
     User: {
+      group: () => ({ id: 1, name: 'Apollo GraphQL' }),
       __resolveReference(reference) {
         if (reference.ssn)
           return users.find(user => user.ssn === reference.ssn);
@@ -117,40 +127,41 @@ it('fetches data correctly with multiple @key fields', async () => {
     }
   `;
 
-  const { data, queryPlan } = await execute(
+  const { data, queryPlan, errors } = await execute(
     [userService, reviewService, actuaryService],
     {
       query,
     },
   );
 
+  expect(errors).toBeFalsy();
   expect(data).toEqual({
     reviews: [
       {
         body: 'A',
         author: {
-          risk: 0.1111111111111111,
+          risk: 0.1,
           name: 'Trevor',
         },
       },
       {
         body: 'B',
         author: {
-          risk: 0.2222222222222222,
+          risk: 0.2,
           name: 'Scheer',
         },
       },
       {
         body: 'C',
         author: {
-          risk: 0.3333333333333333,
+          risk: 0.3,
           name: 'James',
         },
       },
       {
         body: 'D',
         author: {
-          risk: 0.4444444444444444,
+          risk: 0.4,
           name: 'Baxley',
         },
       },
@@ -228,14 +239,12 @@ it('fetches keys as needed to reduce round trip queries', async () => {
       query,
     },
   );
-  console.log(JSON.stringify(errors, null, 2));
 
   expect(errors).toBeFalsy();
-
   expect(data).toEqual({
     users: [
       {
-        risk: 0.1111111111111111,
+        risk: 0.1,
         reviews: [
           {
             body: 'A',
@@ -243,7 +252,7 @@ it('fetches keys as needed to reduce round trip queries', async () => {
         ],
       },
       {
-        risk: 0.2222222222222222,
+        risk: 0.2,
         reviews: [
           {
             body: 'B',
@@ -251,7 +260,7 @@ it('fetches keys as needed to reduce round trip queries', async () => {
         ],
       },
       {
-        risk: 0.3333333333333333,
+        risk: 0.3,
         reviews: [
           {
             body: 'C',
@@ -259,7 +268,7 @@ it('fetches keys as needed to reduce round trip queries', async () => {
         ],
       },
       {
-        risk: 0.4444444444444444,
+        risk: 0.4,
         reviews: [
           {
             body: 'D',
