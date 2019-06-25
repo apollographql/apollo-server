@@ -46,7 +46,7 @@ const server = new ApolloServer({
 });
 ```
 
-If you're already familiar with [setting up an Apollo Server](https://www.apollographql.com/docs/apollo-server/essentials/server#creating), this should look pretty familiar. If not, we recommend you first take a moment to get comfortable with this topic before jumping in to federation.
+If you're already familiar with [setting up an Apollo Server](/essentials/server/#creating-a-server), this should look pretty familiar. If not, we recommend you first take a moment to get comfortable with this topic before jumping in to federation.
 
 Now, let's see what this looks like as a federated service:
 
@@ -125,13 +125,11 @@ const gateway = new ApolloGateway({
 })();
 ```
 
-In this example, we provide two options to the `ApolloGateway` constructor:
-* The `serviceList`, which provides a name and endpoint for each of the federated services.
-* The `debug` flag, which provides some additional logging around gateway startup and query execution. This is useful for troubleshooting, as well as for viewing query plans for incoming requests.
+In this example, we provide the `serviceList` option to the `ApolloGateway` constructor, which provides a name and endpoint for each of the federated services. The name (an arbitrary string) is primarily used for query planner output, error messages, and logging.
 
-On startup, the gateway will fetch the service capabilities from the running servers and form an overall composed graph. It will accept incoming request and create query plans to the underlying services in the service list.
+On startup, the gateway will fetch the service capabilities from the running servers and form an overall composed graph. It will accept incoming requests and create query plans which query the underlying services in the service list.
 
-> If there are any composition errors, the `gateway.load()` promise will be rejected with a list of [validation errors](/federation/errors/)
+> If there are any composition errors, the `gateway.load()` promise will be rejected with a list of [validation errors](/federation/errors/).
 
 #### Gateway initialization
 The call to `gateway.load()` returns a `Promise` which resolves to a `schema` and `executor`. These are intended to be passed into the constructor of `ApolloServer`.
@@ -140,7 +138,7 @@ The call to `gateway.load()` returns a `Promise` which resolves to a `schema` an
 
 ## Inspecting query plans
 
-When the gateway receives a new query, it generates a query plan that defines the sequence of requests the gateway will send to the necessary downstream services. Inspecting a query plan can be a helpful tool in understanding the gateway and exploring how directives like `@requires` and `@provides` can help optimize query plans. To make it easy to access query plans, the `@apollo/gateway` package includes a build of GraphQL Playground that adds a query plan inspector.
+When the gateway receives a new query, it generates a query plan that defines the sequence of requests the gateway will send to the necessary downstream services. Inspecting a query plan can be a helpful tool in understanding the gateway and exploring how directives like [`@requires`](/federation/advanced-features/#computed-fields) and [`@provides`](/federation/advanced-features/#using-denormalized-data) can help optimize query plans. To make it easy to access query plans, the `@apollo/gateway` package includes a build of GraphQL Playground that adds a query plan inspector.
 
 
 ![playground](../images/playground.png)

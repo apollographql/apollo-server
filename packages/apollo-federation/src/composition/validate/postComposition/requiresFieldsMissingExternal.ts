@@ -42,9 +42,7 @@ export const requiresFieldsMissingExternal = (schema: GraphQLSchema) => {
               errorWithCode(
                 'REQUIRES_FIELDS_MISSING_EXTERNAL',
                 logServiceAndType(serviceName, typeName, fieldName) +
-                  `requires the field \`${
-                    selection.name.value
-                  }\` to be marked as @external.`,
+                  `requires the field \`${selection.name.value}\` to be marked as @external.`,
               ),
             );
           }

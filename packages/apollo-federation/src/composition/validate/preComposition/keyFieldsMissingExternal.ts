@@ -5,6 +5,7 @@ import {
   parse,
   GraphQLSchema,
   GraphQLError,
+  specifiedDirectives,
 } from 'graphql';
 import { buildSchemaFromSDL } from 'apollo-graphql';
 import { isNotNullOrUndefined } from 'apollo-env';
@@ -58,7 +59,7 @@ export const keyFieldsMissingExternal = ({
   // this allows us to build a partial schema
   let schema = new GraphQLSchema({
     query: undefined,
-    directives: federationDirectives,
+    directives: [...specifiedDirectives, ...federationDirectives],
   });
   try {
     schema = buildSchemaFromSDL(typeDefs, schema);
@@ -101,9 +102,7 @@ export const keyFieldsMissingExternal = ({
                 errorWithCode(
                   'KEY_FIELDS_MISSING_EXTERNAL',
                   logServiceAndType(serviceName, parentType.name) +
-                    `A @key directive specifies the \`${
-                      fieldDef.name
-                    }\` field which has no matching @external field.`,
+                    `A @key directive specifies the \`${fieldDef.name}\` field which has no matching @external field.`,
                 ),
               );
             }

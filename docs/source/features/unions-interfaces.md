@@ -1,6 +1,6 @@
 ---
 title: Unions and interfaces
-description: How to write add unions and interfaces to a schema
+description: How to add unions and interfaces to a schema
 ---
 
 Unions and interfaces are great when you have fields that are in common between two types.

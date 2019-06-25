@@ -8,9 +8,9 @@ description: For implementing federation in other languages
 To make a GraphQL service federation capable, it needs the following:
 
 * Implementation of the federation schema specification
+* Support for fetching service capabilities
 * Implementation of stub type generation for references
 * Implementation of request resolving for entities.
-* Support for fetching service capabilities
 
 ## Federation schema specification
 
@@ -36,12 +36,13 @@ directive @external on FIELD_DEFINITION
 directive @requires(fields: _FieldSet!) on FIELD_DEFINITION
 directive @provides(fields: _FieldSet!) on FIELD_DEFINITION
 directive @key(fields: _FieldSet!) on OBJECT
+directive @key(fields: _FieldSet!) on INTERFACE
 
 # this is an optional directive discussed below
 directive @extends on OBJECT
 ```
 
-For more information on these additions, see the [glossary](#schema-modifications-glossary)
+For more information on these additions, see the [glossary](#schema-modifications-glossary).
 
 ## Fetch service capabilities
 
@@ -85,7 +86,7 @@ Execution of a federated graph requires being able to "enter" into a service at 
 * Make each entity in the schema part of the `_Entity` union
 * Implement the `_entities` field on the query root
 
-To implement the `_Entity` union, each type annotated with `@key` should be added to the `_Entity` union. If no types are annotated with the key directive, then the `_Entity` union should be removed from the schema. For example, given the following partial schema:
+To implement the `_Entity` union, each type annotated with `@key` should be added to the `_Entity` union. If no types are annotated with the key directive, then the `_Entity` union and `Query._entities` field should be removed from the schema. For example, given the following partial schema:
 
 ```graphql
 type Review @key(fields: "id") {
@@ -227,9 +228,10 @@ A new field must be added to the query root called `_entities`. This field must 
 
 ```graphql
 directive @key(fields: _FieldSet!) on OBJECT
+directive @key(fields: _FieldSet!) on INTERFACE
 ```
 
-The `@key` directive is used to indicate a combination of fields that can be used to uniquely identify and fetch an object.
+The `@key` directive is used to indicate a combination of fields that can be used to uniquely identify and fetch an object or interface.
 
 ```graphql
 type Product @key(fields: "upc") {

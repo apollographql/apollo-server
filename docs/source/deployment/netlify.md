@@ -90,10 +90,7 @@ exports.handler = server.createHandler();
 
 Now, make sure you've run `npm run start:lambda`, and navigate to `localhost:9000/graphql` in your browser. You should see GraphQL Playground, where you can run queries against your API!
 
-<div style="text-align:center">
 ![Local GraphQL Server](../images/graphql.png)
-<br></br>
-</div>
 
 If you can see GraphQL Playground and run a simple query, you've done everything properly. Now, let's add Apollo Client to the frontend.
 
@@ -135,17 +132,11 @@ Check the repository to make sure the code showed up.
 
 [Sign up for a Netlify account](https://app.netlify.com/) if you don’t have one yet. Then, make a new site, and select the right repository:
 
-<div style="text-align:center">
 ![Select Repo on Netlify](../images/selectrep.png)
-<br></br>
-</div>
 
 The starter kit came with a `netlify.toml` configuration file, so we don’t have to change any settings in the UI. Just continue to the deploy step right away.
 
-<div style="text-align:center">
 ![Site deploy in progress](../images/sitedeployinprogress.png)
-<br></br>
-</div>
 
 Wait for it to deploy, and in the meanwhile you can set a custom name for your app. Once it’s done, you’re live!
 

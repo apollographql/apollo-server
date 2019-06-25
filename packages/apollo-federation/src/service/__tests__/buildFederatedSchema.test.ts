@@ -73,6 +73,61 @@ type Money {
 `);
   });
 
+  it('should preserve description text in generated SDL', async () => {
+    const query = `query GetServiceDetails {
+      _service {
+        sdl
+      }
+    }`;
+    const schema = buildFederatedSchema(gql`
+      "A user. This user is very complicated and requires so so so so so so so so so so so so so so so so so so so so so so so so so so so so so so so so much description text"
+      type User @key(fields: "id") {
+        """
+        The unique ID of the user.
+        """
+        id: ID!
+        "The user's name."
+        name: String
+        username: String
+        foo(
+          "Description 1"
+          arg1: String
+          "Description 2"
+          arg2: String
+          "Description 3 Description 3 Description 3 Description 3 Description 3 Description 3 Description 3 Description 3 Description 3 Description 3 Description 3"
+          arg3: String
+        ): String
+      }
+    `);
+
+    const { data, errors } = await graphql(schema, query);
+    expect(errors).toBeUndefined();
+    expect(data._service.sdl).toEqual(`"""
+A user. This user is very complicated and requires so so so so so so so so so so
+so so so so so so so so so so so so so so so so so so so so so so much
+description text
+"""
+type User @key(fields: "id") {
+  "The unique ID of the user."
+  id: ID!
+  "The user's name."
+  name: String
+  username: String
+  foo(
+    "Description 1"
+    arg1: String
+    "Description 2"
+    arg2: String
+    """
+    Description 3 Description 3 Description 3 Description 3 Description 3
+    Description 3 Description 3 Description 3 Description 3 Description 3 Description 3
+    """
+    arg3: String
+  ): String
+}
+`);
+  });
+
   describe(`should add an _entities query root field to the schema`, () => {
     it(`when a query root type with the default name has been defined`, () => {
       const schema = buildFederatedSchema(gql`

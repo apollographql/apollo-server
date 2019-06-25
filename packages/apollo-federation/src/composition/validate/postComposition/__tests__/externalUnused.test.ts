@@ -117,7 +117,7 @@ describe('externalUnused', () => {
     expect(warnings).toEqual([]);
   });
 
-  it('does not warn when @external is selected by a @provides used from a child type', () => {
+  it('does not warn when @external is selected by a @provides used from another type', () => {
     const serviceA = {
       typeDefs: gql`
         type User @key(fields: "id") {
@@ -134,8 +134,107 @@ describe('externalUnused', () => {
           author: User @provides(fields: "username")
         }
 
-        type User {
+        extend type User @key(fields: "id") {
           username: String @external
+        }
+      `,
+      name: 'serviceB',
+    };
+
+    const { schema, errors } = composeServices([serviceA, serviceB]);
+    const warnings = validateExternalUnused(schema);
+    expect(warnings).toEqual([]);
+  });
+
+  it.todo(
+    'does not error when @provides selects an external field in a subselection',
+  );
+
+  it.todo('errors when there is an invalid selection in @requires');
+
+  it('does not warn when @external is selected by a @requires used from another type', () => {
+    const serviceA = {
+      typeDefs: gql`
+        type User @key(fields: "id") {
+          id: ID!
+          username: String
+        }
+
+        type AccountRoles {
+          canRead: Boolean
+          canWrite: Boolean
+        }
+      `,
+      name: 'serviceA',
+    };
+
+    const serviceB = {
+      typeDefs: gql`
+        type Review {
+          author: User
+        }
+
+        extend type User @key(fields: "id") {
+          roles: AccountRoles!
+          isAdmin: Boolean! @requires(fields: "roles { canWrite }")
+        }
+
+        # Externals -- only referenced by the @requires on User.isAdmin
+        extend type AccountRoles {
+          canWrite: Boolean @external
+        }
+      `,
+      name: 'serviceB',
+    };
+
+    const { schema, errors } = composeServices([serviceA, serviceB]);
+    const warnings = validateExternalUnused(schema);
+    expect(warnings).toEqual([]);
+  });
+
+  it('does not warn when @external is selected by a @requires in a deep subselectionm', () => {
+    const serviceA = {
+      typeDefs: gql`
+        type User @key(fields: "id") {
+          id: ID!
+          username: String
+        }
+
+        type AccountRoles {
+          canRead: Group
+          canWrite: Group
+        }
+
+        type Group {
+          id: ID!
+          name: String
+          members: [User]
+        }
+      `,
+      name: 'serviceA',
+    };
+
+    const serviceB = {
+      typeDefs: gql`
+        type Review {
+          author: User
+        }
+
+        extend type User @key(fields: "id") {
+          roles: AccountRoles!
+          username: String @external
+          isAdmin: Boolean!
+            @requires(fields: "roles { canWrite { members { username } } }")
+        }
+
+        # Externals -- only referenced by the @requires on User.isAdmin
+        extend type AccountRoles {
+          canWrite: Group @external
+          # canRead: Group @external
+        }
+
+        extend type Group {
+          members: [User] @external
         }
       `,
       name: 'serviceB',

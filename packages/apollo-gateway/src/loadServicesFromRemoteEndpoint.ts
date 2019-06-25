@@ -56,9 +56,7 @@ export async function getServiceDefinitionsFromRemoteEndpoint({
         })
         .catch(error => {
           console.warn(
-            `Encountered error when loading ${service.name} at ${
-              service.url
-            }: ${error.message}`,
+            `Encountered error when loading ${service.name} at ${service.url}: ${error.message}`,
           );
           return false;
         });
