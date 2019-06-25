@@ -8,6 +8,7 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 - `apollo-server-core`: Avoid duplicate `cacheControl` directives being added via `isDirectiveDefined`. [PR #2762](https://github.com/apollographql/apollo-server/pull/2762) (was reverted in 2.6.1 because previous implementation released in 2.6.0 broke passing in typedefs as a string)
 - `apollo-server-testing`: Add TypeScript types for `apollo-server-testing` client. [PR #2871](https://github.com/apollographql/apollo-server/pull/2871)
+- `apollo-server-plugin-response-cache`: Fix undefined property access attempt which occurred when an incomplete operation was received. [PR #2792](https://github.com/apollographql/apollo-server/pull/2792) [Issue #2745](https://github.com/apollographql/apollo-server/issues/2745)
 
 ### v2.6.5
 
