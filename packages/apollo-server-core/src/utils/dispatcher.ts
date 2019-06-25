@@ -1,7 +1,7 @@
 type AnyFunction = (...args: any[]) => any;
 type Args<F> = F extends (...args: infer A) => any ? A : never;
 type FunctionPropertyNames<T, F extends AnyFunction = AnyFunction> = {
-  [K in keyof T]: T[K] extends F ? K : never
+  [K in keyof T]: T[K] extends F ? K : never;
 }[keyof T];
 type AsFunction<F> = F extends AnyFunction ? F : never;
 type UnwrapPromise<T> = T extends Promise<infer U> ? U : T;

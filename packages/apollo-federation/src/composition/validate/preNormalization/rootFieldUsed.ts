@@ -22,7 +22,7 @@ export const rootFieldUsed = ({
 
   // Map of OperationTypeNode to its respective default root operation type name
   const defaultRootOperationNameLookup: {
-    [node in OperationTypeNode]: DefaultRootOperationTypeName
+    [node in OperationTypeNode]: DefaultRootOperationTypeName;
   } = {
     query: 'Query',
     mutation: 'Mutation',
@@ -35,7 +35,7 @@ export const rootFieldUsed = ({
   );
 
   const disallowedTypeNames: {
-    [key in DefaultRootOperationTypeName]?: boolean
+    [key in DefaultRootOperationTypeName]?: boolean;
   } = {};
 
   let hasSchemaDefinitionOrExtension = false;
