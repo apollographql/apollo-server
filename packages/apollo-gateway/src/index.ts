@@ -81,7 +81,7 @@ export class ApolloGateway {
     this.initializeQueryPlanStore();
   }
 
-  public async load() {
+  public async load(): Promise<GraphQLService> {
     if (!this.isReady) {
       this.logger.debug('Loading configuration for Gateway');
       const [services] = await this.loadServiceDefinitions(this.config);
