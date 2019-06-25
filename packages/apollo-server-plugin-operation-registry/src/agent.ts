@@ -11,8 +11,8 @@ import loglevel from 'loglevel';
 
 import { Response } from 'node-fetch';
 import { InMemoryLRUCache } from 'apollo-server-caching';
-import { GraphQLRequestContext } from 'apollo-server-plugin-base';
 import { fetchIfNoneMatch } from './fetchIfNoneMatch';
+import { PromiseOrValue } from 'graphql/jsutils/PromiseOrValue';
 
 const DEFAULT_POLL_SECONDS: number = 30;
 const SYNC_WARN_TIME_SECONDS: number = 60;
@@ -24,10 +24,10 @@ export interface AgentOptions {
   engine: any;
   store: InMemoryLRUCache;
   schemaTag: string;
-  onManifestUpdate?: (
-    newManifest: OperationManifest,
-    oldManifest: OperationManifest,
-  ) => void;
+  willUpdateManifest?: (
+    newManifest?: OperationManifest,
+    oldManifest?: OperationManifest,
+  ) => PromiseOrValue<OperationManifest>;
 }
 
 export interface Operation {
@@ -56,6 +56,7 @@ export default class Agent {
   public _timesChecked: number = 0;
 
   private lastOperationSignatures: SignatureStore = new Set();
+  private lastManifest?: OperationManifest;
   private readonly options: AgentOptions = Object.create(null);
 
   constructor(options: AgentOptions) {
@@ -106,8 +107,14 @@ export default class Agent {
     try {
       await pulse();
     } catch (err) {
+      // Update the manifest to trigger `onManifestUpdate(newManifest: undefined, oldManifest: undefined)`
+      this.updateManifest();
       console.error(
-        'The operation manifest could not be fetched.  Retries will continue, but requests will be forbidden until the manifest is fetched.',
+        `The operation manifest could not be fetched. Retries will continue.${
+          this.lastManifest
+            ? ''
+            : ' Requests will be forbidden until the manifest is fetched.'
+        }`,
         err.message || err,
       );
     }
@@ -313,19 +320,37 @@ export default class Agent {
       });
   }
 
-  public async updateManifest(manifest: OperationManifest) {
+  public async updateManifest(manifest?: OperationManifest) {
     if (
-      !manifest ||
-      manifest.version !== 2 ||
-      !Array.isArray(manifest.operations)
+      manifest &&
+      (manifest.version !== 2 || !Array.isArray(manifest.operations))
     ) {
       throw new Error('Invalid manifest format.');
     }
 
+    const returnedManifest =
+      (await (this.options.willUpdateManifest &&
+        this.options.willUpdateManifest(manifest, this.lastManifest))) ||
+      manifest;
+
+    if (returnedManifest && !Array.isArray(returnedManifest.operations)) {
+      throw new Error(
+        "Invalid manifest format. Manifest's operations must be an array",
+      );
+    }
+
+    if (returnedManifest) {
+      this.updateOperationStore(returnedManifest.operations);
+    }
+
+    this.lastManifest = manifest;
+  }
+
+  private updateOperationStore(operations: OperationManifest['operations']) {
     const incomingOperations: Map<string, string> = new Map();
     const replacementSignatures: SignatureStore = new Set();
 
-    for (const { signature, document } of manifest.operations) {
+    for (const { signature, document } of operations) {
       incomingOperations.set(signature, document);
       // Keep track of each operation in this manifest so we can store it
       // for comparison after the next fetch.

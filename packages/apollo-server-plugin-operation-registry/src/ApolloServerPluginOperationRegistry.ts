@@ -16,6 +16,7 @@ import { GraphQLSchema } from 'graphql/type';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import loglevel from 'loglevel';
 import loglevelDebug from 'loglevel-debug';
+import { PromiseOrValue } from 'graphql/jsutils/PromiseOrValue';
 
 type ForbidUnregisteredOperationsPredicate = (
   requestContext: GraphQLRequestContext,
@@ -30,10 +31,10 @@ interface Options {
   schemaTag?: string;
   onUnregisteredOperation?: (requestContext: GraphQLRequestContext) => void;
   onForbiddenOperation?: (requestContext: GraphQLRequestContext) => void;
-  onManifestUpdate?: (
-    newManifest: OperationManifest,
-    oldManifest: OperationManifest,
-  ) => void;
+  willUpdateManifest?: (
+    newManifest?: OperationManifest,
+    oldManifest?: OperationManifest,
+  ) => PromiseOrValue<OperationManifest>;
 }
 
 export default function plugin(options: Options = Object.create(null)) {
@@ -100,7 +101,7 @@ export default function plugin(options: Options = Object.create(null)) {
         engine,
         store,
         logger,
-        onManifestUpdate: options.onManifestUpdate,
+        willUpdateManifest: options.willUpdateManifest,
       });
 
       await agent.start();
