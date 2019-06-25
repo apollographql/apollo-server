@@ -6,6 +6,8 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 > The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  When a release is being prepared, a new header will be (manually) created below and the the appropriate changes within that release will be moved into the new section.
 
+- `apollo-server-core`: Avoid duplicate `cacheControl` directives being added via `isDirectiveDefined`. [PR #2762](https://github.com/apollographql/apollo-server/pull/2762) (was reverted in 2.6.1 because previous implementation released in 2.6.0 broke passing in typedefs as a string)
+
 ### v2.6.5
 
 - `apollo-engine-reporting`: Simplify the technique for capturing `operationName`. [PR #2899](https://github.com/apollographql/apollo-server/pull/2899)
