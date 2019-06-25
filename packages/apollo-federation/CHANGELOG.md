@@ -2,6 +2,8 @@
 
 ### vNEXT
 
+# v0.6.x
+
 * Allow specified directives during validation (@deprecated) [#2823](https://github.com/apollographql/apollo-server/pull/2823)
 
 # v0.6.1
