@@ -26,6 +26,7 @@ import { CacheControlExtensionOptions } from 'apollo-cache-control';
 import { ApolloServerPlugin } from 'apollo-server-plugin-base';
 
 import { GraphQLSchemaModule } from '@apollographql/apollo-tools';
+import { GraphQLExecutor } from 'apollo-server-core/dist/requestPipelineAPI';
 export { GraphQLSchemaModule };
 
 export { KeyValueCache } from 'apollo-server-caching';
@@ -64,6 +65,11 @@ type BaseConfig = Pick<
   | 'cache'
 >;
 
+export interface GraphQLService {
+  schema: GraphQLSchema;
+  executor: GraphQLExecutor;
+}
+
 // This configuration is shared between all integrations and should include
 // fields that are not specific to a single integration
 export interface Config extends BaseConfig {
@@ -86,6 +92,7 @@ export interface Config extends BaseConfig {
   //https://github.com/jaydenseric/graphql-upload#type-uploadoptions
   uploads?: boolean | FileUploadOptions;
   playground?: PlaygroundConfig;
+  gateway?: GraphQLService;
 }
 
 export interface FileUploadOptions {

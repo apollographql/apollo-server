@@ -1,7 +1,7 @@
 import {
-  GraphQLExecutor,
   GraphQLExecutionResult,
   GraphQLRequestContext,
+  GraphQLService,
 } from 'apollo-server-core';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import { isObjectType, isIntrospectionType, GraphQLSchema } from 'graphql';
@@ -23,12 +23,6 @@ import { getServiceDefinitionsFromRemoteEndpoint } from './loadServicesFromRemot
 import { serializeQueryPlan, QueryPlan } from './QueryPlan';
 import { GraphQLDataSource } from './datasources/types';
 import { RemoteGraphQLDataSource } from './datasources/RemoteGraphQLDatasource';
-
-export interface GraphQLService {
-  schema?: GraphQLSchema;
-  executor: GraphQLExecutor;
-  isReady: boolean;
-}
 
 export type ServiceEndpointDefinition = Pick<ServiceDefinition, 'name' | 'url'>;
 
@@ -52,7 +46,7 @@ function isLocalConfig(config: GatewayConfig): config is LocalGatewayConfig {
   return 'localServiceList' in config;
 }
 
-export class ApolloGateway implements GraphQLService {
+export class ApolloGateway {
   public schema?: GraphQLSchema;
   public isReady: boolean = false;
   protected serviceMap: ServiceMap = Object.create(null);
@@ -95,7 +89,7 @@ export class ApolloGateway implements GraphQLService {
       this.createSchema(services);
     }
 
-    return { schema: this.schema, executor: this.executor };
+    return { schema: this.schema!, executor: this.executor };
   }
 
   protected createSchema(services: ServiceDefinition[]) {
@@ -264,8 +258,7 @@ export async function createGateway(
   config: GatewayConfig,
 ): Promise<GraphQLService> {
   const gateway = new ApolloGateway(config);
-  await gateway.load();
-  return gateway;
+  return await gateway.load();
 }
 
 export {
