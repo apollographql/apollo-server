@@ -31,9 +31,7 @@ export const providesNotOnEntity = (schema: GraphQLSchema) => {
             errorWithCode(
               'PROVIDES_NOT_ON_ENTITY',
               logServiceAndType(serviceName, typeName, fieldName) +
-                `uses the @provides directive but \`${typeName}.${fieldName}\` returns \`${
-                  field.type
-                }\`, which is not an Object type. @provides can only be used on Object types with at least one @key.`,
+                `uses the @provides directive but \`${typeName}.${fieldName}\` returns \`${field.type}\`, which is not an Object type. @provides can only be used on Object types with at least one @key.`,
             ),
           );
           continue;
@@ -48,9 +46,7 @@ export const providesNotOnEntity = (schema: GraphQLSchema) => {
             errorWithCode(
               'PROVIDES_NOT_ON_ENTITY',
               logServiceAndType(serviceName, typeName, fieldName) +
-                `uses the @provides directive but \`${typeName}.${fieldName}\` does not return a type that has a @key. Try adding a @key to the \`${
-                  field.type
-                }\` type.`,
+                `uses the @provides directive but \`${typeName}.${fieldName}\` does not return a type that has a @key. Try adding a @key to the \`${field.type}\` type.`,
             ),
           );
         }
