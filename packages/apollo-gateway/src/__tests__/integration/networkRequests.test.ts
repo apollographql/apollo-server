@@ -12,14 +12,16 @@ import {
 } from './nockMocks';
 
 it('Queries remote endpoints for their SDLs', async () => {
-  let url = 'localhost:4001';
-  let sdl = `extend type Query {
+  let url = 'http://localhost:4001';
+  let sdl = `
+  extend type Query {
       me: User
-    everyone: [User]
+      everyone: [User]
   }
 
+  "My User."
   type User @key(fields: "id") {
-      id: ID!
+    id: ID!
     name: String
     username: String
   }
@@ -28,10 +30,11 @@ it('Queries remote endpoints for their SDLs', async () => {
   mockLocalhostSDLQuery({ url, sdl });
 
   let gateway = new ApolloGateway({
-    serviceList: [{ name: 'accounts', url: 'http://localhost:4001/' }],
+    serviceList: [{ name: 'accounts', url: `${url}/graphql` }],
   });
   await gateway.load();
   expect(nock.isDone()).toBeTruthy();
+  expect(gateway.schema!.getType('User')!.description).toBe('My User.');
 });
 
 // This test is maybe a bit terrible, but IDK a better way to mock all the requests

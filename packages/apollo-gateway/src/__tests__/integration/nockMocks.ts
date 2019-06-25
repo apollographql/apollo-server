@@ -8,10 +8,10 @@ export const mockLocalhostSDLQuery = ({
   sdl: string;
 }) =>
   nock(url)
-    .post('/', {
+    .post('/graphql', {
       query: 'query GetServiceDefinition { _service { sdl } }',
     })
-    .reply(200, { data: { _service: { sdl: sdl } } });
+    .reply(200, { data: { _service: { sdl } } });
 
 export const mockFetchStorageSecret = ({
   apiKeyHash,
