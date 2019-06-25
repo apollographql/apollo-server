@@ -42,13 +42,13 @@ const EmptyQueryDefinition = {
   name: { kind: Kind.NAME, value: 'Query' },
   fields: [],
   serviceName: null,
-}
+};
 const EmptyMutationDefinition = {
   kind: Kind.OBJECT_TYPE_DEFINITION,
   name: { kind: Kind.NAME, value: 'Mutation' },
   fields: [],
   serviceName: null,
-}
+};
 
 // Map of all definitions to eventually be passed to extendSchema
 interface DefinitionsMap {
@@ -247,8 +247,7 @@ export function buildMapsFromServiceList(serviceList: ServiceDefinition[]) {
   // extendSchema will complain about this. We can't add an empty
   // GraphQLObjectType to the schema constructor, so we add an empty definition
   // here. We only add mutation if there is a mutation extension though.
-  if (!definitionsMap.Query)
-    definitionsMap.Query = [EmptyQueryDefinition];
+  if (!definitionsMap.Query) definitionsMap.Query = [EmptyQueryDefinition];
   if (extensionsMap.Mutation && !definitionsMap.Mutation)
     definitionsMap.Mutation = [EmptyMutationDefinition];
 
@@ -390,7 +389,7 @@ export function addFederationMetadataToSchemaNodes({
   }
   // add externals metadata
   for (const field of externalFields) {
-    const namedType = schema.getType(field.parentTypeName)
+    const namedType = schema.getType(field.parentTypeName);
     if (!namedType) continue;
 
     namedType.federation = {
