@@ -26,7 +26,7 @@ export interface ClientInfo {
 }
 
 export type SendValuesBaseOptions =
-  | { includeNames: Array<String> }
+  | { onlyNames: Array<String> }
   | { exceptNames: Array<String> }
   | { sendAll: true }
   | { sendNone: true };
@@ -104,15 +104,15 @@ export interface EngineReportingOptions<TContext> {
    * By default, Apollo Server does not send the values of any GraphQL variables to Apollo's servers, because variable
    * values often contain the private data of your app's users. If you'd like variable values to be included in traces, set this option.
    * This option can take several forms:
-   * - { sendNone: true }: blocklist all variable values (DEFAULT)
-   * - { sendAll: true}: safelist all variable values
+   * - { sendNone: true }: don't send any variable values (DEFAULT)
+   * - { sendAll: true}: send all variable values
    * - { transform: ... }: a custom function for modifying variable values. Keys added by the custom function will
    *    be removed, and keys removed will be added back with an empty value.
    * - { exceptNames: ... }: a case-sensitive list of names of variables whose values should not be sent to Apollo servers
-   * - { includeNames: ... }: A case-sensitive list of names of variables whose values will be sent to Apollo servers
+   * - { onlyNames: ... }: A case-sensitive list of names of variables whose values will be sent to Apollo servers
    *
-   * Defaults to blocklisting all variable values if both this parameter and
-   * the to-be-deprecated `privateVariables` are not set. The report will
+   * Defaults to not sending any variable values if both this parameter and
+   * the deprecated `privateVariables` are not set. The report will
    * indicate each private variable key whose value was redacted by { sendNone: true } or { exceptNames: [...] }.
    *
    * TODO(helen): Add new flag to the trace details (and modify the protobuf message structure) to indicate the type of modification. Then, add the following description to the docs:
@@ -134,12 +134,14 @@ export interface EngineReportingOptions<TContext> {
    * Apollo's servers, to protect private data of your app's users. If you'd like this information included in traces,
    * set this option. This option can take several forms:
    *
-   * - { sendNone : true } to drop all HTTP request headers (DEFAULT)
-   * - { sendAll : true } to send the values of all HTTP request headers
+   * - { sendNone: true } to drop all HTTP request headers (DEFAULT)
+   * - { sendAll: true } to send the values of all HTTP request headers
    * - { exceptNames: Array<String> } A case-insensitive list of names of HTTP headers whose values should not be
    *     sent to Apollo servers
-   * - { includeNames: Array<String> }: A case-insensitive list of names of HTTP headers whose values will be sent to Apollo servers
+   * - { onlyNames: Array<String> }: A case-insensitive list of names of HTTP headers whose values will be sent to Apollo servers
    *
+   * Defaults to not sending any request header names and values if both this parameter and
+   * the deprecated `privateHeaders` are not set.
    * Unlike with sendVariableValues, names of dropped headers are not reported.
    * The headers 'authorization', 'cookie', and 'set-cookie' are never reported.
    */

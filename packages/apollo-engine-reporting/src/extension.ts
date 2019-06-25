@@ -444,14 +444,15 @@ export function makeTraceDetails(
   Object.keys(variablesToRecord).forEach(name => {
     if (
       !sendVariableValues ||
-      'sendNone' in sendVariableValues ||
+      ('sendNone' in sendVariableValues && sendVariableValues.sendNone) ||
+      ('sendAll' in sendVariableValues && !sendVariableValues.sendAll) ||
       ('exceptNames' in sendVariableValues &&
         // We assume that most users will have only a few variables values to hide,
         // or will just set {sendNone: true}; we can change this
         // linear-time operation if it causes real performance issues.
         sendVariableValues.exceptNames.includes(name)) ||
-      ('includeNames' in sendVariableValues &&
-        !sendVariableValues.includeNames.includes(name))
+      ('onlyNames' in sendVariableValues &&
+        !sendVariableValues.onlyNames.includes(name))
     ) {
       // Special case for private variables. Note that this is a different
       // representation from a variable containing the empty string, as that
@@ -494,10 +495,15 @@ export function makeHTTPRequestHeaders(
   headers: Headers,
   sendHeaders?: SendValuesBaseOptions,
 ): void {
-  if (!sendHeaders || 'sendNone' in sendHeaders) {
+  if (
+    !sendHeaders ||
+    ('sendNone' in sendHeaders && sendHeaders.sendNone) ||
+    ('sendAll' in sendHeaders && !sendHeaders.sendAll)
+  ) {
     return;
   }
   for (const [key, value] of headers) {
+    const lowercaseKey = key.toLowerCase();
     if (
       ('exceptNames' in sendHeaders &&
         // We assume that most users only have a few headers to hide, or will
@@ -505,11 +511,11 @@ export function makeHTTPRequestHeaders(
         // operation if it causes real performance issues.
         sendHeaders.exceptNames.some(exceptHeader => {
           // Headers are case-insensitive, and should be compared as such.
-          return exceptHeader.toLowerCase() === key.toLowerCase();
+          return exceptHeader.toLowerCase() === lowercaseKey;
         })) ||
-      ('includeNames' in sendHeaders &&
-        !sendHeaders.includeNames.some(header => {
-          return header.toLowerCase() === key.toLowerCase();
+      ('onlyNames' in sendHeaders &&
+        !sendHeaders.onlyNames.some(header => {
+          return header.toLowerCase() === lowercaseKey;
         }))
     ) {
       continue;

@@ -124,23 +124,35 @@ describe('check variableJson output for sendVariableValues sendAll/sendNone type
     expect(makeTraceDetails({}, { sendNone: true })).toEqual(emptyOutput);
   });
 
+  const filteredOutput = new Trace.Details();
+  Object.keys(variables).forEach(name => {
+    filteredOutput.variablesJson[name] = '';
+  });
+
+  const nonFilteredOutput = new Trace.Details();
+  Object.keys(variables).forEach(name => {
+    nonFilteredOutput.variablesJson[name] = JSON.stringify(variables[name]);
+  });
+
   it('Case 2: Filter all variables', () => {
-    const filteredOutput = new Trace.Details();
-    Object.keys(variables).forEach(name => {
-      filteredOutput.variablesJson[name] = '';
-    });
     expect(makeTraceDetails(variables, { sendNone: true })).toEqual(
       filteredOutput,
     );
   });
 
   it('Case 3: Do not filter variables', () => {
-    const nonFilteredOutput = new Trace.Details();
-    Object.keys(variables).forEach(name => {
-      nonFilteredOutput.variablesJson[name] = JSON.stringify(variables[name]);
-    });
     expect(makeTraceDetails(variables, { sendAll: true })).toEqual(
       nonFilteredOutput,
+    );
+  });
+
+  it('Case 4: Check behavior for invalid inputs', () => {
+    expect(makeTraceDetails(variables, { sendNone: false })).toEqual(
+      nonFilteredOutput,
+    );
+
+    expect(makeTraceDetails(variables, { sendAll: false })).toEqual(
+      filteredOutput,
     );
   });
 });
@@ -169,7 +181,7 @@ describe('variableJson output for sendVariableValues exceptNames: Array type', (
   });
 });
 
-describe('variableJson output for sendVariableValues includeNames: Array type', () => {
+describe('variableJson output for sendVariableValues onlyNames: Array type', () => {
   it('array contains some values not in keys', () => {
     const privateVariablesArray: string[] = ['t2', 'notInVariables'];
     const expectedVariablesJson = {
@@ -177,27 +189,27 @@ describe('variableJson output for sendVariableValues includeNames: Array type', 
       t2: JSON.stringify(2),
     };
     expect(
-      makeTraceDetails(variables, { includeNames: privateVariablesArray })
+      makeTraceDetails(variables, { onlyNames: privateVariablesArray })
         .variablesJson,
     ).toEqual(expectedVariablesJson);
   });
 
-  it('sendAll=true equivalent to includeNames=[all variables]', () => {
+  it('sendAll=true equivalent to onlyNames=[all variables]', () => {
     let privateVariablesArray: string[] = ['testing', 't2'];
     expect(
       makeTraceDetails(variables, { sendAll: true }).variablesJson,
     ).toEqual(
-      makeTraceDetails(variables, { includeNames: privateVariablesArray })
+      makeTraceDetails(variables, { onlyNames: privateVariablesArray })
         .variablesJson,
     );
   });
 
-  it('sendNone=true equivalent to includeNames=[]', () => {
+  it('sendNone=true equivalent to onlyNames=[]', () => {
     let privateVariablesArray: string[] = [];
     expect(
       makeTraceDetails(variables, { sendNone: true }).variablesJson,
     ).toEqual(
-      makeTraceDetails(variables, { includeNames: privateVariablesArray })
+      makeTraceDetails(variables, { onlyNames: privateVariablesArray })
         .variablesJson,
     );
   });
@@ -307,6 +319,16 @@ describe('tests for the sendHeaders reporting option', () => {
     expect(httpBlocklist.requestHeaders).toEqual({});
   });
 
+  it('invalid inputs for sendHeaders.sendAll and sendHeaders.sendNone', () => {
+    const httpSafelist = makeTestHTTP();
+    makeHTTPRequestHeaders(httpSafelist, headers, { sendNone: false });
+    expect(httpSafelist.requestHeaders).toEqual(headersOutput);
+
+    const httpBlocklist = makeTestHTTP();
+    makeHTTPRequestHeaders(httpBlocklist, headers, { sendAll: false });
+    expect(httpBlocklist.requestHeaders).toEqual({});
+  });
+
   it('test sendHeaders.exceptNames', () => {
     const except: String[] = ['name', 'notinheaders'];
     const http = makeTestHTTP();
@@ -314,11 +336,11 @@ describe('tests for the sendHeaders reporting option', () => {
     expect(http.requestHeaders).toEqual({});
   });
 
-  it('test sendHeaders.includeNames', () => {
+  it('test sendHeaders.onlyNames', () => {
     // headers that should never be sent (such as "authorization") should still be removed if in includeHeaders
     const include: String[] = ['name', 'authorization', 'notinheaders'];
     const http = makeTestHTTP();
-    makeHTTPRequestHeaders(http, headers, { includeNames: include });
+    makeHTTPRequestHeaders(http, headers, { onlyNames: include });
     expect(http.requestHeaders).toEqual(headersOutput);
   });
 
