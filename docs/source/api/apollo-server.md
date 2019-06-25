@@ -345,19 +345,19 @@ addMockFunctionsToSchema({
    
 * `sendVariableValues`: { transform: (options: { variables: Record<string, any>, operationString?: string } ) => Record<string, any> }
                      | { exceptNames: Array&lt;String&gt; }
-                     | { includeNames: Array&lt;String&gt; }
+                     | { onlyNames: Array&lt;String&gt; }
                      | { sendNone: true }
                      | { sendAll: true }
     
     By default, Apollo Server does not send the values of any GraphQL variables to Apollo's servers, because variable values often contain the private data of your app's users. If you'd like variable values to be included in traces, set this option. This option can take several forms:
     
-    - { sendNone: true }: blocklist all variable values (DEFAULT)
-    - { sendAll: true }: safelist all variable values
+    - { sendNone: true }: don't send any variable values (DEFAULT)
+    - { sendAll: true }: send all variable values
     - { transform: ... }: a custom function for modifying variable values. Keys added by the custom function will be removed, and keys removed will be added back with an empty value. 
     - { exceptNames: ... }: a case-sensitive list of names of variables whose values should not be sent to Apollo servers
-    - { includeNames: ... }: a case-sensitive list of names of variables whose values will be sent to Apollo Servers
+    - { onlyNames: ... }: a case-sensitive list of names of variables whose values will be sent to Apollo Servers
 
-   Defaults to blocklisting all variable values if both this parameter and the to-be-deprecated `privateVariables` are not set. 
+   Defaults to not sending any variable values if both this parameter and the deprecated `privateVariables` are not set. 
    The report will indicate each private variable key whose value was redacted by { sendNone: true } or { exceptNames: [...] }.
    
 *  `privateVariables`: Array&lt;String&gt; | boolean
@@ -370,17 +370,18 @@ addMockFunctionsToSchema({
    
    NOTE: An error will be thrown if both this deprecated option and its replacement, `sendVariableValues` are defined.
     
-* `sendHeaders`: { exceptNames: Array&lt;String&gt; } | { includeNames: Array&lt;String&gt; } | { sendAll: boolean } | { sendNone: boolean }
+* `sendHeaders`: { exceptNames: Array&lt;String&gt; } | { onlyNames: Array&lt;String&gt; } | { sendAll: boolean } | { sendNone: boolean }
    By default, Apollo Server does not send the list of HTTP request headers and values to
    Apollo's servers, to protect private data of your app's users. If you'd like this information included in traces,
    set this option. This option can take several forms:
    
-  - { sendNone : true }: drop all HTTP request headers (DEFAULT)
-  - { sendAll : true }: send the values of all HTTP request headers
+   - { sendNone: true }: drop all HTTP request headers (DEFAULT)
+   - { sendAll: true }: send the values of all HTTP request headers
    - { exceptNames: ... }: A case-insensitive list of names of HTTP headers whose values should not be
    sent to Apollo servers
-   - { includeNames: ... }: A case-insensitive list of names of HTTP headers whose values will be sent to Apollo servers
-  
+   - { onlyNames: ... }: A case-insensitive list of names of HTTP headers whose values will be sent to Apollo servers
+   
+   Defaults to not sending any request header names and values if both this parameter and the deprecated `privateHeaders` are not set.
    Unlike with `sendVariableValues`, names of dropped headers are not reported.
    The headers 'authorization', 'cookie', and 'set-cookie' are never reported.
    
