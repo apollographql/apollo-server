@@ -6,8 +6,12 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 > The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  When a release is being prepared, a new header will be (manually) created below and the the appropriate changes within that release will be moved into the new section.
 
-- `apollo-engine-reporting`: Simplify apollo-engine-reporting operationName capturing [PR #2899](https://github.com/apollographql/apollo-server/pull/2899)
+### v2.6.5
+
+- `apollo-engine-reporting`: Simplify the technique for capturing `operationName`. [PR #2899](https://github.com/apollographql/apollo-server/pull/2899)
 - `apollo-server-core`: Fix regression in 2.6.0 which caused `engine: false` not to disable Engine when the `ENGINE_API_KEY` environment variable was set. [PR #2850](https://github.com/apollographql/apollo-server/pull/2850)
+- `@apollo/federation`: Introduced a `README.md`. [PR #2883](https://github.com/apollographql/apollo-server/pull/2883)
+- `@apollo/gateway`: Introduced a `README.md`. [PR #2883](https://github.com/apollographql/apollo-server/pull/2883)
 
 ### v2.6.4
 
