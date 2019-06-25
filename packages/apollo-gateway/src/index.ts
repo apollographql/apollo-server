@@ -185,7 +185,6 @@ export class ApolloGateway implements GraphQLService {
           federationVersion: config.federationVersion!,
         });
 
-    this.createServices(remoteServices);
     return [remoteServices, isNewService];
   }
 
