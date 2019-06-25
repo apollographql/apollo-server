@@ -36,13 +36,13 @@ it('Queries remote endpoints for their SDLs', async () => {
 
 // This test is maybe a bit terrible, but IDK a better way to mock all the requests
 it('Extracts service definitions from remote storage', async () => {
-  let apiKey = 'service:jacksons-service:AABBCCDDEEFFGG';
+  let serviceName = 'jacksons-service';
+  let apiKey = `service:${serviceName}:AABBCCDDEEFFGG`;
   let apiKeyHash = createSHA('sha512')
     .update(apiKey)
     .digest('hex');
 
   let storageSecret = 'secret';
-  let serviceName = 'jacksons-service';
   let implementingServicePath = 'path-to-implementing-service-definition.json';
   let partialSchemaPath = 'path-to-accounts-partial-schema.json';
   let federatedServiceName = 'accounts';
@@ -53,6 +53,7 @@ it('Extracts service definitions from remote storage', async () => {
         everyone: [User]
       }
 
+      "This is my User"
       type User @key(fields: "id") {
         id: ID!
         name: String
@@ -84,6 +85,8 @@ it('Extracts service definitions from remote storage', async () => {
   });
 
   let gateway = new ApolloGateway({ apiKey });
+
   await gateway.load();
   expect(nock.isDone()).toBeTruthy();
+  expect(gateway.schema!.getType('User')!.description).toBe('This is my User');
 });
