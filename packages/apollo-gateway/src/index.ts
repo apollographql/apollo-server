@@ -42,11 +42,11 @@ interface GatewayConfigBase {
   buildService?: (definition: ServiceEndpointDefinition) => GraphQLDataSource;
 }
 
-export interface ConcreteGatewayConfig extends GatewayConfigBase {
+export interface RemoteGatewayConfig extends GatewayConfigBase {
   serviceList: ServiceEndpointDefinition[];
 }
 
-export interface HostedGatewayConfig extends GatewayConfigBase {
+export interface ManagedGatewayConfig extends GatewayConfigBase {
   apiKey?: string;
   tag?: string;
   federationVersion?: number;
@@ -56,21 +56,21 @@ export interface LocalGatewayConfig extends GatewayConfigBase {
 }
 
 export type GatewayConfig =
-  | ConcreteGatewayConfig
+  | RemoteGatewayConfig
   | LocalGatewayConfig
-  | HostedGatewayConfig;
+  | ManagedGatewayConfig;
 
 function isLocalConfig(config: GatewayConfig): config is LocalGatewayConfig {
   return 'localServiceList' in config;
 }
 
-function isHostedConfig(config: GatewayConfig): config is HostedGatewayConfig {
+function isHostedConfig(config: GatewayConfig): config is ManagedGatewayConfig {
   return !(isLocalConfig(config) || isConcreteConfig(config));
 }
 
 function isConcreteConfig(
   config: GatewayConfig,
-): config is ConcreteGatewayConfig {
+): config is RemoteGatewayConfig {
   return 'serviceList' in config;
 }
 
