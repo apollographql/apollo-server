@@ -7,6 +7,7 @@ The version headers in this history reflect the versions of Apollo Server itself
 > The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  When a release is being prepared, a new header will be (manually) created below and the the appropriate changes within that release will be moved into the new section.
 
 - `apollo-server-core`: Avoid duplicate `cacheControl` directives being added via `isDirectiveDefined`. [PR #2762](https://github.com/apollographql/apollo-server/pull/2762) (was reverted in 2.6.1 because previous implementation released in 2.6.0 broke passing in typedefs as a string)
+- `apollo-server-testing`: Add TypeScript types for `apollo-server-testing` client. [PR #2871](https://github.com/apollographql/apollo-server/pull/2871)
 
 ### v2.6.5
 
@@ -33,8 +34,6 @@ The version headers in this history reflect the versions of Apollo Server itself
 - `apollo-engine-reporting`: Set `forbiddenOperation` and `registeredOperation` later in the request lifecycle. [PR #2828](https://github.com/apollographql/apollo-server/pull/2828)
 - `apollo-server-core`: Add `queryHash` to `GraphQLExecutor` for federation. [PR #2822](https://github.com/apollographql/apollo-server/pull/2822)
 - `@apollo/federation`: Preserve descriptions from SDL of federated services. [PR #2830](https://github.com/apollographql/apollo-server/pull/2830)
-
-- `apollo-server-testing` Add TypeScript types for `apollo-server-testing` client. [PR #2871](https://github.com/apollographql/apollo-server/pull/2871)
 
 ### v2.6.2
 
