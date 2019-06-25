@@ -1,11 +1,17 @@
 # Changelog
 
-### vNext
+The version headers in this history reflect the versions of Apollo Server itself.  Versions of other packages (e.g. which are not actual HTTP integrations; packages not prefixed with `apollo-server`) may use different versions.  For more details, check the publish commit for that version in the Git history.
+
+### vNEXT
+
+> The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  When a release is being prepared, a new header will be (manually) created below and the the appropriate changes within that release will be moved into the new section.
 
 - `apollo-engine-reporting`: Simplify apollo-engine-reporting operationName capturing [PR #2899](https://github.com/apollographql/apollo-server/pull/2899)
 - `apollo-server-core`: Fix regression in 2.6.0 which caused `engine: false` not to disable Engine when the `ENGINE_API_KEY` environment variable was set. [PR #2850](https://github.com/apollographql/apollo-server/pull/2850)
 
 ### v2.6.4
+
+> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/596e2f20e090d2f860d238058118d860a72b3be4)
 
 - `@apollo/gateway`: Pass `context` through to the `graphql` command in `LocalGraphQLDatasource`'s `process` method. [PR #2821](https://github.com/apollographql/apollo-server/pull/2821)
 - `@apollo/gateway`: Fix gateway not sending needed variables for subqueries not at the root level. [PR #2867](https://github.com/apollographql/apollo-server/pull/2867)
@@ -15,6 +21,8 @@
 - `@apollo/federation`: Deduplicate variable definitions for sub-queries. [PR #2840](https://github.com/apollographql/apollo-server/pull/2840)
 
 ### v2.6.3
+
+> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/bdf634d4884774fa81fb22475aa4bd8178025762)
 
 - `apollo-engine-reporting`: Set `forbiddenOperation` and `registeredOperation` later in the request lifecycle. [PR #2828](https://github.com/apollographql/apollo-server/pull/2828)
 - `apollo-server-core`: Add `queryHash` to `GraphQLExecutor` for federation. [PR #2822](https://github.com/apollographql/apollo-server/pull/2822)
