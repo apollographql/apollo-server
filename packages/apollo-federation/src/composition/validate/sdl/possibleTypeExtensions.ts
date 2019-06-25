@@ -8,11 +8,10 @@ import {
   isEnumType,
   isInputObjectType,
   Kind,
-  // ObjectTypeExtensionNode,
   isTypeDefinitionNode,
   ObjectTypeExtensionNode,
   InterfaceTypeExtensionNode,
-  // TypeExtensionNode,
+  GraphQLNamedType,
 } from 'graphql';
 import { errorWithCode, logServiceAndType } from '../../utils';
 
@@ -22,6 +21,10 @@ type FederatedExtensionNode = (
   serviceName?: string | null;
 };
 
+// This is a variant of the PossibleTypeExtensions validator in graphql-js.
+// it was modified to only check object/interface extensions. A custom error
+// message was also added.
+// original here: https://github.com/graphql/graphql-js/blob/master/src/validation/rules/PossibleTypeExtensions.js
 export function PossibleTypeExtensions(
   context: SDLValidationContext,
 ): ASTVisitor {
@@ -87,7 +90,10 @@ export function PossibleTypeExtensions(
   };
 }
 
-function typeToExtKind(type: any) {
+// These following utility functions/objects are part of the
+// PossibleTypeExtensions validations in graphql-js, but not exported.
+// https://github.com/graphql/graphql-js/blob/d8c1dfdc9dbbdef2400363cb0748d50cbeef39a8/src/validation/rules/PossibleTypeExtensions.js#L110
+function typeToExtKind(type: GraphQLNamedType) {
   if (isScalarType(type)) {
     return Kind.SCALAR_TYPE_EXTENSION;
   } else if (isObjectType(type)) {
@@ -113,7 +119,8 @@ const defKindToExtKind: { [kind: string]: string } = {
   [Kind.INPUT_OBJECT_TYPE_DEFINITION]: Kind.INPUT_OBJECT_TYPE_EXTENSION,
 };
 
-function typeToKind(type: any) {
+// this function is purely for printing out the `Kind` of the base type def.
+function typeToKind(type: GraphQLNamedType) {
   if (isScalarType(type)) {
     return Kind.SCALAR_TYPE_DEFINITION;
   } else if (isObjectType(type)) {
