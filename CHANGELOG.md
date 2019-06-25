@@ -12,6 +12,8 @@
 - `apollo-engine-reporting`: Set `forbiddenOperation` and `registeredOperation` later in the request lifecycle [PR #2828](https://github.com/apollographql/apollo-server/pull/2828)
 - `apollo-server-core`: Add queryHash to GraphQLExecutor for federation [PR #2822](https://github.com/apollographql/apollo-server/pull/2822)
 
+- `apollo-server-testing` Add TypeScript types for `apollo-server-testing` client. [PR #2871](https://github.com/apollographql/apollo-server/pull/2871)
+
 ### v2.6.2
 
 - `apollo-engine-reporting-protobuf`: Update protobuff to include `forbiddenOperations` and `registeredOperations` [PR #2768](https://github.com/apollographql/apollo-server/pull/2768)
