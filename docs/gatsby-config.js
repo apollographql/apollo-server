@@ -45,7 +45,7 @@ module.exports = {
             'federation/advanced-features',
             'federation/errors',
             'federation/migrating-from-stitching',
-            'federation/hosted-gateway-definitions',
+            'federation/managed-federation',
             'federation/federation-spec',
           ],
           // 'Schema stitching': [

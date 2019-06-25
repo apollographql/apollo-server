@@ -1,5 +1,5 @@
----
-title: Hosted gateway configurations
+  ---
+title: Using managed federation
 description: Managing gateways at scale
 ---
 
@@ -14,9 +14,7 @@ const gateway = await createGateway({
   });
 ```
 
-However for larger scale projects it can be helpful to remotely manage service definitions, such that new services may be added or existing services modified at runtime. For these use cases, aApollo Gateway can be configured to pull a remotely hosted service definition from Apollo Engine.
-
-> Currently the hosted federation service is only available for enterprise. Other customers interested in hosted definitions should reach out to sales to discuss expanding their plans.
+However for larger scale projects it can be helpful to remotely manage service definitions, such that new services may be added or existing services modified at runtime. For these use cases, an Apollo Gateway can be configured to pull a remotely hosted service definition from Apollo Engine.
 
 ## Uploading Service Definitions
 
