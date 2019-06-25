@@ -71,9 +71,10 @@ export interface GraphQLRequestContext<TContext = Record<string, any>> {
   readonly document?: DocumentNode;
   readonly source?: string;
 
-  // `operationName` is set based on the operation AST, so it is defined
-  // even if no `request.operationName` was passed in.
-  // It will be set to `null` for an anonymous operation.
+  // `operationName` is set based on the operation AST, so it is defined even if
+  // no `request.operationName` was passed in.  It will be set to `null` for an
+  // anonymous operation, or if `requestName.operationName` was passed in but
+  // doesn't resolve to an operation in the document.
   readonly operationName?: string | null;
   readonly operation?: OperationDefinitionNode;
 
