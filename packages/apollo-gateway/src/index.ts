@@ -65,12 +65,10 @@ function isLocalConfig(config: GatewayConfig): config is LocalGatewayConfig {
 }
 
 function isHostedConfig(config: GatewayConfig): config is ManagedGatewayConfig {
-  return !(isLocalConfig(config) || isConcreteConfig(config));
+  return !(isLocalConfig(config) || isRemoteConfig(config));
 }
 
-function isConcreteConfig(
-  config: GatewayConfig,
-): config is RemoteGatewayConfig {
+function isRemoteConfig(config: GatewayConfig): config is RemoteGatewayConfig {
   return 'serviceList' in config;
 }
 
@@ -212,7 +210,7 @@ export class ApolloGateway implements GraphQLService {
   ): Promise<[ServiceDefinition[], boolean]> {
     if (isLocalConfig(config)) return [config.localServiceList, false];
 
-    const [remoteServices, isNewService] = isConcreteConfig(config)
+    const [remoteServices, isNewService] = isRemoteConfig(config)
       ? await getServiceDefinitionsFromRemoteEndpoint({
           serviceList: config.serviceList,
         })
