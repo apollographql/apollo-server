@@ -3,6 +3,7 @@ import {
   DocumentNode,
   FieldDefinitionNode,
   TypeDefinitionNode,
+  TypeExtensionNode,
 } from 'graphql';
 
 export type ServiceName = string | null;
@@ -81,5 +82,9 @@ declare module 'graphql/type/definition' {
 }
 
 export type FederatedTypeDefinitionNode = TypeDefinitionNode & {
+  serviceName: string | null;
+};
+
+export type FederatedTypeExtensionNode = TypeExtensionNode & {
   serviceName: string | null;
 };

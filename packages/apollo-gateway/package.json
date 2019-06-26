@@ -1,6 +1,6 @@
 {
   "name": "@apollo/gateway",
-  "version": "0.6.6",
+  "version": "0.6.10",
   "description": "Apollo Gateway",
   "author": "opensource@apollographql.com",
   "main": "dist/index.js",
@@ -21,7 +21,7 @@
   "dependencies": {
     "@apollo/federation": "file:../apollo-federation",
     "apollo-env": "^0.5.1",
-    "apollo-graphql": "^0.3.2",
+    "apollo-graphql": "^0.3.3",
     "apollo-server-caching": "file:../apollo-server-caching",
     "apollo-server-core": "file:../apollo-server-core",
     "apollo-server-env": "file:../apollo-server-env",
