@@ -1,15 +1,17 @@
 import { ServiceDefinition } from '@apollo/federation';
 import { GraphQLExecutionResult } from 'apollo-server-core';
 import { parse } from 'graphql';
-import fetch from 'node-fetch';
+import fetch, { HeadersInit } from 'node-fetch';
 import { ServiceEndpointDefinition } from './';
 
 let serviceDefinitionMap: Map<string, string> = new Map();
 
 export async function getServiceDefinitionsFromRemoteEndpoint({
   serviceList,
+  headers = {},
 }: {
   serviceList: ServiceEndpointDefinition[];
+  headers?: HeadersInit;
 }): Promise<[ServiceDefinition[], boolean]> {
   if (!serviceList || !serviceList.length) {
     throw new Error(
@@ -31,7 +33,7 @@ export async function getServiceDefinitionsFromRemoteEndpoint({
         body: JSON.stringify({
           query: 'query GetServiceDefinition { _service { sdl } }',
         }),
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...headers },
       })
         .then(res => res.json())
         .then(({ data, errors }: GraphQLExecutionResult) => {
