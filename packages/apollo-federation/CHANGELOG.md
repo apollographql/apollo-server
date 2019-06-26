@@ -2,6 +2,9 @@
 
 ### vNEXT
 
+* Fix bug in externalUnused validation [#2919](https://github.com/apollographql/apollo-server/pull/2919)
+
+# v0.6.6
 * Allow specified directives during validation (@deprecated) [#2823](https://github.com/apollographql/apollo-server/pull/2823)
 
 # v0.6.1
