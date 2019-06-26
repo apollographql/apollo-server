@@ -40,7 +40,6 @@ export interface GatewayConfigBase {
   __exposeQueryPlanExperimental?: boolean;
   buildService?: (definition: ServiceEndpointDefinition) => GraphQLDataSource;
   serviceList?: ServiceEndpointDefinition[];
-  onSchemaChange?: SchemaChangeCallback;
 }
 
 export interface LocalGatewayConfig extends GatewayConfigBase {
@@ -53,10 +52,7 @@ function isLocalConfig(config: GatewayConfig): config is LocalGatewayConfig {
   return 'localServiceList' in config;
 }
 
-export type SchemaChangeCallback = (options: {
-  schema: GraphQLSchema;
-  executor: GraphQLExecutor;
-}) => void;
+export type SchemaChangeCallback = (options: { schema: GraphQLSchema }) => void;
 
 export class ApolloGateway implements GraphQLService {
   public schema?: GraphQLSchema;
@@ -66,6 +62,22 @@ export class ApolloGateway implements GraphQLService {
   protected logger: Logger;
   protected queryPlanStore?: InMemoryLRUCache<QueryPlan>;
   private pollingTimer?: NodeJS.Timer;
+
+  private _onSchemaChange?: SchemaChangeCallback;
+  public get onSchemaChange(): SchemaChangeCallback | undefined {
+    return this._onSchemaChange;
+  }
+
+  public set onSchemaChange(value: SchemaChangeCallback | undefined) {
+    // TODO: if (!isRemoteGatewayConfig(this.config)) { throw new Error('onSchemaChange requires an Apollo Engine hosted service list definition.'); }
+    this._onSchemaChange = value;
+    if (!this.onSchemaChange) {
+      clearInterval(this.pollingTimer!);
+      this.pollingTimer = undefined;
+    } else if (!this.pollingTimer) {
+      this.startPollingServices();
+    }
+  }
 
   constructor(config: GatewayConfig) {
     this.config = {
@@ -139,6 +151,9 @@ export class ApolloGateway implements GraphQLService {
   }
 
   private startPollingServices() {
+    if (this.pollingTimer) {
+      clearInterval(this.pollingTimer);
+    }
     this.pollingTimer = setInterval(async () => {
       const [services, isNewSchema] = await this.loadServiceDefinitions(
         this.config,
@@ -150,10 +165,11 @@ export class ApolloGateway implements GraphQLService {
       if (this.queryPlanStore) this.queryPlanStore.flush();
       this.logger.debug('Gateway config has changed, updating schema');
       this.createSchema(services);
-      this.config.onSchemaChange!({
-        schema: this.schema!,
-        executor: this.executor,
-      });
+      if (this.onSchemaChange) {
+        this.onSchemaChange({
+          schema: this.schema!,
+        });
+      }
     }, 10 * 1000);
   }
 
