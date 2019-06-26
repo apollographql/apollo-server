@@ -28,8 +28,8 @@ export interface ClientInfo {
 export type SendValuesBaseOptions =
   | { onlyNames: Array<String> }
   | { exceptNames: Array<String> }
-  | { sendAll: true }
-  | { sendNone: true };
+  | { all: true }
+  | { none: true };
 
 type VariableValueTransformOptions = {
   variables: Record<string, any>;
@@ -104,8 +104,8 @@ export interface EngineReportingOptions<TContext> {
    * By default, Apollo Server does not send the values of any GraphQL variables to Apollo's servers, because variable
    * values often contain the private data of your app's users. If you'd like variable values to be included in traces, set this option.
    * This option can take several forms:
-   * - { sendNone: true }: don't send any variable values (DEFAULT)
-   * - { sendAll: true}: send all variable values
+   * - { none: true }: don't send any variable values (DEFAULT)
+   * - { all: true}: send all variable values
    * - { transform: ... }: a custom function for modifying variable values. Keys added by the custom function will
    *    be removed, and keys removed will be added back with an empty value.
    * - { exceptNames: ... }: a case-sensitive list of names of variables whose values should not be sent to Apollo servers
@@ -113,7 +113,7 @@ export interface EngineReportingOptions<TContext> {
    *
    * Defaults to not sending any variable values if both this parameter and
    * the deprecated `privateVariables` are not set. The report will
-   * indicate each private variable key whose value was redacted by { sendNone: true } or { exceptNames: [...] }.
+   * indicate each private variable key whose value was redacted by { none: true } or { exceptNames: [...] }.
    *
    * TODO(helen): Add new flag to the trace details (and modify the protobuf message structure) to indicate the type of modification. Then, add the following description to the docs:
    * "The report will indicate that variable values were modified by a custom function, or will list all private variables redacted."
@@ -123,8 +123,8 @@ export interface EngineReportingOptions<TContext> {
   /**
    * [DEPRECATED] Use sendVariableValues
    * Passing an array into privateVariables is equivalent to passing { exceptNames: array } into
-   * sendVariableValues, and passing in `true` or `false` is equivalent to passing { sendNone: true } or
-   * { sendAll: true }, respectively.
+   * sendVariableValues, and passing in `true` or `false` is equivalent to passing { none: true } or
+   * { all: true }, respectively.
    *
    * An error will be thrown if both this deprecated option and its replacement, sendVariableValues are defined.
    */
@@ -134,8 +134,8 @@ export interface EngineReportingOptions<TContext> {
    * Apollo's servers, to protect private data of your app's users. If you'd like this information included in traces,
    * set this option. This option can take several forms:
    *
-   * - { sendNone: true } to drop all HTTP request headers (DEFAULT)
-   * - { sendAll: true } to send the values of all HTTP request headers
+   * - { none: true } to drop all HTTP request headers (DEFAULT)
+   * - { all: true } to send the values of all HTTP request headers
    * - { exceptNames: Array<String> } A case-insensitive list of names of HTTP headers whose values should not be
    *     sent to Apollo servers
    * - { onlyNames: Array<String> }: A case-insensitive list of names of HTTP headers whose values will be sent to Apollo servers
@@ -149,7 +149,7 @@ export interface EngineReportingOptions<TContext> {
   /**
    * [DEPRECATED] Use sendHeaders
    * Passing an array into privateHeaders is equivalent to passing { exceptNames: array } into sendHeaders, and
-   * passing `true` or `false` is equivalent to passing in { sendNone: true } and { sendAll: true }, respectively.
+   * passing `true` or `false` is equivalent to passing in { none: true } and { all: true }, respectively.
    *
    * An error will be thrown if both this deprecated option and its replacement, sendHeaders are defined.
    */
@@ -585,6 +585,6 @@ function makeSendValuesBaseOptionsFromLegacy(
         exceptNames: legacyPrivateOption,
       }
     : legacyPrivateOption
-    ? { sendNone: true }
-    : { sendAll: true };
+    ? { none: true }
+    : { all: true };
 }

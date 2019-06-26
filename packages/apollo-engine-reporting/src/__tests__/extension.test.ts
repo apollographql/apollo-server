@@ -117,11 +117,11 @@ describe('check variableJson output for sendVariableValues null or undefined (de
   });
 });
 
-describe('check variableJson output for sendVariableValues sendAll/sendNone type', () => {
+describe('check variableJson output for sendVariableValues all/none type', () => {
   it('Case 1: No keys/values in variables to be filtered/not filtered', () => {
     const emptyOutput = new Trace.Details();
-    expect(makeTraceDetails({}, { sendAll: true })).toEqual(emptyOutput);
-    expect(makeTraceDetails({}, { sendNone: true })).toEqual(emptyOutput);
+    expect(makeTraceDetails({}, { all: true })).toEqual(emptyOutput);
+    expect(makeTraceDetails({}, { none: true })).toEqual(emptyOutput);
   });
 
   const filteredOutput = new Trace.Details();
@@ -135,25 +135,21 @@ describe('check variableJson output for sendVariableValues sendAll/sendNone type
   });
 
   it('Case 2: Filter all variables', () => {
-    expect(makeTraceDetails(variables, { sendNone: true })).toEqual(
-      filteredOutput,
-    );
+    expect(makeTraceDetails(variables, { none: true })).toEqual(filteredOutput);
   });
 
   it('Case 3: Do not filter variables', () => {
-    expect(makeTraceDetails(variables, { sendAll: true })).toEqual(
+    expect(makeTraceDetails(variables, { all: true })).toEqual(
       nonFilteredOutput,
     );
   });
 
   it('Case 4: Check behavior for invalid inputs', () => {
-    expect(makeTraceDetails(variables, { sendNone: false })).toEqual(
+    expect(makeTraceDetails(variables, { none: false })).toEqual(
       nonFilteredOutput,
     );
 
-    expect(makeTraceDetails(variables, { sendAll: false })).toEqual(
-      filteredOutput,
-    );
+    expect(makeTraceDetails(variables, { all: false })).toEqual(filteredOutput);
   });
 });
 
@@ -170,11 +166,9 @@ describe('variableJson output for sendVariableValues exceptNames: Array type', (
     ).toEqual(expectedVariablesJson);
   });
 
-  it('sendNone=true equivalent to exceptNames=[all variables]', () => {
+  it('none=true equivalent to exceptNames=[all variables]', () => {
     let privateVariablesArray: string[] = ['testing', 't2'];
-    expect(
-      makeTraceDetails(variables, { sendNone: true }).variablesJson,
-    ).toEqual(
+    expect(makeTraceDetails(variables, { none: true }).variablesJson).toEqual(
       makeTraceDetails(variables, { exceptNames: privateVariablesArray })
         .variablesJson,
     );
@@ -194,21 +188,17 @@ describe('variableJson output for sendVariableValues onlyNames: Array type', () 
     ).toEqual(expectedVariablesJson);
   });
 
-  it('sendAll=true equivalent to onlyNames=[all variables]', () => {
+  it('all=true equivalent to onlyNames=[all variables]', () => {
     let privateVariablesArray: string[] = ['testing', 't2'];
-    expect(
-      makeTraceDetails(variables, { sendAll: true }).variablesJson,
-    ).toEqual(
+    expect(makeTraceDetails(variables, { all: true }).variablesJson).toEqual(
       makeTraceDetails(variables, { onlyNames: privateVariablesArray })
         .variablesJson,
     );
   });
 
-  it('sendNone=true equivalent to onlyNames=[]', () => {
+  it('none=true equivalent to onlyNames=[]', () => {
     let privateVariablesArray: string[] = [];
-    expect(
-      makeTraceDetails(variables, { sendNone: true }).variablesJson,
-    ).toEqual(
+    expect(makeTraceDetails(variables, { none: true }).variablesJson).toEqual(
       makeTraceDetails(variables, { onlyNames: privateVariablesArray })
         .variablesJson,
     );
@@ -309,23 +299,23 @@ describe('tests for the sendHeaders reporting option', () => {
     expect(http.requestHeaders).toEqual({});
   });
 
-  it('sendHeaders.sendAll and sendHeaders.sendNone', () => {
+  it('sendHeaders.all and sendHeaders.none', () => {
     const httpSafelist = makeTestHTTP();
-    makeHTTPRequestHeaders(httpSafelist, headers, { sendAll: true });
+    makeHTTPRequestHeaders(httpSafelist, headers, { all: true });
     expect(httpSafelist.requestHeaders).toEqual(headersOutput);
 
     const httpBlocklist = makeTestHTTP();
-    makeHTTPRequestHeaders(httpBlocklist, headers, { sendNone: true });
+    makeHTTPRequestHeaders(httpBlocklist, headers, { none: true });
     expect(httpBlocklist.requestHeaders).toEqual({});
   });
 
-  it('invalid inputs for sendHeaders.sendAll and sendHeaders.sendNone', () => {
+  it('invalid inputs for sendHeaders.all and sendHeaders.none', () => {
     const httpSafelist = makeTestHTTP();
-    makeHTTPRequestHeaders(httpSafelist, headers, { sendNone: false });
+    makeHTTPRequestHeaders(httpSafelist, headers, { none: false });
     expect(httpSafelist.requestHeaders).toEqual(headersOutput);
 
     const httpBlocklist = makeTestHTTP();
-    makeHTTPRequestHeaders(httpBlocklist, headers, { sendAll: false });
+    makeHTTPRequestHeaders(httpBlocklist, headers, { all: false });
     expect(httpBlocklist.requestHeaders).toEqual({});
   });
 
@@ -348,7 +338,7 @@ describe('tests for the sendHeaders reporting option', () => {
     headers.append('cookie', 'blahblah');
     headers.append('set-cookie', 'blahblah');
     const http = makeTestHTTP();
-    makeHTTPRequestHeaders(http, headers, { sendAll: true });
+    makeHTTPRequestHeaders(http, headers, { all: true });
     expect(http.requestHeaders['authorization']).toBe(undefined);
     expect(http.requestHeaders['cookie']).toBe(undefined);
     expect(http.requestHeaders['set-cookie']).toBe(undefined);
