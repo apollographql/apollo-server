@@ -52,7 +52,8 @@ function isLocalConfig(config: GatewayConfig): config is LocalGatewayConfig {
   return 'localServiceList' in config;
 }
 
-export type SchemaChangeCallback = (options: { schema: GraphQLSchema }) => void;
+export type SchemaChangeCallback = (schema: GraphQLSchema) => void;
+export type Unsubscriber = () => void;
 
 export class ApolloGateway implements GraphQLService {
   public schema?: GraphQLSchema;
@@ -62,21 +63,20 @@ export class ApolloGateway implements GraphQLService {
   protected logger: Logger;
   protected queryPlanStore?: InMemoryLRUCache<QueryPlan>;
   private pollingTimer?: NodeJS.Timer;
+  private onSchemaChangeListeners = new Set<SchemaChangeCallback>();
 
-  private _onSchemaChange?: SchemaChangeCallback;
-  public get onSchemaChange(): SchemaChangeCallback | undefined {
-    return this._onSchemaChange;
-  }
-
-  public set onSchemaChange(value: SchemaChangeCallback | undefined) {
+  public onSchemaChange(value: SchemaChangeCallback): Unsubscriber {
     // TODO: if (!isRemoteGatewayConfig(this.config)) { throw new Error('onSchemaChange requires an Apollo Engine hosted service list definition.'); }
-    this._onSchemaChange = value;
-    if (!this.onSchemaChange) {
-      clearInterval(this.pollingTimer!);
-      this.pollingTimer = undefined;
-    } else if (!this.pollingTimer) {
-      this.startPollingServices();
-    }
+    this.onSchemaChangeListeners.add(value);
+    if (!this.pollingTimer) this.startPollingServices();
+
+    return () => {
+      this.onSchemaChangeListeners.delete(value);
+      if (this.onSchemaChangeListeners.size === 0 && this.pollingTimer) {
+        clearInterval(this.pollingTimer!);
+        this.pollingTimer = undefined;
+      }
+    };
   }
 
   constructor(config: GatewayConfig) {
@@ -157,11 +157,7 @@ export class ApolloGateway implements GraphQLService {
       if (this.queryPlanStore) this.queryPlanStore.flush();
       this.logger.debug('Gateway config has changed, updating schema');
       this.createSchema(services);
-      if (this.onSchemaChange) {
-        this.onSchemaChange({
-          schema: this.schema!,
-        });
-      }
+      this.onSchemaChangeListeners.forEach(listener => listener(this.schema!));
     }, 10 * 1000);
   }
 
