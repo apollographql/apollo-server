@@ -144,9 +144,8 @@ export class ApolloGateway implements GraphQLService {
   }
 
   private startPollingServices() {
-    if (this.pollingTimer) {
-      clearInterval(this.pollingTimer);
-    }
+    if (this.pollingTimer) clearInterval(this.pollingTimer);
+
     this.pollingTimer = setInterval(async () => {
       const [services, isNewSchema] = await this.loadServiceDefinitions(
         this.config,
