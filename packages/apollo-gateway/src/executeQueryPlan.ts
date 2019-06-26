@@ -150,20 +150,20 @@ async function executeFetch<TContext>(
   const entities = Array.isArray(results) ? results : [results];
   if (entities.length < 1) return;
 
-  if (!fetch.requires) {
-    let variables = Object.create(null);
-    if (fetch.variableUsages) {
-      for (const { node, defaultValue } of fetch.variableUsages) {
-        const name = node.name.value;
-        const providedVariables = context.requestContext.request.variables;
-        if (providedVariables && providedVariables[name] !== 'undefined') {
-          variables[name] = providedVariables[name];
-        } else if (defaultValue) {
-          variables[name] = defaultValue;
-        }
+  let variables = Object.create(null);
+  if (fetch.variableUsages) {
+    for (const { node, defaultValue } of fetch.variableUsages) {
+      const name = node.name.value;
+      const providedVariables = context.requestContext.request.variables;
+      if (providedVariables && providedVariables[name] !== 'undefined') {
+        variables[name] = providedVariables[name];
+      } else if (defaultValue) {
+        variables[name] = defaultValue;
       }
     }
+  }
 
+  if (!fetch.requires) {
     const dataReceivedFromService = await sendOperation(
       context,
       operationForRootFetch(fetch, operationType),
@@ -187,10 +187,14 @@ async function executeFetch<TContext>(
       }
     });
 
+    if ('representations' in variables) {
+      throw new Error(`Variables cannot contain key "representations"`);
+    }
+
     const dataReceivedFromService = await sendOperation(
       context,
       operationForEntitiesFetch(fetch),
-      { representations },
+      { ...variables, representations },
     );
 
     if (!dataReceivedFromService) {
@@ -210,9 +214,7 @@ async function executeFetch<TContext>(
 
     if (receivedEntities.length !== representations.length) {
       throw new Error(
-        `Expected "data._entities" to contain ${
-          representations.length
-        } elements`,
+        `Expected "data._entities" to contain ${representations.length} elements`,
       );
     }
 
@@ -339,14 +341,27 @@ function mapFetchNodeToVariableDefinitions(
   node: FetchNode,
 ): VariableDefinitionNode[] {
   const variableUsage = node.variableUsages;
-  return variableUsage
-    ? variableUsage.map(({ node, type }) => ({
+  if (!variableUsage) {
+    return [];
+  }
+
+  const variableMap = variableUsage.reduce((map, { node, type }) => {
+    const key = `${node.name.value}_${type.toString()}`;
+
+    if (!map.has(key)) {
+      map.set(key, {
         kind: Kind.VARIABLE_DEFINITION,
         variable: node,
         type: astFromType(type),
-      }))
-    : [];
+      });
+    }
+
+    return map;
+  }, new Map<string, VariableDefinitionNode>());
+
+  return Array.from(variableMap.values());
 }
+
 function operationForRootFetch(
   fetch: FetchNode,
   operation: OperationTypeNode = 'query',

@@ -50,8 +50,9 @@ import {
   PlaygroundRenderPageOptions,
 } from './playground';
 
-import createSHA from './utils/createSHA';
 import { generateSchemaHash } from './utils/schemaHash';
+import { isDirectiveDefined } from './utils/isDirectiveDefined';
+import createSHA from './utils/createSHA';
 import {
   processGraphQLRequest,
   GraphQLRequestContext,
@@ -77,7 +78,9 @@ const NoIntrospection = (context: ValidationContext) => ({
 
 function getEngineApiKey(engine: Config['engine']): string | undefined {
   const keyFromEnv = process.env.ENGINE_API_KEY || '';
-  if (typeof engine === 'object' && engine.apiKey) {
+  if (engine === false) {
+    return;
+  } else if (typeof engine === 'object' && engine.apiKey) {
     return engine.apiKey;
   } else if (keyFromEnv) {
     return keyFromEnv;
@@ -266,23 +269,26 @@ export class ApolloServerBase {
         );
       }
 
-      let augmentedTypeDefs = Array.isArray(typeDefs) ? typeDefs : [typeDefs];
+      const augmentedTypeDefs = Array.isArray(typeDefs) ? typeDefs : [typeDefs];
 
       // We augment the typeDefs with the @cacheControl directive and associated
       // scope enum, so makeExecutableSchema won't fail SDL validation
-      augmentedTypeDefs.push(
-        gql`
-          enum CacheControlScope {
-            PUBLIC
-            PRIVATE
-          }
 
-          directive @cacheControl(
-            maxAge: Int
-            scope: CacheControlScope
-          ) on FIELD_DEFINITION | OBJECT | INTERFACE
-        `,
-      );
+      if (!isDirectiveDefined(augmentedTypeDefs, 'cacheControl')) {
+        augmentedTypeDefs.push(
+          gql`
+            enum CacheControlScope {
+              PUBLIC
+              PRIVATE
+            }
+
+            directive @cacheControl(
+              maxAge: Int
+              scope: CacheControlScope
+            ) on FIELD_DEFINITION | OBJECT | INTERFACE
+          `,
+        );
+      }
 
       if (this.uploadsConfig) {
         const { GraphQLUpload } = require('graphql-upload');

@@ -35,14 +35,20 @@ describe('executeQueryPlan', () => {
 
   beforeEach(() => {
     serviceMap = Object.fromEntries(
-      ['accounts', 'product', 'inventory', 'reviews'].map(serviceName => {
-        return [
-          serviceName,
-          buildLocalService([
-            require(path.join(__dirname, '__fixtures__/schemas', serviceName)),
-          ]),
-        ] as [string, LocalGraphQLDataSource];
-      }),
+      ['accounts', 'product', 'inventory', 'reviews', 'books'].map(
+        serviceName => {
+          return [
+            serviceName,
+            buildLocalService([
+              require(path.join(
+                __dirname,
+                '__fixtures__/schemas',
+                serviceName,
+              )),
+            ]),
+          ] as [string, LocalGraphQLDataSource];
+        },
+      ),
     );
 
     let errors: GraphQLError[];
@@ -246,6 +252,152 @@ describe('executeQueryPlan', () => {
                     ],
                   }
             `);
+  });
+
+  it('should not duplicate variable definitions', async () => {
+    const query = gql`
+      query Test($first: Int!) {
+        first: topReviews(first: $first) {
+          body
+          author {
+            name
+          }
+        }
+        second: topReviews(first: $first) {
+          body
+          author {
+            name
+          }
+        }
+      }
+    `;
+
+    const operationContext = buildOperationContext(schema, query);
+    const queryPlan = buildQueryPlan(operationContext);
+
+    const requestContext = buildRequestContext();
+    requestContext.request.variables = { first: 3 };
+
+    const response = await executeQueryPlan(
+      queryPlan,
+      serviceMap,
+      requestContext,
+      operationContext,
+    );
+
+    expect(response.data).toMatchInlineSnapshot(`
+      Object {
+        "first": Array [
+          Object {
+            "author": Object {
+              "name": "Ada Lovelace",
+            },
+            "body": "Love it!",
+          },
+          Object {
+            "author": Object {
+              "name": "Ada Lovelace",
+            },
+            "body": "Too expensive.",
+          },
+          Object {
+            "author": Object {
+              "name": "Alan Turing",
+            },
+            "body": "Could be better.",
+          },
+        ],
+        "second": Array [
+          Object {
+            "author": Object {
+              "name": "Ada Lovelace",
+            },
+            "body": "Love it!",
+          },
+          Object {
+            "author": Object {
+              "name": "Ada Lovelace",
+            },
+            "body": "Too expensive.",
+          },
+          Object {
+            "author": Object {
+              "name": "Alan Turing",
+            },
+            "body": "Could be better.",
+          },
+        ],
+      }
+    `);
+  });
+
+  it('should include variables in non-root requests', async () => {
+    const query = gql`
+      query Test($locale: String) {
+        topReviews {
+          body
+          author {
+            name
+            birthDate(locale: $locale)
+          }
+        }
+      }
+    `;
+
+    const operationContext = buildOperationContext(schema, query);
+    const queryPlan = buildQueryPlan(operationContext);
+
+    const requestContext = buildRequestContext();
+    requestContext.request.variables = { locale: 'en-US' };
+
+    const response = await executeQueryPlan(
+      queryPlan,
+      serviceMap,
+      requestContext,
+      operationContext,
+    );
+
+    expect(response.data).toMatchInlineSnapshot(`
+      Object {
+        "topReviews": Array [
+          Object {
+            "author": Object {
+              "birthDate": "12/10/1815",
+              "name": "Ada Lovelace",
+            },
+            "body": "Love it!",
+          },
+          Object {
+            "author": Object {
+              "birthDate": "12/10/1815",
+              "name": "Ada Lovelace",
+            },
+            "body": "Too expensive.",
+          },
+          Object {
+            "author": Object {
+              "birthDate": "6/23/1912",
+              "name": "Alan Turing",
+            },
+            "body": "Could be better.",
+          },
+          Object {
+            "author": Object {
+              "birthDate": "6/23/1912",
+              "name": "Alan Turing",
+            },
+            "body": "Prefer something else.",
+          },
+          Object {
+            "author": Object {
+              "birthDate": "6/23/1912",
+              "name": "Alan Turing",
+            },
+            "body": "Wish I had read this before.",
+          },
+        ],
+      }
+    `);
   });
 
   it('can execute an introspection query', async () => {

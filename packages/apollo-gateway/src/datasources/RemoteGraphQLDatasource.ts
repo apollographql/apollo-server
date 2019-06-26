@@ -76,14 +76,14 @@ export class RemoteGraphQLDataSource implements GraphQLDataSource {
     }
   }
 
-  protected willSendRequest?<TContext>(
+  public willSendRequest?<TContext>(
     requestContext: Pick<
       GraphQLRequestContext<TContext>,
       'request' | 'context'
     >,
   ): ValueOrPromise<void>;
 
-  protected async didReceiveResponse<TResult = any>(
+  public async didReceiveResponse<TResult = any>(
     response: Response,
     _request: Request,
   ): Promise<TResult> {
@@ -94,11 +94,11 @@ export class RemoteGraphQLDataSource implements GraphQLDataSource {
     }
   }
 
-  protected didEncounterError(error: Error, _request: Request) {
+  public didEncounterError(error: Error, _request: Request) {
     throw error;
   }
 
-  protected parseBody(response: Response): Promise<object | string> {
+  public parseBody(response: Response): Promise<object | string> {
     const contentType = response.headers.get('Content-Type');
     if (contentType && contentType.startsWith('application/json')) {
       return response.json();
@@ -107,7 +107,7 @@ export class RemoteGraphQLDataSource implements GraphQLDataSource {
     }
   }
 
-  protected async errorFromResponse(response: Response) {
+  public async errorFromResponse(response: Response) {
     const message = `${response.status}: ${response.statusText}`;
 
     let error: ApolloError;
