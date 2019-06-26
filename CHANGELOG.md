@@ -6,6 +6,8 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 > The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  When a release is being prepared, a new header will be (manually) created below and the the appropriate changes within that release will be moved into the new section.
 
+- `apollo-server-core`: Guard against undefined property access in `isDirectiveDefined`. [PR #2924](https://github.com/apollographql/apollo-server/pull/2924)
+
 ### v2.6.6
 
 - `apollo-server-core`: Avoid duplicate `cacheControl` directives being added via `isDirectiveDefined`, re-landing the implementation reverted in v2.6.1 which first surfaced in v2.6.0. [PR #2762](https://github.com/apollographql/apollo-server/pull/2762) [Reversion PR #2754](https://github.com/apollographql/apollo-server/pull/2754) [Original PR #2428](https://github.com/apollographql/apollo-server/pull/2428)
