@@ -13,7 +13,7 @@ export const isDirectiveDefined = (
       ? typeDef.definitions.some(
           definition =>
             definition.kind === Kind.DIRECTIVE_DEFINITION &&
-            definition.name.value === 'directiveName',
+            definition.name.value === directiveName,
         )
       : false,
   );
