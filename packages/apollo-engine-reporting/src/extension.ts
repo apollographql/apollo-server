@@ -413,11 +413,11 @@ export function makeTraceDetails(
   Object.keys(variablesToRecord).forEach(name => {
     if (
       !sendVariableValues ||
-      ('sendNone' in sendVariableValues && sendVariableValues.sendNone) ||
-      ('sendAll' in sendVariableValues && !sendVariableValues.sendAll) ||
+      ('none' in sendVariableValues && sendVariableValues.none) ||
+      ('all' in sendVariableValues && !sendVariableValues.all) ||
       ('exceptNames' in sendVariableValues &&
         // We assume that most users will have only a few variables values to hide,
-        // or will just set {sendNone: true}; we can change this
+        // or will just set {none: true}; we can change this
         // linear-time operation if it causes real performance issues.
         sendVariableValues.exceptNames.includes(name)) ||
       ('onlyNames' in sendVariableValues &&
@@ -466,8 +466,8 @@ export function makeHTTPRequestHeaders(
 ): void {
   if (
     !sendHeaders ||
-    ('sendNone' in sendHeaders && sendHeaders.sendNone) ||
-    ('sendAll' in sendHeaders && !sendHeaders.sendAll)
+    ('none' in sendHeaders && sendHeaders.none) ||
+    ('all' in sendHeaders && !sendHeaders.all)
   ) {
     return;
   }
@@ -476,7 +476,7 @@ export function makeHTTPRequestHeaders(
     if (
       ('exceptNames' in sendHeaders &&
         // We assume that most users only have a few headers to hide, or will
-        // just set {sendNone: true} ; we can change this linear-time
+        // just set {none: true} ; we can change this linear-time
         // operation if it causes real performance issues.
         sendHeaders.exceptNames.some(exceptHeader => {
           // Headers are case-insensitive, and should be compared as such.

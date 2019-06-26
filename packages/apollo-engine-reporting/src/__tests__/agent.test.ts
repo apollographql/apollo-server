@@ -17,28 +17,28 @@ describe('signature cache key', () => {
 });
 
 describe("test handleLegacyOptions(), which converts the deprecated privateVariable and privateHeaders options to the new options' formats", () => {
-  it('Case 1: privateVariables/privateHeaders == False; same as sendAll', () => {
+  it('Case 1: privateVariables/privateHeaders == False; same as all', () => {
     const optionsPrivateFalse: EngineReportingOptions<any> = {
       privateVariables: false,
       privateHeaders: false,
     };
     handleLegacyOptions(optionsPrivateFalse);
     expect(optionsPrivateFalse.privateVariables).toBe(undefined);
-    expect(optionsPrivateFalse.sendVariableValues).toEqual({ sendAll: true });
+    expect(optionsPrivateFalse.sendVariableValues).toEqual({ all: true });
     expect(optionsPrivateFalse.privateHeaders).toBe(undefined);
-    expect(optionsPrivateFalse.sendHeaders).toEqual({ sendAll: true });
+    expect(optionsPrivateFalse.sendHeaders).toEqual({ all: true });
   });
 
-  it('Case 2: privateVariables/privateHeaders == True; same as sendNone', () => {
+  it('Case 2: privateVariables/privateHeaders == True; same as none', () => {
     const optionsPrivateTrue: EngineReportingOptions<any> = {
       privateVariables: true,
       privateHeaders: true,
     };
     handleLegacyOptions(optionsPrivateTrue);
     expect(optionsPrivateTrue.privateVariables).toBe(undefined);
-    expect(optionsPrivateTrue.sendVariableValues).toEqual({ sendNone: true });
+    expect(optionsPrivateTrue.sendVariableValues).toEqual({ none: true });
     expect(optionsPrivateTrue.privateHeaders).toBe(undefined);
-    expect(optionsPrivateTrue.sendHeaders).toEqual({ sendNone: true });
+    expect(optionsPrivateTrue.sendHeaders).toEqual({ none: true });
   });
 
   it('Case 3: privateVariables/privateHeaders set to an array', () => {
@@ -61,14 +61,14 @@ describe("test handleLegacyOptions(), which converts the deprecated privateVaria
   it('Case 4: throws error when both the new and old options are set', () => {
     const optionsBothVariables: EngineReportingOptions<any> = {
       privateVariables: true,
-      sendVariableValues: { sendNone: true },
+      sendVariableValues: { none: true },
     };
     expect(() => {
       handleLegacyOptions(optionsBothVariables);
     }).toThrow();
     const optionsBothHeaders: EngineReportingOptions<any> = {
       privateHeaders: true,
-      sendHeaders: { sendNone: true },
+      sendHeaders: { none: true },
     };
     expect(() => {
       handleLegacyOptions(optionsBothHeaders);

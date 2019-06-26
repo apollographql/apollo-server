@@ -10,6 +10,11 @@ The version headers in this history reflect the versions of Apollo Server itself
 - `apollo-engine-reporting`: **BEHAVIOR CHANGE**: The `engine.maskErrorDetails` option, deprecated by `engine.rewriteError` in v2.5.0, now behaves a bit more like the new option: while all error messages will be redacted, they will still show up on the appropriate nodes in a trace. [PR #2932](https://github.com/apollographql/apollo-server/pull/2932)
 - `apollo-engine-reporting`: **BEHAVIOR CHANGE**: By default, send no GraphQL variable values to Apollo's servers instead of sending all variable values. Adding the new EngineReportingOption `maskVariableValues` to send some or all variable values, possibly after transforming them. This replaces the `privateVariables` option, which is now deprecated. [PR #2931](https://github.com/apollographql/apollo-server/pull/2931)
 
+  > Note: In order to keep shipping all GraphQL variable values to Apollo Engine, pass in the option:
+
+  `new ApolloServer({engine: {sendVariableValues: {all: true}}})`.
+
+
 ### v2.6.7
 
 - `apollo-server-core`: Guard against undefined property access in `isDirectiveDefined` which resulted in "Cannot read property 'some' of undefined" error. [PR #2924](https://github.com/apollographql/apollo-server/pull/2924) [Issue #2921](https://github.com/apollographql/apollo-server/issues/2921)
