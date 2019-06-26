@@ -22,19 +22,6 @@ const clientNameHeaderKey = 'apollographql-client-name';
 const clientReferenceIdHeaderKey = 'apollographql-client-reference-id';
 const clientVersionHeaderKey = 'apollographql-client-version';
 
-// (DEPRECATE)
-// This special type is used internally to this module to implement the
-// `maskErrorDetails` (https://github.com/apollographql/apollo-server/pull/1615)
-// functionality in the exact form it was originally implemented — which didn't
-// have the result matching the interface provided by `GraphQLError` but instead
-// just had a `message` property set to `<masked>`.  Since `maskErrorDetails`
-// is now slated for deprecation (with its behavior superceded by the more
-// robust `rewriteError` functionality, this GraphQLErrorOrMaskedErrorObject`
-// should be removed when that deprecation is completed in a major release.
-type GraphQLErrorOrMaskedErrorObject =
-  | GraphQLError
-  | (Partial<GraphQLError> & Pick<GraphQLError, 'message'>);
-
 // EngineReportingExtension is the per-request GraphQLExtension which creates a
 // trace (in protobuf Trace format) for a single request. When the request is
 // done, it passes the Trace back to its associated EngineReportingAgent via the
@@ -275,27 +262,8 @@ export class EngineReportingExtension<TContext = any>
     });
   }
 
-  private rewriteError(
-    err: GraphQLError,
-  ): GraphQLErrorOrMaskedErrorObject | null {
-    // (DEPRECATE)
-    // This relatively basic representation of an error is an artifact
-    // introduced by https://github.com/apollographql/apollo-server/pull/1615.
-    // Interesting, the implementation of that feature didn't actually
-    // accomplish what the requestor had desired.  This functionality is now
-    // being superceded by the `rewriteError` function, which is a more dynamic
-    // implementation which multiple Engine users have been interested in.
-    // When this `maskErrorDetails` is officially deprecated, this
-    // `rewriteError` method can be changed to return `GraphQLError | null`,
-    // and as noted in its definition, `GraphQLErrorOrMaskedErrorObject` can be
-    // removed.
-    if (this.options.maskErrorDetails) {
-      return {
-        message: '<masked>',
-      };
-    }
-
-    if (typeof this.options.rewriteError === 'function') {
+  private rewriteError(err: GraphQLError): GraphQLError | null {
+    if (this.options.rewriteError) {
       // Before passing the error to the user-provided `rewriteError` function,
       // we'll make a shadow copy of the error so the user is free to change
       // the object as they see fit.
@@ -327,6 +295,12 @@ export class EngineReportingExtension<TContext = any>
         return err;
       }
 
+      // We only allow rewriteError to change the message of the error;
+      // we keep everything else the same. (Note that many of the fields
+      // of GraphQLError are not enumerable and won't show up in the trace
+      // (even in the json field) anyway.)
+      // XXX I really don't understand why we don't allow rewriteError
+      //     to rewrite extensions, which do show up in JSON.
       return new GraphQLError(
         rewrittenError.message,
         err.nodes,
@@ -340,7 +314,7 @@ export class EngineReportingExtension<TContext = any>
     return err;
   }
 
-  private addError(error: GraphQLErrorOrMaskedErrorObject): void {
+  private addError(error: GraphQLError): void {
     // By default, put errors on the root node.
     let node = this.nodes.get('');
     if (error.path) {

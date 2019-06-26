@@ -1099,10 +1099,12 @@ export function testApolloServer<AS extends ApolloServerBase>(
               const trace = Object.values(reports[0].tracesPerQuery)[0]
                 .trace[0];
 
-              expect(trace.root.error).toMatchObject([
+              expect(trace.root.child[0].error).toMatchObject([
                 {
-                  json: '{"message":"<masked>"}',
+                  json:
+                    '{"message":"<masked>","locations":[{"line":1,"column":2}],"path":["fieldWhichWillError"]}',
                   message: '<masked>',
+                  location: [{ line: 1, column: 2 }],
                 },
               ]);
             });

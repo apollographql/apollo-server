@@ -335,6 +335,21 @@ export class ApolloServerBase {
     // or cacheControl.
     this.extensions = [];
 
+    // Normalize the legacy option maskErrorDetails.
+    if (engine && typeof engine === 'object') {
+      if (engine.maskErrorDetails && engine.rewriteError) {
+        throw new Error("Can't set both maskErrorDetails and rewriteError!");
+      } else if (
+        engine.rewriteError &&
+        typeof engine.rewriteError !== 'function'
+      ) {
+        throw new Error('rewriteError must be a function');
+      } else if (engine.maskErrorDetails) {
+        engine.rewriteError = () => new GraphQLError('<masked>');
+        delete engine.maskErrorDetails;
+      }
+    }
+
     // In an effort to avoid over-exposing the API key itself, extract the
     // service ID from the API key for plugins which only needs service ID.
     // The truthyness of this value can also be used in other forks of logic
