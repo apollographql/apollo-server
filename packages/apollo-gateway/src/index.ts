@@ -104,13 +104,6 @@ export class ApolloGateway implements GraphQLService {
     }
 
     this.initializeQueryPlanStore();
-
-    if (config.onSchemaChange) {
-      if (!isLocalConfig(this.config)) {
-        this.logger.debug('Starting polling for schema changes');
-        this.startPollingServices();
-      }
-    }
   }
 
   public async load() {
