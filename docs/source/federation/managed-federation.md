@@ -43,17 +43,3 @@ const gateway = createGateway(
   }
 )
 ```
-
-### Automatic Updates
-
-By default the gateway will pull the remote service definition only at sartup. This can be changed to a polling-based approach by passing a `onSchemaChange` event handler to the `createGateway` function:
-
-```javascript
-const gateway = createGateway(
-  {
-    onSchemaChange: () => restartServer()
-  }
-)
-```
-
-> We are in the process of developing a zero down-time way to update service definitions without needing to restart the ApolloServer.
