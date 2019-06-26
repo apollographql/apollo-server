@@ -6,13 +6,23 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 > The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  When a release is being prepared, a new header will be (manually) created below and the the appropriate changes within that release will be moved into the new section.
 
+### v2.6.7
+
+> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/183de5f112324def375a45c239955e1bf1608fae)
+
+- `apollo-server-core`: Guard against undefined property access in `isDirectiveDefined` which resulted in "Cannot read property 'some' of undefined" error. [PR #2924](https://github.com/apollographql/apollo-server/pull/2924) [Issue #2921](https://github.com/apollographql/apollo-server/issues/2921)
+
 ### v2.6.6
+
+> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/26db63cbd5adf54b07a5b67c0e0fbff8e61c79aa)
 
 - `apollo-server-core`: Avoid duplicate `cacheControl` directives being added via `isDirectiveDefined`, re-landing the implementation reverted in v2.6.1 which first surfaced in v2.6.0. [PR #2762](https://github.com/apollographql/apollo-server/pull/2762) [Reversion PR #2754](https://github.com/apollographql/apollo-server/pull/2754) [Original PR #2428](https://github.com/apollographql/apollo-server/pull/2428)
 - `apollo-server-testing`: Add TypeScript types for `apollo-server-testing` client. [PR #2871](https://github.com/apollographql/apollo-server/pull/2871)
 - `apollo-server-plugin-response-cache`: Fix undefined property access attempt which occurred when an incomplete operation was received. [PR #2792](https://github.com/apollographql/apollo-server/pull/2792) [Issue #2745](https://github.com/apollographql/apollo-server/issues/2745)
 
 ### v2.6.5
+
+> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/a2b2a0d8f013826d08433129a69834035e04f1d5)
 
 - `apollo-engine-reporting`: Simplify the technique for capturing `operationName`. [PR #2899](https://github.com/apollographql/apollo-server/pull/2899)
 - `apollo-server-core`: Fix regression in 2.6.0 which caused `engine: false` not to disable Engine when the `ENGINE_API_KEY` environment variable was set. [PR #2850](https://github.com/apollographql/apollo-server/pull/2850)
