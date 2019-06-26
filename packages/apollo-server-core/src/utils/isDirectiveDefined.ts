@@ -9,10 +9,11 @@ export const isDirectiveDefined = (
     return isDirectiveDefined([gql(typeDefs)], directiveName);
   }
   return typeDefs.some(typeDef =>
-    typeDef.definitions.some(
-      definition =>
-        definition.kind === Kind.DIRECTIVE_DEFINITION &&
-        definition.name.value === directiveName,
-    ),
+    typeDef.hasOwnProperty('definitions') ?
+      typeDef.definitions.some(
+        definition =>
+          definition.kind === Kind.DIRECTIVE_DEFINITION &&
+          definition.name.value === directiveName,
+      ) : false,
   );
 };
