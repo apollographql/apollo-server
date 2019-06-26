@@ -8,6 +8,8 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 ### v2.6.7
 
+> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/183de5f112324def375a45c239955e1bf1608fae)
+
 - `apollo-server-core`: Guard against undefined property access in `isDirectiveDefined` which resulted in "Cannot read property 'some' of undefined" error. [PR #2924](https://github.com/apollographql/apollo-server/pull/2924) [Issue #2921](https://github.com/apollographql/apollo-server/issues/2921)
 
 ### v2.6.6
