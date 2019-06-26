@@ -89,7 +89,7 @@ export class ApolloGateway {
       this.createSchema(services);
     }
 
-    return { schema: this.schema!, executor: this.executor };
+    return { schema: this.schema!, executor: this.executor }; // TODO: pass apiKey. (dependant on #2915)
   }
 
   protected createSchema(services: ServiceDefinition[]) {
@@ -257,8 +257,7 @@ function wrapSchemaWithAliasResolver(schema: GraphQLSchema): GraphQLSchema {
 export async function createGateway(
   config: GatewayConfig,
 ): Promise<GraphQLService> {
-  const gateway = new ApolloGateway(config);
-  return await gateway.load();
+  return await new ApolloGateway(config).load();
 }
 
 export {
