@@ -62,7 +62,7 @@ type User @key(fields: "id") {
 }
 ```
 
-The generated SDL should match that exactly with no additions. It is important to preserve the type extensions, directive locations, and omit the federation types.
+The generated SDL should match that exactly with no additions. It is important to preserve the type extensions and directive locations and to omit the federation types.
 
 Some libraries such as `graphql-java` don't have native support for type extensions in their printer. Apollo Federation supports using an `@extends` directive in place of `extend type` to annotate type references:
 
