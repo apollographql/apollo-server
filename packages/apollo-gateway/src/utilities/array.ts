@@ -1,4 +1,4 @@
-import { isNotNullOrUndefined } from './predicates';
+import { isNotNullOrUndefined } from 'apollo-env';
 
 export function compactMap<T, U>(
   array: T[],

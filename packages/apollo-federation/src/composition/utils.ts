@@ -1,4 +1,5 @@
 import 'apollo-server-env';
+import { isNotNullOrUndefined } from 'apollo-env';
 import {
   ObjectTypeDefinitionNode,
   InterfaceTypeExtensionNode,
@@ -28,12 +29,6 @@ import { ExternalFieldDefinition } from './types';
 
 export function isStringValueNode(node: any): node is StringValueNode {
   return node.kind === Kind.STRING;
-}
-
-export function isNotNullOrUndefined<T>(
-  value: T | null | undefined,
-): value is T {
-  return value !== null && typeof value !== 'undefined';
 }
 
 // Create a map of { fieldName: serviceName } for each field.
