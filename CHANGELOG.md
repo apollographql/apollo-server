@@ -1,23 +1,10 @@
 # Changelog
 
-### vNext
-
 The version headers in this history reflect the versions of Apollo Server itself.  Versions of other packages (e.g. which are not actual HTTP integrations; packages not prefixed with `apollo-server`) may use different versions.  For more details, check the publish commit for that version in the Git history.
 
+### vNEXT
+
 > The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  When a release is being prepared, a new header will be (manually) created below and the the appropriate changes within that release will be moved into the new section.
-
-- `apollo-engine-reporting`: BREAKING CHANGE: By default, send no GraphQL variable values to Apollo's servers instead of sending all variable values. 
-Use the new EngineReportingOption `sendVariableValues` to send some or all variable values, possibly after transforming them. 
-This replaces the `privateVariables` option, which is now deprecated. [PR #2847](https://github.com/apollographql/apollo-server/pull/2847)
-
-  Note: This is only a breaking change if the option `privateVariables` was not previously specified. In order to preserve the old default, pass in the option:
-  `new ApolloServer({engine: {sendVariableValues: {all: true}}})`.
-
-- `apollo-engine-reporting`: BREAKING CHANGE: By default, send no GraphQL request headers to Apollo's servers instead of sending all. Use the new EngineReportingOption `sendHeaders` to send some or all headers and their values. 
-This replaces the `privateHeaders` option, which is now deprecated. [PR #2847](https://github.com/apollographql/apollo-server/pull/2847)
-
-  Note: This is only a breaking change if the option `privateHeaders` was not previously specified. In order to preserve the old default, pass in the option:
-  `new ApolloServer({engine: {sendHeaders: {all: true}}})`.
 
 ### v2.6.7
 
