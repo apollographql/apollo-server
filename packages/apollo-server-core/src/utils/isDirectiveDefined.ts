@@ -9,7 +9,7 @@ export const isDirectiveDefined = (
     return isDirectiveDefined([gql(typeDefs)], directiveName);
   }
   return typeDefs.some(typeDef =>
-    typeDef.hasOwnProperty('definitions')
+    Object.prototype.hasOwnProperty.call(typeDef, 'definitions')
       ? typeDef.definitions.some(
           definition =>
             definition.kind === Kind.DIRECTIVE_DEFINITION &&
