@@ -2,19 +2,21 @@ import { DocumentNode, Kind } from 'graphql/language';
 import { gql } from '../';
 
 export const isDirectiveDefined = (
-  typeDefs: DocumentNode[] | string,
+  typeDefs: (DocumentNode | string)[],
   directiveName: string,
 ): boolean => {
-  if (typeof typeDefs === 'string') {
-    return isDirectiveDefined([gql(typeDefs)], directiveName);
-  }
-  return typeDefs.some(typeDef =>
-    Object.prototype.hasOwnProperty.call(typeDef, 'definitions')
-      ? typeDef.definitions.some(
-          definition =>
-            definition.kind === Kind.DIRECTIVE_DEFINITION &&
-            definition.name.value === directiveName,
-        )
-      : false,
-  );
+  // If we didn't receive an array of what we want, ensure it's an array.
+  typeDefs = Array.isArray(typeDefs) ? typeDefs : [typeDefs];
+
+  return typeDefs.some(typeDef => {
+    if (typeof typeDef === 'string') {
+      typeDef = gql(typeDef);
+    }
+
+    return typeDef.definitions.some(
+      definition =>
+        definition.kind === Kind.DIRECTIVE_DEFINITION &&
+        definition.name.value === directiveName,
+    );
+  });
 };
