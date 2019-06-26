@@ -130,7 +130,7 @@ export class ApolloGateway implements GraphQLService {
   }
 
   public onSchemaChange(value: SchemaChangeCallback): Unsubscriber {
-    // TODO: if (!isRemoteGatewayConfig(this.config)) { throw new Error('onSchemaChange requires an Apollo Engine hosted service list definition.'); }
+    // TODO: if (!isRemoteGatewayConfig(this.config)) { throw new Error('onSchemaChange requires an Apollo Engine hosted service list definition.'); } (dependant on #2915)
     this.onSchemaChangeListeners.add(value);
     if (!this.pollingTimer) this.startPollingServices();
 
