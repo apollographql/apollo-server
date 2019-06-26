@@ -65,20 +65,6 @@ export class ApolloGateway implements GraphQLService {
   private pollingTimer?: NodeJS.Timer;
   private onSchemaChangeListeners = new Set<SchemaChangeCallback>();
 
-  public onSchemaChange(value: SchemaChangeCallback): Unsubscriber {
-    // TODO: if (!isRemoteGatewayConfig(this.config)) { throw new Error('onSchemaChange requires an Apollo Engine hosted service list definition.'); }
-    this.onSchemaChangeListeners.add(value);
-    if (!this.pollingTimer) this.startPollingServices();
-
-    return () => {
-      this.onSchemaChangeListeners.delete(value);
-      if (this.onSchemaChangeListeners.size === 0 && this.pollingTimer) {
-        clearInterval(this.pollingTimer!);
-        this.pollingTimer = undefined;
-      }
-    };
-  }
-
   constructor(config: GatewayConfig) {
     this.config = {
       // TODO: expose the query plan in a more flexible JSON format in the future
@@ -141,6 +127,20 @@ export class ApolloGateway implements GraphQLService {
 
     this.logger.debug('Schema loaded and ready for execution');
     this.isReady = true;
+  }
+
+  public onSchemaChange(value: SchemaChangeCallback): Unsubscriber {
+    // TODO: if (!isRemoteGatewayConfig(this.config)) { throw new Error('onSchemaChange requires an Apollo Engine hosted service list definition.'); }
+    this.onSchemaChangeListeners.add(value);
+    if (!this.pollingTimer) this.startPollingServices();
+
+    return () => {
+      this.onSchemaChangeListeners.delete(value);
+      if (this.onSchemaChangeListeners.size === 0 && this.pollingTimer) {
+        clearInterval(this.pollingTimer!);
+        this.pollingTimer = undefined;
+      }
+    };
   }
 
   private startPollingServices() {
