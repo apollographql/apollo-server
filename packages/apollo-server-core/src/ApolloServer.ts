@@ -269,7 +269,7 @@ export class ApolloServerBase {
         );
       }
 
-      let augmentedTypeDefs = Array.isArray(typeDefs) ? typeDefs : [typeDefs];
+      const augmentedTypeDefs = Array.isArray(typeDefs) ? typeDefs : [typeDefs];
 
       // We augment the typeDefs with the @cacheControl directive and associated
       // scope enum, so makeExecutableSchema won't fail SDL validation
