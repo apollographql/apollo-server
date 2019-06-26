@@ -119,7 +119,7 @@ new ApolloServer({
 
 * `engine`: <`EngineReportingOptions`> | boolean
 
-  Provided the `ENGINE_API_KEY` environment variable is set, the engine reporting agent will be started automatically. The API key can also be provided as the `apiKey` field in an object passed as the `engine` field. See the [EngineReportingOptions](#enginereportingoptions) section for a full description of how to configure the reporting agent, including how to blacklist variables. When using the Engine proxy, this option should be set to false.
+  Provided the `ENGINE_API_KEY` environment variable is set, the engine reporting agent will be started automatically. The API key can also be provided as the `apiKey` field in an object passed as the `engine` field. See the [EngineReportingOptions](#enginereportingoptions) section for a full description of how to configure the reporting agent, including how to include variable values and HTTP headers. When using the Engine proxy, this option should be set to false.
 
 * `persistedQueries`: <`Object`> | false
 
@@ -342,20 +342,62 @@ addMockFunctionsToSchema({
    By default, errors sending reports to Engine servers will be logged
    to standard error. Specify this function to process errors in a different
    way.
+   
+* `sendVariableValues`: { transform: (options: { variables: Record<string, any>, operationString?: string } ) => Record<string, any> }
+                     | { exceptNames: Array&lt;String&gt; }
+                     | { onlyNames: Array&lt;String&gt; }
+                     | { none: true }
+                     | { all: true }
+    
+    By default, Apollo Server does not send the values of any GraphQL variables to Apollo's servers, because variable values often contain the private data of your app's users. If you'd like variable values to be included in traces, set this option. This option can take several forms:
+    
+    - { none: true }: don't send any variable values (DEFAULT)
+    - { all: true }: send all variable values
+    - { transform: ... }: a custom function for modifying variable values. Keys added by the custom function will be removed, and keys removed will be added back with an empty value. 
+    - { exceptNames: ... }: a case-sensitive list of names of variables whose values should not be sent to Apollo servers
+    - { onlyNames: ... }: a case-sensitive list of names of variables whose values will be sent to Apollo Servers
 
-*  `privateVariables`: Array<String> | boolean
+   Defaults to not sending any variable values if both this parameter and the deprecated `privateVariables` are not set. 
+   The report will indicate each private variable key whose value was redacted by { none: true } or { exceptNames: [...] }.
+   
+*  `privateVariables`: Array&lt;String&gt; | boolean
 
-   A case-sensitive list of names of variables whose values should not be sent
-   to Apollo servers, or 'true' to leave out all variables. In the former
-   case, the report will indicate that each private variable was redacted in
-   the latter case, no variables are sent at all.
+   <!--- TODO(helen): update the version number here --->
+   DEPRECATING IN VERSION XX.XX.XX, to be replaced by the option `sendVariableValues`, which supports the same
+   functionalities but allows for more flexibility. Passing an array into `privateVariables` is equivalent to
+   passing in `{ exceptNames: array } ` to `sendVariableValues`, and passing in `true` or `false` is equivalent
+   to passing ` { none: true } ` or ` { all: true }`, respectively.
+   
+   NOTE: An error will be thrown if both this deprecated option and its replacement, `sendVariableValues` are defined.
+   In order to preserve the old default of `privateVariables`, which sends all variables and their values, pass in the `sendVariableValues` option:
+     `new ApolloServer({engine: {sendVariableValues: {all: true}}})`.
+    
+* `sendHeaders`: { exceptNames: Array&lt;String&gt; } | { onlyNames: Array&lt;String&gt; } | { all: boolean } | { none: boolean }
+   By default, Apollo Server does not send the list of HTTP request headers and values to
+   Apollo's servers, to protect private data of your app's users. If you'd like this information included in traces,
+   set this option. This option can take several forms:
+   
+   - { none: true }: drop all HTTP request headers (DEFAULT)
+   - { all: true }: send the values of all HTTP request headers
+   - { exceptNames: ... }: A case-insensitive list of names of HTTP headers whose values should not be
+   sent to Apollo servers
+   - { onlyNames: ... }: A case-insensitive list of names of HTTP headers whose values will be sent to Apollo servers
+   
+   Defaults to not sending any request header names and values if both this parameter and the deprecated `privateHeaders` are not set.
+   Unlike with `sendVariableValues`, names of dropped headers are not reported.
+   The headers 'authorization', 'cookie', and 'set-cookie' are never reported.
+   
+*  `privateHeaders`: Array&lt;String&gt; | boolean
 
-*  `privateHeaders`: Array<String> | boolean
-
-   A case-insensitive list of names of HTTP headers whose values should not be
-   sent to Apollo servers, or 'true' to leave out all HTTP headers. Unlike
-   with privateVariables, names of dropped headers are not reported.
-
+   <!--- TODO(helen): update the version number here --->
+   DEPRECATING IN VERSION XX.XX.XX, use `sendHeaders` instead.
+   Passing an array into `privateHeaders` is equivalent to passing ` { exceptNames: array } ` into `sendHeaders`, and
+   passing `true` or `false` is equivalent to passing in ` { none: true } ` and ` { all: true }`, respectively.
+   
+   NOTE: An error will be thrown if both this deprecated option and its replacement, `sendHeaders` are defined.
+   In order to preserve the old default of `privateHeaders`, which sends all request headers and their values, pass in the `sendHeaders` option:
+      `new ApolloServer({engine: {sendHeaders: {all: true}}})`.
+      
 *  `handleSignals`: boolean
 
    By default, EngineReportingAgent listens for the 'SIGINT' and 'SIGTERM'
