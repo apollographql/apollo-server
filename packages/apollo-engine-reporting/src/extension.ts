@@ -435,12 +435,14 @@ export function makeTraceDetails(
             : JSON.stringify(variablesToRecord[name]);
       } catch (e) {
         if (
+          // The apollo-engine-reporting package currently only runs on Node.js
+          // and Node.js 6, 8, 10 and 12 all pass this criteria.  For what it's
+          // worth, changes in error message text are considered major breaking
+          // changes to Node.js.   In the future, hopefully all of these will
+          // be guarded by error `code` properties, but that will take some
+          // upstream V8 work to standardize.
           e.name === 'TypeError' &&
-          (e.message === 'cyclic object value' ||
-            e.message === 'Converting circular structure to JSON' ||
-            e.message === 'Circular reference in value argument not supported')
-          // Not sure how to determine the standardized error message... so checking the ones listed here:
-          // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Errors/Cyclic_object_value#Message
+          e.message.startsWith('Converting circular structure to JSON')
         ) {
           details.variablesJson![name] = JSON.stringify(
             '[Unable to convert value to JSON]',
