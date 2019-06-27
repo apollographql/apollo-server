@@ -108,7 +108,7 @@ export class ApolloGateway implements GraphQLService {
       const apiKey = config.apiKey || process.env['ENGINE_API_KEY'];
       if (!apiKey) {
         throw new Error(
-          'The gateway requires either a serviceList, localServiceList, or apiKey to be provided in the config, or ENGINE_API_KEY to be defined in the environment',
+          'Apollo Gateway requires either a `serviceList`, `localServiceList`, or `apiKey` to be provided in the config, or `ENGINE_API_KEY` to be defined in the environment.',
         );
       }
     }
