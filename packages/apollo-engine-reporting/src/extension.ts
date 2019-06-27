@@ -436,9 +436,15 @@ export function makeTraceDetails(
       } catch (e) {
         if (
           e.name === 'TypeError' &&
-          e.message === 'Converting circular structure to JSON'
+          (e.message === 'cyclic object value' ||
+            e.message === 'Converting circular structure to JSON' ||
+            e.message === 'Circular reference in value argument not supported')
+          // Not sure how to determine the standardized error message... so checking the ones listed here:
+          // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Errors/Cyclic_object_value#Message
         ) {
-          details.variablesJson![name] = JSON.stringify(e.message);
+          details.variablesJson![name] = JSON.stringify(
+            '[Unable to convert value to JSON]',
+          );
         } else {
           // Re-throw when it doesn't meet our expectation so we don't
           // inadvertently swallow anything as a "cycle error" when its not.

@@ -271,6 +271,19 @@ describe('variableJson output for sendVariableValues transform: custom function 
   });
 });
 
+describe('Catch circular reference error during JSON.stringify', () => {
+  const circularReference = {};
+  circularReference['this'] = circularReference;
+
+  const circularVariables = {
+    bad: circularReference,
+  };
+
+  expect(
+    makeTraceDetails(circularVariables, { all: true }).variablesJson['bad'],
+  ).toEqual(JSON.stringify('[Unable to convert value to JSON]'));
+});
+
 function makeTestHTTP(): Trace.HTTP {
   return new Trace.HTTP({
     method: Trace.HTTP.Method.UNKNOWN,
