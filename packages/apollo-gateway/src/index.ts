@@ -220,7 +220,7 @@ export class ApolloGateway implements GraphQLService {
       }
     };
 
-    return await getServiceDefinitions();
+    return getServiceDefinitions();
   }
 
   public executor = async <TContext>(
