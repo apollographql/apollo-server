@@ -114,7 +114,6 @@ export class ApolloServerBase {
   private engineServiceId?: string;
   private engineApiKeyHash?: string;
   private extensions: Array<() => GraphQLExtension>;
-  private engine: boolean | EngineReportingOptions<object> | undefined;
   private schemaHash?: string;
   protected plugins: ApolloServerPlugin[] = [];
 
@@ -374,7 +373,7 @@ export class ApolloServerBase {
       if (this.engineServiceId) {
         const { EngineReportingAgent } = require('apollo-engine-reporting');
         this.engineReportingAgent = new EngineReportingAgent(
-          typeof this.engine === 'object' ? this.engine : Object.create(null),
+          typeof engine === 'object' ? engine : Object.create(null),
           {
             schema: this.schema,
             schemaHash: this.schemaHash,
