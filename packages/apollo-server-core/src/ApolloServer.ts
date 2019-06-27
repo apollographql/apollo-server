@@ -61,6 +61,7 @@ import {
 
 import { Headers } from 'apollo-server-env';
 import { buildServiceDefinition } from '@apollographql/apollo-tools';
+import { EngineReportingOptions } from 'apollo-engine-reporting';
 
 const NoIntrospection = (context: ValidationContext) => ({
   Field(node: FieldDefinitionNode) {
@@ -113,6 +114,7 @@ export class ApolloServerBase {
   private engineServiceId?: string;
   private engineApiKeyHash?: string;
   private extensions: Array<() => GraphQLExtension>;
+  private engine: boolean | EngineReportingOptions<object> | undefined;
   private schemaHash: string;
   protected plugins: ApolloServerPlugin[] = [];
 
@@ -153,6 +155,7 @@ export class ApolloServerBase {
       uploads,
       playground,
       plugins,
+      gateway,
       ...requestOptions
     } = config;
 
@@ -261,6 +264,19 @@ export class ApolloServerBase {
         throw new Error(errors.map(error => error.message).join('\n\n'));
       }
       this.schema = schema!;
+    } else if (gateway) {
+      this.schema = gateway.schema;
+      this.requestOptions.executor = gateway.executor;
+      if (gateway.apiKey) {
+        if (engine === undefined) {
+          ((engine as unknown) as EngineReportingOptions<object>) = {
+            apiKey: gateway.apiKey,
+          };
+        }
+        if (engine) {
+          engine.apiKey = engine.apiKey || gateway.apiKey;
+        }
+      }
     } else {
       if (!typeDefs) {
         throw Error(
@@ -344,19 +360,10 @@ export class ApolloServerBase {
         .digest('hex');
     }
 
+    this.updateSchema(this.schema);
+
+    // Keep this extension second so it wraps everything, except error formatting
     if (this.engineServiceId) {
-      const { EngineReportingAgent } = require('apollo-engine-reporting');
-      this.engineReportingAgent = new EngineReportingAgent(
-        typeof engine === 'object' ? engine : Object.create(null),
-        {
-          schema: this.schema,
-          schemaHash: this.schemaHash,
-          engine: {
-            serviceID: this.engineServiceId,
-          },
-        },
-      );
-      // Let's keep this extension second so it wraps everything, except error formatting
       this.extensions.push(() => this.engineReportingAgent!.newExtension());
     }
 
@@ -397,6 +404,30 @@ export class ApolloServerBase {
   // integrations do not have paths, such as lambda
   public setGraphQLPath(path: string) {
     this.graphqlPath = path;
+  }
+
+  /**
+   * Update schema and all data derived from schema, including clearing any caches that might depend on the schema
+   */
+  private updateSchema(schema: GraphQLSchema) {
+    this.schema = schema;
+    this.schemaHash = generateSchemaHash(this.schema);
+
+    if (this.engineServiceId) {
+      const { EngineReportingAgent } = require('apollo-engine-reporting');
+      this.engineReportingAgent = new EngineReportingAgent(
+        typeof this.engine === 'object' ? this.engine : Object.create(null),
+        {
+          schema: this.schema,
+          schemaHash: this.schemaHash,
+          engine: {
+            serviceID: this.engineServiceId,
+          },
+        },
+      );
+    }
+
+    this.initializeDocumentStore();
   }
 
   protected async willStart() {
