@@ -150,7 +150,6 @@ export class ApolloServerBase {
       mocks,
       mockEntireSchema,
       extensions,
-      engine,
       subscriptions,
       uploads,
       playground,
@@ -158,6 +157,9 @@ export class ApolloServerBase {
       gateway,
       ...requestOptions
     } = config;
+
+    this.engine = requestOptions.engine;
+    delete requestOptions.engine;
 
     // Initialize the document store.  This cannot currently be disabled.
     this.initializeDocumentStore();
@@ -269,10 +271,10 @@ export class ApolloServerBase {
       this.requestOptions.executor = gateway.executor;
 
       if (gateway.engine) {
-        if (engine !== false) {
-          ((engine as unknown) as EngineReportingOptions<object>) = {
+        if (this.engine !== false) {
+          this.engine = {
             ...gateway.engine,
-            ...engine,
+            ...this.engine,
           };
         }
       }
@@ -354,9 +356,9 @@ export class ApolloServerBase {
     // service ID from the API key for plugins which only needs service ID.
     // The truthyness of this value can also be used in other forks of logic
     // related to Engine, as is the case with EngineReportingAgent just below.
-    this.engineServiceId = getEngineServiceId(engine);
+    this.engineServiceId = getEngineServiceId(this.engine);
 
-    const apiKey = getEngineApiKey(engine);
+    const apiKey = getEngineApiKey(this.engine);
     if (apiKey) {
       this.engineApiKeyHash = createSHA('sha512')
         .update(apiKey)

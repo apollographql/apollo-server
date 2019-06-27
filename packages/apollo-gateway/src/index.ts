@@ -173,7 +173,7 @@ export class ApolloGateway {
 
   public onSchemaChange(value: SchemaChangeCallback): Unsubscriber {
     if (
-      !isRemoteConfig(this.config) &&
+      !isManagedConfig(this.config) &&
       !this.config.__enablePollingExperimental
     ) {
       throw new Error(
