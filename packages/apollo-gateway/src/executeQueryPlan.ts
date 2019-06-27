@@ -258,7 +258,7 @@ async function executeFetch<TContext>(
 
 /**
  *
- * @param source result of graphql execution
+ * @param source Result of GraphQL execution.
  * @param selectionSet
  */
 export function executeSelectionSet(
