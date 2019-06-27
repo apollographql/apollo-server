@@ -348,6 +348,9 @@ export class ApolloServerBase {
 
     this.updateSchema(this.schema);
 
+    // Keep this extension second so it wraps everything, except error formatting
+    this.extensions.push(() => this.engineReportingAgent!.newExtension());
+
     if (extensions) {
       this.extensions = [...this.extensions, ...extensions];
     }
@@ -406,8 +409,6 @@ export class ApolloServerBase {
           },
         },
       );
-      // Let's keep this extension second so it wraps everything, except error formatting
-      this.extensions.push(() => this.engineReportingAgent!.newExtension());
     }
 
     this.initializeDocumentStore();
