@@ -3,12 +3,12 @@ import { ServiceDefinition } from '@apollo/federation';
 import { parse } from 'graphql';
 import createSHA from './utilities/createSHA';
 
-export interface LinkFileResult {
+interface LinkFileResult {
   configPath: string;
   formatVersion: number;
 }
 
-export interface ImplementingService {
+interface ImplementingService {
   formatVersion: number;
   graphID: string;
   graphVariant: string;
@@ -18,20 +18,20 @@ export interface ImplementingService {
   partialSchemaPath: string;
 }
 
-export interface ImplementingServiceLocation {
+interface ImplementingServiceLocation {
   name: string;
   path: string;
 }
 
-export interface ConfigFileResult {
+interface ConfigFileResult {
   formatVersion: number;
   id: string;
   implementingServiceLocations: ImplementingServiceLocation[];
   schemaHash: string;
 }
 
-export const envOverrideOperationManifest = 'APOLLO_PARTIAL_SCHEMA_BASE_URL';
-export const envOverrideStorageSecretBaseUrl = 'APOLLO_STORAGE_SECRET_BASE_URL';
+const envOverrideOperationManifest = 'APOLLO_PARTIAL_SCHEMA_BASE_URL';
+const envOverrideStorageSecretBaseUrl = 'APOLLO_STORAGE_SECRET_BASE_URL';
 
 const urlFromEnvOrDefault = (envKey: string, fallback: string) =>
   (process.env[envKey] || fallback).replace(/\/$/, '');
@@ -42,7 +42,7 @@ const urlPartialSchemaBase = urlFromEnvOrDefault(
   'https://storage.googleapis.com/engine-partial-schema-prod/',
 );
 
-export const urlStorageSecretBase: string = urlFromEnvOrDefault(
+const urlStorageSecretBase: string = urlFromEnvOrDefault(
   envOverrideStorageSecretBaseUrl,
   'https://storage.googleapis.com/engine-partial-schema-prod/',
 );

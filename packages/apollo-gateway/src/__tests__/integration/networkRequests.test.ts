@@ -11,9 +11,13 @@ import {
   mockLocalhostSDLQuery,
 } from './nockMocks';
 
+afterEach(() => {
+  expect(nock.isDone()).toBeTruthy();
+});
+
 it('Queries remote endpoints for their SDLs', async () => {
-  let url = 'http://localhost:4001';
-  let sdl = `
+  const url = 'http://localhost:4001';
+  const sdl = `
   extend type Query {
       me: User
       everyone: [User]
@@ -29,28 +33,28 @@ it('Queries remote endpoints for their SDLs', async () => {
 
   mockLocalhostSDLQuery({ url, sdl });
 
-  let gateway = new ApolloGateway({
+  const gateway = new ApolloGateway({
     serviceList: [{ name: 'accounts', url: `${url}/graphql` }],
   });
   await gateway.load();
-  expect(nock.isDone()).toBeTruthy();
   expect(gateway.schema!.getType('User')!.description).toBe('My User.');
 });
 
 // This test is maybe a bit terrible, but IDK a better way to mock all the requests
 it('Extracts service definitions from remote storage', async () => {
-  let serviceName = 'jacksons-service';
-  let apiKey = `service:${serviceName}:AABBCCDDEEFFGG`;
-  let apiKeyHash = createSHA('sha512')
+  const serviceName = 'jacksons-service';
+  const apiKey = `service:${serviceName}:AABBCCDDEEFFGG`;
+  const apiKeyHash = createSHA('sha512')
     .update(apiKey)
     .digest('hex');
 
-  let storageSecret = 'secret';
-  let implementingServicePath = 'path-to-implementing-service-definition.json';
-  let partialSchemaPath = 'path-to-accounts-partial-schema.json';
-  let federatedServiceName = 'accounts';
-  let federatedServiceURL = 'http://localhost:4001';
-  let federatedServiceSchema = `
+  const storageSecret = 'secret';
+  const implementingServicePath =
+    'path-to-implementing-service-definition.json';
+  const partialSchemaPath = 'path-to-accounts-partial-schema.json';
+  const federatedServiceName = 'accounts';
+  const federatedServiceURL = 'http://localhost:4001';
+  const federatedServiceSchema = `
         extend type Query {
         me: User
         everyone: [User]
@@ -87,9 +91,8 @@ it('Extracts service definitions from remote storage', async () => {
     federatedServiceSchema,
   });
 
-  let gateway = new ApolloGateway({ apiKey });
+  const gateway = new ApolloGateway({ apiKey });
 
   await gateway.load();
-  expect(nock.isDone()).toBeTruthy();
   expect(gateway.schema!.getType('User')!.description).toBe('This is my User');
 });
