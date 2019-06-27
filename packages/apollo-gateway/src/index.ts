@@ -108,7 +108,6 @@ export class ApolloGateway implements GraphQLService {
     this.engineConfig = engineConfig;
     if (!this.isReady) {
       this.logger.debug('Loading configuration for Gateway');
-
       const [services] = await this.loadServiceDefinitions(this.config);
       this.logger.debug('Configuration loaded for Gateway');
       this.createSchema(services);
