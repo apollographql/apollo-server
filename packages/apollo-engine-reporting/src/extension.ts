@@ -295,12 +295,12 @@ export class EngineReportingExtension<TContext = any>
         return err;
       }
 
-      // We only allow rewriteError to change the message of the error;
-      // we keep everything else the same. (Note that many of the fields
-      // of GraphQLError are not enumerable and won't show up in the trace
-      // (even in the json field) anyway.)
-      // XXX I really don't understand why we don't allow rewriteError
-      //     to rewrite extensions, which do show up in JSON.
+      // We only allow rewriteError to change the message and extensions of the
+      // error; we keep everything else the same. That way people don't have to
+      // do extra work to keep the error on the same trace node. We also keep
+      // extensions the same if it isn't explicitly changed (to, eg, {}). (Note
+      // that many of the fields of GraphQLError are not enumerable and won't
+      // show up in the trace (even in the json field) anyway.)
       return new GraphQLError(
         rewrittenError.message,
         err.nodes,
@@ -308,7 +308,7 @@ export class EngineReportingExtension<TContext = any>
         err.positions,
         err.path,
         err.originalError,
-        err.extensions,
+        rewrittenError.extensions || err.extensions,
       );
     }
     return err;

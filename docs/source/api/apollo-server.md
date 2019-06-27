@@ -372,8 +372,14 @@ addMockFunctionsToSchema({
    purposes of Apollo Engine reporting.  The modified error (e.g. after changing
    the `err.message` property) should be returned or the function should return
    an explicit `null` to avoid reporting the error entirely.  It is not
-   permissable to return `undefined`.
-   
+   permissable to return `undefined`. Note that most `GraphQLError` fields,
+   like `path`, will get copied from the original error to the new error: this
+   way, you can just `return new GraphQLError("message")` without having to
+   explicitly keep it associated with the same node. Specifically,  only
+   look at the `message` and `extensions` fields on the `GraphQLError` you return,
+   and if you don't explicitly specify `extensions` we use the original
+   error's `extensions`.
+
 *  `schemaTag`: String
 
    A human-readable name to tag this variant of a schema (i.e. staging, EU). Setting this value will cause metrics to be segmented in the Apollo Platform's UI. Additionally schema validation with a schema tag will only check metrics associate with the same string.
