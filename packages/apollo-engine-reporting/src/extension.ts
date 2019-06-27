@@ -434,24 +434,9 @@ export function makeTraceDetails(
             ? ''
             : JSON.stringify(variablesToRecord[name]);
       } catch (e) {
-        if (
-          // The apollo-engine-reporting package currently only runs on Node.js
-          // and Node.js 6, 8, 10 and 12 all pass this criteria.  For what it's
-          // worth, changes in error message text are considered major breaking
-          // changes to Node.js.   In the future, hopefully all of these will
-          // be guarded by error `code` properties, but that will take some
-          // upstream V8 work to standardize.
-          e.name === 'TypeError' &&
-          e.message.startsWith('Converting circular structure to JSON')
-        ) {
-          details.variablesJson![name] = JSON.stringify(
-            '[Unable to convert value to JSON]',
-          );
-        } else {
-          // Re-throw when it doesn't meet our expectation so we don't
-          // inadvertently swallow anything as a "cycle error" when its not.
-          throw e;
-        }
+        details.variablesJson![name] = JSON.stringify(
+          '[Unable to convert value to JSON]',
+        );
       }
     }
   });
