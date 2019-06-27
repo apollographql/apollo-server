@@ -409,7 +409,7 @@ export class ApolloServerBase {
   /**
    * Update schema and all data derived from schema, including clearing any caches that might depend on the schema
    */
-  public updateSchema(schema: GraphQLSchema) {
+  public async updateSchema(schema: GraphQLSchema) {
     this.schema = schema;
     this.schemaHash = generateSchemaHash(this.schema);
 
@@ -429,7 +429,9 @@ export class ApolloServerBase {
       this.extensions.push(() => this.engineReportingAgent!.newExtension());
     }
 
-    this.initializeDocumentStore();
+    if (this.documentStore) {
+      this.documentStore.flush().then(() => this.initializeDocumentStore());
+    }
     this.willStart();
   }
 
