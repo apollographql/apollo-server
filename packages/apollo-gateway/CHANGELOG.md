@@ -2,7 +2,7 @@
 
 ### vNEXT
 
-- fix @requires bug preventing array and null values [PR #2928](https://github.com/apollographql/apollo-server/pull/2928)
+- Fix `@requires` bug preventing array and null values. [PR #2928](https://github.com/apollographql/apollo-server/pull/2928)
 
 # v0.6.5
 
