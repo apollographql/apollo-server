@@ -89,7 +89,7 @@ export class ApolloGateway {
       this.createSchema(services);
     }
 
-    return { schema: this.schema!, executor: this.executor }; // TODO: pass apiKey. (dependant on #2915)
+    return { schema: this.schema!, executor: this.executor };
   }
 
   protected createSchema(services: ServiceDefinition[]) {

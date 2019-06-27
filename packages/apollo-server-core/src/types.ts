@@ -68,7 +68,6 @@ type BaseConfig = Pick<
 export interface GraphQLService {
   schema: GraphQLSchema;
   executor: GraphQLExecutor;
-  apiKey?: string;
 }
 
 // This configuration is shared between all integrations and should include
@@ -84,7 +83,7 @@ export interface Config extends BaseConfig {
   introspection?: boolean;
   mocks?: boolean | IMocks;
   mockEntireSchema?: boolean;
-  engine?: false | EngineReportingOptions<Context>;
+  engine?: boolean | EngineReportingOptions<Context>;
   extensions?: Array<() => GraphQLExtension>;
   cacheControl?: CacheControlExtensionOptions | boolean;
   plugins?: PluginDefinition[];
