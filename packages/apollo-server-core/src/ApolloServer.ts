@@ -349,7 +349,9 @@ export class ApolloServerBase {
     this.updateSchema(this.schema);
 
     // Keep this extension second so it wraps everything, except error formatting
-    this.extensions.push(() => this.engineReportingAgent!.newExtension());
+    if (this.engineServiceId) {
+      this.extensions.push(() => this.engineReportingAgent!.newExtension());
+    }
 
     if (extensions) {
       this.extensions = [...this.extensions, ...extensions];
@@ -393,7 +395,7 @@ export class ApolloServerBase {
   /**
    * Update schema and all data derived from schema, including clearing any caches that might depend on the schema
    */
-  public updateSchema(schema: GraphQLSchema) {
+  private updateSchema(schema: GraphQLSchema) {
     this.schema = schema;
     this.schemaHash = generateSchemaHash(this.schema);
 
@@ -412,7 +414,6 @@ export class ApolloServerBase {
     }
 
     this.initializeDocumentStore();
-    this.willStart();
   }
 
   protected async willStart() {
