@@ -42,16 +42,14 @@ interface GatewayConfigBase {
   buildService?: (definition: ServiceEndpointDefinition) => GraphQLDataSource;
 }
 
-export interface RemoteGatewayConfig extends GatewayConfigBase {
+interface RemoteGatewayConfig extends GatewayConfigBase {
   serviceList: ServiceEndpointDefinition[];
 }
 
-export interface ManagedGatewayConfig extends GatewayConfigBase {
-  apiKey?: string;
-  tag?: string;
+interface ManagedGatewayConfig extends GatewayConfigBase {
   federationVersion?: number;
 }
-export interface LocalGatewayConfig extends GatewayConfigBase {
+interface LocalGatewayConfig extends GatewayConfigBase {
   localServiceList: ServiceDefinition[];
 }
 
@@ -60,14 +58,10 @@ export type GatewayConfig =
   | LocalGatewayConfig
   | ManagedGatewayConfig;
 
+type EngineConfig = { apiKeyHash: string; graphId: string; graphTag?: string };
+
 function isLocalConfig(config: GatewayConfig): config is LocalGatewayConfig {
   return 'localServiceList' in config;
-}
-
-function isManagedConfig(
-  config: GatewayConfig,
-): config is ManagedGatewayConfig {
-  return !(isLocalConfig(config) || isRemoteConfig(config));
 }
 
 function isRemoteConfig(config: GatewayConfig): config is RemoteGatewayConfig {
@@ -81,6 +75,7 @@ export class ApolloGateway implements GraphQLService {
   protected config: GatewayConfig;
   protected logger: Logger;
   protected queryPlanStore?: InMemoryLRUCache<QueryPlan>;
+  private engineConfig: EngineConfig | undefined;
 
   constructor(config: GatewayConfig) {
     this.config = {
@@ -106,21 +101,14 @@ export class ApolloGateway implements GraphQLService {
       this.createSchema(config.localServiceList);
     }
 
-    if (isManagedConfig(config)) {
-      config.apiKey = config.apiKey || process.env['ENGINE_API_KEY'];
-      if (!config.apiKey) {
-        throw new Error(
-          'Apollo Gateway requires either a `serviceList`, `localServiceList`, or `apiKey` to be provided in the config, or `ENGINE_API_KEY` to be defined in the environment.',
-        );
-      }
-    }
-
     this.initializeQueryPlanStore();
   }
 
-  public async load() {
+  public async load(engineConfig?: EngineConfig) {
+    this.engineConfig = engineConfig;
     if (!this.isReady) {
       this.logger.debug('Loading configuration for Gateway');
+
       const [services] = await this.loadServiceDefinitions(this.config);
       this.logger.debug('Configuration loaded for Gateway');
       this.createSchema(services);
@@ -175,17 +163,27 @@ export class ApolloGateway implements GraphQLService {
   ): Promise<[ServiceDefinition[], boolean]> {
     if (isLocalConfig(config)) return [config.localServiceList, false];
 
-    const [remoteServices, isNewService] = isRemoteConfig(config)
-      ? await getServiceDefinitionsFromRemoteEndpoint({
+    const getServiceDefinitions = async () => {
+      if (isRemoteConfig(config)) {
+        return getServiceDefinitionsFromRemoteEndpoint({
           serviceList: config.serviceList,
-        })
-      : await getServiceDefinitionsFromStorage({
-          apiKey: config.apiKey!,
-          graphVariant: config.tag || 'current',
-          federationVersion: config.federationVersion!,
         });
+      } else {
+        if (!this.engineConfig) {
+          throw new Error(
+            'Must supply engineConfig to ApolloGateway#load() when no serviceList is provided.',
+          );
+        }
+        return getServiceDefinitionsFromStorage({
+          graphId: this.engineConfig.graphId,
+          apiKeyHash: this.engineConfig.apiKeyHash,
+          graphVariant: this.engineConfig.graphTag || 'current',
+          federationVersion: config.federationVersion || 1,
+        });
+      }
+    };
 
-    return [remoteServices, isNewService];
+    return await getServiceDefinitions();
   }
 
   public executor = async <TContext>(

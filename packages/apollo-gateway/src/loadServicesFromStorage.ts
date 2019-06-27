@@ -1,7 +1,6 @@
 import { CachedFetcher } from './cachedFetcher';
 import { ServiceDefinition } from '@apollo/federation';
 import { parse } from 'graphql';
-import createSHA from './utilities/createSHA';
 
 interface LinkFileResult {
   configPath: string;
@@ -50,30 +49,31 @@ const urlStorageSecretBase: string = urlFromEnvOrDefault(
 const fetcher = new CachedFetcher();
 let serviceDefinitionList: ServiceDefinition[] = [];
 
-function getStorageSecretUrl(apiKey: string): string {
-  const graphId = apiKey.split(':', 2)[1];
-  const apiKeyHash = createSHA('sha512')
-    .update(apiKey)
-    .digest('hex');
+function getStorageSecretUrl(graphId: string, apiKeyHash: string): string {
   return `${urlStorageSecretBase}/${graphId}/storage-secret/${apiKeyHash}.json`;
 }
 
-async function fetchStorageSecret(apiKey: string): Promise<string> {
-  const storageSecretUrl = getStorageSecretUrl(apiKey);
+async function fetchStorageSecret(
+  graphId: string,
+  apiKeyHash: string,
+): Promise<string> {
+  const storageSecretUrl = getStorageSecretUrl(graphId, apiKeyHash);
   const response = await fetcher.fetch(storageSecretUrl);
   return JSON.parse(response.result);
 }
 
 export async function getServiceDefinitionsFromStorage({
-  apiKey,
+  graphId,
+  apiKeyHash,
   graphVariant,
-  federationVersion = 1,
+  federationVersion,
 }: {
-  apiKey: string;
+  graphId: string;
+  apiKeyHash: string;
   graphVariant: string;
   federationVersion: number;
 }): Promise<[ServiceDefinition[], boolean]> {
-  const secret = await fetchStorageSecret(apiKey);
+  const secret = await fetchStorageSecret(graphId, apiKeyHash);
 
   if (!graphVariant) {
     console.warn('No graphVariant specified, defaulting to "current".');
