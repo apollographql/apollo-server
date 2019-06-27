@@ -167,7 +167,7 @@ describe('variableJson output for sendVariableValues exceptNames: Array type', (
   });
 
   it('none=true equivalent to exceptNames=[all variables]', () => {
-    let privateVariablesArray: string[] = ['testing', 't2'];
+    const privateVariablesArray: string[] = ['testing', 't2'];
     expect(makeTraceDetails(variables, { none: true }).variablesJson).toEqual(
       makeTraceDetails(variables, { exceptNames: privateVariablesArray })
         .variablesJson,
@@ -189,7 +189,7 @@ describe('variableJson output for sendVariableValues onlyNames: Array type', () 
   });
 
   it('all=true equivalent to onlyNames=[all variables]', () => {
-    let privateVariablesArray: string[] = ['testing', 't2'];
+    const privateVariablesArray: string[] = ['testing', 't2'];
     expect(makeTraceDetails(variables, { all: true }).variablesJson).toEqual(
       makeTraceDetails(variables, { onlyNames: privateVariablesArray })
         .variablesJson,
@@ -197,7 +197,7 @@ describe('variableJson output for sendVariableValues onlyNames: Array type', () 
   });
 
   it('none=true equivalent to onlyNames=[]', () => {
-    let privateVariablesArray: string[] = [];
+    const privateVariablesArray: string[] = [];
     expect(makeTraceDetails(variables, { none: true }).variablesJson).toEqual(
       makeTraceDetails(variables, { onlyNames: privateVariablesArray })
         .variablesJson,
@@ -211,7 +211,7 @@ describe('variableJson output for sendVariableValues transform: custom function 
     const customModifier = (input: {
       variables: Record<string, any>;
     }): Record<string, any> => {
-      let out: Record<string, any> = {};
+      const out: Record<string, any> = Object.create(null);
       Object.keys(input.variables).map((name: string) => {
         out[name] = modifiedValue;
       });
@@ -236,7 +236,7 @@ describe('variableJson output for sendVariableValues transform: custom function 
   const modifier = (input: {
     variables: Record<string, any>;
   }): Record<string, any> => {
-    let out: Record<string, any> = {};
+    const out: Record<string, any> = Object.create(null);
     Object.keys(input.variables).map((name: string) => {
       out[name] = null;
     });
@@ -291,6 +291,7 @@ const headersOutput = { name: new Trace.HTTP.Values({ value: ['value'] }) };
 describe('tests for the sendHeaders reporting option', () => {
   it('sendHeaders defaults to hiding all', () => {
     const http = makeTestHTTP();
+    // sendHeaders: null is not a valid TS input, but check the output anyways
     makeHTTPRequestHeaders(http, headers, null);
     expect(http.requestHeaders).toEqual({});
     makeHTTPRequestHeaders(http, headers, undefined);

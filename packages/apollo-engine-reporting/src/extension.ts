@@ -380,11 +380,11 @@ function defaultGenerateClientInfo({ request }: GraphQLRequestContext) {
 
 // Creates trace details from request variables, given a specification for modifying
 // values of private or sensitive variables.
-// The details include the variables in the request, TODO(helen): and the modifier type.
-// If sendVariableValues is {safelistAll: bool} or {exceptVariableNames: Array}, it will act similarly to
+// The details will include all variable names and their (possibly hidden or modified) values.
+// If sendVariableValues is {all: bool}, {none: bool} or {exceptNames: Array}, the option will act similarly to
 // to the to-be-deprecated options.privateVariables, except that the redacted variable
-// names will still be visible in the UI when 'true.'
-// If sendVariableValues is null, we default to the safeListAll = false case.
+// names will still be visible in the UI even if the values are hidden.
+// If sendVariableValues is null or undefined, we default to the {none: true} case.
 export function makeTraceDetails(
   variables: Record<string, any>,
   sendVariableValues?: VariableValueOptions,
@@ -430,16 +430,20 @@ export function makeTraceDetails(
     } else {
       try {
         details.variablesJson![name] =
-          variablesToRecord[name] === undefined
+          typeof variablesToRecord[name] === 'undefined'
             ? ''
             : JSON.stringify(variablesToRecord[name]);
       } catch (e) {
-        // This probably means that the value contains a circular reference,
-        // causing `JSON.stringify()` to throw a TypeError:
-        // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#Issue_with_JSON.stringify()_when_serializing_circular_references
-        details.variablesJson![name] = JSON.stringify(
-          '[Unable to convert value to JSON]',
-        );
+        if (
+          e.name === 'TypeError' &&
+          e.message === 'Converting circular structure to JSON'
+        ) {
+          details.variablesJson![name] = JSON.stringify(e.message);
+        } else {
+          // Re-throw when it doesn't meet our expectation so we don't
+          // inadvertently swallow anything as a "cycle error" when its not.
+          throw e;
+        }
       }
     }
   });
@@ -452,7 +456,7 @@ function cleanModifiedVariables(
   originalKeys: Array<string>,
   modifiedVariables: Record<string, any>,
 ): Record<string, any> {
-  let cleanedVariables: Record<string, any> = {};
+  const cleanedVariables: Record<string, any> = Object.create(null);
   originalKeys.forEach(name => {
     cleanedVariables[name] = modifiedVariables[name];
   });
@@ -472,7 +476,7 @@ export function makeHTTPRequestHeaders(
     return;
   }
   for (const [key, value] of headers) {
-    const lowercaseKey = key.toLowerCase();
+    const lowerCaseKey = key.toLowerCase();
     if (
       ('exceptNames' in sendHeaders &&
         // We assume that most users only have a few headers to hide, or will
@@ -480,11 +484,11 @@ export function makeHTTPRequestHeaders(
         // operation if it causes real performance issues.
         sendHeaders.exceptNames.some(exceptHeader => {
           // Headers are case-insensitive, and should be compared as such.
-          return exceptHeader.toLowerCase() === lowercaseKey;
+          return exceptHeader.toLowerCase() === lowerCaseKey;
         })) ||
       ('onlyNames' in sendHeaders &&
         !sendHeaders.onlyNames.some(header => {
-          return header.toLowerCase() === lowercaseKey;
+          return header.toLowerCase() === lowerCaseKey;
         }))
     ) {
       continue;

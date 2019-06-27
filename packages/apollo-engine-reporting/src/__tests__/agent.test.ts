@@ -58,7 +58,19 @@ describe("test handleLegacyOptions(), which converts the deprecated privateVaria
     });
   });
 
-  it('Case 4: throws error when both the new and old options are set', () => {
+  it('Case 4: privateVariables/privateHeaders are null or undefined; no change', () => {
+    const optionsPrivateFalse: EngineReportingOptions<any> = {
+      privateVariables: undefined,
+      privateHeaders: null, // null is not a valid TS input, but check the output anyways
+    };
+    handleLegacyOptions(optionsPrivateFalse);
+    expect(optionsPrivateFalse.privateVariables).toBe(undefined);
+    expect(optionsPrivateFalse.sendVariableValues).toBe(undefined);
+    expect(optionsPrivateFalse.privateHeaders).toBe(undefined);
+    expect(optionsPrivateFalse.sendHeaders).toBe(undefined);
+  });
+
+  it('Case 5: throws error when both the new and old options are set', () => {
     const optionsBothVariables: EngineReportingOptions<any> = {
       privateVariables: true,
       sendVariableValues: { none: true },
@@ -75,14 +87,14 @@ describe("test handleLegacyOptions(), which converts the deprecated privateVaria
     }).toThrow();
   });
 
-  it('Case 5: the passed in options are not modified if deprecated fields were not set', () => {
+  it('Case 6: the passed in options are not modified if deprecated fields were not set', () => {
     const optionsNotDeprecated: EngineReportingOptions<any> = {
       sendVariableValues: { exceptNames: ['test'] },
-      sendHeaders: true,
+      sendHeaders: { all: true },
     };
     const output: EngineReportingOptions<any> = {
       sendVariableValues: { exceptNames: ['test'] },
-      sendHeaders: true,
+      sendHeaders: { all: true },
     };
     handleLegacyOptions(optionsNotDeprecated);
     expect(optionsNotDeprecated).toEqual(output);

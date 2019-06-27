@@ -551,26 +551,33 @@ export function handleLegacyOptions(
   options: EngineReportingOptions<any>,
 ): void {
   // Handle the legacy option: privateVariables
-  if (options.privateVariables != null && options.sendVariableValues) {
+  if (
+    typeof options.privateVariables !== 'undefined' &&
+    options.sendVariableValues
+  ) {
     throw new Error(
       "You have set both the 'sendVariableValues' and the deprecated 'privateVariables' options. Please only set 'sendVariableValues'.",
     );
-  } else if (options.privateVariables != null) {
-    options.sendVariableValues = makeSendValuesBaseOptionsFromLegacy(
-      options.privateVariables,
-    );
+  } else if (typeof options.privateVariables !== 'undefined') {
+    if (options.privateVariables !== null) {
+      options.sendVariableValues = makeSendValuesBaseOptionsFromLegacy(
+        options.privateVariables,
+      );
+    }
     delete options.privateVariables;
   }
 
   // Handle the legacy option: privateHeaders
-  if (options.privateHeaders != null && options.sendHeaders) {
+  if (typeof options.privateHeaders !== 'undefined' && options.sendHeaders) {
     throw new Error(
       "You have set both the 'sendHeaders' and the deprecated 'privateHeaders' options. Please only set 'sendHeaders'.",
     );
-  } else if (options.privateHeaders != null) {
-    options.sendHeaders = makeSendValuesBaseOptionsFromLegacy(
-      options.privateHeaders,
-    );
+  } else if (typeof options.privateHeaders !== 'undefined') {
+    if (options.privateHeaders !== null) {
+      options.sendHeaders = makeSendValuesBaseOptionsFromLegacy(
+        options.privateHeaders,
+      );
+    }
     delete options.privateHeaders;
   }
 }
