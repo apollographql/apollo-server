@@ -46,7 +46,7 @@ function isLocalConfig(config: GatewayConfig): config is LocalGatewayConfig {
   return 'localServiceList' in config;
 }
 
-export class ApolloGateway {
+export class ApolloGateway implements GraphQLService {
   public schema?: GraphQLSchema;
   public isReady: boolean = false;
   protected serviceMap: ServiceMap = Object.create(null);
@@ -81,7 +81,7 @@ export class ApolloGateway {
     this.initializeQueryPlanStore();
   }
 
-  public async load(): Promise<GraphQLService> {
+  public async load() {
     if (!this.isReady) {
       this.logger.debug('Loading configuration for Gateway');
       const [services] = await this.loadServiceDefinitions(this.config);

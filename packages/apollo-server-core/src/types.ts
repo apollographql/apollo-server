@@ -66,8 +66,10 @@ type BaseConfig = Pick<
 >;
 
 export interface GraphQLService {
-  schema: GraphQLSchema;
-  executor: GraphQLExecutor;
+  load(): Promise<{
+    schema: GraphQLSchema;
+    executor: GraphQLExecutor;
+  }>;
 }
 
 // This configuration is shared between all integrations and should include
