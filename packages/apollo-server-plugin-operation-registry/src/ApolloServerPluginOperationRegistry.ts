@@ -175,7 +175,7 @@ for observability purposes, but all operations will be permitted.`,
           // return value from the function.  In the event of an error, or if
           // the function does not return a value, we will fail-safe to
           // forbidding unregistered operations.
-          let forbidUnregisteredOperations: boolean =
+          let shouldForbidOperation: boolean =
             typeof options.forbidUnregisteredOperations === 'boolean'
               ? options.forbidUnregisteredOperations
               : typeof options.forbidUnregisteredOperations === 'function'
@@ -202,7 +202,7 @@ for observability purposes, but all operations will be permitted.`,
               // enforcement mode; an explicit boolean `false` is required to
               // disable enforcement when a predicate function is in use.
               if (typeof predicateResult === 'boolean') {
-                forbidUnregisteredOperations = predicateResult;
+                shouldForbidOperation = predicateResult;
               } else {
                 logger.warn(
                   `${logHash} Predicate function did not return a boolean response. Got ${predicateResult}`,
@@ -220,17 +220,14 @@ for observability purposes, but all operations will be permitted.`,
 
           // If the user explicitly set forbidUnregisteredOperations to either `true` or a function, and the operation
           // should be forbidden, we report it within metrics as forbidden, even though we may be running in dryRun mode.
-          if (
-            forbidUnregisteredOperations &&
-            options.forbidUnregisteredOperations
-          ) {
+          if (shouldForbidOperation && options.forbidUnregisteredOperations) {
             logger.debug(
               `${logHash} Reporting operation as forbidden to Apollo trace warehouse.`,
             );
             requestContext.metrics.forbiddenOperation = true;
           }
 
-          if (forbidUnregisteredOperations) {
+          if (shouldForbidOperation) {
             if (!options.dryRun) {
               logger.debug(
                 `${logHash}: Execution denied because 'forbidUnregisteredOperations' was enabled for this request and the operation was not found in the local operation registry.`,
