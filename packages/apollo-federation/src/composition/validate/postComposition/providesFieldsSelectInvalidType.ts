@@ -23,7 +23,6 @@ export const providesFieldsSelectInvalidType = (schema: GraphQLSchema) => {
   const types = schema.getTypeMap();
   for (const [typeName, namedType] of Object.entries(types)) {
     if (!isObjectType(namedType)) continue;
-    const allFields = namedType.getFields();
 
     // for each field, if there's a provides on it, check the type of the field
     // it references
@@ -36,6 +35,10 @@ export const providesFieldsSelectInvalidType = (schema: GraphQLSchema) => {
       // composition work. This kind of error should be validated _before_ composition.
       if (!serviceName) continue;
 
+      const fieldType = field.type;
+      if (!isObjectType(fieldType)) continue;
+      const allFields = fieldType.getFields();
+
       if (field.federation && field.federation.provides) {
         const selections = field.federation.provides as FieldNode[];
         for (const selection of selections) {
@@ -46,7 +49,7 @@ export const providesFieldsSelectInvalidType = (schema: GraphQLSchema) => {
               errorWithCode(
                 'PROVIDES_FIELDS_SELECT_INVALID_TYPE',
                 logServiceAndType(serviceName, typeName, fieldName) +
-                  `A @provides selects ${name}, but ${typeName}.${name} could not be found`,
+                  `A @provides selects ${name}, but ${fieldType.name}.${name} could not be found`,
               ),
             );
             continue;
@@ -61,7 +64,7 @@ export const providesFieldsSelectInvalidType = (schema: GraphQLSchema) => {
               errorWithCode(
                 'PROVIDES_FIELDS_SELECT_INVALID_TYPE',
                 logServiceAndType(serviceName, typeName, fieldName) +
-                  `A @provides selects ${typeName}.${name}, which is a list type. A field cannot @provide lists.`,
+                  `A @provides selects ${fieldType.name}.${name}, which is a list type. A field cannot @provide lists.`,
               ),
             );
           }
@@ -74,7 +77,7 @@ export const providesFieldsSelectInvalidType = (schema: GraphQLSchema) => {
               errorWithCode(
                 'PROVIDES_FIELDS_SELECT_INVALID_TYPE',
                 logServiceAndType(serviceName, typeName, fieldName) +
-                  `A @provides selects ${typeName}.${name}, which is an interface type. A field cannot @provide interfaces.`,
+                  `A @provides selects ${fieldType.name}.${name}, which is an interface type. A field cannot @provide interfaces.`,
               ),
             );
           }
@@ -88,7 +91,7 @@ export const providesFieldsSelectInvalidType = (schema: GraphQLSchema) => {
               errorWithCode(
                 'PROVIDES_FIELDS_SELECT_INVALID_TYPE',
                 logServiceAndType(serviceName, typeName, fieldName) +
-                  `A @provides selects ${typeName}.${name}, which is a union type. A field cannot @provide union types.`,
+                  `A @provides selects ${fieldType.name}.${name}, which is a union type. A field cannot @provide union types.`,
               ),
             );
           }

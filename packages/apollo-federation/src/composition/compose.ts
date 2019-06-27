@@ -343,6 +343,7 @@ export function addFederationMetadataToSchemaNodes({
         ) {
           field.federation = {
             ...field.federation,
+            serviceName: baseServiceName,
             provides: parseSelections(
               providesDirective.arguments[0].value.value,
             ),
