@@ -62,7 +62,7 @@ type User @key(fields: "id") {
 }
 ```
 
-The generated SDL should match that exactly with no additions. It is important to preserve the type extensions, directive locations, and omit the federation types.
+The generated SDL should match that exactly with no additions. It is important to preserve the type extensions and directive locations and to omit the federation types.
 
 Some libraries such as `graphql-java` don't have native support for type extensions in their printer. Apollo Federation supports using an `@extends` directive in place of `extend type` to annotate type references:
 
@@ -207,7 +207,7 @@ A new field must be added to the query root called `_service`. This field must r
 
 ### `union Entity`
 
-A new union called `_Entity` must be created. This should be a union of all types that use the `@key` directive.
+A new union called `_Entity` must be created. This should be a union of all types that use the `@key` directive, including both types native to the schema and extended types.
 
 ### `scalar _Any`
 

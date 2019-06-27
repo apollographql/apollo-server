@@ -24,10 +24,14 @@ export const providesFieldsMissingExternal = (schema: GraphQLSchema) => {
       // composition work. This kind of error should be validated _before_ composition.
       if (!serviceName) continue;
 
+      const fieldType = field.type;
+      if (!isObjectType(fieldType)) continue;
+
       const externalFieldsOnTypeForService =
-        namedType.federation &&
-        namedType.federation.externals &&
-        namedType.federation.externals[serviceName];
+        fieldType.federation &&
+        fieldType.federation.externals &&
+        fieldType.federation.externals[serviceName];
+
       if (field.federation && field.federation.provides) {
         const selections = field.federation.provides as FieldNode[];
         for (const selection of selections) {
@@ -41,7 +45,7 @@ export const providesFieldsMissingExternal = (schema: GraphQLSchema) => {
               errorWithCode(
                 'PROVIDES_FIELDS_MISSING_EXTERNAL',
                 logServiceAndType(serviceName, typeName, fieldName) +
-                  `provides the field \`${selection.name.value}\` and requires ${typeName}.${selection.name.value} to be marked as @external.`,
+                  `provides the field \`${selection.name.value}\` and requires ${fieldType}.${selection.name.value} to be marked as @external.`,
               ),
             );
           }

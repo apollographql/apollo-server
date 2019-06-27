@@ -43,16 +43,18 @@ describe('providesFieldsSelectInvalidType', () => {
   it('warns if @provides references fields of a list type', () => {
     const serviceA = {
       typeDefs: gql`
-        type Product @key(fields: "sku") {
-          sku: String!
-          upc: String!
-          color: Color!
-          ids: [ID]!
+        type Review @key(fields: "id") {
+          id: ID!
+          author: User @provides(fields: "wishLists")
         }
 
-        type Color {
-          id: ID!
-          value: String!
+        extend type User @key(fields: "id") {
+          id: ID! @external
+          wishLists: [WishList] @external
+        }
+
+        extend type WishList @key(fields: "id") {
+          id: ID! @external
         }
       `,
       name: 'serviceA',
@@ -60,9 +62,13 @@ describe('providesFieldsSelectInvalidType', () => {
 
     const serviceB = {
       typeDefs: gql`
-        extend type Product {
-          ids: [ID]! @external
-          price: Int! @provides(fields: "ids")
+        type User @key(fields: "id") {
+          id: ID!
+          wishLists: [WishList]
+        }
+
+        type WishList @key(fields: "id") {
+          id: ID!
         }
       `,
       name: 'serviceB',
@@ -76,7 +82,7 @@ describe('providesFieldsSelectInvalidType', () => {
       Array [
         Object {
           "code": "PROVIDES_FIELDS_SELECT_INVALID_TYPE",
-          "message": "[serviceB] Product.price -> A @provides selects Product.ids, which is a list type. A field cannot @provide lists.",
+          "message": "[serviceA] Review.author -> A @provides selects User.wishLists, which is a list type. A field cannot @provide lists.",
         },
       ]
     `);
@@ -85,14 +91,18 @@ describe('providesFieldsSelectInvalidType', () => {
   it('warns if @provides references fields of an interface type', () => {
     const serviceA = {
       typeDefs: gql`
-        type Product @key(fields: "sku") {
-          sku: String!
-          upc: String!
-          related: Node!
+        type Review @key(fields: "id") {
+          id: ID!
+          author: User @provides(fields: "account")
         }
 
-        interface Node {
-          id: ID!
+        extend type User @key(fields: "id") {
+          id: ID! @external
+          account: Account @external
+        }
+
+        extend interface Account {
+          username: String @external
         }
       `,
       name: 'serviceA',
@@ -100,9 +110,13 @@ describe('providesFieldsSelectInvalidType', () => {
 
     const serviceB = {
       typeDefs: gql`
-        extend type Product {
-          related: Node! @external
-          price: Int! @provides(fields: "related")
+        type User @key(fields: "id") {
+          id: ID!
+          account: Account
+        }
+
+        interface Account {
+          username: String
         }
       `,
       name: 'serviceB',
@@ -116,7 +130,7 @@ describe('providesFieldsSelectInvalidType', () => {
       Array [
         Object {
           "code": "PROVIDES_FIELDS_SELECT_INVALID_TYPE",
-          "message": "[serviceB] Product.price -> A @provides selects Product.related, which is an interface type. A field cannot @provide interfaces.",
+          "message": "[serviceA] Review.author -> A @provides selects User.account, which is an interface type. A field cannot @provide interfaces.",
         },
       ]
     `);
@@ -125,21 +139,44 @@ describe('providesFieldsSelectInvalidType', () => {
   it('warns if @provides references fields of a union type', () => {
     const serviceA = {
       typeDefs: gql`
-        type Product @key(fields: "price") {
-          sku: String!
-          price: Numeric!
+        type Review @key(fields: "id") {
+          id: ID!
+          author: User @provides(fields: "account")
         }
 
-        union Numeric = Float | Int
+        extend type User @key(fields: "id") {
+          id: ID! @external
+          account: Account @external
+        }
+
+        extend union Account = PasswordAccount | SMSAccount
+
+        extend type PasswordAccount @key(fields: "email") {
+          email: String! @external
+        }
+
+        extend type SMSAccount @key(fields: "phone") {
+          phone: String! @external
+        }
       `,
       name: 'serviceA',
     };
 
     const serviceB = {
       typeDefs: gql`
-        extend type Product {
-          price: Numeric! @external
-          weight: Int! @provides(fields: "price")
+        type User @key(fields: "id") {
+          id: ID!
+          account: Account
+        }
+
+        union Account = PasswordAccount | SMSAccount
+
+        type PasswordAccount @key(fields: "email") {
+          email: String!
+        }
+
+        type SMSAccount @key(fields: "phone") {
+          phone: String!
         }
       `,
       name: 'serviceB',
@@ -153,7 +190,7 @@ describe('providesFieldsSelectInvalidType', () => {
       Array [
         Object {
           "code": "PROVIDES_FIELDS_SELECT_INVALID_TYPE",
-          "message": "[serviceB] Product.weight -> A @provides selects Product.price, which is a union type. A field cannot @provide union types.",
+          "message": "[serviceA] Review.author -> A @provides selects User.account, which is a union type. A field cannot @provide union types.",
         },
       ]
     `);
