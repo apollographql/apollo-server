@@ -1,4 +1,4 @@
-import { Request, Headers, WithRequired } from 'apollo-server-env';
+import { Request, WithRequired } from 'apollo-server-env';
 
 import {
   GraphQLResolveInfo,
@@ -15,8 +15,6 @@ import {
   EngineReportingOptions,
   GenerateClientInfo,
   AddTraceArgs,
-  VariableValueOptions,
-  SendValuesBaseOptions,
 } from './agent';
 import { GraphQLRequestContext } from 'apollo-server-core/dist/requestPipelineAPI';
 
@@ -106,13 +104,33 @@ export class EngineReportingExtension<TContext = any>
       host: null,
       path: null,
     });
+    if (this.options.privateHeaders !== true) {
+      for (const [key, value] of o.request.headers) {
+        if (
+          this.options.privateHeaders &&
+          Array.isArray(this.options.privateHeaders) &&
+          // We assume that most users only have a few private headers, or will
+          // just set privateHeaders to true; we can change this linear-time
+          // operation if it causes real performance issues.
+          this.options.privateHeaders.some(privateHeader => {
+            // Headers are case-insensitive, and should be compared as such.
+            return privateHeader.toLowerCase() === key.toLowerCase();
+          })
+        ) {
+          continue;
+        }
 
-    if (this.options.sendHeaders) {
-      makeHTTPRequestHeaders(
-        this.trace.http,
-        o.request.headers,
-        this.options.sendHeaders,
-      );
+        switch (key) {
+          case 'authorization':
+          case 'cookie':
+          case 'set-cookie':
+            break;
+          default:
+            this.trace.http!.requestHeaders![key] = new Trace.HTTP.Values({
+              value: [value],
+            });
+        }
+      }
 
       if (o.requestContext.metrics.persistedQueryHit) {
         this.trace.persistedQueryHit = true;
@@ -122,12 +140,41 @@ export class EngineReportingExtension<TContext = any>
       }
     }
 
-    if (o.variables) {
-      this.trace.details = makeTraceDetails(
-        o.variables,
-        this.options.sendVariableValues,
-        o.queryString,
-      );
+    if (this.options.privateVariables !== true && o.variables) {
+      // Note: we explicitly do *not* include the details.rawQuery field. The
+      // Engine web app currently does nothing with this other than store it in
+      // the database and offer it up via its GraphQL API, and sending it means
+      // that using calculateSignature to hide sensitive data in the query
+      // string is ineffective.
+      this.trace.details = new Trace.Details();
+      Object.keys(o.variables).forEach(name => {
+        if (
+          this.options.privateVariables &&
+          Array.isArray(this.options.privateVariables) &&
+          // We assume that most users will have only a few private variables,
+          // or will just set privateVariables to true; we can change this
+          // linear-time operation if it causes real performance issues.
+          this.options.privateVariables.includes(name)
+        ) {
+          // Special case for private variables. Note that this is a different
+          // representation from a variable containing the empty string, as that
+          // will be sent as '""'.
+          this.trace.details!.variablesJson![name] = '';
+        } else {
+          try {
+            this.trace.details!.variablesJson![name] = JSON.stringify(
+              o.variables![name],
+            );
+          } catch (e) {
+            // This probably means that the value contains a circular reference,
+            // causing `JSON.stringify()` to throw a TypeError:
+            // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#Issue_with_JSON.stringify()_when_serializing_circular_references
+            this.trace.details!.variablesJson![name] = JSON.stringify(
+              '[Unable to convert value to JSON]',
+            );
+          }
+        }
+      });
     }
 
     const clientInfo = this.generateClientInfo(o.requestContext);
@@ -401,130 +448,5 @@ function defaultGenerateClientInfo({ request }: GraphQLRequestContext) {
     return request.extensions.clientInfo;
   } else {
     return {};
-  }
-}
-
-// Creates trace details from request variables, given a specification for modifying
-// values of private or sensitive variables.
-// The details include the variables in the request, TODO(helen): and the modifier type.
-// If sendVariableValues is {safelistAll: bool} or {exceptVariableNames: Array}, it will act similarly to
-// to the to-be-deprecated options.privateVariables, except that the redacted variable
-// names will still be visible in the UI when 'true.'
-// If sendVariableValues is null, we default to the safeListAll = false case.
-export function makeTraceDetails(
-  variables: Record<string, any>,
-  sendVariableValues?: VariableValueOptions,
-  operationString?: string,
-): Trace.Details {
-  const details = new Trace.Details();
-  const variablesToRecord = (() => {
-    if (sendVariableValues && 'transform' in sendVariableValues) {
-      // Custom function to allow user to specify what variablesJson will look like
-      const originalKeys = Object.keys(variables);
-      const modifiedVariables = sendVariableValues.transform({
-        variables: variables,
-        operationString: operationString,
-      });
-      return cleanModifiedVariables(originalKeys, modifiedVariables);
-    } else {
-      return variables;
-    }
-  })();
-
-  // Note: we explicitly do *not* include the details.rawQuery field. The
-  // Engine web app currently does nothing with this other than store it in
-  // the database and offer it up via its GraphQL API, and sending it means
-  // that using calculateSignature to hide sensitive data in the query
-  // string is ineffective.
-  Object.keys(variablesToRecord).forEach(name => {
-    if (
-      !sendVariableValues ||
-      ('none' in sendVariableValues && sendVariableValues.none) ||
-      ('all' in sendVariableValues && !sendVariableValues.all) ||
-      ('exceptNames' in sendVariableValues &&
-        // We assume that most users will have only a few variables values to hide,
-        // or will just set {none: true}; we can change this
-        // linear-time operation if it causes real performance issues.
-        sendVariableValues.exceptNames.includes(name)) ||
-      ('onlyNames' in sendVariableValues &&
-        !sendVariableValues.onlyNames.includes(name))
-    ) {
-      // Special case for private variables. Note that this is a different
-      // representation from a variable containing the empty string, as that
-      // will be sent as '""'.
-      details.variablesJson![name] = '';
-    } else {
-      try {
-        details.variablesJson![name] =
-          variablesToRecord[name] === undefined
-            ? ''
-            : JSON.stringify(variablesToRecord[name]);
-      } catch (e) {
-        // This probably means that the value contains a circular reference,
-        // causing `JSON.stringify()` to throw a TypeError:
-        // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#Issue_with_JSON.stringify()_when_serializing_circular_references
-        details.variablesJson![name] = JSON.stringify(
-          '[Unable to convert value to JSON]',
-        );
-      }
-    }
-  });
-  return details;
-}
-
-// Helper for makeTraceDetails() to enforce that the keys of a modified 'variables'
-// matches that of the original 'variables'
-function cleanModifiedVariables(
-  originalKeys: Array<string>,
-  modifiedVariables: Record<string, any>,
-): Record<string, any> {
-  let cleanedVariables: Record<string, any> = {};
-  originalKeys.forEach(name => {
-    cleanedVariables[name] = modifiedVariables[name];
-  });
-  return cleanedVariables;
-}
-
-export function makeHTTPRequestHeaders(
-  http: Trace.IHTTP,
-  headers: Headers,
-  sendHeaders?: SendValuesBaseOptions,
-): void {
-  if (
-    !sendHeaders ||
-    ('none' in sendHeaders && sendHeaders.none) ||
-    ('all' in sendHeaders && !sendHeaders.all)
-  ) {
-    return;
-  }
-  for (const [key, value] of headers) {
-    const lowercaseKey = key.toLowerCase();
-    if (
-      ('exceptNames' in sendHeaders &&
-        // We assume that most users only have a few headers to hide, or will
-        // just set {none: true} ; we can change this linear-time
-        // operation if it causes real performance issues.
-        sendHeaders.exceptNames.some(exceptHeader => {
-          // Headers are case-insensitive, and should be compared as such.
-          return exceptHeader.toLowerCase() === lowercaseKey;
-        })) ||
-      ('onlyNames' in sendHeaders &&
-        !sendHeaders.onlyNames.some(header => {
-          return header.toLowerCase() === lowercaseKey;
-        }))
-    ) {
-      continue;
-    }
-
-    switch (key) {
-      case 'authorization':
-      case 'cookie':
-      case 'set-cookie':
-        break;
-      default:
-        http!.requestHeaders![key] = new Trace.HTTP.Values({
-          value: [value],
-        });
-    }
   }
 }
