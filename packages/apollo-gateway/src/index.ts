@@ -119,7 +119,7 @@ export class ApolloGateway implements GraphQLService {
   protected createSchema(services: ServiceDefinition[]) {
     this.logger.debug(
       `Composing schema from service list: \n${services
-        .map(({ name, url }) => `  ${url || 'local'} : ${name}`)
+        .map(({ name, url }) => `  ${url || 'local'}: ${name}`)
         .join('\n')}`,
     );
 
