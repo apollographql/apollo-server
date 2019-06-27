@@ -254,12 +254,6 @@ function wrapSchemaWithAliasResolver(schema: GraphQLSchema): GraphQLSchema {
   return schema;
 }
 
-export async function createGateway(
-  config: GatewayConfig,
-): Promise<GraphQLService> {
-  return await new ApolloGateway(config).load();
-}
-
 export {
   buildQueryPlan,
   executeQueryPlan,
