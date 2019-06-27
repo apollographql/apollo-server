@@ -61,6 +61,7 @@ import {
 
 import { Headers } from 'apollo-server-env';
 import { buildServiceDefinition } from '@apollographql/apollo-tools';
+import { EngineReportingOptions } from 'apollo-engine-reporting';
 
 const NoIntrospection = (context: ValidationContext) => ({
   Field(node: FieldDefinitionNode) {
@@ -153,6 +154,7 @@ export class ApolloServerBase {
       uploads,
       playground,
       plugins,
+      gateway,
       ...requestOptions
     } = config;
 
@@ -261,6 +263,19 @@ export class ApolloServerBase {
         throw new Error(errors.map(error => error.message).join('\n\n'));
       }
       this.schema = schema!;
+    } else if (gateway) {
+      this.schema = gateway.schema;
+      this.requestOptions.executor = gateway.executor;
+      if (gateway.apiKey) {
+        if (engine === undefined) {
+          ((engine as unknown) as EngineReportingOptions<object>) = {
+            apiKey: gateway.apiKey,
+          };
+        }
+        if (engine) {
+          engine.apiKey = engine.apiKey || gateway.apiKey;
+        }
+      }
     } else {
       if (!typeDefs) {
         throw Error(
