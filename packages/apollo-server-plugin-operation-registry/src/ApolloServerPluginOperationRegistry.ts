@@ -65,7 +65,6 @@ export default function plugin(options: Options = Object.create(null)) {
       schema,
       schemaHash,
       engine,
-      persistedQueries,
     }: GraphQLServiceContext): Promise<void> {
       logger.debug('Initializing operation registry plugin.');
 
@@ -82,13 +81,6 @@ export default function plugin(options: Options = Object.create(null)) {
           engine.serviceID
         }'.  The schema hash is ${schemaHash}.`,
       );
-
-      if (!persistedQueries || !persistedQueries.cache) {
-        const messagePersistedQueriesRequired =
-          'Persisted queries must be enabled to use the operation registry.';
-        logger.error(messagePersistedQueriesRequired);
-        throw new Error(`${pluginName}: ${messagePersistedQueriesRequired}`);
-      }
 
       // An LRU store with no `maxSize` is effectively an InMemoryStore and
       // exactly what we want for this purpose.
