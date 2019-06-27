@@ -365,7 +365,7 @@ export class ApolloServerBase {
         .digest('hex');
     }
 
-    this.updateSchema(this.schema);
+    this.initSchema();
 
     if (extensions) {
       this.extensions = [...this.extensions, ...extensions];
@@ -406,10 +406,14 @@ export class ApolloServerBase {
     this.graphqlPath = path;
   }
 
+  private async initSchema() {
+    this.updateSchema(this.schema, false);
+  }
+
   /**
    * Update schema and all data derived from schema, including clearing any caches that might depend on the schema
    */
-  public async updateSchema(schema: GraphQLSchema) {
+  private async updateSchema(schema: GraphQLSchema, reloadPlugins = true) {
     this.schema = schema;
     this.schemaHash = generateSchemaHash(this.schema);
 
@@ -432,7 +436,8 @@ export class ApolloServerBase {
     if (this.documentStore) {
       this.documentStore.flush().then(() => this.initializeDocumentStore());
     }
-    this.willStart();
+
+    if (reloadPlugins) this.willStart();
   }
 
   protected async willStart() {
