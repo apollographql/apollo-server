@@ -105,8 +105,8 @@ export class ApolloGateway implements GraphQLService {
     }
 
     if (isHostedConfig(config)) {
-      const apiKey = config.apiKey || process.env['ENGINE_API_KEY'];
-      if (!apiKey) {
+      config.apiKey = config.apiKey || process.env['ENGINE_API_KEY'];
+      if (!config.apiKey) {
         throw new Error(
           'Apollo Gateway requires either a `serviceList`, `localServiceList`, or `apiKey` to be provided in the config, or `ENGINE_API_KEY` to be defined in the environment.',
         );
@@ -178,7 +178,7 @@ export class ApolloGateway implements GraphQLService {
           serviceList: config.serviceList,
         })
       : await getServiceDefinitionsFromStorage({
-          apiKey: config.apiKey || process.env['ENGINE_API_KEY']!,
+          apiKey: config.apiKey!,
           graphVariant: config.tag || 'current',
           federationVersion: config.federationVersion!,
         });
