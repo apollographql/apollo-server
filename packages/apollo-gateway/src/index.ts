@@ -114,6 +114,7 @@ export class ApolloGateway {
       }
     }
 
+    this.onSchemaChange = this.onSchemaChange.bind(this);
     this.initializeQueryPlanStore();
   }
 
