@@ -484,8 +484,8 @@ describe('executeQueryPlan', () => {
     it('list of objects with nested selections', () => {
       const selectionSet = getSelectionSet('id', 'listOfObjects');
 
-      // Nest another selection set to just pick 'id' field
-      // { list { id } }
+      // Nest another selection set to just pick 'id' and 'nullable' fields
+      // { list { id nullable } }
       (selectionSet.selections[1] as any).selectionSet = getSelectionSet(
         'id',
         'nullable',
