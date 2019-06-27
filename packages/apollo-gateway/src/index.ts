@@ -64,7 +64,9 @@ function isLocalConfig(config: GatewayConfig): config is LocalGatewayConfig {
   return 'localServiceList' in config;
 }
 
-function isHostedConfig(config: GatewayConfig): config is ManagedGatewayConfig {
+function isManagedConfig(
+  config: GatewayConfig,
+): config is ManagedGatewayConfig {
   return !(isLocalConfig(config) || isRemoteConfig(config));
 }
 
@@ -104,7 +106,7 @@ export class ApolloGateway implements GraphQLService {
       this.createSchema(config.localServiceList);
     }
 
-    if (isHostedConfig(config)) {
+    if (isManagedConfig(config)) {
       config.apiKey = config.apiKey || process.env['ENGINE_API_KEY'];
       if (!config.apiKey) {
         throw new Error(
