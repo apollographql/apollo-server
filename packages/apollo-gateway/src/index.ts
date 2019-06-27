@@ -77,7 +77,7 @@ export class ApolloGateway implements GraphQLService {
   protected queryPlanStore?: InMemoryLRUCache<QueryPlan>;
   private engineConfig: EngineConfig | undefined;
 
-  constructor(config: GatewayConfig) {
+  constructor(config?: GatewayConfig) {
     this.config = {
       // TODO: expose the query plan in a more flexible JSON format in the future
       // and remove this config option in favor of `exposeQueryPlan`. Playground
@@ -93,12 +93,12 @@ export class ApolloGateway implements GraphQLService {
     loglevelDebug(this.logger);
 
     // And also support the `debug` option, if it's truthy.
-    if (config.debug === true) {
+    if (this.config.debug === true) {
       this.logger.enableAll();
     }
 
-    if (isLocalConfig(config)) {
-      this.createSchema(config.localServiceList);
+    if (isLocalConfig(this.config)) {
+      this.createSchema(this.config.localServiceList);
     }
 
     this.initializeQueryPlanStore();
