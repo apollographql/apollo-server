@@ -1,4 +1,9 @@
-import { GraphQLSchema, GraphQLError, getIntrospectionQuery } from 'graphql';
+import {
+  GraphQLSchema,
+  GraphQLError,
+  getIntrospectionQuery,
+  SelectionSetNode,
+} from 'graphql';
 import path from 'path';
 import {
   GraphQLSchemaValidationError,
@@ -11,7 +16,7 @@ import { GraphQLRequestContext } from 'apollo-server-core';
 import { composeServices, buildFederatedSchema } from '@apollo/federation';
 
 import { buildQueryPlan, buildOperationContext } from '../buildQueryPlan';
-import { executeQueryPlan } from '../executeQueryPlan';
+import { executeQueryPlan, executeSelectionSet } from '../executeQueryPlan';
 import { LocalGraphQLDataSource } from '../datasources/LocalGraphQLDatasource';
 
 function buildLocalService(modules: GraphQLSchemaModule[]) {
@@ -418,5 +423,79 @@ describe('executeQueryPlan', () => {
 
     expect(response.data).toHaveProperty('__schema');
     expect(response.errors).toBeUndefined();
+  });
+
+  describe('executeSelectionSet', () => {
+    function getSelectionSet(...values: string[]): SelectionSetNode {
+      return {
+        kind: 'SelectionSet',
+        selections: values.map(value => ({
+          kind: 'Field',
+          name: {
+            kind: 'Name',
+            value,
+          },
+        })),
+      };
+    }
+
+    const data = {
+      __typename: 'TestSubject',
+      id: '1',
+      nullable: null,
+      emptyString: '',
+      emptyList: [],
+      listOfEmpties: ['', '', ''],
+      listOfNumbers: [1, 2, 3],
+      listOfObjects: [
+        { __typename: 'TestObject', id: 1, nullable: null },
+        { __typename: 'TestObject', id: 2, nullable: null },
+      ],
+    };
+
+    it('handles regular selections and simple edge cases', () => {
+      const result = executeSelectionSet(
+        data,
+        getSelectionSet('__typename', 'id', 'nullable', 'emptyString'),
+      );
+
+      expect(result).toEqual({
+        __typename: 'TestSubject',
+        id: '1',
+        nullable: null,
+        emptyString: '',
+      });
+    });
+
+    it('handles lists', () => {
+      const result = executeSelectionSet(
+        data,
+        getSelectionSet('id', 'emptyList', 'listOfEmpties', 'listOfNumbers'),
+      );
+
+      expect(result).toEqual({
+        id: '1',
+        emptyList: [],
+        listOfEmpties: ['', '', ''],
+        listOfNumbers: [1, 2, 3],
+      });
+    });
+
+    it('list of objects with nested selections', () => {
+      const selectionSet = getSelectionSet('id', 'listOfObjects');
+
+      // Nest another selection set to just pick 'id' field
+      // { list { id } }
+      (selectionSet.selections[1] as any).selectionSet = getSelectionSet(
+        'id',
+        'nullable',
+      );
+      const result = executeSelectionSet(data, selectionSet);
+
+      expect(result).toEqual({
+        id: '1',
+        listOfObjects: [{ id: 1, nullable: null }, { id: 2, nullable: null }],
+      });
+    });
   });
 });

@@ -214,7 +214,9 @@ async function executeFetch<TContext>(
 
     if (receivedEntities.length !== representations.length) {
       throw new Error(
-        `Expected "data._entities" to contain ${representations.length} elements`,
+        `Expected "data._entities" to contain ${
+          representations.length
+        } elements`,
       );
     }
 
@@ -259,7 +261,7 @@ async function executeFetch<TContext>(
  * @param source result of graphql execution
  * @param selectionSet
  */
-function executeSelectionSet(
+export function executeSelectionSet(
   source: Record<string, any>,
   selectionSet: SelectionSetNode,
 ): Record<string, any> {
