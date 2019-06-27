@@ -2,6 +2,8 @@ import {
   GraphQLExecutionResult,
   GraphQLRequestContext,
   GraphQLService,
+  SchemaChangeCallback,
+  Unsubscriber,
 } from 'apollo-server-core';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import { isObjectType, isIntrospectionType, GraphQLSchema } from 'graphql';
@@ -34,6 +36,7 @@ interface GatewayConfigBase {
   // should cutover to use the new option when it's built.
   __exposeQueryPlanExperimental?: boolean;
   buildService?: (definition: ServiceEndpointDefinition) => GraphQLDataSource;
+  __enablePollingExperimental?: boolean;
 }
 
 export interface RemoteGatewayConfig extends GatewayConfigBase {
@@ -58,7 +61,9 @@ function isLocalConfig(config: GatewayConfig): config is LocalGatewayConfig {
   return 'localServiceList' in config;
 }
 
-function isHostedConfig(config: GatewayConfig): config is ManagedGatewayConfig {
+function isManagedConfig(
+  config: GatewayConfig,
+): config is ManagedGatewayConfig {
   return !(isLocalConfig(config) || isRemoteConfig(config));
 }
 
@@ -73,6 +78,8 @@ export class ApolloGateway {
   protected config: GatewayConfig;
   protected logger: Logger;
   protected queryPlanStore?: InMemoryLRUCache<QueryPlan>;
+  private pollingTimer?: NodeJS.Timer;
+  private onSchemaChangeListeners = new Set<SchemaChangeCallback>();
 
   constructor(config: GatewayConfig) {
     this.config = {
@@ -98,7 +105,7 @@ export class ApolloGateway {
       this.createSchema(config.localServiceList);
     }
 
-    if (isHostedConfig(config)) {
+    if (isManagedConfig(config)) {
       const apiKey = config.apiKey || process.env['ENGINE_API_KEY'];
       if (!apiKey) {
         throw new Error(
@@ -117,8 +124,24 @@ export class ApolloGateway {
       this.logger.debug('Configuration loaded for Gateway');
       this.createSchema(services);
     }
-
-    return { schema: this.schema!, executor: this.executor }; // TODO: pass apiKey. (dependant on #2915)
+    if (isManagedConfig(this.config)) {
+      return {
+        schema: this.schema!,
+        executor: this.executor,
+        engine: {
+          apiKey: this.config.apiKey,
+          schemaTag: this.config.tag,
+        },
+        onSchemaChange: this.onSchemaChange,
+      };
+    }
+    return {
+      schema: this.schema!,
+      executor: this.executor,
+      ...(this.config.__exposeQueryPlanExperimental && {
+        onSchemaChange: this.onSchemaChange,
+      }),
+    };
   }
 
   protected createSchema(services: ServiceDefinition[]) {
@@ -147,11 +170,50 @@ export class ApolloGateway {
     this.isReady = true;
   }
 
+  public onSchemaChange(value: SchemaChangeCallback): Unsubscriber {
+    if (
+      !isRemoteConfig(this.config) &&
+      !this.config.__enablePollingExperimental
+    ) {
+      throw new Error(
+        'onSchemaChange requires an Apollo Engine hosted service list definition.',
+      );
+    }
+    this.onSchemaChangeListeners.add(value);
+    if (!this.pollingTimer) this.startPollingServices();
+
+    return () => {
+      this.onSchemaChangeListeners.delete(value);
+      if (this.onSchemaChangeListeners.size === 0 && this.pollingTimer) {
+        clearInterval(this.pollingTimer!);
+        this.pollingTimer = undefined;
+      }
+    };
+  }
+
+  private startPollingServices() {
+    if (this.pollingTimer) clearInterval(this.pollingTimer);
+
+    this.pollingTimer = setInterval(async () => {
+      const [services, isNewSchema] = await this.loadServiceDefinitions(
+        this.config,
+      );
+      if (!isNewSchema) {
+        this.logger.debug('No changes to gateway config');
+        return;
+      }
+      if (this.queryPlanStore) this.queryPlanStore.flush();
+      this.logger.debug('Gateway config has changed, updating schema');
+      this.createSchema(services);
+      this.onSchemaChangeListeners.forEach(listener => listener(this.schema!));
+    }, 10 * 1000);
+  }
+
   protected createServices(services: ServiceEndpointDefinition[]) {
     for (const serviceDef of services) {
       if (!serviceDef.url && !isLocalConfig(this.config)) {
         throw new Error(
-          `Service defintion for service ${serviceDef.name} is missing a url`,
+          `Service definition for service ${serviceDef.name} is missing a url`,
         );
       }
       this.serviceMap[serviceDef.name] = this.config.buildService
@@ -253,6 +315,13 @@ export class ApolloGateway {
       maxSize: Math.pow(2, 20) * 30,
       sizeCalculator: approximateObjectSize,
     });
+  }
+
+  public async stop() {
+    if (this.pollingTimer) {
+      clearInterval(this.pollingTimer);
+      this.pollingTimer = undefined;
+    }
   }
 }
 

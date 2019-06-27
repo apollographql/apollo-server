@@ -267,15 +267,18 @@ export class ApolloServerBase {
     } else if (gateway) {
       this.schema = gateway.schema;
       this.requestOptions.executor = gateway.executor;
-      if (gateway.apiKey) {
-        if (engine === undefined) {
+
+      if (gateway.engine) {
+        if (engine !== false) {
           ((engine as unknown) as EngineReportingOptions<object>) = {
-            apiKey: gateway.apiKey,
+            ...gateway.engine,
+            ...engine,
           };
         }
-        if (engine) {
-          engine.apiKey = engine.apiKey || gateway.apiKey;
-        }
+      }
+
+      if (gateway.onSchemaChange) {
+        gateway.onSchemaChange(schema => this.updateSchema(schema));
       }
     } else {
       if (!typeDefs) {
