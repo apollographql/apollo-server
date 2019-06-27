@@ -65,11 +65,23 @@ type BaseConfig = Pick<
   | 'cache'
 >;
 
+export type Unsubscriber = () => void;
+export type SchemaChangeCallback = (schema: GraphQLSchema) => void;
+
+export type GraphQLServiceConfig = {
+  schema: GraphQLSchema;
+  executor: GraphQLExecutor;
+};
+
+export type EngineConfig = {
+  apiKeyHash: string;
+  graphId: string;
+  graphTag?: string;
+};
+
 export interface GraphQLService {
-  load(): Promise<{
-    schema: GraphQLSchema;
-    executor: GraphQLExecutor;
-  }>;
+  load(engineConfig?: EngineConfig): Promise<GraphQLServiceConfig>;
+  onSchemaChange(callback: SchemaChangeCallback): Unsubscriber;
 }
 
 // This configuration is shared between all integrations and should include

@@ -2,6 +2,9 @@ import {
   GraphQLExecutionResult,
   GraphQLRequestContext,
   GraphQLService,
+  SchemaChangeCallback,
+  Unsubscriber,
+  EngineConfig,
 } from 'apollo-server-core';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import { isObjectType, isIntrospectionType, GraphQLSchema } from 'graphql';
@@ -52,14 +55,18 @@ export type GatewayConfig =
   | LocalGatewayConfig
   | ManagedGatewayConfig;
 
-type EngineConfig = { apiKeyHash: string; graphId: string; graphTag?: string };
-
 function isLocalConfig(config: GatewayConfig): config is LocalGatewayConfig {
   return 'localServiceList' in config;
 }
 
 function isRemoteConfig(config: GatewayConfig): config is RemoteGatewayConfig {
   return 'serviceList' in config;
+}
+
+function isManagedConfig(
+  config: GatewayConfig,
+): config is ManagedGatewayConfig {
+  return !isRemoteConfig(config) && !isLocalConfig(config);
 }
 
 export class ApolloGateway implements GraphQLService {
@@ -139,7 +146,10 @@ export class ApolloGateway implements GraphQLService {
   }
 
   public onSchemaChange(value: SchemaChangeCallback): Unsubscriber {
-    // TODO: if (!isRemoteGatewayConfig(this.config)) { throw new Error('onSchemaChange requires an Apollo Engine hosted service list definition.'); } (dependant on #2915)
+    if (!isManagedConfig(this.config)) {
+      return () => {};
+    }
+
     this.onSchemaChangeListeners.add(value);
     if (!this.pollingTimer) this.startPollingServices();
 

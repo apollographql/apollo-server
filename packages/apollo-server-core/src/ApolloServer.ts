@@ -115,10 +115,10 @@ export class ApolloServerBase {
   private engineApiKeyHash?: string;
   private extensions: Array<() => GraphQLExtension>;
   private engine: boolean | EngineReportingOptions<object> | undefined;
-  private schemaHash: string;
+  private schemaHash?: string;
   protected plugins: ApolloServerPlugin[] = [];
 
-  protected schema: GraphQLSchema;
+  protected schema?: GraphQLSchema;
   protected subscriptionServerOptions?: SubscriptionServerOptions;
   protected uploadsConfig?: FileUploadOptions;
 
@@ -134,6 +134,7 @@ export class ApolloServerBase {
   private documentStore?: InMemoryLRUCache<DocumentNode>;
 
   private parseOptions: GraphQLParseOptions;
+  private createSchemaDerivedDataPromise: Promise<void> = Promise.resolve();
 
   // The constructor should be universal across all environments. All environment specific behavior should be set by adding or overriding methods
   constructor(config: Config) {
@@ -256,6 +257,21 @@ export class ApolloServerBase {
       }
     }
 
+    // In an effort to avoid over-exposing the API key itself, extract the
+    // service ID from the API key for plugins which only needs service ID.
+    // The truthyness of this value can also be used in other forks of logic
+    // related to Engine, as is the case with EngineReportingAgent just below.
+    this.engineServiceId = getEngineServiceId(engine);
+
+    const apiKey = getEngineApiKey(engine);
+    if (apiKey) {
+      this.engineApiKeyHash = createSHA('sha512')
+        .update(apiKey)
+        .digest('hex');
+    }
+
+    let gatewayLoadingPromise = Promise.resolve();
+
     if (schema) {
       this.schema = schema;
     } else if (modules) {
@@ -265,18 +281,22 @@ export class ApolloServerBase {
       }
       this.schema = schema!;
     } else if (gateway) {
-      this.schema = gateway.schema;
-      this.requestOptions.executor = gateway.executor;
-      if (gateway.apiKey) {
-        if (engine === undefined) {
-          ((engine as unknown) as EngineReportingOptions<object>) = {
-            apiKey: gateway.apiKey,
-          };
-        }
-        if (engine) {
-          engine.apiKey = engine.apiKey || gateway.apiKey;
-        }
-      }
+      let engineConfig =
+        this.engineApiKeyHash && this.engineServiceId
+          ? {
+              apiKeyHash: this.engineApiKeyHash,
+              graphId: this.engineServiceId,
+            }
+          : undefined;
+
+      gatewayLoadingPromise = gateway.load(engineConfig).then(config => {
+        this.schema = config.schema;
+        requestOptions.executor = config.executor;
+      });
+      gateway.onSchemaChange(schema => {
+        this.schema = schema;
+        this.createSchemaDerivedDataPromise = updateSchemaDerivedData();
+      });
     } else {
       if (!typeDefs) {
         throw Error(
@@ -327,49 +347,57 @@ export class ApolloServerBase {
 
     this.parseOptions = parseOptions;
 
-    if (mocks || (typeof mockEntireSchema !== 'undefined' && mocks !== false)) {
-      addMockFunctionsToSchema({
-        schema: this.schema,
-        mocks:
-          typeof mocks === 'boolean' || typeof mocks === 'undefined'
-            ? {}
-            : mocks,
-        preserveResolvers:
-          typeof mockEntireSchema === 'undefined' ? false : !mockEntireSchema,
-      });
-    }
-
-    // The schema hash is a string representation of the shape of the schema
-    // it is used for reporting and can be used for a cache key if needed
-    this.schemaHash = generateSchemaHash(this.schema);
-
     // Note: doRunQuery will add its own extensions if you set tracing,
     // or cacheControl.
     this.extensions = [];
 
-    // In an effort to avoid over-exposing the API key itself, extract the
-    // service ID from the API key for plugins which only needs service ID.
-    // The truthyness of this value can also be used in other forks of logic
-    // related to Engine, as is the case with EngineReportingAgent just below.
-    this.engineServiceId = getEngineServiceId(engine);
+    const updateSchemaDerivedData = async () => {
+      await gatewayLoadingPromise; // ensures this.schema is defined
 
-    const apiKey = getEngineApiKey(engine);
-    if (apiKey) {
-      this.engineApiKeyHash = createSHA('sha512')
-        .update(apiKey)
-        .digest('hex');
-    }
+      this.schemaHash = generateSchemaHash(this.schema!);
 
-    this.updateSchema(this.schema);
+      if (
+        mocks ||
+        (typeof mockEntireSchema !== 'undefined' && mocks !== false)
+      ) {
+        addMockFunctionsToSchema({
+          schema: this.schema!,
+          mocks:
+            typeof mocks === 'boolean' || typeof mocks === 'undefined'
+              ? {}
+              : mocks,
+          preserveResolvers:
+            typeof mockEntireSchema === 'undefined' ? false : !mockEntireSchema,
+        });
+      }
 
-    // Keep this extension second so it wraps everything, except error formatting
-    if (this.engineServiceId) {
-      this.extensions.push(() => this.engineReportingAgent!.newExtension());
-    }
+      if (this.engineServiceId) {
+        const { EngineReportingAgent } = require('apollo-engine-reporting');
+        this.engineReportingAgent = new EngineReportingAgent(
+          typeof this.engine === 'object' ? this.engine : Object.create(null),
+          {
+            schema: this.schema,
+            schemaHash: this.schemaHash,
+            engine: {
+              serviceID: this.engineServiceId,
+            },
+          },
+        );
+      }
 
-    if (extensions) {
-      this.extensions = [...this.extensions, ...extensions];
-    }
+      this.initializeDocumentStore();
+    };
+
+    this.createSchemaDerivedDataPromise = updateSchemaDerivedData().then(() => {
+      // Keep this extension second so it wraps everything, except error formatting
+      if (this.engineServiceId) {
+        this.extensions.push(() => this.engineReportingAgent!.newExtension());
+      }
+
+      if (extensions) {
+        this.extensions = [...this.extensions, ...extensions];
+      }
+    });
 
     if (subscriptions !== false) {
       if (this.supportsSubscriptions()) {
@@ -406,38 +434,15 @@ export class ApolloServerBase {
     this.graphqlPath = path;
   }
 
-  /**
-   * Update schema and all data derived from schema, including clearing any caches that might depend on the schema
-   */
-  private updateSchema(schema: GraphQLSchema) {
-    this.schema = schema;
-    this.schemaHash = generateSchemaHash(this.schema);
-
-    if (this.engineServiceId) {
-      const { EngineReportingAgent } = require('apollo-engine-reporting');
-      this.engineReportingAgent = new EngineReportingAgent(
-        typeof this.engine === 'object' ? this.engine : Object.create(null),
-        {
-          schema: this.schema,
-          schemaHash: this.schemaHash,
-          engine: {
-            serviceID: this.engineServiceId,
-          },
-        },
-      );
-    }
-
-    this.initializeDocumentStore();
-  }
-
   protected async willStart() {
+    await this.createSchemaDerivedDataPromise;
     await Promise.all(
       this.plugins.map(
         plugin =>
           plugin.serverWillStart &&
           plugin.serverWillStart({
-            schema: this.schema,
-            schemaHash: this.schemaHash,
+            schema: this.schema!,
+            schemaHash: this.schemaHash!,
             engine: {
               serviceID: this.engineServiceId,
               apiKeyHash: this.engineApiKeyHash,
@@ -562,6 +567,8 @@ export class ApolloServerBase {
   protected async graphQLServerOptions(
     integrationContextArgument?: Record<string, any>,
   ) {
+    await this.createSchemaDerivedDataPromise;
+
     let context: Context = this.context ? this.context : {};
 
     try {
@@ -597,6 +604,8 @@ export class ApolloServerBase {
   }
 
   public async executeOperation(request: GraphQLRequest) {
+    await this.createSchemaDerivedDataPromise;
+
     let options;
 
     try {
