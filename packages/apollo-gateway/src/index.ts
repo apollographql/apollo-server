@@ -19,6 +19,7 @@ import {
 } from './executeQueryPlan';
 
 import { getServiceDefinitionsFromRemoteEndpoint } from './loadServicesFromRemoteEndpoint';
+import { getServiceDefinitionsFromStorage } from './loadServicesFromStorage';
 
 import { serializeQueryPlan, QueryPlan } from './QueryPlan';
 import { GraphQLDataSource } from './datasources/types';
@@ -26,28 +27,40 @@ import { RemoteGraphQLDataSource } from './datasources/RemoteGraphQLDatasource';
 
 export type ServiceEndpointDefinition = Pick<ServiceDefinition, 'name' | 'url'>;
 
-export interface GatewayConfigBase {
+interface GatewayConfigBase {
   debug?: boolean;
   // TODO: expose the query plan in a more flexible JSON format in the future
   // and remove this config option in favor of `exposeQueryPlan`. Playground
   // should cutover to use the new option when it's built.
   __exposeQueryPlanExperimental?: boolean;
   buildService?: (definition: ServiceEndpointDefinition) => GraphQLDataSource;
-  serviceList?: ServiceEndpointDefinition[];
 }
 
-export interface LocalGatewayConfig extends GatewayConfigBase {
+interface RemoteGatewayConfig extends GatewayConfigBase {
+  serviceList: ServiceEndpointDefinition[];
+}
+
+interface ManagedGatewayConfig extends GatewayConfigBase {
+  federationVersion?: number;
+}
+interface LocalGatewayConfig extends GatewayConfigBase {
   localServiceList: ServiceDefinition[];
 }
 
-export type GatewayConfig = GatewayConfigBase | LocalGatewayConfig;
+export type GatewayConfig =
+  | RemoteGatewayConfig
+  | LocalGatewayConfig
+  | ManagedGatewayConfig;
+
+type EngineConfig = { apiKeyHash: string; graphId: string; graphTag?: string };
 
 function isLocalConfig(config: GatewayConfig): config is LocalGatewayConfig {
   return 'localServiceList' in config;
 }
 
-export type SchemaChangeCallback = (schema: GraphQLSchema) => void;
-export type Unsubscriber = () => void;
+function isRemoteConfig(config: GatewayConfig): config is RemoteGatewayConfig {
+  return 'serviceList' in config;
+}
 
 export class ApolloGateway implements GraphQLService {
   public schema?: GraphQLSchema;
@@ -56,10 +69,11 @@ export class ApolloGateway implements GraphQLService {
   protected config: GatewayConfig;
   protected logger: Logger;
   protected queryPlanStore?: InMemoryLRUCache<QueryPlan>;
+  private engineConfig: EngineConfig | undefined;
   private pollingTimer?: NodeJS.Timer;
   private onSchemaChangeListeners = new Set<SchemaChangeCallback>();
 
-  constructor(config: GatewayConfig) {
+  constructor(config?: GatewayConfig) {
     this.config = {
       // TODO: expose the query plan in a more flexible JSON format in the future
       // and remove this config option in favor of `exposeQueryPlan`. Playground
@@ -75,18 +89,19 @@ export class ApolloGateway implements GraphQLService {
     loglevelDebug(this.logger);
 
     // And also support the `debug` option, if it's truthy.
-    if (config.debug === true) {
+    if (this.config.debug === true) {
       this.logger.enableAll();
     }
 
-    if (isLocalConfig(config)) {
-      this.createSchema(config.localServiceList);
+    if (isLocalConfig(this.config)) {
+      this.createSchema(this.config.localServiceList);
     }
 
     this.initializeQueryPlanStore();
   }
 
-  public async load() {
+  public async load(engineConfig?: EngineConfig) {
+    this.engineConfig = engineConfig;
     if (!this.isReady) {
       this.logger.debug('Loading configuration for Gateway');
       const [services] = await this.loadServiceDefinitions(this.config);
@@ -100,7 +115,7 @@ export class ApolloGateway implements GraphQLService {
   protected createSchema(services: ServiceDefinition[]) {
     this.logger.debug(
       `Composing schema from service list: \n${services
-        .map(({ name }) => `  ${name}`)
+        .map(({ name, url }) => `  ${url || 'local'}: ${name}`)
         .join('\n')}`,
     );
 
@@ -174,21 +189,28 @@ export class ApolloGateway implements GraphQLService {
     config: GatewayConfig,
   ): Promise<[ServiceDefinition[], boolean]> {
     if (isLocalConfig(config)) return [config.localServiceList, false];
-    if (!config.serviceList)
-      throw new Error(
-        'The gateway requires a service list to be provided in the config',
-      );
 
-    const [
-      remoteServices,
-      isNewService,
-    ] = await getServiceDefinitionsFromRemoteEndpoint({
-      serviceList: config.serviceList,
-    });
+    const getServiceDefinitions = async () => {
+      if (isRemoteConfig(config)) {
+        return getServiceDefinitionsFromRemoteEndpoint({
+          serviceList: config.serviceList,
+        });
+      } else {
+        if (!this.engineConfig) {
+          throw new Error(
+            'Must supply engineConfig to ApolloGateway#load() when no serviceList is provided.',
+          );
+        }
+        return getServiceDefinitionsFromStorage({
+          graphId: this.engineConfig.graphId,
+          apiKeyHash: this.engineConfig.apiKeyHash,
+          graphVariant: this.engineConfig.graphTag || 'current',
+          federationVersion: config.federationVersion || 1,
+        });
+      }
+    };
 
-    this.createServices(remoteServices);
-
-    return [remoteServices, isNewService];
+    return await getServiceDefinitions();
   }
 
   public executor = async <TContext>(
