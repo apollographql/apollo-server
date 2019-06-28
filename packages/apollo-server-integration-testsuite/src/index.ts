@@ -1100,15 +1100,18 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
             },
           });
 
-          const delayUntil = async (check: () => boolean, expectedNumTicks) => {
+          const delayUntil = (check: () => boolean, expectedNumTicks) => {
             if (check()) return expect(expectedNumTicks).toBe(0);
             else expect(expectedNumTicks).not.toBe(0);
-            await Promise.resolve();
-            return delayUntil(check, expectedNumTicks - 1);
+            return new Promise(resolve =>
+              process.nextTick(() =>
+                delayUntil(check, expectedNumTicks - 1).then(resolve),
+              ),
+            );
           };
 
           // Make sure that things were called in the expected order.
-          await delayUntil(() => fn.mock.calls.length === 1, 2);
+          await delayUntil(() => fn.mock.calls.length === 1, 1);
           expect(fn.mock.calls).toEqual([['zero']]);
           resolveServerWillStart();
 
