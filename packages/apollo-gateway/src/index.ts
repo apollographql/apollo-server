@@ -4,7 +4,12 @@ import {
   GraphQLRequestContext,
 } from 'apollo-server-core';
 import { InMemoryLRUCache } from 'apollo-server-caching';
-import { isObjectType, isIntrospectionType, GraphQLSchema } from 'graphql';
+import {
+  isObjectType,
+  isIntrospectionType,
+  GraphQLSchema,
+  GraphQLError,
+} from 'graphql';
 import { WithRequired } from 'apollo-env';
 import { GraphQLSchemaValidationError } from 'apollo-graphql';
 import { composeAndValidate, ServiceDefinition } from '@apollo/federation';
@@ -20,10 +25,11 @@ import {
 
 import { getServiceDefinitionsFromRemoteEndpoint } from './loadServicesFromRemoteEndpoint';
 
-import { serializeQueryPlan, QueryPlan } from './QueryPlan';
+import { serializeQueryPlan, QueryPlan, OperationContext } from './QueryPlan';
 import { GraphQLDataSource } from './datasources/types';
 import { RemoteGraphQLDataSource } from './datasources/RemoteGraphQLDatasource';
 import { HeadersInit } from 'node-fetch';
+import { PromiseOrValue } from 'graphql/jsutils/PromiseOrValue';
 
 export interface GraphQLService {
   schema?: GraphQLSchema;
@@ -42,6 +48,13 @@ export interface GatewayConfigBase {
   buildService?: (definition: ServiceEndpointDefinition) => GraphQLDataSource;
   serviceList?: ServiceEndpointDefinition[];
   introspectionHeaders?: HeadersInit;
+
+  // experimental observability callbacks
+  experimental_didResolveQueryPlan?: DidResolveQueryPlanCallback;
+  experimental_didFailComposition?: DidFailCompositionCallback;
+  experimental_didUpdateSchema?: DidUpdateSchemaCallback;
+  experimental_didUpdateServiceList?: DidUpdateServiceListCallback;
+  experimental_getServiceList?: GetServiceList;
 }
 
 export interface LocalGatewayConfig extends GatewayConfigBase {
@@ -54,6 +67,44 @@ function isLocalConfig(config: GatewayConfig): config is LocalGatewayConfig {
   return 'localServiceList' in config;
 }
 
+type DidResolveQueryPlanCallback = ({
+  queryPlan,
+  serviceMap,
+  operationContext,
+}: {
+  queryPlan: QueryPlan;
+  serviceMap: ServiceMap;
+  operationContext: OperationContext;
+}) => void;
+
+type DidFailCompositionCallback = ({
+  errors,
+  serviceList,
+}: {
+  errors: GraphQLError[];
+  serviceList: ServiceDefinition[];
+}) => void;
+
+type DidUpdateSchemaCallback = ({
+  previousSchema,
+  currentSchema,
+}: {
+  previousSchema?: GraphQLSchema;
+  currentSchema: GraphQLSchema;
+}) => void;
+
+type DidUpdateServiceListCallback = ({
+  previousServiceConfig,
+  currentServiceConfig,
+}: {
+  previousServiceConfig: ServiceDefinition[];
+  currentServiceConfig: ServiceDefinition[];
+}) => void;
+
+type GetServiceList = (
+  config: GatewayConfig,
+) => PromiseOrValue<ServiceDefinition[]>;
+
 export class ApolloGateway implements GraphQLService {
   public schema?: GraphQLSchema;
   public isReady: boolean = false;
@@ -61,6 +112,17 @@ export class ApolloGateway implements GraphQLService {
   protected config: GatewayConfig;
   protected logger: Logger;
   protected queryPlanStore?: InMemoryLRUCache<QueryPlan>;
+
+  // Observe query plan, service info, and operation info prior to execution. The information made available here will give insight into the resulting query plan and the inputs that generated it.
+  protected experimental_didResolveQueryPlan?: DidResolveQueryPlanCallback;
+  // Observe composition failures and the ServiceList that caused them. Pretty straightforward, this enables reporting any issues that occur during composition. Implementors will be interested in addressing these immediately.
+  protected experimental_didFailComposition?: DidFailCompositionCallback;
+  // Observe previous and updated GraphQLSchema after successful composition. Similar to reporting service list changes, reporting schema changes will be useful for finding problematic updates (e.g. via diff) like breaking changes or unexpected type overrides.
+  protected experimental_didUpdateSchema?: DidUpdateSchemaCallback;
+  //Observe previous and updated ServiceList after update. Being able to report service list changes (and see the diff) will be useful in tracking down errors that occur when a new service list is introduced. This should simplify, for example, pinpointing service-specific issues, and a speedy rollback.
+  protected experimental_didUpdateServiceList?: DidUpdateServiceListCallback;
+  // Used for overriding the default service list fetcher. This should return an array of ServiceDefinition. *This function must be awaited.*
+  protected experimental_getServiceList?: GetServiceList;
 
   constructor(config: GatewayConfig) {
     this.config = {
@@ -87,12 +149,25 @@ export class ApolloGateway implements GraphQLService {
     }
 
     this.initializeQueryPlanStore();
+
+    // set up experimental observability callbacks
+    this.experimental_didResolveQueryPlan =
+      config.experimental_didResolveQueryPlan;
+    this.experimental_didFailComposition =
+      config.experimental_didFailComposition;
+    this.experimental_didUpdateSchema = config.experimental_didUpdateSchema;
+    // TODO: add this below
+    this.experimental_didUpdateServiceList =
+      config.experimental_didUpdateServiceList;
+    this.experimental_getServiceList = config.experimental_getServiceList;
   }
 
   public async load() {
     if (!this.isReady) {
       this.logger.debug('Loading configuration for Gateway');
-      const [services] = await this.loadServiceDefinitions(this.config);
+      const services = this.experimental_getServiceList
+        ? await this.experimental_getServiceList(this.config)
+        : await this.loadServiceDefinitions(this.config);
       this.logger.debug('Configuration loaded for Gateway');
       this.createSchema(services);
     }
@@ -101,6 +176,7 @@ export class ApolloGateway implements GraphQLService {
   }
 
   protected createSchema(services: ServiceDefinition[]) {
+    const previousSchema = this.schema;
     this.logger.debug(
       `Composing schema from service list: \n${services
         .map(({ name }) => `  ${name}`)
@@ -110,6 +186,9 @@ export class ApolloGateway implements GraphQLService {
     let { schema, errors } = composeAndValidate(services);
 
     if (errors && errors.length > 0) {
+      if (this.experimental_didFailComposition) {
+        this.experimental_didFailComposition({ errors, serviceList: services });
+      }
       throw new GraphQLSchemaValidationError(errors);
     }
 
@@ -119,6 +198,13 @@ export class ApolloGateway implements GraphQLService {
     // happens because alises are resolved by sub services and the shape
     // of the rootvalue already contains the aliased fields as responseNames
     this.schema = wrapSchemaWithAliasResolver(schema);
+
+    if (this.experimental_didUpdateSchema) {
+      this.experimental_didUpdateSchema({
+        previousSchema,
+        currentSchema: this.schema,
+      });
+    }
 
     this.createServices(services);
 
@@ -143,8 +229,8 @@ export class ApolloGateway implements GraphQLService {
 
   protected async loadServiceDefinitions(
     config: GatewayConfig,
-  ): Promise<[ServiceDefinition[], boolean]> {
-    if (isLocalConfig(config)) return [config.localServiceList, false];
+  ): Promise<ServiceDefinition[]> {
+    if (isLocalConfig(config)) return config.localServiceList;
     if (!config.serviceList)
       throw new Error(
         'The gateway requires a service list to be provided in the config',
@@ -152,7 +238,7 @@ export class ApolloGateway implements GraphQLService {
 
     const [
       remoteServices,
-      isNewService,
+      // isNewService,
     ] = await getServiceDefinitionsFromRemoteEndpoint({
       serviceList: config.serviceList,
       ...(config.introspectionHeaders
@@ -162,7 +248,7 @@ export class ApolloGateway implements GraphQLService {
 
     this.createServices(remoteServices);
 
-    return [remoteServices, isNewService];
+    return remoteServices;
   }
 
   public executor = async <TContext>(
@@ -209,6 +295,14 @@ export class ApolloGateway implements GraphQLService {
       requestContext,
       operationContext,
     );
+
+    if (this.experimental_didResolveQueryPlan) {
+      this.experimental_didResolveQueryPlan({
+        queryPlan,
+        serviceMap: this.serviceMap,
+        operationContext,
+      });
+    }
 
     const shouldShowQueryPlan =
       this.config.__exposeQueryPlanExperimental &&
