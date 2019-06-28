@@ -274,7 +274,7 @@ function executeSelectionSet(
         // Null is a valid value for a response, provided that the types match.
         // Presumably the underlying service has validated that result, so we
         // can pass it through here
-        if (source[responseName] === undefined) {
+        if (typeof source[responseName] === 'undefined') {
           throw new Error(`Field "${responseName}" was not found in response.`);
         }
         if (Array.isArray(source[responseName])) {
