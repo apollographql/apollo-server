@@ -1100,7 +1100,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
             },
           });
 
-          const delayUntil = (check: () => boolean, expectedNumTicks) => {
+          const delayUntil = async (check: () => boolean, expectedNumTicks) => {
             if (check()) return expect(expectedNumTicks).toBe(0);
             else expect(expectedNumTicks).not.toBe(0);
             return new Promise(resolve =>
