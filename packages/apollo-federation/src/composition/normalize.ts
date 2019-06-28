@@ -19,7 +19,7 @@ export function defaultRootOperationTypes(
 ): DocumentNode {
   // Map of OperationTypeNode to its respective default root operation type name
   const defaultRootOperationNameLookup: {
-    [node in OperationTypeNode]: DefaultRootOperationTypeName
+    [node in OperationTypeNode]: DefaultRootOperationTypeName;
   } = {
     query: 'Query',
     mutation: 'Mutation',

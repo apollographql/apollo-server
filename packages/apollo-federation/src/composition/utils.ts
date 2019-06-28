@@ -283,13 +283,13 @@ export function selectionIncludesField({
     const typeIncludesField =
       selectionName &&
       Object.keys(selectionSetType.getFields()).includes(selectionName);
-    if (!selectionName || !typeIncludesField) return false;
+    if (!selectionName || !typeIncludesField) continue;
 
     // get the return type of the selection
     const returnType = getNamedType(
       selectionSetType.getFields()[selectionName].type,
     );
-    if (!returnType || !isObjectType(returnType)) return false;
+    if (!returnType || !isObjectType(returnType)) continue;
     const subselections =
       selection.selectionSet && selection.selectionSet.selections;
 
@@ -297,14 +297,13 @@ export function selectionIncludesField({
     // recursively search for matching selections. typeToFind and fieldToFind
     // stay the same
     if (subselections) {
-      return selectionIncludesField({
+      const selectionDoesIncludeField = selectionIncludesField({
         selectionSetType: returnType,
         selections: subselections,
         typeToFind,
         fieldToFind,
       });
-    } else {
-      return false;
+      if (selectionDoesIncludeField) return true;
     }
   }
   return false;

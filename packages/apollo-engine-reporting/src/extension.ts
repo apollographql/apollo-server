@@ -46,7 +46,7 @@ export class EngineReportingExtension<TContext = any>
   public trace = new Trace();
   private nodes = new Map<string, Trace.Node>();
   private startHrTime!: [number, number];
-  private operationName?: string | null;
+  private explicitOperationName?: string | null;
   private queryString?: string;
   private documentAST?: DocumentNode;
   private options: EngineReportingOptions<TContext>;
@@ -203,12 +203,15 @@ export class EngineReportingExtension<TContext = any>
       this.trace.registeredOperation = !!o.requestContext.metrics
         .registeredOperation;
 
-      // If the `operationName` was not already set elsewhere, for example,
-      // through the `executionDidStart` or the `willResolveField` hooks, then
-      // we'll resort to using the `operationName` which was requested to be
-      // executed by the client.
+      // If the user did not explicitly specify an operation name (which we
+      // would have saved in `executionDidStart`), but the request pipeline made
+      // it far enough to figure out what the operation name must be and store
+      // it on requestContext.operationName, use that name.  (Note that this
+      // depends on the assumption that the RequestContext passed to
+      // requestDidStart, which does not yet have operationName, will be mutated
+      // to add operationName later.)
       const operationName =
-        this.operationName || o.requestContext.operationName || '';
+        this.explicitOperationName || o.requestContext.operationName || '';
       const documentAST = this.documentAST || o.requestContext.document;
 
       this.addTrace({
@@ -222,18 +225,17 @@ export class EngineReportingExtension<TContext = any>
   }
 
   public executionDidStart(o: { executionArgs: ExecutionArgs }) {
-    // If the operationName is explicitly provided, save it. If there's just one
-    // named operation, the client doesn't have to provide it, but we still want
-    // to know the operation name so that the server can identify the query by
-    // it without having to parse a signature.
+    // If the operationName is explicitly provided, save it. Note: this is the
+    // operationName provided by the user. It might be empty if they're relying on
+    // the "just use the only operation I sent" behavior, even if that operation
+    // has a name.
     //
-    // Fortunately, in the non-error case, we can just pull this out of
-    // the first call to willResolveField's `info` argument.  In an
-    // error case (eg, the operationName isn't found, or there are more
-    // than one operation and no specified operationName) it's OK to continue
-    // to file this trace under the empty operationName.
+    // It's possible that execution is about to fail because this operation
+    // isn't actually in the document. We want to know the name in that case
+    // too, which is why it's important that we save the name now, and not just
+    // rely on requestContext.operationName (which will be null in this case).
     if (o.executionArgs.operationName) {
-      this.operationName = o.executionArgs.operationName;
+      this.explicitOperationName = o.executionArgs.operationName;
     }
     this.documentAST = o.executionArgs.document;
   }
@@ -244,11 +246,6 @@ export class EngineReportingExtension<TContext = any>
     _context: TContext,
     info: GraphQLResolveInfo,
   ): ((error: Error | null, result: any) => void) | void {
-    if (this.operationName === undefined) {
-      this.operationName =
-        (info.operation.name && info.operation.name.value) || '';
-    }
-
     const path = info.path;
     const node = this.newNode(path);
     node.type = info.returnType.toString();

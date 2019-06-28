@@ -27,6 +27,7 @@ import { getServiceDefinitionsFromStorage } from './loadServicesFromStorage';
 import { serializeQueryPlan, QueryPlan } from './QueryPlan';
 import { GraphQLDataSource } from './datasources/types';
 import { RemoteGraphQLDataSource } from './datasources/RemoteGraphQLDatasource';
+import { HeadersInit } from 'node-fetch';
 
 export type ServiceEndpointDefinition = Pick<ServiceDefinition, 'name' | 'url'>;
 
@@ -41,6 +42,7 @@ interface GatewayConfigBase {
 
 interface RemoteGatewayConfig extends GatewayConfigBase {
   serviceList: ServiceEndpointDefinition[];
+  introspectionHeaders?: HeadersInit;
 }
 
 interface ManagedGatewayConfig extends GatewayConfigBase {
@@ -214,6 +216,9 @@ export class ApolloGateway implements GraphQLService {
       if (isRemoteConfig(config)) {
         return getServiceDefinitionsFromRemoteEndpoint({
           serviceList: config.serviceList,
+          ...(config.introspectionHeaders
+            ? { headers: config.introspectionHeaders }
+            : {}),
         });
       } else {
         if (!this.engineConfig) {

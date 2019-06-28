@@ -232,10 +232,10 @@ describe('composeServices', () => {
         serviceC,
       ]);
       expect(errors).toMatchInlineSnapshot(`
-                Array [
-                  [GraphQLError: Field "Product.price" can only be defined once.],
-                ]
-            `);
+        Array [
+          [GraphQLError: Field "Product.price" can only be defined once.],
+        ]
+      `);
       expect(schema).toBeDefined();
 
       const product = schema.getType('Product') as GraphQLObjectType;
@@ -292,41 +292,6 @@ describe('composeServices', () => {
 
       const product = schema.getType('Product') as GraphQLObjectType;
       expect(product.getFields()['price'].args[0].name).toEqual('currency');
-    });
-
-    it('treats type extensions as a base type definition when none is available', () => {
-      const serviceA = {
-        typeDefs: gql`
-          extend type Product {
-            price: Float!
-          }
-        `,
-        name: 'serviceA',
-      };
-
-      const serviceB = {
-        typeDefs: gql`
-          extend type Product {
-            color: String!
-          }
-        `,
-        name: 'serviceB',
-      };
-
-      const { schema, errors } = composeServices([serviceA, serviceB]);
-      expect(errors).toHaveLength(0);
-      expect(schema).toBeDefined();
-
-      expect(schema.getType('Product')).toMatchInlineSnapshot(`
-        type Product {
-          price: Float!
-          color: String!
-        }
-      `);
-
-      const product = schema.getType('Product') as GraphQLObjectType;
-
-      expect(product.federation.serviceName).toEqual(null);
     });
 
     // This is a limitation of extendSchema currently (this is currently a broken test to demonstrate)
@@ -536,12 +501,6 @@ describe('composeServices', () => {
       const { schema, errors } = composeServices([serviceA, serviceB]);
       expect(schema).toBeDefined();
       expect(errors).toMatchInlineSnapshot(`Array []`);
-
-      // const colorField = (schema.getType(
-      //   "ProductInput"
-      // ) as GraphQLInputObjectType).getFields()["color"];
-
-      // expect(colorField.serviceName).toEqual("serviceB");
     });
 
     it('extends enum types', () => {
@@ -567,10 +526,6 @@ describe('composeServices', () => {
       const { schema, errors } = composeServices([serviceA, serviceB]);
       expect(schema).toBeDefined();
       expect(errors).toMatchInlineSnapshot(`Array []`);
-
-      // const category = schema.getType("ProductCategory") as GraphQLEnumType;
-      // expect(category.serviceName).toEqual("serviceA");
-      // expect(category.getValue("BEYOND").serviceName).toEqual("serviceB");
     });
   });
 
@@ -659,7 +614,7 @@ describe('composeServices', () => {
 
       const query = schema.getQueryType();
 
-      expect(query.federation.serviceName).toEqual(null);
+      expect(query.federation.serviceName).toBeUndefined();
     });
 
     it('treats root Query type definition as an extension, not base definitions', () => {
@@ -700,7 +655,7 @@ describe('composeServices', () => {
 
       const query = schema.getType('Query') as GraphQLObjectType;
 
-      expect(query.federation.serviceName).toBeNull();
+      expect(query.federation.serviceName).toBeUndefined();
     });
 
     it('allows extension of the Mutation type with no base type definition', () => {
@@ -994,9 +949,12 @@ describe('composeServices', () => {
         expect(errors).toHaveLength(0);
 
         const review = schema.getType('Review') as GraphQLObjectType;
-        expect(
-          review.getFields()['product'].federation.provides,
-        ).toMatchInlineSnapshot(`sku`);
+        expect(review.getFields()['product'].federation).toMatchInlineSnapshot(`
+          Object {
+            "provides": sku,
+            "serviceName": "serviceA",
+          }
+        `);
       });
 
       it('adds @provides information to fields using a nested field set', () => {
@@ -1038,6 +996,44 @@ describe('composeServices', () => {
             sku {
               id
             }
+          `);
+      });
+
+      it('adds @provides information for object types within list types', () => {
+        const serviceA = {
+          typeDefs: gql`
+            type Review {
+              products: [Product] @provides(fields: "sku")
+            }
+
+            extend type Product {
+              sku: String @external
+              color: String
+            }
+          `,
+          name: 'serviceA',
+        };
+
+        const serviceB = {
+          typeDefs: gql`
+            type Product @key(fields: "sku") {
+              sku: String!
+              price: Int! @requires(fields: "sku")
+            }
+          `,
+          name: 'serviceB',
+        };
+
+        const { schema, errors } = composeServices([serviceA, serviceB]);
+        expect(errors).toHaveLength(0);
+
+        const review = schema.getType('Review') as GraphQLObjectType;
+        expect(review.getFields()['products'].federation)
+          .toMatchInlineSnapshot(`
+          Object {
+            "provides": sku,
+            "serviceName": "serviceA",
+          }
           `);
       });
     });

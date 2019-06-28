@@ -88,7 +88,7 @@ export interface GraphQLService {
 // fields that are not specific to a single integration
 export interface Config extends BaseConfig {
   modules?: GraphQLSchemaModule[];
-  typeDefs?: DocumentNode | Array<DocumentNode>;
+  typeDefs?: DocumentNode | Array<DocumentNode> | string | Array<string>;
   parseOptions?: GraphQLParseOptions;
   resolvers?: IResolvers;
   schema?: GraphQLSchema;

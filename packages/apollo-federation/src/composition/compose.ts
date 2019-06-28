@@ -4,7 +4,6 @@ import {
   GraphQLSchema,
   extendSchema,
   Kind,
-  TypeExtensionNode,
   isTypeDefinitionNode,
   isTypeExtensionNode,
   GraphQLError,
@@ -33,9 +32,23 @@ import {
   ExternalFieldDefinition,
   ServiceNameToKeyDirectivesMap,
   FederatedTypeDefinitionNode,
+  FederatedTypeExtensionNode,
 } from './types';
 import { validateSDL } from 'graphql/validation/validate';
 import { compositionRules } from './rules';
+
+const EmptyQueryDefinition = {
+  kind: Kind.OBJECT_TYPE_DEFINITION,
+  name: { kind: Kind.NAME, value: 'Query' },
+  fields: [],
+  serviceName: null,
+};
+const EmptyMutationDefinition = {
+  kind: Kind.OBJECT_TYPE_DEFINITION,
+  name: { kind: Kind.NAME, value: 'Mutation' },
+  fields: [],
+  serviceName: null,
+};
 
 // Map of all definitions to eventually be passed to extendSchema
 interface DefinitionsMap {
@@ -43,7 +56,7 @@ interface DefinitionsMap {
 }
 // Map of all extensions to eventually be passed to extendSchema
 interface ExtensionsMap {
-  [name: string]: TypeExtensionNode[];
+  [name: string]: FederatedTypeExtensionNode[];
 }
 
 /**
@@ -220,35 +233,23 @@ export function buildMapsFromServiceList(serviceList: ServiceDefinition[]) {
          * and add it to the extensionsMap.
          */
         if (extensionsMap[typeName]) {
-          extensionsMap[typeName].push(definition);
+          extensionsMap[typeName].push({ ...definition, serviceName });
         } else {
-          extensionsMap[typeName] = [definition];
+          extensionsMap[typeName] = [{ ...definition, serviceName }];
         }
       }
     }
   }
 
-  /**
-   * what if an extended type doesn't have a base type?
-   * - Check each of the extensions, and see if there's a corresponding definition
-   * - if so, do nothing. If not, create an empty definition with `null` as the serviceName
-   */
-  for (const extensionTypeName of Object.keys(extensionsMap)) {
-    if (!definitionsMap[extensionTypeName]) {
-      definitionsMap[extensionTypeName] = [
-        {
-          kind: Kind.OBJECT_TYPE_DEFINITION,
-          name: { kind: Kind.NAME, value: extensionTypeName },
-          fields: [],
-          serviceName: null,
-        },
-      ];
-
-      // ideally, the serviceName would be the first extending service, but there's not a reliable way to
-      // trace the extensionNode back to a service since each extension can be overwritten by other extensions
-      typeToServiceMap[extensionTypeName].serviceName = null;
-    }
-  }
+  // Since all Query/Mutation definitions in service schemas are treated as
+  // extensions, we don't have a Query or Mutation DEFINITION in the definitions
+  // list. Without a Query/Mutation definition, we can't _extend_ the type.
+  // extendSchema will complain about this. We can't add an empty
+  // GraphQLObjectType to the schema constructor, so we add an empty definition
+  // here. We only add mutation if there is a mutation extension though.
+  if (!definitionsMap.Query) definitionsMap.Query = [EmptyQueryDefinition];
+  if (extensionsMap.Mutation && !definitionsMap.Mutation)
+    definitionsMap.Mutation = [EmptyMutationDefinition];
 
   return {
     typeToServiceMap,
@@ -315,6 +316,7 @@ export function addFederationMetadataToSchemaNodes({
     { serviceName: baseServiceName, extensionFieldsToOwningServiceMap },
   ] of Object.entries(typeToServiceMap)) {
     const namedType = schema.getType(typeName) as GraphQLNamedType;
+    if (!namedType) continue;
 
     // Extend each type in the GraphQLSchema with the serviceName that owns it
     // and the key directives that belong to it
@@ -341,6 +343,7 @@ export function addFederationMetadataToSchemaNodes({
         ) {
           field.federation = {
             ...field.federation,
+            serviceName: baseServiceName,
             provides: parseSelections(
               providesDirective.arguments[0].value.value,
             ),
@@ -387,7 +390,7 @@ export function addFederationMetadataToSchemaNodes({
   }
   // add externals metadata
   for (const field of externalFields) {
-    const namedType = schema.getType(field.parentTypeName) as GraphQLNamedType;
+    const namedType = schema.getType(field.parentTypeName);
     if (!namedType) continue;
 
     namedType.federation = {

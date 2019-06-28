@@ -35,14 +35,20 @@ describe('executeQueryPlan', () => {
 
   beforeEach(() => {
     serviceMap = Object.fromEntries(
-      ['accounts', 'product', 'inventory', 'reviews'].map(serviceName => {
-        return [
-          serviceName,
-          buildLocalService([
-            require(path.join(__dirname, '__fixtures__/schemas', serviceName)),
-          ]),
-        ] as [string, LocalGraphQLDataSource];
-      }),
+      ['accounts', 'product', 'inventory', 'reviews', 'books'].map(
+        serviceName => {
+          return [
+            serviceName,
+            buildLocalService([
+              require(path.join(
+                __dirname,
+                '__fixtures__/schemas',
+                serviceName,
+              )),
+            ]),
+          ] as [string, LocalGraphQLDataSource];
+        },
+      ),
     );
 
     let errors: GraphQLError[];

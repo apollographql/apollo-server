@@ -49,9 +49,6 @@ export class GraphQLExtension<TContext = any> {
     executionArgs: ExecutionArgs;
   }): EndHandler | void;
 
-  public didResolveOperation?(o: {
-    requestContext: GraphQLRequestContext<TContext>;
-  }): void;
   public didEncounterErrors?(errors: ReadonlyArray<GraphQLError>): void;
 
   public willSendResponse?(o: {
@@ -113,15 +110,6 @@ export class GraphQLExtensionStack<TContext = any> {
     );
   }
 
-  public didResolveOperation(o: {
-    requestContext: GraphQLRequestContext<TContext>;
-  }) {
-    this.extensions.forEach(extension => {
-      if (extension.didResolveOperation) {
-        extension.didResolveOperation(o);
-      }
-    });
-  }
   public didEncounterErrors(errors: ReadonlyArray<GraphQLError>) {
     this.extensions.forEach(extension => {
       if (extension.didEncounterErrors) {

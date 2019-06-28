@@ -192,7 +192,7 @@ describe('externalUnused', () => {
     expect(warnings).toEqual([]);
   });
 
-  it('does not warn when @external is selected by a @requires in a deep subselectionm', () => {
+  it('does not warn when @external is selected by a @requires in a deep subselection', () => {
     const serviceA = {
       typeDefs: gql`
         type User @key(fields: "id") {
@@ -221,16 +221,32 @@ describe('externalUnused', () => {
         }
 
         extend type User @key(fields: "id") {
+          id: ID! @external
           roles: AccountRoles!
           username: String @external
           isAdmin: Boolean!
-            @requires(fields: "roles { canWrite { members { username } } }")
+            @requires(
+              fields: """
+              roles {
+                canWrite {
+                  members {
+                    username
+                  }
+                }
+                canRead {
+                  members {
+                    username
+                  }
+                }
+              }
+              """
+            )
         }
 
         # Externals -- only referenced by the @requires on User.isAdmin
         extend type AccountRoles {
           canWrite: Group @external
-          # canRead: Group @external
+          canRead: Group @external
         }
 
         extend type Group {
