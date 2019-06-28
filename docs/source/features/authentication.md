@@ -164,7 +164,7 @@ context: ({ req }) => {
 
  // optionally block the user
  // we could also check user roles/permissions here
- if (!user) throw new AuthorizationError('you must be logged in to query this schema');  
+ if (!user) throw new AuthenticationError('you must be logged in to query this schema');  
 
  // add the user to the context
  return {
