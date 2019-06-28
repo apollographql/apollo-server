@@ -8,7 +8,7 @@ import {
 import { ValueOrPromise } from 'apollo-server-env';
 
 export interface ExpressGraphQLOptionsFunction {
-  (req?: express.Request, res?: express.Response): ValueOrPromise<
+  (req: express.Request, res: express.Response): ValueOrPromise<
     GraphQLOptions
   >;
 }
