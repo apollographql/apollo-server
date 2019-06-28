@@ -4,7 +4,7 @@ import {
   GraphQLService,
   SchemaChangeCallback,
   Unsubscriber,
-  EngineConfig,
+  GraphQLServiceEngineConfig,
 } from 'apollo-server-core';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import { isObjectType, isIntrospectionType, GraphQLSchema } from 'graphql';
@@ -78,7 +78,7 @@ export class ApolloGateway implements GraphQLService {
   protected config: GatewayConfig;
   protected logger: Logger;
   protected queryPlanStore?: InMemoryLRUCache<QueryPlan>;
-  private engineConfig: EngineConfig | undefined;
+  private engineConfig: GraphQLServiceEngineConfig | undefined;
   private pollingTimer?: NodeJS.Timer;
   private onSchemaChangeListeners = new Set<SchemaChangeCallback>();
 
@@ -109,8 +109,8 @@ export class ApolloGateway implements GraphQLService {
     this.initializeQueryPlanStore();
   }
 
-  public async load(engineConfig?: EngineConfig) {
-    this.engineConfig = engineConfig;
+  public async load(options?: { engine?: GraphQLServiceEngineConfig }) {
+    if (options) this.engineConfig = options.engine;
     if (!this.isReady) {
       this.logger.debug('Loading configuration for Gateway');
       const [services] = await this.loadServiceDefinitions(this.config);
@@ -147,16 +147,16 @@ export class ApolloGateway implements GraphQLService {
     this.isReady = true;
   }
 
-  public onSchemaChange(value: SchemaChangeCallback): Unsubscriber {
+  public onSchemaChange(callback: SchemaChangeCallback): Unsubscriber {
     if (!isManagedConfig(this.config)) {
       return () => {};
     }
 
-    this.onSchemaChangeListeners.add(value);
+    this.onSchemaChangeListeners.add(callback);
     if (!this.pollingTimer) this.startPollingServices();
 
     return () => {
-      this.onSchemaChangeListeners.delete(value);
+      this.onSchemaChangeListeners.delete(callback);
       if (this.onSchemaChangeListeners.size === 0 && this.pollingTimer) {
         clearInterval(this.pollingTimer!);
         this.pollingTimer = undefined;
@@ -168,19 +168,10 @@ export class ApolloGateway implements GraphQLService {
     if (this.pollingTimer) clearInterval(this.pollingTimer);
 
     this.pollingTimer = setInterval(async () => {
+      let services, isNewSchema;
       try {
-        const [services, isNewSchema] = await this.loadServiceDefinitions(
+        [services, isNewSchema] = await this.loadServiceDefinitions(
           this.config,
-        );
-        if (!isNewSchema) {
-          this.logger.debug('No changes to gateway config');
-          return;
-        }
-        if (this.queryPlanStore) this.queryPlanStore.flush();
-        this.logger.debug('Gateway config has changed, updating schema');
-        this.createSchema(services);
-        this.onSchemaChangeListeners.forEach(listener =>
-          listener(this.schema!),
         );
       } catch (e) {
         this.logger.debug(
@@ -188,6 +179,23 @@ export class ApolloGateway implements GraphQLService {
           e,
         );
         return;
+      }
+      if (!isNewSchema) {
+        this.logger.debug('No changes to gateway config');
+        return;
+      }
+      if (this.queryPlanStore) this.queryPlanStore.flush();
+      this.logger.debug('Gateway config has changed, updating schema');
+      this.createSchema(services);
+      try {
+        this.onSchemaChangeListeners.forEach(listener =>
+          listener(this.schema!),
+        );
+      } catch (e) {
+        this.logger.debug(
+          'Error notifying schema change listener of update to schema.',
+          e,
+        );
       }
     }, 3 * 1000);
   }
@@ -223,13 +231,13 @@ export class ApolloGateway implements GraphQLService {
       } else {
         if (!this.engineConfig) {
           throw new Error(
-            'Must supply engineConfig to ApolloGateway#load() when no serviceList is provided.',
+            'When `serviceList` is not set, an Apollo Engine configuration must be provided. See https://www.apollographql.com/docs/apollo-server/federation/managed-federation/ for more information.',
           );
         }
         return getServiceDefinitionsFromStorage({
           graphId: this.engineConfig.graphId,
           apiKeyHash: this.engineConfig.apiKeyHash,
-          graphVariant: this.engineConfig.graphTag || 'current',
+          graphVariant: this.engineConfig.graphVariant || 'current',
           federationVersion: config.federationVersion || 1,
         });
       }

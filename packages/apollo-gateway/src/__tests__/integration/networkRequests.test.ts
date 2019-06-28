@@ -42,9 +42,7 @@ it('Queries remote endpoints for their SDLs', async () => {
 // This test is maybe a bit terrible, but IDK a better way to mock all the requests
 it('Extracts service definitions from remote storage', async () => {
   const serviceName = 'jacksons-service';
-  // hash of `service:${serviceName}:AABBCCDDEEFFGG`, but we don't want to depend on createSHA.
-  const apiKeyHash = // createSHA('sha512').update(apiKey).digest('hex');
-    'fa54332e7e8f1522edf721cea7ada93dc7c736f9343f4483989268a956b9101fabd18a53b62d837072abd87018b0b67e052ff732a98b3999e15d39d66d8e56dc';
+  const apiKeyHash = 'abc123';
 
   const storageSecret = 'secret';
   const implementingServicePath =
@@ -91,6 +89,6 @@ it('Extracts service definitions from remote storage', async () => {
 
   const gateway = new ApolloGateway({});
 
-  await gateway.load({ apiKeyHash, graphId: serviceName });
+  await gateway.load({ engine: { apiKeyHash, graphId: serviceName } });
   expect(gateway.schema!.getType('User')!.description).toBe('This is my User');
 });

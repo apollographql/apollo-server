@@ -73,14 +73,20 @@ export type GraphQLServiceConfig = {
   executor: GraphQLExecutor;
 };
 
-export type EngineConfig = {
+/**
+ * This is a restricted view of an engine configuration which only supplies the
+ * necessary info for accessing things like cloud storage.
+ */
+export type GraphQLServiceEngineConfig = {
   apiKeyHash: string;
   graphId: string;
-  graphTag?: string;
+  graphVariant?: string;
 };
 
 export interface GraphQLService {
-  load(engineConfig?: EngineConfig): Promise<GraphQLServiceConfig>;
+  load(options: {
+    engine?: GraphQLServiceEngineConfig;
+  }): Promise<GraphQLServiceConfig>;
   onSchemaChange(callback: SchemaChangeCallback): Unsubscriber;
 }
 

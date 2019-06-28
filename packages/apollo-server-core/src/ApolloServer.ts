@@ -88,6 +88,16 @@ function getEngineApiKey(engine: Config['engine']): string | undefined {
   return;
 }
 
+function getEngineGraphVariant(engine: Config['engine']): string | undefined {
+  if (engine === false) {
+    return;
+  } else if (typeof engine === 'object' && engine.schemaTag) {
+    return engine.schemaTag;
+  } else {
+    return process.env.ENGINE_SCHEMA_TAG;
+  }
+}
+
 function getEngineServiceId(engine: Config['engine']): string | undefined {
   const engineApiKey = getEngineApiKey(engine);
   if (engineApiKey) {
@@ -261,7 +271,6 @@ export class ApolloServerBase {
     // The truthyness of this value can also be used in other forks of logic
     // related to Engine, as is the case with EngineReportingAgent just below.
     this.engineServiceId = getEngineServiceId(engine);
-
     const apiKey = getEngineApiKey(engine);
     if (apiKey) {
       this.engineApiKeyHash = createSHA('sha512')
@@ -280,18 +289,22 @@ export class ApolloServerBase {
       }
       this.schema = schema!;
     } else if (gateway) {
-      let engineConfig =
+      const graphVariant = getEngineGraphVariant(engine);
+      const engineConfig =
         this.engineApiKeyHash && this.engineServiceId
           ? {
               apiKeyHash: this.engineApiKeyHash,
               graphId: this.engineServiceId,
+              ...(graphVariant && { graphVariant }),
             }
           : undefined;
 
-      gatewayLoadingPromise = gateway.load(engineConfig).then(config => {
-        this.schema = config.schema;
-        requestOptions.executor = config.executor;
-      });
+      gatewayLoadingPromise = gateway
+        .load({ engine: engineConfig })
+        .then(config => {
+          this.schema = config.schema;
+          requestOptions.executor = config.executor;
+        });
       gateway.onSchemaChange(schema => {
         this.schema = schema;
         this.createSchemaDerivedDataPromise = updateSchemaDerivedData();
@@ -606,8 +619,6 @@ export class ApolloServerBase {
   }
 
   public async executeOperation(request: GraphQLRequest) {
-    await this.createSchemaDerivedDataPromise;
-
     let options;
 
     try {
