@@ -1,9 +1,4 @@
-import {
-  GraphQLSchema,
-  GraphQLError,
-  getIntrospectionQuery,
-  SelectionSetNode,
-} from 'graphql';
+import { GraphQLSchema, GraphQLError, getIntrospectionQuery } from 'graphql';
 import path from 'path';
 import {
   GraphQLSchemaValidationError,
@@ -16,7 +11,7 @@ import { GraphQLRequestContext } from 'apollo-server-core';
 import { composeServices, buildFederatedSchema } from '@apollo/federation';
 
 import { buildQueryPlan, buildOperationContext } from '../buildQueryPlan';
-import { executeQueryPlan, executeSelectionSet } from '../executeQueryPlan';
+import { executeQueryPlan } from '../executeQueryPlan';
 import { LocalGraphQLDataSource } from '../datasources/LocalGraphQLDatasource';
 
 function buildLocalService(modules: GraphQLSchemaModule[]) {
@@ -222,41 +217,41 @@ describe('executeQueryPlan', () => {
     );
 
     expect(response.data).toMatchInlineSnapshot(`
-                                                Object {
-                                                  "topReviews": Array [
-                                                    Object {
-                                                      "author": Object {
-                                                        "name": "Ada Lovelace",
-                                                      },
-                                                      "body": "Love it!",
-                                                    },
-                                                    Object {
-                                                      "author": Object {
-                                                        "name": "Ada Lovelace",
-                                                      },
-                                                      "body": "Too expensive.",
-                                                    },
-                                                    Object {
-                                                      "author": Object {
-                                                        "name": "Alan Turing",
-                                                      },
-                                                      "body": "Could be better.",
-                                                    },
-                                                    Object {
-                                                      "author": Object {
-                                                        "name": "Alan Turing",
-                                                      },
-                                                      "body": "Prefer something else.",
-                                                    },
-                                                    Object {
-                                                      "author": Object {
-                                                        "name": "Alan Turing",
-                                                      },
-                                                      "body": "Wish I had read this before.",
-                                                    },
-                                                  ],
-                                                }
-                                `);
+      Object {
+        "topReviews": Array [
+          Object {
+            "author": Object {
+              "name": "Ada Lovelace",
+            },
+            "body": "Love it!",
+          },
+          Object {
+            "author": Object {
+              "name": "Ada Lovelace",
+            },
+            "body": "Too expensive.",
+          },
+          Object {
+            "author": Object {
+              "name": "Alan Turing",
+            },
+            "body": "Could be better.",
+          },
+          Object {
+            "author": Object {
+              "name": "Alan Turing",
+            },
+            "body": "Prefer something else.",
+          },
+          Object {
+            "author": Object {
+              "name": "Alan Turing",
+            },
+            "body": "Wish I had read this before.",
+          },
+        ],
+      }
+    `);
   });
 
   it('should not duplicate variable definitions', async () => {
@@ -291,49 +286,49 @@ describe('executeQueryPlan', () => {
     );
 
     expect(response.data).toMatchInlineSnapshot(`
-                                    Object {
-                                      "first": Array [
-                                        Object {
-                                          "author": Object {
-                                            "name": "Ada Lovelace",
-                                          },
-                                          "body": "Love it!",
-                                        },
-                                        Object {
-                                          "author": Object {
-                                            "name": "Ada Lovelace",
-                                          },
-                                          "body": "Too expensive.",
-                                        },
-                                        Object {
-                                          "author": Object {
-                                            "name": "Alan Turing",
-                                          },
-                                          "body": "Could be better.",
-                                        },
-                                      ],
-                                      "second": Array [
-                                        Object {
-                                          "author": Object {
-                                            "name": "Ada Lovelace",
-                                          },
-                                          "body": "Love it!",
-                                        },
-                                        Object {
-                                          "author": Object {
-                                            "name": "Ada Lovelace",
-                                          },
-                                          "body": "Too expensive.",
-                                        },
-                                        Object {
-                                          "author": Object {
-                                            "name": "Alan Turing",
-                                          },
-                                          "body": "Could be better.",
-                                        },
-                                      ],
-                                    }
-                        `);
+      Object {
+        "first": Array [
+          Object {
+            "author": Object {
+              "name": "Ada Lovelace",
+            },
+            "body": "Love it!",
+          },
+          Object {
+            "author": Object {
+              "name": "Ada Lovelace",
+            },
+            "body": "Too expensive.",
+          },
+          Object {
+            "author": Object {
+              "name": "Alan Turing",
+            },
+            "body": "Could be better.",
+          },
+        ],
+        "second": Array [
+          Object {
+            "author": Object {
+              "name": "Ada Lovelace",
+            },
+            "body": "Love it!",
+          },
+          Object {
+            "author": Object {
+              "name": "Ada Lovelace",
+            },
+            "body": "Too expensive.",
+          },
+          Object {
+            "author": Object {
+              "name": "Alan Turing",
+            },
+            "body": "Could be better.",
+          },
+        ],
+      }
+    `);
   });
 
   it('should include variables in non-root requests', async () => {
@@ -363,46 +358,46 @@ describe('executeQueryPlan', () => {
     );
 
     expect(response.data).toMatchInlineSnapshot(`
-                                    Object {
-                                      "topReviews": Array [
-                                        Object {
-                                          "author": Object {
-                                            "birthDate": "12/10/1815",
-                                            "name": "Ada Lovelace",
-                                          },
-                                          "body": "Love it!",
-                                        },
-                                        Object {
-                                          "author": Object {
-                                            "birthDate": "12/10/1815",
-                                            "name": "Ada Lovelace",
-                                          },
-                                          "body": "Too expensive.",
-                                        },
-                                        Object {
-                                          "author": Object {
-                                            "birthDate": "6/23/1912",
-                                            "name": "Alan Turing",
-                                          },
-                                          "body": "Could be better.",
-                                        },
-                                        Object {
-                                          "author": Object {
-                                            "birthDate": "6/23/1912",
-                                            "name": "Alan Turing",
-                                          },
-                                          "body": "Prefer something else.",
-                                        },
-                                        Object {
-                                          "author": Object {
-                                            "birthDate": "6/23/1912",
-                                            "name": "Alan Turing",
-                                          },
-                                          "body": "Wish I had read this before.",
-                                        },
-                                      ],
-                                    }
-                        `);
+      Object {
+        "topReviews": Array [
+          Object {
+            "author": Object {
+              "birthDate": "12/10/1815",
+              "name": "Ada Lovelace",
+            },
+            "body": "Love it!",
+          },
+          Object {
+            "author": Object {
+              "birthDate": "12/10/1815",
+              "name": "Ada Lovelace",
+            },
+            "body": "Too expensive.",
+          },
+          Object {
+            "author": Object {
+              "birthDate": "6/23/1912",
+              "name": "Alan Turing",
+            },
+            "body": "Could be better.",
+          },
+          Object {
+            "author": Object {
+              "birthDate": "6/23/1912",
+              "name": "Alan Turing",
+            },
+            "body": "Prefer something else.",
+          },
+          Object {
+            "author": Object {
+              "birthDate": "6/23/1912",
+              "name": "Alan Turing",
+            },
+            "body": "Wish I had read this before.",
+          },
+        ],
+      }
+    `);
   });
 
   it('can execute an introspection query', async () => {
