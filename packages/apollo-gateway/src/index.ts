@@ -166,18 +166,28 @@ export class ApolloGateway implements GraphQLService {
     if (this.pollingTimer) clearInterval(this.pollingTimer);
 
     this.pollingTimer = setInterval(async () => {
-      const [services, isNewSchema] = await this.loadServiceDefinitions(
-        this.config,
-      );
-      if (!isNewSchema) {
-        this.logger.debug('No changes to gateway config');
+      try {
+        const [services, isNewSchema] = await this.loadServiceDefinitions(
+          this.config,
+        );
+        if (!isNewSchema) {
+          this.logger.debug('No changes to gateway config');
+          return;
+        }
+        if (this.queryPlanStore) this.queryPlanStore.flush();
+        this.logger.debug('Gateway config has changed, updating schema');
+        this.createSchema(services);
+        this.onSchemaChangeListeners.forEach(listener =>
+          listener(this.schema!),
+        );
+      } catch (e) {
+        this.logger.debug(
+          'Error checking for schema updates. Falling back to existing schema.',
+          e,
+        );
         return;
       }
-      if (this.queryPlanStore) this.queryPlanStore.flush();
-      this.logger.debug('Gateway config has changed, updating schema');
-      this.createSchema(services);
-      this.onSchemaChangeListeners.forEach(listener => listener(this.schema!));
-    }, 10 * 1000);
+    }, 3 * 1000);
   }
 
   protected createServices(services: ServiceEndpointDefinition[]) {
