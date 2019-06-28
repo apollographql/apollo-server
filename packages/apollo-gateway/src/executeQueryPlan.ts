@@ -259,7 +259,7 @@ async function executeFetch<TContext>(
  * @param source Result of GraphQL execution.
  * @param selectionSet
  */
-export function executeSelectionSet(
+function executeSelectionSet(
   source: Record<string, any>,
   selectionSet: SelectionSetNode,
 ): Record<string, any> {
