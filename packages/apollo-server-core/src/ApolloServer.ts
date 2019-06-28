@@ -460,9 +460,9 @@ export class ApolloServerBase {
         onDisconnect: onDisconnect,
         onOperation: async (
           message: { payload: any },
-          params: ExecutionParams,
+          connection: ExecutionParams,
         ) => {
-          params.formatResponse = (value: ExecutionResult) => ({
+          connection.formatResponse = (value: ExecutionResult) => ({
             ...value,
             errors:
               value.errors &&
@@ -472,7 +472,7 @@ export class ApolloServerBase {
               }),
           });
           
-          params.formatError = this.requestOptions.formatError;
+          connection.formatError = this.requestOptions.formatError;
           
           let context: Context = this.context ? this.context : { connection };
 
@@ -488,7 +488,7 @@ export class ApolloServerBase {
             })[0];
           }
 
-          return { ...params, context };
+          return { ...connection, context };
         },
         keepAlive,
       },
