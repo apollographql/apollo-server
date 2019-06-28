@@ -2,6 +2,8 @@
 
 ### vNEXT
 
+- Fix `@requires` bug preventing array and null values. [PR #2928](https://github.com/apollographql/apollo-server/pull/2928)
+
 # v0.6.5
 
 * Relax constraints of root operation type names in validation [#2783](ttps://github.com/apollographql/apollo-server/pull/2783)
