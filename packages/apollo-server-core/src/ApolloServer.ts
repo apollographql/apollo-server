@@ -132,7 +132,7 @@ export class ApolloServerBase {
   private documentStore?: InMemoryLRUCache<DocumentNode>;
 
   private parseOptions: GraphQLParseOptions;
-  private createSchemaDerivedDataPromise: Promise<void> = Promise.resolve();
+  private createSchemaDerivedDataPromise: Promise<void>;
 
   // The constructor should be universal across all environments. All environment specific behavior should be set by adding or overriding methods
   constructor(config: Config) {
