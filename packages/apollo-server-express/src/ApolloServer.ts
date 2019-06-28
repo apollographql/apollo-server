@@ -89,7 +89,7 @@ const middlewareFromPath = (
   // package here, we can still reap those cache benefits without directly
   // accessing _parsedUrl ourselves, which could be risky.
   const parsedUrl = parseurl(req);
-  if ( parsedUrl && parsedUrl.pathname === path) {
+  if (parsedUrl && parsedUrl.pathname === path) {
     return middleware(req, res, next);
   } else {
     return next();
@@ -217,36 +217,42 @@ export class ApolloServer extends ApolloServerBase {
     // schema, you'll need to manually specify `introspection: true` in the
     // ApolloServer constructor; by default, the introspection query is only
     // enabled in dev.
-    middleware.push(middlewareFromPath(path, (req, res, next) => {
-      if (this.playgroundOptions && req.method === 'GET') {
-        // perform more expensive content-type check only if necessary
-        // XXX We could potentially move this logic into the GuiOptions lambda,
-        // but I don't think it needs any overriding
-        const accept = accepts(req);
-        const types = accept.types() as string[];
-        const prefersHTML =
-          types.find(
-            (x: string) => x === 'text/html' || x === 'application/json',
-          ) === 'text/html';
+    middleware.push(
+      middlewareFromPath(path, (req, res, next) => {
+        if (this.playgroundOptions && req.method === 'GET') {
+          // perform more expensive content-type check only if necessary
+          // XXX We could potentially move this logic into the GuiOptions lambda,
+          // but I don't think it needs any overriding
+          const accept = accepts(req);
+          const types = accept.types() as string[];
+          const prefersHTML =
+            types.find(
+              (x: string) => x === 'text/html' || x === 'application/json',
+            ) === 'text/html';
 
-        if (prefersHTML) {
-          const playgroundRenderPageOptions: PlaygroundRenderPageOptions = {
-            endpoint: req.originalUrl,
-            subscriptionEndpoint: this.subscriptionsPath,
-            ...this.playgroundOptions,
-          };
-          res.setHeader('Content-Type', 'text/html');
-          const playground = renderPlaygroundPage(playgroundRenderPageOptions);
-          res.write(playground);
-          res.end();
-          return;
+          if (prefersHTML) {
+            const playgroundRenderPageOptions: PlaygroundRenderPageOptions = {
+              endpoint: req.originalUrl,
+              subscriptionEndpoint: this.subscriptionsPath,
+              ...this.playgroundOptions,
+            };
+            res.setHeader('Content-Type', 'text/html');
+            const playground = renderPlaygroundPage(
+              playgroundRenderPageOptions,
+            );
+            res.write(playground);
+            res.end();
+            return;
+          }
         }
-      }
 
-      return graphqlExpress(() =>
-        this.createGraphQLServerOptions(req, res),
-      )(req, res, next);
-    }));
+        return graphqlExpress(() => this.createGraphQLServerOptions(req, res))(
+          req,
+          res,
+          next,
+        );
+      }),
+    );
 
     return compose(middleware);
   }
