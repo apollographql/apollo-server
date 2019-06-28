@@ -1070,7 +1070,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
         it('calls serverWillStart before serving a request', async () => {
           // We'll use this eventually-assigned function to programmatically
           // resolve the `serverWillStart` event.
-          // let resolveServerWillStart: Function;
+          let resolveServerWillStart: Function;
 
           // We'll use this mocked function to determine the order in which
           // the events we're expecting to happen actually occur and validate
@@ -1089,10 +1089,10 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
                   serverWillStart() {
                     fn('zero');
                     return new Promise(resolve => {
-                      // resolveServerWillStart = () => {
-                      fn('one');
-                      resolve();
-                      // };
+                      resolveServerWillStart = () => {
+                        fn('one');
+                        resolve();
+                      };
                     });
                   },
                 },
@@ -1100,10 +1100,17 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
             },
           });
 
-          // Make sure that things were called in the expected order.
-          // expect(fn.mock.calls).toEqual([['zero']]);
+          const delayUntil = async (check: () => boolean, expectedNumTicks) => {
+            if (check()) return expect(expectedNumTicks).toBe(0);
+            else expect(expectedNumTicks).not.toBe(0);
+            await Promise.resolve();
+            return delayUntil(check, expectedNumTicks - 1);
+          };
 
-          // resolveServerWillStart();
+          // Make sure that things were called in the expected order.
+          await delayUntil(() => fn.mock.calls.length === 1, 2);
+          expect(fn.mock.calls).toEqual([['zero']]);
+          resolveServerWillStart();
 
           // Account for the fact that `createApp` might return a Promise,
           // and might not, depending on the integration's implementation of
