@@ -35,8 +35,7 @@ extend type Query {
 directive @external on FIELD_DEFINITION
 directive @requires(fields: _FieldSet!) on FIELD_DEFINITION
 directive @provides(fields: _FieldSet!) on FIELD_DEFINITION
-directive @key(fields: _FieldSet!) on OBJECT
-directive @key(fields: _FieldSet!) on INTERFACE
+directive @key(fields: _FieldSet!) on OBJECT | INTERFACE
 
 # this is an optional directive discussed below
 directive @extends on OBJECT
@@ -205,7 +204,7 @@ A new object type called `_Service` must be created. This type must have an `sdl
 
 A new field must be added to the query root called `_service`. This field must return a non-nullable `_Service` type. The `_service` field on the query root must return SDL which includes all of the service's types (after any non-federation transforms), as well as federation directive annotations on the fields and types. The federation schema modifications (i.e. new types and directives) *should not be* included in this SDL.
 
-### `union Entity`
+### `union _Entity`
 
 A new union called `_Entity` must be created. This should be a union of all types that use the `@key` directive, including both types native to the schema and extended types.
 
@@ -213,7 +212,7 @@ A new union called `_Entity` must be created. This should be a union of all type
 
 A new scalar called `_Any` must be created. The `_Any` scalar is used to pass representations of entities from external services into the root `_entities` field for execution. Validation of the `_Any` scalar is done by matching the `__typename` and `@external` fields defined in the schema.
 
-### `scalar FieldSet`
+### `scalar _FieldSet`
 
 A new scalar called `_FieldSet` is a custom scalar type that is used to represent a set of fields. Grammatically, a field set is a [selection set](https://facebook.github.io/graphql/draft/#sec-Selection-Sets) minus the braces. This means it can represent a single field `"upc"`, multiple fields `"id countryCode"`, and even nested selection sets `"id organization { id }"`.
 
