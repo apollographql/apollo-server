@@ -1138,7 +1138,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
             });
 
           // Ensure the request has not gone through.
-          // expect(fn.mock.calls).toEqual([['zero'], ['one']]);
+          expect(fn.mock.calls).toEqual([['zero'], ['one']]);
 
           // Now, wait for the request to finish.
           await res;
