@@ -148,6 +148,7 @@ export class ApolloServerBase {
   private createSchemaDerivedData: Promise<SchemaDerivedData>;
   private config: Config;
   private __hackedSchema?: GraphQLSchema; // TODO: remove this, when installSubscriptionHandlers is made async.
+  private toDispose = new Set<() => void>();
 
   // The constructor should be universal across all environments. All environment specific behavior should be set by adding or overriding methods
   constructor(config: Config) {
@@ -339,9 +340,14 @@ export class ApolloServerBase {
       parseOptions,
     } = this.config;
     if (gateway) {
-      gateway.onSchemaChange(async schema => {
-        this.createSchemaDerivedData = this.generateSchemaDerivedData(schema);
-      });
+      this.toDispose.add(
+        gateway.onSchemaChange(
+          schema =>
+            (this.createSchemaDerivedData = this.generateSchemaDerivedData(
+              schema,
+            )),
+        ),
+      );
 
       const graphVariant = getEngineGraphVariant(engine);
       const engineConfig =
@@ -485,6 +491,7 @@ export class ApolloServerBase {
   }
 
   public async stop() {
+    this.toDispose.forEach(dispose => dispose());
     if (this.subscriptionServer) await this.subscriptionServer.close();
     if (this.engineReportingAgent) {
       this.engineReportingAgent.stop();
