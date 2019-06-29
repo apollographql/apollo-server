@@ -114,6 +114,16 @@ function approximateObjectSize<T>(obj: T): number {
   return Buffer.byteLength(JSON.stringify(obj), 'utf8');
 }
 
+type SchemaDerivedData = {
+  // A store that, when enabled (default), will store the parsed and validated
+  // versions of operations in-memory, allowing subsequent parses/validates
+  // on the same operation to be executed immediately.
+  documentStore?: InMemoryLRUCache<DocumentNode>;
+  schema: GraphQLSchema;
+  schemaHash: string;
+  extensions: Array<() => GraphQLExtension>;
+};
+
 export class ApolloServerBase {
   public subscriptionsPath?: string;
   public graphqlPath: string = '/graphql';
@@ -123,11 +133,8 @@ export class ApolloServerBase {
   private engineReportingAgent?: import('apollo-engine-reporting').EngineReportingAgent;
   private engineServiceId?: string;
   private engineApiKeyHash?: string;
-  private extensions: Array<() => GraphQLExtension>;
-  private schemaHash?: string;
   protected plugins: ApolloServerPlugin[] = [];
 
-  protected schema?: GraphQLSchema;
   protected subscriptionServerOptions?: SubscriptionServerOptions;
   protected uploadsConfig?: FileUploadOptions;
 
@@ -137,17 +144,15 @@ export class ApolloServerBase {
   // the default version is specified in playground.ts
   protected playgroundOptions?: PlaygroundRenderPageOptions;
 
-  // A store that, when enabled (default), will store the parsed and validated
-  // versions of operations in-memory, allowing subsequent parses/validates
-  // on the same operation to be executed immediately.
-  private documentStore?: InMemoryLRUCache<DocumentNode>;
-
   private parseOptions: GraphQLParseOptions;
-  private createSchemaDerivedDataPromise: Promise<void>;
+  private createSchemaDerivedData: Promise<SchemaDerivedData>;
+  private config: Config;
+  private __hackedSchema?: GraphQLSchema; // TODO: remove this, when installSubscriptionHandlers is made async.
 
   // The constructor should be universal across all environments. All environment specific behavior should be set by adding or overriding methods
   constructor(config: Config) {
     if (!config) throw new Error('ApolloServer requires options.');
+    this.config = config;
     const {
       context,
       resolvers,
@@ -169,8 +174,8 @@ export class ApolloServerBase {
       ...requestOptions
     } = config;
 
-    // Initialize the document store.  This cannot currently be disabled.
-    this.initializeDocumentStore();
+    this.parseOptions = parseOptions;
+    this.context = context;
 
     // Plugins will be instantiated if they aren't already, and this.plugins
     // is populated accordingly.
@@ -182,6 +187,18 @@ export class ApolloServerBase {
     // or protected field of the class instead of a global. Keeping the read in
     // the contructor enables testing of different environments
     const isDev = process.env.NODE_ENV !== 'production';
+
+    // In an effort to avoid over-exposing the API key itself, extract the
+    // service ID from the API key for plugins which only needs service ID.
+    // The truthyness of this value can also be used in other forks of logic
+    // related to Engine, as is the case with EngineReportingAgent just below.
+    this.engineServiceId = getEngineServiceId(engine);
+    const apiKey = getEngineApiKey(engine);
+    if (apiKey) {
+      this.engineApiKeyHash = createSHA('sha512')
+        .update(apiKey)
+        .digest('hex');
+    }
 
     // if this is local dev, introspection should turned on
     // in production, we can manually turn introspection on by passing {
@@ -240,7 +257,6 @@ export class ApolloServerBase {
     }
 
     this.requestOptions = requestOptions as GraphQLOptions;
-    this.context = context;
 
     if (uploads !== false && !forbidUploadsForTesting) {
       if (this.supportsUploads()) {
@@ -266,153 +282,12 @@ export class ApolloServerBase {
       }
     }
 
-    // In an effort to avoid over-exposing the API key itself, extract the
-    // service ID from the API key for plugins which only needs service ID.
-    // The truthyness of this value can also be used in other forks of logic
-    // related to Engine, as is the case with EngineReportingAgent just below.
-    this.engineServiceId = getEngineServiceId(engine);
-    const apiKey = getEngineApiKey(engine);
-    if (apiKey) {
-      this.engineApiKeyHash = createSHA('sha512')
-        .update(apiKey)
-        .digest('hex');
+    if (this.engineServiceId) {
+      const { EngineReportingAgent } = require('apollo-engine-reporting');
+      this.engineReportingAgent = new EngineReportingAgent(
+        typeof engine === 'object' ? engine : Object.create(null),
+      );
     }
-
-    let gatewayLoadingPromise = Promise.resolve();
-
-    if (schema) {
-      this.schema = schema;
-    } else if (modules) {
-      const { schema, errors } = buildServiceDefinition(modules);
-      if (errors && errors.length > 0) {
-        throw new Error(errors.map(error => error.message).join('\n\n'));
-      }
-      this.schema = schema!;
-    } else if (gateway) {
-      const graphVariant = getEngineGraphVariant(engine);
-      const engineConfig =
-        this.engineApiKeyHash && this.engineServiceId
-          ? {
-              apiKeyHash: this.engineApiKeyHash,
-              graphId: this.engineServiceId,
-              ...(graphVariant && { graphVariant }),
-            }
-          : undefined;
-
-      gatewayLoadingPromise = gateway
-        .load({ engine: engineConfig })
-        .then(config => {
-          this.schema = config.schema;
-          requestOptions.executor = config.executor;
-        });
-      gateway.onSchemaChange(schema => {
-        this.schema = schema;
-        this.createSchemaDerivedDataPromise = updateSchemaDerivedData();
-      });
-    } else {
-      if (!typeDefs) {
-        throw Error(
-          'Apollo Server requires either an existing schema, modules or typeDefs',
-        );
-      }
-
-      const augmentedTypeDefs = Array.isArray(typeDefs) ? typeDefs : [typeDefs];
-
-      // We augment the typeDefs with the @cacheControl directive and associated
-      // scope enum, so makeExecutableSchema won't fail SDL validation
-
-      if (!isDirectiveDefined(augmentedTypeDefs, 'cacheControl')) {
-        augmentedTypeDefs.push(
-          gql`
-            enum CacheControlScope {
-              PUBLIC
-              PRIVATE
-            }
-
-            directive @cacheControl(
-              maxAge: Int
-              scope: CacheControlScope
-            ) on FIELD_DEFINITION | OBJECT | INTERFACE
-          `,
-        );
-      }
-
-      if (this.uploadsConfig) {
-        const { GraphQLUpload } = require('graphql-upload');
-        if (resolvers && !resolvers.Upload) {
-          resolvers.Upload = GraphQLUpload;
-        }
-
-        // We augment the typeDefs with the Upload scalar, so typeDefs that
-        // don't include it won't fail
-        augmentedTypeDefs.push(
-          gql`
-            scalar Upload
-          `,
-        );
-      }
-
-      this.schema = makeExecutableSchema({
-        typeDefs: augmentedTypeDefs,
-        schemaDirectives,
-        resolvers,
-        parseOptions,
-      });
-    }
-
-    this.parseOptions = parseOptions;
-
-    // Note: doRunQuery will add its own extensions if you set tracing,
-    // or cacheControl.
-    this.extensions = [];
-
-    const updateSchemaDerivedData = async () => {
-      await gatewayLoadingPromise; // ensures this.schema is defined
-
-      this.schemaHash = generateSchemaHash(this.schema!);
-
-      if (
-        mocks ||
-        (typeof mockEntireSchema !== 'undefined' && mocks !== false)
-      ) {
-        addMockFunctionsToSchema({
-          schema: this.schema!,
-          mocks:
-            typeof mocks === 'boolean' || typeof mocks === 'undefined'
-              ? {}
-              : mocks,
-          preserveResolvers:
-            typeof mockEntireSchema === 'undefined' ? false : !mockEntireSchema,
-        });
-      }
-
-      if (this.engineServiceId) {
-        const { EngineReportingAgent } = require('apollo-engine-reporting');
-        this.engineReportingAgent = new EngineReportingAgent(
-          typeof engine === 'object' ? engine : Object.create(null),
-          {
-            schema: this.schema,
-            schemaHash: this.schemaHash,
-            engine: {
-              serviceID: this.engineServiceId,
-            },
-          },
-        );
-      }
-
-      this.initializeDocumentStore();
-    };
-
-    this.createSchemaDerivedDataPromise = updateSchemaDerivedData().then(() => {
-      // Keep this extension second so it wraps everything, except error formatting
-      if (this.engineServiceId) {
-        this.extensions.push(() => this.engineReportingAgent!.newExtension());
-      }
-
-      if (extensions) {
-        this.extensions = [...this.extensions, ...extensions];
-      }
-    });
 
     if (subscriptions !== false) {
       if (this.supportsSubscriptions()) {
@@ -439,8 +314,11 @@ export class ApolloServerBase {
         );
       }
     }
-
     this.playgroundOptions = createPlaygroundOptions(playground);
+
+    this.createSchemaDerivedData = this.initSchema().then(schema =>
+      this.generateSchemaDerivedData(schema),
+    );
   }
 
   // used by integrations to synchronize the path with subscriptions, some
@@ -449,15 +327,158 @@ export class ApolloServerBase {
     this.graphqlPath = path;
   }
 
+  private async initSchema(): Promise<GraphQLSchema> {
+    const {
+      gateway,
+      engine,
+      schema,
+      modules,
+      typeDefs,
+      resolvers,
+      schemaDirectives,
+      parseOptions,
+    } = this.config;
+    if (gateway) {
+      gateway.onSchemaChange(async schema => {
+        this.createSchemaDerivedData = this.generateSchemaDerivedData(schema);
+      });
+
+      const graphVariant = getEngineGraphVariant(engine);
+      const engineConfig =
+        this.engineApiKeyHash && this.engineServiceId
+          ? {
+              apiKeyHash: this.engineApiKeyHash,
+              graphId: this.engineServiceId,
+              ...(graphVariant && { graphVariant }),
+            }
+          : undefined;
+
+      const config = await gateway.load({ engine: engineConfig });
+      this.requestOptions.executor = config.executor;
+      return config.schema;
+    } else {
+      let constructedSchema;
+      if (schema) {
+        constructedSchema = schema;
+      } else if (modules) {
+        const { schema, errors } = buildServiceDefinition(modules);
+        if (errors && errors.length > 0) {
+          throw new Error(errors.map(error => error.message).join('\n\n'));
+        }
+        constructedSchema = schema!;
+      } else {
+        if (!typeDefs) {
+          throw Error(
+            'Apollo Server requires either an existing schema, modules or typeDefs',
+          );
+        }
+
+        const augmentedTypeDefs = Array.isArray(typeDefs)
+          ? typeDefs
+          : [typeDefs];
+
+        // We augment the typeDefs with the @cacheControl directive and associated
+        // scope enum, so makeExecutableSchema won't fail SDL validation
+
+        if (!isDirectiveDefined(augmentedTypeDefs, 'cacheControl')) {
+          augmentedTypeDefs.push(
+            gql`
+              enum CacheControlScope {
+                PUBLIC
+                PRIVATE
+              }
+
+              directive @cacheControl(
+                maxAge: Int
+                scope: CacheControlScope
+              ) on FIELD_DEFINITION | OBJECT | INTERFACE
+            `,
+          );
+        }
+
+        if (this.uploadsConfig) {
+          const { GraphQLUpload } = require('graphql-upload');
+          if (resolvers && !resolvers.Upload) {
+            resolvers.Upload = GraphQLUpload;
+          }
+
+          // We augment the typeDefs with the Upload scalar, so typeDefs that
+          // don't include it won't fail
+          augmentedTypeDefs.push(
+            gql`
+              scalar Upload
+            `,
+          );
+        }
+
+        constructedSchema = makeExecutableSchema({
+          typeDefs: augmentedTypeDefs,
+          schemaDirectives,
+          resolvers,
+          parseOptions,
+        });
+      }
+
+      this.__hackedSchema = constructedSchema;
+      return constructedSchema;
+    }
+  }
+
+  private async generateSchemaDerivedData(
+    schema: GraphQLSchema,
+  ): Promise<SchemaDerivedData> {
+    const schemaHash = generateSchemaHash(schema!);
+
+    const { mocks, mockEntireSchema, extensions: _extensions } = this.config;
+
+    if (mocks || (typeof mockEntireSchema !== 'undefined' && mocks !== false)) {
+      addMockFunctionsToSchema({
+        schema,
+        mocks:
+          typeof mocks === 'boolean' || typeof mocks === 'undefined'
+            ? {}
+            : mocks,
+        preserveResolvers:
+          typeof mockEntireSchema === 'undefined' ? false : !mockEntireSchema,
+      });
+    }
+
+    const extensions = [];
+
+    if (this.engineReportingAgent) {
+      extensions.push(() =>
+        this.engineReportingAgent!.newExtension(schemaHash),
+      );
+    }
+
+    // Initialize the document store.  This cannot currently be disabled.
+    const documentStore = this.initializeDocumentStore();
+
+    // Note: doRunQuery will add its own extensions if you set tracing,
+    // or cacheControl.
+    extensions.push(...(_extensions || []));
+
+    // Keep this extension second so it wraps everything, except error formatting
+    if (this.engineServiceId) {
+    }
+
+    return {
+      schema,
+      schemaHash,
+      extensions,
+      documentStore,
+    };
+  }
+
   protected async willStart() {
-    await this.createSchemaDerivedDataPromise;
+    const { schema, schemaHash } = await this.createSchemaDerivedData;
     await Promise.all(
       this.plugins.map(
         plugin =>
           plugin.serverWillStart &&
           plugin.serverWillStart({
-            schema: this.schema!,
-            schemaHash: this.schemaHash!,
+            schema: schema,
+            schemaHash: schemaHash,
             engine: {
               serviceID: this.engineServiceId,
               apiKeyHash: this.engineApiKeyHash,
@@ -472,7 +493,7 @@ export class ApolloServerBase {
     if (this.subscriptionServer) await this.subscriptionServer.close();
     if (this.engineReportingAgent) {
       this.engineReportingAgent.stop();
-      await this.engineReportingAgent.sendReport();
+      await this.engineReportingAgent.sendAllReports();
     }
   }
 
@@ -496,9 +517,19 @@ export class ApolloServerBase {
       path,
     } = this.subscriptionServerOptions;
 
+    // TODO: This shouldn't use the schema hack.
+    //
+    // If this method can be made async we can remove this hack in favor of
+    // grabbing the schema from the createSchemaDerivedData promise
+    const schema = this.__hackedSchema;
+    if (this.__hackedSchema === undefined)
+      throw new Error(
+        'Schema undefined during creation of subscription server.',
+      );
+
     this.subscriptionServer = SubscriptionServer.create(
       {
-        schema: this.schema,
+        schema,
         execute,
         subscribe,
         onConnect: onConnect
@@ -564,8 +595,8 @@ export class ApolloServerBase {
     });
   }
 
-  private initializeDocumentStore(): void {
-    this.documentStore = new InMemoryLRUCache<DocumentNode>({
+  private initializeDocumentStore(): InMemoryLRUCache<DocumentNode> {
+    return new InMemoryLRUCache<DocumentNode>({
       // Create ~about~ a 30MiB InMemoryLRUCache.  This is less than precise
       // since the technique to calculate the size of a DocumentNode is
       // only using JSON.stringify on the DocumentNode (and thus doesn't account
@@ -582,7 +613,8 @@ export class ApolloServerBase {
   protected async graphQLServerOptions(
     integrationContextArgument?: Record<string, any>,
   ) {
-    await this.createSchemaDerivedDataPromise;
+    const { schema, documentStore, extensions } = await this
+      .createSchemaDerivedData;
 
     let context: Context = this.context ? this.context : {};
 
@@ -599,10 +631,10 @@ export class ApolloServerBase {
     }
 
     return {
-      schema: this.schema,
+      schema,
       plugins: this.plugins,
-      documentStore: this.documentStore,
-      extensions: this.extensions,
+      documentStore,
+      extensions,
       context,
       // Allow overrides from options. Be explicit about a couple of them to
       // avoid a bad side effect of the otherwise useful noUnusedLocals option
