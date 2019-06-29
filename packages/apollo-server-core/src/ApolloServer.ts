@@ -189,18 +189,6 @@ export class ApolloServerBase {
     // the contructor enables testing of different environments
     const isDev = process.env.NODE_ENV !== 'production';
 
-    // In an effort to avoid over-exposing the API key itself, extract the
-    // service ID from the API key for plugins which only needs service ID.
-    // The truthyness of this value can also be used in other forks of logic
-    // related to Engine, as is the case with EngineReportingAgent just below.
-    this.engineServiceId = getEngineServiceId(engine);
-    const apiKey = getEngineApiKey(engine);
-    if (apiKey) {
-      this.engineApiKeyHash = createSHA('sha512')
-        .update(apiKey)
-        .digest('hex');
-    }
-
     // if this is local dev, introspection should turned on
     // in production, we can manually turn introspection on by passing {
     // introspection: true } to the constructor of ApolloServer
@@ -281,6 +269,18 @@ export class ApolloServerBase {
           'This implementation of ApolloServer does not support file uploads because the environment cannot accept multi-part forms',
         );
       }
+    }
+
+    // In an effort to avoid over-exposing the API key itself, extract the
+    // service ID from the API key for plugins which only needs service ID.
+    // The truthyness of this value can also be used in other forks of logic
+    // related to Engine, as is the case with EngineReportingAgent just below.
+    this.engineServiceId = getEngineServiceId(engine);
+    const apiKey = getEngineApiKey(engine);
+    if (apiKey) {
+      this.engineApiKeyHash = createSHA('sha512')
+        .update(apiKey)
+        .digest('hex');
     }
 
     if (this.engineServiceId) {
