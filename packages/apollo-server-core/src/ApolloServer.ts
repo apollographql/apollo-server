@@ -445,6 +445,7 @@ export class ApolloServerBase {
 
     const extensions = [];
 
+    // Keep this extension second so it wraps everything, except error formatting
     if (this.engineReportingAgent) {
       extensions.push(() =>
         this.engineReportingAgent!.newExtension(schemaHash),
@@ -457,10 +458,6 @@ export class ApolloServerBase {
     // Note: doRunQuery will add its own extensions if you set tracing,
     // or cacheControl.
     extensions.push(...(_extensions || []));
-
-    // Keep this extension second so it wraps everything, except error formatting
-    if (this.engineServiceId) {
-    }
 
     return {
       schema,
