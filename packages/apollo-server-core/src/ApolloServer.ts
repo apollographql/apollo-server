@@ -444,20 +444,18 @@ export class ApolloServerBase {
     }
 
     const extensions = [];
-
     // Keep this extension second so it wraps everything, except error formatting
     if (this.engineReportingAgent) {
       extensions.push(() =>
         this.engineReportingAgent!.newExtension(schemaHash),
       );
     }
-
-    // Initialize the document store.  This cannot currently be disabled.
-    const documentStore = this.initializeDocumentStore();
-
     // Note: doRunQuery will add its own extensions if you set tracing,
     // or cacheControl.
     extensions.push(...(_extensions || []));
+
+    // Initialize the document store.  This cannot currently be disabled.
+    const documentStore = this.initializeDocumentStore();
 
     return {
       schema,
