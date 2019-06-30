@@ -128,7 +128,7 @@ export class ApolloGateway implements GraphQLService {
         .join('\n')}`,
     );
 
-    let { schema, errors } = composeAndValidate(services);
+    const { schema, errors } = composeAndValidate(services);
 
     if (errors && errors.length > 0) {
       throw new GraphQLSchemaValidationError(errors);
@@ -218,32 +218,31 @@ export class ApolloGateway implements GraphQLService {
   protected async loadServiceDefinitions(
     config: GatewayConfig,
   ): Promise<[ServiceDefinition[], boolean]> {
-    if (isLocalConfig(config)) return [config.localServiceList, false];
+    if (isLocalConfig(config)) {
+      return [config.localServiceList, false];
+    }
 
-    const getServiceDefinitions = async () => {
-      if (isRemoteConfig(config)) {
-        return getServiceDefinitionsFromRemoteEndpoint({
-          serviceList: config.serviceList,
-          ...(config.introspectionHeaders
-            ? { headers: config.introspectionHeaders }
-            : {}),
-        });
-      } else {
-        if (!this.engineConfig) {
-          throw new Error(
-            'When `serviceList` is not set, an Apollo Engine configuration must be provided. See https://www.apollographql.com/docs/apollo-server/federation/managed-federation/ for more information.',
-          );
-        }
-        return getServiceDefinitionsFromStorage({
-          graphId: this.engineConfig.graphId,
-          apiKeyHash: this.engineConfig.apiKeyHash,
-          graphVariant: this.engineConfig.graphVariant || 'current',
-          federationVersion: config.federationVersion || 1,
-        });
-      }
-    };
+    if (isRemoteConfig(config)) {
+      return getServiceDefinitionsFromRemoteEndpoint({
+        serviceList: config.serviceList,
+        ...(config.introspectionHeaders
+          ? { headers: config.introspectionHeaders }
+          : {}),
+      });
+    }
 
-    return getServiceDefinitions();
+    if (!this.engineConfig) {
+      throw new Error(
+        'When `serviceList` is not set, an Apollo Engine configuration must be provided. See https://www.apollographql.com/docs/apollo-server/federation/managed-federation/ for more information.',
+      );
+    }
+
+    return getServiceDefinitionsFromStorage({
+      graphId: this.engineConfig.graphId,
+      apiKeyHash: this.engineConfig.apiKeyHash,
+      graphVariant: this.engineConfig.graphVariant || 'current',
+      federationVersion: config.federationVersion || 1,
+    });
   }
 
   public executor = async <TContext>(

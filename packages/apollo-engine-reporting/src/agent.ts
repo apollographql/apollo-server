@@ -145,20 +145,22 @@ const serviceHeaderDefaults = {
   uname: `${os.platform()}, ${os.type()}, ${os.release()}, ${os.arch()})`,
 };
 
-const BlankObject = () => Object.create(null);
-
 // EngineReportingAgent is a persistent object which creates
 // EngineReportingExtensions for each request and sends batches of trace reports
 // to the Engine server.
 export class EngineReportingAgent<TContext = any> {
   private options: EngineReportingOptions<TContext>;
   private apiKey: string;
-  private reports: { [schemaHash: string]: FullTracesReport } = BlankObject();
-  private reportSizes: { [schemaHash: string]: number } = BlankObject();
+  private reports: { [schemaHash: string]: FullTracesReport } = Object.create(
+    null,
+  );
+  private reportSizes: { [schemaHash: string]: number } = Object.create(null);
   private reportTimer: any; // timer typing is weird and node-specific
   private sendReportsImmediately?: boolean;
   private stopped: boolean = false;
-  private reportHeaders: { [schemaHash: string]: ReportHeader } = BlankObject();
+  private reportHeaders: { [schemaHash: string]: ReportHeader } = Object.create(
+    null,
+  );
   private signatureCache: InMemoryLRUCache<string>;
 
   public constructor(options: EngineReportingOptions<TContext> = {}) {
@@ -223,6 +225,7 @@ export class EngineReportingAgent<TContext = any> {
         schemaTag:
           this.options.schemaTag || process.env.ENGINE_SCHEMA_TAG || '',
       });
+      // initializes this.reports[reportHash]
       this.resetReport(schemaHash);
     }
     const report = this.reports[schemaHash];
@@ -264,7 +267,9 @@ export class EngineReportingAgent<TContext = any> {
   }
 
   public async sendAllReports(): Promise<void> {
-    Promise.all(Object.keys(this.reports).map(hash => this.sendReport(hash)));
+    await Promise.all(
+      Object.keys(this.reports).map(hash => this.sendReport(hash)),
+    );
   }
 
   public async sendReport(schemaHash: string): Promise<void> {
