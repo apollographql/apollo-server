@@ -76,13 +76,13 @@ describe('apollo-server-fastify', () => {
     if (httpServer) await httpServer.close();
   });
 
-  describe('constructor', async () => {
+  describe('constructor', () => {
     it('accepts typeDefs and resolvers', () => {
       return createServer({ typeDefs, resolvers });
     });
   });
 
-  describe('applyMiddleware', async () => {
+  describe('applyMiddleware', () => {
     it('can be queried', async () => {
       const { url: uri } = await createServer({
         typeDefs,
@@ -799,28 +799,6 @@ describe('apollo-server-fastify', () => {
           resolvers,
           tracing: true,
           cacheControl: true,
-        });
-
-        const apolloFetch = createApolloFetch({ uri });
-        const result = await apolloFetch({
-          query: `{ books { title author } }`,
-        });
-        expect(result.data).toEqual({ books });
-        expect(result.extensions).toBeDefined();
-        expect(result.extensions.tracing).toBeDefined();
-      });
-
-      xit('applies tracing extension with engine enabled', async () => {
-        const { url: uri } = await createServer({
-          typeDefs,
-          resolvers,
-          tracing: true,
-          engine: {
-            apiKey: 'service:my-app:secret',
-            maxAttempts: 0,
-            endpointUrl: 'l',
-            reportErrorFunction: () => {},
-          },
         });
 
         const apolloFetch = createApolloFetch({ uri });

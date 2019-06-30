@@ -50,7 +50,11 @@ test('trace construction', async () => {
   enableGraphQLExtensions(schema);
 
   const traces: Array<any> = [];
-  function addTrace(signature: string, operationName: string, trace: Trace) {
+  function addTrace(
+    signature: Promise<string | null>,
+    operationName: string,
+    trace: Trace,
+  ) {
     traces.push({ signature, operationName, trace });
   }
 

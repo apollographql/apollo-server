@@ -9,7 +9,7 @@ All integrations that allow HTTP servers, such as express and Hapi, also provide
 
 ## Subscriptions Example
 
-Subscriptions depend on use of a publish and subscribe primitive to generate the events that notify a subscription. `PubSub` is a factory that creates event generators that is provided by all supported packages. `PubSub` is an implementation of the `PubSubEngine` interface, which has been adopted by a variety of additional [event-generating backends](#PubSub-Implementations).
+Subscriptions depend on use of a publish and subscribe primitive to generate the events that notify a subscription. `PubSub` is a factory that creates event generators that is provided by all supported packages. `PubSub` is an implementation of the `PubSubEngine` interface, which has been adopted by a variety of additional [event-generating backends](#pubsub-implementations).
 
 ```js
 const { PubSub } = require('apollo-server');
@@ -19,7 +19,7 @@ const pubsub = new PubSub();
 
 Subscriptions are another root level type, similar to Query and Mutation. To start, we need to add the `Subscription` type to our schema:
 
-```js line=2-4
+```js{2-4}
 const typeDefs = gql`
   type Subscription {
     postAdded: Post
@@ -42,7 +42,7 @@ const typeDefs = gql`
 
 Inside our resolver map, we add a Subscription resolver that returns an `AsyncIterator`, which listens to the events asynchronously. To generate events in the example, we notified the `pubsub` implementation inside of our Mutation resolver with `publish`. This `publish` call can occur outside of a resolver if required.
 
-```js line=4-9,17
+```js{4-9,17}
 const POST_ADDED = 'POST_ADDED';
 
 const resolvers = {
@@ -96,7 +96,7 @@ For a full working example please have a look to [this repo](https://github.com/
 
 To support an authenticated transport, Apollo Server provides lifecycle hooks, including `onConnect` to validate the connection.
 
-On the client, `SubscriptionsClient` supports adding token information to `connectionParams` ([example](/docs/react/advanced/subscriptions.html#authentication)) that will be sent with the first WebSocket message. In the server, all GraphQL subscriptions are delayed until the connection has been fully authenticated and the `onConnect` callback returns a truthy value.
+On the client, `SubscriptionsClient` supports adding token information to `connectionParams` ([example](https://www.apollographql.com/docs/react/advanced/subscriptions/#authentication)) that will be sent with the first WebSocket message. In the server, all GraphQL subscriptions are delayed until the connection has been fully authenticated and the `onConnect` callback returns a truthy value.
 
 The `connectionParams` argument in the `onConnect` callback contains the information passed by the client and can be used to validate user credentials.
 The GraphQL context can also be extended with the authenticated user data to enable fine grain authorization.
@@ -145,11 +145,11 @@ The example above validates the user's token that is sent with the first initial
 
 In case of an authentication error, the Promise will be rejected, which prevents the client's connection.
 
-<h2 id="wss">Securing Subscriptions with WSS</h2>
+## Securing Subscriptions with WSS
 
-Subscriptions can be configured to over SSL/WSS. See [example server](../essentials/server.html#ssl).
+Subscriptions can be configured to over SSL/WSS. See [example server](/essentials/server/#ssltls-support).
 
-<h2 id="subscription-filters">Subscription Filters</h2>
+## Subscription Filters
 
 Sometimes a client will want to filter out specific events based on context and arguments.
 
@@ -170,7 +170,7 @@ When using `withFilter`, provide a filter function. The filter is executed with 
 
 The following definition of the subscription resolver will filter out all of the `commentAdded` events that are not associated with the requested repository:
 
-```js line=8,10-12
+```js{8,10-12}
 const { withFilter } = require('apollo-server');
 
 const resolvers = {
@@ -189,13 +189,13 @@ const resolvers = {
 };
 ```
 
-<h2 id="middleware">Subscriptions with Additional Middleware</h2>
+## Subscriptions with Additional Middleware
 
 With an existing HTTP server (created with `createServer`), we can add subscriptions using the `installSubscriptionHandlers`. Additionally, the subscription-capable integrations export `PubSub` and other subscription functionality.
 
 For example: with an Express server already running on port 4000 that accepts GraphQL HTTP connections (POST) we can expose the subscriptions:
 
-```js line=12
+```js
 const http = require('http');
 const { ApolloServer } = require('apollo-server-express');
 const express = require('express');
@@ -207,7 +207,7 @@ const server = new ApolloServer({ typeDefs, resolvers });
 server.applyMiddleware({app})
 
 const httpServer = http.createServer(app);
-server.installSubscriptionHandlers(httpServer);
+server.installSubscriptionHandlers(httpServer); // highlight-line
 
 // ⚠️ Pay attention to the fact that we are calling `listen` on the http server variable, and not on `app`.
 httpServer.listen(PORT, () => {

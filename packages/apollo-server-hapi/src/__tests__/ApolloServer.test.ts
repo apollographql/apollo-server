@@ -13,7 +13,7 @@ import { createApolloFetch } from 'apollo-fetch';
 import { gql, AuthenticationError } from 'apollo-server-core';
 import { ApolloServer } from '../ApolloServer';
 
-const port = 5555;
+const port = 0;
 
 // NODE: Intentionally skip for Node.js < 8 since Hapi 17 doesn't support those.
 (NODE_MAJOR_VERSION < 8 ? describe.skip : describe)(
