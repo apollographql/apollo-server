@@ -44,7 +44,7 @@ server.listen().then(({ url }) => {
 });
 ```
 
-This is just the beginning. We have published a [roadmap](https://github.com/apollographql/apollo-server/blob/master/ROADMAP.md) for all of the features we will be bringing to Apollo Server soon and we would love your help! If you have any interest, you can get involved on [Github](https://github.com/apollographql/apollo-server) or by joining the [Apollo Slack](https://www.apollographql.com/slack) and going to the #apollo-server channel.
+This is just the beginning. We have published a [roadmap](https://github.com/apollographql/apollo-server/blob/master/ROADMAP.md) for all of the features we will be bringing to Apollo Server soon and we would love your help! If you have any interest, you can get involved on [Github](https://github.com/apollographql/apollo-server) or by joining the [Apollo Spectrum chat](https://spectrum.chat/apollo) and going to the [_Apollo Server_](https://spectrum.chat/apollo/apollo-server) channel.
 
 ### Automatic Persisted Queries
 
