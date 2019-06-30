@@ -6,6 +6,8 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 > The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  When a release is being prepared, a new header will be (manually) created below and the the appropriate changes within that release will be moved into the new section.
 
+- `apollo-server-plugin-base`: Fix `GraphQLRequestListener` type definitions to allow `return void`. [PR #2368](https://github.com/apollographql/apollo-server/pull/2368)
+
 ### v2.6.7
 
 > [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/183de5f112324def375a45c239955e1bf1608fae)
