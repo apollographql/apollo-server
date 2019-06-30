@@ -202,7 +202,7 @@ A new object type called `_Service` must be created. This type must have an `sdl
 
 ### `Query._service`
 
-A new field must be added to the query root called `_service`. This field must return a non-nullable `_Service` type. The `_service` field on the query root must return SDL which includes all of the service's types (after any non-federation transforms), as well as federation directive annotations on the fields and types. The federation schema modifications (i.e. new types and directives) *should not be* included in this SDL.
+A new field must be added to the query root called `_service`. This field must return a non-nullable `_Service` type. The `_service` field on the query root must return SDL which includes all of the service's types (after any non-federation transforms), as well as federation directive annotations on the fields and types. The federation schema modifications (i.e. new types and directive definitions) *should not be* included in this SDL.
 
 ### `union _Entity`
 
