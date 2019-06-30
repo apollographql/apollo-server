@@ -147,7 +147,7 @@ In `apollo-server`, the listen call starts the subscription server and passes th
   * `subscriptionsPath`: <`String`>
   * `server`: <[`http.Server`](https://nodejs.org/api/http.html#http_class_http_server)>
 
-## ApolloServer.applyMiddleware
+## `ApolloServer.applyMiddleware`
 
 The `applyMiddleware` method is provided by the `apollo-server-{integration}` packages that use middleware, such as hapi and express. This function connects ApolloServer to a specific framework.
 
