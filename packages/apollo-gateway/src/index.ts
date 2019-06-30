@@ -73,7 +73,6 @@ function isManagedConfig(
 
 export class ApolloGateway implements GraphQLService {
   public schema?: GraphQLSchema;
-  public isReady: boolean = false;
   protected serviceMap: ServiceMap = Object.create(null);
   protected config: GatewayConfig;
   protected logger: Logger;
@@ -111,14 +110,16 @@ export class ApolloGateway implements GraphQLService {
 
   public async load(options?: { engine?: GraphQLServiceEngineConfig }) {
     if (options) this.engineConfig = options.engine;
-    if (!this.isReady) {
-      this.logger.debug('Loading configuration for Gateway');
-      const [services] = await this.loadServiceDefinitions(this.config);
-      this.logger.debug('Configuration loaded for Gateway');
-      this.createSchema(services);
+    if (this.schema) {
+      return { schema: this.schema, executor: this.executor };
     }
 
-    return { schema: this.schema!, executor: this.executor };
+    this.logger.debug('Loading configuration for Gateway');
+    const [services] = await this.loadServiceDefinitions(this.config);
+    this.logger.debug('Configuration loaded for Gateway');
+    this.schema = this.createSchema(services);
+
+    return { schema: this.schema, executor: this.executor };
   }
 
   protected createSchema(services: ServiceDefinition[]) {
@@ -144,7 +145,7 @@ export class ApolloGateway implements GraphQLService {
     this.createServices(services);
 
     this.logger.debug('Schema loaded and ready for execution');
-    this.isReady = true;
+    return schema;
   }
 
   public onSchemaChange(callback: SchemaChangeCallback): Unsubscriber {
