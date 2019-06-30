@@ -39,7 +39,6 @@ export const typeDefs = gql`
     year: Int @external
     upc: String!
     sku: String!
-
     name(delimeter: String = " "): String @requires(fields: "title year")
     price: String
   }
@@ -82,6 +81,9 @@ const products = [
   { __typename: 'Book', isbn: '0262510871', price: 39 },
   { __typename: 'Book', isbn: '0136291554', price: 29 },
   { __typename: 'Book', isbn: '0201633612', price: 49 },
+  { __typename: 'Book', isbn: '1234567890', price: 59 },
+  { __typename: 'Book', isbn: '404404404', price: 0 },
+  { __typename: 'Book', isbn: '0987654321', price: 29 },
 ];
 
 export const resolvers: GraphQLResolverMap<any> = {

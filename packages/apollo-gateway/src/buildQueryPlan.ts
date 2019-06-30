@@ -1,3 +1,4 @@
+import { isNotNullOrUndefined } from 'apollo-env';
 import {
   DocumentNode,
   FieldNode,
@@ -364,9 +365,17 @@ function splitFields(
       const field = fieldsForParentType[0];
       const { fieldDef } = field;
 
-      // We skip `__typename`.
+      // We skip `__typename` for root types.
       if (fieldDef.name === TypeNameMetaFieldDef.name) {
-        continue;
+        const { schema } = context;
+        const roots = [
+          schema.getQueryType(),
+          schema.getMutationType(),
+          schema.getSubscriptionType(),
+        ]
+          .filter(isNotNullOrUndefined)
+          .map(type => type.name);
+        if (roots.indexOf(parentType.name) > -1) continue;
       }
 
       // We skip introspection fields like `__schema` and `__type`.
