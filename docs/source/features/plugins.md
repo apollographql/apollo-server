@@ -296,6 +296,19 @@ didResolveOperation?(
 ): ValueOrPromise<void>;
 ```
 
+### `didEncounterErrors`
+
+> TODO
+
+```typescript
+didEncounterErrors?(
+  requestContext: WithRequired<
+    GraphQLRequestContext<TContext>,
+    'metrics' | 'source' | 'errors'
+  >,
+): ValueOrPromise<void>;
+```
+
 ### `executionDidStart`
 
 > TODO
