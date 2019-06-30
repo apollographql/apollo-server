@@ -1,4 +1,4 @@
-import { Request, WithRequired } from 'apollo-server-env';
+import { Request, Headers, WithRequired } from 'apollo-server-env';
 
 import {
   GraphQLResolveInfo,
@@ -15,25 +15,14 @@ import {
   EngineReportingOptions,
   GenerateClientInfo,
   AddTraceArgs,
+  VariableValueOptions,
+  SendValuesBaseOptions,
 } from './agent';
 import { GraphQLRequestContext } from 'apollo-server-core/dist/requestPipelineAPI';
 
 const clientNameHeaderKey = 'apollographql-client-name';
 const clientReferenceIdHeaderKey = 'apollographql-client-reference-id';
 const clientVersionHeaderKey = 'apollographql-client-version';
-
-// (DEPRECATE)
-// This special type is used internally to this module to implement the
-// `maskErrorDetails` (https://github.com/apollographql/apollo-server/pull/1615)
-// functionality in the exact form it was originally implemented — which didn't
-// have the result matching the interface provided by `GraphQLError` but instead
-// just had a `message` property set to `<masked>`.  Since `maskErrorDetails`
-// is now slated for deprecation (with its behavior superceded by the more
-// robust `rewriteError` functionality, this GraphQLErrorOrMaskedErrorObject`
-// should be removed when that deprecation is completed in a major release.
-type GraphQLErrorOrMaskedErrorObject =
-  | GraphQLError
-  | (Partial<GraphQLError> & Pick<GraphQLError, 'message'>);
 
 // EngineReportingExtension is the per-request GraphQLExtension which creates a
 // trace (in protobuf Trace format) for a single request. When the request is
@@ -104,33 +93,13 @@ export class EngineReportingExtension<TContext = any>
       host: null,
       path: null,
     });
-    if (this.options.privateHeaders !== true) {
-      for (const [key, value] of o.request.headers) {
-        if (
-          this.options.privateHeaders &&
-          Array.isArray(this.options.privateHeaders) &&
-          // We assume that most users only have a few private headers, or will
-          // just set privateHeaders to true; we can change this linear-time
-          // operation if it causes real performance issues.
-          this.options.privateHeaders.some(privateHeader => {
-            // Headers are case-insensitive, and should be compared as such.
-            return privateHeader.toLowerCase() === key.toLowerCase();
-          })
-        ) {
-          continue;
-        }
 
-        switch (key) {
-          case 'authorization':
-          case 'cookie':
-          case 'set-cookie':
-            break;
-          default:
-            this.trace.http!.requestHeaders![key] = new Trace.HTTP.Values({
-              value: [value],
-            });
-        }
-      }
+    if (this.options.sendHeaders) {
+      makeHTTPRequestHeaders(
+        this.trace.http,
+        o.request.headers,
+        this.options.sendHeaders,
+      );
 
       if (o.requestContext.metrics.persistedQueryHit) {
         this.trace.persistedQueryHit = true;
@@ -140,41 +109,12 @@ export class EngineReportingExtension<TContext = any>
       }
     }
 
-    if (this.options.privateVariables !== true && o.variables) {
-      // Note: we explicitly do *not* include the details.rawQuery field. The
-      // Engine web app currently does nothing with this other than store it in
-      // the database and offer it up via its GraphQL API, and sending it means
-      // that using calculateSignature to hide sensitive data in the query
-      // string is ineffective.
-      this.trace.details = new Trace.Details();
-      Object.keys(o.variables).forEach(name => {
-        if (
-          this.options.privateVariables &&
-          Array.isArray(this.options.privateVariables) &&
-          // We assume that most users will have only a few private variables,
-          // or will just set privateVariables to true; we can change this
-          // linear-time operation if it causes real performance issues.
-          this.options.privateVariables.includes(name)
-        ) {
-          // Special case for private variables. Note that this is a different
-          // representation from a variable containing the empty string, as that
-          // will be sent as '""'.
-          this.trace.details!.variablesJson![name] = '';
-        } else {
-          try {
-            this.trace.details!.variablesJson![name] = JSON.stringify(
-              o.variables![name],
-            );
-          } catch (e) {
-            // This probably means that the value contains a circular reference,
-            // causing `JSON.stringify()` to throw a TypeError:
-            // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#Issue_with_JSON.stringify()_when_serializing_circular_references
-            this.trace.details!.variablesJson![name] = JSON.stringify(
-              '[Unable to convert value to JSON]',
-            );
-          }
-        }
-      });
+    if (o.variables) {
+      this.trace.details = makeTraceDetails(
+        o.variables,
+        this.options.sendVariableValues,
+        o.queryString,
+      );
     }
 
     const clientInfo = this.generateClientInfo(o.requestContext);
@@ -275,27 +215,8 @@ export class EngineReportingExtension<TContext = any>
     });
   }
 
-  private rewriteError(
-    err: GraphQLError,
-  ): GraphQLErrorOrMaskedErrorObject | null {
-    // (DEPRECATE)
-    // This relatively basic representation of an error is an artifact
-    // introduced by https://github.com/apollographql/apollo-server/pull/1615.
-    // Interesting, the implementation of that feature didn't actually
-    // accomplish what the requestor had desired.  This functionality is now
-    // being superceded by the `rewriteError` function, which is a more dynamic
-    // implementation which multiple Engine users have been interested in.
-    // When this `maskErrorDetails` is officially deprecated, this
-    // `rewriteError` method can be changed to return `GraphQLError | null`,
-    // and as noted in its definition, `GraphQLErrorOrMaskedErrorObject` can be
-    // removed.
-    if (this.options.maskErrorDetails) {
-      return {
-        message: '<masked>',
-      };
-    }
-
-    if (typeof this.options.rewriteError === 'function') {
+  private rewriteError(err: GraphQLError): GraphQLError | null {
+    if (this.options.rewriteError) {
       // Before passing the error to the user-provided `rewriteError` function,
       // we'll make a shadow copy of the error so the user is free to change
       // the object as they see fit.
@@ -327,6 +248,12 @@ export class EngineReportingExtension<TContext = any>
         return err;
       }
 
+      // We only allow rewriteError to change the message and extensions of the
+      // error; we keep everything else the same. That way people don't have to
+      // do extra work to keep the error on the same trace node. We also keep
+      // extensions the same if it isn't explicitly changed (to, eg, {}). (Note
+      // that many of the fields of GraphQLError are not enumerable and won't
+      // show up in the trace (even in the json field) anyway.)
       return new GraphQLError(
         rewrittenError.message,
         err.nodes,
@@ -334,13 +261,13 @@ export class EngineReportingExtension<TContext = any>
         err.positions,
         err.path,
         err.originalError,
-        err.extensions,
+        rewrittenError.extensions || err.extensions,
       );
     }
     return err;
   }
 
-  private addError(error: GraphQLErrorOrMaskedErrorObject): void {
+  private addError(error: GraphQLError): void {
     // By default, put errors on the root node.
     let node = this.nodes.get('');
     if (error.path) {
@@ -448,5 +375,127 @@ function defaultGenerateClientInfo({ request }: GraphQLRequestContext) {
     return request.extensions.clientInfo;
   } else {
     return {};
+  }
+}
+
+// Creates trace details from request variables, given a specification for modifying
+// values of private or sensitive variables.
+// The details will include all variable names and their (possibly hidden or modified) values.
+// If sendVariableValues is {all: bool}, {none: bool} or {exceptNames: Array}, the option will act similarly to
+// to the to-be-deprecated options.privateVariables, except that the redacted variable
+// names will still be visible in the UI even if the values are hidden.
+// If sendVariableValues is null or undefined, we default to the {none: true} case.
+export function makeTraceDetails(
+  variables: Record<string, any>,
+  sendVariableValues?: VariableValueOptions,
+  operationString?: string,
+): Trace.Details {
+  const details = new Trace.Details();
+  const variablesToRecord = (() => {
+    if (sendVariableValues && 'transform' in sendVariableValues) {
+      // Custom function to allow user to specify what variablesJson will look like
+      const originalKeys = Object.keys(variables);
+      const modifiedVariables = sendVariableValues.transform({
+        variables: variables,
+        operationString: operationString,
+      });
+      return cleanModifiedVariables(originalKeys, modifiedVariables);
+    } else {
+      return variables;
+    }
+  })();
+
+  // Note: we explicitly do *not* include the details.rawQuery field. The
+  // Engine web app currently does nothing with this other than store it in
+  // the database and offer it up via its GraphQL API, and sending it means
+  // that using calculateSignature to hide sensitive data in the query
+  // string is ineffective.
+  Object.keys(variablesToRecord).forEach(name => {
+    if (
+      !sendVariableValues ||
+      ('none' in sendVariableValues && sendVariableValues.none) ||
+      ('all' in sendVariableValues && !sendVariableValues.all) ||
+      ('exceptNames' in sendVariableValues &&
+        // We assume that most users will have only a few variables values to hide,
+        // or will just set {none: true}; we can change this
+        // linear-time operation if it causes real performance issues.
+        sendVariableValues.exceptNames.includes(name)) ||
+      ('onlyNames' in sendVariableValues &&
+        !sendVariableValues.onlyNames.includes(name))
+    ) {
+      // Special case for private variables. Note that this is a different
+      // representation from a variable containing the empty string, as that
+      // will be sent as '""'.
+      details.variablesJson![name] = '';
+    } else {
+      try {
+        details.variablesJson![name] =
+          typeof variablesToRecord[name] === 'undefined'
+            ? ''
+            : JSON.stringify(variablesToRecord[name]);
+      } catch (e) {
+        details.variablesJson![name] = JSON.stringify(
+          '[Unable to convert value to JSON]',
+        );
+      }
+    }
+  });
+  return details;
+}
+
+// Helper for makeTraceDetails() to enforce that the keys of a modified 'variables'
+// matches that of the original 'variables'
+function cleanModifiedVariables(
+  originalKeys: Array<string>,
+  modifiedVariables: Record<string, any>,
+): Record<string, any> {
+  const cleanedVariables: Record<string, any> = Object.create(null);
+  originalKeys.forEach(name => {
+    cleanedVariables[name] = modifiedVariables[name];
+  });
+  return cleanedVariables;
+}
+
+export function makeHTTPRequestHeaders(
+  http: Trace.IHTTP,
+  headers: Headers,
+  sendHeaders?: SendValuesBaseOptions,
+): void {
+  if (
+    !sendHeaders ||
+    ('none' in sendHeaders && sendHeaders.none) ||
+    ('all' in sendHeaders && !sendHeaders.all)
+  ) {
+    return;
+  }
+  for (const [key, value] of headers) {
+    const lowerCaseKey = key.toLowerCase();
+    if (
+      ('exceptNames' in sendHeaders &&
+        // We assume that most users only have a few headers to hide, or will
+        // just set {none: true} ; we can change this linear-time
+        // operation if it causes real performance issues.
+        sendHeaders.exceptNames.some(exceptHeader => {
+          // Headers are case-insensitive, and should be compared as such.
+          return exceptHeader.toLowerCase() === lowerCaseKey;
+        })) ||
+      ('onlyNames' in sendHeaders &&
+        !sendHeaders.onlyNames.some(header => {
+          return header.toLowerCase() === lowerCaseKey;
+        }))
+    ) {
+      continue;
+    }
+
+    switch (key) {
+      case 'authorization':
+      case 'cookie':
+      case 'set-cookie':
+        break;
+      default:
+        http!.requestHeaders![key] = new Trace.HTTP.Values({
+          value: [value],
+        });
+    }
   }
 }
