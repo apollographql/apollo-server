@@ -205,13 +205,13 @@ Note: When GraphQL Playground starts, It won't have the correct URL containing t
 
 ![Apollo server running on azure with error](../images/deployment/azure-functions/apollo-server-on-azure.png)
 
-We just need to put the full URL that includes the security `code` in the Playground url box. The background polling should refresh the screen momentarily. Click the **Schema** button to see if the docs are loaded correctly as the image below.
+We just need to put the full URL that includes the security `code` in the Playground url box. The background polling should refresh the screen momentarily. Click the **Schema** button to see if the docs are loaded correctly as shown in the image below.
 
 ![Apollo server running on azure with success](../images/deployment/azure-functions/apollo-server-on-azure-sucess.png)
 
 ### Cleaning Up
 
-After complete this tutorial, you can delete all resources at your Azure platform by removing the **az group**. We can delete manually each resource using the following commands:
+After completing this tutorial, you can delete all the resources you created during this example from your Azure account by removing the Azure Resource Group called **apollo-examples** with the **az group** commmand. We can manually delete each resource using the following commands:
 
 ```shell
 az functionapp delete \

@@ -11,7 +11,7 @@ Apollo Engine provides an integrated hub for all GraphQL performance data that i
 
 To set up Apollo Server with Engine, [click here](https://engine.apollographql.com/) to get an Engine API key. This API key can be passed directly to the Apollo Server constructor.
 
-```js line=6-8
+```js{6-8}
 const { ApolloServer } = require("apollo-server");
 
 const server = new ApolloServer({
@@ -39,7 +39,7 @@ ENGINE_API_KEY=YOUR_API_KEY node start-server.js
 Apollo Engine accepts metrics annotated with client information. The Engine UI
 is then able to filter metrics and usage patterns by these names and versions. To provide metrics to the Engine, pass a `generateClientInfo` function into the `ApolloServer` constructor, like so:
 
-```js line=8-23
+```js{8-23}
 const { ApolloServer } = require("apollo-server");
 
 const server = new ApolloServer({

@@ -1,5 +1,6 @@
 import express from 'express';
 import { ApolloServer, ApolloServerExpressConfig } from '../ApolloServer';
+import { graphqlExpress } from '../expressApollo';
 import testSuite, {
   schema as Schema,
   CreateAppOptions,
@@ -20,6 +21,12 @@ describe('expressApollo', () => {
   it('throws error if called without schema', function() {
     expect(() => new ApolloServer(undefined as GraphQLOptions)).toThrow(
       'ApolloServer requires options.',
+    );
+  });
+
+  it('throws error if called with more than one argument', function() {
+    expect(() => graphqlExpress({ schema: Schema }, 1)).toThrow(
+      'Apollo Server expects exactly one argument, got 2',
     );
   });
 });

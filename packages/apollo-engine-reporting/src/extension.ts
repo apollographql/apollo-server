@@ -11,8 +11,11 @@ import {
 import { GraphQLExtension, EndHandler } from 'graphql-extensions';
 import { Trace, google } from 'apollo-engine-reporting-protobuf';
 
-import { EngineReportingOptions, GenerateClientInfo } from './agent';
-import { defaultEngineReportingSignature } from 'apollo-graphql';
+import {
+  EngineReportingOptions,
+  GenerateClientInfo,
+  AddTraceArgs,
+} from './agent';
 import { GraphQLRequestContext } from 'apollo-server-core/dist/requestPipelineAPI';
 
 const clientNameHeaderKey = 'apollographql-client-name';
@@ -43,20 +46,16 @@ export class EngineReportingExtension<TContext = any>
   public trace = new Trace();
   private nodes = new Map<string, Trace.Node>();
   private startHrTime!: [number, number];
-  private operationName?: string | null;
+  private explicitOperationName?: string | null;
   private queryString?: string;
   private documentAST?: DocumentNode;
   private options: EngineReportingOptions<TContext>;
-  private addTrace: (
-    signature: string,
-    operationName: string,
-    trace: Trace,
-  ) => void;
+  private addTrace: (args: AddTraceArgs) => Promise<void>;
   private generateClientInfo: GenerateClientInfo<TContext>;
 
   public constructor(
     options: EngineReportingOptions<TContext>,
-    addTrace: (signature: string, operationName: string, trace: Trace) => void,
+    addTrace: (args: AddTraceArgs) => Promise<void>,
   ) {
     this.options = {
       ...options,
@@ -66,33 +65,7 @@ export class EngineReportingExtension<TContext = any>
     this.trace.root = root;
     this.nodes.set(responsePathAsString(undefined), root);
     this.generateClientInfo =
-      options.generateClientInfo ||
-      // Default to using the `apollo-client-x` header fields if present.
-      // If none are present, fallback on the `clientInfo` query extension
-      // for backwards compatibility.
-      // The default value if neither header values nor query extension is
-      // set is the empty String for all fields (as per protobuf defaults)
-      (({ request }) => {
-        if (
-          request.http &&
-          request.http.headers &&
-          (request.http.headers.get(clientNameHeaderKey) ||
-            request.http.headers.get(clientVersionHeaderKey) ||
-            request.http.headers.get(clientReferenceIdHeaderKey))
-        ) {
-          return {
-            clientName: request.http.headers.get(clientNameHeaderKey),
-            clientVersion: request.http.headers.get(clientVersionHeaderKey),
-            clientReferenceId: request.http.headers.get(
-              clientReferenceIdHeaderKey,
-            ),
-          };
-        } else if (request.extensions && request.extensions.clientInfo) {
-          return request.extensions.clientInfo;
-        } else {
-          return {};
-        }
-      });
+      options.generateClientInfo || defaultGenerateClientInfo;
   }
 
   public requestDidStart(o: {
@@ -102,7 +75,10 @@ export class EngineReportingExtension<TContext = any>
     variables?: Record<string, any>;
     context: TContext;
     extensions?: Record<string, any>;
-    requestContext: WithRequired<GraphQLRequestContext<TContext>, 'metrics'>;
+    requestContext: WithRequired<
+      GraphQLRequestContext<TContext>,
+      'metrics' | 'queryHash'
+    >;
   }): EndHandler {
     this.trace.startTime = dateToTimestamp(new Date());
     this.startHrTime = process.hrtime();
@@ -110,6 +86,7 @@ export class EngineReportingExtension<TContext = any>
     // Generally, we'll get queryString here and not parsedQuery; we only get
     // parsedQuery if you're using an OperationStore. In normal cases we'll get
     // our documentAST in the execution callback after it is parsed.
+    const queryHash = o.requestContext.queryHash;
     this.queryString = o.queryString;
     this.documentAST = o.parsedQuery;
 
@@ -221,44 +198,44 @@ export class EngineReportingExtension<TContext = any>
 
       this.trace.fullQueryCacheHit = !!o.requestContext.metrics
         .responseCacheHit;
+      this.trace.forbiddenOperation = !!o.requestContext.metrics
+        .forbiddenOperation;
+      this.trace.registeredOperation = !!o.requestContext.metrics
+        .registeredOperation;
 
-      const operationName = this.operationName || '';
-      let signature;
-      if (this.documentAST) {
-        const calculateSignature =
-          this.options.calculateSignature || defaultEngineReportingSignature;
-        signature = calculateSignature(this.documentAST, operationName);
-      } else if (this.queryString) {
-        // We didn't get an AST, possibly because of a parse failure. Let's just
-        // use the full query string.
-        //
-        // XXX This does mean that even if you use a calculateSignature which
-        //     hides literals, you might end up sending literals for queries
-        //     that fail parsing or validation. Provide some way to mask them
-        //     anyway?
-        signature = this.queryString;
-      } else {
-        // This shouldn't happen: one of those options must be passed to runQuery.
-        throw new Error('No queryString or parsedQuery?');
-      }
+      // If the user did not explicitly specify an operation name (which we
+      // would have saved in `executionDidStart`), but the request pipeline made
+      // it far enough to figure out what the operation name must be and store
+      // it on requestContext.operationName, use that name.  (Note that this
+      // depends on the assumption that the RequestContext passed to
+      // requestDidStart, which does not yet have operationName, will be mutated
+      // to add operationName later.)
+      const operationName =
+        this.explicitOperationName || o.requestContext.operationName || '';
+      const documentAST = this.documentAST || o.requestContext.document;
 
-      this.addTrace(signature, operationName, this.trace);
+      this.addTrace({
+        operationName,
+        queryHash,
+        documentAST,
+        queryString: this.queryString || '',
+        trace: this.trace,
+      });
     };
   }
 
   public executionDidStart(o: { executionArgs: ExecutionArgs }) {
-    // If the operationName is explicitly provided, save it. If there's just one
-    // named operation, the client doesn't have to provide it, but we still want
-    // to know the operation name so that the server can identify the query by
-    // it without having to parse a signature.
+    // If the operationName is explicitly provided, save it. Note: this is the
+    // operationName provided by the user. It might be empty if they're relying on
+    // the "just use the only operation I sent" behavior, even if that operation
+    // has a name.
     //
-    // Fortunately, in the non-error case, we can just pull this out of
-    // the first call to willResolveField's `info` argument.  In an
-    // error case (eg, the operationName isn't found, or there are more
-    // than one operation and no specified operationName) it's OK to continue
-    // to file this trace under the empty operationName.
+    // It's possible that execution is about to fail because this operation
+    // isn't actually in the document. We want to know the name in that case
+    // too, which is why it's important that we save the name now, and not just
+    // rely on requestContext.operationName (which will be null in this case).
     if (o.executionArgs.operationName) {
-      this.operationName = o.executionArgs.operationName;
+      this.explicitOperationName = o.executionArgs.operationName;
     }
     this.documentAST = o.executionArgs.document;
   }
@@ -269,11 +246,6 @@ export class EngineReportingExtension<TContext = any>
     _context: TContext,
     info: GraphQLResolveInfo,
   ): ((error: Error | null, result: any) => void) | void {
-    if (this.operationName === undefined) {
-      this.operationName =
-        (info.operation.name && info.operation.name.value) || '';
-    }
-
     const path = info.path;
     const node = this.newNode(path);
     node.type = info.returnType.toString();
@@ -452,4 +424,29 @@ function dateToTimestamp(date: Date): google.protobuf.Timestamp {
 // ever trying to store durations in a single number.
 function durationHrTimeToNanos(hrtime: [number, number]) {
   return hrtime[0] * 1e9 + hrtime[1];
+}
+
+function defaultGenerateClientInfo({ request }: GraphQLRequestContext) {
+  // Default to using the `apollo-client-x` header fields if present.
+  // If none are present, fallback on the `clientInfo` query extension
+  // for backwards compatibility.
+  // The default value if neither header values nor query extension is
+  // set is the empty String for all fields (as per protobuf defaults)
+  if (
+    request.http &&
+    request.http.headers &&
+    (request.http.headers.get(clientNameHeaderKey) ||
+      request.http.headers.get(clientVersionHeaderKey) ||
+      request.http.headers.get(clientReferenceIdHeaderKey))
+  ) {
+    return {
+      clientName: request.http.headers.get(clientNameHeaderKey),
+      clientVersion: request.http.headers.get(clientVersionHeaderKey),
+      clientReferenceId: request.http.headers.get(clientReferenceIdHeaderKey),
+    };
+  } else if (request.extensions && request.extensions.clientInfo) {
+    return request.extensions.clientInfo;
+  } else {
+    return {};
+  }
 }

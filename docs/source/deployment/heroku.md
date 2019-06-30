@@ -13,7 +13,7 @@ The following must be done before following this guide:
 - Setup a [Heroku](https://heroku.com) account
 - [Install the Heroku CLI](https://devcenter.heroku.com/articles/heroku-cli) if pushing to Heroku manually (see below)
 
-<h2 id="configure-heroku" title="Configure Heroku">Set up a new Heroku application</h2>
+## Set up a new Heroku application
 
 Before deploying, a new application must be setup. To do this, log into the [Heroku dashboard](https://dashboard.heroku.com/apps). Then click `New > Create New App` in the top right. The name you choose will be referred to later as `<HEROKU_APP_NAME>`, so be sure to replace it in the later sections.
 
@@ -41,7 +41,7 @@ server.listen({ port: process.env.PORT || 4000 }).then(({ url }) => {
 
 There are a couple of ways to push projects to Heroku. Automatically, with GitHub integration, or manually using Heroku push.
 
-<h3 id="deploy" title="Deploy with Heroku Push">Deploying with Heroku push</h3>
+### Deploying with Heroku push
 
 Install the [Heroku Cli](https://devcenter.heroku.com/articles/heroku-cli), then inside of your project, run:
 
@@ -56,7 +56,7 @@ $ git push heroku master # or your branch name
 
 Send a query to your GraphQL service at your Heroku Application at `<HEROKU_APP_NAME>.herokuapp.com`
 
-<h3>Automatically deploying with GitHub</h3>
+### Automatically deploying with GitHub
 
 If the project is already pushed to GitHub, it may be easier to setup automatic deployments from the project's repository
 
@@ -66,7 +66,7 @@ Then, on the app detail page, there is a tab bar at the top, with a "Deploy" opt
 
 ![github deployment instructions](../images/deployment/heroku/heroku-github-instructions.png)
 
-<h2 id="env-vars" title="Environment variables"> Configuring environment variables</h2>
+## Configuring environment variables
 
 In order to enable the production mode of Apollo Server, you will need to set the `NODE_ENV` variable to production. To ensure you have visibility into your GraphQL performance in Apollo Server, you'll want to add the `ENGINE_API_KEY` environment variable to Heroku. For the API key, log into the [Engine UI](https://engine.apollographql.com) and navigate to your service or create a new one.
 

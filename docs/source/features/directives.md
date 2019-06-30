@@ -85,4 +85,4 @@ The implementation of `UpperCaseDirective` takes care of changing the resolver a
 
 ## Building your own
 
-To learn how to implement your own schema directives, read [this guide](./creating-directives.html).
+To learn how to implement your own schema directives, read [this guide](/features/creating-directives/).

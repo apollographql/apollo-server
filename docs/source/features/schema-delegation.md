@@ -7,13 +7,13 @@ Schema delegation is a way to automatically forward a query (or a part of a quer
 
 The `graphql-tools` package provides several related tools for managing schema delegation:
 
-* [Remote schemas](./remote-schemas.html) - turning a remote GraphQL endpoint into a local schema
-* [Schema transforms](./schema-transforms.html) - modifying existing schemas to make delegation easier
-* [Schema stitching](./schema-stitching.html) - merging multiple schemas into one
+* [Remote schemas](/features/remote-schemas/) - turning a remote GraphQL endpoint into a local schema
+* [Schema transforms](/features/schema-transforms/) - modifying existing schemas to make delegation easier
+* [Schema stitching](/features/schema-stitching/) - merging multiple schemas into one
 
 Delegation is performed by one function, `delegateToSchema`, called from within a resolver function of the parent schema. The `delegateToSchema` function sends the query subtree received by the parent resolver to a subschema that knows how to execute it, then returns the result as if the parent resolver had executed the query.
 
-<h2 id="example">Motivational example</h2>
+## Motivational example
 
 Let's consider two schemas, a subschema and a parent schema that reuses parts of a subschema. In this example the parent schema reuses the *definitions* of the subschema. However the implementations separate should be kept separate, so that the subschema can be tested independently or retrieved from a remote service. The subschema:
 
@@ -101,7 +101,7 @@ query($id: ID!) {
 
 Delegation also removes the fields that don't exist on the subschema, such as `user`. This field would be retrieved from the parent schema using normal GraphQL resolvers.
 
-<h2 id="delegateToSchema">Example</h2>
+## Example
 
 The `delegateToSchema` method can be found on the `info.mergeInfo` object within any resolver function, and should be called with the following named options:
 
@@ -150,7 +150,7 @@ const resolvers = {
 };
 ```
 
-<h2 id="considerations">Additional considerations</h2>
+## Additional considerations
 
 ### Aliases
 
@@ -158,4 +158,4 @@ Delegation preserves aliases that are passed from the parent query. However that
 
 ## API
 
-Under the hood, Apollo Server uses the `graphql-tools` library, which includes [`delegateToSchema`](../api/graphql-tools.html#delegateToSchema) by default.
+Under the hood, Apollo Server uses the `graphql-tools` library, which includes [`delegateToSchema`](/api/graphql-tools/#delegatetoschema) by default.

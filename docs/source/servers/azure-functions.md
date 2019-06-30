@@ -1,1 +1,0 @@
-../../../packages/apollo-server-azure-functions/README.md

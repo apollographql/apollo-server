@@ -19,6 +19,8 @@ import {
 } from 'graphql';
 import { KeyValueCache } from 'apollo-server-caching';
 
+type Mutable<T> = { -readonly [P in keyof T]: T[P] };
+
 export interface GraphQLServiceContext {
   schema: GraphQLSchema;
   schemaHash: string;
@@ -45,13 +47,15 @@ export interface GraphQLResponse {
   data?: Record<string, any>;
   errors?: ReadonlyArray<GraphQLFormattedError>;
   extensions?: Record<string, any>;
-  http?: Pick<Response, 'headers'>;
+  http?: Pick<Response, 'headers'> & Partial<Pick<Mutable<Response>, 'status'>>;
 }
 
 export interface GraphQLRequestMetrics {
   persistedQueryHit?: boolean;
   persistedQueryRegister?: boolean;
   responseCacheHit?: boolean;
+  forbiddenOperation?: boolean;
+  registeredOperation?: boolean;
 }
 
 export interface GraphQLRequestContext<TContext = Record<string, any>> {
@@ -67,11 +71,20 @@ export interface GraphQLRequestContext<TContext = Record<string, any>> {
   readonly document?: DocumentNode;
   readonly source?: string;
 
-  // `operationName` is set based on the operation AST, so it is defined
-  // even if no `request.operationName` was passed in.
-  // It will be set to `null` for an anonymous operation.
+  // `operationName` is set based on the operation AST, so it is defined even if
+  // no `request.operationName` was passed in.  It will be set to `null` for an
+  // anonymous operation, or if `requestName.operationName` was passed in but
+  // doesn't resolve to an operation in the document.
   readonly operationName?: string | null;
   readonly operation?: OperationDefinitionNode;
+
+  /**
+   * Unformatted errors which have occurred during the request. Note that these
+   * are present earlier in the request pipeline and differ from **formatted**
+   * errors which are the result of running the user-configurable `formatError`
+   * transformation function over specific errors.
+   */
+  readonly errors?: ReadonlyArray<GraphQLError>;
 
   readonly metrics?: GraphQLRequestMetrics;
 
@@ -85,7 +98,7 @@ export class InvalidGraphQLRequestError extends Error {}
 export type GraphQLExecutor<TContext = Record<string, any>> = (
   requestContext: WithRequired<
     GraphQLRequestContext<TContext>,
-    'document' | 'operationName' | 'operation'
+    'document' | 'operationName' | 'operation' | 'queryHash'
   >,
 ) => ValueOrPromise<GraphQLExecutionResult>;
 

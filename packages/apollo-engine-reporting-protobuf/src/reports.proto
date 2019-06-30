@@ -4,8 +4,6 @@ package mdg.engine.proto;
 
 import "google/protobuf/timestamp.proto";
 
-option optimize_for = SPEED;
-
 message Trace {
 	message CachePolicy {
 		enum Scope {
@@ -138,11 +136,10 @@ message Trace {
 
 	// Older agents (eg the Go engineproxy) relied to some degree on the Engine
 	// backend to run their own semi-compatible implementation of a specific
-	// variant of query signatures. The backend won't do that for new agents, but
-	// we keep this old field around to ensure that queries only get new IDs when
-	// you upgrade to the new agent, not just when we make backend changes
-	// to minimize backend-side signature calculation. Deprecated and ignored
-	// in FullTracesReports.
+	// variant of query signatures. The backend does not do this for new agents (which
+	// set the above 'signature' field). It used to still "re-sign" signatures
+	// from engineproxy, but we've now simplified the backend to no longer do this.
+	// Deprecated and ignored in FullTracesReports.
 	string legacy_signature_needs_resigning = 5;
 
 	Details details = 6;
@@ -170,6 +167,12 @@ message Trace {
 	// (This typically means that a previous request was rejected as an unknown
 	// persisted query.)
 	bool persisted_query_register = 22;
+
+	// Was this operation registered and a part of the safelist?
+	bool registered_operation = 24;
+
+	// Was this operation forbidden due to lack of safelisting?
+	bool forbidden_operation = 25;
 
 	// removed: Node parse = 12; Node validate = 13;
 	//          Id128 server_id = 1; Id128 client_id = 2;
@@ -224,6 +227,8 @@ message ClientNameStats {
 	map<string, uint64> cache_hits_per_version = 4;
 	map<string, uint64> persisted_query_hits_per_version = 10;
 	map<string, uint64> persisted_query_misses_per_version = 11;
+	map<string, uint64> registered_operation_count_per_version = 12;
+	map<string, uint64> forbidden_operation_count_per_version = 13;
 	repeated int64 cache_latency_count = 5; // Duration histogram; see docs/histograms.md
 	PathErrorStats root_error_stats = 6;
 	uint64 requests_with_errors_count = 7;
@@ -244,6 +249,8 @@ message QueryLatencyStats {
 	uint64 requests_with_errors_count = 8;
 	repeated int64 public_cache_ttl_count = 9;
 	repeated int64 private_cache_ttl_count = 10;
+	uint64 registered_operation_count = 11;
+	uint64 forbidden_operation_count = 12;
 }
 
 message StatsContext {
@@ -273,7 +280,7 @@ message FieldStat {
 
 message TypeStat {
 	string name = 1; // deprecated; only set when stored in QueryStats.per_type
-	repeated FieldStat field = 2;  // deprecated; use per_field_stat instead
+	repeated FieldStat field = 2; // deprecated; use per_field_stat instead
 	// Key is (eg) "email" for User.email:String!
 	map<string, FieldStat> per_field_stat = 3;
 }
@@ -351,7 +358,6 @@ message StatsReport {
 	// FullTracesReports.
 	uint64 realtime_duration = 10;
 
-
 	// Maps from query descriptor to QueryStats. Required unless
 	// legacy_per_query_missing_operation_name is set. The keys are strings of the
 	// form `# operationName\nsignature` (literal hash and space), with
@@ -360,7 +366,7 @@ message StatsReport {
 
 	// Older agents (Go engineproxy) didn't explicitly include the operation name
 	// in the key of this map, and the server had to parse it out (after a
-	// re-signing operation). The key here is just the query
+	// re-signing operation which is no longer performed). The key here is just the query
 	// signature. Deprecated.
 	map<string, QueryStats> legacy_per_query_implicit_operation_name = 12;
 
@@ -394,4 +400,9 @@ message FullTracesReport {
 // Just a sequence of traces with the same statsReportKey.
 message Traces {
 	repeated Trace trace = 1;
+}
+
+message TraceV1 {
+	ReportHeader header = 1;
+	Trace trace = 2;
 }

@@ -451,6 +451,116 @@ describe('runQuery', () => {
     });
   });
 
+  describe('request pipeline life-cycle hooks', () => {
+    describe('requestDidStart', () => {
+      const requestDidStart = jest.fn();
+      it('called for each request', async () => {
+        const runOnce = () =>
+          runQuery({
+            schema,
+            queryString: '{ testString }',
+            plugins: [
+              {
+                requestDidStart,
+              },
+            ],
+            request: new MockReq(),
+          });
+
+        await runOnce();
+        expect(requestDidStart.mock.calls.length).toBe(1);
+        await runOnce();
+        expect(requestDidStart.mock.calls.length).toBe(2);
+      });
+    });
+
+    describe('parsingDidStart', () => {
+      const parsingDidStart = jest.fn();
+      it('called when parsing will result in an error', async () => {
+        await runQuery({
+          schema,
+          queryString: '{ testStringWithParseError: }',
+          plugins: [
+            {
+              requestDidStart() {
+                return {
+                  parsingDidStart,
+                };
+              },
+            },
+          ],
+          request: new MockReq(),
+        });
+
+        expect(parsingDidStart).toBeCalled();
+      });
+
+      it('called when a successful parse happens', async () => {
+        await runQuery({
+          schema,
+          queryString: '{ testString }',
+          plugins: [
+            {
+              requestDidStart() {
+                return {
+                  parsingDidStart,
+                };
+              },
+            },
+          ],
+          request: new MockReq(),
+        });
+
+        expect(parsingDidStart).toBeCalled();
+      });
+    });
+
+    describe('didEncounterErrors', () => {
+      const didEncounterErrors = jest.fn();
+      it('called when an error occurs', async () => {
+        await runQuery({
+          schema,
+          queryString: '{ testStringWithParseError: }',
+          plugins: [
+            {
+              requestDidStart() {
+                return {
+                  didEncounterErrors,
+                };
+              },
+            },
+          ],
+          request: new MockReq(),
+        });
+
+        expect(didEncounterErrors).toBeCalledWith(
+          expect.objectContaining({
+            errors: expect.arrayContaining([expect.any(Error)]),
+          }),
+        );
+      });
+
+      it('not called when an error does not occur', async () => {
+        await runQuery({
+          schema,
+          queryString: '{ testString }',
+          plugins: [
+            {
+              requestDidStart() {
+                return {
+                  didEncounterErrors,
+                };
+              },
+            },
+          ],
+          request: new MockReq(),
+        });
+
+        expect(didEncounterErrors).not.toBeCalled();
+      });
+    });
+  });
+
   describe('parsing and validation cache', () => {
     function createLifecyclePluginMocks() {
       const validationDidStart = jest.fn();
