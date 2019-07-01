@@ -176,10 +176,7 @@ export class ApolloServerBase {
       ...requestOptions
     } = config;
 
-    if (
-      gateway &&
-      (modules || schema || typeDefs || subscriptions || resolvers)
-    ) {
+    if (gateway && (modules || schema || typeDefs || resolvers)) {
       throw new Error(
         'Cannot define both `gateway` and any of: `modules`, `schema`, `typeDefs`, or `resolvers`',
       );
