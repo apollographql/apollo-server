@@ -303,21 +303,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           );
         });
 
-        it('warns when implicitly disabling subscriptions via passing a gateway', async () => {
-          const { gateway, triggers } = makeGatewayMock();
-          const consoleWarnSpy = jest
-            .spyOn(console, 'warn')
-            .mockImplementation(() => {});
-
-          triggers.resolveLoad({ schema, executor: () => {} });
-          await createApolloServer({ gateway });
-
-          expect(consoleWarnSpy.mock.calls[0][0]).toMatch(
-            /Subscriptions disabled/,
-          );
-        });
-
-        it('prohibits providing a gateway in addition to explicitly passing subscription options', async () => {
+        it('prohibits providing a gateway in addition to subscription options', async () => {
           const { gateway } = makeGatewayMock();
 
           const incompatibleArgsSpy = jest.fn();
@@ -342,6 +328,13 @@ export function testApolloServer<AS extends ApolloServerBase>(
             subscriptions: { path: '' } as any,
           }).catch(err => incompatibleArgsSpy(err.message));
           expect(incompatibleArgsSpy.mock.calls[2][0]).toMatch(
+            /Cannot define both `subscriptions` and `gateway`./,
+          );
+
+          await createApolloServer({
+            gateway,
+          }).catch(err => incompatibleArgsSpy(err.message));
+          expect(incompatibleArgsSpy.mock.calls[3][0]).toMatch(
             /Cannot define both `subscriptions` and `gateway`./,
           );
         });

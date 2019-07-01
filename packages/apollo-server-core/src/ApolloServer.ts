@@ -177,6 +177,7 @@ export class ApolloServerBase {
     } = config;
 
     if (gateway && (modules || schema || typeDefs || resolvers)) {
+      // TODO: this could be handled by adjusting the typings to keep gateway configs and non-gateway configs seprate.
       throw new Error(
         'Cannot define both `gateway` and any of: `modules`, `schema`, `typeDefs`, or `resolvers`',
       );
@@ -298,11 +299,10 @@ export class ApolloServerBase {
     }
 
     if (gateway && subscriptions !== false) {
-      if (typeof subscriptions === 'undefined') {
-        console.warn('Subscriptions disabled when operating as a gateway.');
-      } else {
-        throw new Error('Cannot define both `subscriptions` and `gateway`.');
-      }
+      // TODO: this could be handled by adjusting the typings to keep gateway configs and non-gateway configs seprate.
+      throw new Error(
+        "Cannot define both `subscriptions` and `gateway`. Set `subscriptions: false` in Apollo Server's config to use gateway.",
+      );
     } else if (subscriptions !== false) {
       if (this.supportsSubscriptions()) {
         if (subscriptions === true || typeof subscriptions === 'undefined') {
