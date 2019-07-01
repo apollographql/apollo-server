@@ -2485,7 +2485,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
         const unsubscribeSpy = jest.fn();
         const { gateway, triggers } = makeGatewayMock({ unsubscribeSpy });
         triggers.resolveLoad({ schema, executor: () => {} });
-        await createApolloServer({ gateway });
+        await createApolloServer({ gateway, subscriptions: false }); 
         expect(unsubscribeSpy).not.toHaveBeenCalled();
         await stopServer();
         expect(unsubscribeSpy).toHaveBeenCalled();
