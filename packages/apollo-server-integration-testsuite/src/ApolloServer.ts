@@ -306,37 +306,31 @@ export function testApolloServer<AS extends ApolloServerBase>(
         it('prohibits providing a gateway in addition to subscription options', async () => {
           const { gateway } = makeGatewayMock();
 
+          const expectedError = /Cannot define both `subscriptions` and `gateway`./;
+
           const incompatibleArgsSpy = jest.fn();
           await createApolloServer({
             gateway,
             subscriptions: 'pathToSubscriptions',
           }).catch(err => incompatibleArgsSpy(err.message));
-          expect(incompatibleArgsSpy.mock.calls[0][0]).toMatch(
-            /Cannot define both `subscriptions` and `gateway`./,
-          );
+          expect(incompatibleArgsSpy.mock.calls[0][0]).toMatch(expectedError);
 
           await createApolloServer({
             gateway,
             subscriptions: true as any,
           }).catch(err => incompatibleArgsSpy(err.message));
-          expect(incompatibleArgsSpy.mock.calls[1][0]).toMatch(
-            /Cannot define both `subscriptions` and `gateway`./,
-          );
+          expect(incompatibleArgsSpy.mock.calls[1][0]).toMatch(expectedError);
 
           await createApolloServer({
             gateway,
             subscriptions: { path: '' } as any,
           }).catch(err => incompatibleArgsSpy(err.message));
-          expect(incompatibleArgsSpy.mock.calls[2][0]).toMatch(
-            /Cannot define both `subscriptions` and `gateway`./,
-          );
+          expect(incompatibleArgsSpy.mock.calls[2][0]).toMatch(expectedError);
 
           await createApolloServer({
             gateway,
           }).catch(err => incompatibleArgsSpy(err.message));
-          expect(incompatibleArgsSpy.mock.calls[3][0]).toMatch(
-            /Cannot define both `subscriptions` and `gateway`./,
-          );
+          expect(incompatibleArgsSpy.mock.calls[3][0]).toMatch(expectedError);
         });
       });
 
