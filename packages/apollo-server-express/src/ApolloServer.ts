@@ -73,6 +73,7 @@ const fileUploadMiddleware = (
 export interface ExpressContext {
   req: express.Request;
   res: express.Response;
+  connection: any;
 }
 
 export interface ApolloServerExpressConfig extends Config {
