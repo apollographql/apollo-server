@@ -15,6 +15,7 @@ import {
 import { Headers } from 'apollo-server-env';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import { AddTraceArgs } from '../agent';
+import { Trace } from 'apollo-engine-reporting-protobuf';
 
 test('trace construction', async () => {
   const typeDefs = `
