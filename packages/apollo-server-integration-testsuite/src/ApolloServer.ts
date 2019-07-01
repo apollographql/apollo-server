@@ -370,7 +370,10 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
           triggers.resolveLoad({ schema, executor });
 
-          const { url: uri } = await createApolloServer({ gateway });
+          const { url: uri } = await createApolloServer({
+            gateway,
+            subscriptions: false,
+          });
 
           const apolloFetch = createApolloFetch({ uri });
           const result = await apolloFetch({ query: '{testString}' });
@@ -2500,7 +2503,10 @@ export function testApolloServer<AS extends ApolloServerBase>(
           });
 
         triggers.resolveLoad({ schema, executor });
-        const { url: uri } = await createApolloServer({ gateway });
+        const { url: uri } = await createApolloServer({
+          gateway,
+          subscriptions: false,
+        });
         const fetchComplete = jest.fn();
         const apolloFetch = createApolloFetch({ uri });
         const result = apolloFetch({ query: '{testString}' }).then(result => {
