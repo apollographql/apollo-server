@@ -2439,7 +2439,10 @@ export function testApolloServer<AS extends ApolloServerBase>(
           executor,
         });
 
-        const { url: uri } = await createApolloServer({ gateway });
+        const { url: uri } = await createApolloServer({
+          gateway,
+          subscriptions: false,
+        });
 
         const apolloFetch = createApolloFetch({ uri });
         const result1 = await apolloFetch({ query: '{testString1}' });
@@ -2461,6 +2464,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
         triggers.resolveLoad({ schema, executor: () => {} });
         await createApolloServer({
           gateway,
+          subscriptions: false,
           engine: { apiKey: 'service:tester:1234abc', schemaTag: 'staging' },
         });
 
@@ -2560,7 +2564,10 @@ export function testApolloServer<AS extends ApolloServerBase>(
           executor,
         });
 
-        const { url: uri } = await createApolloServer({ gateway });
+        const { url: uri } = await createApolloServer({
+          gateway,
+          subscriptions: false,
+        });
 
         // TODO: Remove these awaits... I think it may require the `onSchemaChange` to block?
         const apolloFetch = createApolloFetch({ uri });
