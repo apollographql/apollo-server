@@ -241,7 +241,7 @@ export class ApolloGateway implements GraphQLService {
     return getServiceDefinitionsFromStorage({
       graphId: this.engineConfig.graphId,
       apiKeyHash: this.engineConfig.apiKeyHash,
-      graphVariant: this.engineConfig.graphVariant || 'current',
+      graphVariant: this.engineConfig.graphVariant,
       federationVersion: config.federationVersion || 1,
     });
   }

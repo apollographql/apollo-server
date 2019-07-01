@@ -47,7 +47,7 @@ const urlStorageSecretBase: string = urlFromEnvOrDefault(
 );
 
 const fetcher = new CachedFetcher();
-let serviceDefinitionList: ServiceDefinition[] = [];
+const serviceDefinitionList: ServiceDefinition[] = [];
 
 function getStorageSecretUrl(graphId: string, apiKeyHash: string): string {
   return `${urlStorageSecretBase}/${graphId}/storage-secret/${apiKeyHash}.json`;
@@ -70,7 +70,7 @@ export async function getServiceDefinitionsFromStorage({
 }: {
   graphId: string;
   apiKeyHash: string;
-  graphVariant: string;
+  graphVariant?: string;
   federationVersion: number;
 }): Promise<[ServiceDefinition[], boolean]> {
   const secret = await fetchStorageSecret(graphId, apiKeyHash);

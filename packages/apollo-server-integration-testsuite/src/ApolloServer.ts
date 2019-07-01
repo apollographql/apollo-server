@@ -2468,7 +2468,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
         triggers.resolveLoad({ schema, executor: () => {} });
         await createApolloServer({
           gateway,
-          engine: { apiKey: 'service:tester:1234abc' },
+          engine: { apiKey: 'service:tester:1234abc', schemaTag: 'staging' },
         });
 
         expect(optionsSpy).toHaveBeenLastCalledWith({
@@ -2476,6 +2476,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             apiKeyHash:
               '0ca858e7fe8cffc01c5f1db917d2463b348b50d267427e54c1c8c99e557b242f4145930b949905ec430642467613610e471c40bb7a251b1e2248c399bb0498c4',
             graphId: 'tester',
+            graphVariant: 'staging',
           },
         });
       });
