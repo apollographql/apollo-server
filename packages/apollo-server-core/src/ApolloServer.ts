@@ -88,6 +88,16 @@ function getEngineApiKey(engine: Config['engine']): string | undefined {
   return;
 }
 
+function getEngineGraphVariant(engine: Config['engine']): string | undefined {
+  if (engine === false) {
+    return;
+  } else if (typeof engine === 'object' && engine.schemaTag) {
+    return engine.schemaTag;
+  } else {
+    return process.env.ENGINE_SCHEMA_TAG;
+  }
+}
+
 function getEngineServiceId(engine: Config['engine']): string | undefined {
   const engineApiKey = getEngineApiKey(engine);
   if (engineApiKey) {
@@ -104,6 +114,16 @@ function approximateObjectSize<T>(obj: T): number {
   return Buffer.byteLength(JSON.stringify(obj), 'utf8');
 }
 
+type SchemaDerivedData = {
+  // A store that, when enabled (default), will store the parsed and validated
+  // versions of operations in-memory, allowing subsequent parses/validates
+  // on the same operation to be executed immediately.
+  documentStore?: InMemoryLRUCache<DocumentNode>;
+  schema: GraphQLSchema;
+  schemaHash: string;
+  extensions: Array<() => GraphQLExtension>;
+};
+
 export class ApolloServerBase {
   public subscriptionsPath?: string;
   public graphqlPath: string = '/graphql';
@@ -113,11 +133,8 @@ export class ApolloServerBase {
   private engineReportingAgent?: import('apollo-engine-reporting').EngineReportingAgent;
   private engineServiceId?: string;
   private engineApiKeyHash?: string;
-  private extensions: Array<() => GraphQLExtension>;
-  private schemaHash: string;
   protected plugins: ApolloServerPlugin[] = [];
 
-  protected schema: GraphQLSchema;
   protected subscriptionServerOptions?: SubscriptionServerOptions;
   protected uploadsConfig?: FileUploadOptions;
 
@@ -127,16 +144,17 @@ export class ApolloServerBase {
   // the default version is specified in playground.ts
   protected playgroundOptions?: PlaygroundRenderPageOptions;
 
-  // A store that, when enabled (default), will store the parsed and validated
-  // versions of operations in-memory, allowing subsequent parses/validates
-  // on the same operation to be executed immediately.
-  private documentStore?: InMemoryLRUCache<DocumentNode>;
-
   private parseOptions: GraphQLParseOptions;
+  private schemaDerivedData: Promise<SchemaDerivedData>;
+  private config: Config;
+  /** @deprecated: This is undefined for servers operating as gateways, and will be removed in a future release **/
+  protected schema?: GraphQLSchema;
+  private toDispose = new Set<() => void>();
 
   // The constructor should be universal across all environments. All environment specific behavior should be set by adding or overriding methods
   constructor(config: Config) {
     if (!config) throw new Error('ApolloServer requires options.');
+    this.config = config;
     const {
       context,
       resolvers,
@@ -154,11 +172,19 @@ export class ApolloServerBase {
       uploads,
       playground,
       plugins,
+      gateway,
       ...requestOptions
     } = config;
 
-    // Initialize the document store.  This cannot currently be disabled.
-    this.initializeDocumentStore();
+    if (gateway && (modules || schema || typeDefs || resolvers)) {
+      // TODO: this could be handled by adjusting the typings to keep gateway configs and non-gateway configs seprate.
+      throw new Error(
+        'Cannot define both `gateway` and any of: `modules`, `schema`, `typeDefs`, or `resolvers`',
+      );
+    }
+
+    this.parseOptions = parseOptions;
+    this.context = context;
 
     // Plugins will be instantiated if they aren't already, and this.plugins
     // is populated accordingly.
@@ -228,7 +254,6 @@ export class ApolloServerBase {
     }
 
     this.requestOptions = requestOptions as GraphQLOptions;
-    this.context = context;
 
     if (uploads !== false && !forbidUploadsForTesting) {
       if (this.supportsUploads()) {
@@ -254,14 +279,141 @@ export class ApolloServerBase {
       }
     }
 
+    // Normalize the legacy option maskErrorDetails.
+    if (engine && typeof engine === 'object') {
+      if (engine.maskErrorDetails && engine.rewriteError) {
+        throw new Error("Can't set both maskErrorDetails and rewriteError!");
+      } else if (
+        engine.rewriteError &&
+        typeof engine.rewriteError !== 'function'
+      ) {
+        throw new Error('rewriteError must be a function');
+      } else if (engine.maskErrorDetails) {
+        engine.rewriteError = () => new GraphQLError('<masked>');
+        delete engine.maskErrorDetails;
+      }
+    }
+
+    // In an effort to avoid over-exposing the API key itself, extract the
+    // service ID from the API key for plugins which only needs service ID.
+    // The truthyness of this value can also be used in other forks of logic
+    // related to Engine, as is the case with EngineReportingAgent just below.
+    this.engineServiceId = getEngineServiceId(engine);
+    const apiKey = getEngineApiKey(engine);
+    if (apiKey) {
+      this.engineApiKeyHash = createSHA('sha512')
+        .update(apiKey)
+        .digest('hex');
+    }
+
+    if (this.engineServiceId) {
+      const { EngineReportingAgent } = require('apollo-engine-reporting');
+      this.engineReportingAgent = new EngineReportingAgent(
+        typeof engine === 'object' ? engine : Object.create(null),
+      );
+    }
+
+    if (gateway && subscriptions !== false) {
+      // TODO: this could be handled by adjusting the typings to keep gateway configs and non-gateway configs seprate.
+      throw new Error(
+        "Cannot define both `subscriptions` and `gateway`. Set `subscriptions: false` in Apollo Server's config to use gateway.",
+      );
+    } else if (subscriptions !== false) {
+      if (this.supportsSubscriptions()) {
+        if (subscriptions === true || typeof subscriptions === 'undefined') {
+          this.subscriptionServerOptions = {
+            path: this.graphqlPath,
+          };
+        } else if (typeof subscriptions === 'string') {
+          this.subscriptionServerOptions = { path: subscriptions };
+        } else {
+          this.subscriptionServerOptions = {
+            path: this.graphqlPath,
+            ...subscriptions,
+          };
+        }
+        // This is part of the public API.
+        this.subscriptionsPath = this.subscriptionServerOptions.path;
+
+        //This is here to check if subscriptions are requested without support. By
+        //default we enable them if supported by the integration
+      } else if (subscriptions) {
+        throw new Error(
+          'This implementation of ApolloServer does not support GraphQL subscriptions.',
+        );
+      }
+    }
+
+    this.playgroundOptions = createPlaygroundOptions(playground);
+
+    // TODO: This is a bit nasty because the subscription server needs this.schema synchronously, for reasons of backwards compatibility.
+    const _schema = this.initSchema();
+
+    if (_schema instanceof GraphQLSchema) {
+      const derivedData = this.generateSchemaDerivedData(_schema);
+      this.schema = derivedData.schema;
+      this.schemaDerivedData = Promise.resolve(derivedData);
+    } else {
+      this.schemaDerivedData = _schema.then(schema =>
+        this.generateSchemaDerivedData(schema),
+      );
+    }
+  }
+
+  // used by integrations to synchronize the path with subscriptions, some
+  // integrations do not have paths, such as lambda
+  public setGraphQLPath(path: string) {
+    this.graphqlPath = path;
+  }
+
+  private initSchema(): GraphQLSchema | Promise<GraphQLSchema> {
+    const {
+      gateway,
+      engine,
+      schema,
+      modules,
+      typeDefs,
+      resolvers,
+      schemaDirectives,
+      parseOptions,
+    } = this.config;
+    if (gateway) {
+      this.toDispose.add(
+        // Store the unsubscribe handles, which are returned from
+        // `onSchemaChange`, for later disposal when the server stops
+        gateway.onSchemaChange(
+          schema =>
+            (this.schemaDerivedData = Promise.resolve(
+              this.generateSchemaDerivedData(schema),
+            )),
+        ),
+      );
+
+      const graphVariant = getEngineGraphVariant(engine);
+      const engineConfig =
+        this.engineApiKeyHash && this.engineServiceId
+          ? {
+              apiKeyHash: this.engineApiKeyHash,
+              graphId: this.engineServiceId,
+              ...(graphVariant && { graphVariant }),
+            }
+          : undefined;
+
+      return gateway.load({ engine: engineConfig }).then(config => {
+        this.requestOptions.executor = config.executor;
+        return config.schema;
+      });
+    }
+
+    let constructedSchema;
     if (schema) {
-      this.schema = schema;
+      constructedSchema = schema;
     } else if (modules) {
       const { schema, errors } = buildServiceDefinition(modules);
       if (errors && errors.length > 0) {
         throw new Error(errors.map(error => error.message).join('\n\n'));
       }
-      this.schema = schema!;
+      constructedSchema = schema!;
     } else {
       if (!typeDefs) {
         throw Error(
@@ -305,7 +457,7 @@ export class ApolloServerBase {
         );
       }
 
-      this.schema = makeExecutableSchema({
+      constructedSchema = makeExecutableSchema({
         typeDefs: augmentedTypeDefs,
         schemaDirectives,
         resolvers,
@@ -313,11 +465,17 @@ export class ApolloServerBase {
       });
     }
 
-    this.parseOptions = parseOptions;
+    return constructedSchema;
+  }
+
+  private generateSchemaDerivedData(schema: GraphQLSchema): SchemaDerivedData {
+    const schemaHash = generateSchemaHash(schema!);
+
+    const { mocks, mockEntireSchema, extensions: _extensions } = this.config;
 
     if (mocks || (typeof mockEntireSchema !== 'undefined' && mocks !== false)) {
       addMockFunctionsToSchema({
-        schema: this.schema,
+        schema,
         mocks:
           typeof mocks === 'boolean' || typeof mocks === 'undefined'
             ? {}
@@ -327,105 +485,37 @@ export class ApolloServerBase {
       });
     }
 
-    // The schema hash is a string representation of the shape of the schema
-    // it is used for reporting and can be used for a cache key if needed
-    this.schemaHash = generateSchemaHash(this.schema);
-
+    const extensions = [];
+    // Keep this extension second so it wraps everything, except error formatting
+    if (this.engineReportingAgent) {
+      extensions.push(() =>
+        this.engineReportingAgent!.newExtension(schemaHash),
+      );
+    }
     // Note: doRunQuery will add its own extensions if you set tracing,
     // or cacheControl.
-    this.extensions = [];
+    extensions.push(...(_extensions || []));
 
-    // Normalize the legacy option maskErrorDetails.
-    if (engine && typeof engine === 'object') {
-      if (engine.maskErrorDetails && engine.rewriteError) {
-        throw new Error("Can't set both maskErrorDetails and rewriteError!");
-      } else if (
-        engine.rewriteError &&
-        typeof engine.rewriteError !== 'function'
-      ) {
-        throw new Error('rewriteError must be a function');
-      } else if (engine.maskErrorDetails) {
-        engine.rewriteError = () => new GraphQLError('<masked>');
-        delete engine.maskErrorDetails;
-      }
-    }
+    // Initialize the document store.  This cannot currently be disabled.
+    const documentStore = this.initializeDocumentStore();
 
-    // In an effort to avoid over-exposing the API key itself, extract the
-    // service ID from the API key for plugins which only needs service ID.
-    // The truthyness of this value can also be used in other forks of logic
-    // related to Engine, as is the case with EngineReportingAgent just below.
-    this.engineServiceId = getEngineServiceId(engine);
-
-    const apiKey = getEngineApiKey(engine);
-    if (apiKey) {
-      this.engineApiKeyHash = createSHA('sha512')
-        .update(apiKey)
-        .digest('hex');
-    }
-
-    if (this.engineServiceId) {
-      const { EngineReportingAgent } = require('apollo-engine-reporting');
-      this.engineReportingAgent = new EngineReportingAgent(
-        typeof engine === 'object' ? engine : Object.create(null),
-        {
-          schema: this.schema,
-          schemaHash: this.schemaHash,
-          engine: {
-            serviceID: this.engineServiceId,
-          },
-        },
-      );
-      // Let's keep this extension second so it wraps everything, except error formatting
-      this.extensions.push(() => this.engineReportingAgent!.newExtension());
-    }
-
-    if (extensions) {
-      this.extensions = [...this.extensions, ...extensions];
-    }
-
-    if (subscriptions !== false) {
-      if (this.supportsSubscriptions()) {
-        if (subscriptions === true || typeof subscriptions === 'undefined') {
-          this.subscriptionServerOptions = {
-            path: this.graphqlPath,
-          };
-        } else if (typeof subscriptions === 'string') {
-          this.subscriptionServerOptions = { path: subscriptions };
-        } else {
-          this.subscriptionServerOptions = {
-            path: this.graphqlPath,
-            ...subscriptions,
-          };
-        }
-        // This is part of the public API.
-        this.subscriptionsPath = this.subscriptionServerOptions.path;
-
-        //This is here to check if subscriptions are requested without support. By
-        //default we enable them if supported by the integration
-      } else if (subscriptions) {
-        throw new Error(
-          'This implementation of ApolloServer does not support GraphQL subscriptions.',
-        );
-      }
-    }
-
-    this.playgroundOptions = createPlaygroundOptions(playground);
-  }
-
-  // used by integrations to synchronize the path with subscriptions, some
-  // integrations do not have paths, such as lambda
-  public setGraphQLPath(path: string) {
-    this.graphqlPath = path;
+    return {
+      schema,
+      schemaHash,
+      extensions,
+      documentStore,
+    };
   }
 
   protected async willStart() {
+    const { schema, schemaHash } = await this.schemaDerivedData;
     await Promise.all(
       this.plugins.map(
         plugin =>
           plugin.serverWillStart &&
           plugin.serverWillStart({
-            schema: this.schema,
-            schemaHash: this.schemaHash,
+            schema: schema,
+            schemaHash: schemaHash,
             engine: {
               serviceID: this.engineServiceId,
               apiKeyHash: this.engineApiKeyHash,
@@ -437,15 +527,21 @@ export class ApolloServerBase {
   }
 
   public async stop() {
+    this.toDispose.forEach(dispose => dispose());
     if (this.subscriptionServer) await this.subscriptionServer.close();
     if (this.engineReportingAgent) {
       this.engineReportingAgent.stop();
-      await this.engineReportingAgent.sendReport();
+      await this.engineReportingAgent.sendAllReports();
     }
   }
 
   public installSubscriptionHandlers(server: HttpServer) {
     if (!this.subscriptionServerOptions) {
+      if (this.config.gateway) {
+        throw Error(
+          'Subscriptions are not supported when operating as a gateway',
+        );
+      }
       if (this.supportsSubscriptions()) {
         throw Error(
           'Subscriptions are disabled, due to subscriptions set to false in the ApolloServer constructor',
@@ -464,9 +560,16 @@ export class ApolloServerBase {
       path,
     } = this.subscriptionServerOptions;
 
+    // TODO: This shouldn't use this.schema, as it is deprecated in favor of the schemaDerivedData promise.
+    const schema = this.schema;
+    if (this.schema === undefined)
+      throw new Error(
+        'Schema undefined during creation of subscription server.',
+      );
+
     this.subscriptionServer = SubscriptionServer.create(
       {
-        schema: this.schema,
+        schema,
         execute,
         subscribe,
         onConnect: onConnect
@@ -532,8 +635,8 @@ export class ApolloServerBase {
     });
   }
 
-  private initializeDocumentStore(): void {
-    this.documentStore = new InMemoryLRUCache<DocumentNode>({
+  private initializeDocumentStore(): InMemoryLRUCache<DocumentNode> {
+    return new InMemoryLRUCache<DocumentNode>({
       // Create ~about~ a 30MiB InMemoryLRUCache.  This is less than precise
       // since the technique to calculate the size of a DocumentNode is
       // only using JSON.stringify on the DocumentNode (and thus doesn't account
@@ -550,6 +653,8 @@ export class ApolloServerBase {
   protected async graphQLServerOptions(
     integrationContextArgument?: Record<string, any>,
   ) {
+    const { schema, documentStore, extensions } = await this.schemaDerivedData;
+
     let context: Context = this.context ? this.context : {};
 
     try {
@@ -565,10 +670,10 @@ export class ApolloServerBase {
     }
 
     return {
-      schema: this.schema,
+      schema,
       plugins: this.plugins,
-      documentStore: this.documentStore,
-      extensions: this.extensions,
+      documentStore,
+      extensions,
       context,
       // Allow overrides from options. Be explicit about a couple of them to
       // avoid a bad side effect of the otherwise useful noUnusedLocals option

@@ -41,6 +41,8 @@ import {
   Config,
   ApolloServerBase,
   PluginDefinition,
+  GraphQLService,
+  GraphQLExecutor,
 } from 'apollo-server-core';
 import { Headers } from 'apollo-server-env';
 import { GraphQLExtension, GraphQLResponse } from 'graphql-extensions';
@@ -112,6 +114,40 @@ const queryType = new GraphQLObjectType({
 const schema = new GraphQLSchema({
   query: queryType,
 });
+
+const makeGatewayMock = ({
+  optionsSpy = _options => {},
+  unsubscribeSpy = () => {},
+}: {
+  optionsSpy?: (_options: any) => void;
+  unsubscribeSpy?: () => void;
+} = {}) => {
+  const eventuallyAssigned = {
+    resolveLoad: null as ({ schema, executor }) => void,
+    triggerSchemaChange: null as (newSchema) => void,
+  };
+  const mockedLoadResults = new Promise<{
+    schema: GraphQLSchema;
+    executor: GraphQLExecutor;
+  }>(resolve => {
+    eventuallyAssigned.resolveLoad = ({ schema, executor }) => {
+      resolve({ schema, executor });
+    };
+  });
+
+  const mockedGateway: GraphQLService = {
+    load: options => {
+      optionsSpy(options);
+      return mockedLoadResults;
+    },
+    onSchemaChange: callback => {
+      eventuallyAssigned.triggerSchemaChange = callback;
+      return unsubscribeSpy;
+    },
+  };
+
+  return { gateway: mockedGateway, triggers: eventuallyAssigned };
+};
 
 export interface ServerInfo<AS extends ApolloServerBase> {
   address: string;
@@ -240,6 +276,62 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
           process.env.NODE_ENV = nodeEnv;
         });
+
+        it('prohibits providing a gateway in addition to schema/typedefs/resolvers', async () => {
+          const { gateway } = makeGatewayMock();
+
+          const incompatibleArgsSpy = jest.fn();
+          await createApolloServer({ gateway, schema }).catch(err =>
+            incompatibleArgsSpy(err.message),
+          );
+          expect(incompatibleArgsSpy.mock.calls[0][0]).toMatch(
+            /Cannot define both/,
+          );
+
+          await createApolloServer({ gateway, modules: {} as any }).catch(err =>
+            incompatibleArgsSpy(err.message),
+          );
+          expect(incompatibleArgsSpy.mock.calls[1][0]).toMatch(
+            /Cannot define both/,
+          );
+
+          await createApolloServer({ gateway, typeDefs: {} as any }).catch(
+            err => incompatibleArgsSpy(err.message),
+          );
+          expect(incompatibleArgsSpy.mock.calls[2][0]).toMatch(
+            /Cannot define both/,
+          );
+        });
+
+        it('prohibits providing a gateway in addition to subscription options', async () => {
+          const { gateway } = makeGatewayMock();
+
+          const expectedError = /Cannot define both `subscriptions` and `gateway`./;
+
+          const incompatibleArgsSpy = jest.fn();
+          await createApolloServer({
+            gateway,
+            subscriptions: 'pathToSubscriptions',
+          }).catch(err => incompatibleArgsSpy(err.message));
+          expect(incompatibleArgsSpy.mock.calls[0][0]).toMatch(expectedError);
+
+          await createApolloServer({
+            gateway,
+            subscriptions: true as any,
+          }).catch(err => incompatibleArgsSpy(err.message));
+          expect(incompatibleArgsSpy.mock.calls[1][0]).toMatch(expectedError);
+
+          await createApolloServer({
+            gateway,
+            subscriptions: { path: '' } as any,
+          }).catch(err => incompatibleArgsSpy(err.message));
+          expect(incompatibleArgsSpy.mock.calls[2][0]).toMatch(expectedError);
+
+          await createApolloServer({
+            gateway,
+          }).catch(err => incompatibleArgsSpy(err.message));
+          expect(incompatibleArgsSpy.mock.calls[3][0]).toMatch(expectedError);
+        });
       });
 
       describe('schema creation', () => {
@@ -261,6 +353,30 @@ export function testApolloServer<AS extends ApolloServerBase>(
           expect(result.data).toEqual({ hello: 'hi' });
           expect(result.errors).toBeUndefined();
         });
+
+        it("accepts a gateway's schema and calls its executor", async () => {
+          const { gateway, triggers } = makeGatewayMock();
+
+          const executor = jest.fn();
+          executor.mockReturnValue(
+            Promise.resolve({ data: { testString: 'hi - but federated!' } }),
+          );
+
+          triggers.resolveLoad({ schema, executor });
+
+          const { url: uri } = await createApolloServer({
+            gateway,
+            subscriptions: false,
+          });
+
+          const apolloFetch = createApolloFetch({ uri });
+          const result = await apolloFetch({ query: '{testString}' });
+
+          expect(result.data).toEqual({ testString: 'hi - but federated!' });
+          expect(result.errors).toBeUndefined();
+          expect(executor).toHaveBeenCalled();
+        });
+
         it('uses schema over resolvers + typeDefs', async () => {
           const typeDefs = gql`
             type Query {
@@ -2268,6 +2384,194 @@ export function testApolloServer<AS extends ApolloServerBase>(
             'max-age=10, public',
           );
         }
+      });
+    });
+
+    describe('Gateway', () => {
+      it('receives schema updates from the gateway', async () => {
+        const makeQueryTypeWithField = fieldName =>
+          new GraphQLSchema({
+            query: new GraphQLObjectType({
+              name: 'QueryType',
+              fields: {
+                [fieldName]: {
+                  type: GraphQLString,
+                },
+              },
+            }),
+          });
+
+        const { gateway, triggers } = makeGatewayMock();
+
+        const executor = req =>
+          (req.source as string).match(/1/)
+            ? Promise.resolve({ data: { testString1: 'hello' } })
+            : Promise.resolve({ data: { testString2: 'aloha' } });
+
+        triggers.resolveLoad({
+          schema: makeQueryTypeWithField('testString1'),
+          executor,
+        });
+
+        const { url: uri } = await createApolloServer({
+          gateway,
+          subscriptions: false,
+        });
+
+        const apolloFetch = createApolloFetch({ uri });
+        const result1 = await apolloFetch({ query: '{testString1}' });
+
+        expect(result1.data).toEqual({ testString1: 'hello' });
+        expect(result1.errors).toBeUndefined();
+
+        triggers.triggerSchemaChange(makeQueryTypeWithField('testString2'));
+
+        const result2 = await apolloFetch({ query: '{testString2}' });
+        expect(result2.data).toEqual({ testString2: 'aloha' });
+        expect(result2.errors).toBeUndefined();
+      });
+
+      it('passes engine data to the gateway', async () => {
+        const optionsSpy = jest.fn();
+
+        const { gateway, triggers } = makeGatewayMock({ optionsSpy });
+        triggers.resolveLoad({ schema, executor: () => {} });
+        await createApolloServer({
+          gateway,
+          subscriptions: false,
+          engine: { apiKey: 'service:tester:1234abc', schemaTag: 'staging' },
+        });
+
+        expect(optionsSpy).toHaveBeenLastCalledWith({
+          engine: {
+            apiKeyHash:
+              '0ca858e7fe8cffc01c5f1db917d2463b348b50d267427e54c1c8c99e557b242f4145930b949905ec430642467613610e471c40bb7a251b1e2248c399bb0498c4',
+            graphId: 'tester',
+            graphVariant: 'staging',
+          },
+        });
+      });
+
+      it('unsubscribes from schema update on close', async () => {
+        const unsubscribeSpy = jest.fn();
+        const { gateway, triggers } = makeGatewayMock({ unsubscribeSpy });
+        triggers.resolveLoad({ schema, executor: () => {} });
+        await createApolloServer({ gateway, subscriptions: false });
+        expect(unsubscribeSpy).not.toHaveBeenCalled();
+        await stopServer();
+        expect(unsubscribeSpy).toHaveBeenCalled();
+      });
+
+      it('waits until gateway has resolved a schema to respond to queries', async () => {
+        const { gateway, triggers } = makeGatewayMock();
+        const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+        let resolveExecutor;
+        const executor = () =>
+          new Promise(resolve => {
+            resolveExecutor = () => {
+              resolve({ data: { testString: 'hi - but federated!' } });
+            };
+          });
+
+        triggers.resolveLoad({ schema, executor });
+        const { url: uri } = await createApolloServer({
+          gateway,
+          subscriptions: false,
+        });
+        const fetchComplete = jest.fn();
+        const apolloFetch = createApolloFetch({ uri });
+        const result = apolloFetch({ query: '{testString}' }).then(result => {
+          fetchComplete(result);
+          return result;
+        });
+        expect(fetchComplete).not.toHaveBeenCalled();
+        await wait(100); //some bogus value to make sure we aren't returning early
+        expect(fetchComplete).not.toHaveBeenCalled();
+        resolveExecutor();
+        const resolved = await result;
+        expect(fetchComplete).toHaveBeenCalled();
+        expect(resolved.data).toEqual({ testString: 'hi - but federated!' });
+        expect(resolved.errors).toBeUndefined();
+      });
+
+      it('can serve multiple active schemas simultaneously during a schema rollover', async () => {
+        const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+        const makeQueryTypeWithField = fieldName =>
+          new GraphQLSchema({
+            query: new GraphQLObjectType({
+              name: 'QueryType',
+              fields: {
+                [fieldName]: {
+                  type: GraphQLString,
+                },
+              },
+            }),
+          });
+
+        const { gateway, triggers } = makeGatewayMock();
+
+        const makeEventuallyResolvingPromise = val => {
+          let resolver;
+          const promise = new Promise(
+            resolve => (resolver = () => resolve(val)),
+          );
+          return { resolver, promise };
+        };
+
+        const { resolver: r1, promise: p1 } = makeEventuallyResolvingPromise({
+          data: { testString1: '1' },
+        });
+        const { resolver: r2, promise: p2 } = makeEventuallyResolvingPromise({
+          data: { testString2: '2' },
+        });
+        const { resolver: r3, promise: p3 } = makeEventuallyResolvingPromise({
+          data: { testString3: '3' },
+        });
+
+        const executor = req =>
+          (req.source as string).match(/1/)
+            ? p1
+            : (req.source as string).match(/2/)
+            ? p2
+            : p3;
+
+        triggers.resolveLoad({
+          schema: makeQueryTypeWithField('testString1'),
+          executor,
+        });
+
+        const { url: uri } = await createApolloServer({
+          gateway,
+          subscriptions: false,
+        });
+
+        // TODO: Remove these awaits... I think it may require the `onSchemaChange` to block?
+        const apolloFetch = createApolloFetch({ uri });
+        const result1 = apolloFetch({ query: '{testString1}' });
+        await wait(100);
+        triggers.triggerSchemaChange(makeQueryTypeWithField('testString2'));
+        await wait(100);
+        const result2 = apolloFetch({ query: '{testString2}' });
+        await wait(100);
+        triggers.triggerSchemaChange(makeQueryTypeWithField('testString3'));
+        await wait(100);
+        const result3 = apolloFetch({ query: '{testString3}' });
+        await wait(100);
+        r3();
+        await wait(100);
+        r1();
+        await wait(100);
+        r2();
+
+        await Promise.all([result1, result2, result3]).then(([v1, v2, v3]) => {
+          expect(v1.errors).toBeUndefined();
+          expect(v2.errors).toBeUndefined();
+          expect(v3.errors).toBeUndefined();
+          expect(v1.data).toEqual({ testString1: '1' });
+          expect(v2.data).toEqual({ testString2: '2' });
+          expect(v3.data).toEqual({ testString3: '3' });
+        });
       });
     });
   });

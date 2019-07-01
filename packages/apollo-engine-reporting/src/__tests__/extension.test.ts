@@ -3,7 +3,6 @@ import {
   GraphQLExtensionStack,
   enableGraphQLExtensions,
 } from 'graphql-extensions';
-import { Trace } from 'apollo-engine-reporting-protobuf';
 import { graphql } from 'graphql';
 import { Request } from 'node-fetch';
 import {
@@ -15,6 +14,8 @@ import {
 } from '../extension';
 import { Headers } from 'apollo-server-env';
 import { InMemoryLRUCache } from 'apollo-server-caching';
+import { AddTraceArgs } from '../agent';
+import { Trace } from 'apollo-engine-reporting-protobuf';
 
 test('trace construction', async () => {
   const typeDefs = `
@@ -57,15 +58,15 @@ test('trace construction', async () => {
   enableGraphQLExtensions(schema);
 
   const traces: Array<any> = [];
-  function addTrace(
-    signature: Promise<string | null>,
-    operationName: string,
-    trace: Trace,
-  ) {
-    traces.push({ signature, operationName, trace });
+  async function addTrace({ trace, operationName, schemaHash }: AddTraceArgs) {
+    traces.push({ schemaHash, operationName, trace });
   }
 
-  const reportingExtension = new EngineReportingExtension({}, addTrace);
+  const reportingExtension = new EngineReportingExtension(
+    {},
+    addTrace,
+    'schema-hash',
+  );
   const stack = new GraphQLExtensionStack([reportingExtension]);
   const requestDidEnd = stack.requestDidStart({
     request: new Request('http://localhost:123/foo') as any,
@@ -81,6 +82,7 @@ test('trace construction', async () => {
       context: {},
       cache: new InMemoryLRUCache(),
     },
+    context: {},
   });
   await graphql({
     schema,

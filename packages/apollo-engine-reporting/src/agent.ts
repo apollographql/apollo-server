@@ -12,10 +12,7 @@ import { fetch, RequestAgent, Response } from 'apollo-server-env';
 import retry from 'async-retry';
 
 import { EngineReportingExtension } from './extension';
-import {
-  GraphQLRequestContext,
-  GraphQLServiceContext,
-} from 'apollo-server-core/dist/requestPipelineAPI';
+import { GraphQLRequestContext } from 'apollo-server-core/dist/requestPipelineAPI';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import { defaultEngineReportingSignature } from 'apollo-graphql';
 
@@ -194,6 +191,7 @@ export interface AddTraceArgs {
   trace: Trace;
   operationName: string;
   queryHash: string;
+  schemaHash: string;
   queryString?: string;
   documentAST?: DocumentNode;
 }
@@ -213,18 +211,19 @@ const serviceHeaderDefaults = {
 export class EngineReportingAgent<TContext = any> {
   private options: EngineReportingOptions<TContext>;
   private apiKey: string;
-  private report!: FullTracesReport;
-  private reportSize!: number;
+  private reports: { [schemaHash: string]: FullTracesReport } = Object.create(
+    null,
+  );
+  private reportSizes: { [schemaHash: string]: number } = Object.create(null);
   private reportTimer: any; // timer typing is weird and node-specific
   private sendReportsImmediately?: boolean;
   private stopped: boolean = false;
-  private reportHeader: ReportHeader;
+  private reportHeaders: { [schemaHash: string]: ReportHeader } = Object.create(
+    null,
+  );
   private signatureCache: InMemoryLRUCache<string>;
 
-  public constructor(
-    options: EngineReportingOptions<TContext> = {},
-    { schemaHash }: GraphQLServiceContext,
-  ) {
+  public constructor(options: EngineReportingOptions<TContext> = {}) {
     this.options = options;
     this.apiKey = options.apiKey || process.env.ENGINE_API_KEY || '';
     if (!this.apiKey) {
@@ -238,17 +237,10 @@ export class EngineReportingAgent<TContext = any> {
     // them based on repeated traces for the same `queryHash`.
     this.signatureCache = createSignatureCache();
 
-    this.reportHeader = new ReportHeader({
-      ...serviceHeaderDefaults,
-      schemaHash,
-      schemaTag: options.schemaTag || process.env.ENGINE_SCHEMA_TAG || '',
-    });
-    this.resetReport();
-
     this.sendReportsImmediately = options.sendReportsImmediately;
     if (!this.sendReportsImmediately) {
       this.reportTimer = setInterval(
-        () => this.sendReportAndReportErrors(),
+        () => this.sendAllReportsAndReportErrors(),
         this.options.reportIntervalMs || 10 * 1000,
       );
     }
@@ -258,7 +250,7 @@ export class EngineReportingAgent<TContext = any> {
       signals.forEach(signal => {
         process.once(signal, async () => {
           this.stop();
-          await this.sendReportAndReportErrors();
+          await this.sendAllReportsAndReportErrors();
           process.kill(process.pid, signal);
         });
       });
@@ -268,59 +260,12 @@ export class EngineReportingAgent<TContext = any> {
     handleLegacyOptions(this.options);
   }
 
-  public newExtension(): EngineReportingExtension<TContext> {
+  public newExtension(schemaHash: string): EngineReportingExtension<TContext> {
     return new EngineReportingExtension<TContext>(
       this.options,
       this.addTrace.bind(this),
+      schemaHash,
     );
-  }
-
-  private async getTraceSignature({
-    queryHash,
-    operationName,
-    documentAST,
-    queryString,
-  }: {
-    queryHash: string;
-    operationName: string;
-    documentAST?: DocumentNode;
-    queryString?: string;
-  }): Promise<string> {
-    if (!documentAST && !queryString) {
-      // This shouldn't happen: one of those options must be passed to runQuery.
-      throw new Error('No queryString or parsedQuery?');
-    }
-
-    const cacheKey = signatureCacheKey(queryHash, operationName);
-
-    // If we didn't have the signature in the cache, we'll resort to
-    // calculating it asynchronously.  The `addTrace` method will
-    // `await` the `signature` if it's a Promise, prior to putting it
-    // on the stack of traces to deliver to the cloud.
-    const cachedSignature = await this.signatureCache.get(cacheKey);
-
-    if (cachedSignature) {
-      return cachedSignature;
-    }
-
-    if (!documentAST) {
-      // We didn't get an AST, possibly because of a parse failure. Let's just
-      // use the full query string.
-      //
-      // XXX This does mean that even if you use a calculateSignature which
-      //     hides literals, you might end up sending literals for queries
-      //     that fail parsing or validation. Provide some way to mask them
-      //     anyway?
-      return queryString as string;
-    }
-
-    const generatedSignature = (this.options.calculateSignature ||
-      defaultEngineReportingSignature)(documentAST, operationName);
-
-    // Intentionally not awaited so the cache can be written to at leisure.
-    this.signatureCache.set(cacheKey, generatedSignature);
-
-    return generatedSignature;
   }
 
   public async addTrace({
@@ -329,11 +274,24 @@ export class EngineReportingAgent<TContext = any> {
     documentAST,
     operationName,
     queryString,
+    schemaHash,
   }: AddTraceArgs): Promise<void> {
     // Ignore traces that come in after stop().
     if (this.stopped) {
       return;
     }
+
+    if (!(schemaHash in this.reports)) {
+      this.reportHeaders[schemaHash] = new ReportHeader({
+        ...serviceHeaderDefaults,
+        schemaHash,
+        schemaTag:
+          this.options.schemaTag || process.env.ENGINE_SCHEMA_TAG || '',
+      });
+      // initializes this.reports[reportHash]
+      this.resetReport(schemaHash);
+    }
+    const report = this.reports[schemaHash];
 
     const protobufError = Trace.verify(trace);
     if (protobufError) {
@@ -349,30 +307,37 @@ export class EngineReportingAgent<TContext = any> {
     });
 
     const statsReportKey = `# ${operationName || '-'}\n${signature}`;
-    if (!this.report.tracesPerQuery.hasOwnProperty(statsReportKey)) {
-      this.report.tracesPerQuery[statsReportKey] = new Traces();
-      (this.report.tracesPerQuery[statsReportKey] as any).encodedTraces = [];
+    if (!report.tracesPerQuery.hasOwnProperty(statsReportKey)) {
+      report.tracesPerQuery[statsReportKey] = new Traces();
+      (report.tracesPerQuery[statsReportKey] as any).encodedTraces = [];
     }
     // See comment on our override of Traces.encode inside of
     // apollo-engine-reporting-protobuf to learn more about this strategy.
-    (this.report.tracesPerQuery[statsReportKey] as any).encodedTraces.push(
+    (report.tracesPerQuery[statsReportKey] as any).encodedTraces.push(
       encodedTrace,
     );
-    this.reportSize += encodedTrace.length + Buffer.byteLength(statsReportKey);
+    this.reportSizes[schemaHash] +=
+      encodedTrace.length + Buffer.byteLength(statsReportKey);
 
     // If the buffer gets big (according to our estimate), send.
     if (
       this.sendReportsImmediately ||
-      this.reportSize >=
+      this.reportSizes[schemaHash] >=
         (this.options.maxUncompressedReportSize || 4 * 1024 * 1024)
     ) {
-      await this.sendReportAndReportErrors();
+      await this.sendReportAndReportErrors(schemaHash);
     }
   }
 
-  public async sendReport(): Promise<void> {
-    const report = this.report;
-    this.resetReport();
+  public async sendAllReports(): Promise<void> {
+    await Promise.all(
+      Object.keys(this.reports).map(hash => this.sendReport(hash)),
+    );
+  }
+
+  public async sendReport(schemaHash: string): Promise<void> {
+    const report = this.reports[schemaHash];
+    this.resetReport(schemaHash);
 
     if (Object.keys(report.tracesPerQuery).length === 0) {
       return;
@@ -473,8 +438,64 @@ export class EngineReportingAgent<TContext = any> {
     this.stopped = true;
   }
 
-  private sendReportAndReportErrors(): Promise<void> {
-    return this.sendReport().catch(err => {
+  private async getTraceSignature({
+    queryHash,
+    operationName,
+    documentAST,
+    queryString,
+  }: {
+    queryHash: string;
+    operationName: string;
+    documentAST?: DocumentNode;
+    queryString?: string;
+  }): Promise<string> {
+    if (!documentAST && !queryString) {
+      // This shouldn't happen: one of those options must be passed to runQuery.
+      throw new Error('No queryString or parsedQuery?');
+    }
+
+    const cacheKey = signatureCacheKey(queryHash, operationName);
+
+    // If we didn't have the signature in the cache, we'll resort to
+    // calculating it asynchronously.  The `addTrace` method will
+    // `await` the `signature` if it's a Promise, prior to putting it
+    // on the stack of traces to deliver to the cloud.
+    const cachedSignature = await this.signatureCache.get(cacheKey);
+
+    if (cachedSignature) {
+      return cachedSignature;
+    }
+
+    if (!documentAST) {
+      // We didn't get an AST, possibly because of a parse failure. Let's just
+      // use the full query string.
+      //
+      // XXX This does mean that even if you use a calculateSignature which
+      //     hides literals, you might end up sending literals for queries
+      //     that fail parsing or validation. Provide some way to mask them
+      //     anyway?
+      return queryString as string;
+    }
+
+    const generatedSignature = (this.options.calculateSignature ||
+      defaultEngineReportingSignature)(documentAST, operationName);
+
+    // Intentionally not awaited so the cache can be written to at leisure.
+    this.signatureCache.set(cacheKey, generatedSignature);
+
+    return generatedSignature;
+  }
+
+  private async sendAllReportsAndReportErrors(): Promise<void> {
+    await Promise.all(
+      Object.keys(this.reports).map(schemaHash =>
+        this.sendReportAndReportErrors(schemaHash),
+      ),
+    );
+  }
+
+  private sendReportAndReportErrors(schemaHash: string): Promise<void> {
+    return this.sendReport(schemaHash).catch(err => {
       // This catch block is primarily intended to catch network errors from
       // the retried request itself, which include network errors and non-2xx
       // HTTP errors.
@@ -486,9 +507,11 @@ export class EngineReportingAgent<TContext = any> {
     });
   }
 
-  private resetReport() {
-    this.report = new FullTracesReport({ header: this.reportHeader });
-    this.reportSize = 0;
+  private resetReport(schemaHash: string) {
+    this.reports[schemaHash] = new FullTracesReport({
+      header: this.reportHeaders[schemaHash],
+    });
+    this.reportSizes[schemaHash] = 0;
   }
 }
 

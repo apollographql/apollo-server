@@ -45,6 +45,7 @@ export class EngineReportingExtension<TContext = any>
   public constructor(
     options: EngineReportingOptions<TContext>,
     addTrace: (args: AddTraceArgs) => Promise<void>,
+    private schemaHash: string,
   ) {
     this.options = {
       ...options,
@@ -160,6 +161,7 @@ export class EngineReportingExtension<TContext = any>
         documentAST,
         queryString: this.queryString || '',
         trace: this.trace,
+        schemaHash: this.schemaHash,
       });
     };
   }
