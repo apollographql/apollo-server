@@ -254,6 +254,11 @@ async function executeFetch<TContext>(
   }
 }
 
+/**
+ *
+ * @param source Result of GraphQL execution.
+ * @param selectionSet
+ */
 function executeSelectionSet(
   source: Record<string, any>,
   selectionSet: SelectionSetNode,
@@ -264,13 +269,22 @@ function executeSelectionSet(
     switch (selection.kind) {
       case Kind.FIELD:
         const responseName = getResponseName(selection);
-        if (!source[responseName]) {
+        const selectionSet = selection.selectionSet;
+
+        // Null is a valid value for a response, provided that the types match.
+        // Presumably the underlying service has validated that result, so we
+        // can pass it through here
+        if (typeof source[responseName] === 'undefined') {
           throw new Error(`Field "${responseName}" was not found in response.`);
         }
-        if (selection.selectionSet) {
+        if (Array.isArray(source[responseName])) {
+          result[responseName] = source[responseName].map((value: any) =>
+            selectionSet ? executeSelectionSet(value, selectionSet) : value,
+          );
+        } else if (selectionSet) {
           result[responseName] = executeSelectionSet(
             source[responseName],
-            selection.selectionSet,
+            selectionSet,
           );
         } else {
           result[responseName] = source[responseName];

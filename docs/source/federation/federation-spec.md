@@ -294,7 +294,9 @@ In this case, the Reviews service adds new capabilities to the `User` type by pr
 
 ### `@external`
 
-`directive @external on FIELD_DEFINITION`
+```graphql
+directive @external on FIELD_DEFINITION
+```
 
 The `@external` directive is used to mark a field as owned by another service. This allows service A to use fields from service B while also knowing at runtime the types of that field. For example:
 

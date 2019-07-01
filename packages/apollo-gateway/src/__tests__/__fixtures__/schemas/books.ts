@@ -5,6 +5,7 @@ export const name = 'books';
 export const typeDefs = gql`
   extend type Query {
     book(isbn: String!): Book
+    books: [Book]
   }
 
   type Library @key(fields: "id") {
@@ -24,6 +25,7 @@ export const typeDefs = gql`
     isbn: String!
     title: String
     year: Int
+    similarBooks: [Book!]!
   }
 `;
 
@@ -43,6 +45,23 @@ const books = [
     isbn: '0201633612',
     title: 'Design Patterns',
     year: 1995,
+    similarBooks: ['0201633612', '0136291554'],
+  },
+  {
+    isbn: '1234567890',
+    title: 'The Year Was Null',
+    year: null,
+  },
+  {
+    isbn: '404404404',
+    title: '',
+    year: 404,
+  },
+  {
+    isbn: '0987654321',
+    title: 'No Books Like This Book!',
+    year: 2019,
+    similarBooks: ['', null],
   },
 ];
 
@@ -50,6 +69,13 @@ export const resolvers: GraphQLResolverMap<any> = {
   Book: {
     __resolveObject(object) {
       return books.find(book => book.isbn === object.isbn);
+    },
+    similarBooks(object) {
+      return object.similarBooks
+        ? object.similarBooks
+            .map((isbn: string) => books.find(book => book.isbn === isbn))
+            .filter(Boolean)
+        : [];
     },
   },
   Library: {
@@ -60,6 +86,9 @@ export const resolvers: GraphQLResolverMap<any> = {
   Query: {
     book(_, args) {
       return { isbn: args.isbn };
+    },
+    books() {
+      return books;
     },
   },
 };
