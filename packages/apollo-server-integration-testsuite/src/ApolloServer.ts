@@ -383,31 +383,6 @@ export function testApolloServer<AS extends ApolloServerBase>(
           expect(executor).toHaveBeenCalled();
         });
 
-        // Mocks are not used when operating as a gateway. Todo?
-        it.skip("allows mocking a gateway's operations", async () => {
-          const { gateway, triggers } = makeGatewayMock();
-
-          const executor = jest.fn();
-          executor.mockReturnValue(
-            Promise.resolve({ data: { testString: 'hi - but federated!' } }),
-          );
-
-          triggers.resolveLoad({ schema, executor });
-
-          const { url: uri } = await createApolloServer({
-            gateway,
-            mocks: { String: () => 'mock collective' },
-          });
-
-          const apolloFetch = createApolloFetch({ uri });
-          const result = await apolloFetch({ query: '{testString}' });
-          console.log(result);
-
-          expect(result.data).toEqual({ testString: 'mock collective' });
-          expect(result.errors).toBeUndefined();
-          expect(executor).not.toHaveBeenCalled();
-        });
-
         it('uses schema over resolvers + typeDefs', async () => {
           const typeDefs = gql`
             type Query {
@@ -2485,7 +2460,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
         const unsubscribeSpy = jest.fn();
         const { gateway, triggers } = makeGatewayMock({ unsubscribeSpy });
         triggers.resolveLoad({ schema, executor: () => {} });
-        await createApolloServer({ gateway, subscriptions: false }); 
+        await createApolloServer({ gateway, subscriptions: false });
         expect(unsubscribeSpy).not.toHaveBeenCalled();
         await stopServer();
         expect(unsubscribeSpy).toHaveBeenCalled();
