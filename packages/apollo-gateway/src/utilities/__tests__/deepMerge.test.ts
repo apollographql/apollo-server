@@ -60,18 +60,18 @@ describe('deepMerge', () => {
   it('merges arrays', () => {
     const target = {
       a: 1,
-      b: [{ c: 1, d: 2}]
+      b: [{ c: 1, d: 2 }],
     };
 
     const source = {
       e: 2,
-      b: [{ f: 3 }]
+      b: [{ f: 3 }],
     };
 
     expect(deepMerge(target, source)).toEqual({
       a: 1,
       e: 2,
-      b: [{ c: 1, d: 2, f: 3}]
+      b: [{ c: 1, d: 2, f: 3 }],
     });
   });
 });
