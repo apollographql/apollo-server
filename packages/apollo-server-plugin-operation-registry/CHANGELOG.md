@@ -2,6 +2,7 @@
 
 ### vNEXT (Currently `alpha` tag)
 
+- Add lifecycle hooks: `willUpdateManifest`, `onUnregisteredOperation`, and `onForbiddenOperation`. [PR #158](https://github.com/apollographql/apollo-platform-commercial/pull/158)
 - Prevent the polling timer from keeping the event loop active [PR #223](https://github.com/apollographql/apollo-platform-commercial/pull/223)
 - Update error message for operations that are not in the operation registry [PR #170](https://github.com/apollographql/apollo-platform-commercial/pull/170)
 
