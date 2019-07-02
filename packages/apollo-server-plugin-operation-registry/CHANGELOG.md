@@ -2,6 +2,8 @@
 
 ### vNEXT
 
+- Add lifecycle hooks: willUpdateManifest, onUnregisteredOperation, onForbiddenOperation [PR #158](https://github.com/apollographql/apollo-platform-commercial/pull/158)
+
 ### 0.2.0
 
 - Per-tag operation manifests can now be fetched for each tag that has a schema and registered operations. [PR #135](https://github.com/apollographql/apollo-platform-commercial/pull/135)
