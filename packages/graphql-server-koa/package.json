@@ -1,6 +1,6 @@
 {
   "name": "graphql-server-koa",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "Production-ready Node.js GraphQL server for Koa",
   "main": "dist/index.js",
   "scripts": {
