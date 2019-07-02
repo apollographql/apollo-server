@@ -14,7 +14,7 @@ Let's take a look at how to get a federated graph up and running. We'll start by
 
 ## Defining a federated service
 
-Converting an existing schema into a federated service is the first step in buliding a federated graph. To do this, we'll use the `buildFederatedSchema()` function from the `@apollo/federation` package.
+Converting an existing schema into a federated service is the first step in building a federated graph. To do this, we'll use the `buildFederatedSchema()` function from the `@apollo/federation` package.
 
 Let's start with a basic Apollo Server and make the switch:
 
@@ -135,13 +135,6 @@ On startup, the gateway will fetch the service capabilities from the running ser
 The call to `gateway.load()` returns a `Promise` which resolves to a `schema` and `executor`. These are intended to be passed into the constructor of `ApolloServer`.
 * The `schema` is the final, composed schema which represents all services.
 * The `executor` handles incoming requests. It uses the query planner to manage the various requests to our services that are necessary to construct the final result.
-
-## Inspecting query plans
-
-When the gateway receives a new query, it generates a query plan that defines the sequence of requests the gateway will send to the necessary downstream services. Inspecting a query plan can be a helpful tool in understanding the gateway and exploring how directives like [`@requires`](/federation/advanced-features/#computed-fields) and [`@provides`](/federation/advanced-features/#using-denormalized-data) can help optimize query plans. To make it easy to access query plans, the `@apollo/gateway` package includes a build of GraphQL Playground that adds a query plan inspector.
-
-
-![playground](../images/playground.png)
 
 ## Sharing context across services
 For existing services, it's likely that you've already implemented some form of authentication to convert a request into a user, or require some information passed to the service through request headers. `@apollo/gateway` makes it easy to reuse the context feature of Apollo Server to customize what information is sent to underlying services. Let's see what it looks like to pass user information along from the gateway to its services:

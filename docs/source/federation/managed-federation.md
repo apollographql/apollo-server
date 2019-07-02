@@ -15,17 +15,21 @@ Like any distributed architecture, you should make sure that your federated Grap
 
 #### Reliability
 
-## Observing Gateway Changes
+## Monitoring your infrastructure
 
-## Enabling Federated Metrics
+#### Observing Gateway Changes
 
-## Inspecting Query Plans
+#### Enabling Federated Metrics
+
+#### Monitoring federated services
+
+#### Inspecting Query Plans
 
 When the gateway receives a new query, it generates a query plan that defines the sequence of requests the gateway will send to the necessary downstream services. Inspecting a query plan can be a helpful tool in understanding the gateway and exploring how directives like [`@requires`](/federation/advanced-features/#computed-fields) and [`@provides`](/federation/advanced-features/#using-denormalized-data) can help optimize query plans. To make it easy to access query plans, the `@apollo/gateway` package includes a build of GraphQL Playground that adds a query plan inspector.
 
 
 ![playground](../images/playground.png)
 
-## Observing Gateway Composition
+#### Observing Gateway Composition
 
-## Observing Operation Life-cycle
+#### Observing Operation Life-cycle
