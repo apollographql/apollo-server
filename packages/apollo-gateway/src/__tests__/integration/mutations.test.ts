@@ -239,57 +239,53 @@ it('multiple root mutations with correct service order', async () => {
             }
           }
         },
-        Sequence {
-          Fetch(service: "accounts") {
+        Fetch(service: "accounts") {
+          {
+            login(username: $username, password: $password) {
+              __typename
+              id
+            }
+          }
+        },
+        Flatten(path: "login") {
+          Fetch(service: "reviews") {
             {
-              login(username: $username, password: $password) {
+              ... on User {
                 __typename
                 id
               }
-            }
-          },
-          Sequence {
-            Flatten(path: "login") {
-              Fetch(service: "reviews") {
-                {
-                  ... on User {
+            } =>
+            {
+              ... on User {
+                reviews {
+                  product {
                     __typename
-                    id
-                  }
-                } =>
-                {
-                  ... on User {
-                    reviews {
-                      product {
-                        __typename
-                        ... on Book {
-                          __typename
-                          isbn
-                        }
-                        ... on Furniture {
-                          upc
-                        }
-                      }
+                    ... on Book {
+                      __typename
+                      isbn
+                    }
+                    ... on Furniture {
+                      upc
                     }
                   }
                 }
-              },
-            },
-            Flatten(path: "login.reviews.@.product") {
-              Fetch(service: "product") {
-                {
-                  ... on Book {
-                    __typename
-                    isbn
-                  }
-                } =>
-                {
-                  ... on Book {
-                    upc
-                  }
-                }
-              },
-            },
+              }
+            }
+          },
+        },
+        Flatten(path: "login.reviews.@.product") {
+          Fetch(service: "product") {
+            {
+              ... on Book {
+                __typename
+                isbn
+              }
+            } =>
+            {
+              ... on Book {
+                upc
+              }
+            }
           },
         },
         Fetch(service: "reviews") {
