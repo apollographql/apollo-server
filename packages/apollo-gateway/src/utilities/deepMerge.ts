@@ -15,7 +15,11 @@ export function deepMerge(target: any, source: any): any {
     ) {
       let i = 0;
       for (; i < source[key].length; i++) {
-        deepMerge(target[key][i], source[key][i]);
+        if (isObject(target[key][i]) && isObject(source[key][i])) {
+          deepMerge(target[key][i], source[key][i]);
+        } else {
+          target[key][i] = source[key][i];
+        }
       }
     } else {
       target[key] = source[key];
