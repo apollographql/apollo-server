@@ -147,7 +147,7 @@ In case of an authentication error, the Promise will be rejected, which prevents
 
 ## Securing Subscriptions with WSS
 
-Subscriptions can be configured to over SSL/WSS. See [example server](/essentials/server/#ssltls-support).
+Subscriptions can be configured to over [SSL](https://hosting.review/web-hosting-glossary/#12)/WSS. See [example server](/essentials/server/#ssltls-support).
 
 ## Subscription Filters
 
