@@ -4,6 +4,7 @@ import {
   GraphQLRequest,
   GraphQLResponse,
 } from 'apollo-server-core/dist/requestPipelineAPI';
+import { GraphQLSchema } from 'graphql';
 export {
   GraphQLServiceContext,
   GraphQLRequestContext,
@@ -18,6 +19,7 @@ export type WithRequired<T, K extends keyof T> = T & Required<Pick<T, K>>;
 
 export interface ApolloServerPlugin {
   serverWillStart?(service: GraphQLServiceContext): ValueOrPromise<void>;
+  schemaDidChange?(schema: GraphQLSchema, schemaHash: string): void;
   requestDidStart?<TContext>(
     requestContext: GraphQLRequestContext<TContext>,
   ): GraphQLRequestListener<TContext> | void;
