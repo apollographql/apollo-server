@@ -5,6 +5,16 @@ description: Ensuring reliability and robustness
 
 Like any distributed architecture, you should make sure that your federated GraphQL layer has proper observability and monitoring to ensure the best reliability and performance of both your gateway and the federated services underneath it. This document is meant to provide best practices and how-tos for observability and control over your federated architecture. If you're running Federation in production, we'd love to [hear from you](<LINK_TO_EMAIL>) and accept any [contribution](LINK_TO_GITHUB) to this documentation.
 
+## Managed Federation
+
+// TODO: Document the outline for how managed federation works, how to enable it, how it protects, etc.
+
+#### Overview
+
+#### Controlling rollout
+
+#### Reliability
+
 ## Observing Gateway Changes
 
 ## Enabling Federated Metrics
