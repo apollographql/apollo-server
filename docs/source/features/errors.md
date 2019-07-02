@@ -150,6 +150,10 @@ server.listen().then(({ url }) => {
 });
 ```
 
+The original error instance thrown in the resolver is in `err.originalError`,
+it can be used to check error type, e.g `AuthenticationError` or
+`ValidationError`
+
 ### For Apollo Engine reporting
 
 With the Apollo Platform, it's possible to observe error rates within Apollo
