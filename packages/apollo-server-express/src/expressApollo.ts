@@ -7,9 +7,13 @@ import {
 } from 'apollo-server-core';
 import { ValueOrPromise } from 'apollo-server-env';
 
+export interface ExpressGraphQLOptions extends GraphQLOptions {
+  callNext?: boolean;
+}
+
 export interface ExpressGraphQLOptionsFunction {
   (req?: express.Request, res?: express.Response): ValueOrPromise<
-    GraphQLOptions
+    ExpressGraphQLOptions
   >;
 }
 
@@ -19,9 +23,9 @@ export interface ExpressGraphQLOptionsFunction {
 //
 
 export function graphqlExpress(
-  options: GraphQLOptions | ExpressGraphQLOptionsFunction,
+  optionsCreator: ExpressGraphQLOptions | ExpressGraphQLOptionsFunction,
 ): express.Handler {
-  if (!options) {
+  if (!optionsCreator) {
     throw new Error('Apollo Server requires options.');
   }
 
@@ -31,7 +35,12 @@ export function graphqlExpress(
     );
   }
 
-  return (req, res, next): void => {
+  return async (req, res, next): Promise<void> => {
+    const options =
+      typeof optionsCreator === 'function'
+        ? await optionsCreator(req, res)
+        : optionsCreator;
+
     runHttpQuery([req, res], {
       method: req.method,
       options: options,
@@ -46,6 +55,7 @@ export function graphqlExpress(
         }
         res.write(graphqlResponse);
         res.end();
+        if (options.callNext) next();
       },
       (error: HttpQueryError) => {
         if ('HttpQueryError' !== error.name) {
@@ -61,6 +71,7 @@ export function graphqlExpress(
         res.statusCode = error.statusCode;
         res.write(error.message);
         res.end();
+        if (options.callNext) next();
       },
     );
   };

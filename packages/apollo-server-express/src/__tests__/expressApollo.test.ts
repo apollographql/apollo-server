@@ -1,11 +1,11 @@
 import express from 'express';
+import request from 'supertest';
 import { ApolloServer, ApolloServerExpressConfig } from '../ApolloServer';
-import { graphqlExpress } from '../expressApollo';
+import { graphqlExpress, ExpressGraphQLOptions } from '../expressApollo';
 import testSuite, {
   schema as Schema,
   CreateAppOptions,
 } from 'apollo-server-integration-testsuite';
-import { GraphQLOptions } from 'apollo-server-core';
 
 function createApp(options: CreateAppOptions = {}) {
   const app = express();
@@ -19,7 +19,7 @@ function createApp(options: CreateAppOptions = {}) {
 
 describe('expressApollo', () => {
   it('throws error if called without schema', function() {
-    expect(() => new ApolloServer(undefined as GraphQLOptions)).toThrow(
+    expect(() => new ApolloServer(undefined as ExpressGraphQLOptions)).toThrow(
       'ApolloServer requires options.',
     );
   });
@@ -28,6 +28,18 @@ describe('expressApollo', () => {
     expect(() => graphqlExpress({ schema: Schema }, 1)).toThrow(
       'Apollo Server expects exactly one argument, got 2',
     );
+  });
+
+  it("calls 'next' on query completion regardless of error state when callNext is set", async () => {
+    const app = express();
+    const mock = jest.fn();
+    app.use('/graphiql', graphqlExpress({ callNext: false, schema: Schema }));
+    app.use('/graphql', graphqlExpress({ callNext: true, schema: Schema }));
+    app.use(mock);
+    await request(app).get('/graphiql');
+    expect(mock).not.toBeCalled();
+    await request(app).get('/graphql');
+    expect(mock).toBeCalled();
   });
 });
 
