@@ -354,23 +354,7 @@ function downstreamServiceError(
 function mapFetchNodeToVariableDefinitions(
   node: FetchNode,
 ): VariableDefinitionNode[] {
-  const variableUsage = node.variableUsages;
-  if (!variableUsage) {
-    return [];
-  }
-
-  const variableMap = Object.entries(variableUsage).reduce(
-    (map, [name, node]) => {
-      if (!map.has(name)) {
-        map.set(name, node);
-      }
-
-      return map;
-    },
-    new Map<string, VariableDefinitionNode>(),
-  );
-
-  return Array.from(variableMap.values());
+  return node.variableUsages ? Object.values(node.variableUsages) : [];
 }
 
 function operationForRootFetch(
