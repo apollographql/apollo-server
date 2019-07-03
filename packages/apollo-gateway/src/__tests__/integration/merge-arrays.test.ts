@@ -44,6 +44,5 @@ describe('query', () => {
     });
 
     expect(queryPlan).toCallService('accounts');
-    expect(queryPlan).toCallService('reviews');
   });
 });
