@@ -94,3 +94,34 @@ it('passes variables to nested services', async () => {
   expect(queryPlan).toCallService('accounts');
   expect(queryPlan).toCallService('reviews');
 });
+
+it('works with default variables in the schema', async () => {
+  const query = gql`
+    query LibraryUser($libraryId: ID!, $userId: ID) {
+      library(id: $libraryId) {
+        userAccount(id: $userId) {
+          id
+          name
+        }
+      }
+    }
+  `;
+
+  const { data, queryPlan, errors } = await execute(
+    [accounts, books, inventory, product, reviews],
+    { query, variables: { libraryId: '1' } },
+  );
+
+  expect(data).toEqual({
+    library: {
+      userAccount: {
+        id: '1',
+        name: 'Ada Lovelace',
+      },
+    },
+  });
+
+  expect(errors).toBeUndefined();
+  expect(queryPlan).toCallService('books');
+  expect(queryPlan).toCallService('accounts');
+});
