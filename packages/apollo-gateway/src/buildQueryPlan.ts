@@ -23,10 +23,9 @@ import {
   OperationDefinitionNode,
   SelectionSetNode,
   typeFromAST,
-  TypeInfo,
   TypeNameMetaFieldDef,
   visit,
-  visitWithTypeInfo,
+  VariableDefinitionNode,
 } from 'graphql';
 import {
   Field,
@@ -41,7 +40,6 @@ import {
   PlanNode,
   QueryPlan,
   ResponsePath,
-  VariableUsage,
   OperationContext,
   FragmentMap,
 } from './QueryPlan';
@@ -701,11 +699,22 @@ export function buildQueryPlanningContext({
 }
 
 export class QueryPlanningContext {
+  protected variableDefinitions: {
+    [name: string]: VariableDefinitionNode;
+  };
+
   constructor(
     public readonly schema: GraphQLSchema,
     public readonly operation: OperationDefinitionNode,
     public readonly fragments: FragmentMap,
-  ) {}
+  ) {
+    this.variableDefinitions = Object.create(null);
+    visit(operation, {
+      VariableDefinition: definition => {
+        this.variableDefinitions[definition.variable.name.value] = definition;
+      },
+    });
+  }
 
   getFieldDef(parentType: GraphQLCompositeType, fieldNode: FieldNode) {
     const fieldName = fieldNode.name.value;
@@ -730,43 +739,17 @@ export class QueryPlanningContext {
     return isAbstractType(type) ? this.schema.getPossibleTypes(type) : [type];
   }
 
-  getVariableUsages(selectionSet: SelectionSetNode): VariableUsage[] {
-    const usages: VariableUsage[] = [];
-    // FIXME: we could do less work here by caching the extraction of variable definitions
-    // instead doing that work for each node
-    const node = {
-      ...this.operation,
-      selectionSet,
-    };
-    const defaultOperationVariables: { [name: string]: any } = Object.create(
-      null,
-    );
-    const typeInfo = new TypeInfo(this.schema);
-    visit(
-      node,
-      visitWithTypeInfo(typeInfo, {
-        VariableDefinition: definition => {
-          if (definition.defaultValue) {
-            const { value } = definition.variable.name;
-            defaultOperationVariables[
-              value
-            ] = (definition.defaultValue as any).value;
-          }
-          // return false so that Variable isn't called for this node
-          return false;
-        },
-        Variable(variable) {
-          usages.push({
-            node: variable,
-            type: typeInfo.getInputType()!,
-            // prefer defaults variables from the operation over the schema
-            defaultValue:
-              defaultOperationVariables[variable.name.value] ||
-              typeInfo.getDefaultValue(),
-          });
-        },
-      }),
-    );
+  getVariableUsages(selectionSet: SelectionSetNode) {
+    const usages: {
+      [name: string]: VariableDefinitionNode;
+    } = Object.create(null);
+
+    visit(selectionSet, {
+      Variable: node => {
+        usages[node.name.value] = this.variableDefinitions[node.name.value];
+      },
+    });
+
     return usages;
   }
 

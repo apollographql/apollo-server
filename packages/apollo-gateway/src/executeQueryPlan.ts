@@ -25,7 +25,7 @@ import {
   OperationContext,
 } from './QueryPlan';
 import { deepMerge } from './utilities/deepMerge';
-import { astFromType, getResponseName } from './utilities/graphql';
+import { getResponseName } from './utilities/graphql';
 
 export type ServiceMap = {
   [serviceName: string]: GraphQLDataSource;
@@ -152,13 +152,10 @@ async function executeFetch<TContext>(
 
   let variables = Object.create(null);
   if (fetch.variableUsages) {
-    for (const { node, defaultValue } of fetch.variableUsages) {
-      const name = node.name.value;
+    for (const [name] of Object.entries(fetch.variableUsages)) {
       const providedVariables = context.requestContext.request.variables;
-      if (providedVariables && providedVariables[name] !== 'undefined') {
+      if (providedVariables && typeof providedVariables[name] !== 'undefined') {
         variables[name] = providedVariables[name];
-      } else if (defaultValue) {
-        variables[name] = defaultValue;
       }
     }
   }
@@ -234,6 +231,15 @@ async function executeFetch<TContext>(
       request: {
         query: source,
         variables,
+        // variables: Object.entries(variables).reduce(
+        //   (vars, [name, value]) => {
+        //     if (typeof value !== 'undefined') {
+        //       vars[name] = value;
+        //     }
+        //     return vars;
+        //   },
+        //   {} as { [key: string]: any },
+        //),
       },
       context: context.requestContext.context,
     });
@@ -359,19 +365,16 @@ function mapFetchNodeToVariableDefinitions(
     return [];
   }
 
-  const variableMap = variableUsage.reduce((map, { node, type }) => {
-    const key = `${node.name.value}_${type.toString()}`;
+  const variableMap = Object.entries(variableUsage).reduce(
+    (map, [name, node]) => {
+      if (!map.has(name)) {
+        map.set(name, node);
+      }
 
-    if (!map.has(key)) {
-      map.set(key, {
-        kind: Kind.VARIABLE_DEFINITION,
-        variable: node,
-        type: astFromType(type),
-      });
-    }
-
-    return map;
-  }, new Map<string, VariableDefinitionNode>());
+      return map;
+    },
+    new Map<string, VariableDefinitionNode>(),
+  );
 
   return Array.from(variableMap.values());
 }
