@@ -148,7 +148,7 @@ message Trace {
 			uint64 sent_time_offset = 4;
 
 			// Wallclock times measured in the gateway for when this operation was
-			// sent and recieved.
+			// sent and received.
 			google.protobuf.Timestamp sent_time = 5;
 			google.protobuf.Timestamp received_time = 6;
 		}
