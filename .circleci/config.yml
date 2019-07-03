@@ -65,14 +65,17 @@ jobs:
     docker: [{ image: 'circleci/node:8' }]
     <<: *common_test_steps
 
-  # NODE: Note certain tests are currently being skipped for Node.js 10.
   Node.js 10:
     docker: [{ image: 'circleci/node:10' }]
     <<: *common_test_steps
 
+  Node.js 12:
+    docker: [{ image: 'circleci/node:12' }]
+    <<: *common_test_steps
+
   # Other tests, unrelated to typical code tests.
   Linting:
-    docker: [{ image: 'circleci/node:8' }]
+    docker: [{ image: 'circleci/node:10' }]
     steps:
       # (speed) Intentionally omitted, unnecessary, run_install_desired_npm.
       - checkout
@@ -98,6 +101,8 @@ workflows:
       - Node.js 8:
           <<: *ignore_doc_branches
       - Node.js 10:
+          <<: *ignore_doc_branches
+      - Node.js 12:
           <<: *ignore_doc_branches
       - Linting:
           <<: *ignore_doc_branches
