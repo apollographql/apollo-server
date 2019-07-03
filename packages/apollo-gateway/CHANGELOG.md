@@ -2,6 +2,8 @@
 
 ### vNEXT
 
+* Handle schema defaultVariables correctly within downstream fetches [#2963](https://github.com/apollographql/apollo-server/pull/2963)
+
 # v0.6.12
 
 * Fix `@requires` bug preventing array and null values. [PR #2928](https://github.com/apollographql/apollo-server/pull/2928)

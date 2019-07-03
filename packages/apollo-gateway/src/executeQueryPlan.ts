@@ -25,7 +25,7 @@ import {
   OperationContext,
 } from './QueryPlan';
 import { deepMerge } from './utilities/deepMerge';
-import { astFromType, getResponseName } from './utilities/graphql';
+import { getResponseName } from './utilities/graphql';
 
 export type ServiceMap = {
   [serviceName: string]: GraphQLDataSource;
@@ -152,13 +152,13 @@ async function executeFetch<TContext>(
 
   let variables = Object.create(null);
   if (fetch.variableUsages) {
-    for (const { node, defaultValue } of fetch.variableUsages) {
-      const name = node.name.value;
+    for (const variableName of Object.keys(fetch.variableUsages)) {
       const providedVariables = context.requestContext.request.variables;
-      if (providedVariables && providedVariables[name] !== 'undefined') {
-        variables[name] = providedVariables[name];
-      } else if (defaultValue) {
-        variables[name] = defaultValue;
+      if (
+        providedVariables &&
+        typeof providedVariables[variableName] !== 'undefined'
+      ) {
+        variables[variableName] = providedVariables[variableName];
       }
     }
   }
@@ -354,26 +354,7 @@ function downstreamServiceError(
 function mapFetchNodeToVariableDefinitions(
   node: FetchNode,
 ): VariableDefinitionNode[] {
-  const variableUsage = node.variableUsages;
-  if (!variableUsage) {
-    return [];
-  }
-
-  const variableMap = variableUsage.reduce((map, { node, type }) => {
-    const key = `${node.name.value}_${type.toString()}`;
-
-    if (!map.has(key)) {
-      map.set(key, {
-        kind: Kind.VARIABLE_DEFINITION,
-        variable: node,
-        type: astFromType(type),
-      });
-    }
-
-    return map;
-  }, new Map<string, VariableDefinitionNode>());
-
-  return Array.from(variableMap.values());
+  return node.variableUsages ? Object.values(node.variableUsages) : [];
 }
 
 function operationForRootFetch(
