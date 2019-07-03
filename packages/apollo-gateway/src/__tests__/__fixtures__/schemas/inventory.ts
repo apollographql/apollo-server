@@ -52,7 +52,7 @@ export const resolvers: GraphQLResolverMap<any> = {
   },
   User: {
     goodDescription(object) {
-      return object.metadata[0].description === "2";
-    }
+      return object.metadata[0].description === '2';
+    },
   },
 };

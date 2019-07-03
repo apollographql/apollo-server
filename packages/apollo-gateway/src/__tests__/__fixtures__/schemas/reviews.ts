@@ -163,7 +163,7 @@ export const resolvers: GraphQLResolverMap<any> = {
       return found ? found.username : null;
     },
     goodAddress(object) {
-      return object.metadata[0].address === "1";
+      return object.metadata[0].address === '1';
     },
   },
   Furniture: {

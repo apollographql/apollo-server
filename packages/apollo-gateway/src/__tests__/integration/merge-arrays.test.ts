@@ -33,14 +33,14 @@ describe('query', () => {
     );
 
     expect(data).toEqual({
-      "me": {
-        "goodDescription": true,
-        "metadata": [
+      me: {
+        goodDescription: true,
+        metadata: [
           {
-            "address": "1"
-          }
-        ]
-      }
+            address: '1',
+          },
+        ],
+      },
     });
 
     expect(queryPlan).toCallService('accounts');

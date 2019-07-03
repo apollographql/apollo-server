@@ -57,12 +57,12 @@ const users = [
 
 const metadata = [
   {
-    id: "1",
-    metadata: [{ name: "meta1", address: "1", description: "2"}]
+    id: '1',
+    metadata: [{ name: 'meta1', address: '1', description: '2' }],
   },
   {
-    id: "2",
-    metadata: [{ name: "meta2", address: "3", description: "4"}]
+    id: '2',
+    metadata: [{ name: 'meta2', address: '3', description: '4' }],
   },
 ];
 
@@ -94,11 +94,15 @@ export const resolvers: GraphQLResolverMap<any> = {
   },
   UserMetadata: {
     address(object) {
-      const metaIndex = metadata.findIndex(m => m.metadata.find(o => o.name === object.name));
+      const metaIndex = metadata.findIndex(m =>
+        m.metadata.find(o => o.name === object.name),
+      );
       return metadata[metaIndex].metadata[0].address;
     },
     description(object) {
-      const metaIndex = metadata.findIndex(m => m.metadata.find(o => o.name === object.name));
+      const metaIndex = metadata.findIndex(m =>
+        m.metadata.find(o => o.name === object.name),
+      );
       return metadata[metaIndex].metadata[0].description;
     },
   },
