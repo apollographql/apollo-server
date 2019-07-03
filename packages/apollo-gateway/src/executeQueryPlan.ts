@@ -152,10 +152,13 @@ async function executeFetch<TContext>(
 
   let variables = Object.create(null);
   if (fetch.variableUsages) {
-    for (const [name] of Object.entries(fetch.variableUsages)) {
+    for (const variableName of Object.keys(fetch.variableUsages)) {
       const providedVariables = context.requestContext.request.variables;
-      if (providedVariables && typeof providedVariables[name] !== 'undefined') {
-        variables[name] = providedVariables[name];
+      if (
+        providedVariables &&
+        typeof providedVariables[variableName] !== 'undefined'
+      ) {
+        variables[variableName] = providedVariables[variableName];
       }
     }
   }
