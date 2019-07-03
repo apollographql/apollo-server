@@ -18,6 +18,16 @@ export const typeDefs = gql`
     inStock: Boolean
     isCheckedOut: Boolean
   }
+
+  extend type UserMetadata {
+    description: String @external
+  }
+
+  extend type User @key(fields: "id") {
+    id: ID! @external
+    metadata: [UserMetadata] @external
+    goodDescription: Boolean @requires(fields: "metadata { description }")
+  }
 `;
 
 const inventory = [
@@ -39,5 +49,10 @@ export const resolvers: GraphQLResolverMap<any> = {
     __resolveReference(object) {
       return inventory.find(product => product.isbn === object.isbn);
     },
+  },
+  User: {
+    goodDescription(object) {
+      return object.metadata[0].description === "2";
+    }
   },
 };
