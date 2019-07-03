@@ -21,6 +21,7 @@ describe('providesNotOnEntity', () => {
       typeDefs: gql`
         type Product {
           lineItem: LineItem @provides(fields: "quantity")
+          lineItemNonNull: LineItem! @provides(fields: "quantity")
         }
       `,
       name: 'serviceB',
@@ -46,6 +47,10 @@ describe('providesNotOnEntity', () => {
       typeDefs: gql`
         type Product {
           lineItems: [LineItem] @provides(fields: "quantity")
+          lineItemsNonNull: [LineItem]! @provides(fields: "quantity")
+          nonNullLineItems: [LineItem!] @provides(fields: "quantity")
+          nonNullLineItemsNonNull: [LineItem!]! @provides(fields: "quantity")
+          deep: [[LineItem!]!]! @provides(fields: "quantity")
         }
       `,
       name: 'serviceB',
@@ -198,7 +203,7 @@ describe('providesNotOnEntity', () => {
       Array [
         Object {
           "code": "PROVIDES_NOT_ON_ENTITY",
-          "message": "[serviceB] Product.category -> uses the @provides directive but \`Product.category\` returns \`Category\`, which is not an Object type. @provides can only be used on Object types with at least one @key.",
+          "message": "[serviceB] Product.category -> uses the @provides directive but \`Product.category\` returns \`Category\`, which is not an Object or List type. @provides can only be used on Object types with at least one @key, or Lists of such Objects.",
         },
       ]
     `);
@@ -239,7 +244,7 @@ describe('providesNotOnEntity', () => {
       Array [
         Object {
           "code": "PROVIDES_NOT_ON_ENTITY",
-          "message": "[serviceB] Product.categories -> uses the @provides directive but \`Product.categories\` returns a list of \`Category\`, which is not an Object type. @provides can only be used on lists of Object type with at least one @key.",
+          "message": "[serviceB] Product.categories -> uses the @provides directive but \`Product.categories\` returns \`[Category]\`, which is not an Object or List type. @provides can only be used on Object types with at least one @key, or Lists of such Objects.",
         },
       ]
     `);

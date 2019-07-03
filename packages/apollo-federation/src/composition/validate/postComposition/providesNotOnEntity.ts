@@ -3,7 +3,7 @@ import {
   isObjectType,
   GraphQLError,
   isListType,
-  GraphQLList,
+  isNonNullType,
 } from 'graphql';
 
 import { logServiceAndType, errorWithCode } from '../../utils';
@@ -28,35 +28,32 @@ export const providesNotOnEntity = (schema: GraphQLSchema) => {
       // the only case where serviceName wouldn't exist is on a base type, and in that case,
       // the `provides` metadata should never get added to begin with. This should be caught in
       // composition work. This kind of error should be validated _before_ composition.
+      if (!serviceName && field.federation && field.federation.provides)
+        throw Error(
+          'Internal Consistency Error: field with provides information does not have service name.',
+        );
       if (!serviceName) continue;
+
+      const getBaseType = (type: any): any =>
+        isListType(type) || isNonNullType(type)
+          ? getBaseType(type.ofType)
+          : type;
+      const baseType = getBaseType(field.type);
 
       // field has a @provides directive on it
       if (field.federation && field.federation.provides) {
-        if (isListType(field.type)) {
-          if (!isObjectType(field.type.ofType)) {
-            errors.push(
-              errorWithCode(
-                'PROVIDES_NOT_ON_ENTITY',
-                logServiceAndType(serviceName, typeName, fieldName) +
-                  `uses the @provides directive but \`${typeName}.${fieldName}\` returns a list of \`${field.type.ofType}\`, which is not an Object type. @provides can only be used on lists of Object type with at least one @key.`,
-              ),
-            );
-            continue;
-          }
-        } else if (!isObjectType(field.type)) {
+        if (!isObjectType(baseType)) {
           errors.push(
             errorWithCode(
               'PROVIDES_NOT_ON_ENTITY',
               logServiceAndType(serviceName, typeName, fieldName) +
-                `uses the @provides directive but \`${typeName}.${fieldName}\` returns \`${field.type}\`, which is not an Object type. @provides can only be used on Object types with at least one @key.`,
+                `uses the @provides directive but \`${typeName}.${fieldName}\` returns \`${field.type}\`, which is not an Object or List type. @provides can only be used on Object types with at least one @key, or Lists of such Objects.`,
             ),
           );
           continue;
         }
 
-        const fieldType = isListType(field.type)
-          ? types[field.type.ofType.name]
-          : types[field.type.name];
+        const fieldType = types[baseType.name];
         const selectedFieldIsEntity =
           fieldType.federation && fieldType.federation.keys;
 
@@ -65,7 +62,7 @@ export const providesNotOnEntity = (schema: GraphQLSchema) => {
             errorWithCode(
               'PROVIDES_NOT_ON_ENTITY',
               logServiceAndType(serviceName, typeName, fieldName) +
-                `uses the @provides directive but \`${typeName}.${fieldName}\` does not return a type that has a @key. Try adding a @key to the \`${fieldType}\` type.`,
+                `uses the @provides directive but \`${typeName}.${fieldName}\` does not return a type that has a @key. Try adding a @key to the \`${baseType}\` type.`,
             ),
           );
         }
