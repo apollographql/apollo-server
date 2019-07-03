@@ -231,15 +231,6 @@ async function executeFetch<TContext>(
       request: {
         query: source,
         variables,
-        // variables: Object.entries(variables).reduce(
-        //   (vars, [name, value]) => {
-        //     if (typeof value !== 'undefined') {
-        //       vars[name] = value;
-        //     }
-        //     return vars;
-        //   },
-        //   {} as { [key: string]: any },
-        //),
       },
       context: context.requestContext.context,
     });
