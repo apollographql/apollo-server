@@ -3,6 +3,8 @@ title: Monitoring and metrics
 description: How to monitor Apollo Server's performance
 ---
 
+// TODO: [Point to the federated metrics docs]
+
 Understanding the behavior of GraphQL execution inside of Apollo Server is critical to developing and running a production GraphQL layer. Apollo Server enables GraphQL monitoring in Apollo Engine and provides more primitive native mechanisms to log each phase of a GraphQL request.
 
 ## Apollo Engine
