@@ -1,4 +1,10 @@
-import { GraphQLSchema, isObjectType, GraphQLError } from 'graphql';
+import {
+  GraphQLSchema,
+  isObjectType,
+  GraphQLError,
+  isListType,
+  GraphQLList,
+} from 'graphql';
 
 import { logServiceAndType, errorWithCode } from '../../utils';
 
@@ -26,7 +32,18 @@ export const providesNotOnEntity = (schema: GraphQLSchema) => {
 
       // field has a @provides directive on it
       if (field.federation && field.federation.provides) {
-        if (!isObjectType(field.type)) {
+        if (isListType(field.type)) {
+          if (!isObjectType(field.type.ofType)) {
+            errors.push(
+              errorWithCode(
+                'PROVIDES_NOT_ON_ENTITY',
+                logServiceAndType(serviceName, typeName, fieldName) +
+                  `uses the @provides directive but \`${typeName}.${fieldName}\` returns a list of \`${field.type.ofType}\`, which is not an Object type. @provides can only be used on lists of Object type with at least one @key.`,
+              ),
+            );
+            continue;
+          }
+        } else if (!isObjectType(field.type)) {
           errors.push(
             errorWithCode(
               'PROVIDES_NOT_ON_ENTITY',
@@ -37,7 +54,9 @@ export const providesNotOnEntity = (schema: GraphQLSchema) => {
           continue;
         }
 
-        const fieldType = types[field.type.name];
+        const fieldType = isListType(field.type)
+          ? types[field.type.ofType.name]
+          : types[field.type.name];
         const selectedFieldIsEntity =
           fieldType.federation && fieldType.federation.keys;
 
@@ -46,7 +65,7 @@ export const providesNotOnEntity = (schema: GraphQLSchema) => {
             errorWithCode(
               'PROVIDES_NOT_ON_ENTITY',
               logServiceAndType(serviceName, typeName, fieldName) +
-                `uses the @provides directive but \`${typeName}.${fieldName}\` does not return a type that has a @key. Try adding a @key to the \`${field.type}\` type.`,
+                `uses the @provides directive but \`${typeName}.${fieldName}\` does not return a type that has a @key. Try adding a @key to the \`${fieldType}\` type.`,
             ),
           );
         }
