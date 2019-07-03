@@ -11,7 +11,7 @@ import {
   GraphQLError,
 } from 'graphql';
 import { WithRequired } from 'apollo-env';
-import { GraphQLSchemaValidationError } from 'apollo-graphql';
+// import { GraphQLSchemaValidationError } from 'apollo-graphql';
 import { composeAndValidate, ServiceDefinition } from '@apollo/federation';
 import loglevel, { Logger } from 'loglevel';
 import loglevelDebug from 'loglevel-debug';
@@ -29,7 +29,7 @@ import { serializeQueryPlan, QueryPlan, OperationContext } from './QueryPlan';
 import { GraphQLDataSource } from './datasources/types';
 import { RemoteGraphQLDataSource } from './datasources/RemoteGraphQLDatasource';
 import { HeadersInit } from 'node-fetch';
-import { PromiseOrValue } from 'graphql/jsutils/PromiseOrValue';
+// import { PromiseOrValue } from 'graphql/jsutils/PromiseOrValue';
 
 export interface GraphQLService {
   schema?: GraphQLSchema;
@@ -52,9 +52,9 @@ export interface GatewayConfigBase {
   // experimental observability callbacks
   experimental_didResolveQueryPlan?: DidResolveQueryPlanCallback;
   experimental_didFailComposition?: DidFailCompositionCallback;
-  experimental_didUpdateSchema?: DidUpdateSchemaCallback;
-  experimental_didUpdateServiceList?: DidUpdateServiceListCallback;
-  experimental_getServiceList?: GetServiceList;
+  experimental_updateServiceDefinitions?: GetServiceList;
+  experimental_didUpdateComputedFederationConfig?: DidUpdateComputedFederationConfig;
+  experimental_pollInterval?: number;
 }
 
 export interface LocalGatewayConfig extends GatewayConfigBase {
@@ -85,29 +85,26 @@ type DidFailCompositionCallback = ({
   serviceList: ServiceDefinition[];
 }) => void;
 
-type DidUpdateSchemaCallback = ({
-  previousSchema,
-  currentSchema,
+interface ComputedFederationConfig {
+  serviceDefinitions: ServiceDefinition[];
+  schema: GraphQLSchema;
+  typeToServiceMap?: { [typeName: string]: string };
+}
+
+type DidUpdateComputedFederationConfig = ({
+  previousConfig,
+  currentConfig,
 }: {
-  previousSchema?: GraphQLSchema;
-  currentSchema: GraphQLSchema;
+  previousConfig?: ComputedFederationConfig;
+  currentConfig: ComputedFederationConfig;
 }) => void;
 
-type DidUpdateServiceListCallback = ({
-  previousServiceConfig,
-  currentServiceConfig,
-}: {
-  previousServiceConfig: ServiceDefinition[];
-  currentServiceConfig: ServiceDefinition[];
-}) => void;
-
-type GetServiceList = (
-  config: GatewayConfig,
-) => PromiseOrValue<ServiceDefinition[]>;
+type GetServiceList = (config: GatewayConfig) => Promise<ServiceDefinition[]>;
 
 export class ApolloGateway implements GraphQLService {
   public schema?: GraphQLSchema;
   public isReady: boolean = false;
+  protected serviceDefinitions?: ServiceDefinition[];
   protected serviceMap: ServiceMap = Object.create(null);
   protected config: GatewayConfig;
   protected logger: Logger;
@@ -117,12 +114,10 @@ export class ApolloGateway implements GraphQLService {
   protected experimental_didResolveQueryPlan?: DidResolveQueryPlanCallback;
   // Observe composition failures and the ServiceList that caused them. Pretty straightforward, this enables reporting any issues that occur during composition. Implementors will be interested in addressing these immediately.
   protected experimental_didFailComposition?: DidFailCompositionCallback;
-  // Observe previous and updated GraphQLSchema after successful composition. Similar to reporting service list changes, reporting schema changes will be useful for finding problematic updates (e.g. via diff) like breaking changes or unexpected type overrides.
-  protected experimental_didUpdateSchema?: DidUpdateSchemaCallback;
-  //Observe previous and updated ServiceList after update. Being able to report service list changes (and see the diff) will be useful in tracking down errors that occur when a new service list is introduced. This should simplify, for example, pinpointing service-specific issues, and a speedy rollback.
-  protected experimental_didUpdateServiceList?: DidUpdateServiceListCallback;
+  protected experimental_didUpdateComputedFederationConfig?: DidUpdateComputedFederationConfig;
   // Used for overriding the default service list fetcher. This should return an array of ServiceDefinition. *This function must be awaited.*
-  protected experimental_getServiceList?: GetServiceList;
+  protected updateServiceDefinitions: GetServiceList;
+  protected experimental_pollInterval: number;
 
   constructor(config: GatewayConfig) {
     this.config = {
@@ -150,24 +145,79 @@ export class ApolloGateway implements GraphQLService {
 
     this.initializeQueryPlanStore();
 
+    this.updateServiceDefinitions = config.experimental_updateServiceDefinitions
+      ? config.experimental_updateServiceDefinitions
+      : this.loadServiceDefinitions;
+
     // set up experimental observability callbacks
     this.experimental_didResolveQueryPlan =
       config.experimental_didResolveQueryPlan;
     this.experimental_didFailComposition =
       config.experimental_didFailComposition;
-    this.experimental_didUpdateSchema = config.experimental_didUpdateSchema;
-    // TODO: add this below
-    this.experimental_didUpdateServiceList =
-      config.experimental_didUpdateServiceList;
-    this.experimental_getServiceList = config.experimental_getServiceList;
+    this.experimental_didUpdateComputedFederationConfig =
+      config.experimental_didUpdateComputedFederationConfig;
+    this.experimental_pollInterval = config.experimental_pollInterval || 60000;
+  }
+
+  public async loadAndPoll() {
+    const load = async () => {
+      console.log('LOAD');
+      // Preserve old service defs for observability cb
+      const previousServiceDefinitions = this.serviceDefinitions;
+      const previousSchema = this.schema;
+
+      // Defaults to SaaS fetcher if none is provided
+      const serviceDefinitions = await this.updateServiceDefinitions(
+        this.config,
+      );
+
+      // Update service defs (presumably more complex than just a one-liner)
+      // this.serviceDefinitions = serviceDefinitions;
+      const { schema, errors } = this.createSchema(serviceDefinitions);
+      if (errors && errors.length > 0) {
+        if (this.experimental_didFailComposition) {
+          this.experimental_didFailComposition({
+            errors,
+            serviceList: serviceDefinitions,
+          });
+        }
+        return;
+      }
+
+      // TODO: is this the right place to update serviceList & Schema ?
+      // Do we want it to update if composition fails?
+      this.serviceDefinitions = serviceDefinitions;
+      this.schema = schema;
+
+      // const previousTypeToServiceMap = this.typeToServiceMap;
+      // this.typeToServiceMap = typeToServiceMap;
+      if (this.experimental_didUpdateComputedFederationConfig) {
+        this.experimental_didUpdateComputedFederationConfig({
+          ...(previousServiceDefinitions &&
+            previousSchema && {
+              previousConfig: {
+                serviceDefinitions: previousServiceDefinitions,
+                schema: previousSchema,
+                // typeToServiceMap: previousTypeToServiceMap,
+              },
+            }),
+          currentConfig: {
+            serviceDefinitions,
+            schema,
+            // typeToServiceMap,
+          },
+        });
+      }
+    };
+
+    await load();
+    return setInterval(load, this.experimental_pollInterval);
   }
 
   public async load() {
     if (!this.isReady) {
       this.logger.debug('Loading configuration for Gateway');
-      const services = this.experimental_getServiceList
-        ? await this.experimental_getServiceList(this.config)
-        : await this.loadServiceDefinitions(this.config);
+      const services = await this.updateServiceDefinitions(this.config);
       this.logger.debug('Configuration loaded for Gateway');
       this.createSchema(services);
     }
@@ -176,7 +226,6 @@ export class ApolloGateway implements GraphQLService {
   }
 
   protected createSchema(services: ServiceDefinition[]) {
-    const previousSchema = this.schema;
     this.logger.debug(
       `Composing schema from service list: \n${services
         .map(({ name }) => `  ${name}`)
@@ -185,31 +234,18 @@ export class ApolloGateway implements GraphQLService {
 
     let { schema, errors } = composeAndValidate(services);
 
-    if (errors && errors.length > 0) {
-      if (this.experimental_didFailComposition) {
-        this.experimental_didFailComposition({ errors, serviceList: services });
-      }
-      throw new GraphQLSchemaValidationError(errors);
-    }
-
     // this is a temporary workaround for GraphQLFieldExtensions automatic
     // wrapping of all fields when using ApolloServer. Here we wrap all fields
     // with support for resolving aliases as part of the root value which
     // happens because alises are resolved by sub services and the shape
     // of the rootvalue already contains the aliased fields as responseNames
-    this.schema = wrapSchemaWithAliasResolver(schema);
-
-    if (this.experimental_didUpdateSchema) {
-      this.experimental_didUpdateSchema({
-        previousSchema,
-        currentSchema: this.schema,
-      });
-    }
+    schema = wrapSchemaWithAliasResolver(schema);
 
     this.createServices(services);
 
     this.logger.debug('Schema loaded and ready for execution');
     this.isReady = true;
+    return { schema, errors };
   }
 
   protected createServices(services: ServiceEndpointDefinition[]) {

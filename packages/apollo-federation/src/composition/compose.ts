@@ -290,7 +290,6 @@ export function buildSchemaFromDefinitionsAndExtensions({
   };
 
   errors.push(...validateSDL(extensionsDocument, schema, compositionRules));
-
   schema = extendSchema(schema, extensionsDocument, { assumeValidSDL: true });
 
   return { schema, errors };
