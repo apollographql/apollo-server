@@ -7,7 +7,7 @@ import {
 } from '../common';
 import { resolve as urlResolve } from 'url';
 import { createHash } from 'crypto';
-import { AgentOptions } from '../agent';
+import { AgentOptions, OperationManifest } from '../agent';
 
 const fakeBaseUrl = 'https://myfakehost/';
 
@@ -84,7 +84,7 @@ describe('Agent', () => {
     });
   });
 
-  describe('fetches', () => {
+  describe('with manifest', () => {
     let originalEnvApolloOpManifestBaseUrl: string | undefined;
     let originalEnvOverrideStorageSecretBaseUrl: string | undefined;
     let Agent: typeof import('../agent').default;
@@ -123,6 +123,51 @@ describe('Agent', () => {
       ).replace(new RegExp(`^${urlOperationManifestBase}`), '');
     });
 
+    // Each nock is good for exactly one request!
+    function nockLegacyGoodManifest(
+      operations: ManifestRecord[] = [
+        sampleManifestRecords.a,
+        sampleManifestRecords.b,
+        sampleManifestRecords.c,
+      ],
+    ) {
+      return nockBase()
+        .get(genericLegacyOperationManifestUrl)
+        .reply(200, {
+          version: 2,
+          operations,
+        });
+    }
+
+    function nockGoodManifestsUnderStorageSecret(
+      operations: ManifestRecord[] = [
+        sampleManifestRecords.a,
+        sampleManifestRecords.b,
+        sampleManifestRecords.c,
+      ],
+    ) {
+      return nockBase()
+        .get(genericStorageSecretOperationManifestUrl)
+        .reply(200, {
+          version: 2,
+          operations,
+        });
+    }
+
+    function nockStorageSecret(
+      status = 200,
+      body: any = JSON.stringify(genericStorageSecret),
+    ) {
+      return nockBase()
+        .get(
+          getStorageSecretUrl(genericServiceID, genericApiKeyHash).replace(
+            new RegExp(`^${urlStorageSecretBase}`),
+            '',
+          ),
+        )
+        .reply(status, body);
+    }
+
     afterAll(() => {
       // Put the environment overrides back how they were.
       if (originalEnvApolloOpManifestBaseUrl) {
@@ -148,6 +193,42 @@ describe('Agent', () => {
       jest.resetModules();
     });
 
+    const forCleanup: {
+      store?: InMemoryLRUCache;
+      agent?: import('../agent').default;
+    }[] = [];
+
+    function createAgent({ ...args }: Partial<AgentOptions> = {}) {
+      const options = { ...defaultAgentOptions, ...args };
+
+      // We never actually let the Agent construct its own default store
+      // since we need to pluck the store out to instrument it with spies.
+      const store = options.store;
+      const agent = new Agent(options);
+
+      // Save all agents and stores we've created so we can properly
+      // stop them and clean them up.
+      forCleanup.push({ agent, store });
+      return agent;
+    }
+
+    afterEach(() => {
+      if (!nock.isDone()) {
+        throw new Error(
+          `Not all nock interceptors were used! Pending mocks: ${nock.pendingMocks()}`,
+        );
+      }
+
+      let toCleanup;
+      // Loop through the `forCleanup` constant and empty it out by popping
+      // individual elements off the end and running the appropriate cleanup.
+      while ((toCleanup = forCleanup.pop())) {
+        if (toCleanup.agent) {
+          toCleanup.agent.stop();
+        }
+      }
+    });
+
     it('correctly prepared the test environment', () => {
       expect(getLegacyOperationManifestUrl('abc123', 'def456')).toStrictEqual(
         urlResolve(fakeBaseUrl, '/abc123/def456.v2.json'),
@@ -155,87 +236,6 @@ describe('Agent', () => {
     });
 
     describe('manifest checking and store populating', () => {
-      const forCleanup: {
-        store?: InMemoryLRUCache;
-        agent?: import('../agent').default;
-      }[] = [];
-
-      function createAgent({ ...args } = {}) {
-        const options = { ...defaultAgentOptions, ...args };
-
-        // We never actually let the Agent construct its own default store
-        // since we need to pluck the store out to instrument it with spies.
-        const store = options.store;
-        const agent = new Agent(options);
-
-        // Save all agents and stores we've created so we can properly
-        // stop them and clean them up.
-        forCleanup.push({ agent, store });
-        return agent;
-      }
-
-      afterEach(() => {
-        if (!nock.isDone()) {
-          throw new Error(
-            `Not all nock interceptors were used! Pending mocks: ${nock.pendingMocks()}`,
-          );
-        }
-
-        let toCleanup;
-        // Loop through the `forCleanup` constant and empty it out by popping
-        // individual elements off the end and running the appropriate cleanup.
-        while ((toCleanup = forCleanup.pop())) {
-          if (toCleanup.agent) {
-            toCleanup.agent.stop();
-          }
-        }
-      });
-
-      // Each nock is good for exactly one request!
-      function nockLegacyGoodManifest(
-        operations: ManifestRecord[] = [
-          sampleManifestRecords.a,
-          sampleManifestRecords.b,
-          sampleManifestRecords.c,
-        ],
-      ) {
-        return nockBase()
-          .get(genericLegacyOperationManifestUrl)
-          .reply(200, {
-            version: 2,
-            operations,
-          });
-      }
-
-      function nockGoodManifestsUnderStorageSecret(
-        operations: ManifestRecord[] = [
-          sampleManifestRecords.a,
-          sampleManifestRecords.b,
-          sampleManifestRecords.c,
-        ],
-      ) {
-        return nockBase()
-          .get(genericStorageSecretOperationManifestUrl)
-          .reply(200, {
-            version: 2,
-            operations,
-          });
-      }
-
-      function nockStorageSecret(
-        status = 200,
-        body: any = JSON.stringify(genericStorageSecret),
-      ) {
-        return nockBase()
-          .get(
-            getStorageSecretUrl(genericServiceID, genericApiKeyHash).replace(
-              new RegExp(`^${urlStorageSecretBase}`),
-              '',
-            ),
-          )
-          .reply(status, body);
-      }
-
       function expectStoreSpyOperationEach(
         spy: jest.SpyInstance,
         letters: string[],
@@ -541,25 +541,250 @@ describe('Agent', () => {
     });
 
     describe('manifest lifecycle', () => {
-      describe('willUpdateManifest', () => {
-        describe("called with undefined arguments when can't fetch first time", () => {});
-        describe('called with manifest retrieved from gcs', () => {});
-        describe('uses returned manifest', () => {});
-        describe('not called again when manifest remains same', () => {});
-        describe('called with previous manifest when updated', () => {});
-      });
-    });
-  });
+      function generateWillUpdateManifest(
+        operations?: OperationManifest['operations'],
+      ) {
+        return jest.fn(
+          (
+            newManifest?: OperationManifest,
+            oldManifest?: OperationManifest,
+          ) => {
+            const manifest = newManifest || oldManifest;
+            return (
+              (operations && { version: 2, operations }) ||
+              manifest || { version: 2, operations: [] }
+            );
+          },
+        );
+      }
 
-  describe('operation lifecycle hooks', () => {
-    describe('onUnregisterOperation', () => {
-      describe('called when unregistered operation received', () => {});
-      describe('not called when registered operation received', () => {});
-    });
-    describe('onForbiddenOperation', () => {
-      describe('called when unregistered operation received and forbidden', () => {});
-      describe('not called when unregistered operation received and unforbidden', () => {});
-      describe('not called when registered operation received', () => {});
+      describe('willUpdateManifest', () => {
+        it("receives undefined arguments when can't fetch first time", async () => {
+          nockStorageSecret(404);
+          nockBase()
+            .get(genericLegacyOperationManifestUrl)
+            .reply(500);
+          const mock = generateWillUpdateManifest();
+          const store = defaultStore();
+          const storeSetSpy = jest.spyOn(store, 'set');
+          const storeDeleteSpy = jest.spyOn(store, 'delete');
+
+          const agent = createAgent({
+            willUpdateManifest: mock,
+            store,
+          });
+          await agent.start();
+          expect(mock).toHaveBeenCalledTimes(1);
+          expect(mock).toHaveBeenCalledWith(undefined, undefined);
+
+          // no additions, no deletions.
+          expect(storeSetSpy).toBeCalledTimes(0);
+          expect(storeDeleteSpy).toBeCalledTimes(0);
+        });
+        it('receives manifest retrieved from gcs', async () => {
+          nockStorageSecret();
+          nockGoodManifestsUnderStorageSecret();
+          const mock = generateWillUpdateManifest();
+          const store = defaultStore();
+          const storeSetSpy = jest.spyOn(store, 'set');
+          const storeDeleteSpy = jest.spyOn(store, 'delete');
+
+          const agent = createAgent({
+            willUpdateManifest: mock,
+            store,
+          });
+          await agent.start();
+          expect(mock).toHaveBeenCalledTimes(1);
+          expect(mock).toHaveBeenCalledWith(
+            {
+              version: 2,
+              operations: [
+                sampleManifestRecords.a,
+                sampleManifestRecords.b,
+                sampleManifestRecords.c,
+              ],
+            },
+            undefined,
+          );
+
+          // Three additions, no deletions.
+          expect(storeSetSpy).toBeCalledTimes(3);
+          expect(storeDeleteSpy).toBeCalledTimes(0);
+        });
+        it('uses returned manifest to enforce safelist', async () => {
+          nockStorageSecret();
+          nockGoodManifestsUnderStorageSecret();
+          const mock = generateWillUpdateManifest([sampleManifestRecords.a]);
+          const store = defaultStore();
+          const storeSetSpy = jest.spyOn(store, 'set');
+          const storeDeleteSpy = jest.spyOn(store, 'delete');
+
+          const agent = createAgent({
+            willUpdateManifest: mock,
+            store,
+          });
+          await agent.start();
+          expect(mock).toHaveBeenCalledTimes(1);
+          expect(mock).toHaveBeenCalledWith(
+            {
+              version: 2,
+              operations: [
+                sampleManifestRecords.a,
+                sampleManifestRecords.b,
+                sampleManifestRecords.c,
+              ],
+            },
+            undefined,
+          );
+          expect(mock).toReturnWith({
+            version: 2,
+            operations: [sampleManifestRecords.a],
+          });
+
+          // One additions, no deletions.
+          expect(storeSetSpy).toBeCalledTimes(1);
+          expect(storeDeleteSpy).toBeCalledTimes(0);
+        });
+        it('is not called again when manifest remains same', async () => {
+          nockStorageSecret();
+          nockGoodManifestsUnderStorageSecret();
+
+          const mock = generateWillUpdateManifest();
+          const store = defaultStore();
+          const storeSetSpy = jest.spyOn(store, 'set');
+          const storeDeleteSpy = jest.spyOn(store, 'delete');
+
+          const agent = createAgent({
+            willUpdateManifest: mock,
+            store,
+          });
+          jest.useFakeTimers();
+          await agent.start();
+          expect(mock).toHaveBeenCalledTimes(1);
+          expect(mock).toHaveBeenCalledWith(
+            {
+              version: 2,
+              operations: [
+                sampleManifestRecords.a,
+                sampleManifestRecords.b,
+                sampleManifestRecords.c,
+              ],
+            },
+            undefined,
+          );
+          // Three additions, no deletions.
+          expect(storeSetSpy).toBeCalledTimes(3);
+          expect(storeDeleteSpy).toBeCalledTimes(0);
+
+          // If it's one millisecond short of our next poll interval, nothing
+          // should have changed yet.
+          jest.advanceTimersByTime(pollSeconds * 1000 - 1);
+
+          // Still only one check.
+          expect(agent._timesChecked).toBe(1);
+
+          // Now, we'll expect another request to go out, so we'll nock it.
+          nockStorageSecret();
+          nockBase()
+            .get(genericStorageSecretOperationManifestUrl)
+            .reply(304);
+
+          // If we move forward the last remaining millisecond, we should trigger
+          // and end up with a successful sync.
+          jest.advanceTimersByTime(1);
+
+          // While that timer will fire, it will do work async, and we need to
+          // wait on that work itself.
+          await agent.requestPending();
+
+          // Now the times checked should have gone up.
+          expect(agent._timesChecked).toBe(2);
+
+          // the agent should not have been called again
+          expect(mock).toHaveBeenCalledTimes(1);
+          expect(mock).toHaveBeenCalledWith(
+            {
+              version: 2,
+              operations: [
+                sampleManifestRecords.a,
+                sampleManifestRecords.b,
+                sampleManifestRecords.c,
+              ],
+            },
+            undefined,
+          );
+          // Three additions, no deletions.
+          expect(storeSetSpy).toBeCalledTimes(3);
+          expect(storeDeleteSpy).toBeCalledTimes(0);
+        });
+
+        it('receives previous manifest when updated', async () => {
+          nockStorageSecret();
+          nockGoodManifestsUnderStorageSecret();
+
+          const mock = generateWillUpdateManifest();
+          const store = defaultStore();
+          const storeSetSpy = jest.spyOn(store, 'set');
+          const storeDeleteSpy = jest.spyOn(store, 'delete');
+
+          const agent = createAgent({
+            willUpdateManifest: mock,
+            store,
+          });
+          jest.useFakeTimers();
+          await agent.start();
+          expect(mock).toHaveBeenCalledTimes(1);
+          expect(mock).toHaveBeenCalledWith(
+            {
+              version: 2,
+              operations: [
+                sampleManifestRecords.a,
+                sampleManifestRecords.b,
+                sampleManifestRecords.c,
+              ],
+            },
+            undefined,
+          );
+          // Three additions, no deletions.
+          expect(storeSetSpy).toBeCalledTimes(3);
+          expect(storeDeleteSpy).toBeCalledTimes(0);
+
+          // If it's one millisecond short of our next poll interval, nothing
+          // should have changed yet.
+          jest.advanceTimersByTime(pollSeconds * 1000 - 1);
+
+          // Still only one check.
+          expect(agent._timesChecked).toBe(1);
+
+          // Now, we'll expect another request to go out, so we'll nock it.
+          nockStorageSecret();
+          nockGoodManifestsUnderStorageSecret([sampleManifestRecords.a]);
+
+          // If we move forward the last remaining millisecond, we should trigger
+          // and end up with a successful sync.
+          jest.advanceTimersByTime(1);
+
+          // While that timer will fire, it will do work async, and we need to
+          // wait on that work itself.
+          await agent.requestPending();
+
+          expect(mock).toHaveBeenCalledTimes(2);
+          expect(mock).toHaveBeenCalledWith(
+            { version: 2, operations: [sampleManifestRecords.a] },
+            {
+              version: 2,
+              operations: [
+                sampleManifestRecords.a,
+                sampleManifestRecords.b,
+                sampleManifestRecords.c,
+              ],
+            },
+          );
+          // Three additions, two deletions.
+          expect(storeSetSpy).toBeCalledTimes(3);
+          expect(storeDeleteSpy).toBeCalledTimes(2);
+        });
+      });
     });
   });
 });
