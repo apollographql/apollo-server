@@ -3,16 +3,7 @@
   "editor.tabSize": 2,
   "editor.rulers": [80],
   "editor.wordWrapColumn": 80,
-  "editor.formatOnSave": true,
   "files.trimTrailingWhitespace": true,
   "files.insertFinalNewline": true,
-  "files.exclude": {
-    "**/.git": true,
-    "**/.DS_Store": true,
-    "**/node_modules/": true,
-    "**/dist/": true,
-    "coverage": true,
-    "coverage.lcov": true
-  },
   "typescript.tsdk": "./node_modules/typescript/lib"
 }

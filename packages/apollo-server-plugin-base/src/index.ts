@@ -29,13 +29,13 @@ export interface GraphQLRequestListener<TContext = Record<string, any>> {
       GraphQLRequestContext<TContext>,
       'metrics' | 'source'
     >,
-  ): (err?: Error) => void | void;
+  ): ((err?: Error) => void) | void;
   validationDidStart?(
     requestContext: WithRequired<
       GraphQLRequestContext<TContext>,
       'metrics' | 'source' | 'document'
     >,
-  ): (err?: ReadonlyArray<Error>) => void | void;
+  ): ((err?: ReadonlyArray<Error>) => void) | void;
   didResolveOperation?(
     requestContext: WithRequired<
       GraphQLRequestContext<TContext>,
@@ -64,7 +64,7 @@ export interface GraphQLRequestListener<TContext = Record<string, any>> {
       GraphQLRequestContext<TContext>,
       'metrics' | 'source' | 'document' | 'operationName' | 'operation'
     >,
-  ): (err?: Error) => void | void;
+  ): ((err?: Error) => void) | void;
   willSendResponse?(
     requestContext: WithRequired<
       GraphQLRequestContext<TContext>,

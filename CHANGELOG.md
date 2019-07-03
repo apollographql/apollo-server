@@ -16,6 +16,8 @@ The version headers in this history reflect the versions of Apollo Server itself
   >  `new ApolloServer({engine: {sendVariableValues: {all: true}}})`.
 
 
+- `apollo-server-plugin-base`: Fix `GraphQLRequestListener` type definitions to allow `return void`. [PR #2368](https://github.com/apollographql/apollo-server/pull/2368)
+
 ### v2.6.7
 
 > [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/183de5f112324def375a45c239955e1bf1608fae)
