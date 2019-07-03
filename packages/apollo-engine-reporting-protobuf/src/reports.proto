@@ -119,23 +119,29 @@ message Trace {
 		reserved 4;
 	}
 
-	// FIXME: document all new fields
+	// represents a node in the query plan, under which there is a trace tree for that service fetch.
+	// In particular, each fetch node represents a call to an implementing service, and calls to implementing
+	// services may not be unique. See https://github.com/apollographql/apollo-server/blob/master/packages/apollo-gateway/src/QueryPlan.ts
+	// for more information and details.
 	message QueryPlanNode {
+		// This represents a set of nodes to be executed sequentially by the Gateway executor
 		message SequenceNode {
 			repeated QueryPlanNode nodes = 1;
 		}
+		// This represents a set of nodes to be executed in parallel by the Gateway executor
 		message ParallelNode {
 			repeated QueryPlanNode nodes = 1;
 		}
+		// This represents a node to send an operation to an implementing service
 		message FetchNode {
+			// XXX When we want to include more details about the sub-operation that was
+			// executed against this service, we should include that here in each fetch node.
+			// This might include an operation signature, requires directive, reference resolutions, etc.
 			string serviceName = 1;
-			string operation = 2;
-			// FIXME: do we want selectionSet to be structured instead of a string?
-			// FIXME: do we need variableUsages?
-			// FIXME: do we need requires?
 
 			// This Trace only contains start_time, end_time, duration_ns, and root;
-			// all timings were calculated on the federated service.
+			// all timings were calculated **on the federated service**, and clock skew
+			// will be handled by the ingress server.
 			Trace trace = 3;
 
 			// relative to the outer trace's start_time, in ns, measured in the gateway.
@@ -146,6 +152,9 @@ message Trace {
 			google.protobuf.Timestamp sent_time = 5;
 			google.protobuf.Timestamp received_time = 6;
 		}
+
+		// This node represents a way to reach into the response path and attach related entities.
+		// XXX Flatten is really not the right name and this node may be renamed in the query planner.
 		message FlattenNode {
 			repeated ResponsePathElement response_path = 1;
 			QueryPlanNode node = 2;
