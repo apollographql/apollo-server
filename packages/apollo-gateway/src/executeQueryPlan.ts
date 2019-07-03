@@ -297,10 +297,6 @@ async function executeFetch<TContext>(
       http = {
         headers: new Headers({ 'apollo-federation-include-trace': 'ftv1' }),
       };
-      // FIXME is this actually OK? it hasn't been cleaned like a signature so it
-      // can contain string literals.  should we just leave this off until we're
-      // at the point of actually displaying it in the UI?
-      traceNode.operation = source;
       if (
         context.requestContext.metrics &&
         context.requestContext.metrics.startHrTime
