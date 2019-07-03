@@ -18,12 +18,19 @@ export const typeDefs = gql`
 
   union AccountType = PasswordAccount | SMSAccount
 
+  type UserMetadata {
+    name: String
+    address: String
+    description: String
+  }
+
   type User @key(fields: "id") {
     id: ID!
     name: String
     username: String
     birthDate(locale: String): String
     account: AccountType
+    metadata: [UserMetadata]
   }
 
   extend type Mutation {
@@ -48,6 +55,17 @@ const users = [
   },
 ];
 
+const metadata = [
+  {
+    id: '1',
+    metadata: [{ name: 'meta1', address: '1', description: '2' }],
+  },
+  {
+    id: '2',
+    metadata: [{ name: 'meta2', address: '3', description: '4' }],
+  },
+];
+
 export const resolvers: GraphQLResolverMap<any> = {
   Query: {
     user(_, args) {
@@ -68,6 +86,24 @@ export const resolvers: GraphQLResolverMap<any> = {
             timeZone: 'Asia/Samarkand', // UTC + 5
           })
         : user.birthDate;
+    },
+    metadata(object) {
+      const metaIndex = metadata.findIndex(m => m.id === object.id);
+      return metadata[metaIndex].metadata.map(obj => ({ name: obj.name }));
+    },
+  },
+  UserMetadata: {
+    address(object) {
+      const metaIndex = metadata.findIndex(m =>
+        m.metadata.find(o => o.name === object.name),
+      );
+      return metadata[metaIndex].metadata[0].address;
+    },
+    description(object) {
+      const metaIndex = metadata.findIndex(m =>
+        m.metadata.find(o => o.name === object.name),
+      );
+      return metadata[metaIndex].metadata[0].description;
     },
   },
   Mutation: {
