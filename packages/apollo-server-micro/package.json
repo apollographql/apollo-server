@@ -23,7 +23,7 @@
   },
   "homepage": "https://github.com/apollographql/apollo-server#readme",
   "dependencies": {
-    "@apollographql/graphql-playground-html": "1.6.20",
+    "@apollographql/graphql-playground-html": "1.6.23",
     "accept": "^3.0.2",
     "apollo-server-core": "file:../apollo-server-core",
     "micro": "^9.3.2"
