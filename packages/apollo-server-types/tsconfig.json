@@ -4,8 +4,9 @@
     "rootDir": "./src",
     "outDir": "./dist"
   },
-  "files": ["src/requestPipelineAPI.ts"],
+  "include": ["src/**/*"],
+  "exclude": ["**/__tests__", "**/__mocks__"],
   "references": [
-    { "path": "../apollo-server-caching" }
+    { "path": "../apollo-server-caching/" },
   ]
 }

@@ -8,6 +8,8 @@ import {
 } from '@apollographql/graphql-playground-html';
 import {
   ApolloServerBase,
+  FileUploadOptions,
+  GraphQLOptions,
   formatApolloErrors,
   processFileUploads,
 } from 'apollo-server-core';
@@ -17,7 +19,6 @@ import typeis from 'type-is';
 import { graphqlKoa } from './koaApollo';
 
 export { GraphQLOptions, GraphQLExtension } from 'apollo-server-core';
-import { GraphQLOptions, FileUploadOptions } from 'apollo-server-core';
 
 export interface GetMiddlewareOptions {
   path?: string;

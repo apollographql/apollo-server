@@ -3,6 +3,6 @@
   "include": ["**/*"],
   "references": [
     { "path": "../../" },
-    { "path": "../../../apollo-server-caching/src/__tests__/" }
+    { "path": "../../../apollo-server-caching/src/__tests__/" },
   ]
 }

@@ -1,4 +1,8 @@
-import { GraphQLRequestContext, GraphQLResponse } from 'apollo-server-core';
+import {
+  GraphQLRequestContext,
+  GraphQLResponse,
+  ValueOrPromise,
+} from 'apollo-server-types';
 import {
   ApolloError,
   AuthenticationError,
@@ -10,7 +14,6 @@ import {
   RequestInit,
   Headers,
   Response,
-  ValueOrPromise,
 } from 'apollo-server-env';
 import { isObject } from '../utilities/predicates';
 import { GraphQLDataSource } from './types';

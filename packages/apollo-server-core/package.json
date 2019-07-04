@@ -34,6 +34,7 @@
     "apollo-server-env": "file:../apollo-server-env",
     "apollo-server-errors": "file:../apollo-server-errors",
     "apollo-server-plugin-base": "file:../apollo-server-plugin-base",
+    "apollo-server-types": "file:../apollo-server-types",
     "apollo-tracing": "file:../apollo-tracing",
     "fast-json-stable-stringify": "^2.0.0",
     "graphql-extensions": "file:../graphql-extensions",

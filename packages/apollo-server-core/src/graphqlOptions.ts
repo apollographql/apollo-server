@@ -12,8 +12,7 @@ import { KeyValueCache, InMemoryLRUCache } from 'apollo-server-caching';
 import { DataSource } from 'apollo-datasource';
 import { ApolloServerPlugin } from 'apollo-server-plugin-base';
 import { GraphQLParseOptions } from 'graphql-tools';
-import { ValueOrPromise } from 'apollo-server-env';
-import { GraphQLExecutor } from '../dist/requestPipelineAPI';
+import { GraphQLExecutor, ValueOrPromise } from 'apollo-server-types';
 
 /*
  * GraphQLServerOptions

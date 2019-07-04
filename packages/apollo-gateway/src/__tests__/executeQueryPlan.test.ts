@@ -7,7 +7,7 @@ import {
   GraphQLResolverMap,
 } from 'apollo-graphql';
 import gql from 'graphql-tag';
-import { GraphQLRequestContext } from 'apollo-server-core';
+import { GraphQLRequestContext } from 'apollo-server-types';
 import { composeServices, buildFederatedSchema } from '@apollo/federation';
 
 import { buildQueryPlan, buildOperationContext } from '../buildQueryPlan';

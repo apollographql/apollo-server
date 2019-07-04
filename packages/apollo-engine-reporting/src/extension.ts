@@ -1,5 +1,5 @@
-import { Request, Headers, WithRequired } from 'apollo-server-env';
-
+import { GraphQLRequestContext, WithRequired } from 'apollo-server-types';
+import { Request, Headers } from 'apollo-server-env';
 import {
   GraphQLResolveInfo,
   responsePathAsArray,
@@ -18,7 +18,6 @@ import {
   VariableValueOptions,
   SendValuesBaseOptions,
 } from './agent';
-import { GraphQLRequestContext } from 'apollo-server-core/dist/requestPipelineAPI';
 
 const clientNameHeaderKey = 'apollographql-client-name';
 const clientReferenceIdHeaderKey = 'apollographql-client-reference-id';

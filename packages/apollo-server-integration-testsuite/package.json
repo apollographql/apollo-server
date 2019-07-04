@@ -20,6 +20,7 @@
     "node": ">=6"
   },
   "dependencies": {
-    "apollo-server-core": "file:../apollo-server-core"
+    "apollo-server-core": "file:../apollo-server-core",
+    "apollo-server-types": "file:../apollo-server-types"
   }
 }

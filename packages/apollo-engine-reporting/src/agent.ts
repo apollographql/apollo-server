@@ -12,7 +12,7 @@ import { fetch, RequestAgent, Response } from 'apollo-server-env';
 import retry from 'async-retry';
 
 import { EngineReportingExtension } from './extension';
-import { GraphQLRequestContext } from 'apollo-server-core/dist/requestPipelineAPI';
+import { GraphQLRequestContext } from 'apollo-server-types';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import { defaultEngineReportingSignature } from 'apollo-graphql';
 
