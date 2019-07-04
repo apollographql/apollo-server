@@ -160,31 +160,31 @@ describe('reporting', () => {
       }),
     );
     expect(result).toMatchInlineSnapshot(`
-                                                            Object {
-                                                              "data": Object {
-                                                                "me": Object {
-                                                                  "name": "Ada Lovelace",
-                                                                },
-                                                                "topProducts": Array [
                                                                   Object {
-                                                                    "name": "Table",
-                                                                  },
-                                                                  Object {
-                                                                    "name": "Couch",
-                                                                  },
-                                                                  Object {
-                                                                    "name": "Chair",
-                                                                  },
-                                                                  Object {
-                                                                    "name": "Structure and Interpretation of Computer Programs (1996)",
-                                                                  },
-                                                                  Object {
-                                                                    "name": "Object Oriented Software Construction (1997)",
-                                                                  },
-                                                                ],
-                                                              },
-                                                            }
-                                    `);
+                                                                    "data": Object {
+                                                                      "me": Object {
+                                                                        "name": "Ada Lovelace",
+                                                                      },
+                                                                      "topProducts": Array [
+                                                                        Object {
+                                                                          "name": "Table",
+                                                                        },
+                                                                        Object {
+                                                                          "name": "Couch",
+                                                                        },
+                                                                        Object {
+                                                                          "name": "Chair",
+                                                                        },
+                                                                        Object {
+                                                                          "name": "Structure and Interpretation of Computer Programs (1996)",
+                                                                        },
+                                                                        Object {
+                                                                          "name": "Object Oriented Software Construction (1997)",
+                                                                        },
+                                                                      ],
+                                                                    },
+                                                                  }
+                                        `);
     const reportBody = await reportPromise;
     // nock returns binary bodies as hex strings
     const gzipReportBuffer = Buffer.from(reportBody, 'hex');
@@ -285,6 +285,7 @@ describe('reporting', () => {
                               "seconds": "1562203363",
                             },
                           },
+                          "traceParsingFailed": false,
                         },
                       },
                       Object {
@@ -386,6 +387,7 @@ describe('reporting', () => {
                                     "seconds": "1562203363",
                                   },
                                 },
+                                "traceParsingFailed": false,
                               },
                             },
                             Object {
@@ -478,6 +480,7 @@ describe('reporting', () => {
                                         "seconds": "1562203363",
                                       },
                                     },
+                                    "traceParsingFailed": false,
                                   },
                                 },
                                 "responsePath": Array [
@@ -552,6 +555,7 @@ describe('reporting', () => {
                                         "seconds": "1562203363",
                                       },
                                     },
+                                    "traceParsingFailed": false,
                                   },
                                 },
                                 "responsePath": Array [
