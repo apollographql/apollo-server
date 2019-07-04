@@ -25,7 +25,7 @@
     "node": ">=8"
   },
   "dependencies": {
-    "@apollographql/graphql-playground-html": "1.6.20",
+    "@apollographql/graphql-playground-html": "1.6.23",
     "accept": "^3.0.2",
     "apollo-server-core": "file:../apollo-server-core",
     "boom": "^7.1.0",
