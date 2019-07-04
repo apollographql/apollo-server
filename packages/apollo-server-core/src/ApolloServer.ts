@@ -501,7 +501,11 @@ export class ApolloServerBase {
     // Keep this extension second so it wraps everything, except error formatting
     if (this.engineReportingAgent) {
       if (schemaIsFederated) {
-        // XXX should this throw instead? or be left out?
+        // XXX users can configure a federated Apollo Server to send metrics, but the
+        // Gateway should be responsible for that. It's possible that users are running
+        // their own gateway or running a federated service on its own. Nonetheless, in
+        // the likely case it was accidental, we warn users that they should only report
+        // metrics from the Gateway.
         console.warn(
           "It looks like you're running a federated schema and you've configured your service " +
             'to report metrics to Apollo Engine. You should only configure your Apollo gateway ' +
