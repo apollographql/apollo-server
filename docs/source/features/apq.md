@@ -3,7 +3,7 @@ title: Automatic persisted queries
 description: Improving network performance by sending smaller requests.
 ---
 
-The size of individual GraphQL query strings can be a major pain point. Apollo Server implements Automatic Persisted Queries (APQ), a technique that greatly improves network performance for GraphQL with zero build-time configuration. A persisted query is a ID or hash that can be sent to the server instead of the entire GraphQL query string. This smaller signature reduces bandwidth utilization and speeds up client loading times. Persisted queries are especially nice paired with `GET` requests, enabling the browser cache and [integration with a CDN](#using-get-requests-with-apq-on-a-cdn).
+The size of individual GraphQL query strings can be a major pain point. Apollo Server implements Automatic Persisted Queries (APQ), a technique that greatly improves network performance for GraphQL with zero build-time configuration. A persisted query is an ID or hash that can be sent to the server instead of the entire GraphQL query string. This smaller signature reduces bandwidth utilization and speeds up client loading times. Persisted queries are especially nice paired with `GET` requests, enabling the browser cache and [integration with a CDN](#using-get-requests-with-apq-on-a-cdn).
 
 With Automatic Persisted Queries, the ID is a deterministic hash of the input query, so we don't need a complex build step to share the ID between clients and servers. If a server doesn't know about a given hash, the client can expand the query for it; Apollo Server caches that mapping.
 
@@ -90,7 +90,7 @@ The mechanism is based on a lightweight protocol extension between Apollo Client
 
 <img src="../images/persistedQueries.optPath.png" width="80%" style="margin: 5%" alt="Optimized Path">
 
-- **New Query Path:** In the unlikely event that the query is not already in the Apollo Server registry (this only happens the very first time that Apollo Server sees a query), it will ask the client to resend the request using the full text of the query. At that point Apollo Server will store the query / hash mapping in the registry for all subsequent requests to benefit from.
+- **New Query Path:** In the unlikely event that the query is not already in the Apollo Server registry (this only happens the very first time that Apollo Server sees a query), it will ask the client to resend the request using the full text of the query. At that point, Apollo Server will store the query / hash mapping in the registry for all subsequent requests to benefit from.
 
 <img src="../images/persistedQueries.newPath.png" width="80%" style="margin: 5%;" alt="New Query Path">
 
@@ -98,7 +98,7 @@ The mechanism is based on a lightweight protocol extension between Apollo Client
 
 Content Delivery Networks (CDNs) such as [fly.io](https://fly.io), [Cloudflare](https://www.cloudflare.com/), [Akamai](https://www.akamai.com/), or [Fastly](https://www.fastly.com/) allow content caching close to clients, delivering data with low latency from a nearby server. Apollo Server makes it straightforward to use CDNs with GraphQL queries to cache full responses while still executing more dynamic queries.
 
-Apollo Server works well with a Content Distribution Network (CDN) to cache full GraphQL query results. By adding the appropriate cache hints, Apollo Server can calculate `Cache-Control` headers that a CDN can use to determine how long a request should be cached. For subsequent requests, the result will be served directly from the CDN's cache. A CDN paired with Apollo Server's persisted queries is especially powerful, since GraphQL operations can be shortened and sent with a HTTP GET request.
+Apollo Server works well with a Content Distribution Network (CDN) to cache full GraphQL query results. By adding the appropriate cache hints, Apollo Server can calculate `Cache-Control` headers that a CDN can use to determine how long a request should be cached. For subsequent requests, the result will be served directly from the CDN's cache. A CDN paired with Apollo Server's persisted queries is especially powerful since GraphQL operations can be shortened and sent with an HTTP GET request.
 
 ### Step 1: Add cache hints to the GraphQL schema
 
@@ -156,7 +156,7 @@ const client = new ApolloClient({
 });
 ```
 
-Make sure to include `useGETForHashedQueries: true`. Note that the client will still use POSTs for mutations, because it's generally best to avoid GETs for non-idempotent requests.
+Make sure to include `useGETForHashedQueries: true`. Note that the client will still use POSTs for mutations because it's generally best to avoid GETs for non-idempotent requests.
 
 If configured correctly, browser's dev tools should verify that queries are now sent as GET requests, and receive appropriate `Cache-Control` response headers.
 
