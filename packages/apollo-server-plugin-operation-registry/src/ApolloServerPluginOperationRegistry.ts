@@ -48,7 +48,7 @@ export default function plugin(options: Options = Object.create(null)) {
   }
 
   // Notify about logging as a result of dryRun === true
-  if (options.dryRun === true) {
+  if (options.dryRun === true && options.debug !== false) {
     logger.enableAll();
     logger.debug(
       `${dryRunPrefix} Operation registry logging enabled because options.dryRun is true.`,
