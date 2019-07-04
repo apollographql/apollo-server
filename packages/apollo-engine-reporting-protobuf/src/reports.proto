@@ -139,6 +139,8 @@ message Trace {
 			// This might include an operation signature, requires directive, reference resolutions, etc.
 			string serviceName = 1;
 
+			bool traceParsingFailed = 2;
+
 			// This Trace only contains start_time, end_time, duration_ns, and root;
 			// all timings were calculated **on the federated service**, and clock skew
 			// will be handled by the ingress server.

@@ -116,6 +116,12 @@ export class EngineReportingTreeBuilder {
       const specificNode = this.nodes.get(path.join('.'));
       if (specificNode) {
         node = specificNode;
+      } else {
+        console.warn(
+          `Could not find node with path ${path.join(
+            '.',
+          )}; defaulting to put errors on root node.`,
+        );
       }
     }
 

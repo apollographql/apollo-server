@@ -120,6 +120,10 @@ async function executeNode<TContext>(
   if (!results) {
     // XXX I don't understand `results` threading well enough to understand when this happens
     //     and if this corresponds to a real query plan node that should be reported or not.
+    //
+    // This may be if running something like `query { fooOrNullFromServiceA {
+    // somethingFromServiceB } }` and the first field is null, then we don't bother to run the
+    // inner field at all.
     return new Trace.QueryPlanNode();
   }
 
@@ -271,7 +275,9 @@ async function executeFetch<TContext>(
 
     if (receivedEntities.length !== representations.length) {
       throw new Error(
-        `Expected "data._entities" to contain ${representations.length} elements`,
+        `Expected "data._entities" to contain ${
+          representations.length
+        } elements`,
       );
     }
 
@@ -339,27 +345,35 @@ async function executeFetch<TContext>(
       if (response.extensions && response.extensions.ftv1) {
         const traceBase64 = response.extensions.ftv1;
 
-        let traceBuffer;
+        let traceBuffer: Buffer | undefined;
+        let traceParsingFailed = false;
         try {
           // XXX support non-Node implementations by using Uint8Array? protobufjs
           // supports that, but there's not a no-deps base64 implementation.
           traceBuffer = Buffer.from(traceBase64, 'base64');
         } catch (err) {
-          throw new Error(
-            `error decoding base64 for federated trace from ${fetch.serviceName}: ${err}`,
+          console.error(
+            `error decoding base64 for federated trace from ${
+              fetch.serviceName
+            }: ${err}`,
           );
+          traceParsingFailed = true;
         }
 
-        let trace;
-        try {
-          trace = Trace.decode(traceBuffer);
-        } catch (err) {
-          throw new Error(
-            `error decoding protobuf for federated trace from ${fetch.serviceName}: ${err}`,
-          );
+        if (traceBuffer) {
+          try {
+            const trace = Trace.decode(traceBuffer);
+            traceNode.trace = trace;
+          } catch (err) {
+            console.error(
+              `error decoding protobuf for federated trace from ${
+                fetch.serviceName
+              }: ${err}`,
+            );
+            traceParsingFailed = true;
+          }
         }
-
-        traceNode.trace = trace;
+        traceNode.traceParsingFailed = traceParsingFailed;
       }
     }
 
@@ -446,6 +460,7 @@ function downstreamServiceError(
     message = `Error while fetching subquery from service "${serviceName}"`;
   }
   extensions = {
+    // XXX This error code is relied upon by federated metrics
     code: 'DOWNSTREAM_SERVICE_ERROR',
     serviceName,
     query,
