@@ -6,6 +6,7 @@ export const typeDefs = gql`
   extend type Query {
     book(isbn: String!): Book
     books: [Book]
+    library(id: ID!): Library
   }
 
   type Library @key(fields: "id") {
@@ -89,6 +90,9 @@ export const resolvers: GraphQLResolverMap<any> = {
     },
     books() {
       return books;
+    },
+    library(_, { id }) {
+      return libraries.find(library => library.id === id);
     },
   },
 };
