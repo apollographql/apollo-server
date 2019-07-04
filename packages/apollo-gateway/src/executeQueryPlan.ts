@@ -275,9 +275,7 @@ async function executeFetch<TContext>(
 
     if (receivedEntities.length !== representations.length) {
       throw new Error(
-        `Expected "data._entities" to contain ${
-          representations.length
-        } elements`,
+        `Expected "data._entities" to contain ${representations.length} elements`,
       );
     }
 
@@ -353,9 +351,7 @@ async function executeFetch<TContext>(
           traceBuffer = Buffer.from(traceBase64, 'base64');
         } catch (err) {
           console.error(
-            `error decoding base64 for federated trace from ${
-              fetch.serviceName
-            }: ${err}`,
+            `error decoding base64 for federated trace from ${fetch.serviceName}: ${err}`,
           );
           traceParsingFailed = true;
         }
@@ -366,9 +362,7 @@ async function executeFetch<TContext>(
             traceNode.trace = trace;
           } catch (err) {
             console.error(
-              `error decoding protobuf for federated trace from ${
-                fetch.serviceName
-              }: ${err}`,
+              `error decoding protobuf for federated trace from ${fetch.serviceName}: ${err}`,
             );
             traceParsingFailed = true;
           }
