@@ -82,7 +82,8 @@ const resolvers = {
 
 const server = new ApolloServer({
   typeDefs,
-  resolvers
+  resolvers,
+  playground: true
 });
 
 exports.handler = server.createHandler();
