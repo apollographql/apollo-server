@@ -96,7 +96,7 @@ For a full working example please have a look to [this repo](https://github.com/
 
 To support an authenticated transport, Apollo Server provides lifecycle hooks, including `onConnect` to validate the connection.
 
-On the client, `SubscriptionsClient` supports adding token information to `connectionParams` ([example](https://www.apollographql.com/docs/react/advanced/subscriptions/#authentication)) that will be sent with the first WebSocket message. In the server, all GraphQL subscriptions are delayed until the connection has been fully authenticated and the `onConnect` callback returns a truthy value.
+On the client, `SubscriptionsClient` supports adding token information to `connectionParams` ([example](https://www.apollographql.com/docs/react/advanced/subscriptions/#authentication-over-websocket)) that will be sent with the first WebSocket message. In the server, all GraphQL subscriptions are delayed until the connection has been fully authenticated and the `onConnect` callback returns a truthy value.
 
 The `connectionParams` argument in the `onConnect` callback contains the information passed by the client and can be used to validate user credentials.
 The GraphQL context can also be extended with the authenticated user data to enable fine grain authorization.
