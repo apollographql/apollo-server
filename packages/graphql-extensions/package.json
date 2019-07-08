@@ -14,11 +14,11 @@
     "node": ">=6.0"
   },
   "dependencies": {
-    "@apollographql/apollo-tools": "^0.3.6"
+    "@apollographql/apollo-tools": "^0.3.6",
+    "apollo-server-env": "file:../apollo-server-env"
   },
   "devDependencies": {
-    "apollo-server-core": "file:../apollo-server-core",
-    "apollo-server-env": "file:../apollo-server-env"
+    "apollo-server-core": "file:../apollo-server-core"
   },
   "peerDependencies": {
     "graphql": "^0.12.0 || ^0.13.0 || ^14.0.0"
