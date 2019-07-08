@@ -3,12 +3,14 @@ title: Running Federation in production
 description: Ensuring reliability and robustness
 ---
 
-Like any distributed architecture, you should make sure that your federated GraphQL layer has proper observability and monitoring to ensure the best reliability and performance of both your gateway and the federated services underneath it. This document is meant to provide best practices and how-tos for observability and control over your federated architecture. If you're running Federation in production, we'd love to [hear from you](<LINK_TO_EMAIL>) and accept any [contribution](LINK_TO_GITHUB) to this documentation.
+Like any distributed architecture, you should make sure that your federated GraphQL layer has proper observability, monitoring, and automation to ensure reliability and performance of both your gateway and the federated services underneath it. Serving your GraphQL API from a distributed architecture has many benefits, like productivity, isolation, and being able to match the right services with the right runtimes. Operating a distributed system also has more complexity and points of failure than operating a monolith, and with that complexity comes a need to heighten observability into the state of your system and control over its coordination.
+
+There is a wealth of information around reliability in a distributed service-oriented architecture, and those best practices still certainly apply here. For instance, you should ensure that the resource needs of your services are well-understood, that services and the gateway only roll over to a new version after passing health checks, and you should strive to make all services stateful when possible. This document is meant for teams with the need for a federated GraphQL layer, to provide details of nuance in how federation works, how the gateway responds to changes, and best practices in operating federation in production. If you're running with federation in production, we'd love to [hear from you](mailto:federation@apollographql.com) and accept any [contribution](https://github.com/apollographql/apollo-server/blob/master/docs/source/federation/production.md) to this documentation.
 
 ## Managed Federation
 [//]: # (Description: This section should discuss the basic idea of managed federation without getting into specific and talk vaguely of the problem of service rollout and looking for a balance of automation and observability, workflow, etc.)
-[//]: # (Assignee: Adam)
-[//]: # (Reviewer: James)
+[//]: # (Assignee: Jackson)
+[//]: # (Reviewer: Adam)
 
 #### Overview
 
