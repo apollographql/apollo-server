@@ -72,11 +72,8 @@ const gateway = new ApolloGateway({
   ]
 });
 
-(async () => {
-  const { schema, executor } = await gateway.load();
-  const server = new ApolloServer({ schema, executor });
-  server.listen();
-})();
+const server = new ApolloServer({ gateway });
+server.listen();
 ```
 
 That’s it! With Apollo Federation, your schemas and resolvers live in the individual services. There is no user code in the gateway, just a reference to each of the federated services that make up the graph.
