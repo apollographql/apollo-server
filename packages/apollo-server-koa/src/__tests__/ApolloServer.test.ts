@@ -11,7 +11,7 @@ import { gql, AuthenticationError, Config } from 'apollo-server-core';
 import { ApolloServer, ServerRegistration } from '../ApolloServer';
 
 import {
-  atLeastMajorNodeVersion,
+  NODE_MAJOR_VERSION,
   testApolloServer,
   createServerInfo,
 } from 'apollo-server-integration-testsuite';
@@ -37,7 +37,7 @@ describe('apollo-server-koa', () => {
       const app = new Koa();
       server.applyMiddleware({ app });
       httpServer = await new Promise<http.Server>(resolve => {
-        const s = app.listen({ port: 7777 }, () => resolve(s));
+        const s = app.listen({ port: 0 }, () => resolve(s));
       });
       return createServerInfo(server, httpServer);
     },
@@ -64,7 +64,7 @@ describe('apollo-server-koa', () => {
     server.applyMiddleware({ ...options, app });
 
     httpServer = await new Promise<http.Server>(resolve => {
-      const l = app.listen({ port: 4000 }, () => resolve(l));
+      const l = app.listen({ port: 0 }, () => resolve(l));
     });
 
     return createServerInfo(server, httpServer);
@@ -323,8 +323,9 @@ describe('apollo-server-koa', () => {
         });
       });
     });
-    // NODE: Intentionally skip file upload tests on Node.js 10 or higher.
-    (atLeastMajorNodeVersion(10) ? describe.skip : describe)(
+    // NODE: Skip Node.js 6, but only because `graphql-upload`
+    // doesn't support it anymore.
+    (NODE_MAJOR_VERSION === 6 ? describe.skip : describe)(
       'file uploads',
       () => {
         it('enabled uploads', async () => {
@@ -720,28 +721,6 @@ describe('apollo-server-koa', () => {
           resolvers,
           tracing: true,
           cacheControl: true,
-        });
-
-        const apolloFetch = createApolloFetch({ uri });
-        const result = await apolloFetch({
-          query: `{ books { title author } }`,
-        });
-        expect(result.data).toEqual({ books });
-        expect(result.extensions).toBeDefined();
-        expect(result.extensions.tracing).toBeDefined();
-      });
-
-      xit('applies tracing extension with engine enabled', async () => {
-        const { url: uri } = await createServer({
-          typeDefs,
-          resolvers,
-          tracing: true,
-          engine: {
-            apiKey: 'service:my-app:secret',
-            maxAttempts: 0,
-            endpointUrl: 'l',
-            reportErrorFunction: () => {},
-          },
         });
 
         const apolloFetch = createApolloFetch({ uri });

@@ -30,6 +30,25 @@ describe('@cacheControl directives', () => {
     expect(hints).toContainEqual({ path: ['droid'], maxAge: 0 });
   });
 
+  it('should set maxAge: 0 and no scope for a top-level scalar field without cache hints', async () => {
+    const schema = buildSchemaWithCacheControlSupport(`
+      type Query {
+        name: String
+      }
+    `);
+
+    const hints = await collectCacheControlHints(
+      schema,
+      `
+        query {
+          name
+        }
+      `,
+    );
+
+    expect(hints).toContainEqual({ path: ['name'], maxAge: 0 });
+  });
+
   it('should set maxAge to the default and no scope for a field without cache hints', async () => {
     const schema = buildSchemaWithCacheControlSupport(`
       type Query {

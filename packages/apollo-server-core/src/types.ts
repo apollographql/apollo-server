@@ -1,7 +1,15 @@
 import { GraphQLSchema, DocumentNode } from 'graphql';
-import { SchemaDirectiveVisitor, IResolvers, IMocks } from 'graphql-tools';
+import {
+  SchemaDirectiveVisitor,
+  IResolvers,
+  IMocks,
+  GraphQLParseOptions,
+} from 'graphql-tools';
+import { ValueOrPromise } from 'apollo-server-env';
 import { ConnectionContext } from 'subscriptions-transport-ws';
-import WebSocket from 'ws';
+// The types for `ws` use `export = WebSocket`, so we'll use the
+// matching `import =` to bring in its sole export.
+import WebSocket = require('ws');
 import { GraphQLExtension } from 'graphql-extensions';
 export { GraphQLExtension } from 'graphql-extensions';
 
@@ -22,10 +30,10 @@ export { GraphQLSchemaModule };
 
 export { KeyValueCache } from 'apollo-server-caching';
 
-export type Context<T = any> = T;
-export type ContextFunction<T = any> = (
-  context: Context<T>,
-) => Promise<Context<T>>;
+export type Context<T = object> = T;
+export type ContextFunction<FunctionParams = any, ProducedContext = object> = (
+  context: FunctionParams,
+) => ValueOrPromise<Context<ProducedContext>>;
 
 // A plugin can return an interface that matches `ApolloServerPlugin`, or a
 // factory function that returns `ApolloServerPlugin`.
@@ -42,37 +50,40 @@ export interface SubscriptionServerOptions {
   onDisconnect?: (websocket: WebSocket, context: ConnectionContext) => any;
 }
 
+type BaseConfig = Pick<
+  GraphQLOptions<Context>,
+  | 'formatError'
+  | 'debug'
+  | 'rootValue'
+  | 'validationRules'
+  | 'executor'
+  | 'formatResponse'
+  | 'fieldResolver'
+  | 'tracing'
+  | 'dataSources'
+  | 'cache'
+>;
+
 // This configuration is shared between all integrations and should include
 // fields that are not specific to a single integration
-export interface Config
-  extends Pick<
-      GraphQLOptions<Context<any>>,
-      | 'formatError'
-      | 'debug'
-      | 'rootValue'
-      | 'validationRules'
-      | 'formatResponse'
-      | 'fieldResolver'
-      | 'tracing'
-      | 'dataSources'
-      | 'cache'
-    > {
+export interface Config extends BaseConfig {
   modules?: GraphQLSchemaModule[];
-  typeDefs?: DocumentNode | Array<DocumentNode>;
+  typeDefs?: DocumentNode | Array<DocumentNode> | string | Array<string>;
+  parseOptions?: GraphQLParseOptions;
   resolvers?: IResolvers;
   schema?: GraphQLSchema;
   schemaDirectives?: Record<string, typeof SchemaDirectiveVisitor>;
-  context?: Context<any> | ContextFunction<any>;
+  context?: Context | ContextFunction;
   introspection?: boolean;
   mocks?: boolean | IMocks;
   mockEntireSchema?: boolean;
-  engine?: boolean | EngineReportingOptions<Context<any>>;
+  engine?: boolean | EngineReportingOptions<Context>;
   extensions?: Array<() => GraphQLExtension>;
   cacheControl?: CacheControlExtensionOptions | boolean;
   plugins?: PluginDefinition[];
   persistedQueries?: PersistedQueryOptions | false;
   subscriptions?: Partial<SubscriptionServerOptions> | string | false;
-  //https://github.com/jaydenseric/apollo-upload-server#options
+  //https://github.com/jaydenseric/graphql-upload#type-uploadoptions
   uploads?: boolean | FileUploadOptions;
   playground?: PlaygroundConfig;
 }

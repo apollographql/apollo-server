@@ -42,6 +42,13 @@ declare module 'graphql/type/definition' {
   }
 }
 
+declare module 'apollo-server-core/dist/requestPipelineAPI' {
+  interface GraphQLRequestContext<TContext> {
+    // Not readonly: plugins can set it.
+    overallCachePolicy?: Required<CacheHint> | undefined;
+  }
+}
+
 export class CacheControlExtension<TContext = any>
   implements GraphQLExtension<TContext> {
   private defaultMaxAge: number;
@@ -51,6 +58,7 @@ export class CacheControlExtension<TContext = any>
   }
 
   private hints: Map<ResponsePath, CacheHint> = new Map();
+  private overallCachePolicyOverride?: Required<CacheHint>;
 
   willResolveField(
     _source: any,
@@ -75,26 +83,27 @@ export class CacheControlExtension<TContext = any>
       }
     }
 
-    // If this field is a field on an object, look for hints on the field
-    // itself, taking precedence over previously calculated hints.
-    const parentType = info.parentType;
-    if (parentType instanceof GraphQLObjectType) {
-      const fieldDef = parentType.getFields()[info.fieldName];
-      if (fieldDef.astNode) {
-        hint = mergeHints(
-          hint,
-          cacheHintFromDirectives(fieldDef.astNode.directives),
-        );
-      }
+    // Look for hints on the field itself (on its parent type), taking
+    // precedence over previously calculated hints.
+    const fieldDef = info.parentType.getFields()[info.fieldName];
+    if (fieldDef.astNode) {
+      hint = mergeHints(
+        hint,
+        cacheHintFromDirectives(fieldDef.astNode.directives),
+      );
     }
 
-    // If this resolver returns an object and we haven't seen an explicit maxAge
-    // hint, set the maxAge to 0 (uncached) or the default if specified in the
-    // constructor.  (Non-object fields by default are assumed to inherit their
-    // cacheability from their parents.)
+    // If this resolver returns an object or is a root field and we haven't seen
+    // an explicit maxAge hint, set the maxAge to 0 (uncached) or the default if
+    // specified in the constructor.  (Non-object fields by default are assumed
+    // to inherit their cacheability from their parents. But on the other hand,
+    // while root non-object fields can get explicit hints from their definition
+    // on the Query/Mutation object, if that doesn't exist then there's no
+    // parent field that would assign the default maxAge, so we do it here.)
     if (
       (targetType instanceof GraphQLObjectType ||
-        targetType instanceof GraphQLInterfaceType) &&
+        targetType instanceof GraphQLInterfaceType ||
+        !info.path.prev) &&
       hint.maxAge === undefined
     ) {
       hint.maxAge = this.defaultMaxAge;
@@ -122,7 +131,14 @@ export class CacheControlExtension<TContext = any>
   }
 
   format(): [string, CacheControlFormat] | undefined {
-    if (this.options.stripFormattedExtensions) return;
+    // We should have to explicitly ask to leave the formatted extension in, or
+    // pass the old-school `cacheControl: true` (as interpreted by
+    // apollo-server-core/ApolloServer), in order to include the
+    // engineproxy-aimed extensions. Specifically, we want users of
+    // apollo-server-plugin-response-cache to be able to specify
+    // `cacheControl: {defaultMaxAge: 600}` without accidentally turning on the
+    // extension formatting.
+    if (this.options.stripFormattedExtensions !== false) return;
 
     return [
       'cacheControl',
@@ -137,35 +153,52 @@ export class CacheControlExtension<TContext = any>
   }
 
   public willSendResponse?(o: { graphqlResponse: GraphQLResponse }) {
-    if (this.options.calculateHttpHeaders && o.graphqlResponse.http) {
-      const overallCachePolicy = this.computeOverallCachePolicy();
+    if (
+      !this.options.calculateHttpHeaders ||
+      !o.graphqlResponse.http ||
+      o.graphqlResponse.errors
+    ) {
+      return;
+    }
 
-      if (overallCachePolicy) {
-        o.graphqlResponse.http.headers.set(
-          'Cache-Control',
-          `max-age=${
-            overallCachePolicy.maxAge
-          }, ${overallCachePolicy.scope.toLowerCase()}`,
-        );
-      }
+    const overallCachePolicy = this.computeOverallCachePolicy();
+
+    if (overallCachePolicy) {
+      o.graphqlResponse.http.headers.set(
+        'Cache-Control',
+        `max-age=${
+          overallCachePolicy.maxAge
+        }, ${overallCachePolicy.scope.toLowerCase()}`,
+      );
     }
   }
 
+  public overrideOverallCachePolicy(overallCachePolicy: Required<CacheHint>) {
+    this.overallCachePolicyOverride = overallCachePolicy;
+  }
+
   computeOverallCachePolicy(): Required<CacheHint> | undefined {
+    if (this.overallCachePolicyOverride) {
+      return this.overallCachePolicyOverride;
+    }
+
     let lowestMaxAge: number | undefined = undefined;
     let scope: CacheScope = CacheScope.Public;
 
     for (const hint of this.hints.values()) {
-      if (hint.maxAge) {
-        lowestMaxAge = lowestMaxAge
-          ? Math.min(lowestMaxAge, hint.maxAge)
-          : hint.maxAge;
+      if (hint.maxAge !== undefined) {
+        lowestMaxAge =
+          lowestMaxAge !== undefined
+            ? Math.min(lowestMaxAge, hint.maxAge)
+            : hint.maxAge;
       }
       if (hint.scope === CacheScope.Private) {
         scope = CacheScope.Private;
       }
     }
 
+    // If maxAge is 0, then we consider it uncacheable so it doesn't matter what
+    // the scope was.
     return lowestMaxAge
       ? {
           maxAge: lowestMaxAge,

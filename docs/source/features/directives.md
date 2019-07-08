@@ -60,7 +60,7 @@ const typeDefs = gql`
 // Provide resolver functions for your schema fields
 const resolvers = {
   Query: {
-    hello: (root, args, context) => {
+    hello: (parent, args, context) => {
       return 'Hello world!';
     },
   },
@@ -85,4 +85,4 @@ The implementation of `UpperCaseDirective` takes care of changing the resolver a
 
 ## Building your own
 
-To learn how to implement your own schema directives, read [this guide](./creating-directives.html).
+To learn how to implement your own schema directives, read [this guide](/features/creating-directives/).

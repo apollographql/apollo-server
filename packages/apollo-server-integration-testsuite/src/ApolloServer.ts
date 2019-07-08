@@ -6,7 +6,7 @@ import express = require('express');
 import bodyParser = require('body-parser');
 import yup = require('yup');
 
-import { FullTracesReport, ITrace } from 'apollo-engine-reporting-protobuf';
+import { FullTracesReport } from 'apollo-engine-reporting-protobuf';
 
 import {
   GraphQLSchema,
@@ -28,15 +28,28 @@ import {
   VERSION,
 } from 'apollo-link-persisted-queries';
 
-import { createApolloFetch } from 'apollo-fetch';
+import {
+  createApolloFetch,
+  ApolloFetch,
+  GraphQLRequest,
+  ParsedResponse,
+} from 'apollo-fetch';
 import {
   AuthenticationError,
   UserInputError,
   gql,
   Config,
   ApolloServerBase,
+  PluginDefinition,
 } from 'apollo-server-core';
+import { Headers } from 'apollo-server-env';
 import { GraphQLExtension, GraphQLResponse } from 'graphql-extensions';
+import { TracingFormat } from 'apollo-tracing';
+import ApolloServerPluginResponseCache from 'apollo-server-plugin-response-cache';
+import { GraphQLRequestContext } from 'apollo-server-plugin-base';
+
+import { mockDate, unmockDate, advanceTimeBy } from '__mocks__/date';
+import { EngineReportingOptions } from 'apollo-engine-reporting';
 
 export function createServerInfo<AS extends ApolloServerBase>(
   server: AS,
@@ -387,6 +400,62 @@ export function testApolloServer<AS extends ApolloServerBase>(
       });
     });
 
+    describe('Plugins', () => {
+      let apolloFetch: ApolloFetch;
+      let apolloFetchResponse: ParsedResponse;
+
+      const setupApolloServerAndFetchPairForPlugins = async (
+        plugins: PluginDefinition[] = [],
+      ) => {
+        const { url: uri } = await createApolloServer({
+          typeDefs: gql`
+            type Query {
+              justAField: String
+            }
+          `,
+          plugins,
+        });
+
+        apolloFetch = createApolloFetch({ uri })
+          // Store the response so we can inspect it.
+          .useAfter(({ response }, next) => {
+            apolloFetchResponse = response;
+            next();
+          });
+      };
+
+      it('returns correct status code for a normal operation', async () => {
+        await setupApolloServerAndFetchPairForPlugins();
+
+        const result = await apolloFetch({ query: '{ justAField }' });
+        expect(result.errors).toBeUndefined();
+        expect(apolloFetchResponse.status).toEqual(200);
+      });
+
+      it('allows setting a custom status code for an error', async () => {
+        await setupApolloServerAndFetchPairForPlugins([
+          {
+            requestDidStart() {
+              return {
+                didResolveOperation() {
+                  throw new Error('known_error');
+                },
+                willSendResponse({ response: { http, errors } }) {
+                  if (errors[0].message === 'known_error') {
+                    http.status = 403;
+                  }
+                },
+              };
+            },
+          },
+        ]);
+
+        const result = await apolloFetch({ query: '{ justAField }' });
+        expect(result.errors).toBeDefined();
+        expect(apolloFetchResponse.status).toEqual(403);
+      });
+    });
+
     describe('formatError', () => {
       it('wraps thrown error from validation rules', async () => {
         const throwError = jest.fn(() => {
@@ -450,12 +519,12 @@ export function testApolloServer<AS extends ApolloServerBase>(
         const { url: uri } = await createApolloServer({
           typeDefs: gql`
             type Query {
-              error: String
+              fieldWhichWillError: String
             }
           `,
           resolvers: {
             Query: {
-              error: () => {
+              fieldWhichWillError: () => {
                 return throwError();
               },
             },
@@ -468,9 +537,9 @@ export function testApolloServer<AS extends ApolloServerBase>(
         const apolloFetch = createApolloFetch({ uri });
 
         const result = await apolloFetch({
-          query: '{error}',
+          query: '{fieldWhichWillError}',
         });
-        expect(result.data).toEqual({ error: null });
+        expect(result.data).toEqual({ fieldWhichWillError: null });
         expect(result.errors).toBeDefined();
         expect(result.errors[0].extensions.code).toEqual('BAD_USER_INPUT');
         expect(result.errors[0].message).toEqual('User Input Error');
@@ -480,160 +549,564 @@ export function testApolloServer<AS extends ApolloServerBase>(
     });
 
     describe('lifecycle', () => {
-      describe('with Engine server', () => {
+      describe('for Apollo Engine', () => {
         let nodeEnv: string;
+        let engineServer: EngineMockServer;
 
-        beforeEach(() => {
-          nodeEnv = process.env.NODE_ENV;
-          delete process.env.NODE_ENV;
-        });
+        class EngineMockServer {
+          private app: express.Application;
+          private server: http.Server;
+          private reports: FullTracesReport[] = [];
+          public readonly promiseOfReports: Promise<FullTracesReport[]>;
 
-        let engineServer: http.Server;
+          constructor() {
+            let reportResolver: (reports: FullTracesReport[]) => void;
+            this.promiseOfReports = new Promise<FullTracesReport[]>(resolve => {
+              reportResolver = resolve;
+            });
 
-        function startEngineServer({ check }): Promise<void> {
-          return new Promise(resolve => {
-            const app = express();
-            app.use((req, _res, next) => {
+            this.app = express();
+            this.app.use((req, _res, next) => {
               // body parser requires a content-type
               req.headers['content-type'] = 'text/plain';
               next();
             });
-            app.use(
+            this.app.use(
               bodyParser.raw({
                 inflate: true,
                 type: '*/*',
               }),
             );
-            app.use(check);
-            engineServer = app.listen(0, resolve);
-          });
+
+            this.app.use((req, res) => {
+              const report = FullTracesReport.decode(req.body);
+              this.reports.push(report);
+              res.end();
+
+              // Resolve any outstanding Promises with our new report data.
+              reportResolver(this.reports);
+            });
+          }
+
+          async listen(): Promise<http.Server> {
+            return await new Promise(resolve => {
+              const server = (this.server = this.app.listen(
+                0,
+                // Intentionally IPv4.
+                '127.0.0.1',
+                () => {
+                  resolve(server);
+                },
+              ));
+            });
+          }
+
+          async stop(): Promise<void> {
+            if (!this.server) {
+              return;
+            }
+
+            return new Promise(resolve => {
+              this.server && this.server.close(resolve);
+            });
+          }
+
+          public engineOptions(): Partial<EngineReportingOptions<any>> {
+            return {
+              endpointUrl: this.getUrl(),
+            };
+          }
+
+          private getUrl(): string {
+            if (!this.server) {
+              throw new Error('must listen before getting URL');
+            }
+            const {
+              family,
+              address,
+              port,
+            } = this.server.address() as net.AddressInfo;
+
+            if (family !== 'IPv4') {
+              throw new Error(`The family was unexpectedly ${family}.`);
+            }
+            const { URL } = require('url');
+            return new URL(`http://${address}:${port}`).toString();
+          }
         }
+
+        beforeEach(async () => {
+          nodeEnv = process.env.NODE_ENV;
+          delete process.env.NODE_ENV;
+          engineServer = new EngineMockServer();
+          return await engineServer.listen();
+        });
 
         afterEach(done => {
           process.env.NODE_ENV = nodeEnv;
 
-          if (engineServer) {
-            engineServer.close(done);
-          } else {
-            done();
-          }
+          (engineServer.stop() || Promise.resolve()).then(done);
         });
 
-        it('validation > engine > extensions > formatError', async () => {
-          const throwError = jest.fn(() => {
-            throw new Error('nope');
-          });
-
-          const validationRule = jest.fn(() => {
-            // formatError should be called after validation
-            expect(formatError).not.toBeCalled();
-            // extension should be called after validation
-            expect(willSendResponseInExtension).not.toBeCalled();
-            return true;
-          });
-
-          const willSendResponseInExtension = jest.fn();
-
-          const formatError = jest.fn(error => {
-            try {
-              expect(error).toBeInstanceOf(Error);
-              // extension should be called before formatError
-              expect(willSendResponseInExtension).toHaveBeenCalledTimes(1);
-              // validationRules should be called before formatError
-              expect(validationRule).toHaveBeenCalledTimes(1);
-            } finally {
-              error.message = 'masked';
-              return error;
-            }
-          });
-
-          class Extension<TContext = any> extends GraphQLExtension {
-            willSendResponse(o: {
-              graphqlResponse: GraphQLResponse;
-              context: TContext;
-            }) {
-              expect(o.graphqlResponse.errors.length).toEqual(1);
-              // formatError should be called after extensions
-              expect(formatError).not.toBeCalled();
-              // validationRules should be called before extensions
-              expect(validationRule).toHaveBeenCalledTimes(1);
-              willSendResponseInExtension();
-            }
-          }
-
-          let engineServerDidStart: Promise<void>;
-
-          const didReceiveTrace = new Promise<ITrace>(resolve => {
-            engineServerDidStart = startEngineServer({
-              check: (req, res) => {
-                const report = FullTracesReport.decode(req.body);
-                const header = report.header;
-                expect(header.schemaTag).toEqual('');
-                expect(header.schemaHash).toBeDefined();
-                const trace = Object.values(report.tracesPerQuery)[0].trace[0];
-                resolve(trace);
-                res.end();
-              },
+        describe('extensions', () => {
+          // While it's been broken down quite a bit, this test is still
+          // overloaded and is a prime candidate for de-composition!
+          it('calls formatError and other overloaded client identity tests', async () => {
+            const throwError = jest.fn(() => {
+              throw new Error('nope');
             });
-          });
 
-          await engineServerDidStart;
+            const validationRule = jest.fn(() => {
+              // formatError should be called after validation
+              expect(formatError).not.toBeCalled();
+              // extension should be called after validation
+              expect(willSendResponseInExtension).not.toBeCalled();
+              return true;
+            });
 
-          const { url: uri } = await createApolloServer({
-            typeDefs: gql`
-              type Query {
-                error: String
+            const willSendResponseInExtension = jest.fn();
+
+            const formatError = jest.fn(error => {
+              try {
+                expect(error).toBeInstanceOf(Error);
+                // extension should be called before formatError
+                expect(willSendResponseInExtension).toHaveBeenCalledTimes(1);
+                // validationRules should be called before formatError
+                expect(validationRule).toHaveBeenCalledTimes(1);
+              } finally {
+                error.message = 'masked';
+                return error;
               }
-            `,
-            resolvers: {
-              Query: {
-                error: () => {
-                  throwError();
+            });
+
+            class Extension<TContext = any> extends GraphQLExtension {
+              willSendResponse(o: {
+                graphqlResponse: GraphQLResponse;
+                context: TContext;
+              }) {
+                expect(o.graphqlResponse.errors.length).toEqual(1);
+                // formatError should be called before willSendResponse
+                expect(formatError).toHaveBeenCalledTimes(1);
+                // validationRule should be called before willSendResponse
+                expect(validationRule).toHaveBeenCalledTimes(1);
+                willSendResponseInExtension();
+              }
+            }
+
+            const { url: uri } = await createApolloServer({
+              typeDefs: gql`
+                type Query {
+                  fieldWhichWillError: String
+                }
+              `,
+              resolvers: {
+                Query: {
+                  fieldWhichWillError: () => {
+                    throwError();
+                  },
                 },
               },
-            },
-            validationRules: [validationRule],
-            extensions: [() => new Extension()],
-            engine: {
-              endpointUrl: `http://localhost:${
-                (engineServer.address() as net.AddressInfo).port
-              }`,
-              apiKey: 'service:my-app:secret',
-              maxUncompressedReportSize: 1,
-              generateClientInfo: () => ({
-                clientName: 'testing',
-                clientReferenceId: '1234',
-                clientVersion: 'v1.0.1',
-              }),
-            },
-            formatError,
-            debug: true,
+              validationRules: [validationRule],
+              extensions: [() => new Extension()],
+              engine: {
+                ...engineServer.engineOptions(),
+                apiKey: 'service:my-app:secret',
+                maxUncompressedReportSize: 1,
+                generateClientInfo: () => ({
+                  clientName: 'testing',
+                  clientReferenceId: '1234',
+                  clientVersion: 'v1.0.1',
+                }),
+              },
+              formatError,
+              debug: true,
+            });
+
+            const apolloFetch = createApolloFetch({ uri });
+
+            const result = await apolloFetch({
+              query: `{fieldWhichWillError}`,
+            });
+            expect(result.data).toEqual({
+              fieldWhichWillError: null,
+            });
+            expect(result.errors).toBeDefined();
+            expect(result.errors[0].message).toEqual('masked');
+
+            expect(validationRule).toHaveBeenCalledTimes(1);
+            expect(throwError).toHaveBeenCalledTimes(1);
+            expect(formatError).toHaveBeenCalledTimes(1);
+            expect(willSendResponseInExtension).toHaveBeenCalledTimes(1);
+
+            const reports = await engineServer.promiseOfReports;
+
+            expect(reports.length).toBe(1);
+
+            const trace = Object.values(reports[0].tracesPerQuery)[0].trace[0];
+
+            expect(trace.clientReferenceId).toMatch(/1234/);
+            expect(trace.clientName).toMatch(/testing/);
+            expect(trace.clientVersion).toEqual('v1.0.1');
+
+            expect(trace.root!.child![0].error![0].message).toMatch(/nope/);
+            expect(trace.root!.child![0].error![0].message).not.toMatch(
+              /masked/,
+            );
+          });
+        });
+
+        describe('traces', () => {
+          let throwError: jest.Mock;
+          let apolloFetch: ApolloFetch;
+
+          beforeEach(async () => {
+            throwError = jest.fn();
           });
 
-          const apolloFetch = createApolloFetch({ uri });
+          const setupApolloServerAndFetchPair = async (
+            engineOptions: Partial<EngineReportingOptions<any>> = {},
+            constructorOptions: Partial<CreateServerFunc<AS>> = {},
+          ) => {
+            const { url: uri } = await createApolloServer({
+              typeDefs: gql`
+                type Query {
+                  fieldWhichWillError: String
+                  justAField: String
+                }
+              `,
+              resolvers: {
+                Query: {
+                  fieldWhichWillError: () => {
+                    throwError();
+                  },
+                  justAField: () => 'a string',
+                },
+              },
+              engine: {
+                ...engineServer.engineOptions(),
+                apiKey: 'service:my-app:secret',
+                maxUncompressedReportSize: 1,
+                ...engineOptions,
+              },
+              debug: true,
+              ...constructorOptions,
+            });
 
-          const result = await apolloFetch({
-            query: `{error}`,
+            apolloFetch = createApolloFetch({ uri });
+          };
+
+          it('does not expose stack', async () => {
+            throwError.mockImplementationOnce(() => {
+              throw new Error('how do I stack up?');
+            });
+
+            await setupApolloServerAndFetchPair();
+
+            const result = await apolloFetch({
+              query: `{fieldWhichWillError}`,
+            });
+            expect(result.data).toEqual({
+              fieldWhichWillError: null,
+            });
+            expect(result.errors).toBeDefined();
+
+            // The original error message should still be sent to the client.
+            expect(result.errors[0].message).toEqual('how do I stack up?');
+            expect(throwError).toHaveBeenCalledTimes(1);
+
+            const reports = await engineServer.promiseOfReports;
+            expect(reports.length).toBe(1);
+            const trace = Object.values(reports[0].tracesPerQuery)[0].trace[0];
+
+            // There should be no error at the root, our error is a child.
+            expect(trace.root.error).toStrictEqual([]);
+
+            // There should only be one child.
+            expect(trace.root.child.length).toBe(1);
+
+            // The error should not have the stack in it.
+            expect(trace.root.child[0].error[0]).not.toHaveProperty('stack');
+            expect(
+              JSON.parse(trace.root.child[0].error[0].json),
+            ).not.toHaveProperty('stack');
           });
-          expect(result.data).toEqual({
-            error: null,
+
+          it('sets the trace key to operationName when it is defined', async () => {
+            await setupApolloServerAndFetchPair();
+
+            const result = await apolloFetch({
+              query: `query AnOperationName {justAField}`,
+            });
+            expect(result.data).toEqual({
+              justAField: 'a string',
+            });
+            expect(result.errors).not.toBeDefined();
+
+            const reports = await engineServer.promiseOfReports;
+            expect(reports.length).toBe(1);
+
+            expect(Object.keys(reports[0].tracesPerQuery)[0]).toMatch(
+              /^# AnOperationName\n/,
+            );
           });
-          expect(result.errors).toBeDefined();
-          expect(result.errors[0].message).toEqual('masked');
 
-          expect(validationRule).toHaveBeenCalledTimes(1);
-          expect(throwError).toHaveBeenCalledTimes(1);
-          expect(formatError).toHaveBeenCalledTimes(1);
-          expect(willSendResponseInExtension).toHaveBeenCalledTimes(1);
+          it('sets the trace key to "-" when operationName is undefined', async () => {
+            await setupApolloServerAndFetchPair();
 
-          const trace = await didReceiveTrace;
+            const result = await apolloFetch({
+              query: `{justAField}`,
+            });
+            expect(result.data).toEqual({
+              justAField: 'a string',
+            });
+            expect(result.errors).not.toBeDefined();
 
-          expect(trace.clientReferenceId).toMatch(/1234/);
-          expect(trace.clientName).toMatch(/testing/);
-          expect(trace.clientVersion).toEqual('v1.0.1');
+            const reports = await engineServer.promiseOfReports;
+            expect(reports.length).toBe(1);
 
-          expect(trace.root!.child![0].error![0].message).toMatch(/nope/);
-          expect(trace.root!.child![0].error![0].message).not.toMatch(/masked/);
+            expect(Object.keys(reports[0].tracesPerQuery)[0]).toMatch(/^# -\n/);
+          });
+
+          it("doesn't resort to query body signature on `didResolveOperation` error", async () => {
+            await setupApolloServerAndFetchPair(Object.create(null), {
+              plugins: [
+                {
+                  requestDidStart() {
+                    return {
+                      didResolveOperation() {
+                        throw new Error('known_error');
+                      },
+                    };
+                  },
+                },
+              ],
+            });
+
+            const result = await apolloFetch({
+              query: `{ aliasedField: justAField }`,
+            });
+
+            expect(result.errors).toBeDefined();
+            expect(result.errors[0].extensions).toBeDefined();
+            expect(result.errors[0].message).toEqual('known_error');
+
+            const reports = await engineServer.promiseOfReports;
+            expect(reports.length).toBe(1);
+
+            expect(Object.keys(reports[0].tracesPerQuery)[0]).not.toEqual(
+              '# -\n{ aliasedField: justAField }',
+            );
+          });
+
+          describe('error munging', () => {
+            describe('rewriteError', () => {
+              it('new error', async () => {
+                throwError.mockImplementationOnce(() => {
+                  throw new Error('rewriteError nope');
+                });
+
+                await setupApolloServerAndFetchPair({
+                  rewriteError: () =>
+                    new GraphQLError('rewritten as a new error'),
+                });
+
+                const result = await apolloFetch({
+                  query: `{fieldWhichWillError}`,
+                });
+                expect(result.data).toEqual({
+                  fieldWhichWillError: null,
+                });
+                expect(result.errors).toBeDefined();
+
+                // The original error message should be sent to the client.
+                expect(result.errors[0].message).toEqual('rewriteError nope');
+                expect(throwError).toHaveBeenCalledTimes(1);
+
+                const reports = await engineServer.promiseOfReports;
+                expect(reports.length).toBe(1);
+                const trace = Object.values(reports[0].tracesPerQuery)[0]
+                  .trace[0];
+                // There should be no error at the root, our error is a child.
+                expect(trace.root.error).toStrictEqual([]);
+
+                // There should only be one child.
+                expect(trace.root.child.length).toBe(1);
+
+                // The child should maintain the path, but have its message
+                // rewritten.
+                expect(trace.root.child[0].error).toMatchObject([
+                  {
+                    json:
+                      '{"message":"rewritten as a new error","locations":[{"line":1,"column":2}],"path":["fieldWhichWillError"]}',
+                    message: 'rewritten as a new error',
+                    location: [{ column: 2, line: 1 }],
+                  },
+                ]);
+              });
+
+              it('modified error', async () => {
+                throwError.mockImplementationOnce(() => {
+                  throw new Error('rewriteError mod nope');
+                });
+
+                await setupApolloServerAndFetchPair({
+                  rewriteError: err => {
+                    err.message = 'rewritten as a modified error';
+                    return err;
+                  },
+                });
+
+                const result = await apolloFetch({
+                  query: `{fieldWhichWillError}`,
+                });
+                expect(result.data).toEqual({
+                  fieldWhichWillError: null,
+                });
+                expect(result.errors).toBeDefined();
+                expect(result.errors[0].message).toEqual(
+                  'rewriteError mod nope',
+                );
+                expect(throwError).toHaveBeenCalledTimes(1);
+
+                const reports = await engineServer.promiseOfReports;
+                expect(reports.length).toBe(1);
+                const trace = Object.values(reports[0].tracesPerQuery)[0]
+                  .trace[0];
+                // There should be no error at the root, our error is a child.
+                expect(trace.root.error).toStrictEqual([]);
+
+                // There should only be one child.
+                expect(trace.root.child.length).toBe(1);
+
+                // The child should maintain the path, but have its message
+                // rewritten.
+                expect(trace.root.child[0].error).toMatchObject([
+                  {
+                    json:
+                      '{"message":"rewritten as a modified error","locations":[{"line":1,"column":2}],"path":["fieldWhichWillError"]}',
+                    message: 'rewritten as a modified error',
+                    location: [{ column: 2, line: 1 }],
+                  },
+                ]);
+              });
+
+              it('nulled error', async () => {
+                throwError.mockImplementationOnce(() => {
+                  throw new Error('rewriteError null nope');
+                });
+
+                await setupApolloServerAndFetchPair({
+                  rewriteError: () => null,
+                });
+
+                const result = await apolloFetch({
+                  query: `{fieldWhichWillError}`,
+                });
+                expect(result.data).toEqual({
+                  fieldWhichWillError: null,
+                });
+                expect(result.errors).toBeDefined();
+                expect(result.errors[0].message).toEqual(
+                  'rewriteError null nope',
+                );
+                expect(throwError).toHaveBeenCalledTimes(1);
+
+                const reports = await engineServer.promiseOfReports;
+                expect(reports.length).toBe(1);
+                const trace = Object.values(reports[0].tracesPerQuery)[0]
+                  .trace[0];
+
+                // There should be no error at the root, our error is a child.
+                expect(trace.root.error).toStrictEqual([]);
+
+                // There should only be one child.
+                expect(trace.root.child.length).toBe(1);
+
+                // There should be no error in the trace for this property!
+                expect(trace.root.child[0].error).toStrictEqual([]);
+              });
+            });
+
+            it('undefined error', async () => {
+              throwError.mockImplementationOnce(() => {
+                throw new Error('rewriteError undefined whoops');
+              });
+
+              await setupApolloServerAndFetchPair({
+                rewriteError: () => undefined,
+              });
+
+              const result = await apolloFetch({
+                query: `{fieldWhichWillError}`,
+              });
+              expect(result.data).toEqual({
+                fieldWhichWillError: null,
+              });
+              expect(result.errors).toBeDefined();
+              expect(result.errors[0].message).toEqual(
+                'rewriteError undefined whoops',
+              );
+              expect(throwError).toHaveBeenCalledTimes(1);
+
+              const reports = await engineServer.promiseOfReports;
+              expect(reports.length).toBe(1);
+              const trace = Object.values(reports[0].tracesPerQuery)[0]
+                .trace[0];
+
+              // There should be no error at the root, our error is a child.
+              expect(trace.root.error).toStrictEqual([]);
+
+              // There should only be one child.
+              expect(trace.root.child.length).toBe(1);
+
+              // The child should maintain the path, but have its message
+              // rewritten.
+              expect(trace.root.child[0].error).toMatchObject([
+                {
+                  json:
+                    '{"message":"rewriteError undefined whoops","locations":[{"line":1,"column":2}],"path":["fieldWhichWillError"]}',
+                  message: 'rewriteError undefined whoops',
+                  location: [{ column: 2, line: 1 }],
+                },
+              ]);
+            });
+
+            // This is deprecated, but we'll test it until it's removed in
+            // Apollo Server 3.x.
+            it('maskErrorDetails (legacy)', async () => {
+              throwError.mockImplementationOnce(() => {
+                throw new Error('maskErrorDetails nope');
+              });
+
+              await setupApolloServerAndFetchPair({
+                maskErrorDetails: true,
+              });
+
+              const result = await apolloFetch({
+                query: `{fieldWhichWillError}`,
+              });
+
+              expect(result.data).toEqual({
+                fieldWhichWillError: null,
+              });
+              expect(result.errors).toBeDefined();
+              expect(result.errors[0].message).toEqual('maskErrorDetails nope');
+
+              expect(throwError).toHaveBeenCalledTimes(1);
+
+              const reports = await engineServer.promiseOfReports;
+              expect(reports.length).toBe(1);
+              const trace = Object.values(reports[0].tracesPerQuery)[0]
+                .trace[0];
+
+              expect(trace.root.error).toMatchObject([
+                {
+                  json: '{"message":"<masked>"}',
+                  message: '<masked>',
+                },
+              ]);
+            });
+          });
         });
       });
 
@@ -665,12 +1138,12 @@ export function testApolloServer<AS extends ApolloServerBase>(
         const { url: uri } = await createApolloServer({
           typeDefs: gql`
             type Query {
-              error: String
+              fieldWhichWillError: String
             }
           `,
           resolvers: {
             Query: {
-              error: () => {},
+              fieldWhichWillError: () => {},
             },
           },
           extensions: [() => new Extension()],
@@ -681,7 +1154,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
         const apolloFetch = createApolloFetch({ uri });
 
         const result = await apolloFetch({
-          query: `{error}`,
+          query: `{fieldWhichWillError}`,
         });
         expect(result.data).toBeUndefined();
         expect(result.errors).toBeDefined();
@@ -689,136 +1162,194 @@ export function testApolloServer<AS extends ApolloServerBase>(
         expect(formatError).toHaveBeenCalledTimes(1);
       });
 
-      it('defers context eval with thunk until after options creation', async () => {
-        const uniqueContext = { key: 'major' };
+      describe('context field', () => {
         const typeDefs = gql`
           type Query {
             hello: String
           }
         `;
+
         const resolvers = {
           Query: {
-            hello: (_parent, _args, context) => {
-              expect(context).toEqual(Promise.resolve(uniqueContext));
-              return 'hi';
-            },
+            hello: () => 'hi',
           },
         };
-        const spy = jest.fn(() => ({}));
-        const { url: uri } = await createApolloServer({
-          typeDefs,
-          resolvers,
-          context: spy,
-        });
 
-        const apolloFetch = createApolloFetch({ uri });
-
-        expect(spy).not.toBeCalled();
-
-        await apolloFetch({ query: '{hello}' });
-        expect(spy).toHaveBeenCalledTimes(1);
-        await apolloFetch({ query: '{hello}' });
-        expect(spy).toHaveBeenCalledTimes(2);
-      });
-
-      it('allows context to be async function', async () => {
-        const uniqueContext = { key: 'major' };
-        const spy = jest.fn(() => 'hi');
-        const typeDefs = gql`
-          type Query {
-            hello: String
-          }
-        `;
-        const resolvers = {
-          Query: {
-            hello: (_parent, _args, context) => {
-              expect(context.key).toEqual('major');
-              return spy();
+        it('defers context eval with thunk until after options creation', async () => {
+          const uniqueContext = { key: 'major' };
+          const typeDefs = gql`
+            type Query {
+              hello: String
+            }
+          `;
+          const resolvers = {
+            Query: {
+              hello: (_parent, _args, context) => {
+                expect(context).toEqual(Promise.resolve(uniqueContext));
+                return 'hi';
+              },
             },
-          },
-        };
-        const { url: uri } = await createApolloServer({
-          typeDefs,
-          resolvers,
-          context: async () => uniqueContext,
+          };
+          const spy = jest.fn(() => ({}));
+          const { url: uri } = await createApolloServer({
+            typeDefs,
+            resolvers,
+            context: spy,
+          });
+
+          const apolloFetch = createApolloFetch({ uri });
+
+          expect(spy).not.toBeCalled();
+
+          await apolloFetch({ query: '{hello}' });
+          expect(spy).toHaveBeenCalledTimes(1);
+          await apolloFetch({ query: '{hello}' });
+          expect(spy).toHaveBeenCalledTimes(2);
         });
 
-        const apolloFetch = createApolloFetch({ uri });
-
-        expect(spy).not.toBeCalled();
-        await apolloFetch({ query: '{hello}' });
-        expect(spy).toHaveBeenCalledTimes(1);
-      });
-
-      it('clones the context for every request', async () => {
-        const uniqueContext = { key: 'major' };
-        const spy = jest.fn(() => 'hi');
-        const typeDefs = gql`
-          type Query {
-            hello: String
-          }
-        `;
-        const resolvers = {
-          Query: {
-            hello: (_parent, _args, context) => {
-              expect(context.key).toEqual('major');
-              context.key = 'minor';
-              return spy();
+        it('clones the context for every request', async () => {
+          const uniqueContext = { key: 'major' };
+          const spy = jest.fn(() => 'hi');
+          const typeDefs = gql`
+            type Query {
+              hello: String
+            }
+          `;
+          const resolvers = {
+            Query: {
+              hello: (_parent, _args, context) => {
+                expect(context.key).toEqual('major');
+                context.key = 'minor';
+                return spy();
+              },
             },
-          },
-        };
-        const { url: uri } = await createApolloServer({
-          typeDefs,
-          resolvers,
-          context: uniqueContext,
+          };
+          const { url: uri } = await createApolloServer({
+            typeDefs,
+            resolvers,
+            context: uniqueContext,
+          });
+
+          const apolloFetch = createApolloFetch({ uri });
+
+          expect(spy).not.toBeCalled();
+
+          await apolloFetch({ query: '{hello}' });
+          expect(spy).toHaveBeenCalledTimes(1);
+          await apolloFetch({ query: '{hello}' });
+          expect(spy).toHaveBeenCalledTimes(2);
         });
 
-        const apolloFetch = createApolloFetch({ uri });
+        describe('as a function', () => {
+          it('can accept and return `req`', async () => {
+            expect(
+              await createApolloServer({
+                typeDefs,
+                resolvers,
+                context: ({ req }) => ({ req }),
+              }),
+            ).not.toThrow;
+          });
 
-        expect(spy).not.toBeCalled();
+          it('can accept nothing and return an empty object', async () => {
+            expect(
+              await createApolloServer({
+                typeDefs,
+                resolvers,
+                context: () => ({}),
+              }),
+            ).not.toThrow;
+          });
 
-        await apolloFetch({ query: '{hello}' });
-        expect(spy).toHaveBeenCalledTimes(1);
-        await apolloFetch({ query: '{hello}' });
-        expect(spy).toHaveBeenCalledTimes(2);
-      });
+          it('can be an async function', async () => {
+            const uniqueContext = { key: 'major' };
+            const spy = jest.fn(() => 'hi');
+            const typeDefs = gql`
+              type Query {
+                hello: String
+              }
+            `;
+            const resolvers = {
+              Query: {
+                hello: (_parent, _args, context) => {
+                  expect(context.key).toEqual('major');
+                  return spy();
+                },
+              },
+            };
+            const { url: uri } = await createApolloServer({
+              typeDefs,
+              resolvers,
+              context: async () => uniqueContext,
+            });
 
-      it('returns thrown context error as a valid graphql result', async () => {
-        const nodeEnv = process.env.NODE_ENV;
-        delete process.env.NODE_ENV;
-        const typeDefs = gql`
-          type Query {
-            hello: String
-          }
-        `;
-        const resolvers = {
-          Query: {
-            hello: () => {
-              throw Error('never get here');
-            },
-          },
-        };
-        const { url: uri } = await createApolloServer({
-          typeDefs,
-          resolvers,
-          context: () => {
-            throw new AuthenticationError('valid result');
-          },
+            const apolloFetch = createApolloFetch({ uri });
+
+            expect(spy).not.toBeCalled();
+            await apolloFetch({ query: '{hello}' });
+            expect(spy).toHaveBeenCalledTimes(1);
+          });
+
+          it('returns thrown context error as a valid graphql result', async () => {
+            const nodeEnv = process.env.NODE_ENV;
+            delete process.env.NODE_ENV;
+            const typeDefs = gql`
+              type Query {
+                hello: String
+              }
+            `;
+            const resolvers = {
+              Query: {
+                hello: () => {
+                  throw Error('never get here');
+                },
+              },
+            };
+            const { url: uri } = await createApolloServer({
+              typeDefs,
+              resolvers,
+              context: () => {
+                throw new AuthenticationError('valid result');
+              },
+            });
+
+            const apolloFetch = createApolloFetch({ uri });
+
+            const result = await apolloFetch({ query: '{hello}' });
+            expect(result.errors.length).toEqual(1);
+            expect(result.data).toBeUndefined();
+
+            const e = result.errors[0];
+            expect(e.message).toMatch('valid result');
+            expect(e.extensions).toBeDefined();
+            expect(e.extensions.code).toEqual('UNAUTHENTICATED');
+            expect(e.extensions.exception.stacktrace).toBeDefined();
+
+            process.env.NODE_ENV = nodeEnv;
+          });
         });
 
-        const apolloFetch = createApolloFetch({ uri });
+        describe('as an object', () => {
+          it('can be an empty object', async () => {
+            expect(
+              await createApolloServer({
+                typeDefs,
+                resolvers,
+                context: {},
+              }),
+            ).not.toThrow;
+          });
 
-        const result = await apolloFetch({ query: '{hello}' });
-        expect(result.errors.length).toEqual(1);
-        expect(result.data).toBeUndefined();
-
-        const e = result.errors[0];
-        expect(e.message).toMatch('valid result');
-        expect(e.extensions).toBeDefined();
-        expect(e.extensions.code).toEqual('UNAUTHENTICATED');
-        expect(e.extensions.exception.stacktrace).toBeDefined();
-
-        process.env.NODE_ENV = nodeEnv;
+          it('can contain arbitrary values', async () => {
+            expect(
+              await createApolloServer({
+                typeDefs,
+                resolvers,
+                context: { value: 'arbitrary' },
+              }),
+            ).not.toThrow;
+          });
+        });
       });
 
       it('propogates error codes in production', async () => {
@@ -828,12 +1359,12 @@ export function testApolloServer<AS extends ApolloServerBase>(
         const { url: uri } = await createApolloServer({
           typeDefs: gql`
             type Query {
-              error: String
+              fieldWhichWillError: String
             }
           `,
           resolvers: {
             Query: {
-              error: () => {
+              fieldWhichWillError: () => {
                 throw new AuthenticationError('we the best music');
               },
             },
@@ -842,9 +1373,9 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
         const apolloFetch = createApolloFetch({ uri });
 
-        const result = await apolloFetch({ query: `{error}` });
+        const result = await apolloFetch({ query: `{fieldWhichWillError}` });
         expect(result.data).toBeDefined();
-        expect(result.data).toEqual({ error: null });
+        expect(result.data).toEqual({ fieldWhichWillError: null });
 
         expect(result.errors).toBeDefined();
         expect(result.errors.length).toEqual(1);
@@ -861,12 +1392,12 @@ export function testApolloServer<AS extends ApolloServerBase>(
         const { url: uri } = await createApolloServer({
           typeDefs: gql`
             type Query {
-              error: String!
+              fieldWhichWillError: String!
             }
           `,
           resolvers: {
             Query: {
-              error: () => {
+              fieldWhichWillError: () => {
                 throw new AuthenticationError('we the best music');
               },
             },
@@ -875,7 +1406,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
         const apolloFetch = createApolloFetch({ uri });
 
-        const result = await apolloFetch({ query: `{error}` });
+        const result = await apolloFetch({ query: `{fieldWhichWillError}` });
         expect(result.data).toBeNull();
 
         expect(result.errors).toBeDefined();
@@ -978,7 +1509,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           });
         });
       });
-      it('disables subscritpions when option set to false', done => {
+      it('disables subscriptions when option set to false', done => {
         const typeDefs = gql`
           type Query {
             "graphql-js forces there to be a query type"
@@ -1025,7 +1556,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           }
 
           const client = new SubscriptionClient(
-            `ws://localhost:${port}${server.subscriptionsPath}`,
+            `ws://localhost:${port}${server.subscriptionsPath || ''}`,
             {},
             WebSocket,
           );
@@ -1258,6 +1789,483 @@ export function testApolloServer<AS extends ApolloServerBase>(
           expect(result.data).toEqual({ testString: 'test string' });
           done();
         }, done.fail);
+      });
+    });
+
+    describe('Tracing', () => {
+      const typeDefs = gql`
+        type Book {
+          title: String
+          author: String
+        }
+
+        type Movie {
+          title: String
+        }
+
+        type Query {
+          books: [Book]
+          movies: [Movie]
+        }
+      `;
+
+      const resolvers = {
+        Query: {
+          books: () =>
+            new Promise(resolve =>
+              setTimeout(() => resolve([{ title: 'H', author: 'J' }]), 10),
+            ),
+          movies: () =>
+            new Promise(resolve =>
+              setTimeout(() => resolve([{ title: 'H' }]), 12),
+            ),
+        },
+      };
+
+      it('reports a total duration that is longer than the duration of its resolvers', async () => {
+        const { url: uri } = await createApolloServer({
+          typeDefs,
+          resolvers,
+          tracing: true,
+        });
+
+        const apolloFetch = createApolloFetch({ uri });
+        const result = await apolloFetch({
+          query: `{ books { title author } }`,
+        });
+
+        const tracing: TracingFormat = result.extensions.tracing;
+
+        const earliestStartOffset = tracing.execution.resolvers
+          .map(resolver => resolver.startOffset)
+          .reduce((currentEarliestOffset, nextOffset) =>
+            Math.min(currentEarliestOffset, nextOffset),
+          );
+
+        const latestEndOffset = tracing.execution.resolvers
+          .map(resolver => resolver.startOffset + resolver.duration)
+          .reduce((currentLatestEndOffset, nextEndOffset) =>
+            Math.min(currentLatestEndOffset, nextEndOffset),
+          );
+
+        const resolverDuration = latestEndOffset - earliestStartOffset;
+
+        expect(resolverDuration).not.toBeGreaterThan(tracing.duration);
+      });
+    });
+
+    describe('Response caching', () => {
+      beforeAll(() => {
+        mockDate();
+      });
+
+      afterAll(() => {
+        unmockDate();
+      });
+
+      it('basic caching', async () => {
+        const typeDefs = gql`
+          type Query {
+            cached: String @cacheControl(maxAge: 10)
+            uncached: String
+            private: String @cacheControl(maxAge: 9, scope: PRIVATE)
+          }
+        `;
+
+        type FieldName = 'cached' | 'uncached' | 'private';
+        const fieldNames: FieldName[] = ['cached', 'uncached', 'private'];
+        const resolverCallCount: Partial<Record<FieldName, number>> = {};
+        const expectedResolverCallCount: Partial<
+          Record<FieldName, number>
+        > = {};
+        const expectCacheHit = (fn: FieldName) =>
+          expect(resolverCallCount[fn]).toBe(expectedResolverCallCount[fn]);
+        const expectCacheMiss = (fn: FieldName) =>
+          expect(resolverCallCount[fn]).toBe(++expectedResolverCallCount[fn]);
+
+        const resolvers = {
+          Query: {},
+        };
+        fieldNames.forEach(name => {
+          resolverCallCount[name] = 0;
+          expectedResolverCallCount[name] = 0;
+          resolvers.Query[name] = () => {
+            resolverCallCount[name]++;
+            return `value:${name}`;
+          };
+        });
+
+        const { url: uri } = await createApolloServer({
+          typeDefs,
+          resolvers,
+          plugins: [
+            ApolloServerPluginResponseCache({
+              sessionId: (requestContext: GraphQLRequestContext<any>) => {
+                return (
+                  requestContext.request.http.headers.get('session-id') || null
+                );
+              },
+              extraCacheKeyData: (
+                requestContext: GraphQLRequestContext<any>,
+              ) => {
+                return (
+                  requestContext.request.http.headers.get(
+                    'extra-cache-key-data',
+                  ) || null
+                );
+              },
+              shouldReadFromCache: (
+                requestContext: GraphQLRequestContext<any>,
+              ) => {
+                return !requestContext.request.http.headers.get(
+                  'no-read-from-cache',
+                );
+              },
+              shouldWriteToCache: (
+                requestContext: GraphQLRequestContext<any>,
+              ) => {
+                return !requestContext.request.http.headers.get(
+                  'no-write-to-cache',
+                );
+              },
+            }),
+          ],
+        });
+
+        const apolloFetch = createApolloFetch({ uri });
+        apolloFetch.use(({ request, options }, next) => {
+          const headers = (request as any).headers;
+          if (headers) {
+            if (!options.headers) {
+              options.headers = {};
+            }
+            for (const k in headers) {
+              options.headers[k] = headers[k];
+            }
+          }
+          next();
+        });
+        // Make HTTP response headers visible on the result next to 'data'.
+        apolloFetch.useAfter(({ response }, next) => {
+          response.parsed.httpHeaders = response.headers;
+          next();
+        });
+        // Use 'any' because we're sneaking httpHeaders onto response.parsed.
+        function httpHeader(result: any, header: string): string | null {
+          const value = (result.httpHeaders as Headers).get(header);
+          // hack: hapi sets cache-control: no-cache by default; make it
+          // look to our tests like the other servers.
+          if (header === 'cache-control' && value === 'no-cache') {
+            return null;
+          }
+          return value;
+        }
+        // Just for the typing.
+        function doFetch(
+          options: GraphQLRequest & { headers?: Record<string, string> },
+        ) {
+          return apolloFetch(options as any);
+        }
+
+        const basicQuery = '{ cached }';
+        const fetch = async () => {
+          const result = await doFetch({
+            query: basicQuery,
+          });
+          expect(result.data.cached).toBe('value:cached');
+          return result;
+        };
+
+        // Cache miss
+        {
+          const result = await fetch();
+          expectCacheMiss('cached');
+          expect(httpHeader(result, 'cache-control')).toBe(
+            'max-age=10, public',
+          );
+          expect(httpHeader(result, 'age')).toBe(null);
+        }
+
+        // Cache hit
+        {
+          const result = await fetch();
+          expectCacheHit('cached');
+          expect(httpHeader(result, 'cache-control')).toBe(
+            'max-age=10, public',
+          );
+          expect(httpHeader(result, 'age')).toBe('0');
+        }
+
+        // Cache hit partway to ttl.
+        advanceTimeBy(5 * 1000);
+        {
+          const result = await fetch();
+          expectCacheHit('cached');
+          expect(httpHeader(result, 'cache-control')).toBe(
+            'max-age=10, public',
+          );
+          expect(httpHeader(result, 'age')).toBe('5');
+        }
+
+        // Cache miss after ttl.
+        advanceTimeBy(6 * 1000);
+        {
+          const result = await fetch();
+          expectCacheMiss('cached');
+          expect(httpHeader(result, 'cache-control')).toBe(
+            'max-age=10, public',
+          );
+          expect(httpHeader(result, 'age')).toBe(null);
+        }
+
+        // Cache hit.
+        {
+          const result = await fetch();
+          expectCacheHit('cached');
+          expect(httpHeader(result, 'cache-control')).toBe(
+            'max-age=10, public',
+          );
+          expect(httpHeader(result, 'age')).toBe('0');
+        }
+
+        // For now, caching is based on the original document text, not the AST,
+        // so this should be a cache miss.
+        {
+          const result = await doFetch({
+            query: '{       cached           }',
+          });
+          expect(result.data.cached).toBe('value:cached');
+          expectCacheMiss('cached');
+        }
+
+        // This definitely should be a cache miss because the output is different.
+        {
+          const result = await doFetch({
+            query: '{alias: cached}',
+          });
+          expect(result.data.alias).toBe('value:cached');
+          expectCacheMiss('cached');
+        }
+
+        // Reading both a cached and uncached data should not get cached (it's a
+        // full response cache).
+        {
+          const result = await doFetch({
+            query: '{cached uncached}',
+          });
+          expect(result.data.cached).toBe('value:cached');
+          expect(result.data.uncached).toBe('value:uncached');
+          expectCacheMiss('cached');
+          expectCacheMiss('uncached');
+          expect(httpHeader(result, 'cache-control')).toBe(null);
+          expect(httpHeader(result, 'age')).toBe(null);
+        }
+
+        // Just double-checking that it didn't get cached.
+        {
+          const result = await doFetch({
+            query: '{cached uncached}',
+          });
+          expect(result.data.cached).toBe('value:cached');
+          expect(result.data.uncached).toBe('value:uncached');
+          expectCacheMiss('cached');
+          expectCacheMiss('uncached');
+          expect(httpHeader(result, 'cache-control')).toBe(null);
+          expect(httpHeader(result, 'age')).toBe(null);
+        }
+
+        // Let's just remind ourselves that the basic query is cacheable.
+        {
+          await doFetch({ query: basicQuery });
+          expectCacheHit('cached');
+        }
+
+        // But if we give it some extra cache key data, it'll be cached separately.
+        {
+          const result = await doFetch({
+            query: basicQuery,
+            headers: { 'extra-cache-key-data': 'foo' },
+          });
+          expect(result.data.cached).toBe('value:cached');
+          expectCacheMiss('cached');
+        }
+
+        // But if we give it the same extra cache key data twice, it's a hit.
+        {
+          const result = await doFetch({
+            query: basicQuery,
+            headers: { 'extra-cache-key-data': 'foo' },
+          });
+          expect(result.data.cached).toBe('value:cached');
+          expectCacheHit('cached');
+        }
+
+        // Without a session ID, private fields won't be cached.
+        {
+          const result = await doFetch({
+            query: '{private}',
+          });
+          expect(result.data.private).toBe('value:private');
+          expectCacheMiss('private');
+          // Note that the HTTP header calculator doesn't know about session
+          // IDs, so it'll still tell HTTP-level caches to cache this, albeit
+          // privately.
+          expect(httpHeader(result, 'cache-control')).toBe(
+            'max-age=9, private',
+          );
+          expect(httpHeader(result, 'age')).toBe(null);
+        }
+
+        // See?
+        {
+          const result = await doFetch({
+            query: '{private}',
+          });
+          expect(result.data.private).toBe('value:private');
+          expectCacheMiss('private');
+          expect(httpHeader(result, 'cache-control')).toBe(
+            'max-age=9, private',
+          );
+        }
+
+        // OK, how about with a session ID.  First try should be a miss.
+        {
+          const result = await doFetch({
+            query: '{private}',
+            headers: { 'session-id': 'foo' },
+          });
+          expect(result.data.private).toBe('value:private');
+          expectCacheMiss('private');
+          expect(httpHeader(result, 'cache-control')).toBe(
+            'max-age=9, private',
+          );
+        }
+
+        // But next try should be a hit.
+        {
+          const result = await doFetch({
+            query: '{private}',
+            headers: { 'session-id': 'foo' },
+          });
+          expect(result.data.private).toBe('value:private');
+          expectCacheHit('private');
+          expect(httpHeader(result, 'cache-control')).toBe(
+            'max-age=9, private',
+          );
+        }
+
+        // But a different session ID should be a miss again.
+        {
+          const result = await doFetch({
+            query: '{private}',
+            headers: { 'session-id': 'bar' },
+          });
+          expect(result.data.private).toBe('value:private');
+          expectCacheMiss('private');
+          expect(httpHeader(result, 'cache-control')).toBe(
+            'max-age=9, private',
+          );
+        }
+
+        // As should be no session.
+        {
+          const result = await doFetch({
+            query: '{private}',
+          });
+          expect(result.data.private).toBe('value:private');
+          expectCacheMiss('private');
+          expect(httpHeader(result, 'cache-control')).toBe(
+            'max-age=9, private',
+          );
+        }
+
+        // Let's remind ourselves once again that the basic (public) query is *still* cached.
+        {
+          const result = await doFetch({ query: basicQuery });
+          expectCacheHit('cached');
+          expect(httpHeader(result, 'cache-control')).toBe(
+            'max-age=10, public',
+          );
+        }
+
+        // If you're logged in, though, you get your own cache shared with all
+        // other authenticated users (the "authenticated public" cache), so this
+        // is a miss. It's still a public cache, though, for the HTTP header.
+        // XXX Does that makes sense? Maybe this should be private, or maybe we
+        // should drop the entire "authenticated public" concept.
+        {
+          const result = await doFetch({
+            query: basicQuery,
+            headers: { 'session-id': 'bar' },
+          });
+          expect(result.data.cached).toBe('value:cached');
+          expectCacheMiss('cached');
+          expect(httpHeader(result, 'cache-control')).toBe(
+            'max-age=10, public',
+          );
+        }
+
+        // See, this other session sees it!
+        {
+          const result = await doFetch({
+            query: basicQuery,
+            headers: { 'session-id': 'baz' },
+          });
+          expect(result.data.cached).toBe('value:cached');
+          expectCacheHit('cached');
+          expect(httpHeader(result, 'cache-control')).toBe(
+            'max-age=10, public',
+          );
+          expect(httpHeader(result, 'age')).toBe('0');
+        }
+
+        // Let's continue to remind ourselves that the basic (public) query is *still* cached.
+        {
+          const result = await doFetch({ query: basicQuery });
+          expectCacheHit('cached');
+          expect(httpHeader(result, 'cache-control')).toBe(
+            'max-age=10, public',
+          );
+        }
+
+        // But what if we specifically ask to not read from the cache?
+        {
+          const result = await doFetch({
+            query: basicQuery,
+            headers: { 'no-read-from-cache': 'y' },
+          });
+          expect(result.data.cached).toBe('value:cached');
+          expectCacheMiss('cached');
+          expect(httpHeader(result, 'cache-control')).toBe(
+            'max-age=10, public',
+          );
+        }
+
+        // Let's expire the cache, and run again, not writing to the cache.
+        advanceTimeBy(15 * 1000);
+        {
+          const result = await doFetch({
+            query: basicQuery,
+            headers: { 'no-write-to-cache': 'y' },
+          });
+          expect(result.data.cached).toBe('value:cached');
+          expectCacheMiss('cached');
+          expect(httpHeader(result, 'cache-control')).toBe(
+            'max-age=10, public',
+          );
+        }
+
+        // And now verify that in fact we did not write!
+        {
+          const result = await doFetch({
+            query: basicQuery,
+          });
+          expect(result.data.cached).toBe('value:cached');
+          expectCacheMiss('cached');
+          expect(httpHeader(result, 'cache-control')).toBe(
+            'max-age=10, public',
+          );
+        }
       });
     });
   });

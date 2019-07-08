@@ -5,7 +5,7 @@ description: Add custom scalar and enum types to a schema.
 
 The GraphQL specification includes the following default scalar types: `Int`, `Float`, `String`, `Boolean` and `ID`. While this covers most of the use cases, some need to support custom atomic data types (e.g. `Date`), or add validation to an existing type. To enable this, GraphQL allows custom scalar types. Enumerations are similar to custom scalars with the limitation that their values can only be one of a pre-defined list of strings.
 
-<h2 id="custom-scalars">Custom scalars</h2>
+## Custom scalars
 
 To define a custom scalar, add it to the schema string with the following notation:
 
@@ -13,7 +13,7 @@ To define a custom scalar, add it to the schema string with the following notati
 scalar MyCustomScalar
 ```
 
-Afterwards, define the behavior of a `MyCustomScalar` custom scalar by passing an instance of the [`GraphQLScalarType`](http://graphql.org/graphql-js/type/#graphqlscalartype) class in the [resolver map](https://www.apollographql.com/docs/graphql-tools/resolvers.html#Resolver-map). This instance can be defined with a [dependency](#Using-a-package) or in [source code](#graphqlscalartype).
+Afterwards, define the behavior of a `MyCustomScalar` custom scalar by passing an instance of the [`GraphQLScalarType`](http://graphql.org/graphql-js/type/#graphqlscalartype) class in the [resolver map](https://www.apollographql.com/docs/graphql-tools/resolvers.html#Resolver-map). This instance can be defined with a [dependency](#using-a-package) or in [source code](#custom-graphqlscalartype-instance).
 
 For more information about GraphQL's type system, please refer to the [official documentation](http://graphql.org/graphql-js/type/) or to the [Learning GraphQL](https://github.com/mugli/learning-graphql/blob/master/7.%20Deep%20Dive%20into%20GraphQL%20Type%20System.md) tutorial.
 
@@ -26,7 +26,7 @@ Here, we'll take the [graphql-type-json](https://github.com/taion/graphql-type-j
 Add the `graphql-type-json` package to the project's dependencies :
 
 ```shell
-$ npm install --save graphql-type-json
+$ npm install graphql-type-json
 ```
 
 In code, require the type defined by in the npm package and use it :
@@ -36,17 +36,15 @@ const { ApolloServer, gql } = require('apollo-server');
 const GraphQLJSON = require('graphql-type-json');
 
 const schemaString = gql`
+  scalar JSON
 
-scalar JSON
+  type Foo {
+    aField: JSON
+  }
 
-type Foo {
-  aField: JSON
-}
-
-type Query {
-  foo: Foo
-}
-
+  type Query {
+    foo: Foo
+  }
 `;
 
 const resolveFunctions = {
@@ -62,7 +60,7 @@ server.listen().then(({ url }) => {
 
 Remark : `GraphQLJSON` is a [`GraphQLScalarType`](http://graphql.org/graphql-js/type/#graphqlscalartype) instance.
 
-<h3 id="graphqlscalartype" title="GraphQLScalarType">Custom `GraphQLScalarType` instance</h3>
+### Custom `GraphQLScalarType` instance
 
 Defining a [GraphQLScalarType](http://graphql.org/graphql-js/type/#graphqlscalartype) instance provides more control over the custom scalar and can be added to Apollo server in the following way:
 
@@ -92,31 +90,29 @@ const myCustomScalarType = new GraphQLScalarType({
 });
 
 const schemaString = gql`
+  scalar MyCustomScalar
 
-scalar MyCustomScalar
+  type Foo {
+    aField: MyCustomScalar
+  }
 
-type Foo {
-  aField: MyCustomScalar
-}
-
-type Query {
-  foo: Foo
-}
-
+  type Query {
+    foo: Foo
+  }
 `;
 
 const resolverFunctions = {
   MyCustomScalar: myCustomScalarType
 };
 
-const server = new ApolloServer({ typeDefs: schemaString, resolvers: resolveFunctions });
+const server = new ApolloServer({ typeDefs: schemaString, resolvers: resolverFunctions });
 
 server.listen().then(({ url }) => {
   console.log(`🚀 Server ready at ${url}`)
 });
 ```
 
-<h2 id="examples">Custom scalar examples</h2>
+## Custom scalar examples
 
 Let's look at a couple of examples to demonstrate how a custom scalar type can be defined.
 
@@ -127,11 +123,12 @@ The goal is to define a `Date` data type for returning `Date` values from the da
 The following is the implementation of the `Date` data type. First, the schema:
 
 ```js
-const typeDefs = gql`scalar Date
+const typeDefs = gql`
+  scalar Date
 
-type MyType {
-   created: Date
-}
+  type MyType {
+    created: Date
+  }
 `
 ```
 
@@ -172,11 +169,12 @@ server.listen().then(({ url }) => {
 In this example, we follow the [official GraphQL documentation](http://graphql.org/docs/api-reference-type-system/) for the scalar datatype, which demonstrates how to validate a database field that should only contain odd numbers in GraphQL. First, the schema:
 
 ```js
-const typeDefs = gql`scalar Odd
+const typeDefs = gql`
+  scalar Odd
 
-type MyType {
+  type MyType {
     oddValue: Odd
-}
+  }
 `
 ```
 
@@ -213,7 +211,7 @@ server.listen().then(({ url }) => {
 });
 ```
 
-<h2 id="enums">Enums</h2>
+## Enums
 
 An Enum is similar to a scalar type, but it can only be one of several values defined in the schema. Enums are most useful in a situation where the user must pick from a prescribed list of options. Additionally enums improve development velocity, since they will auto-complete in tools like GraphQL Playground.
 
@@ -279,7 +277,7 @@ const typeDefs = gql`
 const resolvers = {
   Query: {
     favoriteColor: () => 'RED',
-    avatar: (root, args) => {
+    avatar: (parent, args) => {
       // args.borderColor is 'RED', 'GREEN', or 'BLUE'
     },
   }
@@ -292,9 +290,9 @@ server.listen().then(({ url }) => {
 });
 ```
 
-<h3 id="internal-values">Internal values</h3>
+### Internal values
 
-Sometimes a backend forces a different value for an enum internally than in the public API. In this exmple the API contains `RED`, however in resolvers we use `#f00` instead. The `resolvers` argument to `ApolloServer` allows the addition custom values to enums that only exist internally:
+Sometimes a backend forces a different value for an enum internally than in the public API. In this example the API contains `RED`, however in resolvers we use `#f00` instead. The `resolvers` argument to `ApolloServer` allows the addition of custom values to enums that only exist internally:
 
 ```js
 const resolvers = {
@@ -317,7 +315,7 @@ const resolvers = {
   },
   Query: {
     favoriteColor: () => '#f00',
-    avatar: (root, args) => {
+    avatar: (parent, args) => {
       // args.borderColor is '#f00', '#0f0', or '#00f'
     },
   }

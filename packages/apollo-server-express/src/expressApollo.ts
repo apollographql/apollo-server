@@ -5,11 +5,12 @@ import {
   runHttpQuery,
   convertNodeHttpToRequest,
 } from 'apollo-server-core';
+import { ValueOrPromise } from 'apollo-server-env';
 
 export interface ExpressGraphQLOptionsFunction {
-  (req?: express.Request, res?: express.Response):
-    | GraphQLOptions
-    | Promise<GraphQLOptions>;
+  (req?: express.Request, res?: express.Response): ValueOrPromise<
+    GraphQLOptions
+  >;
 }
 
 // Design principles:
@@ -25,7 +26,6 @@ export function graphqlExpress(
   }
 
   if (arguments.length > 1) {
-    // TODO: test this
     throw new Error(
       `Apollo Server expects exactly one argument, got ${arguments.length}`,
     );
