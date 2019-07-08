@@ -48,7 +48,7 @@ Because you can [tag metrics with variants](https://www.apollographql.com/docs/p
 
 In small scale cases it can be sufficient to define the list of services comprising a federated graph directly within the gateway, and manually update the list and restart the server as services are modified and created. However for larger scale projects it is helpful to be able to remotely manage the gateway, such that new services may be added, or existing services modified, all with zero downtime.
 
-For these use cases, `Apollo Gateway` can be configured to pull a remotely hosted service list from the [schema registry](https://www.apollographql.com/docs/platform/schema-registry/) on `Apollo Engine`. This is `Managed Federation`, and it is a key component of building a robust federated graph that can be concurrently developed by teams of any size.
+For these use cases, `Apollo Gateway` can be configured to pull a remotely hosted service list from the [Schema Registry](https://www.apollographql.com/docs/platform/schema-registry/) on `Apollo Dashboard`. This is `Managed Federation`, and it is a key component of building a robust federated graph that can be concurrently developed by teams of any size.
 
 #### Overview
 
@@ -68,9 +68,11 @@ apollo service:push       \
 
 > Each service needs a unique name, this is how you will identify the service for schema updates
 
-The given `endpoint` will be queried for the new schema which, if compatible with the rest of the schema, will be uploaded to `Apollo Engine`. At this point, any `Apollo Gateway` instances serving this graph will begin to roll over to the new schema.
+The given `endpoint` will be queried for the new schema which, if compatible with the rest of the schema, will be uploaded to `Apollo Engine`. At this point, any gateways serving this graph will begin to roll over to the new schema.
 
 You can later modify hosted service definitions by rerunning the `apollo service:push` command with the service's name and the new URL.
+
+> What's the difference between `serviceURL` and `endpoint` parameters? The `endpoint` parameter controls the endpoint where the schema will be fetched from at composition, whereas `serviceURL` controls what URL the gateway will query at runtime. This is especially helpful if you have disabled introspection queries in your production services.
 
 // TODO: Document the integration with service:push, services under a graph, and gateway lifecycle management utilities
 
@@ -80,7 +82,7 @@ You can later modify hosted service definitions by rerunning the `apollo service
 [//]: # (Assignee: Jackson)
 [//]: # (Reviewer: Adam)
 
-When operating as a managed gateway, `Apollo Server` will poll the [schema registry](https://www.apollographql.com/docs/platform/schema-registry/) for updates to the registered service list at 10 second intervals. When a service list update does occur, `Apollo Server` will create a new composed schema from the federated services, and begin to roll over to serving the new schema. Existing in-flight operations on the old schema will continue to be processed while serving the new schema. For this reason, it can be helpful to serve the new schemas from new endpoints, such that no downtime is incurred during rollover.
+When operating as a managed gateway, `Apollo Server` will poll the [Schema Registry](https://www.apollographql.com/docs/platform/schema-registry/) for updates to the registered service list at 10 second intervals. When a service list update does occur, `Apollo Server` will create a new composed schema from the federated services, and begin to roll over to serving the new schema. Existing in-flight operations on the old schema will continue to be processed while serving the new schema. For this reason, it can be helpful to serve the new schemas from new endpoints, such that no downtime is incurred during rollover.
 
 In the event a network failure prevents an `Apollo Server` gateway from contacting the schema registry, the gateway will continue to serve the last known schema while it attempts to reestablish a connection to the schema registry.
 
