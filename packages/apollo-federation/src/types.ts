@@ -54,20 +54,15 @@ function addTypeNameToPossibleReturn<T>(
   return maybeObject as null | T & { __typename: string };
 }
 
-export type GraphQLReferenceResolver<TContext> = (
+export type GraphQLReferenceResolver<TContext = any> = (
   reference: object,
   context: TContext,
   info: GraphQLResolveInfo,
 ) => any;
 
-declare module 'graphql/type/definition' {
-  interface GraphQLObjectType {
-    resolveReference?: GraphQLReferenceResolver<any>;
-  }
-
-  interface GraphQLObjectTypeConfig<TSource, TContext> {
-    resolveReference?: GraphQLReferenceResolver<TContext>;
-  }
+export interface ResolvableGraphQLObjectType<TContext = any>
+  extends GraphQLObjectType {
+  resolveReference?: GraphQLReferenceResolver<TContext>;
 }
 
 export const entitiesField: GraphQLFieldConfig<any, any> = {
@@ -89,11 +84,13 @@ export const entitiesField: GraphQLFieldConfig<any, any> = {
         );
       }
 
-      const resolveReference = type.resolveReference
-        ? type.resolveReference
-        : function defaultResolveReference() {
-            return reference;
-          };
+      function defaultResolveReference() {
+        return reference;
+      }
+
+      const resolveReference =
+        (type as ResolvableGraphQLObjectType).resolveReference ||
+        defaultResolveReference;
 
       const result = resolveReference(reference, context, info);
 
