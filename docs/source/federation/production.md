@@ -15,31 +15,31 @@ There is a wealth of information around reliability in a distributed service-ori
 
 In operating federation in production ourselves and working with a variety of teams deploying federation in their environments, we have collected some best practices to maintain reliability and control over a federated GraphQL layer at scale. If you're running federation in your infrastructure, we'd love to [hear from you](mailto:federation@apollographql.com) to help share any best practices you and your team may have learned from operating federation at scale.
 
-#### Treat the Gateway as infrastructure
+#### Treat the gateway as infrastructure
 
-The [Apollo Gateway](https://www.apollographql.com/docs/apollo-server/federation/implementing/#running-a-gateway) understands how to "speak" federation and orchestrate an incoming operation from a client into a set of operations to the underlying services that implement the graph. Because the Gateway understands how to "speak" federation, it should contain **no business logic** and we recommend treating it as you would any infrastructure, such as a load balancer or a service discovery agent. There should be no need to re-deploy the Gateway as services roll out underneath it. The Gateway is designed to be able to smoothly roll over to updates in any services underneath it, and we recommend using the [managed federation](https://www.apollographql.com/docs/apollo-server/federation/production/#managed-federation) to control how changes in underlying services bubble up to the Gateway. That said, like any infrastructure, you'll want to investigate the different [configuration options](https://www.apollographql.com/docs/apollo-server/api/apollo-gateway/) and choose the ones that make sense for your use case. Additionally, make sure to expose your Gateway to sufficient load to understand its resource consumption and provision accordingly.
+The [Apollo Gateway](https://www.apollographql.com/docs/apollo-server/federation/implementing/#running-a-gateway) understands how to "speak" federation and orchestrate an incoming operation from a client into a set of operations to the underlying services that implement the graph. Because the gateway understands how to "speak" federation, it should contain **no business logic** and we recommend treating it as you would any infrastructure, such as a load balancer or a service discovery agent. There should be no need to re-deploy the gateway as services roll out underneath it. The gateway is designed to be able to smoothly roll over to updates in any services underneath it, and we recommend using the [managed federation](https://www.apollographql.com/docs/apollo-server/federation/production/#managed-federation) to control how changes in underlying services bubble up to the gateway. That said, like any infrastructure, you'll want to investigate the different [configuration options](https://www.apollographql.com/docs/apollo-server/api/apollo-gateway/) and choose the ones that make sense for your use case. Additionally, make sure to expose your gateway to sufficient load to understand its resource consumption and provision accordingly.
 
-#### Put graph-level functionality in the Gateway
+#### Put graph-level functionality in the gateway
 
-Because the Gateway is the component of your GraphQL layer that sees and services every client operation, there are a number of things that make sense to happen at the Gateway level. This includes functionality like [reporting metrics](https://www.apollographql.com/docs/apollo-server/features/metrics/), [whole response caching](https://www.apollographql.com/docs/apollo-server/features/caching/#saving-full-responses-to-a-cache), [operation safe-listing](https://www.apollographql.com/docs/platform/operation-registry/), and [automatic persisted queries](https://www.apollographql.com/docs/apollo-server/features/apq/). Because all of this functionality happens at the operation-level, we recommend ensuring that the Gateway is configured to support this functionality rather than exposing it piecemeal in each implementing service. Since the Apollo Gateway is built atop Apollo Server, setting these features up should require nothing more than following the associated guides.
+Because the gateway is the component of your GraphQL layer that sees and services every client operation, there are a number of things that make sense to happen at the gateway level. This includes functionality like [reporting metrics](https://www.apollographql.com/docs/apollo-server/features/metrics/), [whole response caching](https://www.apollographql.com/docs/apollo-server/features/caching/#saving-full-responses-to-a-cache), [operation safe-listing](https://www.apollographql.com/docs/platform/operation-registry/), and [automatic persisted queries](https://www.apollographql.com/docs/apollo-server/features/apq/). Because all of this functionality happens at the operation-level, we recommend ensuring that the gateway is configured to support this functionality rather than exposing it piecemeal in each implementing service. Since the Apollo gateway is built atop Apollo Server, setting these features up should require nothing more than following the associated guides.
 
 #### Keep implementing services internal
 
-The GraphQL services that implement your graph provide the functionality that the Gateway needs in order to traffic requests. However, because a key principle of the data graph is to strive for [one graph](https://principledgraphql.com/integrity#1-one-graph), there is no need to allow clients to query the underlying services directly without going through the Gateway. Additionally, by exposing implementing services to public traffic, it extends your security and reliablity surface area and makes your system more challenging to secure. While we recommend that the Gateway keep its operation surface area locked down by relying on the [operation registry](https://www.apollographql.com/docs/platform/operation-registry/), it's generally unwieldy to register operations to services, especially when the Gateway may need to make dynamic operations to services using the [`_entities`](https://www.apollographql.com/docs/platform/operation-registry/) field. Further, because of the power and flexibility of the `_entities` field, it may present a serious risk to expose it publicly. If, for some reason, you want to allow outside traffic to send operations to implementing services, we highly recommend keeping the `_entities` field restricted.
+The GraphQL services that implement your graph provide the functionality that the gateway needs in order to traffic requests. However, because a key principle of the data graph is to strive for [one graph](https://principledgraphql.com/integrity#1-one-graph), there is no need to allow clients to query the underlying services directly without going through the gateway. Additionally, by exposing implementing services to public traffic, it extends your security and reliablity surface area and makes your system more challenging to secure. While we recommend that the gateway keep its operation surface area locked down by relying on the [operation registry](https://www.apollographql.com/docs/platform/operation-registry/), it's generally unwieldy to register operations to services, especially when the gateway may need to make dynamic operations to services using the [`_entities`](https://www.apollographql.com/docs/platform/operation-registry/) field. Further, because of the power and flexibility of the `_entities` field, it may present a serious risk to expose it publicly. If, for some reason, you want to allow outside traffic to send operations to implementing services, we highly recommend keeping the `_entities` field restricted.
 
 #### Use variants to control rollout
 
-With [managed federation](https://www.apollographql.com/docs/apollo-server/federation/production/#managed-federation), you have the ability to control which version of your graph a fleet of Gateways are running with. For the majority of deployments, rolling over all of your Gateways to a new schema version is a good strategy, since changes should be checked to be backwards compatible using [schema validation](https://www.apollographql.com/docs/platform/schema-validation/). However, changes at the Gateway level may involve a variety of different updates, like changing how query plans are generated or transferring type ownership from one service to another. In the case that your infrastructure requires more advanced deployment strategies, we recommend using [graph variants](https://www.apollographql.com/docs/platform/schema-registry/#registering-schemas-to-a-variant) to manage different fleets of Gateways running with different configurations.
+With [managed federation](https://www.apollographql.com/docs/apollo-server/federation/production/#managed-federation), you have the ability to control which version of your graph a fleet of Gateways are running with. For the majority of deployments, rolling over all of your Gateways to a new schema version is a good strategy, since changes should be checked to be backwards compatible using [Schema Validation](https://www.apollographql.com/docs/platform/schema-validation/). However, changes at the gateway level may involve a variety of different updates, like changing how query plans are generated or transferring type ownership from one service to another. In the case that your infrastructure requires more advanced deployment strategies, we recommend using [graph variants](https://www.apollographql.com/docs/platform/schema-registry/#registering-schemas-to-a-variant) to manage different fleets of Gateways running with different configurations.
 
-For instance, in order to have a canary deployment, you might maintain two production graphs in the [schema registry](https://www.apollographql.com/docs/platform/schema-registry), one called `prod` and one called `prod-canary`. Your deployment of a change to some implementing service named "foo" might look something like this:
+For instance, in order to have a canary deployment, you might maintain two production graphs in the [Schema Registry](https://www.apollographql.com/docs/platform/schema-registry), one called `prod` and one called `prod-canary`. Your deployment of a change to some implementing service named "foo" might look something like this:
 
 1. Check changes in "foo" against `prod` and `prod-canary`: `apollo service:check --tag=prod --serviceName=foo && apollo service:check --tag=prod-canary --serviceName=foo`
-1. Deploy changes to "foo" into your production environment (_Note: This will not roll out changes to the Gateway yet_)
-1. Roll over the `prod-canary` graph, containing one Gateway container, using `apollo service:push --tag=prod-canary --serviceName=foo` (_Note: If composition fails due to intermediate changes to the canary graph, new configuration will not be rolled out_)
+1. Deploy changes to "foo" into your production environment (_Note: This will not roll out changes to the gateway yet_)
+1. Roll over the `prod-canary` graph, containing one gateway container, using `apollo service:push --tag=prod-canary --serviceName=foo` (_Note: If composition fails due to intermediate changes to the canary graph, new configuration will not be rolled out_)
 1. Wait for health checks to pass against the canary, watch dashboards, etc.
 1. After the canary is stable, roll out the changes to the rest of production using `apollo service:push --tag=prod --serviceName=foo`
 
-Because you can [tag metrics with variants](https://www.apollographql.com/docs/platform/schema-registry/#associating-metrics-with-a-variant) as well, you can use the [Engine UI](https://engine.apollographql.com) to verify a canary's performance before rolling out changes to the rest of the graph. You can also use a similar strategy with variants to support a variety of other advanced deployment workflows, like blue/green deployments.
+Because you can [tag metrics with variants](https://www.apollographql.com/docs/platform/schema-registry/#associating-metrics-with-a-variant) as well, you can use [Apollo Graph Manager](https://engine.apollographql.com) to verify a canary's performance before rolling out changes to the rest of the graph. You can also use a similar strategy with variants to support a variety of other advanced deployment workflows, like blue/green deployments.
 
 ## Managed Federation
 [//]: # (Description: This section should discuss the basic idea of managed federation without getting into specific and talk vaguely of the problem of service rollout and looking for a balance of automation and observability, workflow, etc.)
@@ -48,7 +48,7 @@ Because you can [tag metrics with variants](https://www.apollographql.com/docs/p
 
 In small scale cases it can be sufficient to define the list of services comprising a federated graph directly within the gateway, and manually update the list and restart the server as services are modified and created. However for larger scale projects it is helpful to be able to remotely manage the gateway, such that new services may be added, or existing services modified, all with zero downtime.
 
-For these use cases, `Apollo Gateway` can be configured to pull a remotely hosted service list from the [Schema Registry](https://www.apollographql.com/docs/platform/schema-registry/) on `Apollo Dashboard`. This is `Managed Federation`, and it is a key component of building a robust federated graph that can be concurrently developed by teams of any size.
+For these use cases, a gateway can be configured to pull a remotely hosted service list from the [Schema Registry](https://www.apollographql.com/docs/platform/schema-registry/) on `Apollo Dashboard`. This is `Managed Federation`, and it is a key component of building a robust federated graph that can be concurrently developed by teams of any size.
 
 #### Overview
 
@@ -68,7 +68,7 @@ apollo service:push       \
 
 > Each service needs a unique name, this is how you will identify the service for schema updates
 
-The given `endpoint` will be queried for the new schema which, if compatible with the rest of the schema, will be uploaded to `Apollo Engine`. At this point, any gateways serving this graph will begin to roll over to the new schema.
+The given `endpoint` will be queried for the new schema which, if compatible with the rest of the schema, will be uploaded to `Apollo Graph Manager`. At this point, any gateways serving this graph will begin to roll over to the new schema.
 
 You can later modify hosted service definitions by rerunning the `apollo service:push` command with the service's name and the new URL.
 
@@ -78,13 +78,13 @@ You can later modify hosted service definitions by rerunning the `apollo service
 
 #### Reliability
 
-[//]: # (Description: This section should document how the Gateway polls GCS for updates, why it's a reliable model, what the defaults are, and any recommendations)
+[//]: # (Description: This section should document how the gateway polls GCS for updates, why it's a reliable model, what the defaults are, and any recommendations)
 [//]: # (Assignee: Jackson)
 [//]: # (Reviewer: Adam)
 
 When operating as a managed gateway, `Apollo Server` will poll the [Schema Registry](https://www.apollographql.com/docs/platform/schema-registry/) for updates to the registered service list at 10 second intervals. When a service list update does occur, `Apollo Server` will create a new composed schema from the federated services, and begin to roll over to serving the new schema. Existing in-flight operations on the old schema will continue to be processed while serving the new schema. For this reason, it can be helpful to serve the new schemas from new endpoints, such that no downtime is incurred during rollover.
 
-In the event a network failure prevents an `Apollo Server` gateway from contacting the schema registry, the gateway will continue to serve the last known schema while it attempts to reestablish a connection to the schema registry.
+In the event a network failure prevents an `Apollo Server` gateway from contacting the Schema Registry, the gateway will continue to serve the last known schema while it attempts to reestablish a connection to the registry.
 
 // TODO: Document the model of operating on top of GCS, ways of falling back to local files & introspection
 <!--
@@ -102,7 +102,7 @@ In the event a network failure prevents an `Apollo Server` gateway from contacti
 
 // TODO: General talk about monitoring distributed systems & monitoring GraphQL
 
-#### Observing Gateway Changes
+#### Observing gateway changes
 
 [//]: # (Description: An explanation of observability options for the gateway with some helpful examples and / or anecdotes)
 [//]: # (Assignee: Trevor)
@@ -129,7 +129,7 @@ When the gateway receives a new query, it generates a query plan that defines th
 
 ![playground](../images/playground.png)
 
-#### Observing Gateway Composition
+#### Observing gateway composition
 
 [//]: # (Description: An explanation of this observability option for the gateway with some helpful examples and / or anecdotes)
 [//]: # (Assignee: Trevor)
