@@ -29,7 +29,17 @@ The GraphQL services that implement your graph provide the functionality that th
 
 #### Using variants to control rollout
 
-// TODO: Document how to use a variant in order to have a canary gateway
+With [managed federation](https://www.apollographql.com/docs/apollo-server/federation/production/#managed-federation), you have the ability to control which version of your graph a fleet of Gateways are running with. For the majority of deployments, rolling over all of your Gateways to a new schema version is a good strategy, since changes should be checked to be backwards compatible using [schema validation](https://www.apollographql.com/docs/platform/schema-validation/). However, changes at the Gateway level may involve a variety of different updates, like changing how query plans are generated or transferring type ownership from one service to another. In the case that your infrastructure requires more advanced deployment strategies, we recommend using [graph variants](https://www.apollographql.com/docs/platform/schema-registry/#registering-schemas-to-a-variant) to manage different fleets of Gateways running with different configurations.
+
+For instance, in order to have a canary deployment, you might maintain two production graphs in the [schema registry](https://www.apollographql.com/docs/platform/schema-registry), one called `prod` and one called `prod-canary`. Your deployment of a change to some implementing service named "foo" might look something like this:
+
+1. Check changes in "foo" against `prod` and `prod-canary`: `apollo service:check --tag=prod --serviceName=foo && apollo service:check --tag=prod-canary --serviceName=foo`
+1. Deploy changes to "foo" into your production environment (_Note: This will not roll out changes to the Gateway yet_)
+1. Roll over the `prod-canary` graph, containing one Gateway container, using `apollo service:push --tag=prod-canary --serviceName=foo` (_Note: If composition fails due to intermediate changes to the canary graph, new configuration will not be rolled out_)
+1. Wait for health checks to pass against the canary, watch dashboards, etc.
+1. After the canary is stable, roll out the changes to the rest of production using `apollo service:push --tag=prod --serviceName=foo`
+
+Because you can [tag metrics with variants](https://www.apollographql.com/docs/platform/schema-registry/#associating-metrics-with-a-variant) as well, you can use the [Engine UI](https://engine.apollographql.com) to verify a canary's performance before rolling out changes to the rest of the graph. You can also use a similar strategy with variants to support a variety of other advanced deployment workflows, like blue/green deployments.
 
 ## Managed Federation
 [//]: # (Description: This section should discuss the basic idea of managed federation without getting into specific and talk vaguely of the problem of service rollout and looking for a balance of automation and observability, workflow, etc.)
