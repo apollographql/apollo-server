@@ -161,7 +161,6 @@ export class ApolloGateway implements GraphQLService {
 
   public async loadAndPoll() {
     const load = async () => {
-      console.log('LOAD');
       // Preserve old service defs for observability cb
       const previousServiceDefinitions = this.serviceDefinitions;
       const previousSchema = this.schema;

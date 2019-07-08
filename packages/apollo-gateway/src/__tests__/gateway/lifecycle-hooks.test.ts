@@ -7,7 +7,7 @@ import * as books from '../__fixtures__/schemas/books';
 import * as inventory from '../__fixtures__/schemas/inventory';
 import * as product from '../__fixtures__/schemas/product';
 import * as reviews from '../__fixtures__/schemas/reviews';
-import { buildFederatedSchema } from '@apollo/federation';
+import { buildFederatedSchema, ServiceDefinition } from '@apollo/federation';
 import gql from 'graphql-tag';
 
 const services = [product, reviews, inventory, accounts, books];
@@ -29,18 +29,23 @@ const booksReplacement = {
   },
 };
 
+// jest.useFakeTimers();
+
 describe('lifecycle hooks', () => {
-  let serviceDefinitions;
-  let apolloServers: { port: number; server: ApolloServer }[] = [];
+  let serviceDefinitions: (ServiceDefinition & { port: number | string })[];
+  let apolloServers: { port: number | string; server: ApolloServer }[] = [];
 
   // takes a service and a port and starts an apolloServer
   // if no port is passed, it'll start it at a random one (0)
-  const startServerFromDefinition = (service, portToStartFrom) => {
+  const startServerFromDefinition = (
+    service: ServiceDefinition,
+    portToStartFrom?: number | string,
+  ) => {
     const server = new ApolloServer({
       schema: buildFederatedSchema([service]),
       introspection: true,
     });
-    // apolloServers.push(server);
+
     return server.listen({ port: portToStartFrom || 0 }).then(({ port }) => {
       apolloServers.push({ server, port });
       return { ...service, port };
@@ -49,47 +54,51 @@ describe('lifecycle hooks', () => {
 
   beforeEach(async () => {
     serviceDefinitions = await Promise.all(
-      services.map(startServerFromDefinition),
+      services.map(service => startServerFromDefinition(service)),
     );
   });
+
   afterEach(() => {
     apolloServers.forEach(server => server.server.stop());
     apolloServers = [];
   });
 
   it('uses updateServiceDefinitions override', async () => {
-    const update = jest.fn(async (config: GatewayConfig) => {
-      const [definitions] = await getServiceDefinitionsFromRemoteEndpoint({
-        serviceList: config.serviceList,
-      });
-      return definitions;
-    });
-
-    const experimental_didUpdateComputedFederationConfig = jest.fn();
+    const experimental_updateServiceDefinitions = jest.fn(
+      async (config: GatewayConfig) => {
+        if (!config.serviceList) return [];
+        const [definitions] = await getServiceDefinitionsFromRemoteEndpoint({
+          serviceList: config.serviceList,
+        });
+        return definitions;
+      },
+    );
 
     const gateway = new ApolloGateway({
       serviceList: serviceDefinitions.map(service => ({
         name: service.name,
         url: `http://localhost:${service.port}`,
       })),
-      experimental_updateServiceDefinitions: update,
-      // experimental_didUpdateComputedFederationConfig,
+      experimental_updateServiceDefinitions,
+      experimental_didUpdateComputedFederationConfig: jest.fn(),
     });
 
     const interval = await gateway.loadAndPoll();
 
-    expect(update).toBeCalled();
+    expect(experimental_updateServiceDefinitions).toBeCalled();
     clearInterval(interval);
   });
 
   it('calls experimental_didFailComposition with a bad config', async () => {
     // const experimental_updateServiceDefinitions = () => [];
     const update = jest.fn(async (config: GatewayConfig) => {
+      if (!config.serviceList) return [];
       const [definitions] = await getServiceDefinitionsFromRemoteEndpoint({
         serviceList: config.serviceList,
       });
       return [definitions[0]];
     });
+
     const experimental_didFailComposition = jest.fn();
 
     const gateway = new ApolloGateway({
@@ -114,8 +123,9 @@ describe('lifecycle hooks', () => {
     clearInterval(interval);
   });
 
-  fit('calls experimental_didUpdateComputedFederationConfig on schema update', async done => {
+  it('calls experimental_didUpdateComputedFederationConfig on schema update', async done => {
     const update = jest.fn(async (config: GatewayConfig) => {
+      if (!config.serviceList) return [];
       const [definitions] = await getServiceDefinitionsFromRemoteEndpoint({
         serviceList: config.serviceList,
       });
@@ -130,41 +140,71 @@ describe('lifecycle hooks', () => {
         url: `http://localhost:${service.port}`,
       })),
       experimental_updateServiceDefinitions: update,
-      experimental_pollInterval: 1000,
+      experimental_pollInterval: 100,
       experimental_didUpdateComputedFederationConfig,
     });
 
     const interval = await gateway.loadAndPoll();
-    new Promise(resolve => setTimeout(resolve, 2000));
+
+    await new Promise(resolve => setTimeout(resolve, 200));
 
     // find the service definition that is for the "books" service.
-    const booksDefinition = serviceDefinitions.find(s => s.name === 'books');
+    const booksDefinition = serviceDefinitions.find(s => s.name === 'books')!;
     // keep the port of that service so we can start a replacement book service
     const booksPort = booksDefinition.port;
     // find the apollo server instance using this port
-    const existingBooksServer = apolloServers.find(s => s.port === booksPort);
+    const existingBooksServer = apolloServers.find(s => s.port === booksPort)!;
     // stop the existing server
     existingBooksServer.server.stop();
 
     // start a replacement books service
-    const newBooksService = await startServerFromDefinition(
-      booksReplacement,
-      booksPort,
-    );
+    await startServerFromDefinition(booksReplacement, booksPort);
 
     // wait for 3 seconds
-    new Promise(resolve => setTimeout(resolve, 3000));
+    await new Promise(resolve => setTimeout(resolve, 300));
 
     // after now, the service should have polled and updated the config based
     // off the new book service schema
-    // expect(experimental_didUpdateComputedFederationConfig).toHaveBeenCalledWith(
-    //   {},
-    // );
+
+    const {
+      calls: [firstCall, secondCall],
+    } = experimental_didUpdateComputedFederationConfig.mock;
+
+    expect(firstCall[0]).toHaveProperty('currentConfig');
+    expect(firstCall[0]).not.toHaveProperty('previousConfig');
+
+    expect(secondCall[0]).toHaveProperty('currentConfig');
+    expect(secondCall[0]).toHaveProperty('previousConfig');
+
     clearInterval(interval);
+
+    done();
+  });
+
+  it('using default service definition updater', async done => {
+    const experimental_didUpdateComputedFederationConfig = jest.fn();
+
+    const gateway = new ApolloGateway({
+      serviceList: serviceDefinitions.map(service => ({
+        name: service.name,
+        url: `http://localhost:${service.port}`,
+      })),
+      experimental_pollInterval: 100,
+      experimental_didUpdateComputedFederationConfig,
+    });
+
+    const spy = jest.spyOn(gateway, 'updateServiceDefinitions');
+
+    const interval = await gateway.loadAndPoll();
+
+    await new Promise(resolve => setTimeout(resolve, 200));
+
+    expect(spy.mock.calls.length).toEqual(2);
+    expect(
+      experimental_didUpdateComputedFederationConfig.mock.calls.length,
+    ).toEqual(2);
+
+    clearInterval(interval);
+    done();
   });
 });
-
-it.todo('changing schema after poll');
-it.todo('without overriding fetcher');
-
-it.todo('');
