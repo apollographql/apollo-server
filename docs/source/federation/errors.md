@@ -7,7 +7,7 @@ Apollo Federation implements a strict composition model. When building a gateway
 ### Types and extensions
 
 - `EXTENSION_OF_WRONG_KIND`: An extension is attempting to extend a different type. For example, an interface extension, `extend interface MyType`, would be invalid for a type definition such as `type MyType`.
-- `EXTENSION_WITH_NO_BASE`: A extension is attempting to extend a type which does not exist.
+- `EXTENSION_WITH_NO_BASE`: An extension is attempting to extend a type which does not exist.
 
 ### `@key` directives
 
