@@ -54,32 +54,14 @@ The core of the federated gateway implementation. For an example, see the ["impl
 
     With debug enabled, the server will log startup messages as well as query plans during incoming requests.
 
-### `ApolloGateway.load()`: `Promise<{ schema: GraphQLSchema, exector: GraphQLExecutor }>`
-
 #### Returns
 
-`Promise` that resolves to an object that contains:
+An `ApolloGateway` instance, which is intended to be passed as the `gateway` configuration option of `ApolloServer` like so:
 
-  * `schema`: <`GraphQLSchema`>
-    A composed schema that represents all of the federated schemas
-  * `executor`: <`GraphQLExecutor`>
-    An executor, consumed by `ApolloServer`. Uses the query planner in order to
-    transform a single, incoming request into a set of requests to the federated
-    services.
-
-It's intended that the result of the resolved `Promise` is passed into the constructor of `ApolloServer` like so:
-
-```javascript{6-7}
-...
-(async () => {
-  const { schema, executor } = await gateway.load();
-
-  const server = new ApolloServer({
-    schema,
-    executor
-  });
-  ...
-})();
+```javascript
+const server = new ApolloServer({
+  gateway: new ApolloGateway({ serviceList: [...] }),
+});
 ```
 
 ## RemoteGraphQLDataSource
@@ -108,4 +90,3 @@ The `RemoteGraphQLDataSource` export is used to connect to underlying federated 
       },
     });
     ```
-
