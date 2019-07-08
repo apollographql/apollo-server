@@ -19,9 +19,12 @@ In operating federation in production ourselves and working with a variety of te
 
 The [Apollo Gateway](https://www.apollographql.com/docs/apollo-server/federation/implementing/#running-a-gateway) understands how to "speak" federation and orchestrate an incoming operation from a client into a set of operations to the underlying services that implement the graph. Because the Gateway understands how to "speak" federation, it should contain **no business logic** and we recommend treating it as you would any infrastructure, such as a load balancer or a service discovery agent. There should be no need to re-deploy the Gateway as services roll out underneath it. The Gateway is designed to be able to smoothly roll over to updates in any services underneath it, and we recommend using the [managed federation](https://www.apollographql.com/docs/apollo-server/federation/production/#managed-federation) to control how changes in underlying services bubble up to the Gateway. That said, like any infrastructure, you'll want to investigate the different [configuration options](https://www.apollographql.com/docs/apollo-server/api/apollo-gateway/) and choose the ones that make sense for your use case. Additionally, make sure to expose your Gateway to sufficient load to understand its resource consumption and provision accordingly.
 
+#### Keep graph-level functionality in the Gateway
+
+Because the Gateway is the component of your GraphQL layer that sees and services every client operation, there are a number of things that make sense to happen at the Gateway level. This includes functionality like [reporting metrics](https://www.apollographql.com/docs/apollo-server/features/metrics/), [whole response caching](https://www.apollographql.com/docs/apollo-server/features/caching/#saving-full-responses-to-a-cache), and [automatic persisted queries](https://www.apollographql.com/docs/apollo-server/features/apq/). Because all of this functionality happens at the operation-level, we recommend ensuring that the Gateway is configured to support this functionality rather than exposing it piecemeal in each implementing service. Since the Apollo Gateway is built atop Apollo Server, setting these features up should require nothing more than following the associated guides.
+
 #### Keeping implementing services internal
 
-Since your
 // TODO: Security -- discuss the recommendation that all implementing services should not expose their partial schema
 
 #### Using variants to control rollout
