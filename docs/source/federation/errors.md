@@ -38,7 +38,7 @@ Apollo Federation implements a strict composition model. When building a gateway
 
 - `DUPLICATE_ENUM_DEFINITION`: An Enum was defined multiple times in a single service. Remove one of the definitions.
 - `DUPLICATE_SCALAR_DEFINITION`: A Scalar was defined multiple times in a single service. Remove one of the definitions.
-- `DUPLICATE_ENUM_VALUE`: A service has multiple definitions of the same Enum.`value`. This duplicate value may be in the definition itself or enum extensions.
+- `DUPLICATE_ENUM_VALUE`: A service has multiple definitions of the same Enum `value`. This duplicate value may be in the definition itself or enum extensions.
 - `ENUM_MISMATCH`: An Enum does not have identical values across all services. Even if a service does not use all enum values, they still must be provided if another service uses them. This error will list services with matching definitions like `[serviceA, serviceB], [serviceC]` where `serviceA` and `serviceB` have matching enum definitions, and `serviceC` does not match the other definitions.
 - `ENUM_MISMATCH_TYPE`: Enums must not use the name of a type in another service. For example, if a service defines an enum of `Category`, all definitions of `Category` in other services must also be enums.
 
