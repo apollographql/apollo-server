@@ -11,11 +11,17 @@ import { CacheOptions } from './RESTDataSource';
 
 export class HTTPCache {
   private keyValueCache: KeyValueCache;
-  constructor(keyValueCache: KeyValueCache = new InMemoryLRUCache()) {
+  private httpFetch: typeof fetch;
+
+  constructor(
+    keyValueCache: KeyValueCache = new InMemoryLRUCache(),
+    httpFetch: typeof fetch = fetch,
+  ) {
     this.keyValueCache = new PrefixingKeyValueCache(
       keyValueCache,
       'httpcache:',
     );
+    this.httpFetch = httpFetch;
   }
 
   async fetch(
@@ -31,7 +37,7 @@ export class HTTPCache {
 
     const entry = await this.keyValueCache.get(cacheKey);
     if (!entry) {
-      const response = await fetch(request);
+      const response = await this.httpFetch(request);
 
       const policy = new CachePolicy(
         policyRequestFrom(request),
@@ -71,7 +77,7 @@ export class HTTPCache {
       const revalidationRequest = new Request(request, {
         headers: revalidationHeaders,
       });
-      const revalidationResponse = await fetch(revalidationRequest);
+      const revalidationResponse = await this.httpFetch(revalidationRequest);
 
       const { policy: revalidatedPolicy, modified } = policy.revalidatedPolicy(
         policyRequestFrom(revalidationRequest),
