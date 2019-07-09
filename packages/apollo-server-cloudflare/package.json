@@ -22,7 +22,8 @@
   "homepage": "https://github.com/apollographql/apollo-server#readme",
   "dependencies": {
     "apollo-server-core": "file:../apollo-server-core",
-    "apollo-server-env": "file:../apollo-server-env"
+    "apollo-server-env": "file:../apollo-server-env",
+    "apollo-server-types": "file:../apollo-server-types"
   },
   "peerDependencies": {
     "graphql": "^0.12.0 || ^0.13.0 || ^14.0.0"

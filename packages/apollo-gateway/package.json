@@ -23,11 +23,14 @@
     "apollo-env": "^0.5.1",
     "apollo-graphql": "^0.3.3",
     "apollo-server-caching": "file:../apollo-server-caching",
-    "apollo-server-core": "file:../apollo-server-core",
     "apollo-server-env": "file:../apollo-server-env",
     "loglevel": "^1.6.1",
     "loglevel-debug": "^0.0.1",
     "pretty-format": "^24.7.0"
+  },
+  "devDependencies": {
+    "apollo-server-core": "file:../apollo-server-core",
+    "apollo-server-types": "file:../apollo-server-types"
   },
   "peerDependencies": {
     "graphql": "^14.2.1"

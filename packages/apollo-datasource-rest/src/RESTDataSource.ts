@@ -7,8 +7,9 @@ import {
   URL,
   URLSearchParams,
   URLSearchParamsInit,
-  ValueOrPromise,
 } from 'apollo-server-env';
+
+import { ValueOrPromise } from 'apollo-server-types';
 
 import { DataSource, DataSourceConfig } from 'apollo-datasource';
 

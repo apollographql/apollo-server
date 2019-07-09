@@ -18,7 +18,7 @@ import {
 } from './requestPipeline';
 import { CacheControlExtensionOptions } from 'apollo-cache-control';
 import { ApolloServerPlugin } from 'apollo-server-plugin-base';
-import { WithRequired } from 'apollo-server-env';
+import { WithRequired } from 'apollo-server-types';
 
 export interface HttpQueryRequest {
   method: string;

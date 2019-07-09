@@ -48,7 +48,7 @@ import { Headers } from 'apollo-server-env';
 import { GraphQLExtension, GraphQLResponse } from 'graphql-extensions';
 import { TracingFormat } from 'apollo-tracing';
 import ApolloServerPluginResponseCache from 'apollo-server-plugin-response-cache';
-import { GraphQLRequestContext } from 'apollo-server-plugin-base';
+import { GraphQLRequestContext } from 'apollo-server-types';
 
 import { mockDate, unmockDate, advanceTimeBy } from '__mocks__/date';
 import { EngineReportingOptions } from 'apollo-engine-reporting';

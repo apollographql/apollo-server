@@ -5,7 +5,7 @@ import {
   IMocks,
   GraphQLParseOptions,
 } from 'graphql-tools';
-import { ValueOrPromise } from 'apollo-server-env';
+import { ValueOrPromise, GraphQLExecutor } from 'apollo-server-types';
 import { ConnectionContext } from 'subscriptions-transport-ws';
 // The types for `ws` use `export = WebSocket`, so we'll use the
 // matching `import =` to bring in its sole export.
@@ -26,7 +26,6 @@ import { CacheControlExtensionOptions } from 'apollo-cache-control';
 import { ApolloServerPlugin } from 'apollo-server-plugin-base';
 
 import { GraphQLSchemaModule } from '@apollographql/apollo-tools';
-import { GraphQLExecutor } from 'apollo-server-core/dist/requestPipelineAPI';
 export { GraphQLSchemaModule };
 
 export { KeyValueCache } from 'apollo-server-caching';

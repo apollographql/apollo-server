@@ -1,7 +1,7 @@
 {
-  "name": "apollo-server-plugin-base",
-  "version": "0.6.0-alpha.8",
-  "description": "Apollo Server plugin base classes",
+  "name": "apollo-server-types",
+  "version": "0.1.0",
+  "description": "Apollo Server shared types",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "keywords": [],
@@ -11,8 +11,10 @@
     "node": ">=6"
   },
   "dependencies": {
-    "apollo-server-types": "file:../apollo-server-types"
+    "apollo-server-caching": "file:../apollo-server-caching",
+    "apollo-server-env": "file:../apollo-server-env"
   },
+  "devDependencies": {},
   "peerDependencies": {
     "graphql": "^0.12.0 || ^0.13.0 || ^14.0.0"
   }

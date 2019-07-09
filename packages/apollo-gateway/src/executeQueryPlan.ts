@@ -1,7 +1,7 @@
 import {
   GraphQLExecutionResult,
   GraphQLRequestContext,
-} from 'apollo-server-core';
+} from 'apollo-server-types';
 import {
   ASTNode,
   execute,

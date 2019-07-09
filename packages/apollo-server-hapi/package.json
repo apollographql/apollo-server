@@ -28,6 +28,7 @@
     "@apollographql/graphql-playground-html": "1.6.24",
     "accept": "^3.0.2",
     "apollo-server-core": "file:../apollo-server-core",
+    "apollo-server-types": "file:../apollo-server-types",
     "boom": "^7.1.0",
     "graphql-subscriptions": "^1.0.0",
     "graphql-tools": "^4.0.0"

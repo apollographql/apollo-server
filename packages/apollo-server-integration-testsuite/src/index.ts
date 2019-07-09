@@ -20,7 +20,7 @@ import request = require('supertest');
 
 import { GraphQLOptions, Config } from 'apollo-server-core';
 import gql from 'graphql-tag';
-import { ValueOrPromise } from 'apollo-server-env';
+import { ValueOrPromise } from 'apollo-server-types';
 
 export * from './ApolloServer';
 
