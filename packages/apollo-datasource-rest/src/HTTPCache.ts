@@ -15,7 +15,7 @@ export class HTTPCache {
 
   constructor(
     keyValueCache: KeyValueCache = new InMemoryLRUCache(),
-    httpFetch: typeof fetch = fetch
+    httpFetch: typeof fetch = fetch,
   ) {
     this.keyValueCache = new PrefixingKeyValueCache(
       keyValueCache,
