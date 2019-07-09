@@ -150,6 +150,11 @@ async resolveURL(request: RequestOptions) {
 }
 ```
 
+## Community data sources
+
+- `SQLDataSource` from [`datasource-sql`](https://github.com/cvburgess/SQLDataSource)
+- `MongoDataSource` from [`apollo-datasource-mongodb`](https://github.com/GraphQLGuide/apollo-datasource-mongodb/)
+
 ## Accessing data sources from resolvers
 
 To give resolvers access to data sources, you pass them as options to the `ApolloServer` constructor:
