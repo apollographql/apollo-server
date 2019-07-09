@@ -6,5 +6,6 @@ export interface DataSourceConfig<TContext> {
 }
 
 export abstract class DataSource<TContext = any> {
+  context!: TContext;
   initialize?(config: DataSourceConfig<TContext>): void;
 }
