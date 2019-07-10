@@ -1,8 +1,3 @@
----
-title: Koa
-description: Setting up Apollo Server with Koa
----
-
 [![npm version](https://badge.fury.io/js/apollo-server-koa.svg)](https://badge.fury.io/js/apollo-server-koa) [![Build Status](https://circleci.com/gh/apollographql/apollo-server.svg?style=svg)](https://circleci.com/gh/apollographql/apollo-server) [![Join the community on Spectrum](https://withspectrum.github.io/badge/badge.svg)](https://spectrum.chat/apollo)
 
 

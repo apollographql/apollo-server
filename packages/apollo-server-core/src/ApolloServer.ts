@@ -444,8 +444,14 @@ export class ApolloServerBase {
 
       if (this.uploadsConfig) {
         const { GraphQLUpload } = require('graphql-upload');
-        if (resolvers && !resolvers.Upload) {
-          resolvers.Upload = GraphQLUpload;
+        if (Array.isArray(resolvers)) {
+          if (resolvers.every(resolver => !resolver.Upload)) {
+            resolvers.push({ Upload: GraphQLUpload });
+          }
+        } else {
+          if (resolvers && !resolvers.Upload) {
+            resolvers.Upload = GraphQLUpload;
+          }
         }
 
         // We augment the typeDefs with the Upload scalar, so typeDefs that

@@ -7,6 +7,7 @@ import {
   URL,
   URLSearchParams,
   URLSearchParamsInit,
+  fetch,
 } from 'apollo-server-env';
 
 import { ValueOrPromise } from 'apollo-server-types';
@@ -48,9 +49,13 @@ export abstract class RESTDataSource<TContext = any> extends DataSource {
   context!: TContext;
   memoizedResults = new Map<string, Promise<any>>();
 
+  constructor(private httpFetch?: typeof fetch) {
+    super();
+  }
+
   initialize(config: DataSourceConfig<TContext>): void {
     this.context = config.context;
-    this.httpCache = new HTTPCache(config.cache);
+    this.httpCache = new HTTPCache(config.cache, this.httpFetch);
   }
 
   baseURL?: string;
