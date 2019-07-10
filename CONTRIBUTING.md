@@ -85,4 +85,4 @@ It’s important that every piece of code in Apollo packages is reviewed by at l
 
 If you want to contribute to Apollo server, but aren't quite sure where to start, take a look at the [roadmap and design docs](./ROADMAP.md). Just pick one of the upcoming features that you're interested in, and start working on it. If the design doc isn't clear enough (which it probably won't be), open an issue thread so we can discuss it.
 
-Last but not least, make sure to join the [Apollo Slack channel](http://slack.apollostack.com), where there are lots of other friendly contributors to talk to.
+Last but not least, make sure to join the [Apollo Spectrum community](https://spectrum.chat/apollo), where there are lots of other friendly contributors to talk to.
