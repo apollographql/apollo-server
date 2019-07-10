@@ -3,10 +3,8 @@ import {
   GraphQLRequestContext,
 } from 'apollo-server-core';
 import {
-  ASTNode,
   execute,
   GraphQLError,
-  GraphQLFormattedError,
   Kind,
   OperationDefinitionNode,
   OperationTypeNode,
@@ -239,15 +237,17 @@ async function executeFetch<TContext>(
     });
 
     if (response.errors) {
-      context.errors.push(
+      const errors = response.errors.map(error =>
         downstreamServiceError(
-          undefined,
+          error.message,
           fetch.serviceName,
           source,
           variables,
-          response.errors,
+          error.extensions,
+          error.path,
         ),
       );
+      context.errors.push(...errors);
     }
 
     return response.data;
@@ -326,23 +326,22 @@ function downstreamServiceError(
   serviceName: string,
   query: string,
   variables?: Record<string, any>,
-  downstreamErrors?: ReadonlyArray<GraphQLFormattedError>,
-  nodes?: ReadonlyArray<ASTNode> | ASTNode | undefined,
+  extensions?: Record<string, any>,
   path?: ReadonlyArray<string | number> | undefined,
 ) {
   if (!message) {
     message = `Error while fetching subquery from service "${serviceName}"`;
   }
-  const extensions = {
+  extensions = {
     code: 'DOWNSTREAM_SERVICE_ERROR',
     serviceName,
     query,
     variables,
-    downstreamErrors,
+    ...extensions,
   };
   return new GraphQLError(
     message,
-    nodes,
+    undefined,
     undefined,
     undefined,
     path,
