@@ -76,7 +76,6 @@ const libraryUsers: { [name: string]: string[] } = {
   'NYC Public Library': ['1', '2'],
 };
 
-
 export const resolvers: GraphQLResolverMap<any> = {
   Query: {
     user(_, args) {
