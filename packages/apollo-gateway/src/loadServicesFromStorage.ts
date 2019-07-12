@@ -71,7 +71,7 @@ export async function getServiceDefinitionsFromStorage({
   apiKeyHash: string;
   graphVariant?: string;
   federationVersion: number;
-}): Promise<[ServiceDefinition[] | null, boolean]> {
+}): Promise<[ServiceDefinition[], boolean]> {
   const secret = await fetchStorageSecret(graphId, apiKeyHash);
 
   if (!graphVariant) {
@@ -87,7 +87,7 @@ export async function getServiceDefinitionsFromStorage({
   } = await fetchLinkFile(baseUrl);
 
   // If the link file is a cache hit, no further work is needed
-  if (linkFileCacheHit) return [null, false];
+  if (linkFileCacheHit) return [[], false];
 
   const parsedLink = JSON.parse(linkFileResult) as LinkFileResult;
 
