@@ -53,6 +53,13 @@ export default function plugin(options: Options = Object.create(null)) {
     logger.debug(
       `${dryRunPrefix} Operation registry logging enabled because options.dryRun is true.`,
     );
+    if (options.forbidUnregisteredOperations) {
+      logger.info(
+        `${dryRunPrefix} Allowing all operations since options.dryRun is true. \
+Operations will still be reported to Apollo trace warehouse as forbidden \
+for observability purposes, but all operations will be permitted.`,
+      );
+    }
   }
 
   // Options shouldn't be changed after the plugin has been initiated.
@@ -160,10 +167,12 @@ export default function plugin(options: Options = Object.create(null)) {
           // return value from the function.  In the event of an error, or if
           // the function does not return a value, we will fail-safe to
           // forbidding unregistered operations.
-          let forbidUnregisteredOperations: boolean =
+          let shouldForbidOperation: boolean =
             typeof options.forbidUnregisteredOperations === 'boolean'
               ? options.forbidUnregisteredOperations
-              : typeof options.forbidUnregisteredOperations !== 'undefined';
+              : typeof options.forbidUnregisteredOperations === 'function'
+              ? true
+              : false;
 
           if (typeof options.forbidUnregisteredOperations === 'function') {
             logger.debug(
@@ -185,7 +194,11 @@ export default function plugin(options: Options = Object.create(null)) {
               // enforcement mode; an explicit boolean `false` is required to
               // disable enforcement when a predicate function is in use.
               if (typeof predicateResult === 'boolean') {
-                forbidUnregisteredOperations = predicateResult;
+                shouldForbidOperation = predicateResult;
+              } else {
+                logger.warn(
+                  `${logHash} Predicate function did not return a boolean response. Got ${predicateResult}`,
+                );
               }
             } catch (err) {
               // If an error occurs within the forbidUnregisteredOperations
@@ -197,16 +210,20 @@ export default function plugin(options: Options = Object.create(null)) {
             }
           }
 
-          // If the forbidding of operations isn't enabled, we can just return
-          // since this will only be used for stats.
-          if (forbidUnregisteredOperations) {
+          // If the user explicitly set forbidUnregisteredOperations to either `true` or a function, and the operation
+          // should be forbidden, we report it within metrics as forbidden, even though we may be running in dryRun mode.
+          if (shouldForbidOperation && options.forbidUnregisteredOperations) {
             logger.debug(
-              `${options.dryRun &&
-                dryRunPrefix} ${logHash}: Execution denied because 'forbidUnregisteredOperations' was enabled for this request and the operation was not found in the local operation registry.`,
+              `${logHash} Reporting operation as forbidden to Apollo trace warehouse.`,
             );
-
             requestContext.metrics.forbiddenOperation = true;
+          }
+
+          if (shouldForbidOperation) {
             if (!options.dryRun) {
+              logger.debug(
+                `${logHash}: Execution denied because 'forbidUnregisteredOperations' was enabled for this request and the operation was not found in the local operation registry.`,
+              );
               throw new ForbiddenError('Execution forbidden');
             } else {
               logger.debug(
@@ -216,12 +233,6 @@ export default function plugin(options: Options = Object.create(null)) {
               );
             }
           }
-
-          logger.debug(
-            `${logHash}: Execution of operation ${
-              requestContext.operationName
-            } permitted without a matching entry in the local operation registry because 'forbidUnregisteredOperations' was not enabled for this request.`,
-          );
         },
       };
     },
