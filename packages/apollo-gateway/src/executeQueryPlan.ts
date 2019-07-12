@@ -3,10 +3,8 @@ import {
   GraphQLRequestContext,
 } from 'apollo-server-core';
 import {
-  ASTNode,
   execute,
   GraphQLError,
-  GraphQLFormattedError,
   Kind,
   OperationDefinitionNode,
   OperationTypeNode,
@@ -25,7 +23,7 @@ import {
   OperationContext,
 } from './QueryPlan';
 import { deepMerge } from './utilities/deepMerge';
-import { astFromType, getResponseName } from './utilities/graphql';
+import { getResponseName } from './utilities/graphql';
 
 export type ServiceMap = {
   [serviceName: string]: GraphQLDataSource;
@@ -152,13 +150,13 @@ async function executeFetch<TContext>(
 
   let variables = Object.create(null);
   if (fetch.variableUsages) {
-    for (const { node, defaultValue } of fetch.variableUsages) {
-      const name = node.name.value;
+    for (const variableName of Object.keys(fetch.variableUsages)) {
       const providedVariables = context.requestContext.request.variables;
-      if (providedVariables && providedVariables[name] !== 'undefined') {
-        variables[name] = providedVariables[name];
-      } else if (defaultValue) {
-        variables[name] = defaultValue;
+      if (
+        providedVariables &&
+        typeof providedVariables[variableName] !== 'undefined'
+      ) {
+        variables[variableName] = providedVariables[variableName];
       }
     }
   }
@@ -239,15 +237,17 @@ async function executeFetch<TContext>(
     });
 
     if (response.errors) {
-      context.errors.push(
+      const errors = response.errors.map(error =>
         downstreamServiceError(
-          undefined,
+          error.message,
           fetch.serviceName,
           source,
           variables,
-          response.errors,
+          error.extensions,
+          error.path,
         ),
       );
+      context.errors.push(...errors);
     }
 
     return response.data;
@@ -326,23 +326,22 @@ function downstreamServiceError(
   serviceName: string,
   query: string,
   variables?: Record<string, any>,
-  downstreamErrors?: ReadonlyArray<GraphQLFormattedError>,
-  nodes?: ReadonlyArray<ASTNode> | ASTNode | undefined,
+  extensions?: Record<string, any>,
   path?: ReadonlyArray<string | number> | undefined,
 ) {
   if (!message) {
     message = `Error while fetching subquery from service "${serviceName}"`;
   }
-  const extensions = {
+  extensions = {
     code: 'DOWNSTREAM_SERVICE_ERROR',
     serviceName,
     query,
     variables,
-    downstreamErrors,
+    ...extensions,
   };
   return new GraphQLError(
     message,
-    nodes,
+    undefined,
     undefined,
     undefined,
     path,
@@ -354,26 +353,7 @@ function downstreamServiceError(
 function mapFetchNodeToVariableDefinitions(
   node: FetchNode,
 ): VariableDefinitionNode[] {
-  const variableUsage = node.variableUsages;
-  if (!variableUsage) {
-    return [];
-  }
-
-  const variableMap = variableUsage.reduce((map, { node, type }) => {
-    const key = `${node.name.value}_${type.toString()}`;
-
-    if (!map.has(key)) {
-      map.set(key, {
-        kind: Kind.VARIABLE_DEFINITION,
-        variable: node,
-        type: astFromType(type),
-      });
-    }
-
-    return map;
-  }, new Map<string, VariableDefinitionNode>());
-
-  return Array.from(variableMap.values());
+  return node.variableUsages ? Object.values(node.variableUsages) : [];
 }
 
 function operationForRootFetch(

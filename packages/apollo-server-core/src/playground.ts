@@ -16,7 +16,7 @@ const playgroundVersion = '1.7.26';
 type RecursivePartial<T> = {
   [P in keyof T]?: T[P] extends (infer U)[]
     ? RecursivePartial<U>[]
-    : T[P] extends object
+    : T[P] extends (object | undefined)
     ? RecursivePartial<T[P]>
     : T[P];
 };
@@ -63,7 +63,7 @@ export function createPlaygroundOptions(
       }
     : { settings: undefined };
 
-  const playgroundOptions: PlaygroundRenderPageOptions = {
+  const playgroundOptions: any = {
     ...defaultPlaygroundOptions,
     ...playgroundOverrides,
     ...settingsOverrides,

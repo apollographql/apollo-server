@@ -70,7 +70,7 @@ export interface Config extends BaseConfig {
   modules?: GraphQLSchemaModule[];
   typeDefs?: DocumentNode | Array<DocumentNode> | string | Array<string>;
   parseOptions?: GraphQLParseOptions;
-  resolvers?: IResolvers;
+  resolvers?: IResolvers | Array<IResolvers>;
   schema?: GraphQLSchema;
   schemaDirectives?: Record<string, typeof SchemaDirectiveVisitor>;
   context?: Context | ContextFunction;
