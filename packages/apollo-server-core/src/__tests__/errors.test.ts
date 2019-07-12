@@ -115,6 +115,11 @@ describe('Errors', () => {
       expect(error instanceof ApolloError).toBe(true);
       expect(formatter).toHaveBeenCalledTimes(1);
     });
+    it('Formats native Errors in a JSON-compatible way', () => {
+      const error = new Error('Hello');
+      const [formattedError] = formatApolloErrors([error]);
+      expect(JSON.parse(JSON.stringify(formattedError)).message).toBe('Hello');
+    });
   });
   describe('Named Errors', () => {
     const message = 'message';
