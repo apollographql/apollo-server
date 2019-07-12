@@ -53,7 +53,7 @@ export interface GatewayConfigBase {
   experimental_didResolveQueryPlan?: DidResolveQueryPlanCallback;
   experimental_didFailComposition?: DidFailCompositionCallback;
   experimental_updateServiceDefinitions?: GetServiceList;
-  experimental_didUpdateComputedFederationConfig?: DidUpdateComputedFederationConfig;
+  experimental_didUpdateComposition?: DidUpdateCompositionCallback;
   experimental_pollInterval?: number;
 }
 
@@ -85,19 +85,15 @@ type DidFailCompositionCallback = ({
   serviceList: ServiceDefinition[];
 }) => void;
 
-interface ComputedFederationConfig {
+interface CompositionInfo {
   serviceDefinitions: ServiceDefinition[];
   schema: GraphQLSchema;
-  typeToServiceMap?: { [typeName: string]: string };
 }
 
-type DidUpdateComputedFederationConfig = ({
-  previousConfig,
-  currentConfig,
-}: {
-  previousConfig?: ComputedFederationConfig;
-  currentConfig: ComputedFederationConfig;
-}) => void;
+type DidUpdateCompositionCallback = (
+  currentConfig: CompositionInfo,
+  previousConfig?: CompositionInfo,
+) => void;
 
 type GetServiceList = (config: GatewayConfig) => Promise<ServiceDefinition[]>;
 
@@ -114,10 +110,10 @@ export class ApolloGateway implements GraphQLService {
   protected experimental_didResolveQueryPlan?: DidResolveQueryPlanCallback;
   // Observe composition failures and the ServiceList that caused them. Pretty straightforward, this enables reporting any issues that occur during composition. Implementors will be interested in addressing these immediately.
   protected experimental_didFailComposition?: DidFailCompositionCallback;
-  protected experimental_didUpdateComputedFederationConfig?: DidUpdateComputedFederationConfig;
+  protected experimental_didUpdateComposition?: DidUpdateCompositionCallback;
   // Used for overriding the default service list fetcher. This should return an array of ServiceDefinition. *This function must be awaited.*
   protected updateServiceDefinitions: GetServiceList;
-  protected experimental_pollInterval: number;
+  protected experimental_pollInterval?: number;
 
   constructor(config: GatewayConfig) {
     this.config = {
@@ -154,12 +150,19 @@ export class ApolloGateway implements GraphQLService {
       config.experimental_didResolveQueryPlan;
     this.experimental_didFailComposition =
       config.experimental_didFailComposition;
-    this.experimental_didUpdateComputedFederationConfig =
-      config.experimental_didUpdateComputedFederationConfig;
-    this.experimental_pollInterval = config.experimental_pollInterval || 60000;
+    this.experimental_didUpdateComposition =
+      config.experimental_didUpdateComposition;
+    this.experimental_pollInterval = config.experimental_pollInterval;
+
+    // TODO: warn if user may be polling an endpoint. ie if they have a pollinterval and a custom loader
+    if (config.experimental_pollInterval) {
+      if (config.experimental_updateServiceDefinitions) {
+        console.warn('be careful tho');
+      }
+    }
   }
 
-  public async loadAndPoll() {
+  public async load() {
     const load = async () => {
       // Preserve old service defs for observability cb
       const previousServiceDefinitions = this.serviceDefinitions;
@@ -190,38 +193,30 @@ export class ApolloGateway implements GraphQLService {
 
       // const previousTypeToServiceMap = this.typeToServiceMap;
       // this.typeToServiceMap = typeToServiceMap;
-      if (this.experimental_didUpdateComputedFederationConfig) {
-        this.experimental_didUpdateComputedFederationConfig({
-          ...(previousServiceDefinitions &&
-            previousSchema && {
-              previousConfig: {
-                serviceDefinitions: previousServiceDefinitions,
-                schema: previousSchema,
-                // typeToServiceMap: previousTypeToServiceMap,
-              },
-            }),
-          currentConfig: {
+      if (this.experimental_didUpdateComposition) {
+        this.experimental_didUpdateComposition(
+          {
             serviceDefinitions,
             schema,
-            // typeToServiceMap,
           },
-        });
+          previousServiceDefinitions &&
+            previousSchema && {
+              serviceDefinitions: previousServiceDefinitions,
+              schema: previousSchema,
+            },
+        );
       }
     };
 
     await load();
-    return setInterval(load, this.experimental_pollInterval);
-  }
 
-  public async load() {
-    if (!this.isReady) {
-      this.logger.debug('Loading configuration for Gateway');
-      const services = await this.updateServiceDefinitions(this.config);
-      this.logger.debug('Configuration loaded for Gateway');
-      this.createSchema(services);
-    }
-
-    return { schema: this.schema, executor: this.executor };
+    return {
+      schema: this.schema,
+      executor: this.executor,
+      interval: this.experimental_pollInterval
+        ? setInterval(load, this.experimental_pollInterval)
+        : undefined,
+    };
   }
 
   protected createSchema(services: ServiceDefinition[]) {
