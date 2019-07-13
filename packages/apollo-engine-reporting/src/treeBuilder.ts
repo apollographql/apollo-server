@@ -75,10 +75,7 @@ export class EngineReportingTreeBuilder {
     errors.forEach(err => {
       // This is an error from a federated service. We will already be reporting
       // it in the nested Trace in the query plan.
-      if (
-        err.extensions &&
-        err.extensions.serviceName
-      ) {
+      if (err.extensions && err.extensions.serviceName) {
         return;
       }
 
