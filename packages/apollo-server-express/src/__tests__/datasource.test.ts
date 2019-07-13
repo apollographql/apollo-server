@@ -128,11 +128,14 @@ describe('apollo-server-express', () => {
     const app = express();
 
     server.applyMiddleware({ app });
+    console.log(1);
+
     httpServer = await new Promise<http.Server>(resolve => {
       const s = app.listen({ port: 0 }, () => resolve(s));
     });
     const { url: uri } = createServerInfo(server, httpServer);
 
+    console.log(2);
     const apolloFetch = createApolloFetch({ uri });
     const firstResult = await apolloFetch({ query: '{ id: stringId }' });
 
@@ -140,6 +143,7 @@ describe('apollo-server-express', () => {
     expect(firstResult.errors).toBeUndefined();
     expect(restCalls).toEqual(1);
 
+    console.log(3);
     const secondResult = await apolloFetch({ query: '{ id: stringId }' });
 
     expect(secondResult.data).toEqual({ id: 'hi' });
