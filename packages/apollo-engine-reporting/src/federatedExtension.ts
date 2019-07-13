@@ -1,7 +1,7 @@
 import { GraphQLResolveInfo, GraphQLError } from 'graphql';
 import { GraphQLExtension, EndHandler } from 'graphql-extensions';
 import { Trace } from 'apollo-engine-reporting-protobuf';
-import { GraphQLRequestContext } from 'apollo-server-core/dist/requestPipelineAPI';
+import { GraphQLRequestContext } from 'apollo-server-types';
 
 import { EngineReportingTreeBuilder } from './treeBuilder';
 
