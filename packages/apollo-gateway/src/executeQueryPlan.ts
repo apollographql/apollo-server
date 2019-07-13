@@ -454,8 +454,9 @@ function downstreamServiceError(
     message = `Error while fetching subquery from service "${serviceName}"`;
   }
   extensions = {
-    // XXX This error code is relied upon by federated metrics
     code: 'DOWNSTREAM_SERVICE_ERROR',
+    // XXX The presence of a serviceName in extensions is used to
+    // determine if this error should be captured for metrics reporting.
     serviceName,
     query,
     variables,

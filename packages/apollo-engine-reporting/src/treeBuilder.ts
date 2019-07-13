@@ -77,7 +77,7 @@ export class EngineReportingTreeBuilder {
       // it in the nested Trace in the query plan.
       if (
         err.extensions &&
-        err.extensions.code === 'DOWNSTREAM_SERVICE_ERROR'
+        err.extensions.serviceName
       ) {
         return;
       }
