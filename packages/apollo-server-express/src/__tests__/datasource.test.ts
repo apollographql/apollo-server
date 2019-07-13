@@ -66,6 +66,8 @@ describe('apollo-server-express', () => {
   let restServer;
 
   beforeAll(async () => {
+    console.log('bereofall');
+
     await new Promise(resolve => {
       restServer = restAPI.listen(restPort, resolve);
     });
@@ -98,10 +100,14 @@ describe('apollo-server-express', () => {
     const app = express();
 
     server.applyMiddleware({ app });
+    console.log('12');
+
     httpServer = await new Promise<http.Server>(resolve => {
       const s = app.listen({ port: 0 }, () => resolve(s));
     });
     const { url: uri } = createServerInfo(server, httpServer);
+
+    console.log('eger');
 
     const apolloFetch = createApolloFetch({ uri });
     const firstResult = await apolloFetch({ query: '{ id }' });
@@ -109,6 +115,8 @@ describe('apollo-server-express', () => {
     expect(firstResult.data).toEqual({ id: 'hi' });
     expect(firstResult.errors).toBeUndefined();
     expect(restCalls).toEqual(1);
+
+    console.log('werttwerg');
 
     const secondResult = await apolloFetch({ query: '{ id }' });
 
