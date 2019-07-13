@@ -66,8 +66,6 @@ describe('apollo-server-express', () => {
   let restServer;
 
   beforeAll(async () => {
-    console.log('bereofall');
-
     await new Promise(resolve => {
       restServer = restAPI.listen(restPort, resolve);
     });
@@ -100,7 +98,6 @@ describe('apollo-server-express', () => {
     const app = express();
 
     server.applyMiddleware({ app });
-
     httpServer = await new Promise<http.Server>(resolve => {
       const s = app.listen({ port: 0 }, () => resolve(s));
     });
@@ -131,7 +128,6 @@ describe('apollo-server-express', () => {
     const app = express();
 
     server.applyMiddleware({ app });
-
     httpServer = await new Promise<http.Server>(resolve => {
       const s = app.listen({ port: 0 }, () => resolve(s));
     });
