@@ -101,10 +101,10 @@ export class EngineReportingTreeBuilder {
     error: Trace.Error,
   ) {
     if (!this.startHrTime) {
-      throw Error('addError called before startTiming!');
+      throw Error('addProtobufError called before startTiming!');
     }
     if (this.stopped) {
-      throw Error('addError called after stopTiming!');
+      throw Error('addProtobufError called after stopTiming!');
     }
 
     // By default, put errors on the root node.
