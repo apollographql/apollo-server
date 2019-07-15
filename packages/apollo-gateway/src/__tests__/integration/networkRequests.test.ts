@@ -11,7 +11,7 @@ import {
 } from './nockMocks';
 
 beforeEach(() => {
-  nock.activate();
+  if (!nock.isActive()) nock.activate();
 });
 
 afterEach(() => {
