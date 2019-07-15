@@ -1,114 +1,110 @@
-// import nock from 'nock';
-// import { ApolloGateway } from '../..';
+import nock from 'nock';
+import { ApolloGateway } from '../..';
 
-it('works', () => {
-  expect(true).toBeTruthy();
+import {
+  mockGetRawPartialSchema,
+  mockFetchStorageSecret,
+  mockGetCompositionConfigLink,
+  mockGetCompositionConfigs,
+  mockGetImplementingServices,
+  mockLocalhostSDLQuery,
+} from './nockMocks';
+
+afterEach(() => {
+  expect(nock.isDone()).toBeTruthy();
 });
 
-// import {
-//   mockGetRawPartialSchema,
-//   mockFetchStorageSecret,
-//   mockGetCompositionConfigLink,
-//   mockGetCompositionConfigs,
-//   mockGetImplementingServices,
-//   mockLocalhostSDLQuery,
-// } from './nockMocks';
+it('Queries remote endpoints for their SDLs', async () => {
+  const url = 'http://localhost:4001';
+  const sdl = `
+  extend type Query {
+      me: User
+      everyone: [User]
+  }
 
-// afterEach(() => {
-//   expect(nock.isDone()).toBeTruthy();
-// });
+  "My User."
+  type User @key(fields: "id") {
+    id: ID!
+    name: String
+    username: String
+  }
+  `;
 
-// it('Queries remote endpoints for their SDLs', async () => {
-//   const url = 'http://localhost:4001';
-//   const sdl = `
-//   extend type Query {
-//       me: User
-//       everyone: [User]
-//   }
+  mockLocalhostSDLQuery({ url }).reply(200, {
+    data: { _service: { sdl } },
+  });
 
-//   "My User."
-//   type User @key(fields: "id") {
-//     id: ID!
-//     name: String
-//     username: String
-//   }
-//   `;
+  const gateway = new ApolloGateway({
+    serviceList: [{ name: 'accounts', url: `${url}/graphql` }],
+  });
+  await gateway.load();
+  expect(gateway.schema!.getType('User')!.description).toBe('My User.');
+});
 
-//   mockLocalhostSDLQuery({ url }).reply(200, {
-//     data: { _service: { sdl } },
-//   });
+// This test is maybe a bit terrible, but IDK a better way to mock all the requests
+it('Extracts service definitions from remote storage', async () => {
+  const serviceName = 'jacksons-service';
+  const apiKeyHash = 'abc123';
 
-//   const gateway = new ApolloGateway({
-//     serviceList: [{ name: 'accounts', url: `${url}/graphql` }],
-//   });
-//   await gateway.load();
-//   expect(gateway.schema!.getType('User')!.description).toBe('My User.');
-// });
+  const storageSecret = 'secret';
+  const implementingServicePath =
+    'path-to-implementing-service-definition.json';
+  const partialSchemaPath = 'path-to-accounts-partial-schema.json';
+  const federatedServiceName = 'accounts';
+  const federatedServiceURL = 'http://localhost:4001';
+  const federatedServiceSchema = `
+        extend type Query {
+        me: User
+        everyone: [User]
+      }
 
-// // This test is maybe a bit terrible, but IDK a better way to mock all the requests
-// it('Extracts service definitions from remote storage', async () => {
-//   const serviceName = 'jacksons-service';
-//   const apiKeyHash = 'abc123';
+      "This is my User"
+      type User @key(fields: "id") {
+        id: ID!
+        name: String
+        username: String
+      }`;
 
-//   const storageSecret = 'secret';
-//   const implementingServicePath =
-//     'path-to-implementing-service-definition.json';
-//   const partialSchemaPath = 'path-to-accounts-partial-schema.json';
-//   const federatedServiceName = 'accounts';
-//   const federatedServiceURL = 'http://localhost:4001';
-//   const federatedServiceSchema = `
-//         extend type Query {
-//         me: User
-//         everyone: [User]
-//       }
+  mockFetchStorageSecret({ apiKeyHash, serviceName }).reply(
+    200,
+    `"${storageSecret}"`,
+  );
 
-//       "This is my User"
-//       type User @key(fields: "id") {
-//         id: ID!
-//         name: String
-//         username: String
-//       }`;
+  mockGetCompositionConfigLink(storageSecret).reply(200, {
+    configPath: `${storageSecret}/current/v1/composition-configs/composition-config-path.json`,
+  });
 
-//   mockFetchStorageSecret({ apiKeyHash, serviceName }).reply(
-//     200,
-//     `"${storageSecret}"`,
-//   );
+  mockGetCompositionConfigs({
+    storageSecret,
+  }).reply(200, {
+    implementingServiceLocations: [
+      {
+        name: federatedServiceName,
+        path: `${storageSecret}/current/v1/implementing-services/${federatedServiceName}/${implementingServicePath}.json`,
+      },
+    ],
+  });
 
-//   mockGetCompositionConfigLink(storageSecret).reply(200, {
-//     configPath: `${storageSecret}/current/v1/composition-configs/composition-config-path.json`,
-//   });
+  mockGetImplementingServices({
+    storageSecret,
+    implementingServicePath,
+    federatedServiceName,
+  }).reply(200, {
+    name: federatedServiceName,
+    partialSchemaPath: `${storageSecret}/current/raw-partial-schemas/${partialSchemaPath}`,
+    url: federatedServiceURL,
+  });
 
-//   mockGetCompositionConfigs({
-//     storageSecret,
-//   }).reply(200, {
-//     implementingServiceLocations: [
-//       {
-//         name: federatedServiceName,
-//         path: `${storageSecret}/current/v1/implementing-services/${federatedServiceName}/${implementingServicePath}.json`,
-//       },
-//     ],
-//   });
+  mockGetRawPartialSchema({
+    storageSecret,
+    partialSchemaPath,
+  }).reply(200, federatedServiceSchema);
 
-//   mockGetImplementingServices({
-//     storageSecret,
-//     implementingServicePath,
-//     federatedServiceName,
-//   }).reply(200, {
-//     name: federatedServiceName,
-//     partialSchemaPath: `${storageSecret}/current/raw-partial-schemas/${partialSchemaPath}`,
-//     url: federatedServiceURL,
-//   });
+  const gateway = new ApolloGateway({});
 
-//   mockGetRawPartialSchema({
-//     storageSecret,
-//     partialSchemaPath,
-//   }).reply(200, federatedServiceSchema);
-
-//   const gateway = new ApolloGateway({});
-
-//   await gateway.load({ engine: { apiKeyHash, graphId: serviceName } });
-//   expect(gateway.schema!.getType('User')!.description).toBe('This is my User');
-// });
+  await gateway.load({ engine: { apiKeyHash, graphId: serviceName } });
+  expect(gateway.schema!.getType('User')!.description).toBe('This is my User');
+});
 
 // it('Rollsback to a previous schema when triggered', async () => {
 //   const serviceName = 'jacksons-service';
