@@ -1,6 +1,10 @@
 // import nock from 'nock';
 // import { ApolloGateway } from '../..';
 
+it('works', () => {
+  expect(true).toBeTruthy();
+});
+
 // import {
 //   mockGetRawPartialSchema,
 //   mockFetchStorageSecret,
