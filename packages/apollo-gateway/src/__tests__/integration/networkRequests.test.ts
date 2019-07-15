@@ -10,12 +10,18 @@ import {
   mockLocalhostSDLQuery,
 } from './nockMocks';
 
+beforeEach(() => {
+  nock.activate();
+});
+
 afterEach(() => {
   expect(nock.isDone()).toBeTruthy();
+  nock.cleanAll();
+  nock.restore();
 });
 
 it('Queries remote endpoints for their SDLs', async () => {
-  const url = 'http://localhost:8080';
+  const url = 'http://localhost:4001';
   const sdl = `
   extend type Query {
       me: User
