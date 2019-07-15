@@ -1,6 +1,6 @@
 {
   "name": "apollo-server-cache-redis",
-  "version": "1.0.1-alpha.12",
+  "version": "1.0.1-alpha.13",
   "author": "opensource@apollographql.com",
   "license": "MIT",
   "repository": {
