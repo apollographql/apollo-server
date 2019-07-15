@@ -179,6 +179,8 @@ export async function runHttpQuery(
     debug: options.debug,
 
     plugins: options.plugins || [],
+
+    reporting: options.reporting,
   };
 
   return processHTTPRequest(config, request);
@@ -248,6 +250,9 @@ export async function processHTTPRequest<TContext>(
       context,
       cache: options.cache,
       debug: options.debug,
+      metrics: {
+        captureTraces: !!options.reporting,
+      },
     };
   }
 

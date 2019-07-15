@@ -14,6 +14,8 @@ import {
   ValidationContext,
   FieldDefinitionNode,
   DocumentNode,
+  isObjectType,
+  isScalarType,
 } from 'graphql';
 import { GraphQLExtension } from 'graphql-extensions';
 import {
@@ -311,6 +313,7 @@ export class ApolloServerBase {
       this.engineReportingAgent = new EngineReportingAgent(
         typeof engine === 'object' ? engine : Object.create(null),
       );
+      // Don't add the extension here (we want to add it later in generateSchemaDerivedData).
     }
 
     if (gateway && subscriptions !== false) {
@@ -492,12 +495,40 @@ export class ApolloServerBase {
     }
 
     const extensions = [];
+
+    const schemaIsFederated = this.schemaIsFederated(schema);
+    const { engine } = this.config;
     // Keep this extension second so it wraps everything, except error formatting
     if (this.engineReportingAgent) {
+      if (schemaIsFederated) {
+        // XXX users can configure a federated Apollo Server to send metrics, but the
+        // Gateway should be responsible for that. It's possible that users are running
+        // their own gateway or running a federated service on its own. Nonetheless, in
+        // the likely case it was accidental, we warn users that they should only report
+        // metrics from the Gateway.
+        console.warn(
+          "It looks like you're running a federated schema and you've configured your service " +
+            'to report metrics to Apollo Engine. You should only configure your Apollo gateway ' +
+            'to report metrics to Apollo Engine.',
+        );
+      }
       extensions.push(() =>
         this.engineReportingAgent!.newExtension(schemaHash),
       );
+    } else if (engine !== false && schemaIsFederated) {
+      // We haven't configured this app to use Engine directly. But it looks like
+      // we are a federated service backend, so we should be capable of including
+      // our trace in a response extension if we are asked to by the gateway.
+      const {
+        EngineFederatedTracingExtension,
+      } = require('apollo-engine-reporting');
+      const rewriteError =
+        engine && typeof engine === 'object' ? engine.rewriteError : undefined;
+      extensions.push(
+        () => new EngineFederatedTracingExtension({ rewriteError }),
+      );
     }
+
     // Note: doRunQuery will add its own extensions if you set tracing,
     // or cacheControl.
     extensions.push(...(_extensions || []));
@@ -628,6 +659,31 @@ export class ApolloServerBase {
     return false;
   }
 
+  // Returns true if it appears that the schema was returned from
+  // @apollo/federation's buildFederatedSchema. This strategy avoids depending
+  // explicitly on @apollo/federation or relying on something that might not
+  // survive transformations like monkey-patching a boolean field onto the
+  // schema.
+  //
+  // The only thing this is used for is determining whether traces should be
+  // added to responses if requested with an HTTP header; if there's a false
+  // positive, that feature can be disabled by specifying `engine: false`.
+  private schemaIsFederated(schema: GraphQLSchema): boolean {
+    const serviceType = schema.getType('_Service');
+    if (!(serviceType && isObjectType(serviceType))) {
+      return false;
+    }
+    const sdlField = serviceType.getFields().sdl;
+    if (!sdlField) {
+      return false;
+    }
+    const sdlFieldType = sdlField.type;
+    if (!isScalarType(sdlFieldType)) {
+      return false;
+    }
+    return sdlFieldType.name == 'String';
+  }
+
   private ensurePluginInstantiation(plugins?: PluginDefinition[]): void {
     if (!plugins || !plugins.length) {
       return;
@@ -691,6 +747,7 @@ export class ApolloServerBase {
         any
       >,
       parseOptions: this.parseOptions,
+      reporting: !!this.engineReportingAgent,
       ...this.requestOptions,
     } as GraphQLOptions;
   }

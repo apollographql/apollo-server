@@ -8,9 +8,7 @@ import { Request } from 'node-fetch';
 import {
   EngineReportingExtension,
   makeTraceDetails,
-  makeTraceDetailsLegacy,
   makeHTTPRequestHeaders,
-  makeHTTPRequestHeadersLegacy,
 } from '../extension';
 import { Headers } from 'apollo-server-env';
 import { InMemoryLRUCache } from 'apollo-server-caching';
@@ -104,7 +102,7 @@ const variables: Record<string, any> = {
 describe('check variableJson output for sendVariableValues null or undefined (default)', () => {
   it('Case 1: No keys/values in variables to be filtered/not filtered', () => {
     const emptyOutput = new Trace.Details();
-    expect(makeTraceDetails({}, null)).toEqual(emptyOutput);
+    expect(makeTraceDetails({})).toEqual(emptyOutput);
     expect(makeTraceDetails({}, undefined)).toEqual(emptyOutput);
     expect(makeTraceDetails({})).toEqual(emptyOutput);
   });
@@ -114,7 +112,7 @@ describe('check variableJson output for sendVariableValues null or undefined (de
       filteredOutput.variablesJson[name] = '';
     });
     expect(makeTraceDetails(variables)).toEqual(filteredOutput);
-    expect(makeTraceDetails(variables, null)).toEqual(filteredOutput);
+    expect(makeTraceDetails(variables)).toEqual(filteredOutput);
     expect(makeTraceDetails(variables, undefined)).toEqual(filteredOutput);
   });
 });
