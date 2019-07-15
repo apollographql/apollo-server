@@ -115,7 +115,7 @@ describe('apollo-server-express', () => {
     expect(secondResult.data).toEqual({ id: 'hi' });
     expect(secondResult.errors).toBeUndefined();
     expect(restCalls).toEqual(1);
-  }, 15000);
+  });
 
   it('can cache a string from the backend', async () => {
     server = new ApolloServer({
@@ -145,5 +145,5 @@ describe('apollo-server-express', () => {
     expect(secondResult.data).toEqual({ id: 'hi' });
     expect(secondResult.errors).toBeUndefined();
     expect(restCalls).toEqual(1);
-  }, 15000);
+  });
 });
