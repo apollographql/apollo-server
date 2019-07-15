@@ -16,7 +16,9 @@ The model of federated metrics is that implementing services report timing and e
 
 ## Turning it on
 
-Enabling Apollo metrics in your federated GraphQL infrastructure is as simple as providing an Apollo API key to your Gateway and setting `{ engine: true, reporting: false }` in the constructor options for any federated services built atop Apollo Server. These options will cause the Apollo Gateway to collect tracing information from the underlying federated services and pass them on, along with the query plan, to the Apollo metrics ingress. To change which endpoint you would like to report the tracing information to, you can modify the `endpointUrl` in the `engine` key of the constructor to Apollo Server.
+Ensure that all dependencies on `apollo-server` are at version `2.7.0` or higher. Provide an API key to your gateway via the `ENGINE_API_KEY` environment variable for the gateway to report metrics to the default ingress. To ensure that implementing services do not report metrics as well, do not provide them with an `ENGINE_API_KEY` or set `{ engine: true, reporting: false }` in the constructor options to ApolloServer. These options will cause the Apollo Gateway to collect tracing information from the underlying federated services and pass them on, along with the query plan, to the Apollo metrics ingress. To change which endpoint you would like to report the tracing information to, you can modify the `endpointUrl` in the `engine` key of the constructor to Apollo Server. Currently, only Apollo Server supports detailed metrics insights as an implementing service, but we would love to work with you to implement the protocol in other languages!
+
+> NOTE: By default, metrics will be reported to the `'current'` variant. To change the variant for reporting, set the `ENGINE_GRAPH_VARIANT` environment variable.
 
 ## How tracing data is exposed from a federated service
 
