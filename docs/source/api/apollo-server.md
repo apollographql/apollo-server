@@ -3,7 +3,7 @@ title: "API Reference: apollo-server"
 sidebar_title: apollo-server
 ---
 
-This API reference documents the exports from the `apollo-server`.
+This API reference documents the exports from the `apollo-server` package.
 
 ## `ApolloServer`
 
@@ -133,23 +133,27 @@ new ApolloServer({
 
 `ApolloServer`
 
-### `ApolloServer.listen(options)`: `Promise`
+## `ApolloServer.listen`
 
-#### Parameters
+> **Note:** This method is only provided by the `apollo-server` package.  For the `apollo-server-{integration}` packages, see `applyMiddleware` below.
 
-In `apollo-server`, the listen call starts the subscription server and passes the arguments directly to an http server Node.js' [`net.Server.listen`](https://nodejs.org/api/net.html#net_server_listen) method are supported.
+### Parameters
 
-#### Returns
+* `options`: <`Object`>
 
-`Promise` that resolves to an object that contains:
+  When using the `apollo-server` package, calling `listen` on an instantiated `ApolloServer` will start the server by passing the specified (optional) `options` to a Node.js [`http.Server`](https://nodejs.org/api/http.html#http_class_http_server).  For a full reference of the supported `options`, see the [documentation for `net.Server.listen`](https://nodejs.org/api/net.html#net_server_listen_options_callback).
+
+### Returns
+
+`Promise` that resolves to an object containing the following properties:
 
   * `url`: <`String`>
   * `subscriptionsPath`: <`String`>
-  * `server`: <[`http.Server`](https://nodejs.org/api/http.html#http_class_http_server)>
+  * `server`: &lt;[`http.Server`](https://nodejs.org/api/http.html#http_class_http_server)&gt;
 
-## ApolloServer.applyMiddleware
+## `ApolloServer.applyMiddleware`
 
-The `applyMiddleware` method is provided by the `apollo-server-{integration}` packages that use middleware, such as hapi and express. This function connects ApolloServer to a specific framework.
+The `applyMiddleware` method is provided by the `apollo-server-{integration}` packages that use middleware, such as hapi and express. This method connects `ApolloServer` to a specific HTTP framework.
 
 ### Parameters
 
@@ -373,7 +377,7 @@ addMockFunctionsToSchema({
    the `err.message` property) should be returned or the function should return
    an explicit `null` to avoid reporting the error entirely.  It is not
    permissable to return `undefined`.
-   
+
 *  `schemaTag`: String
 
    A human-readable name to tag this variant of a schema (i.e. staging, EU). Setting this value will cause metrics to be segmented in the Apollo Platform's UI. Additionally schema validation with a schema tag will only check metrics associate with the same string.
