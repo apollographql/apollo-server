@@ -17,34 +17,30 @@ const EMPTY_DOCUMENT = {
   definitions: [],
 };
 
-const testFederatedSchema = (
+const createBuildFederatedSchemaTests = (
   name: string,
-  createSchema: () => GraphQLSchema,
-  runTest: (schema: GraphQLSchema) => Promise<void>,
+  schema: GraphQLSchema,
+  testSchema: (schema: GraphQLSchema) => Promise<void>,
 ) => {
-  const schema = createSchema();
-
   it(name, async () => {
-    await runTest(schema);
+    await testSchema(schema);
   });
 
   it(`${name} (using "schema" argument)`, async () => {
-    await runTest(buildFederatedSchema(schema));
+    await testSchema(buildFederatedSchema(schema));
   });
 };
 
 describe('buildFederatedSchema', () => {
-  testFederatedSchema(
+  createBuildFederatedSchemaTests(
     'should mark a type with a key field as an entity',
-    () => {
-      return buildFederatedSchema(gql`
-        type Product @key(fields: "upc") {
-          upc: String!
-          name: String
-          price: Int
-        }
-      `);
-    },
+    buildFederatedSchema(gql`
+      type Product @key(fields: "upc") {
+        upc: String!
+        name: String
+        price: Int
+      }
+    `),
     async (schema: GraphQLSchema) => {
       expect(schema.getType('Product')).toMatchInlineSnapshot(`
 type Product {
@@ -59,17 +55,15 @@ type Product {
       );
     },
   );
-  testFederatedSchema(
+  createBuildFederatedSchemaTests(
     `should mark a type with a key field as an entity`,
-    () => {
-      return buildFederatedSchema(gql`
-        type Product @key(fields: "upc") {
-          upc: String!
-          name: String
-          price: Int
-        }
-      `);
-    },
+    buildFederatedSchema(gql`
+      type Product @key(fields: "upc") {
+        upc: String!
+        name: String
+        price: Int
+      }
+    `),
     async (schema: GraphQLSchema) => {
       expect(schema.getType('Product')).toMatchInlineSnapshot(`
 type Product {
@@ -85,19 +79,17 @@ type Product {
     },
   );
 
-  testFederatedSchema(
+  createBuildFederatedSchemaTests(
     `should mark a type with multiple key fields as an entity`,
-    () => {
-      return buildFederatedSchema(gql`
-        type Product @key(fields: "upc") @key(fields: "sku") {
-          upc: String!
-          sku: String!
-          name: String
-          price: Int
-        }
-      `);
-    },
-    schema => {
+    buildFederatedSchema(gql`
+      type Product @key(fields: "upc") @key(fields: "sku") {
+        upc: String!
+        sku: String!
+        name: String
+        price: Int
+      }
+    `),
+    async (schema: GraphQLSchema) => {
       expect(schema.getType('Product')).toMatchInlineSnapshot(`
 type Product {
   upc: String!
@@ -113,16 +105,14 @@ type Product {
     },
   );
 
-  testFederatedSchema(
+  createBuildFederatedSchemaTests(
     `should not mark a type without a key field as an entity`,
-    () => {
-      return buildFederatedSchema(gql`
-        type Money {
-          amount: Int!
-          currencyCode: String!
-        }
-      `);
-    },
+    buildFederatedSchema(gql`
+      type Money {
+        amount: Int!
+        currencyCode: String!
+      }
+    `),
     async (schema: GraphQLSchema) => {
       expect(schema.getType('Money')).toMatchInlineSnapshot(`
 type Money {
@@ -133,30 +123,28 @@ type Money {
     },
   );
 
-  testFederatedSchema(
+  createBuildFederatedSchemaTests(
     'should preserve description text in generated SDL',
-    () => {
-      return buildFederatedSchema(gql`
-        "A user. This user is very complicated and requires so so so so so so so so so so so so so so so so so so so so so so so so so so so so so so so so much description text"
-        type User @key(fields: "id") {
-          """
-          The unique ID of the user.
-          """
-          id: ID!
-          "The user's name."
-          name: String
-          username: String
-          foo(
-            "Description 1"
-            arg1: String
-            "Description 2"
-            arg2: String
-            "Description 3 Description 3 Description 3 Description 3 Description 3 Description 3 Description 3 Description 3 Description 3 Description 3 Description 3"
-            arg3: String
-          ): String
-        }
-      `);
-    },
+    buildFederatedSchema(gql`
+      "A user. This user is very complicated and requires so so so so so so so so so so so so so so so so so so so so so so so so so so so so so so so so much description text"
+      type User @key(fields: "id") {
+        """
+        The unique ID of the user.
+        """
+        id: ID!
+        "The user's name."
+        name: String
+        username: String
+        foo(
+          "Description 1"
+          arg1: String
+          "Description 2"
+          arg2: String
+          "Description 3 Description 3 Description 3 Description 3 Description 3 Description 3 Description 3 Description 3 Description 3 Description 3 Description 3"
+          arg3: String
+        ): String
+      }
+    `),
     async (schema: GraphQLSchema) => {
       const query = `query GetServiceDetails {
         _service {
@@ -194,18 +182,16 @@ type User @key(fields: "id") {
   );
 
   describe(`should add an _entities query root field to the schema`, () => {
-    testFederatedSchema(
+    createBuildFederatedSchemaTests(
       `when a query root type with the default name has been defined`,
-      () => {
-        return buildFederatedSchema(gql`
-          type Query {
-            rootField: String
-          }
-          type Product @key(fields: "upc") {
-            upc: ID!
-          }
-        `);
-      },
+      buildFederatedSchema(gql`
+        type Query {
+          rootField: String
+        }
+        type Product @key(fields: "upc") {
+          upc: ID!
+        }
+      `),
       async (schema: GraphQLSchema) => {
         expect(schema.getQueryType()).toMatchInlineSnapshot(`
 type Query {
@@ -217,22 +203,20 @@ type Query {
       },
     );
 
-    testFederatedSchema(
+    createBuildFederatedSchemaTests(
       `when a query root type with a non-default name has been defined`,
-      () => {
-        return buildFederatedSchema(gql`
-          schema {
-            query: QueryRoot
-          }
+      buildFederatedSchema(gql`
+        schema {
+          query: QueryRoot
+        }
 
-          type QueryRoot {
-            rootField: String
-          }
-          type Product @key(fields: "upc") {
-            upc: ID!
-          }
-        `);
-      },
+        type QueryRoot {
+          rootField: String
+        }
+        type Product @key(fields: "upc") {
+          upc: ID!
+        }
+      `),
       async (schema: GraphQLSchema) => {
         expect(schema.getQueryType()).toMatchInlineSnapshot(`
 type QueryRoot {
@@ -245,11 +229,9 @@ type QueryRoot {
     );
   });
   describe(`should not add an _entities query root field to the schema`, () => {
-    testFederatedSchema(
+    createBuildFederatedSchemaTests(
       `when no query root type has been defined`,
-      () => {
-        return buildFederatedSchema(EMPTY_DOCUMENT);
-      },
+      buildFederatedSchema(EMPTY_DOCUMENT),
       async (schema: GraphQLSchema) => {
         expect(schema.getQueryType()).toMatchInlineSnapshot(`
 type Query {
@@ -258,15 +240,13 @@ type Query {
 `);
       },
     );
-    testFederatedSchema(
+    createBuildFederatedSchemaTests(
       `when no types with keys are found`,
-      () => {
-        return buildFederatedSchema(gql`
-          type Query {
-            rootField: String
-          }
-        `);
-      },
+      buildFederatedSchema(gql`
+        type Query {
+          rootField: String
+        }
+      `),
       async (schema: GraphQLSchema) => {
         expect(schema.getQueryType()).toMatchInlineSnapshot(`
 type Query {
@@ -276,18 +256,16 @@ type Query {
 `);
       },
     );
-    testFederatedSchema(
+    createBuildFederatedSchemaTests(
       `when only an interface with keys are found`,
-      () => {
-        return buildFederatedSchema(gql`
-          type Query {
-            rootField: String
-          }
-          interface Product @key(fields: "upc") {
-            upc: ID!
-          }
-        `);
-      },
+      buildFederatedSchema(gql`
+        type Query {
+          rootField: String
+        }
+        interface Product @key(fields: "upc") {
+          upc: ID!
+        }
+      `),
       async (schema: GraphQLSchema) => {
         expect(schema.getQueryType()).toMatchInlineSnapshot(`
 type Query {
@@ -299,37 +277,35 @@ type Query {
     );
   });
   describe('_entities root field', () => {
-    testFederatedSchema(
+    createBuildFederatedSchemaTests(
       'executes resolveReference for a type if found',
-      () => {
-        return buildFederatedSchema([
-          {
-            typeDefs: gql`
-              type Product @key(fields: "upc") {
-                upc: Int
-                name: String
-              }
-              type User @key(fields: "id") {
-                firstName: String
-              }
-            `,
-            resolvers: {
-              Product: {
-                __resolveReference(object) {
-                  expect(object.upc).toEqual(1);
-                  return { name: 'Apollo Gateway' };
-                },
+      buildFederatedSchema([
+        {
+          typeDefs: gql`
+            type Product @key(fields: "upc") {
+              upc: Int
+              name: String
+            }
+            type User @key(fields: "id") {
+              firstName: String
+            }
+          `,
+          resolvers: {
+            Product: {
+              __resolveReference(object) {
+                expect(object.upc).toEqual(1);
+                return { name: 'Apollo Gateway' };
               },
-              User: {
-                __resolveReference(object) {
-                  expect(object.id).toEqual(1);
-                  return Promise.resolve({ firstName: 'James' });
-                },
+            },
+            User: {
+              __resolveReference(object) {
+                expect(object.id).toEqual(1);
+                return Promise.resolve({ firstName: 'James' });
               },
             },
           },
-        ]);
-      },
+        },
+      ]),
       async (schema: GraphQLSchema) => {
         const query = `query GetEntities($representations: [_Any!]!) {
         _entities(representations: $representations) {
@@ -361,16 +337,14 @@ type Query {
         expect(data._entities[1].firstName).toEqual('James');
       },
     );
-    testFederatedSchema(
+    createBuildFederatedSchemaTests(
       'executes resolveReference with default representation values',
-      () => {
-        return buildFederatedSchema(gql`
-          type Product @key(fields: "upc") {
-            upc: Int
-            name: String
-          }
-        `);
-      },
+      buildFederatedSchema(gql`
+        type Product @key(fields: "upc") {
+          upc: Int
+          name: String
+        }
+      `),
       async (schema: GraphQLSchema) => {
         const query = `query GetEntities($representations: [_Any!]!) {
       _entities(representations: $representations) {
@@ -400,24 +374,22 @@ type Query {
     );
   });
   describe('_service root field', () => {
-    testFederatedSchema(
+    createBuildFederatedSchemaTests(
       'keeps extension types when owner type is not present',
-      () => {
-        return buildFederatedSchema(gql`
-          type Review {
-            id: ID
-          }
+      buildFederatedSchema(gql`
+        type Review {
+          id: ID
+        }
 
-          extend type Review {
-            title: String
-          }
+        extend type Review {
+          title: String
+        }
 
-          extend type Product @key(fields: "upc") {
-            upc: String @external
-            reviews: [Review]
-          }
-        `);
-      },
+        extend type Product @key(fields: "upc") {
+          upc: String @external
+          reviews: [Review]
+        }
+      `),
       async (schema: GraphQLSchema) => {
         const query = `query GetServiceDetails {
       _service {
@@ -439,28 +411,26 @@ type Review {
 `);
       },
     );
-    testFederatedSchema(
+    createBuildFederatedSchemaTests(
       'keeps extension interface when owner interface is not present',
-      () => {
-        return buildFederatedSchema(gql`
-          type Review {
-            id: ID
-          }
+      buildFederatedSchema(gql`
+        type Review {
+          id: ID
+        }
 
-          extend type Review {
-            title: String
-          }
+        extend type Review {
+          title: String
+        }
 
-          interface Node @key(fields: "id") {
-            id: ID!
-          }
+        interface Node @key(fields: "id") {
+          id: ID!
+        }
 
-          extend interface Product @key(fields: "upc") {
-            upc: String @external
-            reviews: [Review]
-          }
-        `);
-      },
+        extend interface Product @key(fields: "upc") {
+          upc: String @external
+          reviews: [Review]
+        }
+      `),
       async (schema: GraphQLSchema) => {
         const query = `query GetServiceDetails {
     _service {
@@ -485,17 +455,15 @@ type Review {
 `);
       },
     );
-    testFederatedSchema(
+    createBuildFederatedSchemaTests(
       'returns valid sdl for @key directives',
-      () => {
-        return buildFederatedSchema(gql`
-          type Product @key(fields: "upc") {
-            upc: String!
-            name: String
-            price: Int
-          }
-        `);
-      },
+      buildFederatedSchema(gql`
+        type Product @key(fields: "upc") {
+          upc: String!
+          name: String
+          price: Int
+        }
+      `),
       async (schema: GraphQLSchema) => {
         const query = `query GetServiceDetails {
       _service {
@@ -512,17 +480,15 @@ type Review {
 `);
       },
     );
-    testFederatedSchema(
+    createBuildFederatedSchemaTests(
       'returns valid sdl for multiple @key directives',
-      () => {
-        return buildFederatedSchema(gql`
-          type Product @key(fields: "upc") @key(fields: "name") {
-            upc: String!
-            name: String
-            price: Int
-          }
-        `);
-      },
+      buildFederatedSchema(gql`
+        type Product @key(fields: "upc") @key(fields: "name") {
+          upc: String!
+          name: String
+          price: Int
+        }
+      `),
       async (schema: GraphQLSchema) => {
         const query = `query GetServiceDetails {
       _service {
@@ -540,28 +506,26 @@ type Review {
 `);
       },
     );
-    testFederatedSchema(
+    createBuildFederatedSchemaTests(
       'supports all federation directives',
-      () => {
-        return buildFederatedSchema(gql`
-          type Review @key(fields: "id") {
-            id: ID!
-            body: String
-            author: User @provides(fields: "email")
-            product: Product @provides(fields: "upc")
-          }
+      buildFederatedSchema(gql`
+        type Review @key(fields: "id") {
+          id: ID!
+          body: String
+          author: User @provides(fields: "email")
+          product: Product @provides(fields: "upc")
+        }
 
-          extend type User @key(fields: "email") {
-            email: String @external
-            reviews: [Review]
-          }
+        extend type User @key(fields: "email") {
+          email: String @external
+          reviews: [Review]
+        }
 
-          extend type Product @key(fields: "upc") {
-            upc: String @external
-            reviews: [Review]
-          }
-        `);
-      },
+        extend type Product @key(fields: "upc") {
+          upc: String @external
+          reviews: [Review]
+        }
+      `),
       async (schema: GraphQLSchema) => {
         const query = `query GetServiceDetails {
         _service {
