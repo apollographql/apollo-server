@@ -18,9 +18,6 @@
     "apollo-server-env": "file:../apollo-server-env",
     "apollo-server-types": "file:../apollo-server-types"
   },
-  "devDependencies": {
-    "apollo-server-core": "file:../apollo-server-core"
-  },
   "peerDependencies": {
     "graphql": "^0.12.0 || ^0.13.0 || ^14.0.0"
   }
