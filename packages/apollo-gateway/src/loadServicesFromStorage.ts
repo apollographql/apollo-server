@@ -75,7 +75,6 @@ export async function getServiceDefinitionsFromStorage({
   const secret = await fetchStorageSecret(graphId, apiKeyHash);
 
   if (!graphVariant) {
-    console.warn('No graphVariant specified, defaulting to "current".');
     graphVariant = 'current';
   }
 

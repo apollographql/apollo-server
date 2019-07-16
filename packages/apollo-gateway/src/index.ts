@@ -111,7 +111,12 @@ export class ApolloGateway implements GraphQLService {
   }
 
   public async load(options?: { engine?: GraphQLServiceEngineConfig }) {
-    if (options) this.engineConfig = options.engine;
+    if (options && options.engine) {
+      if (!options.engine.graphVariant)
+        console.warn('No graph variant provided. Defaulting to `current`.');
+      this.engineConfig = options.engine;
+    }
+
     if (this.schema) {
       return { schema: this.schema, executor: this.executor };
     }
