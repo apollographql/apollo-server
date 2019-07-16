@@ -24,7 +24,7 @@
     "node": ">=6"
   },
   "dependencies": {
-    "@apollographql/apollo-tools": "^0.4.0",
+    "@apollographql/apollo-tools": "^0.3.6",
     "@apollographql/graphql-playground-html": "1.6.24",
     "@types/ws": "^6.0.0",
     "apollo-cache-control": "file:../apollo-cache-control",
