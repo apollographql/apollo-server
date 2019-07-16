@@ -2,19 +2,23 @@
 
 The version headers in this history reflect the versions of Apollo Server itself.  Versions of other packages (e.g. which are not actual HTTP integrations; packages not prefixed with `apollo-server`) may use different versions.  For more details, check the publish commit for that version in the Git history.
 
-### v2.7.0 (Pre-release)
+### v2.7.0
 
-> Upcoming!
+- `apollo-server-core`, `@apollo/gateway`: **Introduced managed federation support**  For more information on managed federation, see [the blog post](https://blog.apollographql.com/announcing-managed-federation-265c9f0bc88e) or jump to the [documentation for managed federation](https://www.apollographql.com/docs/platform/federation/).
+- `apollo-engine-reporting`: **Behavior change**: If the error returned from the `engine.rewriteError` hook has an `extensions` property, that property will be used instead of the original error's extensions. Document that changes to most other `GraphQLError` fields by `engine.rewriteError` are ignored. [PR #2932](https://github.com/apollographql/apollo-server/pull/2932)
+- `apollo-engine-reporting`: **Behavior change**: The `engine.maskErrorDetails` option, deprecated by `engine.rewriteError` in v2.5.0, now behaves a bit more like the new option: while all error messages will be redacted, they will still show up on the appropriate nodes in a trace. [PR #2932](https://github.com/apollographql/apollo-server/pull/2932)
+- `apollo-engine-reporting`: **Behavior change**: By default, send no GraphQL variable values to Apollo's servers instead of sending all variable values. Adding the new EngineReportingOption `sendVariableValues` to send some or all variable values, possibly after transforming them. This replaces the `privateVariables` option, which is now deprecated. [PR #2931](https://github.com/apollographql/apollo-server/pull/2931)
 
-- `apollo-engine-reporting`: **BEHAVIOR CHANGE**: If the error returned from the `engine.rewriteError` hook has an `extensions` property, that property will be used instead of the original error's extensions. Document that changes to most other `GraphQLError` fields by `engine.rewriteError` are ignored. [PR #2932](https://github.com/apollographql/apollo-server/pull/2932)
-- `apollo-engine-reporting`: **BEHAVIOR CHANGE**: The `engine.maskErrorDetails` option, deprecated by `engine.rewriteError` in v2.5.0, now behaves a bit more like the new option: while all error messages will be redacted, they will still show up on the appropriate nodes in a trace. [PR #2932](https://github.com/apollographql/apollo-server/pull/2932)
-- `apollo-engine-reporting`: **BEHAVIOR CHANGE**: By default, send no GraphQL variable values to Apollo's servers instead of sending all variable values. Adding the new EngineReportingOption `sendVariableValues` to send some or all variable values, possibly after transforming them. This replaces the `privateVariables` option, which is now deprecated. [PR #2931](https://github.com/apollographql/apollo-server/pull/2931)
+  To maintain the previous behavior of transmitting **all** GraphQL variable values, unfiltered, to Apollo Engine, configure `engine`.`sendVariableValues` as follows:
 
-  > Note: In order to keep shipping all GraphQL variable values to Apollo Engine, pass in the option:
-  >
-  >  `new ApolloServer({engine: {sendVariableValues: {all: true}}})`.
+  ```js
+  engine: {
+    sendVariableValues: { all: true }
+  }
+  ```
 
-- Update `graphql-playground` to resolve incorrect background color on tabs when using the `light` theme. [PR #2989](https://github.com/apollographql/apollo-server/pull/2989) [Issue #2979](https://github.com/apollographql/apollo-server/issues/2979)
+- `graphql-playground`: Update to resolve incorrect background color on tabs when using the `light` theme. [PR #2989](https://github.com/apollographql/apollo-server/pull/2989) [Issue #2979](https://github.com/apollographql/apollo-server/issues/2979)
+- `graphql-playground`: Fix "Query Planner" and "Tracing" panels which were off the edge of the viewport.
 - `apollo-server-plugin-base`: Fix `GraphQLRequestListener` type definitions to allow `return void`. [PR #2368](https://github.com/apollographql/apollo-server/pull/2368)
 
 ### v2.6.7
