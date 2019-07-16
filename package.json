@@ -114,7 +114,6 @@
     "graphql-tag": "2.10.1",
     "graphql-tools": "4.0.5",
     "hapi": "17.8.5",
-    "husky": "2.7.0",
     "ioredis": "4.11.2",
     "jest": "24.8.0",
     "jest-config": "24.8.0",
