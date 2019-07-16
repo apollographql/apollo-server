@@ -147,7 +147,7 @@ In `apollo-server`, the listen call starts the subscription server and passes th
   * `subscriptionsPath`: <`String`>
   * `server`: <[`http.Server`](https://nodejs.org/api/http.html#http_class_http_server)>
 
-## `ApolloServer.applyMiddleware`
+## ApolloServer.applyMiddleware
 
 The `applyMiddleware` method is provided by the `apollo-server-{integration}` packages that use middleware, such as hapi and express. This function connects ApolloServer to a specific framework.
 
@@ -192,14 +192,6 @@ app.use('*', jwtCheck, requireAuth, checkScope);
 
 server.applyMiddleware({ app, path: '/specialUrl' }); // app is from an existing express app. Mount Apollo middleware here. If no path is specified, it defaults to `/graphql`.
 ```
-
-## `ApolloServer.getMiddleware`
-
-Similar to the `applyMiddleware` method above, though rather than applying the composition of the various Apollo Server middlewares which comprise a full-featured Apollo Server deployment (e.g. middleware for HTTP body parsing, GraphQL Playground, uploads and subscriptions) the `getMiddleware` simply returns the middleware.
-
-The `getMiddleware` method takes the same arguments as `applyMiddleware` **except** `app` should not be passed.  Instead, the result of `getMiddleware` must be added as a middleware directly to an existing application (e.g. with `app.use(...)`).
-
-For example, for `apollo-server-express`, this means that rather than passing `applyMiddleware` an `app` which was already initiated from calling `express()`, and `applyMiddleware` "using" (i.e. `app.use`), the implementor will instead call `app.use(...)` on the result of `getMiddleware` with the same arguments.
 
 ## `gql`
 
