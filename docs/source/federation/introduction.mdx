@@ -3,7 +3,7 @@ title: Introduction
 description: What is Apollo Federation?
 ---
 
-For most organizations, the right way to use GraphQL is to expose [one data graph](https://principledgraphql.com/integrity#1-one-graph) that presents a unified view of all available data, including the ability to seamlessly navigate between different objects in the graph. As the graph grows in size and importance, though, a monolithic GraphQL server becomes an unacceptable development bottleneck and single point of failure, so it becomes necessary to [divide the graph's implemention into separate parts](https://principledgraphql.com/integrity#2-federated-implementation).
+For most organizations, the right way to use GraphQL is to expose [one data graph](https://principledgraphql.com/integrity#1-one-graph) that presents a unified view of all available data, including the ability to seamlessly navigate between different objects in the graph. As the graph grows in size and importance, though, a monolithic GraphQL server becomes an unacceptable development bottleneck and single point of failure, so it becomes necessary to [divide the graph's implementation into separate parts](https://principledgraphql.com/integrity#2-federated-implementation).
 
 Apollo Federation is an architecture for composing multiple GraphQL services into a single graph that addresses this need. Unlike other approaches such as schema stitching, it is based on a declarative composition programming model that allows **proper separation of concerns**. This design allows teams to implement an enterprise-scale shared data graph as a set of loosely coupled, separately maintained GraphQL services.
 
