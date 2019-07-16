@@ -6,13 +6,15 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 > The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  When a release is being prepared, a new header will be (manually) created below and the the appropriate changes within that release will be moved into the new section.
 
-- `@apollo/gateway`: Don't print a warning about an unspecified "graph variant" (previously, and in many ways still, known as "schema tag") every few seconds.  We do highly recommend specifying one when using the Apollo Platform features though! [PR #3043](https://github.com/apollographql/apollo-server/pull/3043)
+- _Nothing yet! Stay tuned!_
+
 
 ### v2.7.0
 
 > [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/1d44f3d4756d43123eb01bf293e65f4a3c2e64c8)
 
 - `apollo-server-core`, `@apollo/gateway`: **Introduced managed federation support**.  For more information on managed federation, see [the blog post](https://blog.apollographql.com/announcing-managed-federation-265c9f0bc88e) or jump to the [documentation for managed federation](https://www.apollographql.com/docs/platform/federation/).
+- `@apollo/gateway@0.7.1`: Don't print a warning about an unspecified "graph variant" (previously, and in many ways still, known as "schema tag") every few seconds.  We do highly recommend specifying one when using the Apollo Platform features though! [PR #3043](https://github.com/apollographql/apollo-server/pull/3043)
 - `apollo-engine-reporting`: **Behavior change**: If the error returned from the `engine.rewriteError` hook has an `extensions` property, that property will be used instead of the original error's extensions. Document that changes to most other `GraphQLError` fields by `engine.rewriteError` are ignored. [PR #2932](https://github.com/apollographql/apollo-server/pull/2932)
 - `apollo-engine-reporting`: **Behavior change**: The `engine.maskErrorDetails` option, deprecated by `engine.rewriteError` in v2.5.0, now behaves a bit more like the new option: while all error messages will be redacted, they will still show up on the appropriate nodes in a trace. [PR #2932](https://github.com/apollographql/apollo-server/pull/2932)
 - `apollo-engine-reporting`: **Behavior change**: By default, send no GraphQL variable values to Apollo's servers instead of sending all variable values. Adding the new EngineReportingOption `sendVariableValues` to send some or all variable values, possibly after transforming them. This replaces the `privateVariables` option, which is now deprecated. [PR #2931](https://github.com/apollographql/apollo-server/pull/2931)
