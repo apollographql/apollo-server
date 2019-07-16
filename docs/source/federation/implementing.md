@@ -125,7 +125,9 @@ const gateway = new ApolloGateway({
 })();
 ```
 
-In this example, we provide the `serviceList` option to the `ApolloGateway` constructor, which provides a name and endpoint for each of the federated services. The name (an arbitrary string) is primarily used for query planner output, error messages, and logging.
+In this example, we provide the `serviceList` configuration to the `ApolloGateway` constructor, which provides a name and endpoint for each of the federated services. The name (an arbitrary string) is primarily used for query planner output, error messages, and logging.
+
+> NOTE: In production, we recommend configuring the gateway using a managed configuration, providing static files for federated service specification rather than relying on introspection. For details on how to use the [Apollo schema registry](https://www.apollographql.com/docs/platform/schema-registry/) to support this workflow, see [the platform docs](https://www.apollographql.com/docs/platform/federation/).
 
 On startup, the gateway will fetch the service capabilities from the running servers and form an overall composed graph. It will accept incoming requests and create query plans which query the underlying services in the service list.
 
