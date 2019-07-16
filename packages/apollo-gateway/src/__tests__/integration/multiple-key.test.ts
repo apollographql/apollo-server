@@ -182,43 +182,41 @@ it('fetches data correctly with multiple @key fields', async () => {
             }
           }
         },
-        Sequence {
-          Flatten(path: "reviews.@.author") {
-            Fetch(service: "users") {
-              {
-                ... on User {
-                  __typename
-                  id
-                }
-              } =>
-              {
-                ... on User {
-                  name
-                  __typename
-                  ssn
-                }
+        Flatten(path: "reviews.@.author") {
+          Fetch(service: "users") {
+            {
+              ... on User {
+                __typename
+                id
               }
-            },
+            } =>
+            {
+              ... on User {
+                name
+                __typename
+                ssn
+              }
+            }
           },
-          Flatten(path: "reviews.@.author") {
-            Fetch(service: "actuary") {
-              {
-                ... on User {
-                  __typename
-                  ssn
-                }
-              } =>
-              {
-                ... on User {
-                  risk
-                }
+        },
+        Flatten(path: "reviews.@.author") {
+          Fetch(service: "actuary") {
+            {
+              ... on User {
+                __typename
+                ssn
               }
-            },
+            } =>
+            {
+              ... on User {
+                risk
+              }
+            }
           },
         },
       },
     }
-    `);
+  `);
 });
 
 it('fetches keys as needed to reduce round trip queries', async () => {
@@ -279,52 +277,52 @@ it('fetches keys as needed to reduce round trip queries', async () => {
   });
 
   expect(queryPlan).toMatchInlineSnapshot(`
-    QueryPlan {
-      Sequence {
-        Fetch(service: "users") {
-          {
-            users {
-              __typename
-              ssn
-              id
-            }
-          }
-        },
-        Parallel {
-          Flatten(path: "users.@") {
-            Fetch(service: "actuary") {
+        QueryPlan {
+          Sequence {
+            Fetch(service: "users") {
               {
-                ... on User {
+                users {
                   __typename
                   ssn
-                }
-              } =>
-              {
-                ... on User {
-                  risk
-                }
-              }
-            },
-          },
-          Flatten(path: "users.@") {
-            Fetch(service: "reviews") {
-              {
-                ... on User {
-                  __typename
                   id
                 }
-              } =>
-              {
-                ... on User {
-                  reviews {
-                    body
-                  }
-                }
               }
             },
+            Parallel {
+              Flatten(path: "users.@") {
+                Fetch(service: "actuary") {
+                  {
+                    ... on User {
+                      __typename
+                      ssn
+                    }
+                  } =>
+                  {
+                    ... on User {
+                      risk
+                    }
+                  }
+                },
+              },
+              Flatten(path: "users.@") {
+                Fetch(service: "reviews") {
+                  {
+                    ... on User {
+                      __typename
+                      id
+                    }
+                  } =>
+                  {
+                    ... on User {
+                      reviews {
+                        body
+                      }
+                    }
+                  }
+                },
+              },
+            },
           },
-        },
-      },
-    }
-    `);
+        }
+      `);
 });

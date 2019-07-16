@@ -5,7 +5,7 @@ import {
   runHttpQuery,
   convertNodeHttpToRequest,
 } from 'apollo-server-core';
-import { ValueOrPromise } from 'apollo-server-env';
+import { ValueOrPromise } from 'apollo-server-types';
 
 export interface ExpressGraphQLOptionsFunction {
   (req?: express.Request, res?: express.Response): ValueOrPromise<

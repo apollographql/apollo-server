@@ -2,7 +2,7 @@
 title: Understanding errors
 description: Rules for schema composition
 ---
-Apollo Federation implements a strict composition model. When building a gateway using the `@apollo/gateway` package, `gateway.load()` validates that the provided services compose into a valid GraphQL schema **and** that the gateway has all of the information it needs to execute operations against the composed schema. Any errors will fail composition. This section documents the composition errors that can be thrown by `gateway.load()`.
+Apollo Federation implements a strict composition model. When building a gateway using the `@apollo/gateway` package, `ApolloServer` validates that the provided services compose into a valid GraphQL schema **and** that the gateway has all of the information it needs to execute operations against the composed schema. Any errors will fail composition. This section documents the composition errors that can be thrown by the `new ApolloServer()` call.
 
 ### Types and extensions
 

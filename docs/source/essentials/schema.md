@@ -197,11 +197,9 @@ In the above example, we've requested the book's `title` along with the `name` o
 {
   "data": {
     "addBook": {
-      {
-        "title": "Fox in Socks",
-        "author": {
-          "name": "Dr. Seuss"
-        }
+      "title": "Fox in Socks",
+      "author": {
+        "name": "Dr. Seuss"
       }
     }
   }

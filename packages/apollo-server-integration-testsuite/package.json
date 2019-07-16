@@ -1,7 +1,7 @@
 {
   "name": "apollo-server-integration-testsuite",
   "private": true,
-  "version": "2.6.9",
+  "version": "2.7.0",
   "description": "Apollo Server Integrations testsuite",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -20,6 +20,7 @@
     "node": ">=6"
   },
   "dependencies": {
-    "apollo-server-core": "file:../apollo-server-core"
+    "apollo-server-core": "file:../apollo-server-core",
+    "apollo-server-types": "file:../apollo-server-types"
   }
 }

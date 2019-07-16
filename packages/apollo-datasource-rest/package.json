@@ -1,6 +1,6 @@
 {
   "name": "apollo-datasource-rest",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "author": "opensource@apollographql.com",
   "license": "MIT",
   "repository": {
@@ -22,5 +22,8 @@
     "apollo-server-env": "file:../apollo-server-env",
     "apollo-server-errors": "file:../apollo-server-errors",
     "http-cache-semantics": "^4.0.0"
+  },
+  "devDependencies": {
+    "apollo-server-types": "file:../apollo-server-types"
   }
 }
