@@ -55,29 +55,6 @@ type Product {
       );
     },
   );
-  createBuildFederatedSchemaTests(
-    `should mark a type with a key field as an entity`,
-    buildFederatedSchema(gql`
-      type Product @key(fields: "upc") {
-        upc: String!
-        name: String
-        price: Int
-      }
-    `),
-    async (schema: GraphQLSchema) => {
-      expect(schema.getType('Product')).toMatchInlineSnapshot(`
-type Product {
-  upc: String!
-  name: String
-  price: Int
-}
-`);
-
-      expect(schema.getType('_Entity')).toMatchInlineSnapshot(
-        `union _Entity = Product`,
-      );
-    },
-  );
 
   createBuildFederatedSchemaTests(
     `should mark a type with multiple key fields as an entity`,
