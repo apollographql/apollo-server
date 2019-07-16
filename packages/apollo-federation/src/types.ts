@@ -92,6 +92,7 @@ export const entitiesField: GraphQLFieldConfig<any, any> = {
         (type as ResolvableGraphQLObjectType).resolveReference ||
         defaultResolveReference;
 
+      // FIXME somehow get this to show up special in Engine traces?
       const result = resolveReference(reference, context, info);
 
       if (isPromise(result)) {

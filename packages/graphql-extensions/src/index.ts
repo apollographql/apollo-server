@@ -15,10 +15,7 @@ import {
 
 import { Request } from 'apollo-server-env';
 
-import {
-  GraphQLResponse,
-  GraphQLRequestContext,
-} from 'apollo-server-core/dist/requestPipelineAPI';
+import { GraphQLResponse, GraphQLRequestContext } from 'apollo-server-types';
 export { GraphQLResponse };
 
 import { GraphQLObjectResolver } from '@apollographql/apollo-tools';

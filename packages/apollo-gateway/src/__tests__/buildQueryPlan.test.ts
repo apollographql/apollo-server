@@ -117,41 +117,39 @@ describe('buildQueryPlan', () => {
                                                     }
                                                   }
                                                 },
-                                                Sequence {
-                                                  Flatten(path: "topProducts.@") {
-                                                    Fetch(service: "books") {
-                                                      {
-                                                        ... on Book {
-                                                          __typename
-                                                          isbn
-                                                        }
-                                                      } =>
-                                                      {
-                                                        ... on Book {
-                                                          __typename
-                                                          isbn
-                                                          title
-                                                          year
-                                                        }
+                                                Flatten(path: "topProducts.@") {
+                                                  Fetch(service: "books") {
+                                                    {
+                                                      ... on Book {
+                                                        __typename
+                                                        isbn
                                                       }
-                                                    },
+                                                    } =>
+                                                    {
+                                                      ... on Book {
+                                                        __typename
+                                                        isbn
+                                                        title
+                                                        year
+                                                      }
+                                                    }
                                                   },
-                                                  Flatten(path: "topProducts.@") {
-                                                    Fetch(service: "product") {
-                                                      {
-                                                        ... on Book {
-                                                          __typename
-                                                          isbn
-                                                          title
-                                                          year
-                                                        }
-                                                      } =>
-                                                      {
-                                                        ... on Book {
-                                                          name
-                                                        }
+                                                },
+                                                Flatten(path: "topProducts.@") {
+                                                  Fetch(service: "product") {
+                                                    {
+                                                      ... on Book {
+                                                        __typename
+                                                        isbn
+                                                        title
+                                                        year
                                                       }
-                                                    },
+                                                    } =>
+                                                    {
+                                                      ... on Book {
+                                                        name
+                                                      }
+                                                    }
                                                   },
                                                 },
                                               },
