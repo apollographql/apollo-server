@@ -1,12 +1,11 @@
 /* tslint:disable:no-unused-expression */
 import http from 'http';
-import net from 'net';
 import { sha256 } from 'js-sha256';
 import express = require('express');
 import bodyParser = require('body-parser');
 import yup = require('yup');
 
-import { FullTracesReport } from 'apollo-engine-reporting-protobuf';
+import { FullTracesReport, Trace } from 'apollo-engine-reporting-protobuf';
 
 import {
   GraphQLSchema,
@@ -41,14 +40,16 @@ import {
   Config,
   ApolloServerBase,
   PluginDefinition,
+  GraphQLService,
+  GraphQLExecutor,
 } from 'apollo-server-core';
 import { Headers } from 'apollo-server-env';
 import { GraphQLExtension, GraphQLResponse } from 'graphql-extensions';
 import { TracingFormat } from 'apollo-tracing';
 import ApolloServerPluginResponseCache from 'apollo-server-plugin-response-cache';
-import { GraphQLRequestContext } from 'apollo-server-plugin-base';
+import { GraphQLRequestContext } from 'apollo-server-types';
 
-import { mockDate, unmockDate, advanceTimeBy } from '__mocks__/date';
+import { mockDate, unmockDate, advanceTimeBy } from '../../../__mocks__/date';
 import { EngineReportingOptions } from 'apollo-engine-reporting';
 
 export function createServerInfo<AS extends ApolloServerBase>(
@@ -56,7 +57,7 @@ export function createServerInfo<AS extends ApolloServerBase>(
   httpServer: http.Server,
 ): ServerInfo<AS> {
   const serverInfo: any = {
-    ...(httpServer.address() as net.AddressInfo),
+    ...httpServer.address(),
     server,
     httpServer,
   };
@@ -112,6 +113,40 @@ const queryType = new GraphQLObjectType({
 const schema = new GraphQLSchema({
   query: queryType,
 });
+
+const makeGatewayMock = ({
+  optionsSpy = _options => {},
+  unsubscribeSpy = () => {},
+}: {
+  optionsSpy?: (_options: any) => void;
+  unsubscribeSpy?: () => void;
+} = {}) => {
+  const eventuallyAssigned = {
+    resolveLoad: null as ({ schema, executor }) => void,
+    triggerSchemaChange: null as (newSchema) => void,
+  };
+  const mockedLoadResults = new Promise<{
+    schema: GraphQLSchema;
+    executor: GraphQLExecutor;
+  }>(resolve => {
+    eventuallyAssigned.resolveLoad = ({ schema, executor }) => {
+      resolve({ schema, executor });
+    };
+  });
+
+  const mockedGateway: GraphQLService = {
+    load: options => {
+      optionsSpy(options);
+      return mockedLoadResults;
+    },
+    onSchemaChange: callback => {
+      eventuallyAssigned.triggerSchemaChange = callback;
+      return unsubscribeSpy;
+    },
+  };
+
+  return { gateway: mockedGateway, triggers: eventuallyAssigned };
+};
 
 export interface ServerInfo<AS extends ApolloServerBase> {
   address: string;
@@ -240,6 +275,62 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
           process.env.NODE_ENV = nodeEnv;
         });
+
+        it('prohibits providing a gateway in addition to schema/typedefs/resolvers', async () => {
+          const { gateway } = makeGatewayMock();
+
+          const incompatibleArgsSpy = jest.fn();
+          await createApolloServer({ gateway, schema }).catch(err =>
+            incompatibleArgsSpy(err.message),
+          );
+          expect(incompatibleArgsSpy.mock.calls[0][0]).toMatch(
+            /Cannot define both/,
+          );
+
+          await createApolloServer({ gateway, modules: {} as any }).catch(err =>
+            incompatibleArgsSpy(err.message),
+          );
+          expect(incompatibleArgsSpy.mock.calls[1][0]).toMatch(
+            /Cannot define both/,
+          );
+
+          await createApolloServer({ gateway, typeDefs: {} as any }).catch(
+            err => incompatibleArgsSpy(err.message),
+          );
+          expect(incompatibleArgsSpy.mock.calls[2][0]).toMatch(
+            /Cannot define both/,
+          );
+        });
+
+        it('prohibits providing a gateway in addition to subscription options', async () => {
+          const { gateway } = makeGatewayMock();
+
+          const expectedError = /Cannot define both `subscriptions` and `gateway`./;
+
+          const incompatibleArgsSpy = jest.fn();
+          await createApolloServer({
+            gateway,
+            subscriptions: 'pathToSubscriptions',
+          }).catch(err => incompatibleArgsSpy(err.message));
+          expect(incompatibleArgsSpy.mock.calls[0][0]).toMatch(expectedError);
+
+          await createApolloServer({
+            gateway,
+            subscriptions: true as any,
+          }).catch(err => incompatibleArgsSpy(err.message));
+          expect(incompatibleArgsSpy.mock.calls[1][0]).toMatch(expectedError);
+
+          await createApolloServer({
+            gateway,
+            subscriptions: { path: '' } as any,
+          }).catch(err => incompatibleArgsSpy(err.message));
+          expect(incompatibleArgsSpy.mock.calls[2][0]).toMatch(expectedError);
+
+          await createApolloServer({
+            gateway,
+          }).catch(err => incompatibleArgsSpy(err.message));
+          expect(incompatibleArgsSpy.mock.calls[3][0]).toMatch(expectedError);
+        });
       });
 
       describe('schema creation', () => {
@@ -261,6 +352,30 @@ export function testApolloServer<AS extends ApolloServerBase>(
           expect(result.data).toEqual({ hello: 'hi' });
           expect(result.errors).toBeUndefined();
         });
+
+        it("accepts a gateway's schema and calls its executor", async () => {
+          const { gateway, triggers } = makeGatewayMock();
+
+          const executor = jest.fn();
+          executor.mockReturnValue(
+            Promise.resolve({ data: { testString: 'hi - but federated!' } }),
+          );
+
+          triggers.resolveLoad({ schema, executor });
+
+          const { url: uri } = await createApolloServer({
+            gateway,
+            subscriptions: false,
+          });
+
+          const apolloFetch = createApolloFetch({ uri });
+          const result = await apolloFetch({ query: '{testString}' });
+
+          expect(result.data).toEqual({ testString: 'hi - but federated!' });
+          expect(result.errors).toBeUndefined();
+          expect(executor).toHaveBeenCalled();
+        });
+
         it('uses schema over resolvers + typeDefs', async () => {
           const typeDefs = gql`
             type Query {
@@ -607,7 +722,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             }
 
             return new Promise(resolve => {
-              this.server && this.server.close(resolve);
+              this.server && this.server.close(() => resolve());
             });
           }
 
@@ -621,11 +736,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             if (!this.server) {
               throw new Error('must listen before getting URL');
             }
-            const {
-              family,
-              address,
-              port,
-            } = this.server.address() as net.AddressInfo;
+            const { family, address, port } = this.server.address();
 
             if (family !== 'IPv4') {
               throw new Error(`The family was unexpectedly ${family}.`);
@@ -1099,10 +1210,12 @@ export function testApolloServer<AS extends ApolloServerBase>(
               const trace = Object.values(reports[0].tracesPerQuery)[0]
                 .trace[0];
 
-              expect(trace.root.error).toMatchObject([
+              expect(trace.root.child[0].error).toMatchObject([
                 {
-                  json: '{"message":"<masked>"}',
+                  json:
+                    '{"message":"<masked>","locations":[{"line":1,"column":2}],"path":["fieldWhichWillError"]}',
                   message: '<masked>',
+                  location: [{ line: 1, column: 2 }],
                 },
               ]);
             });
@@ -1184,7 +1297,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           `;
           const resolvers = {
             Query: {
-              hello: (_parent, _args, context) => {
+              hello: (_parent: any, _args: any, context: any) => {
                 expect(context).toEqual(Promise.resolve(uniqueContext));
                 return 'hi';
               },
@@ -1217,7 +1330,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           `;
           const resolvers = {
             Query: {
-              hello: (_parent, _args, context) => {
+              hello: (_parent: any, _args: any, context: any) => {
                 expect(context.key).toEqual('major');
                 context.key = 'minor';
                 return spy();
@@ -1271,7 +1384,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             `;
             const resolvers = {
               Query: {
-                hello: (_parent, _args, context) => {
+                hello: (_parent: any, _args: any, context: any) => {
                   expect(context.key).toEqual('major');
                   return spy();
                 },
@@ -1421,9 +1534,13 @@ export function testApolloServer<AS extends ApolloServerBase>(
     describe('subscriptions', () => {
       const SOMETHING_CHANGED_TOPIC = 'something_changed';
       const pubsub = new PubSub();
-      let subscription;
+      let subscription:
+        | {
+            unsubscribe: () => void;
+          }
+        | undefined;
 
-      function createEvent(num) {
+      function createEvent(num: number) {
         return setTimeout(
           () =>
             pubsub.publish(SOMETHING_CHANGED_TOPIC, {
@@ -1845,12 +1962,137 @@ export function testApolloServer<AS extends ApolloServerBase>(
         const latestEndOffset = tracing.execution.resolvers
           .map(resolver => resolver.startOffset + resolver.duration)
           .reduce((currentLatestEndOffset, nextEndOffset) =>
-            Math.min(currentLatestEndOffset, nextEndOffset),
+            Math.max(currentLatestEndOffset, nextEndOffset),
           );
 
         const resolverDuration = latestEndOffset - earliestStartOffset;
 
         expect(resolverDuration).not.toBeGreaterThan(tracing.duration);
+      });
+    });
+
+    describe('Federated tracing', () => {
+      // Enable federated tracing by pretending to be federated.
+      const federationTypeDefs = gql`
+        type _Service {
+          sdl: String
+        }
+      `;
+
+      const baseTypeDefs = gql`
+        type Book {
+          title: String
+          author: String
+        }
+
+        type Movie {
+          title: String
+        }
+
+        type Query {
+          books: [Book]
+          movies: [Movie]
+        }
+      `;
+
+      const allTypeDefs = [federationTypeDefs, baseTypeDefs];
+
+      const resolvers = {
+        Query: {
+          books: () =>
+            new Promise(resolve =>
+              setTimeout(() => resolve([{ title: 'H', author: 'J' }]), 10),
+            ),
+          movies: () =>
+            new Promise(resolve =>
+              setTimeout(() => resolve([{ title: 'H' }]), 12),
+            ),
+        },
+      };
+
+      function createApolloFetchAsIfFromGateway(uri: string): ApolloFetch {
+        return createApolloFetch({ uri }).use(({ options }, next) => {
+          options.headers = { 'apollo-federation-include-trace': 'ftv1' };
+          next();
+        });
+      }
+
+      it("doesn't include federated trace without the special header", async () => {
+        const { url: uri } = await createApolloServer({
+          typeDefs: allTypeDefs,
+          resolvers,
+        });
+
+        const apolloFetch = createApolloFetch({ uri });
+
+        const result = await apolloFetch({
+          query: `{ books { title author } }`,
+        });
+
+        expect(result.extensions).toBeUndefined();
+      });
+
+      it("doesn't include federated trace without _Service in the schema", async () => {
+        const { url: uri } = await createApolloServer({
+          typeDefs: baseTypeDefs,
+          resolvers,
+        });
+
+        const apolloFetch = createApolloFetchAsIfFromGateway(uri);
+
+        const result = await apolloFetch({
+          query: `{ books { title author } }`,
+        });
+
+        expect(result.extensions).toBeUndefined();
+      });
+
+      it('reports a total duration that is longer than the duration of its resolvers', async () => {
+        const { url: uri } = await createApolloServer({
+          typeDefs: allTypeDefs,
+          resolvers,
+        });
+
+        const apolloFetch = createApolloFetchAsIfFromGateway(uri);
+        apolloFetch.use(({ options }, next) => {
+          options.headers = { 'apollo-federation-include-trace': 'ftv1' };
+          next();
+        });
+
+        const result = await apolloFetch({
+          query: `{ books { title author } }`,
+        });
+
+        const ftv1: string = result.extensions.ftv1;
+
+        expect(ftv1).toBeTruthy();
+        const encoded = Buffer.from(ftv1, 'base64');
+        const trace = Trace.decode(encoded);
+
+        let earliestStartOffset = Infinity;
+        let latestEndOffset = -Infinity;
+        function walk(node: Trace.INode) {
+          if (node.startTime !== 0 && node.endTime !== 0) {
+            earliestStartOffset = Math.min(earliestStartOffset, node.startTime);
+            latestEndOffset = Math.max(latestEndOffset, node.endTime);
+          }
+          node.child.forEach(n => walk(n));
+        }
+        walk(trace.root);
+        expect(earliestStartOffset).toBeLessThan(Infinity);
+        expect(latestEndOffset).toBeGreaterThan(-Infinity);
+        const resolverDuration = latestEndOffset - earliestStartOffset;
+        expect(resolverDuration).toBeGreaterThan(0);
+        expect(trace.durationNs).toBeGreaterThanOrEqual(resolverDuration);
+
+        expect(trace.startTime.seconds).toBeLessThanOrEqual(
+          trace.endTime.seconds,
+        );
+        if (trace.startTime.seconds === trace.endTime.seconds) {
+          expect(trace.startTime.nanos).toBeLessThanOrEqual(
+            trace.endTime.nanos,
+          );
+        }
       });
     });
 
@@ -2266,6 +2508,194 @@ export function testApolloServer<AS extends ApolloServerBase>(
             'max-age=10, public',
           );
         }
+      });
+    });
+
+    describe('Gateway', () => {
+      it('receives schema updates from the gateway', async () => {
+        const makeQueryTypeWithField = fieldName =>
+          new GraphQLSchema({
+            query: new GraphQLObjectType({
+              name: 'QueryType',
+              fields: {
+                [fieldName]: {
+                  type: GraphQLString,
+                },
+              },
+            }),
+          });
+
+        const { gateway, triggers } = makeGatewayMock();
+
+        const executor = req =>
+          (req.source as string).match(/1/)
+            ? Promise.resolve({ data: { testString1: 'hello' } })
+            : Promise.resolve({ data: { testString2: 'aloha' } });
+
+        triggers.resolveLoad({
+          schema: makeQueryTypeWithField('testString1'),
+          executor,
+        });
+
+        const { url: uri } = await createApolloServer({
+          gateway,
+          subscriptions: false,
+        });
+
+        const apolloFetch = createApolloFetch({ uri });
+        const result1 = await apolloFetch({ query: '{testString1}' });
+
+        expect(result1.data).toEqual({ testString1: 'hello' });
+        expect(result1.errors).toBeUndefined();
+
+        triggers.triggerSchemaChange(makeQueryTypeWithField('testString2'));
+
+        const result2 = await apolloFetch({ query: '{testString2}' });
+        expect(result2.data).toEqual({ testString2: 'aloha' });
+        expect(result2.errors).toBeUndefined();
+      });
+
+      it('passes engine data to the gateway', async () => {
+        const optionsSpy = jest.fn();
+
+        const { gateway, triggers } = makeGatewayMock({ optionsSpy });
+        triggers.resolveLoad({ schema, executor: () => {} });
+        await createApolloServer({
+          gateway,
+          subscriptions: false,
+          engine: { apiKey: 'service:tester:1234abc', schemaTag: 'staging' },
+        });
+
+        expect(optionsSpy).toHaveBeenLastCalledWith({
+          engine: {
+            apiKeyHash:
+              '0ca858e7fe8cffc01c5f1db917d2463b348b50d267427e54c1c8c99e557b242f4145930b949905ec430642467613610e471c40bb7a251b1e2248c399bb0498c4',
+            graphId: 'tester',
+            graphVariant: 'staging',
+          },
+        });
+      });
+
+      it('unsubscribes from schema update on close', async () => {
+        const unsubscribeSpy = jest.fn();
+        const { gateway, triggers } = makeGatewayMock({ unsubscribeSpy });
+        triggers.resolveLoad({ schema, executor: () => {} });
+        await createApolloServer({ gateway, subscriptions: false });
+        expect(unsubscribeSpy).not.toHaveBeenCalled();
+        await stopServer();
+        expect(unsubscribeSpy).toHaveBeenCalled();
+      });
+
+      it('waits until gateway has resolved a schema to respond to queries', async () => {
+        const { gateway, triggers } = makeGatewayMock();
+        const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+        let resolveExecutor;
+        const executor = () =>
+          new Promise(resolve => {
+            resolveExecutor = () => {
+              resolve({ data: { testString: 'hi - but federated!' } });
+            };
+          });
+
+        triggers.resolveLoad({ schema, executor });
+        const { url: uri } = await createApolloServer({
+          gateway,
+          subscriptions: false,
+        });
+        const fetchComplete = jest.fn();
+        const apolloFetch = createApolloFetch({ uri });
+        const result = apolloFetch({ query: '{testString}' }).then(result => {
+          fetchComplete(result);
+          return result;
+        });
+        expect(fetchComplete).not.toHaveBeenCalled();
+        await wait(100); //some bogus value to make sure we aren't returning early
+        expect(fetchComplete).not.toHaveBeenCalled();
+        resolveExecutor();
+        const resolved = await result;
+        expect(fetchComplete).toHaveBeenCalled();
+        expect(resolved.data).toEqual({ testString: 'hi - but federated!' });
+        expect(resolved.errors).toBeUndefined();
+      });
+
+      it('can serve multiple active schemas simultaneously during a schema rollover', async () => {
+        const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+        const makeQueryTypeWithField = fieldName =>
+          new GraphQLSchema({
+            query: new GraphQLObjectType({
+              name: 'QueryType',
+              fields: {
+                [fieldName]: {
+                  type: GraphQLString,
+                },
+              },
+            }),
+          });
+
+        const { gateway, triggers } = makeGatewayMock();
+
+        const makeEventuallyResolvingPromise = val => {
+          let resolver;
+          const promise = new Promise(
+            resolve => (resolver = () => resolve(val)),
+          );
+          return { resolver, promise };
+        };
+
+        const { resolver: r1, promise: p1 } = makeEventuallyResolvingPromise({
+          data: { testString1: '1' },
+        });
+        const { resolver: r2, promise: p2 } = makeEventuallyResolvingPromise({
+          data: { testString2: '2' },
+        });
+        const { resolver: r3, promise: p3 } = makeEventuallyResolvingPromise({
+          data: { testString3: '3' },
+        });
+
+        const executor = req =>
+          (req.source as string).match(/1/)
+            ? p1
+            : (req.source as string).match(/2/)
+            ? p2
+            : p3;
+
+        triggers.resolveLoad({
+          schema: makeQueryTypeWithField('testString1'),
+          executor,
+        });
+
+        const { url: uri } = await createApolloServer({
+          gateway,
+          subscriptions: false,
+        });
+
+        // TODO: Remove these awaits... I think it may require the `onSchemaChange` to block?
+        const apolloFetch = createApolloFetch({ uri });
+        const result1 = apolloFetch({ query: '{testString1}' });
+        await wait(100);
+        triggers.triggerSchemaChange(makeQueryTypeWithField('testString2'));
+        await wait(100);
+        const result2 = apolloFetch({ query: '{testString2}' });
+        await wait(100);
+        triggers.triggerSchemaChange(makeQueryTypeWithField('testString3'));
+        await wait(100);
+        const result3 = apolloFetch({ query: '{testString3}' });
+        await wait(100);
+        r3();
+        await wait(100);
+        r1();
+        await wait(100);
+        r2();
+
+        await Promise.all([result1, result2, result3]).then(([v1, v2, v3]) => {
+          expect(v1.errors).toBeUndefined();
+          expect(v2.errors).toBeUndefined();
+          expect(v3.errors).toBeUndefined();
+          expect(v1.data).toEqual({ testString1: '1' });
+          expect(v2.data).toEqual({ testString2: '2' });
+          expect(v3.data).toEqual({ testString3: '3' });
+        });
       });
     });
   });

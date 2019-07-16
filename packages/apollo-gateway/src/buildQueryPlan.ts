@@ -37,7 +37,9 @@ import {
 } from './FieldSet';
 import {
   FetchNode,
+  ParallelNode,
   PlanNode,
+  SequenceNode,
   QueryPlan,
   ResponsePath,
   OperationContext,
@@ -86,9 +88,9 @@ export function buildQueryPlan(operationContext: OperationContext): QueryPlan {
 
   return {
     kind: 'QueryPlan',
-    node: isMutation
-      ? wrapInSequenceNodeIfNeeded(nodes)
-      : wrapInParallelNodeIfNeeded(nodes),
+    node: nodes.length
+      ? flatWrap(isMutation ? 'Sequence' : 'Parallel', nodes)
+      : undefined,
   };
 }
 
@@ -123,31 +125,32 @@ function executionNodeForGroup(
     const dependentNodes = group.dependentGroups.map(dependentGroup =>
       executionNodeForGroup(context, dependentGroup),
     );
-    return {
-      kind: 'Sequence',
-      nodes: [node, wrapInParallelNodeIfNeeded(dependentNodes)],
-    };
+
+    return flatWrap('Sequence', [node, flatWrap('Parallel', dependentNodes)]);
   } else {
     return node;
   }
 }
 
-function wrapInParallelNodeIfNeeded(nodes: PlanNode[]): PlanNode {
-  return nodes.length > 1
-    ? {
-        kind: 'Parallel',
-        nodes: nodes,
-      }
-    : nodes[0];
-}
-
-function wrapInSequenceNodeIfNeeded(nodes: PlanNode[]): PlanNode {
-  return nodes.length > 1
-    ? {
-        kind: 'Sequence',
-        nodes: nodes,
-      }
-    : nodes[0];
+// Wraps the given nodes in a ParallelNode or SequenceNode, unless there's only
+// one node, in which case it is returned directly. Any nodes of the same kind
+// in the given list have their sub-nodes flattened into the list: ie,
+// flatWrap('Sequence', [a, flatWrap('Sequence', b, c), d]) returns a SequenceNode
+// with four children.
+function flatWrap(
+  kind: ParallelNode['kind'] | SequenceNode['kind'],
+  nodes: PlanNode[],
+): PlanNode {
+  if (nodes.length === 0) {
+    throw Error('programming error: should always be called with nodes');
+  }
+  if (nodes.length === 1) {
+    return nodes[0];
+  }
+  return {
+    kind,
+    nodes: nodes.flatMap(n => (n.kind === kind ? n.nodes : [n])),
+  } as PlanNode;
 }
 
 function splitRootFields(
