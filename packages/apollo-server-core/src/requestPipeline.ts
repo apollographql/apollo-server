@@ -432,7 +432,7 @@ export async function processGraphQLRequest<TContext>(
   async function execute(
     requestContext: WithRequired<
       GraphQLRequestContext<TContext>,
-      'document' | 'operationName' | 'operation'
+      'document' | 'operationName' | 'operation' | 'queryHash'
     >,
   ): Promise<GraphQLExecutionResult> {
     const { request, document } = requestContext;
