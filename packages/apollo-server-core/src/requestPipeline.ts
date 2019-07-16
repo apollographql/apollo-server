@@ -344,7 +344,7 @@ export async function processGraphQLRequest<TContext>(
       try {
         const result = await execute(requestContext as WithRequired<
           typeof requestContext,
-          'document' | 'operation' | 'operationName'
+          'document' | 'operation' | 'operationName' | 'queryHash'
         >);
 
         if (result.errors) {
