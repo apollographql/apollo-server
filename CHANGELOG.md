@@ -6,7 +6,7 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 > The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  When a release is being prepared, a new header will be (manually) created below and the the appropriate changes within that release will be moved into the new section.
 
-- _Nothing yet! Stay tuned!_
+- `apollo-server-express`, `apollo-server-koa`: A new `getMiddleware` method, which accepts the same parameters as `applyMiddleware` with the exception of the `app`, has been added.  This allows implementors to obtain the composed middleware and "`use`" it within an existing `app`.  This was previously only possible by passing an `app` to `applyMiddleware` or reaching into Apollo Server internals, but `getMiddleware` should allow a more natural method and will hopefully resolve many issues raised around the previous pattern. [PR #2435](https://github.com/apollographql/apollo-server/pull/2435)
 
 
 ### v2.7.0
