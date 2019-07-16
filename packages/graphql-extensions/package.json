@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@apollographql/apollo-tools": "^0.4.0",
-    "apollo-server-env": "file:../apollo-server-env"
+    "apollo-server-env": "file:../apollo-server-env",
     "apollo-server-types": "file:../apollo-server-types"
   },
   "devDependencies": {
