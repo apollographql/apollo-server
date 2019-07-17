@@ -4,6 +4,7 @@ import {
   UniqueTypeNamesWithoutEnumsOrScalars,
   MatchingEnums,
   PossibleTypeExtensions,
+  UniqueFieldDefinitionNames,
 } from './validate/sdl';
 
 const omit = [
@@ -11,11 +12,13 @@ const omit = [
   'UniqueTypeNames',
   'UniqueEnumValueNames',
   'PossibleTypeExtensions',
+  'UniqueFieldDefinitionNames',
 ];
 
 export const compositionRules = specifiedSDLRules
   .filter(rule => !omit.includes(rule.name))
   .concat([
+    UniqueFieldDefinitionNames,
     UniqueTypeNamesWithoutEnumsOrScalars,
     MatchingEnums,
     PossibleTypeExtensions,
