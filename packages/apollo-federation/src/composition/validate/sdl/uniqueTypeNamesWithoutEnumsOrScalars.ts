@@ -1,6 +1,27 @@
-import { GraphQLError, ASTVisitor, TypeDefinitionNode } from 'graphql';
+import {
+  GraphQLError,
+  ASTVisitor,
+  print,
+  visit,
+  DocumentNode,
+  Kind,
+  ObjectTypeDefinitionNode,
+  InterfaceTypeDefinitionNode,
+  UnionTypeDefinitionNode,
+  InputObjectTypeDefinitionNode,
+  FieldDefinitionNode,
+  InputValueDefinitionNode,
+} from 'graphql';
 
 import { SDLValidationContext } from 'graphql/validation/ValidationContext';
+import Maybe from 'graphql/tsutils/Maybe';
+import { isTypeNodeAnEntity } from '../../utils';
+
+type TypesWithRequiredUniqueNames =
+  | ObjectTypeDefinitionNode
+  | InterfaceTypeDefinitionNode
+  | UnionTypeDefinitionNode
+  | InputObjectTypeDefinitionNode;
 
 export function duplicateTypeNameMessage(typeName: string): string {
   return `There can be only one type named "${typeName}".`;
@@ -18,7 +39,9 @@ export function existedTypeNameMessage(typeName: string): string {
 export function UniqueTypeNamesWithoutEnumsOrScalars(
   context: SDLValidationContext,
 ): ASTVisitor {
-  const knownTypeNames = Object.create(null);
+  const knownTypeNames: {
+    [key: string]: TypesWithRequiredUniqueNames | undefined;
+  } = Object.create(null);
   const schema = context.getSchema();
 
   return {
@@ -30,27 +53,98 @@ export function UniqueTypeNamesWithoutEnumsOrScalars(
     InputObjectTypeDefinition: checkTypeName,
   };
 
-  function checkTypeName(node: TypeDefinitionNode) {
+  function checkTypeName(node: TypesWithRequiredUniqueNames) {
     const typeName = node.name.value;
+    const typeFromSchema = schema && schema.getType(typeName);
+    const typeNodeFromSchema =
+      typeFromSchema &&
+      (typeFromSchema.astNode as Maybe<TypesWithRequiredUniqueNames>);
+    const typeNodeFromDefinitions = knownTypeNames[typeName];
+    const duplicateTypeNode = typeNodeFromSchema || typeNodeFromDefinitions;
 
-    if (schema && schema.getType(typeName)) {
+    // Return early for value types (non-entities that have the same exact fields)
+    if (
+      duplicateTypeNode &&
+      areTypeNodesIdentical(node, duplicateTypeNode, context) &&
+      !isTypeNodeAnEntity(node) &&
+      !isTypeNodeAnEntity(duplicateTypeNode)
+    ) {
+      return false;
+    }
+
+    if (typeNodeFromSchema) {
       context.reportError(
         new GraphQLError(existedTypeNameMessage(typeName), node.name),
       );
       return;
     }
 
-    if (knownTypeNames[typeName]) {
+    if (typeNodeFromDefinitions) {
       context.reportError(
         new GraphQLError(duplicateTypeNameMessage(typeName), [
-          knownTypeNames[typeName],
+          typeNodeFromDefinitions,
           node.name,
         ]),
       );
     } else {
-      knownTypeNames[typeName] = node.name;
+      knownTypeNames[typeName] = node;
     }
 
     return false;
   }
+}
+
+function areTypeNodesIdentical(
+  node1: TypesWithRequiredUniqueNames,
+  node2: TypesWithRequiredUniqueNames,
+  context: SDLValidationContext,
+) {
+  const visitedFields: { [key: string]: string[] } = Object.create(null);
+
+  const doc: DocumentNode = {
+    kind: Kind.DOCUMENT,
+    definitions: [node1, node2],
+  };
+
+  function fieldVisitor(node: FieldDefinitionNode | InputValueDefinitionNode) {
+    const fieldName = node.name.value;
+
+    if (!visitedFields[fieldName]) {
+      visitedFields[fieldName] = [];
+    }
+    visitedFields[fieldName].push(print(node.type));
+  }
+
+  visit(doc, {
+    FieldDefinition: fieldVisitor,
+    InputValueDefinition: fieldVisitor,
+  });
+
+  const possibleErrors: GraphQLError[] = [];
+
+  const entries = Object.entries(visitedFields);
+  const fieldNamesOnTypeMatch =
+    entries.length > 0 &&
+    entries.every(([fieldName, types]) => {
+      if (types.length === 2) {
+        if (types[0] !== types[1]) {
+          possibleErrors.push(
+            new GraphQLError(
+              `Found field type mismatch on expected value type. '${node1.name.value}.${fieldName}' is defined as both a ${types[0]} and a ${types[1]}. In order to define '${node1.name.value}' in multiple places, the fields and their types must be identical.`,
+              [node1, node2],
+            ),
+          );
+        }
+        return true;
+      }
+      return false;
+    });
+
+  if (fieldNamesOnTypeMatch) {
+    possibleErrors.forEach(error => {
+      context.reportError(error);
+    });
+  }
+
+  return fieldNamesOnTypeMatch;
 }

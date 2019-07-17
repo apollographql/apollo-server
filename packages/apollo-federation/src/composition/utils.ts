@@ -23,6 +23,7 @@ import {
   SelectionNode,
   isEqualType,
   FieldNode,
+  TypeDefinitionNode,
 } from 'graphql';
 import Maybe from 'graphql/tsutils/Maybe';
 import { ExternalFieldDefinition } from './types';
@@ -302,4 +303,18 @@ export function selectionIncludesField({
     }
   }
   return false;
+}
+
+export function isTypeNodeAnEntity(node: TypeDefinitionNode) {
+  let isEntity = false;
+
+  visit(node, {
+    Directive(directive) {
+      if (directive.name.value === 'key') {
+        isEntity = true;
+      }
+    },
+  });
+
+  return isEntity;
 }
