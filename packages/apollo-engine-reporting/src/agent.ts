@@ -104,7 +104,7 @@ export interface EngineReportingOptions<TContext> {
    * - { none: true }: don't send any variable values (DEFAULT)
    * - { all: true}: send all variable values
    * - { transform: ... }: a custom function for modifying variable values. Keys added by the custom function will
-   *    be removed, and keys removed will be added back with an empty value.
+   *    be removed, and keys removed will be added back with an empty value. For security reasons, if an error occurs within this function, all variable values will be replaced with `[PREDICATE_FUNCTION_ERROR]`.
    * - { exceptNames: ... }: a case-sensitive list of names of variables whose values should not be sent to Apollo servers
    * - { onlyNames: ... }: A case-sensitive list of names of variables whose values will be sent to Apollo servers
    *
