@@ -12,17 +12,11 @@ import {
   isObjectType,
   isInterfaceType,
   isInputObjectType,
-  DocumentNode,
-  Kind,
-  FieldDefinitionNode,
-  InputValueDefinitionNode,
-  print,
-  visit,
 } from 'graphql';
 import { SDLValidationContext } from 'graphql/validation/ValidationContext';
 import { TypeMap } from 'graphql/type/schema';
 import Maybe from 'graphql/tsutils/Maybe';
-import { isTypeNodeAnEntity } from '../../utils';
+import { isTypeNodeAnEntity, diffFieldsOnTypeNodes } from '../../utils';
 
 type NodeTypesRequiringUniqueFields =
   | TypeDefinitionsRequiringUniqueFields
@@ -136,8 +130,13 @@ export function UniqueFieldDefinitionNames(
         >);
       const valueTypeNode =
         valueTypeFromSchema || possibleValueTypes[node.name.value];
-      if (valueTypeNode) {
-        if (nodesAreIdentical(node, valueTypeNode)) {
+      if (
+        valueTypeNode &&
+        !isTypeNodeAnEntity(valueTypeNode) &&
+        valueTypeNode.kind === node.kind
+      ) {
+        const diff = diffFieldsOnTypeNodes(node, valueTypeNode);
+        if (Object.values(diff).every(diffEntry => diffEntry.length === 2)) {
           return false;
         }
       } else {
@@ -183,36 +182,4 @@ function hasField(type: GraphQLNamedType, fieldName: string) {
     return Boolean(type.getFields()[fieldName]);
   }
   return false;
-}
-
-function nodesAreIdentical(
-  node1: NodeTypesRequiringUniqueFields,
-  node2: NodeTypesRequiringUniqueFields,
-) {
-  const visitedFields: { [key: string]: string[] } = Object.create(null);
-
-  const doc: DocumentNode = {
-    kind: Kind.DOCUMENT,
-    definitions: [node1, node2],
-  };
-
-  function fieldDefinitionVisitor(
-    node: FieldDefinitionNode | InputValueDefinitionNode,
-  ) {
-    const fieldName = node.name.value;
-
-    if (!visitedFields[fieldName]) {
-      visitedFields[fieldName] = [];
-    }
-    visitedFields[fieldName].push(print(node.type));
-  }
-
-  visit(doc, {
-    FieldDefinition: fieldDefinitionVisitor,
-    InputValueDefinition: fieldDefinitionVisitor,
-  });
-
-  const values = Object.values(visitedFields);
-
-  return values.length > 0 && values.every(types => types.length === 2);
 }

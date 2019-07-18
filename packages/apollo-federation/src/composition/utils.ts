@@ -24,6 +24,9 @@ import {
   isEqualType,
   FieldNode,
   TypeDefinitionNode,
+  InputValueDefinitionNode,
+  print,
+  TypeExtensionNode,
 } from 'graphql';
 import Maybe from 'graphql/tsutils/Maybe';
 import { ExternalFieldDefinition } from './types';
@@ -305,7 +308,9 @@ export function selectionIncludesField({
   return false;
 }
 
-export function isTypeNodeAnEntity(node: TypeDefinitionNode) {
+export function isTypeNodeAnEntity(
+  node: TypeDefinitionNode | TypeExtensionNode,
+) {
   let isEntity = false;
 
   visit(node, {
@@ -317,4 +322,41 @@ export function isTypeNodeAnEntity(node: TypeDefinitionNode) {
   });
 
   return isEntity;
+}
+
+export function diffFieldsOnTypeNodes(
+  firstNode: TypeDefinitionNode | TypeExtensionNode,
+  secondNode: TypeDefinitionNode | TypeExtensionNode,
+) {
+  const visitedFields: { [fieldName: string]: string[] } = Object.create(null);
+
+  const doc: DocumentNode = {
+    kind: Kind.DOCUMENT,
+    definitions: [firstNode, secondNode],
+  };
+
+  function fieldVisitor(node: FieldDefinitionNode | InputValueDefinitionNode) {
+    const fieldName = node.name.value;
+
+    if (!visitedFields[fieldName]) {
+      visitedFields[fieldName] = [];
+    }
+    visitedFields[fieldName].push(print(node.type));
+  }
+
+  visit(doc, {
+    FieldDefinition: fieldVisitor,
+    InputValueDefinition: fieldVisitor,
+  });
+
+  const diff = Object.entries(visitedFields).reduce(
+    (acc, [fieldName, types]) => {
+      if (types.length === 2 && types[0] === types[1]) return acc;
+      acc[fieldName] = types;
+      return acc;
+    },
+    {} as { [fieldName: string]: string[] },
+  );
+
+  return diff;
 }

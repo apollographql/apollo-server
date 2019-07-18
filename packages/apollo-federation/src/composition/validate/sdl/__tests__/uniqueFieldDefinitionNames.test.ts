@@ -185,4 +185,75 @@ describe('UniqueFieldDefinitionNames', () => {
       expect(errors).toHaveLength(0);
     });
   });
+
+  describe('edge cases', () => {
+    it('value types must be of the same kind', () => {
+      schema = buildSchemaFromSDL(
+        gql`
+          type Product {
+            sku: ID!
+          }
+        `,
+        schema,
+      );
+
+      const sdl = gql`
+        input Product {
+          sku: ID!
+        }
+      `;
+
+      const errors = validateSDL(sdl, schema, [UniqueFieldDefinitionNames]);
+      expect(errors).toHaveLength(1);
+      expect(errors[0].message).toMatch(
+        'Field "Product.sku" already exists in the schema.',
+      );
+    });
+
+    it('disallows "value types" that are entities (part 1)', () => {
+      schema = buildSchemaFromSDL(
+        gql`
+          type Product @key(fields: "") {
+            sku: ID!
+          }
+        `,
+        schema,
+      );
+
+      const sdl = gql`
+        type Product {
+          sku: ID!
+        }
+      `;
+
+      const errors = validateSDL(sdl, schema, [UniqueFieldDefinitionNames]);
+      expect(errors).toHaveLength(1);
+      expect(errors[0].message).toMatch(
+        'Field "Product.sku" already exists in the schema.',
+      );
+    });
+
+    it('disallows "value types" that are entities (part 2)', () => {
+      schema = buildSchemaFromSDL(
+        gql`
+          type Product {
+            sku: ID!
+          }
+        `,
+        schema,
+      );
+
+      const sdl = gql`
+        type Product @key(fields: "") {
+          sku: ID!
+        }
+      `;
+
+      const errors = validateSDL(sdl, schema, [UniqueFieldDefinitionNames]);
+      expect(errors).toHaveLength(1);
+      expect(errors[0].message).toMatch(
+        'Field "Product.sku" already exists in the schema.',
+      );
+    });
+  });
 });

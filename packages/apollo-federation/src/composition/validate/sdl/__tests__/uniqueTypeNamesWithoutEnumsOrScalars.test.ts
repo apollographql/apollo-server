@@ -295,4 +295,81 @@ describe('UniqueTypeNamesWithoutEnumsOrScalars', () => {
       expect(errors).toHaveLength(0);
     });
   });
+
+  describe('edge cases', () => {
+    it('value types must be of the same kind', () => {
+      schema = buildSchemaFromSDL(
+        gql`
+          input Product {
+            sku: ID
+          }
+        `,
+        schema,
+      );
+
+      const definitions = gql`
+        type Product {
+          sku: ID
+        }
+      `;
+
+      const errors = validateSDL(definitions, schema, [
+        UniqueTypeNamesWithoutEnumsOrScalars,
+      ]);
+      expect(errors).toHaveLength(1);
+      expect(errors[0].message).toMatch(
+        'Type "Product" already exists in the schema.',
+      );
+    });
+
+    it('value types cannot be entities (part 1)', () => {
+      schema = buildSchemaFromSDL(
+        gql`
+          type Product @key(fields: "") {
+            sku: ID
+          }
+        `,
+        schema,
+      );
+
+      const definitions = gql`
+        type Product {
+          sku: ID
+        }
+      `;
+
+      const errors = validateSDL(definitions, schema, [
+        UniqueTypeNamesWithoutEnumsOrScalars,
+      ]);
+      expect(errors).toHaveLength(1);
+      expect(errors[0].message).toMatch(
+        'Type "Product" already exists in the schema.',
+      );
+    });
+
+    it('value types cannot be entities (part 2)', () => {
+      schema = buildSchemaFromSDL(
+        gql`
+          type Product {
+            sku: ID
+          }
+        `,
+        schema,
+      );
+
+      const definitions = gql`
+        type Product @key(fields: "") {
+          sku: ID
+        }
+      `;
+
+      const errors = validateSDL(definitions, schema, [
+        UniqueTypeNamesWithoutEnumsOrScalars,
+      ]);
+      expect(errors).toHaveLength(1);
+      expect(errors[0].message).toMatch(
+        'Type "Product" already exists in the schema.',
+      );
+    });
+  });
 });

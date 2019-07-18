@@ -1,22 +1,17 @@
 import {
   GraphQLError,
   ASTVisitor,
-  print,
-  visit,
-  DocumentNode,
   Kind,
   ObjectTypeDefinitionNode,
   InterfaceTypeDefinitionNode,
   UnionTypeDefinitionNode,
   InputObjectTypeDefinitionNode,
-  FieldDefinitionNode,
-  InputValueDefinitionNode,
   NameNode,
 } from 'graphql';
 
 import { SDLValidationContext } from 'graphql/validation/ValidationContext';
 import Maybe from 'graphql/tsutils/Maybe';
-import { isTypeNodeAnEntity } from '../../utils';
+import { isTypeNodeAnEntity, diffFieldsOnTypeNodes } from '../../utils';
 
 // Types of nodes this validator is responsible for
 type TypesWithRequiredUniqueNames =
@@ -65,11 +60,31 @@ export function UniqueTypeNamesWithoutEnumsOrScalars(
     // Return early for value types (non-entities that have the same exact fields)
     if (
       typeNodeFromSchema &&
-      areTypeNodesIdentical(node, typeNodeFromSchema, context) &&
+      node.kind === typeNodeFromSchema.kind &&
+      node.kind !== Kind.UNION_TYPE_DEFINITION &&
       !isTypeNodeAnEntity(node) &&
       !isTypeNodeAnEntity(typeNodeFromSchema)
     ) {
-      return false;
+      const diff = diffFieldsOnTypeNodes(node, typeNodeFromSchema);
+      const diffEntries = Object.entries(diff);
+      const typesHaveSameShape =
+        diffEntries.length === 0 ||
+        diffEntries.every(([fieldName, types]) => {
+          if (types.length === 2) {
+            context.reportError(
+              new GraphQLError(
+                `Found field type mismatch on expected value type. '${node.name.value}.${fieldName}' is defined as both a ${types[0]} and a ${types[1]}. In order to define '${node.name.value}' in multiple places, the fields and their types must be identical.`,
+                [node, typeNodeFromSchema],
+              ),
+            );
+            return true;
+          }
+          return false;
+        });
+
+      if (typesHaveSameShape) {
+        return false;
+      }
     }
 
     if (typeNodeFromSchema) {
@@ -92,59 +107,4 @@ export function UniqueTypeNamesWithoutEnumsOrScalars(
 
     return false;
   }
-}
-
-function areTypeNodesIdentical(
-  node1: TypesWithRequiredUniqueNames,
-  node2: TypesWithRequiredUniqueNames,
-  context: SDLValidationContext,
-) {
-  const visitedFields: { [key: string]: string[] } = Object.create(null);
-
-  const doc: DocumentNode = {
-    kind: Kind.DOCUMENT,
-    definitions: [node1, node2],
-  };
-
-  function fieldVisitor(node: FieldDefinitionNode | InputValueDefinitionNode) {
-    const fieldName = node.name.value;
-
-    if (!visitedFields[fieldName]) {
-      visitedFields[fieldName] = [];
-    }
-    visitedFields[fieldName].push(print(node.type));
-  }
-
-  visit(doc, {
-    FieldDefinition: fieldVisitor,
-    InputValueDefinition: fieldVisitor,
-  });
-
-  const possibleErrors: GraphQLError[] = [];
-
-  const entries = Object.entries(visitedFields);
-  const fieldNamesOnTypeMatch =
-    entries.length > 0 &&
-    entries.every(([fieldName, types]) => {
-      if (types.length === 2) {
-        if (types[0] !== types[1]) {
-          possibleErrors.push(
-            new GraphQLError(
-              `Found field type mismatch on expected value type. '${node1.name.value}.${fieldName}' is defined as both a ${types[0]} and a ${types[1]}. In order to define '${node1.name.value}' in multiple places, the fields and their types must be identical.`,
-              [node1, node2],
-            ),
-          );
-        }
-        return true;
-      }
-      return false;
-    });
-
-  if (fieldNamesOnTypeMatch) {
-    possibleErrors.forEach(error => {
-      context.reportError(error);
-    });
-  }
-
-  return fieldNamesOnTypeMatch;
 }
