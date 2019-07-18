@@ -31,10 +31,6 @@
     "loglevel-debug": "^0.0.1",
     "pretty-format": "^24.7.0"
   },
-  "devDependencies": {
-    "apollo-server-core": "file:../apollo-server-core",
-    "apollo-server-types": "file:../apollo-server-types"
-  },
   "peerDependencies": {
     "graphql": "^14.2.1"
   }
