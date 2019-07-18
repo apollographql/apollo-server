@@ -305,7 +305,8 @@ export function testApolloServer<AS extends ApolloServerBase>(
         it('prohibits providing a gateway in addition to subscription options', async () => {
           const { gateway } = makeGatewayMock();
 
-          const expectedError = /Cannot define both `subscriptions` and `gateway`./;
+          const expectedError =
+            'Subscriptions are not yet compatible with the gateway';
 
           const incompatibleArgsSpy = jest.fn();
           await createApolloServer({
