@@ -11,7 +11,7 @@ import {
 
 import { SDLValidationContext } from 'graphql/validation/ValidationContext';
 import Maybe from 'graphql/tsutils/Maybe';
-import { isTypeNodeAnEntity, diffFieldsOnTypeNodes } from '../../utils';
+import { isTypeNodeAnEntity, diffTypeNodes } from '../../utils';
 
 // Types of nodes this validator is responsible for
 type TypesWithRequiredUniqueNames =
@@ -66,7 +66,6 @@ export function UniqueTypeNamesWithoutEnumsOrScalars(
      */
     if (
       typeNodeFromSchema &&
-      node.kind === typeNodeFromSchema.kind &&
       node.kind !== Kind.UNION_TYPE_DEFINITION &&
       !isTypeNodeAnEntity(node) &&
       !isTypeNodeAnEntity(typeNodeFromSchema)
@@ -75,18 +74,28 @@ export function UniqueTypeNamesWithoutEnumsOrScalars(
       // By inspecting the diff, we can warn when field types mismatch.
       // A diff entry will exist when a field exists on one type and not the other, or if there is a type mismatch on the field
       // i.e. { sku: [Int, String!], color: [String] }
-      const diff = diffFieldsOnTypeNodes(node, typeNodeFromSchema, schema);
-      const diffEntries = Object.entries(diff);
+      const { kind, fields } = diffTypeNodes(node, typeNodeFromSchema, schema);
+
+      // If the kinds don't match, we want to error if types have the same shape
+      if (kind.length > 0) {
+        possibleErrors.push(
+          new GraphQLError(
+            `Found kind mismatch on expected value type. '${typeName}' is defined as both a ${kind[0]} and a ${kind[1]}. In order to define ${typeName} in multiple places, the kinds must be identical.`,
+          ),
+        );
+      }
+
+      const fieldsDiff = Object.entries(fields);
       const typesHaveSameShape =
-        diffEntries.length === 0 ||
-        diffEntries.every(([fieldName, types]) => {
+        fieldsDiff.length === 0 ||
+        fieldsDiff.every(([fieldName, types]) => {
           // If a diff entry has two types, then the field name matches but the types do not.
           // In this case, we can push a useful error to hint to the user that we
           // think they tried to define a value type, but one of the fields has a type mismatch.
           if (types.length === 2) {
             possibleErrors.push(
               new GraphQLError(
-                `Found field type mismatch on expected value type. '${node.name.value}.${fieldName}' is defined as both a ${types[0]} and a ${types[1]}. In order to define '${node.name.value}' in multiple places, the fields and their types must be identical.`,
+                `Found field type mismatch on expected value type. '${typeName}.${fieldName}' is defined as both a ${types[0]} and a ${types[1]}. In order to define '${typeName}' in multiple places, the fields and their types must be identical.`,
                 [node, typeNodeFromSchema],
               ),
             );

@@ -326,7 +326,7 @@ export function isTypeNodeAnEntity(
   return isEntity;
 }
 
-export function diffFieldsOnTypeNodes(
+export function diffTypeNodes(
   firstNode: TypeDefinitionNode | TypeExtensionNode,
   secondNode: TypeDefinitionNode | TypeExtensionNode,
   schema: Maybe<GraphQLSchema>,
@@ -371,5 +371,17 @@ export function diffFieldsOnTypeNodes(
     InputValueDefinition: fieldVisitor,
   });
 
-  return fieldsDiff;
+  const typeNameDiff =
+    firstNode.name.value === secondNode.name.value
+      ? []
+      : [firstNode.name.value, secondNode.name.value];
+
+  const kindDiff =
+    firstNode.kind === secondNode.kind ? [] : [firstNode.kind, secondNode.kind];
+
+  return {
+    name: typeNameDiff,
+    kind: kindDiff,
+    fields: fieldsDiff,
+  };
 }
