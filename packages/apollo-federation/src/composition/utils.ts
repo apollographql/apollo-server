@@ -27,6 +27,7 @@ import {
   InputValueDefinitionNode,
   print,
   TypeExtensionNode,
+  BREAK,
 } from 'graphql';
 import Maybe from 'graphql/tsutils/Maybe';
 import { ExternalFieldDefinition } from './types';
@@ -317,6 +318,7 @@ export function isTypeNodeAnEntity(
     Directive(directive) {
       if (directive.name.value === 'key') {
         isEntity = true;
+        return BREAK;
       }
     },
   });
