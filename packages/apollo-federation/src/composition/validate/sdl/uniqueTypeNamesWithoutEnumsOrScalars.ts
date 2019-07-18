@@ -57,7 +57,13 @@ export function UniqueTypeNamesWithoutEnumsOrScalars(
       typeFromSchema &&
       (typeFromSchema.astNode as Maybe<TypesWithRequiredUniqueNames>);
 
-    // Return early for value types (non-entities that have the same exact fields)
+    /*
+     * Return early for value types
+     * Value types:
+     * 1) have the same kind (type, interface, input), extensions are excluded
+     * 2) are not entities
+     * 3) have the same set of fields
+     */
     if (
       typeNodeFromSchema &&
       node.kind === typeNodeFromSchema.kind &&
@@ -65,13 +71,20 @@ export function UniqueTypeNamesWithoutEnumsOrScalars(
       !isTypeNodeAnEntity(node) &&
       !isTypeNodeAnEntity(typeNodeFromSchema)
     ) {
+      const possibleErrors: GraphQLError[] = [];
+      // By inspecting the diff, we can warn when field types mismatch.
+      // A diff entry will exist when a field exists on one type and not the other, or if there is a type mismatch on the field
+      // i.e. { sku: [Int, String!], color: [String] }
       const diff = diffFieldsOnTypeNodes(node, typeNodeFromSchema);
       const diffEntries = Object.entries(diff);
       const typesHaveSameShape =
         diffEntries.length === 0 ||
         diffEntries.every(([fieldName, types]) => {
+          // If a diff entry has two types, then the field name matches but the types do not.
+          // In this case, we can push a useful error to hint to the user that we
+          // think they tried to define a value type, but one of the fields has a type mismatch.
           if (types.length === 2) {
-            context.reportError(
+            possibleErrors.push(
               new GraphQLError(
                 `Found field type mismatch on expected value type. '${node.name.value}.${fieldName}' is defined as both a ${types[0]} and a ${types[1]}. In order to define '${node.name.value}' in multiple places, the fields and their types must be identical.`,
                 [node, typeNodeFromSchema],
@@ -83,6 +96,8 @@ export function UniqueTypeNamesWithoutEnumsOrScalars(
         });
 
       if (typesHaveSameShape) {
+        // Only push these errors if we have what looks like a value type
+        possibleErrors.forEach(error => context.reportError(error));
         return false;
       }
     }
