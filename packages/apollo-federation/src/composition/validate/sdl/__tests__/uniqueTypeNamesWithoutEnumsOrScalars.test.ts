@@ -108,6 +108,35 @@ describe('UniqueTypeNamesWithoutEnumsOrScalars', () => {
       );
     });
 
+    it('invalid value types (duplicated within the same SDL)', () => {
+      schema = buildSchemaFromSDL(
+        gql`
+          scalar Ignore
+        `,
+        schema,
+      );
+
+      const sdl = gql`
+        type Product {
+          sku: ID!
+          color: String
+        }
+
+        type Product {
+          sku: ID!
+          color: String
+        }
+      `;
+
+      const errors = validateSDL(sdl, schema, [
+        UniqueTypeNamesWithoutEnumsOrScalars,
+      ]);
+      expect(errors).toHaveLength(1);
+      expect(errors[0].message).toMatch(
+        'There can be only one type named "Product".',
+      );
+    });
+
     it('interface definitions', () => {
       schema = buildSchemaFromSDL(
         gql`

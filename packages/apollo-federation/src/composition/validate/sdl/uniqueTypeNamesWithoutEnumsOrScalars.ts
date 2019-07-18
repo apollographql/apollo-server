@@ -11,12 +11,14 @@ import {
   InputObjectTypeDefinitionNode,
   FieldDefinitionNode,
   InputValueDefinitionNode,
+  NameNode,
 } from 'graphql';
 
 import { SDLValidationContext } from 'graphql/validation/ValidationContext';
 import Maybe from 'graphql/tsutils/Maybe';
 import { isTypeNodeAnEntity } from '../../utils';
 
+// Types of nodes this validator is responsible for
 type TypesWithRequiredUniqueNames =
   | ObjectTypeDefinitionNode
   | InterfaceTypeDefinitionNode
@@ -40,7 +42,7 @@ export function UniqueTypeNamesWithoutEnumsOrScalars(
   context: SDLValidationContext,
 ): ASTVisitor {
   const knownTypeNames: {
-    [key: string]: TypesWithRequiredUniqueNames | undefined;
+    [typeName: string]: NameNode;
   } = Object.create(null);
   const schema = context.getSchema();
 
@@ -59,15 +61,13 @@ export function UniqueTypeNamesWithoutEnumsOrScalars(
     const typeNodeFromSchema =
       typeFromSchema &&
       (typeFromSchema.astNode as Maybe<TypesWithRequiredUniqueNames>);
-    const typeNodeFromDefinitions = knownTypeNames[typeName];
-    const duplicateTypeNode = typeNodeFromSchema || typeNodeFromDefinitions;
 
     // Return early for value types (non-entities that have the same exact fields)
     if (
-      duplicateTypeNode &&
-      areTypeNodesIdentical(node, duplicateTypeNode, context) &&
+      typeNodeFromSchema &&
+      areTypeNodesIdentical(node, typeNodeFromSchema, context) &&
       !isTypeNodeAnEntity(node) &&
-      !isTypeNodeAnEntity(duplicateTypeNode)
+      !isTypeNodeAnEntity(typeNodeFromSchema)
     ) {
       return false;
     }
@@ -79,15 +79,15 @@ export function UniqueTypeNamesWithoutEnumsOrScalars(
       return;
     }
 
-    if (typeNodeFromDefinitions) {
+    if (knownTypeNames[typeName]) {
       context.reportError(
         new GraphQLError(duplicateTypeNameMessage(typeName), [
-          typeNodeFromDefinitions,
+          knownTypeNames[typeName],
           node.name,
         ]),
       );
     } else {
-      knownTypeNames[typeName] = node;
+      knownTypeNames[typeName] = node.name;
     }
 
     return false;
