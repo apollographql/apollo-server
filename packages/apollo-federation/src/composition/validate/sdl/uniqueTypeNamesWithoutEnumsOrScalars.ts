@@ -75,7 +75,7 @@ export function UniqueTypeNamesWithoutEnumsOrScalars(
       // By inspecting the diff, we can warn when field types mismatch.
       // A diff entry will exist when a field exists on one type and not the other, or if there is a type mismatch on the field
       // i.e. { sku: [Int, String!], color: [String] }
-      const diff = diffFieldsOnTypeNodes(node, typeNodeFromSchema);
+      const diff = diffFieldsOnTypeNodes(node, typeNodeFromSchema, schema);
       const diffEntries = Object.entries(diff);
       const typesHaveSameShape =
         diffEntries.length === 0 ||

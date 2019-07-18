@@ -135,7 +135,7 @@ export function UniqueFieldDefinitionNames(
         !isTypeNodeAnEntity(valueTypeNode) &&
         valueTypeNode.kind === node.kind
       ) {
-        const diff = diffFieldsOnTypeNodes(node, valueTypeNode);
+        const diff = diffFieldsOnTypeNodes(node, valueTypeNode, schema);
         if (Object.values(diff).every(diffEntry => diffEntry.length === 2)) {
           return false;
         }

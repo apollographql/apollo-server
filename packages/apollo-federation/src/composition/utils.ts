@@ -25,9 +25,9 @@ import {
   FieldNode,
   TypeDefinitionNode,
   InputValueDefinitionNode,
-  print,
   TypeExtensionNode,
   BREAK,
+  typeFromAST,
 } from 'graphql';
 import Maybe from 'graphql/tsutils/Maybe';
 import { ExternalFieldDefinition } from './types';
@@ -329,36 +329,47 @@ export function isTypeNodeAnEntity(
 export function diffFieldsOnTypeNodes(
   firstNode: TypeDefinitionNode | TypeExtensionNode,
   secondNode: TypeDefinitionNode | TypeExtensionNode,
+  schema: Maybe<GraphQLSchema>,
 ) {
-  const visitedFields: { [fieldName: string]: string[] } = Object.create(null);
+  const fieldsDiff: {
+    [fieldName: string]: GraphQLNamedType[];
+  } = Object.create(null);
 
-  const doc: DocumentNode = {
+  const document: DocumentNode = {
     kind: Kind.DOCUMENT,
     definitions: [firstNode, secondNode],
   };
 
   function fieldVisitor(node: FieldDefinitionNode | InputValueDefinitionNode) {
+    if (!schema) return BREAK;
+
     const fieldName = node.name.value;
 
-    if (!visitedFields[fieldName]) {
-      visitedFields[fieldName] = [];
+    // FIXME: TypeScript doesn’t currently support passing in a type union
+    // to an overloaded function like `typeFromAST`
+    // See https://github.com/Microsoft/TypeScript/issues/14107
+    const type = typeFromAST(schema, node.type as any);
+    if (!type) return;
+
+    if (!fieldsDiff[fieldName]) {
+      fieldsDiff[fieldName] = [type];
+      return;
     }
-    visitedFields[fieldName].push(print(node.type));
+
+    // If we've seen this field twice and the types are the same, remove this
+    // field from the diff result
+    const fieldTypes = fieldsDiff[fieldName];
+    if (isEqualType(fieldTypes[0], type)) {
+      delete fieldsDiff[fieldName];
+    } else {
+      fieldTypes.push(type);
+    }
   }
 
-  visit(doc, {
+  visit(document, {
     FieldDefinition: fieldVisitor,
     InputValueDefinition: fieldVisitor,
   });
 
-  const diff = Object.entries(visitedFields).reduce(
-    (acc, [fieldName, types]) => {
-      if (types.length === 2 && types[0] === types[1]) return acc;
-      acc[fieldName] = types;
-      return acc;
-    },
-    {} as { [fieldName: string]: string[] },
-  );
-
-  return diff;
+  return fieldsDiff;
 }
