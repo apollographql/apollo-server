@@ -143,8 +143,8 @@ On startup, the gateway will fetch the service capabilities from the running ser
 For existing services, it's likely that you've already implemented some form of authentication to convert a request into a user, or require some information passed to the service through request headers. `@apollo/gateway` makes it easy to reuse the context feature of Apollo Server to customize what information is sent to underlying services. Let's see what it looks like to pass user information along from the gateway to its services:
 
 ```javascript{9-18,23-32}
-import { ApolloServer } from 'apollo-server';
-import { ApolloGateway, RemoteGraphQLDataSource } from '@apollo/gateway';
+const { ApolloServer } = require('apollo-server');
+const { ApolloGateway, RemoteGraphQLDataSource } = require('@apollo/gateway');
 
 const gateway = new ApolloGateway({
   serviceList: [
