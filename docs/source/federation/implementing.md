@@ -122,7 +122,7 @@ const gateway = new ApolloGateway({
   ],
 });
 
-const server = new ApolloServer({ gateway });
+const server = new ApolloServer({ gateway, subscriptions: false });
 
 server.listen().then(({ url }) => {
   console.log(`🚀 Server ready at ${url}`);
@@ -165,6 +165,7 @@ const gateway = new ApolloGateway({
 
 const server = new ApolloServer({
   gateway,
+  subscriptions: false,
   context: ({ req }) => {
     // get the user token from the headers
     const token = req.headers.authorization || '';
