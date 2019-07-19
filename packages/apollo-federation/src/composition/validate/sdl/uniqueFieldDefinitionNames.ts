@@ -122,26 +122,28 @@ export function UniqueFieldDefinitionNames(
   ) {
     const typeName = node.name.value;
 
-    if (!isTypeNodeAnEntity(node)) {
-      const valueTypeFromSchema =
-        existingTypeMap[typeName] &&
-        (existingTypeMap[typeName].astNode as Maybe<
-          TypeDefinitionsRequiringUniqueFields
-        >);
-      const valueTypeNode =
-        valueTypeFromSchema || possibleValueTypes[node.name.value];
+    const valueTypeFromSchema =
+      existingTypeMap[typeName] &&
+      (existingTypeMap[typeName].astNode as Maybe<
+        TypeDefinitionsRequiringUniqueFields
+      >);
+    const valueTypeNode =
+      valueTypeFromSchema || possibleValueTypes[node.name.value];
 
-      if (valueTypeNode && !isTypeNodeAnEntity(valueTypeNode)) {
-        const { kind, fields } = diffTypeNodes(node, valueTypeNode, schema);
-        if (
-          kind.length === 0 &&
-          Object.values(fields).every(diffEntry => diffEntry.length === 2)
-        ) {
-          return false;
-        }
-      } else {
-        possibleValueTypes[node.name.value] = node;
+    if (
+      valueTypeNode &&
+      !isTypeNodeAnEntity(valueTypeNode) &&
+      !isTypeNodeAnEntity(node)
+    ) {
+      const { kind, fields } = diffTypeNodes(node, valueTypeNode, schema);
+      if (
+        kind.length === 0 &&
+        Object.values(fields).every(diffEntry => diffEntry.length === 2)
+      ) {
+        return false;
       }
+    } else {
+      possibleValueTypes[node.name.value] = node;
     }
 
     if (!knownFieldNames[typeName]) {

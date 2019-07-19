@@ -343,7 +343,7 @@ describe('UniqueTypeNamesWithoutEnumsOrScalars', () => {
       ]);
       expect(errors).toHaveLength(1);
       expect(errors[0].message).toMatch(
-        'Type "Product" already exists in the schema.',
+        'Value types cannot be entities (using the @key directive).',
       );
     });
 
@@ -368,8 +368,30 @@ describe('UniqueTypeNamesWithoutEnumsOrScalars', () => {
       ]);
       expect(errors).toHaveLength(1);
       expect(errors[0].message).toMatch(
-        'Type "Product" already exists in the schema.',
+        'Value types cannot be entities (using the @key directive).',
       );
+    });
+
+    it('no false positives for properly formed entities (that look like value types)', () => {
+      schema = buildSchemaFromSDL(
+        gql`
+          type Product @key(fields: "") {
+            sku: ID
+          }
+        `,
+        schema,
+      );
+
+      const definitions = gql`
+        extend type Product @key(fields: "") {
+          sku: ID
+        }
+      `;
+
+      const errors = validateSDL(definitions, schema, [
+        UniqueTypeNamesWithoutEnumsOrScalars,
+      ]);
+      expect(errors).toHaveLength(0);
     });
   });
 });

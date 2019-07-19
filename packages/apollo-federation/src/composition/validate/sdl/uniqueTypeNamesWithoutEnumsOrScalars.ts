@@ -64,26 +64,12 @@ export function UniqueTypeNamesWithoutEnumsOrScalars(
      * 2) are not entities
      * 3) have the same set of fields
      */
-    if (
-      typeNodeFromSchema &&
-      node.kind !== Kind.UNION_TYPE_DEFINITION &&
-      !isTypeNodeAnEntity(node) &&
-      !isTypeNodeAnEntity(typeNodeFromSchema)
-    ) {
+    if (typeNodeFromSchema && node.kind !== Kind.UNION_TYPE_DEFINITION) {
       const possibleErrors: GraphQLError[] = [];
       // By inspecting the diff, we can warn when field types mismatch.
       // A diff entry will exist when a field exists on one type and not the other, or if there is a type mismatch on the field
       // i.e. { sku: [Int, String!], color: [String] }
       const { kind, fields } = diffTypeNodes(node, typeNodeFromSchema, schema);
-
-      // If the kinds don't match, we want to error if types have the same shape
-      if (kind.length > 0) {
-        possibleErrors.push(
-          new GraphQLError(
-            `Found kind mismatch on expected value type. '${typeName}' is defined as both a ${kind[0]} and a ${kind[1]}. In order to define ${typeName} in multiple places, the kinds must be identical.`,
-          ),
-        );
-      }
 
       const fieldsDiff = Object.entries(fields);
       const typesHaveSameShape =
@@ -104,9 +90,34 @@ export function UniqueTypeNamesWithoutEnumsOrScalars(
           return false;
         });
 
+      // Once we determined that types have the same shape (name, kind, and field
+      // names), we can provide useful errors
       if (typesHaveSameShape) {
-        // Only push these errors if we have what looks like a value type
+        // Report errors that were collected while determining the matching shape of the types
         possibleErrors.forEach(error => context.reportError(error));
+
+        // Error if the kinds don't match
+        if (kind.length > 0) {
+          context.reportError(
+            new GraphQLError(
+              `Found kind mismatch on expected value type. '${typeName}' is defined as both a ${kind[0]} and a ${kind[1]}. In order to define ${typeName} in multiple places, the kinds must be identical.`,
+              [node, typeNodeFromSchema],
+            ),
+          );
+        }
+
+        // Error if either is an entity
+        if (
+          isTypeNodeAnEntity(node) ||
+          isTypeNodeAnEntity(typeNodeFromSchema)
+        ) {
+          context.reportError(
+            new GraphQLError(
+              `Value types cannot be entities (using the @key directive). Please ensure that one type extends the other correctly, or remove the @key directive if this is not an entity.`,
+            ),
+          );
+        }
+
         return false;
       }
     }
