@@ -44,6 +44,10 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
 });
+
+server.listen(4001).then(({ url }) => {
+    console.log(`🚀 Server ready at ${url}`);
+});
 ```
 
 If you're already familiar with [setting up an Apollo Server](/essentials/server/#creating-a-server), this should look pretty familiar. If not, we recommend you first take a moment to get comfortable with this topic before jumping in to federation.
@@ -87,6 +91,10 @@ const resolvers = {
 
 const server = new ApolloServer({
   schema: buildFederatedSchema([{ typeDefs, resolvers }])
+});
+
+server.listen(4001).then(({ url }) => {
+    console.log(`🚀 Server ready at ${url}`);
 });
 ```
 > Note: we're now providing a `schema` to the `ApolloServer` constructor, rather than `typeDefs` and `resolvers`.
