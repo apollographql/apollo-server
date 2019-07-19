@@ -8,6 +8,7 @@ import {
   InputObjectTypeDefinitionNode,
   NameNode,
 } from 'graphql';
+import xorBy from 'lodash.xorby';
 
 import { SDLValidationContext } from 'graphql/validation/ValidationContext';
 import Maybe from 'graphql/tsutils/Maybe';
@@ -57,6 +58,35 @@ export function UniqueTypeNamesWithoutEnumsOrScalars(
       typeFromSchema &&
       (typeFromSchema.astNode as Maybe<TypesWithRequiredUniqueNames>);
 
+    // Handle union types with the same name
+    if (
+      typeNodeFromSchema &&
+      typeNodeFromSchema.kind === Kind.UNION_TYPE_DEFINITION &&
+      node.kind === Kind.UNION_TYPE_DEFINITION
+    ) {
+      const unionDiff = xorBy(
+        node.types,
+        typeNodeFromSchema.types,
+        'name.value',
+      );
+
+      const diffLength = unionDiff.length;
+      if (diffLength > 0) {
+        context.reportError(
+          new GraphQLError(
+            `The union '${typeName}' is defined in multiple places, however the unioned types do not match. Union types with the same name must also consist of identical types. The type${
+              diffLength > 1 ? 's' : ''
+            } ${unionDiff.map(diffEntry => diffEntry.name.value).join(', ')} ${
+              diffLength > 1 ? 'are' : 'is'
+            } mismatched.`,
+            [node, typeNodeFromSchema],
+          ),
+        );
+      }
+
+      return false;
+    }
+
     /*
      * Return early for value types
      * Value types:
@@ -64,7 +94,7 @@ export function UniqueTypeNamesWithoutEnumsOrScalars(
      * 2) are not entities
      * 3) have the same set of fields
      */
-    if (typeNodeFromSchema && node.kind !== Kind.UNION_TYPE_DEFINITION) {
+    if (typeNodeFromSchema) {
       const possibleErrors: GraphQLError[] = [];
       // By inspecting the diff, we can warn when field types mismatch.
       // A diff entry will exist when a field exists on one type and not the other, or if there is a type mismatch on the field

@@ -171,7 +171,7 @@ describe('UniqueTypeNamesWithoutEnumsOrScalars', () => {
       );
 
       const sdl = gql`
-        union UPC = String | Int
+        union UPC = String | Int | Boolean
       `;
 
       const errors = validateSDL(sdl, schema, [
@@ -179,7 +179,7 @@ describe('UniqueTypeNamesWithoutEnumsOrScalars', () => {
       ]);
       expect(errors).toHaveLength(1);
       expect(errors[0].message).toMatch(
-        'Type "UPC" already exists in the schema.',
+        "The union 'UPC' is defined in multiple places, however the unioned types do not match.",
       );
     });
 
@@ -290,6 +290,24 @@ describe('UniqueTypeNamesWithoutEnumsOrScalars', () => {
       `;
 
       const errors = validateSDL(definitions, schema, [
+        UniqueTypeNamesWithoutEnumsOrScalars,
+      ]);
+      expect(errors).toHaveLength(0);
+    });
+
+    it('identical union types', () => {
+      schema = buildSchemaFromSDL(
+        gql`
+          union UPC = String | Int
+        `,
+        schema,
+      );
+
+      const sdl = gql`
+        union UPC = String | Int
+      `;
+
+      const errors = validateSDL(sdl, schema, [
         UniqueTypeNamesWithoutEnumsOrScalars,
       ]);
       expect(errors).toHaveLength(0);
