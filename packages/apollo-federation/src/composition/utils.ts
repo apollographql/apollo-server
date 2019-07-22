@@ -27,7 +27,7 @@ import {
   InputValueDefinitionNode,
   TypeExtensionNode,
   BREAK,
-  typeFromAST,
+  print,
 } from 'graphql';
 import Maybe from 'graphql/tsutils/Maybe';
 import { ExternalFieldDefinition } from './types';
@@ -329,10 +329,9 @@ export function isTypeNodeAnEntity(
 export function diffTypeNodes(
   firstNode: TypeDefinitionNode | TypeExtensionNode,
   secondNode: TypeDefinitionNode | TypeExtensionNode,
-  schema: Maybe<GraphQLSchema>,
 ) {
   const fieldsDiff: {
-    [fieldName: string]: GraphQLNamedType[];
+    [fieldName: string]: string[];
   } = Object.create(null);
 
   const document: DocumentNode = {
@@ -341,15 +340,9 @@ export function diffTypeNodes(
   };
 
   function fieldVisitor(node: FieldDefinitionNode | InputValueDefinitionNode) {
-    if (!schema) return BREAK;
-
     const fieldName = node.name.value;
 
-    // FIXME: TypeScript doesn’t currently support passing in a type union
-    // to an overloaded function like `typeFromAST`
-    // See https://github.com/Microsoft/TypeScript/issues/14107
-    const type = typeFromAST(schema, node.type as any);
-    if (!type) return;
+    const type = print(node.type);
 
     if (!fieldsDiff[fieldName]) {
       fieldsDiff[fieldName] = [type];
@@ -359,7 +352,7 @@ export function diffTypeNodes(
     // If we've seen this field twice and the types are the same, remove this
     // field from the diff result
     const fieldTypes = fieldsDiff[fieldName];
-    if (isEqualType(fieldTypes[0], type)) {
+    if (fieldTypes[0] === type) {
       delete fieldsDiff[fieldName];
     } else {
       fieldTypes.push(type);

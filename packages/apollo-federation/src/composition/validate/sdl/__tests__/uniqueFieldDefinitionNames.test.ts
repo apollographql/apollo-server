@@ -1,16 +1,40 @@
-import { GraphQLSchema, specifiedDirectives } from 'graphql';
+import {
+  GraphQLSchema,
+  specifiedDirectives,
+  DocumentNode,
+  Kind,
+  extendSchema,
+} from 'graphql';
 import { validateSDL } from 'graphql/validation/validate';
 import gql from 'graphql-tag';
-import { buildSchemaFromSDL } from 'apollo-graphql';
 import {
   typeSerializer,
   graphqlErrorSerializer,
 } from '../../../../snapshotSerializers';
+import { buildMapsFromServiceList } from '../../../compose';
 import federationDirectives from '../../../../directives';
 import { UniqueFieldDefinitionNames } from '..';
+import { ServiceDefinition } from '../../../types';
 
 expect.addSnapshotSerializer(graphqlErrorSerializer);
 expect.addSnapshotSerializer(typeSerializer);
+
+// simulate the first half of the composition process
+function createDocumentsForServices(serviceList: ServiceDefinition[]) {
+  const { definitionsMap, extensionsMap } = buildMapsFromServiceList(
+    serviceList,
+  );
+  return [
+    {
+      kind: Kind.DOCUMENT,
+      definitions: Object.values(definitionsMap).flat(),
+    },
+    {
+      kind: Kind.DOCUMENT,
+      definitions: Object.values(extensionsMap).flat(),
+    },
+  ];
+}
 
 describe('UniqueFieldDefinitionNames', () => {
   let schema: GraphQLSchema;
@@ -25,22 +49,36 @@ describe('UniqueFieldDefinitionNames', () => {
 
   describe('enforces unique field names for', () => {
     it('object type definitions', () => {
-      schema = buildSchemaFromSDL(
-        gql`
-          type Product {
-            sku: ID!
-          }
-        `,
-        schema,
+      const [definitions, extensions] = createDocumentsForServices([
+        {
+          typeDefs: gql`
+            type Product {
+              sku: ID!
+            }
+          `,
+          name: 'serviceA',
+        },
+        {
+          typeDefs: gql`
+            extend type Product {
+              sku: Int!
+            }
+          `,
+          name: 'serviceB',
+        },
+      ]);
+
+      const errors = validateSDL(definitions, schema, [
+        UniqueFieldDefinitionNames,
+      ]);
+      schema = extendSchema(schema, definitions, {
+        assumeValidSDL: true,
+      });
+
+      errors.push(
+        ...validateSDL(extensions, schema, [UniqueFieldDefinitionNames]),
       );
 
-      const sdl = gql`
-        extend type Product {
-          sku: Int!
-        }
-      `;
-
-      const errors = validateSDL(sdl, schema, [UniqueFieldDefinitionNames]);
       expect(errors).toHaveLength(1);
       expect(errors[0].message).toMatch(
         'Field "Product.sku" already exists in the schema.',
@@ -48,22 +86,32 @@ describe('UniqueFieldDefinitionNames', () => {
     });
 
     it('interface definitions', () => {
-      schema = buildSchemaFromSDL(
-        gql`
-          interface Product {
-            sku: ID!
-          }
-        `,
-        schema,
+      const [definitions, extensions] = createDocumentsForServices([
+        {
+          typeDefs: gql`
+            interface Product {
+              sku: ID!
+            }
+          `,
+          name: 'serviceA',
+        },
+        {
+          typeDefs: gql`
+            extend interface Product {
+              sku: String!
+            }
+          `,
+          name: 'serviceB',
+        },
+      ]);
+
+      const errors = validateSDL(definitions, schema, [
+        UniqueFieldDefinitionNames,
+      ]);
+      schema = extendSchema(schema, definitions, { assumeValidSDL: true });
+      errors.push(
+        ...validateSDL(extensions, schema, [UniqueFieldDefinitionNames]),
       );
-
-      const sdl = gql`
-        extend interface Product {
-          sku: String!
-        }
-      `;
-
-      const errors = validateSDL(sdl, schema, [UniqueFieldDefinitionNames]);
       expect(errors).toHaveLength(1);
       expect(errors[0].message).toMatch(
         'Field "Product.sku" already exists in the schema.',
@@ -71,22 +119,32 @@ describe('UniqueFieldDefinitionNames', () => {
     });
 
     it('input object definitions', () => {
-      schema = buildSchemaFromSDL(
-        gql`
-          input Product {
-            sku: ID
-          }
-        `,
-        schema,
+      const [definitions, extensions] = createDocumentsForServices([
+        {
+          typeDefs: gql`
+            input Product {
+              sku: ID
+            }
+          `,
+          name: 'serviceA',
+        },
+        {
+          typeDefs: gql`
+            extend input Product {
+              sku: String!
+            }
+          `,
+          name: 'serviceB',
+        },
+      ]);
+
+      const errors = validateSDL(definitions, schema, [
+        UniqueFieldDefinitionNames,
+      ]);
+      schema = extendSchema(schema, definitions, { assumeValidSDL: true });
+      errors.push(
+        ...validateSDL(extensions, schema, [UniqueFieldDefinitionNames]),
       );
-
-      const sdl = gql`
-        extend input Product {
-          sku: String!
-        }
-      `;
-
-      const errors = validateSDL(sdl, schema, [UniqueFieldDefinitionNames]);
       expect(errors).toHaveLength(1);
       expect(errors[0].message).toMatch(
         'Field "Product.sku" already exists in the schema.',
@@ -96,163 +154,205 @@ describe('UniqueFieldDefinitionNames', () => {
 
   describe('permits duplicate field names for', () => {
     it('value types (identical object types)', () => {
-      schema = buildSchemaFromSDL(
-        gql`
-          type Product {
-            sku: ID!
-            color: String
-          }
-        `,
-        schema,
-      );
+      const [definitions] = createDocumentsForServices([
+        {
+          typeDefs: gql`
+            type Product {
+              sku: ID!
+              color: String
+            }
+          `,
+          name: 'serviceA',
+        },
+        {
+          typeDefs: gql`
+            type Product {
+              sku: ID!
+              color: String
+            }
+          `,
+          name: 'serviceB',
+        },
+      ]);
 
-      const sdl = gql`
-        type Product {
-          sku: ID!
-          color: String
-        }
-      `;
-
-      const errors = validateSDL(sdl, schema, [UniqueFieldDefinitionNames]);
+      const errors = validateSDL(definitions, schema, [
+        UniqueFieldDefinitionNames,
+      ]);
       expect(errors).toHaveLength(0);
     });
 
     it('value types (identical interface types)', () => {
-      schema = buildSchemaFromSDL(
-        gql`
-          interface Product {
-            sku: ID!
-            color: String
-          }
-        `,
-        schema,
-      );
+      const [definitions] = createDocumentsForServices([
+        {
+          typeDefs: gql`
+            interface Product {
+              sku: ID!
+              color: String
+            }
+          `,
+          name: 'serviceA',
+        },
+        {
+          typeDefs: gql`
+            interface Product {
+              sku: ID!
+              color: String
+            }
+          `,
+          name: 'serviceB',
+        },
+      ]);
 
-      const sdl = gql`
-        interface Product {
-          sku: ID!
-          color: String
-        }
-      `;
-
-      const errors = validateSDL(sdl, schema, [UniqueFieldDefinitionNames]);
+      const errors = validateSDL(definitions, schema, [
+        UniqueFieldDefinitionNames,
+      ]);
       expect(errors).toHaveLength(0);
     });
 
     it('value types (identical input types)', () => {
-      schema = buildSchemaFromSDL(
-        gql`
-          input Product {
-            sku: ID!
-            color: String
-          }
-        `,
-        schema,
-      );
+      const [definitions] = createDocumentsForServices([
+        {
+          typeDefs: gql`
+            input Product {
+              sku: ID!
+              color: String
+            }
+          `,
+          name: 'serviceA',
+        },
+        {
+          typeDefs: gql`
+            input Product {
+              sku: ID!
+              color: String
+            }
+          `,
+          name: 'serviceB',
+        },
+      ]);
 
-      const sdl = gql`
-        input Product {
-          sku: ID!
-          color: String
-        }
-      `;
-
-      const errors = validateSDL(sdl, schema, [UniqueFieldDefinitionNames]);
+      const errors = validateSDL(definitions, schema, [
+        UniqueFieldDefinitionNames,
+      ]);
       expect(errors).toHaveLength(0);
     });
 
     it('object type definitions (non-identical, value types with type mismatch)', () => {
-      schema = buildSchemaFromSDL(
-        gql`
-          type Product {
-            sku: ID!
-            color: String
-            quantity: Int
-          }
-        `,
-        schema,
-      );
+      const [definitions] = createDocumentsForServices([
+        {
+          typeDefs: gql`
+            type Product {
+              sku: ID!
+              color: String
+              quantity: Int
+            }
+          `,
+          name: 'serviceA',
+        },
+        {
+          typeDefs: gql`
+            type Product {
+              sku: String!
+              color: String
+              quantity: Int!
+            }
+          `,
+          name: 'serviceB',
+        },
+      ]);
 
-      const sdl = gql`
-        type Product {
-          sku: String!
-          color: String
-          quantity: Int!
-        }
-      `;
-
-      const errors = validateSDL(sdl, schema, [UniqueFieldDefinitionNames]);
+      const errors = validateSDL(definitions, schema, [
+        UniqueFieldDefinitionNames,
+      ]);
       expect(errors).toHaveLength(0);
     });
   });
 
   describe('edge cases', () => {
     it('value types must be of the same kind', () => {
-      schema = buildSchemaFromSDL(
-        gql`
-          type Product {
-            sku: ID!
-          }
-        `,
-        schema,
-      );
+      const [definitions] = createDocumentsForServices([
+        {
+          typeDefs: gql`
+            type Product {
+              sku: ID!
+            }
+          `,
+          name: 'serviceA',
+        },
+        {
+          typeDefs: gql`
+            input Product {
+              sku: ID!
+            }
+          `,
+          name: 'serviceB',
+        },
+      ]);
 
-      const sdl = gql`
-        input Product {
-          sku: ID!
-        }
-      `;
-
-      const errors = validateSDL(sdl, schema, [UniqueFieldDefinitionNames]);
+      const errors = validateSDL(definitions, schema, [
+        UniqueFieldDefinitionNames,
+      ]);
       expect(errors).toHaveLength(1);
       expect(errors[0].message).toMatch(
-        'Field "Product.sku" already exists in the schema.',
+        'Field "Product.sku" can only be defined once.',
       );
     });
 
     it('disallows "value types" that are entities (part 1)', () => {
-      schema = buildSchemaFromSDL(
-        gql`
-          type Product @key(fields: "") {
-            sku: ID!
-          }
-        `,
-        schema,
-      );
+      const [definitions] = createDocumentsForServices([
+        {
+          typeDefs: gql`
+            type Product @key(fields: "sku") {
+              sku: ID!
+            }
+          `,
+          name: 'serviceA',
+        },
+        {
+          typeDefs: gql`
+            type Product {
+              sku: ID!
+            }
+          `,
+          name: 'serviceB',
+        },
+      ]);
 
-      const sdl = gql`
-        type Product {
-          sku: ID!
-        }
-      `;
-
-      const errors = validateSDL(sdl, schema, [UniqueFieldDefinitionNames]);
+      const errors = validateSDL(definitions, schema, [
+        UniqueFieldDefinitionNames,
+      ]);
       expect(errors).toHaveLength(1);
       expect(errors[0].message).toMatch(
-        'Field "Product.sku" already exists in the schema.',
+        'Field "Product.sku" can only be defined once.',
       );
     });
 
     it('disallows "value types" that are entities (part 2)', () => {
-      schema = buildSchemaFromSDL(
-        gql`
-          type Product {
-            sku: ID!
-          }
-        `,
-        schema,
-      );
+      const [definitions] = createDocumentsForServices([
+        {
+          typeDefs: gql`
+            type Product @key(fields: "sku") {
+              sku: ID!
+            }
+          `,
+          name: 'serviceA',
+        },
+        {
+          typeDefs: gql`
+            type Product @key(fields: "sku") {
+              sku: ID!
+            }
+          `,
+          name: 'serviceB',
+        },
+      ]);
 
-      const sdl = gql`
-        type Product @key(fields: "") {
-          sku: ID!
-        }
-      `;
-
-      const errors = validateSDL(sdl, schema, [UniqueFieldDefinitionNames]);
+      const errors = validateSDL(definitions, schema, [
+        UniqueFieldDefinitionNames,
+      ]);
       expect(errors).toHaveLength(1);
       expect(errors[0].message).toMatch(
-        'Field "Product.sku" already exists in the schema.',
+        'Field "Product.sku" can only be defined once.',
       );
     });
   });
