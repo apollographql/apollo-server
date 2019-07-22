@@ -7,16 +7,12 @@ import {
 } from 'graphql';
 import { validateSDL } from 'graphql/validation/validate';
 import gql from 'graphql-tag';
-import {
-  typeSerializer,
-  graphqlErrorSerializer,
-} from '../../../../snapshotSerializers';
+import { typeSerializer } from '../../../../snapshotSerializers';
 import { buildMapsFromServiceList } from '../../../compose';
 import federationDirectives from '../../../../directives';
 import { UniqueFieldDefinitionNames } from '..';
 import { ServiceDefinition } from '../../../types';
 
-expect.addSnapshotSerializer(graphqlErrorSerializer);
 expect.addSnapshotSerializer(typeSerializer);
 
 // simulate the first half of the composition process
