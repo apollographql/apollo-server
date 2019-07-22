@@ -165,24 +165,32 @@ extend type Query {
 
 There is no need to explictly define `Query` or `Mutation` base types anywhere; Apollo automatically handles this for you.
 
-## Sharing Types
+## Value Types
 
-Sometimes, Enum or Scalar types are needed in multiple services. Rather than having a single service "own" those types, all services that use them are expected to share ownership of those types.
+A natural overlap among identical types between services is not uncommon. Rather than having a single service "own" those types, all services that use them are expected to share ownership. This form of type "duplication" across services is supported for Scalars, Objects, Interfaces, Enums, Unions, and Inputs. The rule of thumb for any of these value types is that the types **must be identical** in name and contents.
 
-Defining the same Enum or Scalar across services is supported **as long as the definitions are all identical**.
+### Objects, Interfaces, and Inputs
+For types with field definitions, the fields _and their types_ must match, without any more or less.
 
+### Scalars
+For Scalar values, it's important that services **share the same serialization and parsing logic**, since there is no way to validate that logic from the schema level by federation tooling.
+
+### Enums
 For Enum types, all values must match across services. **Even if a service doesn't use all values in an Enum, they still must be defined in the schema**. Failure to include all enum values in all services that use the Enum will result in a validation error when building the federated schema.
 
-For scalar values, it's important that services **share the same serialization and parsing logic**, since there is no way to validate that logic from the schema level by federation tooling.
+### Unions
+Union types must share the same unioned types, without any more or less.
 
-In the following example, the Product and User services both use the same ProductCategory enum and Date scalar.
+In the following example, the Product and User services both use the same ProductCategory enum, Date scalar, and UPC union.
 
 ```graphql
 # Product Service
 scalar Date
 
+union UPC = String | ID
+
 type Product @key(fields: "sku"){
-  sku: ID!
+  sku: UPC!
   category: ProductCategory
   dateCreated: Date
 }
@@ -196,16 +204,23 @@ enum ProductCategory {
 # User Service
 scalar Date
 
+union UPC = String | ID
+
 type User @key(fields: "id"){
   id: ID!
   dateCreated: Date
   favoriteCategory: ProductCategory
+  favoriteProducts: [Product!]
 }
 
 enum ProductCategory {
   FURNITURE
   BOOK
   DIGITAL_DOWNLOAD
+}
+
+extend type Product @key(fields: "sku"){
+  sku: UPC! @external
 }
 ```
 
