@@ -6,13 +6,12 @@ import {
   InterfaceTypeDefinitionNode,
   UnionTypeDefinitionNode,
   InputObjectTypeDefinitionNode,
-  NameNode,
 } from 'graphql';
 import xorBy from 'lodash.xorby';
 
 import { SDLValidationContext } from 'graphql/validation/ValidationContext';
 import Maybe from 'graphql/tsutils/Maybe';
-import { isTypeNodeAnEntity, diffTypeNodes } from '../../utils';
+import { isTypeNodeAnEntity, diffTypeNodes, errorWithCode } from '../../utils';
 
 // Types of nodes this validator is responsible for
 type TypesWithRequiredUniqueNames =
@@ -37,8 +36,8 @@ export function existedTypeNameMessage(typeName: string): string {
 export function UniqueTypeNamesWithoutEnumsOrScalars(
   context: SDLValidationContext,
 ): ASTVisitor {
-  const knownTypeNames: {
-    [typeName: string]: NameNode;
+  const knownTypes: {
+    [typeName: string]: TypesWithRequiredUniqueNames;
   } = Object.create(null);
   const schema = context.getSchema();
 
@@ -58,28 +57,32 @@ export function UniqueTypeNamesWithoutEnumsOrScalars(
       typeFromSchema &&
       (typeFromSchema.astNode as Maybe<TypesWithRequiredUniqueNames>);
 
+    const typeNodeFromDefs = knownTypes[typeName];
+    const duplicateTypeNode = typeNodeFromSchema || typeNodeFromDefs;
+
     // Handle union types with the same name
     if (
-      typeNodeFromSchema &&
-      typeNodeFromSchema.kind === Kind.UNION_TYPE_DEFINITION &&
+      duplicateTypeNode &&
+      duplicateTypeNode.kind === Kind.UNION_TYPE_DEFINITION &&
       node.kind === Kind.UNION_TYPE_DEFINITION
     ) {
       const unionDiff = xorBy(
         node.types,
-        typeNodeFromSchema.types,
+        duplicateTypeNode.types,
         'name.value',
       );
 
       const diffLength = unionDiff.length;
       if (diffLength > 0) {
         context.reportError(
-          new GraphQLError(
+          errorWithCode(
+            'VALUE_TYPE_UNION_TYPES_MISMATCH',
             `The union '${typeName}' is defined in multiple places, however the unioned types do not match. Union types with the same name must also consist of identical types. The type${
               diffLength > 1 ? 's' : ''
             } ${unionDiff.map(diffEntry => diffEntry.name.value).join(', ')} ${
               diffLength > 1 ? 'are' : 'is'
             } mismatched.`,
-            [node, typeNodeFromSchema],
+            [node, duplicateTypeNode],
           ),
         );
       }
@@ -94,12 +97,12 @@ export function UniqueTypeNamesWithoutEnumsOrScalars(
      * 2) are not entities
      * 3) have the same set of fields
      */
-    if (typeNodeFromSchema) {
+    if (duplicateTypeNode) {
       const possibleErrors: GraphQLError[] = [];
       // By inspecting the diff, we can warn when field types mismatch.
       // A diff entry will exist when a field exists on one type and not the other, or if there is a type mismatch on the field
       // i.e. { sku: [Int, String!], color: [String] }
-      const { kind, fields } = diffTypeNodes(node, typeNodeFromSchema);
+      const { kind, fields } = diffTypeNodes(node, duplicateTypeNode);
 
       const fieldsDiff = Object.entries(fields);
       const typesHaveSameShape =
@@ -110,9 +113,10 @@ export function UniqueTypeNamesWithoutEnumsOrScalars(
           // think they tried to define a value type, but one of the fields has a type mismatch.
           if (types.length === 2) {
             possibleErrors.push(
-              new GraphQLError(
+              errorWithCode(
+                'VALUE_TYPE_FIELD_TYPE_MISMATCH',
                 `Found field type mismatch on expected value type. '${typeName}.${fieldName}' is defined as both a ${types[0]} and a ${types[1]}. In order to define '${typeName}' in multiple places, the fields and their types must be identical.`,
-                [node, typeNodeFromSchema],
+                [node, duplicateTypeNode],
               ),
             );
             return true;
@@ -129,21 +133,21 @@ export function UniqueTypeNamesWithoutEnumsOrScalars(
         // Error if the kinds don't match
         if (kind.length > 0) {
           context.reportError(
-            new GraphQLError(
+            errorWithCode(
+              'VALUE_TYPE_KIND_MISMATCH',
               `Found kind mismatch on expected value type. '${typeName}' is defined as both a ${kind[0]} and a ${kind[1]}. In order to define ${typeName} in multiple places, the kinds must be identical.`,
-              [node, typeNodeFromSchema],
+              [node, duplicateTypeNode],
             ),
           );
         }
 
         // Error if either is an entity
-        if (
-          isTypeNodeAnEntity(node) ||
-          isTypeNodeAnEntity(typeNodeFromSchema)
-        ) {
+        if (isTypeNodeAnEntity(node) || isTypeNodeAnEntity(duplicateTypeNode)) {
           context.reportError(
-            new GraphQLError(
+            errorWithCode(
+              'VALUE_TYPE_NO_ENTITY',
               `Value types cannot be entities (using the @key directive). Please ensure that one type extends the other correctly, or remove the @key directive if this is not an entity.`,
+              [node, duplicateTypeNode],
             ),
           );
         }
@@ -152,22 +156,22 @@ export function UniqueTypeNamesWithoutEnumsOrScalars(
       }
     }
 
-    if (typeNodeFromSchema) {
+    if (duplicateTypeNode) {
       context.reportError(
         new GraphQLError(existedTypeNameMessage(typeName), node.name),
       );
       return;
     }
 
-    if (knownTypeNames[typeName]) {
+    if (knownTypes[typeName]) {
       context.reportError(
         new GraphQLError(duplicateTypeNameMessage(typeName), [
-          knownTypeNames[typeName],
+          knownTypes[typeName],
           node.name,
         ]),
       );
     } else {
-      knownTypeNames[typeName] = node.name;
+      knownTypes[typeName] = node;
     }
 
     return false;

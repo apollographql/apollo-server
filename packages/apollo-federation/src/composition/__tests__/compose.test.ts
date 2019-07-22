@@ -456,7 +456,7 @@ describe('composeServices', () => {
         expect(errors).toMatchInlineSnapshot(`
           Array [
             [GraphQLError: Field "Product.name" can only be defined once.],
-            [GraphQLError: There can be only one type named "Product".],
+            [GraphQLError: Type "Product" already exists in the schema. It cannot also be defined in this type definition.],
           ]
         `);
 

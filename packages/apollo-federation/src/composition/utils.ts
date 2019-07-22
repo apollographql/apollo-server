@@ -28,6 +28,7 @@ import {
   TypeExtensionNode,
   BREAK,
   print,
+  ASTNode,
 } from 'graphql';
 import Maybe from 'graphql/tsutils/Maybe';
 import { ExternalFieldDefinition } from './types';
@@ -168,10 +169,14 @@ export const logServiceAndType = (
 ) => `[${serviceName}] ${typeName}${fieldName ? `.${fieldName} -> ` : ' -> '}`;
 
 // TODO: allow passing of the other args here, rather than just message and code
-export function errorWithCode(code: string, message: string) {
+export function errorWithCode(
+  code: string,
+  message: string,
+  nodes?: ReadonlyArray<ASTNode> | ASTNode | undefined,
+) {
   return new GraphQLError(
     message,
-    undefined,
+    nodes,
     undefined,
     undefined,
     undefined,

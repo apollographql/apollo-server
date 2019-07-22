@@ -20,7 +20,9 @@ expect.addSnapshotSerializer(graphqlErrorSerializer);
 expect.addSnapshotSerializer(typeSerializer);
 
 // simulate the first half of the composition process
-function createDocumentsForServices(serviceList: ServiceDefinition[]) {
+function createDocumentsForServices(
+  serviceList: ServiceDefinition[],
+): DocumentNode[] {
   const { definitionsMap, extensionsMap } = buildMapsFromServiceList(
     serviceList,
   );
