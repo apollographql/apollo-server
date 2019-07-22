@@ -131,11 +131,8 @@ export function UniqueFieldDefinitionNames(
       valueTypeFromSchema || possibleValueTypes[node.name.value];
 
     if (valueTypeNode) {
-      const { kind, fields } = diffTypeNodes(node, valueTypeNode);
-      if (
-        kind.length === 0 &&
-        Object.values(fields).every(diffEntry => diffEntry.length === 2)
-      ) {
+      const { fields } = diffTypeNodes(node, valueTypeNode);
+      if (Object.values(fields).every(diffEntry => diffEntry.length === 2)) {
         return false;
       }
     } else {

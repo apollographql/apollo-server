@@ -265,35 +265,4 @@ describe('UniqueFieldDefinitionNames', () => {
       expect(errors).toHaveLength(0);
     });
   });
-
-  describe('edge cases', () => {
-    it('value types must be of the same kind', () => {
-      const [definitions] = createDocumentsForServices([
-        {
-          typeDefs: gql`
-            type Product {
-              sku: ID!
-            }
-          `,
-          name: 'serviceA',
-        },
-        {
-          typeDefs: gql`
-            input Product {
-              sku: ID!
-            }
-          `,
-          name: 'serviceB',
-        },
-      ]);
-
-      const errors = validateSDL(definitions, schema, [
-        UniqueFieldDefinitionNames,
-      ]);
-      expect(errors).toHaveLength(1);
-      expect(errors[0].message).toMatch(
-        'Field "Product.sku" can only be defined once.',
-      );
-    });
-  });
 });
