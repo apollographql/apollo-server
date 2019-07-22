@@ -16,7 +16,7 @@ import {
 import { SDLValidationContext } from 'graphql/validation/ValidationContext';
 import { TypeMap } from 'graphql/type/schema';
 import Maybe from 'graphql/tsutils/Maybe';
-import { isTypeNodeAnEntity, diffTypeNodes } from '../../utils';
+import { diffTypeNodes } from '../../utils';
 
 type NodeTypesRequiringUniqueFields =
   | TypeDefinitionsRequiringUniqueFields
@@ -130,11 +130,7 @@ export function UniqueFieldDefinitionNames(
     const valueTypeNode =
       valueTypeFromSchema || possibleValueTypes[node.name.value];
 
-    if (
-      valueTypeNode &&
-      !isTypeNodeAnEntity(valueTypeNode) &&
-      !isTypeNodeAnEntity(node)
-    ) {
+    if (valueTypeNode) {
       const { kind, fields } = diffTypeNodes(node, valueTypeNode);
       if (
         kind.length === 0 &&

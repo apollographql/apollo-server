@@ -1,6 +1,6 @@
 import { composeAndValidate } from '../composeAndValidate';
 import gql from 'graphql-tag';
-import { GraphQLObjectType } from 'graphql';
+import { GraphQLObjectType, printSchema } from 'graphql';
 import {
   astSerializer,
   typeSerializer,
@@ -100,22 +100,15 @@ it('composes and validates all (24) permutations without error', () => {
     accountsService,
     productsService,
   ]).map((config, i) => {
-    const { warnings, errors } = composeAndValidate(config);
+    const { errors } = composeAndValidate(config);
 
-    if (warnings.length || errors.length) {
+    if (errors.length) {
       console.error(
-        `Errors or warnings found with composition [${config.map(
-          item => item.name,
-        )}]`,
+        `Errors found with composition [${config.map(item => item.name)}]`,
       );
     }
 
-    expect({ warnings, errors }).toMatchInlineSnapshot(`
-      Object {
-        "errors": Array [],
-        "warnings": Array [],
-      }
-    `);
+    expect(errors).toHaveLength(0);
   });
 });
 
@@ -147,16 +140,16 @@ it('errors when a type extension has no base', () => {
     name: 'serviceB',
   };
 
-  const { schema, errors } = composeAndValidate([serviceA, serviceB]);
+  const { errors } = composeAndValidate([serviceA, serviceB]);
   expect(errors).toHaveLength(1);
   expect(errors).toMatchInlineSnapshot(`
-    Array [
-      Object {
-        "code": "EXTENSION_WITH_NO_BASE",
-        "message": "[serviceB] Location -> \`Location\` is an extension type, but \`Location\` is not defined in any service",
-      },
-    ]
-  `);
+        Array [
+          Object {
+            "code": "EXTENSION_WITH_NO_BASE",
+            "message": "[serviceB] Location -> \`Location\` is an extension type, but \`Location\` is not defined in any service",
+          },
+        ]
+    `);
 });
 
 it('treats types with @extends as type extensions', () => {
@@ -189,12 +182,12 @@ it('treats types with @extends as type extensions', () => {
 
   const product = schema.getType('Product') as GraphQLObjectType;
   expect(product).toMatchInlineSnapshot(`
-    type Product {
-      sku: String!
-      upc: String!
-      price: Int!
-    }
-  `);
+        type Product {
+          sku: String!
+          upc: String!
+          price: Int!
+        }
+    `);
 });
 
 it('errors on invalid usages of default operation names', () => {
@@ -236,13 +229,50 @@ it('errors on invalid usages of default operation names', () => {
 
   const { errors } = composeAndValidate([serviceA, serviceB]);
   expect(errors).toMatchInlineSnapshot(`
-    Array [
-      Object {
-        "code": "ROOT_QUERY_USED",
-        "message": "[serviceA] Query -> Found invalid use of default root operation name \`Query\`. \`Query\` is disallowed when \`Schema.query\` is set to a type other than \`Query\`.",
-      },
-    ]
-  `);
+        Array [
+          Object {
+            "code": "ROOT_QUERY_USED",
+            "message": "[serviceA] Query -> Found invalid use of default root operation name \`Query\`. \`Query\` is disallowed when \`Schema.query\` is set to a type other than \`Query\`.",
+          },
+        ]
+    `);
 });
 
-it.todo('errors on duplicate types where there is a mismatch of field types');
+it('errors on invalid usages of default operation names', () => {
+  const serviceA = {
+    typeDefs: gql`
+      type Query {
+        thing: Product
+      }
+
+      type Product {
+        sku: ID!
+        color: String!
+      }
+    `,
+    name: 'serviceA',
+  };
+
+  const serviceB = {
+    typeDefs: gql`
+      type Query {
+        thing2: Product
+      }
+
+      type Product @key(fields: "sku") {
+        sku: ID!
+        color: String!
+      }
+    `,
+    name: 'serviceB',
+  };
+
+  const { errors } = composeAndValidate([serviceA, serviceB]);
+  expect(errors).toHaveLength(1);
+  expect(errors[0]).toMatchInlineSnapshot(`
+    Object {
+      "code": "VALUE_TYPE_NO_ENTITY",
+      "message": "Value types cannot be entities (using the @key directive). Please ensure that one type extends the other correctly, or remove the @key directive if this is not an entity.",
+    }
+  `);
+});
