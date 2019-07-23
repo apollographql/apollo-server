@@ -146,7 +146,7 @@ export function UniqueTypeNamesWithoutEnumsOrScalars(
           context.reportError(
             errorWithCode(
               'VALUE_TYPE_NO_ENTITY',
-              `Value types cannot be entities (using the @key directive). Please ensure that one type extends the other correctly, or remove the @key directive if this is not an entity.`,
+              `Value types cannot be entities (using the @key directive). Please ensure that one type extends the other and doesn't redefine the type, or remove the @key directive if this is not an entity.`,
               [node, duplicateTypeNode],
             ),
           );
