@@ -88,29 +88,31 @@ export function UniqueFieldDefinitionNames(
       knownFieldNames[typeName] = Object.create(null);
     }
 
-    if (node.fields) {
-      const fieldNames = knownFieldNames[typeName];
+    if (!node.fields) {
+      return false;
+    }
 
-      for (const fieldDef of node.fields) {
-        const fieldName = fieldDef.name.value;
+    const fieldNames = knownFieldNames[typeName];
 
-        if (hasField(existingTypeMap[typeName], fieldName)) {
-          context.reportError(
-            new GraphQLError(
-              existedFieldDefinitionNameMessage(typeName, fieldName),
-              fieldDef.name,
-            ),
-          );
-        } else if (fieldNames[fieldName]) {
-          context.reportError(
-            new GraphQLError(
-              duplicateFieldDefinitionNameMessage(typeName, fieldName),
-              [fieldNames[fieldName], fieldDef.name],
-            ),
-          );
-        } else {
-          fieldNames[fieldName] = fieldDef.name;
-        }
+    for (const fieldDef of node.fields) {
+      const fieldName = fieldDef.name.value;
+
+      if (hasField(existingTypeMap[typeName], fieldName)) {
+        context.reportError(
+          new GraphQLError(
+            existedFieldDefinitionNameMessage(typeName, fieldName),
+            fieldDef.name,
+          ),
+        );
+      } else if (fieldNames[fieldName]) {
+        context.reportError(
+          new GraphQLError(
+            duplicateFieldDefinitionNameMessage(typeName, fieldName),
+            [fieldNames[fieldName], fieldDef.name],
+          ),
+        );
+      } else {
+        fieldNames[fieldName] = fieldDef.name;
       }
     }
 
@@ -143,28 +145,30 @@ export function UniqueFieldDefinitionNames(
       knownFieldNames[typeName] = Object.create(null);
     }
 
-    if (node.fields) {
-      const fieldNames = knownFieldNames[typeName];
+    if (!node.fields) {
+      return false;
+    }
 
-      for (const fieldDef of node.fields) {
-        const fieldName = fieldDef.name.value;
-        if (hasField(existingTypeMap[typeName], fieldName)) {
-          context.reportError(
-            new GraphQLError(
-              existedFieldDefinitionNameMessage(typeName, fieldName),
-              fieldDef.name,
-            ),
-          );
-        } else if (fieldNames[fieldName]) {
-          context.reportError(
-            new GraphQLError(
-              duplicateFieldDefinitionNameMessage(typeName, fieldName),
-              [fieldNames[fieldName], fieldDef.name],
-            ),
-          );
-        } else {
-          fieldNames[fieldName] = fieldDef.name;
-        }
+    const fieldNames = knownFieldNames[typeName];
+
+    for (const fieldDef of node.fields) {
+      const fieldName = fieldDef.name.value;
+      if (hasField(existingTypeMap[typeName], fieldName)) {
+        context.reportError(
+          new GraphQLError(
+            existedFieldDefinitionNameMessage(typeName, fieldName),
+            fieldDef.name,
+          ),
+        );
+      } else if (fieldNames[fieldName]) {
+        context.reportError(
+          new GraphQLError(
+            duplicateFieldDefinitionNameMessage(typeName, fieldName),
+            [fieldNames[fieldName], fieldDef.name],
+          ),
+        );
+      } else {
+        fieldNames[fieldName] = fieldDef.name;
       }
     }
 
