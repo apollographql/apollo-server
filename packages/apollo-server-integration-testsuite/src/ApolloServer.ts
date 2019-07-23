@@ -609,15 +609,49 @@ export function testApolloServer<AS extends ApolloServerBase>(
       });
 
       it('works with errors similar to GraphQL errors, such as yup', async () => {
+        // https://npm.im/yup is a package that produces a particular type of
+        // error that we test compatibility with. This test was first brought
+        // with https://github.com/apollographql/apollo-server/pull/1288. We
+        // used to use the actual `yup` package to generate the error, but we
+        // don't need to actually bundle that dependency just to test
+        // compatibility with that particular error shape.  To be honest, it's
+        // not clear from the original PR which attribute of this error need be
+        // mocked, but for the sake not not breaking anything, all of yup's
+        // error properties have been reproduced here.
         const throwError = jest.fn(async () => {
-          const schema = yup.object().shape({
-            email: yup
-              .string()
-              .email()
-              .required('Please enter your email address'),
+          // Intentionally `any` because this is a custom Error class with
+          // various custom properties (like `value` and `params`).
+          const yuppieError: any = new Error('email must be a valid email');
+          yuppieError.name = 'ValidationError';
+
+          // Set `message` to enumerable, which `yup` does and `Error` doesn't.
+          Object.defineProperty(yuppieError, 'message', {
+            enumerable: true,
           });
 
-          await schema.validate({ email: 'lol' });
+          // Set other properties which `yup` sets.
+          yuppieError.path = 'email';
+          yuppieError.type = undefined;
+          yuppieError.value = { email: 'invalid-email' };
+          yuppieError.errors = ['email must be a valid email'];
+          yuppieError.inner = [];
+          yuppieError.params = {
+            path: 'email',
+            value: 'invalid-email',
+            originalValue: 'invalid-email',
+            label: undefined,
+            regex: /@/,
+          };
+
+          // This stack is fake, but roughly what `yup` generates!
+          yuppieError.stack = [
+            'ValidationError: email must be a valid email',
+            '    at createError (yup/lib/util/createValidation.js:64:35)',
+            '    at yup/lib/util/createValidation.js:113:108',
+            '    at process._tickCallback (internal/process/next_tick.js:68:7)',
+          ].join('\n');
+
+          throw yuppieError;
         });
 
         const formatError = jest.fn(error => {
