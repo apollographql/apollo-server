@@ -1,6 +1,6 @@
 import { composeAndValidate } from '../composeAndValidate';
 import gql from 'graphql-tag';
-import { GraphQLObjectType, printSchema, Kind, print } from 'graphql';
+import { GraphQLObjectType } from 'graphql';
 import {
   astSerializer,
   typeSerializer,
@@ -99,7 +99,7 @@ it('composes and validates all (24) permutations without error', () => {
     reviewsService,
     accountsService,
     productsService,
-  ]).map((config, i) => {
+  ]).map(config => {
     const { errors } = composeAndValidate(config);
 
     if (errors.length) {
