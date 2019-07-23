@@ -314,6 +314,12 @@ export function selectionIncludesField({
   return false;
 }
 
+/**
+ * Returns true if a @key directive is found on the type node
+ *
+ * @param node TypeDefinitionNode | TypeExtensionNode
+ * @returns boolean
+ */
 export function isTypeNodeAnEntity(
   node: TypeDefinitionNode | TypeExtensionNode,
 ) {
@@ -331,6 +337,19 @@ export function isTypeNodeAnEntity(
   return isEntity;
 }
 
+/**
+ * Diff two type nodes. This returns an object consisting of useful properties and their differences
+ * - name: An array of length 0 or 2. If their type names are different, they will be added to the array.
+ *     (['Product', 'Prdocut'])
+ * - fields: An entry in the fields object can mean two things:
+ *     1) a field was found on one type, but not the other (fieldName: ['String!'])
+ *     2) a common field was found, but their types differ (fieldName: ['String!', 'Int!'])
+ * - kind: An array of length 0 or 2. If their kinds are different, they will be added to the array.
+ *     (['InputObjectTypeDefinition', 'InterfaceTypeDefinition'])
+ *
+ * @param firstNode TypeDefinitionNode | TypeExtensionNode
+ * @param secondNode TypeDefinitionNode | TypeExtensionNode
+ */
 export function diffTypeNodes(
   firstNode: TypeDefinitionNode | TypeExtensionNode,
   secondNode: TypeDefinitionNode | TypeExtensionNode,

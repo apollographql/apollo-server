@@ -18,16 +18,14 @@ import { TypeMap } from 'graphql/type/schema';
 import Maybe from 'graphql/tsutils/Maybe';
 import { diffTypeNodes, logServiceAndType } from '../../utils';
 
-type NodeTypesRequiringUniqueFields =
-  | TypeDefinitionsRequiringUniqueFields
-  | TypeExtensionsRequiringUniqueFields;
+type TypeNodeWithFields = TypeDefinitionWithFields | TypeExtensionWithFields;
 
-type TypeDefinitionsRequiringUniqueFields =
+type TypeDefinitionWithFields =
   | InputObjectTypeDefinitionNode
   | InterfaceTypeDefinitionNode
   | ObjectTypeDefinitionNode;
 
-type TypeExtensionsRequiringUniqueFields =
+type TypeExtensionWithFields =
   | InputObjectTypeExtensionNode
   | InterfaceTypeExtensionNode
   | ObjectTypeExtensionNode;
@@ -72,7 +70,7 @@ export function UniqueFieldDefinitionNames(
   } = Object.create(null);
 
   const possibleValueTypes: {
-    [key: string]: NodeTypesRequiringUniqueFields | undefined;
+    [key: string]: TypeNodeWithFields | undefined;
   } = Object.create(null);
 
   // Maintain original functionality for type extensions, but substitute our
@@ -86,7 +84,7 @@ export function UniqueFieldDefinitionNames(
     ObjectTypeDefinition: checkFieldUniquenessExcludingValueTypes,
   };
 
-  function checkFieldUniqueness(node: TypeExtensionsRequiringUniqueFields) {
+  function checkFieldUniqueness(node: TypeExtensionWithFields) {
     const typeName = node.name.value;
 
     if (!knownFieldNames[typeName]) {
@@ -128,21 +126,34 @@ export function UniqueFieldDefinitionNames(
     return false;
   }
 
+  /**
+   * Similar to checkFieldUniqueness above, with some extra permissions:
+   *
+   * 1) Non-uniqueness *on value types* (same field names, same field types) should be permitted
+   * 2) *Near* value types are also permitted here (with relevant errors in uniqueTypeNamesWithFields)
+   *    - Near value types share only the same type name and field names. Permitting these cases allows
+   *      us to catch and warn on likely user errors.
+   *
+   * @param node TypeDefinitionWithFields
+   */
   function checkFieldUniquenessExcludingValueTypes(
-    node: TypeDefinitionsRequiringUniqueFields,
+    node: TypeDefinitionWithFields,
   ) {
     const typeName = node.name.value;
 
     const valueTypeFromSchema =
       existingTypeMap[typeName] &&
-      (existingTypeMap[typeName].astNode as Maybe<
-        TypeDefinitionsRequiringUniqueFields
-      >);
-    const valueTypeNode =
+      (existingTypeMap[typeName].astNode as Maybe<TypeDefinitionWithFields>);
+    const duplicateTypeNode =
       valueTypeFromSchema || possibleValueTypes[node.name.value];
 
-    if (valueTypeNode) {
-      const { fields } = diffTypeNodes(node, valueTypeNode);
+    if (duplicateTypeNode) {
+      const { fields } = diffTypeNodes(node, duplicateTypeNode);
+
+      // This is the condition required for a *near* value type. At this point, we know the
+      // parent type names are the same. We know the field names are the same if either:
+      // 1) the field has no entry in the fields diff (they're identical), or
+      // 2) the field's diff entry is an array of length 2 (both nodes have the field, but the field types are different)
       if (Object.values(fields).every(diffEntry => diffEntry.length === 2)) {
         return false;
       }
