@@ -16,7 +16,7 @@ import {
 import { SDLValidationContext } from 'graphql/validation/ValidationContext';
 import { TypeMap } from 'graphql/type/schema';
 import Maybe from 'graphql/tsutils/Maybe';
-import { diffTypeNodes } from '../../utils';
+import { diffTypeNodes, logServiceAndType } from '../../utils';
 
 type NodeTypesRequiringUniqueFields =
   | TypeDefinitionsRequiringUniqueFields
@@ -42,8 +42,13 @@ export function duplicateFieldDefinitionNameMessage(
 export function existedFieldDefinitionNameMessage(
   typeName: string,
   fieldName: string,
+  serviceName: string,
 ): string {
-  return `Field "${typeName}.${fieldName}" already exists in the schema. It cannot also be defined in this type extension.`;
+  return `${logServiceAndType(
+    serviceName,
+    typeName,
+    fieldName,
+  )}Field "${typeName}.${fieldName}" already exists in the schema. It cannot also be defined in this type extension. If this is meant to be an external field, add the \`@external\` directive.`;
 }
 
 /**
@@ -100,7 +105,11 @@ export function UniqueFieldDefinitionNames(
       if (hasField(existingTypeMap[typeName], fieldName)) {
         context.reportError(
           new GraphQLError(
-            existedFieldDefinitionNameMessage(typeName, fieldName),
+            existedFieldDefinitionNameMessage(
+              typeName,
+              fieldName,
+              existingTypeMap[typeName].astNode!.serviceName!,
+            ),
             fieldDef.name,
           ),
         );
@@ -156,7 +165,11 @@ export function UniqueFieldDefinitionNames(
       if (hasField(existingTypeMap[typeName], fieldName)) {
         context.reportError(
           new GraphQLError(
-            existedFieldDefinitionNameMessage(typeName, fieldName),
+            existedFieldDefinitionNameMessage(
+              typeName,
+              fieldName,
+              existingTypeMap[typeName].astNode!.serviceName!,
+            ),
             fieldDef.name,
           ),
         );
