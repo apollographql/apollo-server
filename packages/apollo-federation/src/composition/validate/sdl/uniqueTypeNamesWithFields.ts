@@ -90,15 +90,13 @@ export function UniqueTypeNamesWithFields(
                   duplicateTypeNode.serviceName!,
                   typeName,
                   fieldName,
-                )}Found field type mismatch on expected value type belonging to services \`${
+                )}A field was defined differently in different services. \`${
                   duplicateTypeNode.serviceName
                 }\` and \`${
                   node.serviceName
-                }\`. \`${typeName}.${fieldName}\` is defined as both a ${
+                }\` define \`${typeName}.${fieldName}\` as a ${types[1]} and ${
                   types[0]
-                } and a ${
-                  types[1]
-                }. In order to define \`${typeName}\` in multiple places, the fields and their types must be identical.`,
+                } respectively. In order to define \`${typeName}\` in multiple places, the fields and their types must be identical.`,
                 [node, duplicateTypeNode],
               ),
             );

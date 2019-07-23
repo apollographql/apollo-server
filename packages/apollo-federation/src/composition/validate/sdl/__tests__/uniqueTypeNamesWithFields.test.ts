@@ -109,11 +109,11 @@ describe('UniqueTypeNamesWithFields', () => {
         Array [
           Object {
             "code": "VALUE_TYPE_FIELD_TYPE_MISMATCH",
-            "message": "[serviceA] Product.sku -> Found field type mismatch on expected value type belonging to services \`serviceA\` and \`serviceB\`. \`Product.sku\` is defined as both a String! and a ID!. In order to define \`Product\` in multiple places, the fields and their types must be identical.",
+            "message": "[serviceA] Product.sku -> A field was defined differently in different services. \`serviceA\` and \`serviceB\` define \`Product.sku\` as a ID! and String! respectively. In order to define \`Product\` in multiple places, the fields and their types must be identical.",
           },
           Object {
             "code": "VALUE_TYPE_FIELD_TYPE_MISMATCH",
-            "message": "[serviceA] Product.quantity -> Found field type mismatch on expected value type belonging to services \`serviceA\` and \`serviceB\`. \`Product.quantity\` is defined as both a Int! and a Int. In order to define \`Product\` in multiple places, the fields and their types must be identical.",
+            "message": "[serviceA] Product.quantity -> A field was defined differently in different services. \`serviceA\` and \`serviceB\` define \`Product.quantity\` as a Int and Int! respectively. In order to define \`Product\` in multiple places, the fields and their types must be identical.",
           },
         ]
       `);
@@ -337,11 +337,11 @@ describe('UniqueTypeNamesWithFields', () => {
         UniqueTypeNamesWithFields,
       ]);
       expect(errors[0]).toMatchInlineSnapshot(`
-        Object {
-          "code": "VALUE_TYPE_KIND_MISMATCH",
-          "message": "[serviceA] Product -> Found kind mismatch on expected value type belonging to services \`serviceA\` and \`serviceB\`. \`Product\` is defined as both a \`ObjectTypeDefinition\` and a \`InputObjectTypeDefinition\`. In order to define \`Product\` in multiple places, the kinds must be identical.",
-        }
-      `);
+                Object {
+                  "code": "VALUE_TYPE_KIND_MISMATCH",
+                  "message": "[serviceA] Product -> Found kind mismatch on expected value type belonging to services \`serviceA\` and \`serviceB\`. \`Product\` is defined as both a \`ObjectTypeDefinition\` and a \`InputObjectTypeDefinition\`. In order to define \`Product\` in multiple places, the kinds must be identical.",
+                }
+            `);
     });
 
     it('value types cannot be entities (part 1)', () => {
@@ -369,11 +369,11 @@ describe('UniqueTypeNamesWithFields', () => {
       ]);
       expect(errors).toHaveLength(1);
       expect(errors[0]).toMatchInlineSnapshot(`
-        Object {
-          "code": "VALUE_TYPE_NO_ENTITY",
-          "message": "[serviceA] Product -> Value types cannot be entities (using the \`@key\` directive). Please ensure that the \`Product\` type is extended properly or remove the \`@key\` directive if this is not an entity.",
-        }
-      `);
+                Object {
+                  "code": "VALUE_TYPE_NO_ENTITY",
+                  "message": "[serviceA] Product -> Value types cannot be entities (using the \`@key\` directive). Please ensure that the \`Product\` type is extended properly or remove the \`@key\` directive if this is not an entity.",
+                }
+            `);
     });
 
     it('value types cannot be entities (part 2)', () => {
@@ -401,11 +401,11 @@ describe('UniqueTypeNamesWithFields', () => {
       ]);
       expect(errors).toHaveLength(1);
       expect(errors[0]).toMatchInlineSnapshot(`
-        Object {
-          "code": "VALUE_TYPE_NO_ENTITY",
-          "message": "[serviceB] Product -> Value types cannot be entities (using the \`@key\` directive). Please ensure that the \`Product\` type is extended properly or remove the \`@key\` directive if this is not an entity.",
-        }
-      `);
+                Object {
+                  "code": "VALUE_TYPE_NO_ENTITY",
+                  "message": "[serviceB] Product -> Value types cannot be entities (using the \`@key\` directive). Please ensure that the \`Product\` type is extended properly or remove the \`@key\` directive if this is not an entity.",
+                }
+            `);
     });
 
     it('no false positives for properly formed entities (that look like value types)', () => {
