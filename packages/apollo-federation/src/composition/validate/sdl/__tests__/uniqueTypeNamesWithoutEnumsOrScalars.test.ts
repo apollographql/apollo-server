@@ -73,7 +73,7 @@ describe('UniqueTypeNamesWithoutEnumsOrScalars', () => {
       ]);
       expect(errors).toHaveLength(1);
       expect(errors[0].message).toMatch(
-        'Type "Product" already exists in the schema.',
+        'There can be only one type named "Product".',
       );
     });
 
@@ -146,7 +146,7 @@ describe('UniqueTypeNamesWithoutEnumsOrScalars', () => {
       ]);
       expect(errors).toHaveLength(1);
       expect(errors[0].message).toMatch(
-        'Type "Product" already exists in the schema.',
+        'There can be only one type named "Product".',
       );
     });
 
@@ -175,7 +175,7 @@ describe('UniqueTypeNamesWithoutEnumsOrScalars', () => {
       ]);
       expect(errors).toHaveLength(1);
       expect(errors[0].message).toMatch(
-        'Type "Product" already exists in the schema.',
+        'There can be only one type named "Product".',
       );
     });
 
@@ -232,7 +232,7 @@ describe('UniqueTypeNamesWithoutEnumsOrScalars', () => {
       ]);
       expect(errors).toHaveLength(1);
       expect(errors[0].message).toMatch(
-        'Type "Product" already exists in the schema.',
+        'There can be only one type named "Product".',
       );
     });
   });

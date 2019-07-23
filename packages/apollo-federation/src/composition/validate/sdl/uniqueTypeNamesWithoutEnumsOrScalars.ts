@@ -156,7 +156,7 @@ export function UniqueTypeNamesWithoutEnumsOrScalars(
       }
     }
 
-    if (duplicateTypeNode) {
+    if (typeFromSchema) {
       context.reportError(
         new GraphQLError(existedTypeNameMessage(typeName), node.name),
       );
