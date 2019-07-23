@@ -179,7 +179,7 @@ For Scalar values, it's important that services **share the same serialization a
 For Enum types, all values must match across services. **Even if a service doesn't use all values in an Enum, they still must be defined in the schema**. Failure to include all enum values in all services that use the Enum will result in a validation error when building the federated schema.
 
 ### Unions
-Union types must share the same unioned types, without any more or less.
+Union types must share the same types in the union, even if not all types are used by a service.
 
 In the following example, the Product and User services both use the same ProductCategory enum, Date scalar, and UPC union.
 
