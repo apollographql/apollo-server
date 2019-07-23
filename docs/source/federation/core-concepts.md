@@ -170,7 +170,7 @@ There is no need to explictly define `Query` or `Mutation` base types anywhere; 
 A natural overlap among identical types between services is not uncommon. Rather than having a single service "own" those types, all services that use them are expected to share ownership. This form of type "duplication" across services is supported for Scalars, Objects, Interfaces, Enums, Unions, and Inputs. The rule of thumb for any of these value types is that the types **must be identical** in name and contents.
 
 ### Objects, Interfaces, and Inputs
-For types with field definitions, the fields _and their types_ must match, without any more or less.
+For types with field definitions, all fields _and their types_ must be identical.
 
 ### Scalars
 For Scalar values, it's important that services **share the same serialization and parsing logic**, since there is no way to validate that logic from the schema level by federation tooling.
