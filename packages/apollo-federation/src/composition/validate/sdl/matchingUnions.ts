@@ -2,7 +2,7 @@ import { GraphQLError, ASTVisitor, UnionTypeDefinitionNode } from 'graphql';
 import { SDLValidationContext } from 'graphql/validation/ValidationContext';
 import Maybe from 'graphql/tsutils/Maybe';
 import xorBy from 'lodash.xorby';
-import { errorWithCode } from '../../utils';
+import { errorWithCode, logServiceAndType } from '../../utils';
 import {
   existedTypeNameMessage,
   duplicateTypeNameMessage,
@@ -46,7 +46,14 @@ export function UniqueUnionTypes(context: SDLValidationContext): ASTVisitor {
         context.reportError(
           errorWithCode(
             'VALUE_TYPE_UNION_TYPES_MISMATCH',
-            `The union '${typeName}' is defined in multiple places, however the unioned types do not match. Union types with the same name must also consist of identical types. The type${
+            `${logServiceAndType(
+              duplicateTypeNode.serviceName!,
+              typeName,
+            )}The union \`${typeName}\` is defined in services \`${
+              duplicateTypeNode.serviceName
+            }\` and \`${
+              node.serviceName
+            }\`, however their types do not match. Union types with the same name must also consist of identical types. The type${
               diffLength > 1 ? 's' : ''
             } ${unionDiff.map(diffEntry => diffEntry.name.value).join(', ')} ${
               diffLength > 1 ? 'are' : 'is'

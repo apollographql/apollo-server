@@ -8,7 +8,12 @@ import {
 
 import { SDLValidationContext } from 'graphql/validation/ValidationContext';
 import Maybe from 'graphql/tsutils/Maybe';
-import { isTypeNodeAnEntity, diffTypeNodes, errorWithCode } from '../../utils';
+import {
+  isTypeNodeAnEntity,
+  diffTypeNodes,
+  errorWithCode,
+  logServiceAndType,
+} from '../../utils';
 
 // Types of nodes this validator is responsible for
 type TypesWithRequiredUniqueNames =
@@ -81,7 +86,19 @@ export function UniqueTypeNamesWithFields(
             possibleErrors.push(
               errorWithCode(
                 'VALUE_TYPE_FIELD_TYPE_MISMATCH',
-                `Found field type mismatch on expected value type. '${typeName}.${fieldName}' is defined as both a ${types[0]} and a ${types[1]}. In order to define '${typeName}' in multiple places, the fields and their types must be identical.`,
+                `${logServiceAndType(
+                  duplicateTypeNode.serviceName!,
+                  typeName,
+                  fieldName,
+                )}Found field type mismatch on expected value type belonging to services \`${
+                  duplicateTypeNode.serviceName
+                }\` and \`${
+                  node.serviceName
+                }\`. \`${typeName}.${fieldName}\` is defined as both a ${
+                  types[0]
+                } and a ${
+                  types[1]
+                }. In order to define \`${typeName}\` in multiple places, the fields and their types must be identical.`,
                 [node, duplicateTypeNode],
               ),
             );
@@ -101,7 +118,18 @@ export function UniqueTypeNamesWithFields(
           context.reportError(
             errorWithCode(
               'VALUE_TYPE_KIND_MISMATCH',
-              `Found kind mismatch on expected value type. '${typeName}' is defined as both a ${kind[0]} and a ${kind[1]}. In order to define ${typeName} in multiple places, the kinds must be identical.`,
+              `${logServiceAndType(
+                duplicateTypeNode.serviceName!,
+                typeName,
+              )}Found kind mismatch on expected value type belonging to services \`${
+                duplicateTypeNode.serviceName
+              }\` and \`${
+                node.serviceName
+              }\`. \`${typeName}\` is defined as both a \`${
+                kind[0]
+              }\` and a \`${
+                kind[1]
+              }\`. In order to define \`${typeName}\` in multiple places, the kinds must be identical.`,
               [node, duplicateTypeNode],
             ),
           );
@@ -109,10 +137,17 @@ export function UniqueTypeNamesWithFields(
 
         // Error if either is an entity
         if (isTypeNodeAnEntity(node) || isTypeNodeAnEntity(duplicateTypeNode)) {
+          const entityNode = isTypeNodeAnEntity(duplicateTypeNode)
+            ? duplicateTypeNode
+            : node;
+
           context.reportError(
             errorWithCode(
               'VALUE_TYPE_NO_ENTITY',
-              `Value types cannot be entities (using the @key directive). Please ensure that one type extends the other and doesn't redefine the type, or remove the @key directive if this is not an entity.`,
+              `${logServiceAndType(
+                entityNode.serviceName!,
+                typeName,
+              )}Value types cannot be entities (using the \`@key\` directive). Please ensure that the \`${typeName}\` type is extended properly or remove the \`@key\` directive if this is not an entity.`,
               [node, duplicateTypeNode],
             ),
           );

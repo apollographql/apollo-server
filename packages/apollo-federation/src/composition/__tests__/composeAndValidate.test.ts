@@ -329,7 +329,7 @@ describe('value types integration tests', () => {
       expect(errors[0]).toMatchInlineSnapshot(`
         Object {
           "code": "VALUE_TYPE_NO_ENTITY",
-          "message": "Value types cannot be entities (using the @key directive). Please ensure that one type extends the other and doesn't redefine the type, or remove the @key directive if this is not an entity.",
+          "message": "[serviceB] Product -> Value types cannot be entities (using the \`@key\` directive). Please ensure that the \`Product\` type is extended properly or remove the \`@key\` directive if this is not an entity.",
         }
       `);
     });
@@ -366,11 +366,11 @@ describe('value types integration tests', () => {
       const { errors } = composeAndValidate([serviceA, serviceB]);
       expect(errors).toHaveLength(1);
       expect(errors[0]).toMatchInlineSnapshot(`
-                                Object {
-                                  "code": "VALUE_TYPE_FIELD_TYPE_MISMATCH",
-                                  "message": "Found field type mismatch on expected value type. 'Product.color' is defined as both a String and a String!. In order to define 'Product' in multiple places, the fields and their types must be identical.",
-                                }
-                        `);
+        Object {
+          "code": "VALUE_TYPE_FIELD_TYPE_MISMATCH",
+          "message": "[serviceA] Product.color -> Found field type mismatch on expected value type belonging to services \`serviceA\` and \`serviceB\`. \`Product.color\` is defined as both a String and a String!. In order to define \`Product\` in multiple places, the fields and their types must be identical.",
+        }
+      `);
     });
 
     it('on kind mismatch', () => {
@@ -405,11 +405,11 @@ describe('value types integration tests', () => {
       const { errors } = composeAndValidate([serviceA, serviceB]);
       expect(errors).toHaveLength(1);
       expect(errors[0]).toMatchInlineSnapshot(`
-                        Object {
-                          "code": "VALUE_TYPE_KIND_MISMATCH",
-                          "message": "Found kind mismatch on expected value type. 'Product' is defined as both a ObjectTypeDefinition and a InterfaceTypeDefinition. In order to define Product in multiple places, the kinds must be identical.",
-                        }
-                  `);
+        Object {
+          "code": "VALUE_TYPE_KIND_MISMATCH",
+          "message": "[serviceA] Product -> Found kind mismatch on expected value type belonging to services \`serviceA\` and \`serviceB\`. \`Product\` is defined as both a \`ObjectTypeDefinition\` and a \`InterfaceTypeDefinition\`. In order to define \`Product\` in multiple places, the kinds must be identical.",
+        }
+      `);
     });
 
     it('on union types mismatch', () => {
@@ -454,11 +454,11 @@ describe('value types integration tests', () => {
       const { errors } = composeAndValidate([serviceA, serviceB]);
       expect(errors).toHaveLength(1);
       expect(errors[0]).toMatchInlineSnapshot(`
-                Object {
-                  "code": "VALUE_TYPE_UNION_TYPES_MISMATCH",
-                  "message": "The union 'Product' is defined in multiple places, however the unioned types do not match. Union types with the same name must also consist of identical types. The types Cabinet, Mattress are mismatched.",
-                }
-            `);
+        Object {
+          "code": "VALUE_TYPE_UNION_TYPES_MISMATCH",
+          "message": "[serviceA] Product -> The union \`Product\` is defined in services \`serviceA\` and \`serviceB\`, however their types do not match. Union types with the same name must also consist of identical types. The types Cabinet, Mattress are mismatched.",
+        }
+      `);
     });
   });
 });

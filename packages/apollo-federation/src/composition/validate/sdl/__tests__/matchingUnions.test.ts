@@ -68,7 +68,7 @@ describe('MatchingUnions', () => {
     expect(errors[0]).toMatchInlineSnapshot(`
       Object {
         "code": "VALUE_TYPE_UNION_TYPES_MISMATCH",
-        "message": "The union 'UPC' is defined in multiple places, however the unioned types do not match. Union types with the same name must also consist of identical types. The type Boolean is mismatched.",
+        "message": "[serviceA] UPC -> The union \`UPC\` is defined in services \`serviceA\` and \`serviceB\`, however their types do not match. Union types with the same name must also consist of identical types. The type Boolean is mismatched.",
       }
     `);
   });
