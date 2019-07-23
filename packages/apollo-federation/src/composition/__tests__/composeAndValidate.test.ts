@@ -143,13 +143,13 @@ it('errors when a type extension has no base', () => {
   const { errors } = composeAndValidate([serviceA, serviceB]);
   expect(errors).toHaveLength(1);
   expect(errors).toMatchInlineSnapshot(`
-                    Array [
-                      Object {
-                        "code": "EXTENSION_WITH_NO_BASE",
-                        "message": "[serviceB] Location -> \`Location\` is an extension type, but \`Location\` is not defined in any service",
-                      },
-                    ]
-          `);
+                        Array [
+                          Object {
+                            "code": "EXTENSION_WITH_NO_BASE",
+                            "message": "[serviceB] Location -> \`Location\` is an extension type, but \`Location\` is not defined in any service",
+                          },
+                        ]
+            `);
 });
 
 it('treats types with @extends as type extensions', () => {
@@ -182,12 +182,12 @@ it('treats types with @extends as type extensions', () => {
 
   const product = schema.getType('Product') as GraphQLObjectType;
   expect(product).toMatchInlineSnapshot(`
-                    type Product {
-                      sku: String!
-                      upc: String!
-                      price: Int!
-                    }
-          `);
+                        type Product {
+                          sku: String!
+                          upc: String!
+                          price: Int!
+                        }
+            `);
 });
 
 it('errors on invalid usages of default operation names', () => {
@@ -229,13 +229,13 @@ it('errors on invalid usages of default operation names', () => {
 
   const { errors } = composeAndValidate([serviceA, serviceB]);
   expect(errors).toMatchInlineSnapshot(`
-                Array [
-                  Object {
-                    "code": "ROOT_QUERY_USED",
-                    "message": "[serviceA] Query -> Found invalid use of default root operation name \`Query\`. \`Query\` is disallowed when \`Schema.query\` is set to a type other than \`Query\`.",
-                  },
-                ]
-        `);
+                    Array [
+                      Object {
+                        "code": "ROOT_QUERY_USED",
+                        "message": "[serviceA] Query -> Found invalid use of default root operation name \`Query\`. \`Query\` is disallowed when \`Schema.query\` is set to a type other than \`Query\`.",
+                      },
+                    ]
+          `);
 });
 
 describe('value types integration tests', () => {
@@ -327,11 +327,11 @@ describe('value types integration tests', () => {
       const { errors } = composeAndValidate([serviceA, serviceB]);
       expect(errors).toHaveLength(1);
       expect(errors[0]).toMatchInlineSnapshot(`
-                                Object {
-                                  "code": "VALUE_TYPE_NO_ENTITY",
-                                  "message": "Value types cannot be entities (using the @key directive). Please ensure that one type extends the other correctly, or remove the @key directive if this is not an entity.",
-                                }
-                        `);
+        Object {
+          "code": "VALUE_TYPE_NO_ENTITY",
+          "message": "Value types cannot be entities (using the @key directive). Please ensure that one type extends the other and doesn't redefine the type, or remove the @key directive if this is not an entity.",
+        }
+      `);
     });
 
     it('on field type mismatch', () => {
@@ -366,11 +366,11 @@ describe('value types integration tests', () => {
       const { errors } = composeAndValidate([serviceA, serviceB]);
       expect(errors).toHaveLength(1);
       expect(errors[0]).toMatchInlineSnapshot(`
-                        Object {
-                          "code": "VALUE_TYPE_FIELD_TYPE_MISMATCH",
-                          "message": "Found field type mismatch on expected value type. 'Product.color' is defined as both a String and a String!. In order to define 'Product' in multiple places, the fields and their types must be identical.",
-                        }
-                  `);
+                                Object {
+                                  "code": "VALUE_TYPE_FIELD_TYPE_MISMATCH",
+                                  "message": "Found field type mismatch on expected value type. 'Product.color' is defined as both a String and a String!. In order to define 'Product' in multiple places, the fields and their types must be identical.",
+                                }
+                        `);
     });
 
     it('on kind mismatch', () => {
@@ -405,11 +405,11 @@ describe('value types integration tests', () => {
       const { errors } = composeAndValidate([serviceA, serviceB]);
       expect(errors).toHaveLength(1);
       expect(errors[0]).toMatchInlineSnapshot(`
-                Object {
-                  "code": "VALUE_TYPE_KIND_MISMATCH",
-                  "message": "Found kind mismatch on expected value type. 'Product' is defined as both a ObjectTypeDefinition and a InterfaceTypeDefinition. In order to define Product in multiple places, the kinds must be identical.",
-                }
-            `);
+                        Object {
+                          "code": "VALUE_TYPE_KIND_MISMATCH",
+                          "message": "Found kind mismatch on expected value type. 'Product' is defined as both a ObjectTypeDefinition and a InterfaceTypeDefinition. In order to define Product in multiple places, the kinds must be identical.",
+                        }
+                  `);
     });
 
     it('on union types mismatch', () => {
@@ -454,11 +454,11 @@ describe('value types integration tests', () => {
       const { errors } = composeAndValidate([serviceA, serviceB]);
       expect(errors).toHaveLength(1);
       expect(errors[0]).toMatchInlineSnapshot(`
-        Object {
-          "code": "VALUE_TYPE_UNION_TYPES_MISMATCH",
-          "message": "The union 'Product' is defined in multiple places, however the unioned types do not match. Union types with the same name must also consist of identical types. The types Cabinet, Mattress are mismatched.",
-        }
-      `);
+                Object {
+                  "code": "VALUE_TYPE_UNION_TYPES_MISMATCH",
+                  "message": "The union 'Product' is defined in multiple places, however the unioned types do not match. Union types with the same name must also consist of identical types. The types Cabinet, Mattress are mismatched.",
+                }
+            `);
     });
   });
 });

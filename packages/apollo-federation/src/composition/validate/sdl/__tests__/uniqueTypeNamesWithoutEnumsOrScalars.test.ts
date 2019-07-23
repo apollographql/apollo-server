@@ -106,17 +106,17 @@ describe('UniqueTypeNamesWithoutEnumsOrScalars', () => {
       ]);
       expect(errors).toHaveLength(2);
       expect(errors).toMatchInlineSnapshot(`
-        Array [
-          Object {
-            "code": "VALUE_TYPE_FIELD_TYPE_MISMATCH",
-            "message": "Found field type mismatch on expected value type. 'Product.sku' is defined as both a String! and a ID!. In order to define 'Product' in multiple places, the fields and their types must be identical.",
-          },
-          Object {
-            "code": "VALUE_TYPE_FIELD_TYPE_MISMATCH",
-            "message": "Found field type mismatch on expected value type. 'Product.quantity' is defined as both a Int! and a Int. In order to define 'Product' in multiple places, the fields and their types must be identical.",
-          },
-        ]
-      `);
+                Array [
+                  Object {
+                    "code": "VALUE_TYPE_FIELD_TYPE_MISMATCH",
+                    "message": "Found field type mismatch on expected value type. 'Product.sku' is defined as both a String! and a ID!. In order to define 'Product' in multiple places, the fields and their types must be identical.",
+                  },
+                  Object {
+                    "code": "VALUE_TYPE_FIELD_TYPE_MISMATCH",
+                    "message": "Found field type mismatch on expected value type. 'Product.quantity' is defined as both a Int! and a Int. In order to define 'Product' in multiple places, the fields and their types must be identical.",
+                  },
+                ]
+            `);
     });
 
     it('object type definitions (overlapping fields, but non-value types)', () => {
@@ -200,11 +200,11 @@ describe('UniqueTypeNamesWithoutEnumsOrScalars', () => {
       ]);
       expect(errors).toHaveLength(1);
       expect(errors[0]).toMatchInlineSnapshot(`
-        Object {
-          "code": "VALUE_TYPE_UNION_TYPES_MISMATCH",
-          "message": "The union 'UPC' is defined in multiple places, however the unioned types do not match. Union types with the same name must also consist of identical types. The type Boolean is mismatched.",
-        }
-      `);
+                Object {
+                  "code": "VALUE_TYPE_UNION_TYPES_MISMATCH",
+                  "message": "The union 'UPC' is defined in multiple places, however the unioned types do not match. Union types with the same name must also consist of identical types. The type Boolean is mismatched.",
+                }
+            `);
     });
 
     it('input definitions', () => {
@@ -387,11 +387,11 @@ describe('UniqueTypeNamesWithoutEnumsOrScalars', () => {
         UniqueTypeNamesWithoutEnumsOrScalars,
       ]);
       expect(errors[0]).toMatchInlineSnapshot(`
-        Object {
-          "code": "VALUE_TYPE_KIND_MISMATCH",
-          "message": "Found kind mismatch on expected value type. 'Product' is defined as both a ObjectTypeDefinition and a InputObjectTypeDefinition. In order to define Product in multiple places, the kinds must be identical.",
-        }
-      `);
+                Object {
+                  "code": "VALUE_TYPE_KIND_MISMATCH",
+                  "message": "Found kind mismatch on expected value type. 'Product' is defined as both a ObjectTypeDefinition and a InputObjectTypeDefinition. In order to define Product in multiple places, the kinds must be identical.",
+                }
+            `);
     });
 
     it('value types cannot be entities (part 1)', () => {
@@ -421,7 +421,7 @@ describe('UniqueTypeNamesWithoutEnumsOrScalars', () => {
       expect(errors[0]).toMatchInlineSnapshot(`
         Object {
           "code": "VALUE_TYPE_NO_ENTITY",
-          "message": "Value types cannot be entities (using the @key directive). Please ensure that one type extends the other correctly, or remove the @key directive if this is not an entity.",
+          "message": "Value types cannot be entities (using the @key directive). Please ensure that one type extends the other and doesn't redefine the type, or remove the @key directive if this is not an entity.",
         }
       `);
     });
@@ -453,7 +453,7 @@ describe('UniqueTypeNamesWithoutEnumsOrScalars', () => {
       expect(errors[0]).toMatchInlineSnapshot(`
         Object {
           "code": "VALUE_TYPE_NO_ENTITY",
-          "message": "Value types cannot be entities (using the @key directive). Please ensure that one type extends the other correctly, or remove the @key directive if this is not an entity.",
+          "message": "Value types cannot be entities (using the @key directive). Please ensure that one type extends the other and doesn't redefine the type, or remove the @key directive if this is not an entity.",
         }
       `);
     });
