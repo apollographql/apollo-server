@@ -123,7 +123,6 @@
     "koa": "2.7.0",
     "koa-multer": "1.0.2",
     "lerna": "3.13.4",
-    "lint-staged": "8.2.1",
     "memcached-mock": "0.1.0",
     "mock-req": "0.2.0",
     "multer": "1.4.2",
