@@ -1,5 +1,4 @@
 {
-  "name": "apollo-server-docs",
   "scripts": {
     "start": "rm -rf .cache && gatsby develop",
     "build": "gatsby build",
