@@ -1,10 +1,11 @@
 import { specifiedSDLRules } from 'graphql/validation/specifiedRules';
 
 import {
-  UniqueTypeNamesWithoutEnumsOrScalars,
+  UniqueTypeNamesWithFields,
   MatchingEnums,
   PossibleTypeExtensions,
   UniqueFieldDefinitionNames,
+  UniqueUnionTypes,
 } from './validate/sdl';
 
 const omit = [
@@ -19,7 +20,8 @@ export const compositionRules = specifiedSDLRules
   .filter(rule => !omit.includes(rule.name))
   .concat([
     UniqueFieldDefinitionNames,
-    UniqueTypeNamesWithoutEnumsOrScalars,
+    UniqueTypeNamesWithFields,
     MatchingEnums,
+    UniqueUnionTypes,
     PossibleTypeExtensions,
   ]);

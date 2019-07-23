@@ -1,13 +1,10 @@
 import {
   GraphQLError,
   ASTVisitor,
-  Kind,
   ObjectTypeDefinitionNode,
   InterfaceTypeDefinitionNode,
-  UnionTypeDefinitionNode,
   InputObjectTypeDefinitionNode,
 } from 'graphql';
-import xorBy from 'lodash.xorby';
 
 import { SDLValidationContext } from 'graphql/validation/ValidationContext';
 import Maybe from 'graphql/tsutils/Maybe';
@@ -17,7 +14,6 @@ import { isTypeNodeAnEntity, diffTypeNodes, errorWithCode } from '../../utils';
 type TypesWithRequiredUniqueNames =
   | ObjectTypeDefinitionNode
   | InterfaceTypeDefinitionNode
-  | UnionTypeDefinitionNode
   | InputObjectTypeDefinitionNode;
 
 export function duplicateTypeNameMessage(typeName: string): string {
@@ -33,7 +29,7 @@ export function existedTypeNameMessage(typeName: string): string {
  * A GraphQL document is only valid if all defined types have unique names.
  * Modified to allow duplicate enum and scalar names
  */
-export function UniqueTypeNamesWithoutEnumsOrScalars(
+export function UniqueTypeNamesWithFields(
   context: SDLValidationContext,
 ): ASTVisitor {
   const knownTypes: {
@@ -45,7 +41,7 @@ export function UniqueTypeNamesWithoutEnumsOrScalars(
     // ScalarTypeDefinition: checkTypeName,
     ObjectTypeDefinition: checkTypeName,
     InterfaceTypeDefinition: checkTypeName,
-    UnionTypeDefinition: checkTypeName,
+    // UnionTypeDefinition: checkTypeName,
     // EnumTypeDefinition: checkTypeName,
     InputObjectTypeDefinition: checkTypeName,
   };
@@ -59,36 +55,6 @@ export function UniqueTypeNamesWithoutEnumsOrScalars(
 
     const typeNodeFromDefs = knownTypes[typeName];
     const duplicateTypeNode = typeNodeFromSchema || typeNodeFromDefs;
-
-    // Handle union types with the same name
-    if (
-      duplicateTypeNode &&
-      duplicateTypeNode.kind === Kind.UNION_TYPE_DEFINITION &&
-      node.kind === Kind.UNION_TYPE_DEFINITION
-    ) {
-      const unionDiff = xorBy(
-        node.types,
-        duplicateTypeNode.types,
-        'name.value',
-      );
-
-      const diffLength = unionDiff.length;
-      if (diffLength > 0) {
-        context.reportError(
-          errorWithCode(
-            'VALUE_TYPE_UNION_TYPES_MISMATCH',
-            `The union '${typeName}' is defined in multiple places, however the unioned types do not match. Union types with the same name must also consist of identical types. The type${
-              diffLength > 1 ? 's' : ''
-            } ${unionDiff.map(diffEntry => diffEntry.name.value).join(', ')} ${
-              diffLength > 1 ? 'are' : 'is'
-            } mismatched.`,
-            [node, duplicateTypeNode],
-          ),
-        );
-      }
-
-      return false;
-    }
 
     /*
      * Return early for value types

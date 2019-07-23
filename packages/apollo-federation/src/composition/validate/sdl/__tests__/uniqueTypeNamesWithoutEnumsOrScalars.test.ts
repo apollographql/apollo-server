@@ -11,7 +11,7 @@ import {
   graphqlErrorSerializer,
 } from '../../../../snapshotSerializers';
 import federationDirectives from '../../../../directives';
-import { UniqueTypeNamesWithoutEnumsOrScalars } from '..';
+import { UniqueTypeNamesWithFields } from '..';
 import { ServiceDefinition } from '../../../types';
 import { buildMapsFromServiceList } from '../../../compose';
 
@@ -36,7 +36,7 @@ function createDocumentsForServices(
   ];
 }
 
-describe('UniqueTypeNamesWithoutEnumsOrScalars', () => {
+describe('UniqueTypeNamesWithFields', () => {
   let schema: GraphQLSchema;
 
   // create a blank schema for each test
@@ -69,7 +69,7 @@ describe('UniqueTypeNamesWithoutEnumsOrScalars', () => {
       ]);
 
       const errors = validateSDL(definitions, schema, [
-        UniqueTypeNamesWithoutEnumsOrScalars,
+        UniqueTypeNamesWithFields,
       ]);
       expect(errors).toHaveLength(1);
       expect(errors[0].message).toMatch(
@@ -102,7 +102,7 @@ describe('UniqueTypeNamesWithoutEnumsOrScalars', () => {
       ]);
 
       const errors = validateSDL(definitions, schema, [
-        UniqueTypeNamesWithoutEnumsOrScalars,
+        UniqueTypeNamesWithFields,
       ]);
       expect(errors).toHaveLength(2);
       expect(errors).toMatchInlineSnapshot(`
@@ -142,7 +142,7 @@ describe('UniqueTypeNamesWithoutEnumsOrScalars', () => {
       ]);
 
       const errors = validateSDL(definitions, schema, [
-        UniqueTypeNamesWithoutEnumsOrScalars,
+        UniqueTypeNamesWithFields,
       ]);
       expect(errors).toHaveLength(1);
       expect(errors[0].message).toMatch(
@@ -171,40 +171,12 @@ describe('UniqueTypeNamesWithoutEnumsOrScalars', () => {
       ]);
 
       const errors = validateSDL(definitions, schema, [
-        UniqueTypeNamesWithoutEnumsOrScalars,
+        UniqueTypeNamesWithFields,
       ]);
       expect(errors).toHaveLength(1);
       expect(errors[0].message).toMatch(
         'There can be only one type named "Product".',
       );
-    });
-
-    it('union definitions', () => {
-      const [definitions] = createDocumentsForServices([
-        {
-          typeDefs: gql`
-            union UPC = String | Int
-          `,
-          name: 'serviceA',
-        },
-        {
-          typeDefs: gql`
-            union UPC = String | Int | Boolean
-          `,
-          name: 'serviceB',
-        },
-      ]);
-
-      const errors = validateSDL(definitions, schema, [
-        UniqueTypeNamesWithoutEnumsOrScalars,
-      ]);
-      expect(errors).toHaveLength(1);
-      expect(errors[0]).toMatchInlineSnapshot(`
-                Object {
-                  "code": "VALUE_TYPE_UNION_TYPES_MISMATCH",
-                  "message": "The union 'UPC' is defined in multiple places, however the unioned types do not match. Union types with the same name must also consist of identical types. The type Boolean is mismatched.",
-                }
-            `);
     });
 
     it('input definitions', () => {
@@ -228,7 +200,7 @@ describe('UniqueTypeNamesWithoutEnumsOrScalars', () => {
       ]);
 
       const errors = validateSDL(definitions, schema, [
-        UniqueTypeNamesWithoutEnumsOrScalars,
+        UniqueTypeNamesWithFields,
       ]);
       expect(errors).toHaveLength(1);
       expect(errors[0].message).toMatch(
@@ -255,7 +227,7 @@ describe('UniqueTypeNamesWithoutEnumsOrScalars', () => {
       ]);
 
       const errors = validateSDL(definitions, schema, [
-        UniqueTypeNamesWithoutEnumsOrScalars,
+        UniqueTypeNamesWithFields,
       ]);
       expect(errors).toHaveLength(0);
     });
@@ -282,7 +254,7 @@ describe('UniqueTypeNamesWithoutEnumsOrScalars', () => {
       ]);
 
       const errors = validateSDL(definitions, schema, [
-        UniqueTypeNamesWithoutEnumsOrScalars,
+        UniqueTypeNamesWithFields,
       ]);
       expect(errors).toHaveLength(0);
     });
@@ -308,7 +280,7 @@ describe('UniqueTypeNamesWithoutEnumsOrScalars', () => {
       ]);
 
       const errors = validateSDL(definitions, schema, [
-        UniqueTypeNamesWithoutEnumsOrScalars,
+        UniqueTypeNamesWithFields,
       ]);
       expect(errors).toHaveLength(0);
     });
@@ -334,29 +306,7 @@ describe('UniqueTypeNamesWithoutEnumsOrScalars', () => {
       ]);
 
       const errors = validateSDL(definitions, schema, [
-        UniqueTypeNamesWithoutEnumsOrScalars,
-      ]);
-      expect(errors).toHaveLength(0);
-    });
-
-    it('identical union types', () => {
-      const [definitions] = createDocumentsForServices([
-        {
-          typeDefs: gql`
-            union UPC = String | Int
-          `,
-          name: 'serviceA',
-        },
-        {
-          typeDefs: gql`
-            union UPC = String | Int
-          `,
-          name: 'serviceB',
-        },
-      ]);
-
-      const errors = validateSDL(definitions, schema, [
-        UniqueTypeNamesWithoutEnumsOrScalars,
+        UniqueTypeNamesWithFields,
       ]);
       expect(errors).toHaveLength(0);
     });
@@ -384,7 +334,7 @@ describe('UniqueTypeNamesWithoutEnumsOrScalars', () => {
       ]);
 
       const errors = validateSDL(definitions, schema, [
-        UniqueTypeNamesWithoutEnumsOrScalars,
+        UniqueTypeNamesWithFields,
       ]);
       expect(errors[0]).toMatchInlineSnapshot(`
                 Object {
@@ -415,7 +365,7 @@ describe('UniqueTypeNamesWithoutEnumsOrScalars', () => {
       ]);
 
       const errors = validateSDL(definitions, schema, [
-        UniqueTypeNamesWithoutEnumsOrScalars,
+        UniqueTypeNamesWithFields,
       ]);
       expect(errors).toHaveLength(1);
       expect(errors[0]).toMatchInlineSnapshot(`
@@ -447,7 +397,7 @@ describe('UniqueTypeNamesWithoutEnumsOrScalars', () => {
       ]);
 
       const errors = validateSDL(definitions, schema, [
-        UniqueTypeNamesWithoutEnumsOrScalars,
+        UniqueTypeNamesWithFields,
       ]);
       expect(errors).toHaveLength(1);
       expect(errors[0]).toMatchInlineSnapshot(`
@@ -479,7 +429,7 @@ describe('UniqueTypeNamesWithoutEnumsOrScalars', () => {
       ]);
 
       const errors = validateSDL(definitions, schema, [
-        UniqueTypeNamesWithoutEnumsOrScalars,
+        UniqueTypeNamesWithFields,
       ]);
       expect(errors).toHaveLength(0);
     });
