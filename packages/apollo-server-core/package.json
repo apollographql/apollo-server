@@ -1,6 +1,6 @@
 {
   "name": "apollo-server-core",
-  "version": "2.6.3",
+  "version": "2.7.0",
   "description": "Core engine for Apollo GraphQL server",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -24,8 +24,8 @@
     "node": ">=6"
   },
   "dependencies": {
-    "@apollographql/apollo-tools": "^0.3.6",
-    "@apollographql/graphql-playground-html": "1.6.20",
+    "@apollographql/apollo-tools": "^0.4.0",
+    "@apollographql/graphql-playground-html": "1.6.24",
     "@types/graphql-upload": "^8.0.0",
     "@types/ws": "^6.0.0",
     "apollo-cache-control": "file:../apollo-cache-control",
@@ -35,10 +35,10 @@
     "apollo-server-env": "file:../apollo-server-env",
     "apollo-server-errors": "file:../apollo-server-errors",
     "apollo-server-plugin-base": "file:../apollo-server-plugin-base",
+    "apollo-server-types": "file:../apollo-server-types",
     "apollo-tracing": "file:../apollo-tracing",
     "fast-json-stable-stringify": "^2.0.0",
     "graphql-extensions": "file:../graphql-extensions",
-    "graphql-subscriptions": "^1.0.0",
     "graphql-tag": "^2.9.2",
     "graphql-tools": "^4.0.0",
     "graphql-upload": "^8.0.2",

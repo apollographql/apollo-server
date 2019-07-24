@@ -236,7 +236,7 @@ Before, when we were simply merging schemas without first transforming them, we 
 
 For example, suppose we transform the `chirpSchema` by removing the `chirpsByAuthorId` field and add a `Chirp_` prefix to all types and field names, in order to make it very clear which types and fields came from `chirpSchema`:
 
-```js
+```ts
 const {
   makeExecutableSchema,
   addMockFunctionsToSchema,
@@ -406,7 +406,7 @@ resolvers: {
 
 The `info.mergeInfo` object provides the `delegateToSchema` method:
 
-```js
+```ts
 type MergeInfo = {
   delegateToSchema<TContext>(options: IDelegateToSchemaOptions<TContext>): any;
 }
@@ -430,7 +430,7 @@ As described in the documentation above, `info.mergeInfo.delegateToSchema` allow
 
 #### onTypeConflict
 
-```js
+```ts
 type OnTypeConflict = (
   left: GraphQLNamedType,
   right: GraphQLNamedType,

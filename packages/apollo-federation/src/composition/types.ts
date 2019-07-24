@@ -1,4 +1,10 @@
-import { SelectionNode, DocumentNode, FieldDefinitionNode } from 'graphql';
+import {
+  SelectionNode,
+  DocumentNode,
+  FieldDefinitionNode,
+  TypeDefinitionNode,
+  TypeExtensionNode,
+} from 'graphql';
 
 export type ServiceName = string | null;
 
@@ -74,3 +80,11 @@ declare module 'graphql/type/definition' {
     federation?: FederationField;
   }
 }
+
+export type FederatedTypeDefinitionNode = TypeDefinitionNode & {
+  serviceName: string | null;
+};
+
+export type FederatedTypeExtensionNode = TypeExtensionNode & {
+  serviceName: string | null;
+};

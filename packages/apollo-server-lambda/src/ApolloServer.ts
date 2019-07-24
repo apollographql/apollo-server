@@ -3,8 +3,7 @@ import {
   APIGatewayProxyEvent,
   Context as LambdaContext,
 } from 'aws-lambda';
-import { ApolloServerBase } from 'apollo-server-core';
-import { GraphQLOptions, Config } from 'apollo-server-core';
+import { ApolloServerBase, GraphQLOptions, Config } from 'apollo-server-core';
 import {
   renderPlaygroundPage,
   RenderPageOptions as PlaygroundRenderPageOptions,

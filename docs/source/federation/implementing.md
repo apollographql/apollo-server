@@ -14,7 +14,7 @@ Let's take a look at how to get a federated graph up and running. We'll start by
 
 ## Defining a federated service
 
-Converting an existing schema into a federated service is the first step in buliding a federated graph. To do this, we'll use the `buildFederatedSchema()` function from the `@apollo/federation` package.
+Converting an existing schema into a federated service is the first step in building a federated graph. To do this, we'll use the `buildFederatedSchema()` function from the `@apollo/federation` package.
 
 Let's start with a basic Apollo Server and make the switch:
 
@@ -43,6 +43,10 @@ const resolvers = {
 const server = new ApolloServer({
   typeDefs,
   resolvers,
+});
+
+server.listen(4001).then(({ url }) => {
+    console.log(`🚀 Server ready at ${url}`);
 });
 ```
 
@@ -88,6 +92,10 @@ const resolvers = {
 const server = new ApolloServer({
   schema: buildFederatedSchema([{ typeDefs, resolvers }])
 });
+
+server.listen(4001).then(({ url }) => {
+    console.log(`🚀 Server ready at ${url}`);
+});
 ```
 > Note: we're now providing a `schema` to the `ApolloServer` constructor, rather than `typeDefs` and `resolvers`.
 
@@ -103,7 +111,7 @@ npm install @apollo/gateway apollo-server graphql
 
 Now we can create a new service that acts as a gateway to the underlying microservices:
 
-```javascript{2,4-9,12}
+```javascript{2,4-9,11}
 const { ApolloServer } = require('apollo-server');
 const { ApolloGateway } = require("@apollo/gateway");
 
@@ -114,41 +122,38 @@ const gateway = new ApolloGateway({
   ],
 });
 
-(async () => {
-  const { schema, executor } = await gateway.load();
+const server = new ApolloServer({
+  gateway,
+  
+  // Currently, subscriptions are enabled by default with Apollo Server, however,
+  // subscriptions are not compatible with the gateway.  We hope to resolve this
+  // limitation in future versions of Apollo Server.  Please reach out to us on
+  // https://spectrum.chat/apollo/apollo-server if this is critical to your adoption!
+  subscriptions: false,
+});
 
-  const server = new ApolloServer({ schema, executor });
-
-  server.listen().then(({ url }) => {
-    console.log(`🚀 Server ready at ${url}`);
-  });
-})();
+server.listen().then(({ url }) => {
+  console.log(`🚀 Server ready at ${url}`);
+});
 ```
 
-In this example, we provide the `serviceList` option to the `ApolloGateway` constructor, which provides a name and endpoint for each of the federated services. The name (an arbitrary string) is primarily used for query planner output, error messages, and logging.
+In this example, we provide the `serviceList` configuration to the `ApolloGateway` constructor, which provides a `name` and endpoint (i.e. `url`) for each of the federated services. The name (an arbitrary string) is primarily used for query planner output, error messages, and logging.
+
+Due the power and flexibility of federation's `_entities` field **federated services should not be publicly accessible**.  Clients are expected to communicate directly with the gateway.  Since circumventing this pattern could expose downstream federated services in ways which they were not intended to be exposed, proper ingress limitations (e.g. firewall rules) should be enforced.
+
+> NOTE: In production, we recommend configuring the gateway in a managed mode, which relies on static files rather than introspection. For details on how to use the [Apollo schema registry](https://www.apollographql.com/docs/platform/schema-registry/) to support this workflow, see [the platform docs](https://www.apollographql.com/docs/platform/federation/).
 
 On startup, the gateway will fetch the service capabilities from the running servers and form an overall composed graph. It will accept incoming requests and create query plans which query the underlying services in the service list.
 
-> If there are any composition errors, the `gateway.load()` promise will be rejected with a list of [validation errors](/federation/errors/).
-
-#### Gateway initialization
-The call to `gateway.load()` returns a `Promise` which resolves to a `schema` and `executor`. These are intended to be passed into the constructor of `ApolloServer`.
-* The `schema` is the final, composed schema which represents all services.
-* The `executor` handles incoming requests. It uses the query planner to manage the various requests to our services that are necessary to construct the final result.
-
-## Inspecting query plans
-
-When the gateway receives a new query, it generates a query plan that defines the sequence of requests the gateway will send to the necessary downstream services. Inspecting a query plan can be a helpful tool in understanding the gateway and exploring how directives like [`@requires`](/federation/advanced-features/#computed-fields) and [`@provides`](/federation/advanced-features/#using-denormalized-data) can help optimize query plans. To make it easy to access query plans, the `@apollo/gateway` package includes a build of GraphQL Playground that adds a query plan inspector.
-
-
-![playground](../images/playground.png)
+> If there are any composition errors, the `new ApolloServer` call will throw with a list of [validation errors](/federation/errors/).
 
 ## Sharing context across services
+
 For existing services, it's likely that you've already implemented some form of authentication to convert a request into a user, or require some information passed to the service through request headers. `@apollo/gateway` makes it easy to reuse the context feature of Apollo Server to customize what information is sent to underlying services. Let's see what it looks like to pass user information along from the gateway to its services:
 
-```javascript{9-18,27-36}
-import { ApolloServer } from 'apollo-server';
-import { ApolloGateway, RemoteGraphQLDataSource } from '@apollo/gateway';
+```javascript{9-18,23-32}
+const { ApolloServer } = require('apollo-server');
+const { ApolloGateway, RemoteGraphQLDataSource } = require('@apollo/gateway');
 
 const gateway = new ApolloGateway({
   serviceList: [
@@ -167,28 +172,30 @@ const gateway = new ApolloGateway({
   },
 });
 
-(async () => {
-  const { schema, executor } = await gateway.load();
+const server = new ApolloServer({
+  gateway,
+  
+  // As noted above, subscriptions are enabled by default with Apollo Server, however,
+  // subscriptions are not compatible with the gateway.  We hope to resolve this
+  // limitation in future versions of Apollo Server.  Please reach out to us on
+  // https://spectrum.chat/apollo/apollo-server if this is critical to your adoption!
+  subscriptions: false,
+  
+  context: ({ req }) => {
+    // get the user token from the headers
+    const token = req.headers.authorization || '';
 
-  const server = new ApolloServer({
-    schema,
-    executor,
-    context: ({ req }) => {
-      // get the user token from the headers
-      const token = req.headers.authorization || '';
+    // try to retrieve a user with the token
+    const userId = getUserId(token);
 
-      // try to retrieve a user with the token
-      const userId = getUserId(token);
+    // add the user to the context
+    return { userId };
+  },
+});
 
-      // add the user to the context
-      return { userId };
-    },
-  });
-
-  server.listen().then(({ url }) => {
-    console.log(`🚀 Server ready at ${url}`);
-  });
-})();
+server.listen().then(({ url }) => {
+  console.log(`🚀 Server ready at ${url}`);
+});
 ```
 
 By leveraging the `buildService` function, we're able to customize how requests are sent to our federated services. In this example, we return a custom `RemoteGraphQLDataSource`. The datasource allows us to modify the outgoing request with information from the Apollo Server `context` before it's sent. Here, we're adding the `user-id` header to pass an authenticated user id to downstream services.

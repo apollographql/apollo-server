@@ -35,7 +35,7 @@ extend type Query {
 directive @external on FIELD_DEFINITION
 directive @requires(fields: _FieldSet!) on FIELD_DEFINITION
 directive @provides(fields: _FieldSet!) on FIELD_DEFINITION
-directive @key(fields: _FieldSet!) on OBJECT
+directive @key(fields: _FieldSet!) on OBJECT | INTERFACE
 
 # this is an optional directive discussed below
 directive @extends on OBJECT
@@ -61,7 +61,7 @@ type User @key(fields: "id") {
 }
 ```
 
-The generated SDL should match that exactly with no additions. It is important to preserve the type extensions, directive locations, and omit the federation types.
+The generated SDL should match that exactly with no additions. It is important to preserve the type extensions and directive locations and to omit the federation types.
 
 Some libraries such as `graphql-java` don't have native support for type extensions in their printer. Apollo Federation supports using an `@extends` directive in place of `extend type` to annotate type references:
 
@@ -202,17 +202,17 @@ A new object type called `_Service` must be created. This type must have an `sdl
 
 ### `Query._service`
 
-A new field must be added to the query root called `_service`. This field must return a non-nullable `_Service` type. The `_service` field on the query root must return SDL which includes all of the service's types (after any non-federation transforms), as well as federation directive annotations on the fields and types. The federation schema modifications (i.e. new types and directives) *should not be* included in this SDL.
+A new field must be added to the query root called `_service`. This field must return a non-nullable `_Service` type. The `_service` field on the query root must return SDL which includes all of the service's types (after any non-federation transforms), as well as federation directive annotations on the fields and types. The federation schema modifications (i.e. new types and directive definitions) *should not be* included in this SDL.
 
-### `union Entity`
+### `union _Entity`
 
-A new union called `_Entity` must be created. This should be a union of all types that use the `@key` directive.
+A new union called `_Entity` must be created. This should be a union of all types that use the `@key` directive, including both types native to the schema and extended types.
 
 ### `scalar _Any`
 
 A new scalar called `_Any` must be created. The `_Any` scalar is used to pass representations of entities from external services into the root `_entities` field for execution. Validation of the `_Any` scalar is done by matching the `__typename` and `@external` fields defined in the schema.
 
-### `scalar FieldSet`
+### `scalar _FieldSet`
 
 A new scalar called `_FieldSet` is a custom scalar type that is used to represent a set of fields. Grammatically, a field set is a [selection set](https://facebook.github.io/graphql/draft/#sec-Selection-Sets) minus the braces. This means it can represent a single field `"upc"`, multiple fields `"id countryCode"`, and even nested selection sets `"id organization { id }"`.
 
@@ -227,9 +227,10 @@ A new field must be added to the query root called `_entities`. This field must 
 
 ```graphql
 directive @key(fields: _FieldSet!) on OBJECT
+directive @key(fields: _FieldSet!) on INTERFACE
 ```
 
-The `@key` directive is used to indicate a combination of fields that can be used to uniquely identify and fetch an object.
+The `@key` directive is used to indicate a combination of fields that can be used to uniquely identify and fetch an object or interface.
 
 ```graphql
 type Product @key(fields: "upc") {
@@ -292,7 +293,9 @@ In this case, the Reviews service adds new capabilities to the `User` type by pr
 
 ### `@external`
 
-`directive @external on FIELD_DEFINITION`
+```graphql
+directive @external on FIELD_DEFINITION
+```
 
 The `@external` directive is used to mark a field as owned by another service. This allows service A to use fields from service B while also knowing at runtime the types of that field. For example:
 

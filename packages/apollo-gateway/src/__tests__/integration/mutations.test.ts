@@ -18,7 +18,7 @@ function spyOnResolver<T extends string>(resolverMap: any, resolverName: T) {
 
 it('supports mutations', async () => {
   const query = gql`
-    mutation Login($username: String, $password: String!) {
+    mutation Login($username: String!, $password: String!) {
       login(username: $username, password: $password) {
         reviews {
           product {
@@ -93,7 +93,7 @@ it('multiple root mutations', async () => {
 
   const query = gql`
     mutation LoginAndReview(
-      $username: String
+      $username: String!
       $password: String!
       $upc: String!
       $body: String!
@@ -160,7 +160,7 @@ it('multiple root mutations with correct service order', async () => {
       $upc: String!
       $body: String!
       $updatedReview: UpdateReviewInput!
-      $username: String
+      $username: String!
       $password: String!
       $reviewId: ID!
     ) {
@@ -239,57 +239,53 @@ it('multiple root mutations with correct service order', async () => {
             }
           }
         },
-        Sequence {
-          Fetch(service: "accounts") {
+        Fetch(service: "accounts") {
+          {
+            login(username: $username, password: $password) {
+              __typename
+              id
+            }
+          }
+        },
+        Flatten(path: "login") {
+          Fetch(service: "reviews") {
             {
-              login(username: $username, password: $password) {
+              ... on User {
                 __typename
                 id
               }
-            }
-          },
-          Sequence {
-            Flatten(path: "login") {
-              Fetch(service: "reviews") {
-                {
-                  ... on User {
+            } =>
+            {
+              ... on User {
+                reviews {
+                  product {
                     __typename
-                    id
-                  }
-                } =>
-                {
-                  ... on User {
-                    reviews {
-                      product {
-                        __typename
-                        ... on Book {
-                          __typename
-                          isbn
-                        }
-                        ... on Furniture {
-                          upc
-                        }
-                      }
+                    ... on Book {
+                      __typename
+                      isbn
+                    }
+                    ... on Furniture {
+                      upc
                     }
                   }
                 }
-              },
-            },
-            Flatten(path: "login.reviews.@.product") {
-              Fetch(service: "product") {
-                {
-                  ... on Book {
-                    __typename
-                    isbn
-                  }
-                } =>
-                {
-                  ... on Book {
-                    upc
-                  }
-                }
-              },
-            },
+              }
+            }
+          },
+        },
+        Flatten(path: "login.reviews.@.product") {
+          Fetch(service: "product") {
+            {
+              ... on Book {
+                __typename
+                isbn
+              }
+            } =>
+            {
+              ... on Book {
+                upc
+              }
+            }
           },
         },
         Fetch(service: "reviews") {

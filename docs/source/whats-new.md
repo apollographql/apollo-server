@@ -44,11 +44,11 @@ server.listen().then(({ url }) => {
 });
 ```
 
-This is just the beginning. We have published a [roadmap](https://github.com/apollographql/apollo-server/blob/master/ROADMAP.md) for all of the features we will be bringing to Apollo Server soon and we would love your help! If you have any interest, you can get involved on [Github](https://github.com/apollographql/apollo-server) or by joining the [Apollo Slack](https://www.apollographql.com/slack) and going to the #apollo-server channel.
+This is just the beginning. We have published a [roadmap](https://github.com/apollographql/apollo-server/blob/master/ROADMAP.md) for all of the features we will be bringing to Apollo Server soon and we would love your help! If you have any interest, you can get involved on [Github](https://github.com/apollographql/apollo-server) or by joining the [Apollo Spectrum chat](https://spectrum.chat/apollo) and going to the [_Apollo Server_](https://spectrum.chat/apollo/apollo-server) channel.
 
 ### Automatic Persisted Queries
 
-A persisted query is an ID or hash that can be sent to the server in place of the GraphQL query string. This smaller signature reduces bandwidth utilization and speeds up client loading times. Apollo Server enables persisted queries without additional server configuration, using an in-memory LRU cache to store the mapping between hash and query string. The persisted query cache can be configured as shown in the following code snippet. To enable persisted queries on the client, follow the [Performance Guide](https://www.apollographql.com/docs/guides/performance.html#Automatic-Persisted-Queries).
+A persisted query is an ID or hash that can be sent to the server in place of the GraphQL query string. This smaller signature reduces bandwidth utilization and speeds up client loading times. Apollo Server enables persisted queries without additional server configuration, using an in-memory LRU cache to store the mapping between hash and query string. The persisted query cache can be configured as shown in the following code snippet. To enable persisted queries on the client, follow the [Performance Guide](https://www.apollographql.com/docs/apollo-server/features/apq/).
 
 ```js{7-12}
 const { ApolloServer } = require('apollo-server');
@@ -70,7 +70,7 @@ server.listen().then(({ url }) => {
 });
 ```
 
-For more information on automatic persisted queries, check the [APQ section of the performance guide](https://www.apollographql.com/docs/guides/performance.html#automatic-persisted-queries).
+For more information on automatic persisted queries, check the [APQ section of the performance guide](https://www.apollographql.com/docs/apollo-server/features/apq/).
 
 ### CDN integration
 

@@ -459,4 +459,18 @@ describe('HTTPCache', () => {
     expect(await response2.json()).toEqual({ name: 'Alan Turing' });
     expect(response2.headers.get('Age')).toEqual('10');
   });
+
+  it('fetches a response from the origin with a custom fetch function', async () => {
+    fetch.mockJSONResponseOnce({ name: 'Ada Lovelace' });
+
+    const customFetch = jest.fn(fetch);
+    const customHttpCache = new HTTPCache(store as any, customFetch);
+
+    const response = await customHttpCache.fetch(
+      new Request('https://api.example.com/people/1'),
+    );
+
+    expect(customFetch.mock.calls.length).toEqual(1);
+    expect(await response.json()).toEqual({ name: 'Ada Lovelace' });
+  });
 });
