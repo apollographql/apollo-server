@@ -150,6 +150,13 @@ async resolveURL(request: RequestOptions) {
 }
 ```
 
+## Community data sources
+
+The following data sources are community contributions which offer their own extensions to the base `DataSource` class provided by `apolllo-datasource`.  While the packages here have been given cursory reviews, Apollo offers no assurance that they follow best practices or that they will continue to be maintained.  If you're the author of a data source that extends `DataSource`, please open a PR to this documentation to have it featured here.  For more details on specific packages, or to report an issue with one of these packages, please refer to the appropriate repository.
+
+- `SQLDataSource` from [`datasource-sql`](https://github.com/cvburgess/SQLDataSource)
+- `MongoDataSource` from [`apollo-datasource-mongodb`](https://github.com/GraphQLGuide/apollo-datasource-mongodb/)
+
 ## Accessing data sources from resolvers
 
 To give resolvers access to data sources, you pass them as options to the `ApolloServer` constructor:
