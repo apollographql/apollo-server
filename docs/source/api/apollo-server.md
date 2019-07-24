@@ -3,7 +3,7 @@ title: "API Reference: apollo-server"
 sidebar_title: apollo-server
 ---
 
-This API reference documents the exports from the `apollo-server`.
+This API reference documents the exports from the `apollo-server` package.
 
 ## `ApolloServer`
 
@@ -119,7 +119,7 @@ new ApolloServer({
 
 * `engine`: <`EngineReportingOptions`> | boolean
 
-  Provided the `ENGINE_API_KEY` environment variable is set, the engine reporting agent will be started automatically. The API key can also be provided as the `apiKey` field in an object passed as the `engine` field. See the [EngineReportingOptions](#enginereportingoptions) section for a full description of how to configure the reporting agent, including how to blacklist variables. When using the Engine proxy, this option should be set to false.
+  Provided the `ENGINE_API_KEY` environment variable is set, the engine reporting agent will be started automatically. The API key can also be provided as the `apiKey` field in an object passed as the `engine` field. See the [EngineReportingOptions](#enginereportingoptions) section for a full description of how to configure the reporting agent, including how to include variable values and HTTP headers. When using the Engine proxy, this option should be set to false.
 
 * `persistedQueries`: <`Object`> | false
 
@@ -133,23 +133,27 @@ new ApolloServer({
 
 `ApolloServer`
 
-### `ApolloServer.listen(options)`: `Promise`
+## `ApolloServer.listen`
 
-#### Parameters
+> **Note:** This method is only provided by the `apollo-server` package.  For the `apollo-server-{integration}` packages, see `applyMiddleware` below.
 
-In `apollo-server`, the listen call starts the subscription server and passes the arguments directly to an http server Node.js' [`net.Server.listen`](https://nodejs.org/api/net.html#net_server_listen) method are supported.
+### Parameters
 
-#### Returns
+* `options`: <`Object`>
 
-`Promise` that resolves to an object that contains:
+  When using the `apollo-server` package, calling `listen` on an instantiated `ApolloServer` will start the server by passing the specified (optional) `options` to a Node.js [`http.Server`](https://nodejs.org/api/http.html#http_class_http_server).  For a full reference of the supported `options`, see the [documentation for `net.Server.listen`](https://nodejs.org/api/net.html#net_server_listen_options_callback).
+
+### Returns
+
+`Promise` that resolves to an object containing the following properties:
 
   * `url`: <`String`>
   * `subscriptionsPath`: <`String`>
-  * `server`: <[`http.Server`](https://nodejs.org/api/http.html#http_class_http_server)>
+  * `server`: &lt;[`http.Server`](https://nodejs.org/api/http.html#http_class_http_server)&gt;
 
-## ApolloServer.applyMiddleware
+## `ApolloServer.applyMiddleware`
 
-The `applyMiddleware` method is provided by the `apollo-server-{integration}` packages that use middleware, such as hapi and express. This function connects ApolloServer to a specific framework.
+The `applyMiddleware` method is provided by the `apollo-server-{integration}` packages that use middleware, such as hapi and express. This method connects `ApolloServer` to a specific HTTP framework.
 
 ### Parameters
 
@@ -343,18 +347,57 @@ addMockFunctionsToSchema({
    to standard error. Specify this function to process errors in a different
    way.
 
-*  `privateVariables`: Array<String> | boolean
+* `sendVariableValues`: { transform: (options: { variables: Record<string, any>, operationString?: string } ) => Record<string, any> }
+                     | { exceptNames: Array&lt;String&gt; }
+                     | { onlyNames: Array&lt;String&gt; }
+                     | { none: true }
+                     | { all: true }
 
-   A case-sensitive list of names of variables whose values should not be sent
-   to Apollo servers, or 'true' to leave out all variables. In the former
-   case, the report will indicate that each private variable was redacted in
-   the latter case, no variables are sent at all.
+    By default, Apollo Server does not send the values of any GraphQL variables to Apollo's servers, because variable values often contain the private data of your app's users. If you'd like variable values to be included in traces, set this option. This option can take several forms:
 
-*  `privateHeaders`: Array<String> | boolean
+    - `{ none: true }`: Don't send any variable values. **(DEFAULT)**
+    - `{ all: true }`: Send all variable values.
+    - `{ transform: ({ variables, operationString}) => { ... } }`: A custom function for modifying variable values. Keys added by the custom function will be removed, and keys removed will be added back with an empty value.  For security reasons, if an error occurs within this function, all variable values will be replaced with `[PREDICATE_FUNCTION_ERROR]`. 
+    - `{ exceptNames: [...] }`: A case-sensitive list of names of variables whose values should not be sent to Apollo servers.
+    - `{ onlyNames: [...] }`: A case-sensitive list of names of variables whose values will be sent to Apollo servers.
 
-   A case-insensitive list of names of HTTP headers whose values should not be
-   sent to Apollo servers, or 'true' to leave out all HTTP headers. Unlike
-   with privateVariables, names of dropped headers are not reported.
+   Defaults to not sending any variable values if both this parameter and the deprecated `privateVariables` are not set.
+   The report will indicate each private variable key whose value was redacted by `{ none: true }` or `{ exceptNames: [...]` }.
+
+*  `privateVariables`: Array&lt;String&gt; | boolean
+
+   > Will be deprecated in 3.0. Use the option `sendVariableValues` instead.
+   Passing an array into `privateVariables` is equivalent to
+   passing in `{ exceptNames: array } ` to `sendVariableValues`, and passing in `true` or `false` is equivalent
+   to passing ` { none: true } ` or ` { all: true }`, respectively.
+
+   > Note: An error will be thrown if both this deprecated option and its replacement, `sendVariableValues` are defined.
+   In order to preserve the old default of `privateVariables`, which sends all variables and their values, pass in the `sendVariableValues` option:
+     `new ApolloServer({engine: {sendVariableValues: {all: true}}})`.
+
+* `sendHeaders`: { exceptNames: Array&lt;String&gt; } | { onlyNames: Array&lt;String&gt; } | { all: boolean } | { none: boolean }
+   By default, Apollo Server does not send the list of HTTP request headers and values to
+   Apollo's servers, to protect private data of your app's users. If you'd like this information included in traces,
+   set this option. This option can take several forms:
+
+   - `{ none: true }`: Drop all HTTP request headers. **(DEFAULT)**
+   - `{ all: true }`: Send the values of all HTTP request headers.
+   - `{ exceptNames: [...] }`: A case-insensitive list of names of HTTP headers whose values should not be sent to Apollo servers.
+   - `{ onlyNames: [...] }`: A case-insensitive list of names of HTTP headers whose values will be sent to Apollo servers.
+
+   Defaults to not sending any request header names and values if both this parameter and the deprecated `privateHeaders` are not set.
+   Unlike with `sendVariableValues`, names of dropped headers are not reported.
+   The headers 'authorization', 'cookie', and 'set-cookie' are never reported.
+
+*  `privateHeaders`: Array&lt;String&gt; | boolean
+
+   > Will be deprecated in 3.0.  Use the `sendHeaders` option instead.
+   Passing an array into `privateHeaders` is equivalent to passing ` { exceptNames: array } ` into `sendHeaders`, and
+   passing `true` or `false` is equivalent to passing in ` { none: true } ` and ` { all: true }`, respectively.
+
+   > Note: An error will be thrown if both this deprecated option and its replacement, `sendHeaders`, are defined.
+   In order to preserve the old default of `privateHeaders`, which sends all request headers and their values, pass in the `sendHeaders` option:
+      `new ApolloServer({engine: {sendHeaders: {all: true}}})`.
 
 *  `handleSignals`: boolean
 
@@ -372,8 +415,14 @@ addMockFunctionsToSchema({
    purposes of Apollo Engine reporting.  The modified error (e.g. after changing
    the `err.message` property) should be returned or the function should return
    an explicit `null` to avoid reporting the error entirely.  It is not
-   permissable to return `undefined`.
-   
+   permissable to return `undefined`. Note that most `GraphQLError` fields,
+   like `path`, will get copied from the original error to the new error: this
+   way, you can just `return new GraphQLError("message")` without having to
+   explicitly keep it associated with the same node. Specifically, only the
+   `message` and `extensions` properties on the returned `GraphQLError` are
+   observed.  If `extensions` aren't specified, the original `extensions` are
+   used.
+
 *  `schemaTag`: String
 
    A human-readable name to tag this variant of a schema (i.e. staging, EU). Setting this value will cause metrics to be segmented in the Apollo Platform's UI. Additionally schema validation with a schema tag will only check metrics associate with the same string.

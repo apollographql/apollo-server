@@ -1,5 +1,5 @@
 import { ServiceDefinition } from '@apollo/federation';
-import { GraphQLExecutionResult } from 'apollo-server-core';
+import { GraphQLExecutionResult } from 'apollo-server-types';
 import { parse } from 'graphql';
 import fetch, { HeadersInit } from 'node-fetch';
 import { ServiceEndpointDefinition } from './';

@@ -34,16 +34,16 @@ import {
   GraphQLRequest,
   GraphQLResponse,
   GraphQLRequestContext,
-  InvalidGraphQLRequestError,
-  ValidationRule,
   GraphQLExecutor,
   GraphQLExecutionResult,
-} from '../dist/requestPipelineAPI';
+  InvalidGraphQLRequestError,
+  ValidationRule,
+  WithRequired,
+} from 'apollo-server-types';
 import {
   ApolloServerPlugin,
   GraphQLRequestListener,
 } from 'apollo-server-plugin-base';
-import { WithRequired } from 'apollo-server-env';
 
 import { Dispatcher } from './utils/dispatcher';
 import {
@@ -344,7 +344,7 @@ export async function processGraphQLRequest<TContext>(
       try {
         const result = await execute(requestContext as WithRequired<
           typeof requestContext,
-          'document' | 'operation' | 'operationName'
+          'document' | 'operation' | 'operationName' | 'queryHash'
         >);
 
         if (result.errors) {
@@ -432,7 +432,7 @@ export async function processGraphQLRequest<TContext>(
   async function execute(
     requestContext: WithRequired<
       GraphQLRequestContext<TContext>,
-      'document' | 'operationName' | 'operation'
+      'document' | 'operationName' | 'operation' | 'queryHash'
     >,
   ): Promise<GraphQLExecutionResult> {
     const { request, document } = requestContext;

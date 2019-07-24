@@ -5,6 +5,8 @@ description: How to monitor Apollo Server's performance
 
 Understanding the behavior of GraphQL execution inside of Apollo Server is critical to developing and running a production GraphQL layer. Apollo Server enables GraphQL monitoring in Apollo Engine and provides more primitive native mechanisms to log each phase of a GraphQL request.
 
+> Using Federation? Check out the documentation for [federated tracing](/federation/metrics/)
+
 ## Apollo Engine
 
 Apollo Engine provides an integrated hub for all GraphQL performance data that is free for one million queries per month. With an API key from the [Engine UI](https://engine.apollographql.com/), Apollo Server reports performance and error data out-of-band. Apollo Engine then aggregates and displays information for [queries](https://www.apollographql.com/docs/engine/features/query-tracking.html), [requests](https://www.apollographql.com/docs/engine/performance.html), the [schema](https://www.apollographql.com/docs/engine/features/performance.html), and [errors](https://www.apollographql.com/docs/engine/features/error-tracking.html). By leveraging this data, Apollo Engine offers [alerts](https://www.apollographql.com/docs/engine/features/alerts.html) via [Slack](https://www.apollographql.com/docs/engine/integrations/slack.html) and [Datadog](https://www.apollographql.com/docs/engine/integrations/datadog.html) integrations.
