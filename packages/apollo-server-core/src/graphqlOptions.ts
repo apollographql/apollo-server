@@ -12,7 +12,7 @@ import { KeyValueCache, InMemoryLRUCache } from 'apollo-server-caching';
 import { DataSource } from 'apollo-datasource';
 import { ApolloServerPlugin } from 'apollo-server-plugin-base';
 import { GraphQLParseOptions } from 'graphql-tools';
-import { ValueOrPromise } from 'apollo-server-env';
+import { GraphQLExecutor, ValueOrPromise } from 'apollo-server-types';
 
 /*
  * GraphQLServerOptions
@@ -27,6 +27,7 @@ import { ValueOrPromise } from 'apollo-server-env';
  * - (optional) debug: a boolean that will print additional debug logging if execution errors occur
  * - (optional) extensions: an array of functions which create GraphQLExtensions (each GraphQLExtension object is used for one request)
  * - (optional) parseOptions: options to pass when parsing schemas and queries
+ * - (optional) reporting: set if we are directly reporting to Engine
  *
  */
 export interface GraphQLServerOptions<
@@ -38,6 +39,7 @@ export interface GraphQLServerOptions<
   rootValue?: ((parsedQuery: DocumentNode) => TRootValue) | TRootValue;
   context?: TContext | (() => never);
   validationRules?: Array<(context: ValidationContext) => any>;
+  executor?: GraphQLExecutor;
   formatResponse?: Function;
   fieldResolver?: GraphQLFieldResolver<any, TContext>;
   debug?: boolean;
@@ -50,6 +52,7 @@ export interface GraphQLServerOptions<
   plugins?: ApolloServerPlugin[];
   documentStore?: InMemoryLRUCache<DocumentNode>;
   parseOptions?: GraphQLParseOptions;
+  reporting?: boolean;
 }
 
 export type DataSources<TContext> = {

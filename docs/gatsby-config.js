@@ -1,4 +1,5 @@
 module.exports = {
+  pathPrefix: '/docs/apollo-server',
   __experimentalThemes: [
     {
       resolve: 'gatsby-theme-apollo-docs',
@@ -6,10 +7,11 @@ module.exports = {
         root: __dirname,
         subtitle: 'Apollo Server',
         description: 'A guide to using Apollo Server',
-        contentDir: 'docs/source',
-        basePath: '/docs/apollo-server',
         githubRepo: 'apollographql/apollo-server',
-        versions: ['1', '2'],
+        defaultVersion: 2,
+        versions: {
+          1: 'version-1',
+        },
         sidebarCategories: {
           null: ['index', 'getting-started', 'whats-new'],
           Essentials: [
@@ -18,6 +20,7 @@ module.exports = {
             'essentials/data',
           ],
           Features: [
+            'features/caching',
             'features/mocking',
             'features/errors',
             'features/data-sources',
@@ -30,6 +33,20 @@ module.exports = {
             'features/creating-directives',
             'features/authentication',
             'features/testing',
+            'features/apq',
+            'features/health-checks',
+            'features/file-uploads',
+          ],
+          Federation: [
+            'federation/introduction',
+            'federation/concerns',
+            'federation/core-concepts',
+            'federation/implementing',
+            'federation/advanced-features',
+            'federation/errors',
+            'federation/migrating-from-stitching',
+            'federation/federation-spec',
+            'federation/metrics',
           ],
           // 'Schema stitching': [
           //   'features/schema-stitching',
@@ -42,8 +59,15 @@ module.exports = {
             'deployment/heroku',
             'deployment/lambda',
             'deployment/now',
+            'deployment/netlify',
+            'deployment/azure-functions',
           ],
-          'API Reference': ['api/apollo-server', 'api/graphql-tools'],
+          'API Reference': [
+            'api/apollo-server',
+            'api/apollo-federation',
+            'api/apollo-gateway',
+            'api/graphql-tools',
+          ],
           Migration: [
             'migration-two-dot',
             'migration-engine',

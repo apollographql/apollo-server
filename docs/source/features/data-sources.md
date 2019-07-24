@@ -264,7 +264,7 @@ const server = new ApolloServer({
 });
 ```
 
-For documentation of the options you can pass to the underlying Redis client, look [here](https://github.com/NodeRedis/node_redis).
+For documentation of the options you can pass to the underlying Redis client, look [here](https://github.com/luin/ioredis).
 
 ## Implementing your own cache backend
 

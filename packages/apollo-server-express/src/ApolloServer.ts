@@ -195,7 +195,7 @@ export class ApolloServer extends ApolloServerBase {
 
         if (prefersHTML) {
           const playgroundRenderPageOptions: PlaygroundRenderPageOptions = {
-            endpoint: path,
+            endpoint: req.originalUrl,
             subscriptionEndpoint: this.subscriptionsPath,
             ...this.playgroundOptions,
           };

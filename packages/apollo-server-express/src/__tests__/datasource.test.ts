@@ -99,21 +99,21 @@ describe('apollo-server-express', () => {
 
     server.applyMiddleware({ app });
     httpServer = await new Promise<http.Server>(resolve => {
-      const s = app.listen({ port: 6667 }, () => resolve(s));
+      const s = app.listen({ port: 0 }, () => resolve(s));
     });
     const { url: uri } = createServerInfo(server, httpServer);
 
     const apolloFetch = createApolloFetch({ uri });
     const firstResult = await apolloFetch({ query: '{ id }' });
 
-    expect(firstResult.data).toEqual({ id: 'hi' });
     expect(firstResult.errors).toBeUndefined();
+    expect(firstResult.data).toEqual({ id: 'hi' });
     expect(restCalls).toEqual(1);
 
     const secondResult = await apolloFetch({ query: '{ id }' });
 
-    expect(secondResult.data).toEqual({ id: 'hi' });
     expect(secondResult.errors).toBeUndefined();
+    expect(secondResult.data).toEqual({ id: 'hi' });
     expect(restCalls).toEqual(1);
   });
 
@@ -129,21 +129,21 @@ describe('apollo-server-express', () => {
 
     server.applyMiddleware({ app });
     httpServer = await new Promise<http.Server>(resolve => {
-      const s = app.listen({ port: 6668 }, () => resolve(s));
+      const s = app.listen({ port: 0 }, () => resolve(s));
     });
     const { url: uri } = createServerInfo(server, httpServer);
 
     const apolloFetch = createApolloFetch({ uri });
     const firstResult = await apolloFetch({ query: '{ id: stringId }' });
 
-    expect(firstResult.data).toEqual({ id: 'hi' });
     expect(firstResult.errors).toBeUndefined();
+    expect(firstResult.data).toEqual({ id: 'hi' });
     expect(restCalls).toEqual(1);
 
     const secondResult = await apolloFetch({ query: '{ id: stringId }' });
 
-    expect(secondResult.data).toEqual({ id: 'hi' });
     expect(secondResult.errors).toBeUndefined();
+    expect(secondResult.data).toEqual({ id: 'hi' });
     expect(restCalls).toEqual(1);
   });
 });

@@ -1,13 +1,33 @@
 import { ApolloServerBase } from 'apollo-server-core';
+import { GraphQLResponse } from 'apollo-server-types';
 import { print, DocumentNode } from 'graphql';
 
 type StringOrAst = string | DocumentNode;
 
 // A query must not come with a mutation (and vice versa).
-type Query = { query: StringOrAst; mutation?: undefined };
-type Mutation = { mutation: StringOrAst; query?: undefined };
+type Query = {
+  query: StringOrAst;
+  mutation?: undefined;
+  variables?: {
+    [name: string]: any;
+  };
+  operationName?: string;
+};
+type Mutation = {
+  mutation: StringOrAst;
+  query?: undefined;
+  variables?: {
+    [name: string]: any;
+  };
+  operationName?: string;
+};
 
-export default (server: ApolloServerBase) => {
+export interface ApolloServerTestClient {
+  query: (query: Query) => Promise<GraphQLResponse>;
+  mutate: (mutation: Mutation) => Promise<GraphQLResponse>;
+}
+
+export default (server: ApolloServerBase): ApolloServerTestClient => {
   const executeOperation = server.executeOperation.bind(server);
   const test = ({ query, mutation, ...args }: Query | Mutation) => {
     const operation = query || mutation;

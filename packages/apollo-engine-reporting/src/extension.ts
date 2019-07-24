@@ -1,23 +1,22 @@
-import { Request } from 'apollo-server-env';
-
+import { GraphQLRequestContext, WithRequired } from 'apollo-server-types';
+import { Request, Headers } from 'apollo-server-env';
 import {
   GraphQLResolveInfo,
-  responsePathAsArray,
-  ResponsePath,
   DocumentNode,
   ExecutionArgs,
   GraphQLError,
 } from 'graphql';
-import {
-  GraphQLExtension,
-  GraphQLResponse,
-  EndHandler,
-} from 'graphql-extensions';
-import { Trace, google } from 'apollo-engine-reporting-protobuf';
+import { GraphQLExtension, EndHandler } from 'graphql-extensions';
+import { Trace } from 'apollo-engine-reporting-protobuf';
 
-import { EngineReportingOptions, GenerateClientInfo } from './agent';
-import { defaultEngineReportingSignature } from 'apollo-graphql';
-import { GraphQLRequestContext } from 'apollo-server-core/dist/requestPipelineAPI';
+import {
+  EngineReportingOptions,
+  GenerateClientInfo,
+  AddTraceArgs,
+  VariableValueOptions,
+  SendValuesBaseOptions,
+} from './agent';
+import { EngineReportingTreeBuilder } from './treeBuilder';
 
 const clientNameHeaderKey = 'apollographql-client-name';
 const clientReferenceIdHeaderKey = 'apollographql-client-reference-id';
@@ -31,60 +30,29 @@ const clientVersionHeaderKey = 'apollographql-client-version';
 // Its public methods all implement the GraphQLExtension interface.
 export class EngineReportingExtension<TContext = any>
   implements GraphQLExtension<TContext> {
-  public trace = new Trace();
-  private nodes = new Map<string, Trace.Node>();
-  private startHrTime!: [number, number];
-  private operationName?: string;
+  private treeBuilder: EngineReportingTreeBuilder;
+  private explicitOperationName?: string | null;
   private queryString?: string;
   private documentAST?: DocumentNode;
   private options: EngineReportingOptions<TContext>;
-  private addTrace: (
-    signature: string,
-    operationName: string,
-    trace: Trace,
-  ) => void;
+  private addTrace: (args: AddTraceArgs) => Promise<void>;
   private generateClientInfo: GenerateClientInfo<TContext>;
 
   public constructor(
     options: EngineReportingOptions<TContext>,
-    addTrace: (signature: string, operationName: string, trace: Trace) => void,
+    addTrace: (args: AddTraceArgs) => Promise<void>,
+    private schemaHash: string,
   ) {
     this.options = {
-      maskErrorDetails: false,
       ...options,
     };
     this.addTrace = addTrace;
-    const root = new Trace.Node();
-    this.trace.root = root;
-    this.nodes.set(responsePathAsString(undefined), root);
     this.generateClientInfo =
-      options.generateClientInfo ||
-      // Default to using the `apollo-client-x` header fields if present.
-      // If none are present, fallback on the `clientInfo` query extension
-      // for backwards compatibility.
-      // The default value if neither header values nor query extension is
-      // set is the empty String for all fields (as per protobuf defaults)
-      (({ request }) => {
-        if (
-          request.http &&
-          request.http.headers &&
-          (request.http.headers.get(clientNameHeaderKey) ||
-            request.http.headers.get(clientVersionHeaderKey) ||
-            request.http.headers.get(clientReferenceIdHeaderKey))
-        ) {
-          return {
-            clientName: request.http.headers.get(clientNameHeaderKey),
-            clientVersion: request.http.headers.get(clientVersionHeaderKey),
-            clientReferenceId: request.http.headers.get(
-              clientReferenceIdHeaderKey,
-            ),
-          };
-        } else if (request.extensions && request.extensions.clientInfo) {
-          return request.extensions.clientInfo;
-        } else {
-          return {};
-        }
-      });
+      options.generateClientInfo || defaultGenerateClientInfo;
+
+    this.treeBuilder = new EngineReportingTreeBuilder({
+      rewriteError: options.rewriteError,
+    });
   }
 
   public requestDidStart(o: {
@@ -92,22 +60,24 @@ export class EngineReportingExtension<TContext = any>
     queryString?: string;
     parsedQuery?: DocumentNode;
     variables?: Record<string, any>;
-    persistedQueryHit?: boolean;
-    persistedQueryRegister?: boolean;
     context: TContext;
     extensions?: Record<string, any>;
-    requestContext: GraphQLRequestContext<TContext>;
+    requestContext: WithRequired<
+      GraphQLRequestContext<TContext>,
+      'metrics' | 'queryHash'
+    >;
   }): EndHandler {
-    this.trace.startTime = dateToTimestamp(new Date());
-    this.startHrTime = process.hrtime();
+    this.treeBuilder.startTiming();
+    o.requestContext.metrics.startHrTime = this.treeBuilder.startHrTime;
 
     // Generally, we'll get queryString here and not parsedQuery; we only get
     // parsedQuery if you're using an OperationStore. In normal cases we'll get
     // our documentAST in the execution callback after it is parsed.
+    const queryHash = o.requestContext.queryHash;
     this.queryString = o.queryString;
     this.documentAST = o.parsedQuery;
 
-    this.trace.http = new Trace.HTTP({
+    this.treeBuilder.trace.http = new Trace.HTTP({
       method:
         Trace.HTTP.Method[o.request.method as keyof typeof Trace.HTTP.Method] ||
         Trace.HTTP.Method.UNKNOWN,
@@ -121,77 +91,28 @@ export class EngineReportingExtension<TContext = any>
       host: null,
       path: null,
     });
-    if (this.options.privateHeaders !== true) {
-      for (const [key, value] of o.request.headers) {
-        if (
-          this.options.privateHeaders &&
-          Array.isArray(this.options.privateHeaders) &&
-          // We assume that most users only have a few private headers, or will
-          // just set privateHeaders to true; we can change this linear-time
-          // operation if it causes real performance issues.
-          this.options.privateHeaders.some(privateHeader => {
-            // Headers are case-insensitive, and should be compared as such.
-            return privateHeader.toLowerCase() === key.toLowerCase();
-          })
-        ) {
-          continue;
-        }
 
-        switch (key) {
-          case 'authorization':
-          case 'cookie':
-          case 'set-cookie':
-            break;
-          default:
-            this.trace.http!.requestHeaders![key] = new Trace.HTTP.Values({
-              value: [value],
-            });
-        }
-      }
+    if (this.options.sendHeaders) {
+      makeHTTPRequestHeaders(
+        this.treeBuilder.trace.http,
+        o.request.headers,
+        this.options.sendHeaders,
+      );
 
-      if (o.persistedQueryHit) {
-        this.trace.persistedQueryHit = true;
+      if (o.requestContext.metrics.persistedQueryHit) {
+        this.treeBuilder.trace.persistedQueryHit = true;
       }
-      if (o.persistedQueryRegister) {
-        this.trace.persistedQueryRegister = true;
+      if (o.requestContext.metrics.persistedQueryRegister) {
+        this.treeBuilder.trace.persistedQueryRegister = true;
       }
     }
 
-    if (this.options.privateVariables !== true && o.variables) {
-      // Note: we explicitly do *not* include the details.rawQuery field. The
-      // Engine web app currently does nothing with this other than store it in
-      // the database and offer it up via its GraphQL API, and sending it means
-      // that using calculateSignature to hide sensitive data in the query
-      // string is ineffective.
-      this.trace.details = new Trace.Details();
-      Object.keys(o.variables).forEach(name => {
-        if (
-          this.options.privateVariables &&
-          Array.isArray(this.options.privateVariables) &&
-          // We assume that most users will have only a few private variables,
-          // or will just set privateVariables to true; we can change this
-          // linear-time operation if it causes real performance issues.
-          this.options.privateVariables.includes(name)
-        ) {
-          // Special case for private variables. Note that this is a different
-          // representation from a variable containing the empty string, as that
-          // will be sent as '""'.
-          this.trace.details!.variablesJson![name] = '';
-        } else {
-          try {
-            this.trace.details!.variablesJson![name] = JSON.stringify(
-              o.variables![name],
-            );
-          } catch (e) {
-            // This probably means that the value contains a circular reference,
-            // causing `JSON.stringify()` to throw a TypeError:
-            // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#Issue_with_JSON.stringify()_when_serializing_circular_references
-            this.trace.details!.variablesJson![name] = JSON.stringify(
-              '[Unable to convert value to JSON]',
-            );
-          }
-        }
-      });
+    if (o.variables) {
+      this.treeBuilder.trace.details = makeTraceDetails(
+        o.variables,
+        this.options.sendVariableValues,
+        o.queryString,
+      );
     }
 
     const clientInfo = this.generateClientInfo(o.requestContext);
@@ -202,54 +123,62 @@ export class EngineReportingExtension<TContext = any>
       const { clientName, clientVersion, clientReferenceId } = clientInfo;
       // the backend makes the choice of mapping clientName => clientReferenceId if
       // no custom reference id is provided
-      this.trace.clientVersion = clientVersion || '';
-      this.trace.clientReferenceId = clientReferenceId || '';
-      this.trace.clientName = clientName || '';
+      this.treeBuilder.trace.clientVersion = clientVersion || '';
+      this.treeBuilder.trace.clientReferenceId = clientReferenceId || '';
+      this.treeBuilder.trace.clientName = clientName || '';
     }
 
     return () => {
-      this.trace.durationNs = durationHrTimeToNanos(
-        process.hrtime(this.startHrTime),
-      );
-      this.trace.endTime = dateToTimestamp(new Date());
+      this.treeBuilder.stopTiming();
 
-      const operationName = this.operationName || '';
-      let signature;
-      if (this.documentAST) {
-        const calculateSignature =
-          this.options.calculateSignature || defaultEngineReportingSignature;
-        signature = calculateSignature(this.documentAST, operationName);
-      } else if (this.queryString) {
-        // We didn't get an AST, possibly because of a parse failure. Let's just
-        // use the full query string.
-        //
-        // XXX This does mean that even if you use a calculateSignature which
-        //     hides literals, you might end up sending literals for queries
-        //     that fail parsing or validation. Provide some way to mask them
-        //     anyway?
-        signature = this.queryString;
-      } else {
-        // This shouldn't happen: one of those options must be passed to runQuery.
-        throw new Error('No queryString or parsedQuery?');
+      this.treeBuilder.trace.fullQueryCacheHit = !!o.requestContext.metrics
+        .responseCacheHit;
+      this.treeBuilder.trace.forbiddenOperation = !!o.requestContext.metrics
+        .forbiddenOperation;
+      this.treeBuilder.trace.registeredOperation = !!o.requestContext.metrics
+        .registeredOperation;
+
+      // If the user did not explicitly specify an operation name (which we
+      // would have saved in `executionDidStart`), but the request pipeline made
+      // it far enough to figure out what the operation name must be and store
+      // it on requestContext.operationName, use that name.  (Note that this
+      // depends on the assumption that the RequestContext passed to
+      // requestDidStart, which does not yet have operationName, will be mutated
+      // to add operationName later.)
+      const operationName =
+        this.explicitOperationName || o.requestContext.operationName || '';
+      const documentAST = this.documentAST || o.requestContext.document;
+
+      // If this was a federated operation and we're the gateway, add the query plan
+      // to the trace.
+      if (o.requestContext.metrics.queryPlanTrace) {
+        this.treeBuilder.trace.queryPlan =
+          o.requestContext.metrics.queryPlanTrace;
       }
 
-      this.addTrace(signature, operationName, this.trace);
+      this.addTrace({
+        operationName,
+        queryHash,
+        documentAST,
+        queryString: this.queryString || '',
+        trace: this.treeBuilder.trace,
+        schemaHash: this.schemaHash,
+      });
     };
   }
 
   public executionDidStart(o: { executionArgs: ExecutionArgs }) {
-    // If the operationName is explicitly provided, save it. If there's just one
-    // named operation, the client doesn't have to provide it, but we still want
-    // to know the operation name so that the server can identify the query by
-    // it without having to parse a signature.
+    // If the operationName is explicitly provided, save it. Note: this is the
+    // operationName provided by the user. It might be empty if they're relying on
+    // the "just use the only operation I sent" behavior, even if that operation
+    // has a name.
     //
-    // Fortunately, in the non-error case, we can just pull this out of
-    // the first call to willResolveField's `info` argument.  In an
-    // error case (eg, the operationName isn't found, or there are more
-    // than one operation and no specified operationName) it's OK to continue
-    // to file this trace under the empty operationName.
+    // It's possible that execution is about to fail because this operation
+    // isn't actually in the document. We want to know the name in that case
+    // too, which is why it's important that we save the name now, and not just
+    // rely on requestContext.operationName (which will be null in this case).
     if (o.executionArgs.operationName) {
-      this.operationName = o.executionArgs.operationName;
+      this.explicitOperationName = o.executionArgs.operationName;
     }
     this.documentAST = o.executionArgs.document;
   }
@@ -260,114 +189,178 @@ export class EngineReportingExtension<TContext = any>
     _context: TContext,
     info: GraphQLResolveInfo,
   ): ((error: Error | null, result: any) => void) | void {
-    if (this.operationName === undefined) {
-      this.operationName =
-        (info.operation.name && info.operation.name.value) || '';
-    }
-
-    const path = info.path;
-    const node = this.newNode(path);
-    node.type = info.returnType.toString();
-    node.parentType = info.parentType.toString();
-    node.startTime = durationHrTimeToNanos(process.hrtime(this.startHrTime));
-
-    return () => {
-      node.endTime = durationHrTimeToNanos(process.hrtime(this.startHrTime));
-      // We could save the error into the trace here, but it won't have all
-      // the information that graphql-js adds to it later, like 'locations'.
-    };
+    return this.treeBuilder.willResolveField(info);
+    // We could save the error into the trace during the end handler, but it
+    // won't have all the information that graphql-js adds to it later, like
+    // 'locations'.
   }
 
-  public willSendResponse(o: { graphqlResponse: GraphQLResponse }) {
-    const { errors } = o.graphqlResponse;
-    if (errors) {
-      errors.forEach((error: GraphQLError) => {
-        // By default, put errors on the root node.
-        let node = this.nodes.get('');
-        if (error.path) {
-          const specificNode = this.nodes.get(error.path.join('.'));
-          if (specificNode) {
-            node = specificNode;
-          }
-        }
-
-        // Always send the trace errors, so that the UI acknowledges that there is an error.
-        const errorInfo = this.options.maskErrorDetails
-          ? { message: '<masked>' }
-          : {
-              message: error.message,
-              location: (error.locations || []).map(
-                ({ line, column }) => new Trace.Location({ line, column }),
-              ),
-              json: JSON.stringify(error),
-            };
-
-        node!.error!.push(new Trace.Error(errorInfo));
-      });
-    }
-  }
-
-  private newNode(path: ResponsePath): Trace.Node {
-    const node = new Trace.Node();
-    const id = path.key;
-    if (typeof id === 'number') {
-      node.index = id;
-    } else {
-      node.fieldName = id;
-    }
-    this.nodes.set(responsePathAsString(path), node);
-    const parentNode = this.ensureParentNode(path);
-    parentNode.child.push(node);
-    return node;
-  }
-
-  private ensureParentNode(path: ResponsePath): Trace.Node {
-    const parentPath = responsePathAsString(path.prev);
-    const parentNode = this.nodes.get(parentPath);
-    if (parentNode) {
-      return parentNode;
-    }
-    // Because we set up the root path in the constructor, we now know that
-    // path.prev isn't undefined.
-    return this.newNode(path.prev!);
+  public didEncounterErrors(errors: GraphQLError[]) {
+    this.treeBuilder.didEncounterErrors(errors);
   }
 }
 
 // Helpers for producing traces.
 
-// Convert from the linked-list ResponsePath format to a dot-joined
-// string. Includes the full path (field names and array indices).
-function responsePathAsString(p: ResponsePath | undefined) {
-  if (p === undefined) {
-    return '';
+function defaultGenerateClientInfo({ request }: GraphQLRequestContext) {
+  // Default to using the `apollo-client-x` header fields if present.
+  // If none are present, fallback on the `clientInfo` query extension
+  // for backwards compatibility.
+  // The default value if neither header values nor query extension is
+  // set is the empty String for all fields (as per protobuf defaults)
+  if (
+    request.http &&
+    request.http.headers &&
+    (request.http.headers.get(clientNameHeaderKey) ||
+      request.http.headers.get(clientVersionHeaderKey) ||
+      request.http.headers.get(clientReferenceIdHeaderKey))
+  ) {
+    return {
+      clientName: request.http.headers.get(clientNameHeaderKey),
+      clientVersion: request.http.headers.get(clientVersionHeaderKey),
+      clientReferenceId: request.http.headers.get(clientReferenceIdHeaderKey),
+    };
+  } else if (request.extensions && request.extensions.clientInfo) {
+    return request.extensions.clientInfo;
+  } else {
+    return {};
   }
-  return responsePathAsArray(p).join('.');
 }
 
-// Converts a JS Date into a Timestamp.
-function dateToTimestamp(date: Date): google.protobuf.Timestamp {
-  const totalMillis = +date;
-  const millis = totalMillis % 1000;
-  return new google.protobuf.Timestamp({
-    seconds: (totalMillis - millis) / 1000,
-    nanos: millis * 1e6,
+// Creates trace details from request variables, given a specification for modifying
+// values of private or sensitive variables.
+// The details will include all variable names and their (possibly hidden or modified) values.
+// If sendVariableValues is {all: bool}, {none: bool} or {exceptNames: Array}, the option will act similarly to
+// to the to-be-deprecated options.privateVariables, except that the redacted variable
+// names will still be visible in the UI even if the values are hidden.
+// If sendVariableValues is null or undefined, we default to the {none: true} case.
+export function makeTraceDetails(
+  variables: Record<string, any>,
+  sendVariableValues?: VariableValueOptions,
+  operationString?: string,
+): Trace.Details {
+  const details = new Trace.Details();
+  const variablesToRecord = (() => {
+    if (sendVariableValues && 'transform' in sendVariableValues) {
+      const originalKeys = Object.keys(variables);
+      try {
+        // Custom function to allow user to specify what variablesJson will look like
+        const modifiedVariables = sendVariableValues.transform({
+          variables: variables,
+          operationString: operationString,
+        });
+        return cleanModifiedVariables(originalKeys, modifiedVariables);
+      } catch (e) {
+        // If the custom function provided by the user throws an exception,
+        // change all the variable values to an appropriate error message.
+        return handleVariableValueTransformError(originalKeys);
+      }
+    } else {
+      return variables;
+    }
+  })();
+
+  // Note: we explicitly do *not* include the details.rawQuery field. The
+  // Engine web app currently does nothing with this other than store it in
+  // the database and offer it up via its GraphQL API, and sending it means
+  // that using calculateSignature to hide sensitive data in the query
+  // string is ineffective.
+  Object.keys(variablesToRecord).forEach(name => {
+    if (
+      !sendVariableValues ||
+      ('none' in sendVariableValues && sendVariableValues.none) ||
+      ('all' in sendVariableValues && !sendVariableValues.all) ||
+      ('exceptNames' in sendVariableValues &&
+        // We assume that most users will have only a few variables values to hide,
+        // or will just set {none: true}; we can change this
+        // linear-time operation if it causes real performance issues.
+        sendVariableValues.exceptNames.includes(name)) ||
+      ('onlyNames' in sendVariableValues &&
+        !sendVariableValues.onlyNames.includes(name))
+    ) {
+      // Special case for private variables. Note that this is a different
+      // representation from a variable containing the empty string, as that
+      // will be sent as '""'.
+      details.variablesJson![name] = '';
+    } else {
+      try {
+        details.variablesJson![name] =
+          typeof variablesToRecord[name] === 'undefined'
+            ? ''
+            : JSON.stringify(variablesToRecord[name]);
+      } catch (e) {
+        details.variablesJson![name] = JSON.stringify(
+          '[Unable to convert value to JSON]',
+        );
+      }
+    }
   });
+  return details;
 }
 
-// Converts an hrtime array (as returned from process.hrtime) to nanoseconds.
-//
-// ONLY CALL THIS ON VALUES REPRESENTING DELTAS, NOT ON THE RAW RETURN VALUE
-// FROM process.hrtime() WITH NO ARGUMENTS.
-//
-// The entire point of the hrtime data structure is that the JavaScript Number
-// type can't represent all int64 values without loss of precision:
-// Number.MAX_SAFE_INTEGER nanoseconds is about 104 days. Calling this function
-// on a duration that represents a value less than 104 days is fine. Calling
-// this function on an absolute time (which is generally roughly time since
-// system boot) is not a good idea.
-//
-// XXX We should probably use google.protobuf.Duration on the wire instead of
-// ever trying to store durations in a single number.
-function durationHrTimeToNanos(hrtime: [number, number]) {
-  return hrtime[0] * 1e9 + hrtime[1];
+function handleVariableValueTransformError(
+  variableNames: string[],
+): Record<string, any> {
+  const modifiedVariables = Object.create(null);
+  variableNames.forEach(name => {
+    modifiedVariables[name] = '[PREDICATE_FUNCTION_ERROR]';
+  });
+  return modifiedVariables;
+}
+
+// Helper for makeTraceDetails() to enforce that the keys of a modified 'variables'
+// matches that of the original 'variables'
+function cleanModifiedVariables(
+  originalKeys: Array<string>,
+  modifiedVariables: Record<string, any>,
+): Record<string, any> {
+  const cleanedVariables: Record<string, any> = Object.create(null);
+  originalKeys.forEach(name => {
+    cleanedVariables[name] = modifiedVariables[name];
+  });
+  return cleanedVariables;
+}
+
+export function makeHTTPRequestHeaders(
+  http: Trace.IHTTP,
+  headers: Headers,
+  sendHeaders?: SendValuesBaseOptions,
+): void {
+  if (
+    !sendHeaders ||
+    ('none' in sendHeaders && sendHeaders.none) ||
+    ('all' in sendHeaders && !sendHeaders.all)
+  ) {
+    return;
+  }
+  for (const [key, value] of headers) {
+    const lowerCaseKey = key.toLowerCase();
+    if (
+      ('exceptNames' in sendHeaders &&
+        // We assume that most users only have a few headers to hide, or will
+        // just set {none: true} ; we can change this linear-time
+        // operation if it causes real performance issues.
+        sendHeaders.exceptNames.some(exceptHeader => {
+          // Headers are case-insensitive, and should be compared as such.
+          return exceptHeader.toLowerCase() === lowerCaseKey;
+        })) ||
+      ('onlyNames' in sendHeaders &&
+        !sendHeaders.onlyNames.some(header => {
+          return header.toLowerCase() === lowerCaseKey;
+        }))
+    ) {
+      continue;
+    }
+
+    switch (key) {
+      case 'authorization':
+      case 'cookie':
+      case 'set-cookie':
+        break;
+      default:
+        http!.requestHeaders![key] = new Trace.HTTP.Values({
+          value: [value],
+        });
+    }
+  }
 }

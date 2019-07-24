@@ -1,7 +1,7 @@
 type AnyFunction = (...args: any[]) => any;
 type Args<F> = F extends (...args: infer A) => any ? A : never;
 type FunctionPropertyNames<T, F extends AnyFunction = AnyFunction> = {
-  [K in keyof T]: T[K] extends F ? K : never
+  [K in keyof T]: T[K] extends F ? K : never;
 }[keyof T];
 type AsFunction<F> = F extends AnyFunction ? F : never;
 type UnwrapPromise<T> = T extends Promise<infer U> ? U : T;
@@ -25,6 +25,25 @@ export class Dispatcher<T> {
         }
       }),
     );
+  }
+
+  public async invokeHooksUntilNonNull<
+    TMethodName extends FunctionPropertyNames<Required<T>>
+  >(
+    methodName: TMethodName,
+    ...args: Args<T[TMethodName]>
+  ): Promise<UnwrapPromise<ReturnType<AsFunction<T[TMethodName]>>> | null> {
+    for (const target of this.targets) {
+      const method = target[methodName];
+      if (!(method && typeof method === 'function')) {
+        continue;
+      }
+      const value = await method.apply(target, args);
+      if (value !== null) {
+        return value;
+      }
+    }
+    return null;
   }
 
   public invokeDidStartHook<
