@@ -159,7 +159,11 @@ export default function plugin(options: Options = Object.create(null)) {
             return;
           } else {
             if (options.onUnregisteredOperation) {
-              options.onUnregisteredOperation(requestContext);
+              new Promise(() => {
+                if (options.onUnregisteredOperation) {
+                  options.onUnregisteredOperation(requestContext);
+                }
+              });
             }
           }
 
@@ -219,7 +223,11 @@ export default function plugin(options: Options = Object.create(null)) {
 
             requestContext.metrics.forbiddenOperation = true;
             if (options.onForbiddenOperation) {
-              options.onForbiddenOperation(requestContext);
+              new Promise(() => {
+                if (options.onForbiddenOperation) {
+                  options.onForbiddenOperation(requestContext);
+                }
+              });
             }
             if (!options.dryRun) {
               throw new ForbiddenError('Execution forbidden');
