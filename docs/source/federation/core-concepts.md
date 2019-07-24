@@ -181,16 +181,21 @@ For Enum types, all values must match across services. **Even if a service doesn
 ### Unions
 Union types must share the same types in the union, even if not all types are used by a service.
 
-In the following example, the Product and User services both use the same `ProductCategory` enum, `Date` scalar, and `UPC` union.
+In the following example, the Product and User services both use the same `ProductCategory` enum, `Date` scalar, `Error` type, and `ProductOrError` union.
 
 ```graphql
 # Product Service
 scalar Date
 
-union UPC = String | ID
+union ProductOrError = Product | Error
+
+type Error {
+  code: Int!
+  message: String!
+}
 
 type Product @key(fields: "sku"){
-  sku: UPC!
+  sku: ID!
   category: ProductCategory
   dateCreated: Date
 }
@@ -204,7 +209,12 @@ enum ProductCategory {
 # User Service
 scalar Date
 
-union UPC = String | ID
+union ProductOrError = Product | Error
+
+type Error {
+  code: Int!
+  message: String!
+}
 
 type User @key(fields: "id"){
   id: ID!
@@ -220,7 +230,7 @@ enum ProductCategory {
 }
 
 extend type Product @key(fields: "sku"){
-  sku: UPC! @external
+  sku: ID! @external
 }
 ```
 

@@ -47,17 +47,36 @@ describe('MatchingUnions', () => {
     });
   });
 
-  it('enforces unique union names', () => {
+  it('enforces unique union names on non-identical union types', () => {
     const [definitions] = createDocumentsForServices([
       {
         typeDefs: gql`
-          union UPC = String | Int
+          union ProductOrError = Product | Error
+
+          type Error {
+            code: Int!
+            message: String!
+          }
+
+          type Product @key(fields: "sku") {
+            sku: ID!
+          }
         `,
         name: 'serviceA',
       },
       {
         typeDefs: gql`
-          union UPC = String | Int | Boolean
+          union ProductOrError = Product
+
+          type Error {
+            code: Int!
+            message: String!
+          }
+
+          extend type Product @key(fields: "sku") {
+            sku: ID! @external
+            colors: [String]
+          }
         `,
         name: 'serviceB',
       },
@@ -68,7 +87,7 @@ describe('MatchingUnions', () => {
     expect(errors[0]).toMatchInlineSnapshot(`
       Object {
         "code": "VALUE_TYPE_UNION_TYPES_MISMATCH",
-        "message": "[serviceA] UPC -> The union \`UPC\` is defined in services \`serviceA\` and \`serviceB\`, however their types do not match. Union types with the same name must also consist of identical types. The type Boolean is mismatched.",
+        "message": "[serviceA] ProductOrError -> The union \`ProductOrError\` is defined in services \`serviceA\` and \`serviceB\`, however their types do not match. Union types with the same name must also consist of identical types. The type Error is mismatched.",
       }
     `);
   });
@@ -77,13 +96,31 @@ describe('MatchingUnions', () => {
     const [definitions] = createDocumentsForServices([
       {
         typeDefs: gql`
-          union UPC = String | Int
+          union ProductOrError = Product | Error
+
+          type Error {
+            code: Int!
+            message: String!
+          }
+
+          type Product @key(fields: "sku") {
+            sku: ID!
+          }
         `,
         name: 'serviceA',
       },
       {
         typeDefs: gql`
-          union UPC = String | Int
+          union ProductOrError = Product | Error
+
+          type Error {
+            code: Int!
+            message: String!
+          }
+
+          type Product @key(fields: "sku") {
+            sku: ID!
+          }
         `,
         name: 'serviceB',
       },
