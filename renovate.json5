@@ -37,6 +37,10 @@
       "allowedVersions": "<3"
     },
     {
+      "packageNames": ["hapi", "@types/hapi"],
+      "allowedVersions": "<18"
+    },
+    {
       "packageNames": ["ws"],
       "allowedVersions": "<7"
     },
