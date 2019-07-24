@@ -150,9 +150,19 @@ server.listen().then(({ url }) => {
 });
 ```
 
-The original error instance thrown in the resolver is in `err.originalError`,
-it can be used to check error type, e.g `AuthenticationError` or
-`ValidationError`
+The error instance received by `formatError` (a `GraphQLError`) contains an `originalError` property which represents the original error thrown within the resolver.  This can be used to `instanceof` check against a specific error class, such as `AuthenticationError`, `ValidationError`, etc.:
+
+```js
+  /* ... */
+  formatError(err) {
+    if (err.originalError instanceof AuthenticationError) {
+      return new Error('Different authentication error message!');
+    }
+  },
+  /* ... */
+```
+
+> To make context-specific adjustments to the error received by `formatError` (e.g. localization or personalization), consider using the `didEncounterErrors` life-cycle hook to attach additional properties to the error, which can be accessed andn utilized within `formatError`.
 
 ### For Apollo Engine reporting
 
