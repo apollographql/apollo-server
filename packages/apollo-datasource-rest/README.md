@@ -1,16 +1,22 @@
-# Apollo REST Data Source (for Node.js)
+# Apollo REST Data Source
 
-This package ([RESTDataSource](https://github.com/apollographql/apollo-server/tree/master/packages/apollo-datasource-rest)) is used for fetching data from a given REST API.
+This package exports a ([`RESTDataSource`](https://github.com/apollographql/apollo-server/tree/master/packages/apollo-datasource-rest)) class which is used for fetching data from a REST API and exposing it via GraphQL within Apollo Server.
+
+## Documentation
+
+View the [Apollo Server documentation for data sources](https://www.apollographql.com/docs/apollo-server/features/data-sources/) for more details.
 
 ## Usage
 
-To get started, install the REST Data Source package:
+To get started, install the `apollo-datasource-rest` package:
 
 ```bash
 npm install apollo-datasource-rest
 ```
 
-To define a data source, extend the [RESTDataSource](https://github.com/apollographql/apollo-server/tree/master/packages/apollo-datasource-rest) class and implement the data fetching methods that your resolvers require. Your implementation of these methods can call on convenience methods built into the [RESTDataSource](https://github.com/apollographql/apollo-server/tree/master/packages/apollo-datasource-rest) class to perform HTTP requests, while making it easy to build up query parameters, parse JSON results, and handle errors.
+To define a data source, extend the [`RESTDataSource`](https://github.com/apollographql/apollo-server/tree/master/packages/apollo-datasource-rest) class and implement the data fetching methods that your resolvers require.  Data sources can then be provided via the `dataSources` property to the `ApolloServer` constructor, as demonstrated in the _Accessing data sources from resolvers_ section below.
+
+Your implementation of these methods can call on convenience methods built into the [RESTDataSource](https://github.com/apollographql/apollo-server/tree/master/packages/apollo-datasource-rest) class to perform HTTP requests, while making it easy to build up query parameters, parse JSON results, and handle errors.
 
 ```javascript
 const { RESTDataSource } = require('apollo-datasource-rest');
