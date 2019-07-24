@@ -1206,7 +1206,7 @@ describe('composeServices', () => {
         `);
       });
 
-      it('treats types with @extends as type extensions', () => {
+      it('treats interfaces with @extends as interface extensions', () => {
         const serviceA = {
           typeDefs: gql`
             interface Product @key(fields: "sku") {
