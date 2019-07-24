@@ -164,7 +164,11 @@ for observability purposes, but all operations will be permitted.`,
             return;
           } else {
             if (options.onUnregisteredOperation) {
-              options.onUnregisteredOperation(requestContext);
+              new Promise(() => {
+                if (options.onUnregisteredOperation) {
+                  options.onUnregisteredOperation(requestContext);
+                }
+              });
             }
           }
 
@@ -231,7 +235,11 @@ for observability purposes, but all operations will be permitted.`,
 
           if (shouldForbidOperation) {
             if (options.onForbiddenOperation) {
-              options.onForbiddenOperation(requestContext);
+              new Promise(() => {
+                if (options.onForbiddenOperation) {
+                  options.onForbiddenOperation(requestContext);
+                }
+              });
             }
             if (!options.dryRun) {
               logger.debug(
