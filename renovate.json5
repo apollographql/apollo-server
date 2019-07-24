@@ -8,14 +8,6 @@
       "packageNames": ["@types/node"],
       "allowedVersions": "8.x"
     },
-    // Currently limited because of a bug in Lerna 3.14.0, as reported in:
-    // https://github.com/lerna/lerna/issues/2107.  Note this can now be
-    // reverted, since it's resolved, but I'll reserve that for a follow-up
-    // commit.
-    {
-      "packageNames": ["lerna"],
-      "allowedVersions": "=3.13.4"
-    },
     /*
       Avoid major version bumps to server frameworks (those used by the
       various Apollo Server integrations (e.g. Fastify, Express, Koa, etc.),
