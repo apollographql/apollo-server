@@ -260,7 +260,7 @@ export class ApolloGateway implements GraphQLService {
     >,
   ): Promise<GraphQLExecutionResult> => {
     const { request, document, queryHash } = requestContext;
-    const queryPlanStoreKey = queryHash + request.operationName || '';
+    const queryPlanStoreKey = queryHash + (request.operationName || '');
     const operationContext = buildOperationContext(
       this.schema!,
       document,
