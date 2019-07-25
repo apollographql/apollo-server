@@ -260,6 +260,7 @@ export class ApolloGateway implements GraphQLService {
     >,
   ): Promise<GraphQLExecutionResult> => {
     const { request, document, queryHash } = requestContext;
+    const queryPlanStoreKey = queryHash + request.operationName || '';
     const operationContext = buildOperationContext(
       this.schema!,
       document,
@@ -267,7 +268,7 @@ export class ApolloGateway implements GraphQLService {
     );
     let queryPlan;
     if (this.queryPlanStore) {
-      queryPlan = await this.queryPlanStore.get(queryHash);
+      queryPlan = await this.queryPlanStore.get(queryPlanStoreKey);
     }
 
     if (!queryPlan) {
@@ -285,9 +286,9 @@ export class ApolloGateway implements GraphQLService {
         // While it shouldn't normally be necessary to wrap this `Promise` in a
         // `Promise.resolve` invocation, it seems that the underlying cache store
         // is returning a non-native `Promise` (e.g. Bluebird, etc.).
-        Promise.resolve(this.queryPlanStore.set(queryHash, queryPlan)).catch(
-          err => this.logger.warn('Could not store queryPlan', err),
-        );
+        Promise.resolve(
+          this.queryPlanStore.set(queryPlanStoreKey, queryPlan),
+        ).catch(err => this.logger.warn('Could not store queryPlan', err));
       }
     }
 
