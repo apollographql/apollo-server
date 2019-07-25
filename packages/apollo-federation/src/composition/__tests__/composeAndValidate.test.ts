@@ -197,6 +197,44 @@ it('treats types with @extends as type extensions', () => {
   `);
 });
 
+it('treats interfaces with @extends as interface extensions', () => {
+  const serviceA = {
+    typeDefs: gql`
+      type Query {
+        products: [Product]!
+      }
+
+      interface Product @key(fields: "sku") {
+        sku: String!
+        upc: String!
+      }
+    `,
+    name: 'serviceA',
+  };
+
+  const serviceB = {
+    typeDefs: gql`
+      interface Product @extends @key(fields: "sku") {
+        sku: String! @external
+        price: Int! @requires(fields: "sku")
+      }
+    `,
+    name: 'serviceB',
+  };
+
+  const { schema, errors } = composeAndValidate([serviceA, serviceB]);
+  expect(errors).toHaveLength(0);
+
+  const product = schema.getType('Product') as GraphQLObjectType;
+  expect(product).toMatchInlineSnapshot(`
+    interface Product {
+      sku: String!
+      upc: String!
+      price: Int!
+    }
+  `);
+});
+
 it('errors on invalid usages of default operation names', () => {
   const serviceA = {
     typeDefs: gql`
