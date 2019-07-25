@@ -3,7 +3,7 @@ import {
   GraphQLExtensionStack,
   enableGraphQLExtensions,
 } from 'graphql-extensions';
-import { graphql } from 'graphql';
+import { graphql, GraphQLError } from 'graphql';
 import { Request } from 'node-fetch';
 import {
   EngineReportingExtension,
@@ -268,6 +268,26 @@ describe('variableJson output for sendVariableValues transform: custom function 
         secondKey
       ],
     ).toEqual(JSON.stringify(null));
+  });
+
+  const errorThrowingModifier = (input: {
+    variables: Record<string, any>;
+  }): Record<string, any> => {
+    throw new GraphQLError('testing error handling');
+  };
+
+  it('redact all variable values when custom modifier throws an error', () => {
+    const variableJson = makeTraceDetails(variables, {
+      transform: errorThrowingModifier,
+    }).variablesJson;
+    Object.keys(variableJson).forEach(variableName => {
+      expect(variableJson[variableName]).toEqual(
+        JSON.stringify('[PREDICATE_FUNCTION_ERROR]'),
+      );
+    });
+    expect(Object.keys(variableJson).sort()).toEqual(
+      Object.keys(variables).sort(),
+    );
   });
 });
 

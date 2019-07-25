@@ -15,6 +15,7 @@ import {
   Context,
   Config,
 } from 'apollo-server-core';
+import { ExecutionParams } from 'subscriptions-transport-ws';
 import accepts from 'accepts';
 import typeis from 'type-is';
 
@@ -73,6 +74,7 @@ const fileUploadMiddleware = (
 export interface ExpressContext {
   req: express.Request;
   res: express.Response;
+  connection?: ExecutionParams;
 }
 
 export interface ApolloServerExpressConfig extends Config {

@@ -1205,6 +1205,47 @@ describe('composeServices', () => {
           }
         `);
       });
+
+      it('treats interfaces with @extends as interface extensions', () => {
+        const serviceA = {
+          typeDefs: gql`
+            interface Product @key(fields: "sku") {
+              sku: String!
+              upc: String!
+            }
+          `,
+          name: 'serviceA',
+        };
+
+        const serviceB = {
+          typeDefs: gql`
+            interface Product @extends @key(fields: "sku") {
+              sku: String! @external
+              price: Int! @requires(fields: "sku")
+            }
+          `,
+          name: 'serviceB',
+        };
+
+        const normalizedServices = [serviceA, serviceB].map(
+          ({ name, typeDefs }) => ({
+            name,
+            typeDefs: normalizeTypeDefs(typeDefs),
+          }),
+        );
+        const { schema, errors } = composeServices(normalizedServices);
+
+        expect(errors).toHaveLength(0);
+
+        const product = schema.getType('Product') as GraphQLObjectType;
+        expect(product).toMatchInlineSnapshot(`
+          interface Product {
+            sku: String!
+            upc: String!
+            price: Int!
+          }
+        `);
+      });
     });
   });
 });

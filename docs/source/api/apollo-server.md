@@ -357,7 +357,7 @@ addMockFunctionsToSchema({
 
     - `{ none: true }`: Don't send any variable values. **(DEFAULT)**
     - `{ all: true }`: Send all variable values.
-    - `{ transform: ({ variables, operationString}) => { ... } }`: A custom function for modifying variable values. Keys added by the custom function will be removed, and keys removed will be added back with an empty value.
+    - `{ transform: ({ variables, operationString}) => { ... } }`: A custom function for modifying variable values. Keys added by the custom function will be removed, and keys removed will be added back with an empty value.  For security reasons, if an error occurs within this function, all variable values will be replaced with `[PREDICATE_FUNCTION_ERROR]`. 
     - `{ exceptNames: [...] }`: A case-sensitive list of names of variables whose values should not be sent to Apollo servers.
     - `{ onlyNames: [...] }`: A case-sensitive list of names of variables whose values will be sent to Apollo servers.
 

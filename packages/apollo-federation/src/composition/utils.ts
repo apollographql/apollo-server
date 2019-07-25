@@ -23,6 +23,7 @@ import {
   SelectionNode,
   isEqualType,
   FieldNode,
+  InterfaceTypeDefinitionNode,
 } from 'graphql';
 import Maybe from 'graphql/tsutils/Maybe';
 import { ExternalFieldDefinition } from './types';
@@ -47,6 +48,7 @@ export function findDirectivesOnTypeOrField(
     | ObjectTypeDefinitionNode
     | ObjectTypeExtensionNode
     | FieldDefinitionNode
+    | InterfaceTypeDefinitionNode
     | InterfaceTypeExtensionNode
   >,
   directiveName: string,
@@ -303,3 +305,15 @@ export function selectionIncludesField({
   }
   return false;
 }
+
+/**
+ * A map of `Kind`s from their definition to their respective extensions
+ */
+export const defKindToExtKind: { [kind: string]: string } = {
+  [Kind.SCALAR_TYPE_DEFINITION]: Kind.SCALAR_TYPE_EXTENSION,
+  [Kind.OBJECT_TYPE_DEFINITION]: Kind.OBJECT_TYPE_EXTENSION,
+  [Kind.INTERFACE_TYPE_DEFINITION]: Kind.INTERFACE_TYPE_EXTENSION,
+  [Kind.UNION_TYPE_DEFINITION]: Kind.UNION_TYPE_EXTENSION,
+  [Kind.ENUM_TYPE_DEFINITION]: Kind.ENUM_TYPE_EXTENSION,
+  [Kind.INPUT_OBJECT_TYPE_DEFINITION]: Kind.INPUT_OBJECT_TYPE_EXTENSION,
+};
