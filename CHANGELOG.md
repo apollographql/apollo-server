@@ -10,6 +10,8 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 ### v2.7.1
 
+> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/2f87e4af9a6f1e3c8f4c51b4f77860bd3150c8c6)
+
 - `apollo-engine-reporting`: If an error is thrown by a custom variable transform function passed into the reporting option `sendVariableValues: { transform: ... }`, all variable values will be replaced with the string `[PREDICATE_FUNCTION_ERROR]`.
 - `apollo-server-express: Typing fix for the `connection` property, which was missing from the `ExpressContext` interface.  [PR #2959](https://github.com/apollographql/apollo-server/pull/2959)
 - `@apollo/gateway`: Ensure execution of correct document within multi-operation documents by including the `operationName` in the cache key used when caching query plans used in federated execution. [PR #3084](https://github.com/apollographql/apollo-server/pull/3084)
