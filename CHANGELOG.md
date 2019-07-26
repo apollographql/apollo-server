@@ -10,6 +10,8 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 ### v2.7.2
 
+> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/d0b33f20ba4731c071d6fd8cfaeca1a1f3d83e4b)
+
 - `apollo-engine-reporting`: fix reporting errors from backend. (The support for federated metrics introduced in v2.7.0 did not properly handle GraphQL errors from the backend; all users of federated metrics should upgrade to this version.) [PR #3056](https://github.com/apollographql/apollo-server/pull/3056) [Issue #3052](https://github.com/apollographql/apollo-server/issues/3052)
 - `apollo-engine-reporting`: clean up `SIGINT` and `SIGTERM` handlers when `EngineReportingAgent` is stopped; fixes 'Possible EventEmitter memory leak detected' log. [PR #3090](https://github.com/apollographql/apollo-server/pull/3090)
 
