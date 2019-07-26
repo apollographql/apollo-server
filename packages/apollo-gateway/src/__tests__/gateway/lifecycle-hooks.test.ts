@@ -52,10 +52,10 @@ describe('lifecycle hooks', () => {
 
     expect(callbackArgs.serviceList).toHaveLength(1);
     expect(callbackArgs.errors).toMatchInlineSnapshot(`
-      Array [
-        [GraphQLError: [product] Book -> \`Book\` is an extension type, but \`Book\` is not defined in any service],
-      ]
-    `);
+                        Array [
+                          [GraphQLError: [product] Book -> \`Book\` is an extension type, but \`Book\` is not defined in any service],
+                        ]
+                `);
     clearInterval(interval);
   });
 
@@ -121,5 +121,31 @@ describe('lifecycle hooks', () => {
     expect(spy).toHaveBeenCalledTimes(1);
   });
 
-  it.todo('warns when polling on the default fetcher');
+  it('warns when polling on the default fetcher', async () => {
+    const consoleSpy = jest.spyOn(console, 'warn');
+    const gateway = new ApolloGateway({
+      serviceList: serviceDefinitions,
+      experimental_pollInterval: 10,
+    });
+    expect(consoleSpy).toHaveBeenCalledTimes(1);
+    expect(consoleSpy.mock.calls[0]).toMatchInlineSnapshot(`
+      Array [
+        "Polling running services is dangerous and not recommended in production. Polling should only be used against a registry. Use with caution.",
+      ]
+    `);
+  });
+
+  it('warns when polling using a custom serviceList fetcher', async () => {
+    const consoleSpy = jest.spyOn(console, 'warn');
+    const gateway = new ApolloGateway({
+      experimental_updateServiceDefinitions: jest.fn(),
+      experimental_pollInterval: 10,
+    });
+    expect(consoleSpy).toHaveBeenCalledTimes(1);
+    expect(consoleSpy.mock.calls[0]).toMatchInlineSnapshot(`
+      Array [
+        "Polling running services is dangerous and not recommended in production. Polling should only be used against a registry. Use with caution.",
+      ]
+    `);
+  });
 });

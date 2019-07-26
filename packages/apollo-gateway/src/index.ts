@@ -159,10 +159,7 @@ export class ApolloGateway implements GraphQLService {
     if (config.experimental_pollInterval) {
       if (config.experimental_updateServiceDefinitions || config.serviceList) {
         console.warn(
-          'Polling running services is dangerous and not recommended in production.',
-        );
-        console.warn(
-          'Polling should only be used against a registry. Use with caution.',
+          'Polling running services is dangerous and not recommended in production. Polling should only be used against a registry. Use with caution.',
         );
       }
     }
