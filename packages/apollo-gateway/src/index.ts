@@ -154,10 +154,16 @@ export class ApolloGateway implements GraphQLService {
       config.experimental_didUpdateComposition;
     this.experimental_pollInterval = config.experimental_pollInterval;
 
-    // TODO: warn if user may be polling an endpoint. ie if they have a pollinterval and a custom loader
+    // TODO: warn if user may be polling an endpoint.
+    // ie if they have a pollinterval and a custom loader or a serviceList
     if (config.experimental_pollInterval) {
-      if (config.experimental_updateServiceDefinitions) {
-        console.warn('be careful tho');
+      if (config.experimental_updateServiceDefinitions || config.serviceList) {
+        console.warn(
+          'Polling running services is dangerous and not recommended in production.',
+        );
+        console.warn(
+          'Polling should only be used against a registry. Use with caution.',
+        );
       }
     }
   }
