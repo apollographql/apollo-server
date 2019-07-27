@@ -20,7 +20,7 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
   engine: {
-    apiKey: "YOUR API KEY HERE"
+    apiKey: "YOUR API KEY HERE",
   }
 });
 
@@ -34,6 +34,21 @@ The API key can also be set with the `ENGINE_API_KEY` environment variable. Sett
 ```bash
 # Replace YOUR_API_KEY with the API key provided within Apollo Engine.
 ENGINE_API_KEY=YOUR_API_KEY node start-server.js
+```
+
+Not sure if metrics reporting is working? You can set the [`debugPrintReports` option](https://github.com/apollographql/apollo-server/blob/master/packages/apollo-engine-reporting/src/agent.ts#L429-L433) in the `engine` option of the Apollo Server constructor to see a message indicating the success of transmission like so:
+
+```js{9}
+const { ApolloServer } = require("apollo-server");
+
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  engine: {
+    apiKey: "YOUR API KEY HERE",
+    debugPrintReports: true,
+  }
+});
 ```
 
 ### Client awareness
