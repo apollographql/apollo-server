@@ -70,7 +70,7 @@
   },
   "devDependencies": {
     "@types/async-retry": "1.4.1",
-    "@types/aws-lambda": "8.10.30",
+    "@types/aws-lambda": "8.10.31",
     "@types/body-parser": "1.17.0",
     "@types/connect": "3.4.32",
     "@types/fast-json-stable-stringify": "2.0.0",
