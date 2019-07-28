@@ -2027,6 +2027,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
         type Query {
           books: [Book]
           movies: [Movie]
+          error: String
         }
       `;
 
@@ -2042,6 +2043,9 @@ export function testApolloServer<AS extends ApolloServerBase>(
             new Promise(resolve =>
               setTimeout(() => resolve([{ title: 'H' }]), 12),
             ),
+          error: () => {
+            throw new GraphQLError('It broke');
+          },
         },
       };
 
@@ -2089,10 +2093,6 @@ export function testApolloServer<AS extends ApolloServerBase>(
         });
 
         const apolloFetch = createApolloFetchAsIfFromGateway(uri);
-        apolloFetch.use(({ options }, next) => {
-          options.headers = { 'apollo-federation-include-trace': 'ftv1' };
-          next();
-        });
 
         const result = await apolloFetch({
           query: `{ books { title author } }`,
@@ -2128,6 +2128,43 @@ export function testApolloServer<AS extends ApolloServerBase>(
             trace.endTime.nanos,
           );
         }
+      });
+
+      it('includes errors in federated trace', async () => {
+        const { url: uri } = await createApolloServer({
+          typeDefs: allTypeDefs,
+          resolvers,
+          formatError(err) {
+            err.message = `Formatted: ${err.message}`;
+            return err;
+          },
+          engine: {
+            rewriteError(err) {
+              err.message = `Rewritten for Engine: ${err.message}`;
+              return err;
+            },
+          },
+        });
+
+        const apolloFetch = createApolloFetchAsIfFromGateway(uri);
+
+        const result = await apolloFetch({
+          query: `{ error }`,
+        });
+
+        expect(result.data).toStrictEqual({ error: null });
+        expect(result.errors).toBeTruthy();
+        expect(result.errors.length).toBe(1);
+        expect(result.errors[0].message).toBe('Formatted: It broke');
+
+        const ftv1: string = result.extensions.ftv1;
+
+        expect(ftv1).toBeTruthy();
+        const encoded = Buffer.from(ftv1, 'base64');
+        const trace = Trace.decode(encoded);
+        expect(trace.root.child[0].error[0].message).toBe(
+          'Rewritten for Engine: It broke',
+        );
       });
     });
 

@@ -6,6 +6,10 @@ import {
 } from 'graphql';
 import { Trace, google } from 'apollo-engine-reporting-protobuf';
 
+function internalError(message: string) {
+  return new Error(`[internal apollo-server error] ${message}`);
+}
+
 export class EngineReportingTreeBuilder {
   private rootNode = new Trace.Node();
   public trace = new Trace({ root: this.rootNode });
@@ -24,10 +28,10 @@ export class EngineReportingTreeBuilder {
 
   public startTiming() {
     if (this.startHrTime) {
-      throw Error('startTiming called twice!');
+      throw internalError('startTiming called twice!');
     }
     if (this.stopped) {
-      throw Error('startTiming called after stopTiming!');
+      throw internalError('startTiming called after stopTiming!');
     }
     this.trace.startTime = dateToProtoTimestamp(new Date());
     this.startHrTime = process.hrtime();
@@ -35,10 +39,10 @@ export class EngineReportingTreeBuilder {
 
   public stopTiming() {
     if (!this.startHrTime) {
-      throw Error('stopTiming called before startTiming!');
+      throw internalError('stopTiming called before startTiming!');
     }
     if (this.stopped) {
-      throw Error('stopTiming called twice!');
+      throw internalError('stopTiming called twice!');
     }
 
     this.trace.durationNs = durationHrTimeToNanos(
@@ -50,10 +54,10 @@ export class EngineReportingTreeBuilder {
 
   public willResolveField(info: GraphQLResolveInfo): () => void {
     if (!this.startHrTime) {
-      throw Error('willResolveField called before startTiming!');
+      throw internalError('willResolveField called before startTiming!');
     }
     if (this.stopped) {
-      throw Error('willResolveField called after stopTiming!');
+      throw internalError('willResolveField called after stopTiming!');
     }
 
     const path = info.path;
@@ -75,6 +79,10 @@ export class EngineReportingTreeBuilder {
     errors.forEach(err => {
       // This is an error from a federated service. We will already be reporting
       // it in the nested Trace in the query plan.
+      //
+      // XXX This probably shouldn't skip query or validation errors, which are
+      //      not in nested Traces because format() isn't called in this case! Or
+      //      maybe format() should be called in that case?
       if (err.extensions && err.extensions.serviceName) {
         return;
       }
@@ -101,10 +109,10 @@ export class EngineReportingTreeBuilder {
     error: Trace.Error,
   ) {
     if (!this.startHrTime) {
-      throw Error('addProtobufError called before startTiming!');
+      throw internalError('addProtobufError called before startTiming!');
     }
     if (this.stopped) {
-      throw Error('addProtobufError called after stopTiming!');
+      throw internalError('addProtobufError called after stopTiming!');
     }
 
     // By default, put errors on the root node.

@@ -5,7 +5,7 @@
     "serve": "gatsby serve"
   },
   "dependencies": {
-    "gatsby": "2.13.32",
+    "gatsby": "2.13.41",
     "gatsby-theme-apollo-docs": "1.2.0"
   }
 }

@@ -1,6 +1,6 @@
 {
   "name": "apollo-server-cloud-functions",
-  "version": "2.7.1",
+  "version": "2.7.2",
   "description": "Production-ready Node.js GraphQL server for Google Cloud Functions",
   "keywords": [
     "GraphQL",

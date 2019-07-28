@@ -23,7 +23,13 @@ import {
   SelectionNode,
   isEqualType,
   FieldNode,
+  TypeDefinitionNode,
+  InputValueDefinitionNode,
   InterfaceTypeDefinitionNode,
+  TypeExtensionNode,
+  BREAK,
+  print,
+  ASTNode,
 } from 'graphql';
 import Maybe from 'graphql/tsutils/Maybe';
 import { ExternalFieldDefinition } from './types';
@@ -165,10 +171,14 @@ export const logServiceAndType = (
 ) => `[${serviceName}] ${typeName}${fieldName ? `.${fieldName} -> ` : ' -> '}`;
 
 // TODO: allow passing of the other args here, rather than just message and code
-export function errorWithCode(code: string, message: string) {
+export function errorWithCode(
+  code: string,
+  message: string,
+  nodes?: ReadonlyArray<ASTNode> | ASTNode | undefined,
+) {
   return new GraphQLError(
     message,
-    undefined,
+    nodes,
     undefined,
     undefined,
     undefined,
@@ -304,6 +314,95 @@ export function selectionIncludesField({
     }
   }
   return false;
+}
+
+/**
+ * Returns true if a @key directive is found on the type node
+ *
+ * @param node TypeDefinitionNode | TypeExtensionNode
+ * @returns boolean
+ */
+export function isTypeNodeAnEntity(
+  node: TypeDefinitionNode | TypeExtensionNode,
+) {
+  let isEntity = false;
+
+  visit(node, {
+    Directive(directive) {
+      if (directive.name.value === 'key') {
+        isEntity = true;
+        return BREAK;
+      }
+    },
+  });
+
+  return isEntity;
+}
+
+/**
+ * Diff two type nodes. This returns an object consisting of useful properties and their differences
+ * - name: An array of length 0 or 2. If their type names are different, they will be added to the array.
+ *     (['Product', 'Product'])
+ * - fields: An entry in the fields object can mean two things:
+ *     1) a field was found on one type, but not the other (fieldName: ['String!'])
+ *     2) a common field was found, but their types differ (fieldName: ['String!', 'Int!'])
+ * - kind: An array of length 0 or 2. If their kinds are different, they will be added to the array.
+ *     (['InputObjectTypeDefinition', 'InterfaceTypeDefinition'])
+ *
+ * @param firstNode TypeDefinitionNode | TypeExtensionNode
+ * @param secondNode TypeDefinitionNode | TypeExtensionNode
+ */
+export function diffTypeNodes(
+  firstNode: TypeDefinitionNode | TypeExtensionNode,
+  secondNode: TypeDefinitionNode | TypeExtensionNode,
+) {
+  const fieldsDiff: {
+    [fieldName: string]: string[];
+  } = Object.create(null);
+
+  const document: DocumentNode = {
+    kind: Kind.DOCUMENT,
+    definitions: [firstNode, secondNode],
+  };
+
+  function fieldVisitor(node: FieldDefinitionNode | InputValueDefinitionNode) {
+    const fieldName = node.name.value;
+
+    const type = print(node.type);
+
+    if (!fieldsDiff[fieldName]) {
+      fieldsDiff[fieldName] = [type];
+      return;
+    }
+
+    // If we've seen this field twice and the types are the same, remove this
+    // field from the diff result
+    const fieldTypes = fieldsDiff[fieldName];
+    if (fieldTypes[0] === type) {
+      delete fieldsDiff[fieldName];
+    } else {
+      fieldTypes.push(type);
+    }
+  }
+
+  visit(document, {
+    FieldDefinition: fieldVisitor,
+    InputValueDefinition: fieldVisitor,
+  });
+
+  const typeNameDiff =
+    firstNode.name.value === secondNode.name.value
+      ? []
+      : [firstNode.name.value, secondNode.name.value];
+
+  const kindDiff =
+    firstNode.kind === secondNode.kind ? [] : [firstNode.kind, secondNode.kind];
+
+  return {
+    name: typeNameDiff,
+    kind: kindDiff,
+    fields: fieldsDiff,
+  };
 }
 
 /**
