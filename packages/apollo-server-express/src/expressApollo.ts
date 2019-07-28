@@ -44,7 +44,14 @@ export function graphqlExpress(
             res.setHeader(name, value);
           }
         }
-        res.send(graphqlResponse);
+
+        // Using `.send` is a best practice for Express, but we also just use
+        // `.end` for compatibility with `connect`.
+        if (typeof res.send === 'function') {
+          res.send(graphqlResponse);
+        } else {
+          res.end(graphqlResponse);
+        }
       },
       (error: HttpQueryError) => {
         if ('HttpQueryError' !== error.name) {
@@ -58,7 +65,13 @@ export function graphqlExpress(
         }
 
         res.statusCode = error.statusCode;
-        res.send(error.message);
+        if (typeof res.send === 'function') {
+          // Using `.send` is a best practice for Express, but we also just use
+          // `.end` for compatibility with `connect`.
+          res.send(error.message);
+        } else {
+          res.end(error.message);
+        }
       },
     );
   };
