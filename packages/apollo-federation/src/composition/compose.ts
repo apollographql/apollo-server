@@ -14,6 +14,8 @@ import {
   DocumentNode,
   GraphQLObjectType,
   specifiedDirectives,
+  TypeDefinitionNode,
+  TypeExtensionNode,
 } from 'graphql';
 import { mapValues } from 'apollo-env';
 import { transformSchema } from 'apollo-graphql';
@@ -31,8 +33,6 @@ import {
   ServiceName,
   ExternalFieldDefinition,
   ServiceNameToKeyDirectivesMap,
-  FederatedTypeDefinitionNode,
-  FederatedTypeExtensionNode,
 } from './types';
 import { validateSDL } from 'graphql/validation/validate';
 import { compositionRules } from './rules';
@@ -52,11 +52,11 @@ const EmptyMutationDefinition = {
 
 // Map of all definitions to eventually be passed to extendSchema
 interface DefinitionsMap {
-  [name: string]: FederatedTypeDefinitionNode[];
+  [name: string]: TypeDefinitionNode[];
 }
 // Map of all extensions to eventually be passed to extendSchema
 interface ExtensionsMap {
-  [name: string]: FederatedTypeExtensionNode[];
+  [name: string]: TypeExtensionNode[];
 }
 
 /**

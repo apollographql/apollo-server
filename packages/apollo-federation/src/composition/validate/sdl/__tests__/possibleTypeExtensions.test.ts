@@ -1,8 +1,6 @@
 import {
-  GraphQLEnumType,
   Kind,
   DocumentNode,
-  validate,
   GraphQLSchema,
   specifiedDirectives,
   extendSchema,
@@ -10,14 +8,11 @@ import {
 import { validateSDL } from 'graphql/validation/validate';
 import gql from 'graphql-tag';
 
-import { composeServices, buildMapsFromServiceList } from '../../../compose';
+import { buildMapsFromServiceList } from '../../../compose';
 import {
-  astSerializer,
   typeSerializer,
-  selectionSetSerializer,
   graphqlErrorSerializer,
 } from '../../../../snapshotSerializers';
-import { normalizeTypeDefs } from '../../../normalize';
 import federationDirectives from '../../../../directives';
 import { ServiceDefinition } from '../../../types';
 import { PossibleTypeExtensions } from '../possibleTypeExtensions';

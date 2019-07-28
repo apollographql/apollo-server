@@ -16,7 +16,8 @@
   "dependencies": {
     "apollo-env": "^0.5.1",
     "apollo-graphql": "^0.3.3",
-    "apollo-server-env": "file:../apollo-server-env"
+    "apollo-server-env": "file:../apollo-server-env",
+    "lodash.xorby": "^4.7.0"
   },
   "peerDependencies": {
     "graphql": "^14.0.2"
