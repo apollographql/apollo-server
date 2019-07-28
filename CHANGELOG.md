@@ -4,6 +4,7 @@
 
 - `apollo-gateway`: Pass `context` through to the `graphql` command in `LocalGraphQLDatasource` `process` method [PR #2821](https://github.com/apollographql/apollo-server/pull/2821)
 - `apollo-engine-reporting`: Set `forbiddenOperation` and `registeredOperation` later in the request lifecycle [PR #2828](https://github.com/apollographql/apollo-server/pull/2828)
+- `apollo-server-express`: Use the Express `send` method, rather than calling `net.Socket.prototype.end`. [PR #2842](https://github.com/apollographql/apollo-server/pull/2842)
 
 ### v2.6.2
 
