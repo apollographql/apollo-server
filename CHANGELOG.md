@@ -8,6 +8,7 @@ The version headers in this history reflect the versions of Apollo Server itself
 
  - `@apollo/federation`: Add support for "value types", which are type definitions which live on multiple services' types, inputs, unions or interfaces.  These common types must be identical by name, kind and field across all services. [PR #3063](https://github.com/apollographql/apollo-server/pull/3063)
 - `apollo-server-express`: Use the Express `send` method, rather than calling `net.Socket.prototype.end`. [PR #2842](https://github.com/apollographql/apollo-server/pull/2842)
+- `apollo-server-hapi`: Update internal dependencies to use scoped packages `@hapi/accept` and `@hapi/boom`, in place of `accept` and `boom` respectively. [PR #3089](https://github.com/apollographql/apollo-server/pull/3089)
 
 ### v2.7.2
 
