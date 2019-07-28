@@ -28,7 +28,7 @@ import { getServiceDefinitionsFromStorage } from './loadServicesFromStorage';
 
 import { serializeQueryPlan, QueryPlan } from './QueryPlan';
 import { GraphQLDataSource } from './datasources/types';
-import { RemoteGraphQLDataSource } from './datasources/RemoteGraphQLDatasource';
+import { RemoteGraphQLDataSource } from './datasources/RemoteGraphQLDataSource';
 import { HeadersInit } from 'node-fetch';
 
 export type ServiceEndpointDefinition = Pick<ServiceDefinition, 'name' | 'url'>;
