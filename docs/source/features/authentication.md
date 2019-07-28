@@ -69,7 +69,7 @@ context: ({ req }) => {
 
  // optionally block the user
  // we could also check user roles/permissions here
- if (!user) throw new AuthorizationError('you must be logged in'); 
+ if (!user) throw new AuthenticationError('you must be logged in'); 
 
  // add the user to the context
  return { user };
@@ -164,7 +164,7 @@ context: ({ req }) => {
 
  // optionally block the user
  // we could also check user roles/permissions here
- if (!user) throw new AuthorizationError('you must be logged in to query this schema');  
+ if (!user) throw new AuthenticationError('you must be logged in to query this schema');  
 
  // add the user to the context
  return {
@@ -191,7 +191,7 @@ Now any model method in `User` has access to the same `user` information that re
 
 ```js
 getAll: () => {
- if(!user || !user.roles.includes('admin') return null;
+ if(!user || !user.roles.includes('admin')) return null;
  return fetch('http://myurl.com/users');
 }
 ```

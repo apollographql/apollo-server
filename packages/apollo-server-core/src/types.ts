@@ -5,7 +5,7 @@ import {
   IMocks,
   GraphQLParseOptions,
 } from 'graphql-tools';
-import { ValueOrPromise } from 'apollo-server-env';
+import { ValueOrPromise, GraphQLExecutor } from 'apollo-server-types';
 import { ConnectionContext } from 'subscriptions-transport-ws';
 // The types for `ws` use `export = WebSocket`, so we'll use the
 // matching `import =` to bring in its sole export.
@@ -64,13 +64,38 @@ type BaseConfig = Pick<
   | 'cache'
 >;
 
+export type Unsubscriber = () => void;
+export type SchemaChangeCallback = (schema: GraphQLSchema) => void;
+
+export type GraphQLServiceConfig = {
+  schema: GraphQLSchema;
+  executor: GraphQLExecutor;
+};
+
+/**
+ * This is a restricted view of an engine configuration which only supplies the
+ * necessary info for accessing things like cloud storage.
+ */
+export type GraphQLServiceEngineConfig = {
+  apiKeyHash: string;
+  graphId: string;
+  graphVariant?: string;
+};
+
+export interface GraphQLService {
+  load(options: {
+    engine?: GraphQLServiceEngineConfig;
+  }): Promise<GraphQLServiceConfig>;
+  onSchemaChange(callback: SchemaChangeCallback): Unsubscriber;
+}
+
 // This configuration is shared between all integrations and should include
 // fields that are not specific to a single integration
 export interface Config extends BaseConfig {
   modules?: GraphQLSchemaModule[];
-  typeDefs?: DocumentNode | Array<DocumentNode>;
+  typeDefs?: DocumentNode | Array<DocumentNode> | string | Array<string>;
   parseOptions?: GraphQLParseOptions;
-  resolvers?: IResolvers;
+  resolvers?: IResolvers | Array<IResolvers>;
   schema?: GraphQLSchema;
   schemaDirectives?: Record<string, typeof SchemaDirectiveVisitor>;
   context?: Context | ContextFunction;
@@ -86,6 +111,7 @@ export interface Config extends BaseConfig {
   //https://github.com/jaydenseric/graphql-upload#type-uploadoptions
   uploads?: boolean | FileUploadOptions;
   playground?: PlaygroundConfig;
+  gateway?: GraphQLService;
 }
 
 export interface FileUploadOptions {

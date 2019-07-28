@@ -1,5 +1,27 @@
 import { specifiedSDLRules } from 'graphql/validation/specifiedRules';
 
-export const compositionRules = specifiedSDLRules.filter(
-  rule => rule.name !== 'UniqueDirectivesPerLocation',
-);
+import {
+  UniqueTypeNamesWithFields,
+  MatchingEnums,
+  PossibleTypeExtensions,
+  UniqueFieldDefinitionNames,
+  UniqueUnionTypes,
+} from './validate/sdl';
+
+const omit = [
+  'UniqueDirectivesPerLocation',
+  'UniqueTypeNames',
+  'UniqueEnumValueNames',
+  'PossibleTypeExtensions',
+  'UniqueFieldDefinitionNames',
+];
+
+export const compositionRules = specifiedSDLRules
+  .filter(rule => !omit.includes(rule.name))
+  .concat([
+    UniqueFieldDefinitionNames,
+    UniqueTypeNamesWithFields,
+    MatchingEnums,
+    UniqueUnionTypes,
+    PossibleTypeExtensions,
+  ]);

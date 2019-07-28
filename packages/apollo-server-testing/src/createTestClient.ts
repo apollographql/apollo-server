@@ -1,4 +1,5 @@
 import { ApolloServerBase } from 'apollo-server-core';
+import { GraphQLResponse } from 'apollo-server-types';
 import { print, DocumentNode } from 'graphql';
 
 type StringOrAst = string | DocumentNode;
@@ -21,7 +22,12 @@ type Mutation = {
   operationName?: string;
 };
 
-export default (server: ApolloServerBase) => {
+export interface ApolloServerTestClient {
+  query: (query: Query) => Promise<GraphQLResponse>;
+  mutate: (mutation: Mutation) => Promise<GraphQLResponse>;
+}
+
+export default (server: ApolloServerBase): ApolloServerTestClient => {
   const executeOperation = server.executeOperation.bind(server);
   const test = ({ query, mutation, ...args }: Query | Mutation) => {
     const operation = query || mutation;

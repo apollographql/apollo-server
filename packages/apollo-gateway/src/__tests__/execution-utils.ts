@@ -4,7 +4,7 @@ import {
   GraphQLSchemaModule,
   GraphQLResolverMap,
 } from 'apollo-graphql';
-import { GraphQLRequest, GraphQLExecutionResult } from 'apollo-server-core';
+import { GraphQLRequest, GraphQLExecutionResult } from 'apollo-server-types';
 import {
   composeAndValidate,
   buildFederatedSchema,

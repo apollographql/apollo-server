@@ -74,3 +74,52 @@ declare module 'graphql/type/definition' {
     federation?: FederationField;
   }
 }
+
+declare module 'graphql/language/ast' {
+  interface UnionTypeDefinitionNode {
+    serviceName?: string | null;
+  }
+  interface UnionTypeExtensionNode {
+    serviceName?: string | null;
+  }
+
+  interface EnumTypeDefinitionNode {
+    serviceName?: string | null;
+  }
+
+  interface EnumTypeExtensionNode {
+    serviceName?: string | null;
+  }
+
+  interface ScalarTypeDefinitionNode {
+    serviceName?: string | null;
+  }
+
+  interface ScalarTypeExtensionNode {
+    serviceName?: string | null;
+  }
+
+  interface ObjectTypeDefinitionNode {
+    serviceName?: string | null;
+  }
+
+  interface ObjectTypeExtensionNode {
+    serviceName?: string | null;
+  }
+
+  interface InterfaceTypeDefinitionNode {
+    serviceName?: string | null;
+  }
+
+  interface InterfaceTypeExtensionNode {
+    serviceName?: string | null;
+  }
+
+  interface InputObjectTypeDefinitionNode {
+    serviceName?: string | null;
+  }
+
+  interface InputObjectTypeExtensionNode {
+    serviceName?: string | null;
+  }
+}

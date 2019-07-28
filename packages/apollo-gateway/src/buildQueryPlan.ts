@@ -1,3 +1,4 @@
+import { isNotNullOrUndefined } from 'apollo-env';
 import {
   DocumentNode,
   FieldNode,
@@ -22,10 +23,9 @@ import {
   OperationDefinitionNode,
   SelectionSetNode,
   typeFromAST,
-  TypeInfo,
   TypeNameMetaFieldDef,
   visit,
-  visitWithTypeInfo,
+  VariableDefinitionNode,
 } from 'graphql';
 import {
   Field,
@@ -37,10 +37,11 @@ import {
 } from './FieldSet';
 import {
   FetchNode,
+  ParallelNode,
   PlanNode,
+  SequenceNode,
   QueryPlan,
   ResponsePath,
-  VariableUsage,
   OperationContext,
   FragmentMap,
 } from './QueryPlan';
@@ -87,9 +88,9 @@ export function buildQueryPlan(operationContext: OperationContext): QueryPlan {
 
   return {
     kind: 'QueryPlan',
-    node: isMutation
-      ? wrapInSequenceNodeIfNeeded(nodes)
-      : wrapInParallelNodeIfNeeded(nodes),
+    node: nodes.length
+      ? flatWrap(isMutation ? 'Sequence' : 'Parallel', nodes)
+      : undefined,
   };
 }
 
@@ -124,31 +125,32 @@ function executionNodeForGroup(
     const dependentNodes = group.dependentGroups.map(dependentGroup =>
       executionNodeForGroup(context, dependentGroup),
     );
-    return {
-      kind: 'Sequence',
-      nodes: [node, wrapInParallelNodeIfNeeded(dependentNodes)],
-    };
+
+    return flatWrap('Sequence', [node, flatWrap('Parallel', dependentNodes)]);
   } else {
     return node;
   }
 }
 
-function wrapInParallelNodeIfNeeded(nodes: PlanNode[]): PlanNode {
-  return nodes.length > 1
-    ? {
-        kind: 'Parallel',
-        nodes: nodes,
-      }
-    : nodes[0];
-}
-
-function wrapInSequenceNodeIfNeeded(nodes: PlanNode[]): PlanNode {
-  return nodes.length > 1
-    ? {
-        kind: 'Sequence',
-        nodes: nodes,
-      }
-    : nodes[0];
+// Wraps the given nodes in a ParallelNode or SequenceNode, unless there's only
+// one node, in which case it is returned directly. Any nodes of the same kind
+// in the given list have their sub-nodes flattened into the list: ie,
+// flatWrap('Sequence', [a, flatWrap('Sequence', b, c), d]) returns a SequenceNode
+// with four children.
+function flatWrap(
+  kind: ParallelNode['kind'] | SequenceNode['kind'],
+  nodes: PlanNode[],
+): PlanNode {
+  if (nodes.length === 0) {
+    throw Error('programming error: should always be called with nodes');
+  }
+  if (nodes.length === 1) {
+    return nodes[0];
+  }
+  return {
+    kind,
+    nodes: nodes.flatMap(n => (n.kind === kind ? n.nodes : [n])),
+  } as PlanNode;
 }
 
 function splitRootFields(
@@ -177,9 +179,7 @@ function splitRootFields(
 
     if (!owningService) {
       throw new GraphQLError(
-        `Couldn't find owning service for field "${parentType.name}.${
-          fieldDef.name
-        }"`,
+        `Couldn't find owning service for field "${parentType.name}.${fieldDef.name}"`,
         fieldNode,
       );
     }
@@ -233,9 +233,7 @@ function splitRootFieldsSerially(
 
     if (!owningService) {
       throw new GraphQLError(
-        `Couldn't find owning service for field "${parentType.name}.${
-          fieldDef.name
-        }"`,
+        `Couldn't find owning service for field "${parentType.name}.${fieldDef.name}"`,
         fieldNode,
       );
     }
@@ -268,9 +266,7 @@ function splitSubfields(
 
     if (!owningService) {
       throw new GraphQLError(
-        `Couldn't find owning service for field "${parentType.name}.${
-          fieldDef.name
-        }"`,
+        `Couldn't find owning service for field "${parentType.name}.${fieldDef.name}"`,
         fieldNode,
       );
     }
@@ -286,7 +282,23 @@ function splitSubfields(
       } else {
         // We need to fetch the key fields from the parent group first, and then
         // use a dependent fetch from the owning service.
-        const keyFields = context.getKeyFields(parentType, owningService);
+        let keyFields = context.getKeyFields({
+          parentType,
+          serviceName: parentGroup.serviceName,
+        });
+        if (
+          keyFields.length === 0 ||
+          (keyFields.length === 1 &&
+            keyFields[0].fieldDef.name === '__typename')
+        ) {
+          // Only __typename key found.
+          // In some cases, the parent group does not have any @key directives.
+          // Fall back to owning group's keys
+          keyFields = context.getKeyFields({
+            parentType,
+            serviceName: owningService,
+          });
+        }
         return parentGroup.dependentGroupForService(owningService, keyFields);
       }
     } else {
@@ -310,13 +322,14 @@ function splitSubfields(
       } else {
         // We need to go through the base group first.
 
-        const keyFields = context.getKeyFields(parentType, baseService);
+        const keyFields = context.getKeyFields({
+          parentType,
+          serviceName: parentGroup.serviceName,
+        });
 
         if (!keyFields) {
           throw new GraphQLError(
-            `Couldn't find keys for type "${
-              parentType.name
-            }}" in service "${baseService}"`,
+            `Couldn't find keys for type "${parentType.name}}" in service "${baseService}"`,
             fieldNode,
           );
         }
@@ -353,9 +366,17 @@ function splitFields(
       const field = fieldsForParentType[0];
       const { fieldDef } = field;
 
-      // We skip `__typename`.
+      // We skip `__typename` for root types.
       if (fieldDef.name === TypeNameMetaFieldDef.name) {
-        continue;
+        const { schema } = context;
+        const roots = [
+          schema.getQueryType(),
+          schema.getMutationType(),
+          schema.getSubscriptionType(),
+        ]
+          .filter(isNotNullOrUndefined)
+          .map(type => type.name);
+        if (roots.indexOf(parentType.name) > -1) continue;
       }
 
       // We skip introspection fields like `__schema` and `__type`.
@@ -681,11 +702,22 @@ export function buildQueryPlanningContext({
 }
 
 export class QueryPlanningContext {
+  protected variableDefinitions: {
+    [name: string]: VariableDefinitionNode;
+  };
+
   constructor(
     public readonly schema: GraphQLSchema,
     public readonly operation: OperationDefinitionNode,
     public readonly fragments: FragmentMap,
-  ) {}
+  ) {
+    this.variableDefinitions = Object.create(null);
+    visit(operation, {
+      VariableDefinition: definition => {
+        this.variableDefinitions[definition.variable.name.value] = definition;
+      },
+    });
+  }
 
   getFieldDef(parentType: GraphQLCompositeType, fieldNode: FieldNode) {
     const fieldName = fieldNode.name.value;
@@ -710,43 +742,17 @@ export class QueryPlanningContext {
     return isAbstractType(type) ? this.schema.getPossibleTypes(type) : [type];
   }
 
-  getVariableUsages(selectionSet: SelectionSetNode): VariableUsage[] {
-    const usages: VariableUsage[] = [];
-    // FIXME: we could do less work here by caching the extraction of variable definitions
-    // instead doing that work for each node
-    const node = {
-      ...this.operation,
-      selectionSet,
-    };
-    const defaultOperationVariables: { [name: string]: any } = Object.create(
-      null,
-    );
-    const typeInfo = new TypeInfo(this.schema);
-    visit(
-      node,
-      visitWithTypeInfo(typeInfo, {
-        VariableDefinition: definition => {
-          if (definition.defaultValue) {
-            const { value } = definition.variable.name;
-            defaultOperationVariables[
-              value
-            ] = (definition.defaultValue as any).value;
-          }
-          // return false so that Variable isn't called for this node
-          return false;
-        },
-        Variable(variable) {
-          usages.push({
-            node: variable,
-            type: typeInfo.getInputType()!,
-            // prefer defaults variables from the operation over the schema
-            defaultValue:
-              defaultOperationVariables[variable.name.value] ||
-              typeInfo.getDefaultValue(),
-          });
-        },
-      }),
-    );
+  getVariableUsages(selectionSet: SelectionSetNode) {
+    const usages: {
+      [name: string]: VariableDefinitionNode;
+    } = Object.create(null);
+
+    visit(selectionSet, {
+      Variable: node => {
+        usages[node.name.value] = this.variableDefinitions[node.name.value];
+      },
+    });
+
     return usages;
   }
 
@@ -765,10 +771,15 @@ export class QueryPlanningContext {
     }
   }
 
-  getKeyFields(
-    parentType: GraphQLCompositeType,
-    serviceName: string,
-  ): FieldSet {
+  getKeyFields({
+    parentType,
+    serviceName,
+    fetchAll = false,
+  }: {
+    parentType: GraphQLCompositeType;
+    serviceName: string;
+    fetchAll?: boolean;
+  }): FieldSet {
     const keyFields: FieldSet = [];
 
     keyFields.push({
@@ -786,12 +797,23 @@ export class QueryPlanningContext {
 
       if (!(keys && keys.length > 0)) continue;
 
-      keyFields.push(
-        ...collectFields(this, possibleType, {
-          kind: Kind.SELECTION_SET,
-          selections: keys[0],
-        }),
-      );
+      if (fetchAll) {
+        keyFields.push(
+          ...keys.flatMap(key =>
+            collectFields(this, possibleType, {
+              kind: Kind.SELECTION_SET,
+              selections: key,
+            }),
+          ),
+        );
+      } else {
+        keyFields.push(
+          ...collectFields(this, possibleType, {
+            kind: Kind.SELECTION_SET,
+            selections: keys[0],
+          }),
+        );
+      }
     }
 
     return keyFields;
@@ -804,7 +826,7 @@ export class QueryPlanningContext {
   ): FieldSet {
     const requiredFields: FieldSet = [];
 
-    requiredFields.push(...this.getKeyFields(parentType, serviceName));
+    requiredFields.push(...this.getKeyFields({ parentType, serviceName }));
 
     if (fieldDef.federation && fieldDef.federation.requires) {
       requiredFields.push(
@@ -827,7 +849,13 @@ export class QueryPlanningContext {
 
     const providedFields: FieldSet = [];
 
-    providedFields.push(...this.getKeyFields(returnType, serviceName));
+    providedFields.push(
+      ...this.getKeyFields({
+        parentType: returnType,
+        serviceName,
+        fetchAll: true,
+      }),
+    );
 
     if (fieldDef.federation && fieldDef.federation.provides) {
       providedFields.push(

@@ -37,9 +37,7 @@ export const keyFieldsMissingOnBase = (schema: GraphQLSchema) => {
                   errorWithCode(
                     'KEY_FIELDS_MISSING_ON_BASE',
                     logServiceAndType(serviceName, typeName) +
-                      `A @key selects ${name}, but ${typeName}.${name} was either created or overwritten by ${
-                        matchingField.federation.serviceName
-                      }, not ${serviceName}`,
+                      `A @key selects ${name}, but ${typeName}.${name} was either created or overwritten by ${matchingField.federation.serviceName}, not ${serviceName}`,
                   ),
                 );
               }
