@@ -342,7 +342,7 @@ export function isTypeNodeAnEntity(
 /**
  * Diff two type nodes. This returns an object consisting of useful properties and their differences
  * - name: An array of length 0 or 2. If their type names are different, they will be added to the array.
- *     (['Product', 'Prdocut'])
+ *     (['Product', 'Product'])
  * - fields: An entry in the fields object can mean two things:
  *     1) a field was found on one type, but not the other (fieldName: ['String!'])
  *     2) a common field was found, but their types differ (fieldName: ['String!', 'Int!'])
