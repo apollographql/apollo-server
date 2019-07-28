@@ -25,6 +25,7 @@ import {
   FieldNode,
   TypeDefinitionNode,
   InputValueDefinitionNode,
+  InterfaceTypeDefinitionNode,
   TypeExtensionNode,
   BREAK,
   print,
@@ -53,6 +54,7 @@ export function findDirectivesOnTypeOrField(
     | ObjectTypeDefinitionNode
     | ObjectTypeExtensionNode
     | FieldDefinitionNode
+    | InterfaceTypeDefinitionNode
     | InterfaceTypeExtensionNode
   >,
   directiveName: string,
@@ -402,3 +404,15 @@ export function diffTypeNodes(
     fields: fieldsDiff,
   };
 }
+
+/**
+ * A map of `Kind`s from their definition to their respective extensions
+ */
+export const defKindToExtKind: { [kind: string]: string } = {
+  [Kind.SCALAR_TYPE_DEFINITION]: Kind.SCALAR_TYPE_EXTENSION,
+  [Kind.OBJECT_TYPE_DEFINITION]: Kind.OBJECT_TYPE_EXTENSION,
+  [Kind.INTERFACE_TYPE_DEFINITION]: Kind.INTERFACE_TYPE_EXTENSION,
+  [Kind.UNION_TYPE_DEFINITION]: Kind.UNION_TYPE_EXTENSION,
+  [Kind.ENUM_TYPE_DEFINITION]: Kind.ENUM_TYPE_EXTENSION,
+  [Kind.INPUT_OBJECT_TYPE_DEFINITION]: Kind.INPUT_OBJECT_TYPE_EXTENSION,
+};

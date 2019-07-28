@@ -59,3 +59,52 @@ it('caches the query plan for a request', async () => {
   expect(result.data).toEqual(secondResult.data);
   expect(planner.buildQueryPlan).toHaveBeenCalledTimes(1);
 });
+
+it('supports multiple operations and operationName', async () => {
+  const query = `#graphql
+    query GetUser {
+      me {
+        username
+      }
+    }
+    query GetReviews {
+      topReviews {
+        body
+      }
+    }
+  `;
+
+  const gateway = new ApolloGateway({
+    localServiceList: [accounts, books, inventory, product, reviews],
+    buildService: service => {
+      return new LocalGraphQLDataSource(buildFederatedSchema([service]));
+    },
+  });
+
+  const { schema, executor } = await gateway.load();
+
+  const server = new ApolloServer({ schema, executor });
+
+  const { data: userData } = await server.executeOperation({
+    query,
+    operationName: 'GetUser',
+  });
+
+  const { data: reviewsData } = await server.executeOperation({
+    query,
+    operationName: 'GetReviews',
+  });
+
+  expect(userData).toEqual({
+    me: { username: '@ada' },
+  });
+  expect(reviewsData).toEqual({
+    topReviews: [
+      { body: 'Love it!' },
+      { body: 'Too expensive.' },
+      { body: 'Could be better.' },
+      { body: 'Prefer something else.' },
+      { body: 'Wish I had read this before.' },
+    ],
+  });
+});
