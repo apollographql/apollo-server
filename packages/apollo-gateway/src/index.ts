@@ -172,7 +172,7 @@ export class ApolloGateway implements GraphQLService {
     };
   }
 
-  private startPollingServices() {
+  protected startPollingServices(interval) {
     if (this.pollingTimer) clearInterval(this.pollingTimer);
 
     this.pollingTimer = setInterval(async () => {
@@ -205,7 +205,7 @@ export class ApolloGateway implements GraphQLService {
           e,
         );
       }
-    }, 10 * 1000);
+    }, interval || (10 * 1000));
   }
 
   protected createServices(services: ServiceEndpointDefinition[]) {
