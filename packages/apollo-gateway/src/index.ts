@@ -205,7 +205,7 @@ export class ApolloGateway implements GraphQLService {
           e,
         );
       }
-    }, interval || (10 * 1000));
+    }, interval || 10 * 1000);
   }
 
   protected createServices(services: ServiceEndpointDefinition[]) {
