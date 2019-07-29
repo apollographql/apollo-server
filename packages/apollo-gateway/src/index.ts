@@ -26,7 +26,7 @@ import {
 import { getServiceDefinitionsFromRemoteEndpoint } from './loadServicesFromRemoteEndpoint';
 import { getServiceDefinitionsFromStorage } from './loadServicesFromStorage';
 
-import { serializeQueryPlan, QueryPlan } from './QueryPlan';
+import { serializeQueryPlan, QueryPlan, OperationContext } from './QueryPlan';
 import { GraphQLDataSource } from './datasources/types';
 import { RemoteGraphQLDataSource } from './datasources/RemoteGraphQLDataSource';
 import { HeadersInit } from 'node-fetch';
@@ -40,6 +40,13 @@ interface GatewayConfigBase {
   // should cutover to use the new option when it's built.
   __exposeQueryPlanExperimental?: boolean;
   buildService?: (definition: ServiceEndpointDefinition) => GraphQLDataSource;
+
+  // experimental observability callbacks
+  experimental_didResolveQueryPlan?: DidResolveQueryPlanCallback;
+  experimental_didFailComposition?: DidFailCompositionCallback;
+  experimental_updateServiceDefinitions?: GetServiceList;
+  experimental_didUpdateComposition?: DidUpdateCompositionCallback;
+  experimental_pollInterval?: number;
 }
 
 interface RemoteGatewayConfig extends GatewayConfigBase {
@@ -73,6 +80,36 @@ function isManagedConfig(
   return !isRemoteConfig(config) && !isLocalConfig(config);
 }
 
+type DidResolveQueryPlanCallback = ({
+  queryPlan,
+  serviceMap,
+  operationContext,
+}: {
+  queryPlan: QueryPlan;
+  serviceMap: ServiceMap;
+  operationContext: OperationContext;
+}) => void;
+
+type DidFailCompositionCallback = ({
+  errors,
+  serviceList,
+}: {
+  errors: GraphQLError[];
+  serviceList: ServiceDefinition[];
+}) => void;
+
+interface CompositionInfo {
+  serviceDefinitions: ServiceDefinition[];
+  schema: GraphQLSchema;
+}
+
+type DidUpdateCompositionCallback = (
+  currentConfig: CompositionInfo,
+  previousConfig?: CompositionInfo,
+) => void;
+
+type GetServiceList = (config: GatewayConfig) => Promise<ServiceDefinition[]>;
+
 export class ApolloGateway implements GraphQLService {
   public schema?: GraphQLSchema;
   protected serviceMap: ServiceMap = Object.create(null);
@@ -82,6 +119,15 @@ export class ApolloGateway implements GraphQLService {
   private engineConfig: GraphQLServiceEngineConfig | undefined;
   private pollingTimer?: NodeJS.Timer;
   private onSchemaChangeListeners = new Set<SchemaChangeCallback>();
+
+  // Observe query plan, service info, and operation info prior to execution. The information made available here will give insight into the resulting query plan and the inputs that generated it.
+  protected experimental_didResolveQueryPlan?: DidResolveQueryPlanCallback;
+  // Observe composition failures and the ServiceList that caused them. Pretty straightforward, this enables reporting any issues that occur during composition. Implementors will be interested in addressing these immediately.
+  protected experimental_didFailComposition?: DidFailCompositionCallback;
+  protected experimental_didUpdateComposition?: DidUpdateCompositionCallback;
+  // Used for overriding the default service list fetcher. This should return an array of ServiceDefinition. *This function must be awaited.*
+  protected updateServiceDefinitions: GetServiceList;
+  protected experimental_pollInterval?: number;
 
   constructor(config?: GatewayConfig) {
     this.config = {
@@ -108,6 +154,29 @@ export class ApolloGateway implements GraphQLService {
     }
 
     this.initializeQueryPlanStore();
+
+    this.updateServiceDefinitions = config.experimental_updateServiceDefinitions
+      ? config.experimental_updateServiceDefinitions
+      : this.loadServiceDefinitions;
+
+    // set up experimental observability callbacks
+    this.experimental_didResolveQueryPlan =
+      config.experimental_didResolveQueryPlan;
+    this.experimental_didFailComposition =
+      config.experimental_didFailComposition;
+    this.experimental_didUpdateComposition =
+      config.experimental_didUpdateComposition;
+    this.experimental_pollInterval = config.experimental_pollInterval;
+
+    // TODO: warn if user may be polling an endpoint.
+    // ie if they have a pollinterval and a custom loader or a serviceList
+    if (config.experimental_pollInterval) {
+      if (config.experimental_updateServiceDefinitions || config.serviceList) {
+        console.warn(
+          'Polling running services is dangerous and not recommended in production. Polling should only be used against a registry. Use with caution.',
+        );
+      }
+    }
   }
 
   public async load(options?: { engine?: GraphQLServiceEngineConfig }) {
