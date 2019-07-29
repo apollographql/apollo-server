@@ -319,7 +319,12 @@ export class ApolloServerBase {
     if (gateway && subscriptions !== false) {
       // TODO: this could be handled by adjusting the typings to keep gateway configs and non-gateway configs seprate.
       throw new Error(
-        "Cannot define both `subscriptions` and `gateway`. Set `subscriptions: false` in Apollo Server's config to use gateway.",
+        [
+          'Subscriptions are not yet compatible with the gateway.',
+          "Set `subscriptions: false` in Apollo Server's constructor to",
+          'explicitly disable subscriptions (which are on by default)',
+          'and allow for gateway functionality.',
+        ].join(' '),
       );
     } else if (subscriptions !== false) {
       if (this.supportsSubscriptions()) {

@@ -44,6 +44,10 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
 });
+
+server.listen(4001).then(({ url }) => {
+    console.log(`🚀 Server ready at ${url}`);
+});
 ```
 
 If you're already familiar with [setting up an Apollo Server](/essentials/server/#creating-a-server), this should look pretty familiar. If not, we recommend you first take a moment to get comfortable with this topic before jumping in to federation.
@@ -88,6 +92,10 @@ const resolvers = {
 const server = new ApolloServer({
   schema: buildFederatedSchema([{ typeDefs, resolvers }])
 });
+
+server.listen(4001).then(({ url }) => {
+    console.log(`🚀 Server ready at ${url}`);
+});
 ```
 > Note: we're now providing a `schema` to the `ApolloServer` constructor, rather than `typeDefs` and `resolvers`.
 
@@ -114,7 +122,15 @@ const gateway = new ApolloGateway({
   ],
 });
 
-const server = new ApolloServer({ gateway });
+const server = new ApolloServer({
+  gateway,
+  
+  // Currently, subscriptions are enabled by default with Apollo Server, however,
+  // subscriptions are not compatible with the gateway.  We hope to resolve this
+  // limitation in future versions of Apollo Server.  Please reach out to us on
+  // https://spectrum.chat/apollo/apollo-server if this is critical to your adoption!
+  subscriptions: false,
+});
 
 server.listen().then(({ url }) => {
   console.log(`🚀 Server ready at ${url}`);
@@ -132,11 +148,12 @@ On startup, the gateway will fetch the service capabilities from the running ser
 > If there are any composition errors, the `new ApolloServer` call will throw with a list of [validation errors](/federation/errors/).
 
 ## Sharing context across services
+
 For existing services, it's likely that you've already implemented some form of authentication to convert a request into a user, or require some information passed to the service through request headers. `@apollo/gateway` makes it easy to reuse the context feature of Apollo Server to customize what information is sent to underlying services. Let's see what it looks like to pass user information along from the gateway to its services:
 
 ```javascript{9-18,23-32}
-import { ApolloServer } from 'apollo-server';
-import { ApolloGateway, RemoteGraphQLDataSource } from '@apollo/gateway';
+const { ApolloServer } = require('apollo-server');
+const { ApolloGateway, RemoteGraphQLDataSource } = require('@apollo/gateway');
 
 const gateway = new ApolloGateway({
   serviceList: [
@@ -157,6 +174,13 @@ const gateway = new ApolloGateway({
 
 const server = new ApolloServer({
   gateway,
+  
+  // As noted above, subscriptions are enabled by default with Apollo Server, however,
+  // subscriptions are not compatible with the gateway.  We hope to resolve this
+  // limitation in future versions of Apollo Server.  Please reach out to us on
+  // https://spectrum.chat/apollo/apollo-server if this is critical to your adoption!
+  subscriptions: false,
+  
   context: ({ req }) => {
     // get the user token from the headers
     const token = req.headers.authorization || '';
