@@ -6,7 +6,7 @@ import {
   ForbiddenError,
 } from 'apollo-server-errors';
 
-import { RemoteGraphQLDataSource } from '../RemoteGraphQLDatasource';
+import { RemoteGraphQLDataSource } from '../RemoteGraphQLDataSource';
 
 beforeEach(() => {
   fetch.mockReset();
