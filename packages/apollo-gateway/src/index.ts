@@ -206,6 +206,11 @@ export class ApolloGateway implements GraphQLService {
         );
       }
     }, 10 * 1000);
+
+    // Prevent the Node.js event loop from remaining active (and preventing,
+    // e.g. process shutdown) by calling `unref` on the `Timeout`.  For more
+    // information, see https://nodejs.org/api/timers.html#timers_timeout_unref.
+    this.pollingTimer.unref();
   }
 
   protected createServices(services: ServiceEndpointDefinition[]) {
