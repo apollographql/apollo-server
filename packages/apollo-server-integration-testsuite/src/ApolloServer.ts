@@ -1,6 +1,7 @@
 /* tslint:disable:no-unused-expression */
 import http from 'http';
 import { sha256 } from 'js-sha256';
+import { URL } from 'url';
 import express = require('express');
 import bodyParser = require('body-parser');
 import yup = require('yup');
@@ -776,7 +777,6 @@ export function testApolloServer<AS extends ApolloServerBase>(
             if (family !== 'IPv4') {
               throw new Error(`The family was unexpectedly ${family}.`);
             }
-            const { URL } = require('url');
             return new URL(`http://${address}:${port}`).toString();
           }
         }
@@ -1941,6 +1941,74 @@ export function testApolloServer<AS extends ApolloServerBase>(
           expect(result.data).toEqual({ testString: 'test string' });
           done();
         }, done.fail);
+      });
+    });
+
+    describe('apollo-engine-reporting', () => {
+      it('graphql server functions even when Apollo servers are down', async () => {
+        let return502Resolve: () => void;
+        const return502Promise = new Promise(
+          resolve => (return502Resolve = resolve),
+        );
+        const fakeEngineServer = http.createServer(async (_, res) => {
+          await return502Promise;
+          res.writeHead(502);
+          res.end();
+        });
+        await new Promise(resolve => {
+          fakeEngineServer.listen(0, '127.0.0.1', () => {
+            resolve();
+          });
+        });
+        try {
+          const { family, address, port } = fakeEngineServer.address();
+          if (family !== 'IPv4') {
+            throw new Error(`The family was unexpectedly ${family}.`);
+          }
+          const fakeEngineUrl = new URL(`http://${address}:${port}`).toString();
+
+          let reportErrorPromiseResolve: (error: Error) => void;
+          const reportErrorPromise = new Promise<Error>(
+            resolve => (reportErrorPromiseResolve = resolve),
+          );
+          const { url: uri } = await createApolloServer({
+            typeDefs: gql`
+              type Query {
+                something: String!
+              }
+            `,
+            resolvers: { Query: { something: () => 'hello' } },
+            engine: {
+              apiKey: 'service:my-app:secret',
+              endpointUrl: fakeEngineUrl,
+              reportIntervalMs: 1,
+              maxAttempts: 1,
+              reportErrorFunction(error: Error) {
+                reportErrorPromiseResolve(error);
+              },
+            },
+          });
+
+          const apolloFetch = createApolloFetch({ uri });
+
+          // Run a GraphQL query. Ensure that it returns successfully even
+          // though reporting is going to fail. (Note that reporting can't
+          // actually have failed yet because we haven't let return502Promise
+          // resolve.)
+          const result = await apolloFetch({
+            query: `{ something }`,
+          });
+          expect(result.data.something).toBe('hello');
+
+          // Allow reporting to return 502.
+          return502Resolve();
+
+          // Make sure we can get the 502 error from reporting.
+          const sendingError = await reportErrorPromise;
+          expect(sendingError.message).toContain('Error: 502: Bad Gateway');
+        } finally {
+          await new Promise(resolve => fakeEngineServer.close(() => resolve()));
+        }
       });
     });
 
