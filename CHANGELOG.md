@@ -87,7 +87,7 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 > [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/596e2f20e090d2f860d238058118d860a72b3be4)
 
-- `@apollo/gateway`: Pass `context` through to the `graphql` command in `LocalGraphQLDatasource`'s `process` method. [PR #2821](https://github.com/apollographql/apollo-server/pull/2821)
+- `@apollo/gateway`: Pass `context` through to the `graphql` command in `LocalGraphQLDataSource`'s `process` method. [PR #2821](https://github.com/apollographql/apollo-server/pull/2821)
 - `@apollo/gateway`: Fix gateway not sending needed variables for subqueries not at the root level. [PR #2867](https://github.com/apollographql/apollo-server/pull/2867)
 - `@apollo/federation`: Allow matching enums/scalars in separate services and validate that enums have matching values. [PR #2829](https://github.com/apollographql/apollo-server/pull/2829).
 - `@apollo/federation`: Strip `@external` fields from interface extensions. [PR #2848](https://github.com/apollographql/apollo-server/pull/2848)

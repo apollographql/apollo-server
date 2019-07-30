@@ -1,4 +1,4 @@
-import { LocalGraphQLDataSource } from '../LocalGraphQLDatasource';
+import { LocalGraphQLDataSource } from '../LocalGraphQLDataSource';
 import { buildFederatedSchema } from '@apollo/federation';
 import gql from 'graphql-tag';
 
