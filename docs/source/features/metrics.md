@@ -20,7 +20,8 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
   engine: {
-    apiKey: "YOUR API KEY HERE"
+    apiKey: "YOUR API KEY HERE",
+    schemaTag: "production"
   }
 });
 
@@ -49,6 +50,7 @@ const server = new ApolloServer({
   resolvers,
   engine: {
     apiKey: "YOUR API KEY HERE",
+    schemaTag: "production",
     generateClientInfo: ({
       request
     }) => {
