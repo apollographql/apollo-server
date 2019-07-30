@@ -13,7 +13,7 @@ import { composeServices, buildFederatedSchema } from '@apollo/federation';
 
 import { buildQueryPlan, buildOperationContext } from '../buildQueryPlan';
 import { executeQueryPlan } from '../executeQueryPlan';
-import { LocalGraphQLDataSource } from '../datasources/LocalGraphQLDatasource';
+import { LocalGraphQLDataSource } from '../datasources/LocalGraphQLDataSource';
 
 function buildLocalService(modules: GraphQLSchemaModule[]) {
   const schema = buildFederatedSchema(modules);

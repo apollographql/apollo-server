@@ -3,7 +3,7 @@ import { createTestClient } from 'apollo-server-testing';
 import { ApolloServerBase as ApolloServer } from 'apollo-server-core';
 import { buildFederatedSchema } from '@apollo/federation';
 
-import { LocalGraphQLDataSource } from '../../datasources/LocalGraphQLDatasource';
+import { LocalGraphQLDataSource } from '../../datasources/LocalGraphQLDataSource';
 import { ApolloGateway } from '../../';
 
 import * as accounts from '../__fixtures__/schemas/accounts';

@@ -9,7 +9,7 @@ import { composeServices, buildFederatedSchema } from '@apollo/federation';
 
 import { buildQueryPlan, buildOperationContext } from '../buildQueryPlan';
 
-import { LocalGraphQLDataSource } from '../datasources/LocalGraphQLDatasource';
+import { LocalGraphQLDataSource } from '../datasources/LocalGraphQLDataSource';
 import { astSerializer, queryPlanSerializer } from '../snapshotSerializers';
 
 expect.addSnapshotSerializer(astSerializer);
