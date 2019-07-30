@@ -43,7 +43,7 @@ const fileUploadMiddleware = (
     (req.req as any)[kMultipart] &&
     typeof processFileUploads === 'function'
   ) {
-    processFileUploads(req.req, reply.res as any, uploadsConfig)
+    processFileUploads(req.req, reply.res, uploadsConfig)
       .then((body: GraphQLOperation | GraphQLOperation[]) => {
         req.body = body;
         done(null);
