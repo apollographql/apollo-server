@@ -240,6 +240,17 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
         });
       });
 
+      it('throws an error if POST body contains invalid JSON', async () => {
+        app = await createApp();
+        const req = request(app)
+          .post('/graphql')
+          .send('**_NOT_JSON_**');
+        return req.then(res => {
+          expect(res.status).toBeGreaterThanOrEqual(400);
+          expect(res.status).toBeLessThanOrEqual(500);
+        });
+      });
+
       it('throws an error if GET query is missing', async () => {
         app = await createApp();
         const req = request(app).get(`/graphql`);

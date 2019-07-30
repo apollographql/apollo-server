@@ -25,9 +25,12 @@ const createAzureFunction = (options: CreateAppOptions = {}) => {
     req.on('data', chunk => (body += chunk));
     req.on('end', () => {
       const urlObject = url.parse(req.url, true);
+      try {
+        body = JSON.parse(body);
+      } catch (e) {}
       const request = {
         method: req.method,
-        body: body && JSON.parse(body),
+        body: body,
         path: req.url,
         query: urlObject.query,
         headers: req.headers,

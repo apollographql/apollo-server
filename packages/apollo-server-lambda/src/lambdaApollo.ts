@@ -39,13 +39,23 @@ export function graphqlLambda(
         statusCode: 500,
       });
     }
+
+    let query: any = event.queryStringParameters;
+    if (event.httpMethod === 'POST' && event.body) {
+      try {
+        query = JSON.parse(event.body);
+      } catch (error) {
+        return callback(null, {
+          body: 'Error parsing JSON POST body',
+          statusCode: 415,
+        });
+      }
+    }
+
     runHttpQuery([event, context], {
       method: event.httpMethod,
       options: options,
-      query:
-        event.httpMethod === 'POST' && event.body
-          ? JSON.parse(event.body)
-          : event.queryStringParameters,
+      query: query,
       request: {
         url: event.path,
         method: event.httpMethod,
