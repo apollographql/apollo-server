@@ -16,7 +16,7 @@ describe('lifecycle hooks', () => {
   it('uses updateServiceDefinitions override', async () => {
     const experimental_updateServiceDefinitions = jest.fn(
       async (config: GatewayConfig) => {
-        return serviceDefinitions;
+        return [serviceDefinitions, true];
       },
     );
 
@@ -32,49 +32,52 @@ describe('lifecycle hooks', () => {
     clearInterval(interval);
   });
 
-  it('calls experimental_didFailComposition with a bad config', async () => {
-    // const experimental_updateServiceDefinitions = () => [];
+  it('calls experimental_didFailComposition with a bad config', async done => {
     const update = jest.fn(async (config: GatewayConfig) => {
-      return [serviceDefinitions[0]];
+      return [[serviceDefinitions[0]], true];
     });
 
     const experimental_didFailComposition = jest.fn();
 
     const gateway = new ApolloGateway({
-      serviceList: serviceDefinitions,
       experimental_updateServiceDefinitions: update,
       experimental_didFailComposition,
     });
 
-    const { interval } = await gateway.load();
+    try {
+      await gateway.load();
+    } catch (e) {
+      const callbackArgs = experimental_didFailComposition.mock.calls[0][0];
+      expect(callbackArgs.serviceList).toHaveLength(1);
+      expect(callbackArgs.errors).toMatchInlineSnapshot(`
+                Array [
+                  [GraphQLError: [product] Book -> \`Book\` is an extension type, but \`Book\` is not defined in any service],
+                ]
+            `);
 
-    const callbackArgs = experimental_didFailComposition.mock.calls[0][0];
-
-    expect(callbackArgs.serviceList).toHaveLength(1);
-    expect(callbackArgs.errors).toMatchInlineSnapshot(`
-                        Array [
-                          [GraphQLError: [product] Book -> \`Book\` is an extension type, but \`Book\` is not defined in any service],
-                        ]
-                `);
-    clearInterval(interval);
+      expect(experimental_didFailComposition).toBeCalled();
+      done();
+    }
   });
 
   it('calls experimental_didUpdateComposition on schema update', async done => {
     const update = jest.fn();
     update.mockImplementationOnce(async (config: GatewayConfig) => {
-      return serviceDefinitions;
+      return [serviceDefinitions, true];
     });
     update.mockImplementationOnce(async (config: GatewayConfig) => {
-      // remove first item and use rest
       const services = serviceDefinitions.filter(s => s.name !== 'books');
       // overwrite books service with a similar 'book' service
       return [
-        ...services,
-        {
-          name: 'book',
-          typeDefs: books.typeDefs,
-          url: 'http://localhost:32542',
-        },
+        [
+          ...services,
+          {
+            name: 'book',
+            typeDefs: books.typeDefs,
+            url: 'http://localhost:32542',
+          },
+        ],
+        true,
       ];
     });
 
@@ -85,10 +88,10 @@ describe('lifecycle hooks', () => {
       experimental_updateServiceDefinitions: update,
       experimental_pollInterval: 10,
       experimental_didUpdateComposition,
+      debug: true,
     });
 
-    const { interval } = await gateway.load();
-
+    await gateway.load();
     await new Promise(resolve => setTimeout(resolve, 20));
 
     const {
@@ -115,9 +118,9 @@ describe('lifecycle hooks', () => {
       localServiceList: serviceDefinitions,
     });
 
-    const spy = jest.spyOn(gateway, 'updateServiceDefinitions');
+    const spy = jest.spyOn(gateway, 'loadServiceDefinitions');
 
-    const { interval } = await gateway.load();
+    await gateway.load();
     expect(spy).toHaveBeenCalledTimes(1);
   });
 
@@ -130,7 +133,7 @@ describe('lifecycle hooks', () => {
     expect(consoleSpy).toHaveBeenCalledTimes(1);
     expect(consoleSpy.mock.calls[0]).toMatchInlineSnapshot(`
       Array [
-        "Polling running services is dangerous and not recommended in production. Polling should only be used against a registry. Use with caution.",
+        "Polling running services is dangerous and not recommended in production. Polling should only be used against a registry. If you are polling running services, use with caution.",
       ]
     `);
   });
@@ -144,7 +147,7 @@ describe('lifecycle hooks', () => {
     expect(consoleSpy).toHaveBeenCalledTimes(1);
     expect(consoleSpy.mock.calls[0]).toMatchInlineSnapshot(`
       Array [
-        "Polling running services is dangerous and not recommended in production. Polling should only be used against a registry. Use with caution.",
+        "Polling running services is dangerous and not recommended in production. Polling should only be used against a registry. If you are polling running services, use with caution.",
       ]
     `);
   });

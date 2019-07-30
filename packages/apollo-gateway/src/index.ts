@@ -10,7 +10,12 @@ import {
   WithRequired,
 } from 'apollo-server-types';
 import { InMemoryLRUCache } from 'apollo-server-caching';
-import { isObjectType, isIntrospectionType, GraphQLSchema } from 'graphql';
+import {
+  isObjectType,
+  isIntrospectionType,
+  GraphQLSchema,
+  GraphQLError,
+} from 'graphql';
 import { GraphQLSchemaValidationError } from 'apollo-graphql';
 import { composeAndValidate, ServiceDefinition } from '@apollo/federation';
 import loglevel, { Logger } from 'loglevel';
@@ -44,7 +49,7 @@ interface GatewayConfigBase {
   // experimental observability callbacks
   experimental_didResolveQueryPlan?: DidResolveQueryPlanCallback;
   experimental_didFailComposition?: DidFailCompositionCallback;
-  experimental_updateServiceDefinitions?: GetServiceList;
+  experimental_updateServiceDefinitions?: LoadServiceDefinitions;
   experimental_didUpdateComposition?: DidUpdateCompositionCallback;
   experimental_pollInterval?: number;
 }
@@ -108,7 +113,9 @@ type DidUpdateCompositionCallback = (
   previousConfig?: CompositionInfo,
 ) => void;
 
-type GetServiceList = (config: GatewayConfig) => Promise<ServiceDefinition[]>;
+type LoadServiceDefinitions = (
+  config: GatewayConfig,
+) => Promise<[ServiceDefinition[], boolean]>;
 
 export class ApolloGateway implements GraphQLService {
   public schema?: GraphQLSchema;
@@ -119,6 +126,7 @@ export class ApolloGateway implements GraphQLService {
   private engineConfig: GraphQLServiceEngineConfig | undefined;
   private pollingTimer?: NodeJS.Timer;
   private onSchemaChangeListeners = new Set<SchemaChangeCallback>();
+  private serviceDefinitions: ServiceDefinition[] = [];
 
   // Observe query plan, service info, and operation info prior to execution. The information made available here will give insight into the resulting query plan and the inputs that generated it.
   protected experimental_didResolveQueryPlan?: DidResolveQueryPlanCallback;
@@ -126,7 +134,7 @@ export class ApolloGateway implements GraphQLService {
   protected experimental_didFailComposition?: DidFailCompositionCallback;
   protected experimental_didUpdateComposition?: DidUpdateCompositionCallback;
   // Used for overriding the default service list fetcher. This should return an array of ServiceDefinition. *This function must be awaited.*
-  protected updateServiceDefinitions: GetServiceList;
+  protected updateServiceDefinitions: LoadServiceDefinitions;
   protected experimental_pollInterval?: number;
 
   constructor(config?: GatewayConfig) {
@@ -155,31 +163,43 @@ export class ApolloGateway implements GraphQLService {
 
     this.initializeQueryPlanStore();
 
-    this.updateServiceDefinitions = config.experimental_updateServiceDefinitions
-      ? config.experimental_updateServiceDefinitions
-      : this.loadServiceDefinitions;
+    // this will be overwritten if the config provides one
+    this.updateServiceDefinitions = this.loadServiceDefinitions;
 
-    // set up experimental observability callbacks
-    this.experimental_didResolveQueryPlan =
-      config.experimental_didResolveQueryPlan;
-    this.experimental_didFailComposition =
-      config.experimental_didFailComposition;
-    this.experimental_didUpdateComposition =
-      config.experimental_didUpdateComposition;
-    this.experimental_pollInterval = config.experimental_pollInterval;
+    if (config) {
+      this.updateServiceDefinitions =
+        config.experimental_updateServiceDefinitions ||
+        this.updateServiceDefinitions;
+      // set up experimental observability callbacks
+      this.experimental_didResolveQueryPlan =
+        config.experimental_didResolveQueryPlan;
+      this.experimental_didFailComposition =
+        config.experimental_didFailComposition;
+      this.experimental_didUpdateComposition =
+        config.experimental_didUpdateComposition;
+      this.experimental_pollInterval =
+        config.experimental_pollInterval || 10000;
 
-    // TODO: warn if user may be polling an endpoint.
-    // ie if they have a pollinterval and a custom loader or a serviceList
-    if (config.experimental_pollInterval) {
-      if (config.experimental_updateServiceDefinitions || config.serviceList) {
-        console.warn(
-          'Polling running services is dangerous and not recommended in production. Polling should only be used against a registry. Use with caution.',
-        );
+      // ie if they have a pollinterval and a custom loader or a serviceList
+      if (config.experimental_pollInterval) {
+        if (
+          config.experimental_updateServiceDefinitions ||
+          (config as RemoteGatewayConfig).serviceList
+        ) {
+          console.warn(
+            'Polling running services is dangerous and not recommended in production. ' +
+              'Polling should only be used against a registry. ' +
+              'If you are polling running services, use with caution.',
+          );
+        }
       }
     }
   }
 
   public async load(options?: { engine?: GraphQLServiceEngineConfig }) {
+    const previousSchema = this.schema;
+    const previousServiceDefinitions = this.serviceDefinitions;
+
     if (options && options.engine) {
       if (!options.engine.graphVariant)
         console.warn('No graph variant provided. Defaulting to `current`.');
@@ -191,9 +211,26 @@ export class ApolloGateway implements GraphQLService {
     }
 
     this.logger.debug('Loading configuration for Gateway');
-    const [services] = await this.loadServiceDefinitions(this.config);
+    const [services] = await this.updateServiceDefinitions(this.config);
+
     this.logger.debug('Configuration loaded for Gateway');
+
     this.schema = this.createSchema(services);
+    this.serviceDefinitions = services;
+
+    if (this.experimental_didUpdateComposition) {
+      this.experimental_didUpdateComposition(
+        {
+          serviceDefinitions: services,
+          schema: this.schema,
+        },
+        previousServiceDefinitions &&
+          previousSchema && {
+            serviceDefinitions: previousServiceDefinitions,
+            schema: previousSchema,
+          },
+      );
+    }
 
     return { schema: this.schema, executor: this.executor };
   }
@@ -208,6 +245,12 @@ export class ApolloGateway implements GraphQLService {
     const { schema, errors } = composeAndValidate(services);
 
     if (errors && errors.length > 0) {
+      if (this.experimental_didFailComposition) {
+        this.experimental_didFailComposition({
+          errors,
+          serviceList: services,
+        });
+      }
       throw new GraphQLSchemaValidationError(errors);
     }
 
@@ -247,7 +290,7 @@ export class ApolloGateway implements GraphQLService {
     this.pollingTimer = setInterval(async () => {
       let services, isNewSchema;
       try {
-        [services, isNewSchema] = await this.loadServiceDefinitions(
+        [services, isNewSchema] = await this.updateServiceDefinitions(
           this.config,
         );
       } catch (e) {
@@ -369,6 +412,14 @@ export class ApolloGateway implements GraphQLService {
           this.queryPlanStore.set(queryPlanStoreKey, queryPlan),
         ).catch(err => this.logger.warn('Could not store queryPlan', err));
       }
+    }
+
+    if (this.experimental_didResolveQueryPlan) {
+      this.experimental_didResolveQueryPlan({
+        queryPlan,
+        serviceMap: this.serviceMap,
+        operationContext,
+      });
     }
 
     const response = await executeQueryPlan<TContext>(
