@@ -26,10 +26,9 @@ describe('lifecycle hooks', () => {
       experimental_didUpdateComputedFederationConfig: jest.fn(),
     });
 
-    const { interval } = await gateway.load();
+    await gateway.load();
 
     expect(experimental_updateServiceDefinitions).toBeCalled();
-    clearInterval(interval);
   });
 
   it('calls experimental_didFailComposition with a bad config', async done => {
@@ -84,16 +83,15 @@ describe('lifecycle hooks', () => {
     const experimental_didUpdateComposition = jest.fn();
 
     const gateway = new ApolloGateway({
-      serviceList: serviceDefinitions,
       experimental_updateServiceDefinitions: update,
       experimental_pollInterval: 10,
       experimental_didUpdateComposition,
-      debug: true,
     });
 
-    await gateway.load();
+    const { interval } = await gateway.load();
     await new Promise(resolve => setTimeout(resolve, 20));
 
+    clearInterval(interval);
     const {
       calls: [firstCall, secondCall],
     } = experimental_didUpdateComposition.mock;
@@ -104,12 +102,9 @@ describe('lifecycle hooks', () => {
     expect(firstCall[0].schema).toBeDefined();
     expect(firstCall[1]).toBeUndefined();
 
-    expect(secondCall[0].schema).toBeDefined();
     // second call should have a previous schema
+    expect(secondCall[0].schema).toBeDefined();
     expect(secondCall[1].schema).toBeDefined();
-
-    clearInterval(interval);
-
     done();
   });
 
@@ -118,10 +113,13 @@ describe('lifecycle hooks', () => {
       localServiceList: serviceDefinitions,
     });
 
-    const spy = jest.spyOn(gateway, 'loadServiceDefinitions');
+    const { schema } = await gateway.load();
 
-    await gateway.load();
-    expect(spy).toHaveBeenCalledTimes(1);
+    // spying on gateway.loadServiceDefinitions wasn't working, so this also
+    // should test functionality. If there's no overwriting service definition
+    // updater, it has to use the default. If there's a valid schema, then
+    // the loader had to have been called.
+    expect(schema.getType('User')).toBeDefined();
   });
 
   it('warns when polling on the default fetcher', async () => {
@@ -136,6 +134,7 @@ describe('lifecycle hooks', () => {
         "Polling running services is dangerous and not recommended in production. Polling should only be used against a registry. If you are polling running services, use with caution.",
       ]
     `);
+    consoleSpy.mockRestore();
   });
 
   it('warns when polling using a custom serviceList fetcher', async () => {

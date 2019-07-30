@@ -177,8 +177,7 @@ export class ApolloGateway implements GraphQLService {
         config.experimental_didFailComposition;
       this.experimental_didUpdateComposition =
         config.experimental_didUpdateComposition;
-      this.experimental_pollInterval =
-        config.experimental_pollInterval || 10000;
+      this.experimental_pollInterval = config.experimental_pollInterval;
 
       // ie if they have a pollinterval and a custom loader or a serviceList
       if (config.experimental_pollInterval) {
@@ -197,42 +196,57 @@ export class ApolloGateway implements GraphQLService {
   }
 
   public async load(options?: { engine?: GraphQLServiceEngineConfig }) {
-    const previousSchema = this.schema;
-    const previousServiceDefinitions = this.serviceDefinitions;
+    const loader = async () => {
+      const previousSchema = this.schema;
+      const previousServiceDefinitions = this.serviceDefinitions;
 
-    if (options && options.engine) {
-      if (!options.engine.graphVariant)
-        console.warn('No graph variant provided. Defaulting to `current`.');
-      this.engineConfig = options.engine;
-    }
+      if (options && options.engine) {
+        if (!options.engine.graphVariant)
+          console.warn('No graph variant provided. Defaulting to `current`.');
+        this.engineConfig = options.engine;
+      }
 
-    if (this.schema) {
-      return { schema: this.schema, executor: this.executor };
-    }
+      this.logger.debug('Loading configuration for gateway');
+      const [services] = await this.updateServiceDefinitions(this.config);
 
-    this.logger.debug('Loading configuration for Gateway');
-    const [services] = await this.updateServiceDefinitions(this.config);
+      this.logger.debug('Configuration loaded for gateway');
 
-    this.logger.debug('Configuration loaded for Gateway');
+      if (
+        JSON.stringify(this.serviceDefinitions) === JSON.stringify(services)
+      ) {
+        this.logger.debug('No change in service definitions since last check');
+      }
 
-    this.schema = this.createSchema(services);
-    this.serviceDefinitions = services;
+      this.schema = this.createSchema(services);
+      this.serviceDefinitions = services;
 
-    if (this.experimental_didUpdateComposition) {
-      this.experimental_didUpdateComposition(
-        {
-          serviceDefinitions: services,
-          schema: this.schema,
-        },
-        previousServiceDefinitions &&
-          previousSchema && {
-            serviceDefinitions: previousServiceDefinitions,
-            schema: previousSchema,
+      if (this.experimental_didUpdateComposition) {
+        this.experimental_didUpdateComposition(
+          {
+            serviceDefinitions: services,
+            schema: this.schema,
           },
-      );
-    }
+          previousServiceDefinitions &&
+            previousSchema && {
+              serviceDefinitions: previousServiceDefinitions,
+              schema: previousSchema,
+            },
+        );
+      }
+    };
 
-    return { schema: this.schema, executor: this.executor };
+    await loader();
+
+    return {
+      // we know this will be here since we're running loader before here,
+      // and this.schema is set inside there by createSchema which requires
+      // a return of a schema
+      schema: this.schema!,
+      executor: this.executor,
+      interval: this.experimental_pollInterval
+        ? setInterval(loader, this.experimental_pollInterval)
+        : undefined,
+    };
   }
 
   protected createSchema(services: ServiceDefinition[]) {
