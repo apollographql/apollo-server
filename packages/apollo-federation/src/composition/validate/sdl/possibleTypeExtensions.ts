@@ -13,7 +13,11 @@ import {
   InterfaceTypeExtensionNode,
   GraphQLNamedType,
 } from 'graphql';
-import { errorWithCode, logServiceAndType } from '../../utils';
+import {
+  errorWithCode,
+  logServiceAndType,
+  defKindToExtKind,
+} from '../../utils';
 
 type FederatedExtensionNode = (
   | ObjectTypeExtensionNode
@@ -105,15 +109,6 @@ function typeToExtKind(type: GraphQLNamedType) {
   }
   return null;
 }
-
-const defKindToExtKind: { [kind: string]: string } = {
-  [Kind.SCALAR_TYPE_DEFINITION]: Kind.SCALAR_TYPE_EXTENSION,
-  [Kind.OBJECT_TYPE_DEFINITION]: Kind.OBJECT_TYPE_EXTENSION,
-  [Kind.INTERFACE_TYPE_DEFINITION]: Kind.INTERFACE_TYPE_EXTENSION,
-  [Kind.UNION_TYPE_DEFINITION]: Kind.UNION_TYPE_EXTENSION,
-  [Kind.ENUM_TYPE_DEFINITION]: Kind.ENUM_TYPE_EXTENSION,
-  [Kind.INPUT_OBJECT_TYPE_DEFINITION]: Kind.INPUT_OBJECT_TYPE_EXTENSION,
-};
 
 // this function is purely for printing out the `Kind` of the base type def.
 function typeToKind(type: GraphQLNamedType) {

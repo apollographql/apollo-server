@@ -28,7 +28,7 @@ import { getServiceDefinitionsFromStorage } from './loadServicesFromStorage';
 
 import { serializeQueryPlan, QueryPlan } from './QueryPlan';
 import { GraphQLDataSource } from './datasources/types';
-import { RemoteGraphQLDataSource } from './datasources/RemoteGraphQLDatasource';
+import { RemoteGraphQLDataSource } from './datasources/RemoteGraphQLDataSource';
 import { HeadersInit } from 'node-fetch';
 
 export type ServiceEndpointDefinition = Pick<ServiceDefinition, 'name' | 'url'>;
@@ -206,6 +206,11 @@ export class ApolloGateway implements GraphQLService {
         );
       }
     }, 10 * 1000);
+
+    // Prevent the Node.js event loop from remaining active (and preventing,
+    // e.g. process shutdown) by calling `unref` on the `Timeout`.  For more
+    // information, see https://nodejs.org/api/timers.html#timers_timeout_unref.
+    this.pollingTimer.unref();
   }
 
   protected createServices(services: ServiceEndpointDefinition[]) {
@@ -260,6 +265,7 @@ export class ApolloGateway implements GraphQLService {
     >,
   ): Promise<GraphQLExecutionResult> => {
     const { request, document, queryHash } = requestContext;
+    const queryPlanStoreKey = queryHash + (request.operationName || '');
     const operationContext = buildOperationContext(
       this.schema!,
       document,
@@ -267,7 +273,7 @@ export class ApolloGateway implements GraphQLService {
     );
     let queryPlan;
     if (this.queryPlanStore) {
-      queryPlan = await this.queryPlanStore.get(queryHash);
+      queryPlan = await this.queryPlanStore.get(queryPlanStoreKey);
     }
 
     if (!queryPlan) {
@@ -285,9 +291,9 @@ export class ApolloGateway implements GraphQLService {
         // While it shouldn't normally be necessary to wrap this `Promise` in a
         // `Promise.resolve` invocation, it seems that the underlying cache store
         // is returning a non-native `Promise` (e.g. Bluebird, etc.).
-        Promise.resolve(this.queryPlanStore.set(queryHash, queryPlan)).catch(
-          err => this.logger.warn('Could not store queryPlan', err),
-        );
+        Promise.resolve(
+          this.queryPlanStore.set(queryPlanStoreKey, queryPlan),
+        ).catch(err => this.logger.warn('Could not store queryPlan', err));
       }
     }
 

@@ -11,7 +11,7 @@ import * as reviews from '../__fixtures__/schemas/reviews';
 import { createTestClient } from 'apollo-server-testing';
 import { ApolloServerBase as ApolloServer } from 'apollo-server-core';
 import { buildFederatedSchema } from '@apollo/federation';
-import { LocalGraphQLDataSource } from '../../datasources/LocalGraphQLDatasource';
+import { LocalGraphQLDataSource } from '../../datasources/LocalGraphQLDataSource';
 import { ApolloGateway } from '../../';
 
 it('supports simple aliases', async () => {
