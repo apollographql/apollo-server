@@ -9,6 +9,9 @@ The version headers in this history reflect the versions of Apollo Server itself
 - `apollo-engine-reporting`: Add missing `apollo-server-caching` dependency. [PR #3054](https://github.com/apollographql/apollo-server/pull/3054)
 - `apollo-server-hapi`: Revert switch from `accept` and `boom` which took place in v2.8.0. [PR #3089](https://github.com/apollographql/apollo-server/pull/3089)
 - `@apollo/gateway`: Change the `setInterval` timer, which is used to continuously check for updates to a federated graph from the Apollo Graph Manager, to be an `unref`'d timer.  Without this change, the server wouldn't terminate properly once polling had started since the event-loop would continue to have unprocessed events on it. [PR #3105](https://github.com/apollographql/apollo-server/pull/3105)
+- Switch to using community `@types/graphql-upload` types.
+- `apollo-server-fastify`: Change the typing of the HTTP `response` from `OutgoingMessage` to `ServerResponse`. [Commit](https://github.com/apollographql/apollo-server/commit/7638f643fa0445f5f8151ef884da779d85fb954c)
+- `apollo-server-hapi`: Pass the `raw` request and response objects to `graphql-upload`s `processRequest` method to align on the same TypeScript types. [Commit](https://github.com/apollographql/apollo-server/commit/8e49b288a6aecd0e134637e64ef4ed751aa8d304)
 
 ### v2.8.0
 
