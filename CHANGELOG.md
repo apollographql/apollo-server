@@ -6,7 +6,7 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 > The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  When a release is being prepared, a new header will be (manually) created below and the the appropriate changes within that release will be moved into the new section.
 
-- _Nothing yet!_
+- `@apollo/federation`: Support for creating federated schemas from existing schemas [#3013](https://github.com/apollographql/apollo-server/pull/3013)
 
 ### v2.8.1
 
@@ -61,7 +61,7 @@ The version headers in this history reflect the versions of Apollo Server itself
   }
   ```
 - `apollo-engine-reporting`: **Behavior change**: By default, send no GraphQL request headers and values to Apollo's servers instead of sending all. Adding the new EngineReportingOption `sendHeaders` to send some or all header values. This replaces the `privateHeaders` option, which is now deprecated. [PR #2931](https://github.com/apollographql/apollo-server/pull/2931)
-   
+
    To maintain the previous behavior of transmitting  **all** GraphQL request headers and values, configure `engine`.`sendHeaders` as following:
      ```js
      engine: {

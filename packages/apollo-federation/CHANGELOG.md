@@ -2,6 +2,8 @@
 
 ### vNEXT
 
+* Support for creating federated schemas from existing schemas [#3013](https://github.com/apollographql/apollo-server/pull/3013)
+
 # v0.6.8
 
 * Support __typenames if defined by an incoming operation [#2922](https://github.com/apollographql/apollo-server/pull/2922)
