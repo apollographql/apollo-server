@@ -80,7 +80,7 @@ The plugin will transmit metrics regarding unregistered operations which can be 
 
 <p align="center">
   <img
-    src="../img/clients-page.png"
+    src="https://cl.ly/2a5b9c82287d/download/clients-page.png"
     alt="The clients page showing unregistered operations"
   /> 
 </p>
