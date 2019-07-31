@@ -8,6 +8,7 @@ import {
   GraphQLInt,
 } from 'graphql';
 import { buildFederatedSchema } from '../buildFederatedSchema';
+import { ResolvableGraphQLObjectType } from '../../types';
 import { typeSerializer } from '../../snapshotSerializers';
 
 expect.addSnapshotSerializer(typeSerializer);
@@ -534,6 +535,8 @@ extend type User @key(fields: "email") {
   });
 
   it('executes resolveReference for a type if found using manually created GraphQLSchema', async () => {
+    expect.assertions(5);
+
     const query = `query GetEntities($representations: [_Any!]!) {
     _entities(representations: $representations) {
       ... on Product {
@@ -552,18 +555,11 @@ extend type User @key(fields: "email") {
       ],
     };
 
-    const product: GraphQLObjectType = new GraphQLObjectType({
+    const product: ResolvableGraphQLObjectType = new GraphQLObjectType({
       name: 'Product',
       fields: () => ({
         upc: { type: GraphQLInt },
         name: { type: GraphQLString },
-        __resolveReference: {
-          type: product,
-          resolve: (object: any) => {
-            expect(object.upc).toEqual(1);
-            return { name: 'Apollo Gateway' };
-          },
-        },
       }),
       astNode: {
         kind: 'ObjectTypeDefinition',
@@ -598,17 +594,15 @@ extend type User @key(fields: "email") {
       },
     });
 
-    const user: GraphQLObjectType = new GraphQLObjectType({
+    product.resolveReference = (object: any) => {
+      expect(object.upc).toEqual(1);
+      return { name: 'Apollo Gateway' };
+    };
+
+    const user: ResolvableGraphQLObjectType = new GraphQLObjectType({
       name: 'User',
       fields: () => ({
         firstName: { type: GraphQLString },
-        __resolveReference: {
-          type: user,
-          resolve: (object: any) => {
-            expect(object.id).toEqual(1);
-            return Promise.resolve({ firstName: 'James' });
-          },
-        },
       }),
       astNode: {
         kind: 'ObjectTypeDefinition',
@@ -642,6 +636,11 @@ extend type User @key(fields: "email") {
         ],
       },
     });
+
+    user.resolveReference = (object: any) => {
+      expect(object.id).toEqual(1);
+      return Promise.resolve({ firstName: 'James' });
+    };
 
     const schema = buildFederatedSchema(
       new GraphQLSchema({

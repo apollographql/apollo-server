@@ -1,31 +1,16 @@
-import { GraphQLSchema, isObjectType } from 'graphql';
+import { GraphQLSchema } from 'graphql';
 import { GraphQLResolverMap } from 'apollo-graphql';
 import {
   GraphQLReferenceResolver,
   ResolvableGraphQLObjectType,
 } from '../types';
 
-function extractFederationResolversForType(
+function extractFederationResolverForType(
   type: ResolvableGraphQLObjectType,
-): { __resolveReference: GraphQLReferenceResolver } | undefined {
+): { __resolveReference: GraphQLReferenceResolver } | void {
   if (type.resolveReference) {
     return { __resolveReference: type.resolveReference };
   }
-
-  if (isObjectType(type)) {
-    const fields = type.getFields();
-
-    if (fields.__resolveReference) {
-      const __resolveReference = fields.__resolveReference
-        .resolve as GraphQLReferenceResolver;
-
-      delete fields.__resolveReference;
-
-      return { __resolveReference };
-    }
-  }
-
-  return;
 }
 
 export function extractFederationResolvers(
@@ -34,7 +19,7 @@ export function extractFederationResolvers(
   const map: GraphQLResolverMap<any> = {};
 
   for (const [typeName, type] of Object.entries(schema.getTypeMap())) {
-    const resolvers = extractFederationResolversForType(
+    const resolvers = extractFederationResolverForType(
       type as ResolvableGraphQLObjectType,
     );
 

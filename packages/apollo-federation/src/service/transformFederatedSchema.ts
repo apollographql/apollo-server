@@ -16,7 +16,7 @@ import { printSchema } from './printFederatedSchema';
 
 export function transformFederatedSchema(
   schema: GraphQLSchema,
-  resolvers: GraphQLResolverMap<any>[] | GraphQLResolverMap<any> = [],
+  resolvers: GraphQLResolverMap<any>[] = [],
 ): GraphQLSchema {
   // At this point in time, we have a schema to be printed into SDL which is
   // representative of what the user defined for their schema. This is before
@@ -74,9 +74,7 @@ export function transformFederatedSchema(
     return undefined;
   });
 
-  (Array.isArray(resolvers) ? resolvers : [resolvers]).forEach(map =>
-    addResolversToSchema(schema, map),
-  );
+  resolvers.forEach(resolver => addResolversToSchema(schema, resolver));
 
   return schema;
 }
