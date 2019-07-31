@@ -1,6 +1,7 @@
 /* tslint:disable:no-unused-expression */
 import http from 'http';
 import { sha256 } from 'js-sha256';
+import { URL } from 'url';
 import express = require('express');
 import bodyParser = require('body-parser');
 import yup = require('yup');
@@ -776,7 +777,6 @@ export function testApolloServer<AS extends ApolloServerBase>(
             if (family !== 'IPv4') {
               throw new Error(`The family was unexpectedly ${family}.`);
             }
-            const { URL } = require('url');
             return new URL(`http://${address}:${port}`).toString();
           }
         }
@@ -1944,6 +1944,74 @@ export function testApolloServer<AS extends ApolloServerBase>(
       });
     });
 
+    describe('apollo-engine-reporting', () => {
+      it('graphql server functions even when Apollo servers are down', async () => {
+        let return502Resolve: () => void;
+        const return502Promise = new Promise(
+          resolve => (return502Resolve = resolve),
+        );
+        const fakeEngineServer = http.createServer(async (_, res) => {
+          await return502Promise;
+          res.writeHead(502);
+          res.end();
+        });
+        await new Promise(resolve => {
+          fakeEngineServer.listen(0, '127.0.0.1', () => {
+            resolve();
+          });
+        });
+        try {
+          const { family, address, port } = fakeEngineServer.address();
+          if (family !== 'IPv4') {
+            throw new Error(`The family was unexpectedly ${family}.`);
+          }
+          const fakeEngineUrl = new URL(`http://${address}:${port}`).toString();
+
+          let reportErrorPromiseResolve: (error: Error) => void;
+          const reportErrorPromise = new Promise<Error>(
+            resolve => (reportErrorPromiseResolve = resolve),
+          );
+          const { url: uri } = await createApolloServer({
+            typeDefs: gql`
+              type Query {
+                something: String!
+              }
+            `,
+            resolvers: { Query: { something: () => 'hello' } },
+            engine: {
+              apiKey: 'service:my-app:secret',
+              endpointUrl: fakeEngineUrl,
+              reportIntervalMs: 1,
+              maxAttempts: 1,
+              reportErrorFunction(error: Error) {
+                reportErrorPromiseResolve(error);
+              },
+            },
+          });
+
+          const apolloFetch = createApolloFetch({ uri });
+
+          // Run a GraphQL query. Ensure that it returns successfully even
+          // though reporting is going to fail. (Note that reporting can't
+          // actually have failed yet because we haven't let return502Promise
+          // resolve.)
+          const result = await apolloFetch({
+            query: `{ something }`,
+          });
+          expect(result.data.something).toBe('hello');
+
+          // Allow reporting to return 502.
+          return502Resolve();
+
+          // Make sure we can get the 502 error from reporting.
+          const sendingError = await reportErrorPromise;
+          expect(sendingError.message).toContain('Error: 502: Bad Gateway');
+        } finally {
+          await new Promise(resolve => fakeEngineServer.close(() => resolve()));
+        }
+      });
+    });
+
     describe('Tracing', () => {
       const typeDefs = gql`
         type Book {
@@ -2027,6 +2095,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
         type Query {
           books: [Book]
           movies: [Movie]
+          error: String
         }
       `;
 
@@ -2042,6 +2111,9 @@ export function testApolloServer<AS extends ApolloServerBase>(
             new Promise(resolve =>
               setTimeout(() => resolve([{ title: 'H' }]), 12),
             ),
+          error: () => {
+            throw new GraphQLError('It broke');
+          },
         },
       };
 
@@ -2089,10 +2161,6 @@ export function testApolloServer<AS extends ApolloServerBase>(
         });
 
         const apolloFetch = createApolloFetchAsIfFromGateway(uri);
-        apolloFetch.use(({ options }, next) => {
-          options.headers = { 'apollo-federation-include-trace': 'ftv1' };
-          next();
-        });
 
         const result = await apolloFetch({
           query: `{ books { title author } }`,
@@ -2128,6 +2196,43 @@ export function testApolloServer<AS extends ApolloServerBase>(
             trace.endTime.nanos,
           );
         }
+      });
+
+      it('includes errors in federated trace', async () => {
+        const { url: uri } = await createApolloServer({
+          typeDefs: allTypeDefs,
+          resolvers,
+          formatError(err) {
+            err.message = `Formatted: ${err.message}`;
+            return err;
+          },
+          engine: {
+            rewriteError(err) {
+              err.message = `Rewritten for Engine: ${err.message}`;
+              return err;
+            },
+          },
+        });
+
+        const apolloFetch = createApolloFetchAsIfFromGateway(uri);
+
+        const result = await apolloFetch({
+          query: `{ error }`,
+        });
+
+        expect(result.data).toStrictEqual({ error: null });
+        expect(result.errors).toBeTruthy();
+        expect(result.errors.length).toBe(1);
+        expect(result.errors[0].message).toBe('Formatted: It broke');
+
+        const ftv1: string = result.extensions.ftv1;
+
+        expect(ftv1).toBeTruthy();
+        const encoded = Buffer.from(ftv1, 'base64');
+        const trace = Trace.decode(encoded);
+        expect(trace.root.child[0].error[0].message).toBe(
+          'Rewritten for Engine: It broke',
+        );
       });
     });
 

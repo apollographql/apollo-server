@@ -28,7 +28,7 @@ import { getServiceDefinitionsFromStorage } from './loadServicesFromStorage';
 
 import { serializeQueryPlan, QueryPlan } from './QueryPlan';
 import { GraphQLDataSource } from './datasources/types';
-import { RemoteGraphQLDataSource } from './datasources/RemoteGraphQLDatasource';
+import { RemoteGraphQLDataSource } from './datasources/RemoteGraphQLDataSource';
 import { HeadersInit } from 'node-fetch';
 
 export type ServiceEndpointDefinition = Pick<ServiceDefinition, 'name' | 'url'>;
@@ -206,6 +206,11 @@ export class ApolloGateway implements GraphQLService {
         );
       }
     }, 10 * 1000);
+
+    // Prevent the Node.js event loop from remaining active (and preventing,
+    // e.g. process shutdown) by calling `unref` on the `Timeout`.  For more
+    // information, see https://nodejs.org/api/timers.html#timers_timeout_unref.
+    this.pollingTimer.unref();
   }
 
   protected createServices(services: ServiceEndpointDefinition[]) {
@@ -253,6 +258,11 @@ export class ApolloGateway implements GraphQLService {
     });
   }
 
+  // XXX Nothing guarantees that the only errors thrown or returned in
+  // result.errors are GraphQLErrors, even though other code (eg
+  // apollo-engine-reporting) assumes that. In fact, errors talking to backends
+  // are unlikely to show up as GraphQLErrors. Do we need to use
+  // formatApolloErrors or something?
   public executor = async <TContext>(
     requestContext: WithRequired<
       GraphQLRequestContext<TContext>,

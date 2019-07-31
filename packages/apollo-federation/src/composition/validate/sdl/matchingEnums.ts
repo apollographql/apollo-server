@@ -4,21 +4,17 @@ import {
   Kind,
   EnumTypeDefinitionNode,
   EnumValueDefinitionNode,
+  TypeDefinitionNode,
 } from 'graphql';
-import { FederatedTypeDefinitionNode } from '../../types';
 import { errorWithCode, logServiceAndType } from '../../utils';
 import { isString } from 'util';
 
-function isEnumDefinition(node: FederatedTypeDefinitionNode) {
+function isEnumDefinition(node: TypeDefinitionNode) {
   return node.kind === Kind.ENUM_TYPE_DEFINITION;
 }
 
 type TypeToDefinitionsMap = {
-  [typeNems: string]: FederatedTypeDefinitionNode[];
-};
-
-type FederatedEnumDefinition = EnumTypeDefinitionNode & {
-  serviceName: string;
+  [typeNems: string]: TypeDefinitionNode[];
 };
 
 export function MatchingEnums(context: SDLValidationContext): ASTVisitor {
@@ -27,8 +23,8 @@ export function MatchingEnums(context: SDLValidationContext): ASTVisitor {
   // group all definitions by name
   // { MyTypeName: [{ serviceName: "A", name: {...}}]}
   let definitionsByName: {
-    [typeName: string]: FederatedTypeDefinitionNode[];
-  } = (definitions as FederatedTypeDefinitionNode[]).reduce(
+    [typeName: string]: TypeDefinitionNode[];
+  } = (definitions as TypeDefinitionNode[]).reduce(
     (typeToDefinitionsMap: TypeToDefinitionsMap, node) => {
       const name = node.name.value;
       if (typeToDefinitionsMap[name]) {
@@ -54,7 +50,7 @@ export function MatchingEnums(context: SDLValidationContext): ASTVisitor {
       for (const {
         values,
         serviceName,
-      } of definitions as FederatedEnumDefinition[]) {
+      } of definitions as EnumTypeDefinitionNode[]) {
         if (serviceName && values)
           simpleEnumDefs.push({
             serviceName,
