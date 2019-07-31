@@ -1,18 +1,18 @@
 jest.mock('node-fetch');
-import fetch, {Response} from 'node-fetch';
+import fetch, { Response } from 'node-fetch';
 import { ApolloServerBase as ApolloServer } from 'apollo-server-core';
 
 import { ApolloGateway } from '../../';
 
 beforeEach(() => {
-  jest.mock('node-fetch', ()=>jest.fn())
+  jest.mock('node-fetch', () => jest.fn());
 });
 
 it('checks for changes to a federated schema on a default polling schedule', async () => {
-  jest.useFakeTimers()
+  jest.useFakeTimers();
 
   const gateway = new ApolloGateway({
-    serviceList: [{ name: 'foo', url: 'https://api.example.com/foo'}],
+    serviceList: [{ name: 'foo', url: 'https://api.example.com/foo' }],
     pollForSchemaChanges: true,
   });
 
@@ -23,8 +23,10 @@ it('checks for changes to a federated schema on a default polling schedule', asy
     type Query {
       foo: String
     }
-  `
-  fetch.mockReturnValue(Promise.resolve({ json: () => ({ data: { _service: { sdl } } }) }));
+  `;
+  fetch.mockReturnValue(
+    Promise.resolve({ json: () => ({ data: { _service: { sdl } } }) }),
+  );
 
   await gateway.load();
 
@@ -43,15 +45,17 @@ it('checks for changes to a federated schema on a default polling schedule', asy
 });
 
 it('allows for a custom polling schedule', async () => {
-  jest.useFakeTimers()
+  jest.useFakeTimers();
 
   const gateway = new ApolloGateway({
-    serviceList: [{ name: 'foo', url: 'https://api.example.com/foo'}],
+    serviceList: [{ name: 'foo', url: 'https://api.example.com/foo' }],
     pollForSchemaChanges: true,
-    schemaChangePollingPeriod: 600 * 1000
+    schemaChangePollingPeriod: 600 * 1000,
   });
 
   expect(setInterval).toHaveBeenCalledTimes(1);
-  expect(setInterval).toHaveBeenLastCalledWith(expect.any(Function), 600 * 1000);
+  expect(setInterval).toHaveBeenLastCalledWith(
+    expect.any(Function),
+    600 * 1000,
+  );
 });
-
