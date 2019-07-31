@@ -258,6 +258,11 @@ export class ApolloGateway implements GraphQLService {
     });
   }
 
+  // XXX Nothing guarantees that the only errors thrown or returned in
+  // result.errors are GraphQLErrors, even though other code (eg
+  // apollo-engine-reporting) assumes that. In fact, errors talking to backends
+  // are unlikely to show up as GraphQLErrors. Do we need to use
+  // formatApolloErrors or something?
   public executor = async <TContext>(
     requestContext: WithRequired<
       GraphQLRequestContext<TContext>,

@@ -6,6 +6,7 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 > The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  When a release is being prepared, a new header will be (manually) created below and the the appropriate changes within that release will be moved into the new section.
 
+- `apollo-engine-reporting`: Fix reporting errors which have non-array `path` fields (eg, non-GraphQLError errors). [PR #3112](https://github.com/apollographql/apollo-server/pull/3112)
 - `apollo-engine-reporting`: Add missing `apollo-server-caching` dependency. [PR #3054](https://github.com/apollographql/apollo-server/pull/3054)
 - `apollo-server-hapi`: Revert switch from `accept` and `boom` which took place in v2.8.0. [PR #3089](https://github.com/apollographql/apollo-server/pull/3089)
 - `@apollo/gateway`: Change the `setInterval` timer, which is used to continuously check for updates to a federated graph from the Apollo Graph Manager, to be an `unref`'d timer.  Without this change, the server wouldn't terminate properly once polling had started since the event-loop would continue to have unprocessed events on it. [PR #3105](https://github.com/apollographql/apollo-server/pull/3105)

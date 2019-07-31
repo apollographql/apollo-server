@@ -117,7 +117,9 @@ export class EngineReportingTreeBuilder {
 
     // By default, put errors on the root node.
     let node = this.rootNode;
-    if (path) {
+    // If a non-GraphQLError Error sneaks in here somehow with a non-array
+    // path, don't crash.
+    if (Array.isArray(path)) {
       const specificNode = this.nodes.get(path.join('.'));
       if (specificNode) {
         node = specificNode;
