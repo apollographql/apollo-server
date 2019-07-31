@@ -119,7 +119,7 @@ export class EngineReportingTreeBuilder {
     let node = this.rootNode;
     // If a non-GraphQLError Error sneaks in here somehow with a non-array
     // path, don't crash.
-    if (path && Array.isArray(path)) {
+    if (Array.isArray(path)) {
       const specificNode = this.nodes.get(path.join('.'));
       if (specificNode) {
         node = specificNode;
