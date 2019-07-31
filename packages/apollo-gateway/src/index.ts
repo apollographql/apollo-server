@@ -40,6 +40,8 @@ interface GatewayConfigBase {
   // should cutover to use the new option when it's built.
   __exposeQueryPlanExperimental?: boolean;
   buildService?: (definition: ServiceEndpointDefinition) => GraphQLDataSource;
+  pollForSchemaChanges?: boolean;
+  schemaChangePollingPeriod?: number;
 }
 
 interface RemoteGatewayConfig extends GatewayConfigBase {
@@ -65,12 +67,6 @@ function isLocalConfig(config: GatewayConfig): config is LocalGatewayConfig {
 
 function isRemoteConfig(config: GatewayConfig): config is RemoteGatewayConfig {
   return 'serviceList' in config;
-}
-
-function isManagedConfig(
-  config: GatewayConfig,
-): config is ManagedGatewayConfig {
-  return !isRemoteConfig(config) && !isLocalConfig(config);
 }
 
 export class ApolloGateway implements GraphQLService {
@@ -105,6 +101,10 @@ export class ApolloGateway implements GraphQLService {
 
     if (isLocalConfig(this.config)) {
       this.createSchema(this.config.localServiceList);
+    }
+
+    if (this.config.pollForSchemaChanges) {
+      this.startPollingServices();
     }
 
     this.initializeQueryPlanStore();
@@ -156,10 +156,6 @@ export class ApolloGateway implements GraphQLService {
   }
 
   public onSchemaChange(callback: SchemaChangeCallback): Unsubscriber {
-    if (!isManagedConfig(this.config)) {
-      return () => {};
-    }
-
     this.onSchemaChangeListeners.add(callback);
     if (!this.pollingTimer) this.startPollingServices();
 
@@ -205,7 +201,7 @@ export class ApolloGateway implements GraphQLService {
           e,
         );
       }
-    }, 10 * 1000);
+    }, this.config.schemaChangePollingPeriod || 10 * 1000);
 
     // Prevent the Node.js event loop from remaining active (and preventing,
     // e.g. process shutdown) by calling `unref` on the `Timeout`.  For more
