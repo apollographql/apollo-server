@@ -10,7 +10,7 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 ### v2.8.1
 
-> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/TODO)
+> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/84d80eba10d87663dab60af4a1cd46bccf30513f)
 
 - `apollo-engine-reporting`: Fix reporting errors which have non-array `path` fields (eg, non-GraphQLError errors). [PR #3112](https://github.com/apollographql/apollo-server/pull/3112)
 - `apollo-engine-reporting`: Add missing `apollo-server-caching` dependency. [PR #3054](https://github.com/apollographql/apollo-server/pull/3054)
