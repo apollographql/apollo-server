@@ -73,6 +73,11 @@ function isManagedConfig(
   return !isRemoteConfig(config) && !isLocalConfig(config);
 }
 
+export interface ServiceWithDataSource {
+  serviceDefinition: ServiceDefinition;
+  dataSource: GraphQLDataSource;
+}
+
 export class ApolloGateway implements GraphQLService {
   public schema?: GraphQLSchema;
   protected serviceMap: ServiceMap = Object.create(null);
@@ -104,7 +109,7 @@ export class ApolloGateway implements GraphQLService {
     }
 
     if (isLocalConfig(this.config)) {
-      this.createSchema(this.config.localServiceList);
+      this.createSchema(this.createServices(this.config.localServiceList));
     }
 
     this.initializeQueryPlanStore();
@@ -129,14 +134,15 @@ export class ApolloGateway implements GraphQLService {
     return { schema: this.schema, executor: this.executor };
   }
 
-  protected createSchema(services: ServiceDefinition[]) {
+  protected createSchema(services: ServiceWithDataSource[]) {
+    const serviceDefinitions = services.map(({serviceDefinition}) => serviceDefinition);
     this.logger.debug(
-      `Composing schema from service list: \n${services
+      `Composing schema from service list: \n${serviceDefinitions
         .map(({ name, url }) => `  ${url || 'local'}: ${name}`)
         .join('\n')}`,
     );
 
-    const { schema, errors } = composeAndValidate(services);
+    const { schema, errors } = composeAndValidate(serviceDefinitions);
 
     if (errors && errors.length > 0) {
       throw new GraphQLSchemaValidationError(errors);
@@ -149,7 +155,7 @@ export class ApolloGateway implements GraphQLService {
     // of the rootvalue already contains the aliased fields as responseNames
     this.schema = wrapSchemaWithAliasResolver(schema);
 
-    this.createServices(services);
+    this.registerServices(services);
 
     this.logger.debug('Schema loaded and ready for execution');
     return schema;
@@ -213,31 +219,47 @@ export class ApolloGateway implements GraphQLService {
     this.pollingTimer.unref();
   }
 
-  protected createServices(services: ServiceEndpointDefinition[]) {
-    for (const serviceDef of services) {
-      if (!serviceDef.url && !isLocalConfig(this.config)) {
-        throw new Error(
-          `Service definition for service ${serviceDef.name} is missing a url`,
-        );
-      }
-      this.serviceMap[serviceDef.name] = this.config.buildService
-        ? this.config.buildService(serviceDef)
-        : new RemoteGraphQLDataSource({
-            url: serviceDef.url,
-          });
+  protected createDataSource(serviceDef: ServiceEndpointDefinition): GraphQLDataSource {
+    if (!serviceDef.url && !isLocalConfig(this.config)) {
+      throw new Error(
+        `Service definition for service ${serviceDef.name} is missing a url`,
+      );
     }
+    return this.config.buildService
+      ? this.config.buildService(serviceDef)
+      : new RemoteGraphQLDataSource({
+        url: serviceDef.url,
+      });
+  }
+
+  private createServices(serviceDefs: ServiceDefinition[]): ServiceWithDataSource[] {
+    return serviceDefs.map(serviceDefinition => ({
+      serviceDefinition,
+      dataSource: this.createDataSource(serviceDefinition)
+    }));
+  }
+
+  private registerServices(services: ServiceWithDataSource[]) {
+    services.forEach(service => {
+      this.serviceMap[service.serviceDefinition.name] = service.dataSource;
+    });
   }
 
   protected async loadServiceDefinitions(
     config: GatewayConfig,
-  ): Promise<[ServiceDefinition[], boolean]> {
+  ): Promise<[ServiceWithDataSource[], boolean]> {
     if (isLocalConfig(config)) {
-      return [config.localServiceList, false];
+      return [this.createServices(config.localServiceList), false];
     }
 
     if (isRemoteConfig(config)) {
+      const serviceList = config.serviceList.map(serviceDefinition => ({
+        serviceDefinition,
+        dataSource: this.createDataSource(serviceDefinition)
+      }));
+
       return getServiceDefinitionsFromRemoteEndpoint({
-        serviceList: config.serviceList,
+        serviceList,
         ...(config.introspectionHeaders
           ? { headers: config.introspectionHeaders }
           : {}),
@@ -255,6 +277,8 @@ export class ApolloGateway implements GraphQLService {
       apiKeyHash: this.engineConfig.apiKeyHash,
       graphVariant: this.engineConfig.graphVariant,
       federationVersion: config.federationVersion || 1,
+    }).then(([definitions, isNew]) => {
+      return [this.createServices(definitions), isNew];
     });
   }
 
