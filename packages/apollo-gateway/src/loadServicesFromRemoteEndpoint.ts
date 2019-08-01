@@ -10,7 +10,10 @@ export async function getServiceDefinitionsFromRemoteEndpoint({
   serviceList,
   headers = {},
 }: {
-  serviceList: {serviceDefinition:  ServiceEndpointDefinition, dataSource: GraphQLDataSource}[];
+  serviceList: {
+    serviceDefinition: ServiceEndpointDefinition;
+    dataSource: GraphQLDataSource;
+  }[];
   headers?: HeadersInit;
 }): Promise<[ServiceWithDataSource[], boolean]> {
   if (!serviceList || !serviceList.length) {
@@ -22,21 +25,24 @@ export async function getServiceDefinitionsFromRemoteEndpoint({
   let isNew = false;
   // for each service, fetch its introspection schema
   const services: ServiceWithDataSource[] = (await Promise.all(
-    serviceList.map(({serviceDefinition, dataSource}) => {
+    serviceList.map(({ serviceDefinition, dataSource }) => {
       const request: GraphQLRequest = {
         query: 'query GetServiceDefinition { _service { sdl } }',
         http: {
           url: <string>serviceDefinition.url,
           method: 'POST',
-          headers: new Headers(headers)
-        }
+          headers: new Headers(headers),
+        },
       };
 
-      return dataSource.process({request, context: {}})
+      return dataSource
+        .process({ request, context: {} })
         .then(({ data, errors }: GraphQLResponse) => {
           if (data && !errors) {
             const typeDefs = data._service.sdl as string;
-            const previousDefinition = serviceDefinitionMap.get(serviceDefinition.name);
+            const previousDefinition = serviceDefinitionMap.get(
+              serviceDefinition.name,
+            );
             // this lets us know if any downstream service has changed
             // and we need to recalculate the schema
             if (previousDefinition !== typeDefs) {
@@ -44,8 +50,11 @@ export async function getServiceDefinitionsFromRemoteEndpoint({
             }
             serviceDefinitionMap.set(serviceDefinition.name, typeDefs);
             return {
-              serviceDefinition: { ...serviceDefinition, typeDefs: parse(typeDefs) },
-              dataSource
+              serviceDefinition: {
+                ...serviceDefinition,
+                typeDefs: parse(typeDefs),
+              },
+              dataSource,
             };
           }
 

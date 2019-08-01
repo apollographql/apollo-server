@@ -135,7 +135,9 @@ export class ApolloGateway implements GraphQLService {
   }
 
   protected createSchema(services: ServiceWithDataSource[]) {
-    const serviceDefinitions = services.map(({serviceDefinition}) => serviceDefinition);
+    const serviceDefinitions = services.map(
+      ({ serviceDefinition }) => serviceDefinition,
+    );
     this.logger.debug(
       `Composing schema from service list: \n${serviceDefinitions
         .map(({ name, url }) => `  ${url || 'local'}: ${name}`)
@@ -219,7 +221,9 @@ export class ApolloGateway implements GraphQLService {
     this.pollingTimer.unref();
   }
 
-  protected createDataSource(serviceDef: ServiceEndpointDefinition): GraphQLDataSource {
+  protected createDataSource(
+    serviceDef: ServiceEndpointDefinition,
+  ): GraphQLDataSource {
     if (!serviceDef.url && !isLocalConfig(this.config)) {
       throw new Error(
         `Service definition for service ${serviceDef.name} is missing a url`,
@@ -228,14 +232,16 @@ export class ApolloGateway implements GraphQLService {
     return this.config.buildService
       ? this.config.buildService(serviceDef)
       : new RemoteGraphQLDataSource({
-        url: serviceDef.url,
-      });
+          url: serviceDef.url,
+        });
   }
 
-  private createServices(serviceDefs: ServiceDefinition[]): ServiceWithDataSource[] {
+  private createServices(
+    serviceDefs: ServiceDefinition[],
+  ): ServiceWithDataSource[] {
     return serviceDefs.map(serviceDefinition => ({
       serviceDefinition,
-      dataSource: this.createDataSource(serviceDefinition)
+      dataSource: this.createDataSource(serviceDefinition),
     }));
   }
 
@@ -255,7 +261,7 @@ export class ApolloGateway implements GraphQLService {
     if (isRemoteConfig(config)) {
       const serviceList = config.serviceList.map(serviceDefinition => ({
         serviceDefinition,
-        dataSource: this.createDataSource(serviceDefinition)
+        dataSource: this.createDataSource(serviceDefinition),
       }));
 
       return getServiceDefinitionsFromRemoteEndpoint({
