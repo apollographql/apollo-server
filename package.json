@@ -111,7 +111,7 @@
     "graphql-tag": "2.10.1",
     "graphql-tools": "4.0.5",
     "hapi": "17.8.5",
-    "ioredis": "4.11.2",
+    "ioredis": "4.14.0",
     "jest": "24.8.0",
     "jest-config": "24.8.0",
     "jest-junit": "7.0.0",
