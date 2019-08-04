@@ -167,11 +167,11 @@ The `applyMiddleware` method is provided by the `apollo-server-{integration}` pa
 
     Specify a custom path. It defaults to `/graphql` if no path is specified.
 
-  * `cors`: <`Object` | `boolean`> ([express](https://github.com/expressjs/cors#cors), [hapi](https://hapijs.com/api#-routeoptionscors))
+  * `cors`: <`Object` | `boolean`> ([express](https://github.com/expressjs/cors#cors), [hapi](https://hapijs.com/api#-routeoptionscors), [koa](https://github.com/koajs/cors/))
 
     Pass the integration-specific cors options. False removes the cors middleware and true uses the defaults.
 
-  * `bodyParserConfig`: <`Object` | `boolean`> ([express](https://github.com/expressjs/body-parser#body-parser))
+  * `bodyParserConfig`: <`Object` | `boolean`> ([express](https://github.com/expressjs/body-parser#body-parser), [koa](https://github.com/koajs/bodyparser))
 
     Pass the body-parser options. False removes the body parser middleware and true uses the defaults.
 
@@ -365,7 +365,7 @@ addMockFunctionsToSchema({
 
     - `{ none: true }`: Don't send any variable values. **(DEFAULT)**
     - `{ all: true }`: Send all variable values.
-    - `{ transform: ({ variables, operationString}) => { ... } }`: A custom function for modifying variable values. Keys added by the custom function will be removed, and keys removed will be added back with an empty value.
+    - `{ transform: ({ variables, operationString}) => { ... } }`: A custom function for modifying variable values. Keys added by the custom function will be removed, and keys removed will be added back with an empty value.  For security reasons, if an error occurs within this function, all variable values will be replaced with `[PREDICATE_FUNCTION_ERROR]`. 
     - `{ exceptNames: [...] }`: A case-sensitive list of names of variables whose values should not be sent to Apollo servers.
     - `{ onlyNames: [...] }`: A case-sensitive list of names of variables whose values will be sent to Apollo servers.
 

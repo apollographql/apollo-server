@@ -38,7 +38,7 @@ directive @provides(fields: _FieldSet!) on FIELD_DEFINITION
 directive @key(fields: _FieldSet!) on OBJECT | INTERFACE
 
 # this is an optional directive discussed below
-directive @extends on OBJECT
+directive @extends on OBJECT | INTERFACE
 ```
 
 For more information on these additions, see the [glossary](#schema-modifications-glossary).

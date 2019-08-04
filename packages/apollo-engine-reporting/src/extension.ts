@@ -242,13 +242,19 @@ export function makeTraceDetails(
   const details = new Trace.Details();
   const variablesToRecord = (() => {
     if (sendVariableValues && 'transform' in sendVariableValues) {
-      // Custom function to allow user to specify what variablesJson will look like
       const originalKeys = Object.keys(variables);
-      const modifiedVariables = sendVariableValues.transform({
-        variables: variables,
-        operationString: operationString,
-      });
-      return cleanModifiedVariables(originalKeys, modifiedVariables);
+      try {
+        // Custom function to allow user to specify what variablesJson will look like
+        const modifiedVariables = sendVariableValues.transform({
+          variables: variables,
+          operationString: operationString,
+        });
+        return cleanModifiedVariables(originalKeys, modifiedVariables);
+      } catch (e) {
+        // If the custom function provided by the user throws an exception,
+        // change all the variable values to an appropriate error message.
+        return handleVariableValueTransformError(originalKeys);
+      }
     } else {
       return variables;
     }
@@ -290,6 +296,16 @@ export function makeTraceDetails(
     }
   });
   return details;
+}
+
+function handleVariableValueTransformError(
+  variableNames: string[],
+): Record<string, any> {
+  const modifiedVariables = Object.create(null);
+  variableNames.forEach(name => {
+    modifiedVariables[name] = '[PREDICATE_FUNCTION_ERROR]';
+  });
+  return modifiedVariables;
 }
 
 // Helper for makeTraceDetails() to enforce that the keys of a modified 'variables'

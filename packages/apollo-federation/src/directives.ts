@@ -36,7 +36,7 @@ export const KeyDirective = new GraphQLDirective({
 export const ExtendsDirective = new GraphQLDirective({
   name: 'extends',
   description: '',
-  locations: [DirectiveLocation.OBJECT],
+  locations: [DirectiveLocation.OBJECT, DirectiveLocation.INTERFACE],
 });
 
 export const ExternalDirective = new GraphQLDirective({

@@ -344,7 +344,7 @@ export async function processGraphQLRequest<TContext>(
       try {
         const result = await execute(requestContext as WithRequired<
           typeof requestContext,
-          'document' | 'operation' | 'operationName'
+          'document' | 'operation' | 'operationName' | 'queryHash'
         >);
 
         if (result.errors) {
@@ -432,7 +432,7 @@ export async function processGraphQLRequest<TContext>(
   async function execute(
     requestContext: WithRequired<
       GraphQLRequestContext<TContext>,
-      'document' | 'operationName' | 'operation'
+      'document' | 'operationName' | 'operation' | 'queryHash'
     >,
   ): Promise<GraphQLExecutionResult> {
     const { request, document } = requestContext;
@@ -456,6 +456,9 @@ export async function processGraphQLRequest<TContext>(
 
     try {
       if (config.executor) {
+        // XXX Nothing guarantees that the only errors thrown or returned
+        // in result.errors are GraphQLErrors, even though other code
+        // (eg apollo-engine-reporting) assumes that.
         return await config.executor(requestContext);
       } else {
         return await graphql.execute(executionArgs);

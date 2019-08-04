@@ -1,6 +1,6 @@
 {
   "name": "@apollo/gateway",
-  "version": "0.7.1",
+  "version": "0.8.1",
   "description": "Apollo Gateway",
   "author": "opensource@apollographql.com",
   "main": "dist/index.js",
@@ -30,10 +30,6 @@
     "loglevel": "^1.6.1",
     "loglevel-debug": "^0.0.1",
     "pretty-format": "^24.7.0"
-  },
-  "devDependencies": {
-    "apollo-server-core": "file:../apollo-server-core",
-    "apollo-server-types": "file:../apollo-server-types"
   },
   "peerDependencies": {
     "graphql": "^14.2.1"

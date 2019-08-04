@@ -17,7 +17,7 @@ import {
   QueryPlan,
   buildOperationContext,
 } from '@apollo/gateway';
-import { LocalGraphQLDataSource } from '../datasources/LocalGraphQLDatasource';
+import { LocalGraphQLDataSource } from '../datasources/LocalGraphQLDataSource';
 import { mergeDeep } from 'apollo-utilities';
 
 import queryPlanSerializer from '../snapshotSerializers/queryPlanSerializer';
