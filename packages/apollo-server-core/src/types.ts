@@ -70,7 +70,6 @@ export type SchemaChangeCallback = (schema: GraphQLSchema) => void;
 export type GraphQLServiceConfig = {
   schema: GraphQLSchema;
   executor: GraphQLExecutor;
-  interval?: NodeJS.Timer;
 };
 
 /**

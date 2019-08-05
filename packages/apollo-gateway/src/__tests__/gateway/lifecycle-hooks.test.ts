@@ -29,6 +29,7 @@ describe('lifecycle hooks', () => {
     await gateway.load();
 
     expect(experimental_updateServiceDefinitions).toBeCalled();
+    expect(gateway.schema.getType('Furniture')).toBeDefined();
   });
 
   it('calls experimental_didFailComposition with a bad config', async done => {
@@ -88,10 +89,12 @@ describe('lifecycle hooks', () => {
       experimental_didUpdateComposition,
     });
 
-    const { interval } = await gateway.load();
-    await new Promise(resolve => setTimeout(resolve, 20));
+    jest.useFakeTimers();
+    await gateway.load();
+    await jest.advanceTimersByTime(15);
 
-    clearInterval(interval);
+    expect(update).toBeCalledTimes(2);
+
     const {
       calls: [firstCall, secondCall],
     } = experimental_didUpdateComposition.mock;

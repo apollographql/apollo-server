@@ -49,7 +49,7 @@ interface GatewayConfigBase {
   // experimental observability callbacks
   experimental_didResolveQueryPlan?: DidResolveQueryPlanCallback;
   experimental_didFailComposition?: DidFailCompositionCallback;
-  experimental_updateServiceDefinitions?: LoadServiceDefinitions;
+  experimental_updateServiceDefinitions?: UpdateServiceDefinitions;
   experimental_didUpdateComposition?: DidUpdateCompositionCallback;
   experimental_pollInterval?: number;
 }
@@ -90,17 +90,17 @@ type DidResolveQueryPlanCallback = ({
   serviceMap,
   operationContext,
 }: {
-  queryPlan: QueryPlan;
-  serviceMap: ServiceMap;
-  operationContext: OperationContext;
+  readonly queryPlan: QueryPlan;
+  readonly serviceMap: ServiceMap;
+  readonly operationContext: OperationContext;
 }) => void;
 
 type DidFailCompositionCallback = ({
   errors,
   serviceList,
 }: {
-  errors: GraphQLError[];
-  serviceList: ServiceDefinition[];
+  readonly errors: GraphQLError[];
+  readonly serviceList: ServiceDefinition[];
 }) => void;
 
 interface CompositionInfo {
@@ -113,7 +113,7 @@ type DidUpdateCompositionCallback = (
   previousConfig?: CompositionInfo,
 ) => void;
 
-type LoadServiceDefinitions = (
+type UpdateServiceDefinitions = (
   config: GatewayConfig,
 ) => Promise<[ServiceDefinition[], boolean]>;
 
@@ -130,11 +130,13 @@ export class ApolloGateway implements GraphQLService {
 
   // Observe query plan, service info, and operation info prior to execution. The information made available here will give insight into the resulting query plan and the inputs that generated it.
   protected experimental_didResolveQueryPlan?: DidResolveQueryPlanCallback;
-  // Observe composition failures and the ServiceList that caused them. Pretty straightforward, this enables reporting any issues that occur during composition. Implementors will be interested in addressing these immediately.
+  // Observe composition failures and the ServiceList that caused them. This enables reporting any issues that occur during composition. Implementors will be interested in addressing these immediately.
   protected experimental_didFailComposition?: DidFailCompositionCallback;
+  // Used to communicated composition changes, and what definitions caused those updates
   protected experimental_didUpdateComposition?: DidUpdateCompositionCallback;
   // Used for overriding the default service list fetcher. This should return an array of ServiceDefinition. *This function must be awaited.*
-  protected updateServiceDefinitions: LoadServiceDefinitions;
+  protected updateServiceDefinitions: UpdateServiceDefinitions;
+  // how often service defs should be loaded/updated (in ms)
   protected experimental_pollInterval?: number;
 
   constructor(config?: GatewayConfig) {
@@ -163,7 +165,7 @@ export class ApolloGateway implements GraphQLService {
 
     this.initializeQueryPlanStore();
 
-    // this will be overwritten if the config provides one
+    // this will be overwritten if the config provides experimental_updateServiceDefinitions
     this.updateServiceDefinitions = this.loadServiceDefinitions;
 
     if (config) {
@@ -236,6 +238,9 @@ export class ApolloGateway implements GraphQLService {
     };
 
     await loader();
+    if (this.experimental_pollInterval) {
+      setInterval(loader, this.experimental_pollInterval);
+    }
 
     return {
       // we know this will be here since we're running loader before here,
@@ -243,9 +248,6 @@ export class ApolloGateway implements GraphQLService {
       // a return of a schema
       schema: this.schema!,
       executor: this.executor,
-      interval: this.experimental_pollInterval
-        ? setInterval(loader, this.experimental_pollInterval)
-        : undefined,
     };
   }
 
