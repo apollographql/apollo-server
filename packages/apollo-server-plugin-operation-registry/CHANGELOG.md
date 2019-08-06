@@ -1,6 +1,9 @@
 # Change Log
 
-### vNEXT  
+### vNEXT
+
+- Update error message for operations that are not in the operation registry [PR #170](https://github.com/apollographql/apollo-platform-commercial/pull/170)
+
 
 ### 0.2.2
 

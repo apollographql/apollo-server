@@ -224,7 +224,16 @@ for observability purposes, but all operations will be permitted.`,
               logger.debug(
                 `${logHash}: Execution denied because 'forbidUnregisteredOperations' was enabled for this request and the operation was not found in the local operation registry.`,
               );
-              throw new ForbiddenError('Execution forbidden');
+              const error = new ForbiddenError(
+                'Execution forbidden: Operation not found in operation registry',
+              );
+              Object.assign(error.extensions, {
+                operationHash: hash,
+                exception: {
+                  message: `Please register your operation with \`npx apollo client:push --tag="${schemaTag}"\`. See https://www.apollographql.com/docs/platform/operation-registry/ for more details.`,
+                },
+              });
+              throw error;
             } else {
               logger.debug(
                 `${dryRunPrefix} ${logHash}: Operation ${
