@@ -128,13 +128,19 @@ export class ApolloGateway implements GraphQLService {
   private onSchemaChangeListeners = new Set<SchemaChangeCallback>();
   private serviceDefinitions: ServiceDefinition[] = [];
 
-  // Observe query plan, service info, and operation info prior to execution. The information made available here will give insight into the resulting query plan and the inputs that generated it.
+  // Observe query plan, service info, and operation info prior to execution.
+  // The information made available here will give insight into the resulting
+  // query plan and the inputs that generated it.
   protected experimental_didResolveQueryPlan?: DidResolveQueryPlanCallback;
-  // Observe composition failures and the ServiceList that caused them. This enables reporting any issues that occur during composition. Implementors will be interested in addressing these immediately.
+  // Observe composition failures and the ServiceList that caused them. This
+  // enables reporting any issues that occur during composition. Implementors
+  // will be interested in addressing these immediately.
   protected experimental_didFailComposition?: DidFailCompositionCallback;
-  // Used to communicated composition changes, and what definitions caused those updates
+  // Used to communicated composition changes, and what definitions caused
+  // those updates
   protected experimental_didUpdateComposition?: DidUpdateCompositionCallback;
-  // Used for overriding the default service list fetcher. This should return an array of ServiceDefinition. *This function must be awaited.*
+  // Used for overriding the default service list fetcher. This should return
+  // an array of ServiceDefinition. *This function must be awaited.*
   protected updateServiceDefinitions: UpdateServiceDefinitions;
   // how often service defs should be loaded/updated (in ms)
   protected experimental_pollInterval?: number;

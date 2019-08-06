@@ -62,7 +62,7 @@ describe('lifecycle hooks', () => {
 
   it('calls experimental_didUpdateComposition on schema update', async done => {
     const update = jest.fn();
-    update.mockImplementationOnce(async (config: GatewayConfig) => {
+    update.mockImplementation(async (config: GatewayConfig) => {
       return [serviceDefinitions, true];
     });
     update.mockImplementationOnce(async (config: GatewayConfig) => {
@@ -81,7 +81,7 @@ describe('lifecycle hooks', () => {
       ];
     });
 
-    const experimental_didUpdateComposition = jest.fn();
+    const experimental_didUpdateComposition = jest.fn(() => {});
 
     const gateway = new ApolloGateway({
       experimental_updateServiceDefinitions: update,
@@ -89,9 +89,8 @@ describe('lifecycle hooks', () => {
       experimental_didUpdateComposition,
     });
 
-    jest.useFakeTimers();
     await gateway.load();
-    await jest.advanceTimersByTime(15);
+    await new Promise(resolve => setTimeout(resolve, 10));
 
     expect(update).toBeCalledTimes(2);
 
