@@ -51,9 +51,9 @@ export async function getServiceDefinitionsFromRemoteEndpoint({
             }
             serviceDefinitionMap.set(serviceDefinition.name, typeDefs);
             return {
-                ...serviceDefinition,
-                typeDefs: parse(typeDefs),
-              };
+              ...serviceDefinition,
+              typeDefs: parse(typeDefs),
+            };
           }
 
           // XXX handle local errors better for local development
