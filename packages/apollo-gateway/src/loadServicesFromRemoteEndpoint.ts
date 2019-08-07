@@ -1,8 +1,9 @@
 import { GraphQLRequest, GraphQLResponse } from 'apollo-server-types';
 import { parse } from 'graphql';
 import { Headers, HeadersInit } from 'node-fetch';
-import { ServiceEndpointDefinition, ServiceWithDataSource } from './';
+import { ServiceEndpointDefinition } from './';
 import { GraphQLDataSource } from './datasources/types';
+import { ServiceDefinition } from '@apollo/federation';
 
 let serviceDefinitionMap: Map<string, string> = new Map();
 
@@ -15,7 +16,7 @@ export async function getServiceDefinitionsFromRemoteEndpoint({
     dataSource: GraphQLDataSource;
   }[];
   headers?: HeadersInit;
-}): Promise<[ServiceWithDataSource[], boolean]> {
+}): Promise<[ServiceDefinition[], boolean]> {
   if (!serviceList || !serviceList.length) {
     throw new Error(
       'Tried to load services from remote endpoints but none provided',
@@ -24,7 +25,7 @@ export async function getServiceDefinitionsFromRemoteEndpoint({
 
   let isNew = false;
   // for each service, fetch its introspection schema
-  const services: ServiceWithDataSource[] = (await Promise.all(
+  const services: ServiceDefinition[] = (await Promise.all(
     serviceList.map(({ serviceDefinition, dataSource }) => {
       const request: GraphQLRequest = {
         query: 'query GetServiceDefinition { _service { sdl } }',
@@ -50,12 +51,9 @@ export async function getServiceDefinitionsFromRemoteEndpoint({
             }
             serviceDefinitionMap.set(serviceDefinition.name, typeDefs);
             return {
-              serviceDefinition: {
                 ...serviceDefinition,
                 typeDefs: parse(typeDefs),
-              },
-              dataSource,
-            };
+              };
           }
 
           // XXX handle local errors better for local development
@@ -72,7 +70,7 @@ export async function getServiceDefinitionsFromRemoteEndpoint({
           return false;
         });
     }),
-  ).then(services => services.filter(Boolean))) as ServiceWithDataSource[];
+  ).then(services => services.filter(Boolean))) as ServiceDefinition[];
 
   // return services
   return [services, isNew];
