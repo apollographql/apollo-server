@@ -213,7 +213,7 @@ export class ApolloGateway implements GraphQLService {
     this.pollingTimer.unref();
   }
 
-  protected createDataSource(
+  private createDataSource(
     serviceDef: ServiceEndpointDefinition,
   ): GraphQLDataSource {
     if (!serviceDef.url && !isLocalConfig(this.config)) {
@@ -230,16 +230,7 @@ export class ApolloGateway implements GraphQLService {
 
   protected createServices(services: ServiceEndpointDefinition[]) {
     for (const serviceDef of services) {
-      if (!serviceDef.url && !isLocalConfig(this.config)) {
-        throw new Error(
-          `Service definition for service ${serviceDef.name} is missing a url`,
-        );
-      }
-      this.serviceMap[serviceDef.name] = this.config.buildService
-        ? this.config.buildService(serviceDef)
-        : new RemoteGraphQLDataSource({
-          url: serviceDef.url,
-        });
+      this.serviceMap[serviceDef.name] = this.createDataSource(serviceDef);
     }
   }
 
