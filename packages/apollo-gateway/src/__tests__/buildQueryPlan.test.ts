@@ -694,36 +694,18 @@ describe('buildQueryPlan', () => {
 
       expect(queryPlan).toMatchInlineSnapshot(`
                 QueryPlan {
-                  Sequence {
-                    Fetch(service: "product") {
-                      {
-                        topProducts {
-                          __typename
-                          ... on Book {
-                            __typename
-                            isbn
-                          }
-                          ... on Furniture {
-                            price
-                          }
+                  Fetch(service: "product") {
+                    {
+                      topProducts {
+                        __typename
+                        ... on Book {
+                          price
+                        }
+                        ... on Furniture {
+                          price
                         }
                       }
-                    },
-                    Flatten(path: "topProducts.@") {
-                      Fetch(service: "product") {
-                        {
-                          ... on Book {
-                            __typename
-                            isbn
-                          }
-                        } =>
-                        {
-                          ... on Book {
-                            price
-                          }
-                        }
-                      },
-                    },
+                    }
                   },
                 }
             `);
@@ -755,6 +737,7 @@ describe('buildQueryPlan', () => {
               topProducts {
                 __typename
                 ... on Book {
+                  price
                   __typename
                   isbn
                 }
@@ -766,42 +749,30 @@ describe('buildQueryPlan', () => {
               }
             }
           },
-          Parallel {
-            Flatten(path: "topProducts.@") {
-              Fetch(service: "product") {
-                {
-                  ... on Book {
-                    __typename
-                    isbn
-                  }
-                } =>
-                {
-                  ... on Book {
-                    price
+          Flatten(path: "topProducts.@") {
+            Fetch(service: "reviews") {
+              {
+                ... on Book {
+                  __typename
+                  isbn
+                }
+                ... on Furniture {
+                  __typename
+                  upc
+                }
+              } =>
+              {
+                ... on Book {
+                  reviews {
+                    body
                   }
                 }
-              },
-            },
-            Flatten(path: "topProducts.@") {
-              Fetch(service: "reviews") {
-                {
-                  ... on Book {
-                    __typename
-                    isbn
-                  }
-                  ... on Furniture {
-                    __typename
-                    upc
-                  }
-                } =>
-                {
-                  ... on Product {
-                    reviews {
-                      body
-                    }
+                ... on Furniture {
+                  reviews {
+                    body
                   }
                 }
-              },
+              }
             },
           },
         },
