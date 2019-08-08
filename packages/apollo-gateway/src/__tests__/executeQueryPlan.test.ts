@@ -505,21 +505,21 @@ describe('executeQueryPlan', () => {
     expect(response.errors).toMatchInlineSnapshot(`undefined`);
 
     expect(response.data).toMatchInlineSnapshot(`
-                        Object {
-                          "book": Object {
-                            "relatedReviews": Array [
-                              Object {
-                                "body": "A classic.",
-                                "id": "6",
-                              },
-                              Object {
-                                "body": "A bit outdated.",
-                                "id": "5",
-                              },
-                            ],
-                          },
-                        }
-                `);
+      Object {
+        "book": Object {
+          "relatedReviews": Array [
+            Object {
+              "body": "A classic.",
+              "id": "6",
+            },
+            Object {
+              "body": "A bit outdated.",
+              "id": "5",
+            },
+          ],
+        },
+      }
+    `);
   });
 
   it('can execute queries with selections on null @requires fields', async () => {
