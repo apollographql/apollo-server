@@ -521,4 +521,38 @@ describe('executeQueryPlan', () => {
                         }
                 `);
   });
+
+  it('can execute queries with selections on null @requires fields', async () => {
+    const query = gql`
+      query {
+        book(isbn: "0987654321") {
+          # Requires similarBooks { isbn }
+          relatedReviews {
+            id
+            body
+          }
+        }
+      }
+    `;
+
+    const operationContext = buildOperationContext(schema, query);
+    const queryPlan = buildQueryPlan(operationContext);
+
+    const response = await executeQueryPlan(
+      queryPlan,
+      serviceMap,
+      buildRequestContext(),
+      operationContext,
+    );
+
+    expect(response.errors).toBeUndefined();
+
+    expect(response.data).toMatchInlineSnapshot(`
+      Object {
+        "book": Object {
+          "relatedReviews": Array [],
+        },
+      }
+    `);
+  });
 });
