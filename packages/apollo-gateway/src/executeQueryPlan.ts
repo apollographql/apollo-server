@@ -395,6 +395,7 @@ function executeSelectionSet(
         // Null is a valid value for a response, provided that the types match.
         // Presumably the underlying service has validated that result, so we
         // can pass it through here
+        // Note: undefined is unexpected here due to GraphQL's type coercion / nullability rules
         if (source === null) {
           result[responseName] = null;
           break;
