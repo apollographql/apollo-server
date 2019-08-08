@@ -280,8 +280,7 @@ describe('buildQueryPlan', () => {
                         `);
   });
 
-  // Actually failing (building 2 fetches to the same service?)
-  xit(`should use a single fetch when requesting relationship subfields from the same service`, () => {
+  it(`should use a single fetch when requesting relationship subfields from the same service`, () => {
     const query = gql`
       query {
         topReviews {
@@ -299,43 +298,23 @@ describe('buildQueryPlan', () => {
 
     expect(queryPlan).toMatchInlineSnapshot(`
                               QueryPlan {
-                                Sequence {
-                                  Fetch(service: "reviews") {
-                                    {
-                                      topReviews {
-                                        body
-                                        author {
-                                          __typename
-                                          id
+                                Fetch(service: "reviews") {
+                                  {
+                                    topReviews {
+                                      body
+                                      author {
+                                        reviews {
+                                          body
                                         }
                                       }
                                     }
-                                  },
-                                  Flatten(path: "topReviews.@.author") {
-                                    Fetch(service: "reviews") {
-                                      {
-                                        ... on User {
-                                          __typename
-                                          id
-                                        }
-                                      } =>
-                                      {
-                                        ... on User {
-                                          reviews {
-                                            body
-                                          }
-                                        }
-                                      }
-                                    },
-                                  },
+                                  }
                                 },
                               }
                     `);
   });
 
-  // Actually failing (building 2 fetches to the same service?)
-  // Also seeing a bit of a shift in which PlanNode the nested fields end up in
-  xit(`should use a single fetch when requesting relationship subfields and provided keys from the same service`, () => {
+  it(`should use a single fetch when requesting relationship subfields and provided keys from the same service`, () => {
     const query = gql`
       query {
         topReviews {
@@ -354,32 +333,18 @@ describe('buildQueryPlan', () => {
 
     expect(queryPlan).toMatchInlineSnapshot(`
                                                 QueryPlan {
-                                                  Sequence {
-                                                    Fetch(service: "reviews") {
-                                                      {
-                                                        topReviews {
-                                                          body
-                                                          author {
-                                                            __typename
-                                                            id
-                                                            reviews {
-                                                              body
-                                                            }
+                                                  Fetch(service: "reviews") {
+                                                    {
+                                                      topReviews {
+                                                        body
+                                                        author {
+                                                          id
+                                                          reviews {
+                                                            body
                                                           }
                                                         }
                                                       }
-                                                    },
-                                                    Merge(path: "topReviews.@.author") {
-                                                      Fetch(service: "accounts") {
-                                                        {
-                                                          __typename
-                                                          id
-                                                        } =>
-                                                        ... on User {
-                                                          id
-                                                        }
-                                                      },
-                                                    },
+                                                    }
                                                   },
                                                 }
                                 `);
