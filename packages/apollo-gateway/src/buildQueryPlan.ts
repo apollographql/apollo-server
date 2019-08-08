@@ -338,6 +338,13 @@ function splitSubfields(
           );
         }
 
+        if (baseService === parentGroup.serviceName) {
+          return parentGroup.dependentGroupForService(
+            owningService,
+            requiredFields,
+          );
+        }
+
         const baseGroup = parentGroup.dependentGroupForService(
           baseService,
           keyFields,

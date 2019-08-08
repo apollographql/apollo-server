@@ -546,6 +546,52 @@ describe('buildQueryPlan', () => {
                                                 `);
     });
 
+    describe(`when requesting a field defined in another service which requires a field in the base service`, () => {
+      it(`should add the field provided by base service in first Fetch`, () => {
+        const query = gql`
+          query {
+            topCars {
+              retailPrice
+            }
+          }
+        `;
+
+        const queryPlan = buildQueryPlan(buildOperationContext(schema, query));
+
+        expect(queryPlan).toMatchInlineSnapshot(`
+                                                                  QueryPlan {
+                                                                    Sequence {
+                                                                      Fetch(service: "product") {
+                                                                        {
+                                                                          topCars {
+                                                                            __typename
+                                                                            id
+                                                                            price
+                                                                          }
+                                                                        }
+                                                                      },
+                                                                      Flatten(path: "topCars.@") {
+                                                                        Fetch(service: "reviews") {
+                                                                          {
+                                                                            ... on Car {
+                                                                              __typename
+                                                                              id
+                                                                              price
+                                                                            }
+                                                                          } =>
+                                                                          {
+                                                                            ... on Car {
+                                                                              retailPrice
+                                                                            }
+                                                                          }
+                                                                        },
+                                                                      },
+                                                                    },
+                                                                  }
+                                                  `);
+      });
+    });
+
     describe(`when the parent selection set is empty`, () => {
       it(`should add key fields to the parent selection set and use a dependent fetch`, () => {
         const query = gql`
