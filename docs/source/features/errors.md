@@ -259,7 +259,7 @@ If it is necessary to change the error prior to reporting it to Apollo Engine
 Consider an example where the error contains a piece of information like
 an API key:
 
-```js{5-11}
+```
 throw new ApolloError("The x-api-key:12345 doesn't have sufficient privileges.");
 ```
 
