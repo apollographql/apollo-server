@@ -44,7 +44,7 @@ export const typeDefs = gql`
   extend type Book implements Product @key(fields: "isbn") {
     isbn: String! @external
     reviews: [Review]
-    similarBooks: [Book!]! @external
+    similarBooks: [Book]! @external
     relatedReviews: [Review!]! @requires(fields: "similarBooks { isbn }")
   }
 

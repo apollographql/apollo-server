@@ -162,7 +162,7 @@ The error instance received by `formatError` (a `GraphQLError`) contains an `ori
   /* ... */
 ```
 
-> To make context-specific adjustments to the error received by `formatError` (e.g. localization or personalization), consider using the `didEncounterErrors` life-cycle hook to attach additional properties to the error, which can be accessed andn utilized within `formatError`.
+> To make context-specific adjustments to the error received by `formatError` (e.g. localization or personalization), consider using the `didEncounterErrors` lifecycle hook to attach additional properties to the error, which can be accessed and utilized within `formatError`.
 
 ### For Apollo Engine reporting
 
@@ -196,8 +196,8 @@ this to Apollo Engine by defining `rewriteError` as follows:
 ```js{5-15}
 const { ApolloServer, AuthenticationError } = require("apollo-server");
 const server = new ApolloServer({
-  typeDefs,  // (Not defined in this example)
-  resolvers, //    "      "      "      "
+  typeDefs,
+  resolvers,
   engine: {
     rewriteError(err) {
       // Return `null` to avoid reporting `AuthenticationError`s
@@ -229,8 +229,8 @@ function as follows:
 ```js{5-16}
 const { ApolloServer } = require("apollo-server");
 const server = new ApolloServer({
-  typeDefs,  // (Not defined in this example)
-  resolvers, //    "      "      "      "
+  typeDefs,
+  resolvers,
   engine: {
     rewriteError(err) {
       // Using a more stable, known error property (e.g. `err.code`) would be
@@ -256,20 +256,22 @@ If it is necessary to change the error prior to reporting it to Apollo Engine
 – for example, if there is personally identifiable information in the error
 `message` — the `rewriteError` function can also help.
 
-Consider an example where the error contained a piece of information like
-an API key (e.g. `throw new ApolloError("The x-api-key:12345 doesn't have
-sufficient privileges.");`).
+Consider an example where the error contains a piece of information like
+an API key:
 
-While a best practice would suggest not including such information in the
-error message itself, the `rewriteError` function could be used to make sure
-it it's sent to Apollo Engine and potentially revealed outside its intended
-scope:
+```
+throw new ApolloError("The x-api-key:12345 doesn't have sufficient privileges.");
+```
+
+The `rewriteError` function can be used to ensure
+such information is not sent to Apollo Engine and potentially revealed outside
+its intended scope:
 
 ```js{5-11}
 const { ApolloServer } = require("apollo-server");
 const server = new ApolloServer({
-  typeDefs,  // (Not defined in this example)
-  resolvers, //    "      "      "      "
+  typeDefs,
+  resolvers,
   engine: {
     rewriteError(err) {
       // Make sure that a specific pattern is removed from all error messages.
