@@ -167,11 +167,11 @@ The `applyMiddleware` method is provided by the `apollo-server-{integration}` pa
 
     Specify a custom path. It defaults to `/graphql` if no path is specified.
 
-  * `cors`: <`Object` | `boolean`> ([express](https://github.com/expressjs/cors#cors), [hapi](https://hapijs.com/api#-routeoptionscors))
+  * `cors`: <`Object` | `boolean`> ([express](https://github.com/expressjs/cors#cors), [hapi](https://hapijs.com/api#-routeoptionscors), [koa](https://github.com/koajs/cors/))
 
     Pass the integration-specific cors options. False removes the cors middleware and true uses the defaults.
 
-  * `bodyParserConfig`: <`Object` | `boolean`> ([express](https://github.com/expressjs/body-parser#body-parser))
+  * `bodyParserConfig`: <`Object` | `boolean`> ([express](https://github.com/expressjs/body-parser#body-parser), [koa](https://github.com/koajs/bodyparser))
 
     Pass the body-parser options. False removes the body parser middleware and true uses the defaults.
 
