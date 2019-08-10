@@ -76,7 +76,7 @@
     "@types/fast-json-stable-stringify": "2.0.0",
     "@types/graphql": "14.2.3",
     "@types/hapi": "17.8.6",
-    "@types/ioredis": "4.0.13",
+    "@types/ioredis": "4.0.14",
     "@types/jest": "24.0.16",
     "@types/koa-router": "7.0.42",
     "@types/lodash": "4.14.136",
