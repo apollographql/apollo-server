@@ -2,6 +2,13 @@
 
 ### vNEXT
 
+# v0.8.2
+
+* Handle `null` @requires selections correctly during execution [#3138](https://github.com/apollographql/apollo-server/pull/3138)
+
+
+# v0.6.13
+
 * Proxy errors from downstream services [#3019](https://github.com/apollographql/apollo-server/pull/3019)
 * Handle schema defaultVariables correctly within downstream fetches [#2963](https://github.com/apollographql/apollo-server/pull/2963)
 
