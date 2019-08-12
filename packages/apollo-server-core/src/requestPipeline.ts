@@ -83,6 +83,7 @@ export interface GraphQLRequestPipelineConfig<TContext> {
 
   extensions?: Array<() => GraphQLExtension>;
   tracing?: boolean;
+  debug?: boolean;
   persistedQueries?: PersistedQueryOptions;
   cacheControl?: CacheControlExtensionOptions;
 
@@ -535,7 +536,7 @@ export async function processGraphQLRequest<TContext>(
   ): ReadonlyArray<GraphQLFormattedError> {
     return formatApolloErrors(errors, {
       formatter: config.formatError,
-      debug: requestContext.debug,
+      debug: requestContext.debug != null ? requestContext.debug : config.debug,
     });
   }
 
