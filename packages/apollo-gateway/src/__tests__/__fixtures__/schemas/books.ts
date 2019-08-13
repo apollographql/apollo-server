@@ -26,7 +26,7 @@ export const typeDefs = gql`
     isbn: String!
     title: String
     year: Int
-    similarBooks: [Book!]!
+    similarBooks: [Book]!
   }
 `;
 
