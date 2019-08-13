@@ -82,7 +82,7 @@ function isRemoteConfig(config: GatewayConfig): config is RemoteGatewayConfig {
 function isManagedConfig(
   config: GatewayConfig,
 ): config is ManagedGatewayConfig {
-  return 'federationVersion' in config;
+  return !isRemoteConfig(config) && !isLocalConfig(config);
 }
 
 type DidResolveQueryPlanCallback = ({
