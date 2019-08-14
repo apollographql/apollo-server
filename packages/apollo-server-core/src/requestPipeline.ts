@@ -236,7 +236,7 @@ export async function processGraphQLRequest<TContext>(
         parsingDidEnd();
       } catch (syntaxError) {
         parsingDidEnd(syntaxError);
-        await didEncounterErrors(syntaxError, requestContext.context)
+        await didEncounterErrors(syntaxError, requestContext.context);
         return await sendErrorResponse(syntaxError, SyntaxError);
       }
 
@@ -254,7 +254,7 @@ export async function processGraphQLRequest<TContext>(
         validationDidEnd();
       } else {
         validationDidEnd(validationErrors);
-        await didEncounterErrors(validationErrors, requestContext.context)
+        await didEncounterErrors(validationErrors, requestContext.context);
         return await sendErrorResponse(validationErrors, ValidationError);
       }
 
@@ -314,7 +314,7 @@ export async function processGraphQLRequest<TContext>(
       if (err instanceof HttpQueryError) {
         throw err;
       }
-      await didEncounterErrors(err, requestContext.context)
+      await didEncounterErrors(err, requestContext.context);
       return await sendErrorResponse(err);
     }
 
@@ -362,7 +362,7 @@ export async function processGraphQLRequest<TContext>(
         executionDidEnd();
       } catch (executionError) {
         executionDidEnd(executionError);
-        await didEncounterErrors(executionError, requestContext.context)
+        await didEncounterErrors(executionError, requestContext.context);
         return await sendErrorResponse(executionError);
       }
     }
@@ -498,9 +498,9 @@ export async function processGraphQLRequest<TContext>(
 
   async function didEncounterErrors(
     errorOrErrors: ReadonlyArray<GraphQLError> | GraphQLError,
-    context: TContext
+    context: TContext,
   ) {
-    const errors = ensureErrorArray(errorOrErrors)
+    const errors = ensureErrorArray(errorOrErrors);
     requestContext.errors = errors;
     extensionStack.didEncounterErrors(errors, context);
 
@@ -518,7 +518,7 @@ export async function processGraphQLRequest<TContext>(
     errorClass?: typeof ApolloError,
   ) {
     // If a single error is passed, it should still be encapsulated in an array.
-    const errors = ensureErrorArray(errorOrErrors)
+    const errors = ensureErrorArray(errorOrErrors);
 
     return sendResponse({
       errors: formatErrors(
@@ -544,11 +544,9 @@ export async function processGraphQLRequest<TContext>(
   }
 
   function ensureErrorArray(
-    errorOrErrors: ReadonlyArray<GraphQLError> | GraphQLError
+    errorOrErrors: ReadonlyArray<GraphQLError> | GraphQLError,
   ): ReadonlyArray<GraphQLError> {
-    return Array.isArray(errorOrErrors)
-      ? errorOrErrors
-      : [errorOrErrors]
+    return Array.isArray(errorOrErrors) ? errorOrErrors : [errorOrErrors];
   }
 
   function initializeRequestListenerDispatcher(): Dispatcher<

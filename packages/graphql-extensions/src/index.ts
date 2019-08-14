@@ -48,7 +48,7 @@ export class GraphQLExtension<TContext = any> {
 
   public didEncounterErrors?(
     errors: ReadonlyArray<GraphQLError>,
-    context: TContext
+    context: TContext,
   ): void;
 
   public willSendResponse?(o: {
@@ -112,7 +112,7 @@ export class GraphQLExtensionStack<TContext = any> {
 
   public didEncounterErrors(
     errors: ReadonlyArray<GraphQLError>,
-    context: TContext
+    context: TContext,
   ) {
     this.extensions.forEach(extension => {
       if (extension.didEncounterErrors) {
