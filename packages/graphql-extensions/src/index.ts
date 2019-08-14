@@ -46,7 +46,10 @@ export class GraphQLExtension<TContext = any> {
     executionArgs: ExecutionArgs;
   }): EndHandler | void;
 
-  public didEncounterErrors?(errors: ReadonlyArray<GraphQLError>): void;
+  public didEncounterErrors?(
+    errors: ReadonlyArray<GraphQLError>,
+    context: TContext
+  ): void;
 
   public willSendResponse?(o: {
     graphqlResponse: GraphQLResponse;
@@ -107,10 +110,13 @@ export class GraphQLExtensionStack<TContext = any> {
     );
   }
 
-  public didEncounterErrors(errors: ReadonlyArray<GraphQLError>) {
+  public didEncounterErrors(
+    errors: ReadonlyArray<GraphQLError>,
+    context: TContext
+  ) {
     this.extensions.forEach(extension => {
       if (extension.didEncounterErrors) {
-        extension.didEncounterErrors(errors);
+        extension.didEncounterErrors(errors, context);
       }
     });
   }
