@@ -53,7 +53,7 @@ Apollo Federation implements a strict composition model. When building a gateway
 
 - `VALUE_TYPE_FIELD_TYPE_MISMATCH`: Two identical types were found, however one or more of their field's types aren't the same. Value types must be identical across services.
 - `VALUE_TYPE_NO_ENTITY`: Two identical types were found, however it's marked as an entity in one of the services. Extend the type correctly, or make the identical types non-entities.
-- `VALUE_TYPE_UNION_TYPES_MISMATCH`: Two identitical union types were found, however their types are not the same. Shared union types must be identical across services.
+- `VALUE_TYPE_UNION_TYPES_MISMATCH`: Two identical union types were found, however their types are not the same. Shared union types must be identical across services.
 - `VALUE_TYPE_KIND_MISMATCH`: A type was found with the same name and fields, however they aren't of the same kind (object, input, interface). Only value types can be duplicated across services.
 
 ### Modified SDL validations
