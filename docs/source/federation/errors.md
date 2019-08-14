@@ -58,4 +58,4 @@ Apollo Federation implements a strict composition model. When building a gateway
 
 ### Modified SDL validations
 
-- Unique Type Names: type definitions can not be duplicated across services, with the exception of Enums, Scalars, and [value types](/core-concepts/#value-types). This is a modified version of the `graphql-js` validation with exclusions for Enums and Scalars, since those are required to be duplicated across services.
+- Unique Type Names: type definitions can not be duplicated across services, with the exception of Enums, Scalars, and [value types](/federation/core-concepts/#value-types). This is a modified version of the `graphql-js` validation with exclusions for Enums and Scalars, since those are required to be duplicated across services.
