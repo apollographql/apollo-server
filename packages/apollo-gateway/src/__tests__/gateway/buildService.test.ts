@@ -5,7 +5,7 @@ import { createTestClient } from 'apollo-server-testing';
 import { ApolloServerBase as ApolloServer } from 'apollo-server-core';
 import { buildFederatedSchema } from '@apollo/federation';
 
-import { RemoteGraphQLDataSource } from '../../datasources/RemoteGraphQLDatasource';
+import { RemoteGraphQLDataSource } from '../../datasources/RemoteGraphQLDataSource';
 import { ApolloGateway } from '../../';
 
 import * as accounts from '../__fixtures__/schemas/accounts';

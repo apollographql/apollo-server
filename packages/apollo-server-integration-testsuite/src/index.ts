@@ -20,7 +20,7 @@ import request = require('supertest');
 
 import { GraphQLOptions, Config } from 'apollo-server-core';
 import gql from 'graphql-tag';
-import { ValueOrPromise } from 'apollo-server-env';
+import { ValueOrPromise } from 'apollo-server-types';
 
 export * from './ApolloServer';
 
@@ -1100,9 +1100,19 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
             },
           });
 
-          // Make sure that things were called in the expected order.
-          expect(fn.mock.calls).toEqual([['zero']]);
+          const delayUntil = async (check: () => boolean, expectedNumTicks) => {
+            if (check()) return expect(expectedNumTicks).toBe(0);
+            else expect(expectedNumTicks).not.toBe(0);
+            return new Promise(resolve =>
+              process.nextTick(() =>
+                delayUntil(check, expectedNumTicks - 1).then(resolve),
+              ),
+            );
+          };
 
+          // Make sure that things were called in the expected order.
+          await delayUntil(() => fn.mock.calls.length === 1, 1);
+          expect(fn.mock.calls).toEqual([['zero']]);
           resolveServerWillStart();
 
           // Account for the fact that `createApp` might return a Promise,

@@ -155,7 +155,7 @@ npm link apollo-server-<integration>
 
 ## Community
 
-Are you stuck? Want to contribute? Come visit us in the [Apollo community on Spectrum.chat!](https://spectrum.chat)
+Are you stuck? Want to contribute? Come visit us in the [Apollo community on Spectrum.chat!](https://spectrum.chat/apollo)
 
 
 ## Maintainers

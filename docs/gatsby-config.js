@@ -47,6 +47,7 @@ module.exports = {
             'federation/errors',
             'federation/migrating-from-stitching',
             'federation/federation-spec',
+            'federation/metrics',
           ],
           // 'Schema stitching': [
           //   'features/schema-stitching',

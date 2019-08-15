@@ -10,13 +10,13 @@ export {
 // This specifies the version of `graphql-playground-react` that will be served
 // from `graphql-playground-html`.  It's passed to ``graphql-playground-html`'s
 // renderPlaygroundPage` via the integration packages' playground configuration.
-const playgroundVersion = '1.7.26';
+const playgroundVersion = '1.7.30';
 
 // https://stackoverflow.com/a/51365037
 type RecursivePartial<T> = {
   [P in keyof T]?: T[P] extends (infer U)[]
     ? RecursivePartial<U>[]
-    : T[P] extends object
+    : T[P] extends (object | undefined)
     ? RecursivePartial<T[P]>
     : T[P];
 };
@@ -63,7 +63,7 @@ export function createPlaygroundOptions(
       }
     : { settings: undefined };
 
-  const playgroundOptions: PlaygroundRenderPageOptions = {
+  const playgroundOptions: any = {
     ...defaultPlaygroundOptions,
     ...playgroundOverrides,
     ...settingsOverrides,

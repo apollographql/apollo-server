@@ -46,7 +46,7 @@ const resolvers = {
 
 With the resolver map above, the query, `{ author { books } }`, will call the `Query.author` resolver first and pass its result to `Author.books`. The query result will contain the return value of `Author.books` nested under `data.author.books`.
 
-Note that you don't have to put all of your resolvers in one object. Refer to the ["modularizing the schema"](https://www.apollographql.com/docs/graphql-tools/generate-schema/#extending-types) section to learn how to combine multiple resolver maps into one.
+Note that you don't have to put all of your resolvers in one object. Refer to the ["modularizing resolvers"](https://www.apollographql.com/docs/apollo-server/essentials/data/#modularizing-resolvers) section to learn how to combine multiple resolver maps into one.
 
 ## Resolver type signature
 

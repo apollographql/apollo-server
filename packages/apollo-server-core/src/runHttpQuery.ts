@@ -18,7 +18,7 @@ import {
 } from './requestPipeline';
 import { CacheControlExtensionOptions } from 'apollo-cache-control';
 import { ApolloServerPlugin } from 'apollo-server-plugin-base';
-import { WithRequired } from 'apollo-server-env';
+import { WithRequired } from 'apollo-server-types';
 
 export interface HttpQueryRequest {
   method: string;
@@ -179,6 +179,8 @@ export async function runHttpQuery(
     debug: options.debug,
 
     plugins: options.plugins || [],
+
+    reporting: options.reporting,
   };
 
   return processHTTPRequest(config, request);
@@ -248,6 +250,9 @@ export async function processHTTPRequest<TContext>(
       context,
       cache: options.cache,
       debug: options.debug,
+      metrics: {
+        captureTraces: !!options.reporting,
+      },
     };
   }
 

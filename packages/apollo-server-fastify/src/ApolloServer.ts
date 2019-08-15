@@ -8,8 +8,9 @@ import {
   processFileUploads,
 } from 'apollo-server-core';
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import { IncomingMessage, OutgoingMessage, Server } from 'http';
+import { IncomingMessage, ServerResponse, Server } from 'http';
 import { graphqlFastify } from './fastifyApollo';
+import { GraphQLOperation } from 'graphql-upload';
 
 const kMultipart = Symbol('multipart');
 const fastJson = require('fast-json-stringify');
@@ -35,7 +36,7 @@ const fileUploadMiddleware = (
   server: ApolloServerBase,
 ) => (
   req: FastifyRequest<IncomingMessage>,
-  reply: FastifyReply<OutgoingMessage>,
+  reply: FastifyReply<ServerResponse>,
   done: (err: Error | null, body?: any) => void,
 ) => {
   if (
@@ -43,11 +44,11 @@ const fileUploadMiddleware = (
     typeof processFileUploads === 'function'
   ) {
     processFileUploads(req.req, reply.res, uploadsConfig)
-      .then(body => {
+      .then((body: GraphQLOperation | GraphQLOperation[]) => {
         req.body = body;
         done(null);
       })
-      .catch(error => {
+      .catch((error: any) => {
         if (error.status && error.expose) reply.status(error.status);
 
         throw formatApolloErrors([error], {
@@ -79,7 +80,7 @@ export class ApolloServer extends ApolloServerBase {
     const promiseWillStart = this.willStart();
 
     return async (
-      app: FastifyInstance<Server, IncomingMessage, OutgoingMessage>,
+      app: FastifyInstance<Server, IncomingMessage, ServerResponse>,
     ) => {
       await promiseWillStart;
 
@@ -120,7 +121,7 @@ export class ApolloServer extends ApolloServerBase {
           const beforeHandlers = [
             (
               req: FastifyRequest<IncomingMessage>,
-              reply: FastifyReply<OutgoingMessage>,
+              reply: FastifyReply<ServerResponse>,
               done: () => void,
             ) => {
               // Note: if you enable playground in production and expect to be able to see your

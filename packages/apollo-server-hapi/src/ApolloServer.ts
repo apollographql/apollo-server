@@ -23,8 +23,8 @@ function handleFileUploads(uploadsConfig: FileUploadOptions) {
     ) {
       Object.defineProperty(request, 'payload', {
         value: await processFileUploads(
-          request,
-          request.response,
+          request.raw.req,
+          request.raw.res,
           uploadsConfig,
         ),
         writable: false,

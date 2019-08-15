@@ -19,11 +19,17 @@ export const typeDefs = gql`
     body: String
   }
 
+  extend type UserMetadata {
+    address: String @external
+  }
+
   extend type User @key(fields: "id") {
     id: ID! @external
     username: String @external
     reviews: [Review]
     numberOfReviews: Int!
+    metadata: [UserMetadata] @external
+    goodAddress: Boolean @requires(fields: "metadata { address }")
   }
 
   extend interface Product {
@@ -38,7 +44,7 @@ export const typeDefs = gql`
   extend type Book implements Product @key(fields: "isbn") {
     isbn: String! @external
     reviews: [Review]
-    similarBooks: [Book!]! @external
+    similarBooks: [Book]! @external
     relatedReviews: [Review!]! @requires(fields: "similarBooks { isbn }")
   }
 
@@ -155,6 +161,9 @@ export const resolvers: GraphQLResolverMap<any> = {
     username(user) {
       const found = usernames.find(username => username.id === user.id);
       return found ? found.username : null;
+    },
+    goodAddress(object) {
+      return object.metadata[0].address === '1';
     },
   },
   Furniture: {
