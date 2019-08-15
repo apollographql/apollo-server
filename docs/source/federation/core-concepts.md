@@ -163,7 +163,7 @@ extend type Query {
 }
 ```
 
-There is no need to explictly define `Query` or `Mutation` base types anywhere; Apollo automatically handles this for you.
+There is no need to explicitly define `Query` or `Mutation` base types anywhere; Apollo automatically handles this for you.
 
 ## Value Types
 
