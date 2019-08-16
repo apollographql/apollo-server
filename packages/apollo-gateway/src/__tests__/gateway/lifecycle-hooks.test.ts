@@ -166,18 +166,4 @@ describe('lifecycle hooks', () => {
                 `);
     consoleSpy.mockRestore();
   });
-
-  it('warns when polling using a custom serviceList fetcher', async () => {
-    const consoleSpy = jest.spyOn(console, 'warn');
-    new ApolloGateway({
-      experimental_updateServiceDefinitions: jest.fn(),
-      experimental_pollInterval: 10,
-    });
-    expect(consoleSpy).toHaveBeenCalledTimes(1);
-    expect(consoleSpy.mock.calls[0]).toMatchInlineSnapshot(`
-                        Array [
-                          "Polling running services is dangerous and not recommended in production. Polling should only be used against a registry. If you are polling running services, use with caution.",
-                        ]
-                `);
-  });
 });
