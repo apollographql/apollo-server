@@ -1,6 +1,7 @@
 import { CachedFetcher } from './cachedFetcher';
 import { ServiceDefinition } from '@apollo/federation';
 import { parse } from 'graphql';
+import { UpdateServiceDefinitions } from '.';
 
 interface LinkFileResult {
   configPath: string;
@@ -22,7 +23,7 @@ interface ImplementingServiceLocation {
   path: string;
 }
 
-interface ConfigFileResult {
+export interface CompositionMetadata {
   formatVersion: number;
   id: string;
   implementingServiceLocations: ImplementingServiceLocation[];
@@ -71,7 +72,7 @@ export async function getServiceDefinitionsFromStorage({
   apiKeyHash: string;
   graphVariant?: string;
   federationVersion: number;
-}): Promise<[ServiceDefinition[], boolean]> {
+}): ReturnType<UpdateServiceDefinitions> {
   const secret = await fetchStorageSecret(graphId, apiKeyHash);
 
   if (!graphVariant) {
@@ -86,7 +87,7 @@ export async function getServiceDefinitionsFromStorage({
   } = await fetchLinkFile(baseUrl);
 
   // If the link file is a cache hit, no further work is needed
-  if (linkFileCacheHit) return [[], false];
+  if (linkFileCacheHit) return { isNewSchema: false };
 
   const parsedLink = JSON.parse(linkFileResult) as LinkFileResult;
 
@@ -94,17 +95,21 @@ export async function getServiceDefinitionsFromStorage({
     `${urlPartialSchemaBase}/${parsedLink.configPath}`,
   );
 
-  const parsedConfig = JSON.parse(configFileResult) as ConfigFileResult;
+  const compositionInfo = JSON.parse(configFileResult) as CompositionMetadata;
 
-  const partialSchemaFiles = await fetchPartialSchemaFiles(
-    parsedConfig.implementingServiceLocations,
+  const serviceDefinitions = await fetchServiceDefinitions(
+    compositionInfo.implementingServiceLocations,
   );
 
   // explicity return that this is a new schema, as the link file has changed.
   // we can't use the hit property of the fetchPartialSchemaFiles, as the partial
   // schema may all be cache hits with the final schema still being new
   // (for instance if a partial schema is removed or a partial schema is rolled back to a prior version, which is still in cache)
-  return [partialSchemaFiles, true];
+  return {
+    serviceDefinitions,
+    compositionInfo,
+    isNewSchema: true,
+  };
 }
 
 async function fetchLinkFile(baseUrl: string) {
@@ -112,10 +117,10 @@ async function fetchLinkFile(baseUrl: string) {
 }
 
 // The order of implementingServices is IMPORTANT
-async function fetchPartialSchemaFiles(
+async function fetchServiceDefinitions(
   implementingServices: ImplementingServiceLocation[],
 ): Promise<ServiceDefinition[]> {
-  const fetchPartialSchemasPromises = implementingServices.map(
+  const serviceDefinitionPromises = implementingServices.map(
     async ({ name, path }) => {
       const serviceLocation = await fetcher.fetch(
         `${urlPartialSchemaBase}/${path}`,
@@ -134,5 +139,5 @@ async function fetchPartialSchemaFiles(
   );
 
   // Respect the order here
-  return Promise.all(fetchPartialSchemasPromises);
+  return Promise.all(serviceDefinitionPromises);
 }

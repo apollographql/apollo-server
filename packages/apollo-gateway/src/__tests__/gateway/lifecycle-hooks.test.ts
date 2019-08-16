@@ -1,4 +1,8 @@
-import { ApolloGateway, GatewayConfig } from '../../index';
+import {
+  ApolloGateway,
+  GatewayConfig,
+  UpdateServiceDefinitions,
+} from '../../index';
 import * as accounts from '../__fixtures__/schemas/accounts';
 import * as books from '../__fixtures__/schemas/books';
 import * as inventory from '../__fixtures__/schemas/inventory';
@@ -14,62 +18,81 @@ const serviceDefinitions = services.map((s, i) => ({
 
 describe('lifecycle hooks', () => {
   it('uses updateServiceDefinitions override', async () => {
-    const experimental_updateServiceDefinitions = jest.fn(
-      async (config: GatewayConfig) => {
-        return [serviceDefinitions, true];
+    const experimental_updateServiceDefinitions: UpdateServiceDefinitions = jest.fn(
+      async (_config: GatewayConfig) => {
+        return { serviceDefinitions, isNewSchema: true };
       },
     );
 
     const gateway = new ApolloGateway({
       serviceList: serviceDefinitions,
       experimental_updateServiceDefinitions,
-      experimental_didUpdateComputedFederationConfig: jest.fn(),
+      experimental_didUpdateComposition: jest.fn(),
     });
 
     await gateway.load();
 
     expect(experimental_updateServiceDefinitions).toBeCalled();
-    expect(gateway.schema.getType('Furniture')).toBeDefined();
+    expect(gateway.schema!.getType('Furniture')).toBeDefined();
   });
 
   it('calls experimental_didFailComposition with a bad config', async done => {
-    const update = jest.fn(async (config: GatewayConfig) => {
-      return [[serviceDefinitions[0]], true];
-    });
-
     const experimental_didFailComposition = jest.fn();
 
     const gateway = new ApolloGateway({
-      experimental_updateServiceDefinitions: update,
+      async experimental_updateServiceDefinitions(_config: GatewayConfig) {
+        return {
+          serviceDefinitions: [serviceDefinitions[0]],
+          compositionInfo: {
+            formatVersion: 1,
+            id: 'abc',
+            implementingServiceLocations: [],
+            schemaHash: 'abc',
+          },
+          isNewSchema: true,
+        };
+      },
       experimental_didFailComposition,
     });
 
     try {
       await gateway.load();
-    } catch (e) {
-      const callbackArgs = experimental_didFailComposition.mock.calls[0][0];
-      expect(callbackArgs.serviceList).toHaveLength(1);
-      expect(callbackArgs.errors).toMatchInlineSnapshot(`
-                Array [
-                  [GraphQLError: [product] Book -> \`Book\` is an extension type, but \`Book\` is not defined in any service],
-                ]
-            `);
+    } catch {}
 
-      expect(experimental_didFailComposition).toBeCalled();
-      done();
-    }
+    const callbackArgs = experimental_didFailComposition.mock.calls[0][0];
+    expect(callbackArgs.serviceList).toHaveLength(1);
+    expect(callbackArgs.errors[0]).toMatchInlineSnapshot(
+      `[GraphQLError: [product] Book -> \`Book\` is an extension type, but \`Book\` is not defined in any service]`,
+    );
+    expect(callbackArgs.compositionInfo.id).toEqual('abc');
+    expect(experimental_didFailComposition).toBeCalled();
+    done();
   });
 
   it('calls experimental_didUpdateComposition on schema update', async done => {
-    const update = jest.fn();
-    update.mockImplementation(async (config: GatewayConfig) => {
-      return [serviceDefinitions, true];
-    });
-    update.mockImplementationOnce(async (config: GatewayConfig) => {
+    const compositionInfo = {
+      formatVersion: 1,
+      id: 'abc',
+      implementingServiceLocations: [],
+      schemaHash: 'hash1',
+    };
+
+    const update = jest.fn((async (_config: GatewayConfig) => {
+      return {
+        serviceDefinitions,
+        isNewSchema: true,
+        compositionInfo: {
+          ...compositionInfo,
+          id: '123',
+          schemaHash: 'hash2',
+        },
+      };
+    }) as UpdateServiceDefinitions);
+
+    update.mockImplementationOnce(async (_config: GatewayConfig) => {
       const services = serviceDefinitions.filter(s => s.name !== 'books');
-      // overwrite books service with a similar 'book' service
-      return [
-        [
+      return {
+        serviceDefinitions: [
           ...services,
           {
             name: 'book',
@@ -77,8 +100,9 @@ describe('lifecycle hooks', () => {
             url: 'http://localhost:32542',
           },
         ],
-        true,
-      ];
+        isNewSchema: true,
+        compositionInfo,
+      };
     });
 
     const experimental_didUpdateComposition = jest.fn(() => {});
@@ -102,11 +126,15 @@ describe('lifecycle hooks', () => {
 
     // first call's `current` arg should have a schema
     expect(firstCall[0].schema).toBeDefined();
+    expect(firstCall[0].compositionInfo.schemaHash).toEqual('hash1');
     expect(firstCall[1]).toBeUndefined();
 
-    // second call should have a previous schema
     expect(secondCall[0].schema).toBeDefined();
+    expect(secondCall[0].compositionInfo.schemaHash).toEqual('hash2');
+    // second call should have previous info in the second arg
     expect(secondCall[1].schema).toBeDefined();
+    expect(secondCall[1].compositionInfo.schemaHash).toEqual('hash1');
+
     done();
   });
 
@@ -126,30 +154,30 @@ describe('lifecycle hooks', () => {
 
   it('warns when polling on the default fetcher', async () => {
     const consoleSpy = jest.spyOn(console, 'warn');
-    const gateway = new ApolloGateway({
+    new ApolloGateway({
       serviceList: serviceDefinitions,
       experimental_pollInterval: 10,
     });
     expect(consoleSpy).toHaveBeenCalledTimes(1);
     expect(consoleSpy.mock.calls[0]).toMatchInlineSnapshot(`
-      Array [
-        "Polling running services is dangerous and not recommended in production. Polling should only be used against a registry. If you are polling running services, use with caution.",
-      ]
-    `);
+                        Array [
+                          "Polling running services is dangerous and not recommended in production. Polling should only be used against a registry. If you are polling running services, use with caution.",
+                        ]
+                `);
     consoleSpy.mockRestore();
   });
 
   it('warns when polling using a custom serviceList fetcher', async () => {
     const consoleSpy = jest.spyOn(console, 'warn');
-    const gateway = new ApolloGateway({
+    new ApolloGateway({
       experimental_updateServiceDefinitions: jest.fn(),
       experimental_pollInterval: 10,
     });
     expect(consoleSpy).toHaveBeenCalledTimes(1);
     expect(consoleSpy.mock.calls[0]).toMatchInlineSnapshot(`
-      Array [
-        "Polling running services is dangerous and not recommended in production. Polling should only be used against a registry. If you are polling running services, use with caution.",
-      ]
-    `);
+                        Array [
+                          "Polling running services is dangerous and not recommended in production. Polling should only be used against a registry. If you are polling running services, use with caution.",
+                        ]
+                `);
   });
 });

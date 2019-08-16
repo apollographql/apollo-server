@@ -29,7 +29,10 @@ import {
 } from './executeQueryPlan';
 
 import { getServiceDefinitionsFromRemoteEndpoint } from './loadServicesFromRemoteEndpoint';
-import { getServiceDefinitionsFromStorage } from './loadServicesFromStorage';
+import {
+  getServiceDefinitionsFromStorage,
+  CompositionMetadata,
+} from './loadServicesFromStorage';
 
 import { serializeQueryPlan, QueryPlan, OperationContext } from './QueryPlan';
 import { GraphQLDataSource } from './datasources/types';
@@ -98,14 +101,17 @@ type DidResolveQueryPlanCallback = ({
 type DidFailCompositionCallback = ({
   errors,
   serviceList,
+  compositionInfo,
 }: {
   readonly errors: GraphQLError[];
   readonly serviceList: ServiceDefinition[];
+  readonly compositionInfo?: CompositionMetadata;
 }) => void;
 
 interface CompositionInfo {
   serviceDefinitions: ServiceDefinition[];
   schema: GraphQLSchema;
+  compositionInfo?: CompositionMetadata;
 }
 
 type DidUpdateCompositionCallback = (
@@ -113,9 +119,18 @@ type DidUpdateCompositionCallback = (
   previousConfig?: CompositionInfo,
 ) => void;
 
-type UpdateServiceDefinitions = (
+export type UpdateServiceDefinitions = (
   config: GatewayConfig,
-) => Promise<[ServiceDefinition[], boolean]>;
+) => Promise<
+  | {
+      serviceDefinitions: ServiceDefinition[];
+      compositionInfo?: CompositionMetadata;
+      isNewSchema: true;
+    }
+  | { isNewSchema: false }
+>;
+
+type Await<T> = T extends Promise<infer U> ? U : T;
 
 export class ApolloGateway implements GraphQLService {
   public schema?: GraphQLSchema;
@@ -127,6 +142,7 @@ export class ApolloGateway implements GraphQLService {
   private pollingTimer?: NodeJS.Timer;
   private onSchemaChangeListeners = new Set<SchemaChangeCallback>();
   private serviceDefinitions: ServiceDefinition[] = [];
+  private compositionInfo?: CompositionMetadata;
 
   // Observe query plan, service info, and operation info prior to execution.
   // The information made available here will give insight into the resulting
@@ -166,7 +182,7 @@ export class ApolloGateway implements GraphQLService {
     }
 
     if (isLocalConfig(this.config)) {
-      this.createSchema(this.config.localServiceList);
+      this.schema = this.createSchema(this.config.localServiceList);
     }
 
     this.initializeQueryPlanStore();
@@ -207,6 +223,7 @@ export class ApolloGateway implements GraphQLService {
     const loader = async () => {
       const previousSchema = this.schema;
       const previousServiceDefinitions = this.serviceDefinitions;
+      const previousCompositionInfo = this.compositionInfo;
 
       if (options && options.engine) {
         if (!options.engine.graphVariant)
@@ -215,29 +232,40 @@ export class ApolloGateway implements GraphQLService {
       }
 
       this.logger.debug('Loading configuration for gateway');
-      const [services] = await this.updateServiceDefinitions(this.config);
+      const result = await this.updateServiceDefinitions(this.config);
 
       this.logger.debug('Configuration loaded for gateway');
 
+      if (!result.isNewSchema) return;
+
       if (
-        JSON.stringify(this.serviceDefinitions) === JSON.stringify(services)
+        JSON.stringify(this.serviceDefinitions) ===
+        JSON.stringify(result.serviceDefinitions)
       ) {
         this.logger.debug('No change in service definitions since last check');
+      } else {
+        this.serviceDefinitions = result.serviceDefinitions;
       }
 
-      this.schema = this.createSchema(services);
-      this.serviceDefinitions = services;
+      this.compositionInfo = result.compositionInfo;
+      this.schema = this.createSchema(result.serviceDefinitions);
 
       if (this.experimental_didUpdateComposition) {
         this.experimental_didUpdateComposition(
           {
-            serviceDefinitions: services,
+            serviceDefinitions: result.serviceDefinitions,
             schema: this.schema,
+            ...(this.compositionInfo && {
+              compositionInfo: this.compositionInfo,
+            }),
           },
           previousServiceDefinitions &&
             previousSchema && {
               serviceDefinitions: previousServiceDefinitions,
               schema: previousSchema,
+              ...(previousCompositionInfo && {
+                compositionInfo: previousCompositionInfo,
+              }),
             },
         );
       }
@@ -257,36 +285,38 @@ export class ApolloGateway implements GraphQLService {
     };
   }
 
-  protected createSchema(services: ServiceDefinition[]) {
+  protected createSchema(serviceList: ServiceDefinition[]) {
     this.logger.debug(
-      `Composing schema from service list: \n${services
+      `Composing schema from service list: \n${serviceList
         .map(({ name, url }) => `  ${url || 'local'}: ${name}`)
         .join('\n')}`,
     );
 
-    const { schema, errors } = composeAndValidate(services);
+    const { schema, errors } = composeAndValidate(serviceList);
 
     if (errors && errors.length > 0) {
       if (this.experimental_didFailComposition) {
         this.experimental_didFailComposition({
           errors,
-          serviceList: services,
+          serviceList,
+          ...(this.compositionInfo && {
+            compositionInfo: this.compositionInfo,
+          }),
         });
       }
       throw new GraphQLSchemaValidationError(errors);
     }
+
+    this.createServices(serviceList);
+
+    this.logger.debug('Schema loaded and ready for execution');
 
     // this is a temporary workaround for GraphQLFieldExtensions automatic
     // wrapping of all fields when using ApolloServer. Here we wrap all fields
     // with support for resolving aliases as part of the root value which
     // happens because alises are resolved by sub services and the shape
     // of the rootvalue already contains the aliased fields as responseNames
-    this.schema = wrapSchemaWithAliasResolver(schema);
-
-    this.createServices(services);
-
-    this.logger.debug('Schema loaded and ready for execution');
-    return schema;
+    return wrapSchemaWithAliasResolver(schema);
   }
 
   public onSchemaChange(callback: SchemaChangeCallback): Unsubscriber {
@@ -310,11 +340,9 @@ export class ApolloGateway implements GraphQLService {
     if (this.pollingTimer) clearInterval(this.pollingTimer);
 
     this.pollingTimer = setInterval(async () => {
-      let services, isNewSchema;
+      let result: Await<ReturnType<UpdateServiceDefinitions>>;
       try {
-        [services, isNewSchema] = await this.updateServiceDefinitions(
-          this.config,
-        );
+        result = await this.updateServiceDefinitions(this.config);
       } catch (e) {
         this.logger.debug(
           'Error checking for schema updates. Falling back to existing schema.',
@@ -322,13 +350,16 @@ export class ApolloGateway implements GraphQLService {
         );
         return;
       }
-      if (!isNewSchema) {
+
+      if (!result.isNewSchema) {
         this.logger.debug('No changes to gateway config');
         return;
       }
+
       if (this.queryPlanStore) this.queryPlanStore.flush();
       this.logger.debug('Gateway config has changed, updating schema');
-      this.createSchema(services);
+
+      this.schema = this.createSchema(result.serviceDefinitions);
       try {
         this.onSchemaChangeListeners.forEach(listener =>
           listener(this.schema!),
@@ -364,9 +395,9 @@ export class ApolloGateway implements GraphQLService {
 
   protected async loadServiceDefinitions(
     config: GatewayConfig,
-  ): Promise<[ServiceDefinition[], boolean]> {
+  ): ReturnType<UpdateServiceDefinitions> {
     if (isLocalConfig(config)) {
-      return [config.localServiceList, false];
+      return { isNewSchema: false };
     }
 
     if (isRemoteConfig(config)) {
