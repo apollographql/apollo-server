@@ -143,7 +143,7 @@ Hapi follows the same pattern with `apollo-server-express` replaced with `apollo
 
 ### Serverless
 
-Apollo Server works great in "serverless" environments such as Amazon Lambda and Microsoft Azure Functions. See [deploying with AWS Lambda](/deployment/lambda/) and [deploying with Azure Functions](/deployment/azure-functions) for more details.
+Apollo Server works great in "serverless" environments such as Amazon Lambda and Microsoft Azure Functions. See [deploying with AWS Lambda](/deployment/lambda/) and [deploying with Azure Functions](/deployment/azure-functions/) for more details.
 
 ### SSL/TLS Support
 
