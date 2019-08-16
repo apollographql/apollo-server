@@ -203,18 +203,13 @@ export class ApolloGateway implements GraphQLService {
         config.experimental_didUpdateComposition;
       this.experimental_pollInterval = config.experimental_pollInterval;
 
-      // ie if they have a pollinterval and a custom loader or a serviceList
-      if (config.experimental_pollInterval) {
-        if (
-          config.experimental_updateServiceDefinitions ||
-          (config as RemoteGatewayConfig).serviceList
-        ) {
-          console.warn(
-            'Polling running services is dangerous and not recommended in production. ' +
-              'Polling should only be used against a registry. ' +
-              'If you are polling running services, use with caution.',
-          );
-        }
+      // Warn against using the pollInterval and a serviceList simulatenously
+      if (config.experimental_pollInterval && isRemoteConfig(config)) {
+        console.warn(
+          'Polling running services is dangerous and not recommended in production. ' +
+            'Polling should only be used against a registry. ' +
+            'If you are polling running services, use with caution.',
+        );
       }
     }
   }
