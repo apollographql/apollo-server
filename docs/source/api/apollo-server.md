@@ -61,10 +61,10 @@ new ApolloServer({
 new ApolloServer({
   typeDefs,
   resolvers,
-  rootValue: (documentAST) => ({
+  rootValue: (documentAST) => {
     const op = getOperationAST(documentNode)
     return op === 'mutation' ? mutationRoot : queryRoot;
-  })
+  }
 });
 ```
 
