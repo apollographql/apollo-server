@@ -169,10 +169,6 @@ This application should be a great starting point for any GraphQL server, but th
 
 ## More information
 
-### GitHub Repository
-
-The code from the above examples can be accessed in our [getting started example repository](https://github.com/apollographql/graphql-server-example) on GitHub
-
 ### Online Playground
 
 It's also possible to play with this example on Glitch, by remixing the repository.
