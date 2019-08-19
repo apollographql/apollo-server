@@ -11,7 +11,7 @@ Understanding GraphQL execution inside of Apollo Server is critical to developin
 
 [Apollo Graph Manager](https://www.apollographql.com/docs/platform/graph-manager-overview/) provides an integrated hub for all of your GraphQL performance data. Obtain an API key from the [Graph Manager UI](https://engine.apollographql.com/) and provide it to Apollo Server to enable automatic reporting of performance and error data. Graph Manager aggregates and displays information for your [schema](https://www.apollographql.com/docs/engine/features/performance.html), [queries](https://www.apollographql.com/docs/engine/features/query-tracking.html), [requests](https://www.apollographql.com/docs/engine/performance.html), and [errors](https://www.apollographql.com/docs/engine/features/error-tracking.html). You can also configure [alerts](https://www.apollographql.com/docs/engine/features/alerts.html) that support [Slack](https://www.apollographql.com/docs/engine/integrations/slack.html) and [Datadog](https://www.apollographql.com/docs/engine/integrations/datadog.html) integrations.
 
-To set connect Apollo Server to Graph Manager, first [visit the Graph Manager UI](https://engine.apollographql.com/) to get a Graph Manager API key.
+To connect Apollo Server to Graph Manager, first [visit the Graph Manager UI](https://engine.apollographql.com/) to get a Graph Manager API key.
 
 You can provide the API key to Apollo Server in any of the following ways:
 

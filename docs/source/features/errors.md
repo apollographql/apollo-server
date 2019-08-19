@@ -182,7 +182,7 @@ reporting the error entirely.
 
 The following sections give some examples of various use-cases for `rewriteError`.
 
-#### Avoid reporting lower-severity predefined errors
+#### Avoid reporting lower-severity, predefined errors
 
 If an application is using the predefined errors noted above (`AuthenticationError`, `ForbiddenError`, `UserInputError`, etc.), these can
 be used with `rewriteError`.

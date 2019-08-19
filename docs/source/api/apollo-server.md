@@ -299,7 +299,7 @@ addMockFunctionsToSchema({
   API key for the service. Obtain an API key from
   [Graph Manager](https://engine.apollographql.com) by logging in and creating
   a service. You can also specify an API key with the `ENGINE_API_KEY`
-  environment variable. This option takes precedence over the environment variable.
+  environment variable, although the `apiKey` option takes precedence.
 
 *  `calculateSignature`: (ast: DocumentNode, operationName: string) => string
 
@@ -318,7 +318,8 @@ addMockFunctionsToSchema({
    In addition to interval-based reporting, Apollo Server sends a report to
    Graph Manager whenever the report's size exceeds this value in
    bytes (default: 4MB). Note that this is a rough limit. The size of the
-   report's header and some other top-level bytes are ignored. We just add up the lengths of the serialized traces and signatures.
+   report's header and some other top-level bytes are ignored. The report size is
+   limited to the sum of the lengths of serialized traces and signatures.
 
 *  `endpointUrl`: string
 
@@ -416,7 +417,7 @@ addMockFunctionsToSchema({
    the `err.message` property) should be returned or the function should return
    an explicit `null` to avoid reporting the error entirely.  It is not
    permissible to return `undefined`. Note that most `GraphQLError` fields,
-   like `path`, will get copied from the original error to the new error: this
+   like `path`, will be copied from the original error to the new error: this
    way, you can just `return new GraphQLError("message")` without having to
    explicitly keep it associated with the same node. Specifically, only the
    `message` and `extensions` properties on the returned `GraphQLError` are
@@ -431,7 +432,7 @@ addMockFunctionsToSchema({
 
    Creates a client context(ClientInfo) based on the request pipeline's
    context, which contains values like the request, response, cache, and
-   context. This generated client information will be provided to Apollo
+   context. This generated client information will be provided to
    Graph Manager and can be used to filter metrics. Set `clientName` to identify a
    particular client. Use `clientVersion` to specify a version for a client
    name.  The default function will use the `clientInfo` field inside of

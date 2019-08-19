@@ -41,7 +41,7 @@ server.listen({ port: process.env.PORT || 4000 }).then(({ url }) => {
 
 There are a couple of ways to push projects to Heroku. Automatically, with GitHub integration, or manually using `git push`.
 
-### Deploying with Heroku push
+### Deploying with Git
 
 Install the [Heroku CLI](https://devcenter.heroku.com/articles/heroku-cli), then inside of your project, run:
 
