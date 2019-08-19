@@ -95,7 +95,8 @@ describe('lifecycle hooks', () => {
     // This is the simplest way I could find to achieve mocked functions that leverage our types
     const mockUpdate = jest.fn(update);
 
-    // We want to return a different composition across two ticks,
+    // We want to return a different composition across two ticks, so we mock it
+    // slightly differenty
     mockUpdate.mockImplementationOnce(async (_config: GatewayConfig) => {
       const services = serviceDefinitions.filter(s => s.name !== 'books');
       return {
@@ -127,8 +128,8 @@ describe('lifecycle hooks', () => {
     expect(mockDidUpdate).toBeCalledTimes(1);
 
     jest.runOnlyPendingTimers();
-    // XXX This allows the ApolloGateway.loader() Promise to resolve after the poll ticks,
-    // and is necessary for allowing mockDidUpdate to see the expected calls.
+    // XXX This allows the ApolloGateway.updateComposition() Promise to resolve
+    // after the poll ticks, and is necessary for allowing mockDidUpdate to see the expected calls.
     await Promise.resolve();
 
     expect(mockUpdate).toBeCalledTimes(2);
@@ -171,11 +172,9 @@ describe('lifecycle hooks', () => {
       experimental_pollInterval: 10,
     });
     expect(consoleSpy).toHaveBeenCalledTimes(1);
-    expect(consoleSpy.mock.calls[0]).toMatchInlineSnapshot(`
-      Array [
-        "Polling running services is dangerous and not recommended in production. Polling should only be used against a registry. If you are polling running services, use with caution.",
-      ]
-    `);
+    expect(consoleSpy.mock.calls[0][0]).toMatch(
+      'Polling running services is dangerous and not recommended in production. Polling should only be used against a registry. If you are polling running services, use with caution.',
+    );
     consoleSpy.mockRestore();
   });
 });
