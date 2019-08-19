@@ -215,69 +215,72 @@ export class ApolloGateway implements GraphQLService {
   }
 
   public async load(options?: { engine?: GraphQLServiceEngineConfig }) {
-    const loader = async () => {
-      const previousSchema = this.schema;
-      const previousServiceDefinitions = this.serviceDefinitions;
-      const previousCompositionInfo = this.compositionInfo;
-
-      if (options && options.engine) {
-        if (!options.engine.graphVariant)
-          console.warn('No graph variant provided. Defaulting to `current`.');
-        this.engineConfig = options.engine;
-      }
-
-      this.logger.debug('Loading configuration for gateway');
-      const result = await this.updateServiceDefinitions(this.config);
-
-      this.logger.debug('Configuration loaded for gateway');
-
-      if (!result.isNewSchema) return;
-
-      if (
-        JSON.stringify(this.serviceDefinitions) ===
-        JSON.stringify(result.serviceDefinitions)
-      ) {
-        this.logger.debug('No change in service definitions since last check');
-      } else {
-        this.serviceDefinitions = result.serviceDefinitions;
-      }
-
-      this.compositionInfo = result.compositionInfo;
-      this.schema = this.createSchema(result.serviceDefinitions);
-
-      if (this.experimental_didUpdateComposition) {
-        this.experimental_didUpdateComposition(
-          {
-            serviceDefinitions: result.serviceDefinitions,
-            schema: this.schema,
-            ...(this.compositionInfo && {
-              compositionInfo: this.compositionInfo,
-            }),
-          },
-          previousServiceDefinitions &&
-            previousSchema && {
-              serviceDefinitions: previousServiceDefinitions,
-              schema: previousSchema,
-              ...(previousCompositionInfo && {
-                compositionInfo: previousCompositionInfo,
-              }),
-            },
-        );
-      }
-    };
-
-    await loader();
+    await this.updateComposition(options);
     if (this.experimental_pollInterval) {
-      setInterval(loader, this.experimental_pollInterval);
+      setInterval(
+        () => this.updateComposition(options),
+        this.experimental_pollInterval,
+      );
     }
 
     return {
-      // we know this will be here since we're running loader before here,
-      // and this.schema is set inside there by createSchema which requires
-      // a return of a schema
+      // we know this will be here since we're awaiting loader before here which sets this.schema
       schema: this.schema!,
       executor: this.executor,
     };
+  }
+
+  protected async updateComposition(options?: {
+    engine?: GraphQLServiceEngineConfig;
+  }) {
+    const previousSchema = this.schema;
+    const previousServiceDefinitions = this.serviceDefinitions;
+    const previousCompositionInfo = this.compositionInfo;
+
+    if (options && options.engine) {
+      if (!options.engine.graphVariant)
+        console.warn('No graph variant provided. Defaulting to `current`.');
+      this.engineConfig = options.engine;
+    }
+
+    this.logger.debug('Loading configuration for gateway');
+    const result = await this.updateServiceDefinitions(this.config);
+
+    this.logger.debug('Configuration loaded for gateway');
+
+    if (!result.isNewSchema) return;
+
+    if (
+      JSON.stringify(this.serviceDefinitions) ===
+      JSON.stringify(result.serviceDefinitions)
+    ) {
+      this.logger.debug('No change in service definitions since last check');
+    } else {
+      this.serviceDefinitions = result.serviceDefinitions;
+    }
+
+    this.compositionInfo = result.compositionInfo;
+    this.schema = this.createSchema(result.serviceDefinitions);
+
+    if (this.experimental_didUpdateComposition) {
+      this.experimental_didUpdateComposition(
+        {
+          serviceDefinitions: result.serviceDefinitions,
+          schema: this.schema,
+          ...(this.compositionInfo && {
+            compositionInfo: this.compositionInfo,
+          }),
+        },
+        previousServiceDefinitions &&
+          previousSchema && {
+            serviceDefinitions: previousServiceDefinitions,
+            schema: previousSchema,
+            ...(previousCompositionInfo && {
+              compositionInfo: previousCompositionInfo,
+            }),
+          },
+      );
+    }
   }
 
   protected createSchema(serviceList: ServiceDefinition[]) {
