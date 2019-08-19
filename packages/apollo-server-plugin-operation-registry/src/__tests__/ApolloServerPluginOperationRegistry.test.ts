@@ -1,6 +1,6 @@
 import plugin from '../ApolloServerPluginOperationRegistry';
 
-describe.only('Operation registry plugin', () => {
+describe('Operation registry plugin', () => {
   it('will instantiate when not called with options', () => {
     expect(plugin()()).toHaveProperty('serverWillStart');
   });
