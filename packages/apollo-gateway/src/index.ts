@@ -224,7 +224,8 @@ export class ApolloGateway implements GraphQLService {
     }
 
     return {
-      // we know this will be here since we're awaiting loader before here which sets this.schema
+      // we know this will be here since we're awaiting this.updateComposition
+      // before here which sets this.schema
       schema: this.schema!,
       executor: this.executor,
     };
