@@ -2,7 +2,7 @@ import { ServiceDefinition } from '@apollo/federation';
 import { GraphQLExecutionResult } from 'apollo-server-types';
 import { parse } from 'graphql';
 import fetch, { HeadersInit } from 'node-fetch';
-import { ServiceEndpointDefinition } from './';
+import { ServiceEndpointDefinition, UpdateServiceDefinitions } from './';
 
 let serviceDefinitionMap: Map<string, string> = new Map();
 
@@ -12,16 +12,16 @@ export async function getServiceDefinitionsFromRemoteEndpoint({
 }: {
   serviceList: ServiceEndpointDefinition[];
   headers?: HeadersInit;
-}): Promise<[ServiceDefinition[], boolean]> {
+}): ReturnType<UpdateServiceDefinitions> {
   if (!serviceList || !serviceList.length) {
     throw new Error(
       'Tried to load services from remote endpoints but none provided',
     );
   }
 
-  let isNew = false;
+  let isNewSchema = false;
   // for each service, fetch its introspection schema
-  const services: ServiceDefinition[] = (await Promise.all(
+  const serviceDefinitions: ServiceDefinition[] = (await Promise.all(
     serviceList.map(service => {
       if (!service.url) {
         throw new Error(
@@ -43,7 +43,7 @@ export async function getServiceDefinitionsFromRemoteEndpoint({
             // this lets us know if any downstream service has changed
             // and we need to recalculate the schema
             if (previousDefinition !== typeDefs) {
-              isNew = true;
+              isNewSchema = true;
             }
             serviceDefinitionMap.set(service.name, typeDefs);
             return { ...service, typeDefs: parse(typeDefs) };
@@ -63,8 +63,12 @@ export async function getServiceDefinitionsFromRemoteEndpoint({
           return false;
         });
     }),
-  ).then(services => services.filter(Boolean))) as ServiceDefinition[];
+  ).then(serviceDefinitions =>
+    serviceDefinitions.filter(Boolean),
+  )) as ServiceDefinition[];
 
-  // return services
-  return [services, isNew];
+  // XXX TS can't seem to infer that isNewSchema could be true
+  return (isNewSchema as true | false)
+    ? { serviceDefinitions, isNewSchema: true }
+    : { isNewSchema: false };
 }
