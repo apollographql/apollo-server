@@ -114,7 +114,7 @@ interface CompositionInfo {
   compositionInfo?: CompositionMetadata;
 }
 
-type DidUpdateCompositionCallback = (
+export type DidUpdateCompositionCallback = (
   currentConfig: CompositionInfo,
   previousConfig?: CompositionInfo,
 ) => void;

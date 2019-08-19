@@ -2,6 +2,7 @@ import {
   ApolloGateway,
   GatewayConfig,
   UpdateServiceDefinitions,
+  DidUpdateCompositionCallback,
 } from '../../index';
 import * as accounts from '../__fixtures__/schemas/accounts';
 import * as books from '../__fixtures__/schemas/books';
@@ -69,7 +70,9 @@ describe('lifecycle hooks', () => {
     done();
   });
 
-  it('calls experimental_didUpdateComposition on schema update', async done => {
+  it('calls experimental_didUpdateComposition on schema update', async () => {
+    jest.useFakeTimers();
+
     const compositionInfo = {
       formatVersion: 1,
       id: 'abc',
@@ -77,19 +80,23 @@ describe('lifecycle hooks', () => {
       schemaHash: 'hash1',
     };
 
-    const update = jest.fn((async (_config: GatewayConfig) => {
-      return {
-        serviceDefinitions,
-        isNewSchema: true,
-        compositionInfo: {
-          ...compositionInfo,
-          id: '123',
-          schemaHash: 'hash2',
-        },
-      };
-    }) as UpdateServiceDefinitions);
+    const update: UpdateServiceDefinitions = async (
+      _config: GatewayConfig,
+    ) => ({
+      serviceDefinitions,
+      isNewSchema: true,
+      compositionInfo: {
+        ...compositionInfo,
+        id: '123',
+        schemaHash: 'hash2',
+      },
+    });
 
-    update.mockImplementationOnce(async (_config: GatewayConfig) => {
+    // This is the simplest way I could find to achieve mocked functions that leverage our types
+    const mockUpdate = jest.fn(update);
+
+    // We want to return a different composition across two ticks,
+    mockUpdate.mockImplementationOnce(async (_config: GatewayConfig) => {
       const services = serviceDefinitions.filter(s => s.name !== 'books');
       return {
         serviceDefinitions: [
@@ -105,37 +112,42 @@ describe('lifecycle hooks', () => {
       };
     });
 
-    const experimental_didUpdateComposition = jest.fn(() => {});
+    const didUpdate: DidUpdateCompositionCallback = () => {};
+    const mockDidUpdate = jest.fn(didUpdate);
 
     const gateway = new ApolloGateway({
-      experimental_updateServiceDefinitions: update,
+      experimental_updateServiceDefinitions: mockUpdate,
+      experimental_didUpdateComposition: mockDidUpdate,
       experimental_pollInterval: 10,
-      experimental_didUpdateComposition,
     });
 
     await gateway.load();
-    await new Promise(resolve => setTimeout(resolve, 19));
 
-    expect(update).toBeCalledTimes(2);
+    expect(mockUpdate).toBeCalledTimes(1);
+    expect(mockDidUpdate).toBeCalledTimes(1);
 
-    const {
-      calls: [firstCall, secondCall],
-    } = experimental_didUpdateComposition.mock;
+    jest.runOnlyPendingTimers();
+    // XXX This allows the ApolloGateway.loader() Promise to resolve after the poll ticks,
+    // and is necessary for allowing mockDidUpdate to see the expected calls.
+    await Promise.resolve();
 
-    expect(experimental_didUpdateComposition).toHaveBeenCalledTimes(2);
+    expect(mockUpdate).toBeCalledTimes(2);
+    expect(mockDidUpdate).toBeCalledTimes(2);
 
-    // first call's `current` arg should have a schema
-    expect(firstCall[0].schema).toBeDefined();
-    expect(firstCall[0].compositionInfo.schemaHash).toEqual('hash1');
+    const [firstCall, secondCall] = mockDidUpdate.mock.calls;
+
+    expect(firstCall[0]!.schema).toBeDefined();
+    expect(firstCall[0].compositionInfo!.schemaHash).toEqual('hash1');
+    // first call should have no second "previous" argument
     expect(firstCall[1]).toBeUndefined();
 
     expect(secondCall[0].schema).toBeDefined();
-    expect(secondCall[0].compositionInfo.schemaHash).toEqual('hash2');
+    expect(secondCall[0].compositionInfo!.schemaHash).toEqual('hash2');
     // second call should have previous info in the second arg
-    expect(secondCall[1].schema).toBeDefined();
-    expect(secondCall[1].compositionInfo.schemaHash).toEqual('hash1');
+    expect(secondCall[1]!.schema).toBeDefined();
+    expect(secondCall[1]!.compositionInfo!.schemaHash).toEqual('hash1');
 
-    done();
+    jest.useRealTimers();
   });
 
   it('uses default service definition updater', async () => {
@@ -160,10 +172,10 @@ describe('lifecycle hooks', () => {
     });
     expect(consoleSpy).toHaveBeenCalledTimes(1);
     expect(consoleSpy.mock.calls[0]).toMatchInlineSnapshot(`
-                        Array [
-                          "Polling running services is dangerous and not recommended in production. Polling should only be used against a registry. If you are polling running services, use with caution.",
-                        ]
-                `);
+      Array [
+        "Polling running services is dangerous and not recommended in production. Polling should only be used against a registry. If you are polling running services, use with caution.",
+      ]
+    `);
     consoleSpy.mockRestore();
   });
 });
