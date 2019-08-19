@@ -44,7 +44,7 @@ describe('lifecycle hooks', () => {
       async experimental_updateServiceDefinitions(_config: GatewayConfig) {
         return {
           serviceDefinitions: [serviceDefinitions[0]],
-          compositionInfo: {
+          compositionMetadata: {
             formatVersion: 1,
             id: 'abc',
             implementingServiceLocations: [],
@@ -65,7 +65,7 @@ describe('lifecycle hooks', () => {
     expect(callbackArgs.errors[0]).toMatchInlineSnapshot(
       `[GraphQLError: [product] Book -> \`Book\` is an extension type, but \`Book\` is not defined in any service]`,
     );
-    expect(callbackArgs.compositionInfo.id).toEqual('abc');
+    expect(callbackArgs.compositionMetadata.id).toEqual('abc');
     expect(experimental_didFailComposition).toBeCalled();
     done();
   });
@@ -73,7 +73,7 @@ describe('lifecycle hooks', () => {
   it('calls experimental_didUpdateComposition on schema update', async () => {
     jest.useFakeTimers();
 
-    const compositionInfo = {
+    const compositionMetadata = {
       formatVersion: 1,
       id: 'abc',
       implementingServiceLocations: [],
@@ -85,8 +85,8 @@ describe('lifecycle hooks', () => {
     ) => ({
       serviceDefinitions,
       isNewSchema: true,
-      compositionInfo: {
-        ...compositionInfo,
+      compositionMetadata: {
+        ...compositionMetadata,
         id: '123',
         schemaHash: 'hash2',
       },
@@ -109,7 +109,7 @@ describe('lifecycle hooks', () => {
           },
         ],
         isNewSchema: true,
-        compositionInfo,
+        compositionMetadata,
       };
     });
 
@@ -138,15 +138,15 @@ describe('lifecycle hooks', () => {
     const [firstCall, secondCall] = mockDidUpdate.mock.calls;
 
     expect(firstCall[0]!.schema).toBeDefined();
-    expect(firstCall[0].compositionInfo!.schemaHash).toEqual('hash1');
+    expect(firstCall[0].compositionMetadata!.schemaHash).toEqual('hash1');
     // first call should have no second "previous" argument
     expect(firstCall[1]).toBeUndefined();
 
     expect(secondCall[0].schema).toBeDefined();
-    expect(secondCall[0].compositionInfo!.schemaHash).toEqual('hash2');
+    expect(secondCall[0].compositionMetadata!.schemaHash).toEqual('hash2');
     // second call should have previous info in the second arg
     expect(secondCall[1]!.schema).toBeDefined();
-    expect(secondCall[1]!.compositionInfo!.schemaHash).toEqual('hash1');
+    expect(secondCall[1]!.compositionMetadata!.schemaHash).toEqual('hash1');
 
     jest.useRealTimers();
   });

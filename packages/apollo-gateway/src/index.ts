@@ -101,17 +101,17 @@ type DidResolveQueryPlanCallback = ({
 type DidFailCompositionCallback = ({
   errors,
   serviceList,
-  compositionInfo,
+  compositionMetadata,
 }: {
   readonly errors: GraphQLError[];
   readonly serviceList: ServiceDefinition[];
-  readonly compositionInfo?: CompositionMetadata;
+  readonly compositionMetadata?: CompositionMetadata;
 }) => void;
 
 interface CompositionInfo {
   serviceDefinitions: ServiceDefinition[];
   schema: GraphQLSchema;
-  compositionInfo?: CompositionMetadata;
+  compositionMetadata?: CompositionMetadata;
 }
 
 export type DidUpdateCompositionCallback = (
@@ -124,7 +124,7 @@ export type UpdateServiceDefinitions = (
 ) => Promise<
   | {
       serviceDefinitions: ServiceDefinition[];
-      compositionInfo?: CompositionMetadata;
+      compositionMetadata?: CompositionMetadata;
       isNewSchema: true;
     }
   | { isNewSchema: false }
@@ -142,7 +142,7 @@ export class ApolloGateway implements GraphQLService {
   private pollingTimer?: NodeJS.Timer;
   private onSchemaChangeListeners = new Set<SchemaChangeCallback>();
   private serviceDefinitions: ServiceDefinition[] = [];
-  private compositionInfo?: CompositionMetadata;
+  private compositionMetadata?: CompositionMetadata;
 
   // Observe query plan, service info, and operation info prior to execution.
   // The information made available here will give insight into the resulting
@@ -236,7 +236,7 @@ export class ApolloGateway implements GraphQLService {
   }) {
     const previousSchema = this.schema;
     const previousServiceDefinitions = this.serviceDefinitions;
-    const previousCompositionInfo = this.compositionInfo;
+    const previousCompositionMetadata = this.compositionMetadata;
 
     if (options && options.engine) {
       if (!options.engine.graphVariant)
@@ -260,7 +260,7 @@ export class ApolloGateway implements GraphQLService {
       this.serviceDefinitions = result.serviceDefinitions;
     }
 
-    this.compositionInfo = result.compositionInfo;
+    this.compositionMetadata = result.compositionMetadata;
     this.schema = this.createSchema(result.serviceDefinitions);
 
     if (this.experimental_didUpdateComposition) {
@@ -268,16 +268,16 @@ export class ApolloGateway implements GraphQLService {
         {
           serviceDefinitions: result.serviceDefinitions,
           schema: this.schema,
-          ...(this.compositionInfo && {
-            compositionInfo: this.compositionInfo,
+          ...(this.compositionMetadata && {
+            compositionMetadata: this.compositionMetadata,
           }),
         },
         previousServiceDefinitions &&
           previousSchema && {
             serviceDefinitions: previousServiceDefinitions,
             schema: previousSchema,
-            ...(previousCompositionInfo && {
-              compositionInfo: previousCompositionInfo,
+            ...(previousCompositionMetadata && {
+              compositionMetadata: previousCompositionMetadata,
             }),
           },
       );
@@ -298,8 +298,8 @@ export class ApolloGateway implements GraphQLService {
         this.experimental_didFailComposition({
           errors,
           serviceList,
-          ...(this.compositionInfo && {
-            compositionInfo: this.compositionInfo,
+          ...(this.compositionMetadata && {
+            compositionMetadata: this.compositionMetadata,
           }),
         });
       }

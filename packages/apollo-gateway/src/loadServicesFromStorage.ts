@@ -95,10 +95,12 @@ export async function getServiceDefinitionsFromStorage({
     `${urlPartialSchemaBase}/${parsedLink.configPath}`,
   );
 
-  const compositionInfo = JSON.parse(configFileResult) as CompositionMetadata;
+  const compositionMetadata = JSON.parse(
+    configFileResult,
+  ) as CompositionMetadata;
 
   const serviceDefinitions = await fetchServiceDefinitions(
-    compositionInfo.implementingServiceLocations,
+    compositionMetadata.implementingServiceLocations,
   );
 
   // explicity return that this is a new schema, as the link file has changed.
@@ -107,7 +109,7 @@ export async function getServiceDefinitionsFromStorage({
   // (for instance if a partial schema is removed or a partial schema is rolled back to a prior version, which is still in cache)
   return {
     serviceDefinitions,
-    compositionInfo,
+    compositionMetadata,
     isNewSchema: true,
   };
 }
