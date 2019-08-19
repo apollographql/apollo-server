@@ -92,7 +92,7 @@
     "@types/request": "2.48.2",
     "@types/request-promise": "4.1.44",
     "@types/test-listen": "1.1.0",
-    "@types/type-is": "1.6.2",
+    "@types/type-is": "1.6.3",
     "@types/ws": "6.0.2",
     "apollo-fetch": "0.7.0",
     "apollo-link": "1.2.12",
