@@ -1,7 +1,6 @@
 import { GraphQLRequest } from 'apollo-server-types';
 import { parse } from 'graphql';
 import { Headers, HeadersInit } from 'node-fetch';
-import { ServiceEndpointDefinition } from './';
 import { GraphQLDataSource } from './datasources/types';
 import { ServiceDefinition } from '@apollo/federation';
 
@@ -12,7 +11,8 @@ export async function getServiceDefinitionsFromRemoteEndpoint({
   headers = {},
 }: {
   serviceList: {
-    serviceDefinition: ServiceEndpointDefinition;
+    name: string,
+    url?: string,
     dataSource: GraphQLDataSource;
   }[];
   headers?: HeadersInit;
@@ -26,17 +26,17 @@ export async function getServiceDefinitionsFromRemoteEndpoint({
   let isNew = false;
   // for each service, fetch its introspection schema
   const services: ServiceDefinition[] = (await Promise.all(
-    serviceList.map(({ serviceDefinition, dataSource }) => {
-      if (!serviceDefinition.url) {
+    serviceList.map(({ name, url, dataSource }) => {
+      if (!url) {
         throw new Error(
-          `Tried to load schema from ${serviceDefinition.name} but no url found`,
+          `Tried to load schema from ${name} but no url found`,
         );
       }
 
       const request: GraphQLRequest = {
         query: 'query GetServiceDefinition { _service { sdl } }',
         http: {
-          url: <string>serviceDefinition.url,
+          url,
           method: 'POST',
           headers: new Headers(headers),
         },
@@ -48,16 +48,17 @@ export async function getServiceDefinitionsFromRemoteEndpoint({
           if (data && !errors) {
             const typeDefs = data._service.sdl as string;
             const previousDefinition = serviceDefinitionMap.get(
-              serviceDefinition.name,
+              name,
             );
             // this lets us know if any downstream service has changed
             // and we need to recalculate the schema
             if (previousDefinition !== typeDefs) {
               isNew = true;
             }
-            serviceDefinitionMap.set(serviceDefinition.name, typeDefs);
+            serviceDefinitionMap.set(name, typeDefs);
             return {
-              ...serviceDefinition,
+              name,
+              url,
               typeDefs: parse(typeDefs),
             };
           }
@@ -71,7 +72,7 @@ export async function getServiceDefinitionsFromRemoteEndpoint({
         })
         .catch(error => {
           console.warn(
-            `Encountered error when loading ${serviceDefinition.name} at ${serviceDefinition.url}: ${error.message}`,
+            `Encountered error when loading ${name} at ${url}: ${error.message}`,
           );
           return false;
         });

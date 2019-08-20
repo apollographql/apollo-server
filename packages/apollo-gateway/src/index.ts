@@ -243,7 +243,7 @@ export class ApolloGateway implements GraphQLService {
 
     if (isRemoteConfig(config)) {
       const serviceList = config.serviceList.map(serviceDefinition => ({
-        serviceDefinition,
+        ...serviceDefinition,
         dataSource: this.createDataSource(serviceDefinition),
       }));
 
