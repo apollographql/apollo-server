@@ -2,6 +2,8 @@
 
 ### vNEXT
 
+* Add experimental observability functions [#3110](https://github.com/apollographql/apollo-server/pull/3110)
+
 # v0.8.2
 
 * Handle `null` @requires selections correctly during execution [#3138](https://github.com/apollographql/apollo-server/pull/3138)
