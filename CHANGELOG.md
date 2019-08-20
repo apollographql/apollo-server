@@ -8,6 +8,11 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 - _Nothing yet!_
 
+### v2.8.2
+
+- `apollo-server-koa`: Update dependency koa to v2.8.1 [PR #3175](https://github.com/apollographql/apollo-server/pull/3175)
+- `apollo-server-express`: Update types exported by the ASE package [PR #3173](https://github.com/apollographql/apollo-server/pull/3175) [PR #3172](https://github.com/apollographql/apollo-server/pull/3172)
+
 ### v2.8.1
 
 > [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/84d80eba10d87663dab60af4a1cd46bccf30513f)
@@ -57,7 +62,7 @@ The version headers in this history reflect the versions of Apollo Server itself
   }
   ```
 - `apollo-engine-reporting`: **Behavior change**: By default, send no GraphQL request headers and values to Apollo's servers instead of sending all. Adding the new EngineReportingOption `sendHeaders` to send some or all header values. This replaces the `privateHeaders` option, which is now deprecated. [PR #2931](https://github.com/apollographql/apollo-server/pull/2931)
-   
+
    To maintain the previous behavior of transmitting  **all** GraphQL request headers and values, configure `engine`.`sendHeaders` as following:
      ```js
      engine: {
