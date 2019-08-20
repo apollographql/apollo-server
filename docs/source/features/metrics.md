@@ -1,22 +1,22 @@
 ---
-title: Monitoring and metrics
+title: Metrics and logging
 description: How to monitor Apollo Server's performance
 ---
 
-Understanding GraphQL execution inside of Apollo Server is critical to developing and running a production GraphQL layer. Apollo Server provides sophisticated GraphQL monitoring via integration with Apollo Graph Manager, along with native mechanisms for logging each phase of a GraphQL request.
+Apollo Server integrates seamlessly with Apollo Graph Manager to help you monitor the execution of your GraphQL operations. It also provides configurable mechanisms for logging each phase of a GraphQL operation.
 
-> Using Federation? Check out the documentation for [federated tracing](/federation/metrics/)
+> Using Federation? Check out the documentation for [federated tracing](/federation/metrics/).
 
-## Apollo Graph Manager
+## Sending metrics to Apollo Graph Manager
 
-[Apollo Graph Manager](https://www.apollographql.com/docs/platform/graph-manager-overview/) provides an integrated hub for all of your GraphQL performance data. Obtain an API key from the [Graph Manager UI](https://engine.apollographql.com/) and provide it to Apollo Server to enable automatic reporting of performance and error data. Graph Manager aggregates and displays information for your [schema](https://www.apollographql.com/docs/engine/features/performance.html), [queries](https://www.apollographql.com/docs/engine/features/query-tracking.html), [requests](https://www.apollographql.com/docs/engine/performance.html), and [errors](https://www.apollographql.com/docs/engine/features/error-tracking.html). You can also configure [alerts](https://www.apollographql.com/docs/engine/features/alerts.html) that support [Slack](https://www.apollographql.com/docs/engine/integrations/slack.html) and [Datadog](https://www.apollographql.com/docs/engine/integrations/datadog.html) integrations.
+[Apollo Graph Manager](https://www.apollographql.com/docs/platform/graph-manager-overview/) provides an integrated hub for all of your GraphQL performance data. It aggregates and displays information for your [schema](https://www.apollographql.com/docs/engine/features/performance.html), [queries](https://www.apollographql.com/docs/engine/features/query-tracking.html), [requests](https://www.apollographql.com/docs/engine/performance.html), and [errors](https://www.apollographql.com/docs/engine/features/error-tracking.html). You can also configure [alerts](https://www.apollographql.com/docs/engine/features/alerts.html) that support [Slack](https://www.apollographql.com/docs/engine/integrations/slack.html) and [Datadog](https://www.apollographql.com/docs/engine/integrations/datadog.html) integrations.
 
-To connect Apollo Server to Graph Manager, first [visit the Graph Manager UI](https://engine.apollographql.com/) to get a Graph Manager API key.
+### Connecting to Graph Manager
 
-You can provide the API key to Apollo Server in any of the following ways:
+To connect Apollo Server to Graph Manager, first [visit the Graph Manager UI](https://engine.apollographql.com/) to get a Graph Manager API key. You can provide this API key to Apollo Server in one of the following ways:
 
-* Include the API key in the constructor options for `ApolloServer`
-* Assign the API key to the `ENGINE_API_KEY` environment variable
+* Include the API key in the constructor options for `ApolloServer`.
+* Assign the API key to the `ENGINE_API_KEY` environment variable.
 
 ### Providing an API key via the `ApolloServer` constructor
 
@@ -50,39 +50,40 @@ server.listen().then(({ url }) => {
 You can provide your Graph Manager API key to Apollo Server via the `ENGINE_API_KEY` environment variable. Similarly, you can assign a particular [variant](https://www.apollographql.com/docs/platform/schema-registry/#managing-environments)
 to an Apollo Server instance via the `ENGINE_SCHEMA_TAG` environment variable.
 
-You can set environment variable values on the command line as seen below, or by using the [`dotenv` npm package](https://www.npmjs.com/package/dotenv) (or similar).
+You can set environment variable values on the command line as seen below, or with the [`dotenv` npm package](https://www.npmjs.com/package/dotenv) (or similar).
 
 ```bash
 # Replace the example values below with values specific to your use case.
 ENGINE_API_KEY=YOUR_API_KEY ENGINE_SCHEMA_TAG=development node start-server.js
 ```
 
-### Client awareness
+### Identifying distinct client versions
 
-> For additional information on client awareness, please see the section in our Apollo Platform documentation on [client awareness](https://www.apollographql.com/docs/platform/client-awareness).
+Graph Manager's [client awareness feature](https://www.apollographql.com/docs/platform/client-awareness) enables you to view metrics for distinct versions
+of your clients. To enable this, your clients need to include some or all of the following identifying information in the headers of GraphQL requests they
+send to Apollo Server:
 
-Setting up client awareness enables client-based filtering of metrics and usage patterns within Apollo Graph Manager.  A client's identity has three configurable dimensions:
+| Identifier | Header Name (default) | Example Value |
+|----|----|----|
+| Client name | `apollographql-client-name` | `iOS Native` |
+| Client version | `apollographql-client-version` | `1.0.1` |
 
-* Name (e.g. "Android App")
-* Version (e.g. `1.0.1`)
-* Reference ID (e.g. A Git reference or other supporting identifier)
+Each of these fields can have any string value that's useful for your application.
+To simplify the browsing and sorting of your client data in Graph Manager,
+a three-part version number (such as `1.0.1`) is recommended for client versions.
 
-There are two ways to configure client awareness:
+> Client version is **not** tied to your current version of Apollo
+> Client (or any other client library). You define this value and are responsible
+> for updating it whenever meaningful changes are made to your client.
 
-1. By setting specific headers on the client which are automatically picked up by Apollo Server.
-2. Defining a custom `generateClientInfo` implementation within Apollo Server, allowing the use of different headers or other information from the request context.
+#### Setting client awareness headers in Apollo Client
 
-#### Default client identification headers
+If you're using Apollo Client, you can set default values for client name and
+version in the [`ApolloClient` constructor](https://www.apollographql.com/docs/react/api/apollo-client/#the-apolloclient-constructor). All requests to Apollo Server will automatically include these values in the appropriate headers.
 
-By default, Apollo Server automatically recognizes the following headers on incoming requests and associates them with a client's identity on a trace automatically:
+#### Using custom headers
 
-* `apollographql-client-name`
-* `apollographql-client-version`
-* `apollographql-client-reference-id`
-
-#### Custom client identification
-
-For more advanced cases, or to use custom headers, pass a `generateClientInfo` function into the `ApolloServer` constructor:
+For more advanced cases, or to use headers other than the default headers, pass a `generateClientInfo` function into the `ApolloServer` constructor:
 
 ```js{9-24}
 const { ApolloServer } = require("apollo-server");
@@ -118,8 +119,7 @@ server.listen().then(({ url }) => {
 });
 ```
 
-> Note: the default implementation looks at `clientInfo` field in the
-> `extensions` of the GraphQL request
+Specifying this function overrides the [`defaultGenerateClientInfo` function](https://github.com/apollographql/apollo-server/blob/master/packages/apollo-engine-reporting/src/extension.ts#L205-L228) that Apollo Server calls otherwise.
 
 ## Logging
 
