@@ -10,8 +10,10 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 ### v2.8.2
 
-- `apollo-server-koa`: Update dependency koa to v2.8.1 [PR #3175](https://github.com/apollographql/apollo-server/pull/3175)
-- `apollo-server-express`: Update types exported by the ASE package [PR #3173](https://github.com/apollographql/apollo-server/pull/3175) [PR #3172](https://github.com/apollographql/apollo-server/pull/3172)
+> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/99f78c6782bce170186ba6ef311182a8c9f281b7)
+
+- `apollo-server-koa`: Update dependency koa to v2.8.1. [PR #3175](https://github.com/apollographql/apollo-server/pull/3175)
+- `apollo-server-express`: Update types exported by the ASE package. [PR #3173](https://github.com/apollographql/apollo-server/pull/3175) [PR #3172](https://github.com/apollographql/apollo-server/pull/3172)
 
 ### v2.8.1
 

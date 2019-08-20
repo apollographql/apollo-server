@@ -2,6 +2,8 @@
 
 ### vNEXT
 
+# v0.9.0
+
 * Add experimental observability functions [#3110](https://github.com/apollographql/apollo-server/pull/3110)
 
 # v0.8.2
