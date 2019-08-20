@@ -1,4 +1,4 @@
-import { GraphQLRequest, GraphQLResponse } from 'apollo-server-types';
+import { GraphQLRequest } from 'apollo-server-types';
 import { parse } from 'graphql';
 import { Headers, HeadersInit } from 'node-fetch';
 import { ServiceEndpointDefinition } from './';
@@ -44,7 +44,7 @@ export async function getServiceDefinitionsFromRemoteEndpoint({
 
       return dataSource
         .process({ request, context: {} })
-        .then(({ data, errors }: GraphQLResponse) => {
+        .then(({ data, errors }) => {
           if (data && !errors) {
             const typeDefs = data._service.sdl as string;
             const previousDefinition = serviceDefinitionMap.get(
