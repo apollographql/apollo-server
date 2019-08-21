@@ -5,8 +5,9 @@ import {
   ObjectTypeDefinitionNode,
   Kind,
   OperationTypeNode,
+  InterfaceTypeDefinitionNode,
 } from 'graphql';
-import { findDirectivesOnTypeOrField } from './utils';
+import { findDirectivesOnTypeOrField, defKindToExtKind } from './utils';
 
 export function normalizeTypeDefs(typeDefs: DocumentNode) {
   return defaultRootOperationTypes(
@@ -217,26 +218,30 @@ export function replaceExtendedDefinitionsWithExtensions(
   typeDefs: DocumentNode,
 ) {
   const typeDefsWithExtendedTypesReplaced = visit(typeDefs, {
-    ObjectTypeDefinition(node) {
-      const isExtensionDefinition =
-        findDirectivesOnTypeOrField(node as ObjectTypeDefinitionNode, 'extends')
-          .length > 0;
-
-      if (!isExtensionDefinition) {
-        return node;
-      }
-
-      const filteredDirectives =
-        node.directives &&
-        node.directives.filter(directive => directive.name.value !== 'extends');
-
-      return {
-        ...node,
-        ...(filteredDirectives && { directives: filteredDirectives }),
-        kind: Kind.OBJECT_TYPE_EXTENSION,
-      };
-    },
+    ObjectTypeDefinition: visitor,
+    InterfaceTypeDefinition: visitor,
   });
+
+  function visitor(
+    node: ObjectTypeDefinitionNode | InterfaceTypeDefinitionNode,
+  ) {
+    const isExtensionDefinition =
+      findDirectivesOnTypeOrField(node, 'extends').length > 0;
+
+    if (!isExtensionDefinition) {
+      return node;
+    }
+
+    const filteredDirectives =
+      node.directives &&
+      node.directives.filter(directive => directive.name.value !== 'extends');
+
+    return {
+      ...node,
+      ...(filteredDirectives && { directives: filteredDirectives }),
+      kind: defKindToExtKind[node.kind],
+    };
+  }
 
   return typeDefsWithExtendedTypesReplaced;
 }

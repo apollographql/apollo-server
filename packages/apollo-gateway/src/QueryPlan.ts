@@ -2,9 +2,8 @@ import {
   FragmentDefinitionNode,
   GraphQLSchema,
   OperationDefinitionNode,
-  GraphQLInputType,
   SelectionSetNode,
-  VariableNode,
+  VariableDefinitionNode,
 } from 'graphql';
 import { astSerializer, queryPlanSerializer } from './snapshotSerializers';
 import prettyFormat from 'pretty-format';
@@ -40,16 +39,9 @@ export interface FetchNode {
   kind: 'Fetch';
   serviceName: string;
   selectionSet: SelectionSetNode;
-  variableUsages?: VariableUsage[];
+  variableUsages?: { [name: string]: VariableDefinitionNode };
   requires?: SelectionSetNode;
 }
-
-export interface VariableUsage {
-  node: VariableNode;
-  type: GraphQLInputType;
-  defaultValue: any;
-}
-
 export interface FlattenNode {
   kind: 'Flatten';
   path: ResponsePath;

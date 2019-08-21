@@ -74,7 +74,7 @@ If a client requests `shippingEstimate`, the query planner will now request `siz
 ```js{4}
 {
   Product: {
-    shippingEstimate(product): {
+    shippingEstimate(product) {
       return computeShippingEstimate(product.sku, product.size, product.weight);
     }
   }

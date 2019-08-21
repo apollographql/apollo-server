@@ -9,7 +9,7 @@ import { composeServices, buildFederatedSchema } from '@apollo/federation';
 
 import { buildQueryPlan, buildOperationContext } from '../buildQueryPlan';
 
-import { LocalGraphQLDataSource } from '../datasources/LocalGraphQLDatasource';
+import { LocalGraphQLDataSource } from '../datasources/LocalGraphQLDataSource';
 import { astSerializer, queryPlanSerializer } from '../snapshotSerializers';
 
 expect.addSnapshotSerializer(astSerializer);
@@ -117,41 +117,39 @@ describe('buildQueryPlan', () => {
                                                     }
                                                   }
                                                 },
-                                                Sequence {
-                                                  Flatten(path: "topProducts.@") {
-                                                    Fetch(service: "books") {
-                                                      {
-                                                        ... on Book {
-                                                          __typename
-                                                          isbn
-                                                        }
-                                                      } =>
-                                                      {
-                                                        ... on Book {
-                                                          __typename
-                                                          isbn
-                                                          title
-                                                          year
-                                                        }
+                                                Flatten(path: "topProducts.@") {
+                                                  Fetch(service: "books") {
+                                                    {
+                                                      ... on Book {
+                                                        __typename
+                                                        isbn
                                                       }
-                                                    },
+                                                    } =>
+                                                    {
+                                                      ... on Book {
+                                                        __typename
+                                                        isbn
+                                                        title
+                                                        year
+                                                      }
+                                                    }
                                                   },
-                                                  Flatten(path: "topProducts.@") {
-                                                    Fetch(service: "product") {
-                                                      {
-                                                        ... on Book {
-                                                          __typename
-                                                          isbn
-                                                          title
-                                                          year
-                                                        }
-                                                      } =>
-                                                      {
-                                                        ... on Book {
-                                                          name
-                                                        }
+                                                },
+                                                Flatten(path: "topProducts.@") {
+                                                  Fetch(service: "product") {
+                                                    {
+                                                      ... on Book {
+                                                        __typename
+                                                        isbn
+                                                        title
+                                                        year
                                                       }
-                                                    },
+                                                    } =>
+                                                    {
+                                                      ... on Book {
+                                                        name
+                                                      }
+                                                    }
                                                   },
                                                 },
                                               },

@@ -19,11 +19,17 @@ export const typeDefs = gql`
     body: String
   }
 
+  extend type UserMetadata {
+    address: String @external
+  }
+
   extend type User @key(fields: "id") {
     id: ID! @external
     username: String @external
     reviews: [Review]
     numberOfReviews: Int!
+    metadata: [UserMetadata] @external
+    goodAddress: Boolean @requires(fields: "metadata { address }")
   }
 
   extend interface Product {
@@ -38,6 +44,8 @@ export const typeDefs = gql`
   extend type Book implements Product @key(fields: "isbn") {
     isbn: String! @external
     reviews: [Review]
+    similarBooks: [Book]! @external
+    relatedReviews: [Review!]! @requires(fields: "similarBooks { isbn }")
   }
 
   extend type Mutation {
@@ -101,7 +109,6 @@ export const resolvers: GraphQLResolverMap<any> = {
     review(_, args) {
       return { id: args.id };
     },
-
     topReviews(_, args) {
       return reviews.slice(0, args.first);
     },
@@ -155,6 +162,9 @@ export const resolvers: GraphQLResolverMap<any> = {
       const found = usernames.find(username => username.id === user.id);
       return found ? found.username : null;
     },
+    goodAddress(object) {
+      return object.metadata[0].address === '1';
+    },
   },
   Furniture: {
     reviews(product) {
@@ -164,6 +174,15 @@ export const resolvers: GraphQLResolverMap<any> = {
   Book: {
     reviews(product) {
       return reviews.filter(review => review.product.isbn === product.isbn);
+    },
+    relatedReviews(book) {
+      return book.similarBooks
+        ? book.similarBooks
+            .map(({ isbn }: any) =>
+              reviews.filter(review => review.product.isbn === isbn),
+            )
+            .flat()
+        : [];
     },
   },
 };

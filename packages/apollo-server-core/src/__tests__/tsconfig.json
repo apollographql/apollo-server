@@ -3,7 +3,7 @@
   "include": ["**/*"],
   "references": [
     { "path": "../../" },
-    { "path": "../../tsconfig.requestPipelineAPI.json" },
-    { "path": "../../../apollo-server-integration-testsuite" }
+    { "path": "../../../apollo-server-types" },
+    { "path": "../../../apollo-server-integration-testsuite" },
   ]
 }

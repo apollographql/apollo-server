@@ -46,7 +46,7 @@ const resolvers = {
 
 With the resolver map above, the query, `{ author { books } }`, will call the `Query.author` resolver first and pass its result to `Author.books`. The query result will contain the return value of `Author.books` nested under `data.author.books`.
 
-Note that you don't have to put all of your resolvers in one object. Refer to the ["modularizing the schema"](https://www.apollographql.com/docs/graphql-tools/generate-schema/#extending-types) section to learn how to combine multiple resolver maps into one.
+Note that you don't have to put all of your resolvers in one object. Refer to the ["modularizing resolvers"](https://www.apollographql.com/docs/apollo-server/essentials/data/#modularizing-resolvers) section to learn how to combine multiple resolver maps into one.
 
 ## Resolver type signature
 
@@ -206,7 +206,7 @@ Once your resolver map is complete, it's time to start testing out your queries 
 
 ### Naming operations
 
-When sending the queries and mutations in the above examples, we've used either `query { ... }` or `mutation { ... }` respectively.  While this is fine, and particularly convenient when running queries by hand, it makes sense to name the operation in order to quickly identify operations during debugging or to aggregate similar operations together for application performance metrics, for example, when using [Apollo Engine](https://engine.apollographql.com/) to monitor an API.
+When sending the queries and mutations in the above examples, we've used either `query { ... }` or `mutation { ... }` respectively.  While this is fine, and particularly convenient when running queries by hand, it makes sense to name the operation in order to quickly identify operations during debugging or to aggregate similar operations together for application performance metrics, for example, when using [Apollo Graph Manager](https://engine.apollographql.com/) to monitor an API.
 
 Operations can be named by placing an identifier after the `query` or `mutation` keyword, as we've done with `HomeBookListing` here:
 

@@ -1,10 +1,4 @@
-import {
-  SelectionNode,
-  DocumentNode,
-  FieldDefinitionNode,
-  TypeDefinitionNode,
-  TypeExtensionNode,
-} from 'graphql';
+import { SelectionNode, DocumentNode, FieldDefinitionNode } from 'graphql';
 
 export type ServiceName = string | null;
 
@@ -81,10 +75,51 @@ declare module 'graphql/type/definition' {
   }
 }
 
-export type FederatedTypeDefinitionNode = TypeDefinitionNode & {
-  serviceName: string | null;
-};
+declare module 'graphql/language/ast' {
+  interface UnionTypeDefinitionNode {
+    serviceName?: string | null;
+  }
+  interface UnionTypeExtensionNode {
+    serviceName?: string | null;
+  }
 
-export type FederatedTypeExtensionNode = TypeExtensionNode & {
-  serviceName: string | null;
-};
+  interface EnumTypeDefinitionNode {
+    serviceName?: string | null;
+  }
+
+  interface EnumTypeExtensionNode {
+    serviceName?: string | null;
+  }
+
+  interface ScalarTypeDefinitionNode {
+    serviceName?: string | null;
+  }
+
+  interface ScalarTypeExtensionNode {
+    serviceName?: string | null;
+  }
+
+  interface ObjectTypeDefinitionNode {
+    serviceName?: string | null;
+  }
+
+  interface ObjectTypeExtensionNode {
+    serviceName?: string | null;
+  }
+
+  interface InterfaceTypeDefinitionNode {
+    serviceName?: string | null;
+  }
+
+  interface InterfaceTypeExtensionNode {
+    serviceName?: string | null;
+  }
+
+  interface InputObjectTypeDefinitionNode {
+    serviceName?: string | null;
+  }
+
+  interface InputObjectTypeExtensionNode {
+    serviceName?: string | null;
+  }
+}
