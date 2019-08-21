@@ -83,20 +83,24 @@ function createSdlData(sdl: string): object {
   return {
     data: {
       _service: {
-        sdl: sdl
-      }
-    }
+        sdl: sdl,
+      },
+    },
   };
 }
 
 it('makes enhanced introspection request using datasource', async () => {
-  fetch.mockJSONResponseOnce(createSdlData( 'extend type Query { one: String }'));
+  fetch.mockJSONResponseOnce(
+    createSdlData('extend type Query { one: String }'),
+  );
 
   const gateway = new ApolloGateway({
-    serviceList: [{
-      name: 'one',
-      url: 'https://api.example.com/one'
-    }],
+    serviceList: [
+      {
+        name: 'one',
+        url: 'https://api.example.com/one',
+      },
+    ],
     buildService: service => {
       return new RemoteGraphQLDataSource({
         url: 'https://api.example.com/override',
@@ -123,21 +127,26 @@ it('makes enhanced introspection request using datasource', async () => {
 });
 
 it('customizes request on a per-service basis', async () => {
-  fetch.mockJSONResponseOnce(createSdlData( 'extend type Query { one: String }'))
-      .mockJSONResponseOnce(createSdlData('extend type Query { two: String }'))
-      .mockJSONResponseOnce(createSdlData('extend type Query { three: String }'));
+  fetch
+    .mockJSONResponseOnce(createSdlData('extend type Query { one: String }'))
+    .mockJSONResponseOnce(createSdlData('extend type Query { two: String }'))
+    .mockJSONResponseOnce(createSdlData('extend type Query { three: String }'));
 
   const gateway = new ApolloGateway({
-    serviceList: [{
-      name: 'one',
-      url: 'https://api.example.com/one'
-    }, {
-      name: 'two',
-      url: 'https://api.example.com/two'
-    }, {
-      name: 'three',
-      url: 'https://api.example.com/three'
-    }],
+    serviceList: [
+      {
+        name: 'one',
+        url: 'https://api.example.com/one',
+      },
+      {
+        name: 'two',
+        url: 'https://api.example.com/two',
+      },
+      {
+        name: 'three',
+        url: 'https://api.example.com/three',
+      },
+    ],
     buildService: service => {
       return new RemoteGraphQLDataSource({
         url: service.url,

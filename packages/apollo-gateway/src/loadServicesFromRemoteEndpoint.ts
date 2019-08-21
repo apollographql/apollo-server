@@ -11,8 +11,8 @@ export async function getServiceDefinitionsFromRemoteEndpoint({
   headers = {},
 }: {
   serviceList: {
-    name: string,
-    url?: string,
+    name: string;
+    url?: string;
     dataSource: GraphQLDataSource;
   }[];
   headers?: HeadersInit;
@@ -28,9 +28,7 @@ export async function getServiceDefinitionsFromRemoteEndpoint({
   const services: ServiceDefinition[] = (await Promise.all(
     serviceList.map(({ name, url, dataSource }) => {
       if (!url) {
-        throw new Error(
-          `Tried to load schema from ${name} but no url found`,
-        );
+        throw new Error(`Tried to load schema from ${name} but no url found`);
       }
 
       const request: GraphQLRequest = {
@@ -47,9 +45,7 @@ export async function getServiceDefinitionsFromRemoteEndpoint({
         .then(({ data, errors }) => {
           if (data && !errors) {
             const typeDefs = data._service.sdl as string;
-            const previousDefinition = serviceDefinitionMap.get(
-              name,
-            );
+            const previousDefinition = serviceDefinitionMap.get(name);
             // this lets us know if any downstream service has changed
             // and we need to recalculate the schema
             if (previousDefinition !== typeDefs) {
