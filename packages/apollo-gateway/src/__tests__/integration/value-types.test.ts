@@ -48,5 +48,10 @@ describe('value types', () => {
       key: 'Condition',
       value: 'excellent',
     });
+    expect(data.topProducts[4].upc).toEqual('0136291554');
+    expect(data.topProducts[4].metadata[0]).toEqual({
+      key: 'Condition',
+      value: 'used',
+    });
   });
 });
