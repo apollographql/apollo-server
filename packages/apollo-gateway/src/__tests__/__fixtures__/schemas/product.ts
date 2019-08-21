@@ -32,6 +32,7 @@ export const typeDefs = gql`
     name: String
     price: String
     brand: Brand
+    metadata: [KeyValue]
   }
 
   extend type Book implements Product @key(fields: "isbn") {
@@ -48,6 +49,12 @@ export const typeDefs = gql`
     id: String!
     price: String
   }
+
+  # Value type
+  type KeyValue {
+    key: String!
+    value: String!
+  }
 `;
 
 const products = [
@@ -61,6 +68,7 @@ const products = [
       __typename: 'Ikea',
       asile: 10,
     },
+    metadata: [{ key: 'Condition', value: 'excellent' }],
   },
   {
     __typename: 'Furniture',
@@ -72,6 +80,7 @@ const products = [
       __typename: 'Amazon',
       referrer: 'https://canopy.co',
     },
+    metadata: [{ key: 'Condition', value: 'used' }],
   },
   {
     __typename: 'Furniture',
@@ -83,6 +92,7 @@ const products = [
       __typename: 'Ikea',
       asile: 10,
     },
+    metadata: [{ key: 'Condition', value: 'like new' }],
   },
   { __typename: 'Book', isbn: '0262510871', price: 39 },
   { __typename: 'Book', isbn: '0136291554', price: 29 },

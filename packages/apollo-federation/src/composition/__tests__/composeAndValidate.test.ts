@@ -328,7 +328,12 @@ describe('value types integration tests', () => {
       name: 'serviceB',
     };
 
-    const { errors } = composeAndValidate([serviceA, serviceB]);
+    const { errors, schema } = composeAndValidate([serviceA, serviceB]);
+
+    // A value type doesn't need any federation metadata to resolve
+    const couchType = schema.getType('Couch');
+    expect(couchType.federation).toBeUndefined();
+
     expect(errors).toHaveLength(0);
   });
 

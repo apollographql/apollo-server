@@ -59,6 +59,12 @@ export const typeDefs = gql`
     updateReview(review: UpdateReviewInput!): Review
     deleteReview(id: ID!): Boolean
   }
+
+  # Value type
+  type KeyValue {
+    key: String!
+    value: String!
+  }
 `;
 
 const usernames = [
