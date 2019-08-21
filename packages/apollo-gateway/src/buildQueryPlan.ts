@@ -253,23 +253,11 @@ function splitSubfields(
   splitFields(context, path, fields, field => {
     const { parentType, fieldNode, fieldDef } = field;
 
-    const baseService = context.getBaseService(parentType);
+    const owningService =
+      context.getOwningService(parentType, fieldDef) || parentGroup.serviceName;
 
-    if (!baseService) {
-      throw new GraphQLError(
-        `Couldn't find base service for type "${parentType.name}"`,
-        fieldNode,
-      );
-    }
-
-    const owningService = context.getOwningService(parentType, fieldDef);
-
-    if (!owningService) {
-      throw new GraphQLError(
-        `Couldn't find owning service for field "${parentType.name}.${fieldDef.name}"`,
-        fieldNode,
-      );
-    }
+    const baseService =
+      context.getBaseService(parentType) || parentGroup.serviceName;
 
     // Is the field defined on the base service?
     if (owningService === baseService) {

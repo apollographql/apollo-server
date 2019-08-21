@@ -332,7 +332,7 @@ describe('value types integration tests', () => {
 
     // A value type doesn't need any federation metadata to resolve
     const couchType = schema.getType('Couch');
-    expect(couchType.federation).toBeUndefined();
+    expect(couchType.federation.serviceName).toEqual(null);
 
     expect(errors).toHaveLength(0);
   });

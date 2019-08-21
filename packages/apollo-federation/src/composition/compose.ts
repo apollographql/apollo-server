@@ -27,6 +27,7 @@ import {
   parseSelections,
   mapFieldNamesToServiceName,
   stripExternalFieldsFromTypeDefs,
+  diffTypeNodes,
 } from './utils';
 import {
   ServiceDefinition,
@@ -418,6 +419,38 @@ export function composeServices(services: ServiceDefinition[]) {
     externalFields,
     keyDirectivesMap,
   } = buildMapsFromServiceList(services);
+
+  for (const [typeName, definitions] of Object.entries(definitionsMap)) {
+    const typeIsValueType =
+      definitions.length > 1 &&
+      definitions.every((definition, index) => {
+        if (findDirectivesOnTypeOrField(definition, 'key').length > 0) {
+          return false;
+        }
+        if (index === 0) {
+          return true;
+        }
+
+        const { name, kind, fields, unionTypes } = diffTypeNodes(
+          definition,
+          definitions[index - 1],
+        );
+
+        return (
+          name.length === 0 &&
+          kind.length === 0 &&
+          Object.keys(fields).length === 0 &&
+          Object.keys(unionTypes).length === 0
+        );
+      });
+
+    if (typeIsValueType) {
+      definitionsMap[typeName] = [
+        { ...definitionsMap[typeName][0], serviceName: null },
+      ];
+      typeToServiceMap[typeName].serviceName = null;
+    }
+  }
 
   let { schema, errors } = buildSchemaFromDefinitionsAndExtensions({
     definitionsMap,

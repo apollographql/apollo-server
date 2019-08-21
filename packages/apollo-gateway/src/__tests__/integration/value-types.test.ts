@@ -42,8 +42,11 @@ describe('value types', () => {
       },
     );
 
-    expect(errors).toHaveLength(0);
-    expect(data.topProducts[0].upc)toEqual("1");
-    expect(data.topProducts[0].metadata[0].toEqual({ key: 'Condition', value: 'excellent' }));
+    expect(errors).toBeUndefined();
+    expect(data.topProducts[0].upc).toEqual('1');
+    expect(data.topProducts[0].metadata[0]).toEqual({
+      key: 'Condition',
+      value: 'excellent',
+    });
   });
 });
