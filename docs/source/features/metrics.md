@@ -57,7 +57,7 @@ You can set environment variable values on the command line as seen below, or wi
 ENGINE_API_KEY=YOUR_API_KEY ENGINE_SCHEMA_TAG=development node start-server.js
 ```
 
-### Identifying distinct client versions
+### Identifying distinct clients
 
 Graph Manager's [client awareness feature](https://www.apollographql.com/docs/platform/client-awareness) enables you to view metrics for distinct versions
 of your clients. To enable this, your clients need to include some or all of the following identifying information in the headers of GraphQL requests they
