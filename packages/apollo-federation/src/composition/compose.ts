@@ -27,7 +27,6 @@ import {
   parseSelections,
   mapFieldNamesToServiceName,
   stripExternalFieldsFromTypeDefs,
-  diffTypeNodes,
 } from './utils';
 import {
   ServiceDefinition,
@@ -80,7 +79,7 @@ interface ExtensionsMap {
  */
 interface TypeToServiceMap {
   [typeName: string]: {
-    serviceName?: ServiceName;
+    serviceNames?: ServiceName[];
     extensionFieldsToOwningServiceMap: { [fieldName: string]: string };
   };
 }
@@ -158,10 +157,13 @@ export function buildMapsFromServiceList(serviceList: ServiceDefinition[]) {
          * 2. It was extended by a service before declared
          */
         if (typeToServiceMap[typeName]) {
-          typeToServiceMap[typeName].serviceName = serviceName;
+          typeToServiceMap[typeName].serviceNames = [
+            ...(typeToServiceMap[typeName].serviceNames || []),
+            serviceName,
+          ];
         } else {
           typeToServiceMap[typeName] = {
-            serviceName,
+            serviceNames: [serviceName],
             extensionFieldsToOwningServiceMap: Object.create(null),
           };
         }
@@ -314,7 +316,7 @@ export function addFederationMetadataToSchemaNodes({
 }) {
   for (const [
     typeName,
-    { serviceName: baseServiceName, extensionFieldsToOwningServiceMap },
+    { serviceNames, extensionFieldsToOwningServiceMap },
   ] of Object.entries(typeToServiceMap)) {
     const namedType = schema.getType(typeName) as GraphQLNamedType;
     if (!namedType) continue;
@@ -323,7 +325,7 @@ export function addFederationMetadataToSchemaNodes({
     // and the key directives that belong to it
     namedType.federation = {
       ...namedType.federation,
-      serviceName: baseServiceName,
+      serviceNames,
       ...(keyDirectivesMap[typeName] && {
         keys: keyDirectivesMap[typeName],
       }),
@@ -344,7 +346,7 @@ export function addFederationMetadataToSchemaNodes({
         ) {
           field.federation = {
             ...field.federation,
-            serviceName: baseServiceName,
+            serviceName: serviceNames && serviceNames[serviceNames.length - 1],
             provides: parseSelections(
               providesDirective.arguments[0].value.value,
             ),
@@ -419,38 +421,6 @@ export function composeServices(services: ServiceDefinition[]) {
     externalFields,
     keyDirectivesMap,
   } = buildMapsFromServiceList(services);
-
-  for (const [typeName, definitions] of Object.entries(definitionsMap)) {
-    const typeIsValueType =
-      definitions.length > 1 &&
-      definitions.every((definition, index) => {
-        if (findDirectivesOnTypeOrField(definition, 'key').length > 0) {
-          return false;
-        }
-        if (index === 0) {
-          return true;
-        }
-
-        const { name, kind, fields, unionTypes } = diffTypeNodes(
-          definition,
-          definitions[index - 1],
-        );
-
-        return (
-          name.length === 0 &&
-          kind.length === 0 &&
-          Object.keys(fields).length === 0 &&
-          Object.keys(unionTypes).length === 0
-        );
-      });
-
-    if (typeIsValueType) {
-      definitionsMap[typeName] = [
-        { ...definitionsMap[typeName][0], serviceName: null },
-      ];
-      typeToServiceMap[typeName].serviceName = null;
-    }
-  }
 
   let { schema, errors } = buildSchemaFromDefinitionsAndExtensions({
     definitionsMap,

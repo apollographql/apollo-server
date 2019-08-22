@@ -18,7 +18,7 @@ export interface ServiceNameToKeyDirectivesMap {
 }
 
 export interface FederationType {
-  serviceName?: ServiceName;
+  serviceNames?: ServiceName[];
   keys?: ServiceNameToKeyDirectivesMap;
   externals?: {
     [serviceName: string]: ExternalFieldDefinition[];

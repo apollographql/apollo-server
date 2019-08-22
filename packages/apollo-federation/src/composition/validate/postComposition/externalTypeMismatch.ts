@@ -5,7 +5,11 @@ import {
   isEqualType,
   GraphQLError,
 } from 'graphql';
-import { logServiceAndType, errorWithCode } from '../../utils';
+import {
+  logServiceAndType,
+  errorWithCode,
+  getOwningService,
+} from '../../utils';
 
 /**
  * All fields marked with @external must match the type definition of the base service.
@@ -56,7 +60,11 @@ export const externalTypeMismatch = (schema: GraphQLSchema) => {
               errorWithCode(
                 'EXTERNAL_TYPE_MISMATCH',
                 logServiceAndType(serviceName, typeName, externalFieldName) +
-                  `Type \`${externalFieldType.name}\` does not match the type of the original field in ${namedType.federation.serviceName} (\`${matchingBaseField.type}\`)`,
+                  `Type \`${
+                    externalFieldType.name
+                  }\` does not match the type of the original field in ${getOwningService(
+                    namedType,
+                  )} (\`${matchingBaseField.type}\`)`,
               ),
             );
           }

@@ -35,7 +35,7 @@ describe('value types', () => {
       }
     `;
 
-    const { data, errors, queryPlan } = await execute(
+    const { data, errors } = await execute(
       [accounts, books, inventory, product, reviews],
       {
         query,
@@ -43,13 +43,13 @@ describe('value types', () => {
     );
 
     expect(errors).toBeUndefined();
-    expect(data.topProducts[0].upc).toEqual('1');
-    expect(data.topProducts[0].metadata[0]).toEqual({
+    expect(data!.topProducts[0].upc).toEqual('1');
+    expect(data!.topProducts[0].metadata[0]).toEqual({
       key: 'Condition',
       value: 'excellent',
     });
-    expect(data.topProducts[4].upc).toEqual('0136291554');
-    expect(data.topProducts[4].metadata[0]).toEqual({
+    expect(data!.topProducts[4].upc).toEqual('0136291554');
+    expect(data!.topProducts[4].metadata[0]).toEqual({
       key: 'Condition',
       value: 'used',
     });
