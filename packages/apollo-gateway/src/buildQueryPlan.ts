@@ -315,10 +315,14 @@ function splitSubfields(
           parentGroup.providedFields.some(matchesField(requiredField)),
         )
       ) {
-        return parentGroup.dependentGroupForService(
-          owningService,
-          requiredFields,
-        );
+        if (owningService === parentGroup.serviceName) {
+          return parentGroup;
+        } else {
+          return parentGroup.dependentGroupForService(
+            owningService,
+            requiredFields,
+          );
+        }
       } else {
         // We need to go through the base group first.
 
@@ -331,6 +335,13 @@ function splitSubfields(
           throw new GraphQLError(
             `Couldn't find keys for type "${parentType.name}}" in service "${baseService}"`,
             fieldNode,
+          );
+        }
+
+        if (baseService === parentGroup.serviceName) {
+          return parentGroup.dependentGroupForService(
+            owningService,
+            requiredFields,
           );
         }
 
@@ -422,39 +433,18 @@ function splitFields(
           );
         }
 
-        // If all possible runtime parent types can be fetched from the same
-        // group, we'll assume we can add the field once for the interface.
-        if (groupsByRuntimeParentTypes.size === 1) {
-          // FIXME: We should make sure the group's service supports the
-          // interface, because even if it owns all possible types it may not
-          // actually contain the interface.
-          const group = groupsByRuntimeParentTypes.keys().next().value;
-          group.fields.push(
-            completeField(
-              context,
-              parentType,
-              group,
-              path,
-              fieldsForResponseName,
-            ),
-          );
-        } else {
-          // If not, we add the field separately for each runtime parent type.
-          for (const [
-            group,
-            runtimeParentTypes,
-          ] of groupsByRuntimeParentTypes) {
-            for (const runtimeParentType of runtimeParentTypes) {
-              group.fields.push(
-                completeField(
-                  context,
-                  runtimeParentType,
-                  group,
-                  path,
-                  fieldsForResponseName,
-                ),
-              );
-            }
+        // We add the field separately for each runtime parent type.
+        for (const [group, runtimeParentTypes] of groupsByRuntimeParentTypes) {
+          for (const runtimeParentType of runtimeParentTypes) {
+            group.fields.push(
+              completeField(
+                context,
+                runtimeParentType,
+                group,
+                path,
+                fieldsForResponseName,
+              ),
+            );
           }
         }
       }

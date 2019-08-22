@@ -48,6 +48,12 @@ export const typeDefs = gql`
     relatedReviews: [Review!]! @requires(fields: "similarBooks { isbn }")
   }
 
+  extend type Car @key(fields: "id") {
+    id: String! @external
+    price: String @external
+    retailPrice: String @requires(fields: "price")
+  }
+
   extend type Mutation {
     reviewProduct(upc: String!, body: String!): Product
     updateReview(review: UpdateReviewInput!): Review
@@ -183,6 +189,11 @@ export const resolvers: GraphQLResolverMap<any> = {
             )
             .flat()
         : [];
+    },
+  },
+  Car: {
+    retailPrice(car) {
+      return car.price;
     },
   },
 };

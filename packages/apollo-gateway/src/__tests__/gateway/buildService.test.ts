@@ -78,3 +78,116 @@ it('correctly passes the context from ApolloServer to datasources', async () => 
     },
   });
 });
+
+function createSdlData(sdl: string): object {
+  return {
+    data: {
+      _service: {
+        sdl: sdl,
+      },
+    },
+  };
+}
+
+it('makes enhanced introspection request using datasource', async () => {
+  fetch.mockJSONResponseOnce(
+    createSdlData('extend type Query { one: String }'),
+  );
+
+  const gateway = new ApolloGateway({
+    serviceList: [
+      {
+        name: 'one',
+        url: 'https://api.example.com/one',
+      },
+    ],
+    buildService: service => {
+      return new RemoteGraphQLDataSource({
+        url: 'https://api.example.com/override',
+        willSendRequest: ({ request }) => {
+          request.http.headers.set('custom-header', 'some-custom-value');
+        },
+      });
+    },
+  });
+
+  await gateway.load();
+
+  expect(fetch).toBeCalledTimes(1);
+
+  expect(fetch).toHaveFetched({
+    url: 'https://api.example.com/override',
+    body: {
+      query: `query GetServiceDefinition { _service { sdl } }`,
+    },
+    headers: {
+      'custom-header': 'some-custom-value',
+    },
+  });
+});
+
+it('customizes request on a per-service basis', async () => {
+  fetch
+    .mockJSONResponseOnce(createSdlData('extend type Query { one: String }'))
+    .mockJSONResponseOnce(createSdlData('extend type Query { two: String }'))
+    .mockJSONResponseOnce(createSdlData('extend type Query { three: String }'));
+
+  const gateway = new ApolloGateway({
+    serviceList: [
+      {
+        name: 'one',
+        url: 'https://api.example.com/one',
+      },
+      {
+        name: 'two',
+        url: 'https://api.example.com/two',
+      },
+      {
+        name: 'three',
+        url: 'https://api.example.com/three',
+      },
+    ],
+    buildService: service => {
+      return new RemoteGraphQLDataSource({
+        url: service.url,
+        willSendRequest: ({ request }) => {
+          request.http.headers.set('service-name', service.name);
+        },
+      });
+    },
+  });
+
+  await gateway.load();
+
+  expect(fetch).toBeCalledTimes(3);
+
+  expect(fetch).toHaveFetched({
+    url: 'https://api.example.com/one',
+    body: {
+      query: `query GetServiceDefinition { _service { sdl } }`,
+    },
+    headers: {
+      'service-name': 'one',
+    },
+  });
+
+  expect(fetch).toHaveFetched({
+    url: 'https://api.example.com/two',
+    body: {
+      query: `query GetServiceDefinition { _service { sdl } }`,
+    },
+    headers: {
+      'service-name': 'two',
+    },
+  });
+
+  expect(fetch).toHaveFetched({
+    url: 'https://api.example.com/three',
+    body: {
+      query: `query GetServiceDefinition { _service { sdl } }`,
+    },
+    headers: {
+      'service-name': 'three',
+    },
+  });
+});

@@ -6,6 +6,7 @@ export const typeDefs = gql`
   extend type Query {
     product(upc: String!): Product
     topProducts(first: Int = 5): [Product]
+    topCars(first: Int = 5): [Car]
   }
 
   type Ikea {
@@ -40,6 +41,11 @@ export const typeDefs = gql`
     upc: String!
     sku: String!
     name(delimeter: String = " "): String @requires(fields: "title year")
+    price: String
+  }
+
+  type Car @key(fields: "id") {
+    id: String!
     price: String
   }
 `;
@@ -86,6 +92,19 @@ const products = [
   { __typename: 'Book', isbn: '0987654321', price: 29 },
 ];
 
+const cars = [
+  {
+    __typename: 'Car',
+    id: '1',
+    price: 9990,
+  },
+  {
+    __typename: 'Car',
+    id: '2',
+    price: 12990,
+  },
+];
+
 export const resolvers: GraphQLResolverMap<any> = {
   Furniture: {
     __resolveReference(object) {
@@ -114,6 +133,11 @@ export const resolvers: GraphQLResolverMap<any> = {
     },
     sku(object) {
       return object.isbn;
+    },
+  },
+  Car: {
+    __resolveReference(object) {
+      return cars.find(car => car.id === object.id);
     },
   },
   Query: {
