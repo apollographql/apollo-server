@@ -36,16 +36,17 @@ The API key can also be set with the `ENGINE_API_KEY` environment variable. Sett
 ENGINE_API_KEY=YOUR_API_KEY node start-server.js
 ```
 
-Not sure if metrics reporting is working? You can set the [`debugPrintReports` option](https://github.com/apollographql/apollo-server/blob/master/packages/apollo-engine-reporting/src/agent.ts#L429-L433) in the `engine` option of the Apollo Server constructor to see a message indicating the success of transmission like so:
+### Debugging
 
-```js{9}
+You can set the [`debugPrintReports` option](https://github.com/apollographql/apollo-server/blob/master/packages/apollo-engine-reporting/src/agent.ts#L429-L433) in the `engine` section of the Apollo Server constructor to see debug output regarding trace transmission.  For example:
+
+```js{8}
 const { ApolloServer } = require("apollo-server");
 
 const server = new ApolloServer({
   typeDefs,
   resolvers,
   engine: {
-    apiKey: "YOUR API KEY HERE",
     debugPrintReports: true,
   }
 });
