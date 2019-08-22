@@ -44,8 +44,14 @@ export const typeDefs = gql`
   extend type Book implements Product @key(fields: "isbn") {
     isbn: String! @external
     reviews: [Review]
-    similarBooks: [Book!]! @external
+    similarBooks: [Book]! @external
     relatedReviews: [Review!]! @requires(fields: "similarBooks { isbn }")
+  }
+
+  extend type Car @key(fields: "id") {
+    id: String! @external
+    price: String @external
+    retailPrice: String @requires(fields: "price")
   }
 
   extend type Mutation {
@@ -183,6 +189,11 @@ export const resolvers: GraphQLResolverMap<any> = {
             )
             .flat()
         : [];
+    },
+  },
+  Car: {
+    retailPrice(car) {
+      return car.price;
     },
   },
 };

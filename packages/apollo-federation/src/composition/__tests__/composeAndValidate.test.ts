@@ -99,23 +99,16 @@ it('composes and validates all (24) permutations without error', () => {
     reviewsService,
     accountsService,
     productsService,
-  ]).map((config, i) => {
-    const { warnings, errors } = composeAndValidate(config);
+  ]).map(config => {
+    const { errors } = composeAndValidate(config);
 
-    if (warnings.length || errors.length) {
+    if (errors.length) {
       console.error(
-        `Errors or warnings found with composition [${config.map(
-          item => item.name,
-        )}]`,
+        `Errors found with composition [${config.map(item => item.name)}]`,
       );
     }
 
-    expect({ warnings, errors }).toMatchInlineSnapshot(`
-      Object {
-        "errors": Array [],
-        "warnings": Array [],
-      }
-    `);
+    expect(errors).toHaveLength(0);
   });
 });
 
@@ -147,7 +140,7 @@ it('errors when a type extension has no base', () => {
     name: 'serviceB',
   };
 
-  const { schema, errors } = composeAndValidate([serviceA, serviceB]);
+  const { errors } = composeAndValidate([serviceA, serviceB]);
   expect(errors).toHaveLength(1);
   expect(errors).toMatchInlineSnapshot(`
     Array [
@@ -283,4 +276,227 @@ it('errors on invalid usages of default operation names', () => {
   `);
 });
 
-it.todo('errors on duplicate types where there is a mismatch of field types');
+describe('value types integration tests', () => {
+  it('handles valid value types correctly', () => {
+    const duplicatedValueTypes = gql`
+      scalar Date
+
+      union CatalogItem = Couch | Mattress
+
+      interface Product {
+        sku: ID!
+      }
+
+      input NewProductInput {
+        sku: ID!
+        type: CatalogItemEnum
+      }
+
+      enum CatalogItemEnum {
+        COUCH
+        MATTRESS
+      }
+
+      type Couch implements Product {
+        sku: ID!
+        material: String!
+      }
+
+      type Mattress implements Product {
+        sku: ID!
+        size: String!
+      }
+    `;
+
+    const serviceA = {
+      typeDefs: gql`
+        type Query {
+          product: Product
+        }
+        ${duplicatedValueTypes}
+      `,
+      name: 'serviceA',
+    };
+
+    const serviceB = {
+      typeDefs: gql`
+        type Query {
+          topProducts: [Product]
+        }
+        ${duplicatedValueTypes}
+      `,
+      name: 'serviceB',
+    };
+
+    const { errors } = composeAndValidate([serviceA, serviceB]);
+    expect(errors).toHaveLength(0);
+  });
+
+  describe('errors', () => {
+    it('when used as an entity', () => {
+      const serviceA = {
+        typeDefs: gql`
+          type Query {
+            product: Product
+          }
+
+          type Product {
+            sku: ID!
+            color: String!
+          }
+        `,
+        name: 'serviceA',
+      };
+
+      const serviceB = {
+        typeDefs: gql`
+          type Query {
+            topProducts: [Product]
+          }
+
+          type Product @key(fields: "sku") {
+            sku: ID!
+            color: String!
+          }
+        `,
+        name: 'serviceB',
+      };
+
+      const { errors } = composeAndValidate([serviceA, serviceB]);
+      expect(errors).toHaveLength(1);
+      expect(errors[0]).toMatchInlineSnapshot(`
+        Object {
+          "code": "VALUE_TYPE_NO_ENTITY",
+          "message": "[serviceB] Product -> Value types cannot be entities (using the \`@key\` directive). Please ensure that the \`Product\` type is extended properly or remove the \`@key\` directive if this is not an entity.",
+        }
+      `);
+    });
+
+    it('on field type mismatch', () => {
+      const serviceA = {
+        typeDefs: gql`
+          type Query {
+            product: Product
+          }
+
+          type Product {
+            sku: ID!
+            color: String!
+          }
+        `,
+        name: 'serviceA',
+      };
+
+      const serviceB = {
+        typeDefs: gql`
+          type Query {
+            topProducts: [Product]
+          }
+
+          type Product {
+            sku: ID!
+            color: String
+          }
+        `,
+        name: 'serviceB',
+      };
+
+      const { errors } = composeAndValidate([serviceA, serviceB]);
+      expect(errors).toHaveLength(1);
+      expect(errors[0]).toMatchInlineSnapshot(`
+        Object {
+          "code": "VALUE_TYPE_FIELD_TYPE_MISMATCH",
+          "message": "[serviceA] Product.color -> A field was defined differently in different services. \`serviceA\` and \`serviceB\` define \`Product.color\` as a String! and String respectively. In order to define \`Product\` in multiple places, the fields and their types must be identical.",
+        }
+      `);
+    });
+
+    it('on kind mismatch', () => {
+      const serviceA = {
+        typeDefs: gql`
+          type Query {
+            product: Product
+          }
+
+          interface Product {
+            sku: ID!
+            color: String!
+          }
+        `,
+        name: 'serviceA',
+      };
+
+      const serviceB = {
+        typeDefs: gql`
+          type Query {
+            topProducts: [Product]
+          }
+
+          type Product {
+            sku: ID!
+            color: String!
+          }
+        `,
+        name: 'serviceB',
+      };
+
+      const { errors } = composeAndValidate([serviceA, serviceB]);
+      expect(errors).toHaveLength(1);
+      expect(errors[0]).toMatchInlineSnapshot(`
+        Object {
+          "code": "VALUE_TYPE_KIND_MISMATCH",
+          "message": "[serviceA] Product -> Found kind mismatch on expected value type belonging to services \`serviceA\` and \`serviceB\`. \`Product\` is defined as both a \`ObjectTypeDefinition\` and a \`InterfaceTypeDefinition\`. In order to define \`Product\` in multiple places, the kinds must be identical.",
+        }
+      `);
+    });
+
+    it('on union types mismatch', () => {
+      const serviceA = {
+        typeDefs: gql`
+          type Query {
+            product: Product
+          }
+
+          type Couch {
+            sku: ID!
+          }
+
+          type Mattress {
+            sku: ID!
+          }
+
+          union Product = Couch | Mattress
+        `,
+        name: 'serviceA',
+      };
+
+      const serviceB = {
+        typeDefs: gql`
+          type Query {
+            topProducts: [Product]
+          }
+
+          type Couch {
+            sku: ID!
+          }
+
+          type Cabinet {
+            sku: ID!
+          }
+
+          union Product = Couch | Cabinet
+        `,
+        name: 'serviceB',
+      };
+
+      const { errors } = composeAndValidate([serviceA, serviceB]);
+      expect(errors).toHaveLength(1);
+      expect(errors[0]).toMatchInlineSnapshot(`
+        Object {
+          "code": "VALUE_TYPE_UNION_TYPES_MISMATCH",
+          "message": "[serviceA] Product -> The union \`Product\` is defined in services \`serviceA\` and \`serviceB\`, however their types do not match. Union types with the same name must also consist of identical types. The types Cabinet, Mattress are mismatched.",
+        }
+      `);
+    });
+  });
+});

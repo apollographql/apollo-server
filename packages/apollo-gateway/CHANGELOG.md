@@ -2,6 +2,26 @@
 
 ### vNEXT
 
+> The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  When a release is being prepared, a new header will be (manually) created below and the the appropriate changes within that release will be moved into the new section.
+
+- _Nothing yet!_
+
+# v0.9.1
+
+* Optimize buildQueryPlan when two FetchGroups are on the same service [#3135](https://github.com/apollographql/apollo-server/pull/3135)
+* Construct and use RemoteGraphQLDataSource to issue introspection query to Federated Services [#3120](https://github.com/apollographql/apollo-server/pull/3120)
+
+# v0.9.0
+
+* Add experimental observability functions [#3110](https://github.com/apollographql/apollo-server/pull/3110)
+
+# v0.8.2
+
+* Handle `null` @requires selections correctly during execution [#3138](https://github.com/apollographql/apollo-server/pull/3138)
+
+
+# v0.6.13
+
 * Proxy errors from downstream services [#3019](https://github.com/apollographql/apollo-server/pull/3019)
 * Handle schema defaultVariables correctly within downstream fetches [#2963](https://github.com/apollographql/apollo-server/pull/2963)
 

@@ -69,7 +69,7 @@ server.listen().then(({ url }) => {
 });
 ```
 
-> Due to its human-readability, we recommend using [schema-definition language (SDL)](https://www.apollographql.com/docs/apollo-server/essentials/schema.html#sdl) to define a GraphQL schema--[a `GraphQLSchema` object from `graphql-js`](https://github.com/graphql/graphql-js/#using-graphqljs) can also be specified instead of `typeDefs` and `resolvers` using the `schema` property:
+> Due to its human-readability, we recommend using [schema-definition language (SDL)](https://www.apollographql.com/docs/apollo-server/essentials/schema/#schema-definition-language) to define a GraphQL schema--[a `GraphQLSchema` object from `graphql-js`](https://github.com/graphql/graphql-js/#using-graphqljs) can also be specified instead of `typeDefs` and `resolvers` using the `schema` property:
 >
 > ```js
 > const server = new ApolloServer({
@@ -155,7 +155,7 @@ npm link apollo-server-<integration>
 
 ## Community
 
-Are you stuck? Want to contribute? Come visit us in the [Apollo community on Spectrum.chat!](https://spectrum.chat)
+Are you stuck? Want to contribute? Come visit us in the [Apollo community on Spectrum.chat!](https://spectrum.chat/apollo)
 
 
 ## Maintainers
