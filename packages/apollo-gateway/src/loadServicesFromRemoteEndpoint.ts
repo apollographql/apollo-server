@@ -1,8 +1,9 @@
-import { ServiceDefinition } from '@apollo/federation';
-import { GraphQLExecutionResult } from 'apollo-server-types';
+import { GraphQLRequest } from 'apollo-server-types';
 import { parse } from 'graphql';
-import fetch, { HeadersInit } from 'node-fetch';
-import { ServiceEndpointDefinition, UpdateServiceDefinitions } from './';
+import { Headers, HeadersInit } from 'node-fetch';
+import { GraphQLDataSource } from './datasources/types';
+import { UpdateServiceDefinitions } from './';
+import { ServiceDefinition } from '@apollo/federation';
 
 let serviceDefinitionMap: Map<string, string> = new Map();
 
@@ -10,7 +11,11 @@ export async function getServiceDefinitionsFromRemoteEndpoint({
   serviceList,
   headers = {},
 }: {
-  serviceList: ServiceEndpointDefinition[];
+  serviceList: {
+    name: string;
+    url?: string;
+    dataSource: GraphQLDataSource;
+  }[];
   headers?: HeadersInit;
 }): ReturnType<UpdateServiceDefinitions> {
   if (!serviceList || !serviceList.length) {
@@ -22,31 +27,37 @@ export async function getServiceDefinitionsFromRemoteEndpoint({
   let isNewSchema = false;
   // for each service, fetch its introspection schema
   const serviceDefinitions: ServiceDefinition[] = (await Promise.all(
-    serviceList.map(service => {
-      if (!service.url) {
-        throw new Error(
-          `Tried to load schema from ${service.name} but no url found`,
-        );
+    serviceList.map(({ name, url, dataSource }) => {
+      if (!url) {
+        throw new Error(`Tried to load schema from ${name} but no url found`);
       }
-      return fetch(service.url, {
-        method: 'POST',
-        body: JSON.stringify({
-          query: 'query GetServiceDefinition { _service { sdl } }',
-        }),
-        headers: { 'Content-Type': 'application/json', ...headers },
-      })
-        .then(res => res.json())
-        .then(({ data, errors }: GraphQLExecutionResult) => {
+
+      const request: GraphQLRequest = {
+        query: 'query GetServiceDefinition { _service { sdl } }',
+        http: {
+          url,
+          method: 'POST',
+          headers: new Headers(headers),
+        },
+      };
+
+      return dataSource
+        .process({ request, context: {} })
+        .then(({ data, errors }) => {
           if (data && !errors) {
             const typeDefs = data._service.sdl as string;
-            const previousDefinition = serviceDefinitionMap.get(service.name);
+            const previousDefinition = serviceDefinitionMap.get(name);
             // this lets us know if any downstream service has changed
             // and we need to recalculate the schema
             if (previousDefinition !== typeDefs) {
               isNewSchema = true;
             }
-            serviceDefinitionMap.set(service.name, typeDefs);
-            return { ...service, typeDefs: parse(typeDefs) };
+            serviceDefinitionMap.set(name, typeDefs);
+            return {
+              name,
+              url,
+              typeDefs: parse(typeDefs),
+            };
           }
 
           // XXX handle local errors better for local development
@@ -58,7 +69,7 @@ export async function getServiceDefinitionsFromRemoteEndpoint({
         })
         .catch(error => {
           console.warn(
-            `Encountered error when loading ${service.name} at ${service.url}: ${error.message}`,
+            `Encountered error when loading ${name} at ${url}: ${error.message}`,
           );
           return false;
         });
