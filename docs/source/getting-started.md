@@ -12,8 +12,6 @@ In this guide, we'll walk you through the process of creating a GraphQL server i
 
 To be successful, make sure you already have general JavaScript knowledge and a recent version of Node.js installed (8+).
 
-If you want to skip walking through the steps, the [More information](#more-information) section at the bottom has a link to a GitHub repository which can be cloned and run locally, and a Glitch to play around in your browser!
-
 ## Step 1: Project initialization
 
 In this step, we'll use your terminal (e.g. Terminal, iTerm, PowerShell) to create a directory called `graphql-server-example` along with a basic Node.js configuration for a simple application.  We'll work within this directory for the rest of the steps, though we will switch back and forth between your IDE (editor)
@@ -166,15 +164,3 @@ This application should be a great starting point for any GraphQL server, but th
 * [Adding Apollo Server to an existing app.](/essentials/server/#server-integrations)
 * [Schema design](/essentials/schema/)
 * [Deploy with Heroku](/deployment/heroku/)
-
-## More information
-
-### GitHub Repository
-
-The code from the above examples can be accessed in our [getting started example repository](https://github.com/apollographql/graphql-server-example) on GitHub
-
-### Online Playground
-
-It's also possible to play with this example on Glitch, by remixing the repository.
-
-[![Remix on Glitch](https://cdn.glitch.com/2703baf2-b643-4da7-ab91-7ee2a2d00b5b%2Fremix-button.svg)](https://glitch.com/edit/#!/import/github/apollographql/graphql-server-example)

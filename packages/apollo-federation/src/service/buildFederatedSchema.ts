@@ -13,6 +13,7 @@ import {
   GraphQLSchemaModule,
   modulesFromSDL,
   addResolversToSchema,
+  GraphQLResolverMap,
 } from 'apollo-graphql';
 import federationDirectives, { typeIncludesDirective } from '../directives';
 
@@ -22,10 +23,43 @@ import { printSchema } from './printFederatedSchema';
 
 import 'apollo-server-env';
 
+type LegacySchemaModule = {
+  typeDefs: DocumentNode | DocumentNode[];
+  resolvers?: GraphQLResolverMap<any>;
+};
+
 export function buildFederatedSchema(
-  modulesOrSDL: (GraphQLSchemaModule | DocumentNode)[] | DocumentNode,
+  modulesOrSDL:
+    | (GraphQLSchemaModule | DocumentNode)[]
+    | DocumentNode
+    | LegacySchemaModule,
 ): GraphQLSchema {
-  const modules = modulesFromSDL(modulesOrSDL);
+  // ApolloServer supports passing an array of DocumentNode along with a single
+  // map of resolvers to build a schema. Long term we don't want to support this
+  // style anymore as we move towards a more structured approach to modules,
+  // however, it has tripped several teams up to not support this signature
+  // in buildFederatedSchema. Especially as teams migrate from
+  // `new ApolloServer({ typeDefs: DocumentNode[], resolvers })` to
+  // `new ApolloServer({ schema: buildFederatedSchema({ typeDefs: DocumentNode[], resolvers }) })`
+  //
+  // The last type in the union for `modulesOrSDL` supports this "legacy" input
+  // style in a simple manner (by just adding the resolvers to the first typeDefs entry)
+  //
+  let shapedModulesOrSDL: (GraphQLSchemaModule | DocumentNode)[] | DocumentNode;
+  if ('typeDefs' in modulesOrSDL) {
+    const { typeDefs, resolvers } = modulesOrSDL;
+    const augmentedTypeDefs = Array.isArray(typeDefs) ? typeDefs : [typeDefs];
+    shapedModulesOrSDL = augmentedTypeDefs.map((typeDefs, i) => {
+      const module: GraphQLSchemaModule = { typeDefs };
+      // add the resolvers to the first "module" in the array
+      if (i === 0 && resolvers) module.resolvers = resolvers;
+      return module;
+    });
+  } else {
+    shapedModulesOrSDL = modulesOrSDL;
+  }
+
+  const modules = modulesFromSDL(shapedModulesOrSDL);
 
   let schema = buildSchemaFromSDL(
     modules,

@@ -8,6 +8,15 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 - `apollo-server-express`, `apollo-server-koa`: A new `getMiddleware` method has been introduced, which accepts the same parameters as `applyMiddleware` with the exception of the `app` property.  This allows implementors to obtain the middleware directly and "`use`" it within an existing `app`.  In the near-term, this should ease some of the pain points with the previous technique.  Longer-term, we are exploring what we consider to be a much more natural approach by introducing an "HTTP transport" in Apollo Server 3.x.  See [this proposal issue](https://github.com/apollographql/apollo-server/issues/3184) for more information.  [PR #2435](https://github.com/apollographql/apollo-server/pull/2435)
 
+- `@apollo/federation`: `buildFederatedSchema`'s `typeDefs` parameter now accepts arrays of `DocumentNode`s (i.e. type definitions wrapped in `gql`) and `resolvers` to make the migration from a single service into a federated service easier for teams previously utilizing this pattern. [PR #3188](https://github.com/apollographql/apollo-server/pull/3188)
+
+### v2.8.2
+
+> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/99f78c6782bce170186ba6ef311182a8c9f281b7)
+
+- `apollo-server-koa`: Update dependency koa to v2.8.1. [PR #3175](https://github.com/apollographql/apollo-server/pull/3175)
+- `apollo-server-express`: Update types exported by the ASE package. [PR #3173](https://github.com/apollographql/apollo-server/pull/3175) [PR #3172](https://github.com/apollographql/apollo-server/pull/3172)
+
 ### v2.8.1
 
 > [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/84d80eba10d87663dab60af4a1cd46bccf30513f)
@@ -57,7 +66,7 @@ The version headers in this history reflect the versions of Apollo Server itself
   }
   ```
 - `apollo-engine-reporting`: **Behavior change**: By default, send no GraphQL request headers and values to Apollo's servers instead of sending all. Adding the new EngineReportingOption `sendHeaders` to send some or all header values. This replaces the `privateHeaders` option, which is now deprecated. [PR #2931](https://github.com/apollographql/apollo-server/pull/2931)
-   
+
    To maintain the previous behavior of transmitting  **all** GraphQL request headers and values, configure `engine`.`sendHeaders` as following:
      ```js
      engine: {

@@ -154,16 +154,16 @@ For more information, check out the [feature explanation about mocking](/feature
 
 ### Performance monitoring
 
-Apollo Server 2.0 enables GraphQL monitoring out of the box. It reports performance and error data out-of-band to Apollo Engine. And Apollo Engine displays information about every query and schema present in your GraphQL service.
+Apollo Server 2.0 enables GraphQL monitoring out of the box. It reports performance and error data out-of-band to Apollo Graph Manager. And Apollo Graph Manager displays information about every query and schema present in your GraphQL service.
 
-To set up Apollo Server with Engine, [click here](https://engine.apollographql.com/) to get an Engine API key and provide it to the `ENGINE_API_KEY` environment variable. Setting an environment variable can be done on the command-line as seen below, or with the [`dotenv` npm package](https://www.npmjs.com/package/dotenv).
+To set up Apollo Server with Graph Manager, [click here](https://engine.apollographql.com/) to get a Graph Manager API key and provide it to the `ENGINE_API_KEY` environment variable. Setting an environment variable can be done on the command-line as seen below, or with the [`dotenv` npm package](https://www.npmjs.com/package/dotenv).
 
 ```bash
-#Replace YOUR_API_KEY with the api key for you service in the Engine UI
+#Replace YOUR_API_KEY with the api key for you service in the Graph Manager UI
 ENGINE_API_KEY=YOUR_API_KEY node start-server.js
 ```
 
-The simplest option is to pass the Engine API Key directly to the Apollo Server constructor.
+The simplest option is to pass the Graph Manager API Key directly to the Apollo Server constructor.
 
 ```js{6-8}
 const { ApolloServer } = require('apollo-server');
