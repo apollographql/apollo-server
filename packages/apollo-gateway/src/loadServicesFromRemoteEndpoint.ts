@@ -5,8 +5,6 @@ import { GraphQLDataSource } from './datasources/types';
 import { UpdateServiceDefinitions } from './';
 import { ServiceDefinition } from '@apollo/federation';
 
-let serviceDefinitionMap: Map<string, string> = new Map();
-
 export async function getServiceDefinitionsFromRemoteEndpoint({
   serviceList,
   headers = {},
@@ -17,7 +15,9 @@ export async function getServiceDefinitionsFromRemoteEndpoint({
     dataSource: GraphQLDataSource;
   }[];
   headers?: HeadersInit;
-}): ReturnType<UpdateServiceDefinitions> {
+},
+  serviceDefinitionMap: Map<string, string>
+): ReturnType<UpdateServiceDefinitions> {
   if (!serviceList || !serviceList.length) {
     throw new Error(
       'Tried to load services from remote endpoints but none provided',
