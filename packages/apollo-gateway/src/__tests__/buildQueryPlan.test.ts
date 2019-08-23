@@ -280,8 +280,7 @@ describe('buildQueryPlan', () => {
                         `);
   });
 
-  // Actually failing (building 2 fetches to the same service?)
-  xit(`should use a single fetch when requesting relationship subfields from the same service`, () => {
+  it(`should use a single fetch when requesting relationship subfields from the same service`, () => {
     const query = gql`
       query {
         topReviews {
@@ -299,43 +298,23 @@ describe('buildQueryPlan', () => {
 
     expect(queryPlan).toMatchInlineSnapshot(`
                               QueryPlan {
-                                Sequence {
-                                  Fetch(service: "reviews") {
-                                    {
-                                      topReviews {
-                                        body
-                                        author {
-                                          __typename
-                                          id
+                                Fetch(service: "reviews") {
+                                  {
+                                    topReviews {
+                                      body
+                                      author {
+                                        reviews {
+                                          body
                                         }
                                       }
                                     }
-                                  },
-                                  Flatten(path: "topReviews.@.author") {
-                                    Fetch(service: "reviews") {
-                                      {
-                                        ... on User {
-                                          __typename
-                                          id
-                                        }
-                                      } =>
-                                      {
-                                        ... on User {
-                                          reviews {
-                                            body
-                                          }
-                                        }
-                                      }
-                                    },
-                                  },
+                                  }
                                 },
                               }
                     `);
   });
 
-  // Actually failing (building 2 fetches to the same service?)
-  // Also seeing a bit of a shift in which PlanNode the nested fields end up in
-  xit(`should use a single fetch when requesting relationship subfields and provided keys from the same service`, () => {
+  it(`should use a single fetch when requesting relationship subfields and provided keys from the same service`, () => {
     const query = gql`
       query {
         topReviews {
@@ -354,32 +333,18 @@ describe('buildQueryPlan', () => {
 
     expect(queryPlan).toMatchInlineSnapshot(`
                                                 QueryPlan {
-                                                  Sequence {
-                                                    Fetch(service: "reviews") {
-                                                      {
-                                                        topReviews {
-                                                          body
-                                                          author {
-                                                            __typename
-                                                            id
-                                                            reviews {
-                                                              body
-                                                            }
+                                                  Fetch(service: "reviews") {
+                                                    {
+                                                      topReviews {
+                                                        body
+                                                        author {
+                                                          id
+                                                          reviews {
+                                                            body
                                                           }
                                                         }
                                                       }
-                                                    },
-                                                    Merge(path: "topReviews.@.author") {
-                                                      Fetch(service: "accounts") {
-                                                        {
-                                                          __typename
-                                                          id
-                                                        } =>
-                                                        ... on User {
-                                                          id
-                                                        }
-                                                      },
-                                                    },
+                                                    }
                                                   },
                                                 }
                                 `);
@@ -581,6 +546,52 @@ describe('buildQueryPlan', () => {
                                                 `);
     });
 
+    describe(`when requesting a field defined in another service which requires a field in the base service`, () => {
+      it(`should add the field provided by base service in first Fetch`, () => {
+        const query = gql`
+          query {
+            topCars {
+              retailPrice
+            }
+          }
+        `;
+
+        const queryPlan = buildQueryPlan(buildOperationContext(schema, query));
+
+        expect(queryPlan).toMatchInlineSnapshot(`
+                                                                  QueryPlan {
+                                                                    Sequence {
+                                                                      Fetch(service: "product") {
+                                                                        {
+                                                                          topCars {
+                                                                            __typename
+                                                                            id
+                                                                            price
+                                                                          }
+                                                                        }
+                                                                      },
+                                                                      Flatten(path: "topCars.@") {
+                                                                        Fetch(service: "reviews") {
+                                                                          {
+                                                                            ... on Car {
+                                                                              __typename
+                                                                              id
+                                                                              price
+                                                                            }
+                                                                          } =>
+                                                                          {
+                                                                            ... on Car {
+                                                                              retailPrice
+                                                                            }
+                                                                          }
+                                                                        },
+                                                                      },
+                                                                    },
+                                                                  }
+                                                  `);
+      });
+    });
+
     describe(`when the parent selection set is empty`, () => {
       it(`should add key fields to the parent selection set and use a dependent fetch`, () => {
         const query = gql`
@@ -694,36 +705,18 @@ describe('buildQueryPlan', () => {
 
       expect(queryPlan).toMatchInlineSnapshot(`
                 QueryPlan {
-                  Sequence {
-                    Fetch(service: "product") {
-                      {
-                        topProducts {
-                          __typename
-                          ... on Book {
-                            __typename
-                            isbn
-                          }
-                          ... on Furniture {
-                            price
-                          }
+                  Fetch(service: "product") {
+                    {
+                      topProducts {
+                        __typename
+                        ... on Book {
+                          price
+                        }
+                        ... on Furniture {
+                          price
                         }
                       }
-                    },
-                    Flatten(path: "topProducts.@") {
-                      Fetch(service: "product") {
-                        {
-                          ... on Book {
-                            __typename
-                            isbn
-                          }
-                        } =>
-                        {
-                          ... on Book {
-                            price
-                          }
-                        }
-                      },
-                    },
+                    }
                   },
                 }
             `);
@@ -755,6 +748,7 @@ describe('buildQueryPlan', () => {
               topProducts {
                 __typename
                 ... on Book {
+                  price
                   __typename
                   isbn
                 }
@@ -766,42 +760,30 @@ describe('buildQueryPlan', () => {
               }
             }
           },
-          Parallel {
-            Flatten(path: "topProducts.@") {
-              Fetch(service: "product") {
-                {
-                  ... on Book {
-                    __typename
-                    isbn
-                  }
-                } =>
-                {
-                  ... on Book {
-                    price
+          Flatten(path: "topProducts.@") {
+            Fetch(service: "reviews") {
+              {
+                ... on Book {
+                  __typename
+                  isbn
+                }
+                ... on Furniture {
+                  __typename
+                  upc
+                }
+              } =>
+              {
+                ... on Book {
+                  reviews {
+                    body
                   }
                 }
-              },
-            },
-            Flatten(path: "topProducts.@") {
-              Fetch(service: "reviews") {
-                {
-                  ... on Book {
-                    __typename
-                    isbn
-                  }
-                  ... on Furniture {
-                    __typename
-                    upc
-                  }
-                } =>
-                {
-                  ... on Product {
-                    reviews {
-                      body
-                    }
+                ... on Furniture {
+                  reviews {
+                    body
                   }
                 }
-              },
+              }
             },
           },
         },
