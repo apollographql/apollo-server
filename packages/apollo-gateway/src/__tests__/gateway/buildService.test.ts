@@ -195,8 +195,8 @@ it('customizes request on a per-service basis', async () => {
 it('does not share service definition cache between gateways', async () => {
   let updates = 0;
   const updateObserver: any = (...args: any[]) => {
-      updates += 1;
-  }
+    updates += 1;
+  };
 
   // Initialize first gateway
   {

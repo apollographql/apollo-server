@@ -412,12 +412,15 @@ export class ApolloGateway implements GraphQLService {
         dataSource: this.createDataSource(serviceDefinition),
       }));
 
-      return getServiceDefinitionsFromRemoteEndpoint({
-        serviceList,
-        ...(config.introspectionHeaders
-          ? { headers: config.introspectionHeaders }
-          : {}),
-      }, this.serviceDefinitionCache);
+      return getServiceDefinitionsFromRemoteEndpoint(
+        {
+          serviceList,
+          ...(config.introspectionHeaders
+            ? { headers: config.introspectionHeaders }
+            : {}),
+        },
+        this.serviceDefinitionCache,
+      );
     }
 
     if (!this.engineConfig) {

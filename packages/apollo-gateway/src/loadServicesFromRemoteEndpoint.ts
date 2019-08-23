@@ -5,18 +5,19 @@ import { GraphQLDataSource } from './datasources/types';
 import { UpdateServiceDefinitions } from './';
 import { ServiceDefinition } from '@apollo/federation';
 
-export async function getServiceDefinitionsFromRemoteEndpoint({
-  serviceList,
-  headers = {},
-}: {
-  serviceList: {
-    name: string;
-    url?: string;
-    dataSource: GraphQLDataSource;
-  }[];
-  headers?: HeadersInit;
-},
-  serviceDefinitionMap: Map<string, string>
+export async function getServiceDefinitionsFromRemoteEndpoint(
+  {
+    serviceList,
+    headers = {},
+  }: {
+    serviceList: {
+      name: string;
+      url?: string;
+      dataSource: GraphQLDataSource;
+    }[];
+    headers?: HeadersInit;
+  },
+  serviceDefinitionMap: Map<string, string>,
 ): ReturnType<UpdateServiceDefinitions> {
   if (!serviceList || !serviceList.length) {
     throw new Error(
