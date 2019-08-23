@@ -18,8 +18,6 @@ import {
 import { ExecutionParams } from 'subscriptions-transport-ws';
 import accepts from 'accepts';
 import typeis from 'type-is';
-import { compose } from 'compose-middleware';
-import parseurl from 'parseurl';
 import { graphqlExpress } from './expressApollo';
 
 export { GraphQLOptions, GraphQLExtension } from 'apollo-server-core';
@@ -75,28 +73,6 @@ const fileUploadMiddleware = (
   }
 };
 
-const middlewareFromPath = (
-  path: string,
-  middleware: express.RequestHandler,
-) => (
-  req: express.Request,
-  res: express.Response,
-  next: express.NextFunction,
-) => {
-  // While Express is quite capable of providing the `path`, `connect` doesn't
-  // provide `req.path` in the same way, even though it's available on the `req`
-  // as `req._parsedUrl`.  That property is a cached representation of a
-  // previous parse done by the `parseurl` package, and by using that (popular)
-  // package here, we can still reap those cache benefits without directly
-  // accessing _parsedUrl ourselves, which could be risky.
-  const parsedUrl = parseurl(req);
-  if (parsedUrl && parsedUrl.pathname === path) {
-    return middleware(req, res, next);
-  } else {
-    return next();
-  }
-};
-
 export interface ExpressContext {
   req: express.Request;
   res: express.Response;
@@ -146,6 +122,8 @@ export class ApolloServer extends ApolloServerBase {
   }: GetMiddlewareOptions = {}) {
     if (!path) path = '/graphql';
 
+    const router = express.Router();
+
     // Despite the fact that this `applyMiddleware` function is `async` in
     // other integrations (e.g. Hapi), currently it is not for Express (@here).
     // That should change in a future version, but that would be a breaking
@@ -160,33 +138,27 @@ export class ApolloServer extends ApolloServerBase {
     // does. (And we'll take care to surface any errors via the `.catch`-able.)
     const promiseWillStart = this.willStart();
 
-    const middleware: express.RequestHandler[] = [];
-
-    middleware.push(
-      middlewareFromPath(path, (_req, _res, next) => {
-        promiseWillStart.then(() => next()).catch(next);
-      }),
-    );
+    router.use(path, (_req, _res, next) => {
+      promiseWillStart.then(() => next()).catch(next);
+    });
 
     if (!disableHealthCheck) {
-      middleware.push(
-        middlewareFromPath('/.well-known/apollo/server-health', (req, res) => {
-          // Response follows https://tools.ietf.org/html/draft-inadarei-api-health-check-01
-          res.type('application/health+json');
+      router.use('/.well-known/apollo/server-health', (req, res) => {
+        // Response follows https://tools.ietf.org/html/draft-inadarei-api-health-check-01
+        res.type('application/health+json');
 
-          if (onHealthCheck) {
-            onHealthCheck(req)
-              .then(() => {
-                res.json({ status: 'pass' });
-              })
-              .catch(() => {
-                res.status(503).json({ status: 'fail' });
-              });
-          } else {
-            res.json({ status: 'pass' });
-          }
-        }),
-      );
+        if (onHealthCheck) {
+          onHealthCheck(req)
+            .then(() => {
+              res.json({ status: 'pass' });
+            })
+            .catch(() => {
+              res.status(503).json({ status: 'fail' });
+            });
+        } else {
+          res.json({ status: 'pass' });
+        }
+      });
     }
 
     let uploadsMiddleware;
@@ -200,63 +172,59 @@ export class ApolloServer extends ApolloServerBase {
     // Note that we don't just pass all of these handlers to a single app.use call
     // for 'connect' compatibility.
     if (cors === true) {
-      middleware.push(middlewareFromPath(path, corsMiddleware()));
+      router.use(path, corsMiddleware());
     } else if (cors !== false) {
-      middleware.push(middlewareFromPath(path, corsMiddleware(cors)));
+      router.use(path, corsMiddleware(cors));
     }
 
     if (bodyParserConfig === true) {
-      middleware.push(middlewareFromPath(path, json()));
+      router.use(path, json());
     } else if (bodyParserConfig !== false) {
-      middleware.push(middlewareFromPath(path, json(bodyParserConfig)));
+      router.use(path, json(bodyParserConfig));
     }
 
     if (uploadsMiddleware) {
-      middleware.push(middlewareFromPath(path, uploadsMiddleware));
+      router.use(path, uploadsMiddleware);
     }
 
     // Note: if you enable playground in production and expect to be able to see your
     // schema, you'll need to manually specify `introspection: true` in the
     // ApolloServer constructor; by default, the introspection query is only
     // enabled in dev.
-    middleware.push(
-      middlewareFromPath(path, (req, res, next) => {
-        if (this.playgroundOptions && req.method === 'GET') {
-          // perform more expensive content-type check only if necessary
-          // XXX We could potentially move this logic into the GuiOptions lambda,
-          // but I don't think it needs any overriding
-          const accept = accepts(req);
-          const types = accept.types() as string[];
-          const prefersHTML =
-            types.find(
-              (x: string) => x === 'text/html' || x === 'application/json',
-            ) === 'text/html';
+    router.use(path, (req, res, next) => {
+      if (this.playgroundOptions && req.method === 'GET') {
+        // perform more expensive content-type check only if necessary
+        // XXX We could potentially move this logic into the GuiOptions lambda,
+        // but I don't think it needs any overriding
+        const accept = accepts(req);
+        const types = accept.types() as string[];
+        const prefersHTML =
+          types.find(
+            (x: string) => x === 'text/html' || x === 'application/json',
+          ) === 'text/html';
 
-          if (prefersHTML) {
-            const playgroundRenderPageOptions: PlaygroundRenderPageOptions = {
-              endpoint: req.originalUrl,
-              subscriptionEndpoint: this.subscriptionsPath,
-              ...this.playgroundOptions,
-            };
-            res.setHeader('Content-Type', 'text/html');
-            const playground = renderPlaygroundPage(
-              playgroundRenderPageOptions,
-            );
-            res.write(playground);
-            res.end();
-            return;
-          }
+        if (prefersHTML) {
+          const playgroundRenderPageOptions: PlaygroundRenderPageOptions = {
+            endpoint: req.originalUrl,
+            subscriptionEndpoint: this.subscriptionsPath,
+            ...this.playgroundOptions,
+          };
+          res.setHeader('Content-Type', 'text/html');
+          const playground = renderPlaygroundPage(playgroundRenderPageOptions);
+          res.write(playground);
+          res.end();
+          return;
         }
+      }
 
-        return graphqlExpress(() => this.createGraphQLServerOptions(req, res))(
-          req,
-          res,
-          next,
-        );
-      }),
-    );
+      return graphqlExpress(() => this.createGraphQLServerOptions(req, res))(
+        req,
+        res,
+        next,
+      );
+    });
 
-    return compose(middleware);
+    return router;
   }
 }
 
