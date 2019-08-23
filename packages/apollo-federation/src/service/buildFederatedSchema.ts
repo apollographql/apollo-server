@@ -45,23 +45,23 @@ export function buildFederatedSchema(
   // The last type in the union for `modulesOrSDL` supports this "legacy" input
   // style in a simple manner (by just adding the resolvers to the first typeDefs entry)
   //
-  let shappedModulesOrSDL:
+  let shapedModulesOrSDL:
     | (GraphQLSchemaModule | DocumentNode)[]
     | DocumentNode;
   if ('typeDefs' in modulesOrSDL) {
     const { typeDefs, resolvers } = modulesOrSDL;
     const augmentedTypeDefs = Array.isArray(typeDefs) ? typeDefs : [typeDefs];
-    shappedModulesOrSDL = augmentedTypeDefs.map((typeDefs, i) => {
+    shapedModulesOrSDL = augmentedTypeDefs.map((typeDefs, i) => {
       const module: GraphQLSchemaModule = { typeDefs };
       // add the resolvers to the first "module" in the array
       if (i === 0 && resolvers) module.resolvers = resolvers;
       return module;
     });
   } else {
-    shappedModulesOrSDL = modulesOrSDL;
+    shapedModulesOrSDL = modulesOrSDL;
   }
 
-  const modules = modulesFromSDL(shappedModulesOrSDL);
+  const modules = modulesFromSDL(shapedModulesOrSDL);
 
   let schema = buildSchemaFromSDL(
     modules,
