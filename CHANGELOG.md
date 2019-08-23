@@ -8,6 +8,8 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 - _Nothing yet!_
 
+- `@apollo/federation`: `buildFederatedSchema`'s `typeDefs` parameter now accepts arrays of `DocumentNode`s (i.e. type definitions wrapped in `gql`) and `resolvers` to make the migration from a single service into a federated service easier for teams previously utilizing this pattern. [PR #3188](https://github.com/apollographql/apollo-server/pull/3188)
+
 ### v2.8.2
 
 > [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/99f78c6782bce170186ba6ef311182a8c9f281b7)
