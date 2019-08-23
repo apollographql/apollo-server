@@ -23,6 +23,7 @@ export interface FederationType {
   externals?: {
     [serviceName: string]: ExternalFieldDefinition[];
   };
+  isValueType?: boolean;
 }
 
 export interface FederationField {

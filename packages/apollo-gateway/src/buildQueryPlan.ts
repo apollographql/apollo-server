@@ -253,7 +253,14 @@ function splitSubfields(
   splitFields(context, path, fields, field => {
     const { parentType, fieldNode, fieldDef } = field;
 
-    const baseService = context.getBaseService(parentType);
+    let baseService, owningService;
+    if (parentType.federation && parentType.federation.isValueType) {
+      baseService = parentGroup.serviceName;
+      owningService = parentGroup.serviceName;
+    } else {
+      baseService = context.getBaseService(parentType);
+      owningService = context.getOwningService(parentType, fieldDef);
+    }
 
     if (!baseService) {
       throw new GraphQLError(
@@ -261,8 +268,6 @@ function splitSubfields(
         fieldNode,
       );
     }
-
-    const owningService = context.getOwningService(parentType, fieldDef);
 
     if (!owningService) {
       throw new GraphQLError(

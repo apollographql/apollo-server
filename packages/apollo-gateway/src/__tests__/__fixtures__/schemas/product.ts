@@ -32,7 +32,7 @@ export const typeDefs = gql`
     name: String
     price: String
     brand: Brand
-    metadata: [KeyValue]
+    metadata: [MetadataOrError]
   }
 
   extend type Book implements Product @key(fields: "isbn") {
@@ -55,6 +55,15 @@ export const typeDefs = gql`
     key: String!
     value: String!
   }
+
+  # Value type
+  type Error {
+    code: Int
+    message: String
+  }
+
+  # Value type
+  union MetadataOrError = KeyValue | Error
 `;
 
 const products = [
@@ -156,6 +165,11 @@ export const resolvers: GraphQLResolverMap<any> = {
     },
     topProducts(_, args) {
       return products.slice(0, args.first);
+    },
+  },
+  MetadataOrError: {
+    __resolveType(object) {
+      return 'key' in object ? 'KeyValue' : 'Error';
     },
   },
 };
