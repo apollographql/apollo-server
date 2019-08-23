@@ -45,9 +45,7 @@ export function buildFederatedSchema(
   // The last type in the union for `modulesOrSDL` supports this "legacy" input
   // style in a simple manner (by just adding the resolvers to the first typeDefs entry)
   //
-  let shapedModulesOrSDL:
-    | (GraphQLSchemaModule | DocumentNode)[]
-    | DocumentNode;
+  let shapedModulesOrSDL: (GraphQLSchemaModule | DocumentNode)[] | DocumentNode;
   if ('typeDefs' in modulesOrSDL) {
     const { typeDefs, resolvers } = modulesOrSDL;
     const augmentedTypeDefs = Array.isArray(typeDefs) ? typeDefs : [typeDefs];
