@@ -197,6 +197,14 @@ app.use('*', jwtCheck, requireAuth, checkScope);
 server.applyMiddleware({ app, path: '/specialUrl' }); // app is from an existing express app. Mount Apollo middleware here. If no path is specified, it defaults to `/graphql`.
 ```
 
+## `ApolloServer.getMiddleware`
+
+Similar to the `applyMiddleware` method above, though rather than applying the composition of the various Apollo Server middlewares which comprise a full-featured Apollo Server deployment (e.g. middleware for HTTP body parsing, GraphQL Playground, uploads and subscriptions) the `getMiddleware` simply returns the middleware.
+
+The `getMiddleware` method takes the same arguments as `applyMiddleware` **except** `app` should not be passed.  Instead, the result of `getMiddleware` must be added as a middleware directly to an existing application (e.g. with `app.use(...)`).
+
+For example, for `apollo-server-express`, this means that rather than passing `applyMiddleware` an `app` which was already initiated from calling `express()`, and `applyMiddleware` "using" (i.e. `app.use`), the implementor will instead call `app.use(...)` on the result of `getMiddleware` with the same arguments.
+
 ## `gql`
 
 The `gql` is a [template literal tag](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#Tagged_templates). Template literals were introduced in recent versions of ECMAScript to provide embedded expressions (i.e. `` `A string with interpolated ${variables}` ``) and template literal tags exist to provide additional functionality for what would otherwise be a normal template literal.

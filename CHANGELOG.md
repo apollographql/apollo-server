@@ -6,7 +6,7 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 > The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  When a release is being prepared, a new header will be (manually) created below and the the appropriate changes within that release will be moved into the new section.
 
-- _Nothing yet!_
+- `apollo-server-express`, `apollo-server-koa`: A new `getMiddleware` method has been introduced, which accepts the same parameters as `applyMiddleware` with the exception of the `app` property.  This allows implementors to obtain the middleware directly and "`use`" it within an existing `app`.  In the near-term, this should ease some of the pain points with the previous technique.  Longer-term, we are exploring what we consider to be a much more natural approach by introducing an "HTTP transport" in Apollo Server 3.x.  See [this proposal issue](https://github.com/apollographql/apollo-server/issues/3184) for more information.  [PR #2435](https://github.com/apollographql/apollo-server/pull/2435)
 
 - `@apollo/federation`: `buildFederatedSchema`'s `typeDefs` parameter now accepts arrays of `DocumentNode`s (i.e. type definitions wrapped in `gql`) and `resolvers` to make the migration from a single service into a federated service easier for teams previously utilizing this pattern. [PR #3188](https://github.com/apollographql/apollo-server/pull/3188)
 
