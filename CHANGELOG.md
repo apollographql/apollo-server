@@ -8,6 +8,8 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 - _Nothing yet!_
 
+- `@apollo/federation`: `buildFederatedSchema` now accepts the same possible interface combination as `new ApolloServer()` for `typeDefs` and `resolvers` to make the migration from a single service into a federated service easier for teams with existing `typeDefs` arrays already built up [PR #3188](https://github.com/apollographql/apollo-server/pull/3188)
+
 ### v2.8.2
 
 > [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/99f78c6782bce170186ba6ef311182a8c9f281b7)
