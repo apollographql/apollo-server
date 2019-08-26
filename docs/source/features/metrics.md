@@ -59,7 +59,7 @@ ENGINE_API_KEY=YOUR_API_KEY ENGINE_SCHEMA_TAG=development node start-server.js
 
 ### Debugging Graph Manager reporting
 
-You can set the [`debugPrintReports` option](https://github.com/apollographql/apollo-server/blob/master/packages/apollo-engine-reporting/src/agent.ts#L429-L433) in the `engine` section of the Apollo Server constructor to see debug output regarding trace transmission.  For example:
+You can set the [`debugPrintReports` option](https://github.com/apollographql/apollo-server/blob/master/packages/apollo-engine-reporting/src/agent.ts#L429-L433) in the `engine` section of the `ApolloServer` constructor to automatically log debugging information for all reporting requests sent to Graph Manager.  For example:
 
 ```js{8}
 const { ApolloServer } = require("apollo-server");
