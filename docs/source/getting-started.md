@@ -1,5 +1,5 @@
 ---
-title: Getting started
+title: Setting up Apollo Server
 ---
 
 > Estimated time: About 10 minutes.

@@ -1,5 +1,5 @@
 ---
-title: Understanding schema concepts
+title: Schema basics
 sidebar_title: Writing a schema
 ---
 
