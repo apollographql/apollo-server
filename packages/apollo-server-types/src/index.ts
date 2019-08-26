@@ -11,7 +11,7 @@ import {
 
 // This seems like it could live in this package too.
 import { KeyValueCache } from 'apollo-server-caching';
-import { Trace } from 'apollo-engine-reporting-protobuf';
+import { ITrace } from 'apollo-engine-reporting-protobuf/dist/protobuf';
 
 export type ValueOrPromise<T> = T | Promise<T>;
 export type WithRequired<T, K extends keyof T> = T & Required<Pick<T, K>>;
@@ -55,7 +55,7 @@ export interface GraphQLRequestMetrics {
   forbiddenOperation?: boolean;
   registeredOperation?: boolean;
   startHrTime?: [number, number];
-  queryPlanTrace?: Trace.QueryPlanNode;
+  queryPlanTrace?: ITrace['queryPlan'];
 }
 
 export interface GraphQLRequestContext<TContext = Record<string, any>> {
