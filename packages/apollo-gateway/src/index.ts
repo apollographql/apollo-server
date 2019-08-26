@@ -529,6 +529,7 @@ export class ApolloGateway implements GraphQLService {
     requestContext: RequestContext<TContext>,
     operationContext: OperationContext,
   ) {
+    // casting out of `readonly`
     const variableDefinitions = operationContext.operation
       .variableDefinitions as VariableDefinitionNode[] | undefined;
 
