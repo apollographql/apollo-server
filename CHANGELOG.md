@@ -7,6 +7,7 @@ The version headers in this history reflect the versions of Apollo Server itself
 > The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  When a release is being prepared, a new header will be (manually) created below and the the appropriate changes within that release will be moved into the new section.
 
 - `apollo-server-core`: Make `formatError` available to subscriptions in the same spirit as the existing `formatResponse`. [PR #2942](https://github.com/apollographql/apollo-server/pull/2942)
+- `apollo-server-types`: Attempt to avoid runtime cost involved with evaluating `apollo-engine-reporting-protobuf` by importing the `ITrace` interface rather than the `Trace` implementation. [PR #3210](https://github.com/apollographql/apollo-server/pull/3210)
 
 ### v2.9.0
 
