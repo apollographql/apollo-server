@@ -631,6 +631,9 @@ export class ApolloServerBase {
                 debug: this.requestOptions.debug,
               }),
           });
+
+          connection.formatError = this.requestOptions.formatError;
+
           let context: Context = this.context ? this.context : { connection };
 
           try {
