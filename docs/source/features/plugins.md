@@ -18,7 +18,7 @@ with each request that's sent to Apollo Server.
 
 ### Responding to events
 
-A plugin specifies exactly which [lifecycle events](#events) 
+A plugin specifies exactly which [lifecycle events](#plugin-event-reference)
 it responds to. To do so, it implements functions that correspond to those events.
 
 For example, this basic plugin (declared as an object literal) responds to the `serverWillStart` event, which fires when Apollo Server is preparing to start up:
