@@ -102,12 +102,10 @@ export interface KeyDirectivesMap {
 }
 
 /**
- * A map for tracking which types have been determined to be a value type, a type
+ * A set of type names that have been determined to be a value type, a type
  * shared across at least 2 services.
  */
-export interface ValueTypesMap {
-  [typeName: string]: boolean;
-}
+type ValueTypes = Set<string>;
 /**
  * Loop over each service and process its typeDefs (`definitions`)
  * - build up typeToServiceMap
@@ -119,7 +117,7 @@ export function buildMapsFromServiceList(serviceList: ServiceDefinition[]) {
   const typeToServiceMap: TypeToServiceMap = Object.create(null);
   const externalFields: ExternalFieldDefinition[] = [];
   const keyDirectivesMap: KeyDirectivesMap = Object.create(null);
-  const valueTypesMap: ValueTypesMap = Object.create(null);
+  const valueTypes: ValueTypes = new Set();
 
   for (const { typeDefs, name: serviceName } of serviceList) {
     // Build a new SDL with @external fields removed, as well as information about
@@ -181,7 +179,7 @@ export function buildMapsFromServiceList(serviceList: ServiceDefinition[]) {
         /**
          * If this type already exists in the definitions map, push this definition to the array (newer defs
          * take precedence). If the types are determined to be identical, add the type name
-         * to the valueTypesMap.
+         * to the valueTypes Set.
          *
          * If not, create the definitions array and add it to the definitionsMap.
          */
@@ -192,7 +190,7 @@ export function buildMapsFromServiceList(serviceList: ServiceDefinition[]) {
           );
 
           if (isValueType) {
-            valueTypesMap[typeName] = true;
+            valueTypes.add(typeName);
           }
 
           definitionsMap[typeName].push({ ...definition, serviceName });
@@ -282,7 +280,7 @@ export function buildMapsFromServiceList(serviceList: ServiceDefinition[]) {
     extensionsMap,
     externalFields,
     keyDirectivesMap,
-    valueTypesMap,
+    valueTypes,
   };
 }
 
@@ -331,13 +329,13 @@ export function addFederationMetadataToSchemaNodes({
   typeToServiceMap,
   externalFields,
   keyDirectivesMap,
-  valueTypesMap,
+  valueTypes,
 }: {
   schema: GraphQLSchema;
   typeToServiceMap: TypeToServiceMap;
   externalFields: ExternalFieldDefinition[];
   keyDirectivesMap: KeyDirectivesMap;
-  valueTypesMap: ValueTypesMap;
+  valueTypes: ValueTypes;
 }) {
   for (const [
     typeName,
@@ -354,7 +352,7 @@ export function addFederationMetadataToSchemaNodes({
       ...(keyDirectivesMap[typeName] && {
         keys: keyDirectivesMap[typeName],
       }),
-      isValueType: Boolean(valueTypesMap[typeName]),
+      isValueType: valueTypes.has(typeName),
     };
 
     // For object types, add metadata for all the @provides directives from its fields
@@ -446,7 +444,7 @@ export function composeServices(services: ServiceDefinition[]) {
     extensionsMap,
     externalFields,
     keyDirectivesMap,
-    valueTypesMap,
+    valueTypes,
   } = buildMapsFromServiceList(services);
 
   let { schema, errors } = buildSchemaFromDefinitionsAndExtensions({
@@ -492,7 +490,7 @@ export function composeServices(services: ServiceDefinition[]) {
     typeToServiceMap,
     externalFields,
     keyDirectivesMap,
-    valueTypesMap,
+    valueTypes,
   });
 
   /**
