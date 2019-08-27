@@ -92,7 +92,7 @@ type Review {
   author: User @provides(fields: "username")
 }
 
-type User @key(fields: "id") {
+extend type User @key(fields: "id") {
   id: ID! @external
   username: String @external
 }
