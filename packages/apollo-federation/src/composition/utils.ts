@@ -420,6 +420,29 @@ export function diffTypeNodes(
 }
 
 /**
+ * A common implementation of diffTypeNodes to ensure two type nodes are equivalent
+ *
+ * @param firstNode TypeDefinitionNode | TypeExtensionNode
+ * @param secondNode TypeDefinitionNode | TypeExtensionNode
+ */
+export function typeNodesAreEquivalent(
+  firstNode: TypeDefinitionNode | TypeExtensionNode,
+  secondNode: TypeDefinitionNode | TypeExtensionNode,
+) {
+  const { name, kind, fields, unionTypes } = diffTypeNodes(
+    firstNode,
+    secondNode,
+  );
+
+  return (
+    name.length === 0 &&
+    kind.length === 0 &&
+    Object.keys(fields).length === 0 &&
+    Object.keys(unionTypes).length === 0
+  );
+}
+
+/**
  * A map of `Kind`s from their definition to their respective extensions
  */
 export const defKindToExtKind: { [kind: string]: string } = {

@@ -27,7 +27,7 @@ import {
   parseSelections,
   mapFieldNamesToServiceName,
   stripExternalFieldsFromTypeDefs,
-  diffTypeNodes,
+  typeNodesAreEquivalent,
 } from './utils';
 import {
   ServiceDefinition,
@@ -186,16 +186,10 @@ export function buildMapsFromServiceList(serviceList: ServiceDefinition[]) {
          * If not, create the definitions array and add it to the definitionsMap.
          */
         if (definitionsMap[typeName]) {
-          const { name, kind, fields, unionTypes } = diffTypeNodes(
+          const isValueType = typeNodesAreEquivalent(
             definitionsMap[typeName][definitionsMap[typeName].length - 1],
             definition,
           );
-
-          const isValueType =
-            name.length === 0 &&
-            kind.length === 0 &&
-            Object.keys(fields).length === 0 &&
-            Object.keys(unionTypes).length === 0;
 
           if (isValueType) {
             valueTypesMap[typeName] = true;
