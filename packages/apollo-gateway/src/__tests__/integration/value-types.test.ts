@@ -198,4 +198,192 @@ describe('value types', () => {
     expect(queryPlan).toCallService('books');
     expect(queryPlan).toCallService('reviews');
   });
+
+  it('resolves @provides fields on value types correctly via contrived example', async () => {
+    const firstService = {
+      name: 'firstService',
+      typeDefs: gql`
+        extend type Query {
+          valueType: ValueType
+        }
+
+        type ValueType {
+          id: ID!
+          user: User! @provides(fields: "id name")
+        }
+
+        extend type User @key(fields: "id") {
+          id: ID! @external
+          name: String! @external
+        }
+      `,
+      resolvers: {
+        Query: {
+          valueType() {
+            return { id: '123', user: { id: '1', name: 'trevor' } };
+          },
+        },
+      },
+    };
+
+    const secondService = {
+      name: 'secondService',
+      typeDefs: gql`
+        extend type Query {
+          otherValueType: ValueType
+        }
+
+        type ValueType {
+          id: ID!
+          user: User! @provides(fields: "id name")
+        }
+
+        extend type User @key(fields: "id") {
+          id: ID! @external
+          name: String! @external
+        }
+      `,
+      resolvers: {
+        Query: {
+          otherValueType() {
+            return { id: '456', user: { id: '2', name: 'james' } };
+          },
+        },
+      },
+    };
+
+    const userService = {
+      name: 'userService',
+      typeDefs: gql`
+        type User @key(fields: "id") {
+          id: ID!
+          name: String!
+          address: String!
+        }
+      `,
+      resolvers: {
+        User: {
+          __resolveReference(user: any) {
+            return user.id === '1'
+              ? { id: '1', name: 'trevor', address: '123 Abc St' }
+              : { id: '2', name: 'james', address: '456 Hello St.' };
+          },
+        },
+      },
+    };
+
+    const query = gql`
+      query Hello {
+        valueType {
+          id
+          user {
+            id
+            name
+            address
+          }
+        }
+        otherValueType {
+          id
+          user {
+            id
+            name
+            address
+          }
+        }
+      }
+    `;
+
+    const { data, errors, queryPlan } = await execute(
+      [firstService, secondService, userService],
+      {
+        query,
+      },
+    );
+
+    expect(data).toMatchInlineSnapshot(`
+      Object {
+        "otherValueType": Object {
+          "id": "456",
+          "user": Object {
+            "address": "456 Hello St.",
+            "id": "2",
+            "name": "james",
+          },
+        },
+        "valueType": Object {
+          "id": "123",
+          "user": Object {
+            "address": "123 Abc St",
+            "id": "1",
+            "name": "trevor",
+          },
+        },
+      }
+    `);
+    expect(errors).toBeUndefined();
+    expect(queryPlan).toMatchInlineSnapshot(`
+      QueryPlan {
+        Parallel {
+          Sequence {
+            Fetch(service: "firstService") {
+              {
+                valueType {
+                  id
+                  user {
+                    id
+                    name
+                    __typename
+                  }
+                }
+              }
+            },
+            Flatten(path: "valueType.user") {
+              Fetch(service: "userService") {
+                {
+                  ... on User {
+                    __typename
+                    id
+                  }
+                } =>
+                {
+                  ... on User {
+                    address
+                  }
+                }
+              },
+            },
+          },
+          Sequence {
+            Fetch(service: "secondService") {
+              {
+                otherValueType {
+                  id
+                  user {
+                    id
+                    name
+                    __typename
+                  }
+                }
+              }
+            },
+            Flatten(path: "otherValueType.user") {
+              Fetch(service: "userService") {
+                {
+                  ... on User {
+                    __typename
+                    id
+                  }
+                } =>
+                {
+                  ... on User {
+                    address
+                  }
+                }
+              },
+            },
+          },
+        },
+      }
+    `);
+  });
 });

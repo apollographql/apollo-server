@@ -32,7 +32,7 @@ export const externalMissingOnBase = (schema: GraphQLSchema) => {
               errorWithCode(
                 'EXTERNAL_MISSING_ON_BASE',
                 logServiceAndType(serviceName, typeName, externalFieldName) +
-                  `marked @external but ${externalFieldName} is not defined on the base service of ${typeName} (${namedType.federation.owningService})`,
+                  `marked @external but ${externalFieldName} is not defined on the base service of ${typeName} (${namedType.federation.serviceName})`,
               ),
             );
             continue;
@@ -48,7 +48,7 @@ export const externalMissingOnBase = (schema: GraphQLSchema) => {
               errorWithCode(
                 'EXTERNAL_MISSING_ON_BASE',
                 logServiceAndType(serviceName, typeName, externalFieldName) +
-                  `marked @external but ${externalFieldName} was defined in ${matchingBaseField.federation.serviceName}, not in the service that owns ${typeName} (${namedType.federation.owningService})`,
+                  `marked @external but ${externalFieldName} was defined in ${matchingBaseField.federation.serviceName}, not in the service that owns ${typeName} (${namedType.federation.serviceName})`,
               ),
             );
           }

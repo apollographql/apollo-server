@@ -341,13 +341,16 @@ export function addFederationMetadataToSchemaNodes({
 
     // Extend each type in the GraphQLSchema with the serviceName that owns it
     // and the key directives that belong to it
+    const isValueType = valueTypes.has(typeName);
+    const serviceName = isValueType ? null : owningService;
+
     namedType.federation = {
       ...namedType.federation,
-      owningService,
+      serviceName,
+      isValueType,
       ...(keyDirectivesMap[typeName] && {
         keys: keyDirectivesMap[typeName],
       }),
-      isValueType: valueTypes.has(typeName),
     };
 
     // For object types, add metadata for all the @provides directives from its fields
@@ -365,10 +368,11 @@ export function addFederationMetadataToSchemaNodes({
         ) {
           field.federation = {
             ...field.federation,
-            serviceName: owningService,
+            serviceName,
             provides: parseSelections(
               providesDirective.arguments[0].value.value,
             ),
+            belongsToValueType: isValueType,
           };
         }
       }

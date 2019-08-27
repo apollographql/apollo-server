@@ -18,7 +18,7 @@ export interface ServiceNameToKeyDirectivesMap {
 }
 
 export interface FederationType {
-  owningService?: string;
+  serviceName?: string | null;
   keys?: ServiceNameToKeyDirectivesMap;
   externals?: {
     [serviceName: string]: ExternalFieldDefinition[];
@@ -30,6 +30,7 @@ export interface FederationField {
   serviceName?: ServiceName;
   requires?: ReadonlyArray<SelectionNode>;
   provides?: ReadonlyArray<SelectionNode>;
+  belongsToValueType?: boolean;
 }
 
 export interface ServiceDefinition {

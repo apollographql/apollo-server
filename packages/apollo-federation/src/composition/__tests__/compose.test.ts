@@ -55,8 +55,8 @@ describe('composeServices', () => {
     const product = schema.getType('Product') as GraphQLObjectType;
     const user = schema.getType('User') as GraphQLObjectType;
 
-    expect(product.federation.owningService).toEqual('serviceA');
-    expect(user.federation.owningService).toEqual('serviceB');
+    expect(product.federation.serviceName).toEqual('serviceA');
+    expect(user.federation.serviceName).toEqual('serviceB');
   });
 
   describe('basic type extensions', () => {
@@ -94,7 +94,7 @@ describe('composeServices', () => {
 
       const product = schema.getType('Product') as GraphQLObjectType;
 
-      expect(product.federation.owningService).toEqual('serviceA');
+      expect(product.federation.serviceName).toEqual('serviceA');
       expect(product.getFields()['price'].federation.serviceName).toEqual(
         'serviceB',
       );
@@ -133,7 +133,7 @@ describe('composeServices', () => {
 
       const product = schema.getType('Product') as GraphQLObjectType;
 
-      expect(product.federation.owningService).toEqual('serviceB');
+      expect(product.federation.serviceName).toEqual('serviceB');
       expect(product.getFields()['price'].federation.serviceName).toEqual(
         'serviceA',
       );
@@ -187,7 +187,7 @@ describe('composeServices', () => {
 
       const product = schema.getType('Product') as GraphQLObjectType;
 
-      expect(product.federation.owningService).toEqual('serviceB');
+      expect(product.federation.serviceName).toEqual('serviceB');
       expect(product.getFields()['price'].federation.serviceName).toEqual(
         'serviceA',
       );
@@ -248,7 +248,7 @@ describe('composeServices', () => {
                         }
                   `);
 
-      expect(product.federation.owningService).toEqual('serviceB');
+      expect(product.federation.serviceName).toEqual('serviceB');
       expect(product.getFields()['price'].federation.serviceName).toEqual(
         'serviceC',
       );
@@ -574,7 +574,7 @@ describe('composeServices', () => {
 
       const product = schema.getType('Product') as GraphQLObjectType;
 
-      expect(product.federation.owningService).toEqual('serviceA');
+      expect(product.federation.serviceName).toEqual('serviceA');
       expect(product.getFields()['id'].federation.serviceName).toEqual(
         'serviceB',
       );
@@ -614,7 +614,7 @@ describe('composeServices', () => {
 
       const query = schema.getQueryType();
 
-      expect(query.federation.owningService).toBeUndefined();
+      expect(query.federation.serviceName).toBeUndefined();
     });
 
     it('treats root Query type definition as an extension, not base definitions', () => {
@@ -655,7 +655,7 @@ describe('composeServices', () => {
 
       const query = schema.getType('Query') as GraphQLObjectType;
 
-      expect(query.federation.owningService).toBeUndefined();
+      expect(query.federation.serviceName).toBeUndefined();
     });
 
     it('allows extension of the Mutation type with no base type definition', () => {
@@ -846,7 +846,7 @@ describe('composeServices', () => {
         expect(product.getFields()['price'].federation.serviceName).toEqual(
           'serviceB',
         );
-        expect(product.federation.owningService).toEqual('serviceA');
+        expect(product.federation.serviceName).toEqual('serviceA');
       });
     });
 
@@ -950,11 +950,12 @@ describe('composeServices', () => {
 
         const review = schema.getType('Review') as GraphQLObjectType;
         expect(review.getFields()['product'].federation).toMatchInlineSnapshot(`
-                              Object {
-                                "provides": sku,
-                                "serviceName": "serviceA",
-                              }
-                        `);
+          Object {
+            "belongsToValueType": false,
+            "provides": sku,
+            "serviceName": "serviceA",
+          }
+        `);
       });
 
       it('adds @provides information to fields using a nested field set', () => {
@@ -1030,11 +1031,56 @@ describe('composeServices', () => {
         const review = schema.getType('Review') as GraphQLObjectType;
         expect(review.getFields()['products'].federation)
           .toMatchInlineSnapshot(`
-                              Object {
-                                "provides": sku,
-                                "serviceName": "serviceA",
-                              }
-                          `);
+          Object {
+            "belongsToValueType": false,
+            "provides": sku,
+            "serviceName": "serviceA",
+          }
+        `);
+      });
+
+      it('adds correct @provides information to fields on value types', () => {
+        const serviceA = {
+          typeDefs: gql`
+            extend type Query {
+              valueType: ValueType
+            }
+
+            type ValueType {
+              id: ID!
+              user: User! @provides(fields: "id name")
+            }
+
+            type User @key(fields: "id") {
+              id: ID!
+              name: String!
+            }
+          `,
+          name: 'serviceA',
+        };
+
+        const serviceB = {
+          typeDefs: gql`
+            type ValueType {
+              id: ID!
+              user: User! @provides(fields: "id name")
+            }
+
+            extend type User @key(fields: "id") {
+              id: ID! @external
+              name: String! @external
+            }
+          `,
+          name: 'serviceB',
+        };
+
+        const { schema, errors } = composeServices([serviceA, serviceB]);
+        expect(errors).toHaveLength(0);
+
+        const valueType = schema.getType('ValueType') as GraphQLObjectType;
+        const userField = valueType.getFields()['user'].federation;
+        expect(userField.belongsToValueType).toBe(true);
+        expect(userField.serviceName).toBe(null);
       });
     });
 

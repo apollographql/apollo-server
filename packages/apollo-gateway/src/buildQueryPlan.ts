@@ -751,9 +751,7 @@ export class QueryPlanningContext {
   }
 
   getBaseService(parentType: GraphQLObjectType): string | null {
-    return (
-      (parentType.federation && parentType.federation.owningService) || null
-    );
+    return (parentType.federation && parentType.federation.serviceName) || null;
   }
 
   getOwningService(
