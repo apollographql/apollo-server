@@ -31,7 +31,6 @@ import {
 } from './utils';
 import {
   ServiceDefinition,
-  ServiceName,
   ExternalFieldDefinition,
   ServiceNameToKeyDirectivesMap,
 } from './types';
@@ -80,7 +79,6 @@ interface ExtensionsMap {
  */
 interface TypeToServiceMap {
   [typeName: string]: {
-    serviceNames?: Set<ServiceName>;
     owningService?: string;
     extensionFieldsToOwningServiceMap: { [fieldName: string]: string };
   };
@@ -165,16 +163,8 @@ export function buildMapsFromServiceList(serviceList: ServiceDefinition[]) {
          * 1. It was declared by a previous service, but this newer one takes precedence, or...
          * 2. It was extended by a service before declared
          */
-        if (typeToServiceMap[typeName]) {
-          const { serviceNames } = typeToServiceMap[typeName];
-          if (serviceNames) {
-            serviceNames.add(serviceName);
-          } else {
-            typeToServiceMap[typeName].serviceNames = new Set([serviceName]);
-          }
-        } else {
+        if (!typeToServiceMap[typeName]) {
           typeToServiceMap[typeName] = {
-            serviceNames: new Set([serviceName]),
             extensionFieldsToOwningServiceMap: Object.create(null),
           };
         }
@@ -344,7 +334,7 @@ export function addFederationMetadataToSchemaNodes({
 }) {
   for (const [
     typeName,
-    { serviceNames, owningService, extensionFieldsToOwningServiceMap },
+    { owningService, extensionFieldsToOwningServiceMap },
   ] of Object.entries(typeToServiceMap)) {
     const namedType = schema.getType(typeName) as GraphQLNamedType;
     if (!namedType) continue;
@@ -354,7 +344,6 @@ export function addFederationMetadataToSchemaNodes({
     namedType.federation = {
       ...namedType.federation,
       owningService,
-      serviceNames,
       ...(keyDirectivesMap[typeName] && {
         keys: keyDirectivesMap[typeName],
       }),

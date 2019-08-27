@@ -18,7 +18,6 @@ export interface ServiceNameToKeyDirectivesMap {
 }
 
 export interface FederationType {
-  serviceNames?: Set<ServiceName>;
   owningService?: string;
   keys?: ServiceNameToKeyDirectivesMap;
   externals?: {
