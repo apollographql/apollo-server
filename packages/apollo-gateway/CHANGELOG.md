@@ -6,6 +6,7 @@
 
 * Make service definition cache local to ApolloGateway object [#3191](https://github.com/apollographql/apollo-server/pull/3191)
 * Fix value type behavior within composition and execution [#3182](https://github.com/apollographql/apollo-server/pull/3182)
+* Validate variables at the gateway level [#3213](https://github.com/apollographql/apollo-server/pull/3213)
 
 # v0.9.1
 
