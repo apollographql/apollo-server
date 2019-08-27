@@ -424,7 +424,7 @@ export class ApolloGateway implements GraphQLService {
         ...(config.introspectionHeaders
           ? { headers: config.introspectionHeaders }
           : {}),
-        serviceSdlMap: this.serviceSdlCache,
+        serviceSdlCache: this.serviceSdlCache,
       });
     }
 
