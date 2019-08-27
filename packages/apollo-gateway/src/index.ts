@@ -457,6 +457,7 @@ export class ApolloGateway implements GraphQLService {
     );
 
     // No need to build a query plan if we know the request is invalid beforehand
+    // In the future, this should be controlled by the requestPipeline
     const validationErrors = this.validateIncomingRequest(
       requestContext,
       operationContext,
