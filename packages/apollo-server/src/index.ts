@@ -22,13 +22,13 @@ export interface ServerInfo {
   server: http.Server;
 }
 
-export class ApolloServer extends ApolloServerBase {
+export class ApolloServer<TContext> extends ApolloServerBase {
   private httpServer?: http.Server;
   private cors?: CorsOptions | boolean;
   private onHealthCheck?: (req: express.Request) => Promise<any>;
 
   constructor(
-    config: ApolloServerExpressConfig & {
+    config: ApolloServerExpressConfig<TContext> & {
       cors?: CorsOptions | boolean;
       onHealthCheck?: (req: express.Request) => Promise<any>;
     },
