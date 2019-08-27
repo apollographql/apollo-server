@@ -162,5 +162,5 @@ If we press the play button in the middle, we should see a response on the right
 This application should be a great starting point for any GraphQL server, but the following resources are a great next step in building a GraphQL server:
 
 * [Adding Apollo Server to an existing app.](/essentials/server/#server-integrations)
-* [Schema design](/essentials/schema/)
+* [Schema design](/defining-a-schema/schema/)
 * [Deploy with Heroku](/deployment/heroku/)

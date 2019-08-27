@@ -203,4 +203,4 @@ server.listen({ port: config.port }, () =>
 
 ## Next steps
 
-Now that the GraphQL server is running, it's time to dive deeper into how we'll fetch data for our types.  We'll get started on that in the [next step](/essentials/data/).
+Now that the GraphQL server is running, it's time to dive deeper into how we'll fetch data for our types.  We'll get started on that in the [next step](/resolving-requests/data/).

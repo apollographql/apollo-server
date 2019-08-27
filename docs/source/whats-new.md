@@ -74,7 +74,7 @@ For more information on automatic persisted queries, check the [APQ section of t
 
 ### CDN integration
 
-Apollo Server works well with a Content-Distribution Network to cache full GraphQL query results. Apollo Server provides `cache-control` headers that a CDN uses to determine how long a request should be cached. For subsequent requests, the result will be served directly from the CDN's cache. A CDN paired with Apollo Server's persisted queries is especially powerful, since GraphQL operations can be shortened and sent with a HTTP GET request. Read more about [caching in Apollo Server](/features/caching/).
+Apollo Server works well with a Content-Distribution Network to cache full GraphQL query results. Apollo Server provides `cache-control` headers that a CDN uses to determine how long a request should be cached. For subsequent requests, the result will be served directly from the CDN's cache. A CDN paired with Apollo Server's persisted queries is especially powerful, since GraphQL operations can be shortened and sent with a HTTP GET request. Read more about [caching in Apollo Server](/improving-performance/caching/).
 
 ### GraphQL errors
 
@@ -111,7 +111,7 @@ const resolvers = {
 };
 ```
 
-For more information, read about [errors in Apollo Server 2](/features/errors/).
+For more information, read about [errors in Apollo Server 2](/resolving-requests/errors/).
 
 ### Schema mocking
 
@@ -150,7 +150,7 @@ server.listen().then(({ url }) => {
 });
 ```
 
-For more information, check out the [feature explanation about mocking](/features/mocking/).
+For more information, check out the [feature explanation about mocking](/testing-and-monitoring/mocking/).
 
 ### Performance monitoring
 
@@ -181,7 +181,7 @@ server.listen().then(({ url }) => {
 });
 ```
 
-For more information, check out the details in the [performance monitoring guide](/features/metrics/).
+For more information, check out the details in the [performance monitoring guide](/testing-and-monitoring/metrics/).
 
 ### GraphQL Playground
 
@@ -214,7 +214,7 @@ server.listen().then(({ url }) => {
 
 To start in production mode, set the `NODE_ENV` environment variables to `production`. For further customization, the Apollo Server constructor options accepts an `introspection` boolean, which can overwrite the default for the environment.
 
-For additional information, check out the [guide on configuring GraphQL playground](/features/graphql-playground/).
+For additional information, check out the [guide on configuring GraphQL playground](/testing-and-monitoring/graphql-playground/).
 
 ### File Uploads
 

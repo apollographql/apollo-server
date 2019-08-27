@@ -59,7 +59,7 @@ The resolver parameters generally follow this naming convention and are describe
 3. `context`: This is an object shared by all resolvers in a particular query, and is used to contain per-request state, including authentication information, dataloader instances, and anything else that should be taken into account when resolving the query. Read [this section](#context-argument) for an explanation of when and how to use context.
 4. `info`: This argument contains information about the execution state of the query, including the field name, path to the field from the root, and more. It's only documented in the [GraphQL.js source code](https://github.com/graphql/graphql-js/blob/c82ff68f52722c20f10da69c9e50a030a1f218ae/src/type/definition.js#L489-L500), but is extended with additional functionality by other modules, like [`apollo-cache-control`](https://github.com/apollographql/apollo-server/tree/master/packages/apollo-cache-control).
 
-In addition to returning GraphQL defined [scalars](/essentials/schema/#scalar-types), you can return [custom scalars](/features/scalars-enums/) for special use cases, such as JSON or big integers.
+In addition to returning GraphQL defined [scalars](/defining-a-schema/schema/#scalar-types), you can return [custom scalars](/defining-a-schema/scalars-enums/) for special use cases, such as JSON or big integers.
 
 ### Resolver results
 
@@ -101,7 +101,7 @@ Every resolver function is called according to the nesting of the query. To unde
 
 The context is how you access your shared connections and fetchers in resolvers to get data.
 
-The `context` is the third argument passed to every resolver. It is useful for passing things that any resolver may need, like [authentication scope](https://blog.apollographql.com/authorization-in-graphql-452b1c402a9), database connections, and custom fetch functions. Additionally, if you're using [dataloaders to batch requests](/features/data-sources/#what-about-dataloader) across resolvers, you can attach them to the `context` as well.
+The `context` is the third argument passed to every resolver. It is useful for passing things that any resolver may need, like [authentication scope](https://blog.apollographql.com/authorization-in-graphql-452b1c402a9), database connections, and custom fetch functions. Additionally, if you're using [dataloaders to batch requests](/resolving-requests/data-sources/#what-about-dataloader) across resolvers, you can attach them to the `context` as well.
 
 As a best practice, `context` should be the same for all resolvers, no matter the particular query or mutation, and resolvers should never modify it. This ensures consistency across resolvers, and helps increase development velocity.
 

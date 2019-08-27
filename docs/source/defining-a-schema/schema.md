@@ -51,7 +51,7 @@ Scalar types represent the leaves of an operation and always resolve to concrete
 * `Boolean`: true or false
 * `ID` (serialized as `String`): A unique identifier, often used to refetch an object or as the key for a cache. While serialized as a String, ID signifies that it is not intended to be human‐readable
 
-These primitive types cover a majority of use cases. For other use cases, we can create [custom scalar types](/features/scalars-enums/).
+These primitive types cover a majority of use cases. For other use cases, we can create [custom scalar types](/defining-a-schema/scalars-enums/).
 
 ### Object types
 
@@ -176,7 +176,7 @@ type Mutation {
 }
 ```
 
-This implements a single `addBook` mutation which accepts `title` and `author` as arguments (both `String` types).  We'll go further into arguments (also known as "input types") in [types](/essentials/schema/#input-types), but the important thing to note here is that this mutation will return the newly-created `Book` object.
+This implements a single `addBook` mutation which accepts `title` and `author` as arguments (both `String` types).  We'll go further into arguments (also known as "input types") in [types](/defining-a-schema/schema/#input-types), but the important thing to note here is that this mutation will return the newly-created `Book` object.
 
 The `Book` object will match the previously-created `Book` type (from above) and, much like the `Query` type, we specify the fields to include in the return object when sending the `mutation`:
 
