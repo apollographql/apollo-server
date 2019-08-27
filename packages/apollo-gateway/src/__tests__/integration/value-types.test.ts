@@ -300,6 +300,10 @@ describe('value types', () => {
       },
     );
 
+    expect(errors).toBeUndefined();
+    expect(queryPlan).toCallService('firstService');
+    expect(queryPlan).toCallService('secondService');
+    expect(queryPlan).toCallService('userService');
     expect(data).toMatchInlineSnapshot(`
       Object {
         "otherValueType": Object {
@@ -320,7 +324,6 @@ describe('value types', () => {
         },
       }
     `);
-    expect(errors).toBeUndefined();
     expect(queryPlan).toMatchInlineSnapshot(`
       QueryPlan {
         Parallel {
