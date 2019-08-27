@@ -1,6 +1,6 @@
 import { composeAndValidate } from '../composeAndValidate';
 import gql from 'graphql-tag';
-import { GraphQLObjectType } from 'graphql';
+import { GraphQLObjectType, DocumentNode } from 'graphql';
 import {
   astSerializer,
   typeSerializer,
@@ -276,60 +276,111 @@ it('errors on invalid usages of default operation names', () => {
   `);
 });
 
-describe('value types integration tests', () => {
-  it('handles valid value types correctly', () => {
-    const duplicatedValueTypes = gql`
-      scalar Date
-
-      union CatalogItem = Couch | Mattress
-
-      interface Product {
-        sku: ID!
-      }
-
-      input NewProductInput {
-        sku: ID!
-        type: CatalogItemEnum
-      }
-
-      enum CatalogItemEnum {
-        COUCH
-        MATTRESS
-      }
-
-      type Couch implements Product {
-        sku: ID!
-        material: String!
-      }
-
-      type Mattress implements Product {
-        sku: ID!
-        size: String!
-      }
-    `;
-
+describe('composition of value types', () => {
+  function getSchemaWithValueType(valueType: DocumentNode) {
     const serviceA = {
       typeDefs: gql`
+        ${valueType}
+
         type Query {
-          product: Product
+          filler: String
         }
-        ${duplicatedValueTypes}
       `,
       name: 'serviceA',
     };
 
     const serviceB = {
-      typeDefs: gql`
-        type Query {
-          topProducts: [Product]
-        }
-        ${duplicatedValueTypes}
-      `,
+      typeDefs: valueType,
       name: 'serviceB',
     };
 
-    const { errors } = composeAndValidate([serviceA, serviceB]);
-    expect(errors).toHaveLength(0);
+    return composeAndValidate([serviceA, serviceB]);
+  }
+
+  describe('success', () => {
+    it('scalars', () => {
+      const { errors, schema } = getSchemaWithValueType(
+        gql`
+          scalar Date
+        `,
+      );
+      expect(errors).toHaveLength(0);
+      expect(schema.getType('Date')).toMatchInlineSnapshot(`scalar Date`);
+    });
+
+    it('unions and object types', () => {
+      const { errors, schema } = getSchemaWithValueType(
+        gql`
+          union CatalogItem = Couch | Mattress
+
+          type Couch {
+            sku: ID!
+            material: String!
+          }
+
+          type Mattress {
+            sku: ID!
+            size: String!
+          }
+        `,
+      );
+      expect(errors).toHaveLength(0);
+      expect(schema.getType('CatalogItem')).toMatchInlineSnapshot(
+        `union CatalogItem = Couch | Mattress`,
+      );
+      expect(schema.getType('Couch')).toMatchInlineSnapshot(`
+      type Couch {
+        sku: ID!
+        material: String!
+      }
+    `);
+    });
+
+    it('input types', () => {
+      const { errors, schema } = getSchemaWithValueType(gql`
+        input NewProductInput {
+          sku: ID!
+          type: String
+        }
+      `);
+      expect(errors).toHaveLength(0);
+      expect(schema.getType('NewProductInput')).toMatchInlineSnapshot(`
+      input NewProductInput {
+        sku: ID!
+        type: String
+      }
+    `);
+    });
+
+    it('interfaces', () => {
+      const { errors, schema } = getSchemaWithValueType(gql`
+        interface Product {
+          sku: ID!
+        }
+      `);
+      expect(errors).toHaveLength(0);
+      expect(schema.getType('Product')).toMatchInlineSnapshot(`
+      interface Product {
+        sku: ID!
+      }
+    `);
+    });
+
+    it('enums', () => {
+      const { errors, schema } = getSchemaWithValueType(gql`
+        enum CatalogItemEnum {
+          COUCH
+          MATTRESS
+        }
+      `);
+      expect(errors).toHaveLength(0);
+      expect(schema.getType('CatalogItemEnum')).toMatchInlineSnapshot(`
+      enum CatalogItemEnum {
+        COUCH
+        MATTRESS
+      }
+    `);
+    });
   });
 
   describe('errors', () => {

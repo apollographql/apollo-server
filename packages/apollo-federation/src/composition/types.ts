@@ -23,12 +23,14 @@ export interface FederationType {
   externals?: {
     [serviceName: string]: ExternalFieldDefinition[];
   };
+  isValueType?: boolean;
 }
 
 export interface FederationField {
   serviceName?: ServiceName;
   requires?: ReadonlyArray<SelectionNode>;
   provides?: ReadonlyArray<SelectionNode>;
+  belongsToValueType?: boolean;
 }
 
 export interface ServiceDefinition {

@@ -253,7 +253,14 @@ function splitSubfields(
   splitFields(context, path, fields, field => {
     const { parentType, fieldNode, fieldDef } = field;
 
-    const baseService = context.getBaseService(parentType);
+    let baseService, owningService;
+    if (parentType.federation && parentType.federation.isValueType) {
+      baseService = parentGroup.serviceName;
+      owningService = parentGroup.serviceName;
+    } else {
+      baseService = context.getBaseService(parentType);
+      owningService = context.getOwningService(parentType, fieldDef);
+    }
 
     if (!baseService) {
       throw new GraphQLError(
@@ -262,15 +269,12 @@ function splitSubfields(
       );
     }
 
-    const owningService = context.getOwningService(parentType, fieldDef);
-
     if (!owningService) {
       throw new GraphQLError(
         `Couldn't find owning service for field "${parentType.name}.${fieldDef.name}"`,
         fieldNode,
       );
     }
-
     // Is the field defined on the base service?
     if (owningService === baseService) {
       // Can we fetch the field from the parent group?
@@ -754,7 +758,11 @@ export class QueryPlanningContext {
     parentType: GraphQLObjectType,
     fieldDef: GraphQLField<any, any>,
   ): string | null {
-    if (fieldDef.federation && fieldDef.federation.serviceName) {
+    if (
+      fieldDef.federation &&
+      fieldDef.federation.serviceName &&
+      !fieldDef.federation.belongsToValueType
+    ) {
       return fieldDef.federation.serviceName;
     } else {
       return this.getBaseService(parentType);

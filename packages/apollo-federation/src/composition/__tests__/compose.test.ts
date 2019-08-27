@@ -1,4 +1,4 @@
-import { GraphQLObjectType, GraphQLEnumType } from 'graphql';
+import { GraphQLObjectType } from 'graphql';
 import gql from 'graphql-tag';
 import { composeServices } from '../compose';
 import {
@@ -950,11 +950,12 @@ describe('composeServices', () => {
 
         const review = schema.getType('Review') as GraphQLObjectType;
         expect(review.getFields()['product'].federation).toMatchInlineSnapshot(`
-                              Object {
-                                "provides": sku,
-                                "serviceName": "serviceA",
-                              }
-                        `);
+          Object {
+            "belongsToValueType": false,
+            "provides": sku,
+            "serviceName": "serviceA",
+          }
+        `);
       });
 
       it('adds @provides information to fields using a nested field set', () => {
@@ -1030,11 +1031,56 @@ describe('composeServices', () => {
         const review = schema.getType('Review') as GraphQLObjectType;
         expect(review.getFields()['products'].federation)
           .toMatchInlineSnapshot(`
-                              Object {
-                                "provides": sku,
-                                "serviceName": "serviceA",
-                              }
-                          `);
+          Object {
+            "belongsToValueType": false,
+            "provides": sku,
+            "serviceName": "serviceA",
+          }
+        `);
+      });
+
+      it('adds correct @provides information to fields on value types', () => {
+        const serviceA = {
+          typeDefs: gql`
+            extend type Query {
+              valueType: ValueType
+            }
+
+            type ValueType {
+              id: ID!
+              user: User! @provides(fields: "id name")
+            }
+
+            type User @key(fields: "id") {
+              id: ID!
+              name: String!
+            }
+          `,
+          name: 'serviceA',
+        };
+
+        const serviceB = {
+          typeDefs: gql`
+            type ValueType {
+              id: ID!
+              user: User! @provides(fields: "id name")
+            }
+
+            extend type User @key(fields: "id") {
+              id: ID! @external
+              name: String! @external
+            }
+          `,
+          name: 'serviceB',
+        };
+
+        const { schema, errors } = composeServices([serviceA, serviceB]);
+        expect(errors).toHaveLength(0);
+
+        const valueType = schema.getType('ValueType') as GraphQLObjectType;
+        const userField = valueType.getFields()['user'].federation;
+        expect(userField.belongsToValueType).toBe(true);
+        expect(userField.serviceName).toBe(null);
       });
     });
 
