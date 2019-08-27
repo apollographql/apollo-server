@@ -758,7 +758,11 @@ export class QueryPlanningContext {
     parentType: GraphQLObjectType,
     fieldDef: GraphQLField<any, any>,
   ): string | null {
-    if (fieldDef.federation && fieldDef.federation.serviceName) {
+    if (
+      fieldDef.federation &&
+      fieldDef.federation.serviceName &&
+      !fieldDef.federation.belongsToValueType
+    ) {
       return fieldDef.federation.serviceName;
     } else {
       return this.getBaseService(parentType);
