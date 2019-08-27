@@ -79,11 +79,11 @@ export interface ExpressContext {
   connection?: ExecutionParams;
 }
 
-export interface ApolloServerExpressConfig<TContext> extends Config {
+export interface ApolloServerExpressConfig<TContext extends {}> extends Config {
   context?: ContextFunction<ExpressContext, Context<TContext>> | Context<TContext>;
 }
 
-export class ApolloServer<TContext> extends ApolloServerBase {
+export class ApolloServer<TContext extends {} = {}> extends ApolloServerBase {
   constructor(config: ApolloServerExpressConfig<TContext>) {
     super(config);
   }
