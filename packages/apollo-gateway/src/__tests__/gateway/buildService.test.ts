@@ -191,3 +191,50 @@ it('customizes request on a per-service basis', async () => {
     },
   });
 });
+
+it('does not share service definition cache between gateways', async () => {
+  let updates = 0;
+  const updateObserver: any = (...args: any[]) => {
+    updates += 1;
+  };
+
+  // Initialize first gateway
+  {
+    fetch.mockJSONResponseOnce(
+      createSdlData('extend type Query { repeat: String }'),
+    );
+
+    const gateway = new ApolloGateway({
+      serviceList: [
+        {
+          name: 'repeat',
+          url: 'https://api.example.com/repeat',
+        },
+      ],
+      experimental_didUpdateComposition: updateObserver,
+    });
+
+    await gateway.load();
+  }
+
+  // Initialize second gateway
+  {
+    fetch.mockJSONResponseOnce(
+      createSdlData('extend type Query { repeat: String }'),
+    );
+
+    const gateway = new ApolloGateway({
+      serviceList: [
+        {
+          name: 'repeat',
+          url: 'https://api.example.com/repeat',
+        },
+      ],
+      experimental_didUpdateComposition: updateObserver,
+    });
+
+    await gateway.load();
+  }
+
+  expect(updates).toEqual(2);
+});

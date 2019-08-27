@@ -150,6 +150,7 @@ export class ApolloGateway implements GraphQLService {
   private onSchemaChangeListeners = new Set<SchemaChangeCallback>();
   private serviceDefinitions: ServiceDefinition[] = [];
   private compositionMetadata?: CompositionMetadata;
+  private serviceSdlCache = new Map<string, string>();
 
   // Observe query plan, service info, and operation info prior to execution.
   // The information made available here will give insight into the resulting
@@ -423,6 +424,7 @@ export class ApolloGateway implements GraphQLService {
         ...(config.introspectionHeaders
           ? { headers: config.introspectionHeaders }
           : {}),
+        serviceSdlCache: this.serviceSdlCache,
       });
     }
 
