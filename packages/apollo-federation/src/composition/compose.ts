@@ -80,7 +80,8 @@ interface ExtensionsMap {
  */
 interface TypeToServiceMap {
   [typeName: string]: {
-    serviceNames?: ServiceName[];
+    serviceNames?: Set<ServiceName>;
+    owningService?: string;
     extensionFieldsToOwningServiceMap: { [fieldName: string]: string };
   };
 }
@@ -165,16 +166,20 @@ export function buildMapsFromServiceList(serviceList: ServiceDefinition[]) {
          * 2. It was extended by a service before declared
          */
         if (typeToServiceMap[typeName]) {
-          typeToServiceMap[typeName].serviceNames = [
-            ...(typeToServiceMap[typeName].serviceNames || []),
-            serviceName,
-          ];
+          const { serviceNames } = typeToServiceMap[typeName];
+          if (serviceNames) {
+            serviceNames.add(serviceName);
+          } else {
+            typeToServiceMap[typeName].serviceNames = new Set([serviceName]);
+          }
         } else {
           typeToServiceMap[typeName] = {
-            serviceNames: [serviceName],
+            serviceNames: new Set([serviceName]),
             extensionFieldsToOwningServiceMap: Object.create(null),
           };
         }
+
+        typeToServiceMap[typeName].owningService = serviceName;
 
         /**
          * If this type already exists in the definitions map, push this definition to the array (newer defs
@@ -339,7 +344,7 @@ export function addFederationMetadataToSchemaNodes({
 }) {
   for (const [
     typeName,
-    { serviceNames, extensionFieldsToOwningServiceMap },
+    { serviceNames, owningService, extensionFieldsToOwningServiceMap },
   ] of Object.entries(typeToServiceMap)) {
     const namedType = schema.getType(typeName) as GraphQLNamedType;
     if (!namedType) continue;
@@ -348,6 +353,7 @@ export function addFederationMetadataToSchemaNodes({
     // and the key directives that belong to it
     namedType.federation = {
       ...namedType.federation,
+      owningService,
       serviceNames,
       ...(keyDirectivesMap[typeName] && {
         keys: keyDirectivesMap[typeName],
@@ -370,7 +376,7 @@ export function addFederationMetadataToSchemaNodes({
         ) {
           field.federation = {
             ...field.federation,
-            serviceName: serviceNames && serviceNames[serviceNames.length - 1],
+            serviceName: owningService,
             provides: parseSelections(
               providesDirective.arguments[0].value.value,
             ),

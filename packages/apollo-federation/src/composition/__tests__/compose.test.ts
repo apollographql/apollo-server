@@ -7,7 +7,6 @@ import {
   selectionSetSerializer,
 } from '../../snapshotSerializers';
 import { normalizeTypeDefs } from '../normalize';
-import { getOwningService } from '../utils';
 
 expect.addSnapshotSerializer(astSerializer);
 expect.addSnapshotSerializer(typeSerializer);
@@ -56,8 +55,8 @@ describe('composeServices', () => {
     const product = schema.getType('Product') as GraphQLObjectType;
     const user = schema.getType('User') as GraphQLObjectType;
 
-    expect(getOwningService(product)).toEqual('serviceA');
-    expect(getOwningService(user)).toEqual('serviceB');
+    expect(product.federation.owningService).toEqual('serviceA');
+    expect(user.federation.owningService).toEqual('serviceB');
   });
 
   describe('basic type extensions', () => {
@@ -95,7 +94,7 @@ describe('composeServices', () => {
 
       const product = schema.getType('Product') as GraphQLObjectType;
 
-      expect(getOwningService(product)).toEqual('serviceA');
+      expect(product.federation.owningService).toEqual('serviceA');
       expect(product.getFields()['price'].federation.serviceName).toEqual(
         'serviceB',
       );
@@ -134,7 +133,7 @@ describe('composeServices', () => {
 
       const product = schema.getType('Product') as GraphQLObjectType;
 
-      expect(getOwningService(product)).toEqual('serviceB');
+      expect(product.federation.owningService).toEqual('serviceB');
       expect(product.getFields()['price'].federation.serviceName).toEqual(
         'serviceA',
       );
@@ -188,7 +187,7 @@ describe('composeServices', () => {
 
       const product = schema.getType('Product') as GraphQLObjectType;
 
-      expect(getOwningService(product)).toEqual('serviceB');
+      expect(product.federation.owningService).toEqual('serviceB');
       expect(product.getFields()['price'].federation.serviceName).toEqual(
         'serviceA',
       );
@@ -249,7 +248,7 @@ describe('composeServices', () => {
                         }
                   `);
 
-      expect(getOwningService(product)).toEqual('serviceB');
+      expect(product.federation.owningService).toEqual('serviceB');
       expect(product.getFields()['price'].federation.serviceName).toEqual(
         'serviceC',
       );
@@ -575,7 +574,7 @@ describe('composeServices', () => {
 
       const product = schema.getType('Product') as GraphQLObjectType;
 
-      expect(getOwningService(product)).toEqual('serviceA');
+      expect(product.federation.owningService).toEqual('serviceA');
       expect(product.getFields()['id'].federation.serviceName).toEqual(
         'serviceB',
       );
@@ -615,7 +614,7 @@ describe('composeServices', () => {
 
       const query = schema.getQueryType();
 
-      expect(getOwningService(query)).toBeUndefined();
+      expect(query.federation.owningService).toBeUndefined();
     });
 
     it('treats root Query type definition as an extension, not base definitions', () => {
@@ -656,7 +655,7 @@ describe('composeServices', () => {
 
       const query = schema.getType('Query') as GraphQLObjectType;
 
-      expect(getOwningService(query)).toBeUndefined();
+      expect(query.federation.owningService).toBeUndefined();
     });
 
     it('allows extension of the Mutation type with no base type definition', () => {
@@ -847,7 +846,7 @@ describe('composeServices', () => {
         expect(product.getFields()['price'].federation.serviceName).toEqual(
           'serviceB',
         );
-        expect(getOwningService(product)).toEqual('serviceA');
+        expect(product.federation.owningService).toEqual('serviceA');
       });
     });
 

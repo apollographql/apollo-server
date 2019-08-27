@@ -181,12 +181,6 @@ export function errorWithCode(
   );
 }
 
-export function getOwningService(type: GraphQLNamedType) {
-  return type.federation && type.federation.serviceNames
-    ? type.federation.serviceNames[type.federation.serviceNames.length - 1]
-    : undefined;
-}
-
 export function findTypesContainingFieldWithReturnType(
   schema: GraphQLSchema,
   node: GraphQLField<any, any>,

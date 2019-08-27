@@ -752,12 +752,7 @@ export class QueryPlanningContext {
 
   getBaseService(parentType: GraphQLObjectType): string | null {
     return (
-      (parentType.federation &&
-        parentType.federation.serviceNames &&
-        parentType.federation.serviceNames[
-          parentType.federation.serviceNames.length - 1
-        ]) ||
-      null
+      (parentType.federation && parentType.federation.owningService) || null
     );
   }
 

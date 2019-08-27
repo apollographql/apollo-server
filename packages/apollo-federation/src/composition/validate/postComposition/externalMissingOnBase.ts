@@ -1,11 +1,6 @@
 import 'apollo-server-env';
 import { GraphQLSchema, isObjectType, GraphQLError } from 'graphql';
-
-import {
-  logServiceAndType,
-  errorWithCode,
-  getOwningService,
-} from '../../utils';
+import { logServiceAndType, errorWithCode } from '../../utils';
 
 /**
  * All fields marked with @external must exist on the base type
@@ -37,9 +32,7 @@ export const externalMissingOnBase = (schema: GraphQLSchema) => {
               errorWithCode(
                 'EXTERNAL_MISSING_ON_BASE',
                 logServiceAndType(serviceName, typeName, externalFieldName) +
-                  `marked @external but ${externalFieldName} is not defined on the base service of ${typeName} (${getOwningService(
-                    namedType,
-                  )})`,
+                  `marked @external but ${externalFieldName} is not defined on the base service of ${typeName} (${namedType.federation.owningService})`,
               ),
             );
             continue;
@@ -55,11 +48,7 @@ export const externalMissingOnBase = (schema: GraphQLSchema) => {
               errorWithCode(
                 'EXTERNAL_MISSING_ON_BASE',
                 logServiceAndType(serviceName, typeName, externalFieldName) +
-                  `marked @external but ${externalFieldName} was defined in ${
-                    matchingBaseField.federation.serviceName
-                  }, not in the service that owns ${typeName} (${getOwningService(
-                    namedType,
-                  )})`,
+                  `marked @external but ${externalFieldName} was defined in ${matchingBaseField.federation.serviceName}, not in the service that owns ${typeName} (${namedType.federation.owningService})`,
               ),
             );
           }
