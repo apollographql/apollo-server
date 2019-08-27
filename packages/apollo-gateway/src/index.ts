@@ -143,7 +143,7 @@ export class ApolloGateway implements GraphQLService {
   private onSchemaChangeListeners = new Set<SchemaChangeCallback>();
   private serviceDefinitions: ServiceDefinition[] = [];
   private compositionMetadata?: CompositionMetadata;
-  private serviceDefinitionCache = new Map<string, string>();
+  private serviceSdlCache = new Map<string, string>();
 
   // Observe query plan, service info, and operation info prior to execution.
   // The information made available here will give insight into the resulting
@@ -412,15 +412,13 @@ export class ApolloGateway implements GraphQLService {
         dataSource: this.createDataSource(serviceDefinition),
       }));
 
-      return getServiceDefinitionsFromRemoteEndpoint(
-        {
-          serviceList,
-          ...(config.introspectionHeaders
-            ? { headers: config.introspectionHeaders }
-            : {}),
-        },
-        this.serviceDefinitionCache,
-      );
+      return getServiceDefinitionsFromRemoteEndpoint({
+        serviceList,
+        ...(config.introspectionHeaders
+          ? { headers: config.introspectionHeaders }
+          : {}),
+        serviceSdlMap: this.serviceSdlCache,
+      });
     }
 
     if (!this.engineConfig) {

@@ -5,20 +5,19 @@ import { GraphQLDataSource } from './datasources/types';
 import { UpdateServiceDefinitions } from './';
 import { ServiceDefinition } from '@apollo/federation';
 
-export async function getServiceDefinitionsFromRemoteEndpoint(
-  {
-    serviceList,
-    headers = {},
-  }: {
-    serviceList: {
-      name: string;
-      url?: string;
-      dataSource: GraphQLDataSource;
-    }[];
-    headers?: HeadersInit;
-  },
-  serviceDefinitionMap: Map<string, string>,
-): ReturnType<UpdateServiceDefinitions> {
+export async function getServiceDefinitionsFromRemoteEndpoint({
+  serviceList,
+  headers = {},
+  serviceSdlMap,
+}: {
+  serviceList: {
+    name: string;
+    url?: string;
+    dataSource: GraphQLDataSource;
+  }[];
+  headers?: HeadersInit;
+  serviceSdlMap: Map<string, string>;
+}): ReturnType<UpdateServiceDefinitions> {
   if (!serviceList || !serviceList.length) {
     throw new Error(
       'Tried to load services from remote endpoints but none provided',
@@ -47,13 +46,13 @@ export async function getServiceDefinitionsFromRemoteEndpoint(
         .then(({ data, errors }) => {
           if (data && !errors) {
             const typeDefs = data._service.sdl as string;
-            const previousDefinition = serviceDefinitionMap.get(name);
+            const previousDefinition = serviceSdlMap.get(name);
             // this lets us know if any downstream service has changed
             // and we need to recalculate the schema
             if (previousDefinition !== typeDefs) {
               isNewSchema = true;
             }
-            serviceDefinitionMap.set(name, typeDefs);
+            serviceSdlMap.set(name, typeDefs);
             return {
               name,
               url,
