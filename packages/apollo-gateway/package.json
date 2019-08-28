@@ -27,6 +27,7 @@
     "apollo-server-core": "file:../apollo-server-core",
     "apollo-server-env": "file:../apollo-server-env",
     "apollo-server-types": "file:../apollo-server-types",
+    "graphql-extensions": "file:../graphql-extensions",
     "loglevel": "^1.6.1",
     "loglevel-debug": "^0.0.1",
     "pretty-format": "^24.7.0"
