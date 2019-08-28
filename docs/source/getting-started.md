@@ -239,9 +239,6 @@ if (config.ssl) {
   server = http.createServer(app)
 }
 
-// Add subscription support
-apollo.installSubscriptionHandlers(server)
-
 server.listen({ port: config.port }, () =>
   console.log(
     '🚀 Server ready at',

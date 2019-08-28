@@ -5,20 +5,21 @@
 /docs/apollo-server/features/test-utils.html /docs/apollo-server/features/testing.html
 
 # Redirects associated with revamp of Apollo Server information architecture
-/docs/apollo-server/essentials/data/ /docs/apollo-server/resolving-requests/data/
-/docs/apollo-server/essentials/schema/ /docs/apollo-server/defining-a-schema/schema/
-/docs/apollo-server/features/apq/ /docs/apollo-server/improving-performance/apq/
-/docs/apollo-server/features/authentication/ /docs/apollo-server/resolving-requests/authentication/
-/docs/apollo-server/features/caching/ /docs/apollo-server/improving-performance/caching/
-/docs/apollo-server/features/creating-directives/ /docs/apollo-server/defining-a-schema/creating-directives/
-/docs/apollo-server/features/data-sources/ /docs/apollo-server/resolving-requests/data-sources/
-/docs/apollo-server/features/directives/ /docs/apollo-server/defining-a-schema/directives/defining-a-schema/scalars-enums/
-/docs/apollo-server/features/file-uploads/ /docs/apollo-server/resolving-requests/file-uploads/
-/docs/apollo-server/features/graphql-playground/ /docs/apollo-server/testing-and-monitoring/graphql-playground/
+/docs/apollo-server/essentials/data/ /docs/apollo-server/serving/data/
+/docs/apollo-server/essentials/schema/ /docs/apollo-server/schema/schema/
+/docs/apollo-server/essentials/server /docs/apollo-server/getting-started/
+/docs/apollo-server/features/apq/ /docs/apollo-server/performance/apq/
+/docs/apollo-server/features/authentication/ /docs/apollo-server/serving/authentication/
+/docs/apollo-server/features/caching/ /docs/apollo-server/performance/caching/
+/docs/apollo-server/features/creating-directives/ /docs/apollo-server/schema/creating-directives/
+/docs/apollo-server/features/data-sources/ /docs/apollo-server/serving/data-sources/
+/docs/apollo-server/features/directives/ /docs/apollo-server/schema/directives/schema/scalars-enums/
+/docs/apollo-server/features/file-uploads/ /docs/apollo-server/serving/file-uploads/
+/docs/apollo-server/features/graphql-playground/ /docs/apollo-server/graphql-playground/
 /docs/apollo-server/features/health-checks/ /docs/apollo-server/testing-and-monitoring/health-checks/
 /docs/apollo-server/features/metrics/ /docs/apollo-server/testing-and-monitoring/metrics/
 /docs/apollo-server/features/mocking/ /docs/apollo-server/testing-and-monitoring/mocking/
 /docs/apollo-server/features/scalars-enums/ /docs/apollo-server/
-/docs/apollo-server/features/subscriptions/ /docs/apollo-server/resolving-requests/subscriptions/
+/docs/apollo-server/features/subscriptions/ /docs/apollo-server/serving/subscriptions/
 /docs/apollo-server/features/testing/ /docs/apollo-server/testing-and-monitoring/testing/
-/docs/apollo-server/features/unions-interfaces/ /docs/apollo-server/defining-a-schema/unions-interfaces/
+/docs/apollo-server/features/unions-interfaces/ /docs/apollo-server/schema/unions-interfaces/
