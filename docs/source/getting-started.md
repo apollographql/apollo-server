@@ -157,6 +157,99 @@ If we press the play button in the middle, we should see a response on the right
 
 ![The response from our server shows title and author!](./images/getting-started/graphql-playground-response.png)
 
+## Server integrations
+
+Depending on whether we are creating a new application or an existing application, the steps will vary slightly since Apollo Server must adapt to the semantics of existing servers (e.g. Express, Hapi, etc.)
+
+### Middleware
+
+Existing applications generally already have middleware in place and Apollo Server works along with those middleware. To integrate with Apollo Server, we'll pass it into the `server.applyMiddleware` method as `app` to add the Apollo Server's middleware.
+
+> The existing application is frequently already named `app`, especially when using Express.  If the application is identified by a different variable, pass the existing variable in place of `app`.
+
+The following code uses the `apollo-server-express` package, which can be installed with `npm install apollo-server-express`.
+
+```js
+const { ApolloServer, gql } = require('apollo-server-express');
+const { typeDefs, resolvers } = require('./schema');
+
+const server = new ApolloServer({
+  // These will be defined for both new or existing servers
+  typeDefs,
+  resolvers,
+});
+
+server.applyMiddleware({ app }); // app is from an existing express app
+
+app.listen({ port: 4000 }, () =>
+  console.log(`🚀 Server ready at http://localhost:4000${server.graphqlPath}`)
+)
+```
+
+Hapi follows the same pattern with `apollo-server-express` replaced with `apollo-server-hapi` and `app` replaced with Hapi server. `applyMiddleware` registers plugins, so it should be called with `await`.
+
+> When transitioning from `apollo-server` to an integration package, running `npm uninstall apollo-server` will remove the extra dependency.
+
+### Serverless
+
+Apollo Server works great in "serverless" environments such as Amazon Lambda and Microsoft Azure Functions. See [deploying with AWS Lambda](/deployment/lambda/) and [deploying with Azure Functions](/deployment/azure-functions/) for more details.
+
+### SSL/TLS Support
+
+If you require an HTTPS connection to your Apollo Server, you can use the `https` module with `apollo-server-express`. Subscriptions can also go through an encrypted WebSocket (WSS)
+
+Here is an example of using HTTPS in production and HTTP in development, with subscriptions:
+
+```javascript
+import express from 'express'
+import { ApolloServer } from 'apollo-server-express'
+import typeDefs from './graphql/schema'
+import resolvers from './graphql/resolvers'
+import fs from 'fs'
+import https from 'https'
+import http from 'http'
+
+const configurations = {
+  // Note: You may need sudo to run on port 443
+  production: { ssl: true, port: 443, hostname: 'example.com' },
+  development: { ssl: false, port: 4000, hostname: 'localhost' }
+}
+
+const environment = process.env.NODE_ENV || 'production'
+const config = configurations[environment]
+
+const apollo = new ApolloServer({ typeDefs, resolvers })
+
+const app = express()
+apollo.applyMiddleware({ app })
+
+// Create the HTTPS or HTTP server, per configuration
+var server
+if (config.ssl) {
+  // Assumes certificates are in .ssl folder from package root. Make sure the files
+  // are secured.
+  server = https.createServer(
+    {
+      key: fs.readFileSync(`./ssl/${environment}/server.key`),
+      cert: fs.readFileSync(`./ssl/${environment}/server.crt`)
+    },
+    app
+  )
+} else {
+  server = http.createServer(app)
+}
+
+// Add subscription support
+apollo.installSubscriptionHandlers(server)
+
+server.listen({ port: config.port }, () =>
+  console.log(
+    '🚀 Server ready at',
+    `http${config.ssl ? 's' : ''}://${config.hostname}:${config.port}${apollo.graphqlPath}`
+  )
+)
+```
+
 ## Next steps
 
 This application should be a great starting point for any GraphQL server, but the following resources are a great next step in building a GraphQL server:
