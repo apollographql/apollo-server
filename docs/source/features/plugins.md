@@ -6,30 +6,58 @@ description: Extend Apollo Server with custom functionality
 > Plugins are available in Apollo Server 2.2.x and later.
 
 **Plugins** enable you to extend Apollo Server's core functionality by performing 
-custom operations in response to individual phases of the GraphQL request lifecycle 
-(or in response to the startup of Apollo Server itself).
+custom operations in response to certain events. Currently, these events correspond
+to individual phases of the GraphQL request lifecycle, and to the startup of Apollo Server itself.
 
 For example, a basic logging plugin might log the GraphQL query string associated 
 with each request that's sent to Apollo Server.
 
 ## Creating a plugin
 
+Plugins are JavaScript objects that implement one or more functions that respond to 
+events. Here's a basic plugin that responds to the `serverWillStart` event:
+
+```js:title=index.js
+const myPlugin = {
+  serverWillStart() {
+    console.log('Server starting up!');
+  },
+};
+```
+
 > If you're using TypeScript to create a plugin, the `apollo-server-plugin-base` module exports the [`ApolloServerPlugin` interface](https://github.com/apollographql/apollo-server/blob/master/packages/apollo-server-plugin-base/src/index.ts) for plugins to implement.
+
+You can define a plugin in the same file where you initialize Apollo Server, or
+you can export it as a separate module:
+
+```js:title=myplugin.js
+module.exports = {
+  serverWillStart() {
+    console.log('Server starting up!');
+  },
+};
+```
+
+To create a plugin that accepts options, create a function that accepts an
+`options` object and returns a properly structured plugin object, like so:
+
+```js:title=myplugin.js
+module.exports = (options) => {
+  return {
+    serverWillStart() {
+      console.log(options.logMessage);
+    },
+  };
+};
+```
+
 
 ### Responding to events
 
 A plugin specifies exactly which [lifecycle events](#plugin-event-reference)
-it responds to. To do so, it implements functions that correspond to those events.
-
-For example, this basic plugin (declared as an object literal) responds to the `serverWillStart` event, which fires when Apollo Server is preparing to start up:
-
-```js
-{
-  serverWillStart() {
-    console.log('Server starting up!');
-  },
-}
-```
+it responds to by implementing functions that correspond to those events.
+The plugin in the examples above responds to the `serverWillStart` event, which
+fires when Apollo Server is preparing to start up.
 
 A plugin can respond to any combination of supported events.
 
@@ -50,20 +78,20 @@ lifecycle:
 `serverWillStart` example above. First, your plugin must define the `requestDidStart` function:
 
 ```js
-{
+const myPlugin = {
   requestDidStart() {
     console.log('Request started!');
   },
-}
+};
 ```
 
 The `requestDidStart` event fires whenever Apollo Server receives a GraphQL request,
 _before_ any other request lifecycle event fires. You can respond to this event
 just like you respond to `serverWillStart`, but you _also_ use this function
- to define responses for a request's _other_ lifecycle events:
+ to define responses for some or all of a request's _other_ lifecycle events, like so:
 
 ```js
-{
+const myPlugin = {
   requestDidStart(requestContext) {
     console.log('Request started!');
 
@@ -79,17 +107,17 @@ just like you respond to `serverWillStart`, but you _also_ use this function
 
     }
   },
-}
+};
 ```
 
 As shown, the `requestDidStart` function can optionally return an object that 
-defines functions that respond to _other_ request lifecycle events. This structure 
+defines functions that respond to request lifecycle events. This structure 
 organizes and encapsulates all of your plugin's request lifecycle logic, making it 
 easier to reason about.
 
 ### Inspecting request and response details
 
-As the example above shows, request lifecycle functions accept a `requestContext`
+As the example above shows, `requestDidStart` and request lifecycle functions accept a `requestContext`
 parameter. This parameter is of type `GraphQLRequestContext`, which includes a
 `request` (of type `GraphQLRequest`), along with a `response` field (of type `GraphQLResponse`) if it's available.
 
@@ -97,8 +125,8 @@ These types and their related subtypes are all defined in [`apollo-server-types/
 
 ## Installing a plugin
 
-Add your plugin to Apollo Server by including it in the `plugins` configuration 
-option you can provide to the `ApolloServer` constructor:
+Add your plugin to Apollo Server by providing a `plugins` configuration 
+option to the `ApolloServer` constructor, like so:
 
 ```js
 const { ApolloServer } = require('apollo-server');
@@ -134,20 +162,20 @@ const server = new ApolloServer({
 
 ## Plugin event reference
 
-Two types of plugin events are currently supported: **server lifecycle
+Apollo Server supports two types of plugin events: **server lifecycle
 events** and **request lifecycle events**.
 
 Server lifecycle events are high-level events related to the lifecycle of Apollo Server itself.
-Currently, only two server lifecycle events are supported: [`serverWillStart`](#serverwillstart) and [`requestDidStart`](#requestdidstart).
+Currently, two server lifecycle events are supported: [`serverWillStart`](#serverwillstart) and [`requestDidStart`](#requestdidstart).
 
-Request lifecycle events are associated with a specific request. You define responses to these events _within_ the response to a `requestDidStart` server lifecycle event, as described in [Responding to request lifecycle events](#responding-to-request-lifecycle-events).
+Request lifecycle events are associated with a specific request. You define responses to these events _within_ the response to a `requestDidStart` event, as described in [Responding to request lifecycle events](#responding-to-request-lifecycle-events).
 
 ### Server lifecycle events
 
 ### `serverWillStart`
 
-The `serverWillStart` event fires when the GraphQL server is preparing to start.  If this is defined as an `async` function (or if it returns a `Promise`), the server does not start until the asynchronous operation completes. Any rejection in this event prevents the server from starting, which enables you to make sure certain
-conditions are met before starting (for example, confirming that an underlying dependency is ready).
+The `serverWillStart` event fires when Apollo Server is preparing to start serving GraphQL requests. If you respond to this event with an `async` function (or if the function returns a `Promise`), the server doesn't start until the asynchronous operation completes. If the `Promise` is _rejected_, startup _fails_ (**unless you're using [Express middleware](/essentials/server/#middleware)**). This helps you make sure all
+of your server's dependencies are available before attempting to begin serving requests.
 
 #### Example
 
@@ -167,10 +195,10 @@ const server = new ApolloServer({
 
 ### `requestDidStart`
 
-The `requestDidStart` event fires when the server has begun fulfilling a request.  
+The `requestDidStart` event fires whenever Apollo Server begins fulfilling a GraphQL request.
 
-This function can optionally return an object that defines functions that respond to
-_request_ lifecycle events associated with the request.
+This function can optionally return an object that includes functions for responding
+to request lifecycle events that might follow `requestDidStart`.
 
 ```js
 const server = new ApolloServer({
@@ -178,39 +206,41 @@ const server = new ApolloServer({
 
   plugins: [
     {
-      /* `requestDidStart` fires when a request has started
-         processing. More granular events — like `parsingDidStart` below —
-         fire as the request processes. */
       requestDidStart(requestContext) {
 
-        /* Define functions that respond to request-specific lifecycle events here. */
+        /* Within this returned object, define functions that respond
+           to request-specific lifecycle events. */
         return {
 
+          /* The `parsingDidStart` request lifecycle event fires
+             when parsing begins. The event is scoped within an
+             associated `requestDidStart` server lifecycle event. */
           parsingDidStart(requestContext) {
-            /* This `parsingDidStart` lifecycle event is
-               called when parsing begins, and is scoped within the
-               `requestDidStart` server lifecycle event. */
             console.log('Parsing started!')
           },
-
         }
       }
     }
   ],
-
-  /* */
 })
 ```
 
-If there are no specific request lifecycle events to implement, `requestDidStart` should not return anything.
+If your plugin doesn't need to respond to any request lifecycle events, `requestDidStart`
+should not return a value. 
 
 ### Request lifecycle events
 
-> The `apollo-server-plugin-base` module exports [the `GraphQLRequestListener` interface](https://github.com/apollographql/apollo-server/blob/master/packages/apollo-server-plugin-base/src/index.ts) which defines the shape of request lifecycle events.  It's recommended to use this interface when building custom plugins in TypeScript which implement granular request lifecycle events via `requestDidStart`.
+> If you're using TypeScript to create your plugin, implement the [ `GraphQLRequestListener` interface](https://github.com/apollographql/apollo-server/blob/master/packages/apollo-server-plugin-base/src/index.ts) from the `apollo-server-plugin-base` module to define functions for request lifecycle events.
 
 ### `parsingDidStart`
 
-The `parsingDidStart` request lifecycle event will receive the request context as the first argument.  At this stage, the `document` AST may not be defined since the parsing may not succeed.
+The `parsingDidStart` event fires whenever Apollo Server will parse a GraphQL
+request to create its associated `document` AST.
+
+If Apollo Server receives a request with a query string that matches a _previous_
+request, the associated `document` might already be available in Apollo Server's cache.
+In this case, `parsingDidStart` is _not_ called for the request, because parsing
+does not occur.
 
 #### TypeScript signature
 
@@ -222,7 +252,14 @@ parsingDidStart?(
 
 ### `validationDidStart`
 
-The `validationDidStart` request lifecycle event will receive the request context as the first argument.  Since parsing would have been successful prior to validation, the `document` AST will be present.
+The `validationDidStart` event fires whenever Apollo Server will validate a 
+request's `document` AST against your GraphQL schema.
+
+Like `parsingDidStart`, this event does _not_ fire if a request's `document` is
+already available in Apollo Server's cache (only successfully validated `document`s are cached by Apollo Server).
+
+The `document` AST is guaranteed to be 
+available at this stage, because parsing must succeed for validation to occur.
 
 #### TypeScript signature
 
@@ -234,9 +271,11 @@ validationDidStart?(
 
 ### `didResolveOperation`
 
-The `didResolveOperation` request lifecycle event is triggered after the operation to be executed has been successfully retrieved from the `document` AST by `graphql`'s `getOperationAST`.  This focusing of execution which identifies the correct operation is important when a `document` contains multiple operations.  At this stage, in addition to the `document` the `operationName` (`String`) and `operation` (AST) will be present on the context.
+The `didResolveOperation` event fires after the `graphql` library successfully
+determines the operation to execute from a request's `document` AST. At this stage,
+both the `operationName` string and `operation` AST are available.
 
-If the operation is anonymous (e.g. the operation is `query { ... }` rather than `query NamedQuery { ... }`, then `operationName` will be `null`.
+> If the operation is anonymous (i.e., the operation is `query { ... }` instead of `query NamedQuery { ... }`), then `operationName` is `null`.
 
 ```typescript
 didResolveOperation?(
@@ -281,81 +320,4 @@ executionDidStart?(
 willSendResponse?(
   requestContext: WithRequired<GraphQLRequestContext<TContext>, 'response'>,
 ): ValueOrPromise<void>;
-```
-
-## TODO
-
-You can also define a plugin This plugin might be directly included as an element of the `plugins`, or it could be provided as a separate module:
-
-```js
-module.exports = {
-  requestDidStart() {
-    /* ... */
-  },
-};
-```
-
-Plugins which accepted options might providing a function which returns an object that implements a object matching the `ApolloServerPlugin` interface:
-
-```js
-/* localPluginModule.js */
-module.exports = (options) => {
-  /* ...Plugin specific implementation... */
-
-  return {
-    requestDidStart() {
-      console.log('The options were', options);
-    },
-  };
-};
-```
-
-Within the `plugins` array, this `localPluginModule.js` would be used as:
-
-```js
-  /* ... Existing, required ApolloServer configuration. ... */
-
-  plugins: [
-
-    require('./localPluginModule')({
-      /* ...configuration options, when necessary! */
-    }),
-
-  ],
-
-  /* ... any additional ApolloServer configuration. ... */
-```
-
-And finally, advanced cases can implement the `ApolloServerPlugin` interface via a factory function.  The factory function will receive `pluginInfo`, which can allow implementors to adjust their behavior based on circumstantial factors:
-
-```js
-/* advancedPluginModule.js */
-module.exports = (options) => {
-  /* ...Plugin specific implementation... */
-
-  return () => {
-
-    return {
-      requestDidStart() {
-        console.log('The options were', options);
-      }
-    };
-  };
-}
-```
-
-And again, this could be used as a plugin by defining it in the `plugins` array:
-
-```js
-  /* ... Existing, required ApolloServer configuration. ... */
-
-  plugins: [
-
-    require('./advancedPluginModule')({
-      /* ...configuration options, when necessary! */
-    }),
-
-  ],
-
-  /* ... any additional ApolloServer configuration. ... */
 ```
