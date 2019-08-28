@@ -4,6 +4,12 @@
 
 > The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  When a release is being prepared, a new header will be (manually) created below and the the appropriate changes within that release will be moved into the new section.
 
+- Nothing yet! Stay tuned!
+
+### v0.9.1
+
+> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/029c8dca3af812ee70589cdb6de749df3d2843d8)
+
 - Fix value type behavior within composition and execution [#3182](https://github.com/apollographql/apollo-server/pull/2922)
 
 # v0.6.8

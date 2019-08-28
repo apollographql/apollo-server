@@ -6,6 +6,12 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 > The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  When a release is being prepared, a new header will be (manually) created below and the the appropriate changes within that release will be moved into the new section.
 
+- Nothing yet! Stay tuned!
+
+### v2.9.1
+
+> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/029c8dca3af812ee70589cdb6de749df3d2843d8)
+
 - `apollo-server-core`: Make `formatError` available to subscriptions in the same spirit as the existing `formatResponse`. [PR #2942](https://github.com/apollographql/apollo-server/pull/2942)
 - `apollo-engine-reporting`: The behavior of the `engine.maxAttempts` parameter previously did not match its documentation. It is documented as being the max number of attempts *including* the initial attempt, but until this release it was actually the number of retries *excluding* the initial attempt. The behavior has been changed to match the documentation (and the literal reading of the option name). [PR #3218](https://github.com/apollographql/apollo-server/pull/3218)
 - `apollo-engine-reporting`: When sending the report fails with a server-side 5xx error, include the full error from the server in the logs. [PR #3218](https://github.com/apollographql/apollo-server/pull/3218)
