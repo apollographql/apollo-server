@@ -41,7 +41,8 @@ module.exports = {
             'testing-and-monitoring/mocking',
             'testing-and-monitoring/testing',
           ],
-          'Improving Performance': ['performance/caching', 'performance/apq'],
+          Performance: ['performance/caching', 'performance/apq'],
+          Integrations: ['integrations/middleware'],
           Deployment: [
             'deployment/heroku',
             'deployment/lambda',

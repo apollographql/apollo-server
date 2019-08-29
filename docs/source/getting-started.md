@@ -215,40 +215,7 @@ One of the most important concepts of GraphQL is that clients can choose to quer
 _only for the fields they need_. Delete `author` from the query string and execute
 it again. The response updates to include only the `title` field for each book! 
 
-## Server integrations
-
-Depending on whether we are creating a new application or an existing application, the steps will vary slightly since Apollo Server must adapt to the semantics of existing servers (e.g. Express, Hapi, etc.)
-
-### Middleware
-
-Existing applications generally already have middleware in place and Apollo Server works along with those middleware. To integrate with Apollo Server, we'll pass it into the `server.applyMiddleware` method as `app` to add the Apollo Server's middleware.
-
-> The existing application is frequently already named `app`, especially when using Express.  If the application is identified by a different variable, pass the existing variable in place of `app`.
-
-The following code uses the `apollo-server-express` package, which can be installed with `npm install apollo-server-express`.
-
-```js
-const { ApolloServer, gql } = require('apollo-server-express');
-const { typeDefs, resolvers } = require('./schema');
-
-const server = new ApolloServer({
-  // These will be defined for both new or existing servers
-  typeDefs,
-  resolvers,
-});
-
-server.applyMiddleware({ app }); // app is from an existing express app
-
-app.listen({ port: 4000 }, () =>
-  console.log(`🚀 Server ready at http://localhost:4000${server.graphqlPath}`)
-)
-```
-
-Hapi follows the same pattern with `apollo-server-express` replaced with `apollo-server-hapi` and `app` replaced with Hapi server. `applyMiddleware` registers plugins, so it should be called with `await`.
-
-> When transitioning from `apollo-server` to an integration package, running `npm uninstall apollo-server` will remove the extra dependency.
-
-### SSL/TLS Support
+## SSL/TLS Support
 
 If you require an HTTPS connection to your Apollo Server, you can use the `https` module with `apollo-server-express`. Subscriptions can also go through an encrypted WebSocket (WSS).
 
