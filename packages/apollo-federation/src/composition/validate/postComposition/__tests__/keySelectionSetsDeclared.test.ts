@@ -5,7 +5,7 @@ import { graphqlErrorSerializer } from '../../../../snapshotSerializers';
 
 expect.addSnapshotSerializer(graphqlErrorSerializer);
 
-describe('keyTypeMismatch', () => {
+describe('keySelectionSetsDeclared', () => {
   it('returns no warnings with proper @key usage', () => {
     const serviceA = {
       typeDefs: gql`

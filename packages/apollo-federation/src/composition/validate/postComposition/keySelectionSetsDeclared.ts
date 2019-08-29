@@ -32,7 +32,7 @@ export const keySelectionSetsDeclared = (schema: GraphQLSchema) => {
                 logServiceAndType(serviceName, typeName) +
                   `uses the key \`${selectionSetToString(
                     selectionSet,
-                  )}\`, which is not declared on the base service. All keys must be declared on the base service. `,
+                  )}\`, which is not declared on the base service. All keys must be declared on the base service.`,
               ),
             );
           }
