@@ -13,11 +13,11 @@ export const keySelectionSetsDeclared = (schema: GraphQLSchema) => {
     if (!isObjectType(namedType)) continue;
 
     if (namedType.federation && namedType.federation.keys) {
-      const baseService = namedType.federation.serviceName!;
+      const baseService = namedType.federation.serviceName;
       if (!baseService) {
         // Federated type does not have a base service. This shouldn't happen, but does in some tests.
         // Just exit early?
-        break;
+        continue;
       }
 
       const baseKeys = namedType.federation.keys[baseService] as FieldNode[][];
