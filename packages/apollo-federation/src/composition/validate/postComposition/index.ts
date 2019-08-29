@@ -5,6 +5,7 @@ export { requiresFieldsMissingExternal } from './requiresFieldsMissingExternal';
 export { requiresFieldsMissingOnBase } from './requiresFieldsMissingOnBase';
 export { keyFieldsMissingOnBase } from './keyFieldsMissingOnBase';
 export { keyFieldsSelectInvalidType } from './keyFieldsSelectInvalidType';
+export { keySelectionSetsDeclared } from './keySelectionSetsDeclared';
 export { providesFieldsMissingExternal } from './providesFieldsMissingExternal';
 export {
   providesFieldsSelectInvalidType,

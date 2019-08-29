@@ -14,6 +14,7 @@ Apollo Federation implements a strict composition model. When building a gateway
 - `KEY_FIELDS_SELECT_INVALID_TYPE`: The fields argument can not have root fields that result in a list, interface, or union type.
 - `KEY_FIELDS_MISSING_ON_BASE`: the fields argument can not select fields that were overwritten by another service.
 - `KEY_FIELDS_MISSING_EXTERNAL`: On extended types, keys must reference a field marked as `@external`.
+- `KEY_NOT_DECLARED`: Keys of extended types must be declared on the base type.
 
 ### `@external` directives
 
