@@ -6,6 +6,7 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 > The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  When a release is being prepared, a new header will be (manually) created below and the the appropriate changes within that release will be moved into the new section.
 
+- `apollo-server-koa`: Update `koa-bodyparser` dependency from `v3.0.0` to `v4.2.1` to fix inaccurate `Content-length` calculation. [PR #3229](https://github.com/apollographql/apollo-server/pull/3229)
 - `apollo-server-express`: Use explicit return type for new `getMiddleware` method, in an effort to resolve [Issue #3222](https://github.com/apollographql/apollo-server/issues/3222) [PR #3230](https://github.com/apollographql/apollo-server/pull/3230)
 
 ### v2.9.1
