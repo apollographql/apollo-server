@@ -15,8 +15,7 @@ export const keySelectionSetsDeclared = (schema: GraphQLSchema) => {
     if (namedType.federation && namedType.federation.keys) {
       const baseService = namedType.federation.serviceName;
       if (!baseService) {
-        // Federated type does not have a base service. This shouldn't happen, but does in some tests.
-        // Just exit early?
+        // This is an invalid case which is handled by the UniqueTypeNamesWithFields validator, throwing error VALUE_TYPE_NO_ENTITY
         continue;
       }
 
