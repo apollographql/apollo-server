@@ -63,7 +63,7 @@ describe('keySelectionSetsDeclared', () => {
       Array [
         Object {
           "code": "KEY_NOT_DECLARED",
-          "message": "[serviceB] Product -> uses the key \`upc\`, which is not declared on the base service. All keys must be declared on the base service. ",
+          "message": "[serviceB] Product -> uses the key \`upc\`, which is not declared on the base service. All keys must be declared on the base service.",
         },
       ]
     `);
@@ -160,7 +160,7 @@ describe('keySelectionSetsDeclared', () => {
       Array [
         Object {
           "code": "KEY_NOT_DECLARED",
-          "message": "[serviceB] Product -> uses the key \`upc sku thing { a }\`, which is not declared on the base service. All keys must be declared on the base service. ",
+          "message": "[serviceB] Product -> uses the key \`upc sku thing { a }\`, which is not declared on the base service. All keys must be declared on the base service.",
         },
       ]
     `);
