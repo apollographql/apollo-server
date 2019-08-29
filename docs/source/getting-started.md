@@ -309,4 +309,4 @@ of schemas, resolvers, and deployment:
 
 * [Schema basics](/schema/schema/)
 * [Fetching data with resolvers](/serving/data/)
-* [Deploying with Heroku](/deployment/heroku)
+* [Deploying with Heroku](/deployment/heroku/)
