@@ -1,6 +1,7 @@
 const { defaults } = require("jest-config");
 
 module.exports = {
+  rootDir: ".",
   testEnvironment: "node",
     preset: "ts-jest",
     testMatch: null,
