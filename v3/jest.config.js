@@ -4,8 +4,6 @@ module.exports = {
   rootDir: ".",
   testEnvironment: "node",
     preset: "ts-jest",
-    testMatch: null,
-    testRegex: "/__tests__/.*\\.test\\.(js|ts)$",
     testPathIgnorePatterns: [
       "/node_modules/",
       "/dist/"
