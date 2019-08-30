@@ -23,6 +23,9 @@
   "dependencies": {
     "apollo-server-core": "file:../apollo-server-core"
   },
+  "devDependencies": {
+    "graphql": "14.5.4"
+  },
   "peerDependencies": {
     "graphql": "^14.5.0"
   }
