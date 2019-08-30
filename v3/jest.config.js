@@ -2,9 +2,6 @@ const { defaults } = require("jest-config");
 
 module.exports = {
   testEnvironment: "node",
-    setupFiles: [
-      "<rootDir>/../apollo-server-env/dist/index.js"
-    ],
     preset: "ts-jest",
     testMatch: null,
     testRegex: "/__tests__/.*\\.test\\.(js|ts)$",
