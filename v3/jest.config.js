@@ -11,7 +11,6 @@ module.exports = {
     ],
     moduleFileExtensions: [...defaults.moduleFileExtensions, "ts", "tsx"],
     moduleNameMapper: {
-      '^__mocks__/(.*)$': '<rootDir>/../../__mocks__/$1',
       // This regex should match the packages that we want compiled from source
       // through `ts-jest`, as opposed to loaded from their output files in
       // `dist`.
