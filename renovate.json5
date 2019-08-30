@@ -3,6 +3,7 @@
     "apollo-open-source"
   ],
   "automerge": false,
+  "baseBranches": ["master", "release-3.x"],
   "packageRules": [
     {
       "packageNames": ["@types/node"],
