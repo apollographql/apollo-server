@@ -16,7 +16,7 @@
     "GraphQL",
     "Apollo",
     "Server",
-    "Javascript"
+    "JavaScript"
   ],
   "engines": {
     "node": ">=10"
