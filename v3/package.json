@@ -46,9 +46,9 @@
     "apollo-server-plugin-base": "^0.6.3"
   },
   "devDependencies": {
-    "graphql": "14.5.4",
     "@types/jest": "^24.0.18",
     "codecov": "3.5.0",
+    "graphql": "14.5.4",
     "jest": "24.9.0",
     "jest-junit": "7.0.0",
     "jest-matcher-utils": "24.9.0",
