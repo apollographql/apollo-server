@@ -10,7 +10,6 @@ module.exports = {
       "/dist/"
     ],
     moduleFileExtensions: [...defaults.moduleFileExtensions, "ts", "tsx"],
-    moduleNameMapper: {},
     clearMocks: true,
     globals: {
       "ts-jest": {
