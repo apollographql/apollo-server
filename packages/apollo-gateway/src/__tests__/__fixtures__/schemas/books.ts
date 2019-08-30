@@ -26,8 +26,24 @@ export const typeDefs = gql`
     isbn: String!
     title: String
     year: Int
-    similarBooks: [Book!]!
+    similarBooks: [Book]!
+    metadata: [MetadataOrError]
   }
+
+  # Value type
+  type KeyValue {
+    key: String!
+    value: String!
+  }
+
+  # Value type
+  type Error {
+    code: Int
+    message: String
+  }
+
+  # Value type
+  union MetadataOrError = KeyValue | Error
 `;
 
 const libraries = [{ id: '1', name: 'NYC Public Library' }];
@@ -36,17 +52,23 @@ const books = [
     isbn: '0262510871',
     title: 'Structure and Interpretation of Computer Programs',
     year: 1996,
+    metadata: [{ key: 'Condition', value: 'excellent' }],
   },
   {
     isbn: '0136291554',
     title: 'Object Oriented Software Construction',
     year: 1997,
+    metadata: [
+      { key: 'Condition', value: 'used' },
+      { code: '401', message: 'Unauthorized' },
+    ],
   },
   {
     isbn: '0201633612',
     title: 'Design Patterns',
     year: 1995,
     similarBooks: ['0201633612', '0136291554'],
+    metadata: [{ key: 'Condition', value: 'like new' }],
   },
   {
     isbn: '1234567890',
@@ -93,6 +115,11 @@ export const resolvers: GraphQLResolverMap<any> = {
     },
     library(_, { id }) {
       return libraries.find(library => library.id === id);
+    },
+  },
+  MetadataOrError: {
+    __resolveType(object) {
+      return 'key' in object ? 'KeyValue' : 'Error';
     },
   },
 };

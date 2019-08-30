@@ -5,12 +5,10 @@ import {
   runHttpQuery,
   convertNodeHttpToRequest,
 } from 'apollo-server-core';
-import { ValueOrPromise } from 'apollo-server-env';
+import { ValueOrPromise } from 'apollo-server-types';
 
 export interface ExpressGraphQLOptionsFunction {
-  (req?: express.Request, res?: express.Response): ValueOrPromise<
-    GraphQLOptions
-  >;
+  (req: express.Request, res: express.Response): ValueOrPromise<GraphQLOptions>;
 }
 
 // Design principles:
@@ -44,8 +42,14 @@ export function graphqlExpress(
             res.setHeader(name, value);
           }
         }
-        res.write(graphqlResponse);
-        res.end();
+
+        // Using `.send` is a best practice for Express, but we also just use
+        // `.end` for compatibility with `connect`.
+        if (typeof res.send === 'function') {
+          res.send(graphqlResponse);
+        } else {
+          res.end(graphqlResponse);
+        }
       },
       (error: HttpQueryError) => {
         if ('HttpQueryError' !== error.name) {
@@ -59,8 +63,13 @@ export function graphqlExpress(
         }
 
         res.statusCode = error.statusCode;
-        res.write(error.message);
-        res.end();
+        if (typeof res.send === 'function') {
+          // Using `.send` is a best practice for Express, but we also just use
+          // `.end` for compatibility with `connect`.
+          res.send(error.message);
+        } else {
+          res.end(error.message);
+        }
       },
     );
   };

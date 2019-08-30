@@ -12,6 +12,7 @@ export const typeDefs = gql`
     body(format: Boolean = false): String
     author: User @provides(fields: "username")
     product: Product
+    metadata: [MetadataOrError]
   }
 
   input UpdateReviewInput {
@@ -19,11 +20,17 @@ export const typeDefs = gql`
     body: String
   }
 
+  extend type UserMetadata {
+    address: String @external
+  }
+
   extend type User @key(fields: "id") {
     id: ID! @external
     username: String @external
     reviews: [Review]
     numberOfReviews: Int!
+    metadata: [UserMetadata] @external
+    goodAddress: Boolean @requires(fields: "metadata { address }")
   }
 
   extend interface Product {
@@ -38,8 +45,14 @@ export const typeDefs = gql`
   extend type Book implements Product @key(fields: "isbn") {
     isbn: String! @external
     reviews: [Review]
-    similarBooks: [Book!]! @external
+    similarBooks: [Book]! @external
     relatedReviews: [Review!]! @requires(fields: "similarBooks { isbn }")
+  }
+
+  extend type Car @key(fields: "id") {
+    id: String! @external
+    price: String @external
+    retailPrice: String @requires(fields: "price")
   }
 
   extend type Mutation {
@@ -47,6 +60,21 @@ export const typeDefs = gql`
     updateReview(review: UpdateReviewInput!): Review
     deleteReview(id: ID!): Boolean
   }
+
+  # Value type
+  type KeyValue {
+    key: String!
+    value: String!
+  }
+
+  # Value type
+  type Error {
+    code: Int
+    message: String
+  }
+
+  # Value type
+  union MetadataOrError = KeyValue | Error
 `;
 
 const usernames = [
@@ -59,6 +87,7 @@ const reviews = [
     authorID: '1',
     product: { __typename: 'Furniture', upc: '1' },
     body: 'Love it!',
+    metadata: [{ code: 418, message: "I'm a teapot" }],
   },
   {
     id: '2',
@@ -89,6 +118,7 @@ const reviews = [
     authorID: '2',
     product: { __typename: 'Book', isbn: '0136291554' },
     body: 'A bit outdated.',
+    metadata: [{ key: 'likes', value: '5' }],
   },
   {
     id: '6',
@@ -156,6 +186,9 @@ export const resolvers: GraphQLResolverMap<any> = {
       const found = usernames.find(username => username.id === user.id);
       return found ? found.username : null;
     },
+    goodAddress(object) {
+      return object.metadata[0].address === '1';
+    },
   },
   Furniture: {
     reviews(product) {
@@ -174,6 +207,16 @@ export const resolvers: GraphQLResolverMap<any> = {
             )
             .flat()
         : [];
+    },
+  },
+  Car: {
+    retailPrice(car) {
+      return car.price;
+    },
+  },
+  MetadataOrError: {
+    __resolveType(object) {
+      return 'key' in object ? 'KeyValue' : 'Error';
     },
   },
 };

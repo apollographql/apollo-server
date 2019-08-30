@@ -1,5 +1,5 @@
 import gql from 'graphql-tag';
-import { Kind, graphql } from 'graphql';
+import { Kind, graphql, DocumentNode, execute } from 'graphql';
 import { buildFederatedSchema } from '../buildFederatedSchema';
 import { typeSerializer } from '../../snapshotSerializers';
 
@@ -476,5 +476,128 @@ extend type User @key(fields: "email") {
 }
 `);
     });
+  });
+});
+
+describe('legacy interface', () => {
+  const resolvers = {
+    Query: {
+      product: () => ({}),
+    },
+    Product: {
+      upc: () => '1234',
+      price: () => 10,
+    },
+  };
+  const typeDefs: DocumentNode[] = [
+    gql`
+      type Query {
+        product: Product
+      }
+      type Product @key(fields: "upc") {
+        upc: String!
+        name: String
+      }
+    `,
+    gql`
+      extend type Product {
+        price: Int
+      }
+    `,
+  ];
+  it('allows legacy schema module interface as an input with an array of typeDefs and resolvers', async () => {
+    const schema = buildFederatedSchema({ typeDefs, resolvers });
+    expect(schema.getType('_Entity')).toMatchInlineSnapshot(
+      `union _Entity = Product`,
+    );
+    expect(
+      await execute(
+        schema,
+        gql`
+          {
+            product {
+              price
+              upc
+            }
+          }
+        `,
+      ),
+    ).toEqual({
+      data: {
+        product: { upc: '1234', price: 10 },
+      },
+    });
+  });
+  it('allows legacy schema module interface as a single module', async () => {
+    const schema = buildFederatedSchema({
+      typeDefs: gql`
+        type Query {
+          product: Product
+        }
+        type Product @key(fields: "upc") {
+          upc: String!
+          name: String
+          price: Int
+        }
+      `,
+      resolvers,
+    });
+    expect(schema.getType('_Entity')).toMatchInlineSnapshot(
+      `union _Entity = Product`,
+    );
+    expect(
+      await execute(
+        schema,
+        gql`
+          {
+            product {
+              price
+              upc
+            }
+          }
+        `,
+      ),
+    ).toEqual({
+      data: {
+        product: { upc: '1234', price: 10 },
+      },
+    });
+  });
+  it('allows legacy schema module interface as a single module without resolvers', async () => {
+    const schema = buildFederatedSchema({
+      typeDefs: gql`
+        type Query {
+          product: Product
+        }
+        type Product @key(fields: "upc") {
+          upc: String!
+          name: String
+          price: Int
+        }
+      `,
+    });
+    expect(schema.getType('Product')).toMatchInlineSnapshot(`
+type Product {
+  upc: String!
+  name: String
+  price: Int
+}
+`);
+    expect(schema.getType('_Entity')).toMatchInlineSnapshot(
+      `union _Entity = Product`,
+    );
+  });
+  it('allows legacy schema module interface as a simple array of documents', async () => {
+    const schema = buildFederatedSchema({ typeDefs });
+    expect(schema.getType('Product')).toMatchInlineSnapshot(`
+type Product {
+  upc: String!
+  name: String
+  price: Int
+}
+`);
+    expect(schema.getType('_Entity')).toMatchInlineSnapshot(
+      `union _Entity = Product`,
+    );
   });
 });

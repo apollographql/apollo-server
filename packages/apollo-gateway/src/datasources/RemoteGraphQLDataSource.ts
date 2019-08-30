@@ -1,4 +1,8 @@
-import { GraphQLRequestContext, GraphQLResponse } from 'apollo-server-core';
+import {
+  GraphQLRequestContext,
+  GraphQLResponse,
+  ValueOrPromise,
+} from 'apollo-server-types';
 import {
   ApolloError,
   AuthenticationError,
@@ -10,7 +14,6 @@ import {
   RequestInit,
   Headers,
   Response,
-  ValueOrPromise,
 } from 'apollo-server-env';
 import { isObject } from '../utilities/predicates';
 import { GraphQLDataSource } from './types';
@@ -34,7 +37,8 @@ export class RemoteGraphQLDataSource implements GraphQLDataSource {
   }: Pick<GraphQLRequestContext<TContext>, 'request' | 'context'>): Promise<
     GraphQLResponse
   > {
-    const headers = new Headers();
+    // Respect incoming http headers (eg, apollo-federation-include-trace).
+    const headers = (request.http && request.http.headers) || new Headers();
     headers.set('Content-Type', 'application/json');
 
     request.http = {

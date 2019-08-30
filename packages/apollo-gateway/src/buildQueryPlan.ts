@@ -37,7 +37,9 @@ import {
 } from './FieldSet';
 import {
   FetchNode,
+  ParallelNode,
   PlanNode,
+  SequenceNode,
   QueryPlan,
   ResponsePath,
   OperationContext,
@@ -86,9 +88,9 @@ export function buildQueryPlan(operationContext: OperationContext): QueryPlan {
 
   return {
     kind: 'QueryPlan',
-    node: isMutation
-      ? wrapInSequenceNodeIfNeeded(nodes)
-      : wrapInParallelNodeIfNeeded(nodes),
+    node: nodes.length
+      ? flatWrap(isMutation ? 'Sequence' : 'Parallel', nodes)
+      : undefined,
   };
 }
 
@@ -123,31 +125,32 @@ function executionNodeForGroup(
     const dependentNodes = group.dependentGroups.map(dependentGroup =>
       executionNodeForGroup(context, dependentGroup),
     );
-    return {
-      kind: 'Sequence',
-      nodes: [node, wrapInParallelNodeIfNeeded(dependentNodes)],
-    };
+
+    return flatWrap('Sequence', [node, flatWrap('Parallel', dependentNodes)]);
   } else {
     return node;
   }
 }
 
-function wrapInParallelNodeIfNeeded(nodes: PlanNode[]): PlanNode {
-  return nodes.length > 1
-    ? {
-        kind: 'Parallel',
-        nodes: nodes,
-      }
-    : nodes[0];
-}
-
-function wrapInSequenceNodeIfNeeded(nodes: PlanNode[]): PlanNode {
-  return nodes.length > 1
-    ? {
-        kind: 'Sequence',
-        nodes: nodes,
-      }
-    : nodes[0];
+// Wraps the given nodes in a ParallelNode or SequenceNode, unless there's only
+// one node, in which case it is returned directly. Any nodes of the same kind
+// in the given list have their sub-nodes flattened into the list: ie,
+// flatWrap('Sequence', [a, flatWrap('Sequence', b, c), d]) returns a SequenceNode
+// with four children.
+function flatWrap(
+  kind: ParallelNode['kind'] | SequenceNode['kind'],
+  nodes: PlanNode[],
+): PlanNode {
+  if (nodes.length === 0) {
+    throw Error('programming error: should always be called with nodes');
+  }
+  if (nodes.length === 1) {
+    return nodes[0];
+  }
+  return {
+    kind,
+    nodes: nodes.flatMap(n => (n.kind === kind ? n.nodes : [n])),
+  } as PlanNode;
 }
 
 function splitRootFields(
@@ -250,7 +253,14 @@ function splitSubfields(
   splitFields(context, path, fields, field => {
     const { parentType, fieldNode, fieldDef } = field;
 
-    const baseService = context.getBaseService(parentType);
+    let baseService, owningService;
+    if (parentType.federation && parentType.federation.isValueType) {
+      baseService = parentGroup.serviceName;
+      owningService = parentGroup.serviceName;
+    } else {
+      baseService = context.getBaseService(parentType);
+      owningService = context.getOwningService(parentType, fieldDef);
+    }
 
     if (!baseService) {
       throw new GraphQLError(
@@ -259,15 +269,12 @@ function splitSubfields(
       );
     }
 
-    const owningService = context.getOwningService(parentType, fieldDef);
-
     if (!owningService) {
       throw new GraphQLError(
         `Couldn't find owning service for field "${parentType.name}.${fieldDef.name}"`,
         fieldNode,
       );
     }
-
     // Is the field defined on the base service?
     if (owningService === baseService) {
       // Can we fetch the field from the parent group?
@@ -312,10 +319,14 @@ function splitSubfields(
           parentGroup.providedFields.some(matchesField(requiredField)),
         )
       ) {
-        return parentGroup.dependentGroupForService(
-          owningService,
-          requiredFields,
-        );
+        if (owningService === parentGroup.serviceName) {
+          return parentGroup;
+        } else {
+          return parentGroup.dependentGroupForService(
+            owningService,
+            requiredFields,
+          );
+        }
       } else {
         // We need to go through the base group first.
 
@@ -328,6 +339,13 @@ function splitSubfields(
           throw new GraphQLError(
             `Couldn't find keys for type "${parentType.name}}" in service "${baseService}"`,
             fieldNode,
+          );
+        }
+
+        if (baseService === parentGroup.serviceName) {
+          return parentGroup.dependentGroupForService(
+            owningService,
+            requiredFields,
           );
         }
 
@@ -419,39 +437,18 @@ function splitFields(
           );
         }
 
-        // If all possible runtime parent types can be fetched from the same
-        // group, we'll assume we can add the field once for the interface.
-        if (groupsByRuntimeParentTypes.size === 1) {
-          // FIXME: We should make sure the group's service supports the
-          // interface, because even if it owns all possible types it may not
-          // actually contain the interface.
-          const group = groupsByRuntimeParentTypes.keys().next().value;
-          group.fields.push(
-            completeField(
-              context,
-              parentType,
-              group,
-              path,
-              fieldsForResponseName,
-            ),
-          );
-        } else {
-          // If not, we add the field separately for each runtime parent type.
-          for (const [
-            group,
-            runtimeParentTypes,
-          ] of groupsByRuntimeParentTypes) {
-            for (const runtimeParentType of runtimeParentTypes) {
-              group.fields.push(
-                completeField(
-                  context,
-                  runtimeParentType,
-                  group,
-                  path,
-                  fieldsForResponseName,
-                ),
-              );
-            }
+        // We add the field separately for each runtime parent type.
+        for (const [group, runtimeParentTypes] of groupsByRuntimeParentTypes) {
+          for (const runtimeParentType of runtimeParentTypes) {
+            group.fields.push(
+              completeField(
+                context,
+                runtimeParentType,
+                group,
+                path,
+                fieldsForResponseName,
+              ),
+            );
           }
         }
       }
@@ -761,7 +758,11 @@ export class QueryPlanningContext {
     parentType: GraphQLObjectType,
     fieldDef: GraphQLField<any, any>,
   ): string | null {
-    if (fieldDef.federation && fieldDef.federation.serviceName) {
+    if (
+      fieldDef.federation &&
+      fieldDef.federation.serviceName &&
+      !fieldDef.federation.belongsToValueType
+    ) {
       return fieldDef.federation.serviceName;
     } else {
       return this.getBaseService(parentType);

@@ -7,12 +7,13 @@ import {
   GraphQLResolverMap,
 } from 'apollo-graphql';
 import gql from 'graphql-tag';
-import { GraphQLRequestContext } from 'apollo-server-core';
+import { GraphQLRequestContext } from 'apollo-server-types';
+import { AuthenticationError } from 'apollo-server-core';
 import { composeServices, buildFederatedSchema } from '@apollo/federation';
 
 import { buildQueryPlan, buildOperationContext } from '../buildQueryPlan';
 import { executeQueryPlan } from '../executeQueryPlan';
-import { LocalGraphQLDataSource } from '../datasources/LocalGraphQLDatasource';
+import { LocalGraphQLDataSource } from '../datasources/LocalGraphQLDataSource';
 
 function buildLocalService(modules: GraphQLSchemaModule[]) {
   const schema = buildFederatedSchema(modules);
@@ -101,7 +102,7 @@ describe('executeQueryPlan', () => {
       overrideResolversInService('accounts', {
         Query: {
           me() {
-            throw new Error('Something went wrong');
+            throw new AuthenticationError('Something went wrong');
           },
         },
       });
@@ -126,9 +127,22 @@ describe('executeQueryPlan', () => {
 
       expect(response).toHaveProperty('data.me', null);
       expect(response).toHaveProperty(
-        'errors.0.extensions.downstreamErrors.0.message',
+        'errors.0.message',
         'Something went wrong',
       );
+      expect(response).toHaveProperty(
+        'errors.0.extensions.code',
+        'UNAUTHENTICATED',
+      );
+      expect(response).toHaveProperty(
+        'errors.0.extensions.serviceName',
+        'accounts',
+      );
+      expect(response).toHaveProperty(
+        'errors.0.extensions.query',
+        '{\n  me {\n    name\n  }\n}',
+      );
+      expect(response).toHaveProperty('errors.0.extensions.variables', {});
     });
 
     it(`should still include other root-level results if one root-level field errors out`, async () => {
@@ -491,20 +505,54 @@ describe('executeQueryPlan', () => {
     expect(response.errors).toMatchInlineSnapshot(`undefined`);
 
     expect(response.data).toMatchInlineSnapshot(`
-                        Object {
-                          "book": Object {
-                            "relatedReviews": Array [
-                              Object {
-                                "body": "A classic.",
-                                "id": "6",
-                              },
-                              Object {
-                                "body": "A bit outdated.",
-                                "id": "5",
-                              },
-                            ],
-                          },
-                        }
-                `);
+      Object {
+        "book": Object {
+          "relatedReviews": Array [
+            Object {
+              "body": "A classic.",
+              "id": "6",
+            },
+            Object {
+              "body": "A bit outdated.",
+              "id": "5",
+            },
+          ],
+        },
+      }
+    `);
+  });
+
+  it('can execute queries with selections on null @requires fields', async () => {
+    const query = gql`
+      query {
+        book(isbn: "0987654321") {
+          # Requires similarBooks { isbn }
+          relatedReviews {
+            id
+            body
+          }
+        }
+      }
+    `;
+
+    const operationContext = buildOperationContext(schema, query);
+    const queryPlan = buildQueryPlan(operationContext);
+
+    const response = await executeQueryPlan(
+      queryPlan,
+      serviceMap,
+      buildRequestContext(),
+      operationContext,
+    );
+
+    expect(response.errors).toBeUndefined();
+
+    expect(response.data).toMatchInlineSnapshot(`
+      Object {
+        "book": Object {
+          "relatedReviews": Array [],
+        },
+      }
+    `);
   });
 });

@@ -28,7 +28,12 @@ export const providesNotOnEntity = (schema: GraphQLSchema) => {
       // the only case where serviceName wouldn't exist is on a base type, and in that case,
       // the `provides` metadata should never get added to begin with. This should be caught in
       // composition work. This kind of error should be validated _before_ composition.
-      if (!serviceName && field.federation && field.federation.provides)
+      if (
+        !serviceName &&
+        field.federation &&
+        field.federation.provides &&
+        !field.federation.belongsToValueType
+      )
         throw Error(
           'Internal Consistency Error: field with provides information does not have service name.',
         );

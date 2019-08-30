@@ -3,18 +3,17 @@ import {
   GraphQLRequestContext,
   GraphQLRequest,
   GraphQLResponse,
-} from 'apollo-server-core/dist/requestPipelineAPI';
+  ValueOrPromise,
+  WithRequired,
+} from 'apollo-server-types';
 export {
   GraphQLServiceContext,
   GraphQLRequestContext,
   GraphQLRequest,
   GraphQLResponse,
+  ValueOrPromise,
+  WithRequired,
 };
-
-// These are copied from apollo-server-env so that we don't need to have a strict
-// non-dev dependency on anything from this package.
-export type ValueOrPromise<T> = T | Promise<T>;
-export type WithRequired<T, K extends keyof T> = T & Required<Pick<T, K>>;
 
 export interface ApolloServerPlugin {
   serverWillStart?(service: GraphQLServiceContext): ValueOrPromise<void>;

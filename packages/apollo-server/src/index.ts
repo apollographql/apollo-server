@@ -43,7 +43,16 @@ export class ApolloServer extends ApolloServerBase {
     subscriptionsPath?: string,
   ): ServerInfo {
     const serverInfo: any = {
-      ...server.address(),
+      // TODO: Once we bump to `@types/node@10` or higher, we can replace cast
+      // with the `net.AddressInfo` type, rather than this custom interface.
+      // Unfortunately, prior to the 10.x types, this type existed on `dgram`,
+      // but not on `net`, and in later types, the `server.address()` signature
+      // can also be a string.
+      ...(server.address() as {
+        address: string;
+        family: string;
+        port: number;
+      }),
       server,
       subscriptionsPath,
     };

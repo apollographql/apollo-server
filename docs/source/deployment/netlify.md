@@ -88,7 +88,9 @@ const server = new ApolloServer({
 exports.handler = server.createHandler();
 ```
 
-Now, make sure you've run `npm run start:lambda`, and navigate to `localhost:9000/graphql` in your browser. You should see GraphQL Playground, where you can run queries against your API!
+Now, make sure you've run `NODE_ENV=development npm run start:lambda`, and navigate to `localhost:9000/graphql` in your browser. You should see GraphQL Playground, where you can run queries against your API!
+
+*Note - The GraphQL Playground will only run if your `NODE_ENV` is set to `development`. If you don't pass this, or your `NODE_ENV` is set to `production`, you will not see the GraphQL Playground.* 
 
 ![Local GraphQL Server](../images/graphql.png)
 
@@ -106,7 +108,7 @@ const client = new ApolloClient({
 });
 ```
 
-> For more information, take a look at the [Getting Started Guide for React](docs/react/essentials/get-started)
+> For more information, take a look at the [Getting Started Guide for React](https://www.apollographql.com/docs/react/essentials/get-started/)
 
 ### Deploy to Netlify
 
