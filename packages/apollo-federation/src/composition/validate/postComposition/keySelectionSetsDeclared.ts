@@ -44,6 +44,7 @@ export const keySelectionSetsDeclared = (schema: GraphQLSchema) => {
   return errors;
 };
 
+// graphql.print(...) gives non-ideal formatting.
 const selectionSetToString = (a: FieldNode[]): string =>
   a
     .map(
