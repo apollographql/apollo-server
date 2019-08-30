@@ -41,6 +41,25 @@
       "allowedVersions": "<7"
     },
     /*
+     * Apollo Server 3.x rules
+     *
+     * Essentially, we want to update Apollo whenever its possible!
+     *
+     */
+    {
+      "paths": [
+        "v3/package.json"
+      ],
+      "packageRules": [
+        "packagePatterns": ["^apollo-"],
+        "schedule": ["at any time"],
+        "automerge": true,
+        "automergeType": "branch",
+        "groupName": "v3"
+      ],
+    },
+
+    /*
       Docs-related Renovate rules
 
       These ensure that the `docs/` folder, which is its own application with
