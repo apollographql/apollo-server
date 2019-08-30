@@ -5,6 +5,9 @@
   "author": "opensource@apollographql.com",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "publishConfig": {
+    "access": "public"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/apollographql/apollo-server/tree/master/v3"
