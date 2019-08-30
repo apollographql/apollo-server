@@ -18,6 +18,9 @@
     "Server",
     "Javascript"
   ],
+  "engines": {
+    "node": ">=10"
+  },
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/apollographql/apollo-server/issues"
