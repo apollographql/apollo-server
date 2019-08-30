@@ -1,0 +1,29 @@
+{
+  "name": "@apollo/server",
+  "version": "3.0.0-alpha.0",
+  "description": "Apollo Server",
+  "author": "opensource@apollographql.com",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/apollographql/apollo-server/tree/master/v3"
+  },
+  "keywords": [
+    "GraphQL",
+    "Apollo",
+    "Server",
+    "Javascript"
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/apollographql/apollo-server/issues"
+  },
+  "homepage": "https://github.com/apollographql/apollo-server#readme",
+  "dependencies": {
+    "apollo-server-core": "file:../apollo-server-core"
+  },
+  "peerDependencies": {
+    "graphql": "^14.5.0"
+  }
+}
