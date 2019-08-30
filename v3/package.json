@@ -18,7 +18,12 @@
     "type": "git",
     "url": "https://github.com/apollographql/apollo-server/tree/master/v3"
   },
-  "keywords": ["GraphQL", "Apollo", "Server", "JavaScript"],
+  "keywords": [
+    "GraphQL",
+    "Apollo",
+    "Server",
+    "JavaScript"
+  ],
   "scripts": {
     "compile": "tsc",
     "watch": "tsc --watch",
