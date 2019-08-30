@@ -19,7 +19,16 @@
     "url": "https://github.com/apollographql/apollo-server/tree/master/v3"
   },
   "keywords": ["GraphQL", "Apollo", "Server", "JavaScript"],
-  "scripts": {},
+  "scripts": {
+    "compile": "tsc",
+    "watch": "tsc --watch",
+    "release": "echo 'Not yet!'",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:ci": "npm run coverage -- --ci --maxWorkers=2 --reporters=default --reporters=jest-junit",
+    "coverage": "npm test -- --coverage",
+    "coverage:upload": "codecov"
+  },
   "dependencies": {
     "apollo-cache-control": "^0.8.3",
     "apollo-datasource-rest": "^0.6.3",
