@@ -3,6 +3,12 @@
   "version": "3.0.0-alpha.0",
   "description": "Apollo Server",
   "author": "opensource@apollographql.com",
+  "engines": {
+    "node": ">=10"
+  },
+  "license": "MIT",
+  "bugs": "https://github.com/apollographql/apollo-server/issues",
+  "homepage": "https://github.com/apollographql/apollo-server#readme",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "publishConfig": {
@@ -12,18 +18,7 @@
     "type": "git",
     "url": "https://github.com/apollographql/apollo-server/tree/master/v3"
   },
-  "keywords": [
-    "GraphQL",
-    "Apollo",
-    "Server",
-    "JavaScript"
-  ],
-  "engines": {
-    "node": ">=10"
-  },
-  "license": "MIT",
-  "bugs": "https://github.com/apollographql/apollo-server/issues",
-  "homepage": "https://github.com/apollographql/apollo-server#readme",
+  "keywords": ["GraphQL", "Apollo", "Server", "JavaScript"],
   "dependencies": {
     "apollo-cache-control": "^0.8.3",
     "apollo-datasource-rest": "^0.6.3",
