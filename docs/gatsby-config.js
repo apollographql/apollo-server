@@ -33,12 +33,12 @@ module.exports = {
             'serving/data',
             'serving/data-sources',
             'serving/errors',
-            'serving/authentication',
             'serving/file-uploads',
             'serving/subscriptions',
           ],
           Testing: ['testing/mocking', 'testing/testing'],
           Performance: ['performance/caching', 'performance/apq'],
+          Security: ['security/authentication', 'security/terminating-ssl'],
           Integrations: ['integrations/middleware'],
           Deployment: [
             'deployment/heroku',
