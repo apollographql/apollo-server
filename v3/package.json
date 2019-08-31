@@ -26,6 +26,7 @@
   ],
   "scripts": {
     "compile": "tsc",
+    "prepare": "npm run compile",
     "watch": "tsc --watch",
     "release": "echo 'Not yet!'",
     "test": "jest",
