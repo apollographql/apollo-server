@@ -1,4 +1,3 @@
-/* tslint:disable:no-unused-expression */
 import MockReq = require('mock-req');
 
 import {
