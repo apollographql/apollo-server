@@ -57,7 +57,7 @@ export async function executeQueryPlan<TContext>(
     errors,
   };
 
-  let data: ResultMap | undefined = Object.create(null);
+  let data: ResultMap | undefined | null = Object.create(null);
 
   const captureTraces = !!(
     requestContext.metrics && requestContext.metrics.captureTraces
@@ -288,7 +288,7 @@ async function executeFetch<TContext>(
     context: ExecutionContext<TContext>,
     operation: OperationDefinitionNode,
     variables: Record<string, any>,
-  ): Promise<ResultMap | void> {
+  ): Promise<ResultMap | void | null> {
     const source = print(operation);
     // We declare this as 'any' because it is missing url and method, which
     // GraphQLRequest.http is supposed to have if it exists.

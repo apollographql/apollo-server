@@ -41,7 +41,7 @@ export interface GraphQLRequest {
 export type VariableValues = { [name: string]: any };
 
 export interface GraphQLResponse {
-  data?: Record<string, any>;
+  data?: Record<string, any> | null;
   errors?: ReadonlyArray<GraphQLFormattedError>;
   extensions?: Record<string, any>;
   http?: Pick<Response, 'headers'> & Partial<Pick<Mutable<Response>, 'status'>>;
@@ -103,7 +103,7 @@ export type GraphQLExecutor<TContext = Record<string, any>> = (
 ) => ValueOrPromise<GraphQLExecutionResult>;
 
 export type GraphQLExecutionResult = {
-  data?: Record<string, any>;
+  data?: Record<string, any> | null;
   errors?: ReadonlyArray<GraphQLError>;
   extensions?: Record<string, any>;
 };
