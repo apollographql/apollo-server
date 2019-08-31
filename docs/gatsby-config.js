@@ -37,10 +37,7 @@ module.exports = {
             'serving/file-uploads',
             'serving/subscriptions',
           ],
-          Testing: [
-            'testing-and-monitoring/mocking',
-            'testing-and-monitoring/testing',
-          ],
+          Testing: ['testing/mocking', 'testing/testing'],
           Performance: ['performance/caching', 'performance/apq'],
           Integrations: ['integrations/middleware'],
           Deployment: [
@@ -50,10 +47,7 @@ module.exports = {
             'deployment/netlify',
             'deployment/azure-functions',
           ],
-          Monitoring: [
-            'testing-and-monitoring/metrics',
-            'testing-and-monitoring/health-checks',
-          ],
+          Monitoring: ['monitoring/metrics', 'monitoring/health-checks'],
           Federation: [
             'federation/introduction',
             'federation/concerns',
