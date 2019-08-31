@@ -73,16 +73,6 @@ jobs:
     docker: [{ image: 'circleci/node:12' }]
     <<: *common_test_steps
 
-  # Other tests, unrelated to typical code tests.
-  Linting:
-    docker: [{ image: 'circleci/node:10' }]
-    steps:
-      # (speed) Intentionally omitted, unnecessary, run_install_desired_npm.
-      - checkout
-      # (speed) --ignore-scripts to skip unnecessary Lerna build during linting.
-      - run: npm install --ignore-scripts
-      - run: npm run lint
-
 # XXX We used to use this filter to only run a "Docs" job on docs branches.
 #     Now we use it to disable all jobs. It's unclear if there's a simpler way
 #     to do this!
@@ -103,6 +93,4 @@ workflows:
       - Node.js 10:
           <<: *ignore_doc_branches
       - Node.js 12:
-          <<: *ignore_doc_branches
-      - Linting:
           <<: *ignore_doc_branches
