@@ -1,4 +1,3 @@
-/* tslint:disable:no-unused-expression */
 import http from 'http';
 import { sha256 } from 'js-sha256';
 import { URL } from 'url';
