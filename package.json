@@ -20,16 +20,6 @@
     "coverage": "npm test -- --coverage",
     "coverage:upload": "codecov"
   },
-  "lint-staged": {
-    "*.ts": [
-      "prettier --write",
-      "git add"
-    ],
-    "*.js": [
-      "prettier --write",
-      "git add"
-    ]
-  },
   "engines": {
     "node": ">=6"
   },
