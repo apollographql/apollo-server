@@ -6,7 +6,7 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 > The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  When a release is being prepared, a new header will be (manually) created below and the the appropriate changes within that release will be moved into the new section.
 
-- _Nothing yet! Stay tuned!_
+- `apollo-server-express`: Add direct dependency on `express` to allow for usage of `express.Router` for `getMiddleware` functionality (from [#2435](https://github.com/apollographql/apollo-server/pull/2435)).  Previously, unlike other server integration packages, `apollo-server-express` did not directly need `express` as a dependency since it only relied on `express` for TypeScript typings. [Issue #3238](https://github.com/apollographql/apollo-server/issues/3238) [PR #3239](https://github.com/apollographql/apollo-server/pull/3239)
 
 ### v2.9.2
 
