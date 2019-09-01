@@ -198,7 +198,6 @@ export interface AddTraceArgs {
 
 const serviceHeaderDefaults = {
   hostname: os.hostname(),
-  // tslint:disable-next-line no-var-requires
   agentVersion: `apollo-engine-reporting@${require('../package.json').version}`,
   runtimeVersion: `node ${process.version}`,
   // XXX not actually uname, but what node has easily.
@@ -354,7 +353,6 @@ export class EngineReportingAgent<TContext = any> {
     await Promise.resolve();
 
     if (this.options.debugPrintReports) {
-      // tslint:disable-next-line no-console
       console.log(`Engine sending report: ${JSON.stringify(report.toJSON())}`);
     }
 
@@ -432,7 +430,6 @@ export class EngineReportingAgent<TContext = any> {
       );
     }
     if (this.options.debugPrintReports) {
-      // tslint:disable-next-line no-console
       console.log(`Engine report: status ${response.status}`);
     }
   }

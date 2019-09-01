@@ -8,11 +8,18 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 - _Nothing yet! Stay tuned!_
 
+### v2.9.3
+
+> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/a1fbf95fc01739d5cbaa59919149bb85c563fdaa)
+
+- `apollo-server-express`: Add direct dependency on `express` to allow for usage of `express.Router` for `getMiddleware` functionality (from [#2435](https://github.com/apollographql/apollo-server/pull/2435)).  Previously, unlike other server integration packages, `apollo-server-express` did not directly need `express` as a dependency since it only relied on `express` for TypeScript typings. [Issue #3238](https://github.com/apollographql/apollo-server/issues/3238) [PR #3239](https://github.com/apollographql/apollo-server/pull/3239)
+- `apollo-server-lambda`: Add `@types/aws-lambda` as a direct dependency to `apollo-server-express` to allow usage of its typings without needing to separately install it. [Issue #2351](https://github.com/apollographql/apollo-server/issue/2351) [PR #3242](https://github.com/apollographql/apollo-server/pull/3242)
+
 ### v2.9.2
 
 > [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/92ea402a90bf9817c9b887707abbd77dcf5edcb4)
 
-- `apollo-server-koa`: Update `koa-bodyparser` dependency from `v3.0.0` to `v4.2.1` to fix inaccurate `Content-length` calculation. [PR #3229](https://github.com/apollographql/apollo-server/pull/3229)
+- `apollo-server-koa`: **Drop support for Node.js v6 within the Apollo Server Koa integration in order to update `koa-bodyparser` dependency from `v3.0.0` to `v4.2.1`.** [PR #TODO](https://github.com/apollographql/apollo-server/pull/TODO) [Issue #3050](https://github.com/apollographql/apollo-server/issues/3050) [PR #3229](https://github.com/apollographql/apollo-server/pull/3229)
 - `apollo-server-express`: Use explicit return type for new `getMiddleware` method, in an effort to resolve [Issue #3222](https://github.com/apollographql/apollo-server/issues/3222) [PR #3230](https://github.com/apollographql/apollo-server/pull/3230)
 
 ### v2.9.1
