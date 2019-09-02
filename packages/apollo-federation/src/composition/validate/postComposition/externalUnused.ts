@@ -62,29 +62,37 @@ export const externalUnused = (schema: GraphQLSchema) => {
               reviews: [Review]
             }
           */
-          const hasMatchingProvidesOnAnotherType = findFieldsThatReturnType({
-            schema,
-            typeToFind: parentType,
-          }).some(field =>
-            findDirectivesOnTypeOrField(field.astNode, 'provides').some(
-              directive => {
-                if (!directive.arguments) return false;
-                const selections =
-                  isStringValueNode(directive.arguments[0].value) &&
-                  parseSelections(directive.arguments[0].value.value);
-                // find the selections which are fields with names matching
-                // our external field name
-                return (
-                  selections &&
-                  selections.some(
-                    selection =>
-                      selection.kind === Kind.FIELD &&
-                      selection.name.value === externalFieldName,
-                  )
-                );
-              },
-            ),
-          );
+          const hasMatchingProvidesOnAnotherType = [
+            parentType,
+            ...parentType.getInterfaces(),
+          ]
+            .map(searchType =>
+              findFieldsThatReturnType({
+                schema,
+                typeToFind: searchType,
+              }),
+            )
+            .flat()
+            .some(field =>
+              findDirectivesOnTypeOrField(field.astNode, 'provides').some(
+                directive => {
+                  if (!directive.arguments) return false;
+                  const selections =
+                    isStringValueNode(directive.arguments[0].value) &&
+                    parseSelections(directive.arguments[0].value.value);
+                  // find the selections which are fields with names matching
+                  // our external field name
+                  return (
+                    selections &&
+                    selections.some(
+                      selection =>
+                        selection.kind === Kind.FIELD &&
+                        selection.name.value === externalFieldName,
+                    )
+                  );
+                },
+              ),
+            );
 
           if (hasMatchingProvidesOnAnotherType) continue;
 

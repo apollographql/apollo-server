@@ -16,6 +16,7 @@ import {
   GraphQLError,
   GraphQLSchema,
   isObjectType,
+  isInterfaceType,
   GraphQLObjectType,
   getNamedType,
   GraphQLField,
@@ -219,7 +220,7 @@ export function findFieldsThatReturnType({
   schema: GraphQLSchema;
   typeToFind: GraphQLNamedType;
 }): GraphQLField<any, any>[] {
-  if (!isObjectType(typeToFind)) return [];
+  if (!isObjectType(typeToFind) && !isInterfaceType(typeToFind)) return [];
 
   const fieldsThatReturnType: GraphQLField<any, any>[] = [];
   const types = schema.getTypeMap();

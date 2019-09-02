@@ -131,7 +131,9 @@ export function buildMapsFromServiceList(serviceList: ServiceDefinition[]) {
     for (let definition of typeDefsWithoutExternalFields.definitions) {
       if (
         definition.kind === Kind.OBJECT_TYPE_DEFINITION ||
-        definition.kind === Kind.OBJECT_TYPE_EXTENSION
+        definition.kind === Kind.OBJECT_TYPE_EXTENSION ||
+        definition.kind === Kind.INTERFACE_TYPE_DEFINITION ||
+        definition.kind === Kind.INTERFACE_TYPE_EXTENSION
       ) {
         const typeName = definition.name.value;
 

@@ -1,6 +1,7 @@
 import {
   GraphQLSchema,
   isObjectType,
+  isInterfaceType,
   GraphQLError,
   isListType,
   isNonNullType,
@@ -47,7 +48,7 @@ export const providesNotOnEntity = (schema: GraphQLSchema) => {
 
       // field has a @provides directive on it
       if (field.federation && field.federation.provides) {
-        if (!isObjectType(baseType)) {
+        if (!isObjectType(baseType) && !isInterfaceType(baseType)) {
           errors.push(
             errorWithCode(
               'PROVIDES_NOT_ON_ENTITY',
