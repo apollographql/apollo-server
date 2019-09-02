@@ -52,6 +52,15 @@ commands:
       - store_artifacts:
           path: reports/junit
 
+  install_and_start_verdaccio:
+    description: "Run and start the Verdaccio server"
+    steps:
+      - run: npm install --no-save verdaccio
+      - run:
+          name: Verdaccio
+          command: npx verdaccio
+          background: true
+
 executors:
   node:
     parameters:
@@ -60,7 +69,8 @@ executors:
         default: '10'
     docker:
       - image: circleci/node:<< parameters.tag >>
-
+    environment:
+      DEBUG: lerna
 
 # Important! When adding a new job to `jobs`, make sure to define when it
 # executes by also adding it to the `workflows` section below!
@@ -84,30 +94,218 @@ jobs:
     executor: { name: node, tag: '10' }
     steps:
       - common_test_steps
+      # We will save the results of this one particular invocation to use in
+      # the publish step. Not only does this make the publishing step take less
+      # time, this also ensures that a passing version gets deployed even if,
+      # theoretically, rebuilding the same commit on the same version of
+      # Node.js should yield the same results!
+      - persist_to_workspace:
+          root: .
+          paths:
+            - ./**
 
   NodeJS 12:
     executor: { name: node, tag: '12' }
     steps:
       - common_test_steps
 
+  Dry publish:
+    executor: node
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - run:
+          name: Write Verdaccio config for dummy server W/O proxy
+          command: |
+            mkdir -p ~/.config/verdaccio/
+            cat \<<'EOF' > ~/.config/verdaccio/config.yaml
+            storage: ./storage
+            uplinks: # None
+            publish:
+              allow_offline: false
+            packages:
+              '**':
+                access: $all
+                publish: $all
+            logs:
+              - {type: stdout, format: pretty, level: http}
+            EOF
+      - install_and_start_verdaccio
+      - run:
+          name: Lerna Publish to (local) Verdaccio
+          command: |
+            npx lerna publish \
+              --no-git-tag-version \
+              --no-push \
+              --registry=http://localhost:4873/ \
+              --yes \
+              from-package
+      - store_artifacts:
+          path: ~/.config/verdaccio/storage/
+          destination: packed
+
+  Publish:
+    executor: node
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: Write Verdaccio config for dummy server w/ proxy
+          command: |
+            mkdir -p ~/.config/verdaccio/
+            cat \<<'EOF' > ~/.config/verdaccio/config.yaml
+            storage: ./storage
+            uplinks:
+              npmjs:
+                url: https://registry.npmjs.org/
+            publish:
+              allow_offline: false
+            packages:
+              '**':
+                access: $all
+                publish: $all
+                proxy: npmjs
+            logs:
+              - {type: stdout, format: pretty, level: http}
+            EOF
+      - install_and_start_verdaccio
+      - run:
+          name: Ensure $CIRCLE_TAG is set
+          command: |
+            # This should be set automatically on tag-triggered builds.
+            if [ -z "$CIRCLE_TAG" ]; then
+              echo 'ERROR! $CIRCLE_TAG is not set.'
+              exit 1
+            fi
+      - run:
+          name: Lerna publish
+          command: |
+            # Get the actual hash the tag points to.
+            TAG_REF="$(git rev-list -n1 "$CIRCLE_TAG")"
+
+            # Fail if we couldn't get it.
+            if [ -z "$TAG_REF" ]; then
+              echo "ERROR! Couldn't get \$TAG_REF."
+              exit 1
+            fi
+
+            # Ensure the annotated tag points to a 'Release' commit.
+            RELEASE_COMMIT_MSG="$(git log --format=%s -n 1 $TAG_REF)"
+            if ! echo "$RELEASE_COMMIT_MSG" | grep -qE '^Release$'; then
+              echo "ERROR! The 'publish/' tags must be on 'Release' commits."
+              exit 1
+            fi
+
+            # See if there are Lerna packages tagged (e.g. matching pkg@x.y.z)
+            # by checking what _tags_ point to the hash.  The expectation is
+            # that there _must_ be Lerna packages tagged in the same ref that
+            # the `publish/` tag points to.
+            TAGS="$(git tag --points-at $TAG_REF)"
+            NON_PUBLISH_TAGS="$(echo "$TAGS" | grep -vE '^publish/[0-9]+')"
+            if ! echo "$NON_PUBLISH_TAGS" | grep -E '^.+@.+$'; then
+              echo "ERROR! There must be at least some other packages tagged."
+              exit 1
+            fi
+
+            # Ensure the annotated publish tag is formatted expectedly.
+            # This could certainly be more defensive, but currently just ensures
+            # that the annotated message starts with 'Publish'.
+            PUBLISH_TAG_MSG="$(git tag -l --format='%(contents)' $CIRCLE_TAG)"
+            if ! echo "$PUBLISH_TAG_MSG" | grep -qE '^Publish'; then
+              echo "ERROR! The 'publish/' tags must be annotated correctly."
+              echo "       Be certain to use the npm-scripts when publishing."
+              exit 1
+            fi
+
+            # If there's a dist-tag, we'll publish to that instead of 'latest'.
+            DIST_TAG="$(echo "$PUBLISH_TAG_MSG" |
+              sed -E 's/^Publish($|( \(dist-tag:([a-z-]+)\))$)/\3/')"
+
+            # Default to latest if we couldn't extract anything from the
+            # annotated `publish/` tag.
+            if [ -z "$DIST_TAG" ]; then
+              DIST_TAG="latest"
+            fi
+
+            echo "Publishing to npm under the $DIST_TAG tag."
+
+            npx lerna publish --registry=http://localhost:4873 \
+              --dist-tag="$DIST_TAG" from-git --yes
+
+      - run:
+          name: Slack notification
+          command: |
+            if [ -z "$SLACK_WEBHOOK_URL" ]; then
+              exit 1
+            fi
+
+            cat \<<'EOM' | curl -X POST -H 'Content-type: application/json' --data @- $SLACK_WEBHOOK_URL
+            {
+              "text": "A new version has been published",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":npm:  *The following Apollo Server packages have been published to the `alpha` tag*\n\n> ⚠️🚧 This is just a test of an automated release pipeline."
+                  }
+                },
+                {
+                  "type": "divider"
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Packages:*\n\n• <https://npm.im/@apollo/server|`@apollo/server@3.y.z-alpha.0`>\n• <https://npm.im/apollo-server-azure-functions|`apollo-server-azure-functions@2.y.z`>\n• <https://npm.im/apollo-server-cloud-functions|`apollo-server-cloud-functions@2.y.z`>\n• <https://npm.im/apollo-server-cloudflare|`apollo-server-cloudflare@2.y.z`>\n• <https://npm.im/apollo-server-core|`apollo-server-core@2.y.z`>\n• <https://npm.im/apollo-server-express|`apollo-server-express@2.y.z`>\n• <https://npm.im/apollo-server-fastify|`apollo-server-fastify@2.y.z`>\n• <https://npm.im/apollo-server-hapi|`apollo-server-hapi@2.y.z`>\n• <https://npm.im/apollo-server-koa|`apollo-server-koa@2.y.z`>\n• <https://npm.im/apollo-server-lambda|`apollo-server-lambda@2.y.z`>\n• <https://npm.im/apollo-server-micro|`apollo-server-micro@2.y.z`>\n• <https://npm.im/apollo-server|`apollo-server@2.y.z`>"
+                  }
+                }
+              ]
+            }
+            EOM
+      - store_artifacts:
+          path: ~/.config/verdaccio/storage/
+          destination: published
+
 # XXX We used to use this filter to only run a "Docs" job on docs branches.
 #     Now we use it to disable all jobs. It's unclear if there's a simpler way
 #     to do this!
-ignore_doc_branches: &ignore_doc_branches
+common_job_filters: &common_job_filters
   filters:
     branches:
       # If 'docs' is found, with word boundaries on either side, skip.
       ignore: /.*?\bdocs\b.*/
+    # Ensure every job has `tags` filters since the publish steps have tags.
+    # This is some wild configuration thing that's pretty hard to figure out.
+    tags:
+      only: /.*/
 
 workflows:
   version: 2
-  Build and Test:
+  Build:
     jobs:
       - NodeJS 6:
-          <<: *ignore_doc_branches
+          <<: *common_job_filters
       - NodeJS 8:
-          <<: *ignore_doc_branches
+          <<: *common_job_filters
       - NodeJS 10:
-          <<: *ignore_doc_branches
+          <<: *common_job_filters
       - NodeJS 12:
-          <<: *ignore_doc_branches
+          <<: *common_job_filters
+      - Dry publish:
+          <<: *common_job_filters
+          requires:
+            - NodeJS 6
+            - NodeJS 8
+            - NodeJS 10
+            - NodeJS 12
+      - Publish:
+          requires:
+            - Dry publish
+          filters:
+            tags:
+              only: /^publish\/[0-9]+$/
+            # We want the publish to trigger on the above tags, not any branch.
+            branches:
+              ignore: /.*/
