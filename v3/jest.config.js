@@ -1,4 +1,5 @@
 module.exports = {
+  displayName: "v3",
   testEnvironment: "node",
   preset: "ts-jest",
   testPathIgnorePatterns: [

@@ -130,7 +130,8 @@
   },
   "jest": {
     "projects": [
-      "<rootDir>/packages/*"
+      "<rootDir>/packages/*",
+      "<rootDir>/v3/"
     ]
   }
 }
