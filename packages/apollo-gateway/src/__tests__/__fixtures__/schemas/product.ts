@@ -32,6 +32,7 @@ export const typeDefs = gql`
     name: String
     price: String
     brand: Brand
+    metadata: [MetadataOrError]
   }
 
   extend type Book implements Product @key(fields: "isbn") {
@@ -48,6 +49,21 @@ export const typeDefs = gql`
     id: String!
     price: String
   }
+
+  # Value type
+  type KeyValue {
+    key: String!
+    value: String!
+  }
+
+  # Value type
+  type Error {
+    code: Int
+    message: String
+  }
+
+  # Value type
+  union MetadataOrError = KeyValue | Error
 `;
 
 const products = [
@@ -61,6 +77,7 @@ const products = [
       __typename: 'Ikea',
       asile: 10,
     },
+    metadata: [{ key: 'Condition', value: 'excellent' }],
   },
   {
     __typename: 'Furniture',
@@ -72,6 +89,7 @@ const products = [
       __typename: 'Amazon',
       referrer: 'https://canopy.co',
     },
+    metadata: [{ key: 'Condition', value: 'used' }],
   },
   {
     __typename: 'Furniture',
@@ -83,6 +101,7 @@ const products = [
       __typename: 'Ikea',
       asile: 10,
     },
+    metadata: [{ key: 'Condition', value: 'like new' }],
   },
   { __typename: 'Book', isbn: '0262510871', price: 39 },
   { __typename: 'Book', isbn: '0136291554', price: 29 },
@@ -146,6 +165,11 @@ export const resolvers: GraphQLResolverMap<any> = {
     },
     topProducts(_, args) {
       return products.slice(0, args.first);
+    },
+  },
+  MetadataOrError: {
+    __resolveType(object) {
+      return 'key' in object ? 'KeyValue' : 'Error';
     },
   },
 };

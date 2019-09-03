@@ -15,6 +15,7 @@ import {
   isIntrospectionType,
   GraphQLSchema,
   GraphQLError,
+  VariableDefinitionNode,
 } from 'graphql';
 import { GraphQLSchemaValidationError } from 'apollo-graphql';
 import { composeAndValidate, ServiceDefinition } from '@apollo/federation';
@@ -38,6 +39,7 @@ import { serializeQueryPlan, QueryPlan, OperationContext } from './QueryPlan';
 import { GraphQLDataSource } from './datasources/types';
 import { RemoteGraphQLDataSource } from './datasources/RemoteGraphQLDataSource';
 import { HeadersInit } from 'node-fetch';
+import { getVariableValues } from 'graphql/execution/values';
 
 export type ServiceEndpointDefinition = Pick<ServiceDefinition, 'name' | 'url'>;
 
@@ -132,6 +134,11 @@ export type UpdateServiceDefinitions = (
 
 type Await<T> = T extends Promise<infer U> ? U : T;
 
+type RequestContext<TContext> = WithRequired<
+  GraphQLRequestContext<TContext>,
+  'document' | 'queryHash'
+>;
+
 export class ApolloGateway implements GraphQLService {
   public schema?: GraphQLSchema;
   protected serviceMap: ServiceMap = Object.create(null);
@@ -143,6 +150,7 @@ export class ApolloGateway implements GraphQLService {
   private onSchemaChangeListeners = new Set<SchemaChangeCallback>();
   private serviceDefinitions: ServiceDefinition[] = [];
   private compositionMetadata?: CompositionMetadata;
+  private serviceSdlCache = new Map<string, string>();
 
   // Observe query plan, service info, and operation info prior to execution.
   // The information made available here will give insight into the resulting
@@ -416,6 +424,7 @@ export class ApolloGateway implements GraphQLService {
         ...(config.introspectionHeaders
           ? { headers: config.introspectionHeaders }
           : {}),
+        serviceSdlCache: this.serviceSdlCache,
       });
     }
 
@@ -439,10 +448,7 @@ export class ApolloGateway implements GraphQLService {
   // are unlikely to show up as GraphQLErrors. Do we need to use
   // formatApolloErrors or something?
   public executor = async <TContext>(
-    requestContext: WithRequired<
-      GraphQLRequestContext<TContext>,
-      'document' | 'operation' | 'queryHash'
-    >,
+    requestContext: RequestContext<TContext>,
   ): Promise<GraphQLExecutionResult> => {
     const { request, document, queryHash } = requestContext;
     const queryPlanStoreKey = queryHash + (request.operationName || '');
@@ -451,7 +457,19 @@ export class ApolloGateway implements GraphQLService {
       document,
       request.operationName,
     );
-    let queryPlan;
+
+    // No need to build a query plan if we know the request is invalid beforehand
+    // In the future, this should be controlled by the requestPipeline
+    const validationErrors = this.validateIncomingRequest(
+      requestContext,
+      operationContext,
+    );
+
+    if (validationErrors.length > 0) {
+      return { errors: validationErrors };
+    }
+
+    let queryPlan: QueryPlan | undefined;
     if (this.queryPlanStore) {
       queryPlan = await this.queryPlanStore.get(queryPlanStoreKey);
     }
@@ -509,6 +527,25 @@ export class ApolloGateway implements GraphQLService {
     }
     return response;
   };
+
+  protected validateIncomingRequest<TContext>(
+    requestContext: RequestContext<TContext>,
+    operationContext: OperationContext,
+  ) {
+    // casting out of `readonly`
+    const variableDefinitions = operationContext.operation
+      .variableDefinitions as VariableDefinitionNode[] | undefined;
+
+    if (!variableDefinitions) return [];
+
+    const { errors } = getVariableValues(
+      operationContext.schema,
+      variableDefinitions,
+      requestContext.request.variables!,
+    );
+
+    return errors || [];
+  }
 
   private initializeQueryPlanStore(): void {
     this.queryPlanStore = new InMemoryLRUCache<QueryPlan>({

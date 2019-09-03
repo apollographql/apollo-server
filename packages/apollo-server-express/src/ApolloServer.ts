@@ -119,7 +119,7 @@ export class ApolloServer<TContext extends {} = {}> extends ApolloServerBase {
     bodyParserConfig,
     disableHealthCheck,
     onHealthCheck,
-  }: GetMiddlewareOptions = {}) {
+  }: GetMiddlewareOptions = {}): express.Router {
     if (!path) path = '/graphql';
 
     const router = express.Router();

@@ -27,10 +27,10 @@ import {
   parseSelections,
   mapFieldNamesToServiceName,
   stripExternalFieldsFromTypeDefs,
+  typeNodesAreEquivalent,
 } from './utils';
 import {
   ServiceDefinition,
-  ServiceName,
   ExternalFieldDefinition,
   ServiceNameToKeyDirectivesMap,
 } from './types';
@@ -79,7 +79,7 @@ interface ExtensionsMap {
  */
 interface TypeToServiceMap {
   [typeName: string]: {
-    serviceName?: ServiceName;
+    owningService?: string;
     extensionFieldsToOwningServiceMap: { [fieldName: string]: string };
   };
 }
@@ -99,6 +99,12 @@ interface TypeToServiceMap {
 export interface KeyDirectivesMap {
   [typeName: string]: ServiceNameToKeyDirectivesMap;
 }
+
+/**
+ * A set of type names that have been determined to be a value type, a type
+ * shared across at least 2 services.
+ */
+type ValueTypes = Set<string>;
 /**
  * Loop over each service and process its typeDefs (`definitions`)
  * - build up typeToServiceMap
@@ -110,6 +116,7 @@ export function buildMapsFromServiceList(serviceList: ServiceDefinition[]) {
   const typeToServiceMap: TypeToServiceMap = Object.create(null);
   const externalFields: ExternalFieldDefinition[] = [];
   const keyDirectivesMap: KeyDirectivesMap = Object.create(null);
+  const valueTypes: ValueTypes = new Set();
 
   for (const { typeDefs, name: serviceName } of serviceList) {
     // Build a new SDL with @external fields removed, as well as information about
@@ -156,20 +163,31 @@ export function buildMapsFromServiceList(serviceList: ServiceDefinition[]) {
          * 1. It was declared by a previous service, but this newer one takes precedence, or...
          * 2. It was extended by a service before declared
          */
-        if (typeToServiceMap[typeName]) {
-          typeToServiceMap[typeName].serviceName = serviceName;
-        } else {
+        if (!typeToServiceMap[typeName]) {
           typeToServiceMap[typeName] = {
-            serviceName,
             extensionFieldsToOwningServiceMap: Object.create(null),
           };
         }
 
+        typeToServiceMap[typeName].owningService = serviceName;
+
         /**
          * If this type already exists in the definitions map, push this definition to the array (newer defs
-         * take precedence). If not, create the definitions array and add it to the definitionsMap.
+         * take precedence). If the types are determined to be identical, add the type name
+         * to the valueTypes Set.
+         *
+         * If not, create the definitions array and add it to the definitionsMap.
          */
         if (definitionsMap[typeName]) {
+          const isValueType = typeNodesAreEquivalent(
+            definitionsMap[typeName][definitionsMap[typeName].length - 1],
+            definition,
+          );
+
+          if (isValueType) {
+            valueTypes.add(typeName);
+          }
+
           definitionsMap[typeName].push({ ...definition, serviceName });
         } else {
           definitionsMap[typeName] = [{ ...definition, serviceName }];
@@ -257,6 +275,7 @@ export function buildMapsFromServiceList(serviceList: ServiceDefinition[]) {
     extensionsMap,
     externalFields,
     keyDirectivesMap,
+    valueTypes,
   };
 }
 
@@ -297,32 +316,38 @@ export function buildSchemaFromDefinitionsAndExtensions({
 }
 
 /**
- * Using the typeToServiceMap, augment the passed in `schema` to add `federation` metadata to the types and
- * fields
+ * Using the various information we've collected about the schema, augment the
+ * `schema` itself with `federation` metadata to the types and fields
  */
 export function addFederationMetadataToSchemaNodes({
   schema,
   typeToServiceMap,
   externalFields,
   keyDirectivesMap,
+  valueTypes,
 }: {
   schema: GraphQLSchema;
   typeToServiceMap: TypeToServiceMap;
   externalFields: ExternalFieldDefinition[];
   keyDirectivesMap: KeyDirectivesMap;
+  valueTypes: ValueTypes;
 }) {
   for (const [
     typeName,
-    { serviceName: baseServiceName, extensionFieldsToOwningServiceMap },
+    { owningService, extensionFieldsToOwningServiceMap },
   ] of Object.entries(typeToServiceMap)) {
     const namedType = schema.getType(typeName) as GraphQLNamedType;
     if (!namedType) continue;
 
     // Extend each type in the GraphQLSchema with the serviceName that owns it
     // and the key directives that belong to it
+    const isValueType = valueTypes.has(typeName);
+    const serviceName = isValueType ? null : owningService;
+
     namedType.federation = {
       ...namedType.federation,
-      serviceName: baseServiceName,
+      serviceName,
+      isValueType,
       ...(keyDirectivesMap[typeName] && {
         keys: keyDirectivesMap[typeName],
       }),
@@ -343,10 +368,11 @@ export function addFederationMetadataToSchemaNodes({
         ) {
           field.federation = {
             ...field.federation,
-            serviceName: baseServiceName,
+            serviceName,
             provides: parseSelections(
               providesDirective.arguments[0].value.value,
             ),
+            belongsToValueType: isValueType,
           };
         }
       }
@@ -417,6 +443,7 @@ export function composeServices(services: ServiceDefinition[]) {
     extensionsMap,
     externalFields,
     keyDirectivesMap,
+    valueTypes,
   } = buildMapsFromServiceList(services);
 
   let { schema, errors } = buildSchemaFromDefinitionsAndExtensions({
@@ -462,6 +489,7 @@ export function composeServices(services: ServiceDefinition[]) {
     typeToServiceMap,
     externalFields,
     keyDirectivesMap,
+    valueTypes,
   });
 
   /**

@@ -198,7 +198,6 @@ export interface AddTraceArgs {
 
 const serviceHeaderDefaults = {
   hostname: os.hostname(),
-  // tslint:disable-next-line no-var-requires
   agentVersion: `apollo-engine-reporting@${require('../package.json').version}`,
   runtimeVersion: `node ${process.version}`,
   // XXX not actually uname, but what node has easily.
@@ -354,7 +353,6 @@ export class EngineReportingAgent<TContext = any> {
     await Promise.resolve();
 
     if (this.options.debugPrintReports) {
-      // tslint:disable-next-line no-console
       console.log(`Engine sending report: ${JSON.stringify(report.toJSON())}`);
     }
 
@@ -403,31 +401,35 @@ export class EngineReportingAgent<TContext = any> {
         });
 
         if (curResponse.status >= 500 && curResponse.status < 600) {
-          throw new Error(`${curResponse.status}: ${curResponse.statusText}`);
+          throw new Error(
+            `HTTP status ${curResponse.status}, ${(await curResponse.text()) ||
+              '(no body)'}`,
+          );
         } else {
           return curResponse;
         }
       },
       {
-        retries: this.options.maxAttempts || 5,
+        retries: (this.options.maxAttempts || 5) - 1,
         minTimeout: this.options.minimumRetryDelayMs || 100,
         factor: 2,
       },
     ).catch((err: Error) => {
-      throw new Error(`Error sending report to Apollo Engine servers: ${err}`);
+      throw new Error(
+        `Error sending report to Apollo Engine servers: ${err.message}`,
+      );
     });
 
     if (response.status < 200 || response.status >= 300) {
       // Note that we don't expect to see a 3xx here because request follows
       // redirects.
       throw new Error(
-        `Error sending report to Apollo Engine servers (HTTP status ${
+        `Error sending report to Apollo Engine servers: HTTP status ${
           response.status
-        }): ${await response.text()}`,
+        }, ${(await response.text()) || '(no body)'}`,
       );
     }
     if (this.options.debugPrintReports) {
-      // tslint:disable-next-line no-console
       console.log(`Engine report: status ${response.status}`);
     }
   }
