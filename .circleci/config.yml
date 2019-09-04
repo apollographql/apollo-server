@@ -249,7 +249,7 @@ jobs:
 
             # Add bullet-points and links to the markdown links.
             MARKDOWN_VERSIONS="$(echo "$VERSION_TAGS" |
-              sed -E 's%^(.+)@(.+)$%• <https://npm.im/\1|`\1@\2`>%')"
+              sed -E 's%^(.+)@(.+)$%• <https://npm.im/\1|`\1@\2`>%\\n')"
 
             cat \<<EOM | curl -X POST -H 'Content-type: application/json' --data @- $SLACK_WEBHOOK_URL
             {
