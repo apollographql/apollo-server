@@ -458,7 +458,6 @@ workflows:
             - NodeJS 8
             - NodeJS 10
             - NodeJS 12
-            - Package tarballs
       - Dry-run and confirmation:
           <<: *common_publish_filters
           requires:
