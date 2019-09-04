@@ -98,10 +98,15 @@ jobs:
       # time, this also ensures that a passing version gets deployed even if,
       # theoretically, rebuilding the same commit on the same version of
       # Node.js should yield the same results!
+      # Note: We'll backup 'project' relative to the home directory, where
+      # 'project' is the default 'working_directory'.  We do this from the root
+      # because we'll also write other files into the root that we need and
+      # want restored (and shared across jobs).
       - persist_to_workspace:
-          root: .
+          root: ~
           paths:
-            - ./**
+            # 'project' is the default 'working_directory'.
+            - ./project/
 
   NodeJS 12:
     executor: { name: node, tag: '12' }
@@ -115,7 +120,7 @@ jobs:
       # This has the benefit of only publishing the exact build that we tested,
       # in addition to not having to re-build it another time.
       - attach_workspace:
-          at: .
+          at: ~
       - run:
           name: Write Verdaccio config for dummy server W/O proxy
           command: |
@@ -159,13 +164,25 @@ jobs:
     executor: node
     steps:
       - attach_workspace:
-          at: .
+          at: ~
       - run:
-          name: Generate publish environment script
+          name: Generate publish environment scripts
           command: |
-            # Everything from here down to END_OF_SCRIPT is written to a file.
-            # The file is sourced in later jobs for its exported env vars.
+            # Make the scripts directory, apply executable bits and write the
+            # script out to the file. Everything from the 'cat' down to the
+            # HEREDOC closing ('END_OF_SCRIPT') is written to the file. The
+            # contents of this file are then sourced (for their exported
+            # environment variables in later steps). Note that we don't chmod
+            # after writing the script since it ends up being a lone, easily
+            # missed line after 'END_OF_SCRIPT'.
+            mkdir -p ~/scripts/
+            touch ~/scripts/apollo-setup-publish-env
+            chmod +x ~/apollo-setup-publish-env
             cat \<<'END_OF_SCRIPT' > ~/apollo-setup-publish-env
+
+            #
+            # NOTE! This is being output as a file, not evaluated immediately!
+            #
 
             # This should be set automatically on tag-triggered builds.
             if [ -z "$CIRCLE_TAG" ]; then
@@ -230,19 +247,16 @@ jobs:
             export MARKDOWN_VERSIONS
 
             END_OF_SCRIPT
-
-            # Make the script executable.
-            chmod +x ~/apollo-setup-publish-env
       - persist_to_workspace:
-          root: .
+          root: ~
           paths:
-            - ./apollo-setup-publish-env
+            - ./scripts/apollo-setup-publish-env
 
   Dry-run:
     executor: node
     steps:
       - attach_workspace:
-          at: .
+          at: ~
       - run:
           name: Write Verdaccio config for dummy server w/ proxy
           command: |
@@ -325,7 +339,7 @@ jobs:
     executor: node
     steps:
       - attach_workspace:
-          at: .
+          at: ~
       # XXX: This step will go away.
       - run:
           name: Write Verdaccio config for dummy server w/ proxy
