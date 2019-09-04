@@ -180,8 +180,8 @@ jobs:
             # missed line after 'END_OF_SCRIPT'.
             mkdir -p ~/scripts/
             touch ~/scripts/apollo-setup-publish-env
-            chmod +x ~/apollo-setup-publish-env
-            cat \<<'END_OF_SCRIPT' > ~/apollo-setup-publish-env
+            chmod +x ~/scripts/apollo-setup-publish-env
+            cat \<<'END_OF_SCRIPT' > ~/scripts/apollo-setup-publish-env
 
             #
             # NOTE! This is being output as a file, not evaluated immediately!
@@ -285,12 +285,12 @@ jobs:
       - run:
           name: Dry-run publish and Slack notification
           command: |
-            if [ ! -x ~/apollo-setup-publish-env ]; then
-              echo "The ~/apollo-setup-publish-env script is not executable."
+            if [ ! -x ~/scripts/apollo-setup-publish-env ]; then
+              echo "~/scripts/apollo-setup-publish-env is not executable."
               exit 1
             fi
 
-            source ~/apollo-setup-publish-env
+            source ~/scripts/apollo-setup-publish-env
 
             echo "Fake publishing to npm under the $DIST_TAG tag."
 
@@ -371,12 +371,12 @@ jobs:
       - run:
           name: Publish
           command: |
-            if [ ! -x ~/apollo-setup-publish-env ]; then
-              echo "The ~/apollo-setup-publish-env script is not executable."
+            if [ ! -x ~/scripts/apollo-setup-publish-env ]; then
+              echo "~/scripts/apollo-setup-publish-env is not executable."
               exit 1
             fi
 
-            source ~/apollo-setup-publish-env
+            source ~/scripts/apollo-setup-publish-env
 
             echo "Publishing to npm under the $DIST_TAG tag."
 
