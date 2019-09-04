@@ -212,7 +212,7 @@ jobs:
             TAGS="$(git tag --points-at $TAG_REF)"
             NON_PUBLISH_TAGS="$(echo "$TAGS" | grep -vE '^publish/[0-9]+')"
             VERSION_TAGS="$(echo "$NON_PUBLISH_TAGS" | grep -E '^.+@.+$')"
-            if [ -z $VERSION_TAGS ]; then
+            if [ -z "$VERSION_TAGS" ]; then
               echo "ERROR! There must be at least some other packages tagged."
               exit 1
             fi
