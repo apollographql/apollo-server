@@ -194,16 +194,16 @@ jobs:
             fi
 
             # Get the actual hash the tag points to.
-            TAG_REF="$(git rev-list -n1 "$CIRCLE_TAG")"
+            tag_ref="$(git rev-list -n1 "$CIRCLE_TAG")"
 
             # Fail if we couldn't get it.
-            if [ -z "$TAG_REF" ]; then
-              echo "ERROR! Couldn't get \$TAG_REF."
+            if [ -z "$tag_ref" ]; then
+              echo "ERROR! Couldn't get \$tag_ref."
               exit 1
             fi
 
             # Ensure the annotated tag points to a 'Release' commit.
-            RELEASE_COMMIT_MSG="$(git log --format=%s -n 1 $TAG_REF)"
+            RELEASE_COMMIT_MSG="$(git log --format=%s -n 1 $tag_ref)"
             if ! echo "$RELEASE_COMMIT_MSG" | grep -qE '^Release$'; then
               echo "ERROR! The 'publish/' tags must be on 'Release' commits."
               exit 1
@@ -213,10 +213,10 @@ jobs:
             # by checking what _tags_ point to the hash.  The expectation is
             # that there _must_ be Lerna packages tagged in the same ref that
             # the `publish/` tag points to.
-            TAGS="$(git tag --points-at $TAG_REF)"
-            NON_PUBLISH_TAGS="$(echo "$TAGS" | grep -vE '^publish/[0-9]+')"
-            VERSION_TAGS="$(echo "$NON_PUBLISH_TAGS" | grep -E '^.+@.+$')"
-            if [ -z "$VERSION_TAGS" ]; then
+            tags="$(git tag --points-at $tag_ref)"
+            non_publish_tags="$(echo "$tags" | grep -vE '^publish/[0-9]+')"
+            version_tags="$(echo "$non_publish_tags" | grep -E '^.+@.+$')"
+            if [ -z "$version_tags" ]; then
               echo "ERROR! There must be at least some other packages tagged."
               exit 1
             fi
@@ -224,15 +224,15 @@ jobs:
             # Ensure the annotated publish tag is formatted expectedly.
             # This could certainly be more defensive, but currently just ensures
             # that the annotated message starts with 'Publish'.
-            PUBLISH_TAG_MSG="$(git tag -l --format='%(contents)' $CIRCLE_TAG)"
-            if ! echo "$PUBLISH_TAG_MSG" | grep -qE '^Publish'; then
+            publish_tag_msg="$(git tag -l --format='%(contents)' $CIRCLE_TAG)"
+            if ! echo "$publish_tag_msg" | grep -qE '^Publish'; then
               echo "ERROR! The 'publish/' tags must be annotated correctly."
               echo "       Be certain to use the npm-scripts when publishing."
               exit 1
             fi
 
             # If there's a dist-tag, we'll publish to that instead of 'latest'.
-            DIST_TAG="$(echo "$PUBLISH_TAG_MSG" |
+            DIST_TAG="$(echo "$publish_tag_msg" |
               sed -E 's/^Publish($|( \(dist-tag:([a-z-]+)\))$)/\3/')"
 
             # Default to latest if we couldn't extract anything from the
@@ -242,7 +242,7 @@ jobs:
             fi
 
             # Add bullet-points and links to the markdown links.
-            MARKDOWN_VERSIONS="$(echo "$VERSION_TAGS" |
+            MARKDOWN_VERSIONS="$(echo "$version_tags" |
               sed -E 's%^(.+)@(.+)$%• <https://npm.im/\1|\`\1@\2\`>\\n%')"
 
             # These are exported for use in later scripts.
@@ -295,7 +295,18 @@ jobs:
             echo "Fake publishing to npm under the $DIST_TAG tag."
 
             npx lerna publish --registry=http://localhost:4873 \
-              --dist-tag="$DIST_TAG" from-git --yes
+              --dist-tag="$DIST_TAG" from-git --yes |
+              tee ~/lerna-output.txt
+
+            # Sorry, not sorry.  Perl is super standard on most images because
+            # of its continued usage in many build systems and is too easy to
+            # do multi-line text extraction with.  Perl pie for the win.
+            to_publish="$(perl -0777 \
+              -nle 'print "$1" while /^Found.*to publish:\n(.+)^$/msg' \
+              ~/lerna-output.txt)"
+
+            markdown_to_publish="$(echo "$to_publish" |
+              sed -E 's%^(.+)@(.+)$%• <https://npm.im/\1|\`\1@\2\`>\\n%')"
 
             if [ -z "$SLACK_WEBHOOK_URL" ]; then
               echo 'Cannot post to Slack because $SLACK_WEBHOOK_URL is not set.'
@@ -304,13 +315,13 @@ jobs:
 
             cat \<<EOM | curl -X POST -H 'Content-type: application/json' --data @- $SLACK_WEBHOOK_URL
             {
-              "text": "New packages have been FAKE published to the \`$DIST_TAG\` tag:\n\n$MARKDOWN_VERSIONS",
+              "text": "A package publish is waiting for approval.  To approve, please visit $CIRCLE_BUILD_URL",
               "blocks": [
                 {
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": ":npm:  *The following packages have been published to the \`$DIST_TAG\` tag*\n\n> ⚠️🚧 This is not real *yet*.\n\n*Packages:*\n\n$MARKDOWN_VERSIONS"
+                    "text": ":wave:  *Approval needed to publish the following to the \`$DIST_TAG\` tag*\n\n> ⚠️🚧 This is not real *yet*.\n\n*Packages:*\n\n$markdown_to_publish"
                   }
                 }
               ]
