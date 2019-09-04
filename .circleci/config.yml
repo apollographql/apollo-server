@@ -306,7 +306,7 @@ jobs:
               ~/lerna-output.txt)"
 
             markdown_to_publish="$(echo "$to_publish" |
-              sed -E 's%^(.+)@(.+)$%• <https://npm.im/\1|\`\1@\2\`>\\n%')"
+              sed -E 's%^ - (.+) => (.+)$%• \`\1\` :point_right: \`\2\`\\n%')"
 
             if [ -z "$SLACK_WEBHOOK_URL" ]; then
               echo 'Cannot post to Slack because $SLACK_WEBHOOK_URL is not set.'
@@ -321,7 +321,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": ":wave:  *Approval needed to publish the following to the \`$DIST_TAG\` tag*\n\n> ⚠️🚧 This is not real *yet*.\n\n*Packages:*\n\n$markdown_to_publish"
+                    "text": ":wave:  *Approval needed to publish the following to the \`$DIST_TAG\` tag*:\n\n> ⚠️🚧 This is not real *yet*.\n\n*Packages:*\n\n$markdown_to_publish"
                   }
                 }
               ]
