@@ -103,7 +103,8 @@ jobs:
       # because we'll also write other files into the root that we need and
       # want restored (and shared across jobs).
       - persist_to_workspace:
-          root: ~
+          # 'working_directory' is '~/project', so this should be $HOME.
+          root: ..
           paths:
             # 'project' is the default 'working_directory'.
             - ./project/
@@ -120,7 +121,8 @@ jobs:
       # This has the benefit of only publishing the exact build that we tested,
       # in addition to not having to re-build it another time.
       - attach_workspace:
-          at: ~
+          # 'working_directory' is '~/project', so this should be $HOME.
+          at: ..
       - run:
           name: Write Verdaccio config for dummy server W/O proxy
           command: |
@@ -164,7 +166,8 @@ jobs:
     executor: node
     steps:
       - attach_workspace:
-          at: ~
+          # 'working_directory' is '~/project', so this should be $HOME.
+          at: ..
       - run:
           name: Generate publish environment scripts
           command: |
@@ -248,7 +251,8 @@ jobs:
 
             END_OF_SCRIPT
       - persist_to_workspace:
-          root: ~
+          # 'working_directory' is '~/project', so this should be $HOME.
+          root: ..
           paths:
             - ./scripts/apollo-setup-publish-env
 
@@ -256,7 +260,8 @@ jobs:
     executor: node
     steps:
       - attach_workspace:
-          at: ~
+          # 'working_directory' is '~/project', so this should be $HOME.
+          at: ..
       - run:
           name: Write Verdaccio config for dummy server w/ proxy
           command: |
@@ -339,7 +344,8 @@ jobs:
     executor: node
     steps:
       - attach_workspace:
-          at: ~
+          # 'working_directory' is '~/project', so this should be $HOME.
+          at: ..
       # XXX: This step will go away.
       - run:
           name: Write Verdaccio config for dummy server w/ proxy
