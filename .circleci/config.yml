@@ -264,6 +264,29 @@ jobs:
               ]
             }
             EOM
+      - run:
+          name: Post to Slack on Failure
+          command: |
+            if [ -z "$SLACK_WEBHOOK_URL" ]; then
+              echo 'Cannot post failure to Slack because $SLACK_WEBHOOK_URL is not set.'
+              exit 1
+            fi
+
+            cat \<<EOM | curl -X POST -H 'Content-type: application/json' --data @- $SLACK_WEBHOOK_URL
+            {
+              "text": "A failure occurred during publishing.  For more information, see $CIRCLE_BUILD_URL.",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":boom: *Failure during publishing!* :broken_heart:\n\n<$CIRCLE_BUILD_URL|See the build details for more information!>"
+                  }
+                }
+              ]
+            }
+            EOM
+          when: on_fail
       - store_artifacts:
           path: ~/.config/verdaccio/storage/
           destination: published
