@@ -308,6 +308,8 @@ jobs:
             markdown_to_publish="$(echo "$to_publish" |
               sed -E 's%^ - (.+) => (.+)$%• \`\1\` :point_right: \`\2\`\\n%')"
 
+            workflow_url="https://circleci.com/workflow-run/$CIRCLE_WORKFLOW_ID"
+
             if [ -z "$SLACK_WEBHOOK_URL" ]; then
               echo 'Cannot post to Slack because $SLACK_WEBHOOK_URL is not set.'
               exit 1
@@ -321,7 +323,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": ":wave:  *Approval needed to publish the following to the \`$DIST_TAG\` tag*:\n\n> ⚠️🚧 This is not real *yet*.\n\n*Packages:*\n\n$markdown_to_publish\n\n*<$CIRCLE_BUILD_URL|Visit the build and click the _Confirmation_ job to approve it!>*"
+                    "text": ":wave:  *Approval needed to publish the following to the \`$DIST_TAG\` tag*:\n\n> ⚠️🚧 This is not real *yet*.\n\n*Packages:*\n\n$markdown_to_publish\n\n*<$workflow_url|Visit the build and click the _Confirmation_ job to approve it!>*"
                   }
                 }
               ]
