@@ -181,8 +181,12 @@ jobs:
             EOF
       - install_and_start_verdaccio
       - run:
-          name: Publish
+          name: Emit publish script
           command: |
+            # Everything from here down to END_OF_SCRIPT is written to a file.
+            # This file is then executed later in subsequent jobs.
+            cat \<<'END_OF_SCRIPT' > ~/apollo-setup-publish-env
+
             # This should be set automatically on tag-triggered builds.
             if [ -z "$CIRCLE_TAG" ]; then
               echo 'ERROR! $CIRCLE_TAG is not set.'
@@ -237,18 +241,69 @@ jobs:
               DIST_TAG="latest"
             fi
 
+            # Add bullet-points and links to the markdown links.
+            MARKDOWN_VERSIONS="$(echo "$VERSION_TAGS" |
+              sed -E 's%^(.+)@(.+)$%• <https://npm.im/\1|\`\1@\2\`>\\n%')"
+
+            export DIST_TAG
+            export MARKDOWN_VERSIONS
+
+            END_OF_SCRIPT
+
+            chmod +x ~/apollo-setup-publish-env
+      - run:
+          name: Pre-publish confirmation
+          command: |
+            if [ ! -x ~/apollo-setup-publish-env ]; then
+              echo "The ~/apollo-setup-publish-env script is not executable."
+              exit 1
+            fi
+
+            source ~/apollo-setup-publish-env
+
+            echo "Fake publishing to npm under the $DIST_TAG tag."
+
+            npx lerna publish --registry=http://localhost:4873 \
+              --dist-tag="$DIST_TAG" from-git --yes
+
+            if [ -z "$SLACK_WEBHOOK_URL" ]; then
+              echo 'Cannot post to Slack because $SLACK_WEBHOOK_URL is not set.'
+              exit 1
+            fi
+
+            cat \<<EOM | curl -X POST -H 'Content-type: application/json' --data @- $SLACK_WEBHOOK_URL
+            {
+              "text": "New packages have been FAKE published to the \`$DIST_TAG\` tag:\n\n$MARKDOWN_VERSIONS",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":npm:  *The following packages have been published to the \`$DIST_TAG\` tag*\n\n> ⚠️🚧 This is not real *yet*.\n\n*Packages:*\n\n$MARKDOWN_VERSIONS"
+                  }
+                }
+              ]
+            }
+            EOM
+      - run:
+          name: Publish
+          command: |
+            if [ ! -x ~/apollo-setup-publish-env ]; then
+              echo "The ~/apollo-setup-publish-env script is not executable."
+              exit 1
+            fi
+
+            source ~/apollo-setup-publish-env
+
             echo "Publishing to npm under the $DIST_TAG tag."
 
             npx lerna publish --registry=http://localhost:4873 \
               --dist-tag="$DIST_TAG" from-git --yes
 
             if [ -z "$SLACK_WEBHOOK_URL" ]; then
+              echo 'Cannot post to Slack because $SLACK_WEBHOOK_URL is not set.'
               exit 1
             fi
-
-            # Add bullet-points and links to the markdown links.
-            MARKDOWN_VERSIONS="$(echo "$VERSION_TAGS" |
-              sed -E 's%^(.+)@(.+)$%• <https://npm.im/\1|\`\1@\2\`>\\n%')"
 
             cat \<<EOM | curl -X POST -H 'Content-type: application/json' --data @- $SLACK_WEBHOOK_URL
             {
