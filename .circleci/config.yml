@@ -155,36 +155,16 @@ jobs:
           path: ~/.config/verdaccio/storage/
           destination: packed
 
-  Publish:
+  Pre-publish:
     executor: node
     steps:
       - attach_workspace:
           at: .
       - run:
-          name: Write Verdaccio config for dummy server w/ proxy
-          command: |
-            mkdir -p ~/.config/verdaccio/
-            cat \<<'EOF' > ~/.config/verdaccio/config.yaml
-            storage: ./storage
-            uplinks:
-              npmjs:
-                url: https://registry.npmjs.org/
-            publish:
-              allow_offline: false
-            packages:
-              '**':
-                access: $all
-                publish: $all
-                proxy: npmjs
-            logs:
-              - {type: stdout, format: pretty, level: http}
-            EOF
-      - install_and_start_verdaccio
-      - run:
-          name: Emit publish script
+          name: Generate publish environment script
           command: |
             # Everything from here down to END_OF_SCRIPT is written to a file.
-            # This file is then executed later in subsequent jobs.
+            # The file is sourced in later jobs for its exported env vars.
             cat \<<'END_OF_SCRIPT' > ~/apollo-setup-publish-env
 
             # This should be set automatically on tag-triggered builds.
@@ -245,14 +225,46 @@ jobs:
             MARKDOWN_VERSIONS="$(echo "$VERSION_TAGS" |
               sed -E 's%^(.+)@(.+)$%• <https://npm.im/\1|\`\1@\2\`>\\n%')"
 
+            # These are exported for use in later scripts.
             export DIST_TAG
             export MARKDOWN_VERSIONS
 
             END_OF_SCRIPT
 
+            # Make the script executable.
             chmod +x ~/apollo-setup-publish-env
+      - persist_to_workspace:
+          root: .
+          paths:
+            - ./apollo-setup-publish-env
+
+  Dry-run and confirmation:
+    executor: node
+    steps:
+      - attach_workspace:
+          at: .
       - run:
-          name: Pre-publish confirmation
+          name: Write Verdaccio config for dummy server w/ proxy
+          command: |
+            mkdir -p ~/.config/verdaccio/
+            cat \<<'EOF' > ~/.config/verdaccio/config.yaml
+            storage: ./storage
+            uplinks:
+              npmjs:
+                url: https://registry.npmjs.org/
+            publish:
+              allow_offline: false
+            packages:
+              '**':
+                access: $all
+                publish: $all
+                proxy: npmjs
+            logs:
+              - {type: stdout, format: pretty, level: http}
+            EOF
+      - install_and_start_verdaccio
+      - run:
+          name: Dry-run publish and confirmation
           command: |
             if [ ! -x ~/apollo-setup-publish-env ]; then
               echo "The ~/apollo-setup-publish-env script is not executable."
@@ -286,6 +298,57 @@ jobs:
             }
             EOM
       - run:
+          name: Post to Slack on Failure
+          command: |
+            if [ -z "$SLACK_WEBHOOK_URL" ]; then
+              echo 'Cannot post failure to Slack because $SLACK_WEBHOOK_URL is not set.'
+              exit 1
+            fi
+
+            cat \<<EOM | curl -X POST -H 'Content-type: application/json' --data @- $SLACK_WEBHOOK_URL
+            {
+              "text": "A failure occurred during PRE-publishing.  For more information, see $CIRCLE_BUILD_URL.",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":boom: *Failure during _PRE_-publishing!* :boom:\n\n<$CIRCLE_BUILD_URL|See the build details for more information!>"
+                  }
+                }
+              ]
+            }
+            EOM
+          when: on_fail
+
+  Publish:
+    executor: node
+    steps:
+      - attach_workspace:
+          at: .
+      # XXX: This step will go away.
+      - run:
+          name: Write Verdaccio config for dummy server w/ proxy
+          command: |
+            mkdir -p ~/.config/verdaccio/
+            cat \<<'EOF' > ~/.config/verdaccio/config.yaml
+            storage: ./storage
+            uplinks:
+              npmjs:
+                url: https://registry.npmjs.org/
+            publish:
+              allow_offline: false
+            packages:
+              '**':
+                access: $all
+                publish: $all
+                proxy: npmjs
+            logs:
+              - {type: stdout, format: pretty, level: http}
+            EOF
+      # XXX: This step will go away.
+      - install_and_start_verdaccio
+      - run:
           name: Publish
           command: |
             if [ ! -x ~/apollo-setup-publish-env ]; then
@@ -297,6 +360,7 @@ jobs:
 
             echo "Publishing to npm under the $DIST_TAG tag."
 
+            # XXX: The --registry flag will go away.
             npx lerna publish --registry=http://localhost:4873 \
               --dist-tag="$DIST_TAG" from-git --yes
 
@@ -349,7 +413,7 @@ jobs:
 # XXX We used to use this filter to only run a "Docs" job on docs branches.
 #     Now we use it to disable all jobs. It's unclear if there's a simpler way
 #     to do this!
-common_job_filters: &common_job_filters
+common_non_publish_filters: &common_non_publish_filters
   filters:
     branches:
       # If 'docs' is found, with word boundaries on either side, skip.
@@ -359,31 +423,39 @@ common_job_filters: &common_job_filters
     tags:
       only: /.*/
 
+common_publish_filters: &common_publish_filters
+  filters:
+    # Only run pre-publish and publish steps on specific tags.
+    tags:
+      only: /^publish\/[0-9]+$/
+    # We want the publish to trigger on the above tag, not any branch.
+    branches:
+      ignore: /.*/
+
 workflows:
   version: 2
   Build:
     jobs:
       - NodeJS 6:
-          <<: *common_job_filters
+          <<: *common_non_publish_filters
       - NodeJS 8:
-          <<: *common_job_filters
+          <<: *common_non_publish_filters
       - NodeJS 10:
-          <<: *common_job_filters
+          <<: *common_non_publish_filters
       - NodeJS 12:
-          <<: *common_job_filters
-      - Dry-run publish:
-          <<: *common_job_filters
+          <<: *common_non_publish_filters
+      - Pre-publish:
+          <<: *common_non_publish_filters
           requires:
             - NodeJS 6
             - NodeJS 8
             - NodeJS 10
             - NodeJS 12
-      - Publish:
+      - Dry-run and confirmation:
+          <<: *common_non_publish_filters
           requires:
-            - Dry-run publish
-          filters:
-            tags:
-              only: /^publish\/[0-9]+$/
-            # We want the publish to trigger on the above tags, not any branch.
-            branches:
-              ignore: /.*/
+            - Pre-publish
+      - Publish:
+          <<: *common_publish_filters
+          requires:
+            - Dry-run and confirmation
