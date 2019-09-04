@@ -238,7 +238,7 @@ jobs:
           paths:
             - ./apollo-setup-publish-env
 
-  Dry-run and confirmation:
+  Dry-run:
     executor: node
     steps:
       - attach_workspace:
@@ -264,7 +264,7 @@ jobs:
             EOF
       - install_and_start_verdaccio
       - run:
-          name: Dry-run publish and confirmation
+          name: Dry-run publish and Slack notification
           command: |
             if [ ! -x ~/apollo-setup-publish-env ]; then
               echo "The ~/apollo-setup-publish-env script is not executable."
@@ -458,11 +458,16 @@ workflows:
             - NodeJS 8
             - NodeJS 10
             - NodeJS 12
-      - Dry-run and confirmation:
+      - Dry-run:
           <<: *common_publish_filters
           requires:
             - Pre-publish
+      - Confirmation:
+          type: approval
+          <<: *common_publish_filters
+          requires:
+            - Dry-run
       - Publish:
           <<: *common_publish_filters
           requires:
-            - Dry-run and confirmation
+            - Confirmation
