@@ -321,7 +321,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": ":wave:  *Approval needed to publish the following to the \`$DIST_TAG\` tag*:\n\n> ⚠️🚧 This is not real *yet*.\n\n*Packages:*\n\n$markdown_to_publish"
+                    "text": ":wave:  *Approval needed to publish the following to the \`$DIST_TAG\` tag*:\n\n> ⚠️🚧 This is not real *yet*.\n\n*Packages:*\n\n$markdown_to_publish\n\n*<$CIRCLE_BUILD_URL|Visit the build and click the _Confirmation_ job to approve it!>*"
                   }
                 }
               ]
