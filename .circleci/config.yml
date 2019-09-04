@@ -280,7 +280,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": ":boom: *Failure during publishing!* :broken_heart:\n\n<$CIRCLE_BUILD_URL|See the build details for more information!>"
+                    "text": ":boom: *Failure during publishing!* :boom:\n\n<$CIRCLE_BUILD_URL|See the build details for more information!>"
                   }
                 }
               ]
