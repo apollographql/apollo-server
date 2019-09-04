@@ -251,15 +251,15 @@ jobs:
             MARKDOWN_VERSIONS="$(echo "$VERSION_TAGS" |
               sed -E 's%^(.+)@(.+)$%• <https://npm.im/\1|`\1@\2`>%')"
 
-            cat \<<"EOM" | curl -X POST -H 'Content-type: application/json' --data @- $SLACK_WEBHOOK_URL
+            cat \<<EOM | curl -X POST -H 'Content-type: application/json' --data @- $SLACK_WEBHOOK_URL
             {
-              "text": "New packages have been published to the `$DIST_TAG` tag:\n\n$MARKDOWN_VERSIONS",
+              "text": "New packages have been published to the \`$DIST_TAG\` tag:\n\n$MARKDOWN_VERSIONS",
               "blocks": [
                 {
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": ":npm:  *The following packages have been published to the `$DIST_TAG` tag*\n\n> ⚠️🚧 This is not real *yet*.\n\n*Packages:*\n\n$MARKDOWN_VERSIONS"
+                    "text": ":npm:  *The following packages have been published to the \`$DIST_TAG\` tag*\n\n> ⚠️🚧 This is not real *yet*.\n\n*Packages:*\n\n$MARKDOWN_VERSIONS"
                   }
                 }
               ]
