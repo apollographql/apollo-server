@@ -182,16 +182,14 @@ jobs:
             EOF
       - install_and_start_verdaccio
       - run:
-          name: Ensure $CIRCLE_TAG is set
+          name: Publish
           command: |
             # This should be set automatically on tag-triggered builds.
             if [ -z "$CIRCLE_TAG" ]; then
               echo 'ERROR! $CIRCLE_TAG is not set.'
               exit 1
             fi
-      - run:
-          name: Publish
-          command: |
+
             # Get the actual hash the tag points to.
             TAG_REF="$(git rev-list -n1 "$CIRCLE_TAG")"
 
@@ -214,7 +212,8 @@ jobs:
             # the `publish/` tag points to.
             TAGS="$(git tag --points-at $TAG_REF)"
             NON_PUBLISH_TAGS="$(echo "$TAGS" | grep -vE '^publish/[0-9]+')"
-            if ! echo "$NON_PUBLISH_TAGS" | grep -E '^.+@.+$'; then
+            VERSION_TAGS="$(echo "$NON_PUBLISH_TAGS" | grep -E '^.+@.+$')"
+            if [ -z $VERSION_TAGS ]; then
               echo "ERROR! There must be at least some other packages tagged."
               exit 1
             fi
@@ -244,32 +243,23 @@ jobs:
             npx lerna publish --registry=http://localhost:4873 \
               --dist-tag="$DIST_TAG" from-git --yes
 
-      - run:
-          name: Slack notification
-          command: |
             if [ -z "$SLACK_WEBHOOK_URL" ]; then
               exit 1
             fi
 
-            cat \<<'EOM' | curl -X POST -H 'Content-type: application/json' --data @- $SLACK_WEBHOOK_URL
+            # Add bullet-points and links to the markdown links.
+            MARKDOWN_VERSIONS="$(echo "$VERSION_TAGS" |
+              sed -E 's%^(.+)@(.+)$%• <https://npm.im/\1|`\1@\2`>%')"
+
+            cat \<<"EOM" | curl -X POST -H 'Content-type: application/json' --data @- $SLACK_WEBHOOK_URL
             {
-              "text": "A new version has been published",
+              "text": "New packages have been published to the `$DIST_TAG` tag:\n\n$MARKDOWN_VERSIONS",
               "blocks": [
                 {
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": ":npm:  *The following Apollo Server packages have been published to the `alpha` tag*\n\n> ⚠️🚧 This is just a test of an automated release pipeline."
-                  }
-                },
-                {
-                  "type": "divider"
-                },
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "*Packages:*\n\n• <https://npm.im/@apollo/server|`@apollo/server@3.y.z-alpha.0`>\n• <https://npm.im/apollo-server-azure-functions|`apollo-server-azure-functions@2.y.z`>\n• <https://npm.im/apollo-server-cloud-functions|`apollo-server-cloud-functions@2.y.z`>\n• <https://npm.im/apollo-server-cloudflare|`apollo-server-cloudflare@2.y.z`>\n• <https://npm.im/apollo-server-core|`apollo-server-core@2.y.z`>\n• <https://npm.im/apollo-server-express|`apollo-server-express@2.y.z`>\n• <https://npm.im/apollo-server-fastify|`apollo-server-fastify@2.y.z`>\n• <https://npm.im/apollo-server-hapi|`apollo-server-hapi@2.y.z`>\n• <https://npm.im/apollo-server-koa|`apollo-server-koa@2.y.z`>\n• <https://npm.im/apollo-server-lambda|`apollo-server-lambda@2.y.z`>\n• <https://npm.im/apollo-server-micro|`apollo-server-micro@2.y.z`>\n• <https://npm.im/apollo-server|`apollo-server@2.y.z`>"
+                    "text": ":npm:  *The following packages have been published to the `$DIST_TAG` tag*\n\n> ⚠️🚧 This is not real *yet*.\n\n*Packages:*\n\n$MARKDOWN_VERSIONS"
                   }
                 }
               ]
