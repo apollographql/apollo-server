@@ -108,7 +108,7 @@ jobs:
     steps:
       - common_test_steps
 
-  Dry-run publish:
+  Package tarballs:
     executor: { name: node, tag: '10' }
     steps:
       # Bring in the workspace which we saved in the 'NodeJS 10' job above.
@@ -444,15 +444,23 @@ workflows:
           <<: *common_non_publish_filters
       - NodeJS 12:
           <<: *common_non_publish_filters
-      - Pre-publish:
+      - Package tarballs:
           <<: *common_non_publish_filters
           requires:
             - NodeJS 6
             - NodeJS 8
             - NodeJS 10
             - NodeJS 12
+      - Pre-publish:
+          <<: *common_publish_filters
+          requires:
+            - NodeJS 6
+            - NodeJS 8
+            - NodeJS 10
+            - NodeJS 12
+            - Package tarballs
       - Dry-run and confirmation:
-          <<: *common_non_publish_filters
+          <<: *common_publish_filters
           requires:
             - Pre-publish
       - Publish:
