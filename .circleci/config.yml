@@ -55,7 +55,6 @@ commands:
   install_and_start_verdaccio:
     description: "Run and start the Verdaccio server"
     steps:
-      - run: npm install --no-save verdaccio
       - run:
           name: Verdaccio
           command: npx verdaccio
@@ -249,7 +248,7 @@ jobs:
 
             # Add bullet-points and links to the markdown links.
             MARKDOWN_VERSIONS="$(echo "$VERSION_TAGS" |
-              sed -E 's%^(.+)@(.+)$%• <https://npm.im/\1|`\1@\2`>%\\n')"
+              sed -E 's%^(.+)@(.+)$%• <https://npm.im/\1|\`\1@\2\`>\\n%')"
 
             cat \<<EOM | curl -X POST -H 'Content-type: application/json' --data @- $SLACK_WEBHOOK_URL
             {
