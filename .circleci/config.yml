@@ -126,6 +126,9 @@ jobs:
       - run:
           name: Write Verdaccio config for dummy server W/O proxy
           command: |
+            # Exit on all errors, undeclared variables and pipefailures.
+            set -euo pipefail
+
             mkdir -p ~/.config/verdaccio/
             cat \<<'EOF' > ~/.config/verdaccio/config.yaml
             # Store the files on disk.  We'll use this directory as a build
@@ -171,6 +174,9 @@ jobs:
       - run:
           name: Generate publish environment scripts
           command: |
+            # Exit on all errors, undeclared variables and pipefailures.
+            set -euo pipefail
+
             # Make the scripts directory, apply executable bits and write the
             # script out to the file. Everything from the 'cat' down to the
             # HEREDOC closing ('END_OF_SCRIPT') is written to the file. The
@@ -186,6 +192,9 @@ jobs:
             #
             # NOTE! This is being output as a file, not evaluated immediately!
             #
+
+            # Exit on all errors, undeclared variables and pipefailures.
+            set -euo pipefail
 
             # This should be set automatically on tag-triggered builds.
             if [ -z "$CIRCLE_TAG" ]; then
@@ -265,6 +274,9 @@ jobs:
       - run:
           name: Write Verdaccio config for dummy server w/ proxy
           command: |
+            # Exit on all errors, undeclared variables and pipefailures.
+            set -euo pipefail
+
             mkdir -p ~/.config/verdaccio/
             cat \<<'EOF' > ~/.config/verdaccio/config.yaml
             storage: ./storage
@@ -285,6 +297,9 @@ jobs:
       - run:
           name: Dry-run publish and Slack notification
           command: |
+            # Exit on all errors, undeclared variables and pipefailures.
+            set -euo pipefail
+
             # If this doesn't exist, we won't have what we need to proceed.
             if [ ! -x ~/scripts/apollo-setup-publish-env ]; then
               echo "~/scripts/apollo-setup-publish-env is not executable."
@@ -334,6 +349,9 @@ jobs:
       - run:
           name: Post to Slack on Failure
           command: |
+            # Exit on all errors, undeclared variables and pipefailures.
+            set -euo pipefail
+
             if [ -z "$SLACK_WEBHOOK_URL" ]; then
               echo 'Cannot post failure to Slack because $SLACK_WEBHOOK_URL is not set.'
               exit 1
@@ -364,6 +382,9 @@ jobs:
       - run:
           name: Publish
           command: |
+            # Exit on all errors, undeclared variables and pipefailures.
+            set -euo pipefail
+
             # If this doesn't exist, we won't have what we need to proceed.
             if [ ! -x ~/scripts/apollo-setup-publish-env ]; then
               echo "~/scripts/apollo-setup-publish-env is not executable."
@@ -406,6 +427,9 @@ jobs:
       - run:
           name: Post to Slack on Failure
           command: |
+            # Exit on all errors, undeclared variables and pipefailures.
+            set -euo pipefail
+
             if [ -z "$SLACK_WEBHOOK_URL" ]; then
               echo 'Cannot post failure to Slack because $SLACK_WEBHOOK_URL is not set.'
               exit 1
