@@ -1,7 +1,7 @@
 version: 2.1
 
 orbs:
-  oss: apollo/oss-ci-cd-tooling@dev:0.0.1
+  oss: apollo/oss-ci-cd-tooling@0.0.1
 
 commands:
   # These are the steps used for each version of Node which we're testing
