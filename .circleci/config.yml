@@ -1,7 +1,11 @@
 version: 2.1
 
+# These "CircleCI Orbs" are reusable bits of configuration that can be shared
+# across projects.  See https://circleci.com/orbs/ for more information.
 orbs:
-  oss: apollo/oss-ci-cd-tooling@0.0.1
+  # `oss` is a local reference to the package.  The source for Apollo Orbs can
+  # be found at http://github.com/apollographql/CircleCI-Orbs.
+  oss: apollo/oss-ci-cd-tooling@0.0.3
 
 commands:
   # These are the steps used for each version of Node which we're testing
@@ -37,14 +41,6 @@ commands:
           path: reports/junit
       - store_artifacts:
           path: reports/junit
-
-  install_and_start_verdaccio:
-    description: "Run and start the Verdaccio server"
-    steps:
-      - run:
-          name: Verdaccio
-          command: npx verdaccio
-          background: true
 
 # Important! When adding a new job to `jobs`, make sure to define when it
 # executes by also adding it to the `workflows` section below!
@@ -140,6 +136,7 @@ workflows:
           requires:
             - Dry-run
       - oss/publish:
+          name: Publish
           <<: *common_publish_filters
           requires:
             - Confirmation
