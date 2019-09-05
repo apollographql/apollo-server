@@ -19,7 +19,6 @@ module.exports = {
           null: [
             'index',
             'getting-started',
-            'graphql-playground',
             '[Changelog](https://github.com/apollographql/apollo-server/blob/master/CHANGELOG.md)',
           ],
           'Defining a Schema': [
@@ -29,25 +28,13 @@ module.exports = {
             'schema/directives',
             'schema/creating-directives',
           ],
-          'Serving Requests': [
-            'serving/data',
-            'serving/data-sources',
-            'serving/errors',
-            'serving/file-uploads',
-            'serving/subscriptions',
+          'Fetching Data': [
+            'data/data',
+            'data/data-sources',
+            'data/errors',
+            'data/file-uploads',
+            'data/subscriptions',
           ],
-          Testing: ['testing/mocking', 'testing/testing'],
-          Performance: ['performance/caching', 'performance/apq'],
-          Security: ['security/authentication', 'security/terminating-ssl'],
-          Integrations: ['integrations/middleware'],
-          Deployment: [
-            'deployment/heroku',
-            'deployment/lambda',
-            'deployment/now',
-            'deployment/netlify',
-            'deployment/azure-functions',
-          ],
-          Monitoring: ['monitoring/metrics', 'monitoring/health-checks'],
           Federation: [
             'federation/introduction',
             'federation/concerns',
@@ -59,6 +46,18 @@ module.exports = {
             'federation/federation-spec',
             'federation/metrics',
           ],
+          Testing: ['testing/mocking', 'testing/testing', 'testing/graphql-playground'],
+          Performance: ['performance/caching', 'performance/apq'],
+          Security: ['security/authentication', 'security/terminating-ssl'],
+          Integrations: ['integrations/middleware'],
+          Deployment: [
+            'deployment/heroku',
+            'deployment/lambda',
+            'deployment/now',
+            'deployment/netlify',
+            'deployment/azure-functions',
+          ],
+          Monitoring: ['monitoring/metrics', 'monitoring/health-checks'],
           'API Reference': [
             'api/apollo-server',
             'api/apollo-federation',
