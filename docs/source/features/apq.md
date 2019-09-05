@@ -145,7 +145,7 @@ import { InMemoryCache } from "apollo-cache-inmemory";
 import { ApolloLink } from "apollo-link";
 import ApolloClient from "apollo-client";
 
-ApolloLink.from([
+const link = ApolloLink.from([
   createPersistedQueryLink({ useGETForHashedQueries: true }),
   createHttpLink({ uri: "/graphql" })
 ]);
