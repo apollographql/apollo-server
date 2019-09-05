@@ -1,23 +1,13 @@
 version: 2.1
 
-# Reusable Snippets!
-#
-# These are re-used by the various tests below, to avoid repetition.
-#
-commands:
-  install_desired_npm:
-    description: "Install the same consistent version of npm"
-    steps:
-      - run:
-          # Due to a bug, npm upgrades from the version of npm that ships with
-          # Node.js 6 (npm v3.10.10) go poorly and generally causes other problems
-          # with the environment.  Since yarn is already available here we can just
-          # use that to work-around the issue.  It's possible that npm cleanup might
-          # prevent this from being necessary, but this installation can be switched
-          # to use `npm` (rather than `yarn`) once Node 6 is no longer tested below.
-          name: Install npm@6, but with yarn.
-          command: sudo yarn global add npm@6
+# These "CircleCI Orbs" are reusable bits of configuration that can be shared
+# across projects.  See https://circleci.com/orbs/ for more information.
+orbs:
+  # `oss` is a local reference to the package.  The source for Apollo Orbs can
+  # be found at http://github.com/apollographql/CircleCI-Orbs.
+  oss: apollo/oss-ci-cd-tooling@0.0.4
 
+commands:
   # These are the steps used for each version of Node which we're testing
   # against.  Thanks to YAMLs inability to merge arrays (though it is able
   # to merge objects), every version of Node must use the exact same steps,
@@ -26,22 +16,9 @@ commands:
   common_test_steps:
     description: "Commands to run on every Node.js environment"
     steps:
-      - install_desired_npm
+      - oss/install_specific_npm_version
       - checkout
-      - restore_cache:
-          keys:
-            # When lock file changes, use increasingly general patterns to restore cache
-            - npm-v2-{{ .Branch }}-{{ checksum "package-lock.json" }}
-            - npm-v2-{{ .Branch }}-
-            - npm-v2-
-      - run: npm --version
-      - run: npm ci
-      - save_cache:
-          key: npm-v2-{{ .Branch }}-{{ checksum "package-lock.json" }}
-          paths:
-            # This should cache the npm cache instead of node_modules, which is needed because
-            # npm ci actually removes node_modules before installing to guarantee a clean slate.
-            - ~/.npm
+      - oss/npm_clean_install_with_caching
       - run:
           command: npm run test:ci
           environment:
@@ -52,25 +29,6 @@ commands:
       - store_artifacts:
           path: reports/junit
 
-  install_and_start_verdaccio:
-    description: "Run and start the Verdaccio server"
-    steps:
-      - run:
-          name: Verdaccio
-          command: npx verdaccio
-          background: true
-
-executors:
-  node:
-    parameters:
-      tag:
-        type: string
-        default: '10'
-    docker:
-      - image: circleci/node:<< parameters.tag >>
-    environment:
-      DEBUG: lerna
-
 # Important! When adding a new job to `jobs`, make sure to define when it
 # executes by also adding it to the `workflows` section below!
 jobs:
@@ -80,17 +38,17 @@ jobs:
 
   # NODE: Note certain tests are currently being skipped for Node.js 6.
   NodeJS 6:
-    executor: { name: node, tag: '6' }
+    executor: { name: oss/node, tag: '6' }
     steps:
       - common_test_steps
 
   NodeJS 8:
-    executor: { name: node, tag: '8' }
+    executor: { name: oss/node, tag: '8' }
     steps:
       - common_test_steps
 
   NodeJS 10:
-    executor: { name: node, tag: '10' }
+    executor: { name: oss/node, tag: '10' }
     steps:
       - common_test_steps
       # We will save the results of this one particular invocation to use in
@@ -98,358 +56,15 @@ jobs:
       # time, this also ensures that a passing version gets deployed even if,
       # theoretically, rebuilding the same commit on the same version of
       # Node.js should yield the same results!
-      # Note: We'll backup 'project' relative to the home directory, where
-      # 'project' is the default 'working_directory'.  We do this from the root
-      # because we'll also write other files into the root that we need and
-      # want restored (and shared across jobs).
       - persist_to_workspace:
-          # 'working_directory' is '~/project', so this should be $HOME.
-          root: ..
+          root: .
           paths:
-            # 'project' is the default 'working_directory'.
-            - ./project/
+            - ./**
 
   NodeJS 12:
-    executor: { name: node, tag: '12' }
+    executor: { name: oss/node, tag: '12' }
     steps:
       - common_test_steps
-
-  Package tarballs:
-    executor: { name: node, tag: '10' }
-    steps:
-      # Bring in the workspace which we saved in the 'NodeJS 10' job above.
-      # This has the benefit of only publishing the exact build that we tested,
-      # in addition to not having to re-build it another time.
-      - attach_workspace:
-          # 'working_directory' is '~/project', so this should be $HOME.
-          at: ..
-      - run:
-          name: Write Verdaccio config for dummy server W/O proxy
-          command: |
-            # Exit on all errors, undeclared variables and pipefailures.
-            set -euo pipefail
-
-            mkdir -p ~/.config/verdaccio/
-            cat \<<'EOF' > ~/.config/verdaccio/config.yaml
-            # Store the files on disk.  We'll use this directory as a build
-            # artifact and gain access to all of the packages which are
-            # published to this server.
-            storage: ./storage
-            # By not specifying any uplinks, we will avoid proxying through
-            # to npm.  This allows publishing of this build's packages
-            # irregardless of whether they are already published to npm.
-            uplinks: # None
-            # Normally, publishing isn't possible without an uplink.
-            publish:
-              allow_offline: false
-            # Allow any package to be published to this (local) server with
-            # no authentication.
-            packages:
-              '**':
-                access: $all
-                publish: $all
-            logs:
-              - {type: stdout, format: pretty, level: http}
-            EOF
-      - install_and_start_verdaccio
-      - run:
-          name: Publish to (local) Verdaccio
-          command: |
-            npx lerna publish \
-              --no-git-tag-version \
-              --no-push \
-              --registry=http://localhost:4873/ \
-              --yes \
-              from-package
-      - store_artifacts:
-          path: ~/.config/verdaccio/storage/
-          destination: packed
-
-  Pre-publish:
-    executor: node
-    steps:
-      - attach_workspace:
-          # 'working_directory' is '~/project', so this should be $HOME.
-          at: ..
-      - run:
-          name: Generate publish environment scripts
-          command: |
-            # Exit on all errors, undeclared variables and pipefailures.
-            set -euo pipefail
-
-            # Make the scripts directory, apply executable bits and write the
-            # script out to the file. Everything from the 'cat' down to the
-            # HEREDOC closing ('END_OF_SCRIPT') is written to the file. The
-            # contents of this file are then sourced (for their exported
-            # environment variables in later steps). Note that we don't chmod
-            # after writing the script since it ends up being a lone, easily
-            # missed line after 'END_OF_SCRIPT'.
-            mkdir -p ~/scripts/
-            touch ~/scripts/apollo-setup-publish-env
-            chmod +x ~/scripts/apollo-setup-publish-env
-            cat \<<'END_OF_SCRIPT' > ~/scripts/apollo-setup-publish-env
-
-            #
-            # NOTE! This is being output as a file, not evaluated immediately!
-            #
-
-            # Exit on all errors, undeclared variables and pipefailures.
-            set -euo pipefail
-
-            # This should be set automatically on tag-triggered builds.
-            if [ -z "$CIRCLE_TAG" ]; then
-              echo 'ERROR! $CIRCLE_TAG is not set.'
-              exit 1
-            fi
-
-            # Get the actual hash the tag points to.
-            tag_ref="$(git rev-list -n1 "$CIRCLE_TAG")"
-
-            # Fail if we couldn't get it.
-            if [ -z "$tag_ref" ]; then
-              echo "ERROR! Couldn't get \$tag_ref."
-              exit 1
-            fi
-
-            # Ensure the annotated tag points to a 'Release' commit.
-            RELEASE_COMMIT_MSG="$(git log --format=%s -n 1 $tag_ref)"
-            if ! echo "$RELEASE_COMMIT_MSG" | grep -qE '^Release$'; then
-              echo "ERROR! The 'publish/' tags must be on 'Release' commits."
-              exit 1
-            fi
-
-            # See if there are Lerna packages tagged (e.g. matching pkg@x.y.z)
-            # by checking what _tags_ point to the hash.  The expectation is
-            # that there _must_ be Lerna packages tagged in the same ref that
-            # the `publish/` tag points to.
-            tags="$(git tag --points-at $tag_ref)"
-            non_publish_tags="$(echo "$tags" | grep -vE '^publish/[0-9]+')"
-            version_tags="$(echo "$non_publish_tags" | grep -E '^.+@.+$')"
-            if [ -z "$version_tags" ]; then
-              echo "ERROR! There must be at least some other packages tagged."
-              exit 1
-            fi
-
-            # Ensure the annotated publish tag is formatted expectedly.
-            # This could certainly be more defensive, but currently just ensures
-            # that the annotated message starts with 'Publish'.
-            publish_tag_msg="$(git tag -l --format='%(contents)' $CIRCLE_TAG)"
-            if ! echo "$publish_tag_msg" | grep -qE '^Publish'; then
-              echo "ERROR! The 'publish/' tags must be annotated correctly."
-              echo "       Be certain to use the npm-scripts when publishing."
-              exit 1
-            fi
-
-            # If there's a dist-tag, we'll publish to that instead of 'latest'.
-            DIST_TAG="$(echo "$publish_tag_msg" |
-              sed -E 's/^Publish($|( \(dist-tag:([a-z-]+)\))$)/\3/')"
-
-            # Default to latest if we couldn't extract anything from the
-            # annotated `publish/` tag.
-            if [ -z "$DIST_TAG" ]; then
-              DIST_TAG="latest"
-            fi
-
-            # Add bullet-points and links to the markdown links.
-            MARKDOWN_VERSIONS="$(echo "$version_tags" |
-              sed -E 's%^(.+)@(.+)$%• <https://npm.im/\1|\`\1@\2\`>\\n%')"
-
-            # These are exported for use in later scripts.
-            export DIST_TAG
-            export MARKDOWN_VERSIONS
-
-            END_OF_SCRIPT
-      - persist_to_workspace:
-          # 'working_directory' is '~/project', so this should be $HOME.
-          root: ..
-          paths:
-            - ./scripts/apollo-setup-publish-env
-
-  Dry-run:
-    executor: node
-    steps:
-      - attach_workspace:
-          # 'working_directory' is '~/project', so this should be $HOME.
-          at: ..
-      - run:
-          name: Write Verdaccio config for dummy server w/ proxy
-          command: |
-            # Exit on all errors, undeclared variables and pipefailures.
-            set -euo pipefail
-
-            mkdir -p ~/.config/verdaccio/
-            cat \<<'EOF' > ~/.config/verdaccio/config.yaml
-            storage: ./storage
-            uplinks:
-              npmjs:
-                url: https://registry.npmjs.org/
-            publish:
-              allow_offline: false
-            packages:
-              '**':
-                access: $all
-                publish: $all
-                proxy: npmjs
-            logs:
-              - {type: stdout, format: pretty, level: http}
-            EOF
-      - install_and_start_verdaccio
-      - run:
-          name: Dry-run publish and Slack notification
-          command: |
-            # Exit on all errors, undeclared variables and pipefailures.
-            set -euo pipefail
-
-            # If this doesn't exist, we won't have what we need to proceed.
-            if [ ! -x ~/scripts/apollo-setup-publish-env ]; then
-              echo "~/scripts/apollo-setup-publish-env is not executable."
-              exit 1
-            fi
-
-            # Load our variables what we set earlier (e.g. DIST_TAG).
-            source ~/scripts/apollo-setup-publish-env
-
-            echo "Fake publishing to npm under the $DIST_TAG tag."
-
-            npx lerna publish --registry=http://localhost:4873 \
-              --dist-tag="$DIST_TAG" from-git --yes |
-              tee ~/lerna-output.txt
-
-            # Sorry, not sorry.  Perl is super standard on most images because
-            # of its continued usage in many build systems and is too easy to
-            # do multi-line text extraction with.  Perl pie for the win.
-            to_publish="$(perl -0777 \
-              -nle 'print "$1" while /^Found.*to publish:\n(.+)^$/msg' \
-              ~/lerna-output.txt)"
-
-            markdown_to_publish="$(echo "$to_publish" |
-              sed -E 's%^ - (.+) => (.+)$%• \`\1\` :point_right: \`\2\`\\n%')"
-
-            workflow_url="https://circleci.com/workflow-run/$CIRCLE_WORKFLOW_ID"
-
-            if [ -z "$SLACK_WEBHOOK_URL" ]; then
-              echo 'Cannot post to Slack because $SLACK_WEBHOOK_URL is not set.'
-              exit 1
-            fi
-
-            cat \<<EOM | curl -X POST -H 'Content-type: application/json' --data @- $SLACK_WEBHOOK_URL
-            {
-              "text": "A package publish is waiting for approval.  To approve, please visit $CIRCLE_BUILD_URL",
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": ":wave:  *Approval needed to publish the following to the \`$DIST_TAG\` tag*:\n\n*Packages:*\n\n$markdown_to_publish\n\n*<$workflow_url|Visit the build and click the _Confirmation_ job to approve it!>*"
-                  }
-                }
-              ]
-            }
-            EOM
-      - run:
-          name: Post to Slack on Failure
-          command: |
-            # Exit on all errors, undeclared variables and pipefailures.
-            set -euo pipefail
-
-            if [ -z "$SLACK_WEBHOOK_URL" ]; then
-              echo 'Cannot post failure to Slack because $SLACK_WEBHOOK_URL is not set.'
-              exit 1
-            fi
-
-            cat \<<EOM | curl -X POST -H 'Content-type: application/json' --data @- $SLACK_WEBHOOK_URL
-            {
-              "text": "A failure occurred during PRE-publishing.  For more information, see $CIRCLE_BUILD_URL.",
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": ":boom: *Failure during _PRE_-publishing dry-run!* :boom:\n\n<$CIRCLE_BUILD_URL|See the build details for more information!>"
-                  }
-                }
-              ]
-            }
-            EOM
-          when: on_fail
-
-  Publish:
-    executor: node
-    steps:
-      - attach_workspace:
-          # 'working_directory' is '~/project', so this should be $HOME.
-          at: ..
-      - run:
-          name: Publish
-          command: |
-            # Exit on all errors, undeclared variables and pipefailures.
-            set -euo pipefail
-
-            # If this doesn't exist, we won't have what we need to proceed.
-            if [ ! -x ~/scripts/apollo-setup-publish-env ]; then
-              echo "~/scripts/apollo-setup-publish-env is not executable."
-              exit 1
-            fi
-
-            # Fail if we don't have the right credentials to actually publish.
-            if [ -z "$NPM_TOKEN" ]; then
-              echo 'ERROR! $NPM_TOKEN is not set.'
-              exit 1
-            fi
-
-            # Load our variables what we set earlier (e.g. DIST_TAG).
-            source ~/scripts/apollo-setup-publish-env
-
-            echo "Publishing to npm under the $DIST_TAG tag."
-
-            # Do the real, actual publish to npm.
-            npx lerna publish --dist-tag="$DIST_TAG" from-git --yes
-
-            if [ -z "$SLACK_WEBHOOK_URL" ]; then
-              echo 'Cannot post to Slack because $SLACK_WEBHOOK_URL is not set.'
-              exit 1
-            fi
-
-            cat \<<EOM | curl -X POST -H 'Content-type: application/json' --data @- $SLACK_WEBHOOK_URL
-            {
-              "text": "New packages have been published to the \`$DIST_TAG\` tag:\n\n$MARKDOWN_VERSIONS",
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": ":npm:  *The following packages have been published to the \`$DIST_TAG\` tag*\n\n*Packages:*\n\n$MARKDOWN_VERSIONS"
-                  }
-                }
-              ]
-            }
-            EOM
-      - run:
-          name: Post to Slack on Failure
-          command: |
-            # Exit on all errors, undeclared variables and pipefailures.
-            set -euo pipefail
-
-            if [ -z "$SLACK_WEBHOOK_URL" ]; then
-              echo 'Cannot post failure to Slack because $SLACK_WEBHOOK_URL is not set.'
-              exit 1
-            fi
-
-            cat \<<EOM | curl -X POST -H 'Content-type: application/json' --data @- $SLACK_WEBHOOK_URL
-            {
-              "text": "A failure occurred during publishing.  For more information, see $CIRCLE_BUILD_URL.",
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": ":boom: *Failure during publishing!* :boom:\n\n<$CIRCLE_BUILD_URL|See the build details for more information!>"
-                  }
-                }
-              ]
-            }
-            EOM
-          when: on_fail
 
 # XXX We used to use this filter to only run a "Docs" job on docs branches.
 #     Now we use it to disable all jobs. It's unclear if there's a simpler way
@@ -485,30 +100,30 @@ workflows:
           <<: *common_non_publish_filters
       - NodeJS 12:
           <<: *common_non_publish_filters
-      - Package tarballs:
+      - oss/lerna_tarballs:
+          name: Package tarballs
           <<: *common_non_publish_filters
           requires:
             - NodeJS 6
             - NodeJS 8
             - NodeJS 10
             - NodeJS 12
-      - Pre-publish:
+      - oss/dry_run:
+          name: Dry-run
           <<: *common_publish_filters
           requires:
             - NodeJS 6
             - NodeJS 8
             - NodeJS 10
             - NodeJS 12
-      - Dry-run:
-          <<: *common_publish_filters
-          requires:
-            - Pre-publish
-      - Confirmation:
+      - oss/confirmation:
+          name: Confirmation
           type: approval
           <<: *common_publish_filters
           requires:
             - Dry-run
-      - Publish:
+      - oss/publish:
+          name: Publish
           <<: *common_publish_filters
           requires:
             - Confirmation
