@@ -47,7 +47,7 @@ export function defaultRootOperationTypes(
       // Build the map of root operation type name to its respective default
       rootOperationTypeMap[node.type.name.value] =
         defaultRootOperationNameLookup[node.operation];
-    }
+    },
   });
 
   // In this case, there's no defined schema or schema extension, so we use defaults
