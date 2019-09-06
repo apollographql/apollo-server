@@ -1,6 +1,3 @@
-*
-!src/**/*
-!package.json
-!README.md
+src/
 tsconfig.json
 tsconfig.test.json
