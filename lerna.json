@@ -7,6 +7,9 @@
     },
     "bootstrap": {
       "scope": "@apollo/server"
+    },
+    "publish": {
+      "message": "Release"
     }
   }
 }
