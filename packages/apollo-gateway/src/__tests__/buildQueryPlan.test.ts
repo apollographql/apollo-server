@@ -806,7 +806,6 @@ describe('buildQueryPlan', () => {
     `;
 
     const queryPlan = buildQueryPlan(buildOperationContext(schema, query));
-    console.log(queryPlan);
 
     expect(queryPlan).toMatchInlineSnapshot(`
       QueryPlan {
