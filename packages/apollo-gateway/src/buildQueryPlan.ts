@@ -402,6 +402,17 @@ function splitFields(
       if (isObjectType(parentType)) {
         // If parent type is an object type, we can directly look for the right
         // group.
+
+        // ParentTypes collected from fragments. Multiple values mean nested fragments
+        if (field.parentTypesArray) {
+          let possibleParentTypes = field.parentTypesArray.map(type =>
+            context.getPossibleTypes(type),
+          );
+          if (!possibleParentTypes.every(arr => arr.includes(parentType))) {
+            continue;
+          }
+        }
+
         const group = groupForField(field as Field<GraphQLObjectType>);
         group.fields.push(
           completeField(
@@ -422,7 +433,19 @@ function splitFields(
           GraphQLObjectType
         >();
 
-        for (const runtimeParentType of context.getPossibleTypes(parentType)) {
+        let possibleTypes = context.getPossibleTypes(parentType);
+
+        // ParentTypes collected from fragments. Multiple values mean nested fragments
+        if (field.parentTypesArray) {
+          let possibleParentTypes = field.parentTypesArray.map(type =>
+            context.getPossibleTypes(type),
+          );
+          possibleTypes = possibleTypes.filter(type =>
+            possibleParentTypes.every(arr => arr.includes(type)),
+          );
+        }
+
+        for (const runtimeParentType of possibleTypes) {
           const fieldDef = context.getFieldDef(
             runtimeParentType,
             field.fieldNode,
@@ -516,12 +539,18 @@ function collectFields(
   visitedFragmentNames: { [fragmentName: string]: boolean } = Object.create(
     null,
   ),
+  parentTypesArray: GraphQLCompositeType[] = [],
 ): FieldSet {
   for (const selection of selectionSet.selections) {
     switch (selection.kind) {
       case Kind.FIELD:
         const fieldDef = context.getFieldDef(parentType, selection);
-        fields.push({ parentType, fieldNode: selection, fieldDef });
+        fields.push({
+          parentType,
+          fieldNode: selection,
+          fieldDef,
+          parentTypesArray,
+        });
         break;
       case Kind.INLINE_FRAGMENT:
         collectFields(
@@ -530,6 +559,7 @@ function collectFields(
           selection.selectionSet,
           fields,
           visitedFragmentNames,
+          [...parentTypesArray, parentType],
         );
         break;
       case Kind.FRAGMENT_SPREAD:
@@ -551,6 +581,7 @@ function collectFields(
           fragment.selectionSet,
           fields,
           visitedFragmentNames,
+          [...parentTypesArray, parentType],
         );
         break;
     }

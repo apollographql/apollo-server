@@ -14,6 +14,7 @@ export interface Field<TParent = GraphQLCompositeType> {
   parentType: TParent;
   fieldNode: FieldNode;
   fieldDef: GraphQLField<any, any>;
+  parentTypesArray?: TParent[];
 }
 export type FieldSet = Field[];
 

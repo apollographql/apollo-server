@@ -790,4 +790,56 @@ describe('buildQueryPlan', () => {
       }
     `);
   });
+
+  it(`interface fragments should expand into possible types only`, () => {
+    const query = gql`
+      query {
+        books {
+          ... on Product {
+            name
+            ... on Furniture {
+              upc
+            }
+          }
+        }
+      }
+    `;
+
+    const queryPlan = buildQueryPlan(buildOperationContext(schema, query));
+    console.log(queryPlan);
+
+    expect(queryPlan).toMatchInlineSnapshot(`
+      QueryPlan {
+        Sequence {
+          Fetch(service: "books") {
+            {
+              books {
+                __typename
+                isbn
+                title
+                year
+              }
+            }
+          },
+          Flatten(path: "books.@") {
+            Fetch(service: "product") {
+              {
+                ... on Book {
+                  __typename
+                  isbn
+                  title
+                  year
+                }
+              } =>
+              {
+                ... on Book {
+                  name
+                }
+              }
+            },
+          },
+        },
+      }
+    `);
+  });
 });
