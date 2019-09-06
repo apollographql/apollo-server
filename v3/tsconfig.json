@@ -21,7 +21,7 @@
       "*" : ["types/*"]
     },
     "rootDir": "./src",
-    "outDir": "./dist"
+    "outDir": "./"
   },
   "include": ["src/**/*"],
   "exclude": ["**/__tests__", "**/__mocks__"]
