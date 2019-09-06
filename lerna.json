@@ -4,6 +4,9 @@
   "command": {
     "version": {
       "includeMergedTags": true
+    },
+    "bootstrap": {
+      "scope": "@apollo/server"
     }
   }
 }
