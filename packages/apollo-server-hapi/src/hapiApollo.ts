@@ -1,9 +1,12 @@
 import Boom from 'boom';
 import { Server, Request, RouteOptions } from 'hapi';
 import {
+  FileUploadOptions,
   GraphQLOptions,
-  runHttpQuery,
+  HttpQueryRequest,
   convertNodeHttpToRequest,
+  processFileUploads,
+  runHttpQuery,
 } from 'apollo-server-core';
 import { ValueOrPromise } from 'apollo-server-types';
 
@@ -26,6 +29,7 @@ export interface HapiPluginOptions {
   vhost?: string;
   route?: RouteOptions;
   graphqlOptions: GraphQLOptions | HapiOptionsFunction;
+  uploadsConfig?: FileUploadOptions;
 }
 
 const graphqlHapi: IPlugin = {
@@ -34,6 +38,7 @@ const graphqlHapi: IPlugin = {
     if (!options || !options.graphqlOptions) {
       throw new Error('Apollo Server requires options.');
     }
+
     server.route({
       method: ['GET', 'POST'],
       path: options.path || '/graphql',
@@ -41,16 +46,34 @@ const graphqlHapi: IPlugin = {
       options: options.route || {},
       handler: async (request, h) => {
         try {
+          let query: HttpQueryRequest['query'];
+
+          if (request.method === 'get') {
+            // TODO: Don't cast as `any`
+            query = request.query as any;
+          } else {
+            if (
+              request.mime === 'multipart/form-data' &&
+              options.uploadsConfig &&
+              typeof processFileUploads === 'function'
+            ) {
+              query = await processFileUploads(
+                request.raw.req,
+                request.raw.res,
+                options.uploadsConfig,
+              );
+            } else {
+              // TODO: Don't cast as `any`
+              query = request.payload as any;
+            }
+          }
+
           const { graphqlResponse, responseInit } = await runHttpQuery(
             [request, h],
             {
               method: request.method.toUpperCase(),
               options: options.graphqlOptions,
-              query:
-                request.method === 'post'
-                  ? // TODO type payload as string or Record
-                    (request.payload as any)
-                  : request.query,
+              query,
               request: convertNodeHttpToRequest(request.raw.req),
             },
           );

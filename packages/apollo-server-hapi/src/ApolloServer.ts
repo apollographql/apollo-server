@@ -8,30 +8,7 @@ import {
 import { graphqlHapi } from './hapiApollo';
 
 export { GraphQLOptions, GraphQLExtension } from 'apollo-server-core';
-import {
-  ApolloServerBase,
-  GraphQLOptions,
-  FileUploadOptions,
-  processFileUploads,
-} from 'apollo-server-core';
-
-function handleFileUploads(uploadsConfig: FileUploadOptions) {
-  return async (request: hapi.Request, _h?: hapi.ResponseToolkit) => {
-    if (
-      typeof processFileUploads === 'function' &&
-      request.mime === 'multipart/form-data'
-    ) {
-      Object.defineProperty(request, 'payload', {
-        value: await processFileUploads(
-          request.raw.req,
-          request.raw.res,
-          uploadsConfig,
-        ),
-        writable: false,
-      });
-    }
-  };
-}
+import { ApolloServerBase, GraphQLOptions } from 'apollo-server-core';
 
 export class ApolloServer extends ApolloServerBase {
   // This translates the arguments from the middleware into graphQL options It
@@ -69,10 +46,6 @@ export class ApolloServer extends ApolloServerBase {
       method: async function(request, h) {
         if (request.path !== path) {
           return h.continue;
-        }
-
-        if (this.uploadsConfig && typeof processFileUploads === 'function') {
-          await handleFileUploads(this.uploadsConfig)(request);
         }
 
         if (this.playgroundOptions && request.method === 'get') {
@@ -138,6 +111,7 @@ export class ApolloServer extends ApolloServerBase {
             : {
                 cors: cors !== undefined ? cors : true,
               },
+        uploadsConfig: this.uploadsConfig,
       },
     });
 
