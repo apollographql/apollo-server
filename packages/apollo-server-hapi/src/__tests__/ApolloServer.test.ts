@@ -409,7 +409,7 @@ const port = 0;
         });
       });
       describe('file uploads', () => {
-        xit('enabled uploads', async () => {
+        it('enabled uploads', async () => {
           server = new ApolloServer({
             typeDefs: gql`
               type File {
