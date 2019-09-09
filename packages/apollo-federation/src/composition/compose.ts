@@ -318,7 +318,7 @@ export function buildSchemaFromDefinitionsAndExtensions({
     ...schema.toConfig(),
     // Casting out of ReadOnlyArray
     directives: specifiedDirectives as GraphQLDirective[]
-  })
+  });
 
   return { schema, errors };
 }

@@ -74,7 +74,7 @@ describe('composeServices', () => {
 
     const directives = schema.getDirectives();
     expect(directives).toHaveLength(3);
-    expect(directives.every(isSpecifiedDirective))
+    expect(directives.every(isSpecifiedDirective));
   });
 
   describe('basic type extensions', () => {
