@@ -7,7 +7,7 @@ import testSuite, {
   NODE_MAJOR_VERSION,
 } from 'apollo-server-integration-testsuite';
 
-// NODE: Intentionally skip on Node.js < 8 since Hapi 17 doesn't support less
+// NODE: Intentionally skip on Node.js < 8 since Hapi 18 doesn't support less
 (NODE_MAJOR_VERSION < 8 ? describe.skip : describe)('integration:Hapi', () => {
   async function createApp(options: CreateAppOptions = {}) {
     const { Server } = require('@hapi/hapi');
