@@ -37,8 +37,8 @@
       "allowedVersions": "<5"
     },
     {
-      "packageNames": ["hapi", "@types/hapi"],
-      "allowedVersions": "<18"
+      "packageNames": ["@hapi/hapi", "@types/hapi__hapi"],
+      "allowedVersions": "<19"
     },
     {
       "packageNames": ["ws"],
