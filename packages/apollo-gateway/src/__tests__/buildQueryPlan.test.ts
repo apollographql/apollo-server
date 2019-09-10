@@ -841,4 +841,40 @@ describe('buildQueryPlan', () => {
       }
     `);
   });
+
+  it(`interface inside interface should expand into possible types only`, () => {
+    const query = gql`
+      query {
+        product(upc: "") {
+          details {
+            country
+          }
+        }
+      }
+    `;
+
+    const queryPlan = buildQueryPlan(buildOperationContext(schema, query));
+
+    expect(queryPlan).toMatchInlineSnapshot(`
+    QueryPlan {
+      Fetch(service: "product") {
+        {
+          product(upc: "") {
+            __typename
+            ... on Book {
+              details {
+                country
+              }
+            }
+            ... on Furniture {
+              details {
+                country
+              }
+            }
+          }
+        }
+      },
+    }
+    `);
+  });
 });

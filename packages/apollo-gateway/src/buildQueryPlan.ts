@@ -19,6 +19,7 @@ import {
   isListType,
   isNamedType,
   isObjectType,
+  isInterfaceType,
   Kind,
   OperationDefinitionNode,
   SelectionSetNode,
@@ -487,7 +488,19 @@ function completeField(
   fields: FieldSet,
 ): Field {
   const { fieldNode, fieldDef } = fields[0];
-  const returnType = getNamedType(fieldDef.type);
+
+  let returnType = getNamedType(fieldDef.type);
+
+  if (isObjectType(parentType) || isInterfaceType(parentType)) {
+    // We should find field type by name, because it may be changed after
+    // replacing parent type inside splitFields function.
+    // For union only __typename may be requested and it's type
+    // will be taken from fieldDef
+    const realField = parentType.getFields()[fieldDef.name];
+    if (realField) {
+      returnType = getNamedType(realField.type);
+    }
+  }
 
   if (!isCompositeType(returnType)) {
     // FIXME: We should look at all field nodes to make sure we take directives
@@ -495,7 +508,6 @@ function completeField(
     return { parentType, fieldNode, fieldDef };
   } else {
     // For composite types, we need to recurse.
-
     const fieldPath = addPath(path, getResponseName(fieldNode), fieldDef.type);
 
     const subGroup = new FetchGroup(parentGroup.serviceName);
