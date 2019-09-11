@@ -145,10 +145,6 @@ The example above validates the user's token that is sent with the first initial
 
 In case of an authentication error, the Promise will be rejected, which prevents the client's connection.
 
-## Securing Subscriptions with WSS
-
-Similar to how the `https://` scheme offers an [SSL/TLS](https://en.wikipedia.org/wiki/Transport_Layer_Security)-encrypted version of `http://`, the subscriptions WebSocket transport can be encrypted using _WebSockets over SSL/TLS_ (WSS). See the [example server setup](/essentials/server/#ssltls-support) for more details.
-
 ## Subscription Filters
 
 Sometimes a client will want to filter out specific events based on context and arguments.
