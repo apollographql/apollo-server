@@ -16,6 +16,7 @@ import {
   specifiedDirectives,
   TypeDefinitionNode,
   TypeExtensionNode,
+  GraphQLDirective,
 } from 'graphql';
 import { mapValues } from 'apollo-env';
 import { transformSchema } from 'apollo-graphql';
@@ -311,6 +312,13 @@ export function buildSchemaFromDefinitionsAndExtensions({
   errors.push(...validateSDL(extensionsDocument, schema, compositionRules));
 
   schema = extendSchema(schema, extensionsDocument, { assumeValidSDL: true });
+
+  // Remove federation directives from the final schema
+  schema = new GraphQLSchema({
+    ...schema.toConfig(),
+    // Casting out of ReadOnlyArray
+    directives: specifiedDirectives as GraphQLDirective[]
+  });
 
   return { schema, errors };
 }
