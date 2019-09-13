@@ -15,6 +15,7 @@
 /docs/apollo-server/features/creating-directives/ /docs/apollo-server/schema/creating-directives/
 /docs/apollo-server/features/data-sources/ /docs/apollo-server/data/data-sources/
 /docs/apollo-server/features/directives/ /docs/apollo-server/schema/directives/
+/docs/apollo-server/features/errors/ /docs/apollo-server/data/errors/
 /docs/apollo-server/features/file-uploads/ /docs/apollo-server/data/file-uploads/
 /docs/apollo-server/features/graphql-playground/ /docs/apollo-server/testing/graphql-playground/
 /docs/apollo-server/features/health-checks/ /docs/apollo-server/monitoring/health-checks/
