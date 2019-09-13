@@ -5,6 +5,7 @@
 > The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  When a release is being prepared, a new header will be (manually) created below and the the appropriate changes within that release will be moved into the new section.
 
 - Nothing yet! Stay tuned!
+- Allow to use provides directive with interface types [#3244](https://github.com/apollographql/apollo-server/pull/3244)
 
 ### v0.9.1
 
