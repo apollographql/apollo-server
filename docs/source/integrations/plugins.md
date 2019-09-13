@@ -66,13 +66,12 @@ A plugin can respond to any combination of supported events.
 Plugins can respond to the following events associated with the GraphQL request
 lifecycle:
 
-* `parsingDidStart`
-* `validationDidStart`
-* `executionDidStart`
-* `didResolveOperation`
-* `didEncounterErrors`
-* `responseForOperation`
-* `willSendResponse`
+* [`parsingDidStart`](#parsingdidstart)
+* [`validationDidStart`](#validationdidstart)
+* [`didResolveOperation`](#didresolveoperation)
+* [`executionDidStart`](#executiondidstart)
+* [`didEncounterErrors`](#didencountererrors)
+* [`willSendResponse`](#willsendresponse)
 
 **However**, the way you define these functions is slightly different from the
 `serverWillStart` example above. First, your plugin must define the `requestDidStart` function:
@@ -86,9 +85,9 @@ const myPlugin = {
 ```
 
 The `requestDidStart` event fires whenever Apollo Server receives a GraphQL request,
-_before_ any other request lifecycle event fires. You can respond to this event
+_before_ any of the lifecycle events listed above. You can respond to this event
 just like you respond to `serverWillStart`, but you _also_ use this function
- to define responses for some or all of a request's _other_ lifecycle events, like so:
+ to define responses for a request's lifecycle events, like so:
 
 ```js
 const myPlugin = {
@@ -174,7 +173,7 @@ Request lifecycle events are associated with a specific request. You define resp
 
 ### `serverWillStart`
 
-The `serverWillStart` event fires when Apollo Server is preparing to start serving GraphQL requests. If you respond to this event with an `async` function (or if the function returns a `Promise`), the server doesn't start until the asynchronous operation completes. If the `Promise` is _rejected_, startup _fails_ (**unless you're using [Express middleware](/essentials/server/#middleware)**). This helps you make sure all
+The `serverWillStart` event fires when Apollo Server is preparing to start serving GraphQL requests. If you respond to this event with an `async` function (or if the function returns a `Promise`), the server doesn't start until the asynchronous operation completes. If the `Promise` is _rejected_, startup _fails_ (**unless you're using [Express middleware](/integrations/middleware/)**). This helps you make sure all
 of your server's dependencies are available before attempting to begin serving requests.
 
 #### Example
@@ -242,8 +241,6 @@ request, the associated `document` might already be available in Apollo Server's
 In this case, `parsingDidStart` is _not_ called for the request, because parsing
 does not occur.
 
-#### TypeScript signature
-
 ```typescript
 parsingDidStart?(
   requestContext: GraphQLRequestContext<TContext>,
@@ -260,8 +257,6 @@ already available in Apollo Server's cache (only successfully validated `documen
 
 The `document` AST is guaranteed to be 
 available at this stage, because parsing must succeed for validation to occur.
-
-#### TypeScript signature
 
 ```typescript
 validationDidStart?(
@@ -286,22 +281,10 @@ didResolveOperation?(
 ): ValueOrPromise<void>;
 ```
 
-### `didEncounterErrors`
-
-> TODO
-
-```typescript
-didEncounterErrors?(
-  requestContext: WithRequired<
-    GraphQLRequestContext<TContext>,
-    'metrics' | 'source' | 'errors'
-  >,
-): ValueOrPromise<void>;
-```
-
 ### `executionDidStart`
 
-> TODO
+The `executionDidStart` event fires whenever Apollo Server begins executing the 
+GraphQL operation specified by a request's `document` AST.
 
 ```typescript
 executionDidStart?(
@@ -312,9 +295,25 @@ executionDidStart?(
 ): (err?: Error) => void | void;
 ```
 
+### `didEncounterErrors`
+
+The `didEncounterErrors` event fires whenever Apollo Server encounters an error while
+executing a GraphQL operation.
+
+```typescript
+didEncounterErrors?(
+  requestContext: WithRequired<
+    GraphQLRequestContext<TContext>,
+    'metrics' | 'source' | 'errors'
+  >,
+): ValueOrPromise<void>;
+```
+
 ### `willSendResponse`
 
-> TODO
+The `willSendResponse` event fires whenever Apollo Server is about to send a response
+for a GraphQL operation. This event fires (and Apollo Server sends a response) even
+if the GraphQL operation encounters one or more errors.
 
 ```typescript
 willSendResponse?(
