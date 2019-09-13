@@ -1082,6 +1082,52 @@ describe('composeServices', () => {
         expect(userField.belongsToValueType).toBe(true);
         expect(userField.serviceName).toBe(null);
       });
+
+      it('adds @provides information for interface types', () => {
+        const serviceA = {
+          typeDefs: gql`
+            interface Product @key(fields: "id") {
+              id: ID
+              color: String
+            }
+
+            type Book implements Product @key(fields: "id") {
+              id: ID
+              color: String
+              pages: Int
+            }
+
+            type Furniture implements Product @key(fields: "id") {
+              id: ID
+              color: String
+              manufacturer: String
+            }
+          `,
+          name: 'serviceA',
+        };
+
+        const serviceB = {
+          typeDefs: gql`
+            type Query {
+              topProduct: Product @provides(fields: "color")
+            }
+          `,
+          name: 'serviceB',
+        };
+
+        const { schema, errors } = composeServices([serviceA, serviceB]);
+        expect(errors).toHaveLength(0);
+
+        const review = schema.getType('Query') as GraphQLObjectType;
+        expect(review.getFields()['topProduct'].federation)
+          .toMatchInlineSnapshot(`
+          Object {
+            "belongsToValueType": false,
+            "provides": color,
+            "serviceName": "serviceB",
+          }
+        `);
+      });
     });
 
     describe('@key directive', () => {
