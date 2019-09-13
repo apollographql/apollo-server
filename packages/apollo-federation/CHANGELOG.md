@@ -6,6 +6,7 @@
 
 - Nothing yet! Stay tuned!
 - Allow to use provides directive with interface types [#3244](https://github.com/apollographql/apollo-server/pull/3244)
+- Remove federation directives from composed schema [#3272](https://github.com/apollographql/apollo-server/pull/3272)
 
 ### v0.9.1
 

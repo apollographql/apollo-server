@@ -1,4 +1,9 @@
 {
   "packages": ["packages/*"],
-  "version": "independent"
+  "version": "independent",
+  "command": {
+    "version": {
+      "includeMergedTags": true
+    }
+  }
 }

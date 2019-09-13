@@ -50,7 +50,7 @@ server.listen(4001).then(({ url }) => {
 });
 ```
 
-If you're already familiar with [setting up an Apollo Server](/essentials/server/#creating-a-server), this should look pretty familiar. If not, we recommend you first take a moment to get comfortable with this topic before jumping in to federation.
+If you're already familiar with [setting up an Apollo Server](/getting-started/), this should look pretty familiar. If not, we recommend you first take a moment to get comfortable with this topic before jumping in to federation.
 
 Now, let's see what this looks like as a federated service:
 

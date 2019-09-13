@@ -1,4 +1,4 @@
-import { GraphQLObjectType } from 'graphql';
+import { GraphQLObjectType, isSpecifiedDirective } from 'graphql';
 import gql from 'graphql-tag';
 import { composeServices } from '../compose';
 import {
@@ -57,6 +57,24 @@ describe('composeServices', () => {
 
     expect(product.federation.serviceName).toEqual('serviceA');
     expect(user.federation.serviceName).toEqual('serviceB');
+  });
+
+  it("doesn't leave federation directives in the final schema", () => {
+    const serviceA = {
+      typeDefs: gql`
+        type Product {
+          sku: String!
+          name: String!
+        }
+      `,
+      name: 'serviceA',
+    };
+
+    const { schema } = composeServices([serviceA]);
+
+    const directives = schema.getDirectives();
+    expect(directives).toHaveLength(3);
+    expect(directives.every(isSpecifiedDirective));
   });
 
   describe('basic type extensions', () => {
