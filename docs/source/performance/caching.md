@@ -118,7 +118,7 @@ const server = new ApolloServer({
 });
 ```
 
-By default, the response cache plugin will use the same cache used by other Apollo Server features, which defaults to an in-memory LRU cache. When running multiple server instances, you’ll want to use a shared cache backend such as Memcached or Redis instead.  See [the data sources documentation](/features/data-sources/#using-memcachedredis-as-a-cache-storage-backend) for details on how to customize Apollo Server's cache.  If you want to use a different cache backed for the response cache than for other Apollo Server caching features, just pass a `KeyValueCache` as the `cache` option to the `responseCachePlugin` function.
+By default, the response cache plugin will use the same cache used by other Apollo Server features, which defaults to an in-memory LRU cache. When running multiple server instances, you’ll want to use a shared cache backend such as Memcached or Redis instead.  See [the data sources documentation](/data/data-sources/#using-memcachedredis-as-a-cache-storage-backend) for details on how to customize Apollo Server's cache.  If you want to use a different cache backed for the response cache than for other Apollo Server caching features, just pass a `KeyValueCache` as the `cache` option to the `responseCachePlugin` function.
 
 If you have data whose response should be cached separately for different users, set `@cacheControl(scope: PRIVATE)` hints on the data, and teach the cache control plugin how to tell your users apart by defining a `sessionId` hook:
 
