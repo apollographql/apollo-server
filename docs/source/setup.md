@@ -5,7 +5,7 @@ description: Detailed directions about adding a GraphQL endpoint and passing opt
 
 Apollo Server has a slightly different API depending on which server integration you are using, but all of the packages share the same core implementation and options format.
 
-If you want to get started quickly, check out the [complete starter code snippet](/v1/example/).
+If you want to get started quickly, check out the [complete starter code snippet](./example/).
 
 ## Passing options
 
@@ -50,7 +50,7 @@ The `GraphQLOptions` object has the following properties:
 
 ### schema
 
-The GraphQL.js schema object that represents your GraphQL schema. You can create this directly using [GraphQL.js](https://github.com/graphql/graphql-js), the reference GraphQL implementation, or you can use graphql-tools, which makes it simple to combine a schema and resolvers. [See an example.](/v1/example/)
+The GraphQL.js schema object that represents your GraphQL schema. You can create this directly using [GraphQL.js](https://github.com/graphql/graphql-js), the reference GraphQL implementation, or you can use graphql-tools, which makes it simple to combine a schema and resolvers. [See an example.](./example/)
 
 ### context
 
@@ -145,8 +145,8 @@ const GraphQLOptions = {
 
 To see how to use the middleware with your particular JavaScript server, check out the docs for those:
 
-* [Express / Connect](/v1/servers/express/)
-* [Hapi](/v1/servers/hapi/)
-* [Koa](/v1/servers/koa/)
+* [Express / Connect](./servers/express/)
+* [Hapi](./servers/hapi/)
+* [Koa](./servers/koa/)
 
 And more are being added every day!
