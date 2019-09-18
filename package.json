@@ -113,6 +113,7 @@
     "mock-req": "0.2.0",
     "nock": "10.0.6",
     "node-fetch": "2.3.0",
+    "prettier": "^1.18.2",
     "qs-middleware": "1.0.3",
     "request": "2.88.0",
     "request-promise": "4.2.4",
