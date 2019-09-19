@@ -2,17 +2,17 @@
 title: Get started with Apollo Server
 ---
 
-> Estimated time: About 10 minutes.
+> This tutorial walks you through installing and configuring Apollo Server.
+> If you're just getting started with GraphQL or the Apollo
+> platform, we recommend first completing the [full-stack tutorial](https://www.apollographql.com/docs/tutorial/introduction/).
 
-This guide walks you through the installation and configuration of Apollo Server.
-
-You will:
+This tutorial helps you:
 
 * Obtain a basic understanding of GraphQL principles
 * Define a GraphQL **schema** that represents the structure of your data set
 * Run an instance of Apollo Server that lets you execute queries against your schema
 
-This guide assumes that you are familiar with the command line and
+This tutorial assumes that you are familiar with the command line and
 JavaScript, and that you have a recent version of Node.js (8+) installed.
 
 ## Step 1: Create a new project
@@ -41,7 +41,7 @@ Applications that run Apollo Server require two top-level dependencies:
 * [`apollo-server`](https://npm.im/apollo-server) is the core library for Apollo Server itself, which helps you define the shape of your data and how to fetch it.
 * [`graphql`](https://npm.im/graphql) is the library used to build a GraphQL schema and execute queries against it.
 
-Run the following command to install both of these dependencies and save them in 
+Run the following command to install both of these dependencies and save them in
 your project's `node_modules` directory:
 
 ```bash
@@ -54,13 +54,13 @@ Also create an empty `index.js` file in your project's root directory:
 touch index.js
 ```
 
- To keep things 
+ To keep things
 simple, `index.js` will contain **all** of the code for this example application.
 
 ## Step 3: Define your GraphQL schema
 
-Every GraphQL server (including Apollo Server) uses a **schema** 
-to define the structure of data that clients can query. 
+Every GraphQL server (including Apollo Server) uses a **schema**
+to define the structure of data that clients can query.
 In this example, we'll create a server for querying a collection
 of books by title and author.
 
@@ -69,8 +69,8 @@ Open `index.js` in your preferred editor and paste the following into it:
 ```js:title=index.js
 const { ApolloServer, gql } = require('apollo-server');
 
-// A schema is a collection of type definitions (hence "typeDefs") 
-// that together define the "shape" of queries that are executed against 
+// A schema is a collection of type definitions (hence "typeDefs")
+// that together define the "shape" of queries that are executed against
 // your data.
 const typeDefs = gql`
   # Comments in GraphQL strings (such as this one) start with the hash (#) symbol.
@@ -97,7 +97,7 @@ a query named `books`, and our server will return an array of zero or more `Book
 
 Now that we've defined the _structure_ of our data, we can define the data itself.
 Apollo Server can fetch data from any source you connect to (including
-a database, a REST API, a static object storage service, or even another GraphQL 
+a database, a REST API, a static object storage service, or even another GraphQL
 server). For the purposes of this tutorial, we'll just hardcode some example data.
 
 Add the following to the bottom of `index.js`:
@@ -121,7 +121,7 @@ objects in the array each match the structure of the `Book` type we defined in o
 ## Step 5: Define a resolver
 
 We've defined our data set, but Apollo Server doesn't know that it should
- _use_ that data set when it's executing a query. To fix this, we create a 
+ _use_ that data set when it's executing a query. To fix this, we create a
  **resolver**.
 
 Resolvers tell Apollo Server _how_ to fetch the data associated with a particular
@@ -181,7 +181,7 @@ We can now execute GraphQL queries on our server. To execute our first query,
 we'll use a tool called **GraphQL Playground**.
 
 With your server still running, visit `http://localhost:4000` in your browser
-to open GraphQL Playground. (Apollo Server hosts GraphQL Playground automatically 
+to open GraphQL Playground. (Apollo Server hosts GraphQL Playground automatically
 when you run it in development.)
 
 ![GraphQL Playground](./images/getting-started/graphql-playground.png)
@@ -193,7 +193,7 @@ The GraphQL Playground UI includes:
 * A text area (to the right) for viewing query results
 * Views for schema inspection and generated documentation (via tabs on the right side)
 
-Our server supports a single query named `books`. Let's execute it! 
+Our server supports a single query named `books`. Let's execute it!
 
 Here's a GraphQL **query string** for executing the `books` query:
 
@@ -206,14 +206,14 @@ Here's a GraphQL **query string** for executing the `books` query:
 }
 ```
 
-Paste this string into the left text area and click the Play button. The 
+Paste this string into the left text area and click the Play button. The
 results (from our hardcoded data set) appear on the right:
 
 ![The response from our server shows title and author!](./images/getting-started/graphql-playground-response.png)
 
-One of the most important concepts of GraphQL is that clients can choose to query 
+One of the most important concepts of GraphQL is that clients can choose to query
 _only for the fields they need_. Delete `author` from the query string and execute
-it again. The response updates to include only the `title` field for each book! 
+it again. The response updates to include only the `title` field for each book!
 
 ## Next steps
 
