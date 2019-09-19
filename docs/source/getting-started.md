@@ -221,6 +221,6 @@ This example application is a great starting point for working with
 Apollo Server. Check out the following resources to learn more about the basics
 of schemas, resolvers, and deployment:
 
-* [Schema basics](/schema/schema/)
-* [Fetching data with resolvers](/data/data/)
-* [Deploying with Heroku](/deployment/heroku/)
+* [Schema basics](https://www.apollographql.com/docs/apollo-server/schema/schema/)
+* [Fetching data with resolvers](https://www.apollographql.com/docs/apollo-server/data/data/)
+* [Deploying with Heroku](https://www.apollographql.com/docs/apollo-server/deployment/heroku/)
