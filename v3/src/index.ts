@@ -1,10 +1,25 @@
-import { Config as BaseConfig, Context, ContextFunction, GraphQLOptions } from 'apollo-server-core';
-import { processGraphQLRequest, GraphQLRequestContext } from 'apollo-server-core/dist/requestPipeline';
-import { ApolloServerPlugin } from 'apollo-server-plugin-base';
-import { GraphQLSchema } from 'graphql';
+import { ApolloServerPlugin, PluginDefinition } from './plugins';
+import { GraphQLSchema } from 'graphql/type/schema';
+import { DocumentNode } from 'graphql/language/ast';
+import { InMemoryLRUCache } from './caching';
+import { approximateObjectSize } from './utilities';
+import {
+  GraphQLRequest,
+  processGraphQLRequest,
+  GraphQLRequestContext,
+} from './execution';
+
+// These should not be imported from here.
+import {
+  Config as BaseConfig,
+  Context,
+  ContextFunction,
+  GraphQLOptions
+} from 'apollo-server-core';
 import { buildServiceDefinition } from '@apollographql/apollo-tools';
 
-export const gql = String.raw;
+export { default as gql } from 'graphql-tag';
+export { GraphQLSchemaModule } from './execution';
 
 // A subset of the base configuration.
 type Config = Pick<BaseConfig,
@@ -16,6 +31,7 @@ type Config = Pick<BaseConfig,
   | 'introspection'
   // TODO(AS3):
   | 'schemaDirectives'
+  // TODO(AS3):
   | 'cacheControl'
   | 'plugins'
 // TODO(AS3) AGM?
@@ -30,7 +46,7 @@ type SchemaDerivedData = {
   schema: GraphQLSchema;
 };
 
-export class ApolloServerBase {
+export class ApolloServer {
   // public requestOptions: Partial<GraphQLOptions<any>> = Object.create(null);
 
   private userContext?: Context | ContextFunction;
@@ -224,8 +240,12 @@ export class ApolloServerBase {
     // }
   }
 
-  // TODO(AS3): This should not be a class member?
-
+  // TODO(AS3): My first temptation was to say that this should not be a
+  // class member, but after further analysis, I think that many utility
+  // functions should be class members — private — so that they can
+  // use a common logger facility.  Of course, they can still exist as a
+  // separate logger, but we would have to make sure that each of those
+  // accepts a logger parameter.
   private ensurePluginInstantiation(plugins?: PluginDefinition[]): void {
     if (!plugins || !plugins.length) {
       return;
@@ -256,13 +276,13 @@ export class ApolloServerBase {
   ) {
     const { schema, documentStore } = await this.schemaDerivedData;
 
-    let context: Context = this.config.context ? this.config.context : {};
+    let context: Context;
 
     try {
       context =
-        typeof this.config.context === 'function'
-          ? await this.config.context(integrationContextArgument || {})
-          : context;
+        typeof this.userContext === 'function'
+          ? await this.userContext(integrationContextArgument || Object.create(null))
+          : this.userContext || Object.create(null);
     } catch (error) {
       // Defer context error resolution to inside of runQuery
       context = () => {
