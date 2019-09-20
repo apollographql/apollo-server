@@ -1,5 +1,5 @@
-import hapi from 'hapi';
-import { parseAll } from 'accept';
+import hapi from '@hapi/hapi';
+import { parseAll } from '@hapi/accept';
 import {
   renderPlaygroundPage,
   RenderPageOptions as PlaygroundRenderPageOptions,
