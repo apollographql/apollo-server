@@ -34,7 +34,9 @@
     "graphql-tools": "^4.0.0"
   },
   "devDependencies": {
-    "apollo-server-integration-testsuite": "file:../apollo-server-integration-testsuite"
+    "apollo-server-integration-testsuite": "file:../apollo-server-integration-testsuite",
+    "@types/hapi__accept":"3.2.0",
+    "@types/hapi__boom":"7.4.1"
   },
   "peerDependencies": {
     "graphql": "^0.12.0 || ^0.13.0 || ^14.0.0"

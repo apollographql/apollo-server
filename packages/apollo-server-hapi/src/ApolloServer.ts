@@ -64,7 +64,7 @@ export class ApolloServer extends ApolloServerBase {
 
     if (!path) path = '/graphql';
 
-    await app.ext({
+    app.ext({
       type: 'onRequest',
       method: async function(request, h) {
         if (request.path !== path) {
@@ -103,7 +103,7 @@ export class ApolloServer extends ApolloServerBase {
     });
 
     if (!disableHealthCheck) {
-      await app.route({
+      app.route({
         method: '*',
         path: '/.well-known/apollo/server-health',
         options: {
