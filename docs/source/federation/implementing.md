@@ -124,7 +124,7 @@ const gateway = new ApolloGateway({
 
 const server = new ApolloServer({
   gateway,
-  
+
   // Currently, subscriptions are enabled by default with Apollo Server, however,
   // subscriptions are not compatible with the gateway.  We hope to resolve this
   // limitation in future versions of Apollo Server.  Please reach out to us on
@@ -138,6 +138,33 @@ server.listen().then(({ url }) => {
 ```
 
 In this example, we provide the `serviceList` configuration to the `ApolloGateway` constructor, which provides a `name` and endpoint (i.e. `url`) for each of the federated services. The name (an arbitrary string) is primarily used for query planner output, error messages, and logging.
+
+It's also possible to first `load()` the gateway and use the `exception` option to throw if the federated service fails to connect.
+
+```js
+const gateway = new ApolloGateway({
+  serviceList: [
+    {
+      name: 'accounts',
+      url: 'http://localhost:4001',
+      // will throw when loading if it fails to connect
+      exception: true },
+    // more services
+  ],
+});
+
+try {
+  const { schema, executor } = await gateway.load()
+
+  const server = new ApolloServer({
+    schema,
+    executor,
+    subscriptions: false,
+  });
+} catch (error) {
+  // Will catch a failure to connect to a federated service.
+}
+```
 
 Due the power and flexibility of federation's `_entities` field **federated services should not be publicly accessible**.  Clients are expected to communicate directly with the gateway.  Since circumventing this pattern could expose downstream federated services in ways which they were not intended to be exposed, proper ingress limitations (e.g. firewall rules) should be enforced.
 
@@ -174,13 +201,13 @@ const gateway = new ApolloGateway({
 
 const server = new ApolloServer({
   gateway,
-  
+
   // As noted above, subscriptions are enabled by default with Apollo Server, however,
   // subscriptions are not compatible with the gateway.  We hope to resolve this
   // limitation in future versions of Apollo Server.  Please reach out to us on
   // https://spectrum.chat/apollo/apollo-server if this is critical to your adoption!
   subscriptions: false,
-  
+
   context: ({ req }) => {
     // get the user token from the headers
     const token = req.headers.authorization || '';
