@@ -7,24 +7,22 @@ import {
   GraphQLRequest,
   processGraphQLRequest,
   GraphQLRequestContext,
+  GraphQLRequestPipelineConfig,
 } from './execution';
 
 // These should not be imported from here.
-import {
-  Config as BaseConfig,
-  Context,
-  ContextFunction,
-  GraphQLOptions
-} from 'apollo-server-core';
+import { Config as BaseConfig } from 'apollo-server-core';
 import { buildServiceDefinition } from '@apollographql/apollo-tools';
 
 export { default as gql } from 'graphql-tag';
-export { GraphQLSchemaModule } from './execution';
+import {
+  Context,
+  ContextFunction,
+} from './execution';
 
 // A subset of the base configuration.
 type Config = Pick<BaseConfig,
   | 'modules'
-  | 'resolvers'
   | 'dataSources'
   | 'parseOptions'
   | 'context'
@@ -271,10 +269,12 @@ export class ApolloServer {
     });
   }
 
-  protected async graphQLServerOptions(
-    integrationContextArgument?: Record<string, any>,
-  ) {
+  public async executeOperation(request: GraphQLRequest) {
+
     const { schema, documentStore } = await this.schemaDerivedData;
+
+    // TODO(AS3) The transport will provide context.
+    const integrationContextArgument = Object.create(null);
 
     let context: Context;
 
@@ -290,11 +290,11 @@ export class ApolloServer {
       };
     }
 
-    return {
+    // TODO(AS3) This context argument is maybe quite wrong, check it.
+    const options: GraphQLRequestPipelineConfig<typeof context> = {
       schema,
       plugins: this.plugins,
       documentStore,
-      context,
       // Allow overrides from options. Be explicit about a couple of them to
       // avoid a bad side effect of the otherwise useful noUnusedLocals option
       // (https://github.com/Microsoft/TypeScript/issues/21673).
@@ -311,27 +311,16 @@ export class ApolloServer {
       // TODO(AS3): AGM
       // reporting: !!this.engineReportingAgent,
       // ...this.requestOptions,
-    } as GraphQLOptions;
-  }
+    };
 
-  public async executeOperation(request: GraphQLRequest) {
-    let options;
-
-    try {
-      options = await this.graphQLServerOptions();
-    } catch (e) {
-      e.message = `Invalid options provided to ApolloServer: ${e.message}`;
-      throw new Error(e);
-    }
-
-    if (typeof options.context === 'function') {
-      options.context = (options.context as () => never)();
-    }
+    // TODO(AS3) This is not where the global cache should be created.
+    // Especially since this is per request.
+    const cache = new InMemoryLRUCache();
 
     const requestCtx: GraphQLRequestContext = {
       request,
-      context: options.context || Object.create(null),
-      cache: options.cache!,
+      context: context,
+      cache,
       response: {
         // TODO(AS3) http should not be a concern here, but instead, it should
         //           be a consideration of the transport itself.
