@@ -32,7 +32,7 @@ const client = new ApolloClient({
 Inside Apollo Server, the query registry is stored in a user-configurable cache. By default, Apollo Server uses a in-memory cache. This can be configured inside of the `ApolloServer` constructor:
 
 ```js
-const { MemcachedCache } = require('apollo-server-memcached');
+const { MemcachedCache } = require('apollo-server-cache-memcached');
 const { ApolloServer } = require('apollo-server');
 
 const server = new ApolloServer({
