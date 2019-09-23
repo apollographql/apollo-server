@@ -14,6 +14,7 @@ export async function getServiceDefinitionsFromRemoteEndpoint({
     name: string;
     url?: string;
     dataSource: GraphQLDataSource;
+    exception?: boolean;
   }[];
   headers?: HeadersInit;
   serviceSdlCache: Map<string, string>;
@@ -27,7 +28,7 @@ export async function getServiceDefinitionsFromRemoteEndpoint({
   let isNewSchema = false;
   // for each service, fetch its introspection schema
   const serviceDefinitions: ServiceDefinition[] = (await Promise.all(
-    serviceList.map(({ name, url, dataSource }) => {
+    serviceList.map(({ name, url, dataSource, exception }) => {
       if (!url) {
         throw new Error(`Tried to load schema from ${name} but no url found`);
       }
@@ -68,6 +69,11 @@ export async function getServiceDefinitionsFromRemoteEndpoint({
           return false;
         })
         .catch(error => {
+          if (exception) {
+            throw new Error(
+              `Encountered error when loading ${name} at ${url}: ${error.message}`,
+            );
+          }
           console.warn(
             `Encountered error when loading ${name} at ${url}: ${error.message}`,
           );
