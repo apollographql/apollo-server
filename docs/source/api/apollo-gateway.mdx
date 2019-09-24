@@ -16,7 +16,9 @@ The core of the federated gateway implementation. For an example, see the ["impl
 
 * `options`: `Object`
 
-  * `serviceList`: `ServiceDefinition[]` _(required)_
+  * `serviceList`: `ServiceDefinition[]` _(must **not** be set when using [managed federation](https://www.apollographql.com/docs/platform/federation/#managed-configuration); **required otherwise**)_
+
+    > To reduce the possibility of different server instances using different configurations during a roll-out, we recommend using a managed configuration that provides a single single source of truth for a graph.  When using [Graph Manager](https://www.apollographql.com/docs/platform/graph-manager-overview/)'s [managed federation](https://www.apollographql.com/docs/platform/federation/#managed-configuration) feature, this is handled automatically and `serviceList` should not be specified.
 
     An array of service definitions. A service definition contains the `name` and `url` for a federated service. The name is an arbitrary unique string and is primarily used for query planner output, error messages, logging, and the like.
 
