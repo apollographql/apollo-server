@@ -3,39 +3,51 @@ title: Migrating from schema stitching
 description: How to migrate services to Apollo Federation
 ---
 
-## Introduction
+If you have a distributed data graph that uses schema stitching, follow the
+steps in this guide to migrate it to use Apollo Federation.
 
-This guide is meant to support users who are already operating a data graph with a gateway built using schema-stitching, and specifically to discuss the **how** of migrating infrastructure and workflows in a way that is both incremental and backwards-compatible. This guide does **not** provide details of _why_ you may want to migrate, and we encourage you to read [the announcement post](https://blog.apollographql.com/apollo-federation-f260cf525d21) to learn some more about how we built Apollo Federation as an answer to problems teams encountered with schema-stitching, and [review the comparison between the two](#comparison-with-schema-stitching) below.
+> For details on the advantages of using a federated data graph instead of
+> schema stitching, see [this blog post](https://blog.apollographql.com/apollo-federation-f260cf525d21).
 
-# Preparing for a migration
+## Summary of steps
 
-The basic strategy for migrating from a stitching gateway to Apollo Federation is to start by standing up an Apollo gateway side-by-side with the stitching gateway, and then migrating services underneath the gateway one-by-one until the graph is completely migrated. The essential steps are these:
+You can (and should) migrate **incrementally** from schema stitching to Apollo Federation.
+To do so, you run Apollo Gateway _alongside_ your existing schema-stitching gateway and migrate the services that implement your data graph (**implementing services**)
+one at a time.
 
-1. [Add basic federation support to all stitched services](#adding-federation-support-to-services)
-2. [Start up a new gateway instance](#starting-up-a-new-gateway)
-3. [Migrate stitching logic from the gateway to individual services](#moving-linking-logic-to-services)
-4. [Complete the migration](#moving-traffic-to-federated-gateway)
-5. [Modifying the schema](#modifying-the-schema)
+Here are the high-level steps for migrating to Apollo Federation:
 
-To see a project using schema stitching that was migrated to take advantage of federation, check out [this repository](https://github.com/apollographql/federation-migration-example).
+1. Add federation support to your implementing services
+2. Start up an instance of Apollo Gateway
+3. Migrate stitching logic from your schema-stitching gateway to your implementing services
+4. Move traffic from the schema-stitching gateway to Apollo Gateway
+5. Make updates to your federated schema
 
-### Adding federation support to services
+Each step is described in detail below.
 
-The first step is to add federation support to each of the services underneath the current stitching gateway. This involves adding support for the key needs of query-planning, and **not** migrating linkages from the stitching pattern to the federation pattern. By adding in federation support to services, you'll be able to make many operations from the gateway, aside from those that rely on stitching logic implemented in your stitching gateway.
+> [This GitHub repository](https://github.com/apollographql/federation-migration-example) shows the same project before and after
+> migrating to Apollo Federation from schema stitching.
 
-This step is possible because the changes to services are **backwards compatible with schema-stitching**. Because of that, we recommend migrating current services in place rather than standing up new services. Along with allowing you to stand up an Apollo gateway to orchestrate operations to these underlying services, this step will help you to identify if you have any basic type conflicts that need to be resolved among your services before moving forward.
+## Step 1: Add federation support to your implementing services
 
-#### Adding support with Apollo Server
+You can add federation support to your implementing services _without_ impacting your
+existing schema-stitching architecture. Support for federation is fully compatible
+with schema stitching.
 
-Apollo Server includes federation support with the `@apollo/federation` package, and there are several packages contributed by the community to support other GraphQL runtimes, including [GraphQL-Java](https://github.com/apollographql/federation-jvm), [Graphene](https://pypi.org/project/graphene-federation/), and [GraphQL-Ruby](https://github.com/Gusto/apollo-federation-ruby). Adding support to services in-place should be a relatively quick exercise. For example, with Apollo Server, the steps are laid out below.
+Because of this, we recommend that you migrate your implementing services in place
+instead of creating replacement services. Doing so helps you identify any type conflicts that exist across your data graph.
 
-To do this with services written using Apollo Server, install the federation package:
+### Using Apollo Server
 
+If your implementing services use Apollo Server, add federation
+support to them by installing the `@apollo/federation` package:
+
+```bash
+npm install @apollo/federation
 ```
-npm i @apollo/federation
-```
 
-Once installed, use the `buildFederatedSchema` utility to modify your existing schema with the needed fields:
+Then use the `buildFederatedSchema` function to augment your schema with
+fields that are necessary for federation support:
 
 ```js
 const { ApolloServer } = require('apollo-server');
@@ -51,6 +63,14 @@ const server = new ApolloServer({
 });
 ```
 
+### Using another GraphQL server
+
+ are several packages contributed by the community to support other GraphQL runtimes, including:
+
+* [GraphQL-Java](https://github.com/apollographql/federation-jvm)
+* [Graphene](https://pypi.org/project/graphene-federation/)
+* [GraphQL-Ruby](https://github.com/Gusto/apollo-federation-ruby)
+
 Before moving on, start up the service and ensure that it still works properly with the existing stitched gateway.
 
 #### Instrumenting registry support
@@ -59,7 +79,7 @@ We highly recommend running services communicate their SDLs to the gateway via a
 
 Apollo Graph Manager works as a (completely free!) service registry which handles managed configuration of the gateway. Running the gateway in this managed mode only requires providing a Graph Manager API key, which will direct the gateway to download service SDLs automatically from the registry in a fault-tolerant way. To read more about the design details and configuration, please read the docs on [managed configuration](https://www.apollographql.com/docs/graph-manager/federation/#registering-federated-services). In short, if using Apollo Graph Manager as your external federation registry, make sure to call `apollo service:push` with a `--serviceName` flag as part of your service's deploy script(s).
 
-### Starting up a new Gateway
+## Step 2: Start up an instance of Apollo Gateway
 
 Once you've migrated your first service to federation, you can start exposing them through a top-level gateway. Apollo gateway is a query-planner and executor that handles incoming GraphQL requests and breaks them down into a series of operations to underlying GraphQL services. We recommend setting the Apollo gateway up side-by-side with your existing stitching gateway. Depending on your infrastructure, you may even want to put them in the same process to support dynamically routing traffic through either your stitching gateway or the federated gateway.
 
