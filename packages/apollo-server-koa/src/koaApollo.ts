@@ -29,7 +29,7 @@ export function graphqlKoa(
     );
   }
 
-  const graphqlHandler = (ctx: Koa.Context): Promise<void> => {
+  const graphqlHandler = (ctx: Koa.Context, next: Function): Promise<void> => {
     return runHttpQuery([ctx], {
       method: ctx.request.method,
       options: options,
@@ -45,6 +45,7 @@ export function graphqlKoa(
           ctx.set(key, responseInit.headers[key]),
         );
         ctx.body = graphqlResponse;
+        return next();
       },
       (error: HttpQueryError) => {
         if ('HttpQueryError' !== error.name) {
@@ -59,6 +60,7 @@ export function graphqlKoa(
 
         ctx.status = error.statusCode;
         ctx.body = error.message;
+        return next();
       },
     );
   };
