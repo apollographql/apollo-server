@@ -5,6 +5,7 @@ import { InMemoryLRUCache } from './caching';
 import { approximateObjectSize } from './utilities';
 import {
   GraphQLRequest,
+  GraphQLResponse,
   processGraphQLRequest,
   GraphQLRequestContext,
   GraphQLRequestPipelineConfig,
@@ -269,7 +270,13 @@ export class ApolloServer {
     });
   }
 
-  public async executeOperation(request: GraphQLRequest) {
+  public async executeOperation<
+    R extends GraphQLRequest,
+    S extends GraphQLResponse = GraphQLResponse
+  >(
+    request: R,
+    responseInit: S = Object.create(null),
+  ) {
 
     const { schema, documentStore } = await this.schemaDerivedData;
 
@@ -319,15 +326,9 @@ export class ApolloServer {
 
     const requestCtx: GraphQLRequestContext = {
       request,
-      context: context,
+      context,
       cache,
-      response: {
-        // TODO(AS3) http should not be a concern here, but instead, it should
-        //           be a consideration of the transport itself.
-        // http: {
-        //   headers: new Headers(),
-        // },
-      },
+      response: responseInit,
     };
 
     return processGraphQLRequest(options, requestCtx);
