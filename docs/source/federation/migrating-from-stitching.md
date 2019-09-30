@@ -1,41 +1,54 @@
 ---
 title: Migrating from schema stitching
-description: How to migrate services to Apollo Federation
+description: How to move your services to Apollo Federation
 ---
 
-## Introduction
+If you have a distributed data graph that uses schema stitching, follow the
+steps in this guide to migrate it to use Apollo Federation.
 
-This guide is meant to support users who are already operating a data graph with a gateway built using schema-stitching, and specifically to discuss the **how** of migrating infrastructure and workflows in a way that is both incremental and backwards-compatible. This guide does **not** provide details of _why_ you may want to migrate, and we encourage you to read [the announcement post](https://blog.apollographql.com/apollo-federation-f260cf525d21) to learn some more about how we built Apollo Federation as an answer to problems teams encountered with schema-stitching, and [review the comparison between the two](#comparison-with-schema-stitching) below.
+For details on the advantages of using a federated data graph instead of
+schema stitching, see [this blog post](https://blog.apollographql.com/apollo-federation-f260cf525d21).
 
-# Preparing for a migration
+## Summary of steps
 
-The basic strategy for migrating from a stitching gateway to Apollo Federation is to start by standing up an Apollo gateway side-by-side with the stitching gateway, and then migrating services underneath the gateway one-by-one until the graph is completely migrated. The essential steps are these:
+You can (and should) migrate **incrementally** from schema stitching to Apollo Federation.
+To do so, you run an Apollo Server gateway _alongside_ your existing schema-stitching gateway and migrate the services that implement your data graph (**implementing services**)
+one at a time.
 
-1. [Add basic federation support to all stitched services](#adding-federation-support-to-services)
-2. [Start up a new gateway instance](#starting-up-a-new-gateway)
-3. [Migrate stitching logic from the gateway to individual services](#moving-linking-logic-to-services)
-4. [Complete the migration](#moving-traffic-to-federated-gateway)
-5. [Modifying the schema](#modifying-the-schema)
+Here are the high-level steps for migrating to Apollo Federation:
 
-To see a project using schema stitching that was migrated to take advantage of federation, check out [this repository](https://github.com/apollographql/federation-migration-example).
+1. Add federation support to your implementing services
+2. Register your GraphQL schemas with a registry
+3. Start up an instance of Apollo Server as a gateway
+4. Migrate stitching logic from your schema-stitching gateway to your implementing services
+5. Move traffic from the schema-stitching gateway to the Apollo Server gateway
+6. Remove schema-stitching fields from your federated schema and complete your migration
 
-### Adding federation support to services
+Each step is described in detail below.
 
-The first step is to add federation support to each of the services underneath the current stitching gateway. This involves adding support for the key needs of query-planning, and **not** migrating linkages from the stitching pattern to the federation pattern. By adding in federation support to services, you'll be able to make many operations from the gateway, aside from those that rely on stitching logic implemented in your stitching gateway.
+> [This GitHub repository](https://github.com/apollographql/federation-migration-example) shows the same project before and after
+> migrating to Apollo Federation from schema stitching.
 
-This step is possible because the changes to services are **backwards compatible with schema-stitching**. Because of that, we recommend migrating current services in place rather than standing up new services. Along with allowing you to stand up an Apollo gateway to orchestrate operations to these underlying services, this step will help you to identify if you have any basic type conflicts that need to be resolved among your services before moving forward.
+## Step 1: Add federation support to your implementing services
 
-#### Adding support with Apollo Server
+You can add federation support to your implementing services _without_ impacting your
+existing schema-stitching architecture. Support for federation is fully compatible
+with schema stitching.
 
-Apollo Server includes federation support with the `@apollo/federation` package, and there are several packages contributed by the community to support other GraphQL runtimes, including [GraphQL-Java](https://github.com/apollographql/federation-jvm), [Graphene](https://pypi.org/project/graphene-federation/), and [GraphQL-Ruby](https://github.com/Gusto/apollo-federation-ruby). Adding support to services in-place should be a relatively quick exercise. For example, with Apollo Server, the steps are laid out below.
+Because of this, we recommend that you migrate your implementing services in place
+instead of creating replacement services. Doing so helps you identify any type conflicts that exist across your data graph.
 
-To do this with services written using Apollo Server, install the federation package:
+### Using Apollo Server
 
+If your implementing services use Apollo Server, add federation
+support to them by installing the `@apollo/federation` package:
+
+```bash
+npm install @apollo/federation
 ```
-npm i @apollo/federation
-```
 
-Once installed, use the `buildFederatedSchema` utility to modify your existing schema with the needed fields:
+Then use the `buildFederatedSchema` function to augment your schema with
+fields that are necessary for federation support:
 
 ```js
 const { ApolloServer } = require('apollo-server');
@@ -51,88 +64,56 @@ const server = new ApolloServer({
 });
 ```
 
-Before moving on, start up the service and ensure that it still works properly with the existing stitched gateway.
+### Using a GraphQL server besides Apollo Server
 
-#### Instrumenting registry support
+There are several community-contributed packages that add federation support to other GraphQL runtimes. These include:
 
-We highly recommend running services communicate their SDLs to the gateway via an [external registry](https://principledgraphql.com/integrity#3-track-the-schema-in-a-registry). There are a few reasons for doing this, which revolve around reliability of your data graph as well as maintaining a central source of truth for collaboration. Specifically with reliability, you want to ensure that whether your gateway is "up" does not depend on all services being "up". Therefore, though using the `serviceList` argument to Apollo gateway is a good way to test things locally, we recommend maintaining service SDLs in an external registry.
+* [GraphQL-Java](https://github.com/apollographql/federation-jvm)
+* [Graphene](https://pypi.org/project/graphene-federation/)
+* [GraphQL-Ruby](https://github.com/Gusto/apollo-federation-ruby)
 
-Apollo Graph Manager works as a (completely free!) service registry which handles managed configuration of the gateway. Running the gateway in this managed mode only requires providing a Graph Manager API key, which will direct the gateway to download service SDLs automatically from the registry in a fault-tolerant way. To read more about the design details and configuration, please read the docs on [managed configuration](https://www.apollographql.com/docs/graph-manager/federation/#registering-federated-services). In short, if using Apollo Graph Manager as your external federation registry, make sure to call `apollo service:push` with a `--serviceName` flag as part of your service's deploy script(s).
+If you're using one of these packages, ensure that after configuring it, your existing schema-stitching gateway continues to work correctly.
 
-### Starting up a new Gateway
+## Step 2: Register your schemas with a GraphQL registry
 
-Once you've migrated your first service to federation, you can start exposing them through a top-level gateway. Apollo gateway is a query-planner and executor that handles incoming GraphQL requests and breaks them down into a series of operations to underlying GraphQL services. We recommend setting the Apollo gateway up side-by-side with your existing stitching gateway. Depending on your infrastructure, you may even want to put them in the same process to support dynamically routing traffic through either your stitching gateway or the federated gateway.
+We strongly recommend that you register all of your GraphQL schemas with an [external registry](https://principledgraphql.com/integrity#3-track-the-schema-in-a-registry). Doing so improves the reliability of your data graph and maintains a single source of truth to simplify collaboration.
 
-As mentioned before, we highly recommend running the gateway with a [managed configuration](https://www.apollographql.com/docs/graph-manager/federation/#managed-configuration). To create a gateway that uses managed configuration through Apollo Graph Manager, you simply need to set `ENGINE_API_KEY` and `ENGINE_SCHEMA_TAG` environment variables appropriately and leave out the `serviceList` constructor option to `ApolloGateway`. See the [Graph Manager docs](https://www.apollographql.com/docs/graph-manager/federation/#connecting-apollo-server-to-the-graph-manager) for more details.
+[Apollo Graph Manager](https://www.apollographql.com/docs/graph-manager/) provides a free schema registry that helps you manage your federated gateway's configuration. You provide your gateway a Graph Manager API key on startup, which directs the gateway to download your schemas automatically in a fault-tolerant way.
 
-Once your gateway is set up, you should be able to make direct queries to it that get routed to underlying services and see responses come through.
+Graph Manager can also provide [schema validation](https://www.apollographql.com/docs/graph-manager/federation/#validating-changes-to-the-graph) to ensure that all
+changes you
+make to your implementing services are compatible with your complete data graph.
 
-### Moving linking logic to service
+> [Learn more about managed configuration](https://www.apollographql.com/docs/graph-manager/federation/#registering-federated-services)
 
-When running a stitching gateway, it's customary to put linking logic _in the gateway_ rather than in the services themselves. The federation model, on the other hand, puts linking logic in services, where resolvers are written to extend foreign types using a primary `@key` field on that type as a dependency. Thus, as part of the migration from schema-stitching to federation, the next step will be to migrate this logic from your stitching gateway into downstream services. Below, we've included some examples of how to do this in more detail. For the most common use cases, here is a good rule of thumb to follow:
+## Step 3: Start up an Apollo Server gateway
 
-* **fragments** : When using fragments in your schema stitching resolvers, these usually translate to a combination of `@key` and `@requires` directives. In general, think of `@key` as the field(s) that completely identify an entity, and only use `@requires` for additional non-identifying information
-* **filtering types** : We do not recommend filtering types out of your exposed schema when using a gateway. If you want types to be hidden, simply do not include them in your service's registered SDL.
-* **renaming types** : If you are currently renaming types at the gateway level, simply rename these types at the service level instead
-* **transforming fields** : If you are currently transforming fields at the gateway level, simply transform these fields at the service level instead
+After you've registered your schemas, you can start exposing your implementing services from a federation-compatible gateway. Apollo Server's gateway is a query planner and executor that handles incoming GraphQL requests and breaks them down into a collection of operations to perform on your implementing services.
 
-#### Removing type extensions from the gateway
+We recommend setting up the Apollo Server gateway _alongside_ your existing schema-stitching gateway. Depending on your infrastructure, you might even want to run both in the same _process_ to support dynamically routing traffic through one gateway or the other.
 
-If you followed the previous step, and added type extensions and fields to your services, you likely have conflicting fields with the stitching gateway now and will get duplicate field errors. You should be able to safely move any type extensions and field definitions out of the stitched gateway and into the service if you haven't already. With federated services, fields and type extensions can reference types that weren't even defined on that service.
+To enable managed configuration through Apollo Graph Manager, set the `ENGINE_API_KEY` and `ENGINE_SCHEMA_TAG` environment variables when you start up your Apollo Server gateway, and **do not provide the `serviceList` constructor option to `ApolloGateway`**. For details, see the [Graph Manager documentation](https://www.apollographql.com/docs/graph-manager/federation/#connecting-apollo-server-to-the-graph-manager).
 
-For example, if you have a reservation and user service and want to add a user field to the reservation, previously you would extend the Reservation type at the gateway before building the final schema.
+After your gateway is set up, you can make direct queries to it that are routed to the correct implementing services.
 
-```javascript{1-5,8}
-const extendedReservationSchema = `
-  extend type Reservation {
-    user: User
-  }
-`;
+## Step 4: Move linking logic to your implementing services
 
-const generateAndMergeSchemas = async () => {
-  const reservationSchema = await generateReservationSchema();
-  const userSchema = await generateUserSchema();
+When using a schema-stitching gateway, your linking logic typically resides _in the gateway itself_. In the federation model, however, linking logic resides _in each implementing service_. Therefore, you need to migrate linking logic from your schema-stitching gateway into each of your implementing services.
 
-  return mergeSchemas({
-    schemas: [reservationSchema, userSchema, extendedReservationSchema],
-    resolvers: {
-      Reservation: {
-        user: {
-          fragment: `... on Reservation { userId }`,
-          resolve: (parent, args, context, info) => {...}
-        }
-      }
-    }
-  })
-}
-```
+Here are recommendations for common cases when migrating your logic:
 
-With federation directives like `@external` it's possible to replace these gateway extensions with extensions on the service that owns their execution.
+* **Fragments**: Fragments in a schema-stitching resolver, usually translate to a combination of `@key` and `@requires` directives in a federated model. In general, think of `@key` as the field(s) that completely identify an entity, and only use `@requires` for additional, non-identifying information.
+* **Filtering types**: We do not recommend filtering types out of your exposed schema when using a gateway. If you want to hide types, do not include them in your service's registered schema.
+* **Renaming types**: If you are currently renaming types at the gateway level,  rename these types at the service level instead.
+* **Transforming fields**: If you are currently transforming fields at the gateway level, transform these fields at the service level instead.
 
-In the example above, the User service is the one that has awareness of how to fetch a user's information based on the reservation object, so in the User service, we can add the extension:
+### Adding resolvers to your federated services
 
-```graphql
-extend type Reservation @key(fields: "id") {
-  id: ID! @external
-  userId: ID! @external
-  user: User @requires(fields: "userId")
-}
-```
+At this point your implementing services support federation, but they still need
+to be able to resolve extensions to types that are defined in _other_ services.
 
-> In order to not break any existing clients, we won't remove the `userId` field until all usage of it is stopped.
-
-The important parts to focus on in this guide are the `user` and `userId` fields.
-
-The user field is similar to the extension that was previously at the gateway with the exception of the `@requires` directive. This directive signals to the query planner that the `user` field also needs the `Reservation.userId` field to properly lookup the user. You can think of the `@requires` directive as acting similarly to the `fragment` previously used in `mergeSchemas` in the stitched gateway.
-
-The userId field is in this extension and marked as `@external` simply as a signal to the federated service that this field exists on the `Reservation` type. Federated services are built to be able to operate independently without any knowledge of the rest of the schema, so type hints like this are necessary to pass validation.
-
-
-#### Adding resolvers to the federated services
-
-Following the previous steps ensures that the stitching gateway will still work with federation, but doesn't quite cover everything needed. This step is to write resolvers at the service-level that previously existed at the gateway.
-
-Inside of `mergeSchemas`, we declare `resolvers` that look to a service and manually call an existing field using `delegateToSchema`. And example of one of these resolvers is:
+A schema-stitching architecture declares this logic at the gateway level using the
+`delegateToSchema` function, like so:
 
 ```js
 resolvers: {
@@ -156,9 +137,34 @@ resolvers: {
 }
 ```
 
-This resolver calls `Query.user` on the `userSchema` to lookup a `User` and adds that user to the `Reservation.user` field that was previously defined at the gateway. This code can all remain. You don't need to remove it from the stitched gateway. In fact, if you did that, the stitched gateway would break.
+This resolver calls `Query.user` on the `userSchema` to look up a `User`. It adds that user to the `Reservation.user` field that was previously defined at the gateway. This code can all remain. You don't need to remove it from the stitched gateway. In fact, if you did that, the stitched gateway would break.
 
-Instead, we just need to _add_ a resolver for `Reservation.user` in the `Users` service.
+On the other hand, a _federated_ architecture defines its resolvers at the service level. These
+resolvers rely on **entities**, which are identified by a primary key. For example, the Reservation
+service must define the `Reservation` type as an entity to allow other services
+to extend it. These other services use the `Reservation`'s `@key` fields to uniquely
+identify a given instance:
+
+```graphql
+type Reservation @key(fields: "id") {
+  id: ID!
+  ...
+}
+```
+
+In the Users service, you can then extend the `Reservation` type with a `user` field like so:
+
+```graphql
+extend type Reservation @key(fields: "id") {
+  id: ID! @external
+  userId: ID! @external
+  user: User @requires(fields: "userId")
+}
+```
+
+The `user` field indicates that it `@requires` a `Reservation`'s `userId` field in order to identify the user that _made_ the reservation.
+
+Then in the Users service, you can add a resolver for `Reservation.user` like so:
 
 ```js
 {
@@ -170,82 +176,30 @@ Instead, we just need to _add_ a resolver for `Reservation.user` in the `Users` 
 }
 ```
 
-The important thing to know about this resolver is that it receives (as its first argument) anything that is defined in a `@key` on the type plus whatever is defined within `@requires` on the field.
+Federated resolvers like this one always receive an object that represents an instance of the extended entity. This object includes the fields that are part of
+the entity's `@key`, along with any other fields that the resolver `@requires`.
 
-So for the `Reservation.user` that we defined earlier:
+For example, this `Reservation.user` resolver receives the `id` of the reservation and a `userId`. You can use the `userId` to look up the corresponding user.
 
-```graphql
-extend type Reservation @key(fields: "id") {
-  id: ID! @external
-  userId: ID! @external
-  user: User @requires(fields: "userId")
-}
-```
+## Step 5: Move traffic from the schema-stitching gateway to the Apollo Server gateway
 
-The `Reservation.user` resolver will receive an `id` (of the reservation) and a `userId`. You can use the `userId` or anything else defined on the `Reservation` to lookup our user. For this example, the `userId` of a reservation is all you would need.
+At this point, both your schema-stitching gateway and your federated gateway are able to resolve GraphQL operations. You can now begin moving traffic from the schema-stitching gateway to the federated gateway.
 
-### Modifying the schema
+Perform this migration in the manner that best suits your infrastructure and applications.
 
-Once you have fully migrated your graph to federation, it should look identical to your stitching gateway's schema, unless you decided to remove unused types along the way. At this point, you can fully migrate all traffic and begin to modify your existing schema to take advantage of federation. For more information on how to do this, check out [this guide](/federation/core-concepts/).
+Some options include:
 
-## Comparison with schema stitching
+* Testing a complete migration in your staging environment to verify that both gateways behave identically
+* Use HTTP headers or feature flags to migrate your internal clients without affecting your user-facing clients
 
-If you're familiar with the `graphql-tools` schema stitching implementation, you're likely wondering how that compares to federation. There are three major differences between the approaches:
+## Step 6: Remove schema-stitching fields from your federated schema
 
-1. With federation, microservices all expose a proper part of the overall graph and can refer directly to types that live in other services, without the need to add foreign keys or superfluous relationship root fields to your schema.
-2. Federation is fully declarative and doesn't require any user code to be running in the gateway.
-3. Execution is efficient and predictable, because it relies on a query plan generated ahead of time with full knowledge of the overall query, instead of on runtime schema delegation that gets invoked as part of normal resolver-based execution.
+After you've fully migrated your graph and incoming traffic to use your federated gateway, you can remove all stitching-specific logic from your architecture.
 
-The first point may need some unpacking. Schema stitching forces you to expose foreign keys and relationship root fields at service boundaries instead of referring to external types directly.
+You can now begin to modify your existing schema to take full advantage of the
+features that federation provides. These features include:
 
-For example, your reviews service would expose  `authorID` and `productID` fields, instead of fields that link to `User` or `Product`. You're also forced to add relationship root fields to get the reviews for a user or product by ID:
-
-```graphql
-extend type Query {
-  reviewsForUser(userID: ID!): [Review]
-}
-
-type Review {
-  body: String
-  authorID: ID!
-}
-```
-
-This means the relationships are implicit, and you can't create a proper graph just based on this schema. In order to compose this service into an overall graph, you'll have to add link definitions to the gateway:
-
-```graphql
-extend type Review {
-  author: User
-}
-
-extend type User {
-  reviews: [Review]
-}
-
-```
-
-And you'll also have to write the code that implements these links, code that will be running in the gateway:
-
-```js
-{
-  User: {
-    reviews: {
-      fragment: `... on User { id }`,
-      resolve(user, args, context, info) {
-        return info.mergeInfo.delegateToSchema({
-          schema: reviewsSchema,
-          operation: "query",
-          fieldName: "reviewsForUser",
-          args: {
-            id: user.id
-          },
-          context,
-          info
-        });
-      }
-    },
-  }
-}
-```
-
-As a result, services can't really be developed in a modular way, because every team will also have to touch the gateway. That means it becomes a development bottleneck, and it's also often code that no one really owns. Yet any change to the gateway code can bring down the entire gateway.
+* Greater flexibility with [federation core concepts](https://www.apollographql.com/docs/apollo-server/federation/core-concepts/)
+* [Metrics and analysis of query plans](https://www.apollographql.com/docs/graph-manager/federation/#metrics-and-observability)
+* [Gateway support for live schema updates from implementing services](https://www.apollographql.com/docs/graph-manager/federation/#diving-into-servicepush)
+* [Validation of composition logic and usage traffic](https://www.apollographql.com/docs/graph-manager/federation/#validating-changes-to-the-graph) (with paid subscription)
