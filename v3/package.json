@@ -51,6 +51,7 @@
   },
   "devDependencies": {
     "@types/jest": "^24.0.18",
+    "@types/node": "^12.7.8",
     "codecov": "3.5.0",
     "graphql": "14.5.4",
     "jest": "24.9.0",
