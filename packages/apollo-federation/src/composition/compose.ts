@@ -50,6 +50,12 @@ const EmptyMutationDefinition = {
   fields: [],
   serviceName: null,
 };
+const EmptySubscriptionDefinition = {
+  kind: Kind.OBJECT_TYPE_DEFINITION,
+  name: { kind: Kind.NAME, value: 'Subscription' },
+  fields: [],
+  serviceName: null,
+};
 
 // Map of all definitions to eventually be passed to extendSchema
 interface DefinitionsMap {
@@ -269,6 +275,8 @@ export function buildMapsFromServiceList(serviceList: ServiceDefinition[]) {
   if (!definitionsMap.Query) definitionsMap.Query = [EmptyQueryDefinition];
   if (extensionsMap.Mutation && !definitionsMap.Mutation)
     definitionsMap.Mutation = [EmptyMutationDefinition];
+  if (extensionsMap.Subscription && !definitionsMap.Subscription)
+    definitionsMap.Subscription = [EmptySubscriptionDefinition];
 
   return {
     typeToServiceMap,
