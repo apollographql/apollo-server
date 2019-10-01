@@ -11,9 +11,17 @@ schema stitching, see [this blog post](https://blog.apollographql.com/apollo-fed
 
 ## Summary of steps
 
-You can (and should) migrate **incrementally** from schema stitching to Apollo Federation.
-To do so, you run an Apollo Server gateway _alongside_ your existing schema-stitching gateway and migrate the services that implement your data graph (**implementing services**)
-one at a time.
+This documentation describes a set of steps for migrating architecture **incrementally** from
+stitching to federation. In order to do so, we rely on the fact that changes necessary for
+federation are completely _backwards compatible_. In other words, services that implement a
+part of the graph (**implementing services**) can be used in both your stitching gateway
+and your Apollo gateway.
+
+A brief explanation of the migration strategy is that we recommend that you begin by modifying
+existing services in place to support the federation specification. You should do this while
+the services are still running to support a stitching gateway. At this point, you can stand up
+an Apollo gateway side-by-side with your existing stitching gateway and migrate over the links
+between the services in an incremental, backwards compatible way.
 
 Here are the high-level steps for migrating to Apollo Federation:
 
@@ -76,7 +84,7 @@ If you're using one of these packages, ensure that after configuring it, your ex
 
 ## Step 2: Register your schemas with a GraphQL registry
 
-We strongly recommend that you register all of your GraphQL schemas with an [external registry](https://principledgraphql.com/integrity#3-track-the-schema-in-a-registry). Doing so improves the reliability of your data graph and maintains a single source of truth to simplify collaboration.
+We strongly recommend that you register all of your GraphQL schemas with an [external registry](https://principledgraphql.com/integrity#3-track-the-schema-in-a-registry). This registry is going to be used to support running the gateway with the supporting service's partial schemas as configuration. Additionally, it enables tracking changes at the service level and protecting the graph from changes that break composition.
 
 [Apollo Graph Manager](https://www.apollographql.com/docs/graph-manager/) provides a free schema registry that helps you manage your federated gateway's configuration. You provide your gateway a Graph Manager API key on startup, which directs the gateway to download your schemas automatically in a fault-tolerant way.
 
