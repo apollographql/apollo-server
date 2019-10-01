@@ -52,9 +52,9 @@ The core of the federated gateway implementation. For an example, see the ["impl
     });
     ```
   * `introspectionHeaders`: `{ [key: string]: string }`
-    
+
     An object containing headers sent with introspection queries
-    
+
     ```js{3-5}
     const gateway = new ApolloGateway({
       ...
@@ -63,7 +63,7 @@ The core of the federated gateway implementation. For an example, see the ["impl
       }
     });
     ```
-   
+
   * `debug`: `Boolean`
 
     With debug enabled, the server will log startup messages as well as query plans during incoming requests.
@@ -101,6 +101,27 @@ The `RemoteGraphQLDataSource` export is used to connect to underlying federated 
       url,
       willSendRequest({ request, context }) {
         request.http.headers.set('x-user-id', context.userId);
+      },
+    });
+    ```
+
+  * `didReceiveResponse`: `(response: Response, request: Request, context: TContext) => Promise<TResult>`
+
+    A function to be called after completing a fetch to the underlying GraphQL service. This method has access to the request, response, and Apollo Server context to allow for updating the context or modifying the final result. This function expects a parsed response to be returned.
+
+    ```js{3-13}
+    new RemoteGraphQLDataSource({
+      url,
+      didReceiveResponse(response, request, context) {
+        if (response.ok) {
+          const cookie = request.http.headers.get('Cookie');
+          if (cookie) {
+            context.responseCookies.push(cookie);
+          }
+          return this.parseBody(response);
+        } else {
+          throw await this.errorFromResponse(response);
+        }
       },
     });
     ```

@@ -124,7 +124,7 @@ const gateway = new ApolloGateway({
 
 const server = new ApolloServer({
   gateway,
-  
+
   // Currently, subscriptions are enabled by default with Apollo Server, however,
   // subscriptions are not compatible with the gateway.  We hope to resolve this
   // limitation in future versions of Apollo Server.  Please reach out to us on
@@ -174,13 +174,13 @@ const gateway = new ApolloGateway({
 
 const server = new ApolloServer({
   gateway,
-  
+
   // As noted above, subscriptions are enabled by default with Apollo Server, however,
   // subscriptions are not compatible with the gateway.  We hope to resolve this
   // limitation in future versions of Apollo Server.  Please reach out to us on
   // https://spectrum.chat/apollo/apollo-server if this is critical to your adoption!
   subscriptions: false,
-  
+
   context: ({ req }) => {
     // get the user token from the headers
     const token = req.headers.authorization || '';
@@ -199,5 +199,65 @@ server.listen().then(({ url }) => {
 ```
 
 By leveraging the `buildService` function, we're able to customize how requests are sent to our federated services. In this example, we return a custom `RemoteGraphQLDataSource`. The datasource allows us to modify the outgoing request with information from the Apollo Server `context` before it's sent. Here, we're adding the `user-id` header to pass an authenticated user id to downstream services.
+
+In a similar vein, the `didReceiveResponse` hook allows us to inspect a service's `response` in order to modify the `context`. The lifecycle of a request to a federated server involves a number of responses, which may contain headers that need to be passed back to the client. Suppose we want to collect the <a href="https://docs.fastly.com/en/guides/getting-started-with-surrogate-keys" target="_blank" rel="noopener noreferrer">Surrogate-Key</a> headers from every response for caching purposes. We can implement this using the `didReceiveResponse` hook and an `ApolloServerPlugin`:
+
+```javascript{11-22,39-48}
+const { ApolloServer } = require('apollo-server');
+const { ApolloGateway, RemoteGraphQLDataSource } = require('@apollo/gateway');
+
+const gateway = new ApolloGateway({
+  serviceList: [
+    { name: 'products', url: 'http://localhost:4001' },
+    // other services
+  ],
+  buildService({ name, url }) {
+    return new RemoteGraphQLDataSource({
+      url,
+      didReceiveResponse(response, request, context) {
+        if (response.ok) {
+          // Parse surrogate keys from the header and push them onto the context
+          const surrogateKeyString = response.headers.get('Surrogate-Key');
+          if (surrogateKeyString) {
+            context.surrogateKeys.push(...surrogateKeyString.split(' '));
+          }
+          return this.parseBody(response);
+        } else {
+          throw await this.errorFromResponse(response);
+        }
+      },
+    });
+  },
+});
+
+const server = new ApolloServer({
+  gateway,
+
+  // As noted above, subscriptions are enabled by default with Apollo Server, however,
+  // subscriptions are not compatible with the gateway.  We hope to resolve this
+  // limitation in future versions of Apollo Server.  Please reach out to us on
+  // https://spectrum.chat/apollo/apollo-server if this is critical to your adoption!
+  subscriptions: false,
+  context() {
+    return { surrogateKeys: [] };
+  },
+  plugins: [
+    {
+      requestDidStart() {
+        return {
+          willSendResponse({ context, response }) {
+            const surrogateKeyString = context.surrogateKeys.join(' ');
+            response.http.headers.append('Surrogate-Key', surrogateKeyString);
+          }
+        };
+      }
+    }
+  ]
+});
+
+server.listen().then(({ url }) => {
+  console.log(`🚀 Server ready at ${url}`);
+});
+```
 
 To learn more about `buildService` or `RemoteGraphQLDataSource`, see the [API docs](/api/apollo-gateway/).
