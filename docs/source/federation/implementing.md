@@ -202,7 +202,7 @@ By leveraging the `buildService` function, we're able to customize how requests 
 
 In a similar vein, the `didReceiveResponse` hook allows us to inspect a service's `response` in order to modify the `context`. The lifecycle of a request to a federated server involves a number of responses, which may contain headers that need to be passed back to the client. Suppose we want to collect the <a href="https://docs.fastly.com/en/guides/getting-started-with-surrogate-keys" target="_blank" rel="noopener noreferrer">Surrogate-Key</a> headers from every response for caching purposes. We can implement this using the `didReceiveResponse` hook and an `ApolloServerPlugin`:
 
-```javascript{11-22,39-48}
+```javascript{12-23,40-49}
 const { ApolloServer } = require('apollo-server');
 const { ApolloGateway, RemoteGraphQLDataSource } = require('@apollo/gateway');
 
