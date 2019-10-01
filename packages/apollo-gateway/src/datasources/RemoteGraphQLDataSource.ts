@@ -91,7 +91,7 @@ export class RemoteGraphQLDataSource implements GraphQLDataSource {
     >,
   ): ValueOrPromise<void>;
 
-  public async didReceiveResponse<TContext, TResult = any>(
+  public async didReceiveResponse<TResult = any, TContext = any>(
     response: Response,
     _request: Request,
     _context: TContext,
