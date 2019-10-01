@@ -129,7 +129,12 @@ describe('didReceiveResponse', () => {
       url: 'https://api.example.com/foo',
       async didReceiveResponse(response, request, context) {
         // I'd prefer to use super.didReceiveResponse here but it doesn't seem to work.
-        const body = await RemoteGraphQLDataSource.prototype.didReceiveResponse.call(this, [response, request, context]);
+        const body = await RemoteGraphQLDataSource.prototype.didReceiveResponse.call(
+          this,
+          response,
+          request,
+          context,
+        );
         const surrogateKeys = request.headers.get('surrogate-keys');
         if (surrogateKeys) {
           (context as any).surrogateKeys.push(...surrogateKeys.split(' '));
