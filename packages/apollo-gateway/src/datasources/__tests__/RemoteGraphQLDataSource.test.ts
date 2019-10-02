@@ -7,7 +7,7 @@ import {
 } from 'apollo-server-errors';
 
 import { RemoteGraphQLDataSource } from '../RemoteGraphQLDataSource';
-import { Headers } from 'apollo-server-env';
+import { Headers, Response, Request } from 'apollo-server-env';
 
 beforeEach(() => {
   fetch.mockReset();
@@ -125,23 +125,24 @@ describe('didReceiveResponse', () => {
       surrogateKeys: string[];
     }
 
-    const DataSource = new RemoteGraphQLDataSource({
-      url: 'https://api.example.com/foo',
-      async didReceiveResponse(response, request, context) {
-        // I'd prefer to use super.didReceiveResponse here but it doesn't seem to work.
-        const body = await RemoteGraphQLDataSource.prototype.didReceiveResponse.call(
-          this,
-          response,
-          request,
-          context,
-        );
+    class MyDataSource extends RemoteGraphQLDataSource {
+      url = 'https://api.example.com/foo';
+
+      async didReceiveResponse<TResult, TContext>(
+        response: Response,
+        request: Request,
+        context: TContext,
+      ): Promise<TResult> {
+        const body = await super.didReceiveResponse<TResult>(response, request, context);
         const surrogateKeys = request.headers.get('surrogate-keys');
         if (surrogateKeys) {
           (context as any).surrogateKeys.push(...surrogateKeys.split(' '));
         }
         return body;
-      },
-    });
+      }
+    }
+
+    const DataSource = new MyDataSource();
 
     fetch.mockJSONResponseOnce({ data: { me: 'james' } });
 
