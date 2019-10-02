@@ -232,11 +232,6 @@ const gateway = new ApolloGateway({
 
 const server = new ApolloServer({
   gateway,
-
-  // As noted above, subscriptions are enabled by default with Apollo Server, however,
-  // subscriptions are not compatible with the gateway.  We hope to resolve this
-  // limitation in future versions of Apollo Server.  Please reach out to us on
-  // https://spectrum.chat/apollo/apollo-server if this is critical to your adoption!
   subscriptions: false, // Must be disabled with the gateway; see above.
   context() {
     return { surrogateKeys: [] };
