@@ -95,7 +95,7 @@ export abstract class RESTDataSource<TContext = any> extends DataSource {
   protected async didReceiveResponse<TResult = any>(
     response: Response,
     _request: Request,
-    _context: TContext,
+    _context?: TContext,
   ): Promise<TResult> {
     if (response.ok) {
       return (this.parseBody(response) as any) as Promise<TResult>;
