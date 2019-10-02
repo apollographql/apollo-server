@@ -62,6 +62,7 @@ type BaseConfig = Pick<
   | 'tracing'
   | 'dataSources'
   | 'cache'
+  | 'reporting'
 >;
 
 export type Unsubscriber = () => void;
