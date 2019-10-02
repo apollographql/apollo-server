@@ -94,7 +94,7 @@ export class RemoteGraphQLDataSource implements GraphQLDataSource {
   public async didReceiveResponse<TResult = any, TContext = any>(
     response: Response,
     _request: Request,
-    _context: TContext,
+    _context?: TContext,
   ): Promise<TResult> {
     if (response.ok) {
       return (this.parseBody(response) as any) as Promise<TResult>;
