@@ -66,7 +66,7 @@ For significant changes to a repository, it’s important to settle on a design 
 2.  **Reach consensus.** Some contributors and community members should reach an agreement that this feature or bug is important, and that someone should work on implementing or fixing it.
 3.  **Agree on intended behavior.** On the issue, reach an agreement about the desired behavior. In the case of a bug fix, it should be clear what it means for the bug to be fixed, and in the case of a feature, it should be clear what it will be like for developers to use the new feature.
 4.  **Agree on implementation plan.** Write a plan for how this feature or bug fix should be implemented. What modules need to be added or rewritten? Should this be one pull request or multiple incremental improvements? Who is going to do each part?
-5.  **Submit PR.** In the case where multiple dependent patches need to be made to implement the change, only submit one at a time. Otherwise, the others might get stale while the first is reviewed and merged. Make sure to avoid “while we’re here” type changes - if something isn’t relevant to the improvement at hand, it should be in a separate PR; this especially includes code style changes of unrelated code.
+5.  **Submit PR.** In the case where multiple dependent patches need to be made to implement the change, only submit one at a time. Otherwise, the others might get stale while the first is reviewed and merged. Make sure to avoid “while we’re here” type changes - if something isn’t relevant to the improvement at hand, it should be in a separate PR; this especially includes code style changes of unrelated code. Keep in mind that, upon opening a PR, if the _Contributor License Agreement (CLA)_ hasn't been previously signed, it will be requested that you sign it. The CLA [can be previewed here](https://contribute.meteor.com).
 6.  **Review.** At least one core contributor should sign off on the change before it’s merged. Look at the “code review” section below to learn about factors are important in the code review. If you want to expedite the code being merged, try to review your own code first!
 7.  **Merge and release!**
 
@@ -79,10 +79,10 @@ It’s important that every piece of code in Apollo packages is reviewed by at l
 3.  **Testing.** Do the tests ensure this code won’t break when other stuff changes around it? When it does break, will the tests added help us identify which part of the library has the problem? Did we cover an appropriate set of edge cases? Look at the test coverage report if there is one. Are all significant code paths in the new code exercised at least once?
 4.  **No unnecessary or unrelated changes.** PRs shouldn’t come with random formatting changes, especially in unrelated parts of the code. If there is some refactoring that needs to be done, it should be in a separate PR from a bug fix or feature, if possible.
 5.  **Code has appropriate comments.** Code should be commented, or written in a clear “self-documenting” way.
-6.  **Idiomatic use of the language.** In TypeScript, make sure the typings are specific and correct. In ES2015, make sure to use imports rather than require and const instead of var, etc. Ideally a linter enforces a lot of this, but use your common sense and follow the style of the surrounding code.
+6.  **Idiomatic use of the language.** In TypeScript, make sure the typings are specific and correct. In ES2015, make sure to use imports rather than require and const instead of var, etc. Use your common sense and follow the style of the surrounding code.
 
 ## New contributors
 
 If you want to contribute to Apollo server, but aren't quite sure where to start, take a look at the [roadmap and design docs](./ROADMAP.md). Just pick one of the upcoming features that you're interested in, and start working on it. If the design doc isn't clear enough (which it probably won't be), open an issue thread so we can discuss it.
 
-Last but not least, make sure to join the [Apollo Slack channel](http://slack.apollostack.com), where there are lots of other friendly contributors to talk to.
+Last but not least, make sure to join the [Apollo Spectrum community](https://spectrum.chat/apollo), where there are lots of other friendly contributors to talk to.

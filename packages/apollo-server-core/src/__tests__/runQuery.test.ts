@@ -1,4 +1,3 @@
-/* tslint:disable:no-unused-expression */
 import MockReq = require('mock-req');
 
 import {
@@ -20,10 +19,8 @@ import {
 import { processGraphQLRequest, GraphQLRequest } from '../requestPipeline';
 import { Request } from 'apollo-server-env';
 import { GraphQLOptions, Context as GraphQLContext } from 'apollo-server-core';
-import {
-  ApolloServerPlugin,
-  GraphQLRequestListener,
-} from 'apollo-server-plugin-base';
+import { ApolloServerPlugin } from 'apollo-server-plugin-base';
+import { GraphQLRequestListener } from 'apollo-server-plugin-base';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 
 // This is a temporary kludge to ensure we preserve runQuery behavior with the
@@ -451,6 +448,116 @@ describe('runQuery', () => {
     });
   });
 
+  describe('request pipeline life-cycle hooks', () => {
+    describe('requestDidStart', () => {
+      const requestDidStart = jest.fn();
+      it('called for each request', async () => {
+        const runOnce = () =>
+          runQuery({
+            schema,
+            queryString: '{ testString }',
+            plugins: [
+              {
+                requestDidStart,
+              },
+            ],
+            request: new MockReq(),
+          });
+
+        await runOnce();
+        expect(requestDidStart.mock.calls.length).toBe(1);
+        await runOnce();
+        expect(requestDidStart.mock.calls.length).toBe(2);
+      });
+    });
+
+    describe('parsingDidStart', () => {
+      const parsingDidStart = jest.fn();
+      it('called when parsing will result in an error', async () => {
+        await runQuery({
+          schema,
+          queryString: '{ testStringWithParseError: }',
+          plugins: [
+            {
+              requestDidStart() {
+                return {
+                  parsingDidStart,
+                };
+              },
+            },
+          ],
+          request: new MockReq(),
+        });
+
+        expect(parsingDidStart).toBeCalled();
+      });
+
+      it('called when a successful parse happens', async () => {
+        await runQuery({
+          schema,
+          queryString: '{ testString }',
+          plugins: [
+            {
+              requestDidStart() {
+                return {
+                  parsingDidStart,
+                };
+              },
+            },
+          ],
+          request: new MockReq(),
+        });
+
+        expect(parsingDidStart).toBeCalled();
+      });
+    });
+
+    describe('didEncounterErrors', () => {
+      const didEncounterErrors = jest.fn();
+      it('called when an error occurs', async () => {
+        await runQuery({
+          schema,
+          queryString: '{ testStringWithParseError: }',
+          plugins: [
+            {
+              requestDidStart() {
+                return {
+                  didEncounterErrors,
+                };
+              },
+            },
+          ],
+          request: new MockReq(),
+        });
+
+        expect(didEncounterErrors).toBeCalledWith(
+          expect.objectContaining({
+            errors: expect.arrayContaining([expect.any(Error)]),
+          }),
+        );
+      });
+
+      it('not called when an error does not occur', async () => {
+        await runQuery({
+          schema,
+          queryString: '{ testString }',
+          plugins: [
+            {
+              requestDidStart() {
+                return {
+                  didEncounterErrors,
+                };
+              },
+            },
+          ],
+          request: new MockReq(),
+        });
+
+        expect(didEncounterErrors).not.toBeCalled();
+      });
+    });
+  });
+
   describe('parsing and validation cache', () => {
     function createLifecyclePluginMocks() {
       const validationDidStart = jest.fn();
@@ -551,8 +658,6 @@ describe('runQuery', () => {
       await runRequest({ plugins, documentStore });
       expect(parsingDidStart.mock.calls.length).toBe(1);
       expect(validationDidStart.mock.calls.length).toBe(1);
-
-      console.log(documentStore);
     });
 
     it("the documentStore calculates the DocumentNode's length by its JSON.stringify'd representation", async () => {

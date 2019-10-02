@@ -5,6 +5,7 @@ import {
   runHttpQuery,
   convertNodeHttpToRequest,
 } from 'apollo-server-core';
+import { ValueOrPromise } from 'apollo-server-types';
 
 export interface IRegister {
   (server: Server, options: any, next?: Function): void;
@@ -17,7 +18,7 @@ export interface IPlugin {
 }
 
 export interface HapiOptionsFunction {
-  (request?: Request): GraphQLOptions | Promise<GraphQLOptions>;
+  (request?: Request): ValueOrPromise<GraphQLOptions>;
 }
 
 export interface HapiPluginOptions {

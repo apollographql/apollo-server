@@ -31,6 +31,7 @@ export {
 // ApolloServer Base class
 export { ApolloServerBase } from './ApolloServer';
 export * from './types';
+export * from './requestPipelineAPI';
 
 // This currently provides the ability to have syntax highlighting as well as
 // consistency between client and server gql tags

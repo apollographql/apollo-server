@@ -5,11 +5,12 @@ import {
   runHttpQuery,
 } from 'apollo-server-core';
 import { Headers } from 'apollo-server-env';
+import { ValueOrPromise } from 'apollo-server-types';
 
 export interface LambdaGraphQLOptionsFunction {
-  (event: lambda.APIGatewayProxyEvent, context: lambda.Context):
-    | GraphQLOptions
-    | Promise<GraphQLOptions>;
+  (event: lambda.APIGatewayProxyEvent, context: lambda.Context): ValueOrPromise<
+    GraphQLOptions
+  >;
 }
 
 export function graphqlLambda(

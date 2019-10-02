@@ -3,11 +3,11 @@ title: "API Reference: apollo-server"
 sidebar_title: apollo-server
 ---
 
-This API reference documents the exports from the `apollo-server`.
+This API reference documents the exports from the `apollo-server` package.
 
 ## `ApolloServer`
 
-The core of an Apollo Server implementation. For an example, see the [Building a server](../essentials/server.html) section within "Essentials".
+The core of an Apollo Server implementation. For an example, see the [getting-started article](/getting-started/).
 
 ### `constructor(options)`: <`ApolloServer`>
 
@@ -61,10 +61,10 @@ new ApolloServer({
 new ApolloServer({
   typeDefs,
   resolvers,
-  rootValue: (documentAST) => ({
+  rootValue: (documentAST) => {
     const op = getOperationAST(documentNode)
     return op === 'mutation' ? mutationRoot : queryRoot;
-  })
+  }
 });
 ```
 
@@ -98,7 +98,7 @@ new ApolloServer({
 
 * `tracing`, `cacheControl`: <`Boolean`>
 
-  Add tracing or cacheControl meta data to the GraphQL response
+  If set to `true`, adds tracing or cacheControl metadata to the GraphQL response. This is primarily intended for use with the deprecated Engine proxy.  `cacheControl` can also be set to an object to specify arguments to the `apollo-cache-control` package, including `defaultMaxAge`, `calculateHttpHeaders`, and `stripFormattedExtensions`.
 
 * `formatError`, `formatResponse`: <`Function`>
 
@@ -119,7 +119,7 @@ new ApolloServer({
 
 * `engine`: <`EngineReportingOptions`> | boolean
 
-  Provided the `ENGINE_API_KEY` environment variable is set, the engine reporting agent will be started automatically. The API key can also be provided as the `apiKey` field in an object passed as the `engine` field. See the [EngineReportingOptions](#EngineReportingOptions) section for a full description of how to configure the reporting agent, including how to blacklist variables. When using the Engine proxy, this option should be set to false.
+  Provided the `ENGINE_API_KEY` environment variable is set, the Graph Manager reporting agent will be started automatically. The API key can also be provided as the `apiKey` field in an object passed as the `engine` field. See the [EngineReportingOptions](#enginereportingoptions) section for a full description of how to configure the reporting agent, including how to include variable values and HTTP headers. When using the Engine proxy, this option should be set to `false`.
 
 * `persistedQueries`: <`Object`> | false
 
@@ -133,23 +133,27 @@ new ApolloServer({
 
 `ApolloServer`
 
-### `ApolloServer.listen(options)`: `Promise`
+## `ApolloServer.listen`
 
-#### Parameters
+> **Note:** This method is only provided by the `apollo-server` package.  For the `apollo-server-{integration}` packages, see `applyMiddleware` below.
 
-In `apollo-server`, the listen call starts the subscription server and passes the arguments directly to an http server Node.js' [`net.Server.listen`](https://nodejs.org/api/net.html#net_server_listen) method are supported.
+### Parameters
 
-#### Returns
+* `options`: <`Object`>
 
-`Promise` that resolves to an object that contains:
+  When using the `apollo-server` package, calling `listen` on an instantiated `ApolloServer` will start the server by passing the specified (optional) `options` to a Node.js [`http.Server`](https://nodejs.org/api/http.html#http_class_http_server).  For a full reference of the supported `options`, see the [documentation for `net.Server.listen`](https://nodejs.org/api/net.html#net_server_listen_options_callback).
+
+### Returns
+
+`Promise` that resolves to an object containing the following properties:
 
   * `url`: <`String`>
   * `subscriptionsPath`: <`String`>
-  * `server`: <[`http.Server`](https://nodejs.org/api/http.html#http_class_http_server)>
+  * `server`: &lt;[`http.Server`](https://nodejs.org/api/http.html#http_class_http_server)&gt;
 
-## ApolloServer.applyMiddleware
+## `ApolloServer.applyMiddleware`
 
-The `applyMiddleware` method is provided by the `apollo-server-{integration}` packages that use middleware, such as hapi and express. This function connects ApolloServer to a specific framework.
+The `applyMiddleware` method is provided by the `apollo-server-{integration}` packages that use middleware, such as hapi and express. This method connects `ApolloServer` to a specific HTTP framework.
 
 ### Parameters
 
@@ -159,19 +163,15 @@ The `applyMiddleware` method is provided by the `apollo-server-{integration}` pa
 
     Pass an instance of the server integration here.
 
-  * `server`: <`ApolloServer`> _(required)_
-
-    Pass the instance of Apollo Server
-
   * `path` : <`String`>
 
     Specify a custom path. It defaults to `/graphql` if no path is specified.
 
-  * `cors`: <`Object` | `boolean`> ([express](https://github.com/expressjs/cors#cors), [hapi](https://hapijs.com/api#-routeoptionscors))
+  * `cors`: <`Object` | `boolean`> ([express](https://github.com/expressjs/cors#cors), [hapi](https://hapijs.com/api#-routeoptionscors), [koa](https://github.com/koajs/cors/))
 
     Pass the integration-specific cors options. False removes the cors middleware and true uses the defaults.
 
-  * `bodyParserConfig`: <`Object` | `boolean`> ([express](https://github.com/expressjs/body-parser#body-parser))
+  * `bodyParserConfig`: <`Object` | `boolean`> ([express](https://github.com/expressjs/body-parser#body-parser), [koa](https://github.com/koajs/bodyparser))
 
     Pass the body-parser options. False removes the body parser middleware and true uses the defaults.
 
@@ -196,6 +196,14 @@ app.use('*', jwtCheck, requireAuth, checkScope);
 
 server.applyMiddleware({ app, path: '/specialUrl' }); // app is from an existing express app. Mount Apollo middleware here. If no path is specified, it defaults to `/graphql`.
 ```
+
+## `ApolloServer.getMiddleware`
+
+Similar to the `applyMiddleware` method above, though rather than applying the composition of the various Apollo Server middlewares which comprise a full-featured Apollo Server deployment (e.g. middleware for HTTP body parsing, GraphQL Playground, uploads and subscriptions) the `getMiddleware` simply returns the middleware.
+
+The `getMiddleware` method takes the same arguments as `applyMiddleware` **except** `app` should not be passed.  Instead, the result of `getMiddleware` must be added as a middleware directly to an existing application (e.g. with `app.use(...)`).
+
+For example, for `apollo-server-express`, this means that rather than passing `applyMiddleware` an `app` which was already initiated from calling `express()`, and `applyMiddleware` "using" (i.e. `app.use`), the implementor will instead call `app.use(...)` on the result of `getMiddleware` with the same arguments.
 
 ## `gql`
 
@@ -296,10 +304,10 @@ addMockFunctionsToSchema({
 
 *  `apiKey`: string __(required)__
 
-  API key for the service. Get this from
-  [Engine](https://engine.apollographql.com) by logging in and creating
-  a service. You may also specify this with the `ENGINE_API_KEY`
-  environment variable the option takes precedence.
+  API key for the service. Obtain an API key from
+  [Graph Manager](https://engine.apollographql.com) by logging in and creating
+  a service. You can also specify an API key with the `ENGINE_API_KEY`
+  environment variable, although the `apiKey` option takes precedence.
 
 *  `calculateSignature`: (ast: DocumentNode, operationName: string) => string
 
@@ -310,23 +318,24 @@ addMockFunctionsToSchema({
 
 *  `reportIntervalMs`: number
 
-   How often to send reports to the Engine server. We'll also send reports
-   when the report gets big see maxUncompressedReportSize.
+   How often to send reports to Graph Manager, in milliseconds. We'll also send reports
+   when the report reaches a size threshold specified by `maxUncompressedReportSize`.
 
 *  `maxUncompressedReportSize`: number
 
-   We send a report when the report size will become bigger than this size in
-   bytes (default: 4MB).  (This is a rough limit --- we ignore the size of the
-   report header and some other top level bytes. We just add up the lengths of
-   the serialized traces and signatures.)
+   In addition to interval-based reporting, Apollo Server sends a report to
+   Graph Manager whenever the report's size exceeds this value in
+   bytes (default: 4MB). Note that this is a rough limit. The size of the
+   report's header and some other top-level bytes are ignored. The report size is
+   limited to the sum of the lengths of serialized traces and signatures.
 
 *  `endpointUrl`: string
 
-   The URL of the Engine report ingress server.
+   The URL of the Graph Manager report ingress server.
 
 *  `requestAgent`: `http.Agent | https.Agent | false`
 
-   HTTP(s) agent to be used for Apollo Engine metrics reporting.  This accepts either an [`http.Agent`](https://nodejs.org/docs/latest-v10.x/api/http.html#http_class_http_agent) or [`https.Agent`](https://nodejs.org/docs/latest-v10.x/api/https.html#https_class_https_agent) and behaves the same as the `agent` parameter to Node.js' [`http.request`](https://nodejs.org/docs/latest-v8.x/api/http.html#http_http_request_options_callback).
+   HTTP(s) agent to be used for Apollo Graph Manager metrics reporting.  This accepts either an [`http.Agent`](https://nodejs.org/docs/latest-v10.x/api/http.html#http_class_http_agent) or [`https.Agent`](https://nodejs.org/docs/latest-v10.x/api/https.html#https_class_https_agent) and behaves the same as the `agent` parameter to Node.js' [`http.request`](https://nodejs.org/docs/latest-v8.x/api/http.html#http_http_request_options_callback).
 
 *  `debugPrintReports`: boolean
 
@@ -343,22 +352,61 @@ addMockFunctionsToSchema({
 
 *  `reportErrorFunction`: (err: Error) => void
 
-   By default, errors sending reports to Engine servers will be logged
+   By default, any errors encountered while sending reports to Graph Manager will be logged
    to standard error. Specify this function to process errors in a different
    way.
 
-*  `privateVariables`: Array<String> | boolean
+* `sendVariableValues`: { transform: (options: { variables: Record<string, any>, operationString?: string } ) => Record<string, any> }
+                     | { exceptNames: Array&lt;String&gt; }
+                     | { onlyNames: Array&lt;String&gt; }
+                     | { none: true }
+                     | { all: true }
 
-   A case-sensitive list of names of variables whose values should not be sent
-   to Apollo servers, or 'true' to leave out all variables. In the former
-   case, the report will indicate that each private variable was redacted in
-   the latter case, no variables are sent at all.
+    By default, Apollo Server does not send the values of any GraphQL variables to Apollo's servers, because variable values often contain the private data of your app's users. If you'd like variable values to be included in traces, set this option. This option can take several forms:
 
-*  `privateHeaders`: Array<String> | boolean
+    - `{ none: true }`: Don't send any variable values. **(DEFAULT)**
+    - `{ all: true }`: Send all variable values.
+    - `{ transform: ({ variables, operationString}) => { ... } }`: A custom function for modifying variable values. Keys added by the custom function will be removed, and keys removed will be added back with an empty value.  For security reasons, if an error occurs within this function, all variable values will be replaced with `[PREDICATE_FUNCTION_ERROR]`. 
+    - `{ exceptNames: [...] }`: A case-sensitive list of names of variables whose values should not be sent to Apollo servers.
+    - `{ onlyNames: [...] }`: A case-sensitive list of names of variables whose values will be sent to Apollo servers.
 
-   A case-insensitive list of names of HTTP headers whose values should not be
-   sent to Apollo servers, or 'true' to leave out all HTTP headers. Unlike
-   with privateVariables, names of dropped headers are not reported.
+   Defaults to not sending any variable values if both this parameter and the deprecated `privateVariables` are not set.
+   The report will indicate each private variable key whose value was redacted by `{ none: true }` or `{ exceptNames: [...]` }.
+
+*  `privateVariables`: Array&lt;String&gt; | boolean
+
+   > Will be deprecated in 3.0. Use the option `sendVariableValues` instead.
+   Passing an array into `privateVariables` is equivalent to
+   passing in `{ exceptNames: array } ` to `sendVariableValues`, and passing in `true` or `false` is equivalent
+   to passing ` { none: true } ` or ` { all: true }`, respectively.
+
+   > Note: An error will be thrown if both this deprecated option and its replacement, `sendVariableValues` are defined.
+   In order to preserve the old default of `privateVariables`, which sends all variables and their values, pass in the `sendVariableValues` option:
+     `new ApolloServer({engine: {sendVariableValues: {all: true}}})`.
+
+* `sendHeaders`: { exceptNames: Array&lt;String&gt; } | { onlyNames: Array&lt;String&gt; } | { all: boolean } | { none: boolean }
+   By default, Apollo Server does not send the list of HTTP request headers and values to
+   Apollo's servers, to protect private data of your app's users. If you'd like this information included in traces,
+   set this option. This option can take several forms:
+
+   - `{ none: true }`: Drop all HTTP request headers. **(DEFAULT)**
+   - `{ all: true }`: Send the values of all HTTP request headers.
+   - `{ exceptNames: [...] }`: A case-insensitive list of names of HTTP headers whose values should not be sent to Apollo servers.
+   - `{ onlyNames: [...] }`: A case-insensitive list of names of HTTP headers whose values will be sent to Apollo servers.
+
+   Defaults to not sending any request header names and values if both this parameter and the deprecated `privateHeaders` are not set.
+   Unlike with `sendVariableValues`, names of dropped headers are not reported.
+   The headers 'authorization', 'cookie', and 'set-cookie' are never reported.
+
+*  `privateHeaders`: Array&lt;String&gt; | boolean
+
+   > Will be deprecated in 3.0.  Use the `sendHeaders` option instead.
+   Passing an array into `privateHeaders` is equivalent to passing ` { exceptNames: array } ` into `sendHeaders`, and
+   passing `true` or `false` is equivalent to passing in ` { none: true } ` and ` { all: true }`, respectively.
+
+   > Note: An error will be thrown if both this deprecated option and its replacement, `sendHeaders`, are defined.
+   In order to preserve the old default of `privateHeaders`, which sends all request headers and their values, pass in the `sendHeaders` option:
+      `new ApolloServer({engine: {sendHeaders: {all: true}}})`.
 
 *  `handleSignals`: boolean
 
@@ -368,16 +416,32 @@ addMockFunctionsToSchema({
    'sendReport()' on other signals if you'd like. Note that 'sendReport()'
    does not run synchronously so it cannot work usefully in an 'exit' handler.
 
-*  `maskErrorDetails`: boolean
+*  `rewriteError`: (err: GraphQLError) => GraphQLError | null
 
-   Set to true to remove error details from the traces sent to Apollo's servers. Defaults to false.
+   By default, all errors are reported to Apollo Graph Manager.  This function
+   can be used to exclude specific errors from being reported.  This function
+   receives a copy of the `GraphQLError` and can manipulate it for the
+   purposes of Graph Manager reporting.  The modified error (e.g., after changing
+   the `err.message` property) should be returned or the function should return
+   an explicit `null` to avoid reporting the error entirely.  It is not
+   permissible to return `undefined`. Note that most `GraphQLError` fields,
+   like `path`, will be copied from the original error to the new error: this
+   way, you can just `return new GraphQLError("message")` without having to
+   explicitly keep it associated with the same node. Specifically, only the
+   `message` and `extensions` properties on the returned `GraphQLError` are
+   observed.  If `extensions` aren't specified, the original `extensions` are
+   used.
+
+*  `schemaTag`: String
+
+   A human-readable name to tag this variant of a schema (i.e. staging, EU). Setting this value will cause metrics to be segmented in the Apollo Platform's UI. Additionally schema validation with a schema tag will only check metrics associate with the same string.
 
 *  `generateClientInfo`: (GraphQLRequestContext) => ClientInfo **AS 2.2**
 
    Creates a client context(ClientInfo) based on the request pipeline's
    context, which contains values like the request, response, cache, and
-   context. This generated client information will be provided to Apollo
-   Engine and can be used to filter metrics. Set `clientName` to identify a
+   context. This generated client information will be provided to
+   Graph Manager and can be used to filter metrics. Set `clientName` to identify a
    particular client. Use `clientVersion` to specify a version for a client
    name.  The default function will use the `clientInfo` field inside of
    GraphQL Query `extensions`.
@@ -389,7 +453,6 @@ addMockFunctionsToSchema({
    for cross-correspondence, so names and reference ids should have a one to
    one relationship.
 
-   > [WARNING] If you specify a `clientReferenceId`, Engine will treat the
+   > [WARNING] If you specify a `clientReferenceId`, Graph Manager will treat the
    > `clientName` as a secondary lookup, so changing a `clientName` may result
    > in an unwanted experience.
-

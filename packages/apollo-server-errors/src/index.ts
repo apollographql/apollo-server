@@ -1,4 +1,4 @@
-import { GraphQLError } from 'graphql';
+import { GraphQLError, GraphQLFormattedError } from 'graphql';
 
 export class ApolloError extends Error implements GraphQLError {
   public extensions: Record<string, any>;
@@ -211,9 +211,9 @@ export class UserInputError extends ApolloError {
 }
 
 export function formatApolloErrors(
-  errors: Array<Error>,
+  errors: ReadonlyArray<Error>,
   options?: {
-    formatter?: Function;
+    formatter?: (error: GraphQLError) => GraphQLFormattedError;
     debug?: boolean;
   },
 ): Array<ApolloError> {
@@ -243,6 +243,19 @@ export function formatApolloErrors(
   // }
 
   const enrichedErrors = errors.map(error => enrichError(error, debug));
+  const makePrintable = error => {
+    if (error instanceof Error) {
+      // Error defines its `message` and other fields as non-enumerable, meaning JSON.stringigfy does not print them.
+      const graphQLError = error as GraphQLFormattedError;
+      return {
+        message: graphQLError.message,
+        ...(graphQLError.locations && { locations: graphQLError.locations }),
+        ...(graphQLError.path && { path: graphQLError.path }),
+        ...(graphQLError.extensions && { extensions: graphQLError.extensions }),
+      };
+    }
+    return error;
+  };
 
   if (!formatter) {
     return enrichedErrors;
@@ -250,7 +263,7 @@ export function formatApolloErrors(
 
   return enrichedErrors.map(error => {
     try {
-      return formatter(error);
+      return makePrintable(formatter(error));
     } catch (err) {
       if (debug) {
         return enrichError(err, debug);
@@ -263,4 +276,14 @@ export function formatApolloErrors(
       }
     }
   }) as Array<ApolloError>;
+}
+
+export function hasPersistedQueryError(errors: Array<Error>): boolean {
+  return Array.isArray(errors)
+    ? errors.some(
+        error =>
+          error instanceof PersistedQueryNotFoundError ||
+          error instanceof PersistedQueryNotSupportedError,
+      )
+    : false;
 }

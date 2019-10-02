@@ -1,7 +1,0 @@
----
-title: Sending queries
----
-
-
-
-

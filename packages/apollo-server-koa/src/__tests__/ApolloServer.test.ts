@@ -1,5 +1,3 @@
-import Koa from 'koa';
-
 import http from 'http';
 
 import request from 'request';
@@ -8,7 +6,7 @@ import fs from 'fs';
 import { createApolloFetch } from 'apollo-fetch';
 
 import { gql, AuthenticationError, Config } from 'apollo-server-core';
-import { ApolloServer, ServerRegistration } from '../ApolloServer';
+import { ServerRegistration } from '../ApolloServer';
 
 import {
   NODE_MAJOR_VERSION,
@@ -28,16 +26,27 @@ const resolvers = {
   },
 };
 
-describe('apollo-server-koa', () => {
-  let server;
-  let httpServer;
+// If we're on Node.js v6, skip this test, since `koa-bodyparser` has dropped
+// support for it and there was an important update to it which we brought in
+// through https://github.com/apollographql/apollo-server/pull/3229.
+// It's worth noting that Node.js v6 has been out of Long-Term-Support status
+// for four months and is no longer recommended by the Node.js Foundation.
+(
+  NODE_MAJOR_VERSION === 6 ?
+  describe.skip :
+  describe
+)('apollo-server-koa', () => {
+  const { ApolloServer } = require('../ApolloServer');
+  const Koa = require('koa');
+  let server: ApolloServer;
+  let httpServer: http.Server;
   testApolloServer(
     async options => {
       server = new ApolloServer(options);
       const app = new Koa();
       server.applyMiddleware({ app });
       httpServer = await new Promise<http.Server>(resolve => {
-        const s = app.listen({ port: 7777 }, () => resolve(s));
+        const s = app.listen({ port: 0 }, () => resolve(s));
       });
       return createServerInfo(server, httpServer);
     },
@@ -48,23 +57,33 @@ describe('apollo-server-koa', () => {
   );
 });
 
-describe('apollo-server-koa', () => {
-  let server: ApolloServer;
-
-  let app: Koa;
+// If we're on Node.js v6, skip this test, since `koa-bodyparser` has dropped
+// support for it and there was an important update to it which we brought in
+// through https://github.com/apollographql/apollo-server/pull/3229.
+// It's worth noting that Node.js v6 has been out of Long-Term-Support status
+// for four months and is no longer recommended by the Node.js Foundation.
+(
+  NODE_MAJOR_VERSION === 6 ?
+  describe.skip :
+  describe
+)('apollo-server-koa', () => {
+  const Koa = require('koa');
+  const { ApolloServer } = require('../ApolloServer');
+  let server: import('../ApolloServer').ApolloServer;
+  let app: import('koa');
   let httpServer: http.Server;
 
   async function createServer(
     serverOptions: Config,
-    options: Partial<ServerRegistration> = {},
+    options: Partial<import('../ApolloServer').ServerRegistration> = {},
   ) {
     server = new ApolloServer(serverOptions);
     app = new Koa();
 
     server.applyMiddleware({ ...options, app });
 
-    httpServer = await new Promise<http.Server>(resolve => {
-      const l = app.listen({ port: 4000 }, () => resolve(l));
+    httpServer = await new Promise(resolve => {
+      const l: http.Server = app.listen({ port: 0 }, () => resolve(l));
     });
 
     return createServerInfo(server, httpServer);
@@ -721,28 +740,6 @@ describe('apollo-server-koa', () => {
           resolvers,
           tracing: true,
           cacheControl: true,
-        });
-
-        const apolloFetch = createApolloFetch({ uri });
-        const result = await apolloFetch({
-          query: `{ books { title author } }`,
-        });
-        expect(result.data).toEqual({ books });
-        expect(result.extensions).toBeDefined();
-        expect(result.extensions.tracing).toBeDefined();
-      });
-
-      xit('applies tracing extension with engine enabled', async () => {
-        const { url: uri } = await createServer({
-          typeDefs,
-          resolvers,
-          tracing: true,
-          engine: {
-            apiKey: 'service:my-app:secret',
-            maxAttempts: 0,
-            endpointUrl: 'l',
-            reportErrorFunction: () => {},
-          },
         });
 
         const apolloFetch = createApolloFetch({ uri });

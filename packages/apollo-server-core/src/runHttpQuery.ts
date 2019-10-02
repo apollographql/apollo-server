@@ -1,4 +1,4 @@
-import { Request, Headers } from 'apollo-server-env';
+import { Request, Headers, ValueOrPromise } from 'apollo-server-env';
 import {
   default as GraphQLOptions,
   resolveGraphqlOptions,
@@ -7,6 +7,7 @@ import {
   formatApolloErrors,
   PersistedQueryNotSupportedError,
   PersistedQueryNotFoundError,
+  hasPersistedQueryError,
 } from 'apollo-server-errors';
 import {
   processGraphQLRequest,
@@ -16,7 +17,8 @@ import {
   GraphQLResponse,
 } from './requestPipeline';
 import { CacheControlExtensionOptions } from 'apollo-cache-control';
-import { ApolloServerPlugin, WithRequired } from 'apollo-server-plugin-base';
+import { ApolloServerPlugin } from 'apollo-server-plugin-base';
+import { WithRequired } from 'apollo-server-types';
 
 export interface HttpQueryRequest {
   method: string;
@@ -28,7 +30,7 @@ export interface HttpQueryRequest {
   query: Record<string, any> | Array<Record<string, any>>;
   options:
     | GraphQLOptions
-    | ((...args: Array<any>) => Promise<GraphQLOptions> | GraphQLOptions);
+    | ((...args: Array<any>) => ValueOrPromise<GraphQLOptions>);
   request: Pick<Request, 'url' | 'method' | 'headers'>;
 }
 
@@ -69,11 +71,19 @@ export class HttpQueryError extends Error {
 /**
  * If options is specified, then the errors array will be formatted
  */
-function throwHttpGraphQLError<E extends Error>(
+export function throwHttpGraphQLError<E extends Error>(
   statusCode: number,
   errors: Array<E>,
   options?: Pick<GraphQLOptions, 'debug' | 'formatError'>,
 ): never {
+  const defaultHeaders = { 'Content-Type': 'application/json' };
+  // force no-cache on PersistedQuery errors
+  const headers = hasPersistedQueryError(errors)
+    ? {
+        ...defaultHeaders,
+        'Cache-Control': 'private, no-cache, must-revalidate',
+      }
+    : defaultHeaders;
   throw new HttpQueryError(
     statusCode,
     prettyJSONStringify({
@@ -85,9 +95,7 @@ function throwHttpGraphQLError<E extends Error>(
         : errors,
     }),
     true,
-    {
-      'Content-Type': 'application/json',
-    },
+    headers,
   );
 }
 
@@ -147,6 +155,7 @@ export async function runHttpQuery(
     rootValue: options.rootValue,
     context: options.context || {},
     validationRules: options.validationRules,
+    executor: options.executor,
     fieldResolver: options.fieldResolver,
 
     // FIXME: Use proper option types to ensure this
@@ -170,6 +179,8 @@ export async function runHttpQuery(
     debug: options.debug,
 
     plugins: options.plugins || [],
+
+    reporting: options.reporting,
   };
 
   return processHTTPRequest(config, request);
@@ -239,6 +250,9 @@ export async function processHTTPRequest<TContext>(
       context,
       cache: options.cache,
       debug: options.debug,
+      metrics: {
+        captureTraces: !!options.reporting,
+      },
     };
   }
 
@@ -279,13 +293,17 @@ export async function processHTTPRequest<TContext>(
 
       try {
         const requestContext = buildRequestContext(request);
+
         const response = await processGraphQLRequest(options, requestContext);
 
         // This code is run on parse/validation errors and any other error that
         // doesn't reach GraphQL execution
         if (response.errors && typeof response.data === 'undefined') {
           // don't include options, since the errors have already been formatted
-          return throwHttpGraphQLError(400, response.errors as any);
+          return throwHttpGraphQLError(
+            (response.http && response.http.status) || 400,
+            response.errors as any,
+          );
         }
 
         if (response.http) {
