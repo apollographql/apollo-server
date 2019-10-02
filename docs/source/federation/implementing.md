@@ -200,49 +200,56 @@ server.listen().then(({ url }) => {
 
 By leveraging the `buildService` function, we're able to customize how requests are sent to our federated services. In this example, we return a custom `RemoteGraphQLDataSource`. The datasource allows us to modify the outgoing request with information from the Apollo Server `context` before it's sent. Here, we're adding the `user-id` header to pass an authenticated user id to downstream services.
 
-In a similar vein, the `didReceiveResponse` hook allows us to inspect a service's `response` in order to modify the `context`. The lifecycle of a request to a federated server involves a number of responses, which may contain headers that need to be passed back to the client. Suppose we want to collect the <a href="https://docs.fastly.com/en/guides/getting-started-with-surrogate-keys" target="_blank" rel="noopener noreferrer">Surrogate-Key</a> headers from every response for caching purposes. We can implement this using the `didReceiveResponse` hook and an `ApolloServerPlugin`:
+In a similar vein, the `didReceiveResponse` hook allows us to inspect a service's `response` in order to modify the `context`. The lifecycle of a request to a federated server involves a number of responses, which may contain headers that need to be passed back to the client. Suppose our services use the <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control" target="_blank" stop="_italicizing" rel="noopener noreferrer">Cache-Control</a> header's `max-age` value. We may have receive a number of these values from our services but we can only respond with one, which should be the minimum of all of the values. We can implement this using the `didReceiveResponse` hook and an `ApolloServerPlugin`:
 
-```javascript{12-23,40-49}
+```javascript{4-20,48,59-71}
 const { ApolloServer } = require('apollo-server');
 const { ApolloGateway, RemoteGraphQLDataSource } = require('@apollo/gateway');
 
+class DataSourceWithCacheControl extends RemoteGraphQLDataSource {
+  async didReceiveResponse(response, request, context) {
+    const body = await super.didReceiveResponse(response, request, context);
+    // Parse the Cache-Control header and update the value on context if it's
+    // _less_ than the current value (or if no value is currently set).
+    const cacheControl = response.headers.get('Cache-Control');
+    if (cacheControl) {
+      const result = cacheControl.match(/max-age=(\d*)/);
+      if (Array.isArray(result) && result[1]) {
+        context.cacheControl.maxAge = context.cacheControl.maxAge
+          ? Math.min(context.cacheControl.maxAge, Number(result[1]))
+          : Number(result[1]);
+      }
+    }
+    return body;
+  }
+}
+
 const gateway = new ApolloGateway({
   serviceList: [
-    { name: 'products', url: 'http://localhost:4001' },
+    { name: 'products', url: 'http://localhost:4001' }
     // other services
   ],
-  buildService({ name, url }) {
-    return new RemoteGraphQLDataSource({
-      url,
-      didReceiveResponse(response, request, context) {
-        if (response.ok) {
-          // Parse surrogate keys from the header and push them onto the context
-          const surrogateKeyString = response.headers.get('Surrogate-Key');
-          if (surrogateKeyString) {
-            context.surrogateKeys.push(...surrogateKeyString.split(' '));
-          }
-          return this.parseBody(response);
-        } else {
-          throw await this.errorFromResponse(response);
-        }
-      },
-    });
-  },
+  buildService({ url }) {
+    return new DataSourceWithCacheControl({ url });
+  }
 });
 
 const server = new ApolloServer({
   gateway,
   subscriptions: false, // Must be disabled with the gateway; see above.
   context() {
-    return { surrogateKeys: [] };
+    return { cacheControl: { maxAge: null } };
   },
   plugins: [
     {
       requestDidStart() {
         return {
           willSendResponse({ context, response }) {
-            const surrogateKeyString = context.surrogateKeys.join(' ');
-            response.http.headers.append('Surrogate-Key', surrogateKeyString);
+            // Append our final result to the outgoing response headers
+            response.http.headers.append(
+              'Cache-Control',
+              `max-age=${context.cacheControl.maxAge}`
+            );
           }
         };
       }
