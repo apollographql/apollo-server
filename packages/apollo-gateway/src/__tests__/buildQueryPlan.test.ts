@@ -790,4 +790,91 @@ describe('buildQueryPlan', () => {
       }
     `);
   });
+
+  it(`interface fragments should expand into possible types only`, () => {
+    const query = gql`
+      query {
+        books {
+          ... on Product {
+            name
+            ... on Furniture {
+              upc
+            }
+          }
+        }
+      }
+    `;
+
+    const queryPlan = buildQueryPlan(buildOperationContext(schema, query));
+
+    expect(queryPlan).toMatchInlineSnapshot(`
+      QueryPlan {
+        Sequence {
+          Fetch(service: "books") {
+            {
+              books {
+                __typename
+                isbn
+                title
+                year
+              }
+            }
+          },
+          Flatten(path: "books.@") {
+            Fetch(service: "product") {
+              {
+                ... on Book {
+                  __typename
+                  isbn
+                  title
+                  year
+                }
+              } =>
+              {
+                ... on Book {
+                  name
+                }
+              }
+            },
+          },
+        },
+      }
+    `);
+  });
+
+  it(`interface inside interface should expand into possible types only`, () => {
+    const query = gql`
+      query {
+        product(upc: "") {
+          details {
+            country
+          }
+        }
+      }
+    `;
+
+    const queryPlan = buildQueryPlan(buildOperationContext(schema, query));
+
+    expect(queryPlan).toMatchInlineSnapshot(`
+    QueryPlan {
+      Fetch(service: "product") {
+        {
+          product(upc: "") {
+            __typename
+            ... on Book {
+              details {
+                country
+              }
+            }
+            ... on Furniture {
+              details {
+                country
+              }
+            }
+          }
+        }
+      },
+    }
+    `);
+  });
 });
