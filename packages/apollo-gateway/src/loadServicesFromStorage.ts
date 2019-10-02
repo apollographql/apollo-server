@@ -30,7 +30,7 @@ export interface CompositionMetadata {
   schemaHash: string;
 }
 
-const envOverrideOperationManifest = 'APOLLO_PARTIAL_SCHEMA_BASE_URL';
+const envOverridePartialSchemaBaseUrl = 'APOLLO_PARTIAL_SCHEMA_BASE_URL';
 const envOverrideStorageSecretBaseUrl = 'APOLLO_STORAGE_SECRET_BASE_URL';
 
 const urlFromEnvOrDefault = (envKey: string, fallback: string) =>
@@ -38,7 +38,7 @@ const urlFromEnvOrDefault = (envKey: string, fallback: string) =>
 
 // Generate and cache our desired operation manifest URL.
 const urlPartialSchemaBase = urlFromEnvOrDefault(
-  envOverrideOperationManifest,
+  envOverridePartialSchemaBaseUrl,
   'https://storage.googleapis.com/engine-partial-schema-prod/',
 );
 
