@@ -95,7 +95,6 @@ export abstract class RESTDataSource<TContext = any> extends DataSource {
   protected async didReceiveResponse<TResult = any>(
     response: Response,
     _request: Request,
-    _context?: TContext,
   ): Promise<TResult> {
     if (response.ok) {
       return (this.parseBody(response) as any) as Promise<TResult>;
@@ -259,7 +258,7 @@ export abstract class RESTDataSource<TContext = any> extends DataSource {
             cacheKey,
             cacheOptions,
           });
-          return await this.didReceiveResponse(response, request, this.context);
+          return await this.didReceiveResponse(response, request);
         } catch (error) {
           this.didEncounterError(error, request);
         }
