@@ -90,7 +90,7 @@ function isManagedConfig(
   return !isRemoteConfig(config) && !isLocalConfig(config);
 }
 
-type DidResolveQueryPlanCallback = ({
+export type DidResolveQueryPlanCallback = ({
   queryPlan,
   serviceMap,
   operationContext,
@@ -100,7 +100,7 @@ type DidResolveQueryPlanCallback = ({
   readonly operationContext: OperationContext;
 }) => void;
 
-type DidFailCompositionCallback = ({
+export type DidFailCompositionCallback = ({
   errors,
   serviceList,
   compositionMetadata,
@@ -110,7 +110,7 @@ type DidFailCompositionCallback = ({
   readonly compositionMetadata?: CompositionMetadata;
 }) => void;
 
-interface CompositionInfo {
+export interface CompositionInfo {
   serviceDefinitions: ServiceDefinition[];
   schema: GraphQLSchema;
   compositionMetadata?: CompositionMetadata;
