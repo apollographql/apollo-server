@@ -65,6 +65,7 @@ module.exports = {
             'api/graphql-tools',
           ],
           Appendices: [
+            'proxy-configuration',
             'migration-two-dot',
             'migration-engine',
             'migration-file-uploads',
