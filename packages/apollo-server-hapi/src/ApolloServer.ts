@@ -1,4 +1,4 @@
-import hapi from 'hapi';
+import hapi from '@hapi/hapi';
 import { parseAll } from 'accept';
 import {
   renderPlaygroundPage,
