@@ -205,7 +205,7 @@ a federated data graph. It accepts incoming requests and creates query plans tha
 
 ### Securing implementing services
 
-Due the power and flexibility of federation's `_entities` field, **only the gateway should be accessible by GraphQL clients**. Individual implementing services
+Due to the power and flexibility of federation's `_entities` field, **only the gateway should be accessible by GraphQL clients**. Individual implementing services
 should **not** be accessible. Make sure to implement firewall rules, access control
 lists, or other measures to ensure that individual implementing services can
 be accessed only via the gateway.

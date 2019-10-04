@@ -96,9 +96,11 @@ const server = new ApolloServer({
 ## `RemoteGraphQLDataSource`
 
 A `RemoteGraphQLDataSource` object represents a connection between your
-federated gateway and a single implementing service. You can customize this
-communication by defining a `willSendRequest` function that lets you modify each
-request's structure before it's sent.
+federated gateway and _one_ of your implementing services. You can customize
+this connection in two different ways:
+
+* Define a `willSendRequest` function that lets you modify your gateway's requests to the implementing service before they're sent.
+* Define a `didReceiveResponse` function that lets you modify the implementing service's responses before the gateway passes them along to the requesting client.
 
 ### `constructor(options)`: `RemoteGraphQLDataSource`
 
