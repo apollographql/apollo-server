@@ -155,21 +155,26 @@ For existing services, it's likely that you've already implemented some form of 
 const { ApolloServer } = require('apollo-server');
 const { ApolloGateway, RemoteGraphQLDataSource } = require('@apollo/gateway');
 
+// highlight-start
+class AuthenticatedDataSource extends RemoteGraphQLDataSource {
+  willSendRequest({ request, context }) {
+    // pass the user's id from the context to underlying services
+    // as a header called `user-id`
+    request.http.headers.set('user-id', context.userId);
+  }
+}
+// highlight-end
+
 const gateway = new ApolloGateway({
   serviceList: [
     { name: 'products', url: 'http://localhost:4001' },
     // other services
   ],
+  // highlight-start
   buildService({ name, url }) {
-    return new RemoteGraphQLDataSource({
-      url,
-      willSendRequest({ request, context }) {
-        // pass the user's id from the context to underlying services
-        // as a header called `user-id`
-        request.http.headers.set('user-id', context.userId);
-      },
-    });
+    return new AuthenticatedDataSource({ url });
   },
+  // highlight-end
 });
 
 const server = new ApolloServer({

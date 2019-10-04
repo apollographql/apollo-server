@@ -38,16 +38,17 @@ The core of the federated gateway implementation. For an example, see the ["impl
     The `service` is provided as an argument, and a `GraphQLDataSource` is expected to be returned.
     Allows for customizing transports.
 
-    ```js{3-10}
+    ```js{1-5,9-11}
+    class AuthenticatedDataSource extends RemoteGraphQLDataSource {
+      willSendRequest({ request, context }) {
+        request.http.headers.set('x-user-id', context.userId);
+      }
+    }
+
     const gateway = new ApolloGateway({
       ...
       buildService({ name, url }) {
-        return new RemoteGraphQLDataSource({
-          url,
-          willSendRequest({ request, context }) {
-            request.http.headers.set('x-user-id', context.userId);
-          },
-        });
+        return new AuthenticatedDataSource({ url });
       },
     });
     ```
