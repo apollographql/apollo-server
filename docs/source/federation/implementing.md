@@ -151,7 +151,7 @@ On startup, the gateway will fetch the service capabilities from the running ser
 
 For existing services, it's likely that you've already implemented some form of authentication to convert a request into a user, or require some information passed to the service through request headers. `@apollo/gateway` makes it easy to reuse the context feature of Apollo Server to customize what information is sent to underlying services. Let's see what it looks like to pass user information along from the gateway to its services:
 
-```javascript{9-18,23-32}
+```javascript
 const { ApolloServer } = require('apollo-server');
 const { ApolloGateway, RemoteGraphQLDataSource } = require('@apollo/gateway');
 
@@ -179,13 +179,7 @@ const gateway = new ApolloGateway({
 
 const server = new ApolloServer({
   gateway,
-
-  // As noted above, subscriptions are enabled by default with Apollo Server, however,
-  // subscriptions are not compatible with the gateway.  We hope to resolve this
-  // limitation in future versions of Apollo Server.  Please reach out to us on
-  // https://spectrum.chat/apollo/apollo-server if this is critical to your adoption!
-  subscriptions: false,
-
+  subscriptions: false, // Must be disabled with the gateway; see above.
   context: ({ req }) => {
     // get the user token from the headers
     const token = req.headers.authorization || '';
