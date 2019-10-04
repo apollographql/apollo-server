@@ -199,8 +199,11 @@ server.listen().then(({ url }) => {
 
 By leveraging the `buildService` function, we're able to customize how requests are sent to our federated services. In this example, we return a custom `RemoteGraphQLDataSource`. The datasource allows us to modify the outgoing request with information from the Apollo Server `context` before it's sent. Here, we're adding the `user-id` header to pass an authenticated user id to downstream services.
 
-In a similar vein, the `didReceiveResponse` hook allows us to inspect a service's `response` in order to modify the `context`. The lifecycle of a request to a federated server involves a number of responses, which may contain headers that need to be passed back to the client. Suppose our services report back their id via a `Service-Id` header. We can aggregate them into a single, comma-separated list in our final response using the `didReceiveResponse` hook and an `ApolloServerPlugin`:
+In a similar vein, the `didReceiveResponse` hook allows us to inspect a service's `response` in order to modify the `context`. The lifecycle of a request to a federated server involves a number of responses, which may contain headers that need to be passed back to the client. Suppose our services report back their id via a `Service-Id` header.
 
+![Flowchart demonstrating willSendResponse usage](../images/willSendResponse-flowchart.png)
+
+To implement this, we can aggregate the service IDs into a single, comma-separated list in our final response using the `didReceiveResponse` hook and an `ApolloServerPlugin`:
 ```javascript
 const { ApolloServer } = require('apollo-server');
 const { ApolloGateway, RemoteGraphQLDataSource } = require('@apollo/gateway');
