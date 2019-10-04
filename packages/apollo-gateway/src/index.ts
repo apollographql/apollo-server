@@ -516,10 +516,20 @@ export class ApolloGateway implements GraphQLService {
       request.http.headers &&
       request.http.headers.get('Apollo-Query-Plan-Experimental');
 
-    if (shouldShowQueryPlan) {
-      const serializedQueryPlan = serializeQueryPlan(queryPlan);
-      this.logger.debug(serializedQueryPlan);
+    // We only want to serialize the query plan if we're going to use it, which is
+    // in two cases:
+    // 1) non-empty query plan and config.debug === true
+    // 2) non-empty query plan and shouldShowQueryPlan === true
+    const serializedQueryPlan =
+      queryPlan.node && (this.config.debug || shouldShowQueryPlan)
+        ? serializeQueryPlan(queryPlan)
+        : null;
 
+    if (this.config.debug && serializedQueryPlan) {
+      this.logger.debug(serializedQueryPlan);
+    }
+
+    if (shouldShowQueryPlan && serializedQueryPlan) {
       // TODO: expose the query plan in a more flexible JSON format in the future
       // and rename this to `queryPlan`. Playground should cutover to use the new
       // option once we've built a way to print that representation.
