@@ -124,7 +124,7 @@ const gateway = new ApolloGateway({
 
 const server = new ApolloServer({
   gateway,
-  
+
   // Currently, subscriptions are enabled by default with Apollo Server, however,
   // subscriptions are not compatible with the gateway.  We hope to resolve this
   // limitation in future versions of Apollo Server.  Please reach out to us on
@@ -151,36 +151,35 @@ On startup, the gateway will fetch the service capabilities from the running ser
 
 For existing services, it's likely that you've already implemented some form of authentication to convert a request into a user, or require some information passed to the service through request headers. `@apollo/gateway` makes it easy to reuse the context feature of Apollo Server to customize what information is sent to underlying services. Let's see what it looks like to pass user information along from the gateway to its services:
 
-```javascript{9-18,23-32}
+```javascript
 const { ApolloServer } = require('apollo-server');
 const { ApolloGateway, RemoteGraphQLDataSource } = require('@apollo/gateway');
+
+// highlight-start
+class AuthenticatedDataSource extends RemoteGraphQLDataSource {
+  willSendRequest({ request, context }) {
+    // pass the user's id from the context to underlying services
+    // as a header called `user-id`
+    request.http.headers.set('user-id', context.userId);
+  }
+}
+// highlight-end
 
 const gateway = new ApolloGateway({
   serviceList: [
     { name: 'products', url: 'http://localhost:4001' },
     // other services
   ],
+  // highlight-start
   buildService({ name, url }) {
-    return new RemoteGraphQLDataSource({
-      url,
-      willSendRequest({ request, context }) {
-        // pass the user's id from the context to underlying services
-        // as a header called `user-id`
-        request.http.headers.set('user-id', context.userId);
-      },
-    });
+    return new AuthenticatedDataSource({ url });
   },
+  // highlight-end
 });
 
 const server = new ApolloServer({
   gateway,
-  
-  // As noted above, subscriptions are enabled by default with Apollo Server, however,
-  // subscriptions are not compatible with the gateway.  We hope to resolve this
-  // limitation in future versions of Apollo Server.  Please reach out to us on
-  // https://spectrum.chat/apollo/apollo-server if this is critical to your adoption!
-  subscriptions: false,
-  
+  subscriptions: false, // Must be disabled with the gateway; see above.
   context: ({ req }) => {
     // get the user token from the headers
     const token = req.headers.authorization || '';
@@ -199,5 +198,70 @@ server.listen().then(({ url }) => {
 ```
 
 By leveraging the `buildService` function, we're able to customize how requests are sent to our federated services. In this example, we return a custom `RemoteGraphQLDataSource`. The datasource allows us to modify the outgoing request with information from the Apollo Server `context` before it's sent. Here, we're adding the `user-id` header to pass an authenticated user id to downstream services.
+
+In a similar vein, the `didReceiveResponse` hook allows us to inspect a service's `response` in order to modify the `context`. The lifecycle of a request to a federated server involves a number of responses, which may contain headers that need to be passed back to the client. Suppose our services report back their id via a `Server-Id` header.
+
+![Flowchart demonstrating willSendResponse usage](../images/willSendResponse-flowchart.png)
+
+To implement this, we can aggregate the server IDs into a single, comma-separated list in our final response using the `didReceiveResponse` hook and an `ApolloServerPlugin`:
+```javascript
+const { ApolloServer } = require('apollo-server');
+const { ApolloGateway, RemoteGraphQLDataSource } = require('@apollo/gateway');
+
+class DataSourceWithServerId extends RemoteGraphQLDataSource {
+  // highlight-start
+  async didReceiveResponse(response, request, context) {
+    const body = await super.didReceiveResponse(response, request, context);
+    // Parse the Server-Id header and add it to the array on context
+    const serverId = response.headers.get('Server-Id');
+    if (serverId) {
+      context.serverIds.push(serverId);
+    }
+    return body;
+  }
+  // highlight-end
+}
+
+const gateway = new ApolloGateway({
+  serviceList: [
+    { name: 'products', url: 'http://localhost:4001' }
+    // other services
+  ],
+  // highlight-start
+  buildService({ url }) {
+    return new DataSourceWithCacheControl({ url });
+  }
+  // highlight-end
+});
+
+const server = new ApolloServer({
+  gateway,
+  subscriptions: false, // Must be disabled with the gateway; see above.
+  context() {
+    return { serverIds: [] };
+  },
+  plugins: [
+    // highlight-start
+    {
+      requestDidStart() {
+        return {
+          willSendResponse({ context, response }) {
+            // Append our final result to the outgoing response headers
+            response.http.headers.append(
+              'Server-Id',
+              context.serverIds.join(',')
+            );
+          }
+        };
+      }
+    }
+    // highlight-end
+  ]
+});
+
+server.listen().then(({ url }) => {
+  console.log(`🚀 Server ready at ${url}`);
+});
+```
 
 To learn more about `buildService` or `RemoteGraphQLDataSource`, see the [API docs](/api/apollo-gateway/).
