@@ -96,12 +96,11 @@ The `RemoteGraphQLDataSource` export is used to connect to underlying federated 
 
     A function to be called on every fetch to the underlying GraphQL service. This method takes information about the incoming request, as well as the context from Apollo Server, to allow for customizing the request.
 
-    ```js{3-5}
-    new RemoteGraphQLDataSource({
-      url,
+    ```js{2-4}
+    class AuthenticatedDataSource extends RemoteGraphQLDataSource({
       willSendRequest({ request, context }) {
         request.http.headers.set('x-user-id', context.userId);
-      },
+      }
     });
     ```
 
@@ -109,19 +108,15 @@ The `RemoteGraphQLDataSource` export is used to connect to underlying federated 
 
     A function to be called after completing a fetch to the underlying GraphQL service. This method has access to the request, response, and Apollo Server context to allow for updating the context or modifying the final result. This function expects a parsed response to be returned.
 
-    ```js{3-13}
-    new RemoteGraphQLDataSource({
-      url,
+    ```js{2-9}
+    class CookieDataSource extends RemoteGraphQLDataSource {
       didReceiveResponse(response, request, context) {
-        if (response.ok) {
-          const cookie = request.http.headers.get('Cookie');
-          if (cookie) {
-            context.responseCookies.push(cookie);
-          }
-          return this.parseBody(response);
-        } else {
-          throw await this.errorFromResponse(response);
+        const body = super.didReceiveResponse(response, request, context);
+        const cookie = request.http.headers.get('Cookie');
+        if (cookie) {
+          context.responseCookies.push(cookie);
         }
-      },
-    });
+        return body;
+      }
+    }
     ```
