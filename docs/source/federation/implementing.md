@@ -206,7 +206,8 @@ In a similar vein, the `didReceiveResponse` hook allows us to inspect a service'
 const { ApolloServer } = require('apollo-server');
 const { ApolloGateway, RemoteGraphQLDataSource } = require('@apollo/gateway');
 
-class DataSourceWithCacheControl extends RemoteGraphQLDataSource { // highlight-start
+class DataSourceWithCacheControl extends RemoteGraphQLDataSource {
+  // highlight-start
   async didReceiveResponse(response, request, context) {
     const body = await super.didReceiveResponse(response, request, context);
     // Parse the Server-Id header and add it to the array on context
@@ -216,18 +217,20 @@ class DataSourceWithCacheControl extends RemoteGraphQLDataSource { // highlight-
     }
     return body;
   }
+  // highlight-end
 }
-// highlight-end
 
 const gateway = new ApolloGateway({
   serviceList: [
     { name: 'products', url: 'http://localhost:4001' }
     // other services
   ],
-  buildService({ url }) { // highlight-start
+  // highlight-start
+  buildService({ url }) {
     return new DataSourceWithCacheControl({ url });
   }
-}); // highlight-end
+  // highlight-end
+});
 
 const server = new ApolloServer({
   gateway,
@@ -236,7 +239,8 @@ const server = new ApolloServer({
     return { serverIds: [] };
   },
   plugins: [
-    { // highlight-start
+    // highlight-start
+    {
       requestDidStart() {
         return {
           willSendResponse({ context, response }) {
@@ -249,7 +253,8 @@ const server = new ApolloServer({
         };
       }
     }
-  ] // highlight-end
+    // highlight-end
+  ]
 });
 
 server.listen().then(({ url }) => {
