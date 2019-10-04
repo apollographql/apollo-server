@@ -200,61 +200,56 @@ server.listen().then(({ url }) => {
 
 By leveraging the `buildService` function, we're able to customize how requests are sent to our federated services. In this example, we return a custom `RemoteGraphQLDataSource`. The datasource allows us to modify the outgoing request with information from the Apollo Server `context` before it's sent. Here, we're adding the `user-id` header to pass an authenticated user id to downstream services.
 
-In a similar vein, the `didReceiveResponse` hook allows us to inspect a service's `response` in order to modify the `context`. The lifecycle of a request to a federated server involves a number of responses, which may contain headers that need to be passed back to the client. Suppose our services use the <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control" target="_blank" stop="_italicizing" rel="noopener noreferrer">Cache-Control</a> header's `max-age` value. We may have receive a number of these values from our services but we can only respond with one, which should be the minimum of all of the values. We can implement this using the `didReceiveResponse` hook and an `ApolloServerPlugin`:
+In a similar vein, the `didReceiveResponse` hook allows us to inspect a service's `response` in order to modify the `context`. The lifecycle of a request to a federated server involves a number of responses, which may contain headers that need to be passed back to the client. Suppose our services report back their id via a `Service-Id` header. We can aggregate them into a single, comma-separated list in our final response using the `didReceiveResponse` hook and an `ApolloServerPlugin`:
 
-```javascript{4-20,48,59-71}
+```javascript
 const { ApolloServer } = require('apollo-server');
 const { ApolloGateway, RemoteGraphQLDataSource } = require('@apollo/gateway');
 
-class DataSourceWithCacheControl extends RemoteGraphQLDataSource {
+class DataSourceWithCacheControl extends RemoteGraphQLDataSource { // highlight-start
   async didReceiveResponse(response, request, context) {
     const body = await super.didReceiveResponse(response, request, context);
-    // Parse the Cache-Control header and update the value on context if it's
-    // _less_ than the current value (or if no value is currently set).
-    const cacheControl = response.headers.get('Cache-Control');
-    if (cacheControl) {
-      const result = cacheControl.match(/max-age=(\d*)/);
-      if (Array.isArray(result) && result[1]) {
-        context.cacheControl.maxAge = context.cacheControl.maxAge
-          ? Math.min(context.cacheControl.maxAge, Number(result[1]))
-          : Number(result[1]);
-      }
+    // Parse the Server-Id header and add it to the array on context
+    const serverId = response.headers.get('Server-Id');
+    if (serverId) {
+      context.serverIds.push(serverId);
     }
     return body;
   }
 }
+// highlight-end
 
 const gateway = new ApolloGateway({
   serviceList: [
     { name: 'products', url: 'http://localhost:4001' }
     // other services
   ],
-  buildService({ url }) {
+  buildService({ url }) { // highlight-start
     return new DataSourceWithCacheControl({ url });
   }
-});
+}); // highlight-end
 
 const server = new ApolloServer({
   gateway,
   subscriptions: false, // Must be disabled with the gateway; see above.
   context() {
-    return { cacheControl: { maxAge: null } };
+    return { serverIds: [] };
   },
   plugins: [
-    {
+    { // highlight-start
       requestDidStart() {
         return {
           willSendResponse({ context, response }) {
             // Append our final result to the outgoing response headers
             response.http.headers.append(
-              'Cache-Control',
-              `max-age=${context.cacheControl.maxAge}`
+              'Server-Id',
+              context.serverIds.join(',')
             );
           }
         };
       }
     }
-  ]
+  ] // highlight-end
 });
 
 server.listen().then(({ url }) => {
