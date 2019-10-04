@@ -23,7 +23,6 @@ describe('constructing requests', () => {
 
     const { data } = await DataSource.process({
       request: { query: '{ me { name } }' },
-      context: {},
     });
 
     expect(data).toEqual({ me: 'james' });
@@ -46,7 +45,6 @@ describe('constructing requests', () => {
         query: '{ me { name } }',
         variables: { id: '1' },
       },
-      context: {},
     });
 
     expect(data).toEqual({ me: 'james' });
@@ -74,7 +72,6 @@ describe('willSendRequest', () => {
         query: '{ me { name } }',
         variables: { id: '1' },
       },
-      context: {},
     });
 
     expect(data).toEqual({ me: 'james' });
@@ -174,7 +171,6 @@ describe('error handling', () => {
 
     const result = DataSource.process({
       request: { query: '{ me { name } }' },
-      context: {},
     });
     await expect(result).rejects.toThrow(AuthenticationError);
     await expect(result).rejects.toMatchObject({
@@ -197,7 +193,6 @@ describe('error handling', () => {
 
     const result = DataSource.process({
       request: { query: '{ me { name } }' },
-      context: {},
     });
     await expect(result).rejects.toThrow(ForbiddenError);
     await expect(result).rejects.toMatchObject({
@@ -220,7 +215,6 @@ describe('error handling', () => {
 
     const result = DataSource.process({
       request: { query: '{ me { name } }' },
-      context: {},
     });
     await expect(result).rejects.toThrow(ApolloError);
     await expect(result).rejects.toMatchObject({
@@ -252,7 +246,6 @@ describe('error handling', () => {
 
     const result = DataSource.process({
       request: { query: '{ me { name } }' },
-      context: {},
     });
     await expect(result).rejects.toThrow(ApolloError);
     await expect(result).rejects.toMatchObject({
