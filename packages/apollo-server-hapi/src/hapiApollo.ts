@@ -1,5 +1,5 @@
-import Boom from 'boom';
-import { Server, Request, RouteOptions } from 'hapi';
+import Boom from '@hapi/boom';
+import { Server, Request, RouteOptions } from '@hapi/hapi';
 import {
   GraphQLOptions,
   runHttpQuery,
@@ -72,7 +72,7 @@ const graphqlHapi: IPlugin = {
             return response;
           }
 
-          const err = new Boom(error.message, { statusCode: error.statusCode });
+          const err = new Boom.Boom(error.message, { statusCode: error.statusCode });
           if (error.headers) {
             Object.keys(error.headers).forEach(header => {
               err.output.headers[header] = error.headers[header];
