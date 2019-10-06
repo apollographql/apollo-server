@@ -1,6 +1,6 @@
 # `apollo-engine-reporting-protobuf`
 
-> **Note:** The Apollo Graph Manager reporting API is subject to change.  We strongly
+> **Note:** The Apollo Graph Manager (previously, Apollo Engine) reporting API is subject to change.  We strongly
 > encourage developers to contact Apollo Graph Manager support to discuss their use
 > case prior to building their own reporting agent using this module.
 
