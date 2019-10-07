@@ -1,7 +1,7 @@
 import { CachedFetcher } from './cachedFetcher';
 import { ServiceDefinition } from '@apollo/federation';
 import { parse } from 'graphql';
-import { UpdateServiceDefinitions } from '.';
+import { Experimental_UpdateServiceDefinitions } from '.';
 
 interface LinkFileResult {
   configPath: string;
@@ -72,7 +72,7 @@ export async function getServiceDefinitionsFromStorage({
   apiKeyHash: string;
   graphVariant?: string;
   federationVersion: number;
-}): ReturnType<UpdateServiceDefinitions> {
+}): ReturnType<Experimental_UpdateServiceDefinitions> {
   const secret = await fetchStorageSecret(graphId, apiKeyHash);
 
   if (!graphVariant) {

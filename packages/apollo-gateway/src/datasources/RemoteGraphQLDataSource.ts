@@ -62,7 +62,11 @@ export class RemoteGraphQLDataSource implements GraphQLDataSource {
     try {
       const httpResponse = await fetch(httpRequest);
 
-      const body = await this.didReceiveResponse(httpResponse, httpRequest);
+      const body = await this.didReceiveResponse(
+        httpResponse,
+        httpRequest,
+        context,
+      );
 
       if (!isObject(body)) {
         throw new Error(`Expected JSON response body, but received: ${body}`);
@@ -87,9 +91,10 @@ export class RemoteGraphQLDataSource implements GraphQLDataSource {
     >,
   ): ValueOrPromise<void>;
 
-  public async didReceiveResponse<TResult = any>(
+  public async didReceiveResponse<TResult = any, TContext = any>(
     response: Response,
     _request: Request,
+    _context?: TContext,
   ): Promise<TResult> {
     if (response.ok) {
       return (this.parseBody(response) as any) as Promise<TResult>;
