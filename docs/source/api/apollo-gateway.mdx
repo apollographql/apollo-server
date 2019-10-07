@@ -20,10 +20,15 @@ example of using `ApolloGateway`, see [Implementing a federated graph](/federati
 
   * `serviceList`: `ServiceDefinition[]`
 
-    > **Do not provide this option if you are using [managed federation](https://www.apollographql.com/docs/platform/federation/#managed-configuration).** If you
-    > are _not_ using managed federation, this option is **required**.
+    > **Do not provide this option if you are using [managed configuration](https://www.apollographql.com/docs/graph-manager/federation/#managed-configuration).** If you
+    > are _not_ using managed configuration, this option is **required**.
 
-    An array representing the implementing services that the gateway will use to resolve incoming GraphQL operations. Each object in the array specifies the `name` and `url` of an implementing service in your federated graph. You can specify any string value for the `name` field, which is used primarily for identifying the service in log output and error messages.
+    An array representing the implementing services that the gateway will use
+    to resolve incoming GraphQL operations. Each object in the array specifies
+    the `name` and `url` of an implementing service in your federated graph.
+    You can specify any string value for the `name` field, which is used for
+    identifying the service in log output and error messages, and for reporting
+    metrics to Apollo Graph Manager.
 
     ```js{3-6}
     const gateway = new ApolloGateway({
@@ -38,7 +43,8 @@ example of using `ApolloGateway`, see [Implementing a federated graph](/federati
   * `buildService`: `(service: ServiceDefinition) => GraphQLDataSource`
 
     Define this function to customize your gateway's data transport to some or
-    all of your data graph's implementing services.
+    all of your data graph's implementing services. This customization can
+    include using a protocol besides the default of HTTP.
 
     If you provide this function, `ApolloGateway` calls it for every
     implementing service in your data graph. The function must return a `GraphQLDataSource` object.
@@ -63,8 +69,8 @@ example of using `ApolloGateway`, see [Implementing a federated graph](/federati
 
   * `introspectionHeaders`: `{ [key: string]: string }`
 
-    An object containing HTTP headers to include in all introspection queries
-    the gateway sends to your implementing services.
+    An object containing HTTP headers that the gateway will include _only_ when
+    obtaining schema definitions from each of your implementing services.
 
     > **Note:** If you define a `buildService` function, you should specify these headers
     > in that function instead of using this option.
@@ -138,7 +144,7 @@ this connection in two different ways:
     Define this function to customize the gateway's behavior after completing
     a fetch to the implementing service. The function takes the request, response, and Apollo Server context as parameters, allowing you to modify any combination of the context and the final result of the fetch.
 
-    This function must returned a parsed response body.
+    This function must return a parsed response body.
 
     ```js{2-9}
     class CookieDataSource extends RemoteGraphQLDataSource {

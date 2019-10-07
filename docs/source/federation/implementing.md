@@ -8,8 +8,10 @@ An Apollo Federation architecture consists of:
 * A collection of **implementing services** that each define a distinct GraphQL schema
 * A **gateway** that composes the distinct schemas into a **federated data graph** and executes queries across that graph
 
+Each of these components can be implmemented in any language and framework.
+
 To be part of a federated graph, an implementing service must conform to the Apollo Federation specification, which exposes the service's capabilities to the gateway,
-as well as to tools like Apollo Graph Manager. A service can **extend** GraphQL types that are defined by _other_ services, and it can define types for other services to extend.
+as well as to tools like Apollo Graph Manager. A service can **extend** GraphQL types that are defined by _other_ services, and it can define types for other services to extend. An implementing service can be written in any language.
 
 Let's look at how to get a federated graph up and running. We'll start by preparing an existing implementing service for federation, and then we'll set up a gateway in front of it.
 
@@ -79,8 +81,7 @@ const typeDefs = gql`
 `;
 ```
 
-The `@key` directive tells other services which fields to use to uniquely identify
-instances of `User`. In this case, those services should use the `id` field.
+The `@key` directive tells other services which field(s) of the `User` type to use to uniquely identify a particular instance. In this case, services should use the `id` field.
 
 Next, we add a **reference resolver** for the `User` type. A reference resolver tells the gateway how to fetch an entity by its `@key` fields:
 
@@ -115,7 +116,8 @@ server.listen(4001).then(({ url }) => {
 
 The server is now ready to be added to a federated data graph!
 
-Here's the complete code sample for our federation-ready server:
+Here are the snippets above combined (note that for this sample to be complete,
+ you must define the `fetchUserById` function for your data source):
 
 ```js:title=index.js
 const { ApolloServer, gql } = require('apollo-server');
@@ -156,8 +158,8 @@ server.listen(4001).then(({ url }) => {
 
 ## Running a gateway
 
-Now that we have a federation-ready service, we can build our gateway as a separate
-service. First, let's install Apollo Server and the `@apollo/gateway` package:
+Now that we have a federation-ready service, we can build set up a federated gateway
+to sit in front of it. First, let's install Apollo Server and the `@apollo/gateway` package:
 
 ```bash
 npm install apollo-server @apollo/gateway graphql
@@ -210,7 +212,7 @@ should **not** be accessible. Make sure to implement firewall rules, access cont
 lists, or other measures to ensure that individual implementing services can
 be accessed only via the gateway.
 
-> In production, we recommend configuring the gateway in a managed mode, which relies on static files rather than introspection. For details on how to use the [Apollo schema registry](https://www.apollographql.com/docs/platform/schema-registry/) to support this workflow, see [the platform docs](https://www.apollographql.com/docs/platform/federation/).
+> In production, we recommend configuring the gateway in a managed mode, which relies on static files rather than introspection. For details on how to use the [Apollo schema registry](https://www.apollographql.com/docs/platform/schema-registry/) to support this workflow, see [the Graph Manager documentation](https://www.apollographql.com/docs/graph-manager/federation/).
 
 ## Sharing context across services
 
