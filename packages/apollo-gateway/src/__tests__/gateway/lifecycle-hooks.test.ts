@@ -1,8 +1,8 @@
 import {
   ApolloGateway,
   GatewayConfig,
-  UpdateServiceDefinitions,
-  DidUpdateCompositionCallback,
+  Experimental_UpdateServiceDefinitions,
+  Experimental_DidUpdateCompositionCallback,
 } from '../../index';
 import * as accounts from '../__fixtures__/schemas/accounts';
 import * as books from '../__fixtures__/schemas/books';
@@ -19,7 +19,7 @@ const serviceDefinitions = services.map((s, i) => ({
 
 describe('lifecycle hooks', () => {
   it('uses updateServiceDefinitions override', async () => {
-    const experimental_updateServiceDefinitions: UpdateServiceDefinitions = jest.fn(
+    const experimental_updateServiceDefinitions: Experimental_UpdateServiceDefinitions = jest.fn(
       async (_config: GatewayConfig) => {
         return { serviceDefinitions, isNewSchema: true };
       },
@@ -80,7 +80,7 @@ describe('lifecycle hooks', () => {
       schemaHash: 'hash1',
     };
 
-    const update: UpdateServiceDefinitions = async (
+    const update: Experimental_UpdateServiceDefinitions = async (
       _config: GatewayConfig,
     ) => ({
       serviceDefinitions,
@@ -113,7 +113,7 @@ describe('lifecycle hooks', () => {
       };
     });
 
-    const didUpdate: DidUpdateCompositionCallback = () => {};
+    const didUpdate: Experimental_DidUpdateCompositionCallback = () => {};
     const mockDidUpdate = jest.fn(didUpdate);
 
     const gateway = new ApolloGateway({
