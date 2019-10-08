@@ -126,6 +126,14 @@ That’s it! With Apollo Federation, schemas and resolvers live in your
 implementing services. The gateway serves only to plan and execute GraphQL
 operations across those implementing services.
 
+In addition to running a gateway with a static list of services, Apollo
+Gateway can also operate in _managed federation_ mode where Apollo Graph
+Manager acts as the source of truth for the underlying services' SDL. This mode of operation enables multiple
+teams working on a data graph to help them coordinate when underlying
+services change using federation-aware tooling. For more information, read about
+[managed federation](https://www.apollographql.com/docs/graph-manager/federation/)
+in Apollo Graph Manager.
+
 ## Query examples
 
 Now we can execute GraphQL operations against our composed schema just as if it

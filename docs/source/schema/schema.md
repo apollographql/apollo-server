@@ -41,6 +41,8 @@ Every type definition in a GraphQL schema belongs to one of the following catego
 
 Each of these is defined in detail below.
 
+And finally, the performance and usage of each field within these declarations can be individually monitored by [Apollo Graph Manager](https://engine.apollographql.com/), providing you with data that will inform decisions about changes to your graph.
+
 ### Scalar types
 
 Scalar types are similar to primitive types in your favorite programming language. They always resolve to concrete data.
@@ -255,6 +257,19 @@ Input types can sometimes be useful when multiple operations require the exact s
 
 **Do not use the same input type for both queries and mutations**. In many cases, arguments that are _required_ for a mutation are _optional_ for a corresponding query.
 
+## Growing with a schema
+
+As your organization grows and evolves, your data graph grows and evolves with it. New products and features introduce new schema types and fields. To track these changes over time, you should maintain your schema's definition in version control.
+
+Most _additive_ changes to a schema are safe and backward compatible. However, changes that remove or alter _existing_ behavior might be _breaking_ changes for one or more of your existing clients. All of the following schema changes are potentially breaking changes:
+
+* Removing a type or field
+* Renaming a type or field
+* Adding nullability to a field
+* Removing a field's arguments
+
+A graph management tool such as [Apollo Graph Manager](https://engine.apollographql.com/) helps you understand whether a potential schema change will impact any of your active clients. Graph Manager also provides field-level performance metrics, schema history tracking, and advanced security via operation safelisting.
+
 ## Documentation strings
 
 GraphQL's schema definition language (SDL) supports markdown-enabled documentation strings. These help consumers of your data graph discover fields and learn how to use them.
@@ -277,9 +292,9 @@ type MyObjectType {
 }
 ```
 
-Documenting your schema makes it much easier for clients to write operations
-against it. Many GraphQL development tools, such as GraphQL Playground,
-display your schema's documentation strings dynamically.
+A well-documented schema offers an enhanced development experience since GraphQL development tools (such as the
+[Apollo VS Code extension](https://marketplace.visualstudio.com/items?itemName=apollographql.vscode-apollo)
+and GraphQL Playground) auto-complete field names along with descriptions when they're provided.  Furthermore, [Apollo Graph Manager](https://engine.apollographql.com/) displays descriptions alongside field-usage and performance details when using its metrics reporting and client-awareness features.
 
 ## Naming conventions
 
