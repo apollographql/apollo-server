@@ -122,14 +122,14 @@ this connection in two different ways:
 
     The implementing service's URL for sending fetch requests via HTTP.
 
-  * `willSendRequest`: `(request: GraphQLRequest) => Promise<void>`
+  * `willSendRequest`: `(requestContext: {request: GraphQLRequest, context: Record<string, any>}) => Promise<void>`
 
     Define this function to customize the structure of each fetch that's sent
-    to the implementing service. The function takes both the request and
-    and the context from Apollo Server as parameters.
+    to the implementing service. The function accepts an object that contains
+    both the original incoming `request` and the current `context`.
 
-    The example below demonstrates adding an `x-user-id`
-    HTTP header to every request the gateway sends to an implementing service:
+    The example below demonstrates using the `willSendRequest` function to
+    add an `x-user-id` HTTP header to every request the gateway sends to an implementing service:
 
     ```js{2-4}
     class AuthenticatedDataSource extends RemoteGraphQLDataSource({
@@ -142,7 +142,7 @@ this connection in two different ways:
   * `didReceiveResponse`: `(response: Response, request: Request, context: TContext) => Promise<TResult>`
 
     Define this function to customize the gateway's behavior after completing
-    a fetch to the implementing service. The function takes the request, response, and Apollo Server context as parameters, allowing you to modify any combination of the context and the final result of the fetch.
+    a fetch to the implementing service. The function takes the original `request`, the implementing service's `response`, and the current `context` as parameters, allowing you to modify any combination of the context and the final result of the fetch.
 
     This function must return a parsed response body.
 

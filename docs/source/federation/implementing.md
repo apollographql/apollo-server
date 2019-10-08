@@ -8,9 +8,9 @@ An Apollo Federation architecture consists of:
 * A collection of **implementing services** that each define a distinct GraphQL schema
 * A **gateway** that composes the distinct schemas into a **federated data graph** and executes queries across that graph
 
-Each of these components can be implmemented in any language and framework.
+Each of these components can be implemented in any language and framework.
 
-To be part of a federated graph, an implementing service must conform to the Apollo Federation specification, which exposes the service's capabilities to the gateway,
+To be part of a federated graph, an implementing service must conform to the [Apollo Federation specification](/federation/federation-spec/), which exposes the service's capabilities to the gateway,
 as well as to tools like Apollo Graph Manager. A service can **extend** GraphQL types that are defined by _other_ services, and it can define types for other services to extend. An implementing service can be written in any language.
 
 Let's look at how to get a federated graph up and running. We'll start by preparing an existing implementing service for federation, and then we'll set up a gateway in front of it.
@@ -19,7 +19,7 @@ Let's look at how to get a federated graph up and running. We'll start by prepar
 
 Converting an existing schema into a federated service is the first step in building a federated graph. To do this, we'll use the `buildFederatedSchema()` function from the `@apollo/federation` package.
 
-To start, here's a *non-federated* instance of Apollo Server:
+To start, here's a *non-federated* Apollo Server setup:
 
 ```javascript:title=index.js
 const { ApolloServer, gql } = require('apollo-server');
@@ -81,7 +81,11 @@ const typeDefs = gql`
 `;
 ```
 
-The `@key` directive tells other services which field(s) of the `User` type to use to uniquely identify a particular instance. In this case, services should use the `id` field.
+The `@key` directive tells other services which field(s) of the `User` type to use
+to uniquely identify a particular instance. In this case, services should use the
+single field `id`. You can even include nested fields in this directive, as shown in
+[Compound and nested keys](/federation/advanced-features/#compound-and-nested-keys).
+
 
 Next, we add a **reference resolver** for the `User` type. A reference resolver tells the gateway how to fetch an entity by its `@key` fields:
 
@@ -100,6 +104,9 @@ const resolvers = {
 };
 ```
 
+We would then define the `fetchUserById` function to obtain the appropriate `User`
+from our backing data store.
+
 Finally, we use the `buildFederatedSchema` function to augment our schema definition
 with federation support. We provide the result of this function to the
 `ApolloServer` constructor:
@@ -116,7 +123,7 @@ server.listen(4001).then(({ url }) => {
 
 The server is now ready to be added to a federated data graph!
 
-Here are the snippets above combined (note that for this sample to be complete,
+Here are the snippets above combined (again, note that for this sample to be complete,
  you must define the `fetchUserById` function for your data source):
 
 ```js:title=index.js
@@ -158,14 +165,14 @@ server.listen(4001).then(({ url }) => {
 
 ## Running a gateway
 
-Now that we have a federation-ready service, we can build set up a federated gateway
-to sit in front of it. First, let's install Apollo Server and the `@apollo/gateway` package:
+Now that we have a federation-ready service, we can set up a federated gateway
+to sit in front of it. First, let's install the necessary packages:
 
 ```bash
 npm install apollo-server @apollo/gateway graphql
 ```
 
-Now we can create a new service that acts as a gateway to our underlying
+Now we can set up an `ApolloServer` instance that acts as a gateway to our underlying
 implementing services:
 
 ```js
