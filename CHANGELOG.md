@@ -6,7 +6,7 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 > The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  When a release is being prepared, a new header will be (manually) created below and the the appropriate changes within that release will be moved into the new section.
 
-- _Nothing yet! Stay tuned!_
+- `@apollo/gateway`, `@apollo/federation`, `apollo-engine-reporting`: Update `apollo-graphql` dependency to bring in [`apollo-tooling`'s #1551](https://github.com/apollographql/apollo-tooling/pull/1551) which resolve runtime errors when its source is minified.  While this fixes a particular minification bug when Apollo Server packages are minified, we _do not_ recommend minification of server code in most cases. [PR #3387](https://github.com/apollographql/apollo-server/pull/3387) [Issue #3335](https://github.com/apollographql/apollo-server/issues/3335)
 
 ### v2.9.3
 
