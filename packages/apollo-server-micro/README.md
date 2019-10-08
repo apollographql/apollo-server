@@ -149,7 +149,7 @@ module.exports = apolloServer.createHandler({ path: '/data' }); // highlight-lin
 }
 ```
 
-4) After an `npm start`, access `http://localhost:3000/graphql` in your
+4) After an `npm start`, access `http://localhost:3000/data` in your
 browser to run queries using
 [`graphql-playground`](https://github.com/prismagraphql/graphql-playground),
 or send GraphQL requests directly to the same URL.
@@ -207,7 +207,7 @@ module.exports = router(
 }
 ```
 
-4) After an `npm start`, access `http://localhost:3000/graphql` in your
+4) After an `npm start`, access `http://localhost:3000/data` in your
 browser to run queries using
 [`graphql-playground`](https://github.com/prismagraphql/graphql-playground),
 or send GraphQL requests directly to the same URL.
