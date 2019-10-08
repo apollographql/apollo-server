@@ -385,24 +385,34 @@ export class ApolloGateway implements GraphQLService {
     this.pollingTimer.unref();
   }
 
-  private createDataSource(
+  private createAndCacheDataSource(
     serviceDef: ServiceEndpointDefinition,
   ): GraphQLDataSource {
+    // If the DataSource has already been created, early return
+    if (this.serviceMap[serviceDef.name])
+      return this.serviceMap[serviceDef.name];
+
     if (!serviceDef.url && !isLocalConfig(this.config)) {
       throw new Error(
         `Service definition for service ${serviceDef.name} is missing a url`,
       );
     }
-    return this.config.buildService
+
+    const dataSource = this.config.buildService
       ? this.config.buildService(serviceDef)
       : new RemoteGraphQLDataSource({
           url: serviceDef.url,
         });
+
+    // Cache the created DataSource
+    this.serviceMap[serviceDef.name] = dataSource;
+
+    return dataSource;
   }
 
   protected createServices(services: ServiceEndpointDefinition[]) {
     for (const serviceDef of services) {
-      this.serviceMap[serviceDef.name] = this.createDataSource(serviceDef);
+      this.createAndCacheDataSource(serviceDef);
     }
   }
 
@@ -416,7 +426,7 @@ export class ApolloGateway implements GraphQLService {
     if (isRemoteConfig(config)) {
       const serviceList = config.serviceList.map(serviceDefinition => ({
         ...serviceDefinition,
-        dataSource: this.createDataSource(serviceDefinition),
+        dataSource: this.createAndCacheDataSource(serviceDefinition),
       }));
 
       return getServiceDefinitionsFromRemoteEndpoint({
