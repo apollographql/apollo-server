@@ -1,12 +1,12 @@
 # `apollo-engine-reporting-protobuf`
 
-> **Note:** The Apollo Engine reporting API is subject to change.  We strongly
-> encourage developers to contact Apollo Engine support to discuss their use
+> **Note:** The Apollo Graph Manager (previously, Apollo Engine) reporting API is subject to change.  We strongly
+> encourage developers to contact Apollo Graph Manager support to discuss their use
 > case prior to building their own reporting agent using this module.
 
 This module provides JavaScript/TypeScript
 [Protocol buffer](https://developers.google.com/protocol-buffers/) definitions
-for the Apollo Engine reporting API.  These definitions are generated for
+for the Apollo Graph Manager reporting API.  These definitions are generated for
 consumption from the `reports.proto` file which is defined internally within
 Apollo.
 
