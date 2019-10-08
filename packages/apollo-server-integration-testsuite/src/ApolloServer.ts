@@ -699,7 +699,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
     });
 
     describe('lifecycle', () => {
-      describe('for Apollo Engine', () => {
+      describe('for Apollo Graph Manager', () => {
         let nodeEnv: string;
         let engineServer: EngineMockServer;
 
