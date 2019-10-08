@@ -2035,12 +2035,12 @@ export function testApolloServer<AS extends ApolloServerBase>(
             expect(sendingError).toBeTruthy();
             if (networkError) {
               expect(sendingError.message).toContain(
-                'Error sending report to Apollo Graph Manager servers',
+                'Error sending report to Apollo Engine servers',
               );
               expect(sendingError.message).toContain('ECONNREFUSED');
             } else {
               expect(sendingError.message).toBe(
-                `Error sending report to Apollo Graph Manager servers: HTTP status ${status}, Important text in the body`,
+                `Error sending report to Apollo Engine servers: HTTP status ${status}, Important text in the body`,
               );
             }
             expect(requestCount).toBe(expectedRequestCount);

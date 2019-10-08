@@ -416,7 +416,7 @@ export class EngineReportingAgent<TContext = any> {
       },
     ).catch((err: Error) => {
       throw new Error(
-        `Error sending report to Apollo Graph Manager servers: ${err.message}`,
+        `Error sending report to Apollo Engine servers: ${err.message}`,
       );
     });
 
@@ -424,7 +424,7 @@ export class EngineReportingAgent<TContext = any> {
       // Note that we don't expect to see a 3xx here because request follows
       // redirects.
       throw new Error(
-        `Error sending report to Apollo Graph Manager servers: HTTP status ${
+        `Error sending report to Apollo Engine servers: HTTP status ${
           response.status
         }, ${(await response.text()) || '(no body)'}`,
       );
