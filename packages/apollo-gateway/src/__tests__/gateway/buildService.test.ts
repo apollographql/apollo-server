@@ -18,6 +18,23 @@ beforeEach(() => {
   fetch.mockReset();
 });
 
+it('calls buildService only once per service', async () => {
+  const buildServiceSpy = jest.fn(() => {
+    return new RemoteGraphQLDataSource({
+      url: 'https://api.example.com/foo'
+    });
+  });
+
+  const gateway = new ApolloGateway({
+    localServiceList: [accounts, books, inventory, product, reviews],
+    buildService: buildServiceSpy
+  });
+
+  await gateway.load();
+
+  expect(buildServiceSpy).toHaveBeenCalledTimes(5);
+});
+
 it('correctly passes the context from ApolloServer to datasources', async () => {
   const gateway = new ApolloGateway({
     localServiceList: [accounts, books, inventory, product, reviews],
