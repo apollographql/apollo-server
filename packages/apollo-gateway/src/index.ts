@@ -52,10 +52,10 @@ interface GatewayConfigBase {
   buildService?: (definition: ServiceEndpointDefinition) => GraphQLDataSource;
 
   // experimental observability callbacks
-  experimental_didResolveQueryPlan?: DidResolveQueryPlanCallback;
-  experimental_didFailComposition?: DidFailCompositionCallback;
-  experimental_updateServiceDefinitions?: UpdateServiceDefinitions;
-  experimental_didUpdateComposition?: DidUpdateCompositionCallback;
+  experimental_didResolveQueryPlan?: Experimental_DidResolveQueryPlanCallback;
+  experimental_didFailComposition?: Experimental_DidFailCompositionCallback;
+  experimental_updateServiceDefinitions?: Experimental_UpdateServiceDefinitions;
+  experimental_didUpdateComposition?: Experimental_DidUpdateCompositionCallback;
   experimental_pollInterval?: number;
 }
 
@@ -90,7 +90,7 @@ function isManagedConfig(
   return !isRemoteConfig(config) && !isLocalConfig(config);
 }
 
-type DidResolveQueryPlanCallback = ({
+export type Experimental_DidResolveQueryPlanCallback = ({
   queryPlan,
   serviceMap,
   operationContext,
@@ -100,7 +100,7 @@ type DidResolveQueryPlanCallback = ({
   readonly operationContext: OperationContext;
 }) => void;
 
-type DidFailCompositionCallback = ({
+export type Experimental_DidFailCompositionCallback = ({
   errors,
   serviceList,
   compositionMetadata,
@@ -110,18 +110,18 @@ type DidFailCompositionCallback = ({
   readonly compositionMetadata?: CompositionMetadata;
 }) => void;
 
-interface CompositionInfo {
+export interface Experimental_CompositionInfo {
   serviceDefinitions: ServiceDefinition[];
   schema: GraphQLSchema;
   compositionMetadata?: CompositionMetadata;
 }
 
-export type DidUpdateCompositionCallback = (
-  currentConfig: CompositionInfo,
-  previousConfig?: CompositionInfo,
+export type Experimental_DidUpdateCompositionCallback = (
+  currentConfig: Experimental_CompositionInfo,
+  previousConfig?: Experimental_CompositionInfo,
 ) => void;
 
-export type UpdateServiceDefinitions = (
+export type Experimental_UpdateServiceDefinitions = (
   config: GatewayConfig,
 ) => Promise<
   | {
@@ -155,17 +155,17 @@ export class ApolloGateway implements GraphQLService {
   // Observe query plan, service info, and operation info prior to execution.
   // The information made available here will give insight into the resulting
   // query plan and the inputs that generated it.
-  protected experimental_didResolveQueryPlan?: DidResolveQueryPlanCallback;
+  protected experimental_didResolveQueryPlan?: Experimental_DidResolveQueryPlanCallback;
   // Observe composition failures and the ServiceList that caused them. This
   // enables reporting any issues that occur during composition. Implementors
   // will be interested in addressing these immediately.
-  protected experimental_didFailComposition?: DidFailCompositionCallback;
+  protected experimental_didFailComposition?: Experimental_DidFailCompositionCallback;
   // Used to communicated composition changes, and what definitions caused
   // those updates
-  protected experimental_didUpdateComposition?: DidUpdateCompositionCallback;
+  protected experimental_didUpdateComposition?: Experimental_DidUpdateCompositionCallback;
   // Used for overriding the default service list fetcher. This should return
   // an array of ServiceDefinition. *This function must be awaited.*
-  protected updateServiceDefinitions: UpdateServiceDefinitions;
+  protected updateServiceDefinitions: Experimental_UpdateServiceDefinitions;
   // how often service defs should be loaded/updated (in ms)
   protected experimental_pollInterval?: number;
 
@@ -347,7 +347,7 @@ export class ApolloGateway implements GraphQLService {
     if (this.pollingTimer) clearInterval(this.pollingTimer);
 
     this.pollingTimer = setInterval(async () => {
-      let result: Await<ReturnType<UpdateServiceDefinitions>>;
+      let result: Await<ReturnType<Experimental_UpdateServiceDefinitions>>;
       try {
         result = await this.updateServiceDefinitions(this.config);
       } catch (e) {
@@ -385,30 +385,40 @@ export class ApolloGateway implements GraphQLService {
     this.pollingTimer.unref();
   }
 
-  private createDataSource(
+  private createAndCacheDataSource(
     serviceDef: ServiceEndpointDefinition,
   ): GraphQLDataSource {
+    // If the DataSource has already been created, early return
+    if (this.serviceMap[serviceDef.name])
+      return this.serviceMap[serviceDef.name];
+
     if (!serviceDef.url && !isLocalConfig(this.config)) {
       throw new Error(
         `Service definition for service ${serviceDef.name} is missing a url`,
       );
     }
-    return this.config.buildService
+
+    const dataSource = this.config.buildService
       ? this.config.buildService(serviceDef)
       : new RemoteGraphQLDataSource({
           url: serviceDef.url,
         });
+
+    // Cache the created DataSource
+    this.serviceMap[serviceDef.name] = dataSource;
+
+    return dataSource;
   }
 
   protected createServices(services: ServiceEndpointDefinition[]) {
     for (const serviceDef of services) {
-      this.serviceMap[serviceDef.name] = this.createDataSource(serviceDef);
+      this.createAndCacheDataSource(serviceDef);
     }
   }
 
   protected async loadServiceDefinitions(
     config: GatewayConfig,
-  ): ReturnType<UpdateServiceDefinitions> {
+  ): ReturnType<Experimental_UpdateServiceDefinitions> {
     if (isLocalConfig(config)) {
       return { isNewSchema: false };
     }
@@ -416,7 +426,7 @@ export class ApolloGateway implements GraphQLService {
     if (isRemoteConfig(config)) {
       const serviceList = config.serviceList.map(serviceDefinition => ({
         ...serviceDefinition,
-        dataSource: this.createDataSource(serviceDefinition),
+        dataSource: this.createAndCacheDataSource(serviceDefinition),
       }));
 
       return getServiceDefinitionsFromRemoteEndpoint({

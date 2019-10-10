@@ -180,6 +180,12 @@ We're up and running!
 We can now execute GraphQL queries on our server. To execute our first query,
 we'll use a tool called **GraphQL Playground**.
 
+> **Note:** If your server is deployed to an environment where `NODE_ENV` is
+> set to `production`, GraphQL Playground and introspection will be disabled by
+> default. To enable them, you'll need to explicitly set `playground: true` and
+> `introspection: true` within [the options to `ApolloServer`'s
+> constructor](https://www.apollographql.com/docs/apollo-server/api/apollo-server/#apolloserver).
+
 With your server still running, visit `http://localhost:4000` in your browser
 to open GraphQL Playground. (Apollo Server hosts GraphQL Playground automatically
 when you run it in development.)

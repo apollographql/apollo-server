@@ -513,8 +513,8 @@ export class ApolloServerBase {
         // metrics from the Gateway.
         console.warn(
           "It looks like you're running a federated schema and you've configured your service " +
-            'to report metrics to Apollo Engine. You should only configure your Apollo gateway ' +
-            'to report metrics to Apollo Engine.',
+            'to report metrics to Apollo Graph Manager. You should only configure your Apollo gateway ' +
+            'to report metrics to Apollo Graph Manager.',
         );
       }
       extensions.push(() =>

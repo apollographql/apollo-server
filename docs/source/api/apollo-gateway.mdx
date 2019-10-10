@@ -3,12 +3,10 @@ title: "API Reference: @apollo/gateway"
 description: Apollo Gateway API reference
 ---
 
-This API reference documents the exports from the `@apollo/gateway`.
-
-
 ## `ApolloGateway`
 
-The core of the federated gateway implementation. For an example, see the ["implementing"](/federation/implementing/) section.
+The core class of Apollo Server's federated gateway implementation. For an
+example of using `ApolloGateway`, see [Implementing a federated graph](/federation/implementing/).
 
 ### `constructor(options)`: `ApolloGateway`
 
@@ -16,11 +14,21 @@ The core of the federated gateway implementation. For an example, see the ["impl
 
 * `options`: `Object`
 
-  * `serviceList`: `ServiceDefinition[]` _(must **not** be set when using [managed federation](https://www.apollographql.com/docs/platform/federation/#managed-configuration); **required otherwise**)_
+  An object that contains configuration options for the gateway.
 
-    > To reduce the possibility of different server instances using different configurations during a roll-out, we recommend using a managed configuration that provides a single single source of truth for a graph.  When using [Graph Manager](https://www.apollographql.com/docs/platform/graph-manager-overview/)'s [managed federation](https://www.apollographql.com/docs/platform/federation/#managed-configuration) feature, this is handled automatically and `serviceList` should not be specified.
+  Supported options include:
 
-    An array of service definitions. A service definition contains the `name` and `url` for a federated service. The name is an arbitrary unique string and is primarily used for query planner output, error messages, logging, and the like.
+  * `serviceList`: `ServiceDefinition[]`
+
+    > **Do not provide this option if you are using [managed configuration](https://www.apollographql.com/docs/graph-manager/federation/#managed-configuration).** If you
+    > are _not_ using managed configuration, this option is **required**.
+
+    An array representing the implementing services that the gateway will use
+    to resolve incoming GraphQL operations. Each object in the array specifies
+    the `name` and `url` of an implementing service in your federated graph.
+    You can specify any string value for the `name` field, which is used for
+    identifying the service in log output and error messages, and for reporting
+    metrics to Apollo Graph Manager.
 
     ```js{3-6}
     const gateway = new ApolloGateway({
@@ -34,9 +42,16 @@ The core of the federated gateway implementation. For an example, see the ["impl
 
   * `buildService`: `(service: ServiceDefinition) => GraphQLDataSource`
 
-    A function to be called for each service in `options.serviceList`.
-    The `service` is provided as an argument, and a `GraphQLDataSource` is expected to be returned.
-    Allows for customizing transports.
+    Define this function to customize your gateway's data transport to some or
+    all of your data graph's implementing services. This customization can
+    include using a protocol besides the default of HTTP.
+
+    If you provide this function, `ApolloGateway` calls it for every
+    implementing service in your data graph. The function must return an object
+    that implements the [`GraphQLDataSource` interface](https://github.com/apollographql/apollo-server/blob/master/packages/apollo-gateway/src/datasources/types.ts), such as an instance of [RemoteGraphQLDataSource](#remotegraphqldatasource) or a subclass of it.
+
+    The example below demonstrates adding an `x-user-id`
+    HTTP header to every request the gateway sends to an implementing service:
 
     ```js{1-5,9-11}
     class AuthenticatedDataSource extends RemoteGraphQLDataSource {
@@ -52,9 +67,15 @@ The core of the federated gateway implementation. For an example, see the ["impl
       },
     });
     ```
+
   * `introspectionHeaders`: `{ [key: string]: string }`
 
-    An object containing headers sent with introspection queries
+    An object containing HTTP headers that the gateway will include _only_ when
+    obtaining schema definitions from each of your implementing services.
+
+    > **Note:** If you define a `buildService` function, you should specify these headers
+    > in that function instead of including this option. This ensures that your `buildService` function doesn't inadvertently overwrite the values of any headers
+    > you provide via this option.
 
     ```js{3-5}
     const gateway = new ApolloGateway({
@@ -67,11 +88,12 @@ The core of the federated gateway implementation. For an example, see the ["impl
 
   * `debug`: `Boolean`
 
-    With debug enabled, the server will log startup messages as well as query plans during incoming requests.
+    If `true`, the gateway logs startup messages, along with the query plan for
+    each incoming request. The default value is `false`.
 
 #### Returns
 
-An `ApolloGateway` instance, which is intended to be passed as the `gateway` configuration option of `ApolloServer` like so:
+An `ApolloGateway` instance, which you then pass as the `gateway` configuration option to the `ApolloServer` constructor, like so:
 
 ```javascript
 const server = new ApolloServer({
@@ -79,9 +101,18 @@ const server = new ApolloServer({
 });
 ```
 
-## RemoteGraphQLDataSource
+## `RemoteGraphQLDataSource`
 
-The `RemoteGraphQLDataSource` export is used to connect to underlying federated services from the gateway. It allows for customizations of its request using the `willSendRequest` function. By default, the `ApolloGateway` creates a new `RemoteGraphQLDataSource` for each service using the `url` from the service definition as its target location.
+A `RemoteGraphQLDataSource` object represents a connection between your
+federated gateway and _one_ of your implementing services.
+
+You can customize this connection by defining a subclass of this class and
+overriding its `willSendRequest` and/or `didReceiveResponse` methods:
+
+* The `willSendRequest` method lets you modify your gateway's requests to the implementing service before they're sent.
+* The `didReceiveResponse` method lets you modify the implementing service's responses before the gateway passes them along to the requesting client.
+
+These methods are described in detail below.
 
 ### `constructor(options)`: `RemoteGraphQLDataSource`
 
@@ -89,13 +120,22 @@ The `RemoteGraphQLDataSource` export is used to connect to underlying federated 
 
 * `options`: `Object`
 
+  An object that contains configuration options for the data source.
+
+  Supported options include:
+
   * `url`: `string` _(required)_
 
-    The location of the service to fetch using an HTTP request.
+    The implementing service's URL for sending fetch requests via HTTP.
 
-  * `willSendRequest`: `(request: GraphQLRequest) => Promise<void>`
+  ### `willSendRequest`: `(requestContext: {request: GraphQLRequest, context: Record<string, any>}) => Promise<void>`
 
-    A function to be called on every fetch to the underlying GraphQL service. This method takes information about the incoming request, as well as the context from Apollo Server, to allow for customizing the request.
+    Override this method to customize the structure of each fetch that's sent
+    to the implementing service. The method accepts an object that contains
+    both the original incoming `request` and the current `context`.
+
+    The example below demonstrates using the `willSendRequest` method to
+    add an `x-user-id` HTTP header to every request the gateway sends to an implementing service:
 
     ```js{2-4}
     class AuthenticatedDataSource extends RemoteGraphQLDataSource({
@@ -105,9 +145,14 @@ The `RemoteGraphQLDataSource` export is used to connect to underlying federated 
     });
     ```
 
-  * `didReceiveResponse`: `(response: Response, request: Request, context: TContext) => Promise<TResult>`
+  ### `didReceiveResponse`: `(response: Response, request: Request, context: TContext) => Promise<TResult>`
 
-    A function to be called after completing a fetch to the underlying GraphQL service. This method has access to the request, response, and Apollo Server context to allow for updating the context or modifying the final result. This function expects a parsed response to be returned.
+    Override this method to customize the gateway's behavior after completing
+    a fetch to the implementing service. The method takes the original `request`, the implementing service's `response`, and the current `context` as parameters, allowing you to modify any combination of the context and the final result of the fetch.
+
+    This method must return an object that matches the structure of a
+    [`GraphQLExecutionResult`](https://github.com/apollographql/apollo-server/blob/master/packages/apollo-server-types/src/index.ts#L105-L109) (i.e., it
+    should include `data`, `errors`, and/or `extensions` fields).
 
     ```js{2-9}
     class CookieDataSource extends RemoteGraphQLDataSource {

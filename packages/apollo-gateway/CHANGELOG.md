@@ -4,6 +4,13 @@
 
 > The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  When a release is being prepared, a new header will be (manually) created below and the the appropriate changes within that release will be moved into the new section.
 
+* Add export for experimental observability functions types. [#3371](https://github.com/apollographql/apollo-server/pull/3371)
+* Fix double instantiation of DataSources [#3388](https://github.com/apollographql/apollo-server/pull/3388)
+
+# v0.10.2
+
+> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/aa200ce24b834320fc79d2605dac340b37d3e434)
+
 * Fix debug query plan logging [#3376](https://github.com/apollographql/apollo-server/pull/3376)
 * Add `context` object to `GraphQLDataSource.didReceiveResponse` arguments [#3360](https://github.com/apollographql/apollo-server/pull/3360)
 
