@@ -322,7 +322,7 @@ const gateway = new ApolloGateway({
   ],
   // highlight-start
   buildService({ url }) {
-    return new DataSourceWithCacheControl({ url });
+    return new DataSourceWithServerId({ url });
   }
   // highlight-end
 });
