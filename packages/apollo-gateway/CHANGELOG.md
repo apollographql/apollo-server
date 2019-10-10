@@ -4,7 +4,8 @@
 
 > The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  When a release is being prepared, a new header will be (manually) created below and the the appropriate changes within that release will be moved into the new section.
 
-* Add export for experimental observability functions types.
+* Add export for experimental observability functions types. [#3371](https://github.com/apollographql/apollo-server/pull/3371)
+* Fix double instantiation of DataSources [#3388](https://github.com/apollographql/apollo-server/pull/3388)
 
 # v0.10.2
 
