@@ -206,6 +206,8 @@ In the above example, we provide the `serviceList` configuration option to the
 of our implementing services. You can specify any string value for `name`, which
 is used primarily for query planner output, error messages, and logging.
 
+> In production, we recommend configuring the gateway in a managed mode, which relies on static files rather than introspection. For details on how to use the [Apollo schema registry](https://www.apollographql.com/docs/platform/schema-registry/) to support this workflow, see [the Graph Manager documentation](https://www.apollographql.com/docs/graph-manager/federation/).
+
 On startup, the gateway fetches each implementing service's capabilities and composes
 a federated data graph. It accepts incoming requests and creates query plans that query the graph's implementing services.
 
@@ -219,15 +221,13 @@ should **not** be accessible. Make sure to implement firewall rules, access cont
 lists, or other measures to ensure that individual implementing services can
 be accessed only via the gateway.
 
-> In production, we recommend configuring the gateway in a managed mode, which relies on static files rather than introspection. For details on how to use the [Apollo schema registry](https://www.apollographql.com/docs/platform/schema-registry/) to support this workflow, see [the Graph Manager documentation](https://www.apollographql.com/docs/graph-manager/federation/).
-
 ## Sharing context across services
 
 ### Customizing incoming requests
 
 If you have an existing set of services, you've probably already
 implemented some form of authentication to associate each request with a user, or
-you require that some information be passed to each service via request headers. The `@apollo/gateway` package makes it easy to reuse Apollo Server's context feature to customize which information is sent to implementing services.
+you require that some information be passed to each service via request headers. The `@apollo/gateway` package enables you to reuse Apollo Server's context feature to customize which information is sent to implementing services.
 
 The following example demonstrates passing user information from the gateway
 to each implementing service via the `user-id` HTTP header:
