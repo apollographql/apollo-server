@@ -47,7 +47,8 @@ example of using `ApolloGateway`, see [Implementing a federated graph](/federati
     include using a protocol besides the default of HTTP.
 
     If you provide this function, `ApolloGateway` calls it for every
-    implementing service in your data graph. The function must return a `GraphQLDataSource` object.
+    implementing service in your data graph. The function must return an object
+    that implements the [`GraphQLDataSource` interface](https://github.com/apollographql/apollo-server/blob/master/packages/apollo-gateway/src/datasources/types.ts), such as an instance of [RemoteGraphQLDataSource](#remotegraphqldatasource) or a subclass of it.
 
     The example below demonstrates adding an `x-user-id`
     HTTP header to every request the gateway sends to an implementing service:
@@ -73,7 +74,8 @@ example of using `ApolloGateway`, see [Implementing a federated graph](/federati
     obtaining schema definitions from each of your implementing services.
 
     > **Note:** If you define a `buildService` function, you should specify these headers
-    > in that function instead of using this option.
+    > in that function instead of including this option. This ensures that your `buildService` function doesn't inadvertently overwrite the values of any headers
+    > you provide via this option.
 
     ```js{3-5}
     const gateway = new ApolloGateway({
@@ -102,11 +104,15 @@ const server = new ApolloServer({
 ## `RemoteGraphQLDataSource`
 
 A `RemoteGraphQLDataSource` object represents a connection between your
-federated gateway and _one_ of your implementing services. You can customize
-this connection in two different ways:
+federated gateway and _one_ of your implementing services.
 
-* Define a `willSendRequest` function that lets you modify your gateway's requests to the implementing service before they're sent.
-* Define a `didReceiveResponse` function that lets you modify the implementing service's responses before the gateway passes them along to the requesting client.
+You can customize this connection by defining a subclass of this class and
+overriding its `willSendRequest` and/or `didReceiveResponse` methods:
+
+* The `willSendRequest` method lets you modify your gateway's requests to the implementing service before they're sent.
+* The `didReceiveResponse` method lets you modify the implementing service's responses before the gateway passes them along to the requesting client.
+
+These methods are described in detail below.
 
 ### `constructor(options)`: `RemoteGraphQLDataSource`
 
@@ -122,13 +128,13 @@ this connection in two different ways:
 
     The implementing service's URL for sending fetch requests via HTTP.
 
-  * `willSendRequest`: `(requestContext: {request: GraphQLRequest, context: Record<string, any>}) => Promise<void>`
+  ### `willSendRequest`: `(requestContext: {request: GraphQLRequest, context: Record<string, any>}) => Promise<void>`
 
-    Define this function to customize the structure of each fetch that's sent
-    to the implementing service. The function accepts an object that contains
+    Override this method to customize the structure of each fetch that's sent
+    to the implementing service. The method accepts an object that contains
     both the original incoming `request` and the current `context`.
 
-    The example below demonstrates using the `willSendRequest` function to
+    The example below demonstrates using the `willSendRequest` method to
     add an `x-user-id` HTTP header to every request the gateway sends to an implementing service:
 
     ```js{2-4}
@@ -139,12 +145,14 @@ this connection in two different ways:
     });
     ```
 
-  * `didReceiveResponse`: `(response: Response, request: Request, context: TContext) => Promise<TResult>`
+  ### `didReceiveResponse`: `(response: Response, request: Request, context: TContext) => Promise<TResult>`
 
-    Define this function to customize the gateway's behavior after completing
-    a fetch to the implementing service. The function takes the original `request`, the implementing service's `response`, and the current `context` as parameters, allowing you to modify any combination of the context and the final result of the fetch.
+    Override this method to customize the gateway's behavior after completing
+    a fetch to the implementing service. The method takes the original `request`, the implementing service's `response`, and the current `context` as parameters, allowing you to modify any combination of the context and the final result of the fetch.
 
-    This function must return a parsed response body.
+    This method must return an object that matches the structure of a
+    [`GraphQLExecutionResult`](https://github.com/apollographql/apollo-server/blob/master/packages/apollo-server-types/src/index.ts#L105-L109) (i.e., it
+    should include `data`, `errors`, and/or `extensions` fields).
 
     ```js{2-9}
     class CookieDataSource extends RemoteGraphQLDataSource {
