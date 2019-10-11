@@ -3,25 +3,15 @@ title: Schema basics
 sidebar_title: Writing a schema
 ---
 
-> Estimated time: About 10 minutes.
+Your GraphQL server uses a **schema** to describe the shape of your data graph. This schema defines a hierarchy of **types** with fields that are populated from your back-end data stores. The schema also specifies exactly which **queries** and **mutations** are available for clients to execute against your data graph.
 
-A GraphQL schema is at the center of any GraphQL server implementation and describes the functionality available to the clients which connect to it.
+This article describes the fundamental building blocks of a schema and how to create one for your GraphQL server.
 
-The core building block within a schema is the "type".  Types provide a wide-range of functionality within a schema, including the ability to:
+## The schema definition language
 
-* Create relationships between types (e.g. between a `Book` and an `Author`).
-* Define which data-fetching (querying) and data-manipulation (mutating) operations can be executed by the client.
-* If desired, self-explain what capabilities are available to the client via introspection.
+The GraphQL specification includes a human-readable **schema definition language** (or **SDL**) that you use to define your schema.
 
-By the end of this page, we hope to have explained the power of types and how they relate to a GraphQL server.
-
-## Schema Definition Language
-
-To make it easy to understand the capabilities of a server, GraphQL implements a human-readable schema syntax known as its Schema Definition Language, or "SDL".  The SDL is used to express the _types_ available within a schema and how those types relate to each other.
-
-At first glance the SDL may appear to be similar to JavaScript, but this GraphQL-specific syntax must be stored as a `String`.  Right now, we'll focus on explaining SDL and then go into examples of using it within JavaScript later on.
-
-In a simple example involving books and authors, the SDL might declare:
+The SDL's syntax superficially resembles JSON. Here's a short example schema that defines two object types: `Book` and `Author`:
 
 ```graphql
 type Book {
@@ -35,48 +25,59 @@ type Author {
 }
 ```
 
-It's important to note that these declarations express the _relationships_ and the _shape_ of the data to return, not where the data comes from or how it might be stored - which will be covered outside the SDL.
+A schema defines a collection of types and the relationships _between_ those types. In the example schema above, every `Book` has an `author`, and every `Author` has a list of `books`. By defining these type relationships in a unified schema, we enable client developers to see exactly what data is available and request a specific subset of that data with a single optimized query.
 
-By drawing these logical connections in the schema definition, we can allow the client (which is often a human developer, designing a front-end) to see what data is available and request it in a single optimized query.
+Note that the schema is **not** responsible for defining where data comes from or how it's stored. It is entirely implementation-agnostic.
 
-GraphQL clients (such as [Apollo Client](https://www.apollographql.com/docs/react)) benefit from the precision of GraphQL operations, especially when compared to traditional REST-based approaches, since they can avoid over-fetching and stitching data, which are particularly costly on slow devices or networks.
+## Supported types
+
+Every type definition in a GraphQL schema belongs to one of the following categories:
+
+* [Scalar types](#scalar-types)
+* [Object types](#object-types)
+* [The `Query` type](#the-query-type)
+* [The `Mutation` type](#the-mutation-type)
+* [Input types](#input-types)
+
+Each of these is defined in detail below.
 
 ### Scalar types
 
-Scalar types represent the leaves of an operation and always resolve to concrete data. The default scalar types which GraphQL offers are:
+Scalar types are similar to primitive types in your favorite programming language. They always resolve to concrete data.
 
-* `Int`: Signed 32‐bit integer
-* `Float`: Signed double-precision floating-point value
-* `String`: UTF‐8 character sequence
-* `Boolean`: true or false
-* `ID` (serialized as `String`): A unique identifier, often used to refetch an object or as the key for a cache. While serialized as a String, ID signifies that it is not intended to be human‐readable
+GraphQL's default scalar types are:
 
-These primitive types cover a majority of use cases. For other use cases, we can create [custom scalar types](/schema/scalars-enums/).
+* `Int`: A signed 32‐bit integer
+* `Float`: A signed double-precision floating-point value
+* `String`: A UTF‐8 character sequence
+* `Boolean`: `true` or `false`
+* `ID` (serialized as a `String`): A unique identifier that's often used to refetch an object or as the key for a cache. Although it's serialized as a `String`, an `ID`  is not intended to be human‐readable.
+
+These primitive types cover the majority of use cases. For more specific use cases, you can create [custom scalar types](/schema/scalars-enums/).
 
 ### Object types
 
-The object type is the most common type used in a schema and represents a group of fields. Each field inside of an object type maps to another type, allowing nested types and circular references.
+Most of the types you define in a GraphQL schema are object types. An object type contains a collection of fields, each of which can be either a scalar type or _another_ object type.
+
+Two object types _can_ include each other as fields, as is the case in our example schema from earlier:
 
 ```graphql
-type TypeName {
-  fieldA: String
-  fieldB: Boolean
-  fieldC: Int
-  fieldD: CustomType
+type Book {
+  title: String
+  author: Author
 }
 
-type CustomType {
-  circular: TypeName
+type Author {
+  name: String
+  books: [Book]
 }
 ```
 
-### The Query type
+### The `Query` type
 
-A GraphQL query is for _fetching_ data and compares to the `GET` verb in REST-based APIs.
+The `Query` type defines exactly which GraphQL queries (i.e., read operations) clients can execute against your data graph. It resembles an [object type](#object-types), but its name is always `Query`.
 
-In order to define what queries are possible on a server, the `Query` type is used within the SDL.  The `Query` type is one of many root-level types which defines functionality (it doesn't actually trigger a query) for clients and acts as an entry-point to other more specific types within the schema.
-
-Using the books and author example we created in the SDL example of the last section, we can define multiple independent queries which are available on a server:
+Each field of the `Query` type defines the name and return type of a different supported query. The `Query` type for our example schema might resemble the following:
 
 ```graphql
 type Query {
@@ -85,16 +86,15 @@ type Query {
 }
 ```
 
-In this `Query` type, we define two types of queries which are available on this GraphQL server:
+This `Query` type defines two available queries: `getBooks` and `getAuthors`. Each query returns a list of the corresponding type.
 
-* `getBooks`: which returns a list of `Book` objects.
-* `getAuthors`: which returns a list of `Author` objects.
+With a REST-based API, books and authors would probably be returned by different endpoints (e.g., `/api/books` and `/api/authors`). The flexibility of GraphQL enables clients to query both resources with a single request.
 
-Those familiar with REST-based APIs would normally find these located on separate end-points (e.g. `/api/books` and `/api/authors`), but GraphQL allows them to be queried at the same time and returned at once.
+#### Structuring a query
 
-As mentioned in the previous section, the structure in which types are organized in the SDL is important because of the relationships it creates.  When a client makes a query to the server, the server will return results in a shape that matches that of the query.
+When your clients build queries to execute against your data graph, those queries match the shape of the object types you define in your schema.
 
-Based on the SDL defined above, a client could request a list of all books _and_ a separate list of all authors by sending a single `query` with exactly what it wishes to receive in return:
+Based on our example schema so far, a client could execute the following query, which requests both a list of all book titles _and_ a list of all author names:
 
 ```graphql
 query {
@@ -108,20 +108,20 @@ query {
 }
 ```
 
-Which would return data to the client as:
+Our server would then respond to the query with results that match the query's structure, like so:
 
 ```json
 {
   "data": {
     "getBooks": [
       {
-        "title": "..."
+        "title": "Jurassic Park"
       },
       ...
     ],
     "getAuthors": [
       {
-        "name": "..."
+        "name": "Michael Crichton"
       },
       ...
     ]
@@ -129,9 +129,9 @@ Which would return data to the client as:
 }
 ```
 
-While having two separate lists&mdash;a list of books and a list of authors&mdash;might be useful for some purposes, a separate desire might be to display a single list of books which includes the author for each book.
+Although it might be useful in some cases to fetch these two separate lists, a client would probably prefer to fetch a single list of books, where each book's author is included in the result.
 
-Thanks to the relationship between `Book` and `Author`, which is defined in the SDL above, such a `query` could be expressed as:
+Because our schema's `Book` type has an `author` field of type `Author`, a client could structure their query like so:
 
 ```graphql
 query {
@@ -144,16 +144,16 @@ query {
 }
 ```
 
-And, without additional effort on its part, the client would receive the information in the same shape as the request:
+And once again, our server would respond with results that match the query's structure:
 
 ```json
 {
   "data": {
     "getBooks": [
       {
-        "title": "..."
+        "title": "Jurassic Park",
         "author": {
-          "name": "..."
+          "name": "Michael Crichton"
         }
       },
       ...
@@ -162,13 +162,11 @@ And, without additional effort on its part, the client would receive the informa
 }
 ```
 
-### The Mutation type
+### The `Mutation` type
 
-Mutations are operations sent to the server to create, update or delete data.  These are comparable to the `PUT`, `POST`, `PATCH` and `DELETE` verbs on REST-based APIs.
+The `Mutation` type is similar in structure and purpose to the [`Query` type](#the-query-type). Whereas the `Query` type defines your data graph's supported read operations, the `Mutation` type defines supported _write_ operations.
 
-Much like how the `Query` type defines the entry-points for data-fetching operations on a GraphQL server, the root-level `Mutation` type specifies the entry points for data-manipulation operations.
-
-For example, when imagining a situation where the API supported adding a new `Book`, the SDL might implement the following `Mutation` type:
+Each field of the `Mutation` type defines the signature and return type of a different mutation. The `Mutation` type for our example schema might resemble the following:
 
 ```graphql
 type Mutation {
@@ -176,9 +174,11 @@ type Mutation {
 }
 ```
 
-This implements a single `addBook` mutation which accepts `title` and `author` as arguments (both `String` types).  We'll go further into arguments (also known as "input types") in [types](/schema/schema/#input-types), but the important thing to note here is that this mutation will return the newly-created `Book` object.
+This `Mutation` type defines a single available mutation, `addBook`. The mutation accepts two arguments (`title` and `author`) and returns a newly created `Book` object. As you'd expect, this `Book` object conforms to the structure that we defined in our schema.
 
-The `Book` object will match the previously-created `Book` type (from above) and, much like the `Query` type, we specify the fields to include in the return object when sending the `mutation`:
+#### Structuring a mutation
+
+Like queries, mutations match the structure of your schema's type definitions. The following mutation creates a new `Book` and requests certain fields of the created object as a return value:
 
 ```graphql
 mutation {
@@ -191,7 +191,7 @@ mutation {
 }
 ```
 
-In the above example, we've requested the book's `title` along with the `name` of the `author`.  The result returned from this mutation would be:
+As with queries, our server would respond to this mutation with a result that matches the mutation's structure, like so:
 
 ```json
 {
@@ -206,15 +206,60 @@ In the above example, we've requested the book's `title` along with the `name` o
 }
 ```
 
-Multiple mutations may be sent in the same request, however they will be executed in the order they are provided (in series), in order to avoid race-conditions within the operation.
+A single client request can include multiple mutations to execute. To prevent race conditions, mutations are executed serially in the order they're listed.
 
-## Documenting your schema
+[Learn more about designing mutations](#designing-mutations)
 
-### Describing types
+### Input types
 
-GraphQL supports providing markdown-enabled descriptions within the schema, which makes it easy for consumers of the API to discover a field and how to use it.
+Input types are special object types that allow you to pass objects as arguments to queries and mutations (as opposed to passing only scalar types). Input types help keep operation signatures clean, much like how accepting a single `options` object in a JavaScript function can be cleaner than repeatedly adding arguments to the function's signature.
 
-For example, the following type definition shows how to use both single-line string literals, as well as multi-line blocks.
+Consider this mutation that creates a blog post:
+
+```graphql
+type Mutation {
+  createPost(title: String, body: String, mediaUrls: [String]): Post
+}
+```
+
+Instead of accepting three arguments, this mutation could accept a _single_ input type that includes all of these fields. This comes in extra handy if we decide to accept an additional argument in the future, such as an `author`.
+
+An input type's definition is similar to an object type's, but it uses the `input` keyword:
+
+```graphql
+type Mutation {
+  createPost(post: PostAndMediaInput): Post
+}
+
+input PostAndMediaInput {
+  title: String
+  body: String
+  mediaUrls: [String]
+}
+```
+
+Not only does this facilitate passing the `PostAndMediaInput` type around within our schema, it also provides a basis for annotating fields with descriptions that are automatically exposed by GraphQL-enabled tools:
+
+```graphql
+input PostAndMediaInput {
+  "A main title for the post"
+  title: String
+  "The text body of the post."
+  body: String
+  "A list of URLs to render in the post."
+  mediaUrls: [String]
+}
+```
+
+Input types can sometimes be useful when multiple operations require the exact same set of information, but you should reuse them sparingly. Operations might eventually diverge in their sets of required arguments.
+
+**Do not use the same input type for both queries and mutations**. In many cases, arguments that are required for a mutation are optional for a corresponding query.
+
+## Documentation strings
+
+GraphQL's schema definition language (SDL) supports markdown-enabled documentation strings. These help consumers of your data graph discover fields and learn how to use them.
+
+The following snippet shows how to use both single-line string literals and multi-line blocks:
 
 ```graphql
 "Description for the type"
@@ -232,35 +277,32 @@ type MyObjectType {
 }
 ```
 
-This makes SDL-generation even easier since many GraphQL tools (like GraphQL Playground) auto-complete field names, along with the descriptions, when available.
+Documenting your schema makes it much easier for clients to write operations
+against it. Many GraphQL development tools, such as GraphQL Playground,
+display your schema's documentation strings dynamically.
 
-### Introspection
+## Naming conventions
 
-Introspection is an **optional** feature, enabled by default during development, which allows clients (which are frequently developers, building an application) to automatically discover the types implemented within a GraphQL schema.
+The GraphQL specification is flexible and doesn't impose specific naming guidelines. However, it's helpful to establish a set of conventions to ensure consistency across your organization. We recommend the following:
 
-By allowing the consumer of the API to view the full possibilities of the API, developers can easily write new queries, or add new fields to existing ones.
+* **Field names** should use `camelCase`. Many GraphQL clients are written in JavaScript, Java, Kotlin, or Swift, all of which recommend `camelCase` for variable names.
+* **Type names** should use `PascalCase`. This matches how classes are defined in the languages mentioned above.
+* **Enum names** should use `PascalCase`.
+* **Enum values** should use `ALL_CAPS`, because they are similar to constants.
 
-One of the main aspects of GraphQL is that it allows you to describe the space of data available in your system with a strongly typed schema. While GraphQL makes it possible to evolve your API over time without breaking your clients, it's always easier if you think about some schema design decisions up front to reduce the amount of refactoring you need to do later.
+These conventions help ensure that most clients don't need to define extra logic to transform the results returned by your server.
 
-This article details some practices around schema design which will help you design a great GraphQL API to stand the test of time.
+## Query-driven schema design
 
-## Style conventions
+A GraphQL schema is most powerful when it's designed for the needs of the clients that will execute operations against it. Although you _can_ structure your types so they match the structure of your back-end data stores, you don't have to! A single object type's fields can be populated with data from any number of different sources. **Design your schema based on how data is used, not based on how it's stored.**
 
-The GraphQL specification is flexible and doesn't impose specific naming guidelines. However, in order to facilitate development and continuity across GraphQL deployments, it's useful to have a general set of conventions. We suggest the following:
+If your data store includes a field or relationship that your clients don't need yet, omit it from your schema. It's easier and safer to add a new field to a schema than it is to remove an existing field that some of your clients are using.
 
-* **Fields** should be named in `camelCase`, since the majority of consumers will be client applications written in JavaScript, Java, Kotlin, or Swift, all of which recommend `camelCase` for variable names.
-* **Types**: should be `PascalCase`, to match how classes are defined in the languages above.
-* **Enums**: should have their type name in `PascalCase`, and their value names in `ALL_CAPS`, since they are similar to constants.
+### Example of a query-driven schema
 
-If you use the conventions above, you won't need to have any extra logic in your clients to convert names to match the conventions of these languages.
+Let's say we're creating a web app that lists upcoming events in our area. We want the app to show the name, date, and location of each event, along with the weather forecast for it.
 
-## Design for client needs
-
-GraphQL schemas are at their best when they are designed around the needs of client applications.  When a team is building their first GraphQL schema, they might be tempted to create literal mappings on top of existing database collections or tables using CRUD-like root fields. While this literal database-to-schema mapping may be a fast way to get up and running, we strongly suggest avoiding it and instead building the schema based on how the GraphQL API will be used by the front-end.
-
-If a database has fields or relationships that the client doesn't yet need, don’t include them in the schema up front. Adding fields later is much easier than removing them, so add fields to your API as your clients need them rather than exposing all of the possible data up front. This is especially useful because GraphQL allows you to create associations between your data that don't exist in the underlying data, enabling you to move complex data manipulation logic out of your clients.
-
-For example, let's say you want to create a view that lists some events, their locations, and the weather at that location. In that case, you might want to do a query like this:
+In this case, we want our web app to be able to execute a query with a structure similar to the following:
 
 ```graphql
 query EventList {
@@ -278,12 +320,11 @@ query EventList {
 }
 ```
 
-The desire to display this data could inform the design of a schema like the following:
+Because we know this is the structure of data that would be helpful for our client, that can inform the structure of our schema:
 
 ```graphql
 type Query {
   upcomingEvents: [Event]
-  # Other fields, etc
 }
 
 type Event {
@@ -303,86 +344,64 @@ type WeatherInfo {
 }
 ```
 
-This doesn't necessarily need to match the data returned from a single REST endpoint or database. For example, if you have a REST endpoint exposing a list of events and their locations, but not weather information, you would just need to fetch the weather information from a second endpoint (or even a 3rd party API) in your resolvers. This way, you can design a schema that will allow your frontend to be as simple as possible, without limiting yourself to the exact shape of data that's in your underlying data sources.
+As mentioned, each of these types can be populated with data from a different data source (or _multiple_ data sources). For example, the `Event` type's `name` and `date` might be populated with data from our back-end database, whereas the `WeatherInfo` type might be populated with data from a third-party weather API.
 
 ## Designing mutations
 
-The `Mutation` type is a core type in GraphQL which specializes in _modifying_ data, which contrasts the `Query` type used for _fetching_ data.
+In GraphQL, it's _recommended_ for every mutation's response to include the data that the mutation modified. This enables clients to obtain the latest persisted data without needing to send a followup query.
 
-Unlike REST, where the behavior can be more ad-hoc, the `Mutation` type is designed with the expectation that there will be a response object.  This ensures that the client receives the most current data without a subsequent round-trip re-query.
-
-A mutation for updating the age of a `User` might look like this:
+A schema that supports updating the `email` of a `User` would include the following:
 
 ```graphql
 type Mutation {
-  updateUserAge(id: ID!, age: Int!): User
+  # This mutation takes id and email parameters and responds with a User
+  updateUserEmail(id: ID!, email: String!): User
 }
 
 type User {
   id: ID!
   name: String!
-  age: Int!
+  email: String!
 }
 ```
 
-With this definition, the following mutation becomes possible:
+A client could then execute a mutation against the schema with the following structure:
 
 ```graphql
 mutation updateMyUser {
-  updateUserAge(id: 1, age: 25){
+  updateUserEmail(id: 1, email: "jane@example.com"){
     id
-    age
     name
+    email
   }
 }
 ```
 
-Once executed by the server, the response returned to the client might be:
+After the GraphQL server executes the mutation and stores the new email address for the user, it responds to the client with the following:
 
 ```json
 {
   "data": {
-    "updateUserAge": {
+    "updateUserEmail": {
       "id": "1",
-      "age": "25",
-      "name": "Jane Doe"
+      "name": "Jane Doe",
+      "email": "jane@example.com"
     }
   }
 }
 ```
 
-While it's not mandatory to return the object which has been updated, the inclusion of the updated information allows the client to confidently update its local state without performing additional requests.
+Although it isn't _mandatory_ for a mutation's response to include the modified object, doing so greatly improves the efficiency of client code. And as with queries, determining which mutations would be useful for your clients helps inform the structure of your schema.
 
-As with queries, it's best to design mutations with the client in mind and in response to a user's action.  In simple cases, this might only result in changes to a single document, however in many cases there will be updates to multiple documents from different resources, for example, a `likePost` mutation might update the total likes for a user as well as their post.
+### Structuring mutation responses
 
-In order to provide a consistent shape of response data, we recommend adopting a pattern which returns a standardized response format which supports returning any number of documents from each resource which was modified.  We'll outline a recommended pattern for this in the next section.
+A single mutation can modify multiple types, or multiple instances of the _same_ type. For example, a mutation that enables a user to "like" a blog post might increment the `likes` count for a `Post` _and_ update the `likedPosts` list for the `User`. This makes it less obvious what the structure of the mutation's response should look like.
 
-### Responses
+Additionally, mutations are much more likely than queries to cause errors, because they modify data. A mutation might even result in a _partial_ error, in which it successfully modifies one piece of data and fails to modify another. Regardless of the type of error, it's important that the error is communicated back to the client in a consistent way.
 
-GraphQL mutations can return any information the developer wishes, but designing mutation responses in a consistent and robust structure makes them more approachable by humans and less complicated to traverse in client code.  There are two guiding principles which we have combined into our suggested mutation response structure.
+To help resolve both of these concerns, we recommend defining a `MutationResponse` interface in your schema, along with a collection of object types that _implement_ that interface (one for each of your mutations).
 
-First, while mutations might only modify a single resource type, they often need to touch several at a time.  It makes sense for this to happen in a single round-trip to the server and this is one of the strengths of GraphQL!  When different resources are modified, the client code can benefit from having updated fields returned from each type and the response format should support that.
-
-Secondly, mutations have a higher chance of causing errors than queries since they are modifying data.  If only a portion of a mutation update succeeds, whether that is a partial update to a single document's fields or a failed update to an entire document, it's important to convey that information to the client to avoid stale local state on the client.
-
-A common way to handle errors during a mutation is to simply `throw` an error.  While that's fine, throwing an error in a resolver will return an error for the entire operation to the caller and prevent a more meaningful response.  Consider the following mutation example, which tries to update a user's `name` and `age`:
-
-```graphql
-mutation updateUser {
-  updateUser(id: 1, user: { age: -1, name: "Foo Bar" }){
-    name
-    age
-  }
-}
-```
-
-With validation in place, this mutation might cause an error since the `age` is a negative value.  While it’s possible that the entire operation should be stopped, there’s an opportunity to partially update the user’s record with the new `name` and return the updated record with the `age` left untouched.
-
-Fortunately, the powerful structure of GraphQL mutations accommodates this use case and can return transactional information about the update alongside the records which have been changed which enables client-side updates to occur automatically.
-
-In order to provide consistency across a schema, we suggest introducing a `MutationResponse` interface which can be implemented on every mutation response in a schema and enables transactional information to be returned in addition to the normal mutation response object.
-
-A `MutationResponse` interface would look like this:
+Here's what the `MutationResponse` interface looks like:
 
 ```graphql
 interface MutationResponse {
@@ -392,10 +411,10 @@ interface MutationResponse {
 }
 ```
 
-An implementing type would look like this:
+And here's what an implementing object type looks like:
 
 ```graphql
-type UpdateUserMutationResponse implements MutationResponse {
+type UpdateUserEmailMutationResponse implements MutationResponse {
   code: String!
   success: Boolean!
   message: String!
@@ -403,7 +422,7 @@ type UpdateUserMutationResponse implements MutationResponse {
 }
 ```
 
-Calling a mutation that returns that `UpdateUserMutationResponse` type would result in a response that looks something like this:
+Our `updateUserEmail` mutation would specify `UpdateUserEmailMutationResponse` as its return type (instead of `User`), and the structure of its response would be the following:
 
 ```json
 {
@@ -411,25 +430,25 @@ Calling a mutation that returns that `UpdateUserMutationResponse` type would res
     "updateUser": {
       "code": "200",
       "success": true,
-      "message": "User was successfully updated",
+      "message": "User email was successfully updated",
       "user": {
         "id": "1",
         "name": "Jane Doe",
-        "age": 35
+        "email": "jane@example.com"
       }
     }
   }
 }
 ```
 
-Let’s break this down, field by field:
+Let’s break this down field by field:
 
-* `code` is a string representing a transactional value explaining details about the status of the data change. Think of this like an HTTP status code.
-* `success` is a boolean indicating whether the update was successful or not. This allows a coarse check by the client to know if there were failures.
-* `message` is a string that is meant to be a human-readable description of the status of the transaction. It is intended to be used in the UI of the product.
-* `user` is added by the implementing type `UpdateUserMutationResponse` to return back the newly created user for the client to use!
+* `code` is a string that represents the status of the data transfer. Think of it like an HTTP status code.
+* `success` is a boolean that indicates whether the mutation was successful. This allows a coarse check by the client to know if there were failures.
+* `message` is a human-readable string that describes the result of the mutation. It is intended to be used in the UI of the product.
+* `user` is added by the implementing type `UpdateUserEmailMutationResponse` to return the newly updated user to the client.
 
-For mutations which have touched multiple types, this same structure can be used to return updated objects from each one.  For example, a `likePost` type, which could affect a user's "reputation" and also update the post itself, might implement `MutationResponse` in the following manner:
+If a mutation modifies _multiple_ types (like our earlier example of "liking" a blog post), its implementing type can include a separate field for each type that's modified:
 
 ```graphql
 type LikePostMutationResponse implements MutationResponse {
@@ -441,7 +460,7 @@ type LikePostMutationResponse implements MutationResponse {
 }
 ```
 
-In this response type, we've provided the expectation that both the `user` and the `post` would be returned and an actual response to a `likePost` mutation could be:
+Because our hypothetical `likePost` mutation modifies fields on both a `Post` and a `User`, its response object includes fields for both of those types. A response has the following structure:
 
 ```json
 {
@@ -451,61 +470,15 @@ In this response type, we've provided the expectation that both the `user` and t
       "success": true,
       "message": "Thanks!",
       "post": {
+        "id": "123",
         "likes": 5040
       },
       "user": {
-        "reputation": 11
+        "likedPosts": ["123"]
       }
     }
   }
 }
 ```
 
-Following this pattern for mutations provides detailed information about the data that has changed and feedback on whether the operation was successful or not.  Armed with this information, developers can easily react to failures within the client
-
-### Input types
-
-Input types are a special type in GraphQL which allows an object to be passed as an argument to both queries and mutations and is helpful when simple scalar types aren't sufficient.
-
-This allows arguments to be structured in an more manageable way, similar to how switching to an `options` argument might be appreciated when `function` arguments become too iterative.
-
-For example, consider this mutation which creates a post along with its accompanying media URLs (e.g. images):
-
-```graphql
-type Mutation {
-  createPost(title: String, body: String, mediaUrls: [String]): Post
-}
-```
-
-This could be easier to digest, and the arguments would be easier to re-use within the mutation, by using an `input` type with the relevant fields.
-
-An input type is defined like a normal object type but using the `input` keyword.  To introduce an `input` type for this example, we'd do:
-
-```graphql
-type Mutation {
-  createPost(post: PostAndMediaInput): Post
-}
-
-input PostAndMediaInput {
-  title: String
-  body: String
-  mediaUrls: [String]
-}
-```
-
-Not only does this facilitate passing the `PostAndMediaInput` around within the schema, it also provides a basis for annotating fields with descriptions which are automatically exposed by GraphQL-enabled tools:
-
-```graphql
-input PostAndMediaInput {
-  "A main title for the post"
-  title: String
-  "The textual body of the post."
-  body: String
-  "A list of URLs to render in the post."
-  mediaUrls: [String]
-}
-```
-
-Input types can also be used when different operations require the exact same information, though we urge caution on over-using this technique since changes to `input` types are breaking changes for all operations which utilize them.
-
-Additionally, while it is possible to reuse an `input` type between a query and mutation which target the same resource, it's often best to avoid this since in many cases certain null fields might be tolerated for one but not the other.
+Following this pattern provides a client with helpful, detailed information about the result of each requested operation. Equipped with this information, developers can better react to operation failures in their client code.
