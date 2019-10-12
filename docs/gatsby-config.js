@@ -51,7 +51,7 @@ module.exports = {
           Security: ['security/authentication', 'security/terminating-ssl'],
           Integrations: [
             'integrations/middleware',
-            'features/plugins',
+            'integrations/plugins',
           ],
           Deployment: [
             'deployment/heroku',
