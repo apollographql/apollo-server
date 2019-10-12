@@ -168,21 +168,6 @@ server.listen().then(({ url }) => {
 
 ### Granular logs
 
-For more advanced cases, Apollo Server provides an experimental API that accepts an array of `graphql-extensions` to the `extensions` field. These extensions receive a variety of lifecycle calls for each phase of a GraphQL request and can keep state, such as the request headers.
+For more advanced cases, Apollo Server provides an experimental API that accepts an array of plugins to its `plugins` field. These include receive a variety of lifecycle calls for each phase of a GraphQL request and can keep state, such as the request headers.
 
-```js
-const { ApolloServer }  = require('apollo-server');
-const LoggingExtension = require('./logging');
-
-const server = new ApolloServer({
-  typeDefs,
-  resolvers,
-  extensions: [() => new LoggingExtension()]
-});
-
-server.listen().then(({ url }) => {
-  console.log(`🚀  Server ready at ${url}`);
-});
-```
-
-For example, the `logFunction` from Apollo Server 1 can be implemented as an [extension](https://github.com/apollographql/apollo-server/blob/8914b135df9840051fe81cc9224b444cfc5b61ab/packages/apollo-server-core/src/logging.ts) and could be modified to add additional state or functionality.
+For more details, see the [article on integrating with plugins](https://deploy-preview-2008--apollo-server-docs.netlify.com/docs/apollo-server/integrations/plugins/#responding-to-events) and check the full API from [the `apollo-server-plugin-base` package](https://github.com/apollographql/apollo-server/blob/7cca442ee39536182b4415fd5eba879d210fa5f9/packages/apollo-server-plugin-base/src/index.ts#L18-L73).
