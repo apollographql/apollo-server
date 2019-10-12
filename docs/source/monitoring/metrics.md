@@ -168,6 +168,6 @@ server.listen().then(({ url }) => {
 
 ### Granular logs
 
-For more advanced cases, Apollo Server provides an experimental API that accepts an array of plugins to its `plugins` field. These include receive a variety of lifecycle calls for each phase of a GraphQL request and can keep state, such as the request headers.
+For more advanced cases, Apollo Server provides an experimental API that accepts an array of plugins to its `plugins` field. Plugins receive a variety of lifecycle calls for each phase of a GraphQL request, include transport specific properties (e.g. headers), and can keep state, making them great for more specific logging needs.
 
 For more details, see the [article on integrating with plugins](https://deploy-preview-2008--apollo-server-docs.netlify.com/docs/apollo-server/integrations/plugins/#responding-to-events) and check the full API from [the `apollo-server-plugin-base` package](https://github.com/apollographql/apollo-server/blob/7cca442ee39536182b4415fd5eba879d210fa5f9/packages/apollo-server-plugin-base/src/index.ts#L18-L73).
