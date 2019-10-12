@@ -15,8 +15,8 @@ import {
 } from '../packages/apollo-server-env';
 
 interface FetchMock extends jest.Mock<typeof fetch> {
-  mockResponseOnce(data?: any, headers?: HeadersInit, status?: number): void;
-  mockJSONResponseOnce(data?: object, headers?: HeadersInit): void;
+  mockResponseOnce(data?: any, headers?: HeadersInit, status?: number): this;
+  mockJSONResponseOnce(data?: object, headers?: HeadersInit): this;
 }
 
 const mockFetch = jest.fn<typeof fetch>(fetch) as FetchMock;

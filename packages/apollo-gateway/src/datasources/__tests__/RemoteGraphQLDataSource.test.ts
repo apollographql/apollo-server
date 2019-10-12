@@ -7,6 +7,7 @@ import {
 } from 'apollo-server-errors';
 
 import { RemoteGraphQLDataSource } from '../RemoteGraphQLDataSource';
+import { Headers, Response, Request } from 'apollo-server-env';
 
 beforeEach(() => {
   fetch.mockReset();
@@ -112,6 +113,51 @@ describe('willSendRequest', () => {
         'x-user-id': '1234',
       },
     });
+  });
+});
+
+describe('didReceiveResponse', () => {
+  it('can accept and modify context', async () => {
+    interface MyContext {
+      surrogateKeys: string[];
+    }
+
+    class MyDataSource extends RemoteGraphQLDataSource {
+      url = 'https://api.example.com/foo';
+
+      async didReceiveResponse<TResult, TContext>(
+        response: Response,
+        request: Request,
+        context: TContext,
+      ): Promise<TResult> {
+        const body = await super.didReceiveResponse<TResult>(response, request, context);
+        const surrogateKeys = request.headers.get('surrogate-keys');
+        if (surrogateKeys) {
+          (context as any).surrogateKeys.push(...surrogateKeys.split(' '));
+        }
+        return body;
+      }
+    }
+
+    const DataSource = new MyDataSource();
+
+    fetch.mockJSONResponseOnce({ data: { me: 'james' } });
+
+    const context: MyContext = { surrogateKeys: [] };
+    await DataSource.process({
+      request: {
+        query: '{ me { name } }',
+        variables: { id: '1' },
+        http: {
+          method: 'GET',
+          url: 'https://api.example.com/foo',
+          headers: new Headers({ 'Surrogate-Keys': 'abc def' }),
+        },
+      },
+      context,
+    });
+
+    expect(context).toEqual({ surrogateKeys: ['abc', 'def'] });
   });
 });
 

@@ -18,12 +18,19 @@ import {
 import { ExecutionParams } from 'subscriptions-transport-ws';
 import accepts from 'accepts';
 import typeis from 'type-is';
-
 import { graphqlExpress } from './expressApollo';
 
 export { GraphQLOptions, GraphQLExtension } from 'apollo-server-core';
 
-export interface ServerRegistration {
+export interface GetMiddlewareOptions {
+  path?: string;
+  cors?: corsMiddleware.CorsOptions | boolean;
+  bodyParserConfig?: OptionsJson | boolean;
+  onHealthCheck?: (req: express.Request) => Promise<any>;
+  disableHealthCheck?: boolean;
+}
+
+export interface ServerRegistration extends GetMiddlewareOptions {
   // Note: You can also pass a connect.Server here. If we changed this field to
   // `express.Application | connect.Server`, it would be very hard to get the
   // app.use calls to typecheck even though they do work properly. Our
@@ -31,11 +38,6 @@ export interface ServerRegistration {
   // we suspect the only connect users left writing GraphQL apps are Meteor
   // users).
   app: express.Application;
-  path?: string;
-  cors?: corsMiddleware.CorsOptions | boolean;
-  bodyParserConfig?: OptionsJson | boolean;
-  onHealthCheck?: (req: express.Request) => Promise<any>;
-  disableHealthCheck?: boolean;
 }
 
 const fileUploadMiddleware = (
@@ -104,18 +106,23 @@ export class ApolloServer extends ApolloServerBase {
     return true;
   }
 
+  public applyMiddleware({ app, ...rest }: ServerRegistration) {
+    app.use(this.getMiddleware(rest));
+  }
+
   // TODO: While `express` is not Promise-aware, this should become `async` in
   // a major release in order to align the API with other integrations (e.g.
   // Hapi) which must be `async`.
-  public applyMiddleware({
-    app,
+  public getMiddleware({
     path,
     cors,
     bodyParserConfig,
     disableHealthCheck,
     onHealthCheck,
-  }: ServerRegistration) {
+  }: GetMiddlewareOptions = {}): express.Router {
     if (!path) path = '/graphql';
+
+    const router = express.Router();
 
     // Despite the fact that this `applyMiddleware` function is `async` in
     // other integrations (e.g. Hapi), currently it is not for Express (@here).
@@ -130,12 +137,13 @@ export class ApolloServer extends ApolloServerBase {
     // request comes in, but we won't call `next` on this middleware until it
     // does. (And we'll take care to surface any errors via the `.catch`-able.)
     const promiseWillStart = this.willStart();
-    app.use(path, (_req, _res, next) => {
+
+    router.use(path, (_req, _res, next) => {
       promiseWillStart.then(() => next()).catch(next);
     });
 
     if (!disableHealthCheck) {
-      app.use('/.well-known/apollo/server-health', (req, res) => {
+      router.use('/.well-known/apollo/server-health', (req, res) => {
         // Response follows https://tools.ietf.org/html/draft-inadarei-api-health-check-01
         res.type('application/health+json');
 
@@ -164,26 +172,26 @@ export class ApolloServer extends ApolloServerBase {
     // Note that we don't just pass all of these handlers to a single app.use call
     // for 'connect' compatibility.
     if (cors === true) {
-      app.use(path, corsMiddleware());
+      router.use(path, corsMiddleware());
     } else if (cors !== false) {
-      app.use(path, corsMiddleware(cors));
+      router.use(path, corsMiddleware(cors));
     }
 
     if (bodyParserConfig === true) {
-      app.use(path, json());
+      router.use(path, json());
     } else if (bodyParserConfig !== false) {
-      app.use(path, json(bodyParserConfig));
+      router.use(path, json(bodyParserConfig));
     }
 
     if (uploadsMiddleware) {
-      app.use(path, uploadsMiddleware);
+      router.use(path, uploadsMiddleware);
     }
 
     // Note: if you enable playground in production and expect to be able to see your
     // schema, you'll need to manually specify `introspection: true` in the
     // ApolloServer constructor; by default, the introspection query is only
     // enabled in dev.
-    app.use(path, (req, res, next) => {
+    router.use(path, (req, res, next) => {
       if (this.playgroundOptions && req.method === 'GET') {
         // perform more expensive content-type check only if necessary
         // XXX We could potentially move this logic into the GuiOptions lambda,
@@ -208,15 +216,14 @@ export class ApolloServer extends ApolloServerBase {
           return;
         }
       }
-      return graphqlExpress(() => {
-        return this.createGraphQLServerOptions(req, res);
-      })(req, res, next);
+
+      return graphqlExpress(() => this.createGraphQLServerOptions(req, res))(
+        req,
+        res,
+        next,
+      );
     });
+
+    return router;
   }
 }
-
-export const registerServer = () => {
-  throw new Error(
-    'Please use server.applyMiddleware instead of registerServer. This warning will be removed in the next release',
-  );
-};

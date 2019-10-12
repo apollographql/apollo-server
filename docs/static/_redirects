@@ -3,3 +3,27 @@
 # The test-utils lived at its current home for about 5 days.
 # It at least exists on some slides and Tweets.
 /docs/apollo-server/features/test-utils.html /docs/apollo-server/features/testing.html
+
+# Redirects associated with revamp of Apollo Server information architecture
+/docs/apollo-server/whats-new https://github.com/apollographql/apollo-server/blob/master/CHANGELOG.md
+/docs/apollo-server/essentials/data/ /docs/apollo-server/data/data/
+/docs/apollo-server/essentials/schema/ /docs/apollo-server/schema/schema/
+/docs/apollo-server/essentials/server /docs/apollo-server/getting-started/
+/docs/apollo-server/features/apq/ /docs/apollo-server/performance/apq/
+/docs/apollo-server/features/authentication/ /docs/apollo-server/security/authentication/
+/docs/apollo-server/features/caching/ /docs/apollo-server/performance/caching/
+/docs/apollo-server/features/creating-directives/ /docs/apollo-server/schema/creating-directives/
+/docs/apollo-server/features/data-sources/ /docs/apollo-server/data/data-sources/
+/docs/apollo-server/features/directives/ /docs/apollo-server/schema/directives/
+/docs/apollo-server/features/errors/ /docs/apollo-server/data/errors/
+/docs/apollo-server/features/file-uploads/ /docs/apollo-server/data/file-uploads/
+/docs/apollo-server/features/graphql-playground/ /docs/apollo-server/testing/graphql-playground/
+/docs/apollo-server/features/health-checks/ /docs/apollo-server/monitoring/health-checks/
+/docs/apollo-server/features/metrics/ /docs/apollo-server/monitoring/metrics/
+/docs/apollo-server/features/mocking/ /docs/apollo-server/testing/mocking/
+/docs/apollo-server/features/scalars-enums/ /docs/apollo-server/
+/docs/apollo-server/features/subscriptions/ /docs/apollo-server/data/subscriptions/
+/docs/apollo-server/features/testing/ /docs/apollo-server/testing/testing/
+/docs/apollo-server/features/unions-interfaces/ /docs/apollo-server/schema/unions-interfaces/
+
+/docs/apollo-server/federation/managed-federation /docs/graph-manager/federation/#connecting-apollo-server-to-the-graph-manager

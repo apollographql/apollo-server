@@ -18,6 +18,7 @@ afterEach(() => {
   expect(nock.isDone()).toBeTruthy();
   nock.cleanAll();
   nock.restore();
+  jest.useRealTimers();
 });
 
 it('Queries remote endpoints for their SDLs', async () => {

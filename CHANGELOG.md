@@ -6,7 +6,46 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 > The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  When a release is being prepared, a new header will be (manually) created below and the the appropriate changes within that release will be moved into the new section.
 
-- _Nothing yet!_
+- `@apollo/gateway`, `@apollo/federation`, `apollo-engine-reporting`: Update `apollo-graphql` dependency to bring in [`apollo-tooling`'s #1551](https://github.com/apollographql/apollo-tooling/pull/1551) which resolve runtime errors when its source is minified.  While this fixes a particular minification bug when Apollo Server packages are minified, we _do not_ recommend minification of server code in most cases. [PR #3387](https://github.com/apollographql/apollo-server/pull/3387) [Issue #3335](https://github.com/apollographql/apollo-server/issues/3335)
+- `apollo-server-koa`: Correctly declare dependency on `koa-compose`. [PR #3356](https://github.com/apollographql/apollo-server/pull/3356)
+- `apollo-server-core`: Preserve any `extensions` that have been placed on the response when pre-execution errors occur. [PR #3394](https://github.com/apollographql/apollo-server/pull/3394)
+
+### v2.9.3
+
+> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/a1fbf95fc01739d5cbaa59919149bb85c563fdaa)
+
+- `apollo-server-express`: Add direct dependency on `express` to allow for usage of `express.Router` for `getMiddleware` functionality (from [#2435](https://github.com/apollographql/apollo-server/pull/2435)).  Previously, unlike other server integration packages, `apollo-server-express` did not directly need `express` as a dependency since it only relied on `express` for TypeScript typings. [Issue #3238](https://github.com/apollographql/apollo-server/issues/3238) [PR #3239](https://github.com/apollographql/apollo-server/pull/3239)
+- `apollo-server-lambda`: Add `@types/aws-lambda` as a direct dependency to `apollo-server-express` to allow usage of its typings without needing to separately install it. [Issue #2351](https://github.com/apollographql/apollo-server/issue/2351) [PR #3242](https://github.com/apollographql/apollo-server/pull/3242)
+
+### v2.9.2
+
+> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/92ea402a90bf9817c9b887707abbd77dcf5edcb4)
+
+- `apollo-server-koa`: **Drop support for Node.js v6 within the Apollo Server Koa integration in order to update `koa-bodyparser` dependency from `v3.0.0` to `v4.2.1`.** [PR #TODO](https://github.com/apollographql/apollo-server/pull/TODO) [Issue #3050](https://github.com/apollographql/apollo-server/issues/3050) [PR #3229](https://github.com/apollographql/apollo-server/pull/3229)
+- `apollo-server-express`: Use explicit return type for new `getMiddleware` method, in an effort to resolve [Issue #3222](https://github.com/apollographql/apollo-server/issues/3222) [PR #3230](https://github.com/apollographql/apollo-server/pull/3230)
+
+### v2.9.1
+
+> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/029c8dca3af812ee70589cdb6de749df3d2843d8)
+
+- `apollo-server-core`: Make `formatError` available to subscriptions in the same spirit as the existing `formatResponse`. [PR #2942](https://github.com/apollographql/apollo-server/pull/2942)
+- `apollo-engine-reporting`: The behavior of the `engine.maxAttempts` parameter previously did not match its documentation. It is documented as being the max number of attempts *including* the initial attempt, but until this release it was actually the number of retries *excluding* the initial attempt. The behavior has been changed to match the documentation (and the literal reading of the option name). [PR #3218](https://github.com/apollographql/apollo-server/pull/3218)
+- `apollo-engine-reporting`: When sending the report fails with a server-side 5xx error, include the full error from the server in the logs. [PR #3218](https://github.com/apollographql/apollo-server/pull/3218)
+- `apollo-server-core`: Fix regression which prevented the resizing of the schema panel in GraphQL Playground. [PR #3224](https://github.com/apollographql/apollo-server/pull/3224) and [upstream](https://github.com/apollographql/graphql-playground/pull/19)
+
+### v2.9.0
+
+> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/6037f6e80fdaa53b50b99ae94d93c724c382c23c)
+
+- `apollo-server-express`, `apollo-server-koa`: A new `getMiddleware` method has been introduced, which accepts the same parameters as `applyMiddleware` with the exception of the `app` property.  This allows implementors to obtain the middleware directly and "`use`" it within an existing `app`.  In the near-term, this should ease some of the pain points with the previous technique.  Longer-term, we are exploring what we consider to be a much more natural approach by introducing an "HTTP transport" in Apollo Server 3.x.  See [this proposal issue](https://github.com/apollographql/apollo-server/issues/3184) for more information.  [PR #2435](https://github.com/apollographql/apollo-server/pull/2435)
+- `@apollo/federation`: `buildFederatedSchema`'s `typeDefs` parameter now accepts arrays of `DocumentNode`s (i.e. type definitions wrapped in `gql`) and `resolvers` to make the migration from a single service into a federated service easier for teams previously utilizing this pattern. [PR #3188](https://github.com/apollographql/apollo-server/pull/3188)
+
+### v2.8.2
+
+> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/99f78c6782bce170186ba6ef311182a8c9f281b7)
+
+- `apollo-server-koa`: Update dependency koa to v2.8.1. [PR #3175](https://github.com/apollographql/apollo-server/pull/3175)
+- `apollo-server-express`: Update types exported by the ASE package. [PR #3173](https://github.com/apollographql/apollo-server/pull/3175) [PR #3172](https://github.com/apollographql/apollo-server/pull/3172)
 
 ### v2.8.1
 
@@ -57,7 +96,7 @@ The version headers in this history reflect the versions of Apollo Server itself
   }
   ```
 - `apollo-engine-reporting`: **Behavior change**: By default, send no GraphQL request headers and values to Apollo's servers instead of sending all. Adding the new EngineReportingOption `sendHeaders` to send some or all header values. This replaces the `privateHeaders` option, which is now deprecated. [PR #2931](https://github.com/apollographql/apollo-server/pull/2931)
-   
+
    To maintain the previous behavior of transmitting  **all** GraphQL request headers and values, configure `engine`.`sendHeaders` as following:
      ```js
      engine: {

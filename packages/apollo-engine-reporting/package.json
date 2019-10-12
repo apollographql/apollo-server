@@ -1,7 +1,7 @@
 {
   "name": "apollo-engine-reporting",
-  "version": "1.4.3",
-  "description": "Send reports about your GraphQL services to Apollo Engine",
+  "version": "1.4.7",
+  "description": "Send reports about your GraphQL services to Apollo Graph Manager (previously known as Apollo Engine)",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "license": "MIT",
@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "apollo-engine-reporting-protobuf": "file:../apollo-engine-reporting-protobuf",
-    "apollo-graphql": "^0.3.3",
+    "apollo-graphql": "^0.3.4",
     "apollo-server-caching": "file:../apollo-server-caching",
     "apollo-server-env": "file:../apollo-server-env",
     "apollo-server-types": "file:../apollo-server-types",
