@@ -271,6 +271,20 @@ export class ApolloGateway implements GraphQLService {
     this.compositionMetadata = result.compositionMetadata;
     this.schema = this.createSchema(result.serviceDefinitions);
 
+    if (this.queryPlanStore) this.queryPlanStore.flush();
+      this.logger.debug('Gateway config has changed, updating schema');
+
+    try {
+      this.onSchemaChangeListeners.forEach(listener =>
+        listener(this.schema!),
+      );
+    } catch (e) {
+      this.logger.warn(
+        'Error notifying schema change listener of update to schema.',
+        e,
+      );
+    }
+
     if (this.experimental_didUpdateComposition) {
       this.experimental_didUpdateComposition(
         {
