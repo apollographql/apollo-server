@@ -9,9 +9,9 @@ This article describes the fundamental building blocks of a schema and how to cr
 
 ## The schema definition language
 
-The GraphQL specification includes a human-readable **schema definition language** (or **SDL**) that you use to define your schema.
+The GraphQL specification includes a human-readable **schema definition language** (or **SDL**) that you use to define your schema and store it as a string.
 
-The SDL's syntax superficially resembles JSON. Here's a short example schema that defines two object types: `Book` and `Author`:
+Here's a short example schema that defines two object types: `Book` and `Author`:
 
 ```graphql
 type Book {
@@ -164,7 +164,7 @@ And once again, our server would respond with results that match the query's str
 
 ### The `Mutation` type
 
-The `Mutation` type is similar in structure and purpose to the [`Query` type](#the-query-type). Whereas the `Query` type defines your data graph's supported read operations, the `Mutation` type defines supported _write_ operations.
+The `Mutation` type is similar in structure and purpose to the [`Query` type](#the-query-type). Whereas the `Query` type defines your data graph's supported _read_ operations, the `Mutation` type defines supported _write_ operations.
 
 Each field of the `Mutation` type defines the signature and return type of a different mutation. The `Mutation` type for our example schema might resemble the following:
 
@@ -253,7 +253,7 @@ input PostAndMediaInput {
 
 Input types can sometimes be useful when multiple operations require the exact same set of information, but you should reuse them sparingly. Operations might eventually diverge in their sets of required arguments.
 
-**Do not use the same input type for both queries and mutations**. In many cases, arguments that are required for a mutation are optional for a corresponding query.
+**Do not use the same input type for both queries and mutations**. In many cases, arguments that are _required_ for a mutation are _optional_ for a corresponding query.
 
 ## Documentation strings
 
