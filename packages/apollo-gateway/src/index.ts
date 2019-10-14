@@ -342,8 +342,6 @@ export class ApolloGateway implements GraphQLService {
       );
     }
 
-
-
     if (this.experimental_didUpdateComposition) {
       this.experimental_didUpdateComposition(
         {
@@ -368,37 +366,8 @@ export class ApolloGateway implements GraphQLService {
   private startPollingServices() {
     if (this.pollingTimer) clearInterval(this.pollingTimer);
 
-    this.pollingTimer = setInterval(async () => {
-      let result: Await<ReturnType<Experimental_UpdateServiceDefinitions>>;
-      try {
-        result = await this.updateServiceDefinitions(this.config);
-      } catch (e) {
-        this.logger.debug(
-          'Error checking for schema updates. Falling back to existing schema.',
-          e,
-        );
-        return;
-      }
-
-      if (!result.isNewSchema) {
-        this.logger.debug('No changes to gateway config');
-        return;
-      }
-
-      if (this.queryPlanStore) this.queryPlanStore.flush();
-      this.logger.debug('Gateway config has changed, updating schema');
-
-      this.schema = this.createSchema(result.serviceDefinitions);
-      try {
-        this.onSchemaChangeListeners.forEach(listener =>
-          listener(this.schema!),
-        );
-      } catch (e) {
-        this.logger.debug(
-          'Error notifying schema change listener of update to schema.',
-          e,
-        );
-      }
+    this.pollingTimer = setInterval(() => {
+      this.updateComposition();
     }, 10 * 1000);
 
     // Prevent the Node.js event loop from remaining active (and preventing,

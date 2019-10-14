@@ -262,20 +262,23 @@ it('Rollsback to a previous schema when triggered', async () => {
   const onChange = jest.fn();
   const gateway = new ApolloGateway();
   await gateway.load({ engine: { apiKeyHash, graphId: serviceName } });
+
   gateway.onSchemaChange(onChange);
-  jest.runOnlyPendingTimers();
+
+  jest.advanceTimersByTime(10000);
 
   jest.useRealTimers();
-  await new Promise(resolve => setTimeout(resolve, 100));
+  await new Promise(resolve => setTimeout(resolve, 10));
   jest.useFakeTimers();
 
   expect(onChange.mock.calls.length).toBe(1);
 
-  jest.runOnlyPendingTimers();
+  jest.advanceTimersByTime(10000);
 
   jest.useRealTimers();
-  await new Promise(resolve => setTimeout(resolve, 100));
+  await new Promise(resolve => setTimeout(resolve, 10));
   jest.useFakeTimers();
+
 
   expect(onChange.mock.calls.length).toBe(2);
 });
