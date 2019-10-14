@@ -123,14 +123,11 @@ export type Experimental_DidUpdateCompositionCallback = (
 
 export type Experimental_UpdateServiceDefinitions = (
   config: GatewayConfig,
-) => Promise<
-  | {
-      serviceDefinitions: ServiceDefinition[];
-      compositionMetadata?: CompositionMetadata;
-      isNewSchema: true;
-    }
-  | { isNewSchema: false }
->;
+) => Promise<{
+  serviceDefinitions: ServiceDefinition[];
+  compositionMetadata?: CompositionMetadata;
+  isNewSchema: boolean;
+}>;
 
 type Await<T> = T extends Promise<infer U> ? U : T;
 
@@ -239,73 +236,6 @@ export class ApolloGateway implements GraphQLService {
     };
   }
 
-  protected async updateComposition(options?: {
-    engine?: GraphQLServiceEngineConfig;
-  }) {
-    const previousSchema = this.schema;
-    const previousServiceDefinitions = this.serviceDefinitions;
-    const previousCompositionMetadata = this.compositionMetadata;
-
-    if (options && options.engine) {
-      if (!options.engine.graphVariant)
-        console.warn('No graph variant provided. Defaulting to `current`.');
-      this.engineConfig = options.engine;
-    }
-
-    this.logger.debug('Loading configuration for gateway');
-    const result = await this.updateServiceDefinitions(this.config);
-
-    this.logger.debug('Configuration loaded for gateway');
-
-    if (!result.isNewSchema) return;
-
-    if (
-      JSON.stringify(this.serviceDefinitions) ===
-      JSON.stringify(result.serviceDefinitions)
-    ) {
-      this.logger.debug('No change in service definitions since last check');
-    } else {
-      this.serviceDefinitions = result.serviceDefinitions;
-    }
-
-    this.compositionMetadata = result.compositionMetadata;
-    this.schema = this.createSchema(result.serviceDefinitions);
-
-    if (this.queryPlanStore) this.queryPlanStore.flush();
-      this.logger.debug('Gateway config has changed, updating schema');
-
-    try {
-      this.onSchemaChangeListeners.forEach(listener =>
-        listener(this.schema!),
-      );
-    } catch (e) {
-      this.logger.warn(
-        'Error notifying schema change listener of update to schema.',
-        e,
-      );
-    }
-
-    if (this.experimental_didUpdateComposition) {
-      this.experimental_didUpdateComposition(
-        {
-          serviceDefinitions: result.serviceDefinitions,
-          schema: this.schema,
-          ...(this.compositionMetadata && {
-            compositionMetadata: this.compositionMetadata,
-          }),
-        },
-        previousServiceDefinitions &&
-          previousSchema && {
-            serviceDefinitions: previousServiceDefinitions,
-            schema: previousSchema,
-            ...(previousCompositionMetadata && {
-              compositionMetadata: previousCompositionMetadata,
-            }),
-          },
-      );
-    }
-  }
-
   protected createSchema(serviceList: ServiceDefinition[]) {
     this.logger.debug(
       `Composing schema from service list: \n${serviceList
@@ -355,6 +285,84 @@ export class ApolloGateway implements GraphQLService {
         this.pollingTimer = undefined;
       }
     };
+  }
+
+  private async updateComposition(options?: {
+    engine?: GraphQLServiceEngineConfig;
+  }) {
+    const previousSchema = this.schema;
+    const previousServiceDefinitions = this.serviceDefinitions;
+    const previousCompositionMetadata = this.compositionMetadata;
+
+    if (options && options.engine) {
+      if (!options.engine.graphVariant)
+        console.warn('No graph variant provided. Defaulting to `current`.');
+      this.engineConfig = options.engine;
+    }
+
+    let result: Await<ReturnType<Experimental_UpdateServiceDefinitions>>;
+    try {
+      this.logger.debug('Loading configuration for gateway');
+      result = await this.updateServiceDefinitions(this.config);
+    } catch (e) {
+      this.logger.warn(
+        'Error checking for schema updates. Falling back to existing schema.',
+        e,
+      );
+      return;
+    }
+
+    if (!result.isNewSchema) {
+      this.logger.debug('No changes to gateway config');
+    }
+
+    if (
+      JSON.stringify(this.serviceDefinitions) ===
+      JSON.stringify(result.serviceDefinitions)
+    ) {
+      this.logger.debug('No change in service definitions since last check');
+      return;
+    } else {
+      this.serviceDefinitions = result.serviceDefinitions;
+    }
+
+    this.compositionMetadata = result.compositionMetadata;
+    this.serviceDefinitions = result.serviceDefinitions;
+
+    if (this.queryPlanStore) this.queryPlanStore.flush();
+    this.logger.info('Gateway config has changed, updating schema');
+
+    this.schema = this.createSchema(result.serviceDefinitions);
+    try {
+      this.onSchemaChangeListeners.forEach(listener => listener(this.schema!));
+    } catch (e) {
+      this.logger.error(
+        'Error notifying schema change listener of update to schema.',
+        e,
+      );
+    }
+
+
+
+    if (this.experimental_didUpdateComposition) {
+      this.experimental_didUpdateComposition(
+        {
+          serviceDefinitions: result.serviceDefinitions,
+          schema: this.schema,
+          ...(this.compositionMetadata && {
+            compositionMetadata: this.compositionMetadata,
+          }),
+        },
+        previousServiceDefinitions &&
+          previousSchema && {
+            serviceDefinitions: previousServiceDefinitions,
+            schema: previousSchema,
+            ...(previousCompositionMetadata && {
+              compositionMetadata: previousCompositionMetadata,
+            }),
+          },
+      );
+    }
   }
 
   private startPollingServices() {
@@ -434,7 +442,7 @@ export class ApolloGateway implements GraphQLService {
     config: GatewayConfig,
   ): ReturnType<Experimental_UpdateServiceDefinitions> {
     if (isLocalConfig(config)) {
-      return { isNewSchema: false };
+      return { isNewSchema: false, serviceDefinitions: [] };
     }
 
     if (isRemoteConfig(config)) {
