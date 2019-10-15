@@ -502,29 +502,25 @@ export class ApolloGateway implements GraphQLService {
       }
     }
 
+    const serviceMap: ServiceMap = Object.entries(this.serviceMap).reduce(
+      (serviceDataSources, [serviceName, { dataSource }]) => {
+        serviceDataSources[serviceName] = dataSource;
+        return serviceDataSources;
+      },
+      {} as ServiceMap,
+    );
+
     if (this.experimental_didResolveQueryPlan) {
       this.experimental_didResolveQueryPlan({
         queryPlan,
-        serviceMap: Object.entries(this.serviceMap).reduce(
-          (accumulator, [name, { dataSource }]) => {
-            accumulator[name] = dataSource;
-            return accumulator;
-          },
-          {} as ServiceMap,
-        ),
+        serviceMap,
         operationContext,
       });
     }
 
     const response = await executeQueryPlan<TContext>(
       queryPlan,
-      Object.entries(this.serviceMap).reduce(
-        (accumulator, [name, { dataSource }]) => {
-          accumulator[name] = dataSource;
-          return accumulator;
-        },
-        {} as ServiceMap,
-      ),
+      serviceMap,
       requestContext,
       operationContext,
     );
