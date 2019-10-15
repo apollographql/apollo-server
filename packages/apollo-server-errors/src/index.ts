@@ -29,7 +29,7 @@ export class ApolloError extends Error implements GraphQLError {
     // and reading arbitrary data on an error, as arbitrary properties on the ApolloError
     // itself won't be supported in the future.
     //
-    // XXX Filter 'message' and 'extensions' specifically so they don't't overwrite the class property.
+    // XXX Filter 'message' and 'extensions' specifically so they don't overwrite the class property.
     // We _could_ filter all of the class properties, but have chosen to only do
     // so if it's an issue for other users. Please feel free to open an issue if you
     // find yourself here with this exact problem.
