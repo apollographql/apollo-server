@@ -411,7 +411,7 @@ export class ApolloGateway implements GraphQLService {
     config: GatewayConfig,
   ): ReturnType<Experimental_UpdateServiceDefinitions> {
     if (isLocalConfig(config)) {
-      return { isNewSchema: false };
+      return { isNewSchema: false, serviceDefinitions: [] };
     }
 
     if (isRemoteConfig(config)) {
