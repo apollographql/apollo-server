@@ -56,7 +56,7 @@ interface GatewayConfigBase {
   experimental_didFailComposition?: Experimental_DidFailCompositionCallback;
   experimental_updateServiceDefinitions?: Experimental_UpdateServiceDefinitions;
   experimental_didUpdateComposition?: Experimental_DidUpdateCompositionCallback;
-  experimental_pollIntervalSeconds?: number;
+  experimental_pollInterval?: number;
 }
 
 interface RemoteGatewayConfig extends GatewayConfigBase {
@@ -172,7 +172,7 @@ export class ApolloGateway implements GraphQLService {
   // an array of ServiceDefinition. *This function must be awaited.*
   protected updateServiceDefinitions: Experimental_UpdateServiceDefinitions;
   // how often service defs should be loaded/updated (in ms)
-  protected experimental_pollIntervalSeconds: number = 10;
+  protected experimental_pollInterval?: number;
 
   constructor(config?: GatewayConfig) {
     this.config = {
@@ -214,12 +214,12 @@ export class ApolloGateway implements GraphQLService {
         config.experimental_didFailComposition;
       this.experimental_didUpdateComposition =
         config.experimental_didUpdateComposition;
-      this.experimental_pollIntervalSeconds =
-        config.experimental_pollIntervalSeconds ||
-        this.experimental_pollIntervalSeconds;
+      this.experimental_pollInterval =
+        config.experimental_pollInterval ||
+        this.experimental_pollInterval;
 
       // Warn against using the pollInterval and a serviceList simulatenously
-      if (config.experimental_pollIntervalSeconds && isRemoteConfig(config)) {
+      if (config.experimental_pollInterval && isRemoteConfig(config)) {
         console.warn(
           'Polling running services is dangerous and not recommended in production. ' +
             'Polling should only be used against a registry. ' +
@@ -231,10 +231,10 @@ export class ApolloGateway implements GraphQLService {
 
   public async load(options?: { engine?: GraphQLServiceEngineConfig }) {
     await this.updateComposition(options);
-    if (this.experimental_pollIntervalSeconds) {
+    if (this.experimental_pollInterval) {
       setInterval(
         () => this.updateComposition(options),
-        this.experimental_pollIntervalSeconds * 1000,
+        this.experimental_pollInterval,
       );
     }
 
@@ -372,10 +372,9 @@ export class ApolloGateway implements GraphQLService {
   private startPollingServices() {
     if (this.pollingTimer) clearInterval(this.pollingTimer);
 
-    console.log(this.experimental_pollIntervalSeconds)
     this.pollingTimer = setInterval(() => {
       this.updateComposition();
-    }, this.experimental_pollIntervalSeconds * 1000);
+    }, this.experimental_pollInterval || 10000);
 
     // Prevent the Node.js event loop from remaining active (and preventing,
     // e.g. process shutdown) by calling `unref` on the `Timeout`.  For more
