@@ -87,7 +87,7 @@ export async function getServiceDefinitionsFromStorage({
   } = await fetchLinkFile(baseUrl);
 
   // If the link file is a cache hit, no further work is needed
-  if (linkFileCacheHit) return { isNewSchema: false, serviceDefinitions: [] };
+  if (linkFileCacheHit) return { isNewSchema: false };
 
   const parsedLink = JSON.parse(linkFileResult) as LinkFileResult;
 
