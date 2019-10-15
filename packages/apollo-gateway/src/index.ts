@@ -223,10 +223,16 @@ export class ApolloGateway implements GraphQLService {
   }
 
   public async load(options?: { engine?: GraphQLServiceEngineConfig }) {
-    await this.updateComposition(options);
+    if (options && options.engine) {
+      if (!options.engine.graphVariant)
+        console.warn('No graph variant provided. Defaulting to `current`.');
+      this.engineConfig = options.engine;
+    }
+
+    await this.updateComposition();
     if (this.experimental_pollInterval) {
       setInterval(
-        () => this.updateComposition(options),
+        () => this.updateComposition(),
         this.experimental_pollInterval,
       );
     }
@@ -239,37 +245,49 @@ export class ApolloGateway implements GraphQLService {
     };
   }
 
-  protected async updateComposition(options?: {
-    engine?: GraphQLServiceEngineConfig;
-  }) {
+  private async updateComposition() {
     const previousSchema = this.schema;
     const previousServiceDefinitions = this.serviceDefinitions;
     const previousCompositionMetadata = this.compositionMetadata;
 
-    if (options && options.engine) {
-      if (!options.engine.graphVariant)
-        console.warn('No graph variant provided. Defaulting to `current`.');
-      this.engineConfig = options.engine;
+    let result: Await<ReturnType<Experimental_UpdateServiceDefinitions>>;
+    try {
+      this.logger.debug('Loading configuration for gateway');
+      result = await this.updateServiceDefinitions(this.config);
+    } catch (e) {
+      this.logger.warn(
+        'Error checking for schema updates. Falling back to existing schema.',
+        e,
+      );
+      return;
     }
 
-    this.logger.debug('Loading configuration for gateway');
-    const result = await this.updateServiceDefinitions(this.config);
-
-    this.logger.debug('Configuration loaded for gateway');
-
-    if (!result.isNewSchema) return;
-
     if (
+      !result.serviceDefinitions ||
       JSON.stringify(this.serviceDefinitions) ===
-      JSON.stringify(result.serviceDefinitions)
+        JSON.stringify(result.serviceDefinitions)
     ) {
       this.logger.debug('No change in service definitions since last check');
+      return;
     } else {
       this.serviceDefinitions = result.serviceDefinitions;
     }
 
     this.compositionMetadata = result.compositionMetadata;
+    this.serviceDefinitions = result.serviceDefinitions;
+
+    if (this.queryPlanStore) this.queryPlanStore.flush();
+    this.logger.info('Gateway config has changed, updating schema');
+
     this.schema = this.createSchema(result.serviceDefinitions);
+    try {
+      this.onSchemaChangeListeners.forEach(listener => listener(this.schema!));
+    } catch (e) {
+      this.logger.error(
+        'Error notifying schema change listener of update to schema.',
+        e,
+      );
+    }
 
     if (this.experimental_didUpdateComposition) {
       this.experimental_didUpdateComposition(
@@ -346,38 +364,9 @@ export class ApolloGateway implements GraphQLService {
   private startPollingServices() {
     if (this.pollingTimer) clearInterval(this.pollingTimer);
 
-    this.pollingTimer = setInterval(async () => {
-      let result: Await<ReturnType<Experimental_UpdateServiceDefinitions>>;
-      try {
-        result = await this.updateServiceDefinitions(this.config);
-      } catch (e) {
-        this.logger.debug(
-          'Error checking for schema updates. Falling back to existing schema.',
-          e,
-        );
-        return;
-      }
-
-      if (!result.isNewSchema) {
-        this.logger.debug('No changes to gateway config');
-        return;
-      }
-
-      if (this.queryPlanStore) this.queryPlanStore.flush();
-      this.logger.debug('Gateway config has changed, updating schema');
-
-      this.schema = this.createSchema(result.serviceDefinitions);
-      try {
-        this.onSchemaChangeListeners.forEach(listener =>
-          listener(this.schema!),
-        );
-      } catch (e) {
-        this.logger.debug(
-          'Error notifying schema change listener of update to schema.',
-          e,
-        );
-      }
-    }, 10 * 1000);
+    this.pollingTimer = setInterval(() => {
+      this.updateComposition();
+    }, this.experimental_pollInterval || 10000);
 
     // Prevent the Node.js event loop from remaining active (and preventing,
     // e.g. process shutdown) by calling `unref` on the `Timeout`.  For more
