@@ -245,7 +245,7 @@ export class ApolloGateway implements GraphQLService {
     };
   }
 
-  private async updateComposition() {
+  private async updateComposition(): Promise<void> {
     const previousSchema = this.schema;
     const previousServiceDefinitions = this.serviceDefinitions;
     const previousCompositionMetadata = this.compositionMetadata;
