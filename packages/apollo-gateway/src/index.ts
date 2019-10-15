@@ -322,10 +322,6 @@ export class ApolloGateway implements GraphQLService {
       return;
     }
 
-    if (!result.isNewSchema) {
-      this.logger.debug('No changes to gateway config');
-    }
-
     if (!result.serviceDefinitions || (
       JSON.stringify(this.serviceDefinitions) ===
       JSON.stringify(result.serviceDefinitions))
