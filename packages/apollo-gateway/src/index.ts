@@ -124,7 +124,7 @@ export type Experimental_DidUpdateCompositionCallback = (
 export type Experimental_UpdateServiceDefinitions = (
   config: GatewayConfig,
 ) => Promise<{
-  serviceDefinitions: ServiceDefinition[];
+  serviceDefinitions?: ServiceDefinition[];
   compositionMetadata?: CompositionMetadata;
   isNewSchema: boolean;
 }>;
@@ -316,9 +316,9 @@ export class ApolloGateway implements GraphQLService {
       this.logger.debug('No changes to gateway config');
     }
 
-    if (
+    if (!result.serviceDefinitions || (
       JSON.stringify(this.serviceDefinitions) ===
-      JSON.stringify(result.serviceDefinitions)
+      JSON.stringify(result.serviceDefinitions))
     ) {
       this.logger.debug('No change in service definitions since last check');
       return;
@@ -411,7 +411,7 @@ export class ApolloGateway implements GraphQLService {
     config: GatewayConfig,
   ): ReturnType<Experimental_UpdateServiceDefinitions> {
     if (isLocalConfig(config)) {
-      return { isNewSchema: false, serviceDefinitions: [] };
+      return { isNewSchema: false };
     }
 
     if (isRemoteConfig(config)) {
