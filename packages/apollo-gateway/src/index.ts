@@ -214,9 +214,7 @@ export class ApolloGateway implements GraphQLService {
         config.experimental_didFailComposition;
       this.experimental_didUpdateComposition =
         config.experimental_didUpdateComposition;
-      this.experimental_pollInterval =
-        config.experimental_pollInterval ||
-        this.experimental_pollInterval;
+      this.experimental_pollInterval = config.experimental_pollInterval;
 
       // Warn against using the pollInterval and a serviceList simulatenously
       if (config.experimental_pollInterval && isRemoteConfig(config)) {
@@ -322,9 +320,10 @@ export class ApolloGateway implements GraphQLService {
       return;
     }
 
-    if (!result.serviceDefinitions || (
+    if (
+      !result.serviceDefinitions ||
       JSON.stringify(this.serviceDefinitions) ===
-      JSON.stringify(result.serviceDefinitions))
+        JSON.stringify(result.serviceDefinitions)
     ) {
       this.logger.debug('No change in service definitions since last check');
       return;

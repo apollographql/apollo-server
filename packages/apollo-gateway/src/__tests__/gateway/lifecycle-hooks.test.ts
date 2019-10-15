@@ -119,7 +119,7 @@ describe('lifecycle hooks', () => {
     const gateway = new ApolloGateway({
       experimental_updateServiceDefinitions: mockUpdate,
       experimental_didUpdateComposition: mockDidUpdate,
-      experimental_pollInterval: 10000,
+      experimental_pollInterval: 10,
     });
 
     await gateway.load();
@@ -169,7 +169,7 @@ describe('lifecycle hooks', () => {
     const consoleSpy = jest.spyOn(console, 'warn');
     new ApolloGateway({
       serviceList: serviceDefinitions,
-      experimental_pollInterval: 10000,
+      experimental_pollInterval: 10,
     });
     expect(consoleSpy).toHaveBeenCalledTimes(1);
     expect(consoleSpy.mock.calls[0][0]).toMatch(
