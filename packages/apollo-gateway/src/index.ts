@@ -228,10 +228,16 @@ export class ApolloGateway implements GraphQLService {
   }
 
   public async load(options?: { engine?: GraphQLServiceEngineConfig }) {
-    await this.updateComposition(options);
+    if (options && options.engine) {
+      if (!options.engine.graphVariant)
+        console.warn('No graph variant provided. Defaulting to `current`.');
+      this.engineConfig = options.engine;
+    }
+
+    await this.updateComposition();
     if (this.experimental_pollInterval) {
       setInterval(
-        () => this.updateComposition(options),
+        () => this.updateComposition(),
         this.experimental_pollInterval,
       );
     }
@@ -295,18 +301,10 @@ export class ApolloGateway implements GraphQLService {
     };
   }
 
-  private async updateComposition(options?: {
-    engine?: GraphQLServiceEngineConfig;
-  }) {
+  private async updateComposition() {
     const previousSchema = this.schema;
     const previousServiceDefinitions = this.serviceDefinitions;
     const previousCompositionMetadata = this.compositionMetadata;
-
-    if (options && options.engine) {
-      if (!options.engine.graphVariant)
-        console.warn('No graph variant provided. Defaulting to `current`.');
-      this.engineConfig = options.engine;
-    }
 
     let result: Await<ReturnType<Experimental_UpdateServiceDefinitions>>;
     try {
