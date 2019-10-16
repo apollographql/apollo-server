@@ -539,11 +539,17 @@ export class ApolloGateway implements GraphQLService {
       this.logger.debug(serializedQueryPlan);
     }
 
-    if (shouldShowQueryPlan && serializedQueryPlan) {
+    if (shouldShowQueryPlan) {
       // TODO: expose the query plan in a more flexible JSON format in the future
       // and rename this to `queryPlan`. Playground should cutover to use the new
       // option once we've built a way to print that representation.
-      response.extensions = { __queryPlanExperimental: serializedQueryPlan };
+
+      // In the case that `serializedQueryPlan` is null (on introspection), we
+      // still want to respond to Playground with something truthy since it depends
+      // on this to decide that query plans are supported by this gateway.
+      response.extensions = {
+        __queryPlanExperimental: serializedQueryPlan || true,
+      };
     }
     return response;
   };
