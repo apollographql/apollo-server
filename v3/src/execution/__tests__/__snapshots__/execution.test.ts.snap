@@ -1,0 +1,394 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`executeGraphqlRequest Errors during execution - error field throws 1`] = `
+Object {
+  "data": Object {
+    "error": null,
+  },
+  "errors": Array [
+    [GraphQLError: Error while resolving \`error\` field],
+  ],
+}
+`;
+
+exports[`executeGraphqlRequest Executable queries - basic 1`] = `
+Object {
+  "data": Object {
+    "people": Array [
+      Object {
+        "name": "James Baxley",
+      },
+      Object {
+        "name": "Ashi Krishnan",
+      },
+      Object {
+        "name": "Jesse Rosenberger",
+      },
+      Object {
+        "name": "Trevor Scheer",
+      },
+    ],
+  },
+}
+`;
+
+exports[`executeGraphqlRequest Executable queries - with directives 1`] = `
+Object {
+  "data": Object {
+    "people": Array [
+      Object {
+        "friends": Array [
+          Object {
+            "name": "Ashi Krishnan",
+          },
+          Object {
+            "name": "Jesse Rosenberger",
+          },
+          Object {
+            "name": "Trevor Scheer",
+          },
+        ],
+        "name": "James Baxley",
+      },
+      Object {
+        "friends": Array [
+          Object {
+            "name": "James Baxley",
+          },
+          Object {
+            "name": "Jesse Rosenberger",
+          },
+          Object {
+            "name": "Trevor Scheer",
+          },
+        ],
+        "name": "Ashi Krishnan",
+      },
+      Object {
+        "friends": Array [
+          Object {
+            "name": "James Baxley",
+          },
+          Object {
+            "name": "Ashi Krishnan",
+          },
+          Object {
+            "name": "Trevor Scheer",
+          },
+        ],
+        "name": "Jesse Rosenberger",
+      },
+      Object {
+        "friends": Array [
+          Object {
+            "name": "James Baxley",
+          },
+          Object {
+            "name": "Ashi Krishnan",
+          },
+          Object {
+            "name": "Jesse Rosenberger",
+          },
+        ],
+        "name": "Trevor Scheer",
+      },
+    ],
+  },
+}
+`;
+
+exports[`executeGraphqlRequest Executable queries - with multiple documents 1`] = `
+Object {
+  "data": Object {
+    "people": Array [
+      Object {
+        "name": "James Baxley",
+      },
+      Object {
+        "name": "Ashi Krishnan",
+      },
+      Object {
+        "name": "Jesse Rosenberger",
+      },
+      Object {
+        "name": "Trevor Scheer",
+      },
+    ],
+  },
+}
+`;
+
+exports[`executeGraphqlRequest Executable queries - with nested selection sets 1`] = `
+Object {
+  "data": Object {
+    "people": Array [
+      Object {
+        "friends": Array [
+          Object {
+            "friends": Array [
+              Object {
+                "name": "James Baxley",
+              },
+              Object {
+                "name": "Jesse Rosenberger",
+              },
+              Object {
+                "name": "Trevor Scheer",
+              },
+            ],
+            "name": "Ashi Krishnan",
+          },
+          Object {
+            "friends": Array [
+              Object {
+                "name": "James Baxley",
+              },
+              Object {
+                "name": "Ashi Krishnan",
+              },
+              Object {
+                "name": "Trevor Scheer",
+              },
+            ],
+            "name": "Jesse Rosenberger",
+          },
+          Object {
+            "friends": Array [
+              Object {
+                "name": "James Baxley",
+              },
+              Object {
+                "name": "Ashi Krishnan",
+              },
+              Object {
+                "name": "Jesse Rosenberger",
+              },
+            ],
+            "name": "Trevor Scheer",
+          },
+        ],
+        "name": "James Baxley",
+      },
+      Object {
+        "friends": Array [
+          Object {
+            "friends": Array [
+              Object {
+                "name": "Ashi Krishnan",
+              },
+              Object {
+                "name": "Jesse Rosenberger",
+              },
+              Object {
+                "name": "Trevor Scheer",
+              },
+            ],
+            "name": "James Baxley",
+          },
+          Object {
+            "friends": Array [
+              Object {
+                "name": "James Baxley",
+              },
+              Object {
+                "name": "Ashi Krishnan",
+              },
+              Object {
+                "name": "Trevor Scheer",
+              },
+            ],
+            "name": "Jesse Rosenberger",
+          },
+          Object {
+            "friends": Array [
+              Object {
+                "name": "James Baxley",
+              },
+              Object {
+                "name": "Ashi Krishnan",
+              },
+              Object {
+                "name": "Jesse Rosenberger",
+              },
+            ],
+            "name": "Trevor Scheer",
+          },
+        ],
+        "name": "Ashi Krishnan",
+      },
+      Object {
+        "friends": Array [
+          Object {
+            "friends": Array [
+              Object {
+                "name": "Ashi Krishnan",
+              },
+              Object {
+                "name": "Jesse Rosenberger",
+              },
+              Object {
+                "name": "Trevor Scheer",
+              },
+            ],
+            "name": "James Baxley",
+          },
+          Object {
+            "friends": Array [
+              Object {
+                "name": "James Baxley",
+              },
+              Object {
+                "name": "Jesse Rosenberger",
+              },
+              Object {
+                "name": "Trevor Scheer",
+              },
+            ],
+            "name": "Ashi Krishnan",
+          },
+          Object {
+            "friends": Array [
+              Object {
+                "name": "James Baxley",
+              },
+              Object {
+                "name": "Ashi Krishnan",
+              },
+              Object {
+                "name": "Jesse Rosenberger",
+              },
+            ],
+            "name": "Trevor Scheer",
+          },
+        ],
+        "name": "Jesse Rosenberger",
+      },
+      Object {
+        "friends": Array [
+          Object {
+            "friends": Array [
+              Object {
+                "name": "Ashi Krishnan",
+              },
+              Object {
+                "name": "Jesse Rosenberger",
+              },
+              Object {
+                "name": "Trevor Scheer",
+              },
+            ],
+            "name": "James Baxley",
+          },
+          Object {
+            "friends": Array [
+              Object {
+                "name": "James Baxley",
+              },
+              Object {
+                "name": "Jesse Rosenberger",
+              },
+              Object {
+                "name": "Trevor Scheer",
+              },
+            ],
+            "name": "Ashi Krishnan",
+          },
+          Object {
+            "friends": Array [
+              Object {
+                "name": "James Baxley",
+              },
+              Object {
+                "name": "Ashi Krishnan",
+              },
+              Object {
+                "name": "Trevor Scheer",
+              },
+            ],
+            "name": "Jesse Rosenberger",
+          },
+        ],
+        "name": "Trevor Scheer",
+      },
+    ],
+  },
+}
+`;
+
+exports[`parseGraphqlRequest Parses valid queries - basic 1`] = `
+query Basic {
+  people {
+    name
+  }
+}
+`;
+
+exports[`parseGraphqlRequest Parses valid queries - with directives 1`] = `
+query Directives($includeFriends: Boolean!) {
+  people {
+    name
+    friends @include(if: $includeFriends) {
+      name
+    }
+  }
+}
+`;
+
+exports[`parseGraphqlRequest Parses valid queries - with multiple documents 1`] = `
+query FirstDocument {
+  people {
+    name
+  }
+}
+
+query SecondDocument {
+  people {
+    id
+  }
+}
+`;
+
+exports[`parseGraphqlRequest Parses valid queries - with nested selection sets 1`] = `
+query Nested {
+  people {
+    name
+    friends {
+      name
+      friends {
+        name
+      }
+    }
+  }
+}
+`;
+
+exports[`parseGraphqlRequest Throws for invalid queries - empty query 1`] = `"Syntax Error: Expected Name, found }"`;
+
+exports[`parseGraphqlRequest Throws for invalid queries - empty selection set 1`] = `"Syntax Error: Expected Name, found }"`;
+
+exports[`parseGraphqlRequest Throws for invalid queries - missing closing } 1`] = `"Syntax Error: Expected Name, found <EOF>"`;
+
+exports[`validateGraphqlRequest invalid queries against schema: basic 1`] = `
+Array [
+  [GraphQLError: Cannot query field "invalidField" on type "Query".],
+]
+`;
+
+exports[`validateGraphqlRequest invalid queries against schema: missing directive 1`] = `
+Array [
+  [GraphQLError: Unknown directive "invalid".],
+]
+`;
+
+exports[`validateGraphqlRequest invalid queries against schema: with invalid selection sets 1`] = `
+Array [
+  [GraphQLError: Cannot query field "invalidField" on type "Person".],
+]
+`;
+
+exports[`validateGraphqlRequest invalid queries against schema: with multiple errors 1`] = `
+Array [
+  [GraphQLError: Cannot query field "invalidOne" on type "Person".],
+  [GraphQLError: Cannot query field "invalidTwo" on type "Query".],
+]
+`;
