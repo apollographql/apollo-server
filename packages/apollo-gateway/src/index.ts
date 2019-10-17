@@ -243,6 +243,8 @@ export class ApolloGateway implements GraphQLService {
 
   public async load(options?: { engine?: GraphQLServiceEngineConfig }) {
     await this.updateComposition(options);
+    const graphId = options && options.engine && options.engine.graphId;
+    this.logger.info(`Gateway loaded schema${graphId && ` for service ${graphId}`}.`)
     if (this.experimental_pollInterval) {
       setInterval(
         () => this.updateComposition(options),
