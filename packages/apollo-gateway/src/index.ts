@@ -76,6 +76,10 @@ export type GatewayConfig =
   | LocalGatewayConfig
   | ManagedGatewayConfig;
 
+type DataSourceCache = {
+  [serviceName: string]: { url?: string; dataSource: GraphQLDataSource };
+};
+
 function isLocalConfig(config: GatewayConfig): config is LocalGatewayConfig {
   return 'localServiceList' in config;
 }
@@ -121,16 +125,19 @@ export type Experimental_DidUpdateCompositionCallback = (
   previousConfig?: Experimental_CompositionInfo,
 ) => void;
 
+/**
+ * **Note:** It's possible for a schema to be the same (`isNewSchema: false`) when
+ * `serviceDefinitions` have changed. For example, during type migration, the
+ * composed schema may be identical but the `serviceDefinitions` would differ
+ * since a type has moved from one service to another.
+ */
 export type Experimental_UpdateServiceDefinitions = (
   config: GatewayConfig,
-) => Promise<
-  | {
-      serviceDefinitions: ServiceDefinition[];
-      compositionMetadata?: CompositionMetadata;
-      isNewSchema: true;
-    }
-  | { isNewSchema: false }
->;
+) => Promise<{
+  serviceDefinitions?: ServiceDefinition[];
+  compositionMetadata?: CompositionMetadata;
+  isNewSchema: boolean;
+}>;
 
 type Await<T> = T extends Promise<infer U> ? U : T;
 
@@ -141,7 +148,7 @@ type RequestContext<TContext> = WithRequired<
 
 export class ApolloGateway implements GraphQLService {
   public schema?: GraphQLSchema;
-  protected serviceMap: ServiceMap = Object.create(null);
+  protected serviceMap: DataSourceCache = Object.create(null);
   protected config: GatewayConfig;
   protected logger: Logger;
   protected queryPlanStore?: InMemoryLRUCache<QueryPlan>;
@@ -279,7 +286,7 @@ export class ApolloGateway implements GraphQLService {
     }
 
     if (
-      !('serviceDefinitions' in result) ||
+      !result.serviceDefinitions ||
       JSON.stringify(this.serviceDefinitions) ===
         JSON.stringify(result.serviceDefinitions)
     ) {
@@ -394,11 +401,14 @@ export class ApolloGateway implements GraphQLService {
     serviceDef: ServiceEndpointDefinition,
   ): GraphQLDataSource {
     // If the DataSource has already been created, early return
-    if (this.serviceMap[serviceDef.name])
-      return this.serviceMap[serviceDef.name];
+    if (
+      this.serviceMap[serviceDef.name] &&
+      serviceDef.url === this.serviceMap[serviceDef.name].url
+    )
+      return this.serviceMap[serviceDef.name].dataSource;
 
     if (!serviceDef.url && !isLocalConfig(this.config)) {
-      throw new Error(
+      this.logger.error(
         `Service definition for service ${serviceDef.name} is missing a url`,
       );
     }
@@ -410,7 +420,7 @@ export class ApolloGateway implements GraphQLService {
         });
 
     // Cache the created DataSource
-    this.serviceMap[serviceDef.name] = dataSource;
+    this.serviceMap[serviceDef.name] = { url: serviceDef.url, dataSource };
 
     return dataSource;
   }
@@ -510,17 +520,25 @@ export class ApolloGateway implements GraphQLService {
       }
     }
 
+    const serviceMap: ServiceMap = Object.entries(this.serviceMap).reduce(
+      (serviceDataSources, [serviceName, { dataSource }]) => {
+        serviceDataSources[serviceName] = dataSource;
+        return serviceDataSources;
+      },
+      Object.create(null) as ServiceMap,
+    );
+
     if (this.experimental_didResolveQueryPlan) {
       this.experimental_didResolveQueryPlan({
         queryPlan,
-        serviceMap: this.serviceMap,
+        serviceMap,
         operationContext,
       });
     }
 
     const response = await executeQueryPlan<TContext>(
       queryPlan,
-      this.serviceMap,
+      serviceMap,
       requestContext,
       operationContext,
     );

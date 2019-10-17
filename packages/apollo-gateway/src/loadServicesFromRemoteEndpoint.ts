@@ -78,8 +78,5 @@ export async function getServiceDefinitionsFromRemoteEndpoint({
     serviceDefinitions.filter(Boolean),
   )) as ServiceDefinition[];
 
-  // XXX TS can't seem to infer that isNewSchema could be true
-  return (isNewSchema as true | false)
-    ? { serviceDefinitions, isNewSchema: true }
-    : { isNewSchema: false };
+  return { serviceDefinitions, isNewSchema }
 }
