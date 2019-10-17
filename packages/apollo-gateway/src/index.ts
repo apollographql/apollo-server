@@ -209,7 +209,19 @@ export class ApolloGateway implements GraphQLService {
         config.experimental_didFailComposition;
       this.experimental_didUpdateComposition =
         config.experimental_didUpdateComposition;
-      this.experimental_pollInterval = config.experimental_pollInterval;
+
+      if (
+        isManagedConfig(config) &&
+        config.experimental_pollInterval &&
+        config.experimental_pollInterval < 10000
+      ) {
+        this.experimental_pollInterval = 10000;
+        this.logger.warn(
+          'Polling Apollo services at a frequency of less than once per 10 seconds (10000) is disallowed. Instead, the minimum allowed pollInterval of 10000 will be used. Please reconfigure your experimental_pollInterval accordingly. If this is problematic for your team, please contact support.',
+        );
+      } else {
+        this.experimental_pollInterval = config.experimental_pollInterval;
+      }
 
       // Warn against using the pollInterval and a serviceList simulatenously
       if (config.experimental_pollInterval && isRemoteConfig(config)) {
@@ -269,7 +281,7 @@ export class ApolloGateway implements GraphQLService {
     if (
       !('serviceDefinitions' in result) ||
       JSON.stringify(this.serviceDefinitions) ===
-      JSON.stringify(result.serviceDefinitions)
+        JSON.stringify(result.serviceDefinitions)
     ) {
       this.logger.debug('No change in service definitions since last check');
       return;
