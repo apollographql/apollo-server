@@ -32,7 +32,7 @@ class ApolloServerMock extends ApolloServerBase {
   }
 }
 
-describe.only('Operation registry plugin', () => {
+describe('Operation registry plugin', () => {
   it('will instantiate when not called with options', () => {
     expect(plugin()()).toHaveProperty('serverWillStart');
   });

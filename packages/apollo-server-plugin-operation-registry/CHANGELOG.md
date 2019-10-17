@@ -2,7 +2,16 @@
 
 ### vNEXT
 
-- Add lifecycle hooks: willUpdateManifest, onUnregisteredOperation, onForbiddenOperation [PR #158](https://github.com/apollographql/apollo-platform-commercial/pull/158)
+- Add lifecycle hooks: `willUpdateManifest`, `onUnregisteredOperation`, and `onForbiddenOperation`. [PR #158](https://github.com/apollographql/apollo-platform-commercial/pull/158)
+- Update error message for operations that are not in the operation registry. [PR #170](https://github.com/apollographql/apollo-platform-commercial/pull/170)
+
+### 0.2.2
+
+- Update `README` image.
+
+### 0.2.1
+
+- Don't enable logging if debug was explicitly set to `false` even if `dryRun` is set to `true`. [PR #159](https://github.com/apollographql/apollo-platform-commercial/pull/159)
 
 ### 0.2.0
 
