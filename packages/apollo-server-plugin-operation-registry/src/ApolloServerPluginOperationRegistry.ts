@@ -84,9 +84,7 @@ for observability purposes, but all operations will be permitted.`,
       }
 
       logger.debug(
-        `Operation registry is configured for '${
-          engine.serviceID
-        }'.  The schema hash is ${schemaHash}.`,
+        `Operation registry is configured for '${engine.serviceID}'.  The schema hash is ${schemaHash}.`,
       );
 
       // An LRU store with no `maxSize` is effectively an InMemoryStore and
@@ -236,9 +234,7 @@ for observability purposes, but all operations will be permitted.`,
               throw error;
             } else {
               logger.debug(
-                `${dryRunPrefix} ${logHash}: Operation ${
-                  requestContext.operationName
-                } would have been forbidden.`,
+                `${dryRunPrefix} ${logHash}: Operation ${requestContext.operationName} would have been forbidden.`,
               );
             }
           }

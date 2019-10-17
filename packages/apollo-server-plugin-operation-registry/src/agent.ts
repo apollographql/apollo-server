@@ -138,9 +138,7 @@ export default class Agent {
     // to have in development.
     if (this.timeSinceLastSuccessfulCheck() > SYNC_WARN_TIME_SECONDS * 1000) {
       console.warn(
-        `WARNING: More than ${SYNC_WARN_TIME_SECONDS} seconds has elapsed since a successful fetch of the manifest. (Last success: ${
-          this.lastSuccessfulCheck
-        })`,
+        `WARNING: More than ${SYNC_WARN_TIME_SECONDS} seconds has elapsed since a successful fetch of the manifest. (Last success: ${this.lastSuccessfulCheck})`,
       );
     }
   }
@@ -189,9 +187,7 @@ export default class Agent {
     this.logger.debug(`Fetching legacy manifest.`);
     if (this.options.schemaTag !== 'current') {
       this.logger.warn(
-        `The legacy manifest contains operations registered for the "current" tag, but the specified schema tag is "${
-          this.options.schemaTag
-        }".`,
+        `The legacy manifest contains operations registered for the "current" tag, but the specified schema tag is "${this.options.schemaTag}".`,
       );
     }
     const legacyManifestUrl = getLegacyOperationManifestUrl(
@@ -227,9 +223,7 @@ export default class Agent {
 
     if (response.status === 404 || response.status === 403) {
       this.logger.warn(
-        `No manifest found for tag "${
-          this.options.schemaTag
-        }" at ${storageSecretManifestUrl}. ${callToAction}`,
+        `No manifest found for tag "${this.options.schemaTag}" at ${storageSecretManifestUrl}. ${callToAction}`,
       );
       return this.fetchLegacyManifest();
     }
@@ -265,9 +259,7 @@ export default class Agent {
         throw new Error(`Unexpected 'Content-Type' header: ${contentType}`);
       }
     } catch (err) {
-      const ourErrorPrefix = `Unable to fetch operation manifest for ${
-        this.options.schemaHash
-      } in '${this.options.engine.serviceID}': ${err}`;
+      const ourErrorPrefix = `Unable to fetch operation manifest for ${this.options.schemaHash} in '${this.options.engine.serviceID}': ${err}`;
 
       err.message = `${ourErrorPrefix}: ${err}`;
 
