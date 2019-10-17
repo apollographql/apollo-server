@@ -260,11 +260,8 @@ it('Rollsback to a previous schema when triggered', async () => {
   jest.useFakeTimers();
 
   const onChange = jest.fn();
-
   const gateway = new ApolloGateway();
-
   await gateway.load({ engine: { apiKeyHash, graphId: serviceName } });
-
   gateway.onSchemaChange(onChange);
 
   // 10000 ms is the default pollInterval
