@@ -255,8 +255,8 @@ export class ApolloGateway implements GraphQLService {
     const previousCompositionMetadata = this.compositionMetadata;
 
     let result: Await<ReturnType<Experimental_UpdateServiceDefinitions>>;
+    this.logger.debug('Loading configuration for gateway');
     try {
-      this.logger.debug('Loading configuration for gateway');
       result = await this.updateServiceDefinitions(this.config);
     } catch (e) {
       this.logger.warn(
