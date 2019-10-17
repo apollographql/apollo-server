@@ -263,18 +263,23 @@ it('Rollsback to a previous schema when triggered', async () => {
   const gateway = new ApolloGateway();
   await gateway.load({ engine: { apiKeyHash, graphId: serviceName } });
   gateway.onSchemaChange(onChange);
-  jest.runOnlyPendingTimers();
 
+  // 10000 ms is the default pollInterval
+  jest.advanceTimersByTime(10000);
+
+  // This useReal/useFake is challenging to explain the need for, and I probably
+  // don't have the _correct_ answer here, but it seems that pushing this process
+  // to the back of the task queue is insufficient.
   jest.useRealTimers();
-  await new Promise(resolve => setTimeout(resolve, 100));
+  await new Promise(resolve => setTimeout(resolve, 10));
   jest.useFakeTimers();
 
   expect(onChange.mock.calls.length).toBe(1);
 
-  jest.runOnlyPendingTimers();
+  jest.advanceTimersByTime(10000);
 
   jest.useRealTimers();
-  await new Promise(resolve => setTimeout(resolve, 100));
+  await new Promise(resolve => setTimeout(resolve, 10));
   jest.useFakeTimers();
 
   expect(onChange.mock.calls.length).toBe(2);
