@@ -262,7 +262,10 @@ export class ApolloGateway implements GraphQLService {
       return;
     }
 
-    if (!('serviceDefinitions' in result)) return;
+    if (!('serviceDefinitions' in result)) {
+      this.logger.trace('No changes to service definitions.');
+      return;
+    }
 
     if (
       JSON.stringify(this.serviceDefinitions) ===
