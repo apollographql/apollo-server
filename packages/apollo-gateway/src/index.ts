@@ -126,7 +126,7 @@ export type Experimental_DidUpdateCompositionCallback = (
 ) => void;
 
 /**
- * Note: It's possible for a schema to be the same (`isNewSchema: false`) when
+ * **Note:** It's possible for a schema to be the same (`isNewSchema: false`) when
  * `serviceDefinitions` have changed. For example, during type migration, the
  * composed schema may be identical but the `serviceDefinitions` would differ
  * since a type has moved from one service to another.
