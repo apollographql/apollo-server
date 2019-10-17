@@ -267,6 +267,9 @@ it('Rollsback to a previous schema when triggered', async () => {
 
   jest.advanceTimersByTime(10000);
 
+  // This useReal/useFake is challenging to explain the need for, and I probably
+  // don't have the _correct_ answer here, but it seems that pushing this process
+  // to the back of the task queue is insufficient.
   jest.useRealTimers();
   await new Promise(resolve => setTimeout(resolve, 10));
   jest.useFakeTimers();
@@ -278,7 +281,6 @@ it('Rollsback to a previous schema when triggered', async () => {
   jest.useRealTimers();
   await new Promise(resolve => setTimeout(resolve, 10));
   jest.useFakeTimers();
-
 
   expect(onChange.mock.calls.length).toBe(2);
 });
