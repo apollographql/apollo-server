@@ -288,7 +288,7 @@ export class ApolloGateway implements GraphQLService {
     if (
       !result.serviceDefinitions ||
       JSON.stringify(this.serviceDefinitions) ===
-      JSON.stringify(result.serviceDefinitions)
+        JSON.stringify(result.serviceDefinitions)
     ) {
       this.logger.debug('No change in service definitions since last check');
       return;
@@ -408,7 +408,9 @@ export class ApolloGateway implements GraphQLService {
       return this.serviceMap[serviceDef.name].dataSource;
 
     if (!serviceDef.url && !isLocalConfig(this.config)) {
-      this.logger.error(`Service definition for service ${serviceDef.name} is missing a url`)
+      this.logger.error(
+        `Service definition for service ${serviceDef.name} is missing a url`,
+      );
     }
 
     const dataSource = this.config.buildService
