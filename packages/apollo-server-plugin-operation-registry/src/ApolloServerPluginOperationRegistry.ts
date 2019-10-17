@@ -163,11 +163,11 @@ for observability purposes, but all operations will be permitted.`,
             requestContext.metrics.registeredOperation = true;
             return;
           } else {
-            if (options.onUnregisteredOperation) {
-              new Promise(() => {
-                if (options.onUnregisteredOperation) {
-                  options.onUnregisteredOperation(requestContext);
-                }
+            // If defined, this method should not block, whether async or not.
+            if (typeof options.onUnregisteredOperation === 'function') {
+              const onUnregisteredOperation = options.onUnregisteredOperation;
+              Promise.resolve().then(() => {
+                 onUnregisteredOperation(requestContext);
               });
             }
           }
@@ -231,11 +231,12 @@ for observability purposes, but all operations will be permitted.`,
               `${logHash} Reporting operation as forbidden to Apollo trace warehouse.`,
             );
             requestContext.metrics.forbiddenOperation = true;
-            if (options.onForbiddenOperation) {
-              new Promise(() => {
-                if (options.onForbiddenOperation) {
-                  options.onForbiddenOperation(requestContext);
-                }
+
+            // If defined, this method should not block, whether async or not.
+            if (typeof options.onForbiddenOperation === 'function') {
+              const onForbiddenOperation = options.onForbiddenOperation;
+              Promise.resolve().then(() => {
+                onForbiddenOperation(requestContext);
               });
             }
           }
