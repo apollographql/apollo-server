@@ -1,9 +1,9 @@
 export {
   processGraphQLRequest,
   GraphQLRequestContext,
-  GraphQLRequestPipelineConfig
-} from "apollo-server-core/dist/requestPipeline";
-import { GraphQLRequest, VariableValues } from "apollo-server-types";
+  GraphQLRequestPipelineConfig,
+} from 'apollo-server-core/dist/requestPipeline';
+import { GraphQLRequest, VariableValues } from 'apollo-server-types';
 import {
   DocumentNode,
   parse,
@@ -12,14 +12,14 @@ import {
   validate,
   execute,
   ExecutionResult,
-  separateOperations
-} from "graphql";
+  separateOperations,
+} from 'graphql';
 export { GraphQLRequest };
 
 // TODO(AS3) I'm not sure if this is execution.  Perhaps, a top-level export.
-export { GraphQLSchemaModule } from "apollo-graphql";
+export { GraphQLSchemaModule } from 'apollo-graphql';
 
-export { Context, ContextFunction } from "apollo-server-core";
+export { Context, ContextFunction } from 'apollo-server-core';
 
 /** Options for {@link processGraphQLRequest} */
 interface ProcessRequestInput {
@@ -39,14 +39,14 @@ interface ProcessRequestInput {
  * @throws GraphQLError on parse failure
  * @throws GraphQLError[] on validation failure
  */
-export async function processGraphqlRequest<TData = Record<string,any>>({
+export async function processGraphqlRequest<TData = Record<string, any>>({
   request,
-  schema
+  schema,
 }: ProcessRequestInput): Promise<ExecutionResult<TData>> {
   const { query, operationName, variables } = request;
 
   if (!query) {
-    throw new GraphQLError("No query document provided");
+    throw new GraphQLError('No query document provided');
   }
 
   // throws GraphQLError on unparseable document
@@ -56,14 +56,14 @@ export async function processGraphqlRequest<TData = Record<string,any>>({
   validateGraphqlRequest({
     schema,
     document,
-    operationName
+    operationName,
   });
 
   return await executeGraphqlRequest<TData>({
     schema,
     document,
     operationName,
-    ...(variables && { variables })
+    ...(variables && { variables }),
   });
 }
 
@@ -105,14 +105,14 @@ interface ValidateInput {
 export function validateGraphqlRequest({
   document,
   schema,
-  operationName
+  operationName,
 }: ValidateInput): void {
   const errors: GraphQLError[] = [];
   const operations = separateOperations(document);
   if (Object.keys(operations).length > 1 && !operationName) {
     errors.push(
       new GraphQLError(
-        "An `operationName` must be provided if multiple operations exist in the query document."
+        'An `operationName` must be provided if multiple operations exist in the query document.'
       )
     );
   }
@@ -153,13 +153,13 @@ export async function executeGraphqlRequest<TData = Record<string, any>>({
   document,
   operationName,
   variables,
-  context
+  context,
 }: ExecutionInput): Promise<ExecutionResult<TData>> {
   return await execute<TData>({
     schema,
     document,
     operationName,
     ...(variables && { variableValues: variables }),
-    ...(context && { contextValue: context })
+    ...(context && { contextValue: context }),
   });
 }
