@@ -34,6 +34,7 @@ import {
   groupByResponseName,
   matchesField,
   selectionSetFromFieldSet,
+  Scope,
 } from './FieldSet';
 import {
   FetchNode,
@@ -72,7 +73,7 @@ export function buildQueryPlan(operationContext: OperationContext): QueryPlan {
 
   const fields = collectFields(
     context,
-    rootType,
+    context.newScope(rootType),
     context.operation.selectionSet,
   );
 
@@ -173,7 +174,8 @@ function splitRootFields(
   }
 
   splitFields(context, [], fields, field => {
-    const { parentType, fieldNode, fieldDef } = field;
+    const { scope, fieldNode, fieldDef } = field;
+    const { parentType } = scope;
 
     const owningService = context.getOwningService(parentType, fieldDef);
 
@@ -227,7 +229,8 @@ function splitRootFieldsSerially(
   }
 
   splitFields(context, [], fields, field => {
-    const { parentType, fieldNode, fieldDef } = field;
+    const { scope, fieldNode, fieldDef } = field;
+    const { parentType } = scope;
 
     const owningService = context.getOwningService(parentType, fieldDef);
 
@@ -251,7 +254,8 @@ function splitSubfields(
   parentGroup: FetchGroup,
 ) {
   splitFields(context, path, fields, field => {
-    const { parentType, fieldNode, fieldDef } = field;
+    const { scope, fieldNode, fieldDef } = field;
+    const { parentType } = scope;
 
     let baseService, owningService;
     if (parentType.federation && parentType.federation.isValueType) {
@@ -379,7 +383,7 @@ function splitFields(
       // into account.
 
       const field = fieldsForParentType[0];
-      const { fieldDef } = field;
+      const { scope, fieldDef } = field;
 
       // We skip `__typename` for root types.
       if (fieldDef.name === TypeNameMetaFieldDef.name) {
@@ -399,14 +403,14 @@ function splitFields(
         continue;
       }
 
-      if (isObjectType(parentType)) {
+      if (isObjectType(parentType) && scope.possibleTypes.includes(parentType)) {
         // If parent type is an object type, we can directly look for the right
         // group.
         const group = groupForField(field as Field<GraphQLObjectType>);
         group.fields.push(
           completeField(
             context,
-            parentType,
+            scope,
             group,
             path,
             fieldsForResponseName,
@@ -422,14 +426,14 @@ function splitFields(
           GraphQLObjectType
         >();
 
-        for (const runtimeParentType of context.getPossibleTypes(parentType)) {
+        for (const runtimeParentType of scope.possibleTypes) {
           const fieldDef = context.getFieldDef(
             runtimeParentType,
             field.fieldNode,
           );
           groupsByRuntimeParentTypes.add(
             groupForField({
-              parentType: runtimeParentType,
+              scope: context.newScope(runtimeParentType, scope),
               fieldNode: field.fieldNode,
               fieldDef,
             }),
@@ -443,7 +447,7 @@ function splitFields(
             group.fields.push(
               completeField(
                 context,
-                runtimeParentType,
+                context.newScope(runtimeParentType, scope),
                 group,
                 path,
                 fieldsForResponseName,
@@ -458,7 +462,7 @@ function splitFields(
 
 function completeField(
   context: QueryPlanningContext,
-  parentType: GraphQLCompositeType,
+  scope: Scope<GraphQLCompositeType>,
   parentGroup: FetchGroup,
   path: ResponsePath,
   fields: FieldSet,
@@ -469,7 +473,7 @@ function completeField(
   if (!isCompositeType(returnType)) {
     // FIXME: We should look at all field nodes to make sure we take directives
     // into account (or remove directives for the time being).
-    return { parentType, fieldNode, fieldDef };
+    return { scope, fieldNode, fieldDef };
   } else {
     // For composite types, we need to recurse.
 
@@ -486,7 +490,7 @@ function completeField(
     // For abstract types, we always need to request `__typename`
     if (isAbstractType(returnType)) {
       subGroup.fields.push({
-        parentType: returnType,
+        scope: context.newScope(returnType, scope),
         fieldNode: typenameField,
         fieldDef: TypeNameMetaFieldDef,
       });
@@ -498,7 +502,7 @@ function completeField(
     parentGroup.otherDependentGroups.push(...subGroup.dependentGroups);
 
     return {
-      parentType,
+      scope,
       fieldNode: {
         ...fieldNode,
         selectionSet: selectionSetFromFieldSet(subGroup.fields, returnType),
@@ -510,7 +514,7 @@ function completeField(
 
 function collectFields(
   context: QueryPlanningContext,
-  parentType: GraphQLCompositeType,
+  scope: Scope<GraphQLCompositeType>,
   selectionSet: SelectionSetNode,
   fields: FieldSet = [],
   visitedFragmentNames: { [fragmentName: string]: boolean } = Object.create(
@@ -520,13 +524,13 @@ function collectFields(
   for (const selection of selectionSet.selections) {
     switch (selection.kind) {
       case Kind.FIELD:
-        const fieldDef = context.getFieldDef(parentType, selection);
-        fields.push({ parentType, fieldNode: selection, fieldDef });
+        const fieldDef = context.getFieldDef(scope.parentType, selection);
+        fields.push({ scope, fieldNode: selection, fieldDef });
         break;
       case Kind.INLINE_FRAGMENT:
         collectFields(
           context,
-          getFragmentCondition(selection),
+          context.newScope(getFragmentCondition(selection), scope),
           selection.selectionSet,
           fields,
           visitedFragmentNames,
@@ -547,7 +551,7 @@ function collectFields(
 
         collectFields(
           context,
-          getFragmentCondition(fragment),
+          context.newScope(getFragmentCondition(fragment), scope),
           fragment.selectionSet,
           fields,
           visitedFragmentNames,
@@ -562,7 +566,7 @@ function collectFields(
     fragment: FragmentDefinitionNode | InlineFragmentNode,
   ): GraphQLCompositeType {
     const typeConditionNode = fragment.typeCondition;
-    if (!typeConditionNode) return parentType;
+    if (!typeConditionNode) return scope.parentType;
 
     return typeFromAST(
       context.schema,
@@ -589,7 +593,7 @@ export function collectSubfields(
     if (selectionSet) {
       subfields = collectFields(
         context,
-        returnType,
+        context.newScope(returnType),
         selectionSet,
         subfields,
         visitedFragmentNames,
@@ -750,6 +754,21 @@ export class QueryPlanningContext {
     return usages;
   }
 
+  newScope<TParent extends GraphQLCompositeType>(
+    parentType: TParent,
+    enclosingScope?: Scope<GraphQLCompositeType>,
+  ): Scope<TParent> {
+    return {
+      parentType,
+      possibleTypes: enclosingScope
+        ? this.getPossibleTypes(parentType).filter(type =>
+            enclosingScope.possibleTypes.includes(type),
+          )
+        : this.getPossibleTypes(parentType),
+      enclosingScope,
+    };
+  }
+
   getBaseService(parentType: GraphQLObjectType): string | null {
     return (parentType.federation && parentType.federation.serviceName) || null;
   }
@@ -781,7 +800,10 @@ export class QueryPlanningContext {
     const keyFields: FieldSet = [];
 
     keyFields.push({
-      parentType,
+      scope: {
+        parentType,
+        possibleTypes: this.getPossibleTypes(parentType),
+      },
       fieldNode: typenameField,
       fieldDef: TypeNameMetaFieldDef,
     });
@@ -798,7 +820,7 @@ export class QueryPlanningContext {
       if (fetchAll) {
         keyFields.push(
           ...keys.flatMap(key =>
-            collectFields(this, possibleType, {
+            collectFields(this, this.newScope(possibleType), {
               kind: Kind.SELECTION_SET,
               selections: key,
             }),
@@ -806,7 +828,7 @@ export class QueryPlanningContext {
         );
       } else {
         keyFields.push(
-          ...collectFields(this, possibleType, {
+          ...collectFields(this, this.newScope(possibleType), {
             kind: Kind.SELECTION_SET,
             selections: keys[0],
           }),
@@ -828,7 +850,7 @@ export class QueryPlanningContext {
 
     if (fieldDef.federation && fieldDef.federation.requires) {
       requiredFields.push(
-        ...collectFields(this, parentType, {
+        ...collectFields(this, this.newScope(parentType), {
           kind: Kind.SELECTION_SET,
           selections: fieldDef.federation.requires,
         }),
@@ -857,7 +879,7 @@ export class QueryPlanningContext {
 
     if (fieldDef.federation && fieldDef.federation.provides) {
       providedFields.push(
-        ...collectFields(this, returnType, {
+        ...collectFields(this, this.newScope(returnType), {
           kind: Kind.SELECTION_SET,
           selections: fieldDef.federation.provides,
         }),
