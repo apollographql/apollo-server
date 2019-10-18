@@ -175,6 +175,16 @@ const nonExecutableQueries: JestInput<{ query: string }> = [
         error
       }
     `
+  }],
+  ['throws multiple errors', {
+    query: gql`
+      query {
+        error
+        people {
+          nestedError
+        }
+      }
+    `
   }]
 ]
 
@@ -196,6 +206,7 @@ const schema = makeExecutableSchema({
       id: ID
       name: String
       friends: [Person]
+      nestedError: String
     }
   `,
   resolvers: {
@@ -210,6 +221,9 @@ const schema = makeExecutableSchema({
     Person: {
       async friends(parentValue) {
         return serverTeam.filter(({ id }) => id !== parentValue.id);
+      },
+      nestedError() {
+        throw new GraphQLError("Error while resolving `nestedError` field")
       }
     }
   }
