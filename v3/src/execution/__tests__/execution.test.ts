@@ -11,6 +11,10 @@ import { GraphQLError } from "graphql";
 
 expect.addSnapshotSerializer(astSerializer);
 
+// This is a handy trick for syntax highlighting GraphQL query strings in editors
+// like VS Code that depend on the gql`` tagged template literal.
+const gql = String.raw;
+
 // An array of tuples, each tuple representing a test.
 // A single tuple has the shape: [testName, { ...testParams }]
 type JestInput<T> = [
@@ -22,7 +26,7 @@ const validQueries: JestInput<{ query: string; operationName?: string; variables
   [
     "basic",
     {
-      query: `
+      query: gql`
       query Basic {
         people {
           name
@@ -34,7 +38,7 @@ const validQueries: JestInput<{ query: string; operationName?: string; variables
   [
     "with nested selection sets",
     {
-      query: `
+      query: gql`
       query Nested {
         people {
           name
@@ -52,7 +56,7 @@ const validQueries: JestInput<{ query: string; operationName?: string; variables
   [
     "with directives",
     {
-      query: `
+      query: gql`
       query Directives($includeFriends: Boolean!) {
         people {
           name
@@ -68,7 +72,7 @@ const validQueries: JestInput<{ query: string; operationName?: string; variables
   [
     "with multiple documents",
     {
-      query: `
+      query: gql`
       query FirstDocument {
         people {
           name
@@ -89,6 +93,7 @@ const validQueries: JestInput<{ query: string; operationName?: string; variables
 const unparseableQueries: JestInput<string>= [
   [
     "missing closing }",
+    // Using gql on this unparseable document breaks code highlighting everywhere
     `
       query Basic {
         people {
@@ -98,7 +103,7 @@ const unparseableQueries: JestInput<string>= [
   ],
   [
     "empty selection set",
-    `
+    gql`
       query Nested {
         people { }
       }
@@ -106,7 +111,7 @@ const unparseableQueries: JestInput<string>= [
   ],
   [
     "empty query",
-    `
+    gql`
       query Empty {}
     `
   ]
@@ -116,7 +121,7 @@ const invalidQueries: JestInput<{ query: string; operationName?: string; }> = [
   [
     "basic",
     {
-      query: `
+      query: gql`
       query Basic {
         invalidField
       }
@@ -126,7 +131,7 @@ const invalidQueries: JestInput<{ query: string; operationName?: string; }> = [
   [
     "with invalid selection sets",
     {
-      query: `
+      query: gql`
       query Nested {
         people {
           name
@@ -139,7 +144,7 @@ const invalidQueries: JestInput<{ query: string; operationName?: string; }> = [
   [
     "missing directive",
     {
-      query: `
+      query: gql`
       query MissingDirective {
         people @invalid {
           name
@@ -151,7 +156,7 @@ const invalidQueries: JestInput<{ query: string; operationName?: string; }> = [
   [
     "with multiple errors",
     {
-      query: `
+      query: gql`
       query FirstDocument {
         people {
           invalidOne
@@ -165,7 +170,7 @@ const invalidQueries: JestInput<{ query: string; operationName?: string; }> = [
 
 const nonExecutableQueries: JestInput<{ query: string }> = [
   ['error field throws', {
-    query: `
+    query: gql`
       query {
         error
       }
@@ -174,7 +179,7 @@ const nonExecutableQueries: JestInput<{ query: string }> = [
 ]
 
 const schema = makeExecutableSchema({
-  typeDefs: `
+  typeDefs: gql`
     type Query {
       people: [Person]
       error: String
