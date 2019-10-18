@@ -24,7 +24,7 @@ type JestInput<T> = [
 
 const validQueries: JestInput<{ query: string; operationName?: string; variables?: VariableValues }> = [
   [
-    "basic",
+    "basic - { people { name } }",
     {
       query: gql`
       query Basic {
@@ -36,7 +36,7 @@ const validQueries: JestInput<{ query: string; operationName?: string; variables
     }
   ],
   [
-    "with nested selection sets",
+    "with nested selection sets - { people { name friends { name friends { name } } } }",
     {
       query: gql`
       query Nested {
@@ -54,7 +54,7 @@ const validQueries: JestInput<{ query: string; operationName?: string; variables
     }
   ],
   [
-    "with directives",
+    "with directives - { people { name { friends { name } } }",
     {
       query: gql`
       query Directives($includeFriends: Boolean!) {
@@ -70,7 +70,7 @@ const validQueries: JestInput<{ query: string; operationName?: string; variables
     }
   ],
   [
-    "with multiple documents",
+    "with multiple documents - { people { name } }",
     {
       query: gql`
       query FirstDocument {
@@ -178,6 +178,13 @@ const nonExecutableQueries: JestInput<{ query: string }> = [
   }]
 ]
 
+const serverTeam = [
+  { id: 1, name: "James Baxley" },
+  { id: 2, name: "Ashi Krishnan" },
+  { id: 3, name: "Jesse Rosenberger" },
+  { id: 4, name: "Trevor Scheer" }
+];
+
 const schema = makeExecutableSchema({
   typeDefs: gql`
     type Query {
@@ -250,13 +257,6 @@ describe("validateGraphqlRequest", () => {
     }
   );
 });
-
-const serverTeam = [
-  { id: 1, name: "James Baxley" },
-  { id: 2, name: "Ashi Krishnan" },
-  { id: 3, name: "Jesse Rosenberger" },
-  { id: 4, name: "Trevor Scheer" }
-];
 
 describe("executeGraphqlRequest", () => {
   it.each(validQueries)(

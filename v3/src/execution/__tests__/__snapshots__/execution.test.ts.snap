@@ -11,7 +11,7 @@ Object {
 }
 `;
 
-exports[`executeGraphqlRequest Executable queries - basic 1`] = `
+exports[`executeGraphqlRequest Executable queries - basic - { people { name } } 1`] = `
 Object {
   "data": Object {
     "people": Array [
@@ -32,7 +32,7 @@ Object {
 }
 `;
 
-exports[`executeGraphqlRequest Executable queries - with directives 1`] = `
+exports[`executeGraphqlRequest Executable queries - with directives - { people { name { friends { name } } } 1`] = `
 Object {
   "data": Object {
     "people": Array [
@@ -97,7 +97,7 @@ Object {
 }
 `;
 
-exports[`executeGraphqlRequest Executable queries - with multiple documents 1`] = `
+exports[`executeGraphqlRequest Executable queries - with multiple documents - { people { name } } 1`] = `
 Object {
   "data": Object {
     "people": Array [
@@ -118,7 +118,7 @@ Object {
 }
 `;
 
-exports[`executeGraphqlRequest Executable queries - with nested selection sets 1`] = `
+exports[`executeGraphqlRequest Executable queries - with nested selection sets - { people { name friends { name friends { name } } } } 1`] = `
 Object {
   "data": Object {
     "people": Array [
@@ -315,7 +315,7 @@ Object {
 }
 `;
 
-exports[`parseGraphqlRequest Parses valid queries - basic 1`] = `
+exports[`parseGraphqlRequest Parses valid queries - basic - { people { name } } 1`] = `
 query Basic {
   people {
     name
@@ -323,7 +323,7 @@ query Basic {
 }
 `;
 
-exports[`parseGraphqlRequest Parses valid queries - with directives 1`] = `
+exports[`parseGraphqlRequest Parses valid queries - with directives - { people { name { friends { name } } } 1`] = `
 query Directives($includeFriends: Boolean!) {
   people {
     name
@@ -334,7 +334,7 @@ query Directives($includeFriends: Boolean!) {
 }
 `;
 
-exports[`parseGraphqlRequest Parses valid queries - with multiple documents 1`] = `
+exports[`parseGraphqlRequest Parses valid queries - with multiple documents - { people { name } } 1`] = `
 query FirstDocument {
   people {
     name
@@ -348,7 +348,7 @@ query SecondDocument {
 }
 `;
 
-exports[`parseGraphqlRequest Parses valid queries - with nested selection sets 1`] = `
+exports[`parseGraphqlRequest Parses valid queries - with nested selection sets - { people { name friends { name friends { name } } } } 1`] = `
 query Nested {
   people {
     name
