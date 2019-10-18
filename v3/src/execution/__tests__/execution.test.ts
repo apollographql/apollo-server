@@ -291,13 +291,13 @@ describe("executeGraphqlRequest", () => {
     'Errors during execution - %s',
     async (_, { query }) => {
       const document = parseGraphqlRequest({ query });
-      const result = await executeGraphqlRequest({
+      const { errors } = await executeGraphqlRequest({
         schema,
         document
       });
 
-      expect(result.errors!.length).toBeGreaterThan(0);
-      expect(result).toMatchSnapshot();
+      expect(errors!.length).toBeGreaterThan(0);
+      expect(errors).toMatchSnapshot();
     })
 });
 

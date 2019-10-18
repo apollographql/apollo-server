@@ -1,43 +1,19 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`executeGraphqlRequest Errors during execution - error field throws 1`] = `
-Object {
-  "data": Object {
-    "error": null,
-  },
-  "errors": Array [
-    [GraphQLError: Error while resolving \`error\` field],
-  ],
-}
+Array [
+  [GraphQLError: Error while resolving \`error\` field],
+]
 `;
 
 exports[`executeGraphqlRequest Errors during execution - throws multiple errors 1`] = `
-Object {
-  "data": Object {
-    "error": null,
-    "people": Array [
-      Object {
-        "nestedError": null,
-      },
-      Object {
-        "nestedError": null,
-      },
-      Object {
-        "nestedError": null,
-      },
-      Object {
-        "nestedError": null,
-      },
-    ],
-  },
-  "errors": Array [
-    [GraphQLError: Error while resolving \`error\` field],
-    [GraphQLError: Error while resolving \`nestedError\` field],
-    [GraphQLError: Error while resolving \`nestedError\` field],
-    [GraphQLError: Error while resolving \`nestedError\` field],
-    [GraphQLError: Error while resolving \`nestedError\` field],
-  ],
-}
+Array [
+  [GraphQLError: Error while resolving \`error\` field],
+  [GraphQLError: Error while resolving \`nestedError\` field],
+  [GraphQLError: Error while resolving \`nestedError\` field],
+  [GraphQLError: Error while resolving \`nestedError\` field],
+  [GraphQLError: Error while resolving \`nestedError\` field],
+]
 `;
 
 exports[`executeGraphqlRequest Executable queries - basic - { people { name } } 1`] = `
