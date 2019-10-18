@@ -1,8 +1,8 @@
 import {
   parseGraphqlRequest,
   validateGraphqlRequest,
-  executeGraphqlRequest
-  // processGraphQLRequest
+  executeGraphqlRequest,
+  processGraphqlRequest
 } from "..";
 import { astSerializer } from "../../snapshotSerializers";
 import { VariableValues } from "apollo-server-core";
@@ -299,4 +299,68 @@ describe("executeGraphqlRequest", () => {
       expect(result.errors!.length).toBeGreaterThan(0);
       expect(result).toMatchSnapshot();
     })
+});
+
+describe("processGraphqlRequest", () => {
+  it.each(validQueries)(
+    "Executable queries - %s",
+    async (_, { query, operationName, variables }) => {
+      const { data, errors } = await processGraphqlRequest({
+        schema,
+        request: {
+          query,
+          operationName,
+          variables
+        }
+      });
+
+      expect(errors).toBeUndefined();
+      expect(data).toMatchSnapshot();
+    }
+  );
+
+  it.each(unparseableQueries)(
+    "Unparseable queries - %s",
+    async (_, query) => {
+      expect(processGraphqlRequest({
+        schema,
+        request: {
+          query
+        }
+      })).rejects.toThrowErrorMatchingSnapshot();
+    }
+  );
+
+  it.each(invalidQueries)(
+    "Invalid queries - %s",
+    async (_, { query, operationName }) => {
+      // Jest's `expect().toThrowErrorMatchingSnapshot()` doesn't work for throwing an array of errors
+      try {
+        await processGraphqlRequest({
+          schema,
+          request: {
+            query,
+            operationName
+          }
+        });
+      } catch (e) {
+        expect(e).toMatchSnapshot();
+      }
+    }
+  );
+
+  it.each(nonExecutableQueries)(
+    "Non-executable queries - %s",
+    async (_, { query }) => {
+      const { errors } = await processGraphqlRequest({
+        schema,
+        request: {
+          query
+        }
+      });
+
+      expect(errors!.length).toBeGreaterThan(0);
+      expect(errors).toMatchSnapshot();
+    }
+  );
 });
