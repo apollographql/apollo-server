@@ -76,6 +76,10 @@ export type GatewayConfig =
   | LocalGatewayConfig
   | ManagedGatewayConfig;
 
+type DataSourceCache = {
+  [serviceName: string]: { url?: string; dataSource: GraphQLDataSource };
+};
+
 function isLocalConfig(config: GatewayConfig): config is LocalGatewayConfig {
   return 'localServiceList' in config;
 }
@@ -121,16 +125,19 @@ export type Experimental_DidUpdateCompositionCallback = (
   previousConfig?: Experimental_CompositionInfo,
 ) => void;
 
+/**
+ * **Note:** It's possible for a schema to be the same (`isNewSchema: false`) when
+ * `serviceDefinitions` have changed. For example, during type migration, the
+ * composed schema may be identical but the `serviceDefinitions` would differ
+ * since a type has moved from one service to another.
+ */
 export type Experimental_UpdateServiceDefinitions = (
   config: GatewayConfig,
-) => Promise<
-  | {
-      serviceDefinitions: ServiceDefinition[];
-      compositionMetadata?: CompositionMetadata;
-      isNewSchema: true;
-    }
-  | { isNewSchema: false }
->;
+) => Promise<{
+  serviceDefinitions?: ServiceDefinition[];
+  compositionMetadata?: CompositionMetadata;
+  isNewSchema: boolean;
+}>;
 
 type Await<T> = T extends Promise<infer U> ? U : T;
 
@@ -141,7 +148,7 @@ type RequestContext<TContext> = WithRequired<
 
 export class ApolloGateway implements GraphQLService {
   public schema?: GraphQLSchema;
-  protected serviceMap: ServiceMap = Object.create(null);
+  protected serviceMap: DataSourceCache = Object.create(null);
   protected config: GatewayConfig;
   protected logger: Logger;
   protected queryPlanStore?: InMemoryLRUCache<QueryPlan>;
@@ -209,7 +216,19 @@ export class ApolloGateway implements GraphQLService {
         config.experimental_didFailComposition;
       this.experimental_didUpdateComposition =
         config.experimental_didUpdateComposition;
-      this.experimental_pollInterval = config.experimental_pollInterval;
+
+      if (
+        isManagedConfig(config) &&
+        config.experimental_pollInterval &&
+        config.experimental_pollInterval < 10000
+      ) {
+        this.experimental_pollInterval = 10000;
+        this.logger.warn(
+          'Polling Apollo services at a frequency of less than once per 10 seconds (10000) is disallowed. Instead, the minimum allowed pollInterval of 10000 will be used. Please reconfigure your experimental_pollInterval accordingly. If this is problematic for your team, please contact support.',
+        );
+      } else {
+        this.experimental_pollInterval = config.experimental_pollInterval;
+      }
 
       // Warn against using the pollInterval and a serviceList simulatenously
       if (config.experimental_pollInterval && isRemoteConfig(config)) {
@@ -241,35 +260,57 @@ export class ApolloGateway implements GraphQLService {
 
   protected async updateComposition(options?: {
     engine?: GraphQLServiceEngineConfig;
-  }) {
-    const previousSchema = this.schema;
-    const previousServiceDefinitions = this.serviceDefinitions;
-    const previousCompositionMetadata = this.compositionMetadata;
-
+  }): Promise<void> {
+    // The options argument and internal config update coule be handled by this.load()
+    // instead of here. We can remove this as a breaking change in the future.
     if (options && options.engine) {
       if (!options.engine.graphVariant)
         console.warn('No graph variant provided. Defaulting to `current`.');
       this.engineConfig = options.engine;
     }
 
+    const previousSchema = this.schema;
+    const previousServiceDefinitions = this.serviceDefinitions;
+    const previousCompositionMetadata = this.compositionMetadata;
+
+    let result: Await<ReturnType<Experimental_UpdateServiceDefinitions>>;
     this.logger.debug('Loading configuration for gateway');
-    const result = await this.updateServiceDefinitions(this.config);
-
-    this.logger.debug('Configuration loaded for gateway');
-
-    if (!result.isNewSchema) return;
+    try {
+      result = await this.updateServiceDefinitions(this.config);
+    } catch (e) {
+      this.logger.warn(
+        'Error checking for schema updates. Falling back to existing schema.',
+        e,
+      );
+      return;
+    }
 
     if (
+      !result.serviceDefinitions ||
       JSON.stringify(this.serviceDefinitions) ===
-      JSON.stringify(result.serviceDefinitions)
+        JSON.stringify(result.serviceDefinitions)
     ) {
       this.logger.debug('No change in service definitions since last check');
+      return;
     } else {
       this.serviceDefinitions = result.serviceDefinitions;
     }
 
     this.compositionMetadata = result.compositionMetadata;
+    this.serviceDefinitions = result.serviceDefinitions;
+
+    if (this.queryPlanStore) this.queryPlanStore.flush();
+    this.logger.info('Gateway config has changed, updating schema');
+
     this.schema = this.createSchema(result.serviceDefinitions);
+    try {
+      this.onSchemaChangeListeners.forEach(listener => listener(this.schema!));
+    } catch (e) {
+      this.logger.error(
+        'Error notifying schema change listener of update to schema.',
+        e,
+      );
+    }
 
     if (this.experimental_didUpdateComposition) {
       this.experimental_didUpdateComposition(
@@ -346,38 +387,9 @@ export class ApolloGateway implements GraphQLService {
   private startPollingServices() {
     if (this.pollingTimer) clearInterval(this.pollingTimer);
 
-    this.pollingTimer = setInterval(async () => {
-      let result: Await<ReturnType<Experimental_UpdateServiceDefinitions>>;
-      try {
-        result = await this.updateServiceDefinitions(this.config);
-      } catch (e) {
-        this.logger.debug(
-          'Error checking for schema updates. Falling back to existing schema.',
-          e,
-        );
-        return;
-      }
-
-      if (!result.isNewSchema) {
-        this.logger.debug('No changes to gateway config');
-        return;
-      }
-
-      if (this.queryPlanStore) this.queryPlanStore.flush();
-      this.logger.debug('Gateway config has changed, updating schema');
-
-      this.schema = this.createSchema(result.serviceDefinitions);
-      try {
-        this.onSchemaChangeListeners.forEach(listener =>
-          listener(this.schema!),
-        );
-      } catch (e) {
-        this.logger.debug(
-          'Error notifying schema change listener of update to schema.',
-          e,
-        );
-      }
-    }, 10 * 1000);
+    this.pollingTimer = setInterval(() => {
+      this.updateComposition();
+    }, this.experimental_pollInterval || 10000);
 
     // Prevent the Node.js event loop from remaining active (and preventing,
     // e.g. process shutdown) by calling `unref` on the `Timeout`.  For more
@@ -389,11 +401,14 @@ export class ApolloGateway implements GraphQLService {
     serviceDef: ServiceEndpointDefinition,
   ): GraphQLDataSource {
     // If the DataSource has already been created, early return
-    if (this.serviceMap[serviceDef.name])
-      return this.serviceMap[serviceDef.name];
+    if (
+      this.serviceMap[serviceDef.name] &&
+      serviceDef.url === this.serviceMap[serviceDef.name].url
+    )
+      return this.serviceMap[serviceDef.name].dataSource;
 
     if (!serviceDef.url && !isLocalConfig(this.config)) {
-      throw new Error(
+      this.logger.error(
         `Service definition for service ${serviceDef.name} is missing a url`,
       );
     }
@@ -405,7 +420,7 @@ export class ApolloGateway implements GraphQLService {
         });
 
     // Cache the created DataSource
-    this.serviceMap[serviceDef.name] = dataSource;
+    this.serviceMap[serviceDef.name] = { url: serviceDef.url, dataSource };
 
     return dataSource;
   }
@@ -505,17 +520,25 @@ export class ApolloGateway implements GraphQLService {
       }
     }
 
+    const serviceMap: ServiceMap = Object.entries(this.serviceMap).reduce(
+      (serviceDataSources, [serviceName, { dataSource }]) => {
+        serviceDataSources[serviceName] = dataSource;
+        return serviceDataSources;
+      },
+      Object.create(null) as ServiceMap,
+    );
+
     if (this.experimental_didResolveQueryPlan) {
       this.experimental_didResolveQueryPlan({
         queryPlan,
-        serviceMap: this.serviceMap,
+        serviceMap,
         operationContext,
       });
     }
 
     const response = await executeQueryPlan<TContext>(
       queryPlan,
-      this.serviceMap,
+      serviceMap,
       requestContext,
       operationContext,
     );
@@ -539,11 +562,17 @@ export class ApolloGateway implements GraphQLService {
       this.logger.debug(serializedQueryPlan);
     }
 
-    if (shouldShowQueryPlan && serializedQueryPlan) {
+    if (shouldShowQueryPlan) {
       // TODO: expose the query plan in a more flexible JSON format in the future
       // and rename this to `queryPlan`. Playground should cutover to use the new
       // option once we've built a way to print that representation.
-      response.extensions = { __queryPlanExperimental: serializedQueryPlan };
+
+      // In the case that `serializedQueryPlan` is null (on introspection), we
+      // still want to respond to Playground with something truthy since it depends
+      // on this to decide that query plans are supported by this gateway.
+      response.extensions = {
+        __queryPlanExperimental: serializedQueryPlan || true,
+      };
     }
     return response;
   };
