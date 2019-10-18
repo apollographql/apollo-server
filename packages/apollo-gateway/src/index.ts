@@ -243,8 +243,12 @@ export class ApolloGateway implements GraphQLService {
 
   public async load(options?: { engine?: GraphQLServiceEngineConfig }) {
     await this.updateComposition(options);
-    const graphId = options && options.engine && options.engine.graphId;
-    this.logger.info(`Gateway loaded schema${graphId && ` for service ${graphId}`}.`)
+    const { graphId, graphVariant } = (options && options.engine) || {};
+    const mode = isManagedConfig(this.config) ? 'managed' : 'unmanaged';
+
+    this.logger.info(
+      `Gateway successfully loaded schema.\n\t* Mode: ${mode}${graphId ? `\n\t* Service: ${graphId}@${graphVariant || 'current'}`: ''}`,
+    );
     if (this.experimental_pollInterval) {
       setInterval(
         () => this.updateComposition(options),
