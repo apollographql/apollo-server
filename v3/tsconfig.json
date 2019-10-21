@@ -15,14 +15,10 @@
     "noUnusedLocals": true,
     "forceConsistentCasingInFileNames": true,
     "lib": ["es2017", "esnext.asynciterable"],
-    "types": ["node"],
     "baseUrl": ".",
-    "paths": {
-      "*" : ["types/*"]
-    },
     "rootDir": "./src",
     "outDir": "./"
   },
-  "include": ["src/**/*"],
-  "exclude": ["**/__tests__", "**/__mocks__"]
+  "include": ["src/**/*.ts"],
+  "exclude": [],
 }

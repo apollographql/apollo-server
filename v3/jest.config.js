@@ -2,6 +2,7 @@ module.exports = {
   displayName: "v3",
   testEnvironment: "node",
   preset: "ts-jest",
+  roots: ["./src/"],
   testPathIgnorePatterns: [
     "<rootDir>/node_modules/",
     "<rootDir>/dist/"
@@ -9,7 +10,7 @@ module.exports = {
   clearMocks: true,
   globals: {
     "ts-jest": {
-      tsConfig: "<rootDir>/src/__tests__/tsconfig.json"
+      tsConfig: "<rootDir>/tsconfig.test.json"
     }
   }
 };
