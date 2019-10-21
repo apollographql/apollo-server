@@ -87,7 +87,10 @@ export interface GraphQLRequestPipelineConfig<TContext> {
   cacheControl?: CacheControlExtensionOptions;
 
   formatError?: (error: GraphQLError) => GraphQLFormattedError;
-  formatResponse?: Function;
+  formatResponse?: (
+    response: GraphQLResponse | null,
+    requestContext: GraphQLRequestContext<TContext>,
+  ) => GraphQLResponse;
 
   plugins?: ApolloServerPlugin[];
   documentStore?: InMemoryLRUCache<DocumentNode>;
