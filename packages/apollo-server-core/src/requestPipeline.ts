@@ -388,9 +388,7 @@ export async function processGraphQLRequest<TContext>(
     if (config.formatResponse) {
       const formattedResponse: GraphQLResponse | null = config.formatResponse(
         response,
-        {
-          context: requestContext.context,
-        },
+        requestContext,
       );
       if (formattedResponse != null) {
         response = formattedResponse;
