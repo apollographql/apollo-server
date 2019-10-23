@@ -5,15 +5,15 @@ import {
   processGraphqlRequest,
 } from '..';
 import { astSerializer } from '../../snapshotSerializers';
-import { VariableValues } from 'apollo-server-core';
-import { makeExecutableSchema } from 'graphql-tools';
+import { VariableValues, gql } from 'apollo-server-core';
+import { buildServiceDefinition } from '@apollographql/apollo-tools';
 import { GraphQLError } from 'graphql';
 
 expect.addSnapshotSerializer(astSerializer);
 
 // This is a handy trick for syntax highlighting GraphQL query strings in editors
-// like VS Code that depend on the gql`` tagged template literal.
-const gql = String.raw;
+// like VS Code that depend on the gql`` or graphql`` tagged template literals.
+const graphql = String.raw;
 
 // An array of tuples, each tuple representing a test.
 // A single tuple has the shape: [testName, { ...testParams }]
@@ -27,7 +27,7 @@ const validQueries: JestInput<{
   [
     'basic - { people { name } }',
     {
-      query: gql`
+      query: graphql`
         query Basic {
           people {
             name
@@ -39,7 +39,7 @@ const validQueries: JestInput<{
   [
     'with nested selection sets - { people { name friends { name friends { name } } } }',
     {
-      query: gql`
+      query: graphql`
         query Nested {
           people {
             name
@@ -57,7 +57,7 @@ const validQueries: JestInput<{
   [
     'with directives - { people { name { friends { name } } }',
     {
-      query: gql`
+      query: graphql`
         query Directives($includeFriends: Boolean!) {
           people {
             name
@@ -73,7 +73,7 @@ const validQueries: JestInput<{
   [
     'with multiple documents - { people { name } }',
     {
-      query: gql`
+      query: graphql`
         query FirstDocument {
           people {
             name
@@ -91,7 +91,7 @@ const validQueries: JestInput<{
   ],
 ];
 
-// Using gql on these unparseable document breaks code highlighting and other
+// Using graphql`` on these unparseable document breaks code highlighting and other
 // tooling dependent on graphql's parser.
 const unparseableQueries: JestInput<string> = [
   [
@@ -123,7 +123,7 @@ const invalidQueries: JestInput<{ query: string; operationName?: string }> = [
   [
     'basic',
     {
-      query: gql`
+      query: graphql`
         query Basic {
           invalidField
         }
@@ -133,7 +133,7 @@ const invalidQueries: JestInput<{ query: string; operationName?: string }> = [
   [
     'with invalid selection sets',
     {
-      query: gql`
+      query: graphql`
         query Nested {
           people {
             name
@@ -146,7 +146,7 @@ const invalidQueries: JestInput<{ query: string; operationName?: string }> = [
   [
     'missing directive',
     {
-      query: gql`
+      query: graphql`
         query MissingDirective {
           people @invalid {
             name
@@ -158,7 +158,7 @@ const invalidQueries: JestInput<{ query: string; operationName?: string }> = [
   [
     'with multiple errors',
     {
-      query: gql`
+      query: graphql`
         query FirstDocument {
           people {
             invalidOne
@@ -174,7 +174,7 @@ const nonExecutableQueries: JestInput<{ query: string }> = [
   [
     'error field throws',
     {
-      query: gql`
+      query: graphql`
         query {
           error
         }
@@ -184,7 +184,7 @@ const nonExecutableQueries: JestInput<{ query: string }> = [
   [
     'throws multiple errors',
     {
-      query: gql`
+      query: graphql`
         query {
           error
           people {
@@ -203,44 +203,48 @@ const serverTeam = [
   { id: 4, name: 'Trevor Scheer' },
 ];
 
-const schema = makeExecutableSchema({
-  typeDefs: gql`
-    type Query {
-      people: [Person]
-      error: String
-      modifiesContext: String
-    }
+const serviceDefinition = buildServiceDefinition([
+  {
+    typeDefs: gql`
+      type Query {
+        people: [Person]
+        error: String
+        modifiesContext: String
+      }
 
-    type Person {
-      id: ID
-      name: String
-      friends: [Person]
-      nestedError: String
-    }
-  `,
-  resolvers: {
-    Query: {
-      people() {
-        return serverTeam;
+      type Person {
+        id: ID
+        name: String
+        friends: [Person]
+        nestedError: String
+      }
+    `,
+    resolvers: {
+      Query: {
+        people() {
+          return serverTeam;
+        },
+        error() {
+          throw new GraphQLError('Error while resolving `error` field');
+        },
+        modifiesContext(_, __, context) {
+          context.modified = true;
+          return 'Context modified!';
+        },
       },
-      error() {
-        throw new GraphQLError('Error while resolving `error` field');
-      },
-      modifiesContext(_, __, context) {
-        context.modified = true;
-        return 'Context modified!';
-      },
-    },
-    Person: {
-      async friends(parentValue) {
-        return serverTeam.filter(({ id }) => id !== parentValue.id);
-      },
-      nestedError() {
-        throw new GraphQLError('Error while resolving `nestedError` field');
+      Person: {
+        async friends(parentValue) {
+          return serverTeam.filter(({ id }) => id !== parentValue.id);
+        },
+        nestedError() {
+          throw new GraphQLError('Error while resolving `nestedError` field');
+        },
       },
     },
   },
-});
+]);
+
+const schema = serviceDefinition.schema!;
 
 describe('parseGraphqlRequest', () => {
   it.each(validQueries)('Parses valid queries - %s', (_, { query }) => {
@@ -409,7 +413,7 @@ describe('processGraphqlRequest', () => {
     const { data } = await processGraphqlRequest({
       schema,
       request: {
-        query: gql`
+        query: graphql`
           query ModifiesContext {
             modifiesContext
           }

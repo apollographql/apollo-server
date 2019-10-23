@@ -50,11 +50,11 @@
     "graphql-tag": "^2.10.1"
   },
   "devDependencies": {
+    "@apollographql/apollo-tools": "0.4.0",
     "@types/jest": "^24.0.18",
     "@types/node": "^12.7.8",
     "codecov": "3.5.0",
     "graphql": "14.5.4",
-    "graphql-tools": "4.0.5",
     "jest": "24.9.0",
     "jest-junit": "7.0.0",
     "jest-matcher-utils": "24.9.0",
