@@ -32,7 +32,7 @@ const client = new ApolloClient({
 Inside Apollo Server, the query registry is stored in a user-configurable cache. By default, Apollo Server uses a in-memory cache. This can be configured inside of the `ApolloServer` constructor:
 
 ```js
-const { MemcachedCache } = require('apollo-server-memcached');
+const { MemcachedCache } = require('apollo-server-cache-memcached');
 const { ApolloServer } = require('apollo-server');
 
 const server = new ApolloServer({
@@ -102,7 +102,7 @@ Apollo Server works well with a Content Distribution Network (CDN) to cache full
 
 ### Step 1: Add cache hints to the GraphQL schema
 
-Add cache hints as [directives](/features/directives/) to GraphQL schema so that Apollo Server knows which fields and types are cacheable and for how long. For example, this schema indicates that all fields that return an `Author` should be cached for 60 seconds, and that the `posts` field should itself be cached for 180 seconds:
+Add cache hints as [directives](/schema/directives/) to GraphQL schema so that Apollo Server knows which fields and types are cacheable and for how long. For example, this schema indicates that all fields that return an `Author` should be cached for 60 seconds, and that the `posts` field should itself be cached for 180 seconds:
 
 ```graphql
 type Author @cacheControl(maxAge: 60) {
@@ -145,7 +145,7 @@ import { InMemoryCache } from "apollo-cache-inmemory";
 import { ApolloLink } from "apollo-link";
 import ApolloClient from "apollo-client";
 
-ApolloLink.from([
+const link = ApolloLink.from([
   createPersistedQueryLink({ useGETForHashedQueries: true }),
   createHttpLink({ uri: "/graphql" })
 ]);

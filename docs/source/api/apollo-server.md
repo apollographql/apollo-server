@@ -7,7 +7,7 @@ This API reference documents the exports from the `apollo-server` package.
 
 ## `ApolloServer`
 
-The core of an Apollo Server implementation. For an example, see the [Building a server](/essentials/server/) section within "Essentials".
+The core of an Apollo Server implementation. For an example, see the [getting-started article](/getting-started/).
 
 ### `constructor(options)`: <`ApolloServer`>
 

@@ -1,7 +1,7 @@
 import { CachedFetcher } from './cachedFetcher';
 import { ServiceDefinition } from '@apollo/federation';
 import { parse } from 'graphql';
-import { UpdateServiceDefinitions } from '.';
+import { Experimental_UpdateServiceDefinitions } from '.';
 
 interface LinkFileResult {
   configPath: string;
@@ -30,7 +30,7 @@ export interface CompositionMetadata {
   schemaHash: string;
 }
 
-const envOverrideOperationManifest = 'APOLLO_PARTIAL_SCHEMA_BASE_URL';
+const envOverridePartialSchemaBaseUrl = 'APOLLO_PARTIAL_SCHEMA_BASE_URL';
 const envOverrideStorageSecretBaseUrl = 'APOLLO_STORAGE_SECRET_BASE_URL';
 
 const urlFromEnvOrDefault = (envKey: string, fallback: string) =>
@@ -38,7 +38,7 @@ const urlFromEnvOrDefault = (envKey: string, fallback: string) =>
 
 // Generate and cache our desired operation manifest URL.
 const urlPartialSchemaBase = urlFromEnvOrDefault(
-  envOverrideOperationManifest,
+  envOverridePartialSchemaBaseUrl,
   'https://storage.googleapis.com/engine-partial-schema-prod/',
 );
 
@@ -72,7 +72,7 @@ export async function getServiceDefinitionsFromStorage({
   apiKeyHash: string;
   graphVariant?: string;
   federationVersion: number;
-}): ReturnType<UpdateServiceDefinitions> {
+}): ReturnType<Experimental_UpdateServiceDefinitions> {
   const secret = await fetchStorageSecret(graphId, apiKeyHash);
 
   if (!graphVariant) {

@@ -1,6 +1,6 @@
 ---
 title: GraphQL Playground
-description: Visually exploring an Apollo Server
+description: Visually explore Apollo Server
 ---
 
 [GraphQL Playground](https://github.com/prismagraphql/graphql-playground) is a graphical, interactive, in-browser GraphQL IDE, created by [Prisma](https://www.prisma.io/) and based on [GraphiQL](https://github.com/graphql/graphiql).

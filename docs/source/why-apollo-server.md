@@ -6,7 +6,7 @@ Building APIs shouldn't have to be so tricky. If you are concerned about perform
 
 ## Schema first design
 
-We think GraphQL's greatest asset is the schema. Think of it like the Rosetta stone of the data your app needs. Schemas represent the touch point of your frontends with the data that powers them. We recommend using the [schema definition language](/essentials/schema/#schema-definition-language), also called the SDL, to easily write out the data and relationships that your app needs to be successful. Unlike REST APIs, GraphQL schemas shouldn't be a one to one mapping of your database, but rather a representation of how your app works with the data it needs. Let's see what this looks like in practice with Apollo Server:
+We think GraphQL's greatest asset is the schema. Think of it like the Rosetta stone of the data your app needs. Schemas represent the touch point of your frontends with the data that powers them. We recommend using the [schema definition language](/schema/schema/#the-schema-definition-language), also called the SDL, to easily write out the data and relationships that your app needs to be successful. Unlike REST APIs, GraphQL schemas shouldn't be a one to one mapping of your database, but rather a representation of how your app works with the data it needs. Let's see what this looks like in practice with Apollo Server:
 
 ```js
 const { ApolloServer, gql } = require('apollo-server');
@@ -40,7 +40,7 @@ server.listen().then(({ url }) => {
 });
 ```
 
-In the example above, we are describing the shapes of our data, how they relate to each other, and how to fetch what our client needs from our data source. Apollo Server uses simple functions called [resolvers](/essentials/data/) to bring to life the schema described in SDL type definitions. When a request comes in to `/graphql`, Apollo Server will translate that request into what it takes to execute the query, will run the resolvers for you to load your data, and return the result in JSON so your app can render it out easily!
+In the example above, we are describing the shapes of our data, how they relate to each other, and how to fetch what our client needs from our data source. Apollo Server uses simple functions called [resolvers](/data/data/) to bring to life the schema described in SDL type definitions. When a request comes in to `/graphql`, Apollo Server will translate that request into what it takes to execute the query, will run the resolvers for you to load your data, and return the result in JSON so your app can render it out easily!
 
 Apollo Server takes care of every step of translating the query your client asks for into the data it needs. It is designed to give you maximum control over how you load the data while taking care of everything else for you! You don't need to worry about parsing the request, validating the query, delivering the response, or even profiling your app. Instead, all you have to do is describe the shape of your data and how to find it; Apollo Server does the rest! 💪
 

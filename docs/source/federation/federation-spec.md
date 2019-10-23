@@ -45,9 +45,9 @@ For more information on these additions, see the [glossary](#schema-modification
 
 ## Fetch service capabilities
 
-Schema composition at the gateway relies on understanding the capabilities of underlying services. This is done through an enhanced introspection using a new entry point added to the query root of a service, the `_service` field.
+Schema composition at the gateway requires having each service's schema, annotated with its federation configuration. This information is fetched from each service using `_service`, an enhanced introspection entry point added to the query root of each federated service.
 
-> Note that the `_service` field is never exposed at the gateway. This is soley done to compose the schema.
+> Note that the `_service` field is not exposed by the gateway; it is solely for internal use.
 
 The `_service` resolver should return the `_Service` type which has a single field called `sdl`. This SDL (schema definition language) is a printed version of the service's schema **including** the annotations of federation directives. This SDL does **not** include the additions of the federation spec above. Given an input like this:
 

@@ -9,7 +9,7 @@ Apollo Server integrates seamlessly with Apollo Graph Manager to help you monito
 
 ## Sending metrics to Apollo Graph Manager
 
-[Apollo Graph Manager](https://www.apollographql.com/docs/platform/graph-manager-overview/) provides an integrated hub for all of your GraphQL performance data. It aggregates and displays information for your [schema](https://www.apollographql.com/docs/engine/features/performance.html), [queries](https://www.apollographql.com/docs/engine/features/query-tracking.html), [requests](https://www.apollographql.com/docs/engine/performance.html), and [errors](https://www.apollographql.com/docs/engine/features/error-tracking.html). You can also configure [alerts](https://www.apollographql.com/docs/engine/features/alerts.html) that support [Slack](https://www.apollographql.com/docs/engine/integrations/slack.html) and [Datadog](https://www.apollographql.com/docs/engine/integrations/datadog.html) integrations.
+[Apollo Graph Manager](https://www.apollographql.com/docs/platform/graph-manager-overview/) provides an integrated hub for all of your GraphQL performance data. It [aggregates and displays information](https://www.apollographql.com/docs/platform/performance/) for your schema, queries, requests, and errors. You can also configure alerts that support [Slack and Datadog integrations](https://www.apollographql.com/docs/platform/integrations/).
 
 ### Connecting to Graph Manager
 
@@ -168,21 +168,6 @@ server.listen().then(({ url }) => {
 
 ### Granular logs
 
-For more advanced cases, Apollo Server provides an experimental API that accepts an array of `graphql-extensions` to the `extensions` field. These extensions receive a variety of lifecycle calls for each phase of a GraphQL request and can keep state, such as the request headers.
+For more advanced cases, Apollo Server provides an experimental API that accepts an array of plugins to its `plugins` field. Plugins receive a variety of lifecycle calls for each phase of a GraphQL request, include transport specific properties (e.g. headers), and can keep state, making them great for more specific logging needs.
 
-```js
-const { ApolloServer }  = require('apollo-server');
-const LoggingExtension = require('./logging');
-
-const server = new ApolloServer({
-  typeDefs,
-  resolvers,
-  extensions: [() => new LoggingExtension()]
-});
-
-server.listen().then(({ url }) => {
-  console.log(`🚀  Server ready at ${url}`);
-});
-```
-
-For example, the `logFunction` from Apollo Server 1 can be implemented as an [extension](https://github.com/apollographql/apollo-server/blob/8914b135df9840051fe81cc9224b444cfc5b61ab/packages/apollo-server-core/src/logging.ts) and could be modified to add additional state or functionality.
+For more details, see the [article on integrating with plugins](https://deploy-preview-2008--apollo-server-docs.netlify.com/docs/apollo-server/integrations/plugins/#responding-to-events) and check the full API from [the `apollo-server-plugin-base` package](https://github.com/apollographql/apollo-server/blob/7cca442ee39536182b4415fd5eba879d210fa5f9/packages/apollo-server-plugin-base/src/index.ts#L18-L73).

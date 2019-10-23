@@ -6,7 +6,22 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 > The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  When a release is being prepared, a new header will be (manually) created below and the the appropriate changes within that release will be moved into the new section.
 
-- _Nothing yet! Stay tuned!_
+- `apollo-server-core`: Provide accurate type for `formatResponse` rather than generic `Function` type. [PR #3431](https://github.com/apollographql/apollo-server/pull/3431)
+- `apollo-server-core`: Pass complete request context to `formatResponse`, rather than just `context`. [PR #3431](https://github.com/apollographql/apollo-server/pull/3431)
+
+### v2.9.7
+
+> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/5d94e986f04457ec17114791ee6db3ece4213dd8)
+
+- `apollo-server-errors`: Fix `ApolloError` bug and `GraphQLError` spec compliance [#3408](https://github.com/apollographql/apollo-server/pull/3408)
+
+### v2.9.6
+
+> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/fc7462ec5f8604bd6cba99aa9a377a9b8e045566)
+
+- `@apollo/gateway`, `@apollo/federation`, `apollo-engine-reporting`: Update `apollo-graphql` dependency to bring in [`apollo-tooling`'s #1551](https://github.com/apollographql/apollo-tooling/pull/1551) which resolve runtime errors when its source is minified.  While this fixes a particular minification bug when Apollo Server packages are minified, we _do not_ recommend minification of server code in most cases. [PR #3387](https://github.com/apollographql/apollo-server/pull/3387) [Issue #3335](https://github.com/apollographql/apollo-server/issues/3335)
+- `apollo-server-koa`: Correctly declare dependency on `koa-compose`. [PR #3356](https://github.com/apollographql/apollo-server/pull/3356)
+- `apollo-server-core`: Preserve any `extensions` that have been placed on the response when pre-execution errors occur. [PR #3394](https://github.com/apollographql/apollo-server/pull/3394)
 
 ### v2.9.3
 

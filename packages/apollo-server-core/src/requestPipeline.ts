@@ -87,7 +87,10 @@ export interface GraphQLRequestPipelineConfig<TContext> {
   cacheControl?: CacheControlExtensionOptions;
 
   formatError?: (error: GraphQLError) => GraphQLFormattedError;
-  formatResponse?: Function;
+  formatResponse?: (
+    response: GraphQLResponse | null,
+    requestContext: GraphQLRequestContext<TContext>,
+  ) => GraphQLResponse;
 
   plugins?: ApolloServerPlugin[];
   documentStore?: InMemoryLRUCache<DocumentNode>;
@@ -385,9 +388,7 @@ export async function processGraphQLRequest<TContext>(
     if (config.formatResponse) {
       const formattedResponse: GraphQLResponse | null = config.formatResponse(
         response,
-        {
-          context: requestContext.context,
-        },
+        requestContext,
       );
       if (formattedResponse != null) {
         response = formattedResponse;

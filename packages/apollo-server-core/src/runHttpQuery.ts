@@ -4,6 +4,7 @@ import {
   resolveGraphqlOptions,
 } from './graphqlOptions';
 import {
+  ApolloError,
   formatApolloErrors,
   PersistedQueryNotSupportedError,
   PersistedQueryNotFoundError,
@@ -18,7 +19,7 @@ import {
 } from './requestPipeline';
 import { CacheControlExtensionOptions } from 'apollo-cache-control';
 import { ApolloServerPlugin } from 'apollo-server-plugin-base';
-import { WithRequired } from 'apollo-server-types';
+import { WithRequired, GraphQLExecutionResult } from 'apollo-server-types';
 
 export interface HttpQueryRequest {
   method: string;
@@ -75,6 +76,7 @@ export function throwHttpGraphQLError<E extends Error>(
   statusCode: number,
   errors: Array<E>,
   options?: Pick<GraphQLOptions, 'debug' | 'formatError'>,
+  extensions?: GraphQLExecutionResult['extensions'],
 ): never {
   const defaultHeaders = { 'Content-Type': 'application/json' };
   // force no-cache on PersistedQuery errors
@@ -84,16 +86,27 @@ export function throwHttpGraphQLError<E extends Error>(
         'Cache-Control': 'private, no-cache, must-revalidate',
       }
     : defaultHeaders;
+
+  type Result =
+   & Pick<GraphQLExecutionResult, 'extensions'>
+   & { errors: E[] | ApolloError[] }
+
+  const result: Result = {
+    errors: options
+      ? formatApolloErrors(errors, {
+          debug: options.debug,
+          formatter: options.formatError,
+        })
+      : errors,
+  };
+
+  if (extensions) {
+    result.extensions = extensions;
+  }
+
   throw new HttpQueryError(
     statusCode,
-    prettyJSONStringify({
-      errors: options
-        ? formatApolloErrors(errors, {
-            debug: options.debug,
-            formatter: options.formatError,
-          })
-        : errors,
-    }),
+    prettyJSONStringify(result),
     true,
     headers,
   );
@@ -303,6 +316,8 @@ export async function processHTTPRequest<TContext>(
           return throwHttpGraphQLError(
             (response.http && response.http.status) || 400,
             response.errors as any,
+            undefined,
+            response.extensions,
           );
         }
 
