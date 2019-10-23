@@ -6,6 +6,9 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 > The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  When a release is being prepared, a new header will be (manually) created below and the the appropriate changes within that release will be moved into the new section.
 
+- `apollo-server-core`: Provide accurate type for `formatResponse` rather than generic `Function` type. [PR #3431](https://github.com/apollographql/apollo-server/pull/3431)
+- `apollo-server-core`: Pass complete request context to `formatResponse`, rather than just `context`. [PR #3431](https://github.com/apollographql/apollo-server/pull/3431)
+
 ### v2.9.7
 
 > [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/5d94e986f04457ec17114791ee6db3ece4213dd8)
