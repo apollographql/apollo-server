@@ -25,7 +25,7 @@ https://github.com/apollographql/apollo-server/blob/master/CONTRIBUTING.md#repor
 - [ ] The actual behavior.
 - [ ] A **simple**, runnable reproduction!
       Please make a GitHub repository that anyone can clone and run and see the
-      problem.  Other great ways to demonstrate a reproduciton are using our
+      problem. Other great ways to demonstrate a reproduction are using our
       CodeSandbox template (https://codesandbox.io/s/apollo-server), or re-mixing
       our Glitch template (https://glitch.com/~apollo-launchpad).
 -->

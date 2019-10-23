@@ -64,7 +64,8 @@ module.exports = {
             'api/apollo-gateway',
             'api/graphql-tools',
           ],
-          Migration: [
+          Appendices: [
+            'proxy-configuration',
             'migration-two-dot',
             'migration-engine',
             'migration-file-uploads',

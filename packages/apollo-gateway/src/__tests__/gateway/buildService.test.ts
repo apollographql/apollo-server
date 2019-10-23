@@ -1,9 +1,7 @@
 import gql from 'graphql-tag';
-import { print } from 'graphql';
 import { fetch } from '__mocks__/apollo-server-env';
 import { createTestClient } from 'apollo-server-testing';
 import { ApolloServerBase as ApolloServer } from 'apollo-server-core';
-import { buildFederatedSchema } from '@apollo/federation';
 
 import { RemoteGraphQLDataSource } from '../../datasources/RemoteGraphQLDataSource';
 import { ApolloGateway } from '../../';
@@ -16,6 +14,27 @@ import * as reviews from '../__fixtures__/schemas/reviews';
 
 beforeEach(() => {
   fetch.mockReset();
+});
+
+it('calls buildService only once per service', async () => {
+  fetch.mockJSONResponseOnce({
+    data: { _service: { sdl: `extend type Query { thing: String }` } },
+  });
+
+  const buildServiceSpy = jest.fn(() => {
+    return new RemoteGraphQLDataSource({
+      url: 'https://api.example.com/foo',
+    });
+  });
+
+  const gateway = new ApolloGateway({
+    serviceList: [{ name: 'foo', url: 'https://api.example.com/foo' }],
+    buildService: buildServiceSpy
+  });
+
+  await gateway.load();
+
+  expect(buildServiceSpy).toHaveBeenCalledTimes(1);
 });
 
 it('correctly passes the context from ApolloServer to datasources', async () => {

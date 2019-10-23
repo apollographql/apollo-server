@@ -570,6 +570,48 @@ export function testApolloServer<AS extends ApolloServerBase>(
         expect(result.errors).toBeDefined();
         expect(apolloFetchResponse.status).toEqual(403);
       });
+
+      it('preserves user-added "extensions" in the response when parsing errors occur', async () => {
+        await setupApolloServerAndFetchPairForPlugins([
+          {
+            requestDidStart() {
+              return {
+                willSendResponse({ response }) {
+                  response.extensions = { myExtension: true };
+                },
+              };
+            },
+          },
+        ]);
+
+        const result =
+          await apolloFetch({ query: '{ 🦠' });
+        expect(result.errors).toBeDefined();
+        expect(result.extensions).toEqual(expect.objectContaining({
+          myExtension: true
+        }));
+      });
+
+      it('preserves user-added "extensions" in the response when validation errors occur', async () => {
+        await setupApolloServerAndFetchPairForPlugins([
+          {
+            requestDidStart() {
+              return {
+                willSendResponse({ response }) {
+                  response.extensions = { myExtension: true };
+                },
+              };
+            },
+          },
+        ]);
+
+        const result =
+          await apolloFetch({ query: '{ missingFieldWhichWillNotValidate }' });
+        expect(result.errors).toBeDefined();
+        expect(result.extensions).toEqual(expect.objectContaining({
+          myExtension: true
+        }));
+      });
     });
 
     describe('formatError', () => {
@@ -699,7 +741,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
     });
 
     describe('lifecycle', () => {
-      describe('for Apollo Engine', () => {
+      describe('for Apollo Graph Manager', () => {
         let nodeEnv: string;
         let engineServer: EngineMockServer;
 
