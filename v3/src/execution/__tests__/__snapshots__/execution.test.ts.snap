@@ -367,11 +367,11 @@ query Nested {
 }
 `;
 
-exports[`parseGraphqlRequest Throws for invalid queries - empty query 1`] = `"Syntax Error: Expected Name, found }"`;
+exports[`parseGraphqlRequest Returns an error for invalid queries - empty query 1`] = `[GraphQLError: Syntax Error: Expected Name, found }]`;
 
-exports[`parseGraphqlRequest Throws for invalid queries - empty selection set 1`] = `"Syntax Error: Expected Name, found }"`;
+exports[`parseGraphqlRequest Returns an error for invalid queries - empty selection set 1`] = `[GraphQLError: Syntax Error: Expected Name, found }]`;
 
-exports[`parseGraphqlRequest Throws for invalid queries - missing closing } 1`] = `"Syntax Error: Expected Name, found <EOF>"`;
+exports[`parseGraphqlRequest Returns an error for invalid queries - missing closing } 1`] = `[GraphQLError: Syntax Error: Expected Name, found <EOF>]`;
 
 exports[`processGraphqlRequest Executable queries - basic - { people { name } } 1`] = `
 Object {
@@ -710,11 +710,23 @@ Array [
 ]
 `;
 
-exports[`processGraphqlRequest Unparseable queries - empty query 1`] = `"Syntax Error: Expected Name, found }"`;
+exports[`processGraphqlRequest Unparseable queries - empty query 1`] = `
+Array [
+  [GraphQLError: Syntax Error: Expected Name, found }],
+]
+`;
 
-exports[`processGraphqlRequest Unparseable queries - empty selection set 1`] = `"Syntax Error: Expected Name, found }"`;
+exports[`processGraphqlRequest Unparseable queries - empty selection set 1`] = `
+Array [
+  [GraphQLError: Syntax Error: Expected Name, found }],
+]
+`;
 
-exports[`processGraphqlRequest Unparseable queries - missing closing } 1`] = `"Syntax Error: Expected Name, found <EOF>"`;
+exports[`processGraphqlRequest Unparseable queries - missing closing } 1`] = `
+Array [
+  [GraphQLError: Syntax Error: Expected Name, found <EOF>],
+]
+`;
 
 exports[`validateGraphqlRequest invalid queries against schema: basic 1`] = `
 Array [

@@ -39,9 +39,10 @@ interface ProcessRequestInput {
  * @param args.request - A GraphQLRequest object consisting of a query string and, optionally, an operationName, and variables
  * @param args.schema - A GraphQLSchema to validate and execute the request against
  *
- * @returns A Promise consisting of data and errors from execution
- * @throws GraphQLError on parse failure
- * @throws GraphQLError[] on validation failure
+ * @returns A Promise consisting of:
+ *   1. Errors if parsing or validation errors occurred
+ *   2. Data and errors if execution occurred but encountered errors
+ *   3. Data without errors if execution was successful without errors
  */
 export async function processGraphqlRequest<TData = Record<string, any>>({
   request,
@@ -50,22 +51,31 @@ export async function processGraphqlRequest<TData = Record<string, any>>({
   const { query, operationName, variables } = request;
 
   if (!query) {
-    throw new GraphQLError('No query document provided');
+    return {
+      errors: [new GraphQLError('No query document provided')],
+    };
   }
 
-  // throws GraphQLError on unparseable document
-  const document = parseGraphqlRequest({ query });
+  // returns early with errors if the document can't be parsed
+  const parseResult = parseGraphqlRequest({ query });
+  if ('error' in parseResult) {
+    return { errors: [parseResult.error] };
+  }
 
-  // throws GraphQLError[] with all validation errors
-  validateGraphqlRequest({
+  // Collect document validation errors and return early if there are any
+  const documentValidationErrors = validateGraphqlRequest({
     schema,
-    document,
+    document: parseResult.document,
     operationName,
   });
 
+  if (documentValidationErrors.length > 0) {
+    return { errors: documentValidationErrors };
+  }
+
   return await executeGraphqlRequest<TData>({
     schema,
-    document,
+    document: parseResult.document,
     operationName,
     ...(variables && { variables }),
   });
@@ -76,17 +86,23 @@ interface ParseInput {
   query: string;
 }
 
+type ParseResult = { error: GraphQLError } | { document: DocumentNode };
+
 /**
  * Parse a GraphQL query into a DocumentNode
  *
  * @param args
  * @param args.query - A string representing a GraphQL query
  *
- * @returns A GraphQL DocumentNode
- * @throws GraphQLError on parse failure
+ * @returns A GraphQL DocumentNode if parse is successful, else a GraphQLError
  */
-export function parseGraphqlRequest({ query }: ParseInput): DocumentNode {
-  return parse(query);
+export function parseGraphqlRequest({ query }: ParseInput): ParseResult {
+  try {
+    const document = parse(query);
+    return { document };
+  } catch (e) {
+    return { error: e as GraphQLError };
+  }
 }
 
 /** Options for {@link validateGraphqlRequest} */
@@ -104,13 +120,13 @@ interface ValidateInput {
  * @param args.schema The schema to validate a query document against
  * @param args.operationName (optional) An operationName must be provided if multiple operations exist in the provided document
  *
- * @throws GraphQLError[] An array of validation errors
+ * @returns An array of validation errors
  */
 export function validateGraphqlRequest({
   document,
   schema,
   operationName,
-}: ValidateInput): void {
+}: ValidateInput): GraphQLError[] {
   const errors: GraphQLError[] = [];
   const operations = separateOperations(document);
   if (Object.keys(operations).length > 1 && !operationName) {
@@ -122,10 +138,7 @@ export function validateGraphqlRequest({
   }
 
   errors.push(...validate(schema, document));
-
-  if (errors.length > 0) {
-    throw errors;
-  }
+  return errors;
 }
 
 /** Options for {@link executeGraphqlRequest} */
@@ -149,8 +162,11 @@ interface ExecutionInput<
  * @param args.variables - (optional) Any variables to be provided to the query
  * @param args.context - (optional) A context object which will be accessible to resolvers during execution
  *
- * @returns Data and errors from GraphQL execution
- * @throws GraphQLError
+ * @returns
+ *   1. Data if execution is successful with no errors
+ *   2. Data and errors if execution occurred with errors
+ *
+ * @see https://github.com/graphql/graphql-spec/blob/master/spec/Section%207%20--%20Response.md#response-format
  */
 export async function executeGraphqlRequest<TData = Record<string, any>>({
   schema,

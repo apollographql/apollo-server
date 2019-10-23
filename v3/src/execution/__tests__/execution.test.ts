@@ -88,7 +88,7 @@ const validQueries: JestInput<{
       `,
       operationName: 'FirstDocument',
     },
-  ],
+  ]
 ];
 
 // Using gql on these unparseable document breaks code highlighting and other
@@ -239,12 +239,17 @@ const schema = makeExecutableSchema({
 
 describe('parseGraphqlRequest', () => {
   it.each(validQueries)('Parses valid queries - %s', (_, { query }) => {
-    const parsed = parseGraphqlRequest({ query });
-    expect(parsed).toMatchSnapshot();
+    const parseResult = parseGraphqlRequest({ query });
+    if ('document' in parseResult) {
+      expect(parseResult.document).toMatchSnapshot();
+    }
   });
 
-  it.each(unparseableQueries)('Throws for invalid queries - %s', (_, query) => {
-    expect(() => parseGraphqlRequest({ query })).toThrowErrorMatchingSnapshot();
+  it.each(unparseableQueries)('Returns an error for invalid queries - %s', (_, query) => {
+    const parseResult = parseGraphqlRequest({query});
+    if ('error' in parseResult) {
+      expect(parseResult.error).toMatchSnapshot();
+    }
   });
 });
 
@@ -252,32 +257,39 @@ describe('validateGraphqlRequest', () => {
   it.each(validQueries)(
     'valid queries against schema: %s',
     (_, { query, operationName }) => {
-      const document = parseGraphqlRequest({ query });
-      expect(() =>
+
+      const parseResult = parseGraphqlRequest({ query });
+      if ('error' in parseResult) {
+        throw new Error('Unexpected parse failure in parseable query. Are you sure you added a valid query to the validQueries test cases?');
+      }
+
+      const validationErrors =
         validateGraphqlRequest({
           schema,
-          document,
+          document: parseResult.document,
           operationName,
-        })
-      ).not.toThrow();
+        });
+
+      expect(validationErrors).toHaveLength(0);
     }
   );
 
   it.each(invalidQueries)(
     'invalid queries against schema: %s',
     (_, { query, operationName }) => {
-      const document = parseGraphqlRequest({ query });
+      const parseResult = parseGraphqlRequest({ query });
+      if ('error' in parseResult) {
+        throw new Error('Unexpected parse failure in parseable query. Are you sure you added a parseable query to the invalidQueries test cases?');
+      }
 
-      try {
+      const validationErrors =
         validateGraphqlRequest({
           schema,
-          document,
+          document: parseResult.document,
           operationName,
         });
-      } catch (e) {
-        // Jest's `expect().toThrowErrorMatchingSnapshot()` doesn't work for throwing an array of errors
-        expect(e).toMatchSnapshot();
-      }
+
+      expect(validationErrors).toMatchSnapshot();
     }
   );
 });
@@ -286,10 +298,14 @@ describe('executeGraphqlRequest', () => {
   it.each(validQueries)(
     'Executable queries - %s',
     async (_, { query, operationName, variables }) => {
-      const document = parseGraphqlRequest({ query });
+      const parseResult = parseGraphqlRequest({ query });
+      if ('error' in parseResult) {
+        throw new Error('Unexpected parse failure in parseable query. Are you sure you added a parseable query to the validQueries test cases?');
+      }
+
       const result = await executeGraphqlRequest({
         schema,
-        document,
+        document: parseResult.document,
         operationName,
         variables,
       });
@@ -300,10 +316,14 @@ describe('executeGraphqlRequest', () => {
   it.each(nonExecutableQueries)(
     'Errors during execution - %s',
     async (_, { query }) => {
-      const document = parseGraphqlRequest({ query });
+      const parseResult = parseGraphqlRequest({ query });
+      if ('error' in parseResult) {
+        throw new Error('Unexpected parse failure in parseable query. Are you sure you added a parseable query to the nonExecutableQueries test cases?');
+      }
+
       const { errors } = await executeGraphqlRequest({
         schema,
-        document,
+        document: parseResult.document,
       });
 
       expect(errors!.length).toBeGreaterThan(0);
@@ -331,31 +351,28 @@ describe('processGraphqlRequest', () => {
   );
 
   it.each(unparseableQueries)('Unparseable queries - %s', async (_, query) => {
-    expect(
-      processGraphqlRequest({
-        schema,
-        request: {
-          query,
-        },
-      })
-    ).rejects.toThrowErrorMatchingSnapshot();
+    const { errors } = await processGraphqlRequest({
+      schema,
+      request: {
+        query,
+      },
+    });
+
+    expect(errors).toMatchSnapshot();
   });
 
   it.each(invalidQueries)(
     'Invalid queries - %s',
     async (_, { query, operationName }) => {
-      // Jest's `expect().toThrowErrorMatchingSnapshot()` doesn't work for throwing an array of errors
-      try {
-        await processGraphqlRequest({
-          schema,
-          request: {
-            query,
-            operationName,
-          },
-        });
-      } catch (e) {
-        expect(e).toMatchSnapshot();
-      }
+      const { errors } = await processGraphqlRequest({
+        schema,
+        request: {
+          query,
+          operationName,
+        },
+      });
+
+      expect(errors).toMatchSnapshot();
     }
   );
 
