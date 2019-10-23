@@ -249,18 +249,26 @@ const schema = serviceDefinition.schema!;
 describe('parseGraphqlRequest', () => {
   it.each(validQueries)('Parses valid queries - %s', (_, { query }) => {
     const parseResult = parseGraphqlRequest({ query });
-    if ('document' in parseResult) {
-      expect(parseResult.document).toMatchSnapshot();
+    if ('error' in parseResult) {
+      throw new Error(
+        'Unexpected parse failure in parseable query. Are you sure you added a valid query to the validQueries test cases?'
+      );
     }
+
+    expect(parseResult.document).toMatchSnapshot();
   });
 
   it.each(unparseableQueries)(
     'Returns an error for invalid queries - %s',
     (_, query) => {
       const parseResult = parseGraphqlRequest({ query });
-      if ('error' in parseResult) {
-        expect(parseResult.error).toMatchSnapshot();
+      if ('document' in parseResult) {
+        throw new Error(
+          'Unexpected successful parse in unparseable query. Are you sure you added an unparseable query to the unparseableQueries test cases?'
+        );
       }
+
+      expect(parseResult.error).toMatchSnapshot();
     }
   );
 });
