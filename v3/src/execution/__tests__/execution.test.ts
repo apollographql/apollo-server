@@ -208,6 +208,7 @@ const schema = makeExecutableSchema({
     type Query {
       people: [Person]
       error: String
+      modifiesContext: String
     }
 
     type Person {
@@ -224,6 +225,10 @@ const schema = makeExecutableSchema({
       },
       error() {
         throw new GraphQLError('Error while resolving `error` field');
+      },
+      modifiesContext(_, __, context) {
+        context.modified = true;
+        return 'Context modified!';
       },
     },
     Person: {
@@ -390,4 +395,22 @@ describe('processGraphqlRequest', () => {
       expect(errors).toMatchSnapshot();
     }
   );
+
+  it('Passes a modifiable context object to resolvers', async () => {
+    const context = Object.create(null);
+    const { data } = await processGraphqlRequest({
+      schema,
+      request: {
+        query: gql`
+          query ModifiesContext {
+            modifiesContext
+          }
+        `,
+      },
+      context,
+    });
+
+    expect(data.modifiesContext).toBe('Context modified!');
+    expect(context).toHaveProperty('modified');
+  });
 });

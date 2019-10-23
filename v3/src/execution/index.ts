@@ -26,9 +26,10 @@ export { GraphQLSchemaModule } from 'apollo-graphql';
 export { Context, ContextFunction } from 'apollo-server-core';
 
 /** Options for {@link processGraphQLRequest} */
-interface ProcessRequestInput {
+interface ProcessRequestInput<TContext extends Record<string, any>> {
   request: GraphQLRequest;
   schema: GraphQLSchema;
+  context?: TContext;
 }
 
 /**
@@ -38,16 +39,21 @@ interface ProcessRequestInput {
  * @param args
  * @param args.request - A GraphQLRequest object consisting of a query string and, optionally, an operationName, and variables
  * @param args.schema - A GraphQLSchema to validate and execute the request against
+ * @param args.context - An optional context object which is available during GraphQL execution
  *
  * @returns A Promise consisting of:
  *   1. Errors if parsing or validation errors occurred
  *   2. Data and errors if execution occurred but encountered errors
  *   3. Data without errors if execution was successful without errors
  */
-export async function processGraphqlRequest<TData = Record<string, any>>({
+export async function processGraphqlRequest<
+  TData = Record<string, any>,
+  TContext extends Record<string, any> = Record<string, any>
+>({
   request,
   schema,
-}: ProcessRequestInput): Promise<ExecutionResult<TData>> {
+  context,
+}: ProcessRequestInput<TContext>): Promise<ExecutionResult<TData>> {
   const { query, operationName, variables } = request;
 
   if (!query) {
@@ -78,6 +84,7 @@ export async function processGraphqlRequest<TData = Record<string, any>>({
     document: parseResult.document,
     operationName,
     ...(variables && { variables }),
+    ...(context && { context }),
   });
 }
 
