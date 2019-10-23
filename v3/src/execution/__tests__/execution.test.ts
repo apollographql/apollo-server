@@ -88,7 +88,7 @@ const validQueries: JestInput<{
       `,
       operationName: 'FirstDocument',
     },
-  ]
+  ],
 ];
 
 // Using gql on these unparseable document breaks code highlighting and other
@@ -250,30 +250,33 @@ describe('parseGraphqlRequest', () => {
     }
   });
 
-  it.each(unparseableQueries)('Returns an error for invalid queries - %s', (_, query) => {
-    const parseResult = parseGraphqlRequest({query});
-    if ('error' in parseResult) {
-      expect(parseResult.error).toMatchSnapshot();
+  it.each(unparseableQueries)(
+    'Returns an error for invalid queries - %s',
+    (_, query) => {
+      const parseResult = parseGraphqlRequest({ query });
+      if ('error' in parseResult) {
+        expect(parseResult.error).toMatchSnapshot();
+      }
     }
-  });
+  );
 });
 
 describe('validateGraphqlRequest', () => {
   it.each(validQueries)(
     'valid queries against schema: %s',
     (_, { query, operationName }) => {
-
       const parseResult = parseGraphqlRequest({ query });
       if ('error' in parseResult) {
-        throw new Error('Unexpected parse failure in parseable query. Are you sure you added a valid query to the validQueries test cases?');
+        throw new Error(
+          'Unexpected parse failure in parseable query. Are you sure you added a valid query to the validQueries test cases?'
+        );
       }
 
-      const validationErrors =
-        validateGraphqlRequest({
-          schema,
-          document: parseResult.document,
-          operationName,
-        });
+      const validationErrors = validateGraphqlRequest({
+        schema,
+        document: parseResult.document,
+        operationName,
+      });
 
       expect(validationErrors).toHaveLength(0);
     }
@@ -284,15 +287,16 @@ describe('validateGraphqlRequest', () => {
     (_, { query, operationName }) => {
       const parseResult = parseGraphqlRequest({ query });
       if ('error' in parseResult) {
-        throw new Error('Unexpected parse failure in parseable query. Are you sure you added a parseable query to the invalidQueries test cases?');
+        throw new Error(
+          'Unexpected parse failure in parseable query. Are you sure you added a parseable query to the invalidQueries test cases?'
+        );
       }
 
-      const validationErrors =
-        validateGraphqlRequest({
-          schema,
-          document: parseResult.document,
-          operationName,
-        });
+      const validationErrors = validateGraphqlRequest({
+        schema,
+        document: parseResult.document,
+        operationName,
+      });
 
       expect(validationErrors).toMatchSnapshot();
     }
@@ -305,7 +309,9 @@ describe('executeGraphqlRequest', () => {
     async (_, { query, operationName, variables }) => {
       const parseResult = parseGraphqlRequest({ query });
       if ('error' in parseResult) {
-        throw new Error('Unexpected parse failure in parseable query. Are you sure you added a parseable query to the validQueries test cases?');
+        throw new Error(
+          'Unexpected parse failure in parseable query. Are you sure you added a parseable query to the validQueries test cases?'
+        );
       }
 
       const result = await executeGraphqlRequest({
@@ -323,7 +329,9 @@ describe('executeGraphqlRequest', () => {
     async (_, { query }) => {
       const parseResult = parseGraphqlRequest({ query });
       if ('error' in parseResult) {
-        throw new Error('Unexpected parse failure in parseable query. Are you sure you added a parseable query to the nonExecutableQueries test cases?');
+        throw new Error(
+          'Unexpected parse failure in parseable query. Are you sure you added a parseable query to the nonExecutableQueries test cases?'
+        );
       }
 
       const { errors } = await executeGraphqlRequest({
