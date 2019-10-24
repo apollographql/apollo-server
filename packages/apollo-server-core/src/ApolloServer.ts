@@ -32,7 +32,7 @@ import {
 
 import { formatApolloErrors } from 'apollo-server-errors';
 import {
-  GraphQLServerOptions as GraphQLOptions,
+  GraphQLServerOptions,
   PersistedQueryOptions,
 } from './graphqlOptions';
 
@@ -129,7 +129,7 @@ type SchemaDerivedData = {
 export class ApolloServerBase {
   public subscriptionsPath?: string;
   public graphqlPath: string = '/graphql';
-  public requestOptions: Partial<GraphQLOptions<any>> = Object.create(null);
+  public requestOptions: Partial<GraphQLServerOptions<any>> = Object.create(null);
 
   private context?: Context | ContextFunction;
   private engineReportingAgent?: import('apollo-engine-reporting').EngineReportingAgent;
@@ -255,7 +255,7 @@ export class ApolloServerBase {
       delete requestOptions.persistedQueries;
     }
 
-    this.requestOptions = requestOptions as GraphQLOptions;
+    this.requestOptions = requestOptions as GraphQLServerOptions;
 
     if (uploads !== false && !forbidUploadsForTesting) {
       if (this.supportsUploads()) {
@@ -722,7 +722,7 @@ export class ApolloServerBase {
   // options
   protected async graphQLServerOptions(
     integrationContextArgument?: Record<string, any>,
-  ) {
+  ): Promise<GraphQLServerOptions> {
     const { schema, documentStore, extensions } = await this.schemaDerivedData;
 
     let context: Context = this.context ? this.context : {};
@@ -757,7 +757,7 @@ export class ApolloServerBase {
       parseOptions: this.parseOptions,
       reporting: !!this.engineReportingAgent,
       ...this.requestOptions,
-    } as GraphQLOptions;
+    };
   }
 
   public async executeOperation(request: GraphQLRequest) {
