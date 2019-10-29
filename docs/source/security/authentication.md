@@ -22,9 +22,12 @@ const { ApolloServer } = require('apollo-server');
 const server = new ApolloServer({
  typeDefs,
  resolvers,
- context: ({ req }) => {
+ context: ({ request, req }) => {
+ 
+   let combineReq = request || req
+   
    // get the user token from the headers
-   const token = req.headers.authorization || '';
+   const token = combineReq.headers.authorization || '';
   
    // try to retrieve a user with the token
    const user = getUser(token);
