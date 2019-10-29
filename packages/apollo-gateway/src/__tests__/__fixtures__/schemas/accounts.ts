@@ -8,12 +8,19 @@ export const typeDefs = gql`
     me: User
   }
 
+  type Department {
+    id: String
+    name: String
+  }
+
   type PasswordAccount @key(fields: "email") {
     email: String!
+    department: Department
   }
 
   type SMSAccount @key(fields: "number") {
     number: String
+    department: Department
   }
 
   union AccountType = PasswordAccount | SMSAccount

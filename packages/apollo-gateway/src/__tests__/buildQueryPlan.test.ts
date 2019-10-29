@@ -790,4 +790,55 @@ describe('buildQueryPlan', () => {
       }
     `);
   });
+
+  describe(`for union types`, () => {
+    it(`include same type in a union with different fields`, () => {
+      const query = gql`
+        {
+          user(id: "2") {
+            account {
+              ... on SMSAccount {
+                number
+                department {
+                  id
+                }
+              }
+              ... on PasswordAccount {
+                department {
+                  name
+                }
+                email
+              }
+            }
+          }
+        }
+      `;
+      const queryPlan = buildQueryPlan(buildOperationContext(schema, query));
+      expect(queryPlan).toMatchInlineSnapshot(`
+        QueryPlan {
+          Fetch(service: "accounts") {
+            {
+              user(id: "2") {
+                account {
+                  __typename
+                  ... on SMSAccount {
+                    number
+                    department {
+                      id
+                    }
+                  }
+                  ... on PasswordAccount {
+                    department {
+                      name
+                    }
+                    email
+                  }
+                }
+              }
+            }
+          },
+        }
+      `);
+    });
+  });
 });

@@ -409,7 +409,7 @@ function splitFields(
             parentType,
             group,
             path,
-            fieldsForResponseName,
+            fieldsForParentType,
           ),
         );
       } else {
@@ -446,7 +446,7 @@ function splitFields(
                 runtimeParentType,
                 group,
                 path,
-                fieldsForResponseName,
+                fieldsForParentType,
               ),
             );
           }
