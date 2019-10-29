@@ -410,7 +410,7 @@ function splitFields(
         group.fields.push(
           completeField(
             context,
-            scope,
+            scope as Scope<typeof parentType>,
             group,
             path,
             fieldsForResponseName,
@@ -462,7 +462,7 @@ function splitFields(
 
 function completeField(
   context: QueryPlanningContext,
-  scope: Scope<GraphQLCompositeType>,
+  scope: Scope<GraphQLObjectType>,
   parentGroup: FetchGroup,
   path: ResponsePath,
   fields: FieldSet,
