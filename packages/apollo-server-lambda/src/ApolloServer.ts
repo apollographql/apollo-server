@@ -48,7 +48,7 @@ export class ApolloServer extends ApolloServerBase {
     return super.graphQLServerOptions({ event, context });
   }
 
-  public createHandler({ cors, onHealthCheck }: CreateHandlerOptions = { cors: undefined }) {
+  public createHandler({ cors, onHealthCheck }: CreateHandlerOptions = { cors: undefined, onHealthCheck: undefined }) {
     // We will kick off the `willStart` event once for the server, and then
     // await it before processing any requests by incorporating its `await` into
     // the GraphQLServerOptions function which is called before each request.
