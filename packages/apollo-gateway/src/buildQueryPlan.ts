@@ -444,13 +444,26 @@ function splitFields(
         // We add the field separately for each runtime parent type.
         for (const [group, runtimeParentTypes] of groupsByRuntimeParentTypes) {
           for (const runtimeParentType of runtimeParentTypes) {
+            // We need to adjust the fields to contain the right fieldDef for
+            // their runtime parent type.
+
+            const fieldDef = context.getFieldDef(
+              runtimeParentType,
+              field.fieldNode,
+            );
+
+            const fieldsWithRuntimeParentType = fieldsForResponseName.map(field => ({
+              ...field,
+              fieldDef,
+            }));
+
             group.fields.push(
               completeField(
                 context,
                 context.newScope(runtimeParentType, scope),
                 group,
                 path,
-                fieldsForResponseName,
+                fieldsWithRuntimeParentType,
               ),
             );
           }
