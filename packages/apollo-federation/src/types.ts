@@ -37,7 +37,6 @@ export const AnyType = new GraphQLScalarType({
   },
 });
 
-// FIXME: move to apollo-env
 function isPromise<T>(value: PromiseOrValue<T>): value is Promise<T> {
   return Boolean(value && 'then' in value && typeof value.then === 'function');
 }

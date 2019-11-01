@@ -16,6 +16,7 @@ import {
 import federationDirectives from '../../../../directives';
 import { ServiceDefinition } from '../../../types';
 import { PossibleTypeExtensions } from '../possibleTypeExtensions';
+import { flat } from '../../../utils';
 
 expect.addSnapshotSerializer(graphqlErrorSerializer);
 expect.addSnapshotSerializer(typeSerializer);
@@ -33,11 +34,11 @@ const createDefinitionsDocumentForServices = (
   return {
     definitions: {
       kind: Kind.DOCUMENT,
-      definitions: Object.values(definitionsMap).flat(),
+      definitions: flat(Object.values(definitionsMap)),
     },
     extensions: {
       kind: Kind.DOCUMENT,
-      definitions: Object.values(extensionsMap).flat(),
+      definitions: flat(Object.values(extensionsMap)),
     },
   };
 };

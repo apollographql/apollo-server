@@ -19,6 +19,7 @@ import { normalizeTypeDefs } from '../../../normalize';
 import federationDirectives from '../../../../directives';
 import { ServiceDefinition } from '../../../types';
 import { MatchingEnums } from '../matchingEnums';
+import { flat } from '../../../utils';
 
 expect.addSnapshotSerializer(astSerializer);
 expect.addSnapshotSerializer(typeSerializer);
@@ -31,7 +32,7 @@ const createDefinitionsDocumentForServices = (
   const { definitionsMap } = buildMapsFromServiceList(serviceList);
   return {
     kind: Kind.DOCUMENT,
-    definitions: Object.values(definitionsMap).flat(),
+    definitions: flat(Object.values(definitionsMap)),
   };
 };
 

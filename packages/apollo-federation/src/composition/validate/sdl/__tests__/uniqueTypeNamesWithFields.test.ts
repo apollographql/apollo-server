@@ -14,6 +14,7 @@ import federationDirectives from '../../../../directives';
 import { UniqueTypeNamesWithFields } from '..';
 import { ServiceDefinition } from '../../../types';
 import { buildMapsFromServiceList } from '../../../compose';
+import { flat } from '../../../utils';
 
 expect.addSnapshotSerializer(graphqlErrorSerializer);
 expect.addSnapshotSerializer(typeSerializer);
@@ -27,11 +28,11 @@ function createDocumentsForServices(
   return [
     {
       kind: Kind.DOCUMENT,
-      definitions: Object.values(definitionsMap).flat(),
+      definitions: flat(Object.values(definitionsMap)),
     },
     {
       kind: Kind.DOCUMENT,
-      definitions: Object.values(extensionsMap).flat(),
+      definitions: flat(Object.values(extensionsMap)),
     },
   ];
 }

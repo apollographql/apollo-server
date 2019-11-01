@@ -1,5 +1,4 @@
 import 'apollo-server-env';
-import { isNotNullOrUndefined } from 'apollo-env';
 import {
   InterfaceTypeExtensionNode,
   FieldDefinitionNode,
@@ -133,21 +132,23 @@ export function hasMatchingFieldInDirectives({
 }) {
   return Boolean(
     namedType.astNode &&
-      directives
-        // for each key directive, get the fields arg
-        .map(keyDirective =>
-          keyDirective.arguments &&
-          isStringValueNode(keyDirective.arguments[0].value)
-            ? {
-                typeName: namedType.astNode!.name.value,
-                keyArgument: keyDirective.arguments[0].value.value,
-              }
-            : null,
-        )
-        // filter out any null/undefined args
-        .filter(isNotNullOrUndefined)
-        // flatten all selections of the "fields" arg to a list of fields
-        .flatMap(selection => parseSelections(selection.keyArgument))
+      // flatten all selections of the "fields" arg to a list of fields
+      flatMap(
+        directives
+          // for each key directive, get the fields arg
+          .map(keyDirective =>
+            keyDirective.arguments &&
+            isStringValueNode(keyDirective.arguments[0].value)
+              ? {
+                  typeName: namedType.astNode!.name.value,
+                  keyArgument: keyDirective.arguments[0].value.value,
+                }
+              : null,
+          )
+          // filter out any null/undefined args
+          .filter(isNotNullOrUndefined),
+        selection => parseSelections(selection.keyArgument),
+      )
         // find a field that matches the @external field
         .some(
           field =>
@@ -447,3 +448,43 @@ export const defKindToExtKind: { [kind: string]: string } = {
   [Kind.ENUM_TYPE_DEFINITION]: Kind.ENUM_TYPE_EXTENSION,
   [Kind.INPUT_OBJECT_TYPE_DEFINITION]: Kind.INPUT_OBJECT_TYPE_EXTENSION,
 };
+
+export function flat<T>(list: Array<T>[]): T[] {
+  return list.reduce(
+    (array, entry) => {
+      if (Array.isArray(entry)) {
+        array.push(...entry);
+      } else {
+        array.push(entry);
+      }
+      return array;
+    },
+    [] as T[],
+  );
+}
+
+export function flatMap<T, U>(
+  array: T[],
+  callbackfn: (value: T, index: number, array: T[]) => ArrayLike<U>,
+): U[] {
+  return Array.prototype.concat(...array.map(callbackfn));
+}
+
+export function mapValues<T, U = T>(
+  object: Record<string, T>,
+  callback: (value: T) => U
+): Record<string, U> {
+  const result: Record<string, U> = Object.create(null);
+
+  for (const [key, value] of Object.entries(object)) {
+    result[key] = callback(value);
+  }
+
+  return result;
+}
+
+export function isNotNullOrUndefined<T>(
+  value: T | null | undefined
+): value is T {
+  return value !== null && typeof value !== "undefined";
+}

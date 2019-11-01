@@ -1,5 +1,4 @@
 import 'apollo-server-env';
-import 'apollo-env';
 import {
   GraphQLSchema,
   extendSchema,
@@ -18,7 +17,6 @@ import {
   TypeExtensionNode,
   GraphQLDirective,
 } from 'graphql';
-import { mapValues } from 'apollo-env';
 import { transformSchema } from 'apollo-graphql';
 
 import federationDirectives from '../directives';
@@ -29,6 +27,8 @@ import {
   mapFieldNamesToServiceName,
   stripExternalFieldsFromTypeDefs,
   typeNodesAreEquivalent,
+  flat,
+  mapValues
 } from './utils';
 import {
   ServiceDefinition,
@@ -297,7 +297,7 @@ export function buildSchemaFromDefinitionsAndExtensions({
   // Extend the blank schema with the base type definitions (as an AST node)
   const definitionsDocument: DocumentNode = {
     kind: Kind.DOCUMENT,
-    definitions: Object.values(definitionsMap).flat(),
+    definitions: flat(Object.values(definitionsMap)),
   };
 
   errors = validateSDL(definitionsDocument, schema, compositionRules);
@@ -306,7 +306,7 @@ export function buildSchemaFromDefinitionsAndExtensions({
   // Extend the schema with the extension definitions (as an AST node)
   const extensionsDocument: DocumentNode = {
     kind: Kind.DOCUMENT,
-    definitions: Object.values(extensionsMap).flat(),
+    definitions: flat(Object.values(extensionsMap)),
   };
 
   errors.push(...validateSDL(extensionsDocument, schema, compositionRules));
