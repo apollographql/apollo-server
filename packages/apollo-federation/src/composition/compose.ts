@@ -15,6 +15,7 @@ import {
   GraphQLObjectType,
   specifiedDirectives,
   TypeDefinitionNode,
+  DirectiveDefinitionNode,
   TypeExtensionNode,
   GraphQLDirective,
 } from 'graphql';
@@ -28,7 +29,7 @@ import {
   parseSelections,
   mapFieldNamesToServiceName,
   stripExternalFieldsFromTypeDefs,
-  typeNodesAreEquivalent,
+  typeNodesAreEquivalent
 } from './utils';
 import {
   ServiceDefinition,
@@ -37,6 +38,10 @@ import {
 } from './types';
 import { validateSDL } from 'graphql/validation/validate';
 import { compositionRules } from './rules';
+
+function isFederationDirective (directive: GraphQLDirective): boolean {
+  return federationDirectives.some(({ name }) => name === directive.name)
+}
 
 const EmptyQueryDefinition = {
   kind: Kind.OBJECT_TYPE_DEFINITION,
@@ -53,7 +58,7 @@ const EmptyMutationDefinition = {
 
 // Map of all definitions to eventually be passed to extendSchema
 interface DefinitionsMap {
-  [name: string]: TypeDefinitionNode[];
+  [name: string]: TypeDefinitionNode[] | DirectiveDefinitionNode[];
 }
 // Map of all extensions to eventually be passed to extendSchema
 interface ExtensionsMap {
@@ -256,6 +261,21 @@ export function buildMapsFromServiceList(serviceList: ServiceDefinition[]) {
         } else {
           extensionsMap[typeName] = [{ ...definition, serviceName }];
         }
+      } else if (definition.kind === Kind.DIRECTIVE_DEFINITION) {
+        const typeName = definition.name.value;
+        // we only keep ExecutableDirectives in composition, however directives can span
+        // both ExecutableDirectives and TypeSystemDirectives. TypeSystemDirectives that are not part
+        // of the federation spec should be rejected in validation. Because of this, we just ignore
+        // doing any locations checking as part of raw composition
+        if (definitionsMap[typeName]) {
+          definitionsMap[typeName].push({ ...definition, serviceName });
+        } else {
+          definitionsMap[typeName] = [{ ...definition, serviceName }];
+        }
+
+        if (!valueTypes.has(typeName)) {
+          valueTypes.add(typeName)
+        }
       }
     }
   }
@@ -316,8 +336,7 @@ export function buildSchemaFromDefinitionsAndExtensions({
   // Remove federation directives from the final schema
   schema = new GraphQLSchema({
     ...schema.toConfig(),
-    // Casting out of ReadOnlyArray
-    directives: specifiedDirectives as GraphQLDirective[]
+    directives: [...schema.getDirectives().filter(x => !isFederationDirective(x))]
   });
 
   return { schema, errors };
