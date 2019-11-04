@@ -17,7 +17,6 @@ import {
   TypeDefinitionNode,
   DirectiveDefinitionNode,
   TypeExtensionNode,
-  GraphQLDirective,
 } from 'graphql';
 import { mapValues } from 'apollo-env';
 import { transformSchema } from 'apollo-graphql';
@@ -30,6 +29,7 @@ import {
   mapFieldNamesToServiceName,
   stripExternalFieldsFromTypeDefs,
   typeNodesAreEquivalent,
+  isFederationDirective,
 } from './utils';
 import {
   ServiceDefinition,
@@ -38,10 +38,6 @@ import {
 } from './types';
 import { validateSDL } from 'graphql/validation/validate';
 import { compositionRules } from './rules';
-
-function isFederationDirective(directive: GraphQLDirective): boolean {
-  return federationDirectives.some(({ name }) => name === directive.name);
-}
 
 const EmptyQueryDefinition = {
   kind: Kind.OBJECT_TYPE_DEFINITION,
@@ -268,13 +264,18 @@ export function buildMapsFromServiceList(serviceList: ServiceDefinition[]) {
         // of the federation spec should be rejected in validation. Because of this, we just ignore
         // doing any locations checking as part of raw composition
         if (definitionsMap[typeName]) {
+          const isValueType = typeNodesAreEquivalent(
+            definitionsMap[typeName][definitionsMap[typeName].length - 1],
+            definition,
+          );
+
+          if (!valueTypes.has(typeName)) {
+            valueTypes.add(typeName);
+          }
+
           definitionsMap[typeName].push({ ...definition, serviceName });
         } else {
           definitionsMap[typeName] = [{ ...definition, serviceName }];
-        }
-
-        if (!valueTypes.has(typeName)) {
-          valueTypes.add(typeName)
         }
       }
     }
@@ -336,7 +337,9 @@ export function buildSchemaFromDefinitionsAndExtensions({
   // Remove federation directives from the final schema
   schema = new GraphQLSchema({
     ...schema.toConfig(),
-    directives: [...schema.getDirectives().filter(x => !isFederationDirective(x))]
+    directives: [
+      ...schema.getDirectives().filter(x => !isFederationDirective(x)),
+    ],
   });
 
   return { schema, errors };

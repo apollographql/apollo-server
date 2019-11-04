@@ -10,3 +10,4 @@ export {
   providesFieldsSelectInvalidType,
 } from './providesFieldsSelectInvalidType';
 export { providesNotOnEntity } from './providesNotOnEntity';
+export { executableDirectivesOnly } from './executableDirectivesOnly';

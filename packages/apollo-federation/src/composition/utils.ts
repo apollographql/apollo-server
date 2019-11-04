@@ -33,6 +33,7 @@ import {
 } from 'graphql';
 import Maybe from 'graphql/tsutils/Maybe';
 import { ExternalFieldDefinition } from './types';
+import federationDirectives from '../directives';
 
 export function isStringValueNode(node: any): node is StringValueNode {
   return node.kind === Kind.STRING;
@@ -449,3 +450,24 @@ export const defKindToExtKind: { [kind: string]: string } = {
   [Kind.ENUM_TYPE_DEFINITION]: Kind.ENUM_TYPE_EXTENSION,
   [Kind.INPUT_OBJECT_TYPE_DEFINITION]: Kind.INPUT_OBJECT_TYPE_EXTENSION,
 };
+
+export const executableDirectiveLocations = [
+  'QUERY',
+  'MUTATION',
+  'SUBSCRIPTION',
+  'FIELD',
+  'FRAGMENT_DEFINITION',
+  'FRAGMENT_SPREAD',
+  'INLINE_FRAGMENT',
+  'VARIABLE_DEFINITION',
+];
+
+export function isExecutableDirective(directive: GraphQLDirective): boolean {
+  return directive.locations.every(location =>
+    executableDirectiveLocations.includes(location),
+  );
+}
+
+export function isFederationDirective(directive: GraphQLDirective): boolean {
+  return federationDirectives.some(({ name }) => name === directive.name);
+}
