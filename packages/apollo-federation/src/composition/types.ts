@@ -124,4 +124,8 @@ declare module 'graphql/language/ast' {
   interface InputObjectTypeExtensionNode {
     serviceName?: string | null;
   }
+
+  interface DirectiveDefinitionNode {
+    serviceName?: string | null;
+  }
 }

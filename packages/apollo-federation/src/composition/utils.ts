@@ -28,6 +28,8 @@ import {
   BREAK,
   print,
   ASTNode,
+  DirectiveDefinitionNode,
+  GraphQLDirective,
 } from 'graphql';
 import Maybe from 'graphql/tsutils/Maybe';
 import { ExternalFieldDefinition } from './types';
@@ -341,12 +343,12 @@ export function isTypeNodeAnEntity(
  * - kind: An array of length 0 or 2. If their kinds are different, they will be added to the array.
  *     (['InputObjectTypeDefinition', 'InterfaceTypeDefinition'])
  *
- * @param firstNode TypeDefinitionNode | TypeExtensionNode
- * @param secondNode TypeDefinitionNode | TypeExtensionNode
+ * @param firstNode TypeDefinitionNode | TypeExtensionNode | DirectiveDefinitionNode
+ * @param secondNode TypeDefinitionNode | TypeExtensionNode | DirectiveDefinitionNode
  */
 export function diffTypeNodes(
-  firstNode: TypeDefinitionNode | TypeExtensionNode,
-  secondNode: TypeDefinitionNode | TypeExtensionNode,
+  firstNode: TypeDefinitionNode | TypeExtensionNode | DirectiveDefinitionNode,
+  secondNode: TypeDefinitionNode | TypeExtensionNode | DirectiveDefinitionNode,
 ) {
   const fieldsDiff: {
     [fieldName: string]: string[];
@@ -416,12 +418,12 @@ export function diffTypeNodes(
 /**
  * A common implementation of diffTypeNodes to ensure two type nodes are equivalent
  *
- * @param firstNode TypeDefinitionNode | TypeExtensionNode
- * @param secondNode TypeDefinitionNode | TypeExtensionNode
+ * @param firstNode TypeDefinitionNode | TypeExtensionNode | DirectiveDefinitionNode
+ * @param secondNode TypeDefinitionNode | TypeExtensionNode | DirectiveDefinitionNode
  */
 export function typeNodesAreEquivalent(
-  firstNode: TypeDefinitionNode | TypeExtensionNode,
-  secondNode: TypeDefinitionNode | TypeExtensionNode,
+  firstNode: TypeDefinitionNode | TypeExtensionNode | DirectiveDefinitionNode,
+  secondNode: TypeDefinitionNode | TypeExtensionNode | DirectiveDefinitionNode,
 ) {
   const { name, kind, fields, unionTypes } = diffTypeNodes(
     firstNode,

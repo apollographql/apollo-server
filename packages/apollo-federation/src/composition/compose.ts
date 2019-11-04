@@ -29,7 +29,7 @@ import {
   parseSelections,
   mapFieldNamesToServiceName,
   stripExternalFieldsFromTypeDefs,
-  typeNodesAreEquivalent
+  typeNodesAreEquivalent,
 } from './utils';
 import {
   ServiceDefinition,
@@ -39,8 +39,8 @@ import {
 import { validateSDL } from 'graphql/validation/validate';
 import { compositionRules } from './rules';
 
-function isFederationDirective (directive: GraphQLDirective): boolean {
-  return federationDirectives.some(({ name }) => name === directive.name)
+function isFederationDirective(directive: GraphQLDirective): boolean {
+  return federationDirectives.some(({ name }) => name === directive.name);
 }
 
 const EmptyQueryDefinition = {
@@ -58,7 +58,7 @@ const EmptyMutationDefinition = {
 
 // Map of all definitions to eventually be passed to extendSchema
 interface DefinitionsMap {
-  [name: string]: TypeDefinitionNode[] | DirectiveDefinitionNode[];
+  [name: string]: (TypeDefinitionNode | DirectiveDefinitionNode)[];
 }
 // Map of all extensions to eventually be passed to extendSchema
 interface ExtensionsMap {
