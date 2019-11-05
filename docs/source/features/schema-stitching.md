@@ -146,7 +146,7 @@ We now have a single schema that supports asking for `userById` and `chirpsByAut
 
 ### Adding resolvers between schemas
 
-*Note*: if you require this functionality, it would be better if you use [Apollo Federation](../federation/migrating-from-stitching.md). The below explains how to implement it manually.
+*Note*: if you require this functionality, it would be better if you use [Apollo Federation](../federation/migrating-from-stitching/). The below explains how to implement it manually.
 
 Combining existing root fields is a great start, but in practice we will often want to introduce additional fields for working with the relationships between types that came from different subschemas. For example, we might want to go from a particular user to their chirps, or from a chirp to its author. Or we might want to query a `latestChirps` field and then get the author of each of those chirps. If the only way to obtain a chirp's author is to call the `userById(id)` root query field with the `authorId` of a given chirp, and we don't know the chirp's `authorId` until we receive the GraphQL response, then we won't be able to obtain the authors as part of the same query.
 
