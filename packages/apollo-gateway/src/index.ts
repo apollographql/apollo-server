@@ -243,6 +243,12 @@ export class ApolloGateway implements GraphQLService {
 
   public async load(options?: { engine?: GraphQLServiceEngineConfig }) {
     await this.updateComposition(options);
+    const { graphId, graphVariant } = (options && options.engine) || {};
+    const mode = isManagedConfig(this.config) ? 'managed' : 'unmanaged';
+
+    this.logger.info(
+      `Gateway successfully loaded schema.\n\t* Mode: ${mode}${graphId ? `\n\t* Service: ${graphId}@${graphVariant || 'current'}`: ''}`,
+    );
     if (this.experimental_pollInterval) {
       setInterval(
         () => this.updateComposition(options),
@@ -292,15 +298,16 @@ export class ApolloGateway implements GraphQLService {
     ) {
       this.logger.debug('No change in service definitions since last check');
       return;
-    } else {
-      this.serviceDefinitions = result.serviceDefinitions;
+    }
+
+    if (previousSchema) {
+      this.logger.info('Gateway config has changed, updating schema');
     }
 
     this.compositionMetadata = result.compositionMetadata;
     this.serviceDefinitions = result.serviceDefinitions;
 
     if (this.queryPlanStore) this.queryPlanStore.flush();
-    this.logger.info('Gateway config has changed, updating schema');
 
     this.schema = this.createSchema(result.serviceDefinitions);
     try {
