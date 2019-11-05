@@ -200,6 +200,23 @@ server.listen().then(({ url }) => {
 });
 ```
 
+## Monitoring your resolvers
+
+As with all code, the performance of individual resolvers will be dependent on the workload embedded within them.  The actual resolvers invoked by a client's request will depend on the operation itself.  GraphQL allows the avoidance of most costly fields when their return data is not necessary by not including them in the request, but it's still important to understand what those computationally costly fields are.
+
+It's recommended that you use a tool which can track field-level metrics within a data graph, aggregate them, and help you understand the performance of your data graph over time.  Apollo Graph Manager integrates with Apollo Server and offers performance analysis, error tracking and schema management features.  For more information, read our article about [monitoring a graph's performance](https://www.apollographql.com/docs/graph-manager/performance/).
+
+In local development, using the `tracing: true` option to Apollo Server will enable a tracing panel
+
+
+```javascript
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  tracing: true,
+});
+```
+
 ## Sending queries
 
 Once your resolver map is complete, it's time to start testing out your queries in GraphQL Playground.
