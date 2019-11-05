@@ -36,10 +36,8 @@ import {
   print,
   specifiedDirectives,
 } from 'graphql';
-
 import federationDirectives, { gatherDirectives } from '../directives';
 import { isFederationType } from '../types';
-import { flatMap } from '../composition/utils';
 
 // Federation change: treat the directives defined by the federation spec
 // similarly to the directives defined by the GraphQL spec (ie, don't print
@@ -360,7 +358,7 @@ function printDescription(
 
 function descriptionLines(description: string, maxLen: number): Array<string> {
   const rawLines = description.split('\n');
-  return flatMap(rawLines, line => {
+  return rawLines.flatMap(line => {
     if (line.length < maxLen + 5) {
       return [line];
     }

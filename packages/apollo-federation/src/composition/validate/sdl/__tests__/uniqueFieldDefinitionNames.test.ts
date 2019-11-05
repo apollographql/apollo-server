@@ -12,7 +12,6 @@ import { buildMapsFromServiceList } from '../../../compose';
 import federationDirectives from '../../../../directives';
 import { UniqueFieldDefinitionNames } from '..';
 import { ServiceDefinition } from '../../../types';
-import { flat } from '../../../utils';
 
 expect.addSnapshotSerializer(typeSerializer);
 
@@ -26,11 +25,11 @@ function createDocumentsForServices(
   return [
     {
       kind: Kind.DOCUMENT,
-      definitions: flat(Object.values(definitionsMap)),
+      definitions: Object.values(definitionsMap).flat(),
     },
     {
       kind: Kind.DOCUMENT,
-      definitions: flat(Object.values(extensionsMap)),
+      definitions: Object.values(extensionsMap).flat(),
     },
   ];
 }

@@ -7,7 +7,6 @@ import {
 } from 'graphql';
 import { validateSDL } from 'graphql/validation/validate';
 import gql from 'graphql-tag';
-
 import { buildMapsFromServiceList } from '../../../compose';
 import {
   typeSerializer,
@@ -16,7 +15,6 @@ import {
 import federationDirectives from '../../../../directives';
 import { ServiceDefinition } from '../../../types';
 import { PossibleTypeExtensions } from '../possibleTypeExtensions';
-import { flat } from '../../../utils';
 
 expect.addSnapshotSerializer(graphqlErrorSerializer);
 expect.addSnapshotSerializer(typeSerializer);
@@ -34,11 +32,11 @@ const createDefinitionsDocumentForServices = (
   return {
     definitions: {
       kind: Kind.DOCUMENT,
-      definitions: flat(Object.values(definitionsMap)),
+      definitions: Object.values(definitionsMap).flat(),
     },
     extensions: {
       kind: Kind.DOCUMENT,
-      definitions: flat(Object.values(extensionsMap)),
+      definitions: Object.values(extensionsMap).flat(),
     },
   };
 };

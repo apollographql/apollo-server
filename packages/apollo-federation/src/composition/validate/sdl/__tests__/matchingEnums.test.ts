@@ -8,7 +8,6 @@ import {
 } from 'graphql';
 import { validateSDL } from 'graphql/validation/validate';
 import gql from 'graphql-tag';
-
 import { composeServices, buildMapsFromServiceList } from '../../../compose';
 import {
   astSerializer,
@@ -19,7 +18,6 @@ import { normalizeTypeDefs } from '../../../normalize';
 import federationDirectives from '../../../../directives';
 import { ServiceDefinition } from '../../../types';
 import { MatchingEnums } from '../matchingEnums';
-import { flat } from '../../../utils';
 
 expect.addSnapshotSerializer(astSerializer);
 expect.addSnapshotSerializer(typeSerializer);
@@ -32,13 +30,13 @@ const createDefinitionsDocumentForServices = (
   const { definitionsMap } = buildMapsFromServiceList(serviceList);
   return {
     kind: Kind.DOCUMENT,
-    definitions: flat(Object.values(definitionsMap)),
+    definitions: Object.values(definitionsMap).flat(),
   };
 };
 
 describe('matchingEnums', () => {
   let schema: GraphQLSchema;
-
+;
   // create a blank schema for each test
   beforeEach(() => {
     schema = new GraphQLSchema({

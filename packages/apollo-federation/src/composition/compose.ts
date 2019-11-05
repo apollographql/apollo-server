@@ -18,7 +18,6 @@ import {
   GraphQLDirective,
 } from 'graphql';
 import { transformSchema } from 'apollo-graphql';
-
 import federationDirectives from '../directives';
 import {
   findDirectivesOnTypeOrField,
@@ -27,7 +26,6 @@ import {
   mapFieldNamesToServiceName,
   stripExternalFieldsFromTypeDefs,
   typeNodesAreEquivalent,
-  flat,
   mapValues
 } from './utils';
 import {
@@ -297,7 +295,7 @@ export function buildSchemaFromDefinitionsAndExtensions({
   // Extend the blank schema with the base type definitions (as an AST node)
   const definitionsDocument: DocumentNode = {
     kind: Kind.DOCUMENT,
-    definitions: flat(Object.values(definitionsMap)),
+    definitions: Object.values(definitionsMap).flat(),
   };
 
   errors = validateSDL(definitionsDocument, schema, compositionRules);
@@ -306,7 +304,7 @@ export function buildSchemaFromDefinitionsAndExtensions({
   // Extend the schema with the extension definitions (as an AST node)
   const extensionsDocument: DocumentNode = {
     kind: Kind.DOCUMENT,
-    definitions: flat(Object.values(extensionsMap)),
+    definitions: Object.values(extensionsMap).flat(),
   };
 
   errors.push(...validateSDL(extensionsDocument, schema, compositionRules));
