@@ -320,9 +320,9 @@ export function buildSchemaFromDefinitionsAndExtensions({
     kind: Kind.DOCUMENT,
     definitions: [
       ...Object.values(definitionsMap).flat(),
-      ...Object.values(directiveDefinitionsMap)
-        .map(Object.values)
-        .flat(),
+      ...Object.values(directiveDefinitionsMap).map(
+        definitions => Object.values(definitions)[0],
+      ),
     ],
   };
 

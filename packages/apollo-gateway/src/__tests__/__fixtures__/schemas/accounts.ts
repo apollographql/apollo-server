@@ -3,6 +3,8 @@ import { GraphQLResolverMap } from 'apollo-graphql';
 
 export const name = 'accounts';
 export const typeDefs = gql`
+  directive @stream on FIELD
+
   extend type Query {
     user(id: ID!): User
     me: User

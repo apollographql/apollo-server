@@ -3,6 +3,8 @@ import gql from 'graphql-tag';
 
 export const name = 'reviews';
 export const typeDefs = gql`
+  directive @stream on FIELD
+
   extend type Query {
     topReviews(first: Int = 5): [Review]
   }
