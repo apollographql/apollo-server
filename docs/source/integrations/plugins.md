@@ -335,6 +335,22 @@ didResolveOperation?(
 ): ValueOrPromise<void>;
 ```
 
+### `responseForOperation`
+
+The `responseForOperation` event is fired immediately before GraphQL execution
+would take place. If its return value resolves to a non-null `GraphQLResponse`,
+that result is used instead of executing the query. Hooks from different plugins
+are invoked in series and the first non-null response is used.
+
+```typescript
+responseForOperation?(
+  requestContext: WithRequired<
+    GraphQLRequestContext<TContext>,
+    'metrics' | 'source' | 'document' | 'operationName' | 'operation'
+  >,
+): ValueOrPromise<GraphQLResponse | null>;
+```
+
 ### `executionDidStart`
 
 The `executionDidStart` event fires whenever Apollo Server begins executing the 
