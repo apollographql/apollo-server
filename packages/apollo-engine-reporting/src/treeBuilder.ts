@@ -1,10 +1,5 @@
-import {
-  GraphQLResolveInfo,
-  GraphQLError,
-  ResponsePath,
-  responsePathAsArray,
-} from 'graphql';
-import { Trace, google } from 'apollo-engine-reporting-protobuf';
+import { GraphQLError, GraphQLResolveInfo, ResponsePath } from 'graphql';
+import { google, Trace } from 'apollo-engine-reporting-protobuf';
 
 function internalError(message: string) {
   return new Error(`[internal apollo-server error] ${message}`);
@@ -16,7 +11,7 @@ export class EngineReportingTreeBuilder {
   public startHrTime?: [number, number];
   private stopped = false;
   private nodes = new Map<string, Trace.Node>([
-    [rootResponsePath, this.rootNode],
+    [responsePathAsString(undefined), this.rootNode],
   ]);
   private rewriteError?: (err: GraphQLError) => GraphQLError | null;
 
@@ -233,14 +228,19 @@ function durationHrTimeToNanos(hrtime: [number, number]) {
 
 // Convert from the linked-list ResponsePath format to a dot-joined
 // string. Includes the full path (field names and array indices).
-function responsePathAsString(p: ResponsePath | undefined) {
+function responsePathAsString(p: ResponsePath | undefined): string {
   if (p === undefined) {
     return '';
   }
-  return responsePathAsArray(p).join('.');
-}
 
-const rootResponsePath = responsePathAsString(undefined);
+  let res = String(p.key);
+
+  while ((p = p.prev) !== undefined) {
+    res = `${p.key}.${res}`;
+  }
+
+  return res;
+}
 
 function errorToProtobufError(error: GraphQLError): Trace.Error {
   return new Trace.Error({
