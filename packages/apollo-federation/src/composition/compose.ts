@@ -54,11 +54,15 @@ const EmptyMutationDefinition = {
 
 // Map of all definitions to eventually be passed to extendSchema
 interface DefinitionsMap {
-  [name: string]: (TypeDefinitionNode | DirectiveDefinitionNode)[];
+  [name: string]: TypeDefinitionNode[];
 }
 // Map of all extensions to eventually be passed to extendSchema
 interface ExtensionsMap {
   [name: string]: TypeExtensionNode[];
+}
+
+interface DirectiveDefinitionsMap {
+  [name: string]: { [serviceName: string]: DirectiveDefinitionNode };
 }
 
 /**
@@ -115,6 +119,7 @@ type ValueTypes = Set<string>;
 export function buildMapsFromServiceList(serviceList: ServiceDefinition[]) {
   const definitionsMap: DefinitionsMap = Object.create(null);
   const extensionsMap: ExtensionsMap = Object.create(null);
+  const directiveDefinitionsMap: DirectiveDefinitionsMap = Object.create(null);
   const typeToServiceMap: TypeToServiceMap = Object.create(null);
   const externalFields: ExternalFieldDefinition[] = [];
   const keyDirectivesMap: KeyDirectivesMap = Object.create(null);
@@ -258,24 +263,16 @@ export function buildMapsFromServiceList(serviceList: ServiceDefinition[]) {
           extensionsMap[typeName] = [{ ...definition, serviceName }];
         }
       } else if (definition.kind === Kind.DIRECTIVE_DEFINITION) {
-        const typeName = definition.name.value;
-        // we only keep ExecutableDirectives in composition, however directives can span
-        // both ExecutableDirectives and TypeSystemDirectives. TypeSystemDirectives that are not part
-        // of the federation spec should be rejected in validation. Because of this, we just ignore
-        // doing any locations checking as part of raw composition
-        if (definitionsMap[typeName]) {
-          const isValueType = typeNodesAreEquivalent(
-            definitionsMap[typeName][definitionsMap[typeName].length - 1],
-            definition,
-          );
-
-          if (!valueTypes.has(typeName)) {
-            valueTypes.add(typeName);
-          }
-
-          definitionsMap[typeName].push({ ...definition, serviceName });
+        const directiveName = definition.name.value;
+        // TypeSystemDirectives that are not part of the federation spec should
+        // be rejected in validation. Because of this, we just ignore doing any
+        // locations checking as part of raw composition
+        if (directiveDefinitionsMap[directiveName]) {
+          directiveDefinitionsMap[directiveName][serviceName] = definition;
         } else {
-          definitionsMap[typeName] = [{ ...definition, serviceName }];
+          directiveDefinitionsMap[directiveName] = {
+            [serviceName]: definition,
+          };
         }
       }
     }
@@ -295,6 +292,7 @@ export function buildMapsFromServiceList(serviceList: ServiceDefinition[]) {
     typeToServiceMap,
     definitionsMap,
     extensionsMap,
+    directiveDefinitionsMap,
     externalFields,
     keyDirectivesMap,
     valueTypes,
@@ -304,9 +302,11 @@ export function buildMapsFromServiceList(serviceList: ServiceDefinition[]) {
 export function buildSchemaFromDefinitionsAndExtensions({
   definitionsMap,
   extensionsMap,
+  directiveDefinitionsMap,
 }: {
   definitionsMap: DefinitionsMap;
   extensionsMap: ExtensionsMap;
+  directiveDefinitionsMap: DirectiveDefinitionsMap;
 }) {
   let errors: GraphQLError[] | undefined = undefined;
 
@@ -318,7 +318,12 @@ export function buildSchemaFromDefinitionsAndExtensions({
   // Extend the blank schema with the base type definitions (as an AST node)
   const definitionsDocument: DocumentNode = {
     kind: Kind.DOCUMENT,
-    definitions: Object.values(definitionsMap).flat(),
+    definitions: [
+      ...Object.values(definitionsMap).flat(),
+      ...Object.values(directiveDefinitionsMap)
+        .map(Object.values)
+        .flat(),
+    ],
   };
 
   errors = validateSDL(definitionsDocument, schema, compositionRules);
@@ -355,12 +360,14 @@ export function addFederationMetadataToSchemaNodes({
   externalFields,
   keyDirectivesMap,
   valueTypes,
+  directiveDefinitionsMap,
 }: {
   schema: GraphQLSchema;
   typeToServiceMap: TypeToServiceMap;
   externalFields: ExternalFieldDefinition[];
   keyDirectivesMap: KeyDirectivesMap;
   valueTypes: ValueTypes;
+  directiveDefinitionsMap: DirectiveDefinitionsMap;
 }) {
   for (const [
     typeName,
@@ -464,6 +471,20 @@ export function addFederationMetadataToSchemaNodes({
       },
     };
   }
+
+  // add all definitions of a specific directive for validation later
+  for (const directiveName of Object.keys(directiveDefinitionsMap)) {
+    const directive = schema.getDirective(directiveName);
+    if (!directive) continue;
+
+    directive.federation = {
+      ...directive.federation,
+      directiveDefinitions: {
+        ...(directive.federation && directive.federation.directiveDefinitions),
+        ...directiveDefinitionsMap[directiveName],
+      },
+    };
+  }
 }
 
 export function composeServices(services: ServiceDefinition[]) {
@@ -471,6 +492,7 @@ export function composeServices(services: ServiceDefinition[]) {
     typeToServiceMap,
     definitionsMap,
     extensionsMap,
+    directiveDefinitionsMap,
     externalFields,
     keyDirectivesMap,
     valueTypes,
@@ -479,6 +501,7 @@ export function composeServices(services: ServiceDefinition[]) {
   let { schema, errors } = buildSchemaFromDefinitionsAndExtensions({
     definitionsMap,
     extensionsMap,
+    directiveDefinitionsMap,
   });
 
   // TODO: We should fix this to take non-default operation root types in
@@ -520,6 +543,7 @@ export function composeServices(services: ServiceDefinition[]) {
     externalFields,
     keyDirectivesMap,
     valueTypes,
+    directiveDefinitionsMap,
   });
 
   /**
