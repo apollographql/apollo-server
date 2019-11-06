@@ -1,11 +1,12 @@
 import 'apollo-server-env';
-import { GraphQLSchema, isObjectType, GraphQLError } from 'graphql';
+import { isObjectType, GraphQLError } from 'graphql';
 import { logServiceAndType, errorWithCode } from '../../utils';
+import { PostCompositionValidator } from '.';
 
 /**
  * All fields marked with @external must exist on the base type
  */
-export const externalMissingOnBase = (schema: GraphQLSchema) => {
+export const externalMissingOnBase: PostCompositionValidator = ({ schema }) => {
   const errors: GraphQLError[] = [];
 
   const types = schema.getTypeMap();
