@@ -165,6 +165,10 @@ export const logServiceAndType = (
   fieldName?: string,
 ) => `[${serviceName}] ${typeName}${fieldName ? `.${fieldName} -> ` : ' -> '}`;
 
+export function logDirective(directiveName: string) {
+  return `[@${directiveName}] -> `;
+}
+
 // TODO: allow passing of the other args here, rather than just message and code
 export function errorWithCode(
   code: string,
@@ -359,6 +363,8 @@ export function diffTypeNodes(
     [typeName: string]: boolean;
   } = Object.create(null);
 
+  const locationsDiff: Set<string> = new Set();
+
   const document: DocumentNode = {
     kind: Kind.DOCUMENT,
     definitions: [firstNode, secondNode],
@@ -398,6 +404,19 @@ export function diffTypeNodes(
         }
       }
     },
+    DirectiveDefinition(node) {
+      node.locations.forEach(location => {
+        const locationName = location.value;
+        // If a location already exists in the Set, then we've seen it once.
+        // This means we can remove it from the final diff, since both directives
+        // have this location in common.
+        if (locationsDiff.has(locationName)) {
+          locationsDiff.delete(locationName);
+        } else {
+          locationsDiff.add(locationName);
+        }
+      });
+    },
   });
 
   const typeNameDiff =
@@ -413,6 +432,7 @@ export function diffTypeNodes(
     kind: kindDiff,
     fields: fieldsDiff,
     unionTypes: unionTypesDiff,
+    locations: Array.from(locationsDiff),
   };
 }
 
@@ -426,7 +446,7 @@ export function typeNodesAreEquivalent(
   firstNode: TypeDefinitionNode | TypeExtensionNode | DirectiveDefinitionNode,
   secondNode: TypeDefinitionNode | TypeExtensionNode | DirectiveDefinitionNode,
 ) {
-  const { name, kind, fields, unionTypes } = diffTypeNodes(
+  const { name, kind, fields, unionTypes, locations } = diffTypeNodes(
     firstNode,
     secondNode,
   );
@@ -435,7 +455,8 @@ export function typeNodesAreEquivalent(
     name.length === 0 &&
     kind.length === 0 &&
     Object.keys(fields).length === 0 &&
-    Object.keys(unionTypes).length === 0
+    Object.keys(unionTypes).length === 0 &&
+    locations.length === 0
   );
 }
 
