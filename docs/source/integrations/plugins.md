@@ -114,6 +114,54 @@ defines functions that respond to request lifecycle events. This structure
 organizes and encapsulates all of your plugin's request lifecycle logic, making it 
 easier to reason about.
 
+The following request lifecycle event handlers can optionally return a function
+that will be invoked after the lifecycle phase is complete:
+
+* [`parsingDidStart`](#parsingdidstart)
+* [`validationDidStart`](#validationdidstart)
+* [`executionDidStart`](#executiondidstart)
+
+These "end hooks" will be invoked with any error(s) that occurred during the
+execution of that lifecycle phase. For example, the following plugin will log
+any errors that occur during any of the above lifecycle events:
+
+```js
+const myPlugin = {
+  requestDidStart() {
+    return {
+      parsingDidStart() {
+        return (err) => {
+          if (err) {
+            console.error(err);
+          }
+        }
+      },
+      validationDidStart() {
+        // This end hook is unique in that it can receive an array of errors,
+        // which will contain every validation error that occurred
+        return (errs) => {
+          if (errs) {
+            errs.forEach(err => console.error(err));
+          }
+        }
+      },
+      executionDidStart() {
+        return (err) => {
+          if (err) {
+            console.error(err);
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+Note that the `validationDidStart` end hook receives an array of errors, which
+will contain every validation error that occurred, if any. The arguments to each
+end hook are documented in the type definitions in the [request lifecycle events
+docs](#request-lifecycle-events) below.
+
 ### Inspecting request and response details
 
 As the example above shows, `requestDidStart` and request lifecycle functions accept a `requestContext`
