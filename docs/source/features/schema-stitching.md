@@ -125,6 +125,10 @@ const authorSchema = makeExecutableSchema({
 
 addMockFunctionsToSchema({ schema: authorSchema });
 
+const schema = mergeSchemas({
+    schemas: [chirpSchema, authorSchema],
+});
+
 const server = new ApolloServer({ schema });
 
 server.listen().then(({ url }) => {
