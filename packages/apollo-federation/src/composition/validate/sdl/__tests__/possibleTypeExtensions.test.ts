@@ -27,17 +27,17 @@ const createDefinitionsDocumentForServices = (
   definitions: DocumentNode;
   extensions: DocumentNode;
 } => {
-  const { definitionsMap, extensionsMap } = buildMapsFromServiceList(
+  const { typeDefinitionsMap, typeExtensionsMap } = buildMapsFromServiceList(
     serviceList,
   );
   return {
     definitions: {
       kind: Kind.DOCUMENT,
-      definitions: Object.values(definitionsMap).flat(),
+      definitions: Object.values(typeDefinitionsMap).flat(),
     },
     extensions: {
       kind: Kind.DOCUMENT,
-      definitions: Object.values(extensionsMap).flat(),
+      definitions: Object.values(typeExtensionsMap).flat(),
     },
   };
 };
