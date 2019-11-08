@@ -36,7 +36,7 @@ const createDefinitionsDocumentForServices = (
 
 describe('matchingEnums', () => {
   let schema: GraphQLSchema;
-;
+
   // create a blank schema for each test
   beforeEach(() => {
     schema = new GraphQLSchema({
