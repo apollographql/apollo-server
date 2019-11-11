@@ -10,6 +10,7 @@ describe('executableDirectivesIdentical', () => {
     const serviceA = {
       typeDefs: gql`
         directive @stream on FIELD
+        directive @instrument(tag: String!) on FIELD
       `,
       name: 'serviceA',
     };
@@ -17,6 +18,7 @@ describe('executableDirectivesIdentical', () => {
     const serviceB = {
       typeDefs: gql`
         directive @stream on FIELD
+        directive @instrument(tag: String!) on FIELD
       `,
       name: 'serviceB',
     };
@@ -27,7 +29,7 @@ describe('executableDirectivesIdentical', () => {
     expect(errors).toHaveLength(0);
   });
 
-  it("throws errors when custom, executable directives aren't defined in every service", () => {
+  it("throws errors when custom, executable directives aren't defined with the same locations in every service", () => {
     const serviceA = {
       typeDefs: gql`
         directive @stream on FIELD
@@ -60,6 +62,36 @@ describe('executableDirectivesIdentical', () => {
       	serviceA: directive @stream on FIELD
       	serviceB: directive @stream on FIELD | QUERY
       	serviceC: directive @stream on INLINE_FRAGMENT",
+        },
+      ]
+    `);
+  });
+
+  it("throws errors when custom, executable directives aren't defined with the same arguments in every service", () => {
+    const serviceA = {
+      typeDefs: gql`
+        directive @instrument(tag: String!) on FIELD
+      `,
+      name: 'serviceA',
+    };
+
+    const serviceB = {
+      typeDefs: gql`
+        directive @instrument(tag: Boolean) on FIELD
+      `,
+      name: 'serviceB',
+    };
+
+    const serviceList = [serviceA, serviceB];
+    const { schema } = composeServices(serviceList);
+    const errors = executableDirectivesIdentical({ schema, serviceList });
+    expect(errors).toMatchInlineSnapshot(`
+      Array [
+        Object {
+          "code": "EXECUTABLE_DIRECTIVES_IDENTICAL",
+          "message": "[@instrument] -> custom directives must be defined identically across all services. See below for a list of current implementations:
+      	serviceA: directive @instrument(tag: String!) on FIELD
+      	serviceB: directive @instrument(tag: Boolean) on FIELD",
         },
       ]
     `);

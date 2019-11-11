@@ -365,6 +365,10 @@ export function diffTypeNodes(
 
   const locationsDiff: Set<string> = new Set();
 
+  const argumentsDiff: {
+    [argumentName: string]: string[];
+  } = Object.create(null);
+
   const document: DocumentNode = {
     kind: Kind.DOCUMENT,
     definitions: [firstNode, secondNode],
@@ -416,6 +420,27 @@ export function diffTypeNodes(
           locationsDiff.add(locationName);
         }
       });
+
+      if (!node.arguments) return;
+
+      // Arguments must have the same name and type. As matches are found, they
+      // are deleted from the diff. Anything left in the diff after looping
+      // represents a discrepancy between the two sets of arguments.
+      node.arguments.forEach(argument => {
+        const argumentName = argument.name.value;
+        const printedType = print(argument.type);
+        if (argumentsDiff[argumentName]) {
+          if (printedType === argumentsDiff[argumentName][0]) {
+            // If the existing entry is equal to printedType, it means there's no
+            // diff, so we can remove the entry from the diff object
+            delete argumentsDiff[argumentName];
+          } else {
+            argumentsDiff[argumentName].push(printedType);
+          }
+        } else {
+          argumentsDiff[argumentName] = [printedType];
+        }
+      });
     },
   });
 
@@ -433,6 +458,7 @@ export function diffTypeNodes(
     fields: fieldsDiff,
     unionTypes: unionTypesDiff,
     locations: Array.from(locationsDiff),
+    args: argumentsDiff,
   };
 }
 
@@ -446,7 +472,7 @@ export function typeNodesAreEquivalent(
   firstNode: TypeDefinitionNode | TypeExtensionNode | DirectiveDefinitionNode,
   secondNode: TypeDefinitionNode | TypeExtensionNode | DirectiveDefinitionNode,
 ) {
-  const { name, kind, fields, unionTypes, locations } = diffTypeNodes(
+  const { name, kind, fields, unionTypes, locations, args } = diffTypeNodes(
     firstNode,
     secondNode,
   );
@@ -456,7 +482,8 @@ export function typeNodesAreEquivalent(
     kind.length === 0 &&
     Object.keys(fields).length === 0 &&
     Object.keys(unionTypes).length === 0 &&
-    locations.length === 0
+    locations.length === 0 &&
+    Object.keys(args).length === 0
   );
 }
 
