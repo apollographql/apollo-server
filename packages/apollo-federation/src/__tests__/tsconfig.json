@@ -3,8 +3,5 @@
   "include": ["**/*"],
   "references": [
     { "path": "../../" },
-  ],
-  "compilerOptions": {
-    "lib": ["es2017", "es2019.array", "esnext.asynciterable"],
-  }
+  ]
 }

@@ -1,9 +1,5 @@
 {
   "extends": "../../../../../../../tsconfig.test.base",
-  "compilerOptions": {
-    "strictNullChecks": false,
-    "lib": ["es2017", "es2019.array", "esnext.asynciterable"],
-  },
   "include": ["**/*"],
   "references": [{ "path": "../../../../../" }]
 }
