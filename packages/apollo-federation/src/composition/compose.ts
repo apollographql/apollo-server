@@ -1,5 +1,4 @@
 import 'apollo-server-env';
-import 'apollo-env';
 import {
   GraphQLSchema,
   extendSchema,
@@ -18,9 +17,7 @@ import {
   TypeExtensionNode,
   GraphQLDirective,
 } from 'graphql';
-import { mapValues } from 'apollo-env';
 import { transformSchema } from 'apollo-graphql';
-
 import federationDirectives from '../directives';
 import {
   findDirectivesOnTypeOrField,
@@ -29,6 +26,7 @@ import {
   mapFieldNamesToServiceName,
   stripExternalFieldsFromTypeDefs,
   typeNodesAreEquivalent,
+  mapValues
 } from './utils';
 import {
   ServiceDefinition,
