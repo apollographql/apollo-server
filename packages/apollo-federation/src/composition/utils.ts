@@ -447,7 +447,7 @@ export const defKindToExtKind: { [kind: string]: string } = {
   [Kind.INPUT_OBJECT_TYPE_DEFINITION]: Kind.INPUT_OBJECT_TYPE_EXTENSION,
 };
 
-//
+// Transform an object's values via a callback function
 export function mapValues<T, U = T>(
   object: Record<string, T>,
   callback: (value: T) => U,
