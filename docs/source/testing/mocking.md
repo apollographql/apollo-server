@@ -198,7 +198,7 @@ const { buildClientSchema } = require('graphql');
 const introspectionResult = require('schema.json');
 const { ApolloServer } = require('apollo-server');
 
-const schema = buildClientSchema(introspectionResult);
+const schema = buildClientSchema(introspectionResult.data);
 
 const server = new ApolloServer({
   schema,
