@@ -2,7 +2,7 @@
   "extends": "./tsconfig.base",
   "compilerOptions": {
     "noEmit": true,
-    "lib": ["es2017", "esnext.asynciterable"],
+    "lib": ["es2017", "es2019.array", "esnext.asynciterable"],
     "types": ["node", "jest", "apollo-server-env/dist/global"],
     "paths": {
       "__mocks__/*" : ["__mocks__/*"],
