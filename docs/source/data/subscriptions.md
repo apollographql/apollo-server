@@ -53,12 +53,12 @@ const resolvers = {
     },
   },
   Query: {
-    posts(root: any, args: any, context: any) {
+    posts(root, args, context) {
       return postController.posts();
     },
   },
   Mutation: {
-    addPost(root: any, args: any, context: any) {
+    addPost(root, args, context) {
       pubsub.publish(POST_ADDED, { postAdded: args });
       return postController.addPost(args);
     },
