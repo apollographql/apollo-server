@@ -480,6 +480,7 @@ export function addFederationMetadataToSchemaNodes({
     if (!directive) continue;
 
     directive.federation = {
+      ...directive.federation,
       directiveDefinitions: directiveDefinitionsMap[directiveName],
     };
   }
