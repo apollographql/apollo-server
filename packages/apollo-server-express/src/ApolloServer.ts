@@ -119,7 +119,7 @@ export class ApolloServer extends ApolloServerBase {
     bodyParserConfig,
     disableHealthCheck,
     onHealthCheck,
-  }: GetMiddlewareOptions = {}) {
+  }: GetMiddlewareOptions = {}): express.Router {
     if (!path) path = '/graphql';
 
     const router = express.Router();
@@ -227,9 +227,3 @@ export class ApolloServer extends ApolloServerBase {
     return router;
   }
 }
-
-export const registerServer = () => {
-  throw new Error(
-    'Please use server.applyMiddleware instead of registerServer. This warning will be removed in the next release',
-  );
-};

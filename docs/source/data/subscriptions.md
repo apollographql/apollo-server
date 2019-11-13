@@ -53,12 +53,12 @@ const resolvers = {
     },
   },
   Query: {
-    posts(root: any, args: any, context: any) {
+    posts(root, args, context) {
       return postController.posts();
     },
   },
   Mutation: {
-    addPost(root: any, args: any, context: any) {
+    addPost(root, args, context) {
       pubsub.publish(POST_ADDED, { postAdded: args });
       return postController.addPost(args);
     },
@@ -144,10 +144,6 @@ server.listen().then(({ url, subscriptionsUrl }) => {
 The example above validates the user's token that is sent with the first initialization message on the transport, then it looks up the user and returns the user object as a Promise. The user object found will be available as `context.currentUser` in your GraphQL resolvers.
 
 In case of an authentication error, the Promise will be rejected, which prevents the client's connection.
-
-## Securing Subscriptions with WSS
-
-Similar to how the `https://` scheme offers an [SSL/TLS](https://en.wikipedia.org/wiki/Transport_Layer_Security)-encrypted version of `http://`, the subscriptions WebSocket transport can be encrypted using _WebSockets over SSL/TLS_ (WSS). See the [example server setup](/essentials/server/#ssltls-support) for more details.
 
 ## Subscription Filters
 

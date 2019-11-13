@@ -1,4 +1,3 @@
-/* tslint:disable:no-unused-expression */
 import { GraphQLError } from 'graphql';
 
 import {

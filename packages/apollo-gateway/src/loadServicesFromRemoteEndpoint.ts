@@ -2,7 +2,7 @@ import { GraphQLRequest } from 'apollo-server-types';
 import { parse } from 'graphql';
 import { Headers, HeadersInit } from 'node-fetch';
 import { GraphQLDataSource } from './datasources/types';
-import { UpdateServiceDefinitions } from './';
+import { Experimental_UpdateServiceDefinitions } from './';
 import { ServiceDefinition } from '@apollo/federation';
 
 export async function getServiceDefinitionsFromRemoteEndpoint({
@@ -17,7 +17,7 @@ export async function getServiceDefinitionsFromRemoteEndpoint({
   }[];
   headers?: HeadersInit;
   serviceSdlCache: Map<string, string>;
-}): ReturnType<UpdateServiceDefinitions> {
+}): ReturnType<Experimental_UpdateServiceDefinitions> {
   if (!serviceList || !serviceList.length) {
     throw new Error(
       'Tried to load services from remote endpoints but none provided',
@@ -78,8 +78,5 @@ export async function getServiceDefinitionsFromRemoteEndpoint({
     serviceDefinitions.filter(Boolean),
   )) as ServiceDefinition[];
 
-  // XXX TS can't seem to infer that isNewSchema could be true
-  return (isNewSchema as true | false)
-    ? { serviceDefinitions, isNewSchema: true }
-    : { isNewSchema: false };
+  return { serviceDefinitions, isNewSchema }
 }

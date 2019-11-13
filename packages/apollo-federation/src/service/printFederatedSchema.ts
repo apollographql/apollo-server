@@ -36,7 +36,6 @@ import {
   print,
   specifiedDirectives,
 } from 'graphql';
-
 import federationDirectives, { gatherDirectives } from '../directives';
 import { isFederationType } from '../types';
 
@@ -295,7 +294,7 @@ function printArgs(args: GraphQLArgument[], indentation = '') {
   );
 }
 
-function printInputValue(arg: GraphQLArgument) {
+function printInputValue(arg: GraphQLInputField | GraphQLArgument) {
   const defaultAST = astFromValue(arg.defaultValue, arg.type);
   let argDecl = arg.name + ': ' + String(arg.type);
   if (defaultAST) {

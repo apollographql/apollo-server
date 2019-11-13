@@ -6,7 +6,43 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 > The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  When a release is being prepared, a new header will be (manually) created below and the the appropriate changes within that release will be moved into the new section.
 
-- Nothing yet! Stay tuned!
+- `apollo-server-core`: Don't try parsing `variables` and `extensions` as JSON if they are defined but empty strings. [PR #3501](https://github.com/apollographql/apollo-server/pull/3501)
+- `apollo-server-lambda`: Introduce `onHealthCheck` on `createHandler` in the same fashion as implemented in other integrations. [PR #3458](https://github.com/apollographql/apollo-server/pull/3458)
+
+### v2.9.8
+
+> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/3cdde1b7a71ace6411fbacf82a1a61bf737444a6)
+
+- `apollo-server-core`: Provide accurate type for `formatResponse` rather than generic `Function` type. [PR #3431](https://github.com/apollographql/apollo-server/pull/3431)
+- `apollo-server-core`: Pass complete request context to `formatResponse`, rather than just `context`. [PR #3431](https://github.com/apollographql/apollo-server/pull/3431)
+
+### v2.9.7
+
+> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/5d94e986f04457ec17114791ee6db3ece4213dd8)
+
+- `apollo-server-errors`: Fix `ApolloError` bug and `GraphQLError` spec compliance [#3408](https://github.com/apollographql/apollo-server/pull/3408)
+
+### v2.9.6
+
+> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/fc7462ec5f8604bd6cba99aa9a377a9b8e045566)
+
+- `@apollo/gateway`, `@apollo/federation`, `apollo-engine-reporting`: Update `apollo-graphql` dependency to bring in [`apollo-tooling`'s #1551](https://github.com/apollographql/apollo-tooling/pull/1551) which resolve runtime errors when its source is minified.  While this fixes a particular minification bug when Apollo Server packages are minified, we _do not_ recommend minification of server code in most cases. [PR #3387](https://github.com/apollographql/apollo-server/pull/3387) [Issue #3335](https://github.com/apollographql/apollo-server/issues/3335)
+- `apollo-server-koa`: Correctly declare dependency on `koa-compose`. [PR #3356](https://github.com/apollographql/apollo-server/pull/3356)
+- `apollo-server-core`: Preserve any `extensions` that have been placed on the response when pre-execution errors occur. [PR #3394](https://github.com/apollographql/apollo-server/pull/3394)
+
+### v2.9.3
+
+> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/a1fbf95fc01739d5cbaa59919149bb85c563fdaa)
+
+- `apollo-server-express`: Add direct dependency on `express` to allow for usage of `express.Router` for `getMiddleware` functionality (from [#2435](https://github.com/apollographql/apollo-server/pull/2435)).  Previously, unlike other server integration packages, `apollo-server-express` did not directly need `express` as a dependency since it only relied on `express` for TypeScript typings. [Issue #3238](https://github.com/apollographql/apollo-server/issues/3238) [PR #3239](https://github.com/apollographql/apollo-server/pull/3239)
+- `apollo-server-lambda`: Add `@types/aws-lambda` as a direct dependency to `apollo-server-express` to allow usage of its typings without needing to separately install it. [Issue #2351](https://github.com/apollographql/apollo-server/issue/2351) [PR #3242](https://github.com/apollographql/apollo-server/pull/3242)
+
+### v2.9.2
+
+> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/92ea402a90bf9817c9b887707abbd77dcf5edcb4)
+
+- `apollo-server-koa`: **Drop support for Node.js v6 within the Apollo Server Koa integration in order to update `koa-bodyparser` dependency from `v3.0.0` to `v4.2.1`.** [PR #TODO](https://github.com/apollographql/apollo-server/pull/TODO) [Issue #3050](https://github.com/apollographql/apollo-server/issues/3050) [PR #3229](https://github.com/apollographql/apollo-server/pull/3229)
+- `apollo-server-express`: Use explicit return type for new `getMiddleware` method, in an effort to resolve [Issue #3222](https://github.com/apollographql/apollo-server/issues/3222) [PR #3230](https://github.com/apollographql/apollo-server/pull/3230)
 
 ### v2.9.1
 

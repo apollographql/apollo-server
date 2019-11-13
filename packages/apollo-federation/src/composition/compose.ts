@@ -1,5 +1,4 @@
 import 'apollo-server-env';
-import 'apollo-env';
 import {
   GraphQLSchema,
   extendSchema,
@@ -16,10 +15,9 @@ import {
   specifiedDirectives,
   TypeDefinitionNode,
   TypeExtensionNode,
+  GraphQLDirective,
 } from 'graphql';
-import { mapValues } from 'apollo-env';
 import { transformSchema } from 'apollo-graphql';
-
 import federationDirectives from '../directives';
 import {
   findDirectivesOnTypeOrField,
@@ -28,6 +26,7 @@ import {
   mapFieldNamesToServiceName,
   stripExternalFieldsFromTypeDefs,
   typeNodesAreEquivalent,
+  mapValues
 } from './utils';
 import {
   ServiceDefinition,
@@ -311,6 +310,13 @@ export function buildSchemaFromDefinitionsAndExtensions({
   errors.push(...validateSDL(extensionsDocument, schema, compositionRules));
 
   schema = extendSchema(schema, extensionsDocument, { assumeValidSDL: true });
+
+  // Remove federation directives from the final schema
+  schema = new GraphQLSchema({
+    ...schema.toConfig(),
+    // Casting out of ReadOnlyArray
+    directives: specifiedDirectives as GraphQLDirective[]
+  });
 
   return { schema, errors };
 }

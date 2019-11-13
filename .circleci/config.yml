@@ -1,53 +1,33 @@
-version: 2
+version: 2.1
 
-#
-# Reusable Snippets!
-#
-# These are re-used by the various tests below, to avoid repetition.
-#
-run_install_desired_npm: &run_install_desired_npm
-  run:
-    # Due to a bug, npm upgrades from the version of npm that ships with
-    # Node.js 6 (npm v3.10.10) go poorly and generally causes other problems
-    # with the environment.  Since yarn is already available here we can just
-    # use that to work-around the issue.  It's possible that npm cleanup might
-    # prevent this from being necessary, but this installation can be switched
-    # to use `npm` (rather than `yarn`) once Node 6 is no longer tested below.
-    name: Install npm@6, but with yarn.
-    command: sudo yarn global add npm@6
+# These "CircleCI Orbs" are reusable bits of configuration that can be shared
+# across projects.  See https://circleci.com/orbs/ for more information.
+orbs:
+  # `oss` is a local reference to the package.  The source for Apollo Orbs can
+  # be found at http://github.com/apollographql/CircleCI-Orbs.
+  oss: apollo/oss-ci-cd-tooling@0.0.5
 
-# These are the steps used for each version of Node which we're testing
-# against.  Thanks to YAMLs inability to merge arrays (though it is able
-# to merge objects), every version of Node must use the exact same steps,
-# or these steps would need to be repeated in a version of Node that needs
-# something different.  Probably best to avoid that, out of principle, though.
-common_test_steps: &common_test_steps
-  steps:
-    - *run_install_desired_npm
-    - checkout
-    - restore_cache:
-        keys:
-          # When lock file changes, use increasingly general patterns to restore cache
-          - npm-v2-{{ .Branch }}-{{ checksum "package-lock.json" }}
-          - npm-v2-{{ .Branch }}-
-          - npm-v2-
-    - run: npm --version
-    - run: npm ci
-    - save_cache:
-        key: npm-v2-{{ .Branch }}-{{ checksum "package-lock.json" }}
-        paths:
-          # This should cache the npm cache instead of node_modules, which is needed because
-          # npm ci actually removes node_modules before installing to guarantee a clean slate.
-          - ~/.npm
-    - run:
-        command: npm run test:ci
-        environment:
-          JEST_JUNIT_OUTPUT: "reports/junit/js-test-results.xml"
-    - run: npm run coverage:upload
-    - store_test_results:
-        path: reports/junit
-    - store_artifacts:
-        path: reports/junit
+commands:
+  # These are the steps used for each version of Node which we're testing
+  # against.  Thanks to YAMLs inability to merge arrays (though it is able
+  # to merge objects), every version of Node must use the exact same steps,
+  # or these steps would need to be repeated in a version of Node that needs
+  # something different.  Probably best to avoid that, out of principle, though.
+  common_test_steps:
+    description: "Commands to run on every Node.js environment"
+    steps:
+      - oss/install_specific_npm_version
+      - checkout
+      - oss/npm_clean_install_with_caching
+      - run:
+          command: npm run test:ci
+          environment:
+            JEST_JUNIT_OUTPUT: "reports/junit/js-test-results.xml"
+      - run: npm run coverage:upload
+      - store_test_results:
+          path: reports/junit
+      - store_artifacts:
+          path: reports/junit
 
 # Important! When adding a new job to `jobs`, make sure to define when it
 # executes by also adding it to the `workflows` section below!
@@ -57,52 +37,93 @@ jobs:
   # at https://hub.docker.com/r/circleci/node/.
 
   # NODE: Note certain tests are currently being skipped for Node.js 6.
-  Node.js 6:
-    docker: [{ image: 'circleci/node:6' }]
-    <<: *common_test_steps
-
-  Node.js 8:
-    docker: [{ image: 'circleci/node:8' }]
-    <<: *common_test_steps
-
-  Node.js 10:
-    docker: [{ image: 'circleci/node:10' }]
-    <<: *common_test_steps
-
-  Node.js 12:
-    docker: [{ image: 'circleci/node:12' }]
-    <<: *common_test_steps
-
-  # Other tests, unrelated to typical code tests.
-  Linting:
-    docker: [{ image: 'circleci/node:10' }]
+  NodeJS 6:
+    executor: { name: oss/node, tag: '6' }
     steps:
-      # (speed) Intentionally omitted, unnecessary, run_install_desired_npm.
-      - checkout
-      # (speed) --ignore-scripts to skip unnecessary Lerna build during linting.
-      - run: npm install --ignore-scripts
-      - run: npm run lint
+      - common_test_steps
+
+  NodeJS 8:
+    executor: { name: oss/node, tag: '8' }
+    steps:
+      - common_test_steps
+
+  NodeJS 10:
+    executor: { name: oss/node, tag: '10' }
+    steps:
+      - common_test_steps
+      # We will save the results of this one particular invocation to use in
+      # the publish step. Not only does this make the publishing step take less
+      # time, this also ensures that a passing version gets deployed even if,
+      # theoretically, rebuilding the same commit on the same version of
+      # Node.js should yield the same results!
+      - persist_to_workspace:
+          root: .
+          paths:
+            - ./**
+
+  NodeJS 12:
+    executor: { name: oss/node, tag: '12' }
+    steps:
+      - common_test_steps
 
 # XXX We used to use this filter to only run a "Docs" job on docs branches.
 #     Now we use it to disable all jobs. It's unclear if there's a simpler way
 #     to do this!
-ignore_doc_branches: &ignore_doc_branches
+common_non_publish_filters: &common_non_publish_filters
   filters:
     branches:
       # If 'docs' is found, with word boundaries on either side, skip.
       ignore: /.*?\bdocs\b.*/
+    # Ensure every job has `tags` filters since the publish steps have tags.
+    # This is some wild configuration thing that's pretty hard to figure out.
+    tags:
+      only: /.*/
+
+common_publish_filters: &common_publish_filters
+  filters:
+    # Only run pre-publish and publish steps on specific tags.
+    tags:
+      only: /^publish\/[0-9]+$/
+    # We want the publish to trigger on the above tag, not any branch.
+    branches:
+      ignore: /.*/
 
 workflows:
   version: 2
-  Build and Test:
+  Build:
     jobs:
-      - Node.js 6:
-          <<: *ignore_doc_branches
-      - Node.js 8:
-          <<: *ignore_doc_branches
-      - Node.js 10:
-          <<: *ignore_doc_branches
-      - Node.js 12:
-          <<: *ignore_doc_branches
-      - Linting:
-          <<: *ignore_doc_branches
+      - NodeJS 6:
+          <<: *common_non_publish_filters
+      - NodeJS 8:
+          <<: *common_non_publish_filters
+      - NodeJS 10:
+          <<: *common_non_publish_filters
+      - NodeJS 12:
+          <<: *common_non_publish_filters
+      - oss/lerna_tarballs:
+          name: Package tarballs
+          <<: *common_non_publish_filters
+          requires:
+            - NodeJS 6
+            - NodeJS 8
+            - NodeJS 10
+            - NodeJS 12
+      - oss/dry_run:
+          name: Dry-run
+          <<: *common_publish_filters
+          requires:
+            - NodeJS 6
+            - NodeJS 8
+            - NodeJS 10
+            - NodeJS 12
+      - oss/confirmation:
+          name: Confirmation
+          type: approval
+          <<: *common_publish_filters
+          requires:
+            - Dry-run
+      - oss/publish:
+          name: Publish
+          <<: *common_publish_filters
+          requires:
+            - Confirmation

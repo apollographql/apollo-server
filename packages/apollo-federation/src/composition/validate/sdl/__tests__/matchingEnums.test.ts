@@ -8,7 +8,6 @@ import {
 } from 'graphql';
 import { validateSDL } from 'graphql/validation/validate';
 import gql from 'graphql-tag';
-
 import { composeServices, buildMapsFromServiceList } from '../../../compose';
 import {
   astSerializer,
