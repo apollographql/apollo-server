@@ -50,9 +50,13 @@ describe('providesFieldsMissingExternal', () => {
       name: 'serviceC',
     };
 
-    const { schema, errors } = composeServices([serviceA, serviceB, serviceC]);
+    const serviceList = [serviceA, serviceB, serviceC];
+    const { schema, errors } = composeServices(serviceList);
     expect(errors).toEqual([]);
-    const warnings = validateProdivesFieldsMissingExternal(schema);
+    const warnings = validateProdivesFieldsMissingExternal({
+      schema,
+      serviceList,
+    });
     expect(warnings).toEqual([]);
   });
 
@@ -83,9 +87,13 @@ describe('providesFieldsMissingExternal', () => {
       name: 'serviceB',
     };
 
-    const { schema, errors } = composeServices([serviceA, serviceB]);
+    const serviceList = [serviceA, serviceB];
+    const { schema, errors } = composeServices(serviceList);
     expect(errors).toEqual([]);
-    const warnings = validateProdivesFieldsMissingExternal(schema);
+    const warnings = validateProdivesFieldsMissingExternal({
+      schema,
+      serviceList,
+    });
     expect(warnings).toMatchInlineSnapshot(`
       Array [
         Object {

@@ -19,17 +19,17 @@ expect.addSnapshotSerializer(typeSerializer);
 function createDocumentsForServices(
   serviceList: ServiceDefinition[],
 ): DocumentNode[] {
-  const { definitionsMap, extensionsMap } = buildMapsFromServiceList(
+  const { typeDefinitionsMap, typeExtensionsMap } = buildMapsFromServiceList(
     serviceList,
   );
   return [
     {
       kind: Kind.DOCUMENT,
-      definitions: Object.values(definitionsMap).flat(),
+      definitions: Object.values(typeDefinitionsMap).flat(),
     },
     {
       kind: Kind.DOCUMENT,
-      definitions: Object.values(extensionsMap).flat(),
+      definitions: Object.values(typeExtensionsMap).flat(),
     },
   ];
 }
