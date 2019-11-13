@@ -366,7 +366,7 @@ function parseGraphQLRequest(
   let queryString: string | undefined = requestParams.query;
   let extensions = requestParams.extensions;
 
-  if (typeof extensions === 'string') {
+  if (extensions && extensions !== '' && typeof extensions === 'string') {
     // For GET requests, we have to JSON-parse extensions. (For POST
     // requests they get parsed as part of parsing the larger body they're
     // inside.)
