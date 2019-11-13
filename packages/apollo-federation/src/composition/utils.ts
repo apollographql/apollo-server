@@ -1,5 +1,4 @@
 import 'apollo-server-env';
-import { isNotNullOrUndefined } from 'apollo-env';
 import {
   InterfaceTypeExtensionNode,
   FieldDefinitionNode,
@@ -447,3 +446,23 @@ export const defKindToExtKind: { [kind: string]: string } = {
   [Kind.ENUM_TYPE_DEFINITION]: Kind.ENUM_TYPE_EXTENSION,
   [Kind.INPUT_OBJECT_TYPE_DEFINITION]: Kind.INPUT_OBJECT_TYPE_EXTENSION,
 };
+
+// Transform an object's values via a callback function
+export function mapValues<T, U = T>(
+  object: Record<string, T>,
+  callback: (value: T) => U,
+): Record<string, U> {
+  const result: Record<string, U> = Object.create(null);
+
+  for (const [key, value] of Object.entries(object)) {
+    result[key] = callback(value);
+  }
+
+  return result;
+}
+
+export function isNotNullOrUndefined<T>(
+  value: T | null | undefined,
+): value is T {
+  return value !== null && typeof value !== 'undefined';
+}
