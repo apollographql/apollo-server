@@ -16,6 +16,7 @@ import {
   DocumentNode,
   isObjectType,
   isScalarType,
+  isSchema,
 } from 'graphql';
 import { GraphQLExtension } from 'graphql-extensions';
 import {
@@ -357,14 +358,16 @@ export class ApolloServerBase {
     // TODO: This is a bit nasty because the subscription server needs this.schema synchronously, for reasons of backwards compatibility.
     const _schema = this.initSchema();
 
-    if (_schema instanceof GraphQLSchema) {
+    if (isSchema(_schema)) {
       const derivedData = this.generateSchemaDerivedData(_schema);
       this.schema = derivedData.schema;
       this.schemaDerivedData = Promise.resolve(derivedData);
-    } else {
+    } else if (typeof _schema.then === 'function') {
       this.schemaDerivedData = _schema.then(schema =>
         this.generateSchemaDerivedData(schema),
       );
+    } else {
+      throw new Error("Unexpected error: Unable to resolve a valid GraphQLSchema.  Please file an issue with a reproduction of this error, if possible.");
     }
   }
 

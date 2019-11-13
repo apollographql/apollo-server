@@ -15,6 +15,7 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 - `apollo-server-core`: Provide accurate type for `formatResponse` rather than generic `Function` type. [PR #3431](https://github.com/apollographql/apollo-server/pull/3431)
 - `apollo-server-core`: Pass complete request context to `formatResponse`, rather than just `context`. [PR #3431](https://github.com/apollographql/apollo-server/pull/3431)
+- `apollo-server-core`: Use `graphql`'s `isSchema` to more defensively check the user-specified schema's type at runtime and prevent unexpected errors. [PR #3462](https://github.com/apollographql/apollo-server/pull/3462)
 
 ### v2.9.7
 
