@@ -8,6 +8,7 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 - `apollo-server-core`: Don't try parsing `variables` and `extensions` as JSON if they are defined but empty strings. [PR #3501](https://github.com/apollographql/apollo-server/pull/3501)
 - `apollo-server-lambda`: Introduce `onHealthCheck` on `createHandler` in the same fashion as implemented in other integrations. [PR #3458](https://github.com/apollographql/apollo-server/pull/3458)
+- `apollo-server-core`: Use `graphql`'s `isSchema` to more defensively check the user-specified schema's type at runtime and prevent unexpected errors. [PR #3462](https://github.com/apollographql/apollo-server/pull/3462)
 
 ### v2.9.8
 
@@ -15,7 +16,6 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 - `apollo-server-core`: Provide accurate type for `formatResponse` rather than generic `Function` type. [PR #3431](https://github.com/apollographql/apollo-server/pull/3431)
 - `apollo-server-core`: Pass complete request context to `formatResponse`, rather than just `context`. [PR #3431](https://github.com/apollographql/apollo-server/pull/3431)
-- `apollo-server-core`: Use `graphql`'s `isSchema` to more defensively check the user-specified schema's type at runtime and prevent unexpected errors. [PR #3462](https://github.com/apollographql/apollo-server/pull/3462)
 
 ### v2.9.7
 
