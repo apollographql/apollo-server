@@ -40,15 +40,18 @@ new ApolloServer({
 
     An object or function called with the current request that creates the context shared across all resolvers
 
-```js
-new ApolloServer({
-	typeDefs,
-	resolvers,
-	context: ({ req }) => ({
-		authScope: getScope(req.headers.authorization)
-	}),
-});
-```
+    ```js
+    new ApolloServer({
+      typeDefs,
+      resolvers,
+      context: (integrationContext) => ({
+        // Note: The `integrationContext` argument varies depending on the specific
+        // integration (e.g. Express, Koa, Hapi, Lambda, etc.) being used.
+        // See the table below for integration specific details.
+        authScope: getScope(integrationContext.req.headers.authorization)
+      }),
+    });
+    ```
 
   * `rootValue`: <`Any`> | <`Function`>
 
