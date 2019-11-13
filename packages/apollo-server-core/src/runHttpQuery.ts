@@ -397,7 +397,7 @@ function parseGraphQLRequest(
   const operationName = requestParams.operationName;
 
   let variables = requestParams.variables;
-  if (typeof variables === 'string') {
+  if (variables && variables !== '' && typeof variables === 'string') {
     try {
       // XXX Really we should only do this for GET requests, but for
       // compatibility reasons we'll keep doing this at least for now for
