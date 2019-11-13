@@ -29,9 +29,6 @@ const typeDefs = gql`
 new ApolloServer({
 	typeDefs,
 	resolvers,
-	context: ({ req }) => ({
-		authScope: getScope(req.headers.authorization)
-	}),
 });
 ```
 
