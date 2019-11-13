@@ -36,7 +36,7 @@ describe('ApolloServerBase construction', () => {
         schema: {},
       });
     }).toThrowErrorMatchingInlineSnapshot(
-      `"ApolloServer encountered a programming error. For some reason, we were unable to resolve a valid GraphQLSchema. Please open an issue on the apollo-server repo with a reproduction of this error if possible."`,
+      `"Unexpected error: Unable to resolve a valid GraphQLSchema.  Please file an issue with a reproduction of this error, if possible."`,
     );
   });
 
