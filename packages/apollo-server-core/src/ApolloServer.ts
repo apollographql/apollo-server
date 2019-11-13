@@ -362,12 +362,12 @@ export class ApolloServerBase {
       const derivedData = this.generateSchemaDerivedData(_schema);
       this.schema = derivedData.schema;
       this.schemaDerivedData = Promise.resolve(derivedData);
-    } else if (_schema.then) {
+    } else if (typeof _schema.then === 'function') {
       this.schemaDerivedData = _schema.then(schema =>
         this.generateSchemaDerivedData(schema),
       );
     } else {
-      throw new Error("ApolloServer encountered a programming error. For some reason, we were unable to resolve a valid GraphQLSchema. Please open an issue on the apollo-server repo with a reproduction of this error if possible.");
+      throw new Error("Unexpected error: Unable to resolve a valid GraphQLSchema.  Please file an issue with a reproduction of this error, if possible.");
     }
   }
 
