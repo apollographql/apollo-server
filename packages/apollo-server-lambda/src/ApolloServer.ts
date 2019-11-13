@@ -177,7 +177,7 @@ export class ApolloServer extends ApolloServerBase {
             .catch(() => {
               return callback(null, {
                 body: JSON.stringify({ status: 'fail' }),
-                statusCode: 200,
+                statusCode: 503,
                 headers: {
                   'Content-Type': 'application/json',
                   ...requestCorsHeadersObject,
