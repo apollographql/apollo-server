@@ -37,7 +37,7 @@ Apollo Federation implements a strict composition model. When building a gateway
 ### Custom directives
 
 - `EXECUTABLE_DIRECTIVES_ONLY`: Custom directives may only be [`ExecutableDirective`s](https://graphql.github.io/graphql-spec/June2018/#ExecutableDirectiveLocation). The locations which a directive implements must be a subset of: `QUERY`, `MUTATION`, `SUBSCRIPTION`, `FIELD`, `FRAGMENT_DEFINITION`, `FRAGMENT_SPREAD`, and `INLINE_FRAGMENT`.
-- `EXECUTABLE_DIRECTIVES_EVERYWHERE`: Custom directives must be implemented across all services. It's acceptable to implement a directive as a no-op within a particular service, but it must still be defined.
+- `EXECUTABLE_DIRECTIVES_IN_ALL_SERVICES`: Custom directives must be implemented across all services. It's acceptable to implement a directive as a no-op within a particular service, but it must still be defined.
 - `EXECUTABLE_DIRECTIVES_IDENTICAL`: Custom directives must be implemented identically from one service to the next. This means that arguments and their respective types, as well as the directives locations, must all be identical within every service.
 
 ### Enums and Scalars

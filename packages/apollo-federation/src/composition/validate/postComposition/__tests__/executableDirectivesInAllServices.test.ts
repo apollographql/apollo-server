@@ -1,11 +1,11 @@
 import gql from 'graphql-tag';
 import { composeServices } from '../../../compose';
-import { executableDirectivesEverywhere } from '../';
+import { executableDirectivesInAllServices } from '../';
 import { graphqlErrorSerializer } from '../../../../snapshotSerializers';
 
 expect.addSnapshotSerializer(graphqlErrorSerializer);
 
-describe('executableDirectivesEverywhere', () => {
+describe('executableDirectivesInAllServices', () => {
   it('throws no errors when custom, executable directives are defined in every service', () => {
     const serviceA = {
       typeDefs: gql`
@@ -23,7 +23,7 @@ describe('executableDirectivesEverywhere', () => {
 
     const serviceList = [serviceA, serviceB];
     const { schema } = composeServices(serviceList);
-    const errors = executableDirectivesEverywhere({ schema, serviceList });
+    const errors = executableDirectivesInAllServices({ schema, serviceList });
     expect(errors).toHaveLength(0);
   });
 
@@ -55,11 +55,11 @@ describe('executableDirectivesEverywhere', () => {
 
     const serviceList = [serviceA, serviceB, serviceC];
     const { schema } = composeServices(serviceList);
-    const errors = executableDirectivesEverywhere({ schema, serviceList });
+    const errors = executableDirectivesInAllServices({ schema, serviceList });
     expect(errors).toMatchInlineSnapshot(`
       Array [
         Object {
-          "code": "EXECUTABLE_DIRECTIVES_EVERYWHERE",
+          "code": "EXECUTABLE_DIRECTIVES_IN_ALL_SERVICES",
           "message": "[@stream] -> Custom directives must be implemented in every service. The following services do not implement the @stream directive: serviceB, serviceC.",
         },
       ]

@@ -4,6 +4,7 @@ import {
   errorWithCode,
   isFederationDirective,
   logDirective,
+  isExecutableDirective,
 } from '../../utils';
 import { PostCompositionValidator } from '.';
 
@@ -11,17 +12,22 @@ import { PostCompositionValidator } from '.';
  * All custom directives must be implemented in every service. This validator
  * is not responsible for ensuring the directives are an ExecutableDirective.
  */
-export const executableDirectivesEverywhere: PostCompositionValidator = ({
+export const executableDirectivesInAllServices: PostCompositionValidator = ({
   schema,
-  serviceList
+  serviceList,
 }) => {
   const errors: GraphQLError[] = [];
 
-  const customDirectives = schema
+  const customExecutableDirectives = schema
     .getDirectives()
-    .filter(x => !isFederationDirective(x) && !isSpecifiedDirective(x));
+    .filter(
+      x =>
+        !isFederationDirective(x) &&
+        !isSpecifiedDirective(x) &&
+        isExecutableDirective(x),
+    );
 
-  customDirectives.forEach(directive => {
+  customExecutableDirectives.forEach(directive => {
     if (!directive.federation) return;
 
     const allServiceNames = serviceList.map(({ name }) => name);
@@ -42,7 +48,7 @@ export const executableDirectivesEverywhere: PostCompositionValidator = ({
     if (serviceNamesWithoutDirective.length > 0) {
       errors.push(
         errorWithCode(
-          'EXECUTABLE_DIRECTIVES_EVERYWHERE',
+          'EXECUTABLE_DIRECTIVES_IN_ALL_SERVICES',
           logDirective(directive.name) +
             `Custom directives must be implemented in every service. The following services do not implement the @${
               directive.name
@@ -53,4 +59,4 @@ export const executableDirectivesEverywhere: PostCompositionValidator = ({
   });
 
   return errors;
-}
+};

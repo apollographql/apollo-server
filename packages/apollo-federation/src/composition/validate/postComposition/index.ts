@@ -15,8 +15,8 @@ export {
 export { providesNotOnEntity } from './providesNotOnEntity';
 export { executableDirectivesOnly } from './executableDirectivesOnly';
 export {
-  executableDirectivesEverywhere,
-} from './executableDirectivesEverywhere';
+  executableDirectivesInAllServices,
+} from './executableDirectivesInAllServices';
 export { executableDirectivesIdentical } from './executableDirectivesIdentical';
 
 export type PostCompositionValidator = ({
