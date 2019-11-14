@@ -2,12 +2,12 @@ import {
   parseGraphqlRequest,
   validateGraphqlRequest,
   executeGraphqlRequest,
-  processGraphqlRequest,
-} from '..';
-import { astSerializer } from '../../snapshotSerializers';
-import { VariableValues, gql } from 'apollo-server-core';
-import { buildServiceDefinition } from '@apollographql/apollo-tools';
-import { GraphQLError } from 'graphql';
+  processGraphqlRequest
+} from "..";
+import { astSerializer } from "../../snapshotSerializers";
+import { VariableValues, gql } from "apollo-server-core";
+import { buildServiceDefinition } from "@apollographql/apollo-tools";
+import { GraphQLError } from "graphql";
 
 expect.addSnapshotSerializer(astSerializer);
 
@@ -17,190 +17,151 @@ const graphql = String.raw;
 
 // An array of tuples, each tuple representing a test.
 // A single tuple has the shape: [testName, { ...testParams }]
-type JestInput<T> = [string, T][];
+type JestInput<T> = Record<string, T>;
 
 const validQueries: JestInput<{
   query: string;
   operationName?: string;
   variables?: VariableValues;
-}> = [
-  [
-    'basic - { people { name } }',
-    {
-      query: graphql`
-        query Basic {
-          people {
-            name
-          }
+}> = {
+  "basic - { people { name } }": {
+    query: graphql`
+      query Basic {
+        people {
+          name
         }
-      `,
-    },
-  ],
-  [
-    'with nested selection sets - { people { name friends { name friends { name } } } }',
-    {
-      query: graphql`
-        query Nested {
-          people {
+      }
+    `
+  },
+  "with nested selection sets - { people { name friends { name friends { name } } } }": {
+    query: graphql`
+      query Nested {
+        people {
+          name
+          friends {
             name
             friends {
               name
-              friends {
-                name
-              }
             }
           }
         }
-      `,
-    },
-  ],
-  [
-    'with directives - { people { name { friends { name } } }',
-    {
-      query: graphql`
-        query Directives($includeFriends: Boolean!) {
-          people {
-            name
-            friends @include(if: $includeFriends) {
-              name
-            }
-          }
-        }
-      `,
-      variables: { includeFriends: true },
-    },
-  ],
-  [
-    'with multiple documents - { people { name } }',
-    {
-      query: graphql`
-        query FirstDocument {
-          people {
+      }
+    `
+  },
+  "with directives - { people { name { friends { name } } }": {
+    query: graphql`
+      query Directives($includeFriends: Boolean!) {
+        people {
+          name
+          friends @include(if: $includeFriends) {
             name
           }
         }
+      }
+    `,
+    variables: { includeFriends: true }
+  },
+  "with multiple documents - { people { name } }": {
+    query: graphql`
+      query FirstDocument {
+        people {
+          name
+        }
+      }
 
-        query SecondDocument {
-          people {
-            id
-          }
+      query SecondDocument {
+        people {
+          id
         }
-      `,
-      operationName: 'FirstDocument',
-    },
-  ],
-];
+      }
+    `,
+    operationName: "FirstDocument"
+  }
+};
 
 // Using graphql`` on these unparseable document breaks code highlighting and other
 // tooling dependent on graphql's parser.
-const unparseableQueries: JestInput<string> = [
-  [
-    'missing closing }',
-    `
+const unparseableQueries: JestInput<string> = {
+  "missing closing }": `
       query Basic {
         people {
           name
         }
     `,
-  ],
-  [
-    'empty selection set',
-    `
+  "empty selection set": `
       query Nested {
         people { }
       }
     `,
-  ],
-  [
-    'empty query',
-    `
+  "empty query": `
       query Empty {}
-    `,
-  ],
-];
+    `
+};
 
-const invalidQueries: JestInput<{ query: string; operationName?: string }> = [
-  [
-    'basic',
-    {
-      query: graphql`
-        query Basic {
+const invalidQueries: JestInput<{ query: string; operationName?: string }> = {
+  basic: {
+    query: graphql`
+      query Basic {
+        invalidField
+      }
+    `
+  },
+  "with invalid selection sets": {
+    query: graphql`
+      query Nested {
+        people {
+          name
           invalidField
         }
-      `,
-    },
-  ],
-  [
-    'with invalid selection sets',
-    {
-      query: graphql`
-        query Nested {
-          people {
-            name
-            invalidField
-          }
+      }
+    `
+  },
+  "missing directive": {
+    query: graphql`
+      query MissingDirective {
+        people @invalid {
+          name
         }
-      `,
-    },
-  ],
-  [
-    'missing directive',
-    {
-      query: graphql`
-        query MissingDirective {
-          people @invalid {
-            name
-          }
+      }
+    `
+  },
+  "with multiple errors": {
+    query: graphql`
+      query FirstDocument {
+        people {
+          invalidOne
         }
-      `,
-    },
-  ],
-  [
-    'with multiple errors',
-    {
-      query: graphql`
-        query FirstDocument {
-          people {
-            invalidOne
-          }
-          invalidTwo
-        }
-      `,
-    },
-  ],
-];
+        invalidTwo
+      }
+    `
+  }
+};
 
-const nonExecutableQueries: JestInput<{ query: string }> = [
-  [
-    'error field throws',
-    {
-      query: graphql`
-        query {
-          error
+const nonExecutableQueries: JestInput<{ query: string }> = {
+  "error field throws": {
+    query: graphql`
+      query {
+        error
+      }
+    `
+  },
+  "throws multiple errors": {
+    query: graphql`
+      query {
+        error
+        people {
+          nestedError
         }
-      `,
-    },
-  ],
-  [
-    'throws multiple errors',
-    {
-      query: graphql`
-        query {
-          error
-          people {
-            nestedError
-          }
-        }
-      `,
-    },
-  ],
-];
+      }
+    `
+  }
+};
 
 const serverTeam = [
-  { id: 1, name: 'James Baxley' },
-  { id: 2, name: 'Ashi Krishnan' },
-  { id: 3, name: 'Jesse Rosenberger' },
-  { id: 4, name: 'Trevor Scheer' },
+  { id: 1, name: "James Baxley" },
+  { id: 2, name: "Ashi Krishnan" },
+  { id: 3, name: "Jesse Rosenberger" },
+  { id: 4, name: "Trevor Scheer" }
 ];
 
 const serviceDefinition = buildServiceDefinition([
@@ -225,46 +186,51 @@ const serviceDefinition = buildServiceDefinition([
           return serverTeam;
         },
         error() {
-          throw new GraphQLError('Error while resolving `error` field');
+          throw new GraphQLError("Error while resolving `error` field");
         },
         modifiesContext(_, __, context) {
           context.modified = true;
-          return 'Context modified!';
-        },
+          return "Context modified!";
+        }
       },
       Person: {
         async friends(parentValue) {
           return serverTeam.filter(({ id }) => id !== parentValue.id);
         },
         nestedError() {
-          throw new GraphQLError('Error while resolving `nestedError` field');
-        },
-      },
-    },
-  },
+          throw new GraphQLError("Error while resolving `nestedError` field");
+        }
+      }
+    }
+  }
 ]);
 
 const schema = serviceDefinition.schema!;
 
-describe('parseGraphqlRequest', () => {
-  it.each(validQueries)('Parses valid queries - %s', (_, { query }) => {
+const validQueryTests = Object.entries(validQueries);
+const unparseableQueryTests = Object.entries(unparseableQueries);
+const invalidQueryTests = Object.entries(invalidQueries);
+const nonExecutableQueryTests = Object.entries(nonExecutableQueries);
+
+describe("parseGraphqlRequest", () => {
+  it.each(validQueryTests)("Parses valid queries - %s", (_, { query }) => {
     const parseResult = parseGraphqlRequest({ query });
-    if ('error' in parseResult) {
+    if ("error" in parseResult) {
       throw new Error(
-        'Unexpected parse failure in parseable query. Are you sure you added a valid query to the validQueries test cases?'
+        "Unexpected parse failure in parseable query. Are you sure you added a valid query to the validQueries test cases?"
       );
     }
 
     expect(parseResult.document).toMatchSnapshot();
   });
 
-  it.each(unparseableQueries)(
-    'Returns an error for invalid queries - %s',
+  it.each(unparseableQueryTests)(
+    "Returns an error for invalid queries - %s",
     (_, query) => {
       const parseResult = parseGraphqlRequest({ query });
-      if ('document' in parseResult) {
+      if ("document" in parseResult) {
         throw new Error(
-          'Unexpected successful parse in unparseable query. Are you sure you added an unparseable query to the unparseableQueries test cases?'
+          "Unexpected successful parse in unparseable query. Are you sure you added an unparseable query to the unparseableQueries test cases?"
         );
       }
 
@@ -273,41 +239,41 @@ describe('parseGraphqlRequest', () => {
   );
 });
 
-describe('validateGraphqlRequest', () => {
-  it.each(validQueries)(
-    'valid queries against schema: %s',
+describe("validateGraphqlRequest", () => {
+  it.each(validQueryTests)(
+    "valid queries against schema: %s",
     (_, { query, operationName }) => {
       const parseResult = parseGraphqlRequest({ query });
-      if ('error' in parseResult) {
+      if ("error" in parseResult) {
         throw new Error(
-          'Unexpected parse failure in parseable query. Are you sure you added a valid query to the validQueries test cases?'
+          "Unexpected parse failure in parseable query. Are you sure you added a valid query to the validQueries test cases?"
         );
       }
 
       const validationErrors = validateGraphqlRequest({
         schema,
         document: parseResult.document,
-        operationName,
+        operationName
       });
 
       expect(validationErrors).toHaveLength(0);
     }
   );
 
-  it.each(invalidQueries)(
-    'invalid queries against schema: %s',
+  it.each(invalidQueryTests)(
+    "invalid queries against schema: %s",
     (_, { query, operationName }) => {
       const parseResult = parseGraphqlRequest({ query });
-      if ('error' in parseResult) {
+      if ("error" in parseResult) {
         throw new Error(
-          'Unexpected parse failure in parseable query. Are you sure you added a parseable query to the invalidQueries test cases?'
+          "Unexpected parse failure in parseable query. Are you sure you added a parseable query to the invalidQueries test cases?"
         );
       }
 
       const validationErrors = validateGraphqlRequest({
         schema,
         document: parseResult.document,
-        operationName,
+        operationName
       });
 
       expect(validationErrors).toMatchSnapshot();
@@ -315,14 +281,14 @@ describe('validateGraphqlRequest', () => {
   );
 });
 
-describe('executeGraphqlRequest', () => {
-  it.each(validQueries)(
-    'Executable queries - %s',
+describe("executeGraphqlRequest", () => {
+  it.each(validQueryTests)(
+    "Executable queries - %s",
     async (_, { query, operationName, variables }) => {
       const parseResult = parseGraphqlRequest({ query });
-      if ('error' in parseResult) {
+      if ("error" in parseResult) {
         throw new Error(
-          'Unexpected parse failure in parseable query. Are you sure you added a parseable query to the validQueries test cases?'
+          "Unexpected parse failure in parseable query. Are you sure you added a parseable query to the validQueries test cases?"
         );
       }
 
@@ -330,25 +296,25 @@ describe('executeGraphqlRequest', () => {
         schema,
         document: parseResult.document,
         operationName,
-        variables,
+        variables
       });
       expect(result).toMatchSnapshot();
     }
   );
 
-  it.each(nonExecutableQueries)(
-    'Errors during execution - %s',
+  it.each(nonExecutableQueryTests)(
+    "Errors during execution - %s",
     async (_, { query }) => {
       const parseResult = parseGraphqlRequest({ query });
-      if ('error' in parseResult) {
+      if ("error" in parseResult) {
         throw new Error(
-          'Unexpected parse failure in parseable query. Are you sure you added a parseable query to the nonExecutableQueries test cases?'
+          "Unexpected parse failure in parseable query. Are you sure you added a parseable query to the nonExecutableQueries test cases?"
         );
       }
 
       const { errors } = await executeGraphqlRequest({
         schema,
-        document: parseResult.document,
+        document: parseResult.document
       });
 
       expect(errors!.length).toBeGreaterThan(0);
@@ -357,17 +323,17 @@ describe('executeGraphqlRequest', () => {
   );
 });
 
-describe('processGraphqlRequest', () => {
-  it.each(validQueries)(
-    'Executable queries - %s',
+describe("processGraphqlRequest", () => {
+  it.each(validQueryTests)(
+    "Executable queries - %s",
     async (_, { query, operationName, variables }) => {
       const { data, errors } = await processGraphqlRequest({
         schema,
         request: {
           query,
           operationName,
-          variables,
-        },
+          variables
+        }
       });
 
       expect(errors).toBeUndefined();
@@ -375,40 +341,43 @@ describe('processGraphqlRequest', () => {
     }
   );
 
-  it.each(unparseableQueries)('Unparseable queries - %s', async (_, query) => {
-    const { errors } = await processGraphqlRequest({
-      schema,
-      request: {
-        query,
-      },
-    });
-
-    expect(errors).toMatchSnapshot();
-  });
-
-  it.each(invalidQueries)(
-    'Invalid queries - %s',
-    async (_, { query, operationName }) => {
+  it.each(unparseableQueryTests)(
+    "Unparseable queries - %s",
+    async (_, query) => {
       const { errors } = await processGraphqlRequest({
         schema,
         request: {
-          query,
-          operationName,
-        },
+          query
+        }
       });
 
       expect(errors).toMatchSnapshot();
     }
   );
 
-  it.each(nonExecutableQueries)(
-    'Non-executable queries - %s',
-    async (_, { query }) => {
+  it.each(invalidQueryTests)(
+    "Invalid queries - %s",
+    async (_, { query, operationName }) => {
       const { errors } = await processGraphqlRequest({
         schema,
         request: {
           query,
-        },
+          operationName
+        }
+      });
+
+      expect(errors).toMatchSnapshot();
+    }
+  );
+
+  it.each(nonExecutableQueryTests)(
+    "Non-executable queries - %s",
+    async (_, { query }) => {
+      const { errors } = await processGraphqlRequest({
+        schema,
+        request: {
+          query
+        }
       });
 
       expect(errors!.length).toBeGreaterThan(0);
@@ -416,7 +385,7 @@ describe('processGraphqlRequest', () => {
     }
   );
 
-  it('Passes a modifiable context object to resolvers', async () => {
+  it("Passes a modifiable context object to resolvers", async () => {
     const context = Object.create(null);
     const { data } = await processGraphqlRequest({
       schema,
@@ -425,12 +394,12 @@ describe('processGraphqlRequest', () => {
           query ModifiesContext {
             modifiesContext
           }
-        `,
+        `
       },
-      context,
+      context
     });
 
-    expect(data.modifiesContext).toBe('Context modified!');
-    expect(context).toHaveProperty('modified');
+    expect(data.modifiesContext).toBe("Context modified!");
+    expect(context).toHaveProperty("modified");
   });
 });
