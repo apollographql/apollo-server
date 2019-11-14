@@ -57,7 +57,7 @@ This should look familiar if you've [set up Apollo Server](/getting-started/) be
 
 Now, let's convert this to a federated service. The first step is to install the `@apollo/federation` package in our project:
 
-```bash
+```shell
 npm install @apollo/federation
 ```
 
@@ -168,8 +168,8 @@ server.listen(4001).then(({ url }) => {
 Now that we have a federation-ready service, we can set up a federated gateway
 to sit in front of it. First, let's install the necessary packages:
 
-```bash
-npm install apollo-server @apollo/gateway graphql
+```shell
+npm install @apollo/gateway apollo-server graphql
 ```
 
 Now we can set up an `ApolloServer` instance that acts as a gateway to our underlying
@@ -206,7 +206,7 @@ In the above example, we provide the `serviceList` configuration option to the
 of our implementing services. You can specify any string value for `name`, which
 is used primarily for query planner output, error messages, and logging.
 
-> In production, we recommend configuring the gateway in a managed mode, which relies on static files rather than introspection. For details on how to use the [Apollo schema registry](https://www.apollographql.com/docs/platform/schema-registry/) to support this workflow, see [the Graph Manager documentation](https://www.apollographql.com/docs/graph-manager/federation/).
+> In production, we recommend configuring the gateway in a managed mode, which relies on static files rather than introspection. For details on how to use the [Apollo schema registry](https://www.apollographql.com/docs/graph-manager/schema-registry/) to support this workflow, see [the Graph Manager documentation](https://www.apollographql.com/docs/graph-manager/federation/).
 
 On startup, the gateway fetches each implementing service's capabilities and composes
 a federated data graph. It accepts incoming requests and creates query plans that query the graph's implementing services.
@@ -358,3 +358,18 @@ server.listen().then(({ url }) => {
 ```
 
 To learn more about `buildService` and `RemoteGraphQLDataSource`, see the [API docs](/api/apollo-gateway/).
+
+## Implementing custom directives
+
+> Note: Apollo Server does not currently support executable directives, however they are supported by the gateway.
+
+The gateway currently provides limited support for custom, service-level directives. To use this feature, there are a few requirements that must be met in order to compose a valid graph:
+
+* Directives can only implement executable locations. Executable directive locations are documented in the [spec](https://graphql.github.io/graphql-spec/June2018/#ExecutableDirectiveLocation).
+> The following locations are considered valid to the gateway: QUERY, MUTATION, SUBSCRIPTION, FIELD, FRAGMENT\_DEFINITION, FRAGMENT\_SPREAD, INLINE\_FRAGMENT
+* Directives must be implemented by *every* service that's part of the graph. It's acceptable for a service to do nothing with a particular directive, but a directive definition must exist within every service's schema.
+* Directive definitions must be identical across all services. A directive definition is identical if its name, arguments and their types, and locations are all the same.
+
+## Managing a federated graph
+
+With Apollo Federation, teams are able to move quickly as they build out their GraphQL services. However, distributed systems introduce complexities which require special tooling and coordination across teams to safely rollout changes. The [Apollo Graph Manager](https://engine.apollographql.com) provides solutions to problems like schema change validation, graph update coordination, and metrics collection.  For more information on the value of Graph Manager, read our [article on managed federation](https://www.apollographql.com/docs/graph-manager/federation/).

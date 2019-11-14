@@ -44,7 +44,7 @@ If the [Now](https://zeit.co/now) CLI is installed, then running the `now` comma
 $ now
 ```
 
-The `now` command immediately deploys a server to the cloud and returns the hosted project link. After finishing, it should be possible to send a query to the GraphQL schema on `now` at `<NOW_APP_NAME>.now.sh/graphql`.
+The `now` command immediately deploys a server to the cloud and returns the hosted project link. After finishing, it should be possible to send a query to the GraphQL schema on `now` at `<https://NOW_APP_NAME>.now.sh/graphql`.
 
 ### Manual GitHub deployment
 

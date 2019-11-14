@@ -32,13 +32,19 @@ Apollo Federation implements a strict composition model. When building a gateway
 
 - `REQUIRES_FIELDS_MISSING_EXTERNAL`: For every field in a `@requires` selection, there must be a matching `@external` field in the service.
 - `REQUIRES_FIELDS_MISSING_ON_BASE`: The fields arg in `@requires` can only reference fields on the base type.
-- `REQUIRES_USED_ON_BASE`: The requires directive may not be used on fields defined on a base type.
+- `REQUIRES_USED_ON_BASE`: The requires directive can not be used on fields defined on a base type.
+
+### Custom directives
+
+- `EXECUTABLE_DIRECTIVES_ONLY`: Custom directives can only be [`ExecutableDirective`s](https://graphql.github.io/graphql-spec/June2018/#ExecutableDirectiveLocation). The locations that a directive implements must be a subset of: `QUERY`, `MUTATION`, `SUBSCRIPTION`, `FIELD`, `FRAGMENT_DEFINITION`, `FRAGMENT_SPREAD`, and `INLINE_FRAGMENT`.
+- `EXECUTABLE_DIRECTIVES_IN_ALL_SERVICES`: Custom directives must be implemented across all services. It's acceptable to implement a directive as a no-op within a particular service, but it must still be defined.
+- `EXECUTABLE_DIRECTIVES_IDENTICAL`: Custom directives must be implemented identically across all services. This means that arguments and their respective types, as well as the directive's locations, must all be identical within every service.
 
 ### Enums and Scalars
 
 - `DUPLICATE_ENUM_DEFINITION`: An Enum was defined multiple times in a single service. Remove one of the definitions.
 - `DUPLICATE_SCALAR_DEFINITION`: A Scalar was defined multiple times in a single service. Remove one of the definitions.
-- `DUPLICATE_ENUM_VALUE`: A service has multiple definitions of the same Enum `value`. This duplicate value may be in the definition itself or enum extensions.
+- `DUPLICATE_ENUM_VALUE`: A service has multiple definitions of the same Enum `value`. This duplicate value can be in the definition itself or enum extensions.
 - `ENUM_MISMATCH`: An Enum does not have identical values across all services. Even if a service does not use all enum values, they still must be provided if another service uses them. This error will list services with matching definitions like `[serviceA, serviceB], [serviceC]` where `serviceA` and `serviceB` have matching enum definitions, and `serviceC` does not match the other definitions.
 - `ENUM_MISMATCH_TYPE`: Enums must not use the name of a type in another service. For example, if a service defines an enum of `Category`, all definitions of `Category` in other services must also be enums.
 

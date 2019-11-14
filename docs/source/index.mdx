@@ -18,10 +18,11 @@ Apollo Server implements a spec-compliant GraphQL server which can be queried fr
 
 These docs will help you go from getting started with Apollo to becoming an expert in no time!
 
-import {ButtonWrapper, ButtonLink} from 'gatsby-theme-apollo-docs';
+import {Button} from '@apollo/space-kit/Button';
+import {Link} from 'gatsby';
 
-<ButtonWrapper>
-  <ButtonLink size="large" to="/getting-started/">
+<div align="center">
+  <Button as={<Link to="/getting-started/" />} size="large">
     Get started
-  </ButtonLink>
-</ButtonWrapper>
+  </Button>
+</div>
