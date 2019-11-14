@@ -1,3 +1,6 @@
+import { GraphQLSchema, GraphQLError } from 'graphql';
+import { ServiceDefinition } from '../../types';
+
 export { externalUnused } from './externalUnused';
 export { externalMissingOnBase } from './externalMissingOnBase';
 export { externalTypeMismatch } from './externalTypeMismatch';
@@ -10,3 +13,16 @@ export {
   providesFieldsSelectInvalidType,
 } from './providesFieldsSelectInvalidType';
 export { providesNotOnEntity } from './providesNotOnEntity';
+export { executableDirectivesOnly } from './executableDirectivesOnly';
+export {
+  executableDirectivesInAllServices,
+} from './executableDirectivesInAllServices';
+export { executableDirectivesIdentical } from './executableDirectivesIdentical';
+
+export type PostCompositionValidator = ({
+  schema,
+  serviceList,
+}: {
+  schema: GraphQLSchema;
+  serviceList: ServiceDefinition[];
+}) => GraphQLError[];

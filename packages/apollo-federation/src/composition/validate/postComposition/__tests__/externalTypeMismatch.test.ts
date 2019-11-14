@@ -27,8 +27,9 @@ describe('validateExternalDirectivesOnSchema', () => {
       name: 'serviceB',
     };
 
-    const { schema, errors } = composeServices([serviceA, serviceB]);
-    const warnings = validateExternalTypeMismatch(schema);
+    const serviceList = [serviceA, serviceB];
+    const { schema } = composeServices(serviceList);
+    const warnings = validateExternalTypeMismatch({ schema, serviceList });
     expect(warnings).toMatchInlineSnapshot(`
       Array [
         Object {
@@ -60,8 +61,9 @@ describe('validateExternalDirectivesOnSchema', () => {
       name: 'serviceB',
     };
 
-    const { schema, errors } = composeServices([serviceA, serviceB]);
-    const warnings = validateExternalTypeMismatch(schema);
+    const serviceList = [serviceA, serviceB];
+    const { schema } = composeServices(serviceList);
+    const warnings = validateExternalTypeMismatch({ schema, serviceList });
     expect(warnings).toMatchInlineSnapshot(`
       Array [
         Object {

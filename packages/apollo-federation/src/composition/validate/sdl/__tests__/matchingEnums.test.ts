@@ -27,10 +27,10 @@ expect.addSnapshotSerializer(selectionSetSerializer);
 const createDefinitionsDocumentForServices = (
   serviceList: ServiceDefinition[],
 ): DocumentNode => {
-  const { definitionsMap } = buildMapsFromServiceList(serviceList);
+  const { typeDefinitionsMap } = buildMapsFromServiceList(serviceList);
   return {
     kind: Kind.DOCUMENT,
-    definitions: Object.values(definitionsMap).flat(),
+    definitions: Object.values(typeDefinitionsMap).flat(),
   };
 };
 

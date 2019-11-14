@@ -3,6 +3,9 @@ import { GraphQLResolverMap } from 'apollo-graphql';
 
 export const name = 'inventory';
 export const typeDefs = gql`
+  directive @stream on FIELD
+  directive @transform(from: String!) on FIELD
+
   extend interface Product {
     inStock: Boolean
   }

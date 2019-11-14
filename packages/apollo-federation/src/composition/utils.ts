@@ -27,9 +27,12 @@ import {
   BREAK,
   print,
   ASTNode,
+  DirectiveDefinitionNode,
+  GraphQLDirective,
 } from 'graphql';
 import Maybe from 'graphql/tsutils/Maybe';
 import { ExternalFieldDefinition } from './types';
+import federationDirectives from '../directives';
 
 export function isStringValueNode(node: any): node is StringValueNode {
   return node.kind === Kind.STRING;
@@ -160,6 +163,10 @@ export const logServiceAndType = (
   typeName: string,
   fieldName?: string,
 ) => `[${serviceName}] ${typeName}${fieldName ? `.${fieldName} -> ` : ' -> '}`;
+
+export function logDirective(directiveName: string) {
+  return `[@${directiveName}] -> `;
+}
 
 // TODO: allow passing of the other args here, rather than just message and code
 export function errorWithCode(
@@ -340,12 +347,12 @@ export function isTypeNodeAnEntity(
  * - kind: An array of length 0 or 2. If their kinds are different, they will be added to the array.
  *     (['InputObjectTypeDefinition', 'InterfaceTypeDefinition'])
  *
- * @param firstNode TypeDefinitionNode | TypeExtensionNode
- * @param secondNode TypeDefinitionNode | TypeExtensionNode
+ * @param firstNode TypeDefinitionNode | TypeExtensionNode | DirectiveDefinitionNode
+ * @param secondNode TypeDefinitionNode | TypeExtensionNode | DirectiveDefinitionNode
  */
 export function diffTypeNodes(
-  firstNode: TypeDefinitionNode | TypeExtensionNode,
-  secondNode: TypeDefinitionNode | TypeExtensionNode,
+  firstNode: TypeDefinitionNode | TypeExtensionNode | DirectiveDefinitionNode,
+  secondNode: TypeDefinitionNode | TypeExtensionNode | DirectiveDefinitionNode,
 ) {
   const fieldsDiff: {
     [fieldName: string]: string[];
@@ -353,6 +360,12 @@ export function diffTypeNodes(
 
   const unionTypesDiff: {
     [typeName: string]: boolean;
+  } = Object.create(null);
+
+  const locationsDiff: Set<string> = new Set();
+
+  const argumentsDiff: {
+    [argumentName: string]: string[];
   } = Object.create(null);
 
   const document: DocumentNode = {
@@ -394,6 +407,40 @@ export function diffTypeNodes(
         }
       }
     },
+    DirectiveDefinition(node) {
+      node.locations.forEach(location => {
+        const locationName = location.value;
+        // If a location already exists in the Set, then we've seen it once.
+        // This means we can remove it from the final diff, since both directives
+        // have this location in common.
+        if (locationsDiff.has(locationName)) {
+          locationsDiff.delete(locationName);
+        } else {
+          locationsDiff.add(locationName);
+        }
+      });
+
+      if (!node.arguments) return;
+
+      // Arguments must have the same name and type. As matches are found, they
+      // are deleted from the diff. Anything left in the diff after looping
+      // represents a discrepancy between the two sets of arguments.
+      node.arguments.forEach(argument => {
+        const argumentName = argument.name.value;
+        const printedType = print(argument.type);
+        if (argumentsDiff[argumentName]) {
+          if (printedType === argumentsDiff[argumentName][0]) {
+            // If the existing entry is equal to printedType, it means there's no
+            // diff, so we can remove the entry from the diff object
+            delete argumentsDiff[argumentName];
+          } else {
+            argumentsDiff[argumentName].push(printedType);
+          }
+        } else {
+          argumentsDiff[argumentName] = [printedType];
+        }
+      });
+    },
   });
 
   const typeNameDiff =
@@ -409,20 +456,22 @@ export function diffTypeNodes(
     kind: kindDiff,
     fields: fieldsDiff,
     unionTypes: unionTypesDiff,
+    locations: Array.from(locationsDiff),
+    args: argumentsDiff,
   };
 }
 
 /**
  * A common implementation of diffTypeNodes to ensure two type nodes are equivalent
  *
- * @param firstNode TypeDefinitionNode | TypeExtensionNode
- * @param secondNode TypeDefinitionNode | TypeExtensionNode
+ * @param firstNode TypeDefinitionNode | TypeExtensionNode | DirectiveDefinitionNode
+ * @param secondNode TypeDefinitionNode | TypeExtensionNode | DirectiveDefinitionNode
  */
 export function typeNodesAreEquivalent(
-  firstNode: TypeDefinitionNode | TypeExtensionNode,
-  secondNode: TypeDefinitionNode | TypeExtensionNode,
+  firstNode: TypeDefinitionNode | TypeExtensionNode | DirectiveDefinitionNode,
+  secondNode: TypeDefinitionNode | TypeExtensionNode | DirectiveDefinitionNode,
 ) {
-  const { name, kind, fields, unionTypes } = diffTypeNodes(
+  const { name, kind, fields, unionTypes, locations, args } = diffTypeNodes(
     firstNode,
     secondNode,
   );
@@ -431,7 +480,9 @@ export function typeNodesAreEquivalent(
     name.length === 0 &&
     kind.length === 0 &&
     Object.keys(fields).length === 0 &&
-    Object.keys(unionTypes).length === 0
+    Object.keys(unionTypes).length === 0 &&
+    locations.length === 0 &&
+    Object.keys(args).length === 0
   );
 }
 
@@ -465,4 +516,25 @@ export function isNotNullOrUndefined<T>(
   value: T | null | undefined,
 ): value is T {
   return value !== null && typeof value !== 'undefined';
+}
+
+export const executableDirectiveLocations = [
+  'QUERY',
+  'MUTATION',
+  'SUBSCRIPTION',
+  'FIELD',
+  'FRAGMENT_DEFINITION',
+  'FRAGMENT_SPREAD',
+  'INLINE_FRAGMENT',
+  'VARIABLE_DEFINITION',
+];
+
+export function isExecutableDirective(directive: GraphQLDirective): boolean {
+  return directive.locations.every(location =>
+    executableDirectiveLocations.includes(location),
+  );
+}
+
+export function isFederationDirective(directive: GraphQLDirective): boolean {
+  return federationDirectives.some(({ name }) => name === directive.name);
 }

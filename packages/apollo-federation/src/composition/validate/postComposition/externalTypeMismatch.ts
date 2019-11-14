@@ -1,17 +1,12 @@
-import {
-  GraphQLSchema,
-  isObjectType,
-  typeFromAST,
-  isEqualType,
-  GraphQLError,
-} from 'graphql';
+import { isObjectType, typeFromAST, isEqualType, GraphQLError } from 'graphql';
 import { logServiceAndType, errorWithCode } from '../../utils';
+import { PostCompositionValidator } from '.';
 
 /**
  * All fields marked with @external must match the type definition of the base service.
  * Additional warning if the type of the @external field doesn't exist at all on the schema
  */
-export const externalTypeMismatch = (schema: GraphQLSchema) => {
+export const externalTypeMismatch: PostCompositionValidator = ({ schema }) => {
   const errors: GraphQLError[] = [];
 
   const types = schema.getTypeMap();
