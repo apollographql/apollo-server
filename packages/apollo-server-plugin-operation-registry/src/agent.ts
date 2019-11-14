@@ -117,6 +117,11 @@ export default class Agent {
         // These errors will be logged, but not crash the server.
         pulse().catch(err => console.error(err.message || err));
       }, this.pollSeconds() * 1000);
+
+    // Prevent the Node.js event loop from remaining active (and preventing,
+    // e.g. process shutdown) by calling `unref` on the `Timeout`.  For more
+    // information, see https://nodejs.org/api/timers.html#timers_timeout_unref.
+    this.timer.unref();
   }
 
   public stop() {
