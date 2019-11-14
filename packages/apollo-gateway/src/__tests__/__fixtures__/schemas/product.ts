@@ -22,7 +22,7 @@ export const typeDefs = gql`
 
   union Brand = Ikea | Amazon
 
-  interface Product {
+  interface Product @key(fields: "sku") @key(fields: "upc") {
     upc: String!
     sku: String!
     name: String
@@ -128,8 +128,16 @@ const cars = [
 ];
 
 export const resolvers: GraphQLResolverMap<any> = {
+  Product: {
+    __resolveReference(object) {
+      return products.find(
+        product => product.upc === object.upc || product.sku === object.sku,
+      );
+    },
+  },
   Furniture: {
     __resolveReference(object) {
+      console.log('rR Furniture');
       return products.find(
         product => product.upc === object.upc || product.sku === object.sku,
       );
