@@ -8,8 +8,6 @@ import {
   specifiedDirectives,
 } from 'graphql';
 import { buildSchemaFromSDL } from 'apollo-graphql';
-import { isNotNullOrUndefined } from 'apollo-env';
-
 import { federationDirectives } from '../../../directives';
 import { ServiceDefinition } from '../../types';
 import {
@@ -17,6 +15,7 @@ import {
   isStringValueNode,
   logServiceAndType,
   errorWithCode,
+  isNotNullOrUndefined
 } from '../../utils';
 
 /**

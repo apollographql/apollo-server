@@ -6,7 +6,7 @@ Building APIs shouldn't have to be so tricky. If you are concerned about perform
 
 ## Schema first design
 
-We think GraphQL's greatest asset is the schema. Think of it like the Rosetta stone of the data your app needs. Schemas represent the touch point of your frontends with the data that powers them. We recommend using the [schema definition language](/schema/schema/#schema-definition-language), also called the SDL, to easily write out the data and relationships that your app needs to be successful. Unlike REST APIs, GraphQL schemas shouldn't be a one to one mapping of your database, but rather a representation of how your app works with the data it needs. Let's see what this looks like in practice with Apollo Server:
+We think GraphQL's greatest asset is the schema. Think of it like the Rosetta stone of the data your app needs. Schemas represent the touch point of your frontends with the data that powers them. We recommend using the [schema definition language](/schema/schema/#the-schema-definition-language), also called the SDL, to easily write out the data and relationships that your app needs to be successful. Unlike REST APIs, GraphQL schemas shouldn't be a one to one mapping of your database, but rather a representation of how your app works with the data it needs. Let's see what this looks like in practice with Apollo Server:
 
 ```js
 const { ApolloServer, gql } = require('apollo-server');

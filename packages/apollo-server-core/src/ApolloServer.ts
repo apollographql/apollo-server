@@ -16,6 +16,7 @@ import {
   DocumentNode,
   isObjectType,
   isScalarType,
+  isSchema,
 } from 'graphql';
 import { GraphQLExtension } from 'graphql-extensions';
 import {
@@ -32,7 +33,7 @@ import {
 
 import { formatApolloErrors } from 'apollo-server-errors';
 import {
-  GraphQLServerOptions as GraphQLOptions,
+  GraphQLServerOptions,
   PersistedQueryOptions,
 } from './graphqlOptions';
 
@@ -129,7 +130,7 @@ type SchemaDerivedData = {
 export class ApolloServerBase {
   public subscriptionsPath?: string;
   public graphqlPath: string = '/graphql';
-  public requestOptions: Partial<GraphQLOptions<any>> = Object.create(null);
+  public requestOptions: Partial<GraphQLServerOptions<any>> = Object.create(null);
 
   private context?: Context | ContextFunction;
   private engineReportingAgent?: import('apollo-engine-reporting').EngineReportingAgent;
@@ -255,7 +256,7 @@ export class ApolloServerBase {
       delete requestOptions.persistedQueries;
     }
 
-    this.requestOptions = requestOptions as GraphQLOptions;
+    this.requestOptions = requestOptions as GraphQLServerOptions;
 
     if (uploads !== false && !forbidUploadsForTesting) {
       if (this.supportsUploads()) {
@@ -357,14 +358,16 @@ export class ApolloServerBase {
     // TODO: This is a bit nasty because the subscription server needs this.schema synchronously, for reasons of backwards compatibility.
     const _schema = this.initSchema();
 
-    if (_schema instanceof GraphQLSchema) {
+    if (isSchema(_schema)) {
       const derivedData = this.generateSchemaDerivedData(_schema);
       this.schema = derivedData.schema;
       this.schemaDerivedData = Promise.resolve(derivedData);
-    } else {
+    } else if (typeof _schema.then === 'function') {
       this.schemaDerivedData = _schema.then(schema =>
         this.generateSchemaDerivedData(schema),
       );
+    } else {
+      throw new Error("Unexpected error: Unable to resolve a valid GraphQLSchema.  Please file an issue with a reproduction of this error, if possible.");
     }
   }
 
@@ -513,8 +516,8 @@ export class ApolloServerBase {
         // metrics from the Gateway.
         console.warn(
           "It looks like you're running a federated schema and you've configured your service " +
-            'to report metrics to Apollo Engine. You should only configure your Apollo gateway ' +
-            'to report metrics to Apollo Engine.',
+            'to report metrics to Apollo Graph Manager. You should only configure your Apollo gateway ' +
+            'to report metrics to Apollo Graph Manager.',
         );
       }
       extensions.push(() =>
@@ -722,7 +725,7 @@ export class ApolloServerBase {
   // options
   protected async graphQLServerOptions(
     integrationContextArgument?: Record<string, any>,
-  ) {
+  ): Promise<GraphQLServerOptions> {
     const { schema, documentStore, extensions } = await this.schemaDerivedData;
 
     let context: Context = this.context ? this.context : {};
@@ -757,7 +760,7 @@ export class ApolloServerBase {
       parseOptions: this.parseOptions,
       reporting: !!this.engineReportingAgent,
       ...this.requestOptions,
-    } as GraphQLOptions;
+    };
   }
 
   public async executeOperation(request: GraphQLRequest) {

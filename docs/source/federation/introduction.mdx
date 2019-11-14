@@ -1,22 +1,53 @@
 ---
-title: Introduction
-description: What is Apollo Federation?
+title: Apollo Federation overview
+description: Implement a single data graph across multiple services
 ---
 
-For most organizations, the right way to use GraphQL is to expose [one data graph](https://principledgraphql.com/integrity#1-one-graph) that presents a unified view of all available data, including the ability to seamlessly navigate between different objects in the graph. As the graph grows in size and importance, though, a monolithic GraphQL server becomes an unacceptable development bottleneck and single point of failure, so it becomes necessary to [divide the graph's implementation into separate parts](https://principledgraphql.com/integrity#2-federated-implementation).
+To get the most out of GraphQL, your organization should expose a [single data
+graph](https://principledgraphql.com/integrity#1-one-graph) that provides a
+unified interface for querying all of your backing data sources. This
+allows clients to fetch data from any number of sources simultaneously,
+_without_ needing to know which data comes from which source.
 
-Apollo Federation is an architecture for composing multiple GraphQL services into a single graph that addresses this need. Unlike other approaches such as schema stitching, it is based on a declarative composition programming model that allows **proper separation of concerns**. This design allows teams to implement an enterprise-scale shared data graph as a set of loosely coupled, separately maintained GraphQL services.
+As your data graph grows, however, it can become inefficient or even difficult
+to represent the graph with a single, monolithic GraphQL server. To remedy this,
+you can divide your data graph's implementation across distinct, composable
+services with **Apollo Federation**.
 
-We designed federation based on our experience working with hundreds of organizations that have built data graphs on top of existing APIs and services. It can be adopted incrementally, whether starting from a monolith or a stitching gateway. Clients work without modification; in fact, clients have no way to distinguish a federated graph from a traditional implementation. To meet the requirements of complex environments, federation includes features like user-specified primary keys, explicit query plans, and flexible ways to make use of denormalized data across service boundaries when available. And of course, it is 100% spec compatible and works well with tools like GraphiQL, Apollo Codegen, and the Apollo VS Code plugin.
+Unlike other distributed GraphQL
+architectures (such as schema stitching), Apollo Federation uses a declarative
+programming model that makes it easy for each **implementing service** to
+implement _only_ the part of your data graph that it should be responsible for.
+This way, your organization can represent an enterprise-scale data graph as a
+collection of separately maintained GraphQL services.
 
-Federation is implemented as two open source Apollo Server add-ons. The `@apollo/federation` package provides the primitives needed to implement composable GraphQL schemas. The `@apollo/gateway` package provides a federated GraphQL gateway that constructs the composed schema and executes queries against it by issuing GraphQL subqueries to one or more underlying services.
+## Incremental adoption
 
-## A first look
+Like the rest of the Apollo platform, Apollo Federation can (and should) be
+adopted **incrementally**:
 
-Let’s dive right into an example to get a feel for things. Here we’ll define a basic schema for an e-commerce application as three federated schemas, each implemented as a standalone GraphQL service:
+* If you currently use a monolithic GraphQL server, you can break its functionality out one service at a time.
+* If you currently use a different _distributed_ data graph strategy (such as schema stitching), you can [add federation support to your existing implementing services one at a time](/federation/migrating-from-stitching/).
 
-```graphql
-# accounts service
+In both of these cases, all of your clients will continue to work throughout
+your incremental migration. In fact, clients have no way to distinguish between
+different data graph implementations.
+
+## Apollo Server implementation
+
+Apollo Server supports Apollo Federation via two open-source extensions:
+`@apollo/federation` and `@apollo/gateway`.
+
+* `@apollo/federation` provides primitives that your implementing services use to make their individual GraphQL schemas composable.
+* `@apollo/gateway` enables you to set up an instance of Apollo Server as a **gateway** that distributes incoming GraphQL operations across one or more  implementing services.
+
+## Federated schema example
+
+Let's look at an example. Below, we define the schema for a basic e-commerce
+application as three _federated_ schemas, each of which can be implemented as
+a standalone GraphQL service:
+
+```graphql:title=accounts
 extend type Query {
   me: User
 }
@@ -27,8 +58,7 @@ type User @key(fields: "id") {
 }
 ```
 
-```graphql
-# products service
+```graphql:title=products
 extend type Query {
   topProducts(first: Int = 5): [Product]
 }
@@ -40,8 +70,7 @@ type Product @key(fields: "upc") {
 }
 ```
 
-```graphql
-# reviews service
+```graphql:title=reviews
 type Review {
   body: String
   author: User @provides(fields: "username")
@@ -59,9 +88,26 @@ extend type Product @key(fields: "upc") {
 }
 ```
 
-Already we see some of the main ideas. Though they are defined separately, federated services can reference types defined by other services (like `Review.product`), add fields to a type defined elsewhere (like `User.reviews`), and specify how types are linked together (the `@key` directive). Don’t worry about these details yet — we’ll see how it works a bit later.
+These schemas illustrate several important conventions of Apollo Federation:
 
-The gateway fetches the federated schemas from each service and composes them into a single graph. Setup is simple:
+* An implementing service can reference a type that's defined by
+_another_ implementing service. For example, the `Review` type includes a
+`product` field of type `Product`, even though the `Product` type is defined in
+a different service.
+
+* An implementing service can also _extend_ a type that's defined by another
+implementing service. For example, the `reviews` service extends the `User`
+type by adding a `reviews` field to it.
+
+* An implementing service must add the `@key` directive to a type's definition
+in order for _other_ services to be able to reference or extend that type. This
+directive tells other services which fields to use to uniquely identify a
+particular instance of the type.
+
+## Gateway example
+
+The gateway for our federated data graph fetches the schema from each
+implementing service and composes those schemas into a single graph:
 
 ```js
 const gateway = new ApolloGateway({
@@ -76,12 +122,25 @@ const server = new ApolloServer({ gateway });
 server.listen();
 ```
 
-That’s it! With Apollo Federation, your schemas and resolvers live in the individual services. There is no user code in the gateway, just a reference to each of the federated services that make up the graph.
+That’s it! With Apollo Federation, schemas and resolvers live in your
+implementing services. The gateway serves only to plan and execute GraphQL
+operations across those implementing services.
 
-Now we can query the composed schema, just as if it had been implemented as a monolith.
+In addition to running a gateway with a static list of services, Apollo
+Gateway can also operate in _managed federation_ mode where Apollo Graph
+Manager acts as the source of truth for the underlying services' SDL. This mode of operation enables multiple
+teams working on a data graph to help them coordinate when underlying
+services change using federation-aware tooling. For more information, read about
+[managed federation](https://www.apollographql.com/docs/graph-manager/federation/)
+in Apollo Graph Manager.
+
+## Query examples
+
+Now we can execute GraphQL operations against our composed schema just as if it
+were implemented as a monolithic service:
 
 ```graphql
-# a simple query that hits just one service
+# a query that the gateway can resolve by calling only the products service
 query {
   topProducts {
     upc
@@ -91,7 +150,7 @@ query {
 ```
 
 ```graphql
-# a query that touches all three services
+# a query that the gateway must call all three services to fully resolve
 query {
   me {
     username
