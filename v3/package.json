@@ -50,6 +50,7 @@
     "graphql-tag": "^2.10.1"
   },
   "devDependencies": {
+    "@apollographql/apollo-tools": "0.4.0",
     "@types/jest": "^24.0.18",
     "@types/node": "^12.7.8",
     "codecov": "3.5.0",
