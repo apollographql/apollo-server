@@ -1,19 +1,17 @@
 # Change Log
 
-### vNEXT
-
-### 0.2.3
+### vNEXT (Currently `alpha` tag)
 
 - Prevent the polling timer from keeping the event loop active [PR #223](https://github.com/apollographql/apollo-platform-commercial/pull/223)
 - Update error message for operations that are not in the operation registry [PR #170](https://github.com/apollographql/apollo-platform-commercial/pull/170)
 
 ### 0.2.2
 
-- update readme image
+- Update `README` image.
 
 ### 0.2.1
 
-- Don't enable logging if debug was explicitly set to false even if dryRun is set to true [PR #159](https://github.com/apollographql/apollo-platform-commercial/pull/159)
+- Don't enable logging if `debug` was explicitly set to `false` even if `dryRun` is set to `true`. [PR #159](https://github.com/apollographql/apollo-platform-commercial/pull/159)
 
 ### 0.2.0
 
@@ -24,4 +22,4 @@
 ### 0.1.0
 
 - `apollo-server-plugin-operation-registry`
-  - Update operation registry plugin to use manifest v2 [#32](https://github.com/apollographql/apollo-platform-commercial/pull/32)
+- Update operation registry plugin to use manifest v2 [#32](https://github.com/apollographql/apollo-platform-commercial/pull/32)
