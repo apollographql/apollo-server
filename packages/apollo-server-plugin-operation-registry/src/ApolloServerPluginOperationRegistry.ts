@@ -11,12 +11,11 @@ import {
   defaultOperationRegistrySignature,
 } from 'apollo-graphql';
 import { ForbiddenError, ApolloError } from 'apollo-server-errors';
-import Agent, { OperationManifest } from './agent';
+import Agent from './agent';
 import { GraphQLSchema } from 'graphql/type';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import loglevel from 'loglevel';
 import loglevelDebug from 'loglevel-debug';
-import { PromiseOrValue } from 'graphql/jsutils/PromiseOrValue';
 
 type ForbidUnregisteredOperationsPredicate = (
   requestContext: GraphQLRequestContext,
@@ -29,12 +28,6 @@ interface Options {
     | ForbidUnregisteredOperationsPredicate;
   dryRun?: boolean;
   schemaTag?: string;
-  onUnregisteredOperation?: (requestContext: GraphQLRequestContext) => void;
-  onForbiddenOperation?: (requestContext: GraphQLRequestContext) => void;
-  willUpdateManifest?: (
-    newManifest?: OperationManifest,
-    oldManifest?: OperationManifest,
-  ) => PromiseOrValue<OperationManifest>;
 }
 
 export default function plugin(options: Options = Object.create(null)) {
@@ -106,7 +99,6 @@ for observability purposes, but all operations will be permitted.`,
         engine,
         store,
         logger,
-        willUpdateManifest: options.willUpdateManifest,
       });
 
       await agent.start();
@@ -162,14 +154,6 @@ for observability purposes, but all operations will be permitted.`,
             );
             requestContext.metrics.registeredOperation = true;
             return;
-          } else {
-            // If defined, this method should not block, whether async or not.
-            if (typeof options.onUnregisteredOperation === 'function') {
-              const onUnregisteredOperation = options.onUnregisteredOperation;
-              Promise.resolve().then(() => {
-                 onUnregisteredOperation(requestContext);
-              });
-            }
           }
 
           // If the `forbidUnregisteredOperations` option is set explicitly to
@@ -231,14 +215,6 @@ for observability purposes, but all operations will be permitted.`,
               `${logHash} Reporting operation as forbidden to Apollo trace warehouse.`,
             );
             requestContext.metrics.forbiddenOperation = true;
-
-            // If defined, this method should not block, whether async or not.
-            if (typeof options.onForbiddenOperation === 'function') {
-              const onForbiddenOperation = options.onForbiddenOperation;
-              Promise.resolve().then(() => {
-                onForbiddenOperation(requestContext);
-              });
-            }
           }
 
           if (shouldForbidOperation) {
