@@ -39,6 +39,12 @@ app.listen({ port: 4000 }, () =>
 
 ## Connect
 
+Please install extra [connect](https://www.npmjs.com/package/connect) and [QS Middleware](https://www.npmjs.com/package/qs-middleware) modules first.
+
+```shell
+npm install --save connect qs-middleware
+```
+
 ```js
 const connect = require('connect');
 const { ApolloServer, gql } = require('apollo-server-express');
