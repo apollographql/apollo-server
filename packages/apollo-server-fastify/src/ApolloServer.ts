@@ -118,7 +118,7 @@ export class ApolloServer extends ApolloServerBase {
             reply.send();
           });
 
-          const beforeHandlers = [
+          const preHandler = [
             (
               req: FastifyRequest<IncomingMessage>,
               reply: FastifyReply<ServerResponse>,
@@ -167,13 +167,13 @@ export class ApolloServer extends ApolloServerBase {
                 done(null);
               },
             );
-            beforeHandlers.push(fileUploadMiddleware(this.uploadsConfig, this));
+            preHandler.push(fileUploadMiddleware(this.uploadsConfig, this));
           }
 
           instance.route({
             method: ['GET', 'POST'],
             url: '/',
-            beforeHandler: beforeHandlers,
+            preHandler: preHandler,
             handler: await graphqlFastify(this.graphQLServerOptions.bind(this)),
           });
         },
