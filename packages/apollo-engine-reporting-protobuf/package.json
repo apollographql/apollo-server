@@ -6,8 +6,8 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "prepare": "npm run pbjs && npm run pbts && cp src/* dist",
-    "pbjs": "bash -c 'mkdir -p dist && pbjs --target static-module --out dist/protobuf.js --wrap commonjs --force-number <(grep -v \"package mdg.engine.proto\" src/reports.proto)'",
-    "pbts": "pbts -o dist/protobuf.d.ts dist/protobuf.js"
+    "pbjs": "bash -c 'mkdir -p dist && apollo-pbjs --target static-module --out dist/protobuf.js --wrap commonjs --force-number <(grep -v \"package mdg.engine.proto\" src/reports.proto)'",
+    "pbts": "apollo-pbts -o dist/protobuf.d.ts dist/protobuf.js"
   },
   "repository": {
     "type": "git",
@@ -27,6 +27,6 @@
   },
   "homepage": "https://github.com/apollographql/apollo-engine-reporting#readme",
   "dependencies": {
-    "protobufjs": "^6.8.6"
+    "@apollo/protobufjs": "^1.0.2"
   }
 }
