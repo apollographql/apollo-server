@@ -3,6 +3,9 @@ import { GraphQLResolverMap } from 'apollo-graphql';
 
 export const name = 'product';
 export const typeDefs = gql`
+  directive @stream on FIELD
+  directive @transform(from: String!) on FIELD
+
   extend type Query {
     product(upc: String!): Product
     topProducts(first: Int = 5): [Product]

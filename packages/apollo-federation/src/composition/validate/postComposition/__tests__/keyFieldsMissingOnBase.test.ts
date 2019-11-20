@@ -35,10 +35,11 @@ describe('keyFieldsMissingOnBase', () => {
       name: 'serviceB',
     };
 
-    const { schema, errors } = composeServices([serviceA, serviceB]);
+    const serviceList = [serviceA, serviceB];
+    const { schema, errors } = composeServices(serviceList);
     expect(errors).toHaveLength(0);
 
-    const warnings = validateKeyFieldsMissingOnBase(schema);
+    const warnings = validateKeyFieldsMissingOnBase({ schema, serviceList });
     expect(warnings).toHaveLength(0);
   });
 
@@ -64,10 +65,11 @@ describe('keyFieldsMissingOnBase', () => {
       name: 'serviceB',
     };
 
-    const { schema, errors } = composeServices([serviceA, serviceB]);
+    const serviceList = [serviceA, serviceB];
+    const { schema, errors } = composeServices(serviceList);
     expect(errors).toHaveLength(0);
 
-    const warnings = validateKeyFieldsMissingOnBase(schema);
+    const warnings = validateKeyFieldsMissingOnBase({ schema, serviceList });
     expect(warnings).toMatchInlineSnapshot(`
       Array [
         Object {
@@ -101,10 +103,11 @@ describe('keyFieldsMissingOnBase', () => {
       name: 'serviceB',
     };
 
-    const { schema, errors } = composeServices([serviceA, serviceB]);
+    const serviceList = [serviceA, serviceB];
+    const { schema, errors } = composeServices(serviceList);
     expect(errors).toHaveLength(0);
 
-    const warnings = validateKeyFieldsMissingOnBase(schema);
+    const warnings = validateKeyFieldsMissingOnBase({ schema, serviceList });
     expect(warnings).toMatchInlineSnapshot();
   });
 });

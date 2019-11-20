@@ -25,7 +25,7 @@ In this example, the `@key` directive tells the Apollo query planner that a part
 
 ## Referencing external types
 
-Once an entity is part of the graph, other services can begin to reference that type from its own types. Let's look at how the reviews service can join across services to return a `Product`:
+Once an entity is part of the graph, other services can begin to reference that type from their own types. Let's look at how the reviews service can join across services to return a `Product`:
 
 ```graphql
 # in the reviews service

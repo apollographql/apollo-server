@@ -1,11 +1,13 @@
-import { GraphQLSchema, isObjectType, FieldNode, GraphQLError } from 'graphql';
-
+import { isObjectType, FieldNode, GraphQLError } from 'graphql';
 import { logServiceAndType, errorWithCode } from '../../utils';
+import { PostCompositionValidator } from '.';
 
 /**
  * - The fields argument can not select fields that were overwritten by another service
  */
-export const keyFieldsMissingOnBase = (schema: GraphQLSchema) => {
+export const keyFieldsMissingOnBase: PostCompositionValidator = ({
+  schema,
+}) => {
   const errors: GraphQLError[] = [];
 
   const types = schema.getTypeMap();

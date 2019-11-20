@@ -476,6 +476,30 @@ extend type User @key(fields: "email") {
 }
 `);
     });
+    it('keeps custom directives', async () => {
+      const query = `query GetServiceDetails {
+        _service {
+          sdl
+        }
+      }`;
+
+      const schema = buildFederatedSchema(gql`
+        directive @custom on FIELD
+
+        extend type User @key(fields: "email") {
+          email: String @external
+        }
+      `);
+
+      const { data, errors } = await graphql(schema, query);
+      expect(errors).toBeUndefined();
+      expect(data._service.sdl).toEqual(`directive @custom on FIELD
+
+extend type User @key(fields: "email") {
+  email: String @external
+}
+`);
+    });
   });
 });
 
