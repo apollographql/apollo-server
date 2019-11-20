@@ -529,12 +529,6 @@ export const executableDirectiveLocations = [
   'VARIABLE_DEFINITION',
 ];
 
-export function isExecutableDirective(directive: GraphQLDirective): boolean {
-  return directive.locations.every(location =>
-    executableDirectiveLocations.includes(location),
-  );
-}
-
 export function isFederationDirective(directive: GraphQLDirective): boolean {
   return federationDirectives.some(({ name }) => name === directive.name);
 }
