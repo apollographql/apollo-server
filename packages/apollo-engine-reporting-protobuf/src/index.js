@@ -1,5 +1,5 @@
 const protobuf = require('./protobuf');
-const protobufJS = require('protobufjs/minimal');
+const protobufJS = require('@apollo/protobufjs/minimal');
 
 // Remove Long support.  Our uint64s tend to be small (less
 // than 104 days).
