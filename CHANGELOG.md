@@ -6,6 +6,8 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 > The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  When a release is being prepared, a new header will be (manually) created below and the the appropriate changes within that release will be moved into the new section.
 
+### v2.9.12
+
 - Reinstate [PR #3530](https://github.com/apollographql/apollo-server/pull/3530) via [#3539](https://github.com/apollographql/apollo-server/pull/3539) - after a patch release of the `@apollo/protobufjs` fork, the build issue for consumers should be resolved.
 
 ### v2.9.11
