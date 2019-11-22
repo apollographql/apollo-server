@@ -46,13 +46,7 @@ describe('Operation registry plugin', () => {
   describe('operation lifecycle hooks', () => {
     describe('onUnregisterOperation', () => {
       it('is called when unregistered operation received', async () => {
-        const mock = jest.fn(requestContext => {
-          expect(requestContext).toMatchObject({
-            request: {
-              operationName: 'HelloFam',
-            },
-          });
-        });
+        const onUnregisteredOperation = jest.fn();
         const server = new ApolloServerMock({
           typeDefs,
           mockEntireSchema: true,
@@ -67,7 +61,7 @@ describe('Operation registry plugin', () => {
                   operations: [],
                 };
               },
-              onUnregisteredOperation: mock,
+              onUnregisteredOperation,
             })(),
           ],
         });
@@ -79,12 +73,19 @@ describe('Operation registry plugin', () => {
         expect(result.data).toBeDefined();
         expect(result.errors).not.toBeDefined();
         expect(result.data && result.data.hello).toBeDefined();
-        expect(mock).toHaveBeenCalledTimes(1);
+        expect(onUnregisteredOperation).toHaveBeenCalledTimes(1);
+        expect(onUnregisteredOperation).toHaveBeenCalledWith(
+          expect.objectContaining({
+            request: expect.objectContaining({
+              operationName: 'HelloFam',
+            }),
+          }),
+        );
         await server.stop();
       });
 
       it('is not called when registered operation received', async () => {
-        const mock = jest.fn();
+        const onUnregisteredOperation = jest.fn();
         const server = new ApolloServerMock({
           typeDefs,
           mockEntireSchema: true,
@@ -104,7 +105,7 @@ describe('Operation registry plugin', () => {
                   ],
                 };
               },
-              onUnregisteredOperation: mock,
+              onUnregisteredOperation,
             })(),
           ],
         });
@@ -116,28 +117,17 @@ describe('Operation registry plugin', () => {
         expect(result.data).toBeDefined();
         expect(result.errors).not.toBeDefined();
         expect(result.data && result.data.hello).toBeDefined();
-        expect(mock).toHaveBeenCalledTimes(0);
+        expect(onUnregisteredOperation).toHaveBeenCalledTimes(0);
         await server.stop();
       });
     });
 
     describe('onForbiddenOperation', () => {
       it('is called when unregistered operation received and forbidden', async () => {
-        const mock = jest.fn(requestContext => {
-          expect(requestContext).toMatchObject({
-            request: {
-              operationName: 'HelloFam',
-            },
-          });
-        });
-        const forbidUnregisteredOperations = jest.fn(requestContext => {
-          expect(requestContext).toMatchObject({
-            request: {
-              operationName: 'HelloFam',
-            },
-          });
-          return true;
-        });
+        const onForbiddenOperation = jest.fn();
+
+        // Returning true from this predicate enables the enforcement.
+        const forbidUnregisteredOperations = jest.fn(() => true);
 
         const server = new ApolloServerMock({
           typeDefs,
@@ -154,7 +144,7 @@ describe('Operation registry plugin', () => {
                 };
               },
               forbidUnregisteredOperations,
-              onForbiddenOperation: mock,
+              onForbiddenOperation,
             })(),
           ],
         });
@@ -169,27 +159,23 @@ describe('Operation registry plugin', () => {
         expect(result.errors && result.errors[0].message).toContain(
           'forbidden',
         );
-        expect(mock).toHaveBeenCalledTimes(1);
+        expect(onForbiddenOperation).toHaveBeenCalledTimes(1);
+        expect(onForbiddenOperation).toHaveBeenCalledWith(
+          expect.objectContaining({
+            request: expect.objectContaining({
+              operationName: 'HelloFam',
+            }),
+          }),
+        );
         expect(forbidUnregisteredOperations).toHaveBeenCalledTimes(1);
         await server.stop();
       });
 
       it('is not called when unregistered operation received and unforbidden', async () => {
-        const mock = jest.fn(requestContext => {
-          expect(requestContext).toMatchObject({
-            request: {
-              operationName: 'HelloFam',
-            },
-          });
-        });
-        const forbidUnregisteredOperations = jest.fn(requestContext => {
-          expect(requestContext).toMatchObject({
-            request: {
-              operationName: 'HelloFam',
-            },
-          });
-          return false;
-        });
+        const onForbiddenOperation = jest.fn();
+
+        // Returning true from this predicate enables the enforcement.
+        const forbidUnregisteredOperations = jest.fn(() => false);
         const server = new ApolloServerMock({
           typeDefs,
           mockEntireSchema: true,
@@ -205,7 +191,7 @@ describe('Operation registry plugin', () => {
                 };
               },
               forbidUnregisteredOperations,
-              onForbiddenOperation: mock,
+              onForbiddenOperation,
             })(),
           ],
         });
@@ -217,7 +203,7 @@ describe('Operation registry plugin', () => {
         expect(result.data).toBeDefined();
         expect(result.errors).not.toBeDefined();
         expect(result.data && result.data.hello).toBeDefined();
-        expect(mock).toHaveBeenCalledTimes(0);
+        expect(onForbiddenOperation).toHaveBeenCalledTimes(0);
         expect(forbidUnregisteredOperations).toHaveBeenCalledTimes(1);
         await server.stop();
       });
