@@ -12,7 +12,7 @@ import loglevel from 'loglevel';
 import { Response } from 'node-fetch';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import { fetchIfNoneMatch } from './fetchIfNoneMatch';
-import { PromiseOrValue } from 'graphql/jsutils/PromiseOrValue';
+import { ValueOrPromise } from "apollo-server-plugin-base";
 
 const DEFAULT_POLL_SECONDS: number = 30;
 const SYNC_WARN_TIME_SECONDS: number = 60;
@@ -27,7 +27,7 @@ export interface AgentOptions {
   willUpdateManifest?: (
     newManifest?: OperationManifest,
     oldManifest?: OperationManifest,
-  ) => PromiseOrValue<OperationManifest>;
+  ) => ValueOrPromise<OperationManifest>;
 }
 
 export interface Operation {
