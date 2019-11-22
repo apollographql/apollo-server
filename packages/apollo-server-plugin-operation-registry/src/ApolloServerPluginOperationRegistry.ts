@@ -133,7 +133,7 @@ for observability purposes, but all operations will be permitted.`,
     requestDidStart(): GraphQLRequestListener<any> {
       return {
         async didResolveOperation(requestContext) {
-          const document = requestContext.document;
+          const documentFromRequestContext = requestContext.document;
           // This shouldn't happen under normal operation since `store` will be
           // set in `serverWillStart` and `requestDidStart` (this) comes after.
           if (!store) {
@@ -141,7 +141,7 @@ for observability purposes, but all operations will be permitted.`,
           }
 
           const normalizedDocument = defaultOperationRegistryNormalization(
-            document,
+            documentFromRequestContext,
 
             // XXX The `operationName` is set from the AST, not from the
             // request `operationName`.  If `operationName` is `null`,
