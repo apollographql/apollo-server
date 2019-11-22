@@ -75,10 +75,17 @@ describe('Operation registry plugin', () => {
         expect(result.data && result.data.hello).toBeDefined();
         expect(onUnregisteredOperation).toHaveBeenCalledTimes(1);
         expect(onUnregisteredOperation).toHaveBeenCalledWith(
+          // First argument: request pipeline context.
           expect.objectContaining({
             request: expect.objectContaining({
               operationName: 'HelloFam',
             }),
+          }),
+
+          // Second argument: operation registry context.
+          expect.objectContaining({
+            signature: expect.stringMatching(/^[a-f0-9]+$/),
+            normalizedDocument: expect.stringMatching(/^query HelloFam/)
           }),
         );
         await server.stop();
@@ -161,10 +168,17 @@ describe('Operation registry plugin', () => {
         );
         expect(onForbiddenOperation).toHaveBeenCalledTimes(1);
         expect(onForbiddenOperation).toHaveBeenCalledWith(
+          // First argument: request pipeline context.
           expect.objectContaining({
             request: expect.objectContaining({
               operationName: 'HelloFam',
             }),
+          }),
+
+          // Second argument: operation registry context.
+          expect.objectContaining({
+            signature: expect.stringMatching(/^[a-f0-9]+$/),
+            normalizedDocument: expect.stringMatching(/^query HelloFam/)
           }),
         );
         expect(forbidUnregisteredOperations).toHaveBeenCalledTimes(1);

@@ -29,6 +29,11 @@ type ForbidUnregisteredOperationsPredicate = (
   requestContext: GraphQLRequestContext,
 ) => boolean;
 
+interface OperationRegistryRequestContext {
+  signature: string;
+  normalizedDocument: string;
+}
+
 interface Options {
   debug?: boolean;
   forbidUnregisteredOperations?:
@@ -36,8 +41,14 @@ interface Options {
     | ForbidUnregisteredOperationsPredicate;
   dryRun?: boolean;
   schemaTag?: string;
-  onUnregisteredOperation?: (requestContext: GraphQLRequestContext) => void;
-  onForbiddenOperation?: (requestContext: GraphQLRequestContext) => void;
+  onUnregisteredOperation?: (
+    requestContext: GraphQLRequestContext,
+    operationRegistryRequestContext: OperationRegistryRequestContext,
+  ) => void;
+  onForbiddenOperation?: (
+    requestContext: GraphQLRequestContext,
+    operationRegistryRequestContext: OperationRegistryRequestContext,
+  ) => void;
   willUpdateManifest?: (
     newManifest?: OperationManifest,
     oldManifest?: OperationManifest,
@@ -176,7 +187,10 @@ for observability purposes, but all operations will be permitted.`,
             if (typeof options.onUnregisteredOperation === 'function') {
               const onUnregisteredOperation = options.onUnregisteredOperation;
               Promise.resolve().then(() => {
-                 onUnregisteredOperation(requestContext);
+                 onUnregisteredOperation(requestContext, {
+                   signature,
+                   normalizedDocument,
+                 });
               });
             }
           }
@@ -245,7 +259,10 @@ for observability purposes, but all operations will be permitted.`,
             if (typeof options.onForbiddenOperation === 'function') {
               const onForbiddenOperation = options.onForbiddenOperation;
               Promise.resolve().then(() => {
-                onForbiddenOperation(requestContext);
+                onForbiddenOperation(requestContext, {
+                  signature,
+                  normalizedDocument,
+                });
               });
             }
           }
