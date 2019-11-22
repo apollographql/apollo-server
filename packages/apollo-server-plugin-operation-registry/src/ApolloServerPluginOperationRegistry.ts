@@ -1,5 +1,5 @@
 import * as assert from 'assert';
-import { pluginName, getStoreKey, hashForLogging } from './common';
+import { pluginName, getStoreKey, signatureForLogging } from './common';
 import {
   ApolloServerPlugin,
   GraphQLServiceContext,
@@ -7,8 +7,15 @@ import {
   GraphQLRequestContext,
 } from 'apollo-server-plugin-base';
 import {
-  operationHash,
-  defaultOperationRegistrySignature,
+  /**
+   * We alias these to different names entirely since the user-facing values
+   * which are present in their manifest (signature and document) are probably
+   * the most important concepts to rally around right now, in terms of
+   * approachability to the implementor.  A future version of the
+   * `apollo-graphql` package should rename them to make this more clear.
+   */
+  operationHash as operationSignature,
+  defaultOperationRegistrySignature as defaultOperationRegistryNormalization,
 } from 'apollo-graphql';
 import { ForbiddenError, ApolloError } from 'apollo-server-errors';
 import Agent, { OperationManifest } from './agent';
@@ -122,43 +129,45 @@ for observability purposes, but all operations will be permitted.`,
             throw new Error('Unable to access store.');
           }
 
-          const hash = operationHash(
-            defaultOperationRegistrySignature(
-              document,
+          const normalizedDocument = defaultOperationRegistryNormalization(
+            document,
 
-              // XXX The `operationName` is set from the AST, not from the
-              // request `operationName`.  If `operationName` is `null`,
-              // then the operation is anonymous.  However, it's not possible
-              // to register anonymous operations from the `apollo` CLI.
-              // We could fail early, however, we still want to abide by the
-              // desires of `forbidUnregisteredOperations`, so we'll allow
-              // this hash be generated anyway.  The hash cannot be in the
-              // manifest, so this would be okay and allow this code to remain
-              // less conditional-y, eventually forbidding the operation when
-              // the hash is not found and `forbidUnregisteredOperations` is on.
-              requestContext.operationName || '',
-            ),
+            // XXX The `operationName` is set from the AST, not from the
+            // request `operationName`.  If `operationName` is `null`,
+            // then the operation is anonymous.  However, it's not possible
+            // to register anonymous operations from the `apollo` CLI.
+            // We could fail early, however, we still want to abide by the
+            // desires of `forbidUnregisteredOperations`, so we'll allow
+            // this signature to be generated anyway.  It could not be in the
+            // manifest, so this would be okay and allow this code to remain
+            // less conditional-y, eventually forbidding the operation when
+            // the signature is absent and `forbidUnregisteredOperations` is on.
+            requestContext.operationName || '',
           );
 
-          if (!hash) {
+          const signature = operationSignature(normalizedDocument);
+
+          if (!signature) {
             throw new ApolloError('No document.');
           }
 
-          // The hashes are quite long and it seems we can get by with a substr.
-          const logHash = hashForLogging(hash);
+          // The signatures are quite long so we truncate to a prefix of it.
+          const logSignature = signatureForLogging(signature);
 
-          logger.debug(`${logHash}: Looking up operation in local registry.`);
+          logger.debug(
+            `${logSignature}: Looking up operation in local registry.`,
+          );
 
           // Try to fetch the operation from the store of operations we're
           // currently aware of, which has been populated by the operation
           // registry.
-          const storeFetch = await store.get(getStoreKey(hash));
+          const storeFetch = await store.get(getStoreKey(signature));
 
           // If we have a hit, we'll return immediately, signaling that we're
           // not intending to block this request.
           if (storeFetch) {
             logger.debug(
-              `${logHash}: Permitting operation found in local registry.`,
+              `${logSignature}: Permitting operation found in local registry.`,
             );
             requestContext.metrics.registeredOperation = true;
             return;
@@ -190,7 +199,7 @@ for observability purposes, but all operations will be permitted.`,
 
           if (typeof options.forbidUnregisteredOperations === 'function') {
             logger.debug(
-              `${logHash}: Calling 'forbidUnregisteredOperations' predicate function with requestContext...`,
+              `${logSignature}: Calling 'forbidUnregisteredOperations' predicate function with requestContext...`,
             );
 
             try {
@@ -199,7 +208,7 @@ for observability purposes, but all operations will be permitted.`,
               );
 
               logger.debug(
-                `${logHash}: The 'forbidUnregisteredOperations' predicate function returned ${predicateResult}`,
+                `${logSignature}: The 'forbidUnregisteredOperations' predicate function returned ${predicateResult}`,
               );
 
               // If we've received a boolean back from the predicate function,
@@ -211,7 +220,7 @@ for observability purposes, but all operations will be permitted.`,
                 shouldForbidOperation = predicateResult;
               } else {
                 logger.warn(
-                  `${logHash} Predicate function did not return a boolean response. Got ${predicateResult}`,
+                  `${logSignature} Predicate function did not return a boolean response. Got ${predicateResult}`,
                 );
               }
             } catch (err) {
@@ -219,7 +228,7 @@ for observability purposes, but all operations will be permitted.`,
               // predicate function, we should assume that the implementor
               // had a security-wise intention and remain in enforcement mode.
               logger.error(
-                `${logHash}: An error occurred within the 'forbidUnregisteredOperations' predicate function: ${err}`,
+                `${logSignature}: An error occurred within the 'forbidUnregisteredOperations' predicate function: ${err}`,
               );
             }
           }
@@ -228,7 +237,7 @@ for observability purposes, but all operations will be permitted.`,
           // should be forbidden, we report it within metrics as forbidden, even though we may be running in dryRun mode.
           if (shouldForbidOperation && options.forbidUnregisteredOperations) {
             logger.debug(
-              `${logHash} Reporting operation as forbidden to Apollo trace warehouse.`,
+              `${logSignature} Reporting operation as forbidden to Apollo trace warehouse.`,
             );
             requestContext.metrics.forbiddenOperation = true;
 
@@ -244,13 +253,13 @@ for observability purposes, but all operations will be permitted.`,
           if (shouldForbidOperation) {
             if (!options.dryRun) {
               logger.debug(
-                `${logHash}: Execution denied because 'forbidUnregisteredOperations' was enabled for this request and the operation was not found in the local operation registry.`,
+                `${logSignature}: Execution denied because 'forbidUnregisteredOperations' was enabled for this request and the operation was not found in the local operation registry.`,
               );
               const error = new ForbiddenError(
                 'Execution forbidden: Operation not found in operation registry',
               );
               Object.assign(error.extensions, {
-                operationHash: hash,
+                operationSignature: signature,
                 exception: {
                   message: `Please register your operation with \`npx apollo client:push --tag="${schemaTag}"\`. See https://www.apollographql.com/docs/platform/operation-registry/ for more details.`,
                 },
@@ -258,7 +267,7 @@ for observability purposes, but all operations will be permitted.`,
               throw error;
             } else {
               logger.debug(
-                `${dryRunPrefix} ${logHash}: Operation ${requestContext.operationName} would have been forbidden.`,
+                `${dryRunPrefix} ${logSignature}: Operation ${requestContext.operationName} would have been forbidden.`,
               );
             }
           }
