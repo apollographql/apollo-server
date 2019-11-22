@@ -27,6 +27,21 @@ export const typeDefs = gql`
     sku: String!
     name: String
     price: String
+    details: ProductDetails
+  }
+
+  interface ProductDetails {
+    country: String
+  }
+
+  type ProductDetailsFurniture implements ProductDetails {
+    country: String
+    color: String
+  }
+
+  type ProductDetailsBook implements ProductDetails {
+    country: String
+    pages: Int
   }
 
   type Furniture implements Product @key(fields: "upc") @key(fields: "sku") {
@@ -36,6 +51,7 @@ export const typeDefs = gql`
     price: String
     brand: Brand
     metadata: [MetadataOrError]
+    details: ProductDetailsFurniture
   }
 
   extend type Book implements Product @key(fields: "isbn") {
@@ -46,6 +62,7 @@ export const typeDefs = gql`
     sku: String!
     name(delimeter: String = " "): String @requires(fields: "title year")
     price: String
+    details: ProductDetailsBook
   }
 
   type Car @key(fields: "id") {
