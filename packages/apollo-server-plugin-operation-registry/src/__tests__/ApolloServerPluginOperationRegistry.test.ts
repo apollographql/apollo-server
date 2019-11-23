@@ -1,5 +1,5 @@
 import plugin from '../ApolloServerPluginOperationRegistry';
-import { ApolloServerBase, ForbiddenError } from 'apollo-server-core';
+import { ApolloServerBase } from 'apollo-server-core';
 import {
   defaultOperationRegistrySignature,
   operationHash,
