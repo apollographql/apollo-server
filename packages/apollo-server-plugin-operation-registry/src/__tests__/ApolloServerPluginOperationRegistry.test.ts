@@ -1,8 +1,15 @@
 import plugin from '../ApolloServerPluginOperationRegistry';
 import { ApolloServerBase } from 'apollo-server-core';
 import {
-  defaultOperationRegistrySignature,
-  operationHash,
+  /**
+   * We alias these to different names entirely since the user-facing values
+   * which are present in their manifest (signature and document) are probably
+   * the most important concepts to rally around right now, in terms of
+   * approachability to the implementor.  A future version of the
+   * `apollo-graphql` package should rename them to make this more clear.
+   */
+  defaultOperationRegistrySignature as defaultOperationRegistryNormalization,
+  operationHash as operationSignature,
 } from 'apollo-graphql';
 import gql from 'graphql-tag';
 import { print } from 'graphql';
@@ -19,11 +26,11 @@ const query = gql`
   }
 `;
 
-const normalizedQueryDocument = defaultOperationRegistrySignature(
+const normalizedQueryDocument = defaultOperationRegistryNormalization(
   query,
   'HelloFam',
 );
-const queryHash = operationHash(normalizedQueryDocument);
+const queryHash = operationSignature(normalizedQueryDocument);
 
 // In order to expose will start and
 class ApolloServerMock extends ApolloServerBase {
