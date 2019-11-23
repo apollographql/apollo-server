@@ -58,9 +58,9 @@ export function getLegacyOperationManifestUrl(
   );
 }
 
-export function signatureForLogging(hash: string): string {
-  if (typeof hash !== 'string') {
+export function signatureForLogging(signature: string): string {
+  if (typeof signature !== 'string') {
     return '<non-string>';
   }
-  return hash.substring(0, 8);
+  return signature.substring(0, 8);
 }
