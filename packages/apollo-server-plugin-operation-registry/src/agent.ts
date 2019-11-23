@@ -107,7 +107,7 @@ export default class Agent {
     try {
       await pulse();
     } catch (err) {
-      // Update the manifest to trigger `onManifestUpdate(newManifest: undefined, oldManifest: undefined)`
+      // Update the manifest to trigger `willUpdateManifest(newManifest: undefined, oldManifest: undefined)`
       this.updateManifest();
       console.error(
         `The operation manifest could not be fetched. Retries will continue.${
