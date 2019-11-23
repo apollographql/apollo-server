@@ -1,4 +1,4 @@
-/docs/ @stephenbarlow @abernix @trevor-scheer @app/renovate-approve
+/docs/ @stephenbarlow @abernix @trevor-scheer @renovate-approve
 
 # Changes to the federation specification should be further reviewed.
 # Most importantly because they require messaging and awareness to
