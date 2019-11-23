@@ -23,7 +23,7 @@ import { GraphQLSchema } from 'graphql/type';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import loglevel from 'loglevel';
 import loglevelDebug from 'loglevel-debug';
-import { PromiseOrValue } from 'graphql/jsutils/PromiseOrValue';
+import { ValueOrPromise } from 'apollo-server-plugin-base';
 
 type ForbidUnregisteredOperationsPredicate = (
   requestContext: GraphQLRequestContext,
@@ -52,7 +52,7 @@ interface Options {
   willUpdateManifest?: (
     newManifest?: OperationManifest,
     oldManifest?: OperationManifest,
-  ) => PromiseOrValue<OperationManifest>;
+  ) => ValueOrPromise<OperationManifest>;
 }
 
 export default function plugin(options: Options = Object.create(null)) {
