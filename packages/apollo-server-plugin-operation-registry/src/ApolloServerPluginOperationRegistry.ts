@@ -279,25 +279,26 @@ for observability purposes, but all operations will be permitted.`,
             }
           }
 
-          if (!options.dryRun) {
-            logger.debug(
-              `${logSignature}: Execution denied because 'forbidUnregisteredOperations' was enabled for this request and the operation was not found in the local operation registry.`,
-            );
-            const error = new ForbiddenError(
-              'Execution forbidden: Operation not found in operation registry',
-            );
-            Object.assign(error.extensions, {
-              operationSignature: signature,
-              exception: {
-                message: `Please register your operation with \`npx apollo client:push --tag="${schemaTag}"\`. See https://www.apollographql.com/docs/platform/operation-registry/ for more details.`,
-              },
-            });
-            throw error;
-          } else {
+          if (options.dryRun) {
             logger.debug(
               `${dryRunPrefix} ${logSignature}: Operation ${requestContext.operationName} would have been forbidden.`,
             );
+            return;
           }
+
+          logger.debug(
+            `${logSignature}: Execution denied because 'forbidUnregisteredOperations' was enabled for this request and the operation was not found in the local operation registry.`,
+          );
+          const error = new ForbiddenError(
+            'Execution forbidden: Operation not found in operation registry',
+          );
+          Object.assign(error.extensions, {
+            operationSignature: signature,
+            exception: {
+              message: `Please register your operation with \`npx apollo client:push --tag="${schemaTag}"\`. See https://www.apollographql.com/docs/platform/operation-registry/ for more details.`,
+            },
+          });
+          throw error;
         },
       };
     },
