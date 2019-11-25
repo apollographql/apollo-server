@@ -1,33 +1,25 @@
 import nock from 'nock';
 import { InMemoryLRUCache } from 'apollo-server-caching';
-import {
-  envOverrideOperationManifest,
-  envOverrideStorageSecretBaseUrl,
-  getStoreKey,
-  fakeTestBaseUrl,
-} from '../common';
 import { resolve as urlResolve } from 'url';
-import { AgentOptions } from '../agent';
 import {
   defaultAgentOptions,
-  nockBase,
-  genericLegacyOperationManifestUrl,
-  genericStorageSecret,
-  genericApiKeyHash,
   genericServiceID,
-  defaultStore,
-  nockStorageSecretOperationManifest,
+  genericStorageSecret,
   nockStorageSecret,
-  nockGoodManifestsUnderStorageSecret,
+  nockBase,
   nockLegacyGoodManifest,
   genericSchemaHash,
   hashedServiceId,
+  nockGoodManifestsUnderStorageSecret,
+  defaultStore,
   defaultTestAgentPollSeconds,
+  nockStorageSecretOperationManifest,
+  genericApiKeyHash,
+  genericLegacyOperationManifestUrl,
 } from './helpers.test-helpers';
-import {
-  Operation,
-  OperationManifest,
-} from "../ApolloServerPluginOperationRegistry";
+import Agent, { AgentOptions } from "../agent";
+import { Operation, OperationManifest } from "../ApolloServerPluginOperationRegistry";
+import { fakeTestBaseUrl, getLegacyOperationManifestUrl, getStoreKey, getOperationManifestUrl, urlOperationManifestBase } from "../common";
 
 // These get a bit verbose within the tests below, so we use this as a
 // sample store to pick and grab from.
@@ -78,65 +70,6 @@ describe('Agent', () => {
   });
 
   describe('with manifest', () => {
-    let originalEnvApolloOpManifestBaseUrl: string | undefined;
-    let originalEnvOverrideStorageSecretBaseUrl: string | undefined;
-    let Agent: typeof import('../agent').default;
-    let getOperationManifestUrl: typeof import('../common').getOperationManifestUrl;
-    let getLegacyOperationManifestUrl: typeof import('../common').getLegacyOperationManifestUrl;
-    let urlOperationManifestBase: string;
-    let genericStorageSecretOperationManifestUrl: string;
-
-    beforeAll(() => {
-      // Override the tests URL with the one we want to mock/nock/test.
-      originalEnvApolloOpManifestBaseUrl =
-        process.env[envOverrideOperationManifest];
-      process.env[envOverrideOperationManifest] = fakeTestBaseUrl;
-
-      originalEnvOverrideStorageSecretBaseUrl =
-        process.env[envOverrideStorageSecretBaseUrl];
-      process.env[envOverrideStorageSecretBaseUrl] = fakeTestBaseUrl;
-
-      // Reset the modules so they're ready to be imported.
-      jest.resetModules();
-
-      // Store these on the local scope after we've reset the modules.
-      Agent = require('../agent').default;
-      getOperationManifestUrl = require('../common').getOperationManifestUrl;
-      getLegacyOperationManifestUrl = require('../common')
-        .getLegacyOperationManifestUrl;
-      urlOperationManifestBase = require('../common').urlOperationManifestBase;
-
-      genericStorageSecretOperationManifestUrl = getOperationManifestUrl(
-        genericServiceID,
-        genericStorageSecret,
-      ).replace(new RegExp(`^${urlOperationManifestBase}`), '');
-    });
-
-    afterAll(() => {
-      // Put the environment overrides back how they were.
-      if (originalEnvApolloOpManifestBaseUrl) {
-        process.env[
-          envOverrideOperationManifest
-        ] = originalEnvApolloOpManifestBaseUrl;
-
-        originalEnvApolloOpManifestBaseUrl = undefined;
-      } else {
-        delete process.env[envOverrideOperationManifest];
-      }
-      if (originalEnvOverrideStorageSecretBaseUrl) {
-        process.env[
-          envOverrideStorageSecretBaseUrl
-        ] = originalEnvOverrideStorageSecretBaseUrl;
-
-        originalEnvOverrideStorageSecretBaseUrl = undefined;
-      } else {
-        delete process.env[envOverrideStorageSecretBaseUrl];
-      }
-
-      // Reset modules again.
-      jest.resetModules();
-    });
-
     const forCleanup: {
       store?: InMemoryLRUCache;
       agent?: import('../agent').default;
@@ -706,9 +639,11 @@ describe('Agent', () => {
 
           // Now, we'll expect another request to go out, so we'll nock it.
           nockStorageSecret(genericServiceID, genericApiKeyHash);
-          nockBase()
-            .get(genericStorageSecretOperationManifestUrl)
-            .reply(304);
+          nockStorageSecretOperationManifest(
+            genericServiceID,
+            genericStorageSecret,
+            304,
+          );
 
           // If we move forward the last remaining millisecond, we should trigger
           // and end up with a successful sync.

@@ -12,7 +12,9 @@ export const fakeTestBaseUrl = 'https://myfakehost/';
 export const urlOperationManifestBase: string = ((): string => {
   const desiredUrl =
     process.env[envOverrideOperationManifest] ||
-    'https://storage.googleapis.com/engine-op-manifest-storage-prod/';
+    process.env['NODE_ENV'] === 'test'
+      ? fakeTestBaseUrl
+      : 'https://storage.googleapis.com/engine-op-manifest-storage-prod/';
 
   // Make sure it has NO trailing slash.
   return desiredUrl.replace(/\/$/, '');
@@ -22,7 +24,9 @@ export const urlOperationManifestBase: string = ((): string => {
 export const urlStorageSecretBase: string = ((): string => {
   const desiredUrl =
     process.env[envOverrideStorageSecretBaseUrl] ||
-    'https://storage.googleapis.com/engine-partial-schema-prod/';
+    process.env['NODE_ENV'] === 'test'
+      ? fakeTestBaseUrl
+      : 'https://storage.googleapis.com/engine-partial-schema-prod/';
 
   // Make sure it has NO trailing slash.
   return desiredUrl.replace(/\/$/, '');
