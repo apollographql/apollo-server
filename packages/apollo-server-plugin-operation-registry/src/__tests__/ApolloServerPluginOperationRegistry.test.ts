@@ -230,7 +230,7 @@ describe('Operation registry plugin', () => {
       });
 
       it('is not called when registered operation received', async () => {
-        const mock = jest.fn();
+        const onForbiddenOperation = jest.fn();
         const server = new ApolloServerMock({
           typeDefs,
           mockEntireSchema: true,
@@ -250,7 +250,7 @@ describe('Operation registry plugin', () => {
                   ],
                 };
               },
-              onForbiddenOperation: mock,
+              onForbiddenOperation,
             })(),
           ],
         });
@@ -262,7 +262,7 @@ describe('Operation registry plugin', () => {
         expect(result.data).toBeDefined();
         expect(result.errors).not.toBeDefined();
         expect(result.data && result.data.hello).toBeDefined();
-        expect(mock).toHaveBeenCalledTimes(0);
+        expect(onForbiddenOperation).toHaveBeenCalledTimes(0);
         await server.stop();
       });
     });
