@@ -13,31 +13,7 @@ import {
 } from 'apollo-graphql';
 import gql from 'graphql-tag';
 import { print } from 'graphql';
-
-const typeDefs = gql`
-  type Query {
-    hello: String
-  }
-`;
-
-const query = gql`
-  query HelloFam {
-    hello
-  }
-`;
-
-const normalizedQueryDocument = defaultOperationRegistryNormalization(
-  query,
-  'HelloFam',
-);
-const queryHash = operationSignature(normalizedQueryDocument);
-
-// In order to expose will start and
-class ApolloServerMock extends ApolloServerBase {
-  public async willStart() {
-    return super.willStart();
-  }
-}
+import { hashApiKey } from "./helpers.test-helpers";
 
 describe('Operation registry plugin', () => {
   it('will instantiate when not called with options', () => {
@@ -53,6 +29,31 @@ describe('Operation registry plugin', () => {
   describe('operation lifecycle hooks', () => {
     const graphId = 'test-service';
     const apiKey = `service:${graphId}:not-an-api-key`;
+    const hashedApiKey = hashApiKey(apiKey);
+    const typeDefs = gql`
+      type Query {
+        hello: String
+      }
+    `;
+
+    const query = gql`
+      query HelloFam {
+        hello
+      }
+    `;
+
+    const normalizedQueryDocument = defaultOperationRegistryNormalization(
+      query,
+      'HelloFam',
+    );
+    const queryHash = operationSignature(normalizedQueryDocument);
+
+    // In order to expose will start and
+    class ApolloServerMock extends ApolloServerBase {
+      public async willStart() {
+        return super.willStart();
+      }
+    }
 
     describe('onUnregisterOperation', () => {
       it('is called when unregistered operation received', async () => {
