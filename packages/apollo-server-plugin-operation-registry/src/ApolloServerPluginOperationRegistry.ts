@@ -34,7 +34,7 @@ export interface OperationRegistryRequestContext {
   normalizedDocument: string;
 }
 
-interface Options {
+export interface Options {
   debug?: boolean;
   forbidUnregisteredOperations?:
     | boolean

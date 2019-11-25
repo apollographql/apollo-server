@@ -1,4 +1,4 @@
-import plugin from '../ApolloServerPluginOperationRegistry';
+import plugin, { Options } from '../ApolloServerPluginOperationRegistry';
 import { ApolloServerBase } from 'apollo-server-core';
 import {
   /**
@@ -53,7 +53,7 @@ describe('Operation registry plugin', () => {
   describe('operation lifecycle hooks', () => {
     describe('onUnregisterOperation', () => {
       it('is called when unregistered operation received', async () => {
-        const onUnregisteredOperation = jest.fn();
+        const onUnregisteredOperation: Options['onUnregisteredOperation'] = jest.fn();
         const server = new ApolloServerMock({
           typeDefs,
           mockEntireSchema: true,
@@ -99,7 +99,7 @@ describe('Operation registry plugin', () => {
       });
 
       it('is not called when registered operation received', async () => {
-        const onUnregisteredOperation = jest.fn();
+        const onUnregisteredOperation: Options['onUnregisteredOperation'] = jest.fn();
         const server = new ApolloServerMock({
           typeDefs,
           mockEntireSchema: true,
