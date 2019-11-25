@@ -247,46 +247,56 @@ for observability purposes, but all operations will be permitted.`,
             }
           }
 
-          // If the user explicitly set forbidUnregisteredOperations to either `true` or a function, and the operation
-          // should be forbidden, we report it within metrics as forbidden, even though we may be running in dryRun mode.
-          if (shouldForbidOperation) {
-            if (options.forbidUnregisteredOperations) {
-              logger.debug(
-                `${logSignature} Reporting operation as forbidden to Apollo trace warehouse.`,
-              );
-              requestContext.metrics.forbiddenOperation = true;
+          // Whether we're in dryRun mode or not, the decision as to whether
+          // or not we'll be forbidding execution has already been decided.
+          // Therefore, we'll return early and avoid nesting this entire
+          // remaining 30+ line block in a `if (shouldForbidOperation)` fork.
+          if (!shouldForbidOperation) {
+            return;
+          }
 
-              // If defined, this method should not block, whether async or not.
-              if (typeof options.onForbiddenOperation === 'function') {
-                const onForbiddenOperation = options.onForbiddenOperation;
-                Promise.resolve().then(() => {
-                  onForbiddenOperation(requestContext, {
-                    signature,
-                    normalizedDocument,
-                  });
+          // If the user explicitly set `forbidUnregisteredOperations` to either
+          // `true` or a (predicate) function which returns `true` we'll
+          // report it within metrics as forbidden, even though we may be
+          // running in `dryRun` mode.  This allows the user to incrementally
+          // go through their code-base and ensure that they've reached
+          // an "inbox zero" - so to speak - of operations needing registration.
+          if (options.forbidUnregisteredOperations) {
+            logger.debug(
+              `${logSignature} Reporting operation as forbidden to Apollo trace warehouse.`,
+            );
+            requestContext.metrics.forbiddenOperation = true;
+
+            // If defined, this method should not block, whether async or not.
+            if (typeof options.onForbiddenOperation === 'function') {
+              const onForbiddenOperation = options.onForbiddenOperation;
+              Promise.resolve().then(() => {
+                onForbiddenOperation(requestContext, {
+                  signature,
+                  normalizedDocument,
                 });
-              }
-            }
-
-            if (!options.dryRun) {
-              logger.debug(
-                `${logSignature}: Execution denied because 'forbidUnregisteredOperations' was enabled for this request and the operation was not found in the local operation registry.`,
-              );
-              const error = new ForbiddenError(
-                'Execution forbidden: Operation not found in operation registry',
-              );
-              Object.assign(error.extensions, {
-                operationSignature: signature,
-                exception: {
-                  message: `Please register your operation with \`npx apollo client:push --tag="${schemaTag}"\`. See https://www.apollographql.com/docs/platform/operation-registry/ for more details.`,
-                },
               });
-              throw error;
-            } else {
-              logger.debug(
-                `${dryRunPrefix} ${logSignature}: Operation ${requestContext.operationName} would have been forbidden.`,
-              );
             }
+          }
+
+          if (!options.dryRun) {
+            logger.debug(
+              `${logSignature}: Execution denied because 'forbidUnregisteredOperations' was enabled for this request and the operation was not found in the local operation registry.`,
+            );
+            const error = new ForbiddenError(
+              'Execution forbidden: Operation not found in operation registry',
+            );
+            Object.assign(error.extensions, {
+              operationSignature: signature,
+              exception: {
+                message: `Please register your operation with \`npx apollo client:push --tag="${schemaTag}"\`. See https://www.apollographql.com/docs/platform/operation-registry/ for more details.`,
+              },
+            });
+            throw error;
+          } else {
+            logger.debug(
+              `${dryRunPrefix} ${logSignature}: Operation ${requestContext.operationName} would have been forbidden.`,
+            );
           }
         },
       };
