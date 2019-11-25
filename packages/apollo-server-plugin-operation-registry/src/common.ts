@@ -6,7 +6,7 @@ export const envOverrideOperationManifest =
 
 export const envOverrideStorageSecretBaseUrl = 'APOLLO_STORAGE_SECRET_BASE_URL';
 
-export const fakeTestBaseUrl = 'https://myfakehost/';
+export const fakeTestBaseUrl = 'https://fake-host-for-apollo-op-reg-tests/';
 
 // Generate and cache our desired operation manifest URL.
 export const urlOperationManifestBase: string = ((): string => {

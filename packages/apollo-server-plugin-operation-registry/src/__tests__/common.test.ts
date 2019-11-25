@@ -9,7 +9,7 @@ describe('common', () => {
     expect(
       common.getLegacyOperationManifestUrl('aServiceId', 'aSchemaHash'),
     ).toMatchInlineSnapshot(
-      `"https://myfakehost/aServiceId/aSchemaHash.v2.json"`,
+      `"https://fake-host-for-apollo-op-reg-tests/aServiceId/aSchemaHash.v2.json"`,
     );
   });
 });
