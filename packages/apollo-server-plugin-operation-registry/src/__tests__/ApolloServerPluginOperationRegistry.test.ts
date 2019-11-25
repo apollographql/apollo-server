@@ -13,7 +13,12 @@ import {
 } from 'apollo-graphql';
 import gql from 'graphql-tag';
 import { print } from 'graphql';
-import { hashApiKey } from "./helpers.test-helpers";
+import {
+  hashApiKey,
+  nockStorageSecret,
+  nockGoodManifestsUnderStorageSecret,
+  genericStorageSecret,
+} from './helpers.test-helpers';
 
 describe('Operation registry plugin', () => {
   it('will instantiate when not called with options', () => {
@@ -58,6 +63,12 @@ describe('Operation registry plugin', () => {
     describe('onUnregisterOperation', () => {
       it('is called when unregistered operation received', async () => {
         const onUnregisteredOperation: Options['onUnregisteredOperation'] = jest.fn();
+        nockStorageSecret(graphId, hashedApiKey);
+        nockGoodManifestsUnderStorageSecret(
+          graphId,
+          genericStorageSecret,
+          [ /* Intentionally empty! */ ],
+        );
         const server = new ApolloServerMock({
           typeDefs,
           mockEntireSchema: true,
@@ -67,12 +78,6 @@ describe('Operation registry plugin', () => {
           },
           plugins: [
             plugin({
-              willUpdateManifest: () => {
-                return {
-                  version: 2,
-                  operations: [],
-                };
-              },
               onUnregisteredOperation,
             })(),
           ],
@@ -105,6 +110,17 @@ describe('Operation registry plugin', () => {
 
       it('is not called when registered operation received', async () => {
         const onUnregisteredOperation: Options['onUnregisteredOperation'] = jest.fn();
+        nockStorageSecret(graphId, hashedApiKey);
+        nockGoodManifestsUnderStorageSecret(
+          graphId,
+          genericStorageSecret,
+          [
+            {
+              document: normalizedQueryDocument,
+              signature: queryHash,
+            },
+          ],
+        );
         const server = new ApolloServerMock({
           typeDefs,
           mockEntireSchema: true,
@@ -114,17 +130,6 @@ describe('Operation registry plugin', () => {
           },
           plugins: [
             plugin({
-              willUpdateManifest: () => {
-                return {
-                  version: 2,
-                  operations: [
-                    {
-                      document: normalizedQueryDocument,
-                      signature: queryHash,
-                    },
-                  ],
-                };
-              },
               onUnregisteredOperation,
             })(),
           ],
@@ -148,7 +153,12 @@ describe('Operation registry plugin', () => {
 
         // Returning true from this predicate enables the enforcement.
         const forbidUnregisteredOperations = jest.fn(() => true);
-
+        nockStorageSecret(graphId, hashedApiKey);
+        nockGoodManifestsUnderStorageSecret(
+          graphId,
+          genericStorageSecret,
+          [ /* Intentionally empty! */ ],
+        );
         const server = new ApolloServerMock({
           typeDefs,
           mockEntireSchema: true,
@@ -158,12 +168,6 @@ describe('Operation registry plugin', () => {
           },
           plugins: [
             plugin({
-              willUpdateManifest: () => {
-                return {
-                  version: 2,
-                  operations: [],
-                };
-              },
               forbidUnregisteredOperations,
               onForbiddenOperation,
             })(),
@@ -204,6 +208,12 @@ describe('Operation registry plugin', () => {
 
         // Returning true from this predicate enables the enforcement.
         const forbidUnregisteredOperations = jest.fn(() => false);
+        nockStorageSecret(graphId, hashedApiKey);
+        nockGoodManifestsUnderStorageSecret(
+          graphId,
+          genericStorageSecret,
+          [ /* Intentionally empty! */ ],
+        );
         const server = new ApolloServerMock({
           typeDefs,
           mockEntireSchema: true,
@@ -213,12 +223,6 @@ describe('Operation registry plugin', () => {
           },
           plugins: [
             plugin({
-              willUpdateManifest: () => {
-                return {
-                  version: 2,
-                  operations: [],
-                };
-              },
               forbidUnregisteredOperations,
               onForbiddenOperation,
             })(),
@@ -239,6 +243,17 @@ describe('Operation registry plugin', () => {
 
       it('is not called when registered operation received', async () => {
         const onForbiddenOperation = jest.fn();
+        nockStorageSecret(graphId, hashedApiKey);
+        nockGoodManifestsUnderStorageSecret(
+          graphId,
+          genericStorageSecret,
+          [
+            {
+              document: normalizedQueryDocument,
+              signature: queryHash,
+            },
+          ],
+        );
         const server = new ApolloServerMock({
           typeDefs,
           mockEntireSchema: true,
@@ -248,17 +263,6 @@ describe('Operation registry plugin', () => {
           },
           plugins: [
             plugin({
-              willUpdateManifest: () => {
-                return {
-                  version: 2,
-                  operations: [
-                    {
-                      document: normalizedQueryDocument,
-                      signature: queryHash,
-                    },
-                  ],
-                };
-              },
               onForbiddenOperation,
             })(),
           ],
