@@ -29,7 +29,7 @@ type ForbidUnregisteredOperationsPredicate = (
   requestContext: GraphQLRequestContext,
 ) => boolean;
 
-interface OperationRegistryRequestContext {
+export interface OperationRegistryRequestContext {
   signature: string;
   normalizedDocument: string;
 }
