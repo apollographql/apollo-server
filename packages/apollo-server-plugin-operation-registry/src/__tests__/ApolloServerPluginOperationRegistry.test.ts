@@ -62,6 +62,7 @@ describe('Operation registry plugin', () => {
           mockEntireSchema: true,
           engine: {
             apiKey,
+            sendReportsImmediately: true,
           },
           plugins: [
             plugin({
@@ -108,6 +109,7 @@ describe('Operation registry plugin', () => {
           mockEntireSchema: true,
           engine: {
             apiKey,
+            sendReportsImmediately: true,
           },
           plugins: [
             plugin({
@@ -151,6 +153,7 @@ describe('Operation registry plugin', () => {
           mockEntireSchema: true,
           engine: {
             apiKey,
+            sendReportsImmediately: true,
           },
           plugins: [
             plugin({
@@ -205,6 +208,7 @@ describe('Operation registry plugin', () => {
           mockEntireSchema: true,
           engine: {
             apiKey,
+            sendReportsImmediately: true,
           },
           plugins: [
             plugin({
@@ -239,6 +243,7 @@ describe('Operation registry plugin', () => {
           mockEntireSchema: true,
           engine: {
             apiKey,
+            sendReportsImmediately: true,
           },
           plugins: [
             plugin({
