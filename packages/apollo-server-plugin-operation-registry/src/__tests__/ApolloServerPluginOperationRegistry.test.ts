@@ -51,6 +51,9 @@ describe('Operation registry plugin', () => {
   // These tests depend on the behavior of willUpdateManifest to update the
   // operation safelist
   describe('operation lifecycle hooks', () => {
+    const graphId = 'test-service';
+    const apiKey = `service:${graphId}:not-an-api-key`;
+
     describe('onUnregisterOperation', () => {
       it('is called when unregistered operation received', async () => {
         const onUnregisteredOperation: Options['onUnregisteredOperation'] = jest.fn();
@@ -58,7 +61,7 @@ describe('Operation registry plugin', () => {
           typeDefs,
           mockEntireSchema: true,
           engine: {
-            apiKey: 'server:not-a-service:not-an-apikey',
+            apiKey,
           },
           plugins: [
             plugin({
@@ -104,7 +107,7 @@ describe('Operation registry plugin', () => {
           typeDefs,
           mockEntireSchema: true,
           engine: {
-            apiKey: 'server:not-a-service:not-an-apikey',
+            apiKey,
           },
           plugins: [
             plugin({
@@ -147,7 +150,7 @@ describe('Operation registry plugin', () => {
           typeDefs,
           mockEntireSchema: true,
           engine: {
-            apiKey: 'server:not-a-service:not-an-apikey',
+            apiKey,
           },
           plugins: [
             plugin({
@@ -201,7 +204,7 @@ describe('Operation registry plugin', () => {
           typeDefs,
           mockEntireSchema: true,
           engine: {
-            apiKey: 'server:not-a-service:not-an-apikey',
+            apiKey,
           },
           plugins: [
             plugin({
@@ -235,7 +238,7 @@ describe('Operation registry plugin', () => {
           typeDefs,
           mockEntireSchema: true,
           engine: {
-            apiKey: 'server:not-a-service:not-an-apikey',
+            apiKey,
           },
           plugins: [
             plugin({
