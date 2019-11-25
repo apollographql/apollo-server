@@ -197,10 +197,10 @@ for observability purposes, but all operations will be permitted.`,
             if (typeof options.onUnregisteredOperation === 'function') {
               const onUnregisteredOperation = options.onUnregisteredOperation;
               Promise.resolve().then(() => {
-                 onUnregisteredOperation(requestContext, {
-                   signature,
-                   normalizedDocument,
-                 });
+                onUnregisteredOperation(requestContext, {
+                  signature,
+                  normalizedDocument,
+                });
               });
             }
           }
@@ -276,7 +276,9 @@ for observability purposes, but all operations will be permitted.`,
               `${logSignature} Reporting operation as forbidden to Apollo trace warehouse.`,
             );
             requestContext.metrics.forbiddenOperation = true;
+          }
 
+          if (shouldForbidOperation) {
             // If defined, this method should not block, whether async or not.
             if (typeof options.onForbiddenOperation === 'function') {
               const onForbiddenOperation = options.onForbiddenOperation;
