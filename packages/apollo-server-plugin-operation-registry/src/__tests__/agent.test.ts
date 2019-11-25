@@ -7,7 +7,7 @@ import {
   fakeTestBaseUrl,
 } from '../common';
 import { resolve as urlResolve } from 'url';
-import { AgentOptions, OperationManifest } from '../agent';
+import { AgentOptions } from '../agent';
 import {
   defaultAgentOptions,
   nockBase,
@@ -24,15 +24,14 @@ import {
   hashedServiceId,
   defaultTestAgentPollSeconds,
 } from './helpers.test-helpers';
-
-interface ManifestRecord {
-  signature: string;
-  document: string;
-}
+import {
+  Operation,
+  OperationManifest,
+} from "../ApolloServerPluginOperationRegistry";
 
 // These get a bit verbose within the tests below, so we use this as a
 // sample store to pick and grab from.
-const sampleManifestRecords: Record<string, ManifestRecord> = {
+const sampleManifestRecords: Record<string, Operation> = {
   a: {
     signature:
       'ba4573fca2e1491fd54b9f398490531ad6327b00610f2c1216dc8c9c4cfd2993',
@@ -51,7 +50,7 @@ const sampleManifestRecords: Record<string, ManifestRecord> = {
   },
 };
 
-const manifest = (...operations: ManifestRecord[]) => ({
+const manifest = (...operations: Operation[]) => ({
   version: 2,
   operations,
 });

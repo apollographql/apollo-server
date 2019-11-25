@@ -18,7 +18,7 @@ import {
   defaultOperationRegistrySignature as defaultOperationRegistryNormalization,
 } from 'apollo-graphql';
 import { ForbiddenError, ApolloError } from 'apollo-server-errors';
-import Agent, { OperationManifest } from './agent';
+import Agent from './agent';
 import { GraphQLSchema } from 'graphql/type';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import loglevel from 'loglevel';
@@ -32,6 +32,16 @@ type ForbidUnregisteredOperationsPredicate = (
 export interface OperationRegistryRequestContext {
   signature: string;
   normalizedDocument: string;
+}
+
+export interface Operation {
+  signature: string;
+  document: string;
+}
+
+export interface OperationManifest {
+  version: number;
+  operations: Array<Operation>;
 }
 
 export interface Options {

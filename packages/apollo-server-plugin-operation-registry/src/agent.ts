@@ -13,6 +13,7 @@ import { Response } from 'node-fetch';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import { fetchIfNoneMatch } from './fetchIfNoneMatch';
 import { ValueOrPromise } from "apollo-server-plugin-base";
+import { OperationManifest } from "./ApolloServerPluginOperationRegistry";
 
 const DEFAULT_POLL_SECONDS: number = 30;
 const SYNC_WARN_TIME_SECONDS: number = 60;
@@ -28,16 +29,6 @@ export interface AgentOptions {
     newManifest?: OperationManifest,
     oldManifest?: OperationManifest,
   ) => ValueOrPromise<OperationManifest>;
-}
-
-export interface Operation {
-  signature: string;
-  document: string;
-}
-
-export interface OperationManifest {
-  version: number;
-  operations: Array<Operation>;
 }
 
 type SignatureStore = Set<string>;
