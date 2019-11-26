@@ -1,45 +1,85 @@
 import { Ref } from './ref'
-import keys, { keyed, Key, Keyed } from './key'
+import { Key, Site, Keyed, keyed } from './key'
 
 export interface Bond {
   type: string
-  ref: Ref<any>
+  key: Key
+  state: any
+  rval: any
 }
 
-export type Pattern = Bond[]
-
-let current: Bond[] | void = void 0
-
-export function link(bond: Bond) {
-  if (!current)
-    throw new Error('No pattern is currently bound')
-  current.push(bond)
+export interface PatternDelta {
+  mut: 'add' | 'remove' | 'change'
+  bond: Bond
 }
 
-export function trace(plan: () => any): Pattern {
-  const pattern: Bond[] = []
+export type Pattern = Map<Site, Bond>
+
+interface Scope {
+  current: Pattern
+  delta: PatternDelta[]
+  removed: Set<Site>
+}
+
+let scope: Scope | void = void 0
+
+interface KeyDelta {
+  mut: 'add' | 'keep' | 'change'
+  bond?: Bond
+}
+
+export function keyState(key: Key): KeyDelta {
+  if (!scope) throw new Error('No pattern is currently bound')
+  const bond = scope.current.get(key.site)
+  if (!bond) return { mut: 'add', bond }
+  if (key.equals(bond.key)) return { mut: 'keep', bond }
+  return { mut: 'change', bond }
+}
+
+export function trace(plan: () => any, pattern: Pattern = new Map): PatternDelta[] {
   try {
-    current = pattern
+    scope = {
+      current: pattern,
+      delta: [],
+      removed: new Set(pattern.keys())
+    }
     plan()
+    for (const site of scope.removed) {
+      scope.delta.push({ mut: 'remove', bond: pattern.get(site)! })
+    }
+    return scope.delta
   } finally {
-    current = void 0
-    return pattern
+    scope = void 0
   }
 }
 
-type CreateBond = (...args: any[]) => Bond
-export const linked = <B extends CreateBond>(create: B): Keyed<(key?: Key) => B> => keyed(
-  (key?: Key) => (
-    (...args: any[]) => {
-      const bond = create(...args)
-      key && keys.set(bond, key)
-      link(bond)
-      return bond
-    }
-  ) as B
+type Linkable<S, R> = (bond: (type: string, state: S, rval?: R) => R, state?: S) => any
+export const linked = <L extends Linkable<any, any>>(linkable: L): Keyed<(key?: Key) => ReturnType<L>> => keyed(
+  (key: Key) => {
+    const stateForKey = keyState(key)
+    const bond =
+      stateForKey.mut === 'keep'
+        ? <R>(_type: string, _state: any, _rval: R): R => {
+          if (!scope) throw new Error('No pattern is currently bound')
+          scope.removed.delete(key.site)
+          return stateForKey.bond?.rval
+        }
+        : <R>(type: string, state: any, rval: R): R => {
+            if (!scope) throw new Error('No pattern is currently bound')
+            scope.delta.push({
+              mut: stateForKey.mut as 'add' | 'change',
+              bond: { type, key, state, rval }
+            })
+            return rval
+          }
+    return linkable(bond, stateForKey.bond?.state)
+  }
 )
 
+type DefState = { ref: Ref<any>, def: any }
+
 export const def = linked(
-  <T>(ref: Ref<T>, def: T | Ref<T>) =>
-    ({ type: 'def', ref, def })
+  (bond: <R>(type: string, state: DefState, rval: R) => R) =>
+    <T>(ref: Ref<T>, def: T | Ref<T>): T | Ref<T> =>
+      bond('def', { ref, def }, def)
 )

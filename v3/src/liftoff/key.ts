@@ -1,45 +1,42 @@
-import { WeakTrie, NextTerminal } from './weak-trie'
 import { isTemplateStringsArray } from '../utilities/types'
 import { setLocation } from './loc'
 
+export type Site = TemplateStringsArray
 export interface Key {
-  id: number
-  description?: string
+  site: Site
+  deps: any[]
+  equals(other: Key): boolean
 }
 
-let nextId = 0
-const createKey = (description?: string) => ({
-  id: nextId++,
-  description,
-})
+export type Keyable = (key: Key) => any
 
-const nextKey: NextTerminal<Key> = (value: any, prev?: Key) =>
-  createKey((prev ? prev.description : '') + String(value))
-
-const Empty = createKey('Empty')
-const Null = createKey('Null')
-const Undefined = createKey('Undefined')
-
-export const keys = new WeakTrie<Key>(nextKey, Empty)
-keys.set(null, Null)
-keys.set(undefined, Undefined)
-
-export default keys
-
-export type Keyable = (key?: Key) => any
 export type Keyed<F extends Keyable> =
   ((parts: TemplateStringsArray, ...subs: any[]) => ReturnType<F>) & ReturnType<F>
 
-export const keyed = <F extends Keyable>(func: F): Keyed<F> => {
-  const keyless = func()
-  return (
-    (...args: any[]) => {
-      const [first] = args
-      if (isTemplateStringsArray(first)) {
-        setLocation(first)
-        return func(keys.getIn(args)).apply(undefined, args)
-      }
-      return keyless.apply(undefined, args)
+export const keyed = <F extends Keyable>(func: F): Keyed<F> => (
+  (...args: any[]) => {
+    const [site, ...deps] = args
+    if (isTemplateStringsArray(site)) {
+      setLocation(site)
+      return func(new DepKey(site, deps)).apply(undefined, args)
     }
-  ) as any
+    return func(anonymous()).apply(undefined, args)
+  }
+) as any
+
+const anonymous = (): Key => new DepKey(Object.assign([], {raw: []}))
+
+class DepKey implements Key {
+  constructor (public readonly site: Site, public readonly deps: any[] = []) {}
+  equals(other: Key) {
+    return other && other.site === this.site && isShallowEqual(this.deps, other.deps)
+  }
+}
+
+function isShallowEqual(a: any[], b: any[]) {
+  if (a.length !== b.length) return false
+  let i = a.length; while (i --> 0) {
+    if (a[i] !== b[i]) return false
+  }
+  return true
 }

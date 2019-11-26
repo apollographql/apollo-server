@@ -27,7 +27,7 @@ export class WeakTrie<T> {
   private readonly root: WeakTrie<T>
 
   getNode(item: any) {
-    const map = isReferenceType(item) ? this.nextRef : this.nextValue
+    const map = isReferenceType(item) ? this.references : this.values
     const existing = map.get(item)
     if (existing) return existing
     const {next, root, term} = this
@@ -37,7 +37,7 @@ export class WeakTrie<T> {
   }
 
   has(item: any) {
-    const map = isReferenceType(item) ? this.nextRef : this.nextValue
+    const map = isReferenceType(item) ? this.references : this.values
     return map.has(item)
   }
 
@@ -48,7 +48,7 @@ export class WeakTrie<T> {
   set(item: any, term: T): boolean {
     if (this.has(item))
       return false
-    const map = isReferenceType(item) ? this.nextRef : this.nextValue
+    const map = isReferenceType(item) ? this.references : this.values
     const {next, root} = this
     const created = new WeakTrie<T>(next, term, root)
     map.set(item, created)
@@ -65,15 +65,15 @@ export class WeakTrie<T> {
     return node.term
   }
 
-  get nextValue(): Map<ValueType, WeakTrie<T>> {
+  get values(): Map<ValueType, WeakTrie<T>> {
     const value: Map<ValueType, WeakTrie<T>> = new Map
-    Object.defineProperty(this, 'nextValue', {value})
+    Object.defineProperty(this, 'values', {value})
     return value
   }
 
-  get nextRef(): WeakMap<ReferenceType, WeakTrie<T>> {
+  get references(): WeakMap<ReferenceType, WeakTrie<T>> {
     const value: WeakMap<ReferenceType, WeakTrie<T>> = new WeakMap
-    Object.defineProperty(this, 'nextRef', {value})
+    Object.defineProperty(this, 'references', {value})
     return value
   }
 }
