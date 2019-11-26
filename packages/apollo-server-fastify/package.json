@@ -29,14 +29,14 @@
     "apollo-server-core": "file:../apollo-server-core",
     "apollo-server-types": "file:../apollo-server-types",
     "fastify-accepts": "^0.5.0",
-    "fastify-cors": "^0.2.0",
-    "graphql-subscriptions": "^1.0.0",
-    "graphql-tools": "^4.0.0"
+    "fastify-cors": "^3.0.0",
+    "graphql-subscriptions": "^1.1.0",
+    "graphql-tools": "^4.0.6"
   },
   "devDependencies": {
     "apollo-server-integration-testsuite": "file:../apollo-server-integration-testsuite"
   },
   "peerDependencies": {
-    "graphql": "^0.12.0 || ^0.13.0 || ^14.0.0"
+    "graphql": "^0.12.0 || ^0.13.0 || ^14.0.0 || ^14.5.0"
   }
 }
