@@ -23,6 +23,7 @@ function createRefType<T>
       setLocation(ref, tag)
       refsByTag.set(tag, ref)
       refLabels.set(ref, tag.join('___'))
+      allRefs.add(ref)
       return ref
 
       function ref(_value: T | Ref<T>) {
@@ -33,6 +34,9 @@ function createRefType<T>
 
 const refLabels = new WeakMap<Ref<any>, string>()
 const refsByTag = new WeakMap<any, Ref<any>>()
+const allRefs = new WeakSet<Ref<any>>()
+
+export const isRef = <T>(o: any): o is Ref<T> => allRefs.has(o)
 
 export const str = createRefType <string> `string`
 export const obj = createRefType <object> `object`

@@ -6,11 +6,11 @@ describe("patterns — ", () => {
     const name = str`name for testing`;
     const count = int`count for testing`;
     const delta = trace(() => {
-      def(name, "hello world");
-      def(name, name);
+      def(name) ("hello world");
+      def(name) (name);
 
-      def(count, 1);
-      def(count, 10);
+      def(count) (1);
+      def(count) (10);
     });
 
     expect(delta).toMatchInlineSnapshot(`

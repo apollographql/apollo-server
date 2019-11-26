@@ -1,11 +1,11 @@
 import { Ref } from './ref'
 import { Key, Site, Keyed, keyed } from './key'
 
-export interface Bond {
+export interface Bond<R=any> {
   type: string
   key: Key
   state: any
-  rval: any
+  rval: R
 }
 
 export interface PatternDelta {
@@ -80,6 +80,6 @@ type DefState = { ref: Ref<any>, def: any }
 
 export const def = linked(
   (bond: <R>(type: string, state: DefState, rval: R) => R) =>
-    <T>(ref: Ref<T>, def: T | Ref<T>): T | Ref<T> =>
+    <T>(ref: Ref<T>) => (def: T | Ref<T>): T | Ref<T> =>
       bond('def', { ref, def }, def)
 )
