@@ -232,6 +232,7 @@ export class ApolloGateway implements GraphQLService {
 
       // Warn against using the pollInterval and a serviceList simulatenously
       if (config.experimental_pollInterval && isRemoteConfig(config)) {
+        this.experimental_pollInterval = config.experimental_pollInterval;
         console.warn(
           'Polling running services is dangerous and not recommended in production. ' +
             'Polling should only be used against a registry. ' +
