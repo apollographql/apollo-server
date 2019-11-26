@@ -167,7 +167,7 @@ export class ApolloServer extends ApolloServerBase {
                 done(null);
               },
             );
-            f.push(fileUploadMiddleware(this.uploadsConfig, this));
+            preHandler.push(fileUploadMiddleware(this.uploadsConfig, this));
           }
 
           instance.route({
