@@ -551,3 +551,67 @@ describe('composition of value types', () => {
     });
   });
 });
+
+describe('composition of schemas with directives', () => {
+  /**
+   * To see which usage sites indicate whether a directive is "executable" or
+   * merely for use by the type-system ("type-system"), see the GraphQL spec:
+   * https://graphql.github.io/graphql-spec/June2018/#sec-Type-System.Directives
+   */
+  it('preserves executable and purges type-system directives', () => {
+    const serviceA = {
+      typeDefs: gql`
+        "directives at FIELDs are executable"
+        directive @audit(risk: Int!) on FIELD
+
+        "directives at FIELD_DEFINITIONs are for the type-system"
+        directive @transparency(concealment: Int!) on FIELD_DEFINITION
+
+        type EarthConcern {
+          environmental: String! @transparency(concealment: 5)
+        }
+
+        extend type Query {
+          importantDirectives: [EarthConcern!]!
+        }
+      `,
+      name: 'serviceA',
+    };
+
+    const serviceB = {
+      typeDefs: gql`
+        "directives at FIELDs are executable"
+        directive @audit(risk: Int!) on FIELD
+
+        "directives at FIELD_DEFINITIONs are for the type-system"
+        directive @transparency(concealment: Int!) on FIELD_DEFINITION
+
+        extend type EarthConcern {
+          societal: String! @transparency(concealment: 6)
+        }
+      `,
+      name: 'serviceB',
+    };
+
+    const { schema, errors } = composeAndValidate([serviceA, serviceB]);
+    expect(errors).toHaveLength(0);
+
+    const audit = schema.getDirective('audit');
+    expect(audit).toMatchInlineSnapshot(`"@audit"`);
+
+    const transparency = schema.getDirective('transparency');
+    expect(transparency).toBeUndefined();
+
+    const fields = (schema.getType(
+      'EarthConcern',
+    ) as GraphQLObjectType).getFields();
+
+    expect(fields['environmental'].astNode).toMatchInlineSnapshot(
+      `environmental: String!`,
+    );
+
+    expect(fields['societal'].astNode).toMatchInlineSnapshot(
+      `societal: String!`,
+    );
+  });
+});
