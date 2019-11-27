@@ -1,5 +1,4 @@
 import {
-  GraphQLSchema,
   isObjectType,
   FieldNode,
   isInterfaceType,
@@ -8,15 +7,17 @@ import {
   isUnionType,
   GraphQLError,
 } from 'graphql';
-
 import { logServiceAndType, errorWithCode } from '../../utils';
+import { PostCompositionValidator } from '.';
 
 /**
  * - The fields argument can not have root fields that result in a list
  * - The fields argument can not have root fields that result in an interface
  * - The fields argument can not have root fields that result in a union type
  */
-export const keyFieldsSelectInvalidType = (schema: GraphQLSchema) => {
+export const keyFieldsSelectInvalidType: PostCompositionValidator = ({
+  schema,
+}) => {
   const errors: GraphQLError[] = [];
 
   const types = schema.getTypeMap();

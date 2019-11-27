@@ -6,6 +6,34 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 > The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  When a release is being prepared, a new header will be (manually) created below and the the appropriate changes within that release will be moved into the new section.
 
+- `@apollo/gateway`: Add `@types/node-fetch` as a regular dependency to avoid missing dependency for TypeScript consumers. [PR #3546](https://github.com/apollographql/apollo-server/pull/3546) [Issue #3471](https://github.com/apollographql/apollo-server/issues/3471)
+
+### v2.9.12
+
+- Reinstate [PR #3530](https://github.com/apollographql/apollo-server/pull/3530) via [#3539](https://github.com/apollographql/apollo-server/pull/3539) - after a patch release of the `@apollo/protobufjs` fork, the build issue for consumers should be resolved.
+
+### v2.9.11
+
+- Revert [PR #3530](https://github.com/apollographql/apollo-server/pull/3530) via [#3535](https://github.com/apollographql/apollo-server/pull/3535)- the introduction of the `@apollo/protobufjs` fork is causing TS errors in consumer projects. Reverting this change for now, and will reintroduce it after the issue is resolved within the forked package.
+
+### v2.9.10
+
+> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/2a4c654986a158aaccf947ee56a4bfc48a3173c7)
+
+- `apollo-engine-reporting`: Swap usage of `protobufjs` for a newly published fork located at [`@apollo/protobufjs`](https://npm.im/@apollo/protobufjs). This is to account for the [relative uncertainty](https://github.com/protobufjs/protobuf.js/issues/1199) into the continued on-going maintenance of the official `protobuf.js` project. This should immediately resolve a bug that affected `Long` types in `apollo-engine-reporting` and other non-Apollo projects that rely on `protobuf.js`'s `Long` type. [PR #3530](https://github.com/apollographql/apollo-server/pull/3530)
+
+### v2.9.9
+
+> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/93002737d53dd9a50b473ab9cef14849b3e539aa)
+
+- `apollo-server-core`: Don't try parsing `variables` and `extensions` as JSON if they are defined but empty strings. [PR #3501](https://github.com/apollographql/apollo-server/pull/3501)
+- `apollo-server-lambda`: Introduce `onHealthCheck` on `createHandler` in the same fashion as implemented in other integrations. [PR #3458](https://github.com/apollographql/apollo-server/pull/3458)
+- `apollo-server-core`: Use `graphql`'s `isSchema` to more defensively check the user-specified schema's type at runtime and prevent unexpected errors. [PR #3462](https://github.com/apollographql/apollo-server/pull/3462)
+
+### v2.9.8
+
+> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/3cdde1b7a71ace6411fbacf82a1a61bf737444a6)
+
 - `apollo-server-core`: Provide accurate type for `formatResponse` rather than generic `Function` type. [PR #3431](https://github.com/apollographql/apollo-server/pull/3431)
 - `apollo-server-core`: Pass complete request context to `formatResponse`, rather than just `context`. [PR #3431](https://github.com/apollographql/apollo-server/pull/3431)
 
