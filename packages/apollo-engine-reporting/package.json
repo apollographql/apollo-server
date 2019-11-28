@@ -18,5 +18,8 @@
     "apollo-server-types": "file:../apollo-server-types",
     "async-retry": "^1.2.1",
     "graphql-extensions": "file:../graphql-extensions"
+  },
+  "peerDependencies": {
+    "graphql": "^0.12.0 || ^0.13.0 || ^14.0.0"
   }
 }
