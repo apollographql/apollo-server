@@ -1,4 +1,4 @@
-import { RefType, __ref_testing__ } from './ref'
+import { ScalarType, __ref_testing__ } from './ref'
 import { TypeCheck, checkString } from '../test-helpers'
 
 const { createScalarType } = __ref_testing__
@@ -15,7 +15,7 @@ describe('createScalarType creates scalar ref types', () => {
 import { getLocation } from './loc'
 import { trace, def } from './pattern'
 
-function testIsRefType<T>(ref: RefType<T>, check: TypeCheck<T>) {
+function testIsRefType<T>(ref: ScalarType<T>, check: TypeCheck<T>) {
   describe(`${ref} creates Ref<${check.typeName}>`, () => {
     it('the creator has a location', () =>
       expect(getLocation(ref)).toBeDefined())

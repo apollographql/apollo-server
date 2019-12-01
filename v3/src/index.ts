@@ -38,17 +38,16 @@ type Config = Pick<BaseConfig,
 // | 'engine'
 > & Partial<Pick<BaseConfig, 'modules'>>
 
-export const ServerConfig = obj <Config> `Apollo Server Config` ()
+export const ServerConfig = obj <Config> `Apollo Server Config` ({})
 export const Schema = obj <GraphQLSchemaModule> `Schema module` ()
 
 export async function Apollo(plan: () => any) {
   const core = new Core(plan)
   const config = await core.only(ServerConfig)
   config.modules = await core.once(Schema)
-  const server = new ApolloServer(await core.only(ServerConfig))
+  const server = new ApolloServer(config)
   return server
 }
-
 
 type SchemaDerivedData = {
   // A store that, when enabled (default), will store the parsed and validated
