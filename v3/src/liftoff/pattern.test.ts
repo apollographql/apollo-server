@@ -6,11 +6,18 @@ describe("patterns — ", () => {
     const name = str`name for testing`();
     const count = int`count for testing`();
     const delta = trace(() => {
-      def(name)("hello world");
-      def(name)(name);
+      // You can call scalar refs to define them
+      name`greeting`("hello world");
 
-      def(count)(1);
+      // Or use `def` explicitly (here shown with a key)
+      def`with a key`(name)(name);
+
+      // You can omit keys, although doing so means the
+      // defs will change every time the plan is evaluated.
       def(count)(10);
+
+      // Calls also work without keys.
+      count(1);
     });
 
     expect(delta).toMatchInlineSnapshot(`
@@ -19,15 +26,14 @@ describe("patterns — ", () => {
           "bond": Object {
             "key": DepKey {
               "deps": Array [],
-              "site": Array [],
+              "site": Array [
+                "greeting",
+              ],
             },
             "rval": "hello world",
             "state": Object {
               "def": "hello world",
-              "ref": Scalar {
-                "defaultValue": undefined,
-                "label": "name for testing",
-              },
+              "ref": [Function],
             },
             "type": "def",
           },
@@ -37,39 +43,14 @@ describe("patterns — ", () => {
           "bond": Object {
             "key": DepKey {
               "deps": Array [],
-              "site": Array [],
+              "site": Array [
+                "with a key",
+              ],
             },
-            "rval": Scalar {
-              "defaultValue": undefined,
-              "label": "name for testing",
-            },
+            "rval": [Function],
             "state": Object {
-              "def": Scalar {
-                "defaultValue": undefined,
-                "label": "name for testing",
-              },
-              "ref": Scalar {
-                "defaultValue": undefined,
-                "label": "name for testing",
-              },
-            },
-            "type": "def",
-          },
-          "mut": "add",
-        },
-        Object {
-          "bond": Object {
-            "key": DepKey {
-              "deps": Array [],
-              "site": Array [],
-            },
-            "rval": 1,
-            "state": Object {
-              "def": 1,
-              "ref": Scalar {
-                "defaultValue": undefined,
-                "label": "count for testing",
-              },
+              "def": [Function],
+              "ref": [Function],
             },
             "type": "def",
           },
@@ -84,10 +65,22 @@ describe("patterns — ", () => {
             "rval": 10,
             "state": Object {
               "def": 10,
-              "ref": Scalar {
-                "defaultValue": undefined,
-                "label": "count for testing",
-              },
+              "ref": [Function],
+            },
+            "type": "def",
+          },
+          "mut": "add",
+        },
+        Object {
+          "bond": Object {
+            "key": DepKey {
+              "deps": Array [],
+              "site": Array [],
+            },
+            "rval": 1,
+            "state": Object {
+              "def": 1,
+              "ref": [Function],
             },
             "type": "def",
           },

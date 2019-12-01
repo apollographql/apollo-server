@@ -25,23 +25,16 @@ describe('source locations — ', () => {
   })
 
 
-  let location: Error | void = void 0
   function tag(parts: TemplateStringsArray) {
     setLocation(parts)
     return getLocation(parts)
   }
 
-  function testTag() {
-    const loc = tag `hello world`
-    if (!location) {
-      location = loc
-      return
-    }
-    expect(location).toBe(loc)
+  function testLocation() {
+    return tag `hello world`
   }
 
   it('interestingly, template literal objects are allocated once per callsite', () => {
-    testTag()
-    testTag()
+    expect(testLocation()).toBe(testLocation())
   })
 })

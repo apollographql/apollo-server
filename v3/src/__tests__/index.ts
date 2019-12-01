@@ -1,4 +1,5 @@
-import { ApolloServer, gql } from "../index";
+import { Apollo, gql, Schema } from "../index";
+import { def } from "../liftoff";
 
 // TODO(AS3) Why can't I apply the `GraphQLSchemaModule` type here?
 const testModule = {
@@ -30,11 +31,13 @@ const testModule = {
 
 describe("ApolloServer", () => {
   it("can execute a query", async () => {
-    const operation = await (new ApolloServer({
-      modules: [testModule],
-    })).executeOperation({
+    const server = await Apollo(() => {
+      def (Schema) (testModule)
+    })
+
+    const operation = await server.executeOperation({
       query: 'query GetBooks { books { author } }',
-    });
+    })
 
     expect(operation).toHaveProperty(['data', 'books', 0, 'author']);
     expect(operation).toHaveProperty('errors', undefined);

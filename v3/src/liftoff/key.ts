@@ -18,7 +18,7 @@ export const keyed = <F extends Keyable>(func: F): Keyed<F> => (
     const [site, ...deps] = args
     if (isTemplateStringsArray(site)) {
       setLocation(site)
-      return func(new DepKey(site, deps)).apply(undefined, args)
+      return func(new DepKey(site, deps))
     }
     return func(anonymous()).apply(undefined, args)
   }
