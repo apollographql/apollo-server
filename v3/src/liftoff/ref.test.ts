@@ -1,10 +1,10 @@
 import { RefType, __ref_testing__ } from './ref'
 import { TypeCheck, checkString } from '../test-helpers'
 
-const { createRefType } = __ref_testing__
+const { createScalarType } = __ref_testing__
 
-describe('createRefType creates ref types', () => {
-  const string = createRefType<string> `string`
+describe('createScalarType creates scalar ref types', () => {
+  const string = createScalarType<string> `string`
 
   it('with a location', () =>
     expect(getLocation(string)).toBeDefined())
@@ -13,16 +13,18 @@ describe('createRefType creates ref types', () => {
 })
 
 import { getLocation } from './loc'
+import { trace, def } from './pattern'
 
 function testIsRefType<T>(ref: RefType<T>, check: TypeCheck<T>) {
   describe(`${ref} creates Ref<${check.typeName}>`, () => {
-    it('with a location', () =>
+    it('the creator has a location', () =>
       expect(getLocation(ref)).toBeDefined())
 
     it('creates ref with a location', () =>
-      expect(getLocation(ref `a ref`)).toBeDefined())
+      expect(getLocation(ref `a ref` ())).toBeDefined())
 
-    it(`creates refs accepting ${check.typeName} values`, () =>
-      ref `another ref` (check.example))
+    it(`creates refs accepting ${check.typeName} values`, () => {
+      trace(() => def(ref `another ref` ()) (check.example))
+    })
   })
 }

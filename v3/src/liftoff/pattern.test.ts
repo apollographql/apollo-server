@@ -3,14 +3,14 @@ import { str, int } from "./ref";
 
 describe("patterns — ", () => {
   it("trace(plan) returns all bonds linked by plan()", () => {
-    const name = str`name for testing`;
-    const count = int`count for testing`;
+    const name = str`name for testing`();
+    const count = int`count for testing`();
     const delta = trace(() => {
-      def(name) ("hello world");
-      def(name) (name);
+      def(name)("hello world");
+      def(name)(name);
 
-      def(count) (1);
-      def(count) (10);
+      def(count)(1);
+      def(count)(10);
     });
 
     expect(delta).toMatchInlineSnapshot(`
@@ -24,7 +24,10 @@ describe("patterns — ", () => {
             "rval": "hello world",
             "state": Object {
               "def": "hello world",
-              "ref": [Function],
+              "ref": Scalar {
+                "defaultValue": undefined,
+                "label": "name for testing",
+              },
             },
             "type": "def",
           },
@@ -36,10 +39,19 @@ describe("patterns — ", () => {
               "deps": Array [],
               "site": Array [],
             },
-            "rval": [Function],
+            "rval": Scalar {
+              "defaultValue": undefined,
+              "label": "name for testing",
+            },
             "state": Object {
-              "def": [Function],
-              "ref": [Function],
+              "def": Scalar {
+                "defaultValue": undefined,
+                "label": "name for testing",
+              },
+              "ref": Scalar {
+                "defaultValue": undefined,
+                "label": "name for testing",
+              },
             },
             "type": "def",
           },
@@ -54,7 +66,10 @@ describe("patterns — ", () => {
             "rval": 1,
             "state": Object {
               "def": 1,
-              "ref": [Function],
+              "ref": Scalar {
+                "defaultValue": undefined,
+                "label": "count for testing",
+              },
             },
             "type": "def",
           },
@@ -69,7 +84,10 @@ describe("patterns — ", () => {
             "rval": 10,
             "state": Object {
               "def": 10,
-              "ref": [Function],
+              "ref": Scalar {
+                "defaultValue": undefined,
+                "label": "count for testing",
+              },
             },
             "type": "def",
           },
