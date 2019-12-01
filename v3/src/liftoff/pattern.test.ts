@@ -1,10 +1,13 @@
 import { def, trace } from "./pattern";
 import { str, int } from "./ref";
+import refSerializer from "../snapshotSerializers/refSerializer";
+
+expect.addSnapshotSerializer(refSerializer);
 
 describe("patterns — ", () => {
   it("trace(plan) returns all bonds linked by plan()", () => {
-    const name = str`name for testing`();
-    const count = int`count for testing`();
+    const name = str`cute lil ref`();
+    const count = int`tiny count`();
     const delta = trace(() => {
       // You can call scalar refs to define them
       name`greeting`("hello world");
@@ -33,7 +36,7 @@ describe("patterns — ", () => {
             "rval": "hello world",
             "state": Object {
               "def": "hello world",
-              "ref": [Function],
+              "ref": cute lil ref <string> (pattern.test.ts:9:21),
             },
             "type": "def",
           },
@@ -47,10 +50,10 @@ describe("patterns — ", () => {
                 "with a key",
               ],
             },
-            "rval": [Function],
+            "rval": cute lil ref <string> (pattern.test.ts:9:21),
             "state": Object {
-              "def": [Function],
-              "ref": [Function],
+              "def": cute lil ref <string> (pattern.test.ts:9:21),
+              "ref": cute lil ref <string> (pattern.test.ts:9:21),
             },
             "type": "def",
           },
@@ -65,7 +68,7 @@ describe("patterns — ", () => {
             "rval": 10,
             "state": Object {
               "def": 10,
-              "ref": [Function],
+              "ref": tiny count <int> (pattern.test.ts:10:22),
             },
             "type": "def",
           },
@@ -80,7 +83,7 @@ describe("patterns — ", () => {
             "rval": 1,
             "state": Object {
               "def": 1,
-              "ref": [Function],
+              "ref": tiny count <int> (pattern.test.ts:10:22),
             },
             "type": "def",
           },

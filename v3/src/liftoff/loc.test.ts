@@ -18,6 +18,7 @@ describe('source locations — ', function testSourceLocations() {
     ${'col'}          | ${19}
     ${'path'}         | ${/\/src\/liftoff\/loc.test.ts/}
     ${'functionName'} | ${'Suite.testSourceLocations'}
+    ${'short'}        | ${'loc.test.ts:4:19'}
     `
     ('.$prop', ({ prop, value }: { prop: keyof Location, value: any }) => {
       const actual = location[prop]

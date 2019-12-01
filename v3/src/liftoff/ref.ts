@@ -23,12 +23,13 @@ export interface Scalar<T> extends Ref<T> {
 
 function createScalarType<T>
   (tag: TemplateStringsArray, ..._deps: any[]): ScalarType<T> {
-    setLocation(tag)
+    setLocation(tag, 2)
     setLocation(createRef, tag)
+    const typeLabel = tag.join('___')
     return createRef
 
     function createRef<X extends T>(tag: TemplateStringsArray, ..._deps: any[]) {
-      setLocation(tag)
+      setLocation(tag, 2)
       const label = tag.join('___')
       return create
 
@@ -58,6 +59,7 @@ function createScalarType<T>
         setLocation(define, tag)
         refsByTag.set(tag, define)
         refLabels.set(define, label)
+        refTypeLabels.set(define, typeLabel)
         allRefs.add(define)
 
         return define
@@ -65,7 +67,17 @@ function createScalarType<T>
     }
   }
 
-const refLabels = new WeakMap<Ref<any>, string>()
+
+export function getLabel(ref: object) {
+  return refLabels.get(ref)
+}
+
+export function getTypeLabel(ref: object) {
+  return refTypeLabels.get(ref)
+}
+
+const refLabels = new WeakMap<any, string>()
+const refTypeLabels = new WeakMap<any, string>()
 const refsByTag = new WeakMap<any, Ref<any>>()
 const allRefs = new WeakSet<Ref<any>>()
 

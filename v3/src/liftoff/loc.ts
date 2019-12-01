@@ -18,6 +18,10 @@ export class Location {
   public get line() { return this.frame.lineNumber }
   public get col() { return this.frame.columnNumber }
 
+  public get short() {
+    return `${this.file}:${this.line}:${this.col}`
+  }
+
   public readonly functionName?: string
   public readonly args?: any[]
 
