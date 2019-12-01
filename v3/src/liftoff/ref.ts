@@ -65,22 +65,6 @@ function createScalarType<T>
     }
   }
 
-// class Scalar<T> implements Ref<T> {
-//   public readonly label: string
-
-//   constructor(tag: TemplateStringsArray, public readonly defaultValue?: T | Ref<T>) {
-//     setLocation(this, tag)
-//     refsByTag.set(tag, this)
-//     this.label = tag.join('___')
-//     refLabels.set(this, this.label)
-//     allRefs.add(this)
-//   }
-
-//   toString() { return this.label }
-
-//   get [DEFAULT_VALUE]() { return this.defaultValue }
-// }
-
 const refLabels = new WeakMap<Ref<any>, string>()
 const refsByTag = new WeakMap<any, Ref<any>>()
 const allRefs = new WeakSet<Ref<any>>()
