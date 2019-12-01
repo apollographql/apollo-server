@@ -1,15 +1,32 @@
-import { setLocation, getLocation, getStack } from './loc'
+import { setLocation, getLocation, Location } from './loc'
 
-describe('source locations — ', () => {
+describe('source locations — ', function testSourceLocations() {
   const obj = {}; setLocation(obj)
 
   it('setLocation sets the location of an object as an error; getLocation returns it', () => {
     expect(getLocation(obj)).toBeDefined()
   })
 
-  it('getStack gives you the stack', () => {
-    expect(getStack(obj)).toBeDefined()
-    expect(getStack(obj)).toMatch('loc.test.ts:4')
+
+  describe('Location', () => {
+    const location = getLocation(obj)!
+
+    it.each `
+    prop              | value
+    ${'file'}         | ${'loc.test.ts'}
+    ${'line'}         | ${4}
+    ${'col'}          | ${19}
+    ${'path'}         | ${/\/src\/liftoff\/loc.test.ts/}
+    ${'functionName'} | ${'Suite.testSourceLocations'}
+    `
+    ('.$prop', ({ prop, value }: { prop: keyof Location, value: any }) => {
+      const actual = location[prop]
+      if (value instanceof RegExp) {
+        expect(actual).toMatch(value)
+      } else {
+        expect(actual).toBe(value)
+      }
+    })
   })
 
   it('setLocation is idempotent', () => {
