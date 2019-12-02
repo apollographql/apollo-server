@@ -68,10 +68,8 @@ describe("the core", () => {
       ));
 
     it("throws if the ref is defined multiple times", () =>
-      expect(core.only(Schema)).rejects.toMatchInlineSnapshot(`
-        [Error: GraphQL Schema was defined 2 times:
-          - at anonymous (core.test.ts:43:5)
-          - at anonymous (core.test.ts:45:5)]
-      `));
+      expect(core.only(Schema)).rejects.toThrow(
+        /was defined 2 times:[^(]*\(core\.test\.ts:43:5[^(]*\(core\.test\.ts:45:5/
+      ))
   });
 });
