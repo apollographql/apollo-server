@@ -50,12 +50,24 @@ export class Core {
 
   states: Map<Ref<any>, any> = new Map
 
-  resolveDefs(ref: Ref<any>): Set<Bond> {
+  /**
+   * Resolve all bonds that define this ref.
+   *
+   * @param ref {Ref<T>} the ref
+   * @returns Set<Bond>
+   */
+  private resolveDefs(ref: Ref<any>): Set<Bond> {
     return this.defs.get(ref) || (
       typeof ref[DEFAULT_BOND] !== 'undefined' ? new Set([ref[DEFAULT_BOND]]) : NO_BONDS
     )
   }
 
+  /**
+   * Given a ref, return an array of all defined values for that ref.
+   *
+   * @param ref {Ref<T>} the ref to read
+   * @returns Promise<T[]>
+   */
   async once<T>(ref: Ref<T>): Promise<T[]> {
     const {states} = this
 
@@ -72,6 +84,13 @@ export class Core {
     return state
   }
 
+  /**
+   * Given a ref, return the single defined value for that ref. Rejects if there
+   * are zero or more than one definitions for the ref.
+   *
+   * @param ref {Ref<T>} the ref to read
+   * @returns Promise<T>
+   */
   async only<T>(ref: Ref<T>): Promise<T> {
     return this.once(ref).then(values => {
       if (values.length === 1) return values[0]

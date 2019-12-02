@@ -6,23 +6,41 @@ export interface ScalarType<T> {
   <X extends T=T>(tag: TemplateStringsArray, ...deps: any[]): (defaultValue?: X | Ref<X>) => Scalar<X>
 }
 
-
 export const DEFAULT_VALUE = Symbol('Default value, if any // Ref<T>::[DEFAULT_VALUE]: T | Ref<T>')
 export const DEFAULT_BOND = Symbol('Bond for default value // Bond')
 export interface Ref<T> {
+  // [DEFAULT_VALUE] value holds the default value for this ref
   [DEFAULT_VALUE]: T | Ref<T> | void
+
+  // [DEFAULT_BOND] holds a bond which applies to this ref and binds
+  // the [DEFAULT_VALUE]. Creating this once is useful because it lets us
+  // set location data for the definition to the source location where the
+  // ref was defined.
   [DEFAULT_BOND]: Bond
 }
 
 export interface Scalar<T> extends Ref<T> {
+  /**
+   * Provide a definition for this ref.
+   *
+   * @param value {T | Ref<T>} the definition
+   */
   (value: T | Ref<T>): void
   (tag: TemplateStringsArray, ...deps: any[]): (value: T | Ref<T>) => void
 
+  /**
+   * Provide a definition for this ref.
+   *
+   * @param value {T | Ref<T>} the definition
+   */
   def(value: T | Ref<T>): void
   def(tag: TemplateStringsArray, ...deps: any[]): (value: T | Ref<T>) => void
 }
 
 
+/**
+ * Create a scalar type, which can be called to create scalar refs.
+ */
 function createScalarType<T>
   (tag: TemplateStringsArray, ..._deps: any[]): ScalarType<T> {
     setLocation(tag, 2)
@@ -30,11 +48,22 @@ function createScalarType<T>
     const typeLabel = tag.join('___')
     return createRef
 
+    /**
+     * Label a scalar ref.
+     *
+     * @param tag
+     * @param deps
+     */
     function createRef<X extends T>(tag: TemplateStringsArray, ...deps: any[]) {
       setLocation(tag, 2)
       const label = tag.join('___')
       return create
 
+      /**
+       * Create a scalar ref, optionally with a default value.
+       *
+       * @param defaultValue {T | Ref<T>}
+       */
       function create(defaultValue?: X | Ref<X>): Scalar<X> {
         const define: Scalar<X> = keyed(key => (value: X | Ref<X>) => {
           def (key.site, ...key.deps) (define) (value)
