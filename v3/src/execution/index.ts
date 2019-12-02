@@ -2,10 +2,7 @@ export {
   GraphQLRequestContext,
   GraphQLRequestPipelineConfig,
 } from 'apollo-server-core/dist/requestPipeline';
-import {
-  GraphQLRequest,
-  VariableValues,
-} from 'apollo-server-types';
+import { VariableValues } from 'apollo-server-types';
 import {
   DocumentNode,
   parse,
@@ -13,9 +10,9 @@ import {
   GraphQLSchema,
   validate,
   execute,
-  ExecutionResult,
   separateOperations,
 } from 'graphql';
+import { GraphQLRequest, GraphQLResponse } from "../types/";
 
 // TODO(AS3) I'm not sure if this is execution.  Perhaps, a top-level export.
 export { GraphQLSchemaModule } from 'apollo-graphql';
@@ -49,7 +46,7 @@ export async function processGraphqlRequest<
   request,
   schema,
   context,
-}: ProcessRequestInput<TContext>): Promise<Record<string, any>> {
+}: ProcessRequestInput<TContext>): Promise<GraphQLResponse> {
   const { query, operationName, variables } = request;
 
   if (!query) {
@@ -177,7 +174,7 @@ export async function executeGraphqlRequest({
   operationName,
   variables,
   context,
-}: ExecutionInput): Promise<ExecutionResult<Record<string, any>>> {
+}: ExecutionInput): Promise<GraphQLResponse> {
   return await execute<Record<string, any>>({
     schema,
     document,

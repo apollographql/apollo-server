@@ -1,8 +1,8 @@
-import { IncomingMessage, RequestListener } from 'http';
-import { HttpRequest } from './transport';
-import { processHttpRequest } from './transport';
-import { GraphQLRequest } from '../../execution';
+import { IncomingMessage, RequestListener, ServerResponse } from "http";
+import { IHttpRequest } from "./transport";
+import { processHttpRequest } from "./transport";
 import { GraphQLSchema } from "graphql";
+import { GraphQLRequest } from "../../types";
 
 /**
  * A factory function that receives an instance of `ApolloServer` and returns
@@ -15,36 +15,52 @@ export const httpHandler: (
   schema: GraphQLSchema,
 ) => RequestListener = schema => {
   if (!(schema instanceof GraphQLSchema)) {
-    throw new Error('Must pass an instance of ApolloServer');
+    throw new Error("Must pass a schema.");
   }
 
   /**
    * Returns the handler that can be passed to the HTTP framework that
    * respects the `(req, res)` pattern (e.g. Express or Node.js).
    */
-  return async function httpRequestHandler(req, res): Promise<void> {
+  return async function httpRequestListener(req, res): Promise<void> {
+    if (!req) {
+      return responseAsInternalServerError(
+        res,
+        "Missing request on HTTP request handler invocation.",
+      );
+    }
+
+    if (!res) {
+      return responseAsInternalServerError(
+        res,
+        "Missing response sink on HTTP request handler invocation.",
+      );
+    }
+
     let parsedRequest: GraphQLRequest;
     try {
       /**
-       * TODO: Should probably validate, in a non-TypeScript way, that the
-       * TODO: properties we expect to be there are present.
+       * TODO: Need to assert at runtime that the properties we expect to
+       * be there are present.
        */
       parsedRequest = await jsonBodyParse(req);
     } catch (err) {
-      res.writeHead(500, 'Error parsing body.');
-      return;
+      // TODO(AS3) In order to limit error codes to a single place, this may
+      // be well-served to be a `GraphQLError`.
+      return responseAsInternalServerError(res, "Error parsing body");
     }
 
     /**
      * Maps the incoming request to the shape that the Apollo HTTP transport
      * expects it to be in.
      */
-    const httpGraphqlRequest: HttpRequest = {
+    const httpGraphqlRequest: IHttpRequest = {
       parsedRequest,
       url: req.url,
       headers: req.headers,
       // The `method` property, while optional in `http.IncomingMessage` type,
       // is guaranteed to be present on extensions of `http.Server` instances.
+      // Ref: https://git.io/JeM4V
       method: req.method!,
     };
 
@@ -76,13 +92,36 @@ export const httpHandler: (
 };
 
 /**
+ * Called in the event of a critical error within the HTTP handler.
+ *
+ * @param res Called
+ * @param errorMessage
+ */
+export function responseAsInternalServerError(
+  res: ServerResponse,
+  errorMessage: string,
+): void {
+  res.writeHead(500, errorMessage);
+  return;
+}
+
+/**
  * Take an `http.IncomingMessage` and translate it into a `GraphQLRequest` which
- * is suitable for consumption by the HTTP transport.  This is essentially a
+ * is suitable for consumption by the HTTP transport.  This is a bare-bones
  * replacement for using a more full-featured package like the popular
- * [`body-parser`](https://npm.im/body-parser) package.
+ * [`body-parser`](https://npm.im/body-parser) package.  Of notable absence,
+ * this method does nothing to strictly enforce body length limits, and has
+ * no other error handling.  The `JSON.parse` will of course throw with
+ * malformed input!
  *
  * @param req The request from an `http.IncomingMessage` compatible interface.
  *            (Note that Express' `req` **is** compatible!)
+ *
+ * @remarks
+ *
+ * TODO(AS3) Consider whether this implementation should be used as a getting
+ * started experience that doesn't require an external package.
+ *
  */
 async function jsonBodyParse(req: IncomingMessage): Promise<GraphQLRequest> {
   const body: string = await new Promise(resolve => {
