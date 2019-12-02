@@ -20,7 +20,7 @@ import {
   Context,
   ContextFunction,
 } from './execution';
-import { Core, obj } from './liftoff';
+import { Core, obj, Plan } from './liftoff';
 
 // A subset of the base configuration.
 type Config = Pick<BaseConfig,
@@ -41,7 +41,7 @@ type Config = Pick<BaseConfig,
 export const ServerConfig = obj <Config> `Apollo Server Config` ({})
 export const Schema = obj <GraphQLSchemaModule> `Schema module` ()
 
-export async function Apollo(plan: () => any) {
+export async function Apollo(plan: Plan) {
   const core = new Core(plan)
   const config = await core.only(ServerConfig)
   config.modules = await core.once(Schema)

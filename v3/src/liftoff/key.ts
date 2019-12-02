@@ -17,17 +17,24 @@ export const keyed = <F extends Keyable>(func: F): Keyed<F> => (
   (...args: any[]) => {
     const [site, ...deps] = args
     if (isTemplateStringsArray(site)) {
-      setLocation(site)
+      setLocation(site, 2)
       return func(new DepKey(site, deps))
     }
     return func(anonymous()).apply(undefined, args)
   }
 ) as any
 
-const anonymous = (): Key => new DepKey(Object.assign([], {raw: []}))
+const anonymous = (): Key => {
+  const site = Object.assign([], {raw: []})
+  setLocation(site, 3)
+  return new DepKey(site)
+}
 
 class DepKey implements Key {
-  constructor (public readonly site: Site, public readonly deps: any[] = []) {}
+  constructor (public readonly site: Site, public readonly deps: any[] = []) {
+    setLocation(this, site)
+  }
+
   equals(other: Key) {
     return other && other.site === this.site && isShallowEqual(this.deps, other.deps)
   }

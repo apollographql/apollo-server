@@ -64,12 +64,14 @@ describe("the core", () => {
 
     it("throws if the ref is not defined", () =>
       expect(core.only(preprocess)).rejects.toMatchInlineSnapshot(
-        `[Error: ref \`Query preprocessor\` was defined 0 times]`
+        `[Error: Query preprocessor <function> (core.test.ts:39:53) was never defined]`
       ));
 
     it("throws if the ref is defined multiple times", () =>
-      expect(core.only(Schema)).rejects.toMatchInlineSnapshot(
-        `[Error: ref \`GraphQL Schema\` was defined 2 times]`
-      ));
+      expect(core.only(Schema)).rejects.toMatchInlineSnapshot(`
+        [Error: GraphQL Schema was defined 2 times:
+          - at anonymous (core.test.ts:43:5)
+          - at anonymous (core.test.ts:45:5)]
+      `));
   });
 });

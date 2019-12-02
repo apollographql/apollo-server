@@ -12,3 +12,11 @@ export const isReferenceType = (o: any): o is ReferenceType => {
 
 export const isTemplateStringsArray = (o: any): o is TemplateStringsArray =>
   Array.isArray(o) && (o as any).raw
+
+export interface Constructor<T> {
+  new(...args: any[]): T
+}
+
+export interface Class<T> extends Constructor<T> {
+  prototype: T
+}

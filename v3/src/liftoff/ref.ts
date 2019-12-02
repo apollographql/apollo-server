@@ -1,15 +1,17 @@
-import { setLocation } from './loc'
+import { setLocation, getLocation } from './loc'
 import { keyed } from './key'
-import { def } from './pattern'
+import { def, Bond, trace } from './pattern'
 
 export interface ScalarType<T> {
   <X extends T=T>(tag: TemplateStringsArray, ...deps: any[]): (defaultValue?: X | Ref<X>) => Scalar<X>
 }
 
 
-export const DEFAULT_VALUE = Symbol('Ref<T>::[DEFAULT_VALUE]: T | void')
+export const DEFAULT_VALUE = Symbol('Default value, if any // Ref<T>::[DEFAULT_VALUE]: T | Ref<T>')
+export const DEFAULT_BOND = Symbol('Bond for default value // Bond')
 export interface Ref<T> {
   [DEFAULT_VALUE]: T | Ref<T> | void
+  [DEFAULT_BOND]: Bond
 }
 
 export interface Scalar<T> extends Ref<T> {
@@ -28,7 +30,7 @@ function createScalarType<T>
     const typeLabel = tag.join('___')
     return createRef
 
-    function createRef<X extends T>(tag: TemplateStringsArray, ..._deps: any[]) {
+    function createRef<X extends T>(tag: TemplateStringsArray, ...deps: any[]) {
       setLocation(tag, 2)
       const label = tag.join('___')
       return create
@@ -38,21 +40,22 @@ function createScalarType<T>
           def (key.site, ...key.deps) (define) (value)
         }) as any
 
+        const defaultBond = typeof defaultValue !== 'undefined'
+          ? trace(() => def (tag, ...deps) (define) (defaultValue))[0].bond
+          : undefined
+
         Object.defineProperties(define, {
           [DEFAULT_VALUE]: {
             value: defaultValue,
-            configurable: false,
-            writable: false,
+          },
+          [DEFAULT_BOND]: {
+            value: defaultBond
           },
           toString: {
-            value() { return label },
-            configurable: false,
-            writable: false,
+            value() { return `${label} <${typeLabel}> (${getLocation(this)?.short})` },
           },
           def: {
             value: define,
-            configurable: false,
-            writable: false,
           },
         })
 

@@ -1,5 +1,6 @@
 import { Ref } from './ref'
 import { Key, Site, Keyed, keyed } from './key'
+import { throws } from './errors'
 
 export interface Bond<R=any> {
   type: string
@@ -15,6 +16,8 @@ export interface PatternDelta {
 
 export type Pattern = Map<Site, Bond>
 
+const E_UNBOUND = throws('UNBOUND', 'No pattern is currently bound')
+
 interface Scope {
   current: Pattern
   delta: PatternDelta[]
@@ -29,7 +32,7 @@ interface KeyDelta {
 }
 
 export function keyState(key: Key): KeyDelta {
-  if (!scope) throw new Error('No pattern is currently bound')
+  if (!scope) throw E_UNBOUND()
   const bond = scope.current.get(key.site)
   if (!bond) return { mut: 'add', bond }
   if (key.equals(bond.key)) return { mut: 'keep', bond }
@@ -37,6 +40,7 @@ export function keyState(key: Key): KeyDelta {
 }
 
 export function trace(plan: () => any, pattern: Pattern = new Map): PatternDelta[] {
+  const prevScope = scope
   try {
     scope = {
       current: pattern,
@@ -49,7 +53,7 @@ export function trace(plan: () => any, pattern: Pattern = new Map): PatternDelta
     }
     return scope.delta
   } finally {
-    scope = void 0
+    scope = prevScope
   }
 }
 
@@ -60,12 +64,12 @@ export const linked = <L extends Linkable<any, any>>(linkable: L): Keyed<(key?: 
     const bond =
       stateForKey.mut === 'keep'
         ? <R>(_type: string, _state: any, _rval: R): R => {
-          if (!scope) throw new Error('No pattern is currently bound')
+          if (!scope) throw E_UNBOUND()
           scope.removed.delete(key.site)
           return stateForKey.bond?.rval
         }
         : <R>(type: string, state: any, rval: R): R => {
-            if (!scope) throw new Error('No pattern is currently bound')
+            if (!scope) throw E_UNBOUND()
             scope.delta.push({
               mut: stateForKey.mut as 'add' | 'change',
               bond: { type, key, state, rval }

@@ -1,5 +1,5 @@
 import { Plugin, Config, Refs } from 'pretty-format'
-import { isRef, Ref, getLabel, getTypeLabel, getLocation } from '../liftoff'
+import { isRef, Ref } from '../liftoff'
 
 export default {
   test(value: any) {
@@ -14,6 +14,6 @@ export default {
     _refs: Refs,
     _printer: any,
   ): string {
-    return `${getLabel(value)} <${getTypeLabel(value)}> (${getLocation(value)?.short})`
+    return value.toString()
   },
 } as Plugin
