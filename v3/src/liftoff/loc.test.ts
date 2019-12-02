@@ -3,7 +3,7 @@ import { setLocation, getLocation, Location } from './loc'
 describe('source locations — ', function testSourceLocations() {
   const obj = {}; setLocation(obj)
 
-  it('setLocation sets the location of an object as an error; getLocation returns it', () => {
+  it('setLocation sets the source location of an object; getLocation returns it', () => {
     expect(getLocation(obj)).toBeDefined()
   })
 
@@ -42,6 +42,25 @@ describe('source locations — ', function testSourceLocations() {
     expect(getLocation(other)).toBe(getLocation(obj))
   })
 
+  function a(depth: number) {
+    return b(depth)
+
+    function b(depth: number) {
+      return c(depth)
+
+      function c(depth: number) {
+        const obj = {}
+        setLocation(obj, depth)
+        return getLocation(obj)
+      }
+    }
+  }
+
+  it('setLocation(x, depth) sets the location of x to be the current stack at depth', () => {
+    expect(a(1)?.functionName).toBe('c')
+    expect(a(2)?.functionName).toBe('b')
+    expect(a(3)?.functionName).toBe('a')
+  })
 
   function tag(parts: TemplateStringsArray) {
     setLocation(parts)

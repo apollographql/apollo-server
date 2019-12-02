@@ -12,9 +12,9 @@ const E_ONLY = throws(class ReadOnlyOneError extends Error {
     const {ref, defs} = this
     if (!defs.length) return `${ref} was never defined`
     return `${getLabel(ref)} was defined ${defs.length} times:\n${
-      defs.map(def => {
+      defs.map((def, i) => {
         const loc = getLocation(def.key)
-        return `  - at ${loc?.functionName ?? 'anonymous'} (${loc?.short})`
+        return `  ${i + 1}. at ${loc?.functionName ?? 'anonymous'} (${loc?.short})`
       }).join('\n')
     }`
   }
