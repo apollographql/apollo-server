@@ -1,7 +1,6 @@
-import { Apollo, gql, Schema } from "../index";
-import { GraphQLSchemaModule } from "@apollographql/apollo-tools";
+import { Apollo, gql, Schema } from ".";
 
-const booksModule: GraphQLSchemaModule = {
+const Books = () => Schema`Books Schema`({
   typeDefs: gql`
     type Book {
       title: String
@@ -26,9 +25,9 @@ const booksModule: GraphQLSchemaModule = {
       ]
     }
   }
-};
+})
 
-const authorsModule: GraphQLSchemaModule = {
+const Authors = () => Schema`Authors Schema`({
   typeDefs: gql`
     type Author {
       name: String
@@ -53,12 +52,12 @@ const authorsModule: GraphQLSchemaModule = {
       ]
     }
   }
-};
+})
 
 describe("ApolloServer", () => {
   it("can execute a query", async () => {
     const server = await Apollo(() => {
-      Schema(booksModule);
+      Books();
     });
 
     const operation = await server.executeOperation({
@@ -71,10 +70,8 @@ describe("ApolloServer", () => {
 
   it("can merge modules", async () => {
     const server = await Apollo(() => {
-      Schema`books schema`
-        (booksModule);
-      Schema`authors schema`
-        (authorsModule);
+      Books();
+      Authors();
     });
 
     const authors = await server.executeOperation({
