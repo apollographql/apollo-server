@@ -44,13 +44,12 @@ interface ProcessRequestInput<TRequestContext extends Record<string, any>> {
  *   3. Data without errors if execution was successful without errors
  */
 export async function processGraphqlRequest<
-  TData = Record<string, any>,
   TContext extends Record<string, any> = Record<string, any>
 >({
   request,
   schema,
   context,
-}: ProcessRequestInput<TContext>): Promise<ExecutionResult<TData>> {
+}: ProcessRequestInput<TContext>): Promise<Record<string, any>> {
   const { query, operationName, variables } = request;
 
   if (!query) {
@@ -76,7 +75,7 @@ export async function processGraphqlRequest<
     return { errors: documentValidationErrors };
   }
 
-  return await executeGraphqlRequest<TData>({
+  return await executeGraphqlRequest({
     schema,
     document: parseResult.document,
     operationName,
@@ -172,14 +171,14 @@ interface ExecutionInput<
  *
  * @see https://github.com/graphql/graphql-spec/blob/master/spec/Section%207%20--%20Response.md#response-format
  */
-export async function executeGraphqlRequest<TData = Record<string, any>>({
+export async function executeGraphqlRequest({
   schema,
   document,
   operationName,
   variables,
   context,
-}: ExecutionInput): Promise<ExecutionResult<TData>> {
-  return await execute<TData>({
+}: ExecutionInput): Promise<ExecutionResult<Record<string, any>>> {
+  return await execute<Record<string, any>>({
     schema,
     document,
     operationName,
