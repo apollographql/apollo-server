@@ -25,11 +25,18 @@ export { GraphQLSchemaModule } from 'apollo-graphql';
 
 export { Context, ContextFunction } from 'apollo-server-core';
 
+// interface TransportContext {
+//   [key: string]: any;
+// }
+
 /** Options for {@link processGraphQLRequest} */
-interface ProcessRequestInput<TContext extends Record<string, any>> {
+interface ProcessRequestInput<
+  TRequestContext extends Record<string, any>,
+  // TTransportContext extends TransportContext = TransportContext
+> {
   request: GraphQLRequest;
   schema: GraphQLSchema;
-  context?: TContext;
+  context?: TRequestContext;
 }
 
 /**

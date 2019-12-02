@@ -271,11 +271,11 @@ export class ApolloServer {
   }
 
   public async executeOperation<
-    R extends GraphQLRequest,
-    S extends GraphQLResponse = GraphQLResponse
+    TRequest extends GraphQLRequest,
+    TResponse extends GraphQLResponse = GraphQLResponse
   >(
-    request: R,
-    responseInit: S = Object.create(null),
+    request: TRequest,
+    responseInit: TResponse = Object.create(null),
   ) {
 
     const { schema, documentStore } = await this.schemaDerivedData;
