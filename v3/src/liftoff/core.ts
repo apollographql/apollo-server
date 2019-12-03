@@ -5,25 +5,6 @@ import { getLocation } from './loc'
 
 export type Plan = () => void
 
-const E_ONLY = throws(class ReadOnlyOneError extends Error {
-  static readonly code = 'ONLY'
-
-  get message() {
-    const {ref, defs} = this
-    if (!defs.length) return `${ref} was never defined`
-    return `${getLabel(ref)} was defined ${defs.length} times:\n${
-      defs.map((def, i) => {
-        const loc = getLocation(def.key)
-        return `  ${i + 1}. at ${loc?.functionName ?? 'anonymous'} (${loc?.short})`
-      }).join('\n')
-    }`
-  }
-  constructor(public readonly ref: Ref<any>, public readonly defs: Bond[]) {
-    super()
-  }
-})
-
-const NO_BONDS = new Set<Bond>()
 export class Core {
   private defs: Map<Ref<any>, Set<Bond>> = new Map
 
@@ -98,3 +79,23 @@ export class Core {
     })
   }
 }
+
+export const E_ONLY = throws(class ReadOnlyOneError extends Error {
+  static readonly code = 'ONLY'
+
+  get message() {
+    const {ref, defs} = this
+    if (!defs.length) return `${ref} was never defined`
+    return `${getLabel(ref)} was defined ${defs.length} times:\n${
+      defs.map((def, i) => {
+        const loc = getLocation(def.key)
+        return `  ${i + 1}. at ${loc?.functionName ?? 'anonymous'} (${loc?.short})`
+      }).join('\n')
+    }`
+  }
+  constructor(public readonly ref: Ref<any>, public readonly defs: Bond[]) {
+    super()
+  }
+})
+
+const NO_BONDS = new Set<Bond>()
