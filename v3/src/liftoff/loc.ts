@@ -33,7 +33,7 @@ export class Location {
    */
   constructor(public readonly error: Error, public readonly depth: number) {}
 
-  get stack(): Readonly<Readonly<StackFrame[]>> {
+  get stack(): readonly Readonly<StackFrame>[] {
     const value = Object.freeze(
       Parser.parse(this.error).map(Object.freeze) as Readonly<StackFrame>[]
     )
@@ -47,6 +47,7 @@ export class Location {
     return this.stack[this.depth]
   }
 }
+
 
 export function setLocation(of: any): void
 export function setLocation(of: any, src: object): void
