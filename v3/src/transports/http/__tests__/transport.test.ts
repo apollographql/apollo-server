@@ -71,7 +71,7 @@ describe("processes an HTTP request", () => {
   const schema = buildSchemaFromSDL([testModule]);
 
   describe("Status code", () => {
-    it("is set to 200 on a single, properly formed query", async () => {
+    it("returns 200 on a single, properly formed query", async () => {
       expect.assertions(1);
       await expect(
         httpPostGraphqlQueryToSchema(schema, validQuery),

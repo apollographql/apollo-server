@@ -94,7 +94,7 @@ export const httpHandler: (
 /**
  * Called in the event of a critical error within the HTTP handler.
  *
- * @param res Called
+ * @param res 
  * @param errorMessage
  */
 export function responseAsInternalServerError(

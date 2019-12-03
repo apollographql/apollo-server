@@ -116,7 +116,7 @@ export async function processHttpRequest(
  *
  * @param response
  */
-export function generatedResponse(args: {
+function generatedResponse(args: {
   response: GraphQLResponse;
   headers?: OutgoingHttpHeaders;
 }): IHttpResponse {
