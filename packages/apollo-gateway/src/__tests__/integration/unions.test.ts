@@ -5,53 +5,45 @@ import { execute } from '../execution-utils';
 expect.addSnapshotSerializer(astSerializer);
 expect.addSnapshotSerializer(queryPlanSerializer);
 
-it('handles multiple union type conditions', async () => {
+it('handles multiple union type conditions that share a response name (media)', async () => {
   const query = gql`
     query {
-      union {
-        ...Foo
-        ...Bar
+      content {
+        ...Audio
+        ... on Video {
+          media {
+            aspectRatio
+          }
+        }
       }
     }
-
-    fragment Foo on Foo {
-      nested {
-        thing
-      }
-    }
-
-    fragment Bar on Bar {
-      nested {
-        stuff
+    fragment Audio on Audio {
+      media {
+        url
       }
     }
   `;
 
-  const { data, queryPlan, errors } = await execute(
+  const { queryPlan, errors } = await execute(
     [
       {
-        name: 'unionService',
+        name: 'contentService',
         typeDefs: gql`
           extend type Query {
-            union: MyUnion
+            content: Content
           }
-
-          union MyUnion = Foo | Bar
-
-          type Foo {
-            nested: Thing
+          union Content = Audio | Video
+          type Audio {
+            media: AudioURL
           }
-
-          type Thing {
-            thing: String
+          type AudioURL {
+            url: String
           }
-
-          type Bar {
-            nested: Stuff
+          type Video {
+            media: VideoAspectRatio
           }
-
-          type Stuff {
-            stuff: String
+          type VideoAspectRatio {
+            aspectRatio: String
           }
         `,
         resolvers: {
@@ -62,39 +54,26 @@ it('handles multiple union type conditions', async () => {
     { query },
   );
 
-  expect(data).toMatchInlineSnapshot(`
-    Object {
-      "union": null,
-    }
-  `);
+  expect(errors).toBeUndefined();
   expect(queryPlan).toMatchInlineSnapshot(`
     QueryPlan {
-      Fetch(service: "unionService") {
+      Fetch(service: "contentService") {
         {
-          union {
+          content {
             __typename
-            ... on Foo {
-              nested {
-                thing
-                stuff
+            ... on Audio {
+              media {
+                url
               }
             }
-            ... on Bar {
-              nested {
-                thing
-                stuff
+            ... on Video {
+              media {
+                aspectRatio
               }
             }
           }
         }
       },
     }
-  `);
-
-  expect(errors).toMatchInlineSnapshot(`
-    Array [
-      [GraphQLError: Cannot query field "stuff" on type "Thing".],
-      [GraphQLError: Cannot query field "thing" on type "Stuff".],
-    ]
   `);
 });
