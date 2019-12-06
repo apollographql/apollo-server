@@ -418,6 +418,31 @@ function splitFields(
         );
       } else {
         // For interfaces however, we need to look at all possible runtime types.
+        // if all possible runtime types can be fufilled by only one service then
+        // we don't need to expand the fields into unique type conditions
+        //
+        // This is an optimization to prevent an explosion of type conditions to
+        // services when it isn't needed
+        const uniqueServices = new Set(
+          ...[
+            scope.possibleTypes.map(
+              ({ federation }) => federation && federation.serviceName
+            )
+          ]
+        );
+
+        if (
+          uniqueServices.size === 1 &&
+          // the interface can be defined in a service outside of where the concrete types
+          // are defined, in that case we still need to expand the selection
+          uniqueServices.has(parentType.federation && parentType.federation.serviceName)
+        ) {
+          const group = groupForField(field as Field<GraphQLObjectType>);
+          group.fields.push(
+            completeField(context, scope, group, path, fieldsForResponseName)
+          );
+          continue;
+        }
 
         // We keep track of which possible runtime parent types can be fetched
         // from which group,
@@ -475,7 +500,7 @@ function splitFields(
 
 function completeField(
   context: QueryPlanningContext,
-  scope: Scope<GraphQLObjectType>,
+  scope: Scope<GraphQLCompositeType>,
   parentGroup: FetchGroup,
   path: ResponsePath,
   fields: FieldSet,
