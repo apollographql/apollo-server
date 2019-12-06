@@ -15,7 +15,7 @@ export {
   WithRequired,
 };
 
-export interface ApolloServerPlugin<TContext = Record<string, any>> {
+export interface ApolloServerPlugin<TContext extends Record<string, any> = Record<string, any>> {
   serverWillStart?(service: GraphQLServiceContext): ValueOrPromise<void>;
   requestDidStart?(
     requestContext: GraphQLRequestContext<TContext>,
