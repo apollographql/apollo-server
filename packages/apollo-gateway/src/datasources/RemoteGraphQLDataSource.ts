@@ -19,6 +19,8 @@ import { isObject } from '../utilities/predicates';
 import { GraphQLDataSource } from './types';
 import createSHA from 'apollo-server-core/dist/utils/createSHA';
 
+type GraphQLRequestWithHttp = GraphQLRequest & Required<Pick<GraphQLRequest, 'http'>>;
+
 export class RemoteGraphQLDataSource<TContext extends Record<string, any> = Record<string, any>> implements GraphQLDataSource<TContext> {
   fetcher: typeof fetch = fetch;
 
@@ -71,7 +73,10 @@ export class RemoteGraphQLDataSource<TContext extends Record<string, any> = Reco
     };
 
     if (this.willSendRequest) {
-      await this.willSendRequest({ request, context });
+      await this.willSendRequest({
+        request: request as GraphQLRequestWithHttp,
+        context
+      });
     }
 
     if (!request.query) {
@@ -170,10 +175,10 @@ export class RemoteGraphQLDataSource<TContext extends Record<string, any> = Reco
   }
 
   public willSendRequest?(
-    requestContext: Pick<
-      GraphQLRequestContext<TContext>,
-      'request' | 'context'
-    >,
+    requestContext: {
+      request: GraphQLRequestWithHttp,
+      context: TContext
+    },
   ): ValueOrPromise<void>;
 
   public didReceiveResponse?(
