@@ -1,71 +1,76 @@
-// @flow strict
-
+/**
+ * Portions of code within this module are leveraging code copied from the
+ * `graphql-js` library and modified to suit the needs of Apollo Server. For
+ * details regarding the terms of these modifications and any relevant
+ * attributions for the existing code, see the LICENSE file, at the root of this
+ * package.
+ */
 import { forEach, isCollection } from 'iterall';
-
-import inspect from '../jsutils/inspect';
-import memoize3 from '../jsutils/memoize3';
-import invariant from '../jsutils/invariant';
-import devAssert from '../jsutils/devAssert';
-import isInvalid from '../jsutils/isInvalid';
-import isNullish from '../jsutils/isNullish';
-import isPromise from '../jsutils/isPromise';
-import { type ObjMap } from '../jsutils/ObjMap';
-import isObjectLike from '../jsutils/isObjectLike';
-import promiseReduce from '../jsutils/promiseReduce';
-import promiseForObject from '../jsutils/promiseForObject';
-import { type PromiseOrValue } from '../jsutils/PromiseOrValue';
-import { type Path, addPath, pathToArray } from '../jsutils/Path';
-
-import { GraphQLError } from '../error/GraphQLError';
-import { locatedError } from '../error/locatedError';
-
-import { Kind } from '../language/kinds';
 import {
-  type DocumentNode,
-  type OperationDefinitionNode,
-  type SelectionSetNode,
-  type FieldNode,
-  type FragmentSpreadNode,
-  type InlineFragmentNode,
-  type FragmentDefinitionNode,
-} from '../language/ast';
+  inspect,
+  memoize3,
+  invariant,
+  devAssert,
+  isInvalid,
+  isNullish,
+  isPromise,
+  ObjMap,
+  isObjectLike,
+  promiseReduce,
+  promiseForObject,
+} from './jsutils';
+import { PromiseOrValue } from 'graphql/jsutils/PromiseOrValue';
+import { Path, addPath, pathToArray } from 'graphql/jsutils/Path';
+import { GraphQLError ,locatedError } from 'graphql/error';
+import { Kind } from 'graphql/language/kinds';
+import {
+  DocumentNode,
+  OperationDefinitionNode,
+  SelectionSetNode,
+  FieldNode,
+  FragmentSpreadNode,
+  InlineFragmentNode,
+  FragmentDefinitionNode,
+  ASTNode,
+} from 'graphql/language/ast';
 
-import { assertValidSchema } from '../type/validate';
-import { type GraphQLSchema } from '../type/schema';
+import { assertValidSchema } from 'graphql/type/validate';
+import { GraphQLSchema } from 'graphql/type/schema';
 import {
   SchemaMetaFieldDef,
   TypeMetaFieldDef,
   TypeNameMetaFieldDef,
-} from '../type/introspection';
+} from 'graphql/type/introspection';
 import {
   GraphQLIncludeDirective,
   GraphQLSkipDirective,
-} from '../type/directives';
+} from 'graphql/type/directives';
 import {
-  type GraphQLObjectType,
-  type GraphQLOutputType,
-  type GraphQLLeafType,
-  type GraphQLAbstractType,
-  type GraphQLField,
-  type GraphQLFieldResolver,
-  type GraphQLResolveInfo,
-  type GraphQLTypeResolver,
-  type GraphQLList,
+  GraphQLObjectType,
+  GraphQLOutputType,
+  GraphQLLeafType,
+  GraphQLAbstractType,
+  GraphQLField,
+  GraphQLFieldResolver,
+  GraphQLResolveInfo,
+  GraphQLTypeResolver,
+  GraphQLList,
   isObjectType,
   isAbstractType,
   isLeafType,
   isListType,
   isNonNullType,
-} from '../type/definition';
+} from 'graphql/type/definition';
 
-import { typeFromAST } from '../utilities/typeFromAST';
-import { getOperationRootType } from '../utilities/getOperationRootType';
-
+import { typeFromAST } from 'graphql/utilities/typeFromAST';
+import { getOperationRootType } from 'graphql/utilities/getOperationRootType';
 import {
   getVariableValues,
   getArgumentValues,
   getDirectiveValues,
-} from './values';
+} from 'graphql/execution/values';
+
+import Maybe from 'graphql/tsutils/Maybe';
 
 /**
  * Terminology
@@ -93,17 +98,17 @@ import {
  * Namely, schema of the type system that is currently executing,
  * and the fragments defined in the query document
  */
-export type ExecutionContext = {|
+export type ExecutionContext = {
   schema: GraphQLSchema,
   fragments: ObjMap<FragmentDefinitionNode>,
-  rootValue: mixed,
-  contextValue: mixed,
+  rootValue: unknown,
+  contextValue: unknown,
   operation: OperationDefinitionNode,
-  variableValues: { [variable: string]: mixed, ... },
+  variableValues: { [variable: string]: unknown },
   fieldResolver: GraphQLFieldResolver<any, any>,
   typeResolver: GraphQLTypeResolver<any, any>,
   errors: Array<GraphQLError>,
-|};
+};
 
 /**
  * The result of GraphQL execution.
@@ -111,21 +116,21 @@ export type ExecutionContext = {|
  *   - `errors` is included when any errors occurred as a non-empty array.
  *   - `data` is the result of a successful execution of the query.
  */
-export type ExecutionResult = {|
-  errors?: $ReadOnlyArray<GraphQLError>,
-  data?: ObjMap<mixed> | null,
-|};
+export type ExecutionResult = {
+  errors?: readonly GraphQLError[],
+  data?: ObjMap<unknown> | null,
+};
 
-export type ExecutionArgs = {|
+export type ExecutionArgs = {
   schema: GraphQLSchema,
   document: DocumentNode,
-  rootValue?: mixed,
-  contextValue?: mixed,
-  variableValues?: ?{ +[variable: string]: mixed, ... },
-  operationName?: ?string,
-  fieldResolver?: ?GraphQLFieldResolver<any, any>,
-  typeResolver?: ?GraphQLTypeResolver<any, any>,
-|};
+  rootValue?: unknown,
+  contextValue?: unknown,
+  variableValues?: Maybe<{ readonly [variable: string]: unknown }>,
+  operationName?: Maybe<string>,
+  fieldResolver?: Maybe<GraphQLFieldResolver<any, any>>,
+  typeResolver?: Maybe<GraphQLTypeResolver<any, any>>,
+};
 
 /**
  * Implements the "Evaluating requests" section of the GraphQL specification.
@@ -139,48 +144,7 @@ export type ExecutionArgs = {|
  *
  * Accepts either an object with named arguments, or individual arguments.
  */
-declare function execute(
-  ExecutionArgs,
-  ..._: []
-): PromiseOrValue<ExecutionResult>;
-/* eslint-disable no-redeclare */
-declare function execute(
-  schema: GraphQLSchema,
-  document: DocumentNode,
-  rootValue?: mixed,
-  contextValue?: mixed,
-  variableValues?: ?{ +[variable: string]: mixed, ... },
-  operationName?: ?string,
-  fieldResolver?: ?GraphQLFieldResolver<any, any>,
-  typeResolver?: ?GraphQLTypeResolver<any, any>,
-): PromiseOrValue<ExecutionResult>;
-export function execute(
-  argsOrSchema,
-  document,
-  rootValue,
-  contextValue,
-  variableValues,
-  operationName,
-  fieldResolver,
-  typeResolver,
-) {
-  /* eslint-enable no-redeclare */
-  // Extract arguments from object args if provided.
-  return arguments.length === 1
-    ? executeImpl(argsOrSchema)
-    : executeImpl({
-        schema: argsOrSchema,
-        document,
-        rootValue,
-        contextValue,
-        variableValues,
-        operationName,
-        fieldResolver,
-        typeResolver,
-      });
-}
-
-function executeImpl(args: ExecutionArgs): PromiseOrValue<ExecutionResult> {
+export function execute(args: ExecutionArgs): PromiseOrValue<ExecutionResult> {
   const {
     schema,
     document,
@@ -208,8 +172,14 @@ function executeImpl(args: ExecutionArgs): PromiseOrValue<ExecutionResult> {
     typeResolver,
   );
 
+  function isExecutionContext(
+    maybeContext: any
+  ): maybeContext is ExecutionContext {
+    return !Array.isArray(maybeContext);
+  }
+
   // Return early errors if execution context failed.
-  if (Array.isArray(exeContext)) {
+  if (!isExecutionContext(exeContext)) {
     return { errors: exeContext };
   }
 
@@ -230,7 +200,7 @@ function executeImpl(args: ExecutionArgs): PromiseOrValue<ExecutionResult> {
  */
 function buildResponse(
   exeContext: ExecutionContext,
-  data: PromiseOrValue<ObjMap<mixed> | null>,
+  data: PromiseOrValue<ObjMap<unknown> | null>,
 ): PromiseOrValue<ExecutionResult> {
   if (isPromise(data)) {
     return data.then(resolved => buildResponse(exeContext, resolved));
@@ -249,8 +219,8 @@ function buildResponse(
 export function assertValidExecutionArguments(
   schema: GraphQLSchema,
   document: DocumentNode,
-  rawVariableValues: ?{ +[variable: string]: mixed, ... },
-): void {
+  rawVariableValues: Maybe<{ readonly [variable: string]: unknown }>,
+): asserts rawVariableValues {
   devAssert(document, 'Must provide document');
 
   // If the schema used for execution is invalid, throw an error.
@@ -274,14 +244,14 @@ export function assertValidExecutionArguments(
 export function buildExecutionContext(
   schema: GraphQLSchema,
   document: DocumentNode,
-  rootValue: mixed,
-  contextValue: mixed,
-  rawVariableValues: ?{ +[variable: string]: mixed, ... },
-  operationName: ?string,
-  fieldResolver: ?GraphQLFieldResolver<mixed, mixed>,
-  typeResolver?: ?GraphQLTypeResolver<mixed, mixed>,
-): $ReadOnlyArray<GraphQLError> | ExecutionContext {
-  let operation: OperationDefinitionNode | void;
+  rootValue: unknown,
+  contextValue: unknown,
+  rawVariableValues: Maybe<{ readonly [variable: string]: unknown }>,
+  operationName: Maybe<string>,
+  fieldResolver: Maybe<GraphQLFieldResolver<unknown, unknown>>,
+  typeResolver?: Maybe<GraphQLTypeResolver<unknown, unknown>>,
+): readonly GraphQLError[] | ExecutionContext {
+  let operation: OperationDefinitionNode | undefined;
   const fragments: ObjMap<FragmentDefinitionNode> = Object.create(null);
   for (const definition of document.definitions) {
     switch (definition.kind) {
@@ -342,8 +312,8 @@ export function buildExecutionContext(
 function executeOperation(
   exeContext: ExecutionContext,
   operation: OperationDefinitionNode,
-  rootValue: mixed,
-): PromiseOrValue<ObjMap<mixed> | null> {
+  rootValue: unknown,
+): PromiseOrValue<ObjMap<unknown> | null> {
   const type = getOperationRootType(exeContext.schema, operation);
   const fields = collectFields(
     exeContext,
@@ -385,10 +355,10 @@ function executeOperation(
 function executeFieldsSerially(
   exeContext: ExecutionContext,
   parentType: GraphQLObjectType,
-  sourceValue: mixed,
-  path: Path | void,
+  sourceValue: unknown,
+  path: Path | undefined,
   fields: ObjMap<Array<FieldNode>>,
-): PromiseOrValue<ObjMap<mixed>> {
+): PromiseOrValue<ObjMap<unknown>> {
   return promiseReduce(
     Object.keys(fields),
     (results, responseName) => {
@@ -424,10 +394,10 @@ function executeFieldsSerially(
 function executeFields(
   exeContext: ExecutionContext,
   parentType: GraphQLObjectType,
-  sourceValue: mixed,
-  path: Path | void,
+  sourceValue: unknown,
+  path: Path | undefined,
   fields: ObjMap<Array<FieldNode>>,
-): PromiseOrValue<ObjMap<mixed>> {
+): PromiseOrValue<ObjMap<unknown>> {
   const results = Object.create(null);
   let containsPromise = false;
 
@@ -603,10 +573,10 @@ function getFieldEntryKey(node: FieldNode): string {
 function resolveField(
   exeContext: ExecutionContext,
   parentType: GraphQLObjectType,
-  source: mixed,
-  fieldNodes: $ReadOnlyArray<FieldNode>,
+  source: unknown,
+  fieldNodes: readonly FieldNode[],
   path: Path,
-): PromiseOrValue<mixed> {
+): PromiseOrValue<unknown> {
   const fieldNode = fieldNodes[0];
   const fieldName = fieldNode.name.value;
 
@@ -651,8 +621,8 @@ function resolveField(
  */
 export function buildResolveInfo(
   exeContext: ExecutionContext,
-  fieldDef: GraphQLField<mixed, mixed>,
-  fieldNodes: $ReadOnlyArray<FieldNode>,
+  fieldDef: GraphQLField<unknown, unknown>,
+  fieldNodes: readonly FieldNode[],
   parentType: GraphQLObjectType,
   path: Path,
 ): GraphQLResolveInfo {
@@ -669,6 +639,15 @@ export function buildResolveInfo(
     rootValue: exeContext.rootValue,
     operation: exeContext.operation,
     variableValues: exeContext.variableValues,
+    // TODO: This is required by apollo-cache-control's type augmentation but shouldn't
+    // have to be included here.
+    cacheControl: {
+      setCacheHint() {},
+      cacheHint: {
+        maxAge: 0,
+        scope: require('apollo-cache-control').CacheScope.public
+      }
+    }
   };
 }
 
@@ -680,12 +659,12 @@ export function buildResolveInfo(
  */
 export function resolveFieldValueOrError(
   exeContext: ExecutionContext,
-  fieldDef: GraphQLField<mixed, mixed>,
-  fieldNodes: $ReadOnlyArray<FieldNode>,
-  resolveFn: GraphQLFieldResolver<mixed, mixed>,
-  source: mixed,
+  fieldDef: GraphQLField<unknown, unknown>,
+  fieldNodes: readonly FieldNode[],
+  resolveFn: GraphQLFieldResolver<unknown, unknown>,
+  source: unknown,
   info: GraphQLResolveInfo,
-): Error | mixed {
+): Error | unknown {
   try {
     // Build a JS object of arguments from the field.arguments AST, using the
     // variables scope to fulfill any variable references.
@@ -710,7 +689,7 @@ export function resolveFieldValueOrError(
 
 // Sometimes a non-error is thrown, wrap it as an Error instance to ensure a
 // consistent Error interface.
-function asErrorInstance(error: mixed): Error {
+function asErrorInstance(error: unknown): Error {
   if (error instanceof Error) {
     return error;
   }
@@ -722,11 +701,11 @@ function asErrorInstance(error: mixed): Error {
 function completeValueCatchingError(
   exeContext: ExecutionContext,
   returnType: GraphQLOutputType,
-  fieldNodes: $ReadOnlyArray<FieldNode>,
+  fieldNodes: readonly FieldNode[],
   info: GraphQLResolveInfo,
   path: Path,
-  result: mixed,
-): PromiseOrValue<mixed> {
+  result: unknown,
+): PromiseOrValue<unknown> {
   try {
     let completed;
     if (isPromise(result)) {
@@ -757,7 +736,13 @@ function completeValueCatchingError(
   }
 }
 
-function handleFieldError(rawError, fieldNodes, path, returnType, exeContext) {
+function handleFieldError(
+  rawError: unknown,
+  fieldNodes: readonly ASTNode[],
+  path: Path,
+  returnType: GraphQLOutputType,
+  exeContext: ExecutionContext
+) {
   const error = locatedError(
     asErrorInstance(rawError),
     fieldNodes,
@@ -800,11 +785,11 @@ function handleFieldError(rawError, fieldNodes, path, returnType, exeContext) {
 function completeValue(
   exeContext: ExecutionContext,
   returnType: GraphQLOutputType,
-  fieldNodes: $ReadOnlyArray<FieldNode>,
+  fieldNodes: readonly FieldNode[],
   info: GraphQLResolveInfo,
   path: Path,
-  result: mixed,
-): PromiseOrValue<mixed> {
+  result: unknown,
+): PromiseOrValue<unknown> {
   // If result is an Error, throw a located error.
   if (result instanceof Error) {
     throw result;
@@ -881,7 +866,7 @@ function completeValue(
   invariant(
     false,
     'Cannot complete value of unexpected output type: ' +
-      inspect((returnType: empty)),
+      inspect(returnType),
   );
 }
 
@@ -892,11 +877,11 @@ function completeValue(
 function completeListValue(
   exeContext: ExecutionContext,
   returnType: GraphQLList<GraphQLOutputType>,
-  fieldNodes: $ReadOnlyArray<FieldNode>,
+  fieldNodes: readonly FieldNode[],
   info: GraphQLResolveInfo,
   path: Path,
-  result: mixed,
-): PromiseOrValue<$ReadOnlyArray<mixed>> {
+  result: unknown,
+): PromiseOrValue<readonly unknown[]> {
   if (!isCollection(result)) {
     throw new GraphQLError(
       `Expected Iterable, but did not find one for field "${info.parentType.name}.${info.fieldName}".`,
@@ -907,8 +892,8 @@ function completeListValue(
   // where the list contains no Promises by avoiding creating another Promise.
   const itemType = returnType.ofType;
   let containsPromise = false;
-  const completedResults = [];
-  forEach((result: any), (item, index) => {
+  const completedResults: any[] = [];
+  forEach(result as any, (item, index) => {
     // No need to modify the info object containing the path,
     // since from here on it is not ever accessed by resolver functions.
     const fieldPath = addPath(path, index);
@@ -934,7 +919,7 @@ function completeListValue(
  * Complete a Scalar or Enum by serializing to a valid value, returning
  * null if serialization is not possible.
  */
-function completeLeafValue(returnType: GraphQLLeafType, result: mixed): mixed {
+function completeLeafValue(returnType: GraphQLLeafType, result: unknown): unknown {
   const serializedResult = returnType.serialize(result);
   if (isInvalid(serializedResult)) {
     throw new Error(
@@ -952,11 +937,11 @@ function completeLeafValue(returnType: GraphQLLeafType, result: mixed): mixed {
 function completeAbstractValue(
   exeContext: ExecutionContext,
   returnType: GraphQLAbstractType,
-  fieldNodes: $ReadOnlyArray<FieldNode>,
+  fieldNodes: readonly FieldNode[],
   info: GraphQLResolveInfo,
   path: Path,
-  result: mixed,
-): PromiseOrValue<ObjMap<mixed>> {
+  result: unknown,
+): PromiseOrValue<ObjMap<unknown>> {
   const resolveTypeFn = returnType.resolveType || exeContext.typeResolver;
   const contextValue = exeContext.contextValue;
   const runtimeType = resolveTypeFn(result, contextValue, info, returnType);
@@ -999,12 +984,12 @@ function completeAbstractValue(
 }
 
 function ensureValidRuntimeType(
-  runtimeTypeOrName: ?GraphQLObjectType | string,
+  runtimeTypeOrName: Maybe<GraphQLObjectType | string>,
   exeContext: ExecutionContext,
   returnType: GraphQLAbstractType,
-  fieldNodes: $ReadOnlyArray<FieldNode>,
+  fieldNodes: readonly FieldNode[],
   info: GraphQLResolveInfo,
-  result: mixed,
+  result: unknown,
 ): GraphQLObjectType {
   const runtimeType =
     typeof runtimeTypeOrName === 'string'
@@ -1036,11 +1021,11 @@ function ensureValidRuntimeType(
 function completeObjectValue(
   exeContext: ExecutionContext,
   returnType: GraphQLObjectType,
-  fieldNodes: $ReadOnlyArray<FieldNode>,
+  fieldNodes: readonly FieldNode[],
   info: GraphQLResolveInfo,
   path: Path,
-  result: mixed,
-): PromiseOrValue<ObjMap<mixed>> {
+  result: unknown,
+): PromiseOrValue<ObjMap<unknown>> {
   // If there is an isTypeOf predicate function, call it with the
   // current result. If isTypeOf returns false, then raise an error rather
   // than continuing execution.
@@ -1078,8 +1063,8 @@ function completeObjectValue(
 
 function invalidReturnTypeError(
   returnType: GraphQLObjectType,
-  result: mixed,
-  fieldNodes: $ReadOnlyArray<FieldNode>,
+  result: unknown,
+  fieldNodes: readonly FieldNode[],
 ): GraphQLError {
   return new GraphQLError(
     `Expected value of type "${returnType.name}" but got: ${inspect(result)}.`,
@@ -1090,10 +1075,10 @@ function invalidReturnTypeError(
 function collectAndExecuteSubfields(
   exeContext: ExecutionContext,
   returnType: GraphQLObjectType,
-  fieldNodes: $ReadOnlyArray<FieldNode>,
+  fieldNodes: readonly FieldNode[],
   path: Path,
-  result: mixed,
-): PromiseOrValue<ObjMap<mixed>> {
+  result: unknown,
+): PromiseOrValue<ObjMap<unknown>> {
   // Collect sub-fields to execute to complete this value.
   const subFieldNodes = collectSubfields(exeContext, returnType, fieldNodes);
   return executeFields(exeContext, returnType, result, path, subFieldNodes);
@@ -1108,7 +1093,7 @@ const collectSubfields = memoize3(_collectSubfields);
 function _collectSubfields(
   exeContext: ExecutionContext,
   returnType: GraphQLObjectType,
-  fieldNodes: $ReadOnlyArray<FieldNode>,
+  fieldNodes: readonly FieldNode[],
 ): ObjMap<Array<FieldNode>> {
   let subFieldNodes = Object.create(null);
   const visitedFragmentNames = Object.create(null);
@@ -1136,7 +1121,10 @@ function _collectSubfields(
  * Otherwise, test each possible type for the abstract type by calling
  * isTypeOf for the object being coerced, returning the first type that matches.
  */
-export const defaultTypeResolver: GraphQLTypeResolver<mixed, mixed> = function(
+export const defaultTypeResolver: GraphQLTypeResolver<
+  { __typename: string },
+  unknown
+> = function(
   value,
   contextValue,
   info,
@@ -1172,8 +1160,10 @@ export const defaultTypeResolver: GraphQLTypeResolver<mixed, mixed> = function(
           return possibleTypes[i];
         }
       }
+      return;
     });
   }
+  return;
 };
 
 /**
@@ -1183,8 +1173,8 @@ export const defaultTypeResolver: GraphQLTypeResolver<mixed, mixed> = function(
  * of calling that function while passing along args and context value.
  */
 export const defaultFieldResolver: GraphQLFieldResolver<
-  mixed,
-  mixed,
+  unknown,
+  unknown
 > = function(source: any, args, contextValue, info) {
   // ensure source is a value for which property access is acceptable.
   if (isObjectLike(source) || typeof source === 'function') {
@@ -1211,7 +1201,7 @@ export function getFieldDef(
   schema: GraphQLSchema,
   parentType: GraphQLObjectType,
   fieldName: string,
-): ?GraphQLField<mixed, mixed> {
+): Maybe<GraphQLField<unknown, unknown>> {
   if (
     fieldName === SchemaMetaFieldDef.name &&
     schema.getQueryType() === parentType

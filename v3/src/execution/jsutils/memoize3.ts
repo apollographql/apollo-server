@@ -1,17 +1,25 @@
-// @flow strict
+/**
+ * Portions of code within this module are leveraging code copied from the
+ * `graphql-js` library and modified to suit the needs of Apollo Server. For
+ * details regarding the terms of these modifications and any relevant
+ * attributions for the existing code, see the LICENSE file, at the root of this
+ * package.
+ */
 
 /**
  * Memoizes the provided three-argument function.
  */
-export default function memoize3<
-  A1: { ... } | $ReadOnlyArray<mixed>,
-  A2: { ... } | $ReadOnlyArray<mixed>,
-  A3: { ... } | $ReadOnlyArray<mixed>,
-  R: mixed,
->(fn: (A1, A2, A3) => R): (A1, A2, A3) => R {
-  let cache0;
+type MemoArg = {[key: string]: any} | readonly any[];
 
-  function memoized(a1, a2, a3) {
+export function memoize3<
+  T extends MemoArg,
+  U extends MemoArg,
+  V extends MemoArg,
+  R
+>(fn: (A1: T, A2: U, A3: V) => R): (A1: T, A2: U, A3: V) => R {
+  let cache0: WeakMap<any, any> | undefined;
+
+  function memoized(a1: T, a2: U, a3: V) {
     if (!cache0) {
       cache0 = new WeakMap();
     }

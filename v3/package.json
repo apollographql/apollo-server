@@ -47,21 +47,22 @@
     "apollo-server-plugin-base": "^0.6.3",
     "apollo-server-testing": "^2.9.2",
     "apollo-server-types": "^0.2.3",
-    "graphql-tag": "^2.10.1"
+    "graphql-tag": "^2.10.1",
+    "iterall": "^1.2.2"
   },
   "devDependencies": {
     "@apollographql/apollo-tools": "0.4.0",
     "@types/jest": "^24.0.18",
     "@types/node": "^12.7.8",
     "codecov": "3.5.0",
-    "graphql": "14.5.4",
+    "graphql": "14.5.8",
     "jest": "24.9.0",
     "jest-junit": "7.0.0",
     "jest-matcher-utils": "24.9.0",
     "ts-jest": "24.0.2",
-    "typescript": "3.6.2"
+    "typescript": "3.7.3"
   },
   "peerDependencies": {
-    "graphql": "^14.5.0"
+    "graphql": "^14.5.8"
   }
 }

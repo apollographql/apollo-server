@@ -1,6 +1,12 @@
-// @flow strict
+/**
+ * Portions of code within this module are leveraging code copied from the
+ * `graphql-js` library and modified to suit the needs of Apollo Server. For
+ * details regarding the terms of these modifications and any relevant
+ * attributions for the existing code, see the LICENSE file, at the root of this
+ * package.
+ */
 
-import { type ObjMap } from './ObjMap';
+import { ObjMap } from '.';
 
 /**
  * This function transforms a JS object `ObjMap<Promise<T>>` into
@@ -9,7 +15,7 @@ import { type ObjMap } from './ObjMap';
  * This is akin to bluebird's `Promise.props`, but implemented only using
  * `Promise.all` so it will work with any implementation of ES6 promises.
  */
-export default function promiseForObject<T>(
+export function promiseForObject<T>(
   object: ObjMap<Promise<T>>,
 ): Promise<ObjMap<T>> {
   const keys = Object.keys(object);
