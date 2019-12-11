@@ -23,7 +23,6 @@ import { GraphQLSchema } from 'graphql/type';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import loglevel from 'loglevel';
 import loglevelDebug from 'loglevel-debug';
-import { ValueOrPromise } from 'apollo-server-plugin-base';
 
 type ForbidUnregisteredOperationsPredicate = (
   requestContext: GraphQLRequestContext,
@@ -59,10 +58,6 @@ export interface Options {
     requestContext: GraphQLRequestContext,
     operationRegistryRequestContext: OperationRegistryRequestContext,
   ) => void;
-  willUpdateManifest?: (
-    newManifest?: OperationManifest,
-    oldManifest?: OperationManifest,
-  ) => ValueOrPromise<OperationManifest>;
 }
 
 export default function plugin(options: Options = Object.create(null)) {
@@ -134,7 +129,6 @@ for observability purposes, but all operations will be permitted.`,
         engine,
         store,
         logger,
-        willUpdateManifest: options.willUpdateManifest,
       });
 
       await agent.start();
