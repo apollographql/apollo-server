@@ -297,8 +297,8 @@ executionDidStart?(
 
 ### `didEncounterErrors`
 
-The `didEncounterErrors` event fires whenever Apollo Server encounters an error while
-executing a GraphQL operation.
+The `didEncounterErrors` event fires when Apollo Server encounters errors while
+parsing, validating, or executing a GraphQL operation.
 
 ```typescript
 didEncounterErrors?(
