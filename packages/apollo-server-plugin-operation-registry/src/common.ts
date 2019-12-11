@@ -12,7 +12,8 @@ export const fakeTestBaseUrl = 'https://fake-host-for-apollo-op-reg-tests/';
 export const urlOperationManifestBase: string = ((): string => {
   const desiredUrl =
     process.env[envOverrideOperationManifest] ||
-    process.env['NODE_ENV'] === 'test'
+    // See src/__tests__/jestSetup.ts for more details on this env. variable.
+    process.env['__APOLLO_OPERATION_REGISTRY_TESTS__'] === 'true'
       ? fakeTestBaseUrl
       : 'https://storage.googleapis.com/engine-op-manifest-storage-prod/';
 
@@ -24,7 +25,8 @@ export const urlOperationManifestBase: string = ((): string => {
 export const urlStorageSecretBase: string = ((): string => {
   const desiredUrl =
     process.env[envOverrideStorageSecretBaseUrl] ||
-    process.env['NODE_ENV'] === 'test'
+    // See src/__tests__/jestSetup.ts for more details on this env. variable.
+    process.env['__APOLLO_OPERATION_REGISTRY_TESTS__'] === 'true'
       ? fakeTestBaseUrl
       : 'https://storage.googleapis.com/engine-partial-schema-prod/';
 
