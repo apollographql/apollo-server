@@ -25,7 +25,7 @@
     "node": ">=6"
   },
   "dependencies": {
-    "@apollographql/apollo-tools": "0.4.1",
+    "@apollographql/apollo-tools": "0.4.2",
     "@apollo/federation": "file:packages/apollo-federation",
     "@apollo/gateway": "file:packages/apollo-gateway",
     "apollo-cache-control": "file:packages/apollo-cache-control",
