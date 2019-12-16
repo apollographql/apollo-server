@@ -27,19 +27,12 @@ export function httpHandler(schema: GraphQLSchema): RequestListener {
    */
   return async function httpRequestListener(req, res): Promise<void> {
     if (!req) {
-      internalServerError(
-        res,
-        "Missing request on HTTP request handler invocation.",
-      );
-      return;
+      throw new Error("Missing request on HTTP request handler invocation.");
     }
 
     if (!res) {
-      internalServerError(
-        res,
-        "Missing response sink on HTTP request handler invocation.",
-      );
-      return;
+      throw new Error(
+        "Missing response sink on HTTP request handler invocation.");
     }
 
     let parsedRequest: GraphQLRequest;
