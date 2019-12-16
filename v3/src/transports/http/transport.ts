@@ -108,18 +108,31 @@ export async function processHttpRequest(
   }
 }
 
+/** Options for {@link generatedResponse} */
+interface IGeneratedResponseArgs {
+  /**
+   * A complete `GraphQLResponse`. Note that the `body` of this `response` may
+   * be an `AsyncIterable` which may continue to iterate after the initial
+   * response.
+   */
+  response: GraphQLResponse;
+
+  /**
+   * HTTP headers which should be added to the response by the HTTP handler.
+   * Currently, Apollo Server provides no ability to specify how these will be
+   * set.
+   */
+  headers?: OutgoingHttpHeaders;
+}
+
 /**
  * Generate the response to return to the HTTP transport.
  *
  * TODO(AS3) Yet to be determined, is how the setting of additional headers
  * should be handled.
  *
- * @param response
  */
-function generatedResponse(args: {
-  response: GraphQLResponse;
-  headers?: OutgoingHttpHeaders;
-}): IHttpResponse {
+function generatedResponse(args: IGeneratedResponseArgs): IHttpResponse {
   const {
     response,
     headers = Object.create(null),
