@@ -54,9 +54,7 @@ export type GraphQLResponseWithExecutionErrors =
 export function isErrorBeforeExecution(
   response: GraphQLResponse,
 ): response is WithRequired<GraphQLResponse, "errors"> {
-  return Array.isArray(response.errors) && typeof response.data === "undefined"
-    ? true
-    : false;
+  return Array.isArray(response.errors) && typeof response.data === "undefined";
 }
 
 /**
@@ -84,9 +82,7 @@ export function isErrorBeforeExecution(
 export function isErrorDuringExecution(
   response: GraphQLResponse,
 ): response is GraphQLResponseWithExecutionErrors {
-  return Array.isArray(response.errors) && typeof response.data !== "undefined"
-    ? true
-    : false;
+  return Array.isArray(response.errors) && typeof response.data !== "undefined";
 }
 
 // @ts-ignore
