@@ -1378,6 +1378,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           });
 
         // Only the first request should result in an error.
+        expect(didEncounterErrors).toHaveBeenCalledTimes(1);
         expect(didEncounterErrors).toBeCalledWith(
           expect.objectContaining({
             errors: expect.arrayContaining([
@@ -1393,16 +1394,13 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
             query,
           });
 
-        // There should be no additional errors now.
+        // There should be no additional errors now.  In other words, we'll
+        // re-assert that we've been called the same single time that we
+        // asserted above.
         expect(didEncounterErrors).toHaveBeenCalledTimes(1);
 
         expect(result.body.data).toEqual({ testString: 'it works' });
         expect(result.body.errors).toBeUndefined();
-
-        // Only the first request should have resulted in an error, not the
-        // second.  Therefore, we'll re-assert what we already asserted above
-        // in order to ensure that it has not changed.
-        expect(didEncounterErrors).toHaveBeenCalledTimes(1);
       });
 
       it('returns with batched persisted queries', async () => {
