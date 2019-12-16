@@ -24,7 +24,7 @@ export { GraphQLOptions, GraphQLExtension } from 'apollo-server-core';
 
 export interface GetMiddlewareOptions {
   path?: string;
-  cors?: corsMiddleware.CorsOptions | boolean;
+  cors?: corsMiddleware.CorsOptions | corsMiddleware.CorsOptionsDelegate | boolean;
   bodyParserConfig?: OptionsJson | boolean;
   onHealthCheck?: (req: express.Request) => Promise<any>;
   disableHealthCheck?: boolean;
