@@ -14,6 +14,7 @@ import {
   TypeNameMetaFieldDef,
   VariableDefinitionNode,
   GraphQLFieldResolver,
+  GraphQLFormattedError,
 } from 'graphql';
 import { Trace, google } from 'apollo-engine-reporting-protobuf';
 import { GraphQLDataSource } from './datasources/types';
@@ -330,6 +331,7 @@ async function executeFetch<TContext>(
           variables,
           error.extensions,
           error.path,
+          error,
         ),
       );
       context.errors.push(...errors);
@@ -454,6 +456,7 @@ function downstreamServiceError(
   variables?: Record<string, any>,
   extensions?: Record<string, any>,
   path?: ReadonlyArray<string | number> | undefined,
+  originalError?: GraphQLFormattedError | undefined,
 ) {
   if (!message) {
     message = `Error while fetching subquery from service "${serviceName}"`;
@@ -473,7 +476,7 @@ function downstreamServiceError(
     undefined,
     undefined,
     path,
-    undefined,
+    originalError as Error,
     extensions,
   );
 }
