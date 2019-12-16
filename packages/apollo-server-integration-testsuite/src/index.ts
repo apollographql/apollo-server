@@ -1400,7 +1400,8 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
         expect(result.body.errors).toBeUndefined();
 
         // Only the first request should have resulted in an error, not the
-        // second.
+        // second.  Therefore, we'll re-assert what we already asserted above
+        // in order to ensure that it has not changed.
         expect(didEncounterErrors).toHaveBeenCalledTimes(1);
       });
 
