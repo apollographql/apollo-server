@@ -537,6 +537,18 @@ describe('runQuery', () => {
         );
       });
 
+      it('called when an error occurs in execution', async () => {
+        const response = await runQuery({
+          schema,
+          queryString: '{ testError }',
+          request: new MockReq(),
+        });
+
+        expect(response).toHaveProperty(
+          'errors.0.message','Secret error message');
+        expect(response).toHaveProperty('data.testError', null);
+      });
+
       it('not called when an error does not occur', async () => {
         await runQuery({
           schema,
