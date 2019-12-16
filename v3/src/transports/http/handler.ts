@@ -9,7 +9,12 @@ import { GraphQLRequest } from "../../types";
  * a `RequestHandler` that can be used with Node.js' `http.createServer`, or
  * Express' `app.use`.
  *
- * @param apollo An instance of `ApolloServer`
+ * @param schema  Presently, this requires a `GraphQLSchema`, though that should
+ *                not be the case.  A correct implementation of this must
+ *                either accept a function which is directly capable of
+ *                executing a GraphQL operation, or a `class` which provides
+ *                a known method which can be similarly executed upon (e.g.
+ *                a `executeOperation` method).
  */
 export const httpHandler: (
   schema: GraphQLSchema,
