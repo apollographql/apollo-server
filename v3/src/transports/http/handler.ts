@@ -122,6 +122,10 @@ export function internalServerError(
  * @param req The request from an `http.IncomingMessage` compatible interface.
  *            (Note that Express' `req` **is** compatible!)
  *
+ * @throws {SyntaxError}  A malformed request body that does not contain valid
+ *                        JSON structure will cause `JSON.parse` to fail.  This
+ *                        will result in a `SyntaxError` being thrown.
+ *
  * @remarks
  *
  * TODO(AS3) Consider whether this implementation should be used as a getting
