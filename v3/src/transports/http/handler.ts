@@ -16,9 +16,7 @@ import { GraphQLRequest } from "../../types";
  *                a known method which can be similarly executed upon (e.g.
  *                a `executeOperation` method).
  */
-export const httpHandler: (
-  schema: GraphQLSchema,
-) => RequestListener = schema => {
+export function httpHandler(schema: GraphQLSchema): RequestListener {
   if (!(schema instanceof GraphQLSchema)) {
     throw new Error("Must pass a schema.");
   }
@@ -94,7 +92,7 @@ export const httpHandler: (
     }
     res.end();
   };
-};
+}
 
 /**
  * Called in the event of a critical error within the HTTP handler.
