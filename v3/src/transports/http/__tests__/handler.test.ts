@@ -1,6 +1,6 @@
 import { gql } from "apollo-server-core";
 import { buildSchemaFromSDL } from "apollo-graphql";
-import { httpHandler, responseAsInternalServerError } from "../handler";
+import { httpHandler, internalServerError } from "../handler";
 import { ServerResponse, RequestListener } from "http";
 import { PassThrough, Readable } from "stream";
 const testModule = {
@@ -119,11 +119,11 @@ describe("httpHandler", () => {
   });
 });
 
-describe("responseAsInternalServerError", () => {
+describe("internalServerError", () => {
   it("can call the writeHead message with the correct code and message", () => {
     const res = mockedResponse();
-    // @ts-ignore
-    responseAsInternalServerError(res, "Catastrophic.");
+    // @ts-ignore The `res` is missing many necessary properties.
+    internalServerError(res, "Catastrophic.");
     expect(res.writeHead).toBeCalledTimes(1);
     expect(res.writeHead).toBeCalledWith(500, "Catastrophic.");
     expect(res.end).not.toBeCalled();

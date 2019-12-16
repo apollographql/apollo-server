@@ -27,17 +27,19 @@ export function httpHandler(schema: GraphQLSchema): RequestListener {
    */
   return async function httpRequestListener(req, res): Promise<void> {
     if (!req) {
-      return responseAsInternalServerError(
+      internalServerError(
         res,
         "Missing request on HTTP request handler invocation.",
       );
+      return;
     }
 
     if (!res) {
-      return responseAsInternalServerError(
+      internalServerError(
         res,
         "Missing response sink on HTTP request handler invocation.",
       );
+      return;
     }
 
     let parsedRequest: GraphQLRequest;
@@ -50,7 +52,8 @@ export function httpHandler(schema: GraphQLSchema): RequestListener {
     } catch (err) {
       // TODO(AS3) In order to limit error codes to a single place, this may
       // be well-served to be a `GraphQLError`.
-      return responseAsInternalServerError(res, "Error parsing body");
+      internalServerError(res, "Error parsing body");
+      return;
     }
 
     /**
@@ -100,12 +103,11 @@ export function httpHandler(schema: GraphQLSchema): RequestListener {
  * @param res
  * @param errorMessage
  */
-export function responseAsInternalServerError(
+export function internalServerError(
   res: ServerResponse,
   errorMessage: string,
 ): void {
   res.writeHead(500, errorMessage);
-  return;
 }
 
 /**
