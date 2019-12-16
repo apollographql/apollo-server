@@ -1193,6 +1193,77 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
         });
       });
 
+      it('errors when version is not specified', async () => {
+        const result = await request(app)
+          .get('/graphql')
+          .query({
+            query,
+            extensions: JSON.stringify({
+              persistedQuery: {
+                // Version intentionally omitted.
+                sha256Hash: extensions.persistedQuery.sha256Hash,
+              }
+            }),
+          });
+
+        expect(result).toMatchObject({
+          status: 400,
+          // Different integrations' response text varies in format.
+          text: expect.stringContaining('Unsupported persisted query version'),
+          req: expect.objectContaining({
+            method: 'GET',
+          }),
+        });
+      });
+
+      it('errors when version is unsupported', async () => {
+        const result = await request(app)
+          .get('/graphql')
+          .query({
+            query,
+            extensions: JSON.stringify({
+              persistedQuery: {
+                // Version intentionally wrong.
+                version: VERSION + 1,
+                sha256Hash: extensions.persistedQuery.sha256Hash,
+              }
+            }),
+          });
+
+        expect(result).toMatchObject({
+          status: 400,
+          // Different integrations' response text varies in format.
+          text: expect.stringContaining('Unsupported persisted query version'),
+          req: expect.objectContaining({
+            method: 'GET',
+          }),
+        });
+      });
+
+      it('errors when hash is mismatched', async () => {
+        const result = await request(app)
+          .get('/graphql')
+          .query({
+            query,
+            extensions: JSON.stringify({
+              persistedQuery: {
+                version: 1,
+                // Sha intentionally wrong.
+                sha256Hash: extensions.persistedQuery.sha256Hash.substr(0,5),
+              }
+            }),
+          });
+
+        expect(result).toMatchObject({
+          status: 400,
+          // Different integrations' response text varies in format.
+          text: expect.stringContaining('provided sha does not match query'),
+          req: expect.objectContaining({
+            method: 'GET',
+          }),
+        });
+      });
+
       it('returns PersistedQueryNotFound on the first try', async () => {
         const result = await request(app)
           .post('/graphql')
