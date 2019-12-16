@@ -1,7 +1,7 @@
 import { IncomingMessage, RequestListener, ServerResponse } from "http";
 import { IHttpRequest } from "./transport";
 import { processHttpRequest } from "./transport";
-import { GraphQLSchema } from "graphql";
+import { GraphQLSchema, isSchema } from "graphql/type";
 import { GraphQLRequest } from "../../types";
 
 /**
@@ -17,7 +17,7 @@ import { GraphQLRequest } from "../../types";
  *                a `executeOperation` method).
  */
 export function httpHandler(schema: GraphQLSchema): RequestListener {
-  if (!(schema instanceof GraphQLSchema)) {
+  if (!isSchema(schema)) {
     throw new Error("Must pass a schema.");
   }
 
