@@ -3,12 +3,18 @@ import { GraphQLSchema } from 'graphql/type/schema';
 import { DocumentNode } from 'graphql/language/ast';
 import { InMemoryLRUCache } from './caching';
 import { approximateObjectSize } from './utilities';
+import { processGraphqlRequest } from './execution';
+import { GraphQLRequest } from './types';
 
 // These should not be imported from here.
 import { Config as BaseConfig } from 'apollo-server-core';
 import { buildServiceDefinition } from '@apollographql/apollo-tools';
 
 export { default as gql } from 'graphql-tag';
+import {
+  Context,
+  ContextFunction,
+} from './execution';
 
 // A subset of the base configuration.
 type Config = Pick<BaseConfig,
@@ -37,6 +43,7 @@ type SchemaDerivedData = {
 export class ApolloServer {
   // public requestOptions: Partial<GraphQLOptions<any>> = Object.create(null);
 
+  private userContext?: Context | ContextFunction;
   // TODO(AS3) Reconsider these for Apollo Graph Manager
   // private engineReportingAgent?: import('apollo-engine-reporting').EngineReportingAgent;
   // private engineServiceId?: string;
@@ -51,6 +58,9 @@ export class ApolloServer {
 
   constructor(private readonly config: Config) {
     if (!config) throw new Error('ApolloServer requires options.');
+
+    // TODO(AS3) Rename content variables to be more clear, like `userContext`.
+    this.userContext = this.config.context;
 
     // Plugins will be instantiated if they aren't already, and this.plugins
     // is populated accordingly.
@@ -253,5 +263,30 @@ export class ApolloServer {
       maxSize: Math.pow(2, 20) * 30,
       sizeCalculator: approximateObjectSize,
     });
+  }
+
+  public async executeOperation<TRequest extends GraphQLRequest>(
+    request: TRequest,
+  ) {
+    const { schema } = await this.schemaDerivedData;
+
+    // TODO(AS3) The transport will provide context.
+    const integrationContextArgument = Object.create(null);
+
+    let context: Context;
+
+    try {
+      context =
+        typeof this.userContext === 'function'
+          ? await this.userContext(integrationContextArgument || Object.create(null))
+          : this.userContext || Object.create(null);
+    } catch (error) {
+      // Defer context error resolution to inside of runQuery
+      context = () => {
+        throw error;
+      };
+    }
+
+    return processGraphqlRequest({ request, context, schema });
   }
 }
