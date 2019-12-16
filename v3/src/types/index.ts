@@ -84,22 +84,3 @@ export function isErrorDuringExecution(
 ): response is GraphQLResponseWithExecutionErrors {
   return Array.isArray(response.errors) && typeof response.data !== "undefined";
 }
-
-// @ts-ignore
-interface experimental_GraphQLResponseWithPreExecutionErrors {
-  errors: ReadonlyArray<GraphQLError>;
-  //TODO Make the above a `NonEmptyArray<T>`, preferably.
-  data?: undefined;
-}
-
-// @ts-ignore
-interface experimental_GraphQLResponseWithExecutionErrors {
-  errors: ReadonlyArray<GraphQLError>;
-  data: Record<string, any> | null;
-}
-
-// @ts-ignore
-type experimental_GraphQLResponseWithoutErrors = {
-  errors?: undefined;
-  data: Record<string, any> | null;
-};
