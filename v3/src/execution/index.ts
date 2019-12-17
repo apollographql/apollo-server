@@ -2,7 +2,6 @@ export {
   GraphQLRequestContext,
   GraphQLRequestPipelineConfig,
 } from 'apollo-server-core/dist/requestPipeline';
-import { VariableValues } from 'apollo-server-types';
 import {
   DocumentNode,
   parse,
@@ -12,7 +11,7 @@ import {
   execute,
   separateOperations,
 } from 'graphql';
-import { GraphQLRequest, GraphQLResponse } from "../types";
+import { GraphQLRequest, GraphQLResponse, VariableValues } from "../types";
 
 // TODO(AS3) I'm not sure if this is execution.  Perhaps, a top-level export.
 export { GraphQLSchemaModule } from 'apollo-graphql';
