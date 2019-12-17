@@ -180,7 +180,7 @@ describe('lifecycle hooks', () => {
     consoleSpy.mockRestore();
   });
 
-  it('registers schema change callbacks when experimental_pollInterval is set for unamanged configs', async () => {
+  it('registers schema change callbacks when experimental_pollInterval is set for unmanaged configs', async () => {
     jest.useFakeTimers();
 
     const experimental_updateServiceDefinitions: Experimental_UpdateServiceDefinitions = jest.fn(
