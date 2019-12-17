@@ -40,9 +40,6 @@ type IMockedResponse = Pick<
       | "end"
     >
 
-// type IMockedRequest = Pick<IncomingMessage, "method">;
-// type IMockedRequestListener = (req: IMockedRequest) => void;
-
 function mockedResponse(): IMockedResponse {
   return {
     writeHead: jest.fn(),
