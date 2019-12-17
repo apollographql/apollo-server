@@ -6,6 +6,22 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 > The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  When a release is being prepared, a new header will be (manually) created below and the the appropriate changes within that release will be moved into the new section.
 
+- `apollo-server-core`: Upgrade TS to 3.7.3 [#3618](https://github.com/apollographql/apollo-server/pull/3618)
+
+### v2.9.14
+
+> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/ad5eac5ea1741142122e4cb8fd34a9748be31e89)
+
+- `apollo-server-core`: Ensure that plugin's `didEncounterErrors` hooks are invoked for known automated persisted query (APQ) errors. [#3614](https://github.com/apollographql/apollo-server/pull/3614)
+- `apollo-server-plugin-base`: Move `TContext` generic from `requestDidStart` method to `ApolloServerPlugin` Interface. [#3525](https://github.com/apollographql/apollo-server/pull/3525)
+
+### v2.9.13
+
+> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/a0a60e73e04e913d388de8324f7d17e4406deea2)
+
+- `@apollo/gateway`: Add `@types/node-fetch` as a regular dependency to avoid missing dependency for TypeScript consumers. [PR #3546](https://github.com/apollographql/apollo-server/pull/3546) [Issue #3471](https://github.com/apollographql/apollo-server/issues/3471)
+- `apollo-engine-reporting`: Declare acceptable `graphql` versions ranges in `peerDependencies` rather than allowing it to occur implicitly (and less ideally) via its consumers (e.g. most `apollo-server-*` packages). [PR #3496](https://github.com/apollographql/apollo-server/pull/3496)
+
 ### v2.9.12
 
 - Reinstate [PR #3530](https://github.com/apollographql/apollo-server/pull/3530) via [#3539](https://github.com/apollographql/apollo-server/pull/3539) - after a patch release of the `@apollo/protobufjs` fork, the build issue for consumers should be resolved.

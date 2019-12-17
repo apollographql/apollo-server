@@ -31,7 +31,7 @@ import {
   Field,
   FieldSet,
   groupByParentType,
-  groupByResponseName,
+  groupByParentTypeAndResponseName,
   matchesField,
   selectionSetFromFieldSet,
   Scope,
@@ -373,7 +373,7 @@ function splitFields(
   fields: FieldSet,
   groupForField: (field: Field<GraphQLObjectType>) => FetchGroup,
 ) {
-  for (const fieldsForResponseName of groupByResponseName(fields).values()) {
+  for (const fieldsForResponseName of groupByParentTypeAndResponseName(fields).values()) {
     for (const [parentType, fieldsForParentType] of groupByParentType(
       fieldsForResponseName,
     )) {

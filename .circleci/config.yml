@@ -22,7 +22,7 @@ commands:
       - run:
           command: npm run test:ci
           environment:
-            JEST_JUNIT_OUTPUT: "reports/junit/js-test-results.xml"
+            JEST_JUNIT_OUTPUT_DIR: "reports/junit/"
       - run: npm run coverage:upload
       - store_test_results:
           path: reports/junit
