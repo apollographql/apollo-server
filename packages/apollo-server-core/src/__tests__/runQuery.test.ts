@@ -514,19 +514,19 @@ describe('runQuery', () => {
 
     describe('didEncounterErrors', () => {
       const didEncounterErrors = jest.fn();
+      const plugins: ApolloServerPlugin[] = [
+        {
+          requestDidStart() {
+            return { didEncounterErrors };
+          },
+        },
+      ];
+
       it('called when an error occurs', async () => {
         await runQuery({
           schema,
           queryString: '{ testStringWithParseError: }',
-          plugins: [
-            {
-              requestDidStart() {
-                return {
-                  didEncounterErrors,
-                };
-              },
-            },
-          ],
+          plugins,
           request: new MockReq(),
         });
 
@@ -537,19 +537,32 @@ describe('runQuery', () => {
         );
       });
 
+      it('called when an error occurs in execution', async () => {
+        const response = await runQuery({
+          schema,
+          queryString: '{ testError }',
+          plugins,
+          request: new MockReq(),
+        });
+
+        expect(response).toHaveProperty(
+          'errors.0.message','Secret error message');
+        expect(response).toHaveProperty('data.testError', null);
+
+        expect(didEncounterErrors).toBeCalledWith(
+          expect.objectContaining({
+            errors: expect.arrayContaining([expect.objectContaining({
+              message: 'Secret error message',
+            })]),
+          }),
+        );
+      });
+
       it('not called when an error does not occur', async () => {
         await runQuery({
           schema,
           queryString: '{ testString }',
-          plugins: [
-            {
-              requestDidStart() {
-                return {
-                  didEncounterErrors,
-                };
-              },
-            },
-          ],
+          plugins,
           request: new MockReq(),
         });
 
