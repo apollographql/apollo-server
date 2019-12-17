@@ -34,6 +34,7 @@ export type GraphQLResponseWithExecutionErrors =
  * of a response that resulted in an error prior to execution.
  *
  * @remarks
+ *
  * Pre execution errors require that the the `data` property be absent.
  *
  * Per the [GraphQL specification (June 2018, Section 7.1.2)][1]:
