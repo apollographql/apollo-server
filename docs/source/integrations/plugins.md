@@ -243,7 +243,10 @@ does not occur.
 
 ```typescript
 parsingDidStart?(
-  requestContext: GraphQLRequestContext<TContext>,
+  requestContext: WithRequired<
+    GraphQLRequestContext<TContext>,
+    'metrics' | 'source'
+  >,
 ): (err?: Error) => void | void;
 ```
 
@@ -260,7 +263,10 @@ available at this stage, because parsing must succeed for validation to occur.
 
 ```typescript
 validationDidStart?(
-  requestContext: WithRequired<GraphQLRequestContext<TContext>, 'document'>,
+  requestContext: WithRequired<
+    GraphQLRequestContext<TContext>,
+    'metrics' | 'source' | 'document'
+  >,
 ): (err?: ReadonlyArray<Error>) => void | void;
 ```
 
@@ -276,7 +282,7 @@ both the `operationName` string and `operation` AST are available.
 didResolveOperation?(
   requestContext: WithRequired<
     GraphQLRequestContext<TContext>,
-    'document' | 'operationName' | 'operation'
+    'metrics' | 'source' | 'document' | 'operationName' | 'operation'
   >,
 ): ValueOrPromise<void>;
 ```
@@ -290,7 +296,7 @@ GraphQL operation specified by a request's `document` AST.
 executionDidStart?(
   requestContext: WithRequired<
     GraphQLRequestContext<TContext>,
-    'document' | 'operationName' | 'operation'
+    'metrics' | 'source' | 'document' | 'operationName' | 'operation'
   >,
 ): (err?: Error) => void | void;
 ```
@@ -317,6 +323,9 @@ if the GraphQL operation encounters one or more errors.
 
 ```typescript
 willSendResponse?(
-  requestContext: WithRequired<GraphQLRequestContext<TContext>, 'response'>,
+  requestContext: WithRequired<
+    GraphQLRequestContext<TContext>,
+    'metrics' | 'response'
+  >,
 ): ValueOrPromise<void>;
 ```
