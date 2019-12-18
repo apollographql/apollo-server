@@ -16,6 +16,8 @@ export interface KeyValueCache {
 }
 ```
 
+`ttl` is in seconds.
+
 ## Testing cache implementations
 
 ### Test helpers
