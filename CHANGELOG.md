@@ -7,6 +7,7 @@ The version headers in this history reflect the versions of Apollo Server itself
 > The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  When a release is being prepared, a new header will be (manually) created below and the the appropriate changes within that release will be moved into the new section.
 
 - `apollo-server-core`: Upgrade TS to 3.7.3 [#3618](https://github.com/apollographql/apollo-server/pull/3618)
+- `apollo-server-cloud-functions`: Transmit CORS headers on `OPTIONS` request. [PR #3557](https://github.com/apollographql/apollo-server/pull/3557)
 - `apollo-server-caching`: De-compose options interface for `KeyValueCache.prototype.set` to accommodate better TSDoc annotations for its properties (e.g. to specify that `ttl` is defined in _seconds_). [PR #3619](https://github.com/apollographql/apollo-server/pull/3619)
 
 ### v2.9.14
