@@ -1257,6 +1257,63 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
         });
       });
 
+      it('when ttlSeconds is set, passes ttl to the apq cache set call', async () => {
+        const cache = createMockCache();
+        app = await createApp({
+          graphqlOptions: {
+            schema,
+            persistedQueries: {
+              cache: cache,
+              ttlSeconds: 900,
+            },
+          },
+        });
+
+        await request(app)
+          .post('/graphql')
+          .send({
+            extensions,
+            query,
+          });
+
+        expect(cache.set).toHaveBeenCalledWith(
+          expect.stringMatching(/^apq:/),
+          '{testString}',
+          expect.objectContaining({
+            ttl: 900,
+          }),
+        );
+      });
+
+      it('when ttlSeconds is unset, ttl is not passed to apq cache',
+        async () => {
+          const cache = createMockCache();
+          app = await createApp({
+            graphqlOptions: {
+              schema,
+              persistedQueries: {
+                cache: cache,
+              },
+            },
+          });
+
+          await request(app)
+            .post('/graphql')
+            .send({
+              extensions,
+              query,
+            });
+
+          expect(cache.set).toHaveBeenCalledWith(
+            expect.stringMatching(/^apq:/),
+            '{testString}',
+            expect.not.objectContaining({
+              ttl: 900,
+            }),
+          );
+        }
+      );
+
       it('errors when version is not specified', async () => {
         const result = await request(app)
           .get('/graphql')
