@@ -14,7 +14,6 @@ import testSuite, {
 
     const app: import('hapi').Server = new Server({
       host: 'localhost',
-      port: 8000,
     });
 
     const server = new ApolloServer(
