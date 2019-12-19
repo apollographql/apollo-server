@@ -28,7 +28,13 @@ export class RedisCache implements TestableKeyValueCache<string> {
     options?: KeyValueCacheSetOptions,
   ): Promise<void> {
     const { ttl } = Object.assign({}, this.defaultSetOptions, options);
-    await this.client.set(key, value, 'EX', ttl);
+    if (typeof ttl === 'number') {
+      await this.client.set(key, value, 'EX', ttl);
+    } else {
+      // We'll leave out the EXpiration when no value is specified.  Of course,
+      // it may be purged from the cache for other reasons as deemed necessary.
+      await this.client.set(key, value);
+    }
   }
 
   async get(key: string): Promise<string | undefined> {

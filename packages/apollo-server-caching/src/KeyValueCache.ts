@@ -4,7 +4,7 @@ export interface KeyValueCacheSetOptions {
    * Specified in **seconds**, the time-to-live (TTL) value limits the lifespan
    * of the data being stored in the cache.
    */
-  ttl?: number
+  ttl?: number | null
 };
 
 export interface KeyValueCache<V = string> {

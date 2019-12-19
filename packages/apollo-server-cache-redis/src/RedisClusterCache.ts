@@ -30,7 +30,13 @@ export class RedisClusterCache implements KeyValueCache {
     options?: KeyValueCacheSetOptions,
   ): Promise<void> {
     const { ttl } = Object.assign({}, this.defaultSetOptions, options);
-    await this.client.set(key, data, 'EX', ttl);
+    if (typeof ttl === 'number') {
+      await this.client.set(key, data, 'EX', ttl);
+    } else {
+      // We'll leave out the EXpiration when no value is specified.  Of course,
+      // it may be purged from the cache for other reasons as deemed necessary.
+      await this.client.set(key, data);
+    }
   }
 
   async get(key: string): Promise<string | undefined> {

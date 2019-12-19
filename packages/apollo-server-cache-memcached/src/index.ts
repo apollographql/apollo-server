@@ -29,7 +29,13 @@ export class MemcachedCache implements TestableKeyValueCache {
     options?: KeyValueCacheSetOptions,
   ): Promise<void> {
     const { ttl } = Object.assign({}, this.defaultSetOptions, options);
-    await this.client.set(key, value, ttl);
+    if (typeof ttl === 'number') {
+      await this.client.set(key, value, ttl);
+    } else {
+      // In Memcached, zero indicates no specific expiration time.  Of course,
+      // it may be purged from the cache for other reasons as deemed necessary.
+      await this.client.set(key, value, 0);
+    }
   }
 
   async get(key: string): Promise<string | undefined> {
