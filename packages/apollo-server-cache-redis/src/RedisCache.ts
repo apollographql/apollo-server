@@ -1,10 +1,13 @@
-import { TestableKeyValueCache } from 'apollo-server-caching';
+import {
+  TestableKeyValueCache,
+  KeyValueCacheSetOptions,
+} from 'apollo-server-caching';
 import Redis, { RedisOptions } from 'ioredis';
 import DataLoader from 'dataloader';
 
 export class RedisCache implements TestableKeyValueCache<string> {
   readonly client: any;
-  readonly defaultSetOptions = {
+  readonly defaultSetOptions: KeyValueCacheSetOptions = {
     ttl: 300,
   };
 
@@ -22,7 +25,7 @@ export class RedisCache implements TestableKeyValueCache<string> {
   async set(
     key: string,
     value: string,
-    options?: { ttl?: number },
+    options?: KeyValueCacheSetOptions,
   ): Promise<void> {
     const { ttl } = Object.assign({}, this.defaultSetOptions, options);
     await this.client.set(key, value, 'EX', ttl);

@@ -1,4 +1,4 @@
-import { KeyValueCache } from 'apollo-server-caching';
+import { KeyValueCache, KeyValueCacheSetOptions } from 'apollo-server-caching';
 import Redis, {
   ClusterOptions,
   ClusterNode,
@@ -8,7 +8,7 @@ import DataLoader from 'dataloader';
 
 export class RedisClusterCache implements KeyValueCache {
   readonly client: any;
-  readonly defaultSetOptions = {
+  readonly defaultSetOptions: KeyValueCacheSetOptions = {
     ttl: 300,
   };
 
@@ -27,7 +27,7 @@ export class RedisClusterCache implements KeyValueCache {
   async set(
     key: string,
     data: string,
-    options?: { ttl?: number },
+    options?: KeyValueCacheSetOptions,
   ): Promise<void> {
     const { ttl } = Object.assign({}, this.defaultSetOptions, options);
     await this.client.set(key, data, 'EX', ttl);

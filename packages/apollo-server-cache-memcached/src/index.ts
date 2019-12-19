@@ -1,11 +1,14 @@
-import { TestableKeyValueCache } from 'apollo-server-caching';
+import {
+  TestableKeyValueCache,
+  KeyValueCacheSetOptions,
+} from 'apollo-server-caching';
 import Memcached from 'memcached';
 import { promisify } from 'util';
 
 export class MemcachedCache implements TestableKeyValueCache {
   // FIXME: Replace any with proper promisified type
   readonly client: any;
-  readonly defaultSetOptions = {
+  readonly defaultSetOptions: KeyValueCacheSetOptions = {
     ttl: 300,
   };
 
@@ -23,7 +26,7 @@ export class MemcachedCache implements TestableKeyValueCache {
   async set(
     key: string,
     value: string,
-    options?: { ttl?: number },
+    options?: KeyValueCacheSetOptions,
   ): Promise<void> {
     const { ttl } = Object.assign({}, this.defaultSetOptions, options);
     await this.client.set(key, value, ttl);
