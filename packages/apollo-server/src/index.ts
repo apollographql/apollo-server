@@ -100,7 +100,7 @@ export class ApolloServer extends ApolloServerBase {
     // provide generous values for the getting started experience
     super.applyMiddleware({
       app,
-      path: '/',
+      path: '/graphql',
       bodyParserConfig: { limit: '50mb' },
       onHealthCheck: this.onHealthCheck,
       cors:
