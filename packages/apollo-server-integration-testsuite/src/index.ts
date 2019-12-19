@@ -1226,16 +1226,20 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
         Parameters<GraphQLRequestListener['didEncounterErrors']>
       >;
 
-      beforeEach(async () => {
+      function createMockCache() {
         const map = new Map<string, string>();
-        const cache = {
-          set: async (key, val) => {
+        return {
+          set: jest.fn(async (key, val) => {
             await map.set(key, val);
-          },
-          get: async key => map.get(key),
-          delete: async key => map.delete(key),
+          }),
+          get: jest.fn(async key => map.get(key)),
+          delete: jest.fn(async key => map.delete(key)),
         };
+      }
+
+      beforeEach(async () => {
         didEncounterErrors = jest.fn();
+        const cache = createMockCache();
         app = await createApp({
           graphqlOptions: {
             schema,
