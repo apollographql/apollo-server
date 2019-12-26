@@ -1540,7 +1540,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
         });
       });
 
-      it('propogates error codes in production', async () => {
+      it('propagates error codes in production', async () => {
         const nodeEnv = process.env.NODE_ENV;
         process.env.NODE_ENV = 'production';
 
@@ -1573,7 +1573,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
         process.env.NODE_ENV = nodeEnv;
       });
 
-      it('propogates error codes with null response in production', async () => {
+      it('propagates error codes with null response in production', async () => {
         const nodeEnv = process.env.NODE_ENV;
         process.env.NODE_ENV = 'production';
 
@@ -1769,7 +1769,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
           // Unfortunately the error connection is not propagated to the
           // observable. What should happen is we provide a default onError
-          // function that notifies the returned observable and can cursomize
+          // function that notifies the returned observable and can customize
           // the behavior with an option in the client constructor. If you're
           // available to make a PR to the following please do!
           // https://github.com/apollographql/subscriptions-transport-ws/blob/master/src/client.ts
