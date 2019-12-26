@@ -14,8 +14,8 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 > [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/ad5eac5ea1741142122e4cb8fd34a9748be31e89)
 
-- `apollo-server-core`: Ensure that plugin's `didEncounterErrors` hooks are invoked for known automated persisted query (APQ) errors. [#3614](https://github.com/apollographql/apollo-server/pull/3614)
-- `apollo-server-plugin-base`: Move `TContext` generic from `requestDidStart` method to `ApolloServerPlugin` Interface. [#3525](https://github.com/apollographql/apollo-server/pull/3525)
+- `apollo-server-core`: Ensure that plugin's `didEncounterErrors` hooks are invoked for known automated persisted query (APQ) errors. [PR #3614](https://github.com/apollographql/apollo-server/pull/3614)
+- `apollo-server-plugin-base`: Move `TContext` generic from `requestDidStart` method to `ApolloServerPlugin` Interface. [PR #3525](https://github.com/apollographql/apollo-server/pull/3525)
 
 ### v2.9.13
 
