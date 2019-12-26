@@ -3,7 +3,6 @@ import { sha256 } from 'js-sha256';
 import { URL } from 'url';
 import express = require('express');
 import bodyParser = require('body-parser');
-import yup = require('yup');
 
 import { FullTracesReport, Trace } from 'apollo-engine-reporting-protobuf';
 
