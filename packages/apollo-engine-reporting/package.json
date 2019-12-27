@@ -15,6 +15,7 @@
     "apollo-graphql": "^0.3.4",
     "apollo-server-caching": "file:../apollo-server-caching",
     "apollo-server-env": "file:../apollo-server-env",
+    "apollo-server-errors": "file:../apollo-server-errors",
     "apollo-server-types": "file:../apollo-server-types",
     "async-retry": "^1.2.1",
     "graphql-extensions": "file:../graphql-extensions"
