@@ -330,9 +330,18 @@ export async function processGraphQLRequest<TContext>(
     // an error) and not actually write, we'll write to the cache if it was
     // determined earlier in the request pipeline that we should do so.
     if (metrics.persistedQueryRegister && persistedQueryCache) {
-      Promise.resolve(persistedQueryCache.set(queryHash, query)).catch(
-        console.warn,
-      );
+      Promise.resolve(
+        persistedQueryCache.set(
+          queryHash,
+          query,
+          config.persistedQueries &&
+            typeof config.persistedQueries.ttl !== 'undefined'
+            ? {
+                ttl: config.persistedQueries.ttl,
+              }
+            : Object.create(null),
+        ),
+      ).catch(console.warn);
     }
 
     let response: GraphQLResponse | null = await dispatcher.invokeHooksUntilNonNull(
