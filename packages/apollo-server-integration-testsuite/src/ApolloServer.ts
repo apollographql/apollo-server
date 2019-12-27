@@ -1084,6 +1084,55 @@ export function testApolloServer<AS extends ApolloServerBase>(
             );
           });
 
+          it("doesn't internal server error on an APQ", async () => {
+            await setupApolloServerAndFetchPair();
+
+            const TEST_STRING_QUERY = `
+              { onlyForThisApqTest${
+                Math.random()
+                  .toString()
+                  .split('.')[1]
+              }: justAField }
+            `;
+            const hash = sha256
+              .create()
+              .update(TEST_STRING_QUERY)
+              .hex();
+
+            const result = await apolloFetch({
+            // @ts-ignore The `ApolloFetch` types don't allow `extensions` to be
+            // passed in, in the same way as `variables`, with a request. This
+            // is a typing omission in `apollo-fetch`, as can be seen here:
+            // https://git.io/Jeb63  This will all be going away soon (and
+            // that package is already archived and deprecated.
+              extensions: {
+                persistedQuery: {
+                  version: VERSION,
+                  sha256Hash: hash,
+                }
+              },
+            });
+
+            // Having a persisted query not found error is fine.
+            expect(result.errors).toContainEqual(
+              expect.objectContaining({
+                extensions: expect.objectContaining({
+                  code: "PERSISTED_QUERY_NOT_FOUND",
+                })
+              })
+            );
+
+            // However, having an internal server error is not okay!
+            expect(result.errors).not.toContainEqual(
+              expect.objectContaining({
+                extensions: expect.objectContaining({
+                  code: "INTERNAL_SERVER_ERROR",
+                })
+              })
+            );
+
+          });
+
           describe('error munging', () => {
             describe('rewriteError', () => {
               it('new error', async () => {
