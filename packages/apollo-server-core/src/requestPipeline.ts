@@ -335,9 +335,9 @@ export async function processGraphQLRequest<TContext>(
           queryHash,
           query,
           config.persistedQueries &&
-            typeof config.persistedQueries.ttlSeconds !== 'undefined'
+            typeof config.persistedQueries.ttl !== 'undefined'
             ? {
-                ttl: config.persistedQueries.ttlSeconds,
+                ttl: config.persistedQueries.ttl,
               }
             : Object.create(null),
         ),

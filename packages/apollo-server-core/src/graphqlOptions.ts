@@ -76,7 +76,7 @@ export interface PersistedQueryOptions {
    * be determined by the cache's eviction policy, but the record will never
    * simply expire.
    */
-  ttlSeconds?: number | null;
+  ttl?: number | null;
 }
 
 export default GraphQLServerOptions;

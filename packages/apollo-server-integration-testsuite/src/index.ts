@@ -1264,7 +1264,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
             schema,
             persistedQueries: {
               cache: cache,
-              ttlSeconds: 900,
+              ttl: 900,
             },
           },
         });
