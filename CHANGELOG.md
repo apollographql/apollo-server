@@ -6,11 +6,17 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 > The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  When a release is being prepared, a new header will be (manually) created below and the the appropriate changes within that release will be moved into the new section.
 
+- _Nothing yet. Stay tuned!_
+
+### v2.9.15
+
+> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/TODO)
+
 - `apollo-engine-reporting`: Fix regression introduced by [#3614](https://github.com/apollographql/apollo-server/pull/3614) which caused `PersistedQueryNotFoundError`, `PersistedQueryNotSupportedError` and `InvalidGraphQLRequestError` errors to be triggered before the `requestDidStart` handler triggered `treeBuilder`'s `startTiming` method. This fix preserves the existing behavior by special-casing these specific errors.  [PR #3638](https://github.com/apollographql/apollo-server/pull/3638) [Issue #3627](https://github.com/apollographql/apollo-server/issues/3627)
-- `apollo-server-core`: Upgrade TS to 3.7.3 [#3618](https://github.com/apollographql/apollo-server/pull/3618)
 - `apollo-server-cloud-functions`: Transmit CORS headers on `OPTIONS` request. [PR #3557](https://github.com/apollographql/apollo-server/pull/3557)
 - `apollo-server-caching`: De-compose options interface for `KeyValueCache.prototype.set` to accommodate better TSDoc annotations for its properties (e.g. to specify that `ttl` is defined in _seconds_). [PR #3619](https://github.com/apollographql/apollo-server/pull/3619)
 - `apollo-server-core`, `apollo-server-caching`: Introduce a `ttl` property, specified in seconds, on the options for automated persisted queries (APQ) which applies specific TTL settings to the cache `set`s during APQ registration.  Previously, all APQ cache records were set to 300 seconds.  Additionally, this adds support (to the underlying `apollo-server-caching` mechanisms) for a time-to-live (TTL) value of `null` which, when supported by the cache implementation, skips the assignment of a TTL value altogether.  This allows the cache's controller to determine when eviction happens (e.g. cache forever, and purge least recently used when the cache is full), which may be desireable for network cache stores (e.g. Memcached, Redis). [PR #3623](https://github.com/apollographql/apollo-server/pull/3623)
+- `apollo-server-core`: Upgrade TS to 3.7.3 [#3618](https://github.com/apollographql/apollo-server/pull/3618)
 
 ### v2.9.14
 
