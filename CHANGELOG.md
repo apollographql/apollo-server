@@ -10,7 +10,7 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 ### v2.9.15
 
-> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/TODO)
+> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/0743d6b2f1737758cf09e80d2086917772bc00c9)
 
 - `apollo-engine-reporting`: Fix regression introduced by [#3614](https://github.com/apollographql/apollo-server/pull/3614) which caused `PersistedQueryNotFoundError`, `PersistedQueryNotSupportedError` and `InvalidGraphQLRequestError` errors to be triggered before the `requestDidStart` handler triggered `treeBuilder`'s `startTiming` method. This fix preserves the existing behavior by special-casing these specific errors.  [PR #3638](https://github.com/apollographql/apollo-server/pull/3638) [Issue #3627](https://github.com/apollographql/apollo-server/issues/3627)
 - `apollo-server-cloud-functions`: Transmit CORS headers on `OPTIONS` request. [PR #3557](https://github.com/apollographql/apollo-server/pull/3557)
