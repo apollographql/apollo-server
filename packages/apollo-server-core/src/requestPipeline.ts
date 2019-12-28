@@ -114,7 +114,7 @@ export async function processGraphQLRequest<TContext>(
 
   const dispatcher = initializeRequestListenerDispatcher();
 
-  initializeDataSources();
+  await initializeDataSources();
 
   const metrics = requestContext.metrics || Object.create(null);
   if (!requestContext.metrics) {
@@ -611,7 +611,7 @@ export async function processGraphQLRequest<TContext>(
     return new GraphQLExtensionStack(extensions);
   }
 
-  function initializeDataSources() {
+  async function initializeDataSources() {
     if (config.dataSources) {
       const context = requestContext.context;
 
@@ -619,7 +619,7 @@ export async function processGraphQLRequest<TContext>(
 
       for (const dataSource of Object.values(dataSources)) {
         if (dataSource.initialize) {
-          dataSource.initialize({
+          await dataSource.initialize({
             context,
             cache: requestContext.cache,
           });
