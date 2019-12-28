@@ -61,7 +61,7 @@
     "@types/async-retry": "1.4.1",
     "@types/aws-lambda": "8.10.39",
     "@types/body-parser": "1.17.1",
-    "@types/connect": "3.4.32",
+    "@types/connect": "3.4.33",
     "@types/fast-json-stable-stringify": "2.0.0",
     "@types/graphql": "14.2.3",
     "@types/hapi": "17.8.7",
