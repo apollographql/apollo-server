@@ -28,8 +28,12 @@ describe('requiresFieldsMissingExternal', () => {
       name: 'serviceB',
     };
 
-    const { schema, errors } = composeServices([serviceA, serviceB]);
-    const warnings = validateRequiresFieldsMissingExternal(schema);
+    const serviceList = [serviceA, serviceB];
+    const { schema } = composeServices(serviceList);
+    const warnings = validateRequiresFieldsMissingExternal({
+      schema,
+      serviceList,
+    });
     expect(warnings).toEqual([]);
   });
 
@@ -54,8 +58,12 @@ describe('requiresFieldsMissingExternal', () => {
       name: 'serviceB',
     };
 
-    const { schema, errors } = composeServices([serviceA, serviceB]);
-    const warnings = validateRequiresFieldsMissingExternal(schema);
+    const serviceList = [serviceA, serviceB];
+    const { schema } = composeServices(serviceList);
+    const warnings = validateRequiresFieldsMissingExternal({
+      schema,
+      serviceList,
+    });
     expect(warnings).toMatchInlineSnapshot(`
       Array [
         Object {

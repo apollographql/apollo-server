@@ -359,6 +359,17 @@ server.listen().then(({ url }) => {
 
 To learn more about `buildService` and `RemoteGraphQLDataSource`, see the [API docs](/api/apollo-gateway/).
 
+## Implementing custom directives
+
+> Note: Apollo Server does not currently support executable directives, however they are supported by the gateway.
+
+The gateway currently provides limited support for custom, service-level directives. To use this feature, there are a few requirements that must be met in order to compose a valid graph:
+
+* Directives can only implement executable locations. Executable directive locations are documented in the [spec](https://graphql.github.io/graphql-spec/June2018/#ExecutableDirectiveLocation).
+> The following locations are considered valid to the gateway: QUERY, MUTATION, SUBSCRIPTION, FIELD, FRAGMENT\_DEFINITION, FRAGMENT\_SPREAD, INLINE\_FRAGMENT
+* Directives must be implemented by *every* service that's part of the graph. It's acceptable for a service to do nothing with a particular directive, but a directive definition must exist within every service's schema.
+* Directive definitions must be identical across all services. A directive definition is identical if its name, arguments and their types, and locations are all the same.
+
 ## Managing a federated graph
 
 With Apollo Federation, teams are able to move quickly as they build out their GraphQL services. However, distributed systems introduce complexities which require special tooling and coordination across teams to safely rollout changes. The [Apollo Graph Manager](https://engine.apollographql.com) provides solutions to problems like schema change validation, graph update coordination, and metrics collection.  For more information on the value of Graph Manager, read our [article on managed federation](https://www.apollographql.com/docs/graph-manager/federation/).

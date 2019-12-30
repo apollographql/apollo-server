@@ -29,9 +29,6 @@ const typeDefs = gql`
 new ApolloServer({
 	typeDefs,
 	resolvers,
-	context: ({ req }) => ({
-		authScope: getScope(req.headers.authorization)
-	}),
 });
 ```
 
@@ -43,15 +40,33 @@ new ApolloServer({
 
     An object or function called with the current request that creates the context shared across all resolvers
 
-```js
-new ApolloServer({
-	typeDefs,
-	resolvers,
-	context: ({ req }) => ({
-		authScope: getScope(req.headers.authorization)
-	}),
-});
-```
+    ```js
+    new ApolloServer({
+      typeDefs,
+      resolvers,
+      context: (integrationContext) => ({
+        // Important: The `integrationContext` argument varies depending
+        // on the specific integration (e.g. Express, Koa,  Lambda, etc.)
+        // being used. See the table below for specific signatures.
+
+        // For example, using Express's `authorization` header, and a
+        // `getScope` method (intentionally left unspecified here):
+        authScope: getScope(integrationContext.req.headers.authorization)
+      }),
+    });
+    ```
+
+    | Integration | Integration Context Signature |
+    |---|---|
+    | Azure Functions  | <code>{<br/>&nbsp;&nbsp;request: [`HttpRequest`](https://github.com/Azure/azure-functions-nodejs-worker/blob/ba8402bd3e86344e68cb06f65f9740b5d05a9700/types/public/Interfaces.d.ts#L73-L108),<br/>&nbsp;&nbsp;context: [`Context`](https://github.com/Azure/azure-functions-nodejs-worker/blob/ba8402bd3e86344e68cb06f65f9740b5d05a9700/types/public/Interfaces.d.ts#L18-L69)<br/>}</code> |
+    | Google Cloud Functions  | <code>{ req: [`Request`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/50adc95acf873e714256074311353232fcc1b5ed/types/express-serve-static-core/index.d.ts), res: [`Response`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/50adc95acf873e714256074311353232fcc1b5ed/types/express-serve-static-core/index.d.ts#L490-L861) }</code> |
+    | Cloudflare  | <code>{ req: [`Request`](https://github.com/apollographql/apollo-server/blob/04fe6aa1314ca84de26b4dc26e9b29dda16b81bc/packages/apollo-server-env/src/fetch.d.ts#L37-L45) }</code> |
+    | Express | <code>{<br/>&nbsp;&nbsp;req: [`express.Request`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/50adc95acf873e714256074311353232fcc1b5ed/types/express-serve-static-core/index.d.ts),<br/>&nbsp;&nbsp;res: [`express.Response`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/50adc95acf873e714256074311353232fcc1b5ed/types/express-serve-static-core/index.d.ts#L490-L861)<br/>}</code> |
+    | Fastify  | <code>{}</code> |
+    | hapi  | <code>{<br/>&nbsp;&nbsp;request: [`hapi.Request`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/50adc95acf873e714256074311353232fcc1b5ed/types/hapi/index.d.ts#L396-L605),<br/>&nbsp;&nbsp;h: [`hapi.ResponseToolkit`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/50adc95acf873e714256074311353232fcc1b5ed/types/hapi/index.d.ts#L979-L1100)<br/>}</code> |
+    | Koa | <code>{ ctx: [`Koa.Context`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/50adc95acf873e714256074311353232fcc1b5ed/types/koa/index.d.ts#L724-L731) }</code> |
+    | AWS Lambda | <code>{<br/>&nbsp;&nbsp;event: [`APIGatewayProxyEvent`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/50adc95acf873e714256074311353232fcc1b5ed/types/aws-lambda/index.d.ts#L78-L92),<br/>&nbsp;&nbsp;context: [`LambdaContext`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/50adc95acf873e714256074311353232fcc1b5ed/types/aws-lambda/index.d.ts#L510-L534)<br/>}</code> |
+    | Micro | <code>{ req: [`MicroRequest`](https://github.com/apollographql/apollo-server/blob/c356bcf3f2864b8d2fcca0add455071e0606ef46/packages/apollo-server-micro/src/types.ts#L3-L5), res: [`ServerResponse`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/50adc95acf873e714256074311353232fcc1b5ed/types/node/v10/http.d.ts#L145-L158) }</code> |
 
   * `rootValue`: <`Any`> | <`Function`>
 

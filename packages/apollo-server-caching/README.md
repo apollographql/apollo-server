@@ -16,6 +16,8 @@ export interface KeyValueCache {
 }
 ```
 
+> The `ttl` value for the `set` method's `options` is specified in __seconds__.
+
 ## Testing cache implementations
 
 ### Test helpers

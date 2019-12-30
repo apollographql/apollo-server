@@ -7,14 +7,24 @@ import {
   Kind,
   SelectionNode,
   SelectionSetNode,
+  GraphQLObjectType,
 } from 'graphql';
 import { getResponseName } from './utilities/graphql';
 
-export interface Field<TParent = GraphQLCompositeType> {
-  parentType: TParent;
+export interface Field<
+  TParent extends GraphQLCompositeType = GraphQLCompositeType
+> {
+  scope: Scope<TParent>;
   fieldNode: FieldNode;
   fieldDef: GraphQLField<any, any>;
 }
+
+export interface Scope<TParent extends GraphQLCompositeType> {
+  parentType: TParent;
+  possibleTypes: ReadonlyArray<GraphQLObjectType>;
+  enclosingScope?: Scope<GraphQLCompositeType>;
+}
+
 export type FieldSet = Field[];
 
 export function printFields(fields?: FieldSet) {
@@ -22,7 +32,7 @@ export function printFields(fields?: FieldSet) {
   return (
     '[' +
     fields
-      .map(field => `"${field.parentType.name}.${field.fieldDef.name}"`)
+      .map(field => `"${field.scope.parentType.name}.${field.fieldDef.name}"`)
       .join(', ') +
     ']'
   );
@@ -54,11 +64,29 @@ function groupBy<T, U>(keyFunction: (element: T) => U) {
   };
 }
 
-export const groupByResponseName = groupBy<Field, string>(field =>
-  getResponseName(field.fieldNode),
+// The response name isn't sufficient for determining uniqueness. In the case of
+// unions, for example, we can see a response name collision where the parent type
+// is different. In this case, these should not be merged (media)!
+// query {
+//   content {
+//     ... on Audio {
+//       media {
+//         url
+//       }
+//     }
+//     ... on Video {
+//       media {
+//         aspectRatio
+//       }
+//     }
+//   }
+// }
+export const groupByParentTypeAndResponseName = groupBy<Field, string>(field =>
+  `${field.scope.parentType}:${getResponseName(field.fieldNode)}`,
 );
+
 export const groupByParentType = groupBy<Field, GraphQLCompositeType>(
-  field => field.parentType,
+  field => field.scope.parentType,
 );
 
 export function selectionSetFromFieldSet(
@@ -70,9 +98,9 @@ export function selectionSetFromFieldSet(
     selections: Array.from(groupByParentType(fields)).flatMap(
       ([typeCondition, fieldsByParentType]: [GraphQLCompositeType, FieldSet]) =>
         wrapInInlineFragmentIfNeeded(
-          Array.from(groupByResponseName(fieldsByParentType).values()).map(
+          Array.from(groupByParentTypeAndResponseName(fieldsByParentType).values()).map(
             fieldsByResponseName => {
-              return combineFields(typeCondition, fieldsByResponseName)
+              return combineFields(fieldsByResponseName)
                 .fieldNode;
             },
           ),
@@ -106,15 +134,14 @@ function wrapInInlineFragmentIfNeeded(
 }
 
 function combineFields(
-  parentType: GraphQLCompositeType,
   fields: FieldSet,
 ): Field {
-  const { fieldNode, fieldDef } = fields[0];
+  const { scope, fieldNode, fieldDef } = fields[0];
   const returnType = getNamedType(fieldDef.type);
 
   if (isCompositeType(returnType)) {
     return {
-      parentType,
+      scope,
       fieldNode: {
         ...fieldNode,
         selectionSet: mergeSelectionSets(fields.map(field => field.fieldNode)),
@@ -122,7 +149,7 @@ function combineFields(
       fieldDef,
     };
   } else {
-    return { parentType, fieldNode, fieldDef };
+    return { scope, fieldNode, fieldDef };
   }
 }
 

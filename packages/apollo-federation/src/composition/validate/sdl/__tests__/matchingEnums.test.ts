@@ -8,7 +8,6 @@ import {
 } from 'graphql';
 import { validateSDL } from 'graphql/validation/validate';
 import gql from 'graphql-tag';
-
 import { composeServices, buildMapsFromServiceList } from '../../../compose';
 import {
   astSerializer,
@@ -28,10 +27,10 @@ expect.addSnapshotSerializer(selectionSetSerializer);
 const createDefinitionsDocumentForServices = (
   serviceList: ServiceDefinition[],
 ): DocumentNode => {
-  const { definitionsMap } = buildMapsFromServiceList(serviceList);
+  const { typeDefinitionsMap } = buildMapsFromServiceList(serviceList);
   return {
     kind: Kind.DOCUMENT,
-    definitions: Object.values(definitionsMap).flat(),
+    definitions: Object.values(typeDefinitionsMap).flat(),
   };
 };
 

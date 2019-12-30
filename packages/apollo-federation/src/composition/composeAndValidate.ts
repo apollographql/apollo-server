@@ -23,7 +23,12 @@ export function composeAndValidate(serviceList: ServiceDefinition[]) {
   errors.push(...compositionResult.errors);
 
   // validate the composed schema based on service information
-  errors.push(...validateComposedSchema(compositionResult.schema));
+  errors.push(
+    ...validateComposedSchema({
+      schema: compositionResult.schema,
+      serviceList,
+    }),
+  );
 
   // TODO remove the warnings array once no longer used by clients
   return { schema: compositionResult.schema, warnings: [], errors };

@@ -36,7 +36,6 @@ import {
   print,
   specifiedDirectives,
 } from 'graphql';
-
 import federationDirectives, { gatherDirectives } from '../directives';
 import { isFederationType } from '../types';
 
