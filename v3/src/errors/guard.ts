@@ -19,18 +19,15 @@ function use(failure: FailureMode | Failure<any>) {
   return 'create' in failure ? failure : failure()
 }
 
-export function guard(condition: any, op?: Comparison, rhs?: any, failure: FailureMode | Failure<any> = E_GUARD): asserts condition {
-  if (op && op in COMPARE) {
-    const lhs = condition
-    console.log('compairong', lhs, op, rhs, COMPARE[op], COMPARE[op](lhs, rhs))
-    if (!COMPARE[op](lhs, rhs)) {
-      console.log('throwing', lhs, op, rhs, COMPARE[op], COMPARE[op](lhs, rhs))
-      throw use(failure).msg `Assertion failed: ${lhs} ${op} ${rhs}`.create()
-    }
-  }
+export function guard(condition: any, failure: FailureMode | Failure<any> = E_GUARD): asserts condition {
   if (!condition) {
     throw use(failure).msg `Assertion failed`.create()
   }
+}
+
+export function check(lhs: any, op: Comparison, rhs: any, failure: FailureMode | Failure<any> = E_GUARD): boolean {
+  if (op in COMPARE && COMPARE[op](lhs, rhs)) return true
+  throw use(failure).msg `Assertion failed: ${lhs} ${op} ${rhs}`.create()
 }
 
 guard.instance = <R>(lhs: any, cls: Class<R>, failure: FailureMode | Failure<any> = E_GUARD): asserts lhs is R => {
@@ -38,3 +35,5 @@ guard.instance = <R>(lhs: any, cls: Class<R>, failure: FailureMode | Failure<any
     throw use(failure).msg `Assertion failed: ${lhs} instanceof ${cls.name}`.create()
   }
 }
+
+guard.check = check

@@ -1,3 +1,0 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
-
-exports[`guard performs comparisons 1`] = `"Assertion failed: hello === world"`;
