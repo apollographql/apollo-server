@@ -6,27 +6,13 @@ describe("guard", () => {
     const a = "hello";
     expect(() => {
       guard(a !== a);
-    }).toThrowErrorMatchingInlineSnapshot(`"Assertion failed"`);
+    }).toThrowErrorMatchingInlineSnapshot(`"Guard failed"`);
   });
 
   it("passes when condition ok", () => {
     const a = "hello";
     expect(() => {
       guard(a === a);
-    }).not.toThrow();
-  });
-
-  it(".instance asserts instanceof", () => {
-    expect(() => {
-      guard.instance(2, String);
-    }).toThrowErrorMatchingInlineSnapshot(
-      `"Assertion failed: 2 instanceof String"`
-    );
-  });
-
-  it(".instance passes when ok", () => {
-    expect(() => {
-      guard.instance(new String("hello"), String);
     }).not.toThrow();
   });
 
@@ -40,7 +26,7 @@ describe("guard", () => {
     }).toThrowErrorMatchingInlineSnapshot(`
 "Client undefined invalid
 
-Assertion failed"
+Guard failed"
 `);
   });
 });
@@ -80,8 +66,22 @@ describe("check", () => {
     if (compare(lhs, rhs)) {
       run.not.toThrow();
     } else {
-      run.toThrowError(`Assertion failed: ${lhs} ${op} ${rhs}`);
+      run.toThrowError(`Check failed: ${lhs} ${op} ${rhs}`);
     }
+  });
+
+  it(".instance asserts instanceof", () => {
+    expect(() => {
+      check.instance(2, String);
+    }).toThrowErrorMatchingInlineSnapshot(
+      `"Check failed: 2 instanceof String"`
+    );
+  });
+
+  it(".instance passes when ok", () => {
+    expect(() => {
+      check.instance(new String("hello"), String);
+    }).not.toThrow();
   });
 
   it("optionally, takes a failure to throw if the check fails", () => {
@@ -99,7 +99,26 @@ describe("check", () => {
     }).toThrowErrorMatchingInlineSnapshot(`
 "Client a-client exceeded 1000 with rate=9999
 
-Assertion failed: 9999 <= 1000"
+Check failed: 9999 <= 1000"
 `);
   });
+
+  describe('.exists checks for non-nullishness', () => {
+    it.each([
+      [0, 'pass'],
+      ['', 'pass'],
+      [NaN, 'pass'],
+      [null, 'fail'],
+      [undefined, 'fail'],
+    ] as any)('%s will %s', (val, expectation) => {
+      const run = expect(() => {
+        check.exists(val)
+      })
+      if (expectation === 'pass') {
+        run.not.toThrow()
+      } else {
+        run.toThrowError(`Check failed: ${val} exists`)
+      }
+    })
+  })
 });
