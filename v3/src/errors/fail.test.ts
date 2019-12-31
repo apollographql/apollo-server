@@ -55,7 +55,7 @@ describe("fail", () => {
     it("creates errors, taking the constructor params", () => {
       const fail = E_TOO_FAST(100, "a-client");
       expect(fail).toMatchInlineSnapshot(`
-        Failure {
+        FailureElement {
           "messages": Array [],
           "mode": [Function],
           "params": Array [

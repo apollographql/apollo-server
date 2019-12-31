@@ -8,7 +8,6 @@ export function fail<E extends Class<Error>>
   (code: string, Base: E): FailureMode<ConstructorParameters<E>, Instance<E>>
 export function fail<E extends ErrorWithStaticCode>
   (Base: E): FailureMode<ConstructorParameters<E>, Instance<E>>
-
 export function fail<E extends ErrorWithStaticCode>(
   codeOrBase: E | string,
   ...rest: any[]
@@ -26,7 +25,6 @@ export function fail<E extends ErrorWithStaticCode>(
   return failureMode(Base, code)
 }
 
-
 export type Message<P extends any[]> = [string] | [(...params: P) => string] | [TemplateStringsArray, ...any[]]
 
 export type Fail<P extends any[], Base extends Error> = Base & {
@@ -34,7 +32,7 @@ export type Fail<P extends any[], Base extends Error> = Base & {
   readonly params: P
 }
 
-export interface FailureMode<P extends any[] = [object?], Base extends Error = Error> {
+export interface FailureMode<P extends any[] = [], Base extends Error = Error> {
   (...params: P): Failure<P, Base>
   readonly code: string
   class: Class<Fail<P, Base>> & (new (fromFailure: Failure<P, Base>) => Fail<P, Base>)
@@ -54,12 +52,27 @@ export interface FailureMode<P extends any[] = [object?], Base extends Error = E
   ) & ((...msg: Message<P>) => FailureMode<P, Base>)
 }
 
-export interface Failure<P extends any[], Base extends Error> {
+export interface Failure<P extends any[]=any[], Base extends Error=Error> {
   create(): Fail<P, Base>
   readonly messages: Message<P>[]
+  readonly message: string
+  msg: (
+    <MoreProps>(...msg: Message<[MoreProps]>) =>
+    P extends []
+      ? MoreProps extends object
+        ? Failure<[MoreProps], Base>
+        : Failure<P, Base>
+      :
+    P extends [infer Props]
+      ? MoreProps extends object
+        ? Failure<[Props & MoreProps], Base>
+        : Failure<P, Base>
+      :
+      Failure<P, Base>
+  ) & ((...msg: Message<P>) => Failure<P, Base>)
 }
 
-export class Failure<P extends any[], Base extends Error> {
+export class FailureElement<P extends any[], Base extends Error> implements Failure<P, Base> {
   constructor(
     public readonly mode: FailureMode<P, Base>,
     public readonly params: P,
@@ -77,6 +90,10 @@ export class Failure<P extends any[], Base extends Error> {
     return this.messages.map(msg => this.format(msg))
       .filter(Boolean)
       .join('\n\n')
+  }
+
+  msg(...msg: any) {
+    return new FailureElement(this.mode, this.params, [...this.messages, msg]) as any
   }
 }
 
@@ -115,7 +132,7 @@ function failureMode<B extends Class<Error>>(Base: B, code: string, messages: Me
     }
 
   function FailureMode(...args: ConstructorParameters<B>) {
-    return new Failure(FailureMode as any, args, messages)
+    return new FailureElement(FailureMode as any, args, messages)
   }
 
   Object.defineProperties(FailureClass, {
