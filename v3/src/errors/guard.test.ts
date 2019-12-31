@@ -95,66 +95,76 @@ describe("check", () => {
     );
 
     expect(() => {
-      check(rate, "<=", maxRate, E_TOO_FAST({ maxRate, rate, client }));
+      check(
+        rate,
+        "<=",
+        maxRate,
+        E_TOO_FAST({ maxRate, rate, client }),
+        "Coming in hot"
+      );
     }).toThrowErrorMatchingInlineSnapshot(`
 "Client a-client exceeded 1000 with rate=9999
+
+Coming in hot
 
 Check failed: 9999 <= 1000"
 `);
   });
 
-  describe('.exists checks for non-nullishness', () => {
+  describe(".exists checks for non-nullishness", () => {
     it.each([
-      [0, 'pass'],
-      ['', 'pass'],
-      [NaN, 'pass'],
-      [null, 'fail'],
-      [undefined, 'fail'],
-    ] as any)('%s will %s', (val, expectation) => {
+      [0, "pass"],
+      ["", "pass"],
+      [NaN, "pass"],
+      [null, "fail"],
+      [undefined, "fail"]
+    ] as any)("%s will %s", (val, expectation) => {
       const run = expect(() => {
-        check.exists(val)
-      })
-      if (expectation === 'pass') {
-        run.not.toThrow()
+        check.exists(val);
+      });
+      if (expectation === "pass") {
+        run.not.toThrow();
       } else {
-        run.toThrowError(`Check failed: ${val} exists`)
+        run.toThrowError(`Check failed: ${val} exists`);
       }
-    })
-  })
+    });
+  });
 
-  describe('type guards', () => {
-    it.each([...function *() {
-      const examples = [
-        [0,              'number'],
-        [NaN,            'number'],
-        [Infinity,       'number'],
-        ['',             'string'],
-        [undefined,      'undefined'],
-        [{},             'object'],
-        [[],             'object'],
-        [() => {},       'function'],
-        [false,          'boolean'],
-        [Symbol.iterator,'symbol']
-      ]
-      const types = new Set(examples.map(x => x[1]))
-      let i = examples.length; while (i --> 0) {
-        const [val, type] = examples[i]
-        yield [type, val, 'pass']
-        for (const other of types) {
-          if (other === type) continue
-          yield [other, val, 'fail']
+  describe("type guards", () => {
+    it.each([
+      ...(function*() {
+        const examples = [
+          [0, "number"],
+          [NaN, "number"],
+          [Infinity, "number"],
+          ["", "string"],
+          [undefined, "undefined"],
+          [{}, "object"],
+          [[], "object"],
+          [() => {}, "function"],
+          [false, "boolean"],
+          [Symbol.iterator, "symbol"]
+        ];
+        const types = new Set(examples.map(x => x[1]));
+        let i = examples.length;
+        while (i-- > 0) {
+          const [val, type] = examples[i];
+          yield [type, val, "pass"];
+          for (const other of types) {
+            if (other === type) continue;
+            yield [other, val, "fail"];
+          }
         }
-      }
-
-    }()] as any)('.%s(%s) should %s', (type: string, val: any, expectation) => {
+      })()
+    ] as any)(".%s(%s) should %s", (type: string, val: any, expectation) => {
       const run = expect(() => {
-        (check as any)[type](val)
-      })
-      if (expectation === 'pass') {
-        run.not.toThrow()
+        (check as any)[type](val);
+      });
+      if (expectation === "pass") {
+        run.not.toThrow();
       } else {
-        run.toThrowError(`Check failed: ${String(val)} is ${type}`)
+        run.toThrowError(`Check failed: ${String(val)} is ${type}`);
       }
-    })
-  })
+    });
+  });
 });
