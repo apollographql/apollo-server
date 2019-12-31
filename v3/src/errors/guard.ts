@@ -1,4 +1,4 @@
-import { fail, FailureMode, Failure } from "./fail";
+import { fail, FailureMode, Failure, Message } from "./fail";
 import { Class, AnyFunc } from "../utilities/types";
 
 const E_GUARD = fail('GUARD')
@@ -16,81 +16,83 @@ const COMPARE = {
   '>=': (lhs: any, rhs: any) => lhs >= rhs,
 }
 
-export type ToThrow = FailureMode | Failure<any>
+export type ToThrow = FailureMode<any, any> | Failure<any, any>
 
-function use(toThrow: ToThrow) {
-  return 'create' in toThrow ? toThrow : toThrow()
+function panic(toThrow: ToThrow, ...messages: Message<any>[]): never {
+  let failure = 'create' in toThrow ? toThrow : toThrow()
+  for (const m of messages) failure = failure.msg(...m)
+  throw failure.create()
 }
 
-export function guard(condition: any, failure: ToThrow = E_GUARD): asserts condition {
+export function guard(condition: any, failure: ToThrow = E_GUARD, ...message: Message<any>): asserts condition {
   if (!condition) {
-    throw use(failure).msg `Guard failed`.create()
+    panic(failure, message, ['Guard failed'])
   }
 }
 
-export function check(lhs: any, op: Comparison, rhs: any, failure: ToThrow = E_CHECK): boolean {
+export function check(lhs: any, op: Comparison, rhs: any, failure: ToThrow = E_CHECK, ...message: Message<any>): boolean {
   if (op in COMPARE && COMPARE[op](lhs, rhs)) return true
-  throw use(failure).msg `Check failed: ${lhs} ${op} ${rhs}`.create()
+  panic(failure, message, [`Check failed: ${lhs} ${op} ${rhs}`])
 }
 
-check.instance = <R>(lhs: any, cls: Class<R>, failure: ToThrow = E_CHECK): asserts lhs is R => {
+check.instance = <R>(lhs: any, cls: Class<R>, failure: ToThrow = E_CHECK, ...message: Message<any>): asserts lhs is R => {
   if (!(lhs instanceof cls)) {
-    throw use(failure).msg `Check failed: ${lhs} instanceof ${cls.name}`.create()
+    panic(failure, message, [`Check failed: ${lhs} instanceof ${cls.name}`])
   }
 }
 
-check.exists = (o: any, failure: ToThrow = E_CHECK): o is Exclude<any, null | undefined> => {
+check.exists = (o: any, failure: ToThrow = E_CHECK, ...message: Message<any>): o is Exclude<any, null | undefined> => {
   if (o == null) {
-    throw use(failure).msg `Check failed: ${o} exists`.create()
+    panic(failure, message, [`Check failed: ${o} exists`])
   }
   return true
 }
 
-check.string = (o: any, failure: ToThrow = E_CHECK): o is string => {
+check.string = (o: any, failure: ToThrow = E_CHECK, ...message: Message<any>): o is string => {
   if (typeof o !== "string") {
-    throw use(failure).msg `Check failed: ${String(o)} is string`.create()
+    panic(failure, message, [`Check failed: ${String(o)} is string`])
   }
   return true
 }
 
-check.number = (o: any, failure: ToThrow = E_CHECK): o is number => {
+check.number = (o: any, failure: ToThrow = E_CHECK, ...message: Message<any>): o is number => {
   if (typeof o !== "number") {
-    throw use(failure).msg `Check failed: ${String(o)} is number`.create()
+    panic(failure, message, [`Check failed: ${String(o)} is number`])
   }
   return true
 }
 
-check.boolean = (o: any, failure: ToThrow = E_CHECK): o is boolean => {
+check.boolean = (o: any, failure: ToThrow = E_CHECK, ...message: Message<any>): o is boolean => {
   if (typeof o !== "boolean") {
-    throw use(failure).msg `Check failed: ${String(o)} is boolean`.create()
+    panic(failure, message, [`Check failed: ${String(o)} is boolean`])
   }
   return true
 }
 
-check.symbol = (o: any, failure: ToThrow = E_CHECK): o is symbol => {
+check.symbol = (o: any, failure: ToThrow = E_CHECK, ...message: Message<any>): o is symbol => {
   if (typeof o !== "symbol") {
-    throw use(failure).msg `Check failed: ${String(o)} is symbol`.create()
+    panic(failure, message, [`Check failed: ${String(o)} is symbol`])
   }
   return true
 }
 
-check.undefined = (o: any, failure: ToThrow = E_CHECK): o is undefined => {
+check.undefined = (o: any, failure: ToThrow = E_CHECK, ...message: Message<any>): o is undefined => {
   if (typeof o !== "undefined") {
-    throw use(failure).msg `Check failed: ${String(o)} is undefined`.create()
+    panic(failure, message, [`Check failed: ${String(o)} is undefined`])
   }
   return true
 }
 
-check.object = (o: any, failure: ToThrow = E_CHECK): o is object => {
+check.object = (o: any, failure: ToThrow = E_CHECK, ...message: Message<any>): o is object => {
   if (!o || typeof o !== "object") {
-    throw use(failure).msg `Check failed: ${String(o)} is object`.create()
+    panic(failure, message, [`Check failed: ${String(o)} is object`])
   }
   return true
 }
 
-check.function = (o: any, failure: ToThrow = E_CHECK): o is AnyFunc => {
+check.function = (o: any, failure: ToThrow = E_CHECK, ...message: Message<any>): o is AnyFunc => {
   if (typeof o !== "function") {
-    throw use(failure).msg `Check failed: ${String(o)} is function`.create()
+    panic(failure, message, [`Check failed: ${String(o)} is function`])
   }
   return true
 }

@@ -56,20 +56,7 @@ export interface Failure<P extends any[]=any[], Base extends Error=Error> {
   create(): Fail<P, Base>
   readonly messages: Message<P>[]
   readonly message: string
-  msg: (
-    <MoreProps>(...msg: Message<[MoreProps]>) =>
-    P extends []
-      ? MoreProps extends object
-        ? Failure<[MoreProps], Base>
-        : Failure<P, Base>
-      :
-    P extends [infer Props]
-      ? MoreProps extends object
-        ? Failure<[Props & MoreProps], Base>
-        : Failure<P, Base>
-      :
-      Failure<P, Base>
-  ) & ((...msg: Message<P>) => Failure<P, Base>)
+  msg(...msg: Message<P>): Failure<P, Base>
 }
 
 export class FailureElement<P extends any[], Base extends Error> implements Failure<P, Base> {
