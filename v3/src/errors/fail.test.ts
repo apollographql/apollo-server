@@ -1,86 +1,89 @@
 import { fail } from "./fail";
 
 describe("fail", () => {
-  describe("basically", () => {
+  describe("returns a failure mode", () => {
     const E_EXAMPLE = fail("EXAMPLE");
 
-    it("creates errors", () => {
+    it("with a static code", () => {
+      expect(E_EXAMPLE.code).toBe("EXAMPLE");
+    });
+
+    it("which can create() errors", () => {
       expect(E_EXAMPLE().create()).toBeInstanceOf(Error);
     });
 
-    it("has a static code and creates errors with that code", () => {
-      expect(E_EXAMPLE.code).toBe('EXAMPLE');
-      expect(E_EXAMPLE().create().code).toBe("EXAMPLE");
-    });
+    describe("which accepts messages", () => {
+      const E_EXAMPLE = fail("EXAMPLE");
+      it("as template strings", () => {
+        const E_EXAMPLE_TEMPLATE = E_EXAMPLE.msg`Something went wrong`;
+        expect(E_EXAMPLE_TEMPLATE().create().message).toMatchInlineSnapshot(
+          `"Something went wrong"`
+        );
+      });
 
-    it("has the error code as its message", () => {
-      expect(E_EXAMPLE().create().message).toMatchInlineSnapshot(`undefined`);
-    });
+      it("as plain strings", () => {
+        const E_EXAMPLE_STRING = E_EXAMPLE.msg("A plain string");
+        expect(E_EXAMPLE_STRING().create().message).toMatchInlineSnapshot(
+          `"A plain string"`
+        );
+      });
 
-    it("returns a Failure when called, which captures constructor params", () => {
-      expect(E_EXAMPLE()).toMatchInlineSnapshot(`
-        Failure {
-          "messages": Array [],
-          "mode": [Function],
-          "params": Array [],
-        }
-      `);
+      it("as formatters, adjusting its required props", () => {
+        const E_EXAMPLE_FORMAT = E_EXAMPLE.msg(
+          (props: { cause: string }) => `What went wrong: ${props.cause}`
+        );
+        expect(
+          E_EXAMPLE_FORMAT({ cause: "Something." }).create().message
+        ).toMatchInlineSnapshot(`"What went wrong: Something."`);
+      });
     });
   });
 
-  describe("accepts messages", () => {
-    const E_EXAMPLE = fail("EXAMPLE");
-    it("as template strings", () => {
-      const E_EXAMPLE_TEMPLATE = E_EXAMPLE.message`Something went wrong`;
-      expect(E_EXAMPLE_TEMPLATE().create()).toMatchInlineSnapshot(`
-        Failure {
-          "messages": Array [
-            Array [
-              Array [
-                "Something went wrong",
-              ],
-            ],
-          ],
-          "mode": [Function],
-          "params": Array [],
-        }
-      `);
+  describe("extends existing classes", () => {
+    class ClientRateExceededExampleError extends Error {
+      constructor(public maxRate: number, public client: string) {
+        super("Rate exceeded.");
+      }
+    }
+
+    const E_TOO_FAST = fail("TOO_FAST", ClientRateExceededExampleError);
+
+    it("has the provided code", () => {
+      expect(E_TOO_FAST.code).toBe("TOO_FAST");
     });
 
-    it("as plain strings", () => {
-      const E_EXAMPLE_STRING = E_EXAMPLE.message("A plain string");
-      expect(E_EXAMPLE_STRING().create()).toMatchInlineSnapshot(`
+    it("creates errors, taking the constructor params", () => {
+      const fail = E_TOO_FAST(100, "a-client");
+      expect(fail).toMatchInlineSnapshot(`
         Failure {
-          "messages": Array [
-            Array [
-              "A plain string",
-            ],
-          ],
-          "mode": [Function],
-          "params": Array [],
-        }
-      `);
-    });
-
-    it("as formatters, adjusting its required arguments", () => {
-      const E_EXAMPLE_FORMAT = E_EXAMPLE.message(
-        (p: { cause: string }) => `What went wrong? ${p.cause}`
-      );
-      expect(E_EXAMPLE_FORMAT({ cause: "something" }).create())
-        .toMatchInlineSnapshot(`
-        Failure {
-          "messages": Array [
-            Array [
-              [Function],
-            ],
-          ],
+          "messages": Array [],
           "mode": [Function],
           "params": Array [
-            Object {
-              "cause": "something",
-            },
+            100,
+            "a-client",
           ],
         }
+      `);
+    });
+
+    it("takes formatters that also receive the constructor params", () => {
+      expect(
+        E_TOO_FAST.msg(
+          (maxRate: number, client: string) =>
+            `Client ${client} exceeded ${maxRate}`
+        )(500, "some-client").create().message
+      ).toMatchInlineSnapshot(`"Client some-client exceeded 500"`);
+    });
+
+    it("takes multiple formatters", () => {
+      expect(
+        E_TOO_FAST.msg((r: number, c: string) => `Client ${c} exceeded ${r}`)
+          .msg((r: number) => `Rate was ${r}`)(500, "some-client")
+          .create().message
+      ).toMatchInlineSnapshot(`
+        "Client some-client exceeded 500
+
+        Rate was 500"
       `);
     });
   });

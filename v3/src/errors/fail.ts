@@ -38,7 +38,8 @@ export interface FailureMode<P extends any[] = [object?], Base extends Error = E
   (...params: P): Failure<P, Base>
   readonly code: string
   class: Class<Fail<P, Base>> & (new (fromFailure: Failure<P, Base>) => Fail<P, Base>)
-  message: <MoreProps=undefined>(...msg: Message<[MoreProps]>) =>
+  msg: (
+    <MoreProps>(...msg: Message<[MoreProps]>) =>
     P extends []
       ? MoreProps extends object
         ? FailureMode<[MoreProps], Base>
@@ -50,6 +51,7 @@ export interface FailureMode<P extends any[] = [object?], Base extends Error = E
         : FailureMode<P, Base>
       :
       FailureMode<P, Base>
+  ) & ((...msg: Message<P>) => FailureMode<P, Base>)
 }
 
 export interface Failure<P extends any[], Base extends Error> {
@@ -66,6 +68,16 @@ export class Failure<P extends any[], Base extends Error> {
   create(): Fail<P, Base> {
     return new this.mode.class(this)
   }
+
+  format(msg: Message<P>) {
+    return formatMsg(msg, this.params)
+  }
+
+  get message(): string {
+    return this.messages.map(msg => this.format(msg))
+      .filter(Boolean)
+      .join('\n\n')
+  }
 }
 
 export interface ErrorWithStaticCode extends Class<Error> {
@@ -75,9 +87,7 @@ export interface ErrorWithStaticCode extends Class<Error> {
 function formatMsg<P extends any[]>(message: Message<P>, params: P) {
   if (!message.length) return null
   const [format] = message
-  console.log('format:', format)
   if (typeof format === 'function') {
-    console.log(format, params)
     return format(...params)
   }
   if (isTemplateInvocation(message)) return String.raw(...message)
@@ -85,27 +95,22 @@ function formatMsg<P extends any[]>(message: Message<P>, params: P) {
   return null
 }
 
-const FAILURE_CODE = Symbol('Failure code')
+const FAILURE_MODE = Symbol('Failure mode')
 
-function failureMode<B extends Class<Error>>(Base: B, code: string, ...messages: Message<ConstructorParameters<B>>[]): FailureMode<ConstructorParameters<B>, Instance<B>> {
-  const FailureClass = ((Base as any)[FAILURE_CODE] === code) ? Base :
+function failureMode<B extends Class<Error>>(Base: B, code: string, messages: Message<ConstructorParameters<B>>[] = []): FailureMode<ConstructorParameters<B>, Instance<B>> {
+  const FailureClass = ((Base as any)[FAILURE_MODE]?.code === code) ? Base :
     class FailureClass extends Base {
-      static readonly [FAILURE_CODE] = code
+      static readonly [FAILURE_MODE] = FailureMode
       static readonly code = code
       public readonly failure: Failure<ConstructorParameters<B>, Instance<B>>
+      public readonly code = code
 
       constructor(...args: any[]) {
-        const [failure] = args as [Failure<ConstructorParameters<B>, Instance<B>>]
-        super(...failure.params)
-        this.failure = failure
-      }
-
-      get message() {
-        if (!super.message && !this.failure.messages.length) return code
-        return [
-          super.message,
-          ...this.failure.messages.map(m => formatMsg(m, this.failure.params))
-        ].filter(Boolean).join('\n\n')
+        super(...args[0].params)
+        this.failure = args[0]
+        Object.defineProperty(this, 'message', {
+          value: this.failure.message
+        })
       }
     }
 
@@ -115,15 +120,18 @@ function failureMode<B extends Class<Error>>(Base: B, code: string, ...messages:
 
   Object.defineProperties(FailureClass, {
     name: { value: code },
+    [FAILURE_MODE]: { value: FailureMode },
   })
 
   Object.defineProperties(FailureMode, {
-    code: {value: code},
-    message: {
+    code: { value: code },
+    msg: {
       value(...message: Message<ConstructorParameters<B>>) {
-        return failureMode(FailureClass, code, ...messages, message)
+        return failureMode(FailureClass, code, [...messages, message])
       }
-    }
+    },
+    [FAILURE_MODE]: { value: FailureMode },
+    class: { value: FailureClass }
   })
 
   FailureMode.prototype = Object.create(FailureClass.prototype)
