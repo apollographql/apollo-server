@@ -22,7 +22,9 @@ function use(failure: FailureMode | Failure<any>) {
 export function guard(condition: any, op?: Comparison, rhs?: any, failure: FailureMode | Failure<any> = E_GUARD): asserts condition {
   if (op && op in COMPARE) {
     const lhs = condition
+    console.log('compairong', lhs, op, rhs, COMPARE[op], COMPARE[op](lhs, rhs))
     if (!COMPARE[op](lhs, rhs)) {
+      console.log('throwing', lhs, op, rhs, COMPARE[op], COMPARE[op](lhs, rhs))
       throw use(failure).msg `Assertion failed: ${lhs} ${op} ${rhs}`.create()
     }
   }

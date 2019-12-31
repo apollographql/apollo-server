@@ -33,26 +33,28 @@ describe("guard", () => {
   const comparisons: Comparison[] = ['<', '>', '==', '===', '!=', '!==', '<=', '>=']
   const obj = {}
 
-  it.each `
-  lhs        | rhs
-  ${0}       | ${[-1, 1, 0, 100, -Infinity, Infinity]}
-  ${'hello'} | ${['hello', '', obj]}
-  ${obj}     | ${[{}, obj, 'a string']}
-  `
-  ("compares $lhs to $rhs", (({ lhs, rhs }) => {
-    for (const op of comparisons) {
-      for (const r of rhs) {
-        const func = `((l, r) => l ${op} r)`
-        const run = expect(() => {
-          guard(lhs, op, r)
-        })
-        console.log(lhs, op, r, eval(func)(lhs, r))
-        if (eval(func)(lhs, r)) {
-          run.not.toThrow()
-        } else {
-          run.toThrowError(`Assertion failed: ${lhs} ${op} ${r}`)
+  it.each([...function*() {
+    const obj = {}
+    const examples = new Map<any, any>()
+    examples.set(0, [-1, 1, 0, 100, -Infinity, Infinity])
+    examples.set('hello', ['hello', '', obj])
+    examples.set(obj, [{}, obj, 'a string'])
+    for (const lhs of examples.keys()) {
+      for (const rhs of examples.get(lhs)) {
+        for (const op of comparisons) {
+          yield [lhs, op, rhs]
         }
       }
+    }
+  }()])("compares %s %s %s", ((lhs, op, rhs) => {
+    const func = `((l, r) => l ${op} r)`
+    const run = expect(() => {
+      guard(lhs, op, rhs)
+    })
+    if (eval(func)(lhs, rhs)) {
+      run.not.toThrow()
+    } else {
+      run.toThrowError(`Assertion failed: ${lhs} ${op} ${rhs}`)
     }
   }));
 
