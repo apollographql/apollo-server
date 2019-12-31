@@ -121,4 +121,40 @@ Check failed: 9999 <= 1000"
       }
     })
   })
+
+  describe('type guards', () => {
+    it.each([...function *() {
+      const examples = [
+        [0,              'number'],
+        [NaN,            'number'],
+        [Infinity,       'number'],
+        ['',             'string'],
+        [undefined,      'undefined'],
+        [{},             'object'],
+        [[],             'object'],
+        [() => {},       'function'],
+        [false,          'boolean'],
+        [Symbol.iterator,'symbol']
+      ]
+      const types = new Set(examples.map(x => x[1]))
+      let i = examples.length; while (i --> 0) {
+        const [val, type] = examples[i]
+        yield [type, val, 'pass']
+        for (const other of types) {
+          if (other === type) continue
+          yield [other, val, 'fail']
+        }
+      }
+
+    }()] as any)('.%s(%s) should %s', (type: string, val: any, expectation) => {
+      const run = expect(() => {
+        (check as any)[type](val)
+      })
+      if (expectation === 'pass') {
+        run.not.toThrow()
+      } else {
+        run.toThrowError(`Check failed: ${String(val)} is ${type}`)
+      }
+    })
+  })
 });
