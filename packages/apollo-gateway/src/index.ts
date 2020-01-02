@@ -247,14 +247,10 @@ export class ApolloGateway implements GraphQLService {
     const mode = isManagedConfig(this.config) ? 'managed' : 'unmanaged';
 
     this.logger.info(
-      `Gateway successfully loaded schema.\n\t* Mode: ${mode}${graphId ? `\n\t* Service: ${graphId}@${graphVariant || 'current'}`: ''}`,
+      `Gateway successfully loaded schema.\n\t* Mode: ${mode}${
+        graphId ? `\n\t* Service: ${graphId}@${graphVariant || 'current'}` : ''
+      }`,
     );
-    if (this.experimental_pollInterval) {
-      setInterval(
-        () => this.updateComposition(options),
-        this.experimental_pollInterval,
-      );
-    }
 
     return {
       // we know this will be here since we're awaiting this.updateComposition
@@ -375,7 +371,7 @@ export class ApolloGateway implements GraphQLService {
   }
 
   public onSchemaChange(callback: SchemaChangeCallback): Unsubscriber {
-    if (!isManagedConfig(this.config)) {
+    if (!isManagedConfig(this.config) && !this.experimental_pollInterval) {
       return () => {};
     }
 

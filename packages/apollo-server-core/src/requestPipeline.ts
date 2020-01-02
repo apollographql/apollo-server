@@ -135,11 +135,10 @@ export async function processGraphQLRequest<TContext>(
     // It looks like we've received a persisted query. Check if we
     // support them.
     if (!config.persistedQueries || !config.persistedQueries.cache) {
-      throw new PersistedQueryNotSupportedError();
+      return await emitErrorAndThrow(new PersistedQueryNotSupportedError());
     } else if (extensions.persistedQuery.version !== 1) {
-      throw new InvalidGraphQLRequestError(
-        'Unsupported persisted query version',
-      );
+      return await emitErrorAndThrow(
+        new InvalidGraphQLRequestError('Unsupported persisted query version'));
     }
 
     // We'll store a reference to the persisted query cache so we can actually
@@ -164,15 +163,14 @@ export async function processGraphQLRequest<TContext>(
       if (query) {
         metrics.persistedQueryHit = true;
       } else {
-        throw new PersistedQueryNotFoundError();
+        return await emitErrorAndThrow(new PersistedQueryNotFoundError());
       }
     } else {
       const computedQueryHash = computeQueryHash(query);
 
       if (queryHash !== computedQueryHash) {
-        throw new InvalidGraphQLRequestError(
-          'provided sha does not match query',
-        );
+        return await emitErrorAndThrow(
+          new InvalidGraphQLRequestError('provided sha does not match query'));
       }
 
       // We won't write to the persisted query cache until later.
@@ -186,7 +184,8 @@ export async function processGraphQLRequest<TContext>(
     // now, but this should be replaced with the new operation ID algorithm.
     queryHash = computeQueryHash(query);
   } else {
-    throw new InvalidGraphQLRequestError('Must provide query string.');
+    return await emitErrorAndThrow(
+      new InvalidGraphQLRequestError('Must provide query string.'));
   }
 
   requestContext.queryHash = queryHash;
@@ -313,6 +312,14 @@ export async function processGraphQLRequest<TContext>(
       // for the time-being this just maintains existing behavior for what
       // happens when `throw`-ing an `HttpQueryError` in `didResolveOperation`.
       if (err instanceof HttpQueryError) {
+        // In order to report this error reliably to the request pipeline, we'll
+        // have to regenerate it with the original error message and stack for
+        // the purposes of the `didEncounterErrors` life-cycle hook (which
+        // expects `GraphQLError`s), but still throw the `HttpQueryError`, so
+        // the appropriate status code is enforced by `runHttpQuery.ts`.
+        const graphqlError = new GraphQLError(err.message);
+        graphqlError.stack = err.stack;
+        await didEncounterErrors([graphqlError]);
         throw err;
       }
       return await sendErrorResponse(err);
@@ -323,9 +330,18 @@ export async function processGraphQLRequest<TContext>(
     // an error) and not actually write, we'll write to the cache if it was
     // determined earlier in the request pipeline that we should do so.
     if (metrics.persistedQueryRegister && persistedQueryCache) {
-      Promise.resolve(persistedQueryCache.set(queryHash, query)).catch(
-        console.warn,
-      );
+      Promise.resolve(
+        persistedQueryCache.set(
+          queryHash,
+          query,
+          config.persistedQueries &&
+            typeof config.persistedQueries.ttl !== 'undefined'
+            ? {
+                ttl: config.persistedQueries.ttl,
+              }
+            : Object.create(null),
+        ),
+      ).catch(console.warn);
     }
 
     let response: GraphQLResponse | null = await dispatcher.invokeHooksUntilNonNull(
@@ -491,6 +507,26 @@ export async function processGraphQLRequest<TContext>(
       >,
     );
     return requestContext.response!;
+  }
+
+  /**
+   * Report an error via `didEncounterErrors` and then `throw` it.
+   *
+   * Prior to the introduction of this function, some errors were being thrown
+   * within the request pipeline and going directly to handling within
+   * the `runHttpQuery.ts` module, rather than first being reported to the
+   * plugin API's `didEncounterErrors` life-cycle hook (where they are to be
+   * expected!).
+   *
+   * @param error The error to report to the request pipeline plugins prior
+   *              to being thrown.
+   *
+   * @throws
+   *
+   */
+  async function emitErrorAndThrow(error: GraphQLError): Promise<never> {
+    await didEncounterErrors([error]);
+    throw error;
   }
 
   async function didEncounterErrors(errors: ReadonlyArray<GraphQLError>) {
