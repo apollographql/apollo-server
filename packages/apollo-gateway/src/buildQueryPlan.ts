@@ -31,7 +31,7 @@ import {
   Field,
   FieldSet,
   groupByParentType,
-  groupByParentTypeAndResponseName,
+  groupByResponseName,
   matchesField,
   selectionSetFromFieldSet,
   Scope,
@@ -373,7 +373,7 @@ function splitFields(
   fields: FieldSet,
   groupForField: (field: Field<GraphQLObjectType>) => FetchGroup,
 ) {
-  for (const fieldsForResponseName of groupByParentTypeAndResponseName(fields).values()) {
+  for (const fieldsForResponseName of groupByResponseName(fields).values()) {
     for (const [parentType, fieldsForParentType] of groupByParentType(
       fieldsForResponseName,
     )) {
@@ -413,7 +413,7 @@ function splitFields(
             scope as Scope<typeof parentType>,
             group,
             path,
-            fieldsForResponseName,
+            fieldsForParentType,
           ),
         );
       } else {
@@ -452,7 +452,7 @@ function splitFields(
               field.fieldNode,
             );
 
-            const fieldsWithRuntimeParentType = fieldsForResponseName.map(field => ({
+            const fieldsWithRuntimeParentType = fieldsForParentType.map(field => ({
               ...field,
               fieldDef,
             }));
