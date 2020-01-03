@@ -141,7 +141,6 @@ type User @key(fields: "id") {
 
       expect(schema.getQueryType()).toMatchInlineSnapshot(`
 type Query {
-  """"""
   _entities(representations: [_Any!]!): [_Entity]!
   _service: _Service!
   rootField: String
@@ -165,7 +164,6 @@ type Query {
 
       expect(schema.getQueryType()).toMatchInlineSnapshot(`
 type QueryRoot {
-  """"""
   _entities(representations: [_Any!]!): [_Entity]!
   _service: _Service!
   rootField: String
