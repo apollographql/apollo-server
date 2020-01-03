@@ -342,7 +342,7 @@ function printDescription(
     | GraphQLUnionType,
   indentation: string = '',
 ): string {
-  if (!def.description) {
+  if (def.description == null) {
     return '';
   }
 
