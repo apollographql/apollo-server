@@ -1226,16 +1226,20 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
         Parameters<GraphQLRequestListener['didEncounterErrors']>
       >;
 
-      beforeEach(async () => {
+      function createMockCache() {
         const map = new Map<string, string>();
-        const cache = {
-          set: async (key, val) => {
+        return {
+          set: jest.fn(async (key, val) => {
             await map.set(key, val);
-          },
-          get: async key => map.get(key),
-          delete: async key => map.delete(key),
+          }),
+          get: jest.fn(async key => map.get(key)),
+          delete: jest.fn(async key => map.delete(key)),
         };
+      }
+
+      beforeEach(async () => {
         didEncounterErrors = jest.fn();
+        const cache = createMockCache();
         app = await createApp({
           graphqlOptions: {
             schema,
@@ -1252,6 +1256,63 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
           },
         });
       });
+
+      it('when ttlSeconds is set, passes ttl to the apq cache set call', async () => {
+        const cache = createMockCache();
+        app = await createApp({
+          graphqlOptions: {
+            schema,
+            persistedQueries: {
+              cache: cache,
+              ttl: 900,
+            },
+          },
+        });
+
+        await request(app)
+          .post('/graphql')
+          .send({
+            extensions,
+            query,
+          });
+
+        expect(cache.set).toHaveBeenCalledWith(
+          expect.stringMatching(/^apq:/),
+          '{testString}',
+          expect.objectContaining({
+            ttl: 900,
+          }),
+        );
+      });
+
+      it('when ttlSeconds is unset, ttl is not passed to apq cache',
+        async () => {
+          const cache = createMockCache();
+          app = await createApp({
+            graphqlOptions: {
+              schema,
+              persistedQueries: {
+                cache: cache,
+              },
+            },
+          });
+
+          await request(app)
+            .post('/graphql')
+            .send({
+              extensions,
+              query,
+            });
+
+          expect(cache.set).toHaveBeenCalledWith(
+            expect.stringMatching(/^apq:/),
+            '{testString}',
+            expect.not.objectContaining({
+              ttl: 900,
+            }),
+          );
+        }
+      );
 
       it('errors when version is not specified', async () => {
         const result = await request(app)

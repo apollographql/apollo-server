@@ -64,25 +64,8 @@ function groupBy<T, U>(keyFunction: (element: T) => U) {
   };
 }
 
-// The response name isn't sufficient for determining uniqueness. In the case of
-// unions, for example, we can see a response name collision where the parent type
-// is different. In this case, these should not be merged (media)!
-// query {
-//   content {
-//     ... on Audio {
-//       media {
-//         url
-//       }
-//     }
-//     ... on Video {
-//       media {
-//         aspectRatio
-//       }
-//     }
-//   }
-// }
-export const groupByParentTypeAndResponseName = groupBy<Field, string>(field =>
-  `${field.scope.parentType}:${getResponseName(field.fieldNode)}`,
+export const groupByResponseName = groupBy<Field, string>(field =>
+  getResponseName(field.fieldNode)
 );
 
 export const groupByParentType = groupBy<Field, GraphQLCompositeType>(
@@ -98,7 +81,7 @@ export function selectionSetFromFieldSet(
     selections: Array.from(groupByParentType(fields)).flatMap(
       ([typeCondition, fieldsByParentType]: [GraphQLCompositeType, FieldSet]) =>
         wrapInInlineFragmentIfNeeded(
-          Array.from(groupByParentTypeAndResponseName(fieldsByParentType).values()).map(
+          Array.from(groupByResponseName(fieldsByParentType).values()).map(
             fieldsByResponseName => {
               return combineFields(fieldsByResponseName)
                 .fieldNode;
