@@ -14,7 +14,7 @@
     "access": "public"
   },
   "dependencies": {
-    "apollo-graphql": "^0.3.4",
+    "apollo-graphql": "^0.3.7",
     "apollo-server-env": "file:../apollo-server-env",
     "core-js": "^3.4.0",
     "lodash.xorby": "^4.7.0"
