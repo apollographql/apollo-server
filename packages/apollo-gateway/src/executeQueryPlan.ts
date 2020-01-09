@@ -319,7 +319,9 @@ async function executeFetch<TContext>(
         http,
       },
       context: context.requestContext.context,
-    });
+    },
+      context.requestContext.request.http && context.requestContext.request.http.headers
+    );
 
     if (response.errors) {
       const errors = response.errors.map(error =>
