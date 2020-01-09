@@ -6,12 +6,16 @@ import {
   runHttpQuery,
   HttpQueryError,
   throwHttpGraphQLError,
+  processHTTPRequest,
+  HttpQueryRequest
 } from '../runHttpQuery';
 import {
   PersistedQueryNotFoundError,
   PersistedQueryNotSupportedError,
   ForbiddenError,
 } from 'apollo-server-errors';
+import { Headers } from 'apollo-server-env';
+import { KeyValueCache } from 'apollo-server-caching';
 
 const queryType = new GraphQLObjectType({
   name: 'QueryType',
@@ -85,5 +89,94 @@ describe('runHttpQuery', () => {
         expect(err.headers).toEqual({ 'Content-Type': 'application/json' });
       }
     });
+  });
+});
+
+describe('processHTTPRequest', () => {
+  const schema = new GraphQLObjectType({
+    name: 'QueryType',
+    fields: {
+      testString: {
+        type: GraphQLString,
+        resolve() {
+          return 'it works';
+        },
+      }
+    }
+  });
+
+  const httpRequest: HttpQueryRequest = {
+    method: "POST",
+    query: {
+      testField: true,
+      query: "{ testString }"
+    },
+    options: {
+      schema: new GraphQLSchema({
+        query: schema
+      })
+    },
+    request: {
+      url: "test",
+      method: "POST",
+      headers: new Headers(),
+    }
+  };
+
+  const parsingDidStart = jest.fn();
+  const validationDidStart = jest.fn();
+  const didResolveOperation = jest.fn();
+  const executionDidStart = jest.fn();
+  const didEncounterErrors = jest.fn();
+  const willSendResponse = jest.fn();
+
+  const options = {
+    schema: new GraphQLSchema({query: schema}),
+    cache: <KeyValueCache>{},
+    plugins: [
+      {
+        requestDidStart() {
+          return { parsingDidStart, validationDidStart, didResolveOperation,
+                   executionDidStart, didEncounterErrors, willSendResponse};
+        }
+      },
+    ],
+    context: {}
+  };
+
+  describe('handling an HTTP request', () => {
+    it('provides the parent HTTP object to the plugin context', (done) => {
+      return processHTTPRequest(options, httpRequest).then(() => {
+
+        expect(parsingDidStart.mock.calls.length).toBe(1);
+        expect(parsingDidStart.mock.calls[0].length).toBeGreaterThan(0);
+        expect(parsingDidStart.mock.calls[0][0]).toBeDefined();
+        expect(parsingDidStart.mock.calls[0][0].parent).toEqual(httpRequest);
+
+        expect(validationDidStart.mock.calls.length).toBe(1);
+        expect(validationDidStart.mock.calls[0].length).toBeGreaterThan(0);
+        expect(validationDidStart.mock.calls[0][0]).toBeDefined();
+        expect(validationDidStart.mock.calls[0][0].parent).toEqual(httpRequest);
+
+        expect(didResolveOperation.mock.calls.length).toBe(1);
+        expect(didResolveOperation.mock.calls[0].length).toBeGreaterThan(0);
+        expect(didResolveOperation.mock.calls[0][0]).toBeDefined();
+        expect(didResolveOperation.mock.calls[0][0].parent).toEqual(httpRequest);
+
+        expect(executionDidStart.mock.calls.length).toBe(1);
+        expect(executionDidStart.mock.calls[0].length).toBeGreaterThan(0);
+        expect(executionDidStart.mock.calls[0][0]).toBeDefined();
+        expect(executionDidStart.mock.calls[0][0].parent).toEqual(httpRequest);
+
+        expect(didEncounterErrors.mock.calls.length).toBe(0);
+
+        expect(willSendResponse.mock.calls.length).toBe(1);
+        expect(willSendResponse.mock.calls[0].length).toBeGreaterThan(0);
+        expect(willSendResponse.mock.calls[0][0]).toBeDefined();
+        expect(willSendResponse.mock.calls[0][0].parent).toEqual(httpRequest);
+        done();
+      });
+    });
+
   });
 });

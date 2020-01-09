@@ -245,6 +245,7 @@ export async function processHTTPRequest<TContext>(
   };
 
   function buildRequestContext(
+    httpRequest: HttpQueryRequest,
     request: GraphQLRequest,
   ): GraphQLRequestContext<TContext> {
     // FIXME: We currently shallow clone the context for every request,
@@ -254,6 +255,7 @@ export async function processHTTPRequest<TContext>(
     // in ApolloServer#graphQLServerOptions, before runHttpQuery is invoked).
     const context = cloneObject(options.context);
     return {
+      parent: httpRequest,
       request,
       response: {
         http: {
@@ -287,7 +289,7 @@ export async function processHTTPRequest<TContext>(
       const responses = await Promise.all(
         requests.map(async request => {
           try {
-            const requestContext = buildRequestContext(request);
+            const requestContext = buildRequestContext(httpRequest, request);
             return await processGraphQLRequest(options, requestContext);
           } catch (error) {
             // A batch can contain another query that returns data,
@@ -305,7 +307,7 @@ export async function processHTTPRequest<TContext>(
       const request = parseGraphQLRequest(httpRequest.request, requestPayload);
 
       try {
-        const requestContext = buildRequestContext(request);
+        const requestContext = buildRequestContext(httpRequest, request);
 
         const response = await processGraphQLRequest(options, requestContext);
 

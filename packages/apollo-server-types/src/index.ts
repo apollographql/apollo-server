@@ -59,6 +59,8 @@ export interface GraphQLRequestMetrics {
 }
 
 export interface GraphQLRequestContext<TContext = Record<string, any>> {
+  // using 'any' to decouple from any type of HTTP container
+  readonly parent?: any;
   readonly request: GraphQLRequest;
   readonly response?: GraphQLResponse;
 
