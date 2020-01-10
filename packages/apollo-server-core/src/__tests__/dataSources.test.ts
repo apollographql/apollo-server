@@ -41,10 +41,6 @@ describe('ApolloServerBase dataSources', () => {
 
     const actualCallOrder: string[] = [];
 
-    const initialize = () => Promise.resolve().then(
-      () => { actualCallOrder.push(INITIALIZE); }
-    );
-
     const server = new ApolloServerBase({
       typeDefs,
       resolvers: {
@@ -57,11 +53,22 @@ describe('ApolloServerBase dataSources', () => {
       },
       dataSources: () => ({
         x: {
-          initialize,
+          initialize() {
+            return Promise.resolve().then(
+              () => { actualCallOrder.push(INITIALIZE); }
+            );
+          },
           getData() { actualCallOrder.push(METHOD_CALL); }
         },
         y: {
-          initialize
+          initialize() {
+            return new Promise(res => {
+              setTimeout(() => {
+                actualCallOrder.push(INITIALIZE);
+                res();
+              }, 0);
+            });
+          },
         },
         z: {
           initialize() { actualCallOrder.push(INITIALIZE); }
