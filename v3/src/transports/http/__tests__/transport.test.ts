@@ -71,32 +71,25 @@ describe("processes an HTTP request", () => {
   const schema = buildSchemaFromSDL([testModule]);
 
   describe("Status code", () => {
-    it("returns 200 on a single, properly formed query", async () => {
-      expect.assertions(1);
-      await expect(
-        httpPostGraphqlQueryToSchema(schema, validQuery),
-      ).resolves.toHaveProperty("statusCode", 200);
+    it("returns 200 on a single, properly formed query", () => {
+      return expect(httpPostGraphqlQueryToSchema(schema, validQuery))
+        .resolves.toHaveProperty("statusCode", 200);
     });
 
-    it("returns a 400 error code on a GraphQL parse error", async () => {
-      expect.assertions(1);
-      await expect(
-        httpPostGraphqlQueryToSchema(schema, unparseableQuery),
-      ).resolves.toHaveProperty("statusCode", 400);
+    it("returns a 400 error code on a GraphQL parse error", () => {
+      return expect(httpPostGraphqlQueryToSchema(schema, unparseableQuery))
+        .resolves.toHaveProperty("statusCode", 400);
     });
 
-    it("returns a 400 error code on a GraphQL validation error", async () => {
-      expect.assertions(1);
-      await expect(
-        httpPostGraphqlQueryToSchema(schema, invalidQuery),
-      ).resolves.toHaveProperty("statusCode", 400);
+    it("returns a 400 error code on a GraphQL validation error", () => {
+      return expect(httpPostGraphqlQueryToSchema(schema, invalidQuery))
+        .resolves.toHaveProperty("statusCode", 400);
     });
 
-    it("returns a 207 code on a forbidden error in a resolver", async () => {
-      expect.assertions(1);
-      await expect(
-        httpPostGraphqlQueryToSchema(schema, "query { throwForbiddenError }"),
-      ).resolves.toHaveProperty("statusCode", 207);
+    it("returns a 207 code on a forbidden error in a resolver", () => {
+      return expect(
+        httpPostGraphqlQueryToSchema(schema, "query { throwForbiddenError }"))
+          .resolves.toHaveProperty("statusCode", 207);
     });
 
     it.todo("returns a 405 if the HTTP method was not 'POST' or 'GET'");
