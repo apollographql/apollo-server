@@ -18,8 +18,10 @@ export { GraphQLSchemaModule } from 'apollo-graphql';
 
 export { Context, ContextFunction } from 'apollo-server-core';
 
+export type UserContext = Record<string, any>;
+
 /** Options for {@link processGraphqlRequest} */
-interface ProcessRequestInput<TRequestContext extends Record<string, any>> {
+interface ProcessRequestInput<TRequestContext extends UserContext> {
   request: GraphQLRequest;
   schema: GraphQLSchema;
   context?: TRequestContext;
@@ -40,7 +42,7 @@ interface ProcessRequestInput<TRequestContext extends Record<string, any>> {
  *   3. Data without errors if execution was successful without errors
  */
 export async function processGraphqlRequest<
-  TContext extends Record<string, any> = Record<string, any>
+  TContext extends UserContext = UserContext
 >({
   request,
   schema,
@@ -141,9 +143,7 @@ export function validateGraphqlRequest({
 }
 
 /** Options for {@link executeGraphqlRequest} */
-interface ExecutionInput<
-  TContext extends Record<string, any> = Record<string, any>
-> {
+interface ExecutionInput<TContext extends UserContext = UserContext> {
   schema: GraphQLSchema;
   document: DocumentNode;
   operationName?: string;
@@ -174,7 +174,7 @@ export async function executeGraphqlRequest({
   variables,
   context,
 }: ExecutionInput): Promise<GraphQLResponse> {
-  return await execute<Record<string, any>>({
+  return await execute<UserContext>({
     schema,
     document,
     operationName,
