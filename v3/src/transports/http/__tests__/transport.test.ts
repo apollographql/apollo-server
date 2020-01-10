@@ -92,7 +92,21 @@ describe("processes an HTTP request", () => {
           .resolves.toHaveProperty("statusCode", 207);
     });
 
-    it.todo("returns a 405 if the HTTP method was not 'POST' or 'GET'");
+    it("returns a 405 if the HTTP method was not 'POST' or 'GET'", () => {
+      const unexpectedHttpMethodQuery = processHttpRequest({
+        schema,
+        request: {
+          method: "DELETE",
+          headers: {},
+          parsedRequest: {
+            query: validQuery,
+          },
+        },
+      });
+
+      return expect(unexpectedHttpMethodQuery)
+        .resolves.toHaveProperty("statusCode", 405);
+    });
 
     /**
      * To implement this test, we need cooperation from the request pipeline.

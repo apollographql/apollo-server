@@ -65,6 +65,10 @@ interface IProcessHttpRequestArgs {
   request: IHttpRequest;
 }
 
+// Intentionally not exported to ensure that this technique for setting HTTP
+// status codes is only used internally for now.
+class ApolloGraphQLErrorWithHttpStatusCode extends GraphQLError {};
+
 /**
  * Process an HTTP request.
  *
@@ -87,7 +91,18 @@ export async function processHttpRequest(
     return generatedResponse({
       response: {
         // TODO(AS3) This should be a HTTP status code 405.
-        errors: [new GraphQLError("Unsupported method")],
+        errors: [
+          new ApolloGraphQLErrorWithHttpStatusCode("Unsupported method",
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            {
+              __apolloHttpStatusCode: 405,
+            }
+          )
+        ],
       },
     });
   }
@@ -179,6 +194,16 @@ function generatedResponse(args: IGeneratedResponseArgs): IHttpResponse {
 export function statusCodeForError(error: GraphQLError): number {
   if (!(error instanceof GraphQLError)) {
     return 500;
+  }
+
+  // We intentially use a non-exported sub-class of GraphQLError to ensure that
+  // this solution is just leveraged in the general sense for now.
+  if (
+    error instanceof ApolloGraphQLErrorWithHttpStatusCode &&
+    error.extensions &&
+    typeof error.extensions.__apolloHttpStatusCode === 'number'
+  ) {
+    return error.extensions.__apolloHttpStatusCode;
   }
 
   if (
