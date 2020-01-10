@@ -617,14 +617,19 @@ export async function processGraphQLRequest<TContext>(
 
       const dataSources = config.dataSources();
 
+      const initializers: any[] = [];
       for (const dataSource of Object.values(dataSources)) {
         if (dataSource.initialize) {
-          await dataSource.initialize({
-            context,
-            cache: requestContext.cache,
-          });
+          initializers.push(
+            dataSource.initialize({
+              context,
+              cache: requestContext.cache,
+            })
+          );
         }
       }
+
+      await Promise.all(initializers);
 
       if ('dataSources' in context) {
         throw new Error(
