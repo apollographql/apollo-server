@@ -7,21 +7,19 @@ const typeDefs = gql`
   }
 `;
 
-const resolvers = {
-  Query: {
-    hello() {
-      return 'world';
-    }
-  },
-};
-
 describe('ApolloServerBase dataSources', () => {
   it('initializes synchronous datasources from a datasource creator function', async () => {
     const initialize = jest.fn();
 
     const server = new ApolloServerBase({
       typeDefs,
-      resolvers,
+      resolvers: {
+        Query: {
+          hello() {
+            return 'world';
+          }
+        }
+      },
       dataSources: () => ({ x: { initialize }, y: { initialize } })
     });
 
@@ -30,49 +28,53 @@ describe('ApolloServerBase dataSources', () => {
     expect(initialize).toHaveBeenCalledTimes(2);
   });
 
-  it('initializes asynchronous datasources before calling resolvers', async () => {
-    const expectedMessage = 'success';
-    let maybeInitialized = 'failure';
+  it('initializes all async and sync datasources before calling resolvers', async () => {
+    const INITIALIZE = "datasource initializer call";
+    const METHOD_CALL = "datasource method call";
 
-    const additionalInitializer = jest.fn();
+    const expectedCallOrder = [
+      INITIALIZE,
+      INITIALIZE,
+      INITIALIZE,
+      METHOD_CALL
+    ];
+
+    const actualCallOrder: string[] = [];
+
+    const initialize = () => Promise.resolve().then(
+      () => { actualCallOrder.push(INITIALIZE); }
+    );
 
     const server = new ApolloServerBase({
       typeDefs,
       resolvers: {
         Query: {
           hello(_, __, context) {
-            return context.dataSources.x.getData();
+            context.dataSources.x.getData();
+            return "world";
           }
         },
       },
       dataSources: () => ({
         x: {
-          initialize() {
-            return new Promise(res => { setTimeout(() => {
-              maybeInitialized = expectedMessage;
-              res();
-            }, 200) })
-          },
-          getData() { return maybeInitialized; }
+          initialize,
+          getData() { actualCallOrder.push(METHOD_CALL); }
         },
         y: {
-          initialize() {
-            return new Promise(res => { setTimeout(() => {
-              additionalInitializer();
-              res();
-            }, 400) })
-          }
+          initialize
+        },
+        z: {
+          initialize() { actualCallOrder.push(INITIALIZE); }
         }
       })
     });
 
-    const res = await server.executeOperation({ query: "query { hello }"});
+    await server.executeOperation({ query: "query { hello }"});
 
-    expect(res.data?.hello).toBe(expectedMessage);
-    expect(additionalInitializer).toHaveBeenCalled();
+    expect(actualCallOrder).toEqual(expectedCallOrder);
   });
 
-  it('make datasources available on resolver contexts', async () => {
+  it('makes datasources available on resolver contexts', async () => {
     const message = 'hi from dataSource';
     const getData = jest.fn(() => message);
 
