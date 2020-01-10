@@ -413,7 +413,7 @@ function splitFields(
             scope as Scope<typeof parentType>,
             group,
             path,
-            fieldsForResponseName,
+            fieldsForParentType,
           ),
         );
       } else {
@@ -452,7 +452,7 @@ function splitFields(
               field.fieldNode,
             );
 
-            const fieldsWithRuntimeParentType = fieldsForResponseName.map(field => ({
+            const fieldsWithRuntimeParentType = fieldsForParentType.map(field => ({
               ...field,
               fieldDef,
             }));

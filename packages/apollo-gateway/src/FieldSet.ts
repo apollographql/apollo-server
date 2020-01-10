@@ -65,7 +65,7 @@ function groupBy<T, U>(keyFunction: (element: T) => U) {
 }
 
 export const groupByResponseName = groupBy<Field, string>(field =>
-  getResponseName(field.fieldNode),
+  getResponseName(field.fieldNode)
 );
 
 export const groupByParentType = groupBy<Field, GraphQLCompositeType>(

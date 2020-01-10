@@ -1,4 +1,4 @@
-import { KeyValueCache } from './KeyValueCache';
+import { KeyValueCache, KeyValueCacheSetOptions } from './KeyValueCache';
 
 // PrefixingKeyValueCache wraps another cache and adds a prefix to all keys used
 // by all operations.  This allows multiple features to share the same
@@ -16,7 +16,7 @@ export class PrefixingKeyValueCache<V = string> implements KeyValueCache<V> {
   get(key: string) {
     return this.wrapped.get(this.prefix + key);
   }
-  set(key: string, value: V, options?: { ttl?: number }) {
+  set(key: string, value: V, options?: KeyValueCacheSetOptions) {
     return this.wrapped.set(this.prefix + key, value, options);
   }
   delete(key: string) {
