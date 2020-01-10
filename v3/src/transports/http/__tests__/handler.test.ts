@@ -56,15 +56,15 @@ const schema = buildSchemaFromSDL([testModule]);
 
 describe("httpHandler", () => {
   describe("construction", () => {
-    it("returns a RequestListener when invoked with a schema", () => {
-      expect(httpHandler(schema)).toBeInstanceOf(Function);
-    });
-
     it("throws when invoked without a schema", () => {
       expect(() => {
         // @ts-ignore
         httpHandler();
       }).toThrowErrorMatchingInlineSnapshot(`"Must pass a schema."`);
+    });
+
+    it("returns a RequestListener when invoked with a schema", () => {
+      expect(httpHandler(schema)).toBeInstanceOf(Function);
     });
   });
 
