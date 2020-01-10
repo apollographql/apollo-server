@@ -105,24 +105,6 @@ describe('processHTTPRequest', () => {
     }
   });
 
-  const httpRequest: HttpQueryRequest = {
-    method: "POST",
-    query: {
-      testField: true,
-      query: "{ testString }"
-    },
-    options: {
-      schema: new GraphQLSchema({
-        query: schema
-      })
-    },
-    request: {
-      url: "test",
-      method: "POST",
-      headers: new Headers(),
-    }
-  };
-
   const parsingDidStart = jest.fn();
   const validationDidStart = jest.fn();
   const didResolveOperation = jest.fn();
@@ -146,6 +128,24 @@ describe('processHTTPRequest', () => {
 
   describe('handling an HTTP request', () => {
     it('provides the parent HTTP object to the plugin context', (done) => {
+      const httpRequest: HttpQueryRequest = {
+        method: "POST",
+        query: {
+          testField: true,
+          query: "{ testString }"
+        },
+        options: {
+          schema: new GraphQLSchema({
+            query: schema
+          })
+        },
+        request: {
+          url: "test",
+          method: "POST",
+          headers: new Headers(),
+        }
+      };
+
       return processHTTPRequest(options, httpRequest).then(() => {
 
         expect(parsingDidStart.mock.calls.length).toBe(1);
