@@ -3,7 +3,7 @@ import { GraphQLSchema } from 'graphql/type/schema';
 import { DocumentNode } from 'graphql/language/ast';
 import { InMemoryLRUCache } from './caching';
 import { approximateObjectSize } from './utilities';
-import { processGraphqlRequest } from './execution';
+import { processGraphqlRequestAgainstSchema } from './execution';
 import { GraphQLRequest } from './types';
 
 // These should not be imported from here.
@@ -287,6 +287,6 @@ export class ApolloServer {
       };
     }
 
-    return processGraphqlRequest({ request, context, schema });
+    return processGraphqlRequestAgainstSchema({ request, context, schema });
   }
 }

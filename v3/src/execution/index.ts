@@ -20,7 +20,7 @@ export { Context, ContextFunction } from 'apollo-server-core';
 
 export type UserContext = Record<string, any>;
 
-/** Options for {@link processGraphqlRequest} */
+/** Options for {@link processGraphqlRequestAgainstSchema} */
 interface ProcessRequestInput<TRequestContext extends UserContext> {
   request: GraphQLRequest;
   schema: GraphQLSchema;
@@ -41,7 +41,7 @@ interface ProcessRequestInput<TRequestContext extends UserContext> {
  *   2. Data and errors if execution occurred but encountered errors
  *   3. Data without errors if execution was successful without errors
  */
-export async function processGraphqlRequest<
+export async function processGraphqlRequestAgainstSchema<
   TContext extends UserContext = UserContext
 >({
   request,

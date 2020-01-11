@@ -1,4 +1,4 @@
-import { processGraphqlRequest } from "../../execution";
+import { processGraphqlRequestAgainstSchema } from "../../execution";
 import { IncomingHttpHeaders, OutgoingHttpHeaders } from "http";
 import { GraphQLSchema } from "graphql/type";
 import { GraphQLError } from "graphql/error";
@@ -109,7 +109,7 @@ export async function processHttpRequest(
 
   try {
     return generatedResponse({
-      response: await processGraphqlRequest({
+      response: await processGraphqlRequestAgainstSchema({
         schema,
         request: request.parsedRequest,
       }),
