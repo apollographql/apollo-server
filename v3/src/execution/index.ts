@@ -22,8 +22,18 @@ export type UserContext = Record<string, any>;
 
 /** Options for {@link processGraphqlRequestAgainstSchema} */
 interface ProcessGraphqlRequestInput<TRequestContext extends UserContext> {
+  /**
+   * A object consisting of a query string and, optionally,
+   * an operationName, and variables.
+   */
   request: GraphQLRequest;
+  /**
+   * The `GraphQLSchema` to validate and execute the request against.
+   */
   schema: GraphQLSchema;
+  /**
+   * An optional context object which is available during GraphQL execution.
+   */
   context?: TRequestContext;
 }
 
@@ -31,10 +41,8 @@ interface ProcessGraphqlRequestInput<TRequestContext extends UserContext> {
  * Process a GraphQLRequest. This includes parsing, validation,
  * and execution of a query against a provided schema.
  *
- * @param args
- * @param args.request - A GraphQLRequest object consisting of a query string and, optionally, an operationName, and variables
- * @param args.schema - A GraphQLSchema to validate and execute the request against
- * @param args.context - An optional context object which is available during GraphQL execution
+ * @param args   An object containing the relevant properties from
+ *              `ProcessGraphqlRequestInput`.
  *
  * @returns A Promise consisting of:
  *   1. Errors if parsing or validation errors occurred
