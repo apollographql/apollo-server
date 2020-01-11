@@ -11,8 +11,23 @@ export type WithRequired<T, K extends keyof T> = T & Required<Pick<T, K>>;
 
 export type VariableValues = { [key: string]: any };
 
+/**
+ * Representation of the most typical input from a client.  Typically, each
+ * of these properties would be each transmitted as their own variable.
+ * e.g. on HTTP GET these might each be an HTTP query-string key/value pair.
+ */
 export interface GraphQLRequest {
+  /**
+   * Despite the name, the value may be a query or a mutation, and may contain
+   * multiple operations.  If multiple operations are included, the separate
+   * `operationName` variable must be set to indicate which operation will be
+   * executed.
+   */
   query?: string;
+  /**
+   * When the `query` contains multiple operations, this specifies the name of
+   * which operation to execute.
+   */
   operationName?: string;
   variables?: VariableValues;
   extensions?: Record<string, any>;
