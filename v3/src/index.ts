@@ -3,18 +3,16 @@ import { GraphQLSchema } from 'graphql/type/schema';
 import { DocumentNode } from 'graphql/language/ast';
 import { InMemoryLRUCache } from './caching';
 import { approximateObjectSize } from './utilities';
-import { processGraphqlRequestAgainstSchema } from './execution';
-import { GraphQLRequest } from './types';
+import {
+  ProcessGraphqlRequest,
+  processGraphqlRequestAgainstSchema,
+} from './execution';
 
 // These should not be imported from here.
 import { Config as BaseConfig } from 'apollo-server-core';
 import { buildServiceDefinition } from '@apollographql/apollo-tools';
 
 export { default as gql } from 'graphql-tag';
-import {
-  Context,
-  ContextFunction,
-} from './execution';
 
 // A subset of the base configuration.
 type Config = Pick<BaseConfig,
@@ -43,7 +41,7 @@ type SchemaDerivedData = {
 export class ApolloServer {
   // public requestOptions: Partial<GraphQLOptions<any>> = Object.create(null);
 
-  private userContext?: Context | ContextFunction;
+  // private userContext?: Context | ContextFunction;
   // TODO(AS3) Reconsider these for Apollo Graph Manager
   // private engineReportingAgent?: import('apollo-engine-reporting').EngineReportingAgent;
   // private engineServiceId?: string;
@@ -60,7 +58,8 @@ export class ApolloServer {
     if (!config) throw new Error('ApolloServer requires options.');
 
     // TODO(AS3) Rename content variables to be more clear, like `userContext`.
-    this.userContext = this.config.context;
+    // TODO(AS3) Reconsider whether context is here at all!
+    // this.userContext = this.config.context;
 
     // Plugins will be instantiated if they aren't already, and this.plugins
     // is populated accordingly.
@@ -265,28 +264,27 @@ export class ApolloServer {
     });
   }
 
-  public async executeOperation<TRequest extends GraphQLRequest>(
-    request: TRequest,
-  ) {
+  public executeOperation: ProcessGraphqlRequest = async (input) => {
     const { schema } = await this.schemaDerivedData;
 
-    // TODO(AS3) The transport will provide context.
-    const integrationContextArgument = Object.create(null);
+    // // TODO(AS3) The transport will provide context.
+    // const integrationContextArgument = Object.create(null);
 
-    let context: Context;
+    // try {
+    //   context =
+    //     typeof this.userContext === 'function'
+    //       ? await this.userContext(integrationContextArgument || Object.create(null))
+    //       : this.userContext || Object.create(null);
+    // } catch (error) {
+    //   // Defer context error resolution to inside of runQuery
+    //   context = () => {
+    //     throw error;
+    //   };
+    // }
 
-    try {
-      context =
-        typeof this.userContext === 'function'
-          ? await this.userContext(integrationContextArgument || Object.create(null))
-          : this.userContext || Object.create(null);
-    } catch (error) {
-      // Defer context error resolution to inside of runQuery
-      context = () => {
-        throw error;
-      };
-    }
-
-    return processGraphqlRequestAgainstSchema({ request, context, schema });
+    return processGraphqlRequestAgainstSchema({
+      ...input,
+      schema,
+    })
   }
 }

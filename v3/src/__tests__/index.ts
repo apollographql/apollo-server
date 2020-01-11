@@ -33,7 +33,9 @@ describe("ApolloServer", () => {
     const operation = await (new ApolloServer({
       modules: [testModule],
     })).executeOperation({
-      query: 'query GetBooks { books { author } }',
+      request: {
+        query: 'query GetBooks { books { author } }',
+      },
     });
 
     expect(operation).toHaveProperty(['data', 'books', 0, 'author']);
