@@ -120,7 +120,7 @@
     "subscriptions-transport-ws": "0.9.16",
     "supertest": "4.0.2",
     "test-listen": "1.1.0",
-    "ts-jest": "24.2.0",
+    "ts-jest": "24.3.0",
     "typescript": "3.7.4",
     "ws": "6.2.1"
   },
