@@ -57,12 +57,25 @@ describe("httpHandler", () => {
       res = mockedResponse();
     });
 
-    // TODO(AS3) Skipped, but need to enable.
-    it.skip("throws when called with no request", () => {
-      expect(() => {
-        // @ts-ignore
-        handler();
-      }).toThrowError();
+    it("throws when called with no request", async () => {
+      expect.assertions(1);
+      try {
+        // @ts-ignore Explicitly omitted all arguments (request & response).
+        await handler();
+      } catch (err) {
+        expect(err).toHaveProperty("message",
+          "Missing request on HTTP request handler invocation.");
+      }
+    });
+
+    it("throws when called with no response", async () => {
+      try {
+        // @ts-ignore Explicitly omitted second argument (response).
+        await handler({});
+      } catch (err) {
+        expect(err).toHaveProperty("message",
+          "Missing response sink on HTTP request handler invocation.");
+      }
     });
 
     // TODO(AS3) Move this to testing `jsonBodyParse` and finish it by
