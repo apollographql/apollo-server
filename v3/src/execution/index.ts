@@ -21,7 +21,7 @@ export { Context, ContextFunction } from 'apollo-server-core';
 export type UserContext = Record<string, any>;
 
 /** Options for {@link processGraphqlRequestAgainstSchema} */
-interface ProcessRequestInput<TRequestContext extends UserContext> {
+interface ProcessGraphqlRequestInput<TRequestContext extends UserContext> {
   request: GraphQLRequest;
   schema: GraphQLSchema;
   context?: TRequestContext;
@@ -47,7 +47,7 @@ export async function processGraphqlRequestAgainstSchema<
   request,
   schema,
   context,
-}: ProcessRequestInput<TContext>): Promise<GraphQLResponse> {
+}: ProcessGraphqlRequestInput<TContext>): Promise<GraphQLResponse> {
   const { query, operationName, variables } = request;
 
   if (!query) {
