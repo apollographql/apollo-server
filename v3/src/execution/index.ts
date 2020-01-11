@@ -20,7 +20,7 @@ export { Context, ContextFunction } from 'apollo-server-core';
 
 export type UserContext = Record<string, any>;
 
-/** Options for {@link processGraphqlRequestAgainstSchema} */
+/** Input for {@link processGraphqlRequest} */
 interface ProcessGraphqlRequestInput<TRequestContext extends UserContext> {
   /**
    * A object consisting of a query string and, optionally,
@@ -28,20 +28,33 @@ interface ProcessGraphqlRequestInput<TRequestContext extends UserContext> {
    */
   request: GraphQLRequest;
   /**
-   * The `GraphQLSchema` to validate and execute the request against.
-   */
-  schema: GraphQLSchema;
-  /**
    * An optional context object which is available during GraphQL execution.
    */
   context?: TRequestContext;
 }
 
+type ProcessGraphqlRequestAgainstSchemaInput<
+  TRequestContext extends UserContext
+> = ProcessGraphqlRequestInput<TRequestContext> & {
+  /**
+   * The `GraphQLSchema` to validate and execute the request against.
+   */
+  schema: GraphQLSchema
+};
+
+export type ProcessGraphqlRequest<
+  TContext extends UserContext = UserContext
+> = (input: ProcessGraphqlRequestInput<TContext>) => Promise<GraphQLResponse>;
+export type ProcessGraphqlRequestAgainstSchema<
+  TContext extends UserContext = UserContext
+> = (input: ProcessGraphqlRequestAgainstSchemaInput<TContext>) =>
+  Promise<GraphQLResponse> ;
+
 /**
  * Process a GraphQLRequest. This includes parsing, validation,
  * and execution of a query against a provided schema.
  *
- * @param args   An object containing the relevant properties from
+ * @param input An object containing the relevant properties from
  *              `ProcessGraphqlRequestInput`.
  *
  * @returns A Promise consisting of:
@@ -49,14 +62,14 @@ interface ProcessGraphqlRequestInput<TRequestContext extends UserContext> {
  *   2. Data and errors if execution occurred but encountered errors
  *   3. Data without errors if execution was successful without errors
  */
-export async function processGraphqlRequestAgainstSchema<
-  TContext extends UserContext = UserContext
->({
-  request,
-  schema,
-  context,
-}: ProcessGraphqlRequestInput<TContext>): Promise<GraphQLResponse> {
-  const { query, operationName, variables } = request;
+export const processGraphqlRequestAgainstSchema:
+  ProcessGraphqlRequestAgainstSchema = async function (input) {
+
+  const {
+    request: { query, operationName, variables },
+    schema,
+    context,
+  } = input;
 
   if (!query) {
     return {
