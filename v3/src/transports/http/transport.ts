@@ -1,6 +1,5 @@
-import { processGraphqlRequestAgainstSchema } from "../../execution";
+import { ProcessGraphqlRequest } from "../../execution";
 import { IncomingHttpHeaders, OutgoingHttpHeaders } from "http";
-import { GraphQLSchema } from "graphql/type";
 import { GraphQLError } from "graphql/error";
 import {
   GraphQLRequest,
@@ -61,7 +60,7 @@ export interface IHttpResponse {
 
 /** Options for {@link processHttpRequest} */
 interface IProcessHttpRequestArgs {
-  schema: GraphQLSchema;
+  processGraphqlRequestFn: ProcessGraphqlRequest;
   request: IHttpRequest;
 }
 
@@ -85,7 +84,7 @@ export async function processHttpRequest(
    */
   args: IProcessHttpRequestArgs,
 ): Promise<IHttpResponse> {
-  const { schema, request } = args;
+  const { processGraphqlRequestFn, request } = args;
 
   if (request.method !== 'POST' && request.method !== 'GET') {
     return generatedResponse({
@@ -109,8 +108,7 @@ export async function processHttpRequest(
 
   try {
     return generatedResponse({
-      response: await processGraphqlRequestAgainstSchema({
-        schema,
+      response: await processGraphqlRequestFn({
         request: request.parsedRequest,
       }),
     });

@@ -6,6 +6,10 @@ import { GraphQLSchema } from "graphql/type/schema";
 // TODO(AS3) Stop depending on this module!
 import { ForbiddenError } from "apollo-server-core";
 import { GraphQLRequest } from "../../../types";
+import {
+  ProcessGraphqlRequest,
+  processGraphqlRequestAgainstSchema,
+} from "../../../execution";
 
 const testModule = {
   typeDefs: gql`
@@ -43,6 +47,12 @@ const validQuery= "query { books { author } }";
 const unparseableQuery = "query {";
 const invalidQuery = "query { books }";
 
+function mockProcessGraphqlRequest(
+  schema: GraphQLSchema,
+): ProcessGraphqlRequest  {
+  return (input) => processGraphqlRequestAgainstSchema({ ...input, schema })
+}
+
 /**
  * Test helper which simulates an HTTP POST (simulates because we're only ever
  * emulating the interface, not actually doing it over a socket) `query` on a
@@ -55,7 +65,7 @@ async function httpPostGraphqlQueryToSchema(
   headers: Record<string, any> = Object.create(null),
 ): Promise<IHttpResponse> {
   return processHttpRequest({
-    schema,
+    processGraphqlRequestFn: mockProcessGraphqlRequest(schema),
     request: {
       method: "POST",
       headers,
@@ -94,7 +104,7 @@ describe("processes an HTTP request", () => {
 
     it("returns a 405 if the HTTP method was not 'POST' or 'GET'", () => {
       const unexpectedHttpMethodQuery = processHttpRequest({
-        schema,
+        processGraphqlRequestFn: mockProcessGraphqlRequest(schema),
         request: {
           method: "DELETE",
           headers: {},

@@ -1,24 +1,25 @@
 import { IncomingMessage, RequestListener, ServerResponse } from "http";
 import { IHttpRequest } from "./transport";
 import { processHttpRequest } from "./transport";
-import { GraphQLSchema, isSchema } from "graphql/type";
 import { GraphQLRequest } from "../../types";
+import { ProcessGraphqlRequest } from "../../execution";
 
 /**
- * A factory function that receives an instance of `ApolloServer` and returns
- * a `RequestHandler` that can be used with Node.js' `http.createServer`, or
+ * A factory function that receives an instance of `ApolloServer` and returns a
+ * `RequestHandler` that can be used with Node.js' `http.createServer`, or
  * Express' `app.use`.
  *
- * @param schema  Presently, this requires a `GraphQLSchema`, though that should
- *                not be the case.  A correct implementation of this must
- *                either accept a function which is directly capable of
- *                executing a GraphQL operation, or a `class` which provides
- *                a known method which can be similarly executed upon (e.g.
- *                a `executeOperation` method).
+ * @param processGraphqlRequestFn - A method which will process a
+ * `GraphQLRequest` and return a `GraphQLResponse`. It must itself understand
+ * what schema to process this request against.
  */
-export function httpHandler(schema: GraphQLSchema): RequestListener {
-  if (!isSchema(schema)) {
-    throw new Error("Must pass a schema.");
+
+export function httpHandler(processGraphqlRequestFn: ProcessGraphqlRequest): RequestListener {
+  if (typeof processGraphqlRequestFn !== "function") {
+    throw new Error("Invalid handler received: Pass the `executeOperation` " +
+      "method from an instance of an `ApolloServer` to this function, or a " +
+      "similar function which accepts a `GraphQLRequest` and returns a " +
+      "`GraphQLResoonse`.");
   }
 
   /**
@@ -64,7 +65,7 @@ export function httpHandler(schema: GraphQLSchema): RequestListener {
     };
 
     const httpGraphqlResponse = await processHttpRequest({
-      schema,
+      processGraphqlRequestFn,
       request: httpGraphqlRequest,
     });
 

@@ -1,34 +1,7 @@
-import { gql } from "apollo-server-core";
-import { buildSchemaFromSDL } from "apollo-graphql";
 import { httpHandler, internalServerError } from "../handler";
 import { ServerResponse, RequestListener } from "http";
 import { PassThrough, Readable } from "stream";
-const testModule = {
-  typeDefs: gql`
-    type Book {
-      title: String
-      author: String
-    }
-
-    type Query {
-      books: [Book]
-    }
-  `,
-  resolvers: {
-    Query: {
-      books: () => [
-        {
-          title: "Harry Potter and the Chamber of Secrets",
-          author: "J.K. Rowling",
-        },
-        {
-          title: "Jurassic Park",
-          author: "Michael Crichton",
-        },
-      ],
-    },
-  },
-};
+import { ProcessGraphqlRequest } from "../../../execution";
 
 type IMockedResponse = Pick<
       ServerResponse,
@@ -52,19 +25,26 @@ function mockedResponse(): IMockedResponse {
 }
 
 const validQuery= "query { books { author } }";
-const schema = buildSchemaFromSDL([testModule]);
+const processor: ProcessGraphqlRequest = async () => {
+  return {
+    data: null,
+  }
+};
 
 describe("httpHandler", () => {
   describe("construction", () => {
-    it("throws when invoked without a schema", () => {
+    it("throws when invoked without a processor", () => {
       expect(() => {
         // @ts-ignore
         httpHandler();
-      }).toThrowErrorMatchingInlineSnapshot(`"Must pass a schema."`);
+      }).toThrow("Invalid handler received: Pass the `executeOperation` " +
+      "method from an instance of an `ApolloServer` to this function, or " +
+      "a similar function which accepts a `GraphQLRequest` and returns " +
+      "a `GraphQLResoonse`.");
     });
 
-    it("returns a RequestListener when invoked with a schema", () => {
-      expect(httpHandler(schema)).toBeInstanceOf(Function);
+    it("returns a RequestListener", () => {
+      expect(httpHandler(processor)).toBeInstanceOf(Function);
     });
   });
 
@@ -73,7 +53,7 @@ describe("httpHandler", () => {
     let res: IMockedResponse;
 
     beforeEach(() => {
-      handler = httpHandler(schema);
+      handler = httpHandler(processor);
       res = mockedResponse();
     });
 
