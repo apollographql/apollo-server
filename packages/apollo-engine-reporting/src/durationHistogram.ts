@@ -38,5 +38,4 @@ export class DurationHistogram {
      this.buckets = Array<number>(383).fill(0);
     }
   }
-
 }
