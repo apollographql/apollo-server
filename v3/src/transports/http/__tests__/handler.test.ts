@@ -1,5 +1,6 @@
-import { ServerResponse } from "http";
-import { PassThrough, Readable } from "stream";
+import { ProcessGraphqlRequest } from "../../../execution";
+import { createResponse } from "node-mocks-http";
+import { EventEmitter } from "events";
 import {
   __testing__,
   httpHandler,
@@ -8,30 +9,7 @@ import {
 const {
   internalServerError,
 } = __testing__;
-import { ProcessGraphqlRequest } from "../../../execution";
 
-type IMockedResponse = Pick<
-      ServerResponse,
-      | "setHeader"
-      | "writeHead"
-      | "statusCode"
-      | "statusMessage"
-      | "write"
-      | "end"
-    >
-
-function mockedResponse(): IMockedResponse {
-  return {
-    writeHead: jest.fn(),
-    write: jest.fn(),
-    end: jest.fn(),
-    setHeader: jest.fn(),
-    statusCode: 0,
-    statusMessage: "DEFAULT_VALUE",
-  };
-}
-
-const validQuery= "query { books { author } }";
 const processor: ProcessGraphqlRequest = async () => {
   return {
     data: null,
@@ -57,11 +35,8 @@ describe("httpHandler", () => {
 
   describe("RequestListener", () => {
     let handler: AsyncRequestListener;
-    let res: IMockedResponse;
-
     beforeEach(() => {
       handler = httpHandler(processor);
-      res = mockedResponse();
     });
 
     it("throws when called with no request", async () => {
@@ -85,29 +60,6 @@ describe("httpHandler", () => {
       }
     });
 
-    // TODO(AS3) Move this to testing `jsonBodyParse` and finish it by
-    // proving that it's actually failing as it should be.
-    // (I'm pretty sure it's failing for the wrong reasons.)
-    it.skip("fails with an internal server error on corrupted body streams",
-      async () => {
-        const pass = new PassThrough();
-        const readable = new Readable();
-        // readable._read = function () {};
-
-        const req = Object.assign({
-          method: 'POST',
-          headers: {},
-        }, readable);
-
-        pass.write(JSON.stringify({ query: validQuery }));
-
-        // @ts-ignore
-        await handler(req, res);
-
-        expect(res.writeHead).toBeCalledWith(500, "Error parsing body");
-      }
-    );
-
     // Legacy
     it.todo("returns a 500 if the body of the request is missing");
     it.todo(
@@ -118,11 +70,22 @@ describe("httpHandler", () => {
 
 describe("internalServerError", () => {
   it("can call the writeHead message with the correct code and message", () => {
-    const res = mockedResponse();
-    // @ts-ignore The `res` is missing many necessary properties.
+    expect.assertions(5);
+    const res = createResponse({ eventEmitter: EventEmitter });
+    const resEnd = jest.spyOn(res, "end");
+
+    // Set expectations to be checked after the response is emitted.
+    // Make sure to update the assertion count when adding to this block!
+    res.on("end", () => {
+      expect(res._getHeaders()).toEqual({});
+      expect(res._getStatusCode()).toBe(500);
+      expect(res._getStatusMessage()).toBe("Catastrophic.");
+      expect(res._getData()).toStrictEqual("");
+    });
+
+    // Trigger test criteria
     internalServerError(res, "Catastrophic.");
-    expect(res.writeHead).toBeCalledTimes(1);
-    expect(res.writeHead).toBeCalledWith(500, "Catastrophic.");
-    expect(res.end).toBeCalled();
-  })
+
+    expect(resEnd).toHaveBeenCalledTimes(1);
+  });
 });
