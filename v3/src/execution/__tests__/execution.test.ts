@@ -399,7 +399,7 @@ describe("processGraphqlRequest", () => {
       context
     });
 
-    expect(data.modifiesContext).toBe("Context modified!");
+    expect(data!.modifiesContext).toBe("Context modified!");
     expect(context).toHaveProperty("modified");
   });
 });

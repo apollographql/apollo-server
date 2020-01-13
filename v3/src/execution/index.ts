@@ -14,10 +14,10 @@ import {
   GraphQLError,
   GraphQLSchema,
   validate,
-  execute,
   ExecutionResult,
   separateOperations,
 } from 'graphql';
+import { execute } from './execute';
 export { GraphQLRequest, GraphQLResponse };
 
 // TODO(AS3) I'm not sure if this is execution.  Perhaps, a top-level export.
@@ -47,13 +47,12 @@ interface ProcessRequestInput<TContext extends Record<string, any>> {
  *   3. Data without errors if execution was successful without errors
  */
 export async function processGraphqlRequest<
-  TData = Record<string, any>,
   TContext extends Record<string, any> = Record<string, any>
 >({
   request,
   schema,
   context,
-}: ProcessRequestInput<TContext>): Promise<ExecutionResult<TData>> {
+}: ProcessRequestInput<TContext>): Promise<ExecutionResult> {
   const { query, operationName, variables } = request;
 
   if (!query) {
@@ -79,7 +78,7 @@ export async function processGraphqlRequest<
     return { errors: documentValidationErrors };
   }
 
-  return await executeGraphqlRequest<TData>({
+  return await executeGraphqlRequest<TContext>({
     schema,
     document: parseResult.document,
     operationName,
@@ -175,14 +174,16 @@ interface ExecutionInput<
  *
  * @see https://github.com/graphql/graphql-spec/blob/master/spec/Section%207%20--%20Response.md#response-format
  */
-export async function executeGraphqlRequest<TData = Record<string, any>>({
+export async function executeGraphqlRequest<
+  TContext extends Record<string, any> = Record<string, any>
+>({
   schema,
   document,
   operationName,
   variables,
   context,
-}: ExecutionInput): Promise<ExecutionResult<TData>> {
-  return await execute<TData>({
+}: ExecutionInput<TContext>): Promise<ExecutionResult> {
+  return await execute({
     schema,
     document,
     operationName,
