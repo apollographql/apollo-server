@@ -1,6 +1,12 @@
-import { httpHandler, internalServerError } from "../handler";
 import { ServerResponse, RequestListener } from "http";
 import { PassThrough, Readable } from "stream";
+import {
+  __testing__,
+  httpHandler,
+} from "../handler";
+const {
+  internalServerError,
+} = __testing__;
 import { ProcessGraphqlRequest } from "../../../execution";
 
 type IMockedResponse = Pick<

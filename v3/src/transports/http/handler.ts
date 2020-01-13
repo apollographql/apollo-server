@@ -97,7 +97,7 @@ export function httpHandler(processGraphqlRequestFn: ProcessGraphqlRequest): Req
  * @param res
  * @param errorMessage
  */
-export function internalServerError(
+function internalServerError(
   res: ServerResponse,
   errorMessage: string,
 ): void {
@@ -145,4 +145,8 @@ async function jsonBodyParse(req: IncomingMessage): Promise<GraphQLRequest> {
     variables,
     extensions,
   };
+}
+
+export const __testing__ = {
+  internalServerError,
 }
