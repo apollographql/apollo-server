@@ -84,6 +84,8 @@ describe("httpHandler", () => {
 
     // Legacy
     it.todo("returns a 500 if the body of the request is missing");
+    // It seems to me that the `query` very well could be missing in an APQ
+    // scenario.  I don't fully understand why we would enable this test.
     it.todo(
       "returns a 400 if the 'query' is missing when the 'GET' method is used",
     );
