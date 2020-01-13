@@ -23,10 +23,12 @@ describe("httpHandler", () => {
       expect(() => {
         // @ts-ignore Calling this method with missing arguments.
         httpHandler();
-      }).toThrow("Invalid handler received: Pass the `executeOperation` " +
-      "method from an instance of an `ApolloServer` to this function, or " +
-      "a similar function which accepts a `GraphQLRequest` and returns " +
-      "a `GraphQLResoonse`.");
+      }).toThrow(
+        "Invalid handler received: Pass the `executeOperation` method from " +
+          "an instance of an `ApolloServer` to this function, or a similar " +
+          "function which accepts a `GraphQLRequest` and returns a " +
+          "`GraphQLResoonse`."
+      );
     });
 
     it("returns a RequestListener", () => {
