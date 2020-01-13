@@ -173,7 +173,7 @@ export class ApolloServer extends ApolloServerBase {
           instance.route({
             method: ['GET', 'POST'],
             url: '/',
-            beforeHandler: beforeHandlers,
+            preHandler: beforeHandlers,
             handler: await graphqlFastify(this.graphQLServerOptions.bind(this)),
           });
         },
