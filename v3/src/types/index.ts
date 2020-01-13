@@ -5,6 +5,8 @@ import {
 } from "graphql/execution/execute";
 export { GraphQLError };
 
+export type PromisifyReturnType<T extends (...args: any) => any> =
+  (...args: Parameters<T>) => Promise<ReturnType<T>>;
 export type NonEmptyArray<T> = [T, ...T[]];
 export type ValueOrPromise<T> = T | Promise<T>;
 export type WithRequired<T, K extends keyof T> = T & Required<Pick<T, K>>;

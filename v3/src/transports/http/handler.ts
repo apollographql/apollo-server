@@ -1,8 +1,10 @@
 import { IncomingMessage, RequestListener, ServerResponse } from "http";
 import { IHttpRequest } from "./transport";
 import { processHttpRequest } from "./transport";
-import { GraphQLRequest } from "../../types";
+import { GraphQLRequest, PromisifyReturnType } from "../../types";
 import { ProcessGraphqlRequest } from "../../execution";
+
+export type AsyncRequestListener = PromisifyReturnType<RequestListener>;
 
 /**
  * A factory function that receives an instance of `ApolloServer` and returns a
@@ -14,7 +16,9 @@ import { ProcessGraphqlRequest } from "../../execution";
  * what schema to process this request against.
  */
 
-export function httpHandler(processGraphqlRequestFn: ProcessGraphqlRequest): RequestListener {
+export function httpHandler(
+  processGraphqlRequestFn: ProcessGraphqlRequest,
+): AsyncRequestListener {
   if (typeof processGraphqlRequestFn !== "function") {
     throw new Error("Invalid handler received: Pass the `executeOperation` " +
       "method from an instance of an `ApolloServer` to this function, or a " +

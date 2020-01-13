@@ -1,8 +1,9 @@
-import { ServerResponse, RequestListener } from "http";
+import { ServerResponse } from "http";
 import { PassThrough, Readable } from "stream";
 import {
   __testing__,
   httpHandler,
+  AsyncRequestListener,
 } from "../handler";
 const {
   internalServerError,
@@ -55,7 +56,7 @@ describe("httpHandler", () => {
   });
 
   describe("RequestListener", () => {
-    let handler: RequestListener;
+    let handler: AsyncRequestListener;
     let res: IMockedResponse;
 
     beforeEach(() => {
