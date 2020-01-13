@@ -143,14 +143,18 @@ async function jsonBodyParse(req: IncomingMessage): Promise<GraphQLRequest> {
   // Values which are not present after the destructuring will be explicitly
   // `undefined`, but we may want to have them be absent entirely, though this
   // is an internal data structure, so perhaps unnecessary.
-  const { query, operationName, variables, extensions } = JSON.parse(body);
+  try {
+    const { query, operationName, variables, extensions } = JSON.parse(body);
 
-  return {
-    query,
-    operationName,
-    variables,
-    extensions,
-  };
+    return {
+      query,
+      operationName,
+      variables,
+      extensions,
+    };
+  } catch {
+    throw new SyntaxError("Malformed JSON input.");
+  }
 }
 
 export const __testing__ = {
