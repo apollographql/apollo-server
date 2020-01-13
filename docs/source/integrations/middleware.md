@@ -41,4 +41,6 @@ app.listen({ port: 4000 }, () =>
 In the above example, the `app` parameter you provide to `applyMiddleware`
 is your middleware's top-level representation of your application. In Express applications, for example, this variable is commonly named `app`.
 
+That happens because you are passing this top-level representation **by reference** so into the Apollo Server code, a specific route for Apollo is configured internally and applied to that middleware (Express e.g.). For additional information check the implementation code [here](https://github.com/apollographql/apollo-server/blob/master/packages/apollo-server-express/src/ApolloServer).
+
 > **Note:** When integrating with hapi, call `applyMiddleware` with `await`.
