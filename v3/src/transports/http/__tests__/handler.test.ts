@@ -123,6 +123,6 @@ describe("internalServerError", () => {
     internalServerError(res, "Catastrophic.");
     expect(res.writeHead).toBeCalledTimes(1);
     expect(res.writeHead).toBeCalledWith(500, "Catastrophic.");
-    expect(res.end).not.toBeCalled();
+    expect(res.end).toBeCalled();
   })
 });

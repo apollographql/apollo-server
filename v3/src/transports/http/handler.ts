@@ -106,6 +106,7 @@ function internalServerError(
   errorMessage: string,
 ): void {
   res.writeHead(500, errorMessage);
+  res.end()
 }
 
 /**
