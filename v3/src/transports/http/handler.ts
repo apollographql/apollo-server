@@ -50,7 +50,7 @@ export function httpHandler(
     } catch (err) {
       // TODO(AS3) In order to limit error codes to a single place, this may
       // be well-served to be a `GraphQLError`.
-      internalServerError(res, "Error parsing body");
+      badRequest(res, "Error parsing body");
       return;
     }
 
@@ -93,6 +93,20 @@ export function httpHandler(
     }
     res.end();
   };
+}
+
+/**
+ * Called in the event of a critical error within the HTTP handler.
+ *
+ * @param res
+ * @param errorMessage
+ */
+function badRequest(
+  res: ServerResponse,
+  errorMessage: string = "Bad Request",
+): void {
+  res.writeHead(400, errorMessage);
+  res.end()
 }
 
 /**
@@ -158,5 +172,6 @@ async function jsonBodyParse(req: IncomingMessage): Promise<GraphQLRequest> {
 }
 
 export const __testing__ = {
+  badRequest,
   internalServerError,
 }
