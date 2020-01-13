@@ -9,6 +9,7 @@ import {
 const {
   badRequest,
   internalServerError,
+  jsonBodyParse,
 } = __testing__;
 
 const processor: ProcessGraphqlRequest = async () => {
@@ -134,5 +135,74 @@ describe("internalServerError", () => {
     internalServerError(res, "Catastrophic.");
 
     expect(resEnd).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("jsonBodyParse", () => {
+  it("throws a SyntaxError on malformed JSON input", async () => {
+    const req = createRequest({ method: "POST" });
+    const parsedBodyPromise = jsonBodyParse(req);
+    // Intentional corruption!
+    req.send("{");
+    await expect(parsedBodyPromise).rejects.toThrow(SyntaxError);
+    await expect(parsedBodyPromise).rejects
+      .toThrowError("Malformed JSON input.");
+  });
+
+  it("can parse a body with all GraphQLRequest properties included", () => {
+    const req = createRequest({ method: "POST" });
+    const parsedBodyPromise = jsonBodyParse(req);
+    req.send({
+      query: "{ __typename }",
+      operationName: "",
+      variables: JSON.stringify({}),
+      extensions: JSON.stringify({})
+    });
+    return expect(parsedBodyPromise).resolves.toMatchObject({
+      query: "{ __typename }",
+      operationName: "",
+      variables: "{}",
+      extensions: "{}"
+    });
+  });
+
+  it("can parse a body's 'variables' which include escapes", () => {
+    const req = createRequest({ method: "POST" });
+    const parsedBodyPromise = jsonBodyParse(req);
+    req.send({
+      query: "{ __typename }",
+      operationName: "",
+      variables: JSON.stringify({ value: true }),
+      extensions: JSON.stringify({})
+    });
+    return expect(parsedBodyPromise).resolves.toMatchObject({
+      query: "{ __typename }",
+      operationName: "",
+      variables: '{"value":true}',
+      extensions: "{}"
+    });
+  });
+
+  it("excludes properties not specific to our needs", async () => {
+    const req = createRequest({ method: "POST" });
+    const parsedBodyPromise = jsonBodyParse(req);
+    req.send({
+      query: "{ __typename }",
+      arbitrary: true
+    });
+    await expect(parsedBodyPromise).resolves.not.toHaveProperty("arbitrary");
+    await expect(parsedBodyPromise).resolves.toHaveProperty("query");
+  });
+
+  it("returns GraphQLRequest properties as undefined when absent", async () => {
+    const req = createRequest({ method: "POST" });
+    const parsedBodyPromise = jsonBodyParse(req);
+    req.send({ query: "{ __typename }" });
+    await expect(parsedBodyPromise).resolves.toStrictEqual({
+      query: "{ __typename }",
+      variables: undefined,
+      extensions: undefined,
+      operationName: undefined
+    });
   });
 });

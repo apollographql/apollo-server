@@ -174,4 +174,5 @@ async function jsonBodyParse(req: IncomingMessage): Promise<GraphQLRequest> {
 export const __testing__ = {
   badRequest,
   internalServerError,
+  jsonBodyParse,
 }
