@@ -103,7 +103,7 @@ export function httpHandler(
  */
 function internalServerError(
   res: ServerResponse,
-  errorMessage: string,
+  errorMessage: string = "Internal Server Error",
 ): void {
   res.writeHead(500, errorMessage);
   res.end()
