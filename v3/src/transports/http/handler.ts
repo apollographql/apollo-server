@@ -132,11 +132,12 @@ function internalServerError(
  *
  */
 async function jsonBodyParse(req: IncomingMessage): Promise<GraphQLRequest> {
-  const body: string = await new Promise(resolve => {
+  const body: string = await new Promise((resolve, reject) => {
     const data: Uint8Array[] = [];
     req
       .on('data', chunk => data.push(chunk))
-      .on('end', () => resolve(Buffer.concat(data).toString()));
+      .on('error', reject)
+      .on('end', () => resolve(Buffer.concat(data).toString('utf-8')));
   });
 
   // Values which are not present after the destructuring will be explicitly
