@@ -385,6 +385,10 @@ function splitFields(
       const field = fieldsForParentType[0];
       const { scope, fieldDef } = field;
 
+      // If the length of possibleTypes is zero, we're nested inside a type condition
+      // that's impossible to fulfill and can be excluded from the query plan altogether.
+      if (scope.possibleTypes.length === 0) continue;
+
       // We skip `__typename` for root types.
       if (fieldDef.name === TypeNameMetaFieldDef.name) {
         const { schema } = context;
@@ -418,25 +422,27 @@ function splitFields(
         );
       } else {
         // For interfaces however, we need to look at all possible runtime types.
-        // if all possible runtime types can be fufilled by only one service then
-        // we don't need to expand the fields into unique type conditions
-        //
-        // This is an optimization to prevent an explosion of type conditions to
-        // services when it isn't needed
-        const uniqueServices = new Set(
-          ...[
-            scope.possibleTypes.map(
-              ({ federation }) => federation && federation.serviceName
-            )
-          ]
+
+        /**
+         * The following is an optimization to prevent an explosion of type
+         * conditions to services when it isn't needed. If all possible runtime
+         * types can be fufilled by only one service then we don't need to
+         * expand the fields into unique type conditions.
+         */
+
+        // Collect all of the field defs on the possible runtime types
+        const possibleFieldDefs = scope.possibleTypes.map(
+          runtimeType => context.getFieldDef(runtimeType, field.fieldNode),
         );
 
-        if (
-          uniqueServices.size === 1 &&
-          // the interface can be defined in a service outside of where the concrete types
-          // are defined, in that case we still need to expand the selection
-          uniqueServices.has(parentType.federation && parentType.federation.serviceName)
-        ) {
+        // If none of the field defs have a federation property, this interface's
+        // implementors can all be resolved within the same service.
+        const hasNoExtendingFieldDefs = possibleFieldDefs.every(
+          def => !def.federation
+        );
+
+        // With no extending field definitions, we can engage the optimization
+        if (hasNoExtendingFieldDefs) {
           const group = groupForField(field as Field<GraphQLObjectType>);
           group.fields.push(
             completeField(context, scope, group, path, fieldsForResponseName)
