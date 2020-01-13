@@ -41,7 +41,6 @@ describe("httpHandler", () => {
     });
 
     it("throws when called with no request", async () => {
-      expect.assertions(1);
       try {
         // @ts-ignore Explicitly omitted all arguments (request & response).
         await handler();
