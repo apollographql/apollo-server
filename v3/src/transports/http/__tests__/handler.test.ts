@@ -21,7 +21,7 @@ describe("httpHandler", () => {
   describe("construction", () => {
     it("throws when invoked without a processor", () => {
       expect(() => {
-        // @ts-ignore
+        // @ts-ignore Calling this method with missing arguments.
         httpHandler();
       }).toThrow("Invalid handler received: Pass the `executeOperation` " +
       "method from an instance of an `ApolloServer` to this function, or " +
