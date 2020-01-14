@@ -8,10 +8,11 @@ import {
   GraphQLError,
   GraphQLSchema,
   validate,
-  execute,
   separateOperations,
 } from 'graphql';
 import { GraphQLRequest, GraphQLResponse, VariableValues } from "../types";
+export { GraphQLRequest, GraphQLResponse };
+import { execute } from './execute';
 
 // TODO(AS3) I'm not sure if this is execution.  Perhaps, a top-level export.
 export { GraphQLSchemaModule } from 'apollo-graphql';
@@ -195,7 +196,7 @@ export async function executeGraphqlRequest({
   variables,
   context,
 }: ExecutionInput): Promise<GraphQLResponse> {
-  return await execute<UserContext>({
+  return await execute({
     schema,
     document,
     operationName,
