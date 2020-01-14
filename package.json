@@ -25,7 +25,7 @@
     "node": ">=6"
   },
   "dependencies": {
-    "@apollographql/apollo-tools": "0.4.2",
+    "@apollographql/apollo-tools": "0.4.3",
     "@apollo/federation": "file:packages/apollo-federation",
     "@apollo/gateway": "file:packages/apollo-gateway",
     "apollo-cache-control": "file:packages/apollo-cache-control",
@@ -67,7 +67,7 @@
     "@types/hapi": "17.8.7",
     "@types/ioredis": "4.14.3",
     "@types/jest": "24.0.25",
-    "@types/koa-router": "7.0.42",
+    "@types/koa-router": "7.4.0",
     "@types/lodash": "4.14.149",
     "@types/lodash.sortby": "4.7.6",
     "@types/lodash.xorby": "4.7.6",
@@ -120,7 +120,7 @@
     "subscriptions-transport-ws": "0.9.16",
     "supertest": "4.0.2",
     "test-listen": "1.1.0",
-    "ts-jest": "24.2.0",
+    "ts-jest": "24.3.0",
     "typescript": "3.7.4",
     "ws": "6.2.1"
   },
