@@ -12,6 +12,7 @@ const {
   jsonBodyParse,
 } = __testing__;
 
+const validQuery = "query { books { author } }";
 const processor: ProcessGraphqlRequest = async () => {
   return {
     data: null,
@@ -81,6 +82,32 @@ describe("httpHandler", () => {
 
       // Intentional corruption!
       req.send("{");
+      return expect(handlerPromise).resolves.toBeUndefined();
+    });
+
+    it("returns a 200 when the body is proper", () => {
+      expect.assertions(5);
+      const req = createRequest({ method: "POST" });
+      const res = createResponse({ eventEmitter: EventEmitter });
+
+      // Set expectations to be checked after the response is emitted.
+      // Make sure to update the assertion count when adding to this block!
+      res.on("end", () => {
+        expect(res._getHeaders()).toMatchObject({
+          'content-type': 'application/json',
+        });
+        expect(res._getStatusCode()).toBe(200);
+        expect(res._getStatusMessage()).toBe("");
+        expect(res._getJSONData()).toStrictEqual({
+          data: null,
+        });
+      });
+
+      const handlerPromise = handler(req, res);
+
+      req.send({
+        query: validQuery,
+      });
       return expect(handlerPromise).resolves.toBeUndefined();
     });
 
