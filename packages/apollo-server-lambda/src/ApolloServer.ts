@@ -3,7 +3,12 @@ import {
   APIGatewayProxyEvent,
   Context as LambdaContext,
 } from 'aws-lambda';
-import { ApolloServerBase, GraphQLOptions, Config } from 'apollo-server-core';
+import {
+  ApolloServerBase,
+  FileUploadOptions,
+  GraphQLOptions,
+  Config
+} from 'apollo-server-core';
 import {
   renderPlaygroundPage,
   RenderPageOptions as PlaygroundRenderPageOptions,
@@ -11,6 +16,7 @@ import {
 
 import { graphqlLambda } from './lambdaApollo';
 import { Headers } from 'apollo-server-env';
+import stream from 'stream'
 
 export interface CreateHandlerOptions {
   cors?: {
@@ -21,6 +27,7 @@ export interface CreateHandlerOptions {
     credentials?: boolean;
     maxAge?: number;
   };
+  uploadsConfig?: FileUploadOptions;
   onHealthCheck?: (req: APIGatewayProxyEvent) => Promise<any>;
 }
 
@@ -43,9 +50,9 @@ export class ApolloServer extends ApolloServerBase {
   // be propagated with a generic to the super class
   createGraphQLServerOptions(
     event: APIGatewayProxyEvent,
-    context: LambdaContext,
+    context: LambdaContext
   ): Promise<GraphQLOptions> {
-    return super.graphQLServerOptions({ event, context });
+    return super.graphQLServerOptions({ event, context});
   }
 
   public createHandler({ cors, onHealthCheck }: CreateHandlerOptions = { cors: undefined, onHealthCheck: undefined }) {
@@ -213,19 +220,28 @@ export class ApolloServer extends ApolloServerBase {
         }
       }
 
-      const callbackFilter: APIGatewayProxyCallback = (error, result) => {
-        callback(
-          error,
-          result && {
-            ...result,
-            headers: {
-              ...result.headers,
-              ...requestCorsHeadersObject,
+      const makeCallbackFilter = (doneFn: Function): APIGatewayProxyCallback => {
+        return (error, result) => {
+          doneFn();
+          callback(
+            error,
+            result && {
+              ...result,
+              headers: {
+                ...result.headers,
+                ...requestCorsHeadersObject,
+              },
             },
-          },
-        );
+          );
+        };
       };
 
+      const response = new stream.Writable() as NodeJS.WritableStream;
+      const serverParams = {
+        response,
+        uploadsConfig: this.uploadsConfig || {},
+        requestOptions: this.requestOptions
+      }
       graphqlLambda(async () => {
         // In a world where this `createHandler` was async, we might avoid this
         // but since we don't want to introduce a breaking change to this API
@@ -236,7 +252,9 @@ export class ApolloServer extends ApolloServerBase {
         // its contract) prior to processing the request.
         await promiseWillStart;
         return this.createGraphQLServerOptions(event, context);
-      })(event, context, callbackFilter);
+      }, serverParams)(event, context, makeCallbackFilter(()=>{
+        response.end();
+      }));
     };
   }
 }

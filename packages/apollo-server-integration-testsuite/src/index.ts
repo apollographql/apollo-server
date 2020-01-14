@@ -31,6 +31,11 @@ export const NODE_MAJOR_VERSION: number = parseInt(
   10,
 );
 
+export const NODE_MINOR_VERSION: number = parseInt(
+  process.versions.node.split('.', 2)[1],
+  10,
+);
+
 const QueryRootType = new GraphQLObjectType({
   name: 'QueryRoot',
   fields: {

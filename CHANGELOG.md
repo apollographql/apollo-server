@@ -8,6 +8,8 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 - `apollo-server-core`: Update apollo-tooling dependencies, resolve TS build error (missing types for node-fetch) [#3662](https://github.com/apollographql/apollo-server/pull/3662)
 
+- `apollo-server-lambda`: Support file uploads on AWS Lambda [Issue #1419](https://github.com/apollographql/apollo-server/issues/1419) [Issue #1703](https://github.com/apollographql/apollo-server/issues/1703) [PR #1739](https://github.com/apollographql/apollo-server/pull/1739)
+
 ### v2.9.15
 
 > [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/0743d6b2f1737758cf09e80d2086917772bc00c9)
