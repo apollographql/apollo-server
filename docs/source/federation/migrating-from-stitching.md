@@ -66,7 +66,8 @@ const server = new ApolloServer({
 
 ### Using a GraphQL server besides Apollo Server
 
-There are [several community-contributed packages](/federation/federation-libraries/) that add federation support to other GraphQL runtimes. For a complete list, please visit
+There are [several community-contributed packages](/federation/federation-libraries/) that add federation support to other GraphQL runtimes.
+
 ## Step 2: Register your schemas with a GraphQL registry
 
 We strongly recommend that you register all of your GraphQL schemas with an [external registry](https://principledgraphql.com/integrity#3-track-the-schema-in-a-registry). Doing so improves the reliability of your data graph and maintains a single source of truth to simplify collaboration.
