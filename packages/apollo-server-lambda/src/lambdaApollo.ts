@@ -24,9 +24,9 @@ export function graphqlLambda(
     throw new Error('Apollo Server requires options.');
   }
 
-  if (arguments.length > 2) {
+  if (arguments.length !== 2) {
     throw new Error(
-      `Apollo Server expects exactly one argument, got ${arguments.length}`,
+      `Apollo Server expects exactly two arguments, got ${arguments.length}`,
     );
   }
 
