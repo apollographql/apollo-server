@@ -44,7 +44,7 @@ module.exports = {
             'federation/errors',
             'federation/migrating-from-stitching',
             'federation/federation-spec',
-            'federation/federation-libraries',
+            'federation/other-servers',
             'federation/metrics',
           ],
           Testing: ['testing/mocking', 'testing/testing', 'testing/graphql-playground'],
