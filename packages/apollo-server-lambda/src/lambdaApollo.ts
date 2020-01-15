@@ -94,6 +94,7 @@ export function graphqlLambda(
 
         processFileUploads(request, serverParams.response, serverParams.uploadsConfig)
         .then((body: any) => {
+          // if files were uploaded they're in the body here
           runQuery(body);
         })
         .catch(error => {
@@ -103,9 +104,11 @@ export function graphqlLambda(
           });
         });
       } else {
+        // standard query/mutation - no files uploaded
         runQuery(JSON.parse(event.body));
       }
     } else {
+      // just query string params
       runQuery(event.queryStringParameters);
     }
   };

@@ -222,7 +222,7 @@ export class ApolloServer extends ApolloServerBase {
 
       const makeCallbackFilter = (doneFn: Function): APIGatewayProxyCallback => {
         return (error, result) => {
-          doneFn();
+          doneFn(); // needed to close the response
           callback(
             error,
             result && {
@@ -237,6 +237,8 @@ export class ApolloServer extends ApolloServerBase {
       };
 
       const response = new stream.Writable() as NodeJS.WritableStream;
+
+      // These serverParams are needed to pass to allow processing of file uploads
       const serverParams = {
         response,
         uploadsConfig: this.uploadsConfig || {},
