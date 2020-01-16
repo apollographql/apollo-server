@@ -84,7 +84,7 @@ const typeDefs = gql`
 const resolvers = {
   Query: {
     uploads: () => {},
-    helloWorld: () => 'hi',
+    helloWorld: () => 'hi'
   },
   Mutation: {
     singleUpload: async (_, {file}) => {
@@ -117,7 +117,20 @@ const supportedNodeVersion =
     });
   });
 
-  test('allows for uploading a single file', async () => {
+  it('allows for a standard query without uploads', async () => {
+    const req = request(app)
+      .post('/graphql')
+      .set('Content-Type', 'application/json')
+      .set('Accept', 'application/json')
+      .send({
+        query: `query{helloWorld}`
+    });
+    const res = await req;
+    expect(res.statusCode).toBe(200);
+    expect(res.body.data.helloWorld).toBe('hi')
+  });
+
+  it('allows for uploading a single file', async () => {
     const expected = {
       filename: 'package.json',
       encoding: '7bit',
@@ -152,7 +165,7 @@ const supportedNodeVersion =
     });
   });
 
-  test('allows for uploading multiple files', async () => {
+  it('allows for uploading multiple files', async () => {
     const expected = [{
       filename: 'package.json',
       encoding: '7bit',
