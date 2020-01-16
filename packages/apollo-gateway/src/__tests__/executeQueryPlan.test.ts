@@ -508,7 +508,7 @@ describe('executeQueryPlan', () => {
     `);
   });
 
-  it(`can execute queries that whose fields are union types`, async () => {
+  it(`can execute queries whose fields are union types`, async () => {
     const query = gql`
       query {
         user(id: "1") {
