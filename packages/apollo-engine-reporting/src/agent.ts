@@ -185,6 +185,10 @@ export interface EngineReportingOptions<TContext> {
    * Creates the client information for operation traces.
    */
   generateClientInfo?: GenerateClientInfo<TContext>;
+  /**
+   * If non-zero, sample traces at the given rate, e.g. 0.5 = half of all traces
+   */
+  sampleRate?: number;
 }
 
 export interface AddTraceArgs {

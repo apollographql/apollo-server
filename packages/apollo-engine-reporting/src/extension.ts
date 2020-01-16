@@ -156,14 +156,16 @@ export class EngineReportingExtension<TContext = any>
           o.requestContext.metrics.queryPlanTrace;
       }
 
-      this.addTrace({
-        operationName,
-        queryHash,
-        documentAST,
-        queryString: this.queryString || '',
-        trace: this.treeBuilder.trace,
-        schemaHash: this.schemaHash,
-      });
+      if (!this.options.sampleRate || this.options.sampleRate >= Math.random()) {
+        this.addTrace({
+          operationName,
+          queryHash,
+          documentAST,
+          queryString: this.queryString || '',
+          trace: this.treeBuilder.trace,
+          schemaHash: this.schemaHash,
+        });
+      }
     };
   }
 
