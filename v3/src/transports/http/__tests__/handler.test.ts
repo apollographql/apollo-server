@@ -74,7 +74,7 @@ describe("httpHandler", () => {
       res.on("end", () => {
         expect(res._getHeaders()).toEqual({});
         expect(res._getStatusCode()).toBe(400);
-        expect(res._getStatusMessage()).toBe("Error parsing body");
+        expect(res._getStatusMessage()).toBe("Malformed request body");
         expect(res._getData()).toStrictEqual("");
       });
 
@@ -82,6 +82,32 @@ describe("httpHandler", () => {
 
       // Intentional corruption!
       req.send("{");
+      return expect(handlerPromise).resolves.toBeUndefined();
+    });
+
+    it("returns a 400 when 'variables' is malformed", () => {
+      expect.assertions(5);
+      const req = createRequest({ method: "POST" });
+      const res = createResponse({ eventEmitter: EventEmitter });
+
+      // Set expectations to be checked after the response is emitted.
+      // Make sure to update the assertion count when adding to this block!
+      res.on("end", () => {
+        expect(res._getHeaders()).toEqual({});
+        expect(res._getStatusCode()).toBe(400);
+        expect(res._getStatusMessage()).toBe("Malformed request body");
+        expect(res._getData()).toStrictEqual("");
+      });
+
+      const handlerPromise = handler(req, res);
+
+      req.send({
+        query: "{ __typename }",
+        operationName: "",
+        // Intentional variable corruption!
+        variables: '{',
+        extensions: JSON.stringify({})
+      });
       return expect(handlerPromise).resolves.toBeUndefined();
     });
 
@@ -173,7 +199,25 @@ describe("jsonBodyParse", () => {
     req.send("{");
     await expect(parsedBodyPromise).rejects.toThrow(SyntaxError);
     await expect(parsedBodyPromise).rejects
-      .toThrowError("Malformed JSON input.");
+      .toThrowError("Body is malformed JSON");
+  });
+
+  it("throws on invalid `variables`", async () => {
+    const req = createRequest({ method: "POST" });
+    const parsedBodyPromise = jsonBodyParse(req);
+    req.send({ variables: "{" });
+    await expect(parsedBodyPromise).rejects.toThrow(SyntaxError);
+    await expect(parsedBodyPromise).rejects
+      .toThrowError("Malformed JSON input for 'variables'");
+  });
+
+  it("throws on invalid `extensions`", async () => {
+    const req = createRequest({ method: "POST" });
+    const parsedBodyPromise = jsonBodyParse(req);
+    req.send({ extensions: "{" });
+    await expect(parsedBodyPromise).rejects.toThrow(SyntaxError);
+    await expect(parsedBodyPromise).rejects
+      .toThrowError("Malformed JSON input for 'extensions'");
   });
 
   it("can parse a body with all GraphQLRequest properties included", () => {
@@ -185,15 +229,15 @@ describe("jsonBodyParse", () => {
       variables: JSON.stringify({}),
       extensions: JSON.stringify({})
     });
-    return expect(parsedBodyPromise).resolves.toMatchObject({
+    return expect(parsedBodyPromise).resolves.toEqual({
       query: "{ __typename }",
       operationName: "",
-      variables: "{}",
-      extensions: "{}"
+      variables: {},
+      extensions: {},
     });
   });
 
-  it("can parse a body's 'variables' which include escapes", () => {
+  it("can parse a body's 'variables' which include JSON-escaped values", () => {
     const req = createRequest({ method: "POST" });
     const parsedBodyPromise = jsonBodyParse(req);
     req.send({
@@ -202,11 +246,13 @@ describe("jsonBodyParse", () => {
       variables: JSON.stringify({ value: true }),
       extensions: JSON.stringify({})
     });
-    return expect(parsedBodyPromise).resolves.toMatchObject({
+    return expect(parsedBodyPromise).resolves.toEqual({
       query: "{ __typename }",
       operationName: "",
-      variables: '{"value":true}',
-      extensions: "{}"
+      variables: {
+        value: true,
+      },
+      extensions: {},
     });
   });
 
@@ -225,7 +271,7 @@ describe("jsonBodyParse", () => {
     const req = createRequest({ method: "POST" });
     const parsedBodyPromise = jsonBodyParse(req);
     req.send({ query: "{ __typename }" });
-    await expect(parsedBodyPromise).resolves.toStrictEqual({
+    await expect(parsedBodyPromise).resolves.toEqual({
       query: "{ __typename }",
       variables: undefined,
       extensions: undefined,

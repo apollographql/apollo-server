@@ -50,8 +50,11 @@ export function httpHandler(
     } catch (err) {
       // TODO(AS3) In order to limit error codes to a single place, this may
       // be well-served to be a `GraphQLError`.
-      badRequest(res, "Error parsing body");
-      return;
+      if (err instanceof SyntaxError) {
+        return badRequest(res, "Malformed request body");
+      }
+
+      return internalServerError(res);
     }
 
     /**
@@ -154,20 +157,66 @@ async function jsonBodyParse(req: IncomingMessage): Promise<GraphQLRequest> {
       .on('end', () => resolve(Buffer.concat(data).toString('utf-8')));
   });
 
-  // Values which are not present after the destructuring will be explicitly
-  // `undefined`, but we may want to have them be absent entirely, though this
-  // is an internal data structure, so perhaps unnecessary.
-  try {
-    const { query, operationName, variables, extensions } = JSON.parse(body);
+  /**
+   * First we'll parse the body, however this doesn't parse objects within
+   * that body, like `variables` and `extensions`, which will need to be further
+   * unwrapped from their JSON encoding to form a processable `GraphQLRequest`.
+   * The blanks in this object will be filled in, as we parse those attributes.
+   */
+  const parsedBody: Partial<GraphQLRequest> = Object.create(null);
 
-    return {
-      query,
-      operationName,
-      variables,
-      extensions,
-    };
+  // These will be parsed and added to the parsed body, when ready.
+  let unparsedVariables: string, unparsedExtensions: string;
+
+  /**
+   * Destructure the initial parsing of the request body in order to find an
+   * intermediate representation of a GraphQLRequest. Note that while the
+   * `query` must not be parsed into a `DocumentNode` at this stage, the
+   * `variables` and `extensions` should be parsed further with JSON.parse.
+   * Any unspecfied properties will be `undefined`. We could exclude them
+   * entirely, but for an internal data structure, this seems unnecessary.
+   */
+  ({
+    query: parsedBody.query,
+    operationName: parsedBody.operationName,
+    variables: unparsedVariables,
+    extensions: unparsedExtensions
+  } = parseJsonInputAsObject<GraphQLRequest>(
+    body,
+    "Body is malformed JSON",
+  ) || Object.create(null));
+
+  parsedBody.variables = parseJsonInputAsObject(unparsedVariables,
+    "Malformed JSON input for 'variables'");
+
+  parsedBody.extensions = parseJsonInputAsObject(unparsedExtensions,
+    "Malformed JSON input for 'extensions'");
+
+  return parsedBody;
+}
+
+/**
+ * Parse a JSON string and assert that it is in fact an object after parsing.
+ *
+ * @param input
+ * @param errMsg
+ */
+function parseJsonInputAsObject<T>(
+  input: string,
+  errMsg: string,
+): T | undefined {
+  if (typeof input !== "string") {
+    return;
+  }
+
+  try {
+    const parsed = JSON.parse(input);
+    if (typeof parsed !== "object") {
+      throw new Error();
+    }
+    return parsed;
   } catch {
-    throw new SyntaxError("Malformed JSON input.");
+    throw new SyntaxError(errMsg);
   }
 }
 
