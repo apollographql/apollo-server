@@ -1,5 +1,10 @@
-import { ProcessGraphqlRequest } from "../../../execution";
-import { createResponse, createRequest } from "node-mocks-http";
+import { ProcessGraphqlRequest, GraphQLRequest } from "../../../execution";
+import {
+  createResponse,
+  createRequest,
+  RequestOptions,
+  ResponseOptions,
+} from "node-mocks-http";
 import { EventEmitter } from "events";
 import {
   __testing__,
@@ -18,6 +23,22 @@ const processor: ProcessGraphqlRequest = async () => {
     data: null,
   }
 };
+
+function buildRequestListenerPair(
+  requestOptions: RequestOptions = Object.create(null),
+  responseOptions: ResponseOptions = Object.create(null),
+) {
+  return {
+    req: createRequest({
+      method: "POST",
+      ...requestOptions,
+    }),
+    res: createResponse({
+      eventEmitter: EventEmitter,
+      ...responseOptions,
+    }),
+  }
+}
 
 describe("httpHandler", () => {
   describe("construction", () => {
@@ -44,97 +65,98 @@ describe("httpHandler", () => {
       handler = httpHandler(processor);
     });
 
-    it("throws when called with no request", async () => {
-      try {
-        // @ts-ignore Explicitly omitted all arguments (request & response).
-        await handler();
-      } catch (err) {
-        expect(err).toHaveProperty("message",
-          "Missing request on HTTP request handler invocation.");
-      }
-    });
-
-    it("throws when called with no response", async () => {
-      try {
-        // @ts-ignore Explicitly omitted second argument (response).
-        await handler({});
-      } catch (err) {
-        expect(err).toHaveProperty("message",
-          "Missing response sink on HTTP request handler invocation.");
-      }
-    });
-
-    it("returns a 400 when the body is malformed", () => {
-      expect.assertions(5);
-      const req = createRequest({ method: "POST" });
-      const res = createResponse({ eventEmitter: EventEmitter });
-
-      // Set expectations to be checked after the response is emitted.
-      // Make sure to update the assertion count when adding to this block!
-      res.on("end", () => {
-        expect(res._getHeaders()).toEqual({});
-        expect(res._getStatusCode()).toBe(400);
-        expect(res._getStatusMessage()).toBe("Malformed request body");
-        expect(res._getData()).toStrictEqual("");
+    describe("guards for programming errors", () => {
+      it("throws when called with no request", async () => {
+        try {
+          // @ts-ignore Explicitly omitted all arguments (request & response).
+          await handler();
+        } catch (err) {
+          expect(err).toHaveProperty("message",
+            "Missing request on HTTP request handler invocation.");
+        }
       });
 
-      const handlerPromise = handler(req, res);
-
-      // Intentional corruption!
-      req.send("{");
-      return expect(handlerPromise).resolves.toBeUndefined();
+      it("throws when called with no response", async () => {
+        try {
+          // @ts-ignore Explicitly omitted second argument (response).
+          await handler({});
+        } catch (err) {
+          expect(err).toHaveProperty("message",
+            "Missing response sink on HTTP request handler invocation.");
+        }
+      });
     });
 
-    it("returns a 400 when 'variables' is malformed", () => {
-      expect.assertions(5);
-      const req = createRequest({ method: "POST" });
-      const res = createResponse({ eventEmitter: EventEmitter });
+    describe("request handling", () => {
+      describe("POST", () => {
+        let req: ReturnType<typeof createRequest>;
+        let res: ReturnType<typeof createResponse>;
+        let handlerPromise: Promise<void>;
 
-      // Set expectations to be checked after the response is emitted.
-      // Make sure to update the assertion count when adding to this block!
-      res.on("end", () => {
-        expect(res._getHeaders()).toEqual({});
-        expect(res._getStatusCode()).toBe(400);
-        expect(res._getStatusMessage()).toBe("Malformed request body");
-        expect(res._getData()).toStrictEqual("");
-      });
-
-      const handlerPromise = handler(req, res);
-
-      req.send({
-        query: "{ __typename }",
-        operationName: "",
-        // Intentional variable corruption!
-        variables: '{',
-        extensions: JSON.stringify({})
-      });
-      return expect(handlerPromise).resolves.toBeUndefined();
-    });
-
-    it("returns a 200 when the body is proper", () => {
-      expect.assertions(5);
-      const req = createRequest({ method: "POST" });
-      const res = createResponse({ eventEmitter: EventEmitter });
-
-      // Set expectations to be checked after the response is emitted.
-      // Make sure to update the assertion count when adding to this block!
-      res.on("end", () => {
-        expect(res._getHeaders()).toMatchObject({
-          'content-type': 'application/json',
+        beforeEach(() => {
+          ({ req, res } = buildRequestListenerPair());
+          handlerPromise = handler(req, res);
         });
-        expect(res._getStatusCode()).toBe(200);
-        expect(res._getStatusMessage()).toBe("");
-        expect(res._getJSONData()).toStrictEqual({
-          data: null,
+
+        it("returns a 400 when the body is malformed", () => {
+          expect.assertions(5);
+          // Set expectations to be checked after the response is emitted.
+          // Make sure to update the assertion count when adding to this block!
+          res.on("end", () => {
+            expect(res._getHeaders()).toEqual({});
+            expect(res._getStatusCode()).toBe(400);
+            expect(res._getStatusMessage()).toBe("Malformed request body");
+            expect(res._getData()).toStrictEqual("");
+          });
+
+          // Intentional corruption!
+          req.send("{");
+          return expect(handlerPromise).resolves.toBeUndefined();
+        });
+
+        it("returns a 400 when 'variables' is malformed", () => {
+          expect.assertions(5);
+
+          // Set expectations to be checked after the response is emitted.
+          // Make sure to update the assertion count when adding to this block!
+          res.on("end", () => {
+            expect(res._getHeaders()).toEqual({});
+            expect(res._getStatusCode()).toBe(400);
+            expect(res._getStatusMessage()).toBe("Malformed request body");
+            expect(res._getData()).toStrictEqual("");
+          });
+
+          req.send({
+            query: "{ __typename }",
+            operationName: "",
+            // Intentional variable corruption!
+            variables: '{',
+            extensions: JSON.stringify({})
+          });
+          return expect(handlerPromise).resolves.toBeUndefined();
+        });
+
+        it("returns a 200 when the body is proper", () => {
+          expect.assertions(5);
+          // Set expectations to be checked after the response is emitted.
+          // Make sure to update the assertion count when adding to this block!
+          res.on("end", () => {
+            expect(res._getHeaders()).toMatchObject({
+              'content-type': 'application/json',
+            });
+            expect(res._getStatusCode()).toBe(200);
+            expect(res._getStatusMessage()).toBe("");
+            expect(res._getJSONData()).toStrictEqual({
+              data: null,
+            });
+          });
+
+          req.send({
+            query: validQuery,
+          });
+          return expect(handlerPromise).resolves.toBeUndefined();
         });
       });
-
-      const handlerPromise = handler(req, res);
-
-      req.send({
-        query: validQuery,
-      });
-      return expect(handlerPromise).resolves.toBeUndefined();
     });
 
     // Legacy
@@ -192,9 +214,14 @@ describe("internalServerError", () => {
 });
 
 describe("jsonBodyParse", () => {
+  let req: ReturnType<typeof createRequest>;
+  let parsedBodyPromise: Promise<GraphQLRequest>;
+  beforeEach(() => {
+    ({ req } = buildRequestListenerPair());
+    parsedBodyPromise = jsonBodyParse(req);
+  });
+
   it("throws a SyntaxError on malformed JSON input", async () => {
-    const req = createRequest({ method: "POST" });
-    const parsedBodyPromise = jsonBodyParse(req);
     // Intentional corruption!
     req.send("{");
     await expect(parsedBodyPromise).rejects.toThrow(SyntaxError);
@@ -221,8 +248,6 @@ describe("jsonBodyParse", () => {
   });
 
   it("can parse a body with all GraphQLRequest properties included", () => {
-    const req = createRequest({ method: "POST" });
-    const parsedBodyPromise = jsonBodyParse(req);
     req.send({
       query: "{ __typename }",
       operationName: "",
@@ -238,8 +263,6 @@ describe("jsonBodyParse", () => {
   });
 
   it("can parse a body's 'variables' which include JSON-escaped values", () => {
-    const req = createRequest({ method: "POST" });
-    const parsedBodyPromise = jsonBodyParse(req);
     req.send({
       query: "{ __typename }",
       operationName: "",
@@ -257,8 +280,6 @@ describe("jsonBodyParse", () => {
   });
 
   it("excludes properties not specific to our needs", async () => {
-    const req = createRequest({ method: "POST" });
-    const parsedBodyPromise = jsonBodyParse(req);
     req.send({
       query: "{ __typename }",
       arbitrary: true
@@ -268,8 +289,6 @@ describe("jsonBodyParse", () => {
   });
 
   it("returns GraphQLRequest properties as undefined when absent", async () => {
-    const req = createRequest({ method: "POST" });
-    const parsedBodyPromise = jsonBodyParse(req);
     req.send({ query: "{ __typename }" });
     await expect(parsedBodyPromise).resolves.toEqual({
       query: "{ __typename }",
