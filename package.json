@@ -121,7 +121,7 @@
     "supertest": "4.0.2",
     "test-listen": "1.1.0",
     "ts-jest": "24.3.0",
-    "typescript": "3.7.4",
+    "typescript": "3.7.5",
     "ws": "6.2.1"
   },
   "jest": {
