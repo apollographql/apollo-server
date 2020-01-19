@@ -6,6 +6,46 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 > The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  When a release is being prepared, a new header will be (manually) created below and the the appropriate changes within that release will be moved into the new section.
 
+- `apollo-server-core`: Update apollo-tooling dependencies, resolve TS build error (missing types for node-fetch) [#3662](https://github.com/apollographql/apollo-server/pull/3662)
+
+### v2.9.15
+
+> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/0743d6b2f1737758cf09e80d2086917772bc00c9)
+
+- `apollo-engine-reporting`: Fix regression introduced by [#3614](https://github.com/apollographql/apollo-server/pull/3614) which caused `PersistedQueryNotFoundError`, `PersistedQueryNotSupportedError` and `InvalidGraphQLRequestError` errors to be triggered before the `requestDidStart` handler triggered `treeBuilder`'s `startTiming` method. This fix preserves the existing behavior by special-casing these specific errors.  [PR #3638](https://github.com/apollographql/apollo-server/pull/3638) [Issue #3627](https://github.com/apollographql/apollo-server/issues/3627)
+- `apollo-server-cloud-functions`: Transmit CORS headers on `OPTIONS` request. [PR #3557](https://github.com/apollographql/apollo-server/pull/3557)
+- `apollo-server-caching`: De-compose options interface for `KeyValueCache.prototype.set` to accommodate better TSDoc annotations for its properties (e.g. to specify that `ttl` is defined in _seconds_). [PR #3619](https://github.com/apollographql/apollo-server/pull/3619)
+- `apollo-server-core`, `apollo-server-caching`: Introduce a `ttl` property, specified in seconds, on the options for automated persisted queries (APQ) which applies specific TTL settings to the cache `set`s during APQ registration.  Previously, all APQ cache records were set to 300 seconds.  Additionally, this adds support (to the underlying `apollo-server-caching` mechanisms) for a time-to-live (TTL) value of `null` which, when supported by the cache implementation, skips the assignment of a TTL value altogether.  This allows the cache's controller to determine when eviction happens (e.g. cache forever, and purge least recently used when the cache is full), which may be desireable for network cache stores (e.g. Memcached, Redis). [PR #3623](https://github.com/apollographql/apollo-server/pull/3623)
+- `apollo-server-core`: Upgrade TS to 3.7.3 [#3618](https://github.com/apollographql/apollo-server/pull/3618)
+
+### v2.9.14
+
+> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/ad5eac5ea1741142122e4cb8fd34a9748be31e89)
+
+- `apollo-server-core`: Ensure that plugin's `didEncounterErrors` hooks are invoked for known automated persisted query (APQ) errors. [PR #3614](https://github.com/apollographql/apollo-server/pull/3614)
+- `apollo-server-plugin-base`: Move `TContext` generic from `requestDidStart` method to `ApolloServerPlugin` Interface. [PR #3525](https://github.com/apollographql/apollo-server/pull/3525)
+
+### v2.9.13
+
+> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/a0a60e73e04e913d388de8324f7d17e4406deea2)
+
+- `@apollo/gateway`: Add `@types/node-fetch` as a regular dependency to avoid missing dependency for TypeScript consumers. [PR #3546](https://github.com/apollographql/apollo-server/pull/3546) [Issue #3471](https://github.com/apollographql/apollo-server/issues/3471)
+- `apollo-engine-reporting`: Declare acceptable `graphql` versions ranges in `peerDependencies` rather than allowing it to occur implicitly (and less ideally) via its consumers (e.g. most `apollo-server-*` packages). [PR #3496](https://github.com/apollographql/apollo-server/pull/3496)
+
+### v2.9.12
+
+- Reinstate [PR #3530](https://github.com/apollographql/apollo-server/pull/3530) via [#3539](https://github.com/apollographql/apollo-server/pull/3539) - after a patch release of the `@apollo/protobufjs` fork, the build issue for consumers should be resolved.
+
+### v2.9.11
+
+- Revert [PR #3530](https://github.com/apollographql/apollo-server/pull/3530) via [#3535](https://github.com/apollographql/apollo-server/pull/3535)- the introduction of the `@apollo/protobufjs` fork is causing TS errors in consumer projects. Reverting this change for now, and will reintroduce it after the issue is resolved within the forked package.
+
+### v2.9.10
+
+> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/2a4c654986a158aaccf947ee56a4bfc48a3173c7)
+
+- `apollo-engine-reporting`: Swap usage of `protobufjs` for a newly published fork located at [`@apollo/protobufjs`](https://npm.im/@apollo/protobufjs). This is to account for the [relative uncertainty](https://github.com/protobufjs/protobuf.js/issues/1199) into the continued on-going maintenance of the official `protobuf.js` project. This should immediately resolve a bug that affected `Long` types in `apollo-engine-reporting` and other non-Apollo projects that rely on `protobuf.js`'s `Long` type. [PR #3530](https://github.com/apollographql/apollo-server/pull/3530)
+
 ### v2.9.9
 
 > [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/93002737d53dd9a50b473ab9cef14849b3e539aa)

@@ -3,7 +3,6 @@ import { sha256 } from 'js-sha256';
 import { URL } from 'url';
 import express = require('express');
 import bodyParser = require('body-parser');
-import yup = require('yup');
 
 import { FullTracesReport, Trace } from 'apollo-engine-reporting-protobuf';
 
@@ -1085,6 +1084,55 @@ export function testApolloServer<AS extends ApolloServerBase>(
             );
           });
 
+          it("doesn't internal server error on an APQ", async () => {
+            await setupApolloServerAndFetchPair();
+
+            const TEST_STRING_QUERY = `
+              { onlyForThisApqTest${
+                Math.random()
+                  .toString()
+                  .split('.')[1]
+              }: justAField }
+            `;
+            const hash = sha256
+              .create()
+              .update(TEST_STRING_QUERY)
+              .hex();
+
+            const result = await apolloFetch({
+            // @ts-ignore The `ApolloFetch` types don't allow `extensions` to be
+            // passed in, in the same way as `variables`, with a request. This
+            // is a typing omission in `apollo-fetch`, as can be seen here:
+            // https://git.io/Jeb63  This will all be going away soon (and
+            // that package is already archived and deprecated.
+              extensions: {
+                persistedQuery: {
+                  version: VERSION,
+                  sha256Hash: hash,
+                }
+              },
+            });
+
+            // Having a persisted query not found error is fine.
+            expect(result.errors).toContainEqual(
+              expect.objectContaining({
+                extensions: expect.objectContaining({
+                  code: "PERSISTED_QUERY_NOT_FOUND",
+                })
+              })
+            );
+
+            // However, having an internal server error is not okay!
+            expect(result.errors).not.toContainEqual(
+              expect.objectContaining({
+                extensions: expect.objectContaining({
+                  code: "INTERNAL_SERVER_ERROR",
+                })
+              })
+            );
+
+          });
+
           describe('error munging', () => {
             describe('rewriteError', () => {
               it('new error', async () => {
@@ -1541,7 +1589,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
         });
       });
 
-      it('propogates error codes in production', async () => {
+      it('propagates error codes in production', async () => {
         const nodeEnv = process.env.NODE_ENV;
         process.env.NODE_ENV = 'production';
 
@@ -1574,7 +1622,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
         process.env.NODE_ENV = nodeEnv;
       });
 
-      it('propogates error codes with null response in production', async () => {
+      it('propagates error codes with null response in production', async () => {
         const nodeEnv = process.env.NODE_ENV;
         process.env.NODE_ENV = 'production';
 
@@ -1770,7 +1818,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
           // Unfortunately the error connection is not propagated to the
           // observable. What should happen is we provide a default onError
-          // function that notifies the returned observable and can cursomize
+          // function that notifies the returned observable and can customize
           // the behavior with an option in the client constructor. If you're
           // available to make a PR to the following please do!
           // https://github.com/apollographql/subscriptions-transport-ws/blob/master/src/client.ts
