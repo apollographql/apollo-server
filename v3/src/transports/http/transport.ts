@@ -9,6 +9,14 @@ import {
 } from "../../types";
 
 /**
+ * An intermediary interface of an incoming request, prior to becoming a
+ * `GraphQLRequest`, before it is fully parsed. At this stage, all values are
+ * strings, as extracted from the HTTP request's incoming bytes. This means that
+ * some properties (e.g. `variables`, `extensions`), need additional parsing.
+ */
+export type SerializedGraphqlRequest = { [P in keyof GraphQLRequest]: string }
+
+/**
  * This interface correlates to the `req.IncomingMessage` type, in a Node.js
  * agnostic way.
  */
