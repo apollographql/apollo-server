@@ -238,8 +238,6 @@ describe("jsonBodyParse", () => {
   });
 
   it("throws on invalid `variables`", async () => {
-    const req = createRequest({ method: "POST" });
-    const parsedBodyPromise = jsonBodyParse(req);
     req.send({ variables: "{" });
     await expect(parsedBodyPromise).rejects.toThrow(SyntaxError);
     await expect(parsedBodyPromise).rejects
@@ -247,8 +245,6 @@ describe("jsonBodyParse", () => {
   });
 
   it("throws on invalid `extensions`", async () => {
-    const req = createRequest({ method: "POST" });
-    const parsedBodyPromise = jsonBodyParse(req);
     req.send({ extensions: "{" });
     await expect(parsedBodyPromise).rejects.toThrow(SyntaxError);
     await expect(parsedBodyPromise).rejects
