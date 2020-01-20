@@ -11,10 +11,12 @@ import {
   httpHandler,
   AsyncRequestListener,
 } from "../handler";
+import { URLSearchParams } from "apollo-server-env";
 const {
   badRequest,
   internalServerError,
   jsonBodyParse,
+  parseGetRequest,
 } = __testing__;
 
 const validQuery = "query { books { author } }";
@@ -301,6 +303,54 @@ describe("jsonBodyParse", () => {
       variables: undefined,
       extensions: undefined,
       operationName: undefined
+    });
+  });
+});
+
+describe("parseGetRequest", () => {
+  const buildRequestForGet = (
+    params?: Record<string, string>,
+    requestOptions?: RequestOptions,
+  ) => buildRequestListenerPair({
+    method: "GET",
+    url: "/" +
+      // Extra implementation to avoid the query string when params are omitted.
+      (
+        params ? "?" + (new URLSearchParams(params || {})).toString()
+        : ""
+      ),
+    ...requestOptions,
+  });
+
+  describe("query string parses", () => {
+    it("a simple `query`", () => {
+      const query = '{field}';
+      const { req } = buildRequestForGet({ query });
+      return expect(parseGetRequest(req)).resolves.toMatchObject({ query });
+    });
+
+    it("a more complicated `query`", () => {
+      const query = '{ field(argument: "value") { selection }';
+      const { req } = buildRequestForGet({ query });
+      return expect(parseGetRequest(req)).resolves.toMatchObject({ query });
+    });
+
+    it("the `operationName` when specified", () => {
+      const query = 'query myQuery {field}';
+      const operationName = 'myQuery'
+      const { req } = buildRequestForGet({ query, operationName });
+      return expect(parseGetRequest(req)).resolves.toMatchObject({
+        query,
+        operationName,
+      });
+    });
+
+    it("`operationName` included when `query` unspecified", () => {
+      const operationName = 'myQuery'
+      const { req } = buildRequestForGet({ operationName });
+      return expect(parseGetRequest(req)).resolves.toMatchObject({
+        operationName,
+      });
     });
   });
 });

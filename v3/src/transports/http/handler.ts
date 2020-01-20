@@ -3,6 +3,7 @@ import { IHttpRequest, SerializedGraphqlRequest } from "./transport";
 import { processHttpRequest } from "./transport";
 import { GraphQLRequest, PromisifyReturnType } from "../../types";
 import { ProcessGraphqlRequest } from "../../execution";
+import { parse as urlParse } from "url";
 
 export type AsyncRequestListener = PromisifyReturnType<RequestListener>;
 
@@ -166,6 +167,8 @@ async function jsonBodyParse(req: IncomingMessage): Promise<GraphQLRequest> {
   let stringifiedBody: SerializedGraphqlRequest;
   if (req.method === 'POST') {
     stringifiedBody = await parsePostRequest(req);
+  } else if (req.method === "GET") {
+    stringifiedBody = await parseGetRequest(req);
   } else {
     throw new Error(`Unsupported HTTP method '${req.method}'`)
   }
@@ -193,6 +196,31 @@ async function jsonBodyParse(req: IncomingMessage): Promise<GraphQLRequest> {
   }
 
   return parsedBody;
+}
+
+async function parseGetRequest(
+  req: IncomingMessage,
+): Promise<SerializedGraphqlRequest> {
+  if (typeof req.url !== "string") {
+    throw new Error("Must have `url` on request to parse the query string.");
+  }
+
+  // We'll extract the parameters from the query string for GET requests.
+  const { query: parsedQueryString } = urlParse(req.url, true);
+
+  [
+    "query",
+    "operationName",
+    "variables",
+    "extensions",
+  ].forEach((paramName: string) => {
+    if (typeof parsedQueryString[paramName] === 'object') {
+      throw new Error(
+        `The '${paramName}' parameter must not be specified more than once.`);
+    }
+  });
+
+  return parsedQueryString;
 }
 
 async function parsePostRequest(
@@ -242,4 +270,5 @@ export const __testing__ = {
   badRequest,
   internalServerError,
   jsonBodyParse,
+  parseGetRequest,
 }
