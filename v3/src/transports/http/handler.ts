@@ -99,7 +99,10 @@ export function httpHandler(
 }
 
 /**
- * Called in the event of a critical error within the HTTP handler.
+ * Called in the event of a bad request within the HTTP handler.
+ *
+ * This error means that the client sent something the server didn't understand.
+ * Sending the same request again is unlikely to succeed.
  *
  * @param res
  * @param errorMessage
@@ -114,6 +117,9 @@ function badRequest(
 
 /**
  * Called in the event of a critical error within the HTTP handler.
+ *
+ * This means a critical error happened within the server and that the client
+ * can send the same request again without changing it and it might succeed.
  *
  * @param res
  * @param errorMessage
