@@ -25,12 +25,18 @@ const processor: ProcessGraphqlRequest = async () => {
 };
 
 function buildRequestListenerPair(
-  requestOptions: RequestOptions = Object.create(null),
+  requestOptions: RequestOptions,
   responseOptions: ResponseOptions = Object.create(null),
 ) {
+
+  if (!requestOptions.method) {
+    throw new Error(
+      "Internal error: Must pass `method` to " +
+      "`buildRequestListenerPair`'s `requestOptions`.");
+  }
+
   return {
     req: createRequest({
-      method: "POST",
       ...requestOptions,
     }),
     res: createResponse({
@@ -94,7 +100,7 @@ describe("httpHandler", () => {
         let handlerPromise: Promise<void>;
 
         beforeEach(() => {
-          ({ req, res } = buildRequestListenerPair());
+          ({ req, res } = buildRequestListenerPair({ method: 'POST' }));
           handlerPromise = handler(req, res);
         });
 
@@ -217,7 +223,7 @@ describe("jsonBodyParse", () => {
   let req: ReturnType<typeof createRequest>;
   let parsedBodyPromise: Promise<GraphQLRequest>;
   beforeEach(() => {
-    ({ req } = buildRequestListenerPair());
+    ({ req } = buildRequestListenerPair({ method: "POST" }));
     parsedBodyPromise = jsonBodyParse(req);
   });
 
