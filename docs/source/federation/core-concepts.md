@@ -93,7 +93,7 @@ So to review: to reference an external entity from a resolver, we
 
 ## Extending external types
 
-Returning a reference to an author represents just one side of a relationship. A true data graph should expose the ability to navigate relationships in both directions. You'll want to be able to go from a product to its reviews, for example. While these fields are exposed on `Product` for the client to query, they can't be part of the accounts service because they are a concern of the reviews service.
+Returning a reference to an author represents just one side of a relationship. A true data graph should expose the ability to navigate relationships in both directions. You'll want to be able to go from a product to its reviews, for example. While these fields are exposed on `Product` for the client to query, they can't be part of the product catalog service because they are a concern of the reviews service.
 
 The `extend type` mechanism is all we need for this use case. While the `Product` type belongs to the product catalog service, other services can define extension fields on this type using the `extend type` syntax.
 
