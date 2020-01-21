@@ -175,7 +175,7 @@ describe('apollo-server-micro', function() {
               },
               Mutation: {
                 singleUpload: async (_, args) => {
-                  expect((await args.file).stream).toBeDefined();
+                  expect((await args.file).createReadStream).toBeDefined();
                   return args.file;
                 },
               },
