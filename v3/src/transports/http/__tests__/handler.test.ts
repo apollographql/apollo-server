@@ -58,7 +58,7 @@ describe("httpHandler", () => {
         "Invalid handler received: Pass the `executeOperation` method from " +
           "an instance of an `ApolloServer` to this function, or a similar " +
           "function which accepts a `GraphQLRequest` and returns a " +
-          "`GraphQLResoonse`."
+          "`GraphQLResponse`."
       );
     });
 
