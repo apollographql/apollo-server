@@ -11,7 +11,11 @@ import {
   httpHandler,
   AsyncRequestListener,
 } from "../handler";
-import { URLSearchParams } from "apollo-server-env";
+// This `URLSchemaParams` could very well be a polyfill, like the one we once
+// offered in `apollo-serve-env`, but we should reconsider exactly what we want
+// that package to offer and how/where we want it to exist before consciously
+// choosing to use it again.
+import { URLSearchParams } from "url";
 const {
   badRequest,
   internalServerError,
