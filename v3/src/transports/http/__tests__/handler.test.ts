@@ -35,7 +35,13 @@ const validQuery = "query { books { author } }";
  * this test-suite aims to test only the handler properties and not details
  * which are tested more thoroughly elsewhere (e.g. transport, execution).
  */
-const mockProcessor: ProcessGraphqlRequest = async () => {
+const mockProcessor: ProcessGraphqlRequest = async ({ request }) => {
+  // We have very loose requirements in this mock processor.  In fact, nothing
+  // actually exercises this error right now, but it remains here to prevent
+  // inadvertant mis-use of this methid in a future test.
+  if (!request.query && !request.extensions) {
+    throw new Error("Unable to process with mockProcessor.");
+  }
 
   // Note that this is always "successful", since we're not testing the
   // error properties at the handler level, but rather the transport.
