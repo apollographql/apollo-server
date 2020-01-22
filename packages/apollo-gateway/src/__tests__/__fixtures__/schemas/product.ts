@@ -8,6 +8,7 @@ export const typeDefs = gql`
 
   extend type Query {
     product(upc: String!): Product
+    vehicle(id: String!): Vehicle
     topProducts(first: Int = 5): [Product]
     topCars(first: Int = 5): [Car]
   }
@@ -65,9 +66,30 @@ export const typeDefs = gql`
     details: ProductDetailsBook
   }
 
-  type Car @key(fields: "id") {
+  interface Vehicle {
     id: String!
+    description: String
     price: String
+  }
+
+  type Car implements Vehicle @key(fields: "id") {
+    id: String!
+    description: String
+    price: String
+  }
+
+  type Van implements Vehicle @key(fields: "id") {
+    id: String!
+    description: String
+    price: String
+  }
+
+  union Thing = Car | Ikea
+
+  extend type User @key(fields: "id") {
+    id: ID! @external
+    vehicle: Vehicle
+    thing: Thing
   }
 
   # Value type
@@ -131,16 +153,24 @@ const products = [
   { __typename: 'Book', isbn: '0987654321', price: 29 },
 ];
 
-const cars = [
+const vehicles = [
   {
     __typename: 'Car',
     id: '1',
+    description: 'Humble Toyota',
     price: 9990,
   },
   {
     __typename: 'Car',
     id: '2',
+    description: 'Awesome Tesla',
     price: 12990,
+  },
+  {
+    __typename: 'Van',
+    id: '3',
+    description: 'Just a van...',
+    price: 15990,
   },
 ];
 
@@ -176,12 +206,33 @@ export const resolvers: GraphQLResolverMap<any> = {
   },
   Car: {
     __resolveReference(object) {
-      return cars.find(car => car.id === object.id);
+      return vehicles.find(vehicles => vehicles.id === object.id);
+    },
+  },
+  Van: {
+    __resolveReference(object) {
+      return vehicles.find(vehicles => vehicles.id === object.id);
+    },
+  },
+  Thing: {
+    __resolveType(object) {
+      return 'id' in object ? 'Car' : 'Ikea';
+    },
+  },
+  User: {
+    vehicle(user) {
+      return vehicles.find(vehicles => vehicles.id === user.id);
+    },
+    thing(user) {
+      return vehicles.find(vehicles => vehicles.id === user.id);
     },
   },
   Query: {
     product(_, args) {
       return products.find(product => product.upc === args.upc);
+    },
+    vehicle(_, args) {
+      return vehicles.find(vehicles => vehicles.id === args.id);
     },
     topProducts(_, args) {
       return products.slice(0, args.first);
