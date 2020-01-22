@@ -30,10 +30,108 @@ const mockProcessor: ProcessGraphqlRequest = async () => {
   }
 };
 
-function buildRequestListenerPair(
+/**
+ * Mock type of Node.js' `http.IncomingMessage`.
+ */
+type MockRequest = ReturnType<typeof createRequest>;
+
+/**
+ * Mock type of Node.js' `http.ServerResponse`.
+ */
+type MockResponse = ReturnType<typeof createResponse>;
+
+/**
+ * HTTP parameters to be passed as part of a request.  For POST requests, these
+ * will be serialized into JSON and send in the body of the request.  For GET
+ * requests, they will become part of the query-string.
+ */
+type Params = Record<string, string> | string | undefined;
+
+interface TestableRequestListener {
+  /**
+   * Access to the `req` (i.e. `http.IncomingMessage`)
+   */
+  req: MockRequest;
+
+  /**
+   * Access to the `res` (i.e. `http.ServerResponse`)
+   */
+  res: MockResponse;
+
+  /**
+   * Used by tests to send the appropriately shaped request to the mocked
+   * request (i.e. `MockRequest`, a.k.a. `http.IncomingMessage`) depending on
+   * whether the `method` in use is `GET` or `POST`.  Because of the placement
+   * of those variables and the way that transmitting these parameters varies
+   * depending on the method (`GET` in the query string and `POST` in the body)
+   * this method is responsible for creating the actual test handler.  This is
+   * because the parameters for a `GET` request should be present at the time
+   * the request object is instantiated contrasted with `POST`-ed parameters
+   * which are sent as a stream of data after the request is already going.
+   *
+   * This abstraction allows us to write single tests and have them exercised
+   * for both `GET` and `POST` and to ensure that they behave identically.
+   */
+  initHandlerWithParams: (params: Params) => void;
+
+  /**
+   * A `Promise` that will eventually resolve or reject to the handler.
+   *
+   * This will not yield an actual handler until data has been transmitted
+   * to be used by the handler with `initHandlerWithParams` for the reasons
+   * noted in that method's description.
+   *
+   * In practice, since the handler doesn't actually return anything, this will
+   * either result in a resolution to `undefined`, or a `rejection` with an
+   * error.
+   */
+  handlerPromise: ReturnType<AsyncRequestListener>;
+}
+
+function createMockRequestListener(
   requestOptions: RequestOptions,
   responseOptions: ResponseOptions = Object.create(null),
 ) {
+  const req = createRequest({
+    ...requestOptions,
+  });
+
+  const res = createResponse({
+    eventEmitter: EventEmitter,
+    ...responseOptions,
+  });
+
+  return {
+    req,
+    res,
+  }
+}
+
+/**
+ * Create a testable `RequestListener` to test both POST and GET requests
+ *
+ * POST requests receive their parameters as a steram of data on the body
+ * while GET requests are provided their parameters in the query string.  We
+ * aim to support both of these methods though the behavior between them should
+ * be mostly the same.  While POST requests might eventually be
+ * used for more complicated purposes (e.g. uploads), the core functionality
+ * (e.g. parsing of `variables`, `extensions`) should remain the same and be
+ * tested in an identical fashion.  The actual parsing of the parameters is
+ * still tested separately, within the `parseGetRequest` and `parsePostRequest`
+ * methods laster in this test-suite.
+ *
+ * @param params Parameters defined by `TestableRequestListenerParams`
+ */
+function getTestableRequestListener(
+  {
+    requestOptions,
+    responseOptions,
+    handler,
+  }: {
+    requestOptions: RequestOptions;
+    responseOptions?: ResponseOptions;
+    handler: AsyncRequestListener;
+  }): TestableRequestListener {
 
   if (!requestOptions.method) {
     throw new Error(
@@ -41,14 +139,51 @@ function buildRequestListenerPair(
       "`buildRequestListenerPair`'s `requestOptions`.");
   }
 
+  // Create a `Promise` which will eventually resolve to the return result of
+  // the aynchronous handler.  In order to send the data only after the handler
+  // was created, the handler won't actually be created until after we have
+  // data to be sent to it.
+  let handlerPromiseResolve: (value?: Promise<void>) => void;
+  const handlerPromise =
+    new Promise<ReturnType<AsyncRequestListener>>((resolve) => {
+      handlerPromiseResolve = resolve;
+    })
+    // We'll actually return the `Promise` of the handler itself here to
+    // un-wrap what would otherwise be a `Promise` of a `Promise`.
+    .then((resolved) => resolved);
+
+  let initPromiseResolve: (value?: void) => void;
+  const initPromise = new Promise<void>((resolve) => {
+    initPromiseResolve = resolve;
+  }).then(() =>  handlerPromiseResolve(handler(req, res)));
+
+  const { req, res } = createMockRequestListener(requestOptions, responseOptions)
+
+  const initHandlerWithParams: TestableRequestListener['initHandlerWithParams'] =
+    async (params) => {
+      // For a GET request, we'll apply the parameters as the query string.
+      if (req.method === "GET") {
+        req.url = "/" +
+          // Extra implementation to avoid the query string when params omitted.
+          (params ? "?" + (new URLSearchParams(params || {})).toString() : "");
+      }
+
+      // For a POST request, we'll stream the data in the body after we create
+      // the handler.
+      initPromise.then(() => {
+        if (req.method === "POST") {
+          req.send(params);
+        }
+      });
+
+      initPromiseResolve();
+    }
+
   return {
-    req: createRequest({
-      ...requestOptions,
-    }),
-    res: createResponse({
-      eventEmitter: EventEmitter,
-      ...responseOptions,
-    }),
+    req,
+    res,
+    initHandlerWithParams,
+    handlerPromise,
   }
 }
 
@@ -99,18 +234,45 @@ describe("httpHandler", () => {
       });
     });
 
-    describe("request handling", () => {
-      describe("POST", () => {
-        let req: ReturnType<typeof createRequest>;
-        let res: ReturnType<typeof createResponse>;
-        let handlerPromise: Promise<void>;
+    describe.each<RequestOptions["method"]>([
+      "GET",
+      "POST",
+    ])(
+      "request handling - %s",
+      (method) => {
+        let req: TestableRequestListener['req'],
+            res: TestableRequestListener['res'],
+            handlerPromise: TestableRequestListener['handlerPromise'],
+            initHandlerWithParams: TestableRequestListener['initHandlerWithParams'];
 
-        beforeEach(() => {
-          ({ req, res } = buildRequestListenerPair({ method: 'POST' }));
-          handlerPromise = handler(req, res);
+        beforeEach(async () => {
+          (
+            // Destructure into the locally scoped variables to allow
+            // abbreviated usage within all of the tests below.
+            { req, res, initHandlerWithParams, handlerPromise } =
+            getTestableRequestListener({
+              requestOptions: { method },
+              handler,
+            })
+          );
         });
 
-        it("returns a 400 when 'variables' is malformed", () => {
+        // This also tests the behavior of the `initHandlerWithParams` helper.
+        it("reads streams of the request body appropriately", async () => {
+          // Only one of the two scenarios should be triggered.
+          expect.assertions(1);
+          const reqOn = jest.spyOn(req, "on");
+          await initHandlerWithParams({ query: validQuery });
+          if (method === "POST") {
+            // In theory, it would have been called multiple times, but this
+            // test doesn't check for those details.
+            expect(reqOn).toHaveBeenCalled();
+          } else if (method === "GET") {
+            expect(reqOn).not.toHaveBeenCalled();
+          }
+        });
+
+        it("returns a 400 when 'variables' is malformed", async () => {
           expect.assertions(5);
 
           // Set expectations to be checked after the response is emitted.
@@ -122,17 +284,17 @@ describe("httpHandler", () => {
             expect(res._getData()).toStrictEqual("");
           });
 
-          req.send({
+          await initHandlerWithParams({
             query: "{ __typename }",
             operationName: "",
             // Intentional variable corruption!
             variables: '{',
             extensions: JSON.stringify({})
           });
-          return expect(handlerPromise).resolves.toBeUndefined();
+          await expect(handlerPromise).resolves.toBeUndefined();
         });
 
-        it("returns a 200 when the body is proper", () => {
+        it("returns a 200 when the body is proper", async () => {
           expect.assertions(5);
           // Set expectations to be checked after the response is emitted.
           // Make sure to update the assertion count when adding to this block!
@@ -147,13 +309,13 @@ describe("httpHandler", () => {
             });
           });
 
-          req.send({
+          await initHandlerWithParams({
             query: validQuery,
           });
-          return expect(handlerPromise).resolves.toBeUndefined();
+          await expect(handlerPromise).resolves.toBeUndefined();
         });
-      });
-    });
+      }
+    );
 
     // Legacy
     it.todo("returns a 500 if the body of the request is missing");
@@ -210,10 +372,10 @@ describe("internalServerError", () => {
 });
 
 describe("jsonBodyParse", () => {
-  let req: ReturnType<typeof createRequest>;
+  let req: MockRequest;
   let parsedBodyPromise: Promise<GraphQLRequest>;
   beforeEach(() => {
-    ({ req } = buildRequestListenerPair({ method: "POST" }));
+    ({ req } = createMockRequestListener({ method: "POST" }));
     parsedBodyPromise = jsonBodyParse(req);
   });
 
@@ -295,7 +457,7 @@ describe("parseGetRequest", () => {
   const buildRequestForGet = (
     params?: Record<string, string>,
     requestOptions?: RequestOptions,
-  ) => buildRequestListenerPair({
+  ) => createMockRequestListener({
     method: "GET",
     url: "/" +
       // Extra implementation to avoid the query string when params are omitted.
