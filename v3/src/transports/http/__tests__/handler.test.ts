@@ -24,7 +24,7 @@ const {
 } = __testing__;
 
 const validQuery = "query { books { author } }";
-const processor: ProcessGraphqlRequest = async () => {
+const mockProcessor: ProcessGraphqlRequest = async () => {
   return {
     data: null,
   }
@@ -67,14 +67,14 @@ describe("httpHandler", () => {
     });
 
     it("returns a RequestListener", () => {
-      expect(httpHandler(processor)).toBeInstanceOf(Function);
+      expect(httpHandler(mockProcessor)).toBeInstanceOf(Function);
     });
   });
 
   describe("RequestListener", () => {
     let handler: AsyncRequestListener;
     beforeEach(() => {
-      handler = httpHandler(processor);
+      handler = httpHandler(mockProcessor);
     });
 
     describe("guards for programming errors", () => {
