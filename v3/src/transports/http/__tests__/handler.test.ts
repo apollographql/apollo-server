@@ -110,22 +110,6 @@ describe("httpHandler", () => {
           handlerPromise = handler(req, res);
         });
 
-        it("returns a 400 when the body is malformed", () => {
-          expect.assertions(5);
-          // Set expectations to be checked after the response is emitted.
-          // Make sure to update the assertion count when adding to this block!
-          res.on("end", () => {
-            expect(res._getHeaders()).toEqual({});
-            expect(res._getStatusCode()).toBe(400);
-            expect(res._getStatusMessage()).toBe("Malformed request body");
-            expect(res._getData()).toStrictEqual("");
-          });
-
-          // Intentional corruption!
-          req.send("{");
-          return expect(handlerPromise).resolves.toBeUndefined();
-        });
-
         it("returns a 400 when 'variables' is malformed", () => {
           expect.assertions(5);
 
