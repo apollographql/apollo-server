@@ -23,6 +23,10 @@ const {
   parseGetRequest,
 } = __testing__;
 
+// This is meant to be a "valid query" in the sense that it represents what
+// might be a valid query, though it's worth noting that there is no validation,
+// no schema, and no implementation to make it real.  It's used in test-cases
+// below for representative purposes, and nothing else.
 const validQuery = "query { books { author } }";
 const mockProcessor: ProcessGraphqlRequest = async () => {
   return {
