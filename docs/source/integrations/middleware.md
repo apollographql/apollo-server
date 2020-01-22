@@ -1,5 +1,6 @@
 ---
 title: Integrating with Node.js middleware
+sidebar_title: Node.js middleware
 description: Use Apollo Server with Express, Koa, and more
 ---
 
@@ -19,7 +20,7 @@ it after installing an integration package.
 
 ## Applying middleware
 
-When integrating with middleware, first you initialize Apollo Server just like you 
+When integrating with middleware, first you initialize Apollo Server just like you
 always do, and then you call `applyMiddleware`, like so:
 
 ```js

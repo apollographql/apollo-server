@@ -15,6 +15,10 @@ import { buildQueryPlan, buildOperationContext } from '../buildQueryPlan';
 import { executeQueryPlan } from '../executeQueryPlan';
 import { LocalGraphQLDataSource } from '../datasources/LocalGraphQLDataSource';
 
+import { astSerializer, queryPlanSerializer } from '../snapshotSerializers';
+expect.addSnapshotSerializer(astSerializer);
+expect.addSnapshotSerializer(queryPlanSerializer);
+
 function buildLocalService(modules: GraphQLSchemaModule[]) {
   const schema = buildFederatedSchema(modules);
   return new LocalGraphQLDataSource(schema);
@@ -432,6 +436,119 @@ describe('executeQueryPlan', () => {
 
     expect(response.data).toHaveProperty('__schema');
     expect(response.errors).toBeUndefined();
+  });
+
+  it(`can execute queries on interface types`, async () => {
+    const query = gql`
+      query {
+        vehicle(id: "1") {
+          description
+          price
+          retailPrice
+        }
+      }
+    `;
+
+    const operationContext = buildOperationContext(schema, query);
+    const queryPlan = buildQueryPlan(operationContext);
+
+    const response = await executeQueryPlan(
+      queryPlan,
+      serviceMap,
+      buildRequestContext(),
+      operationContext,
+    );
+
+    expect(response.data).toMatchInlineSnapshot(`
+      Object {
+        "vehicle": Object {
+          "description": "Humble Toyota",
+          "price": "9990",
+          "retailPrice": "9990",
+        },
+      }
+    `);
+  });
+
+  it(`can execute queries whose fields are interface types`, async () => {
+    const query = gql`
+      query {
+        user(id: "1") {
+          name
+          vehicle {
+            description
+            price
+            retailPrice
+          }
+        }
+      }
+    `;
+
+    const operationContext = buildOperationContext(schema, query);
+    const queryPlan = buildQueryPlan(operationContext);
+
+    const response = await executeQueryPlan(
+      queryPlan,
+      serviceMap,
+      buildRequestContext(),
+      operationContext,
+    );
+
+    expect(response.data).toMatchInlineSnapshot(`
+      Object {
+        "user": Object {
+          "name": "Ada Lovelace",
+          "vehicle": Object {
+            "description": "Humble Toyota",
+            "price": "9990",
+            "retailPrice": "9990",
+          },
+        },
+      }
+    `);
+  });
+
+  it(`can execute queries whose fields are union types`, async () => {
+    const query = gql`
+      query {
+        user(id: "1") {
+          name
+          thing {
+            ... on Vehicle {
+              description
+              price
+              retailPrice
+            }
+            ... on Ikea {
+              asile
+            }
+          }
+        }
+      }
+    `;
+
+    const operationContext = buildOperationContext(schema, query);
+    const queryPlan = buildQueryPlan(operationContext);
+
+    const response = await executeQueryPlan(
+      queryPlan,
+      serviceMap,
+      buildRequestContext(),
+      operationContext,
+    );
+
+    expect(response.data).toMatchInlineSnapshot(`
+      Object {
+        "user": Object {
+          "name": "Ada Lovelace",
+          "thing": Object {
+            "description": "Humble Toyota",
+            "price": "9990",
+            "retailPrice": "9990",
+          },
+        },
+      }
+    `);
   });
 
   it('can execute queries with falsey @requires (except undefined)', async () => {
