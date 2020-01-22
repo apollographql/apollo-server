@@ -1,5 +1,5 @@
 ---
-title: Using with other servers
+title: Federation with other servers
 ---
 
 The following is a list of known open source GraphQL server libraries that have built-in support for Apollo Federation.
@@ -13,4 +13,4 @@ The following is a list of known open source GraphQL server libraries that have 
 | Python      | graphene     | [graphene-federation](https://github.com/preply/graphene-federation)             |
 | Ruby        | graphql-ruby | [apollo-federation-ruby](https://github.com/Gusto/apollo-federation-ruby)        |
 
-Do you maintain a library that implements Apollo Federation that isn't listed here? Please [submit a PR](https://github.com/apollographql/apollo-server/tree/master/docs/source/federation/federation-libraries.md) to be added to the list!
+Do you maintain a library that implements Apollo Federation that isn't listed here? Please [submit a PR](https://github.com/apollographql/apollo-server/tree/master/docs/source/federation/other-servers.md) to be added to the list!
