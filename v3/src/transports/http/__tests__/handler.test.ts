@@ -28,7 +28,17 @@ const {
 // no schema, and no implementation to make it real.  It's used in test-cases
 // below for representative purposes, and nothing else.
 const validQuery = "query { books { author } }";
+
+/**
+ * This is a mock processor which is meant to mimic what must be a more complete
+ * GraphQL processor.  It is, however, _not_ a complete implementation because
+ * this test-suite aims to test only the handler properties and not details
+ * which are tested more thoroughly elsewhere (e.g. transport, execution).
+ */
 const mockProcessor: ProcessGraphqlRequest = async () => {
+
+  // Note that this is always "successful", since we're not testing the
+  // error properties at the handler level, but rather the transport.
   return {
     data: null,
   }
