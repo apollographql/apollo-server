@@ -11,9 +11,9 @@ module.exports = {
         subtitle: 'Apollo Server',
         description: 'A guide to using Apollo Server',
         githubRepo: 'apollographql/apollo-server',
-        defaultVersion: 2,
+        defaultVersion: '2',
         versions: {
-          1: 'version-1',
+          '1': 'version-1',
         },
         sidebarCategories: {
           null: [
