@@ -12,11 +12,12 @@ export type AsyncRequestListener = PromisifyReturnType<RequestListener>;
  * `RequestHandler` that can be used with Node.js' `http.createServer`, or
  * Express' `app.use`.
  *
- * @param processGraphqlRequestFn - A method which will process a
- * `GraphQLRequest` and return a `GraphQLResponse`. It must itself understand
- * what schema to process this request against.
+ * @param processGraphqlRequestFn - A function which implements
+ * `ProcessGraphqlRequest`, processes a `GraphQLRequest` and returns a
+ * `GraphQLResponse`. It must itself understand what schema to process this
+ * request against.  In practice, the standard implementation of this is
+ * provided by `ApolloServer`'s `executeOperation` method.
  */
-
 export function httpHandler(
   processGraphqlRequestFn: ProcessGraphqlRequest,
 ): AsyncRequestListener {
