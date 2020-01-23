@@ -118,14 +118,15 @@ describe("processes an HTTP request", () => {
         .resolves.toHaveProperty("statusCode", 405);
     });
 
+    it.todo("ensure that 'extensions' are properly returned in the response");
+    it.todo("ensure that 'errors' is properly returned in the response");
+    it.todo("ensure that 'data' is properly returned in the response");
+
     /**
      * To implement this test, we need cooperation from the request pipeline.
      * Today, this would be done with `didResolveOperation`.
      */
     it.todo("returns a 405 when attempting a 'mutation' when the 'GET' method is used");
-    it.todo("ensure that 'extensions' are properly returned in the response");
-    it.todo("ensure that 'errors' is properly returned in the response");
-    it.todo("ensure that 'data' is properly returned in the response");
   });
 
   describe("Headers", () => {
