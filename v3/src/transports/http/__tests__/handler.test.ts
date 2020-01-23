@@ -314,6 +314,28 @@ describe("httpHandler", () => {
           await expect(handlerPromise).resolves.toBeUndefined();
         });
 
+        it("returns a 400 when 'extensions' is malformed", async () => {
+          expect.assertions(5);
+
+          // Set expectations to be checked after the response is emitted.
+          // Make sure to update the assertion count when adding to this block!
+          res.on("end", () => {
+            expect(res._getHeaders()).toEqual({});
+            expect(res._getStatusCode()).toBe(400);
+            expect(res._getStatusMessage()).toBe("Malformed request body");
+            expect(res._getData()).toStrictEqual("");
+          });
+
+          await initHandlerWithParams({
+            query: "{ __typename }",
+            operationName: "",
+            variables: JSON.stringify({}),
+            // Intentional variable corruption!
+            extensions: '{',
+          });
+          await expect(handlerPromise).resolves.toBeUndefined();
+        });
+
         it("returns a 200 when the body is proper", async () => {
           expect.assertions(5);
           // Set expectations to be checked after the response is emitted.
