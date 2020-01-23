@@ -46,6 +46,7 @@ export interface IHttpResponse {
    * The numeric representation of the HTTP status code.
    */
   statusCode: number;
+
   /**
    * An optional string specification of the HTTP status code.
    *
@@ -57,6 +58,7 @@ export interface IHttpResponse {
    * [IANA official status messages]: https://www.iana.org/assignments/http-status-codes/http-status-codes.xhtml
    */
   statusMessage?: string;
+
   /**
    * This returns an `AsyncIterable` which could include multiple responses.
    * It is up to the implementing HTTP handler to decide what it does with
@@ -190,7 +192,7 @@ function generatedResponse(args: IGeneratedResponseArgs): IHttpResponse {
  * we did in Apollo Server 2.x.  For now, we just structurally check the error
  * to see if it matches characteristics of particular error types.
  *
- * More , the new execution pipeline doesn't actually throw these errors
+ * Moreso, the new execution pipeline doesn't actually throw these errors
  * right now, so this is the only technique we can currently employ.  While we
  * could re-use `apollo-server-errors` errors in Apollo Server 3, we may want to
  * consider another option, so I didn't want to reach for that package just yet.
