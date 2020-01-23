@@ -47,7 +47,7 @@ export function httpHandler(
        * TODO: Need to assert at runtime that the properties we expect to
        * be there are present.
        */
-      parsedRequest = await jsonBodyParse(req);
+      parsedRequest = await parseRequest(req);
     } catch (err) {
       // TODO(AS3) In order to limit error codes to a single place, this may
       // be well-served to be a `GraphQLError`.
@@ -155,7 +155,7 @@ function internalServerError(
  * started experience that doesn't require an external package.
  *
  */
-async function jsonBodyParse(req: IncomingMessage): Promise<GraphQLRequest> {
+async function parseRequest(req: IncomingMessage): Promise<GraphQLRequest> {
   /**
    * First we'll parse the body, however this doesn't parse objects within
    * that body, like `variables` and `extensions`, which will need to be further
@@ -269,6 +269,6 @@ function parseJsonInputAsObject<T>(
 export const __testing__ = {
   badRequest,
   internalServerError,
-  jsonBodyParse,
   parseGetRequest,
+  parsePostRequest,
 }

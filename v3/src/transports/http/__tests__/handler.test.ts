@@ -1,4 +1,4 @@
-import { ProcessGraphqlRequest, GraphQLRequest } from "../../../execution";
+import { ProcessGraphqlRequest } from "../../../execution";
 import {
   createResponse,
   createRequest,
@@ -16,11 +16,12 @@ import {
 // that package to offer and how/where we want it to exist before consciously
 // choosing to use it again.
 import { URLSearchParams } from "url";
+import { SerializedGraphqlRequest } from "../transport";
 const {
   badRequest,
   internalServerError,
-  jsonBodyParse,
   parseGetRequest,
+  parsePostRequest,
 } = __testing__;
 
 // This is meant to be a "valid query" in the sense that it represents what
@@ -413,20 +414,19 @@ describe("internalServerError", () => {
   });
 });
 
-describe("jsonBodyParse", () => {
+describe("parsePostRequest", () => {
   let req: MockRequest;
-  let parsedBodyPromise: Promise<GraphQLRequest>;
+  let parsingPromise: Promise<SerializedGraphqlRequest>;
   beforeEach(() => {
     ({ req } = createMockRequestListener({ method: "POST" }));
-    parsedBodyPromise = jsonBodyParse(req);
+    parsingPromise = parsePostRequest(req);
   });
 
   it("throws a SyntaxError on malformed JSON input", async () => {
     // Intentional corruption!
     req.send("{");
-    await expect(parsedBodyPromise).rejects.toThrow(SyntaxError);
-    await expect(parsedBodyPromise).rejects
-      .toThrowError("Body is malformed JSON");
+    await expect(parsingPromise).rejects.toThrow(SyntaxError);
+    await expect(parsingPromise).rejects.toThrowError("Body is malformed JSON");
   });
 
   it("can parse a body with all GraphQLRequest properties included", () => {
@@ -436,43 +436,41 @@ describe("jsonBodyParse", () => {
       variables: JSON.stringify({}),
       extensions: JSON.stringify({})
     });
-    return expect(parsedBodyPromise).resolves.toEqual({
+    return expect(parsingPromise).resolves.toEqual({
       query: "{ __typename }",
       operationName: "",
-      variables: {},
-      extensions: {},
+      variables: "{}",
+      extensions: "{}",
     });
   });
 
-  it("can parse a body's 'variables' which include JSON-escaped values", () => {
+  it("can parse a body containing properly escaped nested JSON", () => {
     req.send({
       query: "{ __typename }",
       operationName: "",
-      variables: JSON.stringify({ value: true }),
-      extensions: JSON.stringify({})
+      variables: JSON.stringify({ variablesValue: true }),
+      extensions: JSON.stringify({ extensionsValue: true }),
     });
-    return expect(parsedBodyPromise).resolves.toEqual({
+    return expect(parsingPromise).resolves.toEqual({
       query: "{ __typename }",
       operationName: "",
-      variables: {
-        value: true,
-      },
-      extensions: {},
+      variables: "{\"variablesValue\":true}",
+      extensions: "{\"extensionsValue\":true}",
     });
   });
 
-  it("excludes properties not specific to our needs", async () => {
+  it("includes non-GraphQL specific properties", async () => {
     req.send({
       query: "{ __typename }",
       arbitrary: true
     });
-    await expect(parsedBodyPromise).resolves.not.toHaveProperty("arbitrary");
-    await expect(parsedBodyPromise).resolves.toHaveProperty("query");
+    await expect(parsingPromise).resolves.toHaveProperty("arbitrary");
+    await expect(parsingPromise).resolves.toHaveProperty("query");
   });
 
   it("returns GraphQLRequest properties as undefined when absent", async () => {
     req.send({ query: "{ __typename }" });
-    await expect(parsedBodyPromise).resolves.toEqual({
+    await expect(parsingPromise).resolves.toEqual({
       query: "{ __typename }",
       variables: undefined,
       extensions: undefined,
