@@ -3,6 +3,7 @@ import {
   ExecutionResult,
 } from "graphql/execution/execute";
 export { GraphQLError } from "graphql/error";
+export { GraphQLSchemaModule } from "apollo-server-core";
 
 export type PromisifyReturnType<T extends (...args: any) => any> =
   (...args: Parameters<T>) => Promise<ReturnType<T>>;

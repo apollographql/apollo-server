@@ -14,9 +14,6 @@ import { GraphQLRequest, GraphQLResponse, VariableValues } from "../types";
 export { GraphQLRequest, GraphQLResponse };
 import { execute } from './execute';
 
-// TODO(AS3) I'm not sure if this is execution.  Perhaps, a top-level export.
-export { GraphQLSchemaModule } from 'apollo-graphql';
-
 export { Context, ContextFunction } from 'apollo-server-core';
 
 export type UserContext = Record<string, any>;
