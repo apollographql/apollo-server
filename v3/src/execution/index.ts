@@ -14,8 +14,6 @@ import { GraphQLRequest, GraphQLResponse, VariableValues } from "../types";
 export { GraphQLRequest, GraphQLResponse };
 import { execute } from './execute';
 
-export { Context, ContextFunction } from 'apollo-server-core';
-
 export type UserContext = Record<string, any>;
 
 /** Input for {@link processGraphqlRequest} */
