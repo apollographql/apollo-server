@@ -429,20 +429,6 @@ describe("jsonBodyParse", () => {
       .toThrowError("Body is malformed JSON");
   });
 
-  it("throws on invalid `variables`", async () => {
-    req.send({ variables: "{" });
-    await expect(parsedBodyPromise).rejects.toThrow(SyntaxError);
-    await expect(parsedBodyPromise).rejects
-      .toThrowError("Malformed JSON input for 'variables'");
-  });
-
-  it("throws on invalid `extensions`", async () => {
-    req.send({ extensions: "{" });
-    await expect(parsedBodyPromise).rejects.toThrow(SyntaxError);
-    await expect(parsedBodyPromise).rejects
-      .toThrowError("Malformed JSON input for 'extensions'");
-  });
-
   it("can parse a body with all GraphQLRequest properties included", () => {
     req.send({
       query: "{ __typename }",
