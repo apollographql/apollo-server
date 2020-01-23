@@ -1,9 +1,8 @@
-import { GraphQLError} from "graphql/error";
 import {
   ExecutionResultDataDefault,
   ExecutionResult,
 } from "graphql/execution/execute";
-export { GraphQLError };
+export { GraphQLError } from "graphql/error";
 
 export type PromisifyReturnType<T extends (...args: any) => any> =
   (...args: Parameters<T>) => Promise<ReturnType<T>>;
