@@ -131,7 +131,6 @@ describe("processes an HTTP request", () => {
 
   describe("Headers", () => {
     describe("`Content-type`", () => {
-      expect.assertions(1);
       it("is set to `application/json` on a single, properly formed query",
         async () => {
           await expect(
@@ -166,7 +165,6 @@ describe("processes an HTTP request", () => {
       );
 
       it("is set to `application/json` on an execution error", async () => {
-        expect.assertions(1);
         await expect(
           httpPostGraphqlQueryToSchema(schema, "query { throwForbiddenError }"),
         ).resolves.toHaveProperty(
