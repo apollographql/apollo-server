@@ -3,7 +3,11 @@ import { IHttpRequest, SerializedGraphqlRequest } from "./transport";
 import { processHttpRequest } from "./transport";
 import { GraphQLRequest, PromisifyReturnType } from "../../types";
 import { ProcessGraphqlRequest } from "../../execution";
-import { parse as urlParse } from "url";
+import {
+  parsePostRequest,
+  parseGetRequest,
+  parseJsonInputAsObject,
+} from "./utils";
 
 export type AsyncRequestListener = PromisifyReturnType<RequestListener>;
 
@@ -199,77 +203,7 @@ async function parseRequest(req: IncomingMessage): Promise<GraphQLRequest> {
   return parsedBody;
 }
 
-async function parseGetRequest(
-  req: IncomingMessage,
-): Promise<SerializedGraphqlRequest> {
-  if (typeof req.url !== "string") {
-    throw new Error("Must have `url` on request to parse the query string.");
-  }
-
-  // We'll extract the parameters from the query string for GET requests.
-  const { query: parsedQueryString } = urlParse(req.url, true);
-
-  [
-    "query",
-    "operationName",
-    "variables",
-    "extensions",
-  ].forEach((paramName: string) => {
-    if (typeof parsedQueryString[paramName] === 'object') {
-      throw new Error(
-        `The '${paramName}' parameter must not be specified more than once.`);
-    }
-  });
-
-  return parsedQueryString;
-}
-
-async function parsePostRequest(
-  req: IncomingMessage,
-): Promise<SerializedGraphqlRequest> {
-  // On a POST, we'll read the body from the `Readable` stream.
-  const body: string = await new Promise((resolve, reject) => {
-    const data: Uint8Array[] = [];
-    req
-      .on('data', chunk => data.push(chunk))
-      .on('error', reject)
-      .on('end', () => resolve(Buffer.concat(data).toString('utf-8')));
-  });
-
-  return parseJsonInputAsObject<GraphQLRequest>(
-    body,
-    "Body is malformed JSON",
-  ) || Object.create(null);
-}
-
-/**
- * Parse a JSON string and assert that it is in fact an object after parsing.
- *
- * @param input
- * @param errMsg
- */
-function parseJsonInputAsObject<T>(
-  input: string,
-  errMsg: string,
-): T | undefined {
-  if (typeof input !== "string") {
-    return;
-  }
-
-  try {
-    const parsed = JSON.parse(input);
-    if (typeof parsed !== "object") {
-      throw new Error();
-    }
-    return parsed;
-  } catch {
-    throw new SyntaxError(errMsg);
-  }
-}
-
 export const __testing__ = {
   badRequest,
   internalServerError,
-  parseGetRequest,
-  parsePostRequest,
 }
