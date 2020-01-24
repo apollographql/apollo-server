@@ -55,25 +55,25 @@ This example persists a dummy query of `{__typename}`, using its sha256 hash: `e
 
 1. Request a persisted query:
 
-```bash
-curl -g 'http://localhost:4000/?extensions={"persistedQuery":{"version":1,"sha256Hash":"ecf4edb46db40b5132295c0291d62fb65d6759a9eedfa4d5d612dd5ec54a6b38"}}'
-```
+   ```bash
+   curl -g 'http://localhost:4000/?extensions={"persistedQuery":{"version":1,"sha256Hash":"ecf4edb46db40b5132295c0291d62fb65d6759a9eedfa4d5d612dd5ec54a6b38"}}'
+   ```
 
    Expect a response of: `{"errors": [{"message": "PersistedQueryNotFound", "extensions": {...}}]}`.
 
 2. Store the query to the cache:
 
-```bash
-curl -g 'http://localhost:4000/?query={__typename}&extensions={"persistedQuery":{"version":1,"sha256Hash":"ecf4edb46db40b5132295c0291d62fb65d6759a9eedfa4d5d612dd5ec54a6b38"}}'
-```
+   ```bash
+   curl -g 'http://localhost:4000/?query={__typename}&extensions={"persistedQuery":{"version":1,"sha256Hash":"ecf4edb46db40b5132295c0291d62fb65d6759a9eedfa4d5d612dd5ec54a6b38"}}'
+   ```
 
    Expect a response of `{"data": {"__typename": "Query"}}"`.
 
 3. Request the persisted query again:
 
-```bash
-curl -g 'http://localhost:4000/?extensions={"persistedQuery":{"version":1,"sha256Hash":"ecf4edb46db40b5132295c0291d62fb65d6759a9eedfa4d5d612dd5ec54a6b38"}}'
-```
+   ```bash
+   curl -g 'http://localhost:4000/?extensions={"persistedQuery":{"version":1,"sha256Hash":"ecf4edb46db40b5132295c0291d62fb65d6759a9eedfa4d5d612dd5ec54a6b38"}}'
+   ```
 
    Expect a response of `{"data": {"__typename": "Query"}}"`, as the query string is loaded from the cache.
 
