@@ -7,6 +7,7 @@ import {
   ProcessGraphqlRequest,
   processGraphqlRequestAgainstSchema,
 } from './execution';
+export { default as httpHandler } from "./transports/http/handler";
 
 // These should not be imported from here.
 import { Config as BaseConfig } from 'apollo-server-core';

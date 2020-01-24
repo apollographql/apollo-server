@@ -22,7 +22,7 @@ export type AsyncRequestListener = PromisifyReturnType<RequestListener>;
  * request against.  In practice, the standard implementation of this is
  * provided by `ApolloServer`'s `executeOperation` method.
  */
-export function httpHandler(
+export default function httpHandler(
   processGraphqlRequestFn: ProcessGraphqlRequest,
 ): AsyncRequestListener {
   if (typeof processGraphqlRequestFn !== "function") {

@@ -1,8 +1,8 @@
 import { createResponse, RequestOptions } from "node-mocks-http";
 import { EventEmitter } from "events";
 import {
+  default as httpHandler,
   __testing__,
-  httpHandler,
   AsyncRequestListener,
 } from "../handler";
 import {
