@@ -234,6 +234,10 @@ const server = new ApolloServer(
 
 ## `PubSub` Implementations
 
+> **Please note**: By default `graphql-subscriptions` exports an in-memory (`EventEmitter`) event system to re-run subscriptions. This is not suitable for running in a serious production app, because there is no way to share subscriptions and publishes across many running servers.
+>
+> We recommend using one of the external `PubSub` implementations listed below for production environments.
+
 The Apollo Server implementation of `PubSub` can be replaced by another implementations of [PubSubEngine interface](https://github.com/apollographql/graphql-subscriptions/blob/master/src/pubsub-engine.ts). The community has created the following integrations:
 
 - [Redis](https://github.com/davidyaha/graphql-redis-subscriptions)
@@ -245,4 +249,4 @@ The Apollo Server implementation of `PubSub` can be replaced by another implemen
 - [Google Cloud Firestore](https://github.com/MrBoolean/graphql-firestore-subscriptions)
 - [Add your implementation...](https://github.com/apollographql/apollo-server/pull/new/master)
 
-You can implement a `PubSub` of your own, using the exported `PubSubEngine` interface from `apollo-server` or another integration. If you want to set up a GraphQL server using the `graphql-subscriptions` package, follow [this guide](https://www.apollographql.com/docs/graphql-subscriptions/).
+You can implement a `PubSub` of your own, using the exported `PubSubEngine` interface from `apollo-server` or another integration. If you want to set up a GraphQL server using the `graphql-subscriptions` package (not recommended for production), follow [this guide](https://www.apollographql.com/docs/graphql-subscriptions/).
