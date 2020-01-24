@@ -243,13 +243,14 @@ export class ApolloServerBase {
     }
 
     if (requestOptions.persistedQueries !== false) {
+      const {
+        cache: apqCache = requestOptions.cache!,
+        ...apqOtherOptions
+      } = requestOptions.persistedQueries || Object.create(null);
+
       requestOptions.persistedQueries = {
-        cache: new PrefixingKeyValueCache(
-          (requestOptions.persistedQueries &&
-            requestOptions.persistedQueries.cache) ||
-            requestOptions.cache!,
-          APQ_CACHE_PREFIX,
-        ),
+        cache: new PrefixingKeyValueCache(apqCache, APQ_CACHE_PREFIX),
+        ...apqOtherOptions,
       };
     } else {
       // the user does not want to use persisted queries, so we remove the field
