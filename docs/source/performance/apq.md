@@ -7,7 +7,7 @@ The size of individual GraphQL query strings can be a major pain point. Apollo S
 
 With Automatic Persisted Queries, the ID is a deterministic hash of the input query, so we don't need a complex build step to share the ID between clients and servers. If a server doesn't know about a given hash, the client can expand the query for it; Apollo Server caches that mapping.
 
-### Setup
+## Setup
 
 Apollo Server supports automatic persisted queries without any additional configuration and only requires changes to Apollo Client.
 
@@ -47,7 +47,7 @@ const server = new ApolloServer({
 });
 ```
 
-### Verify
+## Verify
 
 Apollo Server's persisted queries configuration can be tested from the command-line. The following examples assume Apollo Server is running at `localhost:4000/`.
 This example persists a dummy query of `{__typename}`, using its sha256 hash: `ecf4edb46db40b5132295c0291d62fb65d6759a9eedfa4d5d612dd5ec54a6b38`.
@@ -77,7 +77,7 @@ curl -g 'http://localhost:4000/?extensions={"persistedQuery":{"version":1,"sha25
 
    Expect a response of `{"data": {"__typename": "Query"}}"`, as the query string is loaded from the cache.
 
-### Using `GET` requests with APQ on a CDN
+## Using `GET` requests with APQ on a CDN
 
 A great application for APQ is running Apollo Server behind a CDN. Many CDNs only cache GET requests, but many GraphQL queries are too long to fit comfortably in a cacheable GET request.  When the APQ link is created with `createPersistedQueryLink({useGETForHashedQueries: true})`, Apollo Client automatically sends the short hashed queries as GET requests allowing a CDN to serve those request. For full-length queries and for all mutations, Apollo Client will continue to use POST requests.
 
