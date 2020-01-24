@@ -1,5 +1,4 @@
 import { CachedFetcher } from './cachedFetcher';
-import { ServiceDefinition } from '@apollo/federation';
 import { parse } from 'graphql';
 import { Experimental_UpdateServiceDefinitions } from '.';
 
@@ -47,19 +46,8 @@ const urlStorageSecretBase: string = urlFromEnvOrDefault(
   'https://storage.googleapis.com/engine-partial-schema-prod/',
 );
 
-const fetcher = new CachedFetcher();
-
 function getStorageSecretUrl(graphId: string, apiKeyHash: string): string {
   return `${urlStorageSecretBase}/${graphId}/storage-secret/${apiKeyHash}.json`;
-}
-
-async function fetchStorageSecret(
-  graphId: string,
-  apiKeyHash: string,
-): Promise<string> {
-  const storageSecretUrl = getStorageSecretUrl(graphId, apiKeyHash);
-  const response = await fetcher.fetch(storageSecretUrl);
-  return JSON.parse(response.result);
 }
 
 export async function getServiceDefinitionsFromStorage({
@@ -67,13 +55,18 @@ export async function getServiceDefinitionsFromStorage({
   apiKeyHash,
   graphVariant,
   federationVersion,
+  fetcher,
 }: {
   graphId: string;
   apiKeyHash: string;
   graphVariant?: string;
   federationVersion: number;
+  fetcher: CachedFetcher;
 }): ReturnType<Experimental_UpdateServiceDefinitions> {
-  const secret = await fetchStorageSecret(graphId, apiKeyHash);
+  // fetch the storage secret
+  const storageSecretUrl = getStorageSecretUrl(graphId, apiKeyHash);
+  const response = await fetcher.fetch(storageSecretUrl);
+  const secret = JSON.parse(response.result);
 
   if (!graphVariant) {
     graphVariant = 'current';
@@ -84,7 +77,7 @@ export async function getServiceDefinitionsFromStorage({
   const {
     isCacheHit: linkFileCacheHit,
     result: linkFileResult,
-  } = await fetchLinkFile(baseUrl);
+  } = await fetcher.fetch(`${baseUrl}/composition-config-link`);
 
   // If the link file is a cache hit, no further work is needed
   if (linkFileCacheHit) return { isNewSchema: false };
@@ -99,8 +92,25 @@ export async function getServiceDefinitionsFromStorage({
     configFileResult,
   ) as CompositionMetadata;
 
-  const serviceDefinitions = await fetchServiceDefinitions(
-    compositionMetadata.implementingServiceLocations,
+  // It's important to maintain the original order here
+  const serviceDefinitions = await Promise.all(
+    compositionMetadata.implementingServiceLocations.map(
+      async ({ name, path }) => {
+        const serviceLocation = await fetcher.fetch(
+          `${urlPartialSchemaBase}/${path}`,
+        );
+
+        const { url, partialSchemaPath } = JSON.parse(
+          serviceLocation.result,
+        ) as ImplementingService;
+
+        const { result } = await fetcher.fetch(
+          `${urlPartialSchemaBase}/${partialSchemaPath}`,
+        );
+
+        return { name, url, typeDefs: parse(result) };
+      },
+    ),
   );
 
   // explicity return that this is a new schema, as the link file has changed.
@@ -112,34 +122,4 @@ export async function getServiceDefinitionsFromStorage({
     compositionMetadata,
     isNewSchema: true,
   };
-}
-
-async function fetchLinkFile(baseUrl: string) {
-  return fetcher.fetch(`${baseUrl}/composition-config-link`);
-}
-
-// The order of implementingServices is IMPORTANT
-async function fetchServiceDefinitions(
-  implementingServices: ImplementingServiceLocation[],
-): Promise<ServiceDefinition[]> {
-  const serviceDefinitionPromises = implementingServices.map(
-    async ({ name, path }) => {
-      const serviceLocation = await fetcher.fetch(
-        `${urlPartialSchemaBase}/${path}`,
-      );
-
-      const { url, partialSchemaPath } = JSON.parse(
-        serviceLocation.result,
-      ) as ImplementingService;
-
-      const { result } = await fetcher.fetch(
-        `${urlPartialSchemaBase}/${partialSchemaPath}`,
-      );
-
-      return { name, url, typeDefs: parse(result) };
-    },
-  );
-
-  // Respect the order here
-  return Promise.all(serviceDefinitionPromises);
 }
