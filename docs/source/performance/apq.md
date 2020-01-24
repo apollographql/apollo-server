@@ -294,3 +294,14 @@ const server = new ApolloServer({
 });
 ```
 
+## Disabling
+
+Automatic persisted queries can be disabled entirely by setting the `persistedQueries` attribute to `false` in the `ApolloServer` constructor options:
+
+```javascript
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  persistedQueries: false, // highlight-line
+});
+```
