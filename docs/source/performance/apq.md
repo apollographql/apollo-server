@@ -29,24 +29,6 @@ const client = new ApolloClient({
 
 > Note: Users of `apollo-boost` should [migrate to `apollo-client`](https://www.apollographql.com/docs/react/advanced/boost-migration/) in order to use the `apollo-link-persisted-queries` package.
 
-Inside Apollo Server, the query registry is stored in a user-configurable cache. By default, Apollo Server uses a in-memory cache. This can be configured inside of the `ApolloServer` constructor:
-
-```js
-const { MemcachedCache } = require('apollo-server-cache-memcached');
-const { ApolloServer } = require('apollo-server');
-
-const server = new ApolloServer({
-  typeDefs,
-  resolvers,
-  persistedQueries: {
-    cache: new MemcachedCache(
-      ['memcached-server-1', 'memcached-server-2', 'memcached-server-3'],
-      { retries: 10, retry: 10000 }, // Options
-    ),
-  },
-});
-```
-
 ## Verify
 
 Apollo Server's persisted queries configuration can be tested from the command-line. The following examples assume Apollo Server is running at `localhost:4000/`.
@@ -165,3 +147,26 @@ If configured correctly, browser's dev tools should verify that queries are now 
 How exactly this works depends on exactly which CDN you chose. Configure your CDN to send requests to Apollo Server. Some CDNs may need to be specially configured to honor origin Cache-Control headers; for example, here is [Akamai's documentation on that setting](https://learn.akamai.com/en-us/webhelp/ion/oca/GUID-57C31126-F745-4FFB-AA92-6A5AAC36A8DA.html). If all is well, cacheable queries should now be saved by the CDN.
 
 > Note that requests served directly by a CDN will not show up in the Engine dashboard.
+
+## Cache configuration
+
+Inside Apollo Server, the automated persisted query registry is stored in a user-configurable cache.  A local in-memory cache is enabled by default, however, if a general default `cache` has been provided as a top-level option to the `ApolloServer` constructor options, that cache will be used instead.
+
+```javascript
+const { MemcachedCache } = require('apollo-server-cache-memcached');
+const { ApolloServer } = require('apollo-server');
+
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  // highlight-start
+  persistedQueries: {
+    cache: new MemcachedCache(
+      ['memcached-1.local', 'memcached-2.local', 'memcached-3.local'],
+      { retries: 10, retry: 10000 }, // Options
+    ),
+  },
+  // highlight-end
+});
+```
+
