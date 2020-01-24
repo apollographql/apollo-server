@@ -264,3 +264,33 @@ const server = new ApolloServer({
 });
 ```
 
+## Adjusting cache time-to-live (TTL)
+
+The cache time-to-live (TTL) value determines how long an automatic persisted query registration will remain in the cache.  For the in-memory store, there is no TTL and for any of the distributed cache stores (e.g. Memcached), the default lifespan is 300 seconds.  This TTL value can be overriden or disabled entirely by setting the `ttl` attribute within `persistedQueries`.  If the query is received on a regular basis, it will be re-registered after it has been purged from the cache.
+
+To specify a different TTL than the default value of 300, specify an integer indicating the number of seconds the registration should remain before it is considered invalid:
+
+```javascript
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  persistedQueries: {
+    // highlight-start
+    ttl: 900, // 15 minutes
+    // highlight-end
+  },
+});
+```
+
+To avoid attaching a TTL to the registration, specify the `ttl` value as `null`.  This will leave the eviction of the registration up to the cache implementation's eviction policy (e.g. when it runs out memory):
+
+```javascript
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  persistedQueries: {
+    ttl: null, // highlight-line
+  },
+});
+```
+
