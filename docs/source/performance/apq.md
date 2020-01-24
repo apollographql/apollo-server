@@ -152,6 +152,21 @@ How exactly this works depends on exactly which CDN you chose. Configure your CD
 
 Inside Apollo Server, the automated persisted query registry is stored in a user-configurable cache.  A local in-memory cache is enabled by default, however, if a general default `cache` has been provided as a top-level option to the `ApolloServer` constructor options, that cache will be used instead.
 
+To override a the cache implementation specifically for automated persisted queries, leaving the general cache untouched, provide an instance of the desired implementation to the `ApolloServer` constructor option for `persistedQueries`.  The available classes and the npm modules they are available from are as follows:
+
+* Local, in-memory cache (default, when not specified)
+* Memcached: `MemcachedCache` from [`apollo-server-cache-memcached`](https://npm.im/apollo-server-cache-memcached)
+* Redis (single instance or Sentinels): `RedisCache` from [`apollo-server-cache-redis`](https://npm.im/apollo-server-cache-redis)
+* Redis Cluster: `RedisClusterCache` from [`apollo-server-cache-redis`](https://npm.im/apollo-server-cache-redis)
+
+For more specific details, see the examples below.
+
+### Memcached
+
+```shell
+$ npm install apollo-server-cache-memcached
+```
+
 ```javascript
 const { MemcachedCache } = require('apollo-server-cache-memcached');
 const { ApolloServer } = require('apollo-server');
@@ -164,6 +179,85 @@ const server = new ApolloServer({
     cache: new MemcachedCache(
       ['memcached-1.local', 'memcached-2.local', 'memcached-3.local'],
       { retries: 10, retry: 10000 }, // Options
+    ),
+  },
+  // highlight-end
+});
+```
+
+### Redis (single instance)
+
+```shell
+$ npm install apollo-server-cache-redis
+```
+
+```javascript
+const { RedisCache } = require('apollo-server-cache-redis');
+
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  // highlight-start
+  persistedQueries: {
+    cache: new RedisCache({
+      host: 'redis-server',
+      // Options are passed through to the Redis client
+    }),
+  },
+  // highlight-end
+});
+```
+
+### Redis (Sentinel)
+
+```shell
+$ npm install apollo-server-cache-redis
+```
+
+```javascript
+const { RedisCache } = require('apollo-server-cache-redis');
+
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  // highlight-start
+  persistedQueries: {
+    cache: new RedisCache({
+      sentinels: [{
+        host: 'sentinel-host-01',
+        port: 26379
+      }],
+      password: 'my_password',
+      name: 'service_name',
+      // Options are passed through to the Redis client
+    }),
+  },
+  // highlight-end
+});
+```
+
+### Redis Cluster
+
+```shell
+$ npm install apollo-server-cache-redis
+```
+
+```javascript
+const { RedisClusterCache } = require('apollo-server-cache-redis');
+
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  // highlight-start
+  persistedQueries: {
+    cache: new RedisClusterCache(
+      [{
+        host: 'redis-node-01-host',
+        // Options are passed through to the Redis cluster client
+      }],
+      {
+        // Cluster options are passed through to the Redis cluster client
+      }
     ),
   },
   // highlight-end
