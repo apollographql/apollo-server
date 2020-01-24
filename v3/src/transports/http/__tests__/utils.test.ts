@@ -6,7 +6,7 @@ import {
   ResponseOptions,
 } from "node-mocks-http";
 // This `URLSchemaParams` could very well be a polyfill, like the one we once
-// offered in `apollo-serve-env`, but we should reconsider exactly what we want
+// offered in `apollo-server-env`, but we should reconsider exactly what we want
 // that package to offer and how/where we want it to exist before consciously
 // choosing to use it again.
 import { URLSearchParams } from "url";
@@ -145,7 +145,7 @@ export function getTestableRequestListener(
   if (!requestOptions.method) {
     throw new Error(
       "Internal error: Must pass `method` to " +
-      "`buildRequestListenerPair`'s `requestOptions`.");
+      "`getTestableRequestListener`'s `requestOptions`.");
   }
 
   // Create a `Promise` which will eventually resolve to the return result of

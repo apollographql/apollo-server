@@ -99,7 +99,10 @@ export async function processHttpRequest(
   if (request.method !== 'POST' && request.method !== 'GET') {
     return generatedResponse({
       response: {
-        // TODO(AS3) This should be a HTTP status code 405.
+        // TODO(AS3) This is currently being short-circuited by the handler.
+        // This still may be a valuable guard for any non-default handlers
+        // that are (eventually) written, but we should figure out the boundary
+        // more clearly.
         errors: [
           new ApolloGraphQLErrorWithHttpStatusCode("Unsupported method",
             undefined,
