@@ -114,7 +114,7 @@ export async function processGraphQLRequest<TContext>(
 
   const dispatcher = initializeRequestListenerDispatcher();
 
-  initializeDataSources();
+  await initializeDataSources();
 
   const metrics = requestContext.metrics || Object.create(null);
   if (!requestContext.metrics) {
@@ -611,20 +611,25 @@ export async function processGraphQLRequest<TContext>(
     return new GraphQLExtensionStack(extensions);
   }
 
-  function initializeDataSources() {
+  async function initializeDataSources() {
     if (config.dataSources) {
       const context = requestContext.context;
 
       const dataSources = config.dataSources();
 
+      const initializers: any[] = [];
       for (const dataSource of Object.values(dataSources)) {
         if (dataSource.initialize) {
-          dataSource.initialize({
-            context,
-            cache: requestContext.cache,
-          });
+          initializers.push(
+            dataSource.initialize({
+              context,
+              cache: requestContext.cache,
+            })
+          );
         }
       }
+
+      await Promise.all(initializers);
 
       if ('dataSources' in context) {
         throw new Error(
