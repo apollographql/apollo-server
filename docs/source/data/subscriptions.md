@@ -42,7 +42,7 @@ const typeDefs = gql`
 
 Inside our resolver map, we add a Subscription resolver that returns an `AsyncIterator`, which listens to the events asynchronously. To generate events in the example, we notified the `pubsub` implementation inside of our Mutation resolver with `publish`. This `publish` call can occur outside of a resolver if required.
 
-```js{4-9,17}
+```js
 const POST_ADDED = 'POST_ADDED';
 
 const resolvers = {
