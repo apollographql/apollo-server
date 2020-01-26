@@ -59,8 +59,11 @@ const resolvers = {
   },
   Mutation: {
     addPost(root, args, context) {
-      pubsub.publish(POST_ADDED, { postAdded: args });
-      return postController.addPost(args);
+      const postAdded = postController.addPost(args);
+      if (postAdded) {
+        pubsub.publish(POST_ADDED, { postAdded: args });
+      }
+      return postAdded;
     },
   },
 };
