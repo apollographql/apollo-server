@@ -62,8 +62,6 @@ describe('integration:Lambda', () => {
 });
 
 const typeDefs = gql`
-  scalar Upload
-
   type File {
     filename: String!
     mimetype: String!
