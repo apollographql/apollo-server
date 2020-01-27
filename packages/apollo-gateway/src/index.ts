@@ -40,6 +40,7 @@ import { GraphQLDataSource } from './datasources/types';
 import { RemoteGraphQLDataSource } from './datasources/RemoteGraphQLDataSource';
 import { HeadersInit } from 'node-fetch';
 import { getVariableValues } from 'graphql/execution/values';
+import { CachedFetcher } from './cachedFetcher';
 
 export type ServiceEndpointDefinition = Pick<ServiceDefinition, 'name' | 'url'>;
 
@@ -158,6 +159,7 @@ export class ApolloGateway implements GraphQLService {
   private serviceDefinitions: ServiceDefinition[] = [];
   private compositionMetadata?: CompositionMetadata;
   private serviceSdlCache = new Map<string, string>();
+  private fetcher = new CachedFetcher();
 
   // Observe query plan, service info, and operation info prior to execution.
   // The information made available here will give insight into the resulting
@@ -467,6 +469,7 @@ export class ApolloGateway implements GraphQLService {
       apiKeyHash: this.engineConfig.apiKeyHash,
       graphVariant: this.engineConfig.graphVariant,
       federationVersion: config.federationVersion || 1,
+      fetcher: this.fetcher
     });
   }
 
