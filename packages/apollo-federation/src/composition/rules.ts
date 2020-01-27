@@ -12,20 +12,12 @@ import { specifiedSDLRules } from 'graphql/validation/specifiedRules';
  */
 
 import {
-  UniqueDirectivesPerLocation as UniqueDirectivesPerLocationFromGraphqlJs,
-} from 'graphql/validation/rules/UniqueDirectivesPerLocation';
-import {
-  UniqueTypeNames as UniqueTypeNamesFromGraphqlJs,
-} from 'graphql/validation/rules/UniqueTypeNames';
-import {
-  UniqueEnumValueNames as UniqueEnumValueNamesFromGraphqlJs,
-} from 'graphql/validation/rules/UniqueEnumValueNames';
-import {
-  PossibleTypeExtensions as PossibleTypeExtensionsFromGraphqlJs,
-} from 'graphql/validation/rules/PossibleTypeExtensions';
-import {
-  UniqueFieldDefinitionNames as UniqueFieldDefinitionNamesFromGraphqlJs,
-} from 'graphql/validation/rules/UniqueFieldDefinitionNames';
+  UniqueDirectivesPerLocationRule as UniqueDirectivesPerLocationFromGraphqlJs,
+  UniqueTypeNamesRule as UniqueTypeNamesFromGraphqlJs,
+  UniqueEnumValueNamesRule as UniqueEnumValueNamesFromGraphqlJs,
+  PossibleTypeExtensionsRule as PossibleTypeExtensionsFromGraphqlJs,
+  UniqueFieldDefinitionNamesRule as UniqueFieldDefinitionNamesFromGraphqlJs,
+} from 'graphql/validation';
 
 /**
  * Then, we'll import our own validation rules to take the place of those that
