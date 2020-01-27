@@ -45,6 +45,11 @@ export class ApolloServer extends ApolloServerBase {
     super(options);
   }
 
+  // Uploads are supported in this integration
+  protected supportsUploads(): boolean {
+    return true;
+  }
+
   // This translates the arguments from the middleware into graphQL options It
   // provides typings for the integration specific behavior, ideally this would
   // be propagated with a generic to the super class
@@ -237,7 +242,6 @@ export class ApolloServer extends ApolloServerBase {
       };
 
       const response = new stream.Writable() as NodeJS.WritableStream;
-
       // These serverParams are needed to pass to allow processing of file uploads
       const serverParams = {
         response,
