@@ -63,7 +63,6 @@
     "@types/body-parser": "1.17.1",
     "@types/connect": "3.4.33",
     "@types/fast-json-stable-stringify": "2.0.0",
-    "@types/graphql": "14.2.3",
     "@types/hapi": "17.8.7",
     "@types/ioredis": "4.14.4",
     "@types/jest": "24.9.1",
