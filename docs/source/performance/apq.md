@@ -1,6 +1,6 @@
 ---
 title: Automatic persisted queries
-description: Improving network performance by sending smaller requests.
+description: Improve network performance by sending smaller requests
 ---
 
 The size of individual GraphQL query strings can be a major pain point. Apollo Server implements Automatic Persisted Queries (APQ), a technique that greatly improves network performance for GraphQL with zero build-time configuration. A persisted query is an ID or hash that can be sent to the server instead of the entire GraphQL query string. This smaller signature reduces bandwidth utilization and speeds up client loading times. Persisted queries are especially nice paired with `GET` requests, enabling the browser cache and [integration with a CDN](#using-get-requests-with-apq-on-a-cdn).
@@ -150,16 +150,18 @@ How exactly this works depends on exactly which CDN you chose. Configure your CD
 
 ## Cache configuration
 
-Inside Apollo Server, the automated persisted query registry is stored in a user-configurable cache.  A local in-memory cache is enabled by default, however, if a general default `cache` has been provided as a top-level option to the `ApolloServer` constructor options, that cache will be used instead.
+By default, Apollo Server stores its APQ registry within its local in-memory cache. If you provide a different `cache` as a top-level option to the `ApolloServer` constructor, Apollo Server uses that cache instead.
 
-To override a the cache implementation specifically for automated persisted queries, leaving the general cache untouched, provide an instance of the desired implementation to the `ApolloServer` constructor option for `persistedQueries`.  The available classes and the npm modules they are available from are as follows:
+You can also designate a cache _specifically_ for the APQ registry. To do so, provide an instance of your preferred cache class to the `ApolloServer` constructor as the `persistedQueries` option. The following backing data stores are supported:
 
-* Local, in-memory cache (default, when not specified)
-* Memcached: `MemcachedCache` from [`apollo-server-cache-memcached`](https://npm.im/apollo-server-cache-memcached)
-* Redis (single instance or Sentinels): `RedisCache` from [`apollo-server-cache-redis`](https://npm.im/apollo-server-cache-redis)
-* Redis Cluster: `RedisClusterCache` from [`apollo-server-cache-redis`](https://npm.im/apollo-server-cache-redis)
+| Data store  | Class name  | Library  |
+|---|---|---|
+| Local in-memory cache (default)  | `InMemoryCache`  | [`apollo-cache-inmemory`](https://npm.im/apollo-cache-inmemory)  |
+| Memcached  | `MemcachedCache`  | [`apollo-server-cache-memcached`](https://npm.im/apollo-server-cache-memcached)  |
+| Redis (single instance or Sentinel)  | `RedisCache`  | [`apollo-server-cache-redis`](https://npm.im/apollo-server-cache-redis)  |
+| Redis Cluster | `RedisClusterCache`| [`apollo-server-cache-redis`](https://npm.im/apollo-server-cache-redis)|
 
-For more specific details, see the examples below.
+Examples for supported data stores are provided below.
 
 ### Memcached
 
@@ -266,9 +268,9 @@ const server = new ApolloServer({
 
 ## Adjusting cache time-to-live (TTL)
 
-The cache time-to-live (TTL) value determines how long an automatic persisted query registration will remain in the cache.  For the in-memory store, there is no TTL and for any of the distributed cache stores (e.g. Memcached), the default lifespan is 300 seconds.  This TTL value can be overriden or disabled entirely by setting the `ttl` attribute within `persistedQueries`.  If the query is received on a regular basis, it will be re-registered after it has been purged from the cache.
+The cache time-to-live (TTL) value determines how long a registered APQ remains in the cache. If a cached query's TTL elapses and the query is purged, it's re-registered the next time it's sent by a client.
 
-To specify a different TTL than the default value of 300, specify an integer indicating the number of seconds the registration should remain before it is considered invalid:
+Apollo Server's default in-memory store does not specify a TTL for APQ (an APQ remains cached until it is overwritten by the cache's standard eviction policy). For all other [supported stores](#cache-configuration), the default TTL is 300 seconds. You can override or disable this value by setting the `ttl` attribute of the `persistedQueries` option, in seconds:
 
 ```javascript
 const server = new ApolloServer({
@@ -282,7 +284,7 @@ const server = new ApolloServer({
 });
 ```
 
-To avoid attaching a TTL to the registration, specify the `ttl` value as `null`.  This will leave the eviction of the registration up to the cache implementation's eviction policy (e.g. when it runs out memory):
+To disable TTL entirely, specify `null` for the value of `ttl`:
 
 ```javascript
 const server = new ApolloServer({
@@ -294,9 +296,11 @@ const server = new ApolloServer({
 });
 ```
 
-## Disabling
+As with the default behavior of the in-memory cache, this leaves APQs in the cache until they are overwritten by the cache's standard eviction policy.
 
-Automatic persisted queries can be disabled entirely by setting the `persistedQueries` attribute to `false` in the `ApolloServer` constructor options:
+## Disabling APQ
+
+You can disable APQ entirely by setting the `persistedQueries` attribute to `false` in the `ApolloServer` constructor options:
 
 ```javascript
 const server = new ApolloServer({
