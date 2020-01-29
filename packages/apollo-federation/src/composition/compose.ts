@@ -29,6 +29,7 @@ import {
   mapValues,
   isFederationDirective,
   executableDirectiveLocations,
+  stripFieldDefinitionDirectivesFromTypeDefs,
 } from './utils';
 import {
   ServiceDefinition,
@@ -135,7 +136,13 @@ export function buildMapsFromServiceList(serviceList: ServiceDefinition[]) {
 
     externalFields.push(...strippedFields);
 
-    for (let definition of typeDefsWithoutExternalFields.definitions) {
+    const {
+      typeDefsWithoutFieldDefinitionDirectives,
+    } = stripFieldDefinitionDirectivesFromTypeDefs(
+      typeDefsWithoutExternalFields,
+    );
+
+    for (let definition of typeDefsWithoutFieldDefinitionDirectives.definitions) {
       if (
         definition.kind === Kind.OBJECT_TYPE_DEFINITION ||
         definition.kind === Kind.OBJECT_TYPE_EXTENSION

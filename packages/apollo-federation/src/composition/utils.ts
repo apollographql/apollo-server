@@ -83,6 +83,43 @@ export function stripExternalFieldsFromTypeDefs(
   return { typeDefsWithoutExternalFields, strippedFields };
 }
 
+export function stripFieldDefinitionDirectivesFromTypeDefs(
+  typeDefs: DocumentNode,
+): {
+  typeDefsWithoutFieldDefinitionDirectives: DocumentNode;
+} {
+  const typeDefsWithoutFieldDefinitionDirectives = visit(typeDefs, {
+    FieldDefinition: removeDirectiveFromFieldDefinitionVisitor(),
+  }) as DocumentNode;
+
+  return { typeDefsWithoutFieldDefinitionDirectives };
+}
+
+function removeDirectiveFromFieldDefinitionVisitor<
+  T extends FieldDefinitionNode
+>() {
+  return (node: T) => {
+    let directives = node.directives;
+    if (directives) {
+      directives = directives.filter(directive => {
+        if (
+          !federationDirectives.some(
+            ({ name }) => name === directive.name.value,
+          )
+        ) {
+          return false;
+        }
+        return true;
+      });
+    }
+
+    return {
+      ...node,
+      directives,
+    };
+  };
+}
+
 /**
  * Returns a closure that strips fields marked with `@external` and adds them
  * to an array.
