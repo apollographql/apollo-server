@@ -76,7 +76,6 @@ export const entitiesField: GraphQLFieldConfig<any, any> = {
       type: new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(AnyType))),
     },
   },
-  description: '',
   resolve(_source, { representations }, context, info) {
     return representations.map((reference: { __typename: string } & object) => {
       const { __typename } = reference;
