@@ -586,7 +586,10 @@ describe('composition of schemas with directives', () => {
         "directives at FIELD_DEFINITIONs are for the type-system"
         directive @transparency(concealment: Int!) on FIELD_DEFINITION
 
-        extend type EarthConcern {
+        "directives at OBJECTs are for the type-system"
+        directive @experimental on OBJECT
+
+        extend type EarthConcern @experimental {
           societal: String! @transparency(concealment: 6)
         }
       `,
@@ -602,9 +605,15 @@ describe('composition of schemas with directives', () => {
     const transparency = schema.getDirective('transparency');
     expect(transparency).toBeUndefined();
 
-    const fields = (schema.getType(
-      'EarthConcern',
-    ) as GraphQLObjectType).getFields();
+    const type = schema.getType('EarthConcern') as GraphQLObjectType;
+
+    expect(type.astNode).toMatchInlineSnapshot(`
+      type EarthConcern {
+        environmental: String!
+      }
+    `);
+
+    const fields = type.getFields();
 
     expect(fields['environmental'].astNode).toMatchInlineSnapshot(
       `environmental: String!`,

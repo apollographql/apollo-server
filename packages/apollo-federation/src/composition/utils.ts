@@ -90,7 +90,7 @@ export function stripTypeSystemDirectivesFromTypeDefs(typeDefs: DocumentNode) {
         ({ name }) => name === node.name.value,
       );
       return isFederationDirective ? undefined : null;
-    }
+    },
   }) as DocumentNode;
 
   return typeDefsWithoutTypeSystemDirectives;
