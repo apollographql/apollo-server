@@ -5,7 +5,7 @@ import { Request, RequestInit, Headers } from 'apollo-server-env';
 export {};
 declare global {
   namespace jest {
-    interface Matchers<R> {
+    interface Matchers<R, T> {
       toHaveFetched(spy: SpyInstance): R;
     }
   }
