@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "apollo-engine-reporting-protobuf": "file:../apollo-engine-reporting-protobuf",
-    "apollo-graphql": "^0.3.7",
+    "apollo-graphql": "^0.4.0",
     "apollo-server-caching": "file:../apollo-server-caching",
     "apollo-server-env": "file:../apollo-server-env",
     "apollo-server-errors": "file:../apollo-server-errors",
