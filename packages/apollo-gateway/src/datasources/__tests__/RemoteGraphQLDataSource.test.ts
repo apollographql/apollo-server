@@ -7,7 +7,8 @@ import {
 } from 'apollo-server-errors';
 
 import { RemoteGraphQLDataSource } from '../RemoteGraphQLDataSource';
-import { Headers, Response, Request } from 'apollo-server-env';
+import { Headers } from 'apollo-server-env';
+import { GraphQLRequestContext } from 'apollo-server-types';
 
 beforeEach(() => {
   fetch.mockReset();
@@ -126,17 +127,19 @@ describe('didReceiveResponse', () => {
     class MyDataSource extends RemoteGraphQLDataSource {
       url = 'https://api.example.com/foo';
 
-      async didReceiveResponse<TResult, TContext>(
-        response: Response,
-        request: Request,
-        context: TContext,
-      ): Promise<TResult> {
-        const body = await super.didReceiveResponse<TResult>(response, request, context);
-        const surrogateKeys = request.headers.get('surrogate-keys');
+      didReceiveResponse<MyContext>({
+        request,
+        response,
+      }: Required<Pick<
+        GraphQLRequestContext<MyContext>,
+          'request' | 'response' | 'context'
+      >>) {
+        const surrogateKeys =
+          request.http && request.http.headers.get('surrogate-keys');
         if (surrogateKeys) {
           (context as any).surrogateKeys.push(...surrogateKeys.split(' '));
         }
-        return body;
+        return response;
       }
     }
 
