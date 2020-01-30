@@ -83,41 +83,17 @@ export function stripExternalFieldsFromTypeDefs(
   return { typeDefsWithoutExternalFields, strippedFields };
 }
 
-export function stripFieldDefinitionDirectivesFromTypeDefs(
-  typeDefs: DocumentNode,
-): {
-  typeDefsWithoutFieldDefinitionDirectives: DocumentNode;
-} {
-  const typeDefsWithoutFieldDefinitionDirectives = visit(typeDefs, {
-    FieldDefinition: removeDirectiveFromFieldDefinitionVisitor(),
+export function stripTypeSystemDirectivesFromTypeDefs(typeDefs: DocumentNode) {
+  const typeDefsWithoutTypeSystemDirectives = visit(typeDefs, {
+    Directive(node) {
+      const isFederationDirective = federationDirectives.some(
+        ({ name }) => name === node.name.value,
+      );
+      return isFederationDirective ? undefined : null;
+    }
   }) as DocumentNode;
 
-  return { typeDefsWithoutFieldDefinitionDirectives };
-}
-
-function removeDirectiveFromFieldDefinitionVisitor<
-  T extends FieldDefinitionNode
->() {
-  return (node: T) => {
-    let directives = node.directives;
-    if (directives) {
-      directives = directives.filter(directive => {
-        if (
-          !federationDirectives.some(
-            ({ name }) => name === directive.name.value,
-          )
-        ) {
-          return false;
-        }
-        return true;
-      });
-    }
-
-    return {
-      ...node,
-      directives,
-    };
-  };
+  return typeDefsWithoutTypeSystemDirectives;
 }
 
 /**
