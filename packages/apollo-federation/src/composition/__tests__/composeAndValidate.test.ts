@@ -329,11 +329,11 @@ describe('composition of value types', () => {
         `union CatalogItem = Couch | Mattress`,
       );
       expect(schema.getType('Couch')).toMatchInlineSnapshot(`
-      type Couch {
-        sku: ID!
-        material: String!
-      }
-    `);
+              type Couch {
+                sku: ID!
+                material: String!
+              }
+          `);
     });
 
     it('input types', () => {
@@ -345,11 +345,11 @@ describe('composition of value types', () => {
       `);
       expect(errors).toHaveLength(0);
       expect(schema.getType('NewProductInput')).toMatchInlineSnapshot(`
-      input NewProductInput {
-        sku: ID!
-        type: String
-      }
-    `);
+              input NewProductInput {
+                sku: ID!
+                type: String
+              }
+          `);
     });
 
     it('interfaces', () => {
@@ -360,10 +360,10 @@ describe('composition of value types', () => {
       `);
       expect(errors).toHaveLength(0);
       expect(schema.getType('Product')).toMatchInlineSnapshot(`
-      interface Product {
-        sku: ID!
-      }
-    `);
+              interface Product {
+                sku: ID!
+              }
+          `);
     });
 
     it('enums', () => {
@@ -375,11 +375,11 @@ describe('composition of value types', () => {
       `);
       expect(errors).toHaveLength(0);
       expect(schema.getType('CatalogItemEnum')).toMatchInlineSnapshot(`
-      enum CatalogItemEnum {
-        COUCH
-        MATTRESS
-      }
-    `);
+              enum CatalogItemEnum {
+                COUCH
+                MATTRESS
+              }
+          `);
     });
   });
 
