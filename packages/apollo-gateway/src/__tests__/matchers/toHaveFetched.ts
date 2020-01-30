@@ -11,12 +11,10 @@ declare global {
   }
 }
 
-function toHaveFetched(
-  this: jest.MatcherUtils,
-  fetch: jest.SpyInstance,
-  request: RequestInit & { url: string },
-): { message(): string; pass: boolean } {
-  let headers = new Headers();
+type ExtendedRequest = RequestInit & { url: string };
+
+function prepareHttpRequest(request: ExtendedRequest): Request {
+  const headers = new Headers();
   headers.set('Content-Type', 'application/json');
   if (request.headers) {
     for (let name in request.headers) {
@@ -30,8 +28,15 @@ function toHaveFetched(
     body: JSON.stringify(request.body),
   };
 
-  const httpRequest = new Request(request.url, options);
+  return new Request(request.url, options);
+}
 
+function toHaveFetched(
+  this: jest.MatcherUtils,
+  fetch: jest.SpyInstance,
+  request: ExtendedRequest,
+): { message(): string; pass: boolean } {
+  const httpRequest = prepareHttpRequest(request);
   let pass = false;
   let message = () => '';
   try {
