@@ -85,11 +85,7 @@ it('correctly passes the context from ApolloServer to datasources', async () => 
   expect(fetch).toHaveFetched({
     url: 'https://api.example.com/foo',
     body: {
-      query: `{
-  me {
-    username
-  }
-}`,
+      query: `{me{username}}`,
       variables: {},
     },
     headers: {
