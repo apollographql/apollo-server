@@ -52,6 +52,30 @@ function toHaveFetched(
   };
 }
 
+function toHaveFetchedNth(
+  this: jest.MatcherUtils,
+  fetch: jest.SpyInstance,
+  nthCall: number,
+  request: ExtendedRequest,
+): { message(): string; pass: boolean } {
+  const httpRequest = prepareHttpRequest(request);
+  let pass = false;
+  let message = () => '';
+  try {
+    expect(fetch).toHaveBeenNthCalledWith(nthCall, httpRequest);
+    pass = true;
+  } catch (e) {
+    message = () => e.message;
+  }
+
+  return {
+    message,
+    pass,
+  };
+}
+
+
 expect.extend({
   toHaveFetched,
+  toHaveFetchedNth,
 });
