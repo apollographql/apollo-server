@@ -89,6 +89,7 @@ export function stripTypeSystemDirectivesFromTypeDefs(typeDefs: DocumentNode) {
       const isFederationDirective = federationDirectives.some(
         ({ name }) => name === node.name.value,
       );
+      // Returning `null` to a visit will cause it to be removed from the tree.
       return isFederationDirective ? undefined : null;
     },
   }) as DocumentNode;
