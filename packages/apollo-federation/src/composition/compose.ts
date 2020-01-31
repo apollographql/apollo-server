@@ -136,6 +136,10 @@ export function buildMapsFromServiceList(serviceList: ServiceDefinition[]) {
 
     externalFields.push(...strippedFields);
 
+    // Type system directives from downstream services are not a concern of the
+    // gateway, but rather the services on which the fields live which serve
+    // those types.  In other words, its up to an implementing service to
+    // act on such directives, not the gateway.
     const typeDefsWithoutTypeSystemDirectives =
       stripTypeSystemDirectivesFromTypeDefs(typeDefsWithoutExternalFields);
 
