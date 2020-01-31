@@ -40,6 +40,7 @@ import { GraphQLDataSource } from './datasources/types';
 import { RemoteGraphQLDataSource } from './datasources/RemoteGraphQLDataSource';
 import { HeadersInit } from 'node-fetch';
 import { getVariableValues } from 'graphql/execution/values';
+import { CachedFetcher } from './cachedFetcher';
 
 export type ServiceEndpointDefinition = Pick<ServiceDefinition, 'name' | 'url'>;
 
@@ -158,6 +159,7 @@ export class ApolloGateway implements GraphQLService {
   private serviceDefinitions: ServiceDefinition[] = [];
   private compositionMetadata?: CompositionMetadata;
   private serviceSdlCache = new Map<string, string>();
+  private fetcher = new CachedFetcher();
 
   // Observe query plan, service info, and operation info prior to execution.
   // The information made available here will give insight into the resulting
@@ -247,14 +249,10 @@ export class ApolloGateway implements GraphQLService {
     const mode = isManagedConfig(this.config) ? 'managed' : 'unmanaged';
 
     this.logger.info(
-      `Gateway successfully loaded schema.\n\t* Mode: ${mode}${graphId ? `\n\t* Service: ${graphId}@${graphVariant || 'current'}`: ''}`,
+      `Gateway successfully loaded schema.\n\t* Mode: ${mode}${
+        graphId ? `\n\t* Service: ${graphId}@${graphVariant || 'current'}` : ''
+      }`,
     );
-    if (this.experimental_pollInterval) {
-      setInterval(
-        () => this.updateComposition(options),
-        this.experimental_pollInterval,
-      );
-    }
 
     return {
       // we know this will be here since we're awaiting this.updateComposition
@@ -375,7 +373,7 @@ export class ApolloGateway implements GraphQLService {
   }
 
   public onSchemaChange(callback: SchemaChangeCallback): Unsubscriber {
-    if (!isManagedConfig(this.config)) {
+    if (!isManagedConfig(this.config) && !this.experimental_pollInterval) {
       return () => {};
     }
 
@@ -471,6 +469,7 @@ export class ApolloGateway implements GraphQLService {
       apiKeyHash: this.engineConfig.apiKeyHash,
       graphVariant: this.engineConfig.graphVariant,
       federationVersion: config.federationVersion || 1,
+      fetcher: this.fetcher
     });
   }
 

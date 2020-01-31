@@ -114,6 +114,54 @@ defines functions that respond to request lifecycle events. This structure
 organizes and encapsulates all of your plugin's request lifecycle logic, making it 
 easier to reason about.
 
+The following request lifecycle event handlers can optionally return a function
+that will be invoked after the lifecycle phase is complete:
+
+* [`parsingDidStart`](#parsingdidstart)
+* [`validationDidStart`](#validationdidstart)
+* [`executionDidStart`](#executiondidstart)
+
+These "end hooks" will be invoked with any error(s) that occurred during the
+execution of that lifecycle phase. For example, the following plugin will log
+any errors that occur during any of the above lifecycle events:
+
+```js
+const myPlugin = {
+  requestDidStart() {
+    return {
+      parsingDidStart() {
+        return (err) => {
+          if (err) {
+            console.error(err);
+          }
+        }
+      },
+      validationDidStart() {
+        // This end hook is unique in that it can receive an array of errors,
+        // which will contain every validation error that occurred
+        return (errs) => {
+          if (errs) {
+            errs.forEach(err => console.error(err));
+          }
+        }
+      },
+      executionDidStart() {
+        return (err) => {
+          if (err) {
+            console.error(err);
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+Note that the `validationDidStart` end hook receives an array of errors, which
+will contain every validation error that occurred, if any. The arguments to each
+end hook are documented in the type definitions in the [request lifecycle events
+docs](#request-lifecycle-events) below.
+
 ### Inspecting request and response details
 
 As the example above shows, `requestDidStart` and request lifecycle functions accept a `requestContext`
@@ -243,7 +291,10 @@ does not occur.
 
 ```typescript
 parsingDidStart?(
-  requestContext: GraphQLRequestContext<TContext>,
+  requestContext: WithRequired<
+    GraphQLRequestContext<TContext>,
+    'metrics' | 'source'
+  >,
 ): (err?: Error) => void | void;
 ```
 
@@ -260,7 +311,10 @@ available at this stage, because parsing must succeed for validation to occur.
 
 ```typescript
 validationDidStart?(
-  requestContext: WithRequired<GraphQLRequestContext<TContext>, 'document'>,
+  requestContext: WithRequired<
+    GraphQLRequestContext<TContext>,
+    'metrics' | 'source' | 'document'
+  >,
 ): (err?: ReadonlyArray<Error>) => void | void;
 ```
 
@@ -276,9 +330,25 @@ both the `operationName` string and `operation` AST are available.
 didResolveOperation?(
   requestContext: WithRequired<
     GraphQLRequestContext<TContext>,
-    'document' | 'operationName' | 'operation'
+    'metrics' | 'source' | 'document' | 'operationName' | 'operation'
   >,
 ): ValueOrPromise<void>;
+```
+
+### `responseForOperation`
+
+The `responseForOperation` event is fired immediately before GraphQL execution
+would take place. If its return value resolves to a non-null `GraphQLResponse`,
+that result is used instead of executing the query. Hooks from different plugins
+are invoked in series and the first non-null response is used.
+
+```typescript
+responseForOperation?(
+  requestContext: WithRequired<
+    GraphQLRequestContext<TContext>,
+    'metrics' | 'source' | 'document' | 'operationName' | 'operation'
+  >,
+): ValueOrPromise<GraphQLResponse | null>;
 ```
 
 ### `executionDidStart`
@@ -290,7 +360,7 @@ GraphQL operation specified by a request's `document` AST.
 executionDidStart?(
   requestContext: WithRequired<
     GraphQLRequestContext<TContext>,
-    'document' | 'operationName' | 'operation'
+    'metrics' | 'source' | 'document' | 'operationName' | 'operation'
   >,
 ): (err?: Error) => void | void;
 ```
@@ -317,6 +387,9 @@ if the GraphQL operation encounters one or more errors.
 
 ```typescript
 willSendResponse?(
-  requestContext: WithRequired<GraphQLRequestContext<TContext>, 'response'>,
+  requestContext: WithRequired<
+    GraphQLRequestContext<TContext>,
+    'metrics' | 'response'
+  >,
 ): ValueOrPromise<void>;
 ```

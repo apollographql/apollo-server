@@ -66,13 +66,7 @@ const server = new ApolloServer({
 
 ### Using a GraphQL server besides Apollo Server
 
-There are several community-contributed packages that add federation support to other GraphQL runtimes. These include:
-
-* [GraphQL-Java](https://github.com/apollographql/federation-jvm)
-* [Graphene](https://pypi.org/project/graphene-federation/)
-* [GraphQL-Ruby](https://github.com/Gusto/apollo-federation-ruby)
-
-If you're using one of these packages, ensure that after configuring it, your existing schema-stitching gateway continues to work correctly.
+There are [several community-contributed packages](/federation/other-servers/) that add federation support to other GraphQL runtimes.
 
 ## Step 2: Register your schemas with a GraphQL registry
 
