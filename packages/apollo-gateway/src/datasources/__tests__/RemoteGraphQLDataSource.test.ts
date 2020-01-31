@@ -163,6 +163,38 @@ describe('didReceiveResponse', () => {
 
     expect(context).toEqual({ surrogateKeys: ['abc', 'def'] });
   });
+
+  it('is only called once', async () => {
+    class MyDataSource extends RemoteGraphQLDataSource {
+      url = 'https://api.example.com/foo';
+
+      didReceiveResponse<MyContext>({
+        response,
+      }: Required<Pick<
+        GraphQLRequestContext<MyContext>,
+          'request' | 'response' | 'context'
+      >>) {
+        return response;
+      }
+    }
+
+    const DataSource = new MyDataSource();
+    const spyDidReceiveResponse =
+      jest.spyOn(DataSource, 'didReceiveResponse');
+
+    fetch.mockJSONResponseOnce({ data: { me: 'james' } });
+
+    await DataSource.process({
+      request: {
+        query: '{ me { name } }',
+        variables: { id: '1' },
+      },
+      context: {},
+    });
+
+    expect(spyDidReceiveResponse).toHaveBeenCalledTimes(1);
+
+  });
 });
 
 describe('error handling', () => {
