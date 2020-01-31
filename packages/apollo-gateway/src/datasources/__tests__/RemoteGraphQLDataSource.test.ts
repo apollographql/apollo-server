@@ -137,7 +137,7 @@ describe('didReceiveResponse', () => {
         const surrogateKeys =
           request.http && request.http.headers.get('surrogate-keys');
         if (surrogateKeys) {
-          (context as any).surrogateKeys.push(...surrogateKeys.split(' '));
+          context.surrogateKeys.push(...surrogateKeys.split(' '));
         }
         return response;
       }
