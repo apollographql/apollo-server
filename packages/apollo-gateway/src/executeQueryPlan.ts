@@ -14,6 +14,7 @@ import {
   TypeNameMetaFieldDef,
   VariableDefinitionNode,
   GraphQLFieldResolver,
+  stripIgnoredCharacters,
 } from 'graphql';
 import { Trace, google } from 'apollo-engine-reporting-protobuf';
 import { GraphQLDataSource } from './datasources/types';
@@ -289,7 +290,7 @@ async function executeFetch<TContext>(
     operation: OperationDefinitionNode,
     variables: Record<string, any>,
   ): Promise<ResultMap | void | null> {
-    const source = print(operation);
+    const source = stripIgnoredCharacters(print(operation));
     // We declare this as 'any' because it is missing url and method, which
     // GraphQLRequest.http is supposed to have if it exists.
     let http: any;
