@@ -139,7 +139,7 @@ export function buildMapsFromServiceList(serviceList: ServiceDefinition[]) {
     const typeDefsWithoutTypeSystemDirectives =
       stripTypeSystemDirectivesFromTypeDefs(typeDefsWithoutExternalFields);
 
-    for (let definition of typeDefsWithoutTypeSystemDirectives.definitions) {
+    for (const definition of typeDefsWithoutTypeSystemDirectives.definitions) {
       if (
         definition.kind === Kind.OBJECT_TYPE_DEFINITION ||
         definition.kind === Kind.OBJECT_TYPE_EXTENSION
