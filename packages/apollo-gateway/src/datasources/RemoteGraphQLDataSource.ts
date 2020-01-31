@@ -12,7 +12,6 @@ import {
 import {
   fetch,
   Request,
-  RequestInit,
   Headers,
   Response,
 } from 'apollo-server-env';
@@ -52,18 +51,34 @@ export class RemoteGraphQLDataSource implements GraphQLDataSource {
       await this.willSendRequest({ request, context });
     }
 
-    const { http, ...graphqlRequest } = request;
-    const options: RequestInit = {
-      ...http,
-      body: JSON.stringify(graphqlRequest),
-    };
-
-    const httpRequest = new Request(request.http.url, options);
-
     const respond = (response: GraphQLResponse, request: GraphQLRequest) =>
       typeof this.didReceiveResponse === "function"
         ? this.didReceiveResponse({ response, request, context })
         : response;
+
+    const response = await this.sendRequest(request, context);
+    return respond(response, request);
+  }
+
+  private async sendRequest<TContext>(
+    request: GraphQLRequest,
+    context: TContext,
+  ): Promise<GraphQLResponse> {
+
+    // This would represent an internal programming error since this shouldn't
+    // be possible in the way that this method is invoked right now.
+    if (!request.http) {
+      throw new Error("Internal error: Only 'http' requests are supported.")
+    }
+
+    // We don't want to serialize the `http` properties into the body that is
+    // being transmitted.  Instead, we want those to be used to indicate what
+    // we're accessing (e.g. url) and what we access it with (e.g. headers).
+    const { http, ...requestWithoutHttp } = request;
+    const httpRequest = new Request(http.url, {
+      ...http,
+      body: JSON.stringify(requestWithoutHttp),
+    });
 
     try {
       const httpResponse = await fetch(httpRequest);
@@ -78,12 +93,10 @@ export class RemoteGraphQLDataSource implements GraphQLDataSource {
         throw new Error(`Expected JSON response body, but received: ${body}`);
       }
 
-      const response: GraphQLResponse = {
+      return {
         ...body,
         http: httpResponse,
       };
-
-      return respond(response, request);
     } catch (error) {
       this.didEncounterError(error, httpRequest);
       throw error;
