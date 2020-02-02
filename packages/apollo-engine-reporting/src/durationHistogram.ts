@@ -1,7 +1,7 @@
 export class DurationHistogram {
-  private buckets: number[];
+  private readonly buckets: number[];
 
-  public serialize(): number[] {
+  public toArray(): number[] {
     let bufferedZeroes = 0;
     let outputArray = Array<number>();
 
