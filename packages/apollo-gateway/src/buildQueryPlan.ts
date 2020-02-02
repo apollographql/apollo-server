@@ -385,6 +385,10 @@ function splitFields(
       const field = fieldsForParentType[0];
       const { scope, fieldDef } = field;
 
+      // If the length of possibleTypes is zero, we're nested inside a type condition
+      // that's impossible to fulfill and can be excluded from the query plan altogether.
+      if (scope.possibleTypes.length === 0) continue;
+
       // We skip `__typename` for root types.
       if (fieldDef.name === TypeNameMetaFieldDef.name) {
         const { schema } = context;
@@ -418,6 +422,33 @@ function splitFields(
         );
       } else {
         // For interfaces however, we need to look at all possible runtime types.
+
+        /**
+         * The following is an optimization to prevent an explosion of type
+         * conditions to services when it isn't needed. If all possible runtime
+         * types can be fufilled by only one service then we don't need to
+         * expand the fields into unique type conditions.
+         */
+
+        // Collect all of the field defs on the possible runtime types
+        const possibleFieldDefs = scope.possibleTypes.map(
+          runtimeType => context.getFieldDef(runtimeType, field.fieldNode),
+        );
+
+        // If none of the field defs have a federation property, this interface's
+        // implementors can all be resolved within the same service.
+        const hasNoExtendingFieldDefs = possibleFieldDefs.every(
+          def => !def.federation
+        );
+
+        // With no extending field definitions, we can engage the optimization
+        if (hasNoExtendingFieldDefs) {
+          const group = groupForField(field as Field<GraphQLObjectType>);
+          group.fields.push(
+            completeField(context, scope, group, path, fieldsForResponseName)
+          );
+          continue;
+        }
 
         // We keep track of which possible runtime parent types can be fetched
         // from which group,
@@ -475,7 +506,7 @@ function splitFields(
 
 function completeField(
   context: QueryPlanningContext,
-  scope: Scope<GraphQLObjectType>,
+  scope: Scope<GraphQLCompositeType>,
   parentGroup: FetchGroup,
   path: ResponsePath,
   fields: FieldSet,
