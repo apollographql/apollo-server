@@ -30,6 +30,7 @@ export class RemoteGraphQLDataSource implements GraphQLDataSource {
   }
 
   url!: string;
+  customFetch!: typeof fetch;
 
   async process<TContext>({
     request,
@@ -58,9 +59,10 @@ export class RemoteGraphQLDataSource implements GraphQLDataSource {
     };
 
     const httpRequest = new Request(request.http.url, options);
+    const customFetch = this.customFetch || fetch;
 
     try {
-      const httpResponse = await fetch(httpRequest);
+      const httpResponse = await customFetch(httpRequest);
 
       const body = await this.didReceiveResponse(
         httpResponse,

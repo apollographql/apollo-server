@@ -54,6 +54,34 @@ describe('constructing requests', () => {
       body: { query: '{ me { name } }', variables: { id: '1' } },
     });
   });
+
+  it('accepts custom fetch instance', async () => {
+    const customFetchMock = jest.fn(() => {
+      return new Response(JSON.stringify({ data: { me: 'james' } }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    });
+
+    const DataSource = new RemoteGraphQLDataSource({
+      url: 'https://api.example.com/foo',
+      customFetch: customFetchMock,
+    });
+
+    const { data } = await DataSource.process({
+      request: {
+        query: '{ me { name } }',
+      },
+    });
+
+    expect(data).toEqual({ me: 'james' });
+    expect(fetch).toBeCalledTimes(0);
+    expect(customFetchMock).toBeCalledTimes(1);
+    expect(customFetchMock).toHaveFetched({
+      url: 'https://api.example.com/foo',
+      body: { query: '{ me { name } }' },
+    });
+  });
 });
 
 describe('willSendRequest', () => {
@@ -131,7 +159,11 @@ describe('didReceiveResponse', () => {
         request: Request,
         context: TContext,
       ): Promise<TResult> {
-        const body = await super.didReceiveResponse<TResult>(response, request, context);
+        const body = await super.didReceiveResponse<TResult>(
+          response,
+          request,
+          context,
+        );
         const surrogateKeys = request.headers.get('surrogate-keys');
         if (surrogateKeys) {
           (context as any).surrogateKeys.push(...surrogateKeys.split(' '));
