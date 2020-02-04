@@ -11,7 +11,6 @@ import {
   separateOperations,
 } from 'graphql';
 import { GraphQLRequest, GraphQLResponse, VariableValues } from "../types";
-export { GraphQLRequest, GraphQLResponse };
 import { execute } from './execute';
 
 export type UserContext = Record<string, any>;
