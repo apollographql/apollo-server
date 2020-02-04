@@ -67,7 +67,7 @@ it('trace construction', async () => {
   );
   const stack = new GraphQLExtensionStack([reportingExtension]);
   const requestDidEnd = stack.requestDidStart({
-    request: new Request('http://localhost:123/foo') as any,
+    request: new Request('http://localhost:123/foo'),
     queryString: query,
     requestContext: {
       request: {
