@@ -48,23 +48,21 @@ describe("httpHandler", () => {
 
     describe("guards for programming errors", () => {
       it("throws when called with no request", async () => {
-        try {
+        await expect(
           // @ts-ignore Explicitly omitted all arguments (request & response).
-          await handler();
-        } catch (err) {
-          expect(err).toHaveProperty("message",
-            "Missing request on HTTP request handler invocation.");
-        }
+          handler()
+        ).rejects.toThrow(
+          "Missing request on HTTP request handler invocation."
+        );
       });
 
       it("throws when called with no response", async () => {
-        try {
+        await expect(
           // @ts-ignore Explicitly omitted second argument (response).
-          await handler({});
-        } catch (err) {
-          expect(err).toHaveProperty("message",
-            "Missing response sink on HTTP request handler invocation.");
-        }
+          handler({})
+        ).rejects.toThrow(
+          "Missing response sink on HTTP request handler invocation."
+        );
       });
     });
 
