@@ -9,6 +9,7 @@ The version headers in this history reflect the versions of Apollo Server itself
 - Move TContext generic from requestDidStart method to ApolloServerPlugin Interface [#3525](https://github.com/apollographql/apollo-server/pull/3525)
 - `apollo-server-express`: Support `CorsOptionsDelegate` type on `cors` parameter to `applyMiddleware`, to align with the supported type of the underlying [`cors`](https://npm.im/cors) middleware [itself](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/31483b781ac30f98bdf4d40a517e921f2fc2ce37/types/cors/index.d.ts#L32). [PR #3613](https://github.com/apollographql/apollo-server/pull/3613)
 - `apollo-server-core`: Allow asynchronous initialization of datasources: the `initialize` method on datasources may now return a Promise, which will be settled before any resolvers are called. [#3639](https://github.com/apollographql/apollo-server/pull/3639)
+- `apollo-server-core`: experimental: Allow configuration of the parsed/validated document store by introducing an `experimental_approximateDocumentStoreMiB` property to the `ApolloServer` constructor options which overrides the default cache size of 30MiB. [#3755](https://github.com/apollographql/apollo-server/pull/3755)
 
 ### v2.9.16
 

@@ -144,6 +144,19 @@ new ApolloServer({
 
   Pass the integration-specific CORS options. `false` removes the CORS middleware and `true` uses the defaults. This option is only available to `apollo-server`. For other server integrations, place `cors` inside of `applyMiddleware`.
 
+* `experimental_approximateDocumentStoreSizeMiB`: `number`
+
+  > **This property is experimental.**  It may be removed or change at any time, even within a patch release.
+
+  When set, this sets the approximate size of the parsed/validated document
+  store (in MiB).  This cache is used to save the already parsed and validated
+  `DocumentNode`s for re-use on subsequent queries which resolve to the same
+  `queryHash` (a SHA-256 of incoming operation).
+
+  When this property is omitted, the cache is still enabled with a default
+  size of 30MiB, which is generally sufficient unless the server is processing
+  a high number of unique operations.
+
 #### Returns
 
 `ApolloServer`
