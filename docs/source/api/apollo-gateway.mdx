@@ -91,6 +91,18 @@ example of using `ApolloGateway`, see [Implementing a federated graph](/federati
     If `true`, the gateway logs startup messages, along with the query plan for
     each incoming request. The default value is `false`.
 
+  * `experimental_approximateQueryPlanStoreMiB`: `number`
+
+    > **This property is experimental.**  It may be removed or change at any time, even within a patch release.
+
+    When set, this sets the approximate size of the query plan store (in MiB).
+    This cache is used to save query plans for re-use on subsequent queries
+    which resolve to the same `queryHash` (a SHA-256 of incoming operation).
+
+    When this property is omitted, the cache is still enabled with a default
+    size of 30MiB, which is generally sufficient unless the server is
+    processing a high number of unique operations.
+
 #### Returns
 
 An `ApolloGateway` instance, which you then pass as the `gateway` configuration option to the `ApolloServer` constructor, like so:
