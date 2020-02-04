@@ -7,6 +7,7 @@
 * Reduce interface expansion for types contained to a single service [#3582](https://github.com/apollographql/apollo-server/pull/3582)
 * Instantiate one `CachedFetcher` per gateway instance.  This resolves a condition where multiple federated gateways would utilize the same cache store could result in an `Expected undefined to be a GraphQLSchema` error. [#3704](https://github.com/apollographql/apollo-server/pull/3704)
 * Gateway: minimize downstream request size [#3737](https://github.com/apollographql/apollo-server/pull/3737)
+* experimental: Allow configuration of the query plan store by introducing an `experimental_approximateQueryPlanStoreMiB` property to the `ApolloGateway` constructor options which overrides the default cache size of 30MiB. [#3755](https://github.com/apollographql/apollo-server/pull/3755)
 
 # v0.11.6
 
