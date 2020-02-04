@@ -145,11 +145,17 @@ describe('check variableJson output for sendVariableValues all/none type', () =>
   });
 
   it('Case 4: Check behavior for invalid inputs', () => {
-    expect(makeTraceDetails(variables, { none: false })).toEqual(
+    expect(makeTraceDetails(variables,
+      // @ts-ignore Testing untyped usage; only `{ none: true }` is legal.
+      { none: false }
+    )).toEqual(
       nonFilteredOutput,
     );
 
-    expect(makeTraceDetails(variables, { all: false })).toEqual(filteredOutput);
+    expect(makeTraceDetails(variables,
+      // @ts-ignore Testing untyped usage; only `{ all: true }` is legal.
+      { all: false }
+    )).toEqual(filteredOutput);
   });
 });
 
@@ -292,8 +298,12 @@ describe('variableJson output for sendVariableValues transform: custom function 
 });
 
 describe('Catch circular reference error during JSON.stringify', () => {
-  const circularReference = {};
-  circularReference['this'] = circularReference;
+  interface SelfCircular {
+    self?: SelfCircular;
+  }
+
+  const circularReference: SelfCircular = {};
+  circularReference['self'] = circularReference;
 
   const circularVariables = {
     bad: circularReference,
@@ -324,8 +334,10 @@ const headersOutput = { name: new Trace.HTTP.Values({ value: ['value'] }) };
 describe('tests for the sendHeaders reporting option', () => {
   it('sendHeaders defaults to hiding all', () => {
     const http = makeTestHTTP();
-    // sendHeaders: null is not a valid TS input, but check the output anyways
-    makeHTTPRequestHeaders(http, headers, null);
+    makeHTTPRequestHeaders(http, headers,
+      // @ts-ignore: `null` is not a valid type; check output on invalid input.
+      null
+    );
     expect(http.requestHeaders).toEqual({});
     makeHTTPRequestHeaders(http, headers, undefined);
     expect(http.requestHeaders).toEqual({});
@@ -345,11 +357,17 @@ describe('tests for the sendHeaders reporting option', () => {
 
   it('invalid inputs for sendHeaders.all and sendHeaders.none', () => {
     const httpSafelist = makeTestHTTP();
-    makeHTTPRequestHeaders(httpSafelist, headers, { none: false });
+    makeHTTPRequestHeaders(httpSafelist, headers,
+      // @ts-ignore Testing untyped usage; only `{ none: true }` is legal.
+      { none: false }
+    );
     expect(httpSafelist.requestHeaders).toEqual(headersOutput);
 
     const httpBlocklist = makeTestHTTP();
-    makeHTTPRequestHeaders(httpBlocklist, headers, { all: false });
+    makeHTTPRequestHeaders(httpBlocklist, headers,
+      // @ts-ignore Testing untyped usage; only `{ all: true }` is legal.
+      { all: false }
+    );
     expect(httpBlocklist.requestHeaders).toEqual({});
   });
 
