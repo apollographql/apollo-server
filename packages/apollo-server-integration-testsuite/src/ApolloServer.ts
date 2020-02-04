@@ -2034,6 +2034,50 @@ export function testApolloServer<AS extends ApolloServerBase>(
     });
 
     describe('apollo-engine-reporting', () => {
+      async function makeFakeTestableEngineServer({
+        status,
+        waitWriteResponse = false,
+      }: {
+        status: number;
+        waitWriteResponse?: boolean;
+      }) {
+        let writeResponseResolve: () => void;
+        const writeResponsePromise = new Promise(
+          resolve => (writeResponseResolve = resolve),
+        );
+        const fakeEngineServer = http.createServer(async (_, res) => {
+          await writeResponsePromise;
+          res.writeHead(status);
+          res.end('Important text in the body');
+        });
+        await new Promise(resolve => {
+          fakeEngineServer.listen(0, '127.0.0.1', () => {
+            resolve();
+          });
+        });
+        async function closeServer() {
+          await new Promise(resolve => fakeEngineServer.close(() => resolve()));
+        }
+
+        const { family, address, port } = fakeEngineServer.address();
+        if (family !== 'IPv4') {
+          throw new Error(`The family was unexpectedly ${family}.`);
+        }
+
+        const fakeEngineUrl = `http://${address}:${port}`;
+
+        if (!waitWriteResponse) {
+          writeResponseResolve();
+        }
+
+        return {
+          closeServer,
+          fakeEngineServer,
+          fakeEngineUrl,
+          writeResponseResolve,
+        };
+      }
+
       describe('graphql server functions even when Apollo servers are down', () => {
         async function testWithStatus(
           status: number,
@@ -2041,32 +2085,16 @@ export function testApolloServer<AS extends ApolloServerBase>(
         ) {
           const networkError = status === 0;
 
-          let writeResponseResolve: () => void;
-          const writeResponsePromise = new Promise(
-            resolve => (writeResponseResolve = resolve),
-          );
-          const fakeEngineServer = http.createServer(async (_, res) => {
-            await writeResponsePromise;
-            res.writeHead(status);
-            res.end('Important text in the body');
+          const {
+            closeServer,
+            fakeEngineUrl,
+            writeResponseResolve,
+          } = await makeFakeTestableEngineServer({
+            status,
+            waitWriteResponse: true,
           });
-          await new Promise(resolve => {
-            fakeEngineServer.listen(0, '127.0.0.1', () => {
-              resolve();
-            });
-          });
-          async function closeServer() {
-            await new Promise(resolve =>
-              fakeEngineServer.close(() => resolve()),
-            );
-          }
-          try {
-            const { family, address, port } = fakeEngineServer.address();
-            if (family !== 'IPv4') {
-              throw new Error(`The family was unexpectedly ${family}.`);
-            }
-            const fakeEngineUrl = `http://${address}:${port}`;
 
+          try {
             // To simulate a network error, we create and close the server.
             // This lets us still generate a port that is hopefully unused.
             if (networkError) {
