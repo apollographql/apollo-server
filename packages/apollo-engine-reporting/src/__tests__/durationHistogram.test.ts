@@ -1,8 +1,5 @@
 import { DurationHistogram } from "../durationHistogram";
 
-function assertToArrayHelper(expected: number[], buckets: number[]) {
-  expect(new DurationHistogram(buckets).toArray()).toEqual(expected);
-}
 
 describe("Duration histogram tests", () => {
   it("generateEmptyHistogram", () => {
@@ -23,18 +20,41 @@ describe("Duration histogram tests", () => {
   });
 
   it("testToArray", () => {
-    assertToArrayHelper([], []);
-    assertToArrayHelper([], [0]);
-    assertToArrayHelper([], [0, 0, 0, 0]);
-    assertToArrayHelper([1], [1]);
-    assertToArrayHelper([100_000_000_000], [100_000_000_000]);
-    assertToArrayHelper([1, 0, 5], [1, 0, 5]);
-    assertToArrayHelper([1, -2, 5], [1, 0, 0, 5]);
-    assertToArrayHelper([0, 5], [0, 5]);
-    assertToArrayHelper([0, 1, -2, 2, -3, 3, -2, 4, 0, 5], [0, 1, 0, 0, 2, 0, 0, 0, 3, 0, 0, 4, 0, 5, 0]);
-    assertToArrayHelper([-2, 5], [0, 0, 5]);
-    assertToArrayHelper([-3, 5], [0, 0, 0, 5]);
-    assertToArrayHelper([-2, 5, -3, 10], [0, 0, 5, 0, 0, 0, 10]);
+    function assertInitArrayHelper(expected: number[], buckets: number[], initSize = 118) {
+      expect(new DurationHistogram(initSize, buckets).toArray()).toEqual(expected);
+    }
+
+    function assertInsertValueHelper(expected: number[], buckets: number[], initSize = 118) {
+      let histogram = new DurationHistogram(initSize);
+      buckets.forEach((val, bucket) => {
+          histogram.incrementBucket(bucket, val);
+        }
+      );
+      expect(histogram.toArray()).toEqual(expected);
+    }
+
+    function metaToArrayFuzzer(assertToArrayHelper: any, initSize = 118) {
+      assertToArrayHelper([], [], initSize);
+      assertToArrayHelper([], [0], initSize);
+      assertToArrayHelper([], [0, 0, 0, 0], initSize);
+      assertToArrayHelper([1], [1], initSize);
+      assertToArrayHelper([100_000_000_000], [100_000_000_000], initSize);
+      assertToArrayHelper([1, 0, 5], [1, 0, 5], initSize);
+      assertToArrayHelper([1, -2, 5], [1, 0, 0, 5], initSize);
+      assertToArrayHelper([0, 5], [0, 5], initSize);
+      assertToArrayHelper([0, 1, -2, 2, -3, 3, -2, 4, 0, 5], [0, 1, 0, 0, 2, 0, 0, 0, 3, 0, 0, 4, 0, 5, 0], initSize);
+      assertToArrayHelper([-2, 5], [0, 0, 5], initSize);
+      assertToArrayHelper([-3, 5], [0, 0, 0, 5], initSize);
+      assertToArrayHelper([-2, 5, -3, 10], [0, 0, 5, 0, 0, 0, 10], initSize);
+    }
+
+    metaToArrayFuzzer(assertInitArrayHelper);
+    metaToArrayFuzzer(assertInitArrayHelper, 1);
+    metaToArrayFuzzer(assertInitArrayHelper, 5);
+
+    metaToArrayFuzzer(assertInsertValueHelper);
+    metaToArrayFuzzer(assertInsertValueHelper, 1);
+    metaToArrayFuzzer(assertInsertValueHelper, 5);
   });
 
   it("combineHistogram", () => {
