@@ -55,9 +55,9 @@ it('trace construction', async () => {
   addMockFunctionsToSchema({ schema });
   enableGraphQLExtensions(schema);
 
-  const traces: Array<any> = [];
-  async function addTrace({ trace, operationName, schemaHash }: AddTraceArgs) {
-    traces.push({ schemaHash, operationName, trace });
+  const traces: Array<AddTraceArgs> = [];
+  async function addTrace(args: AddTraceArgs) {
+    traces.push(args);
   }
 
   const reportingExtension = new EngineReportingExtension(
