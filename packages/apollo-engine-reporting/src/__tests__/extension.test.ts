@@ -15,7 +15,7 @@ import { InMemoryLRUCache } from 'apollo-server-caching';
 import { AddTraceArgs } from '../agent';
 import { Trace } from 'apollo-engine-reporting-protobuf';
 
-test('trace construction', async () => {
+it('trace construction', async () => {
   const typeDefs = `
   type User {
     id: Int
