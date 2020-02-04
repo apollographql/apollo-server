@@ -27,7 +27,7 @@ export class DurationHistogram {
     const log = Math.log(durationNs / 1000.0);
     const unboundedBucket = Math.ceil(log / DurationHistogram.EXPONENT_LOG);
 
-    // Comapre <= 0 to catch -0 and -infinity
+    // Compare <= 0 to catch -0 and -infinity
     return (unboundedBucket <= 0 || Number.isNaN(unboundedBucket)) ?
       0 :
       (unboundedBucket >= DurationHistogram.BUCKET_COUNT) ? DurationHistogram.BUCKET_COUNT - 1 : unboundedBucket;
