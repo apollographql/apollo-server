@@ -57,4 +57,4 @@ Companies ranging from enterprise to startups trust Apollo Server to power their
 [Implementing GraphQL at Major League Soccer](https://labs.mlssoccer.com/implementing-graphql-at-major-league-soccer-ff0a002b20ca)
 [The New York Times Now on Apollo](https://open.nytimes.com/the-new-york-times-now-on-apollo-b9a78a5038c).
 
-If your company is using Apollo Server in production, we'd love to feature a case study on the Apollo blog! Please get in touch via Slack so we can learn more about how you're using Apollo. Alternatively, if you already have a blog post or a conference talk that you'd like to feature here, please send a [Pull Request](https://github.com/apollographql/apollo-server/pulls).
+If your company is using Apollo Server in production, we'd love to feature a case study on the Apollo blog! Please get in touch via Spectrum so we can learn more about how you're using Apollo. Alternatively, if you already have a blog post or a conference talk that you'd like to feature here, please send a [Pull Request](https://github.com/apollographql/apollo-server/pulls).
