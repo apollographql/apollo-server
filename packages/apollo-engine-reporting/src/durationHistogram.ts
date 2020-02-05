@@ -28,11 +28,12 @@ export class DurationHistogram {
     const unboundedBucket = Math.ceil(log / DurationHistogram.EXPONENT_LOG);
 
     // Compare <= 0 to catch -0 and -infinity
-    return (unboundedBucket <= 0 || Number.isNaN(unboundedBucket)) ?
-      0 :
-      (unboundedBucket >= DurationHistogram.BUCKET_COUNT) ? DurationHistogram.BUCKET_COUNT - 1 : unboundedBucket;
+    return unboundedBucket <= 0 || Number.isNaN(unboundedBucket)
+      ? 0
+      : unboundedBucket >= DurationHistogram.BUCKET_COUNT
+      ? DurationHistogram.BUCKET_COUNT - 1
+      : unboundedBucket;
   }
-
 
   public incrementDuration(durationNs: number) {
     this.incrementBucket(DurationHistogram.durationToBucket(durationNs));
@@ -41,17 +42,17 @@ export class DurationHistogram {
   public incrementBucket(bucket: number, value = 1) {
     if (bucket >= DurationHistogram.BUCKET_COUNT) {
       // Since we don't have fixed size arrays I'd rather throw the error manually
-      throw Error("Bucket is out of bounds of the buckets array");
+      throw Error('Bucket is out of bounds of the buckets array');
     }
 
     // Extend the array if we haven't gotten it long enough to handle the new bucket
     if (bucket >= this.buckets.length) {
-      let tempBufferLength = bucket - this.buckets.length + 1;
-      let emptyBucketBuffer = Array<number>(tempBufferLength).fill(0);
-      this.buckets.push(...emptyBucketBuffer);
+      const oldLength = this.buckets.length;
+      this.buckets.length = bucket + 1;
+      this.buckets.fill(0, oldLength);
     }
 
-    this.buckets[bucket]+=value;
+    this.buckets[bucket] += value;
   }
 
   public combine(otherHistogram: DurationHistogram) {
@@ -64,7 +65,7 @@ export class DurationHistogram {
     let arrayInitSize = Math.max(buckets?.length || 0, initSize);
     this.buckets = Array<number>(arrayInitSize).fill(0);
     if (buckets) {
-      buckets.forEach((val, index) => this.buckets[index] = val);
+      buckets.forEach((val, index) => (this.buckets[index] = val));
     }
   }
 }
