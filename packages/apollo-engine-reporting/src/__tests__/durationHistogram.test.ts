@@ -21,11 +21,11 @@ describe("Duration histogram tests", () => {
 
   it("testToArray", () => {
     function assertInitArrayHelper(expected: number[], buckets: number[], initSize = 118) {
-      expect(new DurationHistogram(initSize, buckets).toArray()).toEqual(expected);
+      expect(new DurationHistogram({initSize, buckets}).toArray()).toEqual(expected);
     }
 
     function assertInsertValueHelper(expected: number[], buckets: number[], initSize = 118) {
-      let histogram = new DurationHistogram(initSize);
+      let histogram = new DurationHistogram({initSize});
       buckets.forEach((val, bucket) => {
           histogram.incrementBucket(bucket, val);
         }

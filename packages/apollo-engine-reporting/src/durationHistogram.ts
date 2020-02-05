@@ -1,3 +1,7 @@
+export interface DurationHistogramOptions {
+  initSize?: number
+  buckets?: number[]
+}
 export class DurationHistogram {
   private readonly buckets: number[];
   public static readonly BUCKET_COUNT = 384;
@@ -61,9 +65,15 @@ export class DurationHistogram {
     }
   }
 
-  constructor(initSize = 74, buckets?: number[]) {
-    let arrayInitSize = Math.max(buckets?.length || 0, initSize);
+
+  constructor(options?: DurationHistogramOptions) {
+    const initSize = options?.initSize || 74;
+    const buckets = options?.buckets;
+
+    const arrayInitSize = Math.max(buckets?.length || 0, initSize);
+
     this.buckets = Array<number>(arrayInitSize).fill(0);
+
     if (buckets) {
       buckets.forEach((val, index) => (this.buckets[index] = val));
     }
