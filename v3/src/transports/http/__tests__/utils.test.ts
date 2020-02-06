@@ -78,7 +78,7 @@ export interface TestableRequestListener {
    * This abstraction allows us to write single tests and have them exercised
    * for both `GET` and `POST` and to ensure that they behave identically.
    */
-  initHandlerWithParams: (params: Params) => void;
+  initHandlerWithParams: (params: Params) => Promise<void>;
 
   /**
    * A `Promise` that will eventually resolve or reject to the handler.
