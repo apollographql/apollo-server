@@ -156,7 +156,7 @@ You can also designate a cache _specifically_ for the APQ registry. To do so, pr
 
 | Data store  | Class name  | Library  |
 |---|---|---|
-| Local in-memory cache (default)  | `InMemoryCache`  | [`apollo-cache-inmemory`](https://npm.im/apollo-cache-inmemory)  |
+| Local in-memory cache (default)  | `InMemoryLRUCache`  | [`apollo-server-caching`](https://npm.im/apollo-server-caching)  |
 | Memcached  | `MemcachedCache`  | [`apollo-server-cache-memcached`](https://npm.im/apollo-server-cache-memcached)  |
 | Redis (single instance or Sentinel)  | `RedisCache`  | [`apollo-server-cache-redis`](https://npm.im/apollo-server-cache-redis)  |
 | Redis Cluster | `RedisClusterCache`| [`apollo-server-cache-redis`](https://npm.im/apollo-server-cache-redis)|
