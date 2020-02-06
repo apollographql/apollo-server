@@ -4,7 +4,12 @@
 
 > The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  When a release is being prepared, a new header will be (manually) created below and the the appropriate changes within that release will be moved into the new section.
 
+- _Nothing yet! Stay tuned._
+
+# v0.12.0
+
 - Strip all Type System Directives during composition [#3736](https://github.com/apollographql/apollo-server/pull/3736)
+- Prepare for changes in upcoming `graphql@15` release. [#3712](https://github.com/apollographql/apollo-server/pull/3712)
 
 # v0.11.1
 
