@@ -11,6 +11,8 @@
 
 # v0.11.6
 
+> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/0743d6b2f1737758cf09e80d2086917772bc00c9)
+
 - Fix onSchemaChange callbacks for unmanaged configs [#3605](https://github.com/apollographql/apollo-server/pull/3605)
 
 # v0.11.4
