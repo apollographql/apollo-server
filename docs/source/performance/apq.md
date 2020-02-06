@@ -152,7 +152,7 @@ How exactly this works depends on exactly which CDN you chose. Configure your CD
 
 By default, Apollo Server stores its APQ registry within its local in-memory cache. If you provide a different `cache` as a top-level option to the `ApolloServer` constructor, Apollo Server uses that cache instead.
 
-You can also designate a cache _specifically_ for the APQ registry. To do so, provide an instance of your preferred cache class to the `ApolloServer` constructor as the `persistedQueries` option. The following backing data stores are supported:
+You can also designate a cache _specifically_ for the APQ registry. To do so, provide an instance of your preferred cache class to the `ApolloServer` constructor as a `cache` option nested inside the `persistedQueries` options object. The following backing data stores are supported:
 
 | Data store  | Class name  | Library  |
 |---|---|---|
