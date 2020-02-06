@@ -4,6 +4,10 @@
 
 > The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  When a release is being prepared, a new header will be (manually) created below and the the appropriate changes within that release will be moved into the new section.
 
+# v0.12.0
+
+> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/9c0aa1e661ccc2c5a1471b781102637dd47e21b1)
+
 - Reduce interface expansion for types contained to a single service [#3582](https://github.com/apollographql/apollo-server/pull/3582)
 - Instantiate one `CachedFetcher` per gateway instance.  This resolves a condition where multiple federated gateways would utilize the same cache store could result in an `Expected undefined to be a GraphQLSchema` error. [#3704](https://github.com/apollographql/apollo-server/pull/3704)
 - Gateway: minimize downstream request size [#3737](https://github.com/apollographql/apollo-server/pull/3737)
