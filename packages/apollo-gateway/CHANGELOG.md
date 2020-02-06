@@ -1,4 +1,4 @@
-# Changelog
+# CHANGELOG for `@apollo/federation`
 
 ### vNEXT
 

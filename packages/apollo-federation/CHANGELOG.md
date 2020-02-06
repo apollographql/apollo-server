@@ -1,4 +1,4 @@
-# Change Log
+# CHANGELOG for `@apollo/gateway`
 
 ### vNEXT
 
