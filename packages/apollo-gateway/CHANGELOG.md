@@ -1,4 +1,4 @@
-# CHANGELOG for `@apollo/federation`
+# CHANGELOG for `@apollo/gateway`
 
 ### vNEXT
 
