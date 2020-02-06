@@ -1,4 +1,4 @@
-This is a PR tracking a `release-x.y.z` branch for an upcoming release of Apollo Server. 🙌   The version in the title of this PR should correspond to the appropriate branch.
+As with [release PRs in the past](https://github.com/apollographql/apollo-server/labels/%F0%9F%8F%97%20release), this is a PR tracking a `release-x.y.z` branch for an upcoming release of Apollo Server. 🙌   The version in the title of this PR should correspond to the appropriate branch.
 
 Check the appropriate milestone (to the right) for more details on what we hope to get into this release!
 
