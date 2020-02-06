@@ -9,7 +9,7 @@ Apollo Server integrates seamlessly with Apollo Graph Manager to help you monito
 
 ## Sending metrics to Apollo Graph Manager
 
-[Apollo Graph Manager](https://www.apollographql.com/docs/platform/graph-manager-overview/) provides an integrated hub for all of your GraphQL performance data. It [aggregates and displays information](https://www.apollographql.com/docs/platform/performance/) for your schema, queries, requests, and errors. You can also configure alerts that support [Slack and Datadog integrations](https://www.apollographql.com/docs/platform/integrations/).
+[Apollo Graph Manager](https://www.apollographql.com/docs/platform/graph-manager-overview/) provides an integrated hub for all of your GraphQL performance data. It [aggregates and displays information](https://www.apollographql.com/docs/platform/performance/) for your schema, queries, requests, and errors. You can also configure alerts that support [Slack](https://www.apollographql.com/docs/graph-manager/slack-integration/) and [Datadog](https://www.apollographql.com/docs/graph-manager/datadog-integration/) integrations.
 
 ### Connecting to Graph Manager
 
