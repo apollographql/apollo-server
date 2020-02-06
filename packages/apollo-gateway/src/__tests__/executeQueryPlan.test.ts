@@ -144,7 +144,7 @@ describe('executeQueryPlan', () => {
       );
       expect(response).toHaveProperty(
         'errors.0.extensions.query',
-        '{\n  me {\n    name\n  }\n}',
+        '{me{name}}',
       );
       expect(response).toHaveProperty('errors.0.extensions.variables', {});
     });
