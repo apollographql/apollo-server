@@ -12,6 +12,8 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 ### v2.9.16
 
+> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/4d1a75e318897c335674c7ee046c0baec7df4a9b)
+
 - `apollo-server-core`: Update apollo-tooling dependencies, resolve TS build error (missing types for node-fetch) [#3662](https://github.com/apollographql/apollo-server/pull/3662)
 
 ### v2.9.15
