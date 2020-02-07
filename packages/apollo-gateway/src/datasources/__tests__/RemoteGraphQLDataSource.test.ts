@@ -15,44 +15,225 @@ beforeEach(() => {
 });
 
 describe('constructing requests', () => {
-  it('stringifies a request with a query', async () => {
-    const DataSource = new RemoteGraphQLDataSource({
-      url: 'https://api.example.com/foo',
+  describe('without APQ', () => {
+    it('stringifies a request with a query', async () => {
+      const DataSource = new RemoteGraphQLDataSource({
+        url: 'https://api.example.com/foo',
+        apq: false,
+      });
+
+      fetch.mockJSONResponseOnce({ data: { me: 'james' } });
+
+      const { data } = await DataSource.process({
+        request: { query: '{ me { name } }' },
+        context: {},
+      });
+
+      expect(data).toEqual({ me: 'james' });
+      expect(fetch).toBeCalledTimes(1);
+      expect(fetch).toHaveFetched({
+        url: 'https://api.example.com/foo',
+        body: { query: '{ me { name } }' },
+      });
     });
 
-    fetch.mockJSONResponseOnce({ data: { me: 'james' } });
+    it('passes variables', async () => {
+      const DataSource = new RemoteGraphQLDataSource({
+        url: 'https://api.example.com/foo',
+        apq: false,
+      });
 
-    const { data } = await DataSource.process({
-      request: { query: '{ me { name } }' },
-    });
+      fetch.mockJSONResponseOnce({ data: { me: 'james' } });
 
-    expect(data).toEqual({ me: 'james' });
-    expect(fetch).toBeCalledTimes(1);
-    expect(fetch).toHaveFetched({
-      url: 'https://api.example.com/foo',
-      body: { query: '{ me { name } }' },
+      const { data } = await DataSource.process({
+        request: {
+          query: '{ me { name } }',
+          variables: { id: '1' },
+        },
+        context: {},
+      });
+
+      expect(data).toEqual({ me: 'james' });
+      expect(fetch).toBeCalledTimes(1);
+      expect(fetch).toHaveFetched({
+        url: 'https://api.example.com/foo',
+        body: { query: '{ me { name } }', variables: { id: '1' } },
+      });
     });
   });
 
-  it('passes variables', async () => {
-    const DataSource = new RemoteGraphQLDataSource({
-      url: 'https://api.example.com/foo',
+  describe('with APQ', () => {
+    // When changing this, adjust the SHA-256 hash below as well.
+    const query = '{ me { name } }';
+
+    // This is a SHA-256 hash of `query` above.
+    const sha256Hash =
+      "b8d9506e34c83b0e53c2aa463624fcea354713bc38f95276e6f0bd893ffb5b88";
+
+    describe('miss', () => {
+      const apqNotFoundResponse = {
+        "errors": [
+          {
+            "message": "PersistedQueryNotFound",
+            "extensions": {
+              "code": "PERSISTED_QUERY_NOT_FOUND",
+              "exception": {
+                "stacktrace": ["PersistedQueryNotFoundError: PersistedQueryNotFound"]
+              }
+            }
+          }
+        ]
+      };
+
+      it('stringifies a request with a query', async () => {
+        const DataSource = new RemoteGraphQLDataSource({
+          url: 'https://api.example.com/foo',
+          apq: true,
+        });
+
+        fetch.mockJSONResponseOnce(apqNotFoundResponse);
+        fetch.mockJSONResponseOnce({ data: { me: 'james' } });
+
+        const { data } = await DataSource.process({
+          request: { query },
+          context: {},
+        });
+
+        expect(data).toEqual({ me: 'james' });
+        expect(fetch).toBeCalledTimes(2);
+        expect(fetch).toHaveFetchedNth(1, {
+          url: 'https://api.example.com/foo',
+          body: {
+            extensions: {
+              persistedQuery: {
+                version: 1,
+                sha256Hash,
+              }
+            }
+          },
+        });
+        expect(fetch).toHaveFetchedNth(2, {
+          url: 'https://api.example.com/foo',
+          body: {
+            query,
+            extensions: {
+              persistedQuery: {
+                version: 1,
+                sha256Hash,
+              }
+            }
+          },
+        });
+      });
+
+      it('passes variables', async () => {
+        const DataSource = new RemoteGraphQLDataSource({
+          url: 'https://api.example.com/foo',
+          apq: true,
+        });
+
+        fetch.mockJSONResponseOnce(apqNotFoundResponse);
+        fetch.mockJSONResponseOnce({ data: { me: 'james' } });
+
+        const { data } = await DataSource.process({
+          request: {
+            query,
+            variables: { id: '1' },
+          },
+          context: {},
+        });
+
+        expect(data).toEqual({ me: 'james' });
+        expect(fetch).toBeCalledTimes(2);
+        expect(fetch).toHaveFetchedNth(1, {
+          url: 'https://api.example.com/foo',
+          body: {
+            variables: { id: '1' },
+            extensions: {
+              persistedQuery: {
+                version: 1,
+                sha256Hash,
+              }
+            }
+          },
+        });
+
+        expect(fetch).toHaveFetchedNth(2, {
+          url: 'https://api.example.com/foo',
+          body: {
+            query,
+            variables: { id: '1' },
+            extensions: {
+              persistedQuery: {
+                version: 1,
+                sha256Hash,
+              }
+            }
+          },
+        });
+      });
     });
 
-    fetch.mockJSONResponseOnce({ data: { me: 'james' } });
+    describe('hit', () => {
+      it('stringifies a request with a query', async () => {
+        const DataSource = new RemoteGraphQLDataSource({
+          url: 'https://api.example.com/foo',
+          apq: true,
+        });
 
-    const { data } = await DataSource.process({
-      request: {
-        query: '{ me { name } }',
-        variables: { id: '1' },
-      },
-    });
+        fetch.mockJSONResponseOnce({ data: { me: 'james' } });
 
-    expect(data).toEqual({ me: 'james' });
-    expect(fetch).toBeCalledTimes(1);
-    expect(fetch).toHaveFetched({
-      url: 'https://api.example.com/foo',
-      body: { query: '{ me { name } }', variables: { id: '1' } },
+        const { data } = await DataSource.process({
+          request: { query },
+          context: {},
+        });
+
+        expect(data).toEqual({ me: 'james' });
+        expect(fetch).toBeCalledTimes(1);
+        expect(fetch).toHaveFetched({
+          url: 'https://api.example.com/foo',
+          body: {
+            extensions: {
+              persistedQuery: {
+                version: 1,
+                sha256Hash,
+              }
+            }
+          },
+        });
+      });
+
+      it('passes variables', async () => {
+        const DataSource = new RemoteGraphQLDataSource({
+          url: 'https://api.example.com/foo',
+          apq: true,
+        });
+
+        fetch.mockJSONResponseOnce({ data: { me: 'james' } });
+
+        const { data } = await DataSource.process({
+          request: {
+            query,
+            variables: { id: '1' },
+          },
+          context: {},
+        });
+
+        expect(data).toEqual({ me: 'james' });
+        expect(fetch).toBeCalledTimes(1);
+        expect(fetch).toHaveFetched({
+          url: 'https://api.example.com/foo',
+          body: {
+            variables: { id: '1' },
+            extensions: {
+              persistedQuery: {
+                version: 1,
+                sha256Hash,
+              }
+            }
+          },
+        });
+      });
     });
   });
 });
@@ -181,6 +362,39 @@ describe('didReceiveResponse', () => {
     const DataSource = new MyDataSource();
     const spyDidReceiveResponse =
       jest.spyOn(DataSource, 'didReceiveResponse');
+
+    fetch.mockJSONResponseOnce({ data: { me: 'james' } });
+
+    await DataSource.process({
+      request: {
+        query: '{ me { name } }',
+        variables: { id: '1' },
+      },
+      context: {},
+    });
+
+    expect(spyDidReceiveResponse).toHaveBeenCalledTimes(1);
+
+  });
+
+  // APQ makes two requests, so make sure only one calls the response hook.
+  it('is only called once when apq is enabled', async () => {
+    class MyDataSource extends RemoteGraphQLDataSource {
+      url = 'https://api.example.com/foo';
+      apq = true;
+
+      didReceiveResponse<MyContext>({
+        response,
+      }: Required<Pick<
+        GraphQLRequestContext<MyContext>,
+          'request' | 'response' | 'context'
+      >>) {
+        return response;
+      }
+    }
+
+    const DataSource = new MyDataSource();
+    const spyDidReceiveResponse = jest.spyOn(DataSource, 'didReceiveResponse');
 
     fetch.mockJSONResponseOnce({ data: { me: 'james' } });
 

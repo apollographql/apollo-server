@@ -12,12 +12,12 @@ import {
 import {
   fetch,
   Request,
-  RequestInit,
   Headers,
   Response,
 } from 'apollo-server-env';
 import { isObject } from '../utilities/predicates';
 import { GraphQLDataSource } from './types';
+import createSHA from 'apollo-server-core/dist/utils/createSHA';
 
 export class RemoteGraphQLDataSource implements GraphQLDataSource {
   constructor(
@@ -31,6 +31,26 @@ export class RemoteGraphQLDataSource implements GraphQLDataSource {
   }
 
   url!: string;
+
+  /**
+   * Whether the downstream request should be made with automated persisted
+   * query (APQ) behavior enabled.
+   *
+   * @remarks When enabled, the request to the downstream service will first be
+   * attempted using a SHA-256 hash of the operation rather than including the
+   * operation itself. If the downstream server supports APQ and has this
+   * operation registered in its APQ storage, it will be able to complete the
+   * request without the entirety of the operation document being transmitted.
+   *
+   * In the event that the downstream service is unaware of the operation, it
+   * will respond with an `PersistedQueryNotFound` error and it will be resent
+   * with the full operation body for fulfillment.
+   *
+   * Generally speaking, when the downstream server is processing similar
+   * operations repeatedly, APQ can offer substantial network savings in terms
+   * of bytes transmitted over the wire between gateways and downstream servers.
+   */
+  apq: boolean = false;
 
   async process<TContext>({
     request,
@@ -52,18 +72,76 @@ export class RemoteGraphQLDataSource implements GraphQLDataSource {
       await this.willSendRequest({ request, context });
     }
 
-    const { http, ...graphqlRequest } = request;
-    const options: RequestInit = {
-      ...http,
-      body: JSON.stringify(graphqlRequest),
-    };
+    if (!request.query) {
+      throw new Error("Missing query");
+    }
 
-    const httpRequest = new Request(request.http.url, options);
+    const apqHash = createSHA('sha256')
+       .update(request.query)
+       .digest('hex');
+
+    const { query, ...requestWithoutQuery } = request;
 
     const respond = (response: GraphQLResponse, request: GraphQLRequest) =>
       typeof this.didReceiveResponse === "function"
         ? this.didReceiveResponse({ response, request, context })
         : response;
+
+    if (this.apq) {
+      // Take the original extensions and extend them with
+      // the necessary "extensions" for APQ handshaking.
+      requestWithoutQuery.extensions = {
+        ...request.extensions,
+        persistedQuery: {
+          version: 1,
+          sha256Hash: apqHash,
+        },
+      };
+
+      const apqOptimisticResponse =
+        await this.sendRequest(requestWithoutQuery, context);
+
+      // If we didn't receive notice to retry with APQ, then let's
+      // assume this is the best result we'll get and return it!
+      if (
+        !apqOptimisticResponse.errors ||
+        !apqOptimisticResponse.errors.find(error =>
+          error.message === 'PersistedQueryNotFound')
+      ) {
+        return respond(apqOptimisticResponse, requestWithoutQuery);
+      }
+    }
+
+    // If APQ was enabled, we'll run the same request again, but add in the
+    // previously omitted `query`.  If APQ was NOT enabled, this is the first
+    // request (non-APQ, all the way).
+    const requestWithQuery: GraphQLRequest = {
+      query,
+      ...requestWithoutQuery,
+    };
+    const response = await this.sendRequest(requestWithQuery, context);
+    return respond(response, requestWithQuery);
+  }
+
+  private async sendRequest<TContext>(
+    request: GraphQLRequest,
+    context: TContext,
+  ): Promise<GraphQLResponse> {
+
+    // This would represent an internal programming error since this shouldn't
+    // be possible in the way that this method is invoked right now.
+    if (!request.http) {
+      throw new Error("Internal error: Only 'http' requests are supported.")
+    }
+
+    // We don't want to serialize the `http` properties into the body that is
+    // being transmitted.  Instead, we want those to be used to indicate what
+    // we're accessing (e.g. url) and what we access it with (e.g. headers).
+    const { http, ...requestWithoutHttp } = request;
+    const httpRequest = new Request(http.url, {
+      ...http,
+      body: JSON.stringify(requestWithoutHttp),
+    });
 
     try {
       const httpResponse = await fetch(httpRequest);
@@ -78,12 +156,10 @@ export class RemoteGraphQLDataSource implements GraphQLDataSource {
         throw new Error(`Expected JSON response body, but received: ${body}`);
       }
 
-      const response: GraphQLResponse = {
+      return {
         ...body,
         http: httpResponse,
       };
-
-      return respond(response, request);
     } catch (error) {
       this.didEncounterError(error, httpRequest);
       throw error;
