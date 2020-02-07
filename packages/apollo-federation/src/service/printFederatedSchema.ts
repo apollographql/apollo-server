@@ -363,7 +363,7 @@ function descriptionLines(description: string, maxLen: number): Array<string> {
   const rawLines = description.split('\n');
   return rawLines.flatMap(line => {
     if (line.length < maxLen + 5) {
-      return line;
+      return line.length === 0 ? [] : line;
     }
     // For > 120 character long lines, cut at space boundaries into sublines
     // of ~80 chars.
