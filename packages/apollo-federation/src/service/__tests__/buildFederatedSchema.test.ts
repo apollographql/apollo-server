@@ -96,6 +96,20 @@ type Money {
           arg2: String
           "Description 3 Description 3 Description 3 Description 3 Description 3 Description 3 Description 3 Description 3 Description 3 Description 3 Description 3"
           arg3: String
+          """
+          Description block string including double quote "4"
+          """
+          arg4: String
+          "Description string value including double quote \\"5\\""
+          arg5: String
+          """
+          Description block string including back slash \\\\6\\\\
+          """
+          arg6: String
+          "Description string value including back slash \\\\7\\\\"
+          arg7: String
+          "Description string value including line terminator 8\\r\\n"
+          arg8: String
         ): String
       }
     `);
@@ -123,6 +137,25 @@ type User @key(fields: "id") {
     Description 3 Description 3 Description 3 Description 3 Description 3 Description 3
     """
     arg3: String
+    """
+    Description block string including double quote "4"
+    """
+    arg4: String
+    """
+    Description string value including double quote "5"
+    """
+    arg5: String
+    """
+    Description block string including back slash \\\\6\\\\
+    """
+    arg6: String
+    """
+    Description string value including back slash \\7\\
+    """
+    arg7: String
+    """
+    Description string value including line terminator 8\r\n    """
+    arg8: String
   ): String
 }
 `);
