@@ -7,7 +7,8 @@ import {
 } from 'apollo-server-errors';
 
 import { RemoteGraphQLDataSource } from '../RemoteGraphQLDataSource';
-import { Headers, Response, Request } from 'apollo-server-env';
+import { Headers } from 'apollo-server-env';
+import { GraphQLRequestContext } from 'apollo-server-types';
 
 beforeEach(() => {
   fetch.mockReset();
@@ -126,17 +127,19 @@ describe('didReceiveResponse', () => {
     class MyDataSource extends RemoteGraphQLDataSource {
       url = 'https://api.example.com/foo';
 
-      async didReceiveResponse<TResult, TContext>(
-        response: Response,
-        request: Request,
-        context: TContext,
-      ): Promise<TResult> {
-        const body = await super.didReceiveResponse<TResult>(response, request, context);
-        const surrogateKeys = request.headers.get('surrogate-keys');
+      didReceiveResponse<MyContext>({
+        request,
+        response,
+      }: Required<Pick<
+        GraphQLRequestContext<MyContext>,
+          'request' | 'response' | 'context'
+      >>) {
+        const surrogateKeys =
+          request.http && request.http.headers.get('surrogate-keys');
         if (surrogateKeys) {
-          (context as any).surrogateKeys.push(...surrogateKeys.split(' '));
+          context.surrogateKeys.push(...surrogateKeys.split(' '));
         }
-        return body;
+        return response;
       }
     }
 
@@ -159,6 +162,38 @@ describe('didReceiveResponse', () => {
     });
 
     expect(context).toEqual({ surrogateKeys: ['abc', 'def'] });
+  });
+
+  it('is only called once', async () => {
+    class MyDataSource extends RemoteGraphQLDataSource {
+      url = 'https://api.example.com/foo';
+
+      didReceiveResponse<MyContext>({
+        response,
+      }: Required<Pick<
+        GraphQLRequestContext<MyContext>,
+          'request' | 'response' | 'context'
+      >>) {
+        return response;
+      }
+    }
+
+    const DataSource = new MyDataSource();
+    const spyDidReceiveResponse =
+      jest.spyOn(DataSource, 'didReceiveResponse');
+
+    fetch.mockJSONResponseOnce({ data: { me: 'james' } });
+
+    await DataSource.process({
+      request: {
+        query: '{ me { name } }',
+        variables: { id: '1' },
+      },
+      context: {},
+    });
+
+    expect(spyDidReceiveResponse).toHaveBeenCalledTimes(1);
+
   });
 });
 

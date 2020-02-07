@@ -2,6 +2,7 @@ import {
   GraphQLRequestContext,
   GraphQLResponse,
   ValueOrPromise,
+  GraphQLRequest,
 } from 'apollo-server-types';
 import {
   ApolloError,
@@ -59,14 +60,19 @@ export class RemoteGraphQLDataSource implements GraphQLDataSource {
 
     const httpRequest = new Request(request.http.url, options);
 
+    const respond = (response: GraphQLResponse, request: GraphQLRequest) =>
+      typeof this.didReceiveResponse === "function"
+        ? this.didReceiveResponse({ response, request, context })
+        : response;
+
     try {
       const httpResponse = await fetch(httpRequest);
 
-      const body = await this.didReceiveResponse(
-        httpResponse,
-        httpRequest,
-        context,
-      );
+      if (!httpResponse.ok) {
+        throw await this.errorFromResponse(httpResponse);
+      }
+
+      const body = await this.parseBody(httpResponse, httpRequest, context);
 
       if (!isObject(body)) {
         throw new Error(`Expected JSON response body, but received: ${body}`);
@@ -77,7 +83,7 @@ export class RemoteGraphQLDataSource implements GraphQLDataSource {
         http: httpResponse,
       };
 
-      return response;
+      return respond(response, request);
     } catch (error) {
       this.didEncounterError(error, httpRequest);
       throw error;
@@ -91,23 +97,22 @@ export class RemoteGraphQLDataSource implements GraphQLDataSource {
     >,
   ): ValueOrPromise<void>;
 
-  public async didReceiveResponse<TResult = any, TContext = any>(
-    response: Response,
-    _request: Request,
-    _context?: TContext,
-  ): Promise<TResult> {
-    if (response.ok) {
-      return (this.parseBody(response) as any) as Promise<TResult>;
-    } else {
-      throw await this.errorFromResponse(response);
-    }
-  }
+  public didReceiveResponse?<TContext = any>(
+    requestContext: Required<Pick<
+      GraphQLRequestContext<TContext>,
+      'request' | 'response' | 'context'>
+    >,
+  ): ValueOrPromise<GraphQLResponse>;
 
   public didEncounterError(error: Error, _request: Request) {
     throw error;
   }
 
-  public parseBody(response: Response): Promise<object | string> {
+  public parseBody<TContext>(
+    response: Response,
+    _request?: Request,
+    _context?: TContext,
+  ): Promise<object | string> {
     const contentType = response.headers.get('Content-Type');
     if (contentType && contentType.startsWith('application/json')) {
       return response.json();
