@@ -1,6 +1,6 @@
 export interface DurationHistogramOptions {
-  initSize?: number
-  buckets?: number[]
+  initSize?: number;
+  buckets?: number[];
 }
 export class DurationHistogram {
   private readonly buckets: number[];
@@ -61,10 +61,9 @@ export class DurationHistogram {
 
   public combine(otherHistogram: DurationHistogram) {
     for (let i = 0; i < otherHistogram.buckets.length; i++) {
-      this.buckets[i] += otherHistogram.buckets[i];
+      this.incrementBucket(i, otherHistogram.buckets[i]);
     }
   }
-
 
   constructor(options?: DurationHistogramOptions) {
     const initSize = options?.initSize || 74;
