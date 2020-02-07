@@ -347,7 +347,10 @@ function printDescription(
   }
 
   const lines = descriptionLines(def.description, 120 - indentation.length);
-  if (lines.length === 1) {
+  const hasExceptingStringCharacter = /"|\\|\r|\n/.test(lines[0]);
+  const printAsSingleLine = lines.length === 1 && !hasExceptingStringCharacter;
+
+  if (printAsSingleLine) {
     return indentation + `"${lines[0]}"\n`;
   } else {
     return (
