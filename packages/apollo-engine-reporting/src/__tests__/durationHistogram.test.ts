@@ -58,14 +58,15 @@ describe("Duration histogram tests", () => {
   });
 
   it("combineHistogram", () => {
-    let firstHistogram = new DurationHistogram();
+    let firstHistogram = new DurationHistogram({initSize:0});
     firstHistogram.incrementBucket(20);
     let secondHistogram = new DurationHistogram();
     secondHistogram.incrementBucket(40);
+    secondHistogram.incrementBucket(100, 10);
 
     firstHistogram.combine(secondHistogram);
 
-    expect([-20, 1, -19, 1]).toEqual(firstHistogram.toArray());
+    expect([-20, 1, -19, 1, -59, 10]).toEqual(firstHistogram.toArray());
   });
 
   it("bucketZeroToOne", () => {
