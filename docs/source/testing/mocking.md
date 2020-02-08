@@ -5,7 +5,7 @@ description: Mock your GraphQL data based on a schema.
 
 The strongly-typed nature of a GraphQL API lends itself extremely well to mocking. This is an important part of a GraphQL-First development process, because it enables frontend developers to build out UI components and features without having to wait for a backend implementation.
 
-Even when the UI is already built, it can let you test your UI without waiting on slow database requests, or build out a component harness using a tool like React Storybook without needing to start a real GraphQL server.
+Even when the UI is already built, it can let you test your UI without waiting on slow database requests, or build out a component harness using a tool like [Storybook](https://storybook.js.org/) without needing to start a real GraphQL server.
 
 ## Default mock example
 
