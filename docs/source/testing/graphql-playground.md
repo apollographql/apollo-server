@@ -11,7 +11,7 @@ In development, Apollo Server enables GraphQL Playground on the same URL as the 
 
 ## Configuring Playground
 
-The Apollo Server constructor contains the ability to configure GraphQL Playground with the `playground` configuration option. The options can be found on GraphQL Playground's [documentation](https://github.com/prismagraphql/graphql-playground/#usage)
+The Apollo Server constructor contains the ability to configure GraphQL Playground with the `playground` configuration option. The options can be found on GraphQL Playground's [documentation](https://github.com/prismagraphql/graphql-playground/#usage).
 
 ```js
 new ApolloServer({
