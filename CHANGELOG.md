@@ -7,7 +7,7 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 ### v2.11.0
 
-- _Nothing yet! Stay tuned._
+- `apollo-server-core`: Update GraphQL Playground to latest version to remove a rogue curly-brace appearing in the top-right corner of the interface under certain conditions. [PR #3702](https://github.com/apollographql/apollo-server/pull/3702) [Playground PR](https://github.com/apollographql/graphql-playground/pull/21)
 
 ### v2.10.0
 
