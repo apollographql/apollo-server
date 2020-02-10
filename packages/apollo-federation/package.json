@@ -20,6 +20,6 @@
     "lodash.xorby": "^4.7.0"
   },
   "peerDependencies": {
-    "graphql": "^14.0.2"
+    "graphql": "^14.0.2 || ^15.0.0-rc.2"
   }
 }

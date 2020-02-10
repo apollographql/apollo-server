@@ -35,6 +35,6 @@
     "apollo-server-integration-testsuite": "file:../apollo-server-integration-testsuite"
   },
   "peerDependencies": {
-    "graphql": "^0.12.0 || ^0.13.0 || ^14.0.0"
+    "graphql": "^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0-rc.2"
   }
 }
