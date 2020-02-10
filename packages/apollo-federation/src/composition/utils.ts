@@ -83,6 +83,20 @@ export function stripExternalFieldsFromTypeDefs(
   return { typeDefsWithoutExternalFields, strippedFields };
 }
 
+export function stripTypeSystemDirectivesFromTypeDefs(typeDefs: DocumentNode) {
+  const typeDefsWithoutTypeSystemDirectives = visit(typeDefs, {
+    Directive(node) {
+      const isFederationDirective = federationDirectives.some(
+        ({ name }) => name === node.name.value,
+      );
+      // Returning `null` to a visit will cause it to be removed from the tree.
+      return isFederationDirective ? undefined : null;
+    },
+  }) as DocumentNode;
+
+  return typeDefsWithoutTypeSystemDirectives;
+}
+
 /**
  * Returns a closure that strips fields marked with `@external` and adds them
  * to an array.

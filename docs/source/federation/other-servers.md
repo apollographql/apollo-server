@@ -6,6 +6,7 @@ The following is a list of known open source GraphQL server libraries that have 
 
 | Language    | Framework    | Library                                                                          |
 | ----------- | ------------ | -------------------------------------------------------------------------------- |
+| Go          | gqlgen       | [gqlgen](https://github.com/99designs/gqlgen/tree/master/plugin/federation)      |
 | Java        | graphql-java | [federation-jvm](https://github.com/apollographql/federation-jvm)                |
 | Kotlin      | graphql-java | [graphql-kotlin](https://github.com/ExpediaGroup/graphql-kotlin)                 |
 | PHP         | graphql-php  | [php-graphql-federation](https://github.com/pascaldevink/php-graphql-federation) |
