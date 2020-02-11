@@ -1,17 +1,15 @@
 ---
-title: Core concepts
-description: How schema composition works
+title: Working with entities
+description: Reference types across services
 ---
 
-Apollo Federation works through a declarative composition model where services expose their capabilities and together they can be formed into a single graph. This section describes the core concepts in the programming model.
+In Apollo Federation, an **entity** is a type that you define canonically in _one_ implementing service and then reference and extend in _other_ implementing services. Entities are the core building block of a federated graph.
 
-## Entities and keys
+## Declaring an entity
 
-An entity is a type that can be referenced by another service. Entities create connection points between services and form the basic building blocks of a federated graph. Entities have a primary key whose value uniquely identifies a specific instance of the type, similar to the function of a primary key in a SQL table.
+In a GraphQL schema, you can designate an object type as an entity by adding a `@key` directive to its definition, like so:
 
-Declaring an entity is done by adding a `@key` directive to the type definition. The directive takes one argument specifying the key:
-
-```graphql{1}
+```graphql{1}:title=products
 type Product @key(fields: "upc") {
   upc: String!
   name: String!
@@ -19,47 +17,53 @@ type Product @key(fields: "upc") {
 }
 ```
 
-In this example, the `@key` directive tells the Apollo query planner that a particular instance of `Product` can be fetched if you have its `upc`. Unlike Relay's [Node interface](https://facebook.github.io/relay/docs/en/graphql-server-specification.html#object-identification), keys can be any field (not just `ID`) and need not be globally unique. The ability to specify an entity's key makes it easier to build a data graph on top of existing APIs and services that already have a notion of a primary key, and encourages a more natural product-centric type definition.
+The `@key` directive declares the entity's **primary key**, which consists of one or more of the type's `fields`. In the example above, the `Product` entity's primary key is its `upc` field. The Apollo query planner uses an entity's primary key to identify a given instance of the type.
 
-> Apollo supports multiple keys for an entity and composite keys (combination of fields). See [advanced features](/federation/advanced-features/) for more information on these options.
+> Apollo Federation supports [defining _multiple_ primary keys for an entity](./advanced-features/#multiple-primary-keys), along with [primary keys that consist of multiple fields](./advanced-features/#compound-and-nested-keys).
 
-## Referencing external types
+## Referencing an entity from another service
 
-Once an entity is part of the graph, other services can begin to reference that type from their own types. Let's look at how the reviews service can join across services to return a `Product`:
+After you define an entity in one implementing service, other implementing services can then reference that entity. If a `products` service defines the `Product` entity above, a `reviews` service can then add a field of type `Product` to its `Review` type, like so:
 
-```graphql
-# in the reviews service
+```graphql:title=reviews
 type Review {
   product: Product
 }
 
+# This is a "stub" of the Product entity (see below)
 extend type Product @key(fields: "upc") {
   upc: String! @external
 }
 ```
 
-In this example we have a `Review` type with a field called `product` that returns the `Product` type. Since `Product` is an entity that lives in another service, we define a *stub* of that type in this service with just enough information to enable composition. The syntax may look a bit strange at first, so let's unpack it:
-- The `extend` keyword declares that `Product` is an entity defined elsewhere, in this case the product catalog service.
-- The `@key` directive declares that we'll use a UPC to reference a particular product. This must match the referenced entity's own key as defined in the product catalog service.
-- The definition of the `upc` field with an `@external` directive declares the type of the `upc` field (`String!`, in this case) that is implemented in another service.
+Because the `Product` entity is defined in another service, the `reviews` service needs to define a **stub** of it to make its own schema valid. The stub includes just enough information for the service to know how to interact with a `Product`:
 
-This explicit syntax has several benefits. It is standard GraphQL grammar. It allows us to run the reviews service standalone with a valid schema, including a `Product` type with a single `upc` field. And it provides strong typing information that lets us catch mistakes at schema composition time.
+* The `extend` keyword indicates that `Product` is an entity that is defined in another implementing service (in this case, `products`).
+* The `@key` directive indicates that `Product` uses the `upc` field as its primary key. **This value must match the value of `@key` specified in the entity's originating service.**
+* The `upc` field must be included in the stub because it is part of the entity's primary key. It also must be annotated with the `@external` directive to indicate that the field originates from another service.
 
-With the type definitions in place, we can write a resolver for `Review.product`. Instead of returning a complete `Product` object (we can't; this service doesn't know much about products), the resolver just returns a reference to the external type.
+This explicit syntax has several benefits:
+* It is standard GraphQL grammar.
+* It enables you to run the `reviews` service standalone with a valid schema, including a `Product` type with a single `upc` field.
+* It provides strong typing information that lets you catch mistakes at schema composition time.
+
+## Resolving an entity from another service
+
+In our example, the `reviews` service needs to define its own resolver for the `Product` entity. The `reviews` service doesn't know much about `Product`s, but fortunately, it doesn't need to. All it needs to do is return enough information to uniquely identify a given `Product`, like so:
 
 ```js
 {
   Review: {
     product(review) {
-      return { __typename: "Product", upc: review.product_upc };
+      return { __typename: "Product", upc: review.upc };
     }
   }
 }
 ```
 
-The `{ __typename: "Product", upc: review.product_upc }` object is a *representation* of a `Product` entity. Representations are how services reference each others' types. They contain an explicit typename definition and a value for the key.
+This return value is a **representation** of a `Product` entity. Implementing services use representations to reference entities from other services. All a representation requires is an explicit `__typename` definition and values for the entity's primary key fields.
 
-The gateway will use the representation as an input to the service that owns the referenced entity. So to allow the gateway to enter the graph in this manner and resume execution of the query, the last thing we need is a *reference resolver* back in the product catalog service. We only write this once per entity.
+Your federated gateway provides this representation to the entity's originating service to fetch the full object. For this to work, the originating service (in this case, `products`) must define a **reference resolver** for the `Product` entity:
 
 ```js{3-5}
 {
@@ -71,9 +75,9 @@ The gateway will use the representation as an input to the service that owns the
 }
 ```
 
-> Reference resolvers are a special addition to Apollo Server that allow individual types to be resolved by a reference from another service. They are called when a query references an `entity` across service boundaries. To learn more about `__resolveReference`, see the [API docs](/api/apollo-federation/).
+> Reference resolvers are a special addition to Apollo Server that enable an entity to be resolved by another service. They are called whenever a query references an `entity` across service boundaries. To learn more about `__resolveReference`, see the [API docs](/api/apollo-federation/).
 
-What is nice about this model is that we end up with a schema that represents a true subset of the overall graph, as opposed to a mangled schema with foreign key fields like `productID`. Ultimately, this means clients can write queries like this without having to ask for special fields or make additional requests to other services.
+With this model, each implementing service ends up with a schema that represents a true subset of the complete data graph, as opposed to complex individual schemas that define foreign key fields like `productID`. This enables clients to transparently execute a query like the following, which hits both the `products` and `reviews` services:
 
 ```graphql
 {
@@ -86,12 +90,7 @@ What is nice about this model is that we end up with a schema that represents a 
 }
 ```
 
-So to review: to reference an external entity from a resolver, we
-1. Define a stub type for the entity we want to reference. The key as declared in the stub must match the entity's own declaration.
-2. From the referencing resolver, return a representation.
-3. In the referenced service, implement a reference resolver for the entity.
-
-## Extending external types
+## Extending an entity from another service
 
 Returning a reference to an author represents just one side of a relationship. A true data graph should expose the ability to navigate relationships in both directions. You'll want to be able to go from a product to its reviews, for example. While these fields are exposed on `Product` for the client to query, they can't be part of the accounts service because they are a concern of the reviews service.
 
@@ -233,5 +232,3 @@ extend type Product @key(fields: "sku"){
   sku: ID! @external
 }
 ```
-
-
