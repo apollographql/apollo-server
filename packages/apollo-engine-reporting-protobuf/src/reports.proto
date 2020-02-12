@@ -22,9 +22,6 @@ message Trace {
 		// enclosed in double quotes, etc.  The value of a private variable is
 		// the empty string.
 		map<string, string> variables_json = 4;
-		// Deprecated. Engineproxy did not encode variable values as JSON, so you
-		// couldn't tell numbers from numeric strings. Send variables_json instead.
-		map<string, bytes> variables = 1;
 		// Optional: this is the original full query before the signature algorithm
 		// is applied.  Engineproxy always sent this in all traces, which meant that
 		// literal-masking done by the signature algorithm didn't fully hide
@@ -32,9 +29,6 @@ message Trace {
 		// include this by default.  (The Engine frontend does not currently show
 		// this field.)
 		string raw_query = 2;
-		// Don't include this in traces inside a FullTracesReport; the operation
-		// name for these traces comes from the key of the traces_per_query map.
-		string operation_name = 3;
 	}
 
 	message Error {
@@ -244,15 +238,6 @@ message Trace {
 	google.protobuf.Timestamp origin_reported_end_time = 16;
 	uint64 origin_reported_duration_ns = 17;
 
-	// Older agents (eg the Go engineproxy) relied to some degree on the Engine
-	// backend to run their own semi-compatible implementation of a specific
-	// variant of query signatures. The backend does not do this for new agents (which
-	// set the above 'signature' field). It used to still "re-sign" signatures
-	// from engineproxy, but we've now simplified the backend to no longer do this.
-	// Deprecated and ignored in FullTracesReports.
-	string legacy_signature_needs_resigning = 5;
-
-
 	// removed: Node parse = 12; Node validate = 13;
 	//          Id128 server_id = 1; Id128 client_id = 2;
 	reserved 12, 13, 1, 2;
@@ -266,7 +251,6 @@ message Trace {
 // agent_version, etc.) is sent by the Apollo Engine Reporting agent, but we do not currently save that
 // information to any of our persistent storage.
 message ReportHeader {
-	string service = 3;
 	// eg "host-01.example.com"
 	string hostname = 5;
 
@@ -282,39 +266,14 @@ message ReportHeader {
 	string schema_tag = 10;
 	// The hex representation of the sha512 of the introspection response
 	string schema_hash = 11;
+
+	reserved 3; // removed string service = 3;
 }
 
 message PathErrorStats {
 	map<string, PathErrorStats> children = 1;
 	uint64 errors_count = 4;
 	uint64 requests_with_errors_count = 5;
-}
-
-message ClientNameStats {
-	// Duration histogram for non-cache-hit queries.
-	// (See docs/histograms.md for the histogram format.)
-	repeated int64 latency_count = 1;
-	reserved 2; // removed: repeated uint64 error_count = 2;
-	// These per-version fields were used to understand what versions contributed to this sample
-	// when we were implementing the aggregation of this information ourselves using BigTable.
-	// However, since the per-version stats don't separate out latency, it makes more sense to
-	// have stats reported with contextual information so we can have the specific breakdown we're
-	// looking for. These fields are somewhat misleading as we never actually do any per-version
-	// awareness with anything reporting in the legacy "per_client_name" stats, and instead use
-	// "query_stats_with_context" to have more contextual information.
-	map<string, uint64> requests_count_per_version = 3; // required
-	map<string, uint64> cache_hits_per_version = 4;
-	map<string, uint64> persisted_query_hits_per_version = 10;
-	map<string, uint64> persisted_query_misses_per_version = 11;
-	map<string, uint64> registered_operation_count_per_version = 12;
-	map<string, uint64> forbidden_operation_count_per_version = 13;
-	repeated int64 cache_latency_count = 5; // Duration histogram; see docs/histograms.md
-	PathErrorStats root_error_stats = 6;
-	uint64 requests_with_errors_count = 7;
-	// TTL histograms for cache misses for the public cache.
-	repeated int64 public_cache_ttl_count = 8;
-	// TTL histograms for cache misses for the private cache.
-	repeated int64 private_cache_ttl_count = 9;
 }
 
 message QueryLatencyStats {
@@ -338,16 +297,6 @@ message StatsContext {
 	string client_version = 3;
 }
 
-message ContextualizedQueryLatencyStats {
-	QueryLatencyStats query_latency_stats = 1;
-	StatsContext context = 2;
-}
-
-message ContextualizedTypeStats {
-	StatsContext context = 1;
-	map<string, TypeStat> per_type_stat = 2;
-}
-
 message FieldStat {
 	string name = 2; // deprecated; only set when stored in TypeStat.field
 	string return_type = 3; // required; eg "String!" for User.email:String!
@@ -358,30 +307,8 @@ message FieldStat {
 }
 
 message TypeStat {
-	string name = 1; // deprecated; only set when stored in QueryStats.per_type
-	repeated FieldStat field = 2;  // deprecated; use per_field_stat instead
 	// Key is (eg) "email" for User.email:String!
 	map<string, FieldStat> per_field_stat = 3;
-}
-
-message QueryStats {
-	// Either per_client_name (for back-compat) or query_stats_with_context must be specified. If both are
-	// specified, then query_stats_with_context will be used and per_client_name will be ignored. Although
-	// the fields in ClientNameStats mention things "per-version," the information in the "per-version"
-	// fields will only ever be over the default version, the empty String: "", if arrived at via the
-	// FullTracesAggregator.
-	map<string, ClientNameStats> per_client_name = 1; // deprecated; use stats_with_context instead
-	repeated ContextualizedQueryLatencyStats query_stats_with_context = 4;
-	repeated TypeStat per_type = 2; // deprecated; use type_stats_with_context instead
-	// Key is the parent type, e.g. "User" for User.email:String!
-	map<string, TypeStat> per_type_stat = 3; // deprecated; use type_stats_with_context instead
-	repeated ContextualizedTypeStats type_stats_with_context = 5;
-}
-
-// Top-level message type for the server-side traces endpoint
-message TracesReport {
-	ReportHeader header = 1; // required
-	repeated Trace trace = 2; // required
 }
 
 message Field {
@@ -394,76 +321,14 @@ message Type {
 	repeated Field field = 2;
 }
 
-message MemStats {
-	uint64 total_bytes = 1; // MemStats.Sys
-	uint64 stack_bytes = 2; // MemStats.StackSys
-	uint64 heap_bytes = 3; // MemStats.HeapSys
-	uint64 heap_released_bytes = 13; // MemStats.HeapReleased
-	uint64 gc_overhead_bytes = 4; // MemStats.GCSys
-
-	uint64 stack_used_bytes = 5; // MemStats.StackInuse
-	uint64 heap_allocated_bytes = 6; // MemStats.HeapAlloc
-	uint64 heap_allocated_objects = 7; // MemStats.HeapObjects
-
-	uint64 heap_allocated_bytes_delta = 8; // MemStats.TotalAlloc delta
-	uint64 heap_allocated_objects_delta = 9; // MemStats.Mallocs delta
-	uint64 heap_freed_objects_delta = 10; // MemStats.Frees delta
-
-	uint64 gc_stw_ns_delta = 11; // MemStats.PauseTotalNs delta
-	uint64 gc_count_delta = 12; // MemStats.NumGC delta
-}
-
-message TimeStats {
-	uint64 uptime_ns = 1;
-	uint64 real_ns_delta = 2;
-	uint64 user_ns_delta = 3;
-	uint64 sys_ns_delta = 4;
-}
-
-// Top-level message type for the server-side stats endpoint
-message StatsReport {
-	ReportHeader header = 1; // required
-
-	// These fields are about properties of the engineproxy and are not generated
-	// from FullTracesReports.
-	MemStats mem_stats = 2;
-	TimeStats time_stats = 3;
-
-	// Beginning of the period over which stats are collected.
-	google.protobuf.Timestamp start_time = 8;
-	// End of the period of which stats are collected.
-	google.protobuf.Timestamp end_time = 9;
-	// Only used to interpret mem_stats and time_stats; not generated from
-	// FullTracesReports.
-	uint64 realtime_duration = 10;
-
-
-	// Maps from query descriptor to QueryStats. Required unless
-	// legacy_per_query_missing_operation_name is set. The keys are strings of the
-	// form `# operationName\nsignature` (literal hash and space), with
-	// operationName - if there is no operation name.
-	map<string, QueryStats> per_query = 14;
-
-	// Older agents (Go engineproxy) didn't explicitly include the operation name
-	// in the key of this map, and the server had to parse it out (after a
-	// re-signing operation which is no longer performed). The key here is just the query
-	// signature. Deprecated.
-	map<string, QueryStats> legacy_per_query_implicit_operation_name = 12;
-
-	// Deprecated: it was useful in Optics where we had access to the whole schema
-	// but has not been ever used in Engine.  apollo-engine-reporting will not
-	// send it.
-	repeated Type type = 13;
-}
-
 // This is the top-level message used by the new traces ingress. This
 // is designed for the apollo-engine-reporting TypeScript agent and will
 // eventually be documented as a public ingress API. This message consists
 // solely of traces; the equivalent of the StatsReport is automatically
-// generated server-side from this message.  Agents should send traces
-// for all requests in this report.  Generally, buffering up until a large
+// generated server-side from this message. Agent sound either send a trace or include it as a stats
+// for every request in this report. Generally, buffering up until a large
 // size has been reached (say, 4MB) or 5-10 seconds has passed is appropriate.
-message FullTracesReport {
+message UnifiedReport {
 	ReportHeader header = 1;
 
 	// key is statsReportKey (# operationName\nsignature) Note that the nested
@@ -475,14 +340,22 @@ message FullTracesReport {
 	// details.raw_query (which would consume a lot of space and has privacy/data
 	// access issues, and isn't currently exposed by our app anyway).
 	map<string, Traces> traces_per_query = 5;
+
+	// Wallclock time when the report "ends", which can be considered the max of end_time
+	// of all traces represented by this message.
+	// If this field is not present will default to max of end_time of traces
+	google.protobuf.Timestamp end_time = 3; // required if no traces in this message
 }
 
-// Just a sequence of traces with the same statsReportKey.
+// Just a sequence of traces and contextualized stats with the same statsReportKey.
 message Traces {
 	repeated Trace trace = 1;
+	repeated ContextualizedStats stats_with_context = 2;
 }
 
-message TraceV1 {
-	ReportHeader header = 1;
-	Trace trace = 2;
+message ContextualizedStats {
+	StatsContext context = 1;
+	QueryLatencyStats query_latency_stats = 2;
+	// Key is type name.
+	map<string, TypeStat> per_type_stat = 3;
 }

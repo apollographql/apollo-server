@@ -2,7 +2,7 @@ import os from 'os';
 import { gzip } from 'zlib';
 import { DocumentNode, GraphQLError } from 'graphql';
 import {
-  FullTracesReport,
+  UnifiedReport,
   ReportHeader,
   Traces,
   Trace,
@@ -210,7 +210,7 @@ const serviceHeaderDefaults = {
 export class EngineReportingAgent<TContext = any> {
   private options: EngineReportingOptions<TContext>;
   private apiKey: string;
-  private reports: { [schemaHash: string]: FullTracesReport } = Object.create(
+  private reports: { [schemaHash: string]: UnifiedReport } = Object.create(
     null,
   );
   private reportSizes: { [schemaHash: string]: number } = Object.create(null);
@@ -356,11 +356,11 @@ export class EngineReportingAgent<TContext = any> {
       console.log(`Engine sending report: ${JSON.stringify(report.toJSON())}`);
     }
 
-    const protobufError = FullTracesReport.verify(report);
+    const protobufError = UnifiedReport.verify(report);
     if (protobufError) {
       throw new Error(`Error encoding report: ${protobufError}`);
     }
-    const message = FullTracesReport.encode(report).finish();
+    const message = UnifiedReport.encode(report).finish();
 
     const compressed = await new Promise<Buffer>((resolve, reject) => {
       // The protobuf library gives us a Uint8Array. Node 8's zlib lets us
@@ -522,7 +522,7 @@ export class EngineReportingAgent<TContext = any> {
   }
 
   private resetReport(schemaHash: string) {
-    this.reports[schemaHash] = new FullTracesReport({
+    this.reports[schemaHash] = new UnifiedReport({
       header: this.reportHeaders[schemaHash],
     });
     this.reportSizes[schemaHash] = 0;
