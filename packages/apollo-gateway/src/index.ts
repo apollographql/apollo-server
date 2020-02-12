@@ -40,7 +40,7 @@ import { GraphQLDataSource } from './datasources/types';
 import { RemoteGraphQLDataSource } from './datasources/RemoteGraphQLDataSource';
 import { HeadersInit } from 'node-fetch';
 import { getVariableValues } from 'graphql/execution/values';
-import { CachedFetcher } from './cachedFetcher';
+import fetcher, { Fetcher } from 'make-fetch-happen';
 
 export type ServiceEndpointDefinition = Pick<ServiceDefinition, 'name' | 'url'>;
 
@@ -60,6 +60,7 @@ interface GatewayConfigBase {
   experimental_pollInterval?: number;
   experimental_approximateQueryPlanStoreMiB?: number;
   experimental_autoFragmentization?: boolean;
+  fetcher?: Fetcher;
 }
 
 interface RemoteGatewayConfig extends GatewayConfigBase {
@@ -161,7 +162,10 @@ export class ApolloGateway implements GraphQLService {
   private serviceDefinitions: ServiceDefinition[] = [];
   private compositionMetadata?: CompositionMetadata;
   private serviceSdlCache = new Map<string, string>();
-  private fetcher = new CachedFetcher();
+
+  private fetcher: Fetcher = fetcher.defaults({
+    cacheManager: "./gateway-local-cache"
+  });
 
   // Observe query plan, service info, and operation info prior to execution.
   // The information made available here will give insight into the resulting
@@ -246,6 +250,10 @@ export class ApolloGateway implements GraphQLService {
             'Polling should only be used against a registry. ' +
             'If you are polling running services, use with caution.',
         );
+      }
+
+      if (config.fetcher) {
+        this.fetcher = config.fetcher;
       }
     }
   }
