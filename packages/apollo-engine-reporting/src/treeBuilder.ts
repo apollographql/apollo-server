@@ -9,7 +9,7 @@ import {
   PersistedQueryNotFoundError,
   PersistedQueryNotSupportedError,
 } from 'apollo-server-errors';
-import { InvalidGraphQLRequestError } from "apollo-server-types";
+import { InvalidGraphQLRequestError } from 'apollo-server-types';
 
 function internalError(message: string) {
   return new Error(`[internal apollo-server error] ${message}`);
@@ -82,9 +82,11 @@ export class EngineReportingTreeBuilder {
 
   public didEncounterErrors(errors: GraphQLError[]) {
     errors.forEach(err => {
-      if (err instanceof PersistedQueryNotFoundError ||
+      if (
+        err instanceof PersistedQueryNotFoundError ||
         err instanceof PersistedQueryNotSupportedError ||
-        err instanceof InvalidGraphQLRequestError) {
+        err instanceof InvalidGraphQLRequestError
+      ) {
         return;
       }
 
