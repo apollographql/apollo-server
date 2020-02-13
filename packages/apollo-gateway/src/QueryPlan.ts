@@ -21,6 +21,7 @@ export type OperationContext = {
   schema: GraphQLSchema;
   operation: OperationDefinitionNode;
   fragments: FragmentMap;
+  compressDownstreamRequests: boolean;
 };
 
 export type PlanNode = SequenceNode | ParallelNode | FetchNode | FlattenNode;
@@ -41,6 +42,7 @@ export interface FetchNode {
   selectionSet: SelectionSetNode;
   variableUsages?: { [name: string]: VariableDefinitionNode };
   requires?: SelectionSetNode;
+  internalFragments: Set<FragmentDefinitionNode>;
 }
 export interface FlattenNode {
   kind: 'Flatten';

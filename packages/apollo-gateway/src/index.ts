@@ -59,6 +59,7 @@ interface GatewayConfigBase {
   experimental_didUpdateComposition?: Experimental_DidUpdateCompositionCallback;
   experimental_pollInterval?: number;
   experimental_approximateQueryPlanStoreMiB?: number;
+  experimental_compressDownstreamRequests?: boolean;
 }
 
 interface RemoteGatewayConfig extends GatewayConfigBase {
@@ -493,6 +494,7 @@ export class ApolloGateway implements GraphQLService {
       this.schema!,
       document,
       request.operationName,
+      this.config.experimental_compressDownstreamRequests
     );
 
     // No need to build a query plan if we know the request is invalid beforehand
