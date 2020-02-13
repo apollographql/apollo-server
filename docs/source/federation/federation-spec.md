@@ -1,5 +1,6 @@
 ---
-title: Federation specification
+title: Apollo Federation specification
+sidebar_title: Specification
 description: For implementing federation in other languages
 ---
 
