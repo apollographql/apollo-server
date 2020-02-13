@@ -1,12 +1,13 @@
 ---
 title: Fetching data with resolvers
+sidebar_title: Resolvers
 ---
 
 GraphQL is the best way to work with data from **any** back-end that your product needs. It is not a mapping of your database, but rather a graph of the data sources and shapes your product is made of. Resolvers are the key to this graph. Each resolver represents a single field, and can be used to fetch data from any source(s) you may have.
 
 Resolvers provide the instructions for turning a GraphQL operation into data. Resolvers are organized into a one to one mapping to the fields in a GraphQL schema. This section describes resolvers' organization, every field's default resolver, and their signature.
 
-## Resolver map
+## The resolver map
 
 In order to respond to queries, a schema needs to have resolve functions for all fields. This collection of functions is called the "resolver map". This map relates the schema fields and types to a function.
 
