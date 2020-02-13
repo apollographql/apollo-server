@@ -856,25 +856,25 @@ describe('buildQueryPlan', () => {
     const queryPlan = buildQueryPlan(buildOperationContext(schema, query));
 
     expect(queryPlan).toMatchInlineSnapshot(`
-    QueryPlan {
-      Fetch(service: "product") {
-        {
-          product(upc: "") {
-            __typename
-            ... on Book {
-              details {
-                country
+      QueryPlan {
+        Fetch(service: "product") {
+          {
+            product(upc: "") {
+              __typename
+              ... on Book {
+                details {
+                  country
+                }
               }
-            }
-            ... on Furniture {
-              details {
-                country
+              ... on Furniture {
+                details {
+                  country
+                }
               }
             }
           }
-        }
-      },
-    }
+        },
+      }
     `);
   });
 
