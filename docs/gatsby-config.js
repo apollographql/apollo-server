@@ -37,7 +37,6 @@ module.exports = {
           ],
           Federation: [
             'federation/introduction',
-            'federation/concerns',
             'federation/core-concepts',
             'federation/implementing',
             'federation/advanced-features',
