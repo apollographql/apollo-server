@@ -4,6 +4,12 @@
 
 > The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  When a release is being prepared, a new header will be (manually) created below and the the appropriate changes within that release will be moved into the new section.
 
+- _Nothing yet! Stay tuned._
+
+## v0.12.1
+
+- Update to include [fixes from `@apollo/federation`](https://github.com/apollographql/apollo-server/blob/master/packages/apollo-federation/CHANGELOG.md).
+
 ## v0.12.0
 
 > [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/9c0aa1e661ccc2c5a1471b781102637dd47e21b1)
