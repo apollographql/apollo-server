@@ -5,6 +5,8 @@ description: Reference and extend another service's types
 
 In Apollo Federation, an **entity** is a type that you define canonically in _one_ implementing service and can then reference and extend in _other_ implementing services. Entities are the core building block of a federated graph.
 
+>In a federated graph, every object that is _not_ an entity is a [value type](./value-types/).
+
 ## Declaring
 
 In a GraphQL schema, you can designate any object type as an entity by adding a `@key` directive to its definition, like so:
@@ -19,7 +21,42 @@ type Product @key(fields: "upc") {
 
 The `@key` directive declares the entity's **primary key**, which consists of one or more of the type's `fields`. In the example above, the `Product` entity's primary key is its `upc` field. Apollo Gateway's query planner uses an entity's primary key to identify a given instance of the type.
 
-> Apollo Federation supports [defining _multiple_ primary keys for an entity](./advanced-features/#multiple-primary-keys), along with [primary keys that consist of multiple fields](./advanced-features/#compound-and-nested-keys).
+> An entity's `@key` cannot include fields that hold unions or interfaces.
+
+### Defining multiple primary keys
+
+If an entity can be uniquely identified by more than one combination of fields, you can define more than one primary key for that entity.
+
+In the following example, a `Product` entity can be uniquely identified by either its `upc` _or_ its `sku`:
+
+```graphql
+type Product @key(fields: "upc") @key(fields: "sku") {
+  upc: String!
+  sku: String!
+  price: String
+}
+```
+
+This pattern is helpful when different services interact with different fields of an entity. For example, a `reviews` service might refer to products by their UPC, whereas an `inventory` service might use SKUs.
+
+> You cannot list multiple primary keys when you [extend an entity](#extending), only when you declare the entity in its originating service.
+
+### Defining a compound primary key
+
+A single primary key can consist of multiple fields, and even nested fields.
+
+The following example shows a primary key that consists of both a user's `id` _and_ the `id` of that user's associated organization:
+
+```graphql
+type User @key(fields: "id organization { id }") {
+  id: ID!
+  organization: Organization!
+}
+
+type Organization {
+  id: ID!
+}
+```
 
 ## Referencing
 
@@ -39,8 +76,8 @@ extend type Product @key(fields: "upc") {
 Because the `Product` entity is defined in another service, the `reviews` service needs to define a **stub** of it to make its own schema valid. The stub includes just enough information for the service to know how to interact with a `Product`:
 
 * The `extend` keyword indicates that `Product` is an entity that is defined in another implementing service (in this case, the `products` service).
-* The `@key` directive indicates that `Product` uses the `upc` field as its primary key. **This value must match the value of `@key` specified in the entity's originating service.**
-* The `upc` field must be included in the stub because it is part of the entity's primary key. It also must be annotated with the `@external` directive to indicate that the field originates in another service.
+* The `@key` directive indicates that `Product` uses the `upc` field as its primary key. **This value must match the value of a `@key` specified in the entity's originating service.**
+* The `upc` field must be included in the stub because it is part of the specified `@key`. It also must be annotated with the `@external` directive to indicate that the field originates in another service.
 
 This explicit syntax has several benefits:
 * It is standard GraphQL grammar.
@@ -168,7 +205,7 @@ extend type Query {
 }
 ```
 
-## Changing a field's originating service
+## Migrating a field
 
 As your federated graph grows, you might decide that you want a particular field of an entity to originate in a different service.
 
@@ -185,3 +222,30 @@ Apollo Gateway helps you perform this migration much like you perform a database
 4. In the `products` service, remove the `inStock` field and its resolver.
 
 5. Push the updated `products` service to your environment. This removes the invalid duplicate, and Apollo Gateway will begin resolving the `inStock` field in the `inventory` service.
+
+## Resolving another service's field (advanced)
+
+Sometimes, multiple implementing services are capable of resolving a particular field for an entity, because all of those services have access to a particular data store. For example, an `inventory` service and a `products` service might both have access to the database that stores all product-related data.
+
+When you [extend an entity](#extending) in this case, you can specify that the extending service `@provides` the field, like so:
+
+```graphql{2,8-9}:title=inventory
+type InStockCont {
+  product: Product! @provides(fields: "name price")
+  quantity: Integer!
+}
+
+extend type Product @key(fields: "sku") {
+  sku: String! @external
+  name: String @external
+  price: Integer @external
+}
+```
+
+**This is a completely optional optimization.** When Apollo Gateway plans a query's execution, it looks at which fields are available from each implementing service. It then attempts to optimize performance by executing the query across the fewest services needed to access all required fields.
+
+Keep the following in mind when using the `@provides` directive:
+
+* Each service that `@provides` a field must also define a resolver for that field. **That resolver's behavior must match the behavior of the resolver in the field's originating service.**
+* When an entity's field can be fetched from multiple services, there is no guarantee as to _which_ service will resolve that field for a particular query.
+* If a service `@provides` a field, it must still list that field as `@external`, because the field originates in another service.
