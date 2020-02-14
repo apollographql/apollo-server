@@ -4,7 +4,7 @@
 
 > The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  When a release is being prepared, a new header will be (manually) created below and the the appropriate changes within that release will be moved into the new section.
 
-- Don't strip the `@deprecated` type-system directive [#3792](https://github.com/apollographql/apollo-server/pull/3792) This PR resolves a breaking change introduced by [#3736](https://github.com/apollographql/apollo-server/pull/3736) in the `v0.12.0` release of `@apollo/federation`. As an oversight, we began stripping all type-system directives from SDL. This behavior didn't account for the special case that is the `@deprecated` directive. This change reinstates the previous behavior so the `@deprecated` directive remains in SDL.
+- Fix `v0.12.0` regression: Preserve the `@deprecated` type-system directive as a special case when removing type system directives during composition, resolving an unintentional breaking change introduced by [#3736](https://github.com/apollographql/apollo-server/pull/3736). [#3792](https://github.com/apollographql/apollo-server/pull/3792)
 
 ## v0.12.0
 
