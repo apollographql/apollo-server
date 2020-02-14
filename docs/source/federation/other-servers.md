@@ -12,6 +12,7 @@ The following is a list of known open source GraphQL server libraries that have 
 | Kotlin      | graphql-java | [graphql-kotlin](https://github.com/ExpediaGroup/graphql-kotlin)                 |
 | PHP         | graphql-php  | [php-graphql-federation](https://github.com/pascaldevink/php-graphql-federation) |
 | PHP         | wp-graphql   | [wp-graphql-federation](https://github.com/wp-graphql/wp-graphql-federation)     |
+| Python      | ariadne      | [ariadne](https://github.com/mirumee/ariadne)                                    |
 | Python      | graphene     | [graphene-federation](https://github.com/preply/graphene-federation)             |
 | Ruby        | graphql-ruby | [apollo-federation-ruby](https://github.com/Gusto/apollo-federation-ruby)        |
 
