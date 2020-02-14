@@ -623,4 +623,32 @@ describe('composition of schemas with directives', () => {
       `societal: String!`,
     );
   });
+
+  it(`doesn't strip the special case @deprecated type-system directive`, () => {
+    const serviceA = {
+      typeDefs: gql`
+        type EarthConcern {
+          environmental: String!
+        }
+
+        extend type Query {
+          importantDirectives: [EarthConcern!]!
+            @deprecated(reason: "Don't remove me please")
+        }
+      `,
+      name: 'serviceA',
+    };
+
+    const { schema, errors } = composeAndValidate([serviceA]);
+    expect(errors).toHaveLength(0);
+
+    const deprecated = schema.getDirective('deprecated');
+    expect(deprecated).toMatchInlineSnapshot(`"@deprecated"`);
+
+    const queryType = schema.getType('Query') as GraphQLObjectType;
+    const field = queryType.getFields()['importantDirectives'];
+
+    expect(field.isDeprecated).toBe(true);
+    expect(field.deprecationReason).toEqual("Don't remove me please");
+  });
 });
