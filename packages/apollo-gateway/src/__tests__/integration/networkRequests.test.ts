@@ -1,5 +1,4 @@
 import nock from 'nock';
-import { rmdirSync } from 'fs';
 import { ApolloGateway } from '../..';
 
 import {
@@ -20,7 +19,6 @@ afterEach(() => {
   nock.cleanAll();
   nock.restore();
   jest.useRealTimers();
-  rmdirSync(process.cwd() + '/gateway-local-cache', { recursive: true });
 });
 
 it('Queries remote endpoints for their SDLs', async () => {

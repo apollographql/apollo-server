@@ -41,6 +41,8 @@ import { RemoteGraphQLDataSource } from './datasources/RemoteGraphQLDataSource';
 import { HeadersInit } from 'node-fetch';
 import { getVariableValues } from 'graphql/execution/values';
 import fetcher, { Fetcher } from 'make-fetch-happen';
+import { Request, Response } from 'apollo-server-env';
+import { Cache } from './cache';
 
 export type ServiceEndpointDefinition = Pick<ServiceDefinition, 'name' | 'url'>;
 
@@ -164,7 +166,7 @@ export class ApolloGateway implements GraphQLService {
   private serviceSdlCache = new Map<string, string>();
 
   private fetcher: Fetcher = fetcher.defaults({
-    cacheManager: "./gateway-local-cache"
+    cacheManager: new Cache()
   });
 
   // Observe query plan, service info, and operation info prior to execution.

@@ -66,9 +66,9 @@ export async function getServiceDefinitionsFromStorage({
   // fetch the storage secret
   const storageSecretUrl = getStorageSecretUrl(graphId, apiKeyHash);
 
-  const secret = await fetcher(storageSecretUrl).then(response =>
-    response.json(),
-  );
+  const secret = await fetcher(storageSecretUrl).then(response => {
+    return response.json();
+  });
 
   if (!graphVariant) {
     graphVariant = 'current';
