@@ -23,7 +23,10 @@ import {
   InMemoryLRUCache,
   PrefixingKeyValueCache,
 } from 'apollo-server-caching';
-import { ApolloServerPlugin } from 'apollo-server-plugin-base';
+import {
+  ApolloServerPlugin,
+  GraphQLServiceContext,
+} from 'apollo-server-plugin-base';
 import runtimeSupportsUploads from './utils/runtimeSupportsUploads';
 
 import {
@@ -558,19 +561,35 @@ export class ApolloServerBase {
 
   protected async willStart() {
     const { schema, schemaHash } = await this.schemaDerivedData;
+    const service: GraphQLServiceContext = {
+      schema: schema,
+      schemaHash: schemaHash,
+      engine: {
+        serviceID: this.engineServiceId,
+        apiKeyHash: this.engineApiKeyHash,
+      },
+    };
+
+    // The `persistedQueries` attribute on the GraphQLServiceContext was
+    // originally used by the operation registry, which shared the cache with
+    // it.  This is no longer the case.  However, while we are continuing to
+    // expand the support of the interface for `persistedQueries`, e.g. with
+    // additions like https://github.com/apollographql/apollo-server/pull/3623,
+    // we don't want to continually expand the API surface of what we expose
+    // to the plugin API.   In this particular case, it certainly doesn't need
+    // to get the `ttl` default value which are intended for APQ only.
+    if (this.requestOptions.persistedQueries?.cache) {
+      service.persistedQueries = {
+        cache: this.requestOptions.persistedQueries.cache,
+      }
+    }
+
+      persistedQueries: this.requestOptions.persistedQueries,
     await Promise.all(
       this.plugins.map(
         plugin =>
           plugin.serverWillStart &&
-          plugin.serverWillStart({
-            schema: schema,
-            schemaHash: schemaHash,
-            engine: {
-              serviceID: this.engineServiceId,
-              apiKeyHash: this.engineApiKeyHash,
-            },
-            persistedQueries: this.requestOptions.persistedQueries,
-          }),
+          plugin.serverWillStart(service),
       ),
     );
   }
