@@ -59,6 +59,7 @@ interface GatewayConfigBase {
   experimental_didUpdateComposition?: Experimental_DidUpdateCompositionCallback;
   experimental_pollInterval?: number;
   experimental_approximateQueryPlanStoreMiB?: number;
+  experimental_autoFragmentization?: boolean;
 }
 
 interface RemoteGatewayConfig extends GatewayConfigBase {
@@ -512,7 +513,11 @@ export class ApolloGateway implements GraphQLService {
     }
 
     if (!queryPlan) {
-      queryPlan = buildQueryPlan(operationContext);
+      queryPlan = buildQueryPlan(operationContext, {
+        autoFragmentization: Boolean(
+          this.config.experimental_autoFragmentization,
+        ),
+      });
       if (this.queryPlanStore) {
         // The underlying cache store behind the `documentStore` returns a
         // `Promise` which is resolved (or rejected), eventually, based on the
