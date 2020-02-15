@@ -897,7 +897,8 @@ describe('buildQueryPlan', () => {
       `;
 
       const queryPlan = buildQueryPlan(
-        buildOperationContext(schema, query, undefined, true),
+        buildOperationContext(schema, query, undefined),
+        { compressDownstreamRequests: true }
       );
 
       expect(queryPlan).toMatchInlineSnapshot(`
@@ -1012,7 +1013,8 @@ describe('buildQueryPlan', () => {
       `;
 
       const queryPlan = buildQueryPlan(
-        buildOperationContext(schema, query, undefined, true),
+        buildOperationContext(schema, query, undefined),
+        { compressDownstreamRequests: true }
       );
 
       expect(queryPlan).toMatchInlineSnapshot(`
@@ -1041,7 +1043,8 @@ describe('buildQueryPlan', () => {
       `;
 
       const queryPlan = buildQueryPlan(
-        buildOperationContext(schema, query, undefined, true),
+        buildOperationContext(schema, query, undefined),
+        { compressDownstreamRequests: true }
       );
 
       expect(queryPlan).toMatchInlineSnapshot(`

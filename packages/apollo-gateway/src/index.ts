@@ -494,7 +494,6 @@ export class ApolloGateway implements GraphQLService {
       this.schema!,
       document,
       request.operationName,
-      this.config.experimental_compressDownstreamRequests
     );
 
     // No need to build a query plan if we know the request is invalid beforehand
@@ -514,7 +513,11 @@ export class ApolloGateway implements GraphQLService {
     }
 
     if (!queryPlan) {
-      queryPlan = buildQueryPlan(operationContext);
+      queryPlan = buildQueryPlan(operationContext, {
+        compressDownstreamRequests: Boolean(
+          this.config.experimental_compressDownstreamRequests,
+        ),
+      });
       if (this.queryPlanStore) {
         // The underlying cache store behind the `documentStore` returns a
         // `Promise` which is resolved (or rejected), eventually, based on the

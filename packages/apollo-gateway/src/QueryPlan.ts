@@ -21,7 +21,6 @@ export type OperationContext = {
   schema: GraphQLSchema;
   operation: OperationDefinitionNode;
   fragments: FragmentMap;
-  compressDownstreamRequests: boolean;
 };
 
 export type PlanNode = SequenceNode | ParallelNode | FetchNode | FlattenNode;

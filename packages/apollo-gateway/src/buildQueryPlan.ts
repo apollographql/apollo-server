@@ -26,7 +26,6 @@ import {
   TypeNameMetaFieldDef,
   visit,
   VariableDefinitionNode,
-  print,
   VisitFn,
   ASTNode,
   VariableNode,
@@ -61,8 +60,15 @@ const typenameField = {
   },
 };
 
-export function buildQueryPlan(operationContext: OperationContext): QueryPlan {
-  const context = buildQueryPlanningContext(operationContext);
+interface BuildQueryPlanOptions {
+  compressDownstreamRequests: boolean;
+}
+
+export function buildQueryPlan(
+  operationContext: OperationContext,
+  options: BuildQueryPlanOptions = { compressDownstreamRequests: false },
+): QueryPlan {
+  const context = buildQueryPlanningContext(operationContext, options);
 
   if (context.operation.operation === 'subscription') {
     throw new GraphQLError(
@@ -769,7 +775,6 @@ export function buildOperationContext(
   schema: GraphQLSchema,
   document: DocumentNode,
   operationName?: string,
-  compressDownstreamRequests: boolean = false,
 ): OperationContext {
   let operation: OperationDefinitionNode | undefined;
   const fragments: {
@@ -804,16 +809,19 @@ export function buildOperationContext(
     }
   }
 
-  return { schema, operation, fragments, compressDownstreamRequests };
+  return { schema, operation, fragments };
 }
 
-export function buildQueryPlanningContext({
-  operation,
-  schema,
-  fragments,
-  compressDownstreamRequests,
-}: OperationContext): QueryPlanningContext {
-  return new QueryPlanningContext(schema, operation, fragments, compressDownstreamRequests);
+export function buildQueryPlanningContext(
+  { operation, schema, fragments }: OperationContext,
+  options: BuildQueryPlanOptions,
+): QueryPlanningContext {
+  return new QueryPlanningContext(
+    schema,
+    operation,
+    fragments,
+    options.compressDownstreamRequests,
+  );
 }
 
 export class QueryPlanningContext {
