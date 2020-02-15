@@ -886,18 +886,20 @@ export class QueryPlanningContext {
       [name: string]: VariableDefinitionNode;
     } = Object.create(null);
 
-    const Variable: VisitFn<ASTNode, VariableNode> = node => {
-      usages[node.name.value] = this.variableDefinitions[node.name.value];
+    // Construct a document of the selection set and fragment definitions so we
+    // can visit them, adding all variable usages to the `usages` object.
+    const document: DocumentNode = {
+      kind: Kind.DOCUMENT,
+      definitions: [
+        { kind: Kind.OPERATION_DEFINITION, selectionSet, operation: 'query' },
+        ...Array.from(fragments),
+      ],
     };
 
-    visit(selectionSet, {
-      Variable,
-    });
-
-    fragments.forEach(fragment => {
-      visit(fragment, {
-        Variable,
-      });
+    visit(document, {
+      Variable: (node) => {
+        usages[node.name.value] = this.variableDefinitions[node.name.value];
+      },
     });
 
     return usages;
