@@ -26,9 +26,6 @@ import {
   TypeNameMetaFieldDef,
   visit,
   VariableDefinitionNode,
-  VisitFn,
-  ASTNode,
-  VariableNode,
 } from 'graphql';
 import {
   Field,
