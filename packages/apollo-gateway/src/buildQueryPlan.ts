@@ -591,7 +591,7 @@ function getInternalFragment(
   context: QueryPlanningContext
 ) {
   const key = JSON.stringify(selectionSet);
-  if (!context.internalFragments[key]) {
+  if (!context.internalFragments.has(key)) {
     const name = `__QueryPlanFragment_${context.internalFragmentCount++}__`;
 
     const definition: FragmentDefinitionNode = {
@@ -622,14 +622,15 @@ function getInternalFragment(
         },
       ],
     };
-    context.internalFragments[key] = {
+
+    context.internalFragments.set(key, {
       name,
       definition,
       selectionSet: fragmentSelection,
-    };
+    });
   }
 
-  return context.internalFragments[key];
+  return context.internalFragments.get(key)!;
 }
 
 function collectFields(
@@ -825,13 +826,14 @@ export function buildQueryPlanningContext(
 }
 
 export class QueryPlanningContext {
-  public internalFragments: {
-    [key: string]: {
+  public internalFragments: Map<
+    string,
+    {
       name: string;
       definition: FragmentDefinitionNode;
       selectionSet: SelectionSetNode;
-    };
-  } = {};
+    }
+  > = new Map();
 
   public internalFragmentCount = 0;
 
@@ -876,24 +878,27 @@ export class QueryPlanningContext {
     return isAbstractType(type) ? this.schema.getPossibleTypes(type) : [type];
   }
 
-  getVariableUsages(selectionSet: SelectionSetNode, fragments: Set<FragmentDefinitionNode>) {
+  getVariableUsages(
+    selectionSet: SelectionSetNode,
+    fragments: Set<FragmentDefinitionNode>,
+  ) {
     const usages: {
       [name: string]: VariableDefinitionNode;
     } = Object.create(null);
 
-    const Variable: VisitFn<ASTNode, VariableNode> = (node) => {
+    const Variable: VisitFn<ASTNode, VariableNode> = node => {
       usages[node.name.value] = this.variableDefinitions[node.name.value];
-    }
+    };
 
     visit(selectionSet, {
-      Variable
+      Variable,
     });
 
     fragments.forEach(fragment => {
       visit(fragment, {
-        Variable
-      })
-    })
+        Variable,
+      });
+    });
 
     return usages;
   }
