@@ -1,5 +1,6 @@
 / /docs/apollo-server/
 
+/docs/apollo-server/federation/advanced-features/ /docs/apollo-server/federation/core-concepts/
 /docs/apollo-server/federation/concerns/ /docs/apollo-server/federation/introduction/#separation-of-concerns
 
 # The test-utils lived at its current home for about 5 days.

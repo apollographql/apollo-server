@@ -40,7 +40,6 @@ module.exports = {
             'federation/implementing',
             'federation/core-concepts',
             'federation/value-types',
-            'federation/advanced-features',
             'federation/errors',
             'federation/metrics',
             'federation/migrating-from-stitching',
