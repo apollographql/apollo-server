@@ -551,17 +551,15 @@ function completeField(
     parentGroup.otherDependentGroups.push(...subGroup.dependentGroups);
 
     let definition: FragmentDefinitionNode;
-    let selectionSet: SelectionSetNode;
+    let selectionSet = selectionSetFromFieldSet(subGroup.fields, returnType);
 
     if (context.compressDownstreamRequests && subGroup.fields.length > 2) {
       ({ definition, selectionSet } = getInternalFragment(
-        subGroup.fields,
+        selectionSet,
         returnType,
         context,
       ));
       parentGroup.internalFragments.add(definition);
-    } else {
-      selectionSet = selectionSetFromFieldSet(subGroup.fields, returnType);
     }
 
     // "Hoist" internalFragments of the subGroup into the parentGroup so all
@@ -582,13 +580,11 @@ function completeField(
 }
 
 function getInternalFragment(
-  fields: Field<GraphQLCompositeType>[],
+  selectionSet: SelectionSetNode,
   returnType: GraphQLCompositeType,
   context: QueryPlanningContext
 ) {
-  const expandedSelectionSet = selectionSetFromFieldSet(fields, returnType);
-
-  const key = JSON.stringify(expandedSelectionSet);
+  const key = JSON.stringify(selectionSet);
   if (!context.internalFragments[key]) {
     const name = `__QueryPlanFragment_${context.internalFragmentCount++}__`;
 
@@ -605,7 +601,7 @@ function getInternalFragment(
           value: returnType.name,
         },
       },
-      selectionSet: expandedSelectionSet,
+      selectionSet,
     };
 
     const fragmentSelection: SelectionSetNode = {
