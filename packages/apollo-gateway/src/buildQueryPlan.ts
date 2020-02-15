@@ -61,12 +61,12 @@ const typenameField = {
 };
 
 interface BuildQueryPlanOptions {
-  compressDownstreamRequests: boolean;
+  autoFragmentization: boolean;
 }
 
 export function buildQueryPlan(
   operationContext: OperationContext,
-  options: BuildQueryPlanOptions = { compressDownstreamRequests: false },
+  options: BuildQueryPlanOptions = { autoFragmentization: false },
 ): QueryPlan {
   const context = buildQueryPlanningContext(operationContext, options);
 
@@ -559,7 +559,7 @@ function completeField(
     let definition: FragmentDefinitionNode;
     let selectionSet = selectionSetFromFieldSet(subGroup.fields, returnType);
 
-    if (context.compressDownstreamRequests && subGroup.fields.length > 2) {
+    if (context.autoFragmentization && subGroup.fields.length > 2) {
       ({ definition, selectionSet } = getInternalFragment(
         selectionSet,
         returnType,
@@ -821,7 +821,7 @@ export function buildQueryPlanningContext(
     schema,
     operation,
     fragments,
-    options.compressDownstreamRequests,
+    options.autoFragmentization,
   );
 }
 
@@ -845,7 +845,7 @@ export class QueryPlanningContext {
     public readonly schema: GraphQLSchema,
     public readonly operation: OperationDefinitionNode,
     public readonly fragments: FragmentMap,
-    public readonly compressDownstreamRequests: boolean,
+    public readonly autoFragmentization: boolean,
   ) {
     this.variableDefinitions = Object.create(null);
     visit(operation, {

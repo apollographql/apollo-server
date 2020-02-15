@@ -59,7 +59,7 @@ interface GatewayConfigBase {
   experimental_didUpdateComposition?: Experimental_DidUpdateCompositionCallback;
   experimental_pollInterval?: number;
   experimental_approximateQueryPlanStoreMiB?: number;
-  experimental_compressDownstreamRequests?: boolean;
+  experimental_autoFragmentization?: boolean;
 }
 
 interface RemoteGatewayConfig extends GatewayConfigBase {
@@ -514,8 +514,8 @@ export class ApolloGateway implements GraphQLService {
 
     if (!queryPlan) {
       queryPlan = buildQueryPlan(operationContext, {
-        compressDownstreamRequests: Boolean(
-          this.config.experimental_compressDownstreamRequests,
+        autoFragmentization: Boolean(
+          this.config.experimental_autoFragmentization,
         ),
       });
       if (this.queryPlanStore) {
