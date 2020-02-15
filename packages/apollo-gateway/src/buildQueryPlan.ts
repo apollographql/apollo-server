@@ -589,15 +589,15 @@ function getInternalFragment(
     const name = `__QueryPlanFragment_${context.internalFragmentCount++}__`;
 
     const definition: FragmentDefinitionNode = {
-      kind: 'FragmentDefinition',
+      kind: Kind.FRAGMENT_DEFINITION,
       name: {
-        kind: 'Name',
+        kind: Kind.NAME,
         value: name,
       },
       typeCondition: {
-        kind: 'NamedType',
+        kind: Kind.NAMED_TYPE,
         name: {
-          kind: 'Name',
+          kind: Kind.NAME,
           value: returnType.name,
         },
       },
@@ -605,12 +605,12 @@ function getInternalFragment(
     };
 
     const fragmentSelection: SelectionSetNode = {
-      kind: 'SelectionSet',
+      kind: Kind.SELECTION_SET,
       selections: [
         {
-          kind: 'FragmentSpread',
+          kind: Kind.FRAGMENT_SPREAD,
           name: {
-            kind: 'Name',
+            kind: Kind.NAME,
             value: name,
           },
         },
