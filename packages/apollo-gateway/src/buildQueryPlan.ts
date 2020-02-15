@@ -588,7 +588,7 @@ function getInternalFragment(
 ) {
   const expandedSelectionSet = selectionSetFromFieldSet(fields, returnType);
 
-  const key = print(expandedSelectionSet);
+  const key = JSON.stringify(expandedSelectionSet);
   if (!context.internalFragments[key]) {
     const name = `__QueryPlanFragment_${context.internalFragmentCount++}__`;
 
