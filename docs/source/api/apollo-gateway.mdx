@@ -41,6 +41,18 @@ example of using `ApolloGateway`, see [Implementing a federated graph](/federati
     });
     ```
 
+  * `apq`: `Boolean`
+
+    When enabled the gateway will attempt to use [automated persisted queries (APQ)](https://www.apollographql.com/docs/apollo-server/performance/apq/)
+    when sending queries to downstream services.  Depending on the complexity
+    of queries sent to downstream services, this technique can greatly reduce
+    the size of the payloads being transmitted over the network.  Downstream
+    implementing services must also support APQ functionality to participate
+    in this feature (Apollo Server does by default unless it has been
+    explicitly disabled).  As with typical APQ behavior, a downstream server
+    must have received and registered a query once before it will be able to
+    serve an APQ request.
+
   * `buildService`: `(service: ServiceDefinition) => GraphQLDataSource`
 
     Define this function to customize your gateway's data transport to some or
@@ -158,24 +170,34 @@ These methods are described in detail below.
     });
     ```
 
-  ### `didReceiveResponse`: `(response: Response, request: Request, context: TContext) => Promise<TResult>`
+  ### `didReceiveResponse`: `(requestContext: {request: GraphQLRequest, response: GraphQLResponse, context: Record<string, any>}) => Promise<GraphQLResponse>`
 
     Override this method to customize the gateway's behavior after completing
-    a fetch to the implementing service. The method takes the original `request`, the implementing service's `response`, and the current `context` as parameters, allowing you to modify any combination of the context and the final result of the fetch.
+    a fetch to the implementing service. The method receives an object (a
+    [`GraphQLRequestContext`](https://github.com/apollographql/apollo-server/blob/2562d096/packages/apollo-server-types/src/index.ts#L61-L92))
+    containing the `request` (a `GraphQLRequest`), the implementing service's
+    `response` (a `GraphQLResponse`), and the current `context` as parameters.
+    This allows modification of the context and the final result of the fetch.
 
-    This method must return an object that matches the structure of a
-    [`GraphQLExecutionResult`](https://github.com/apollographql/apollo-server/blob/master/packages/apollo-server-types/src/index.ts#L105-L109) (i.e., it
-    should include `data`, `errors`, and/or `extensions` fields).
+    The `http` property on the `request` and `response` objects will contain
+    additional HTTP-specific properties, like `headers`.
 
-    ```js{2-9}
+    Any implementation of this method must return an object that matches the
+    structure of a [`GraphQLResponse`](https://github.com/apollographql/apollo-server/blob/2562d096/packages/apollo-server-types/src/index.ts#L43-L48)
+    (i.e., it should include `http`, `data`, `errors`, and/or `extensions`
+    fields).  If no modifications are necessary, simply return the original
+    `response`.
+
+    ```javascript
     class CookieDataSource extends RemoteGraphQLDataSource {
-      didReceiveResponse(response, request, context) {
-        const body = super.didReceiveResponse(response, request, context);
+      didReceiveResponse({ response, request, context }) {
         const cookie = request.http.headers.get('Cookie');
         if (cookie) {
           context.responseCookies.push(cookie);
         }
-        return body;
+
+        // Return the response back, even when unchanged.
+        return response;
       }
     }
     ```

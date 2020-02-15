@@ -5,9 +5,7 @@ The version headers in this history reflect the versions of Apollo Server itself
 - [__CHANGELOG for `@apollo/gateway`__](https://github.com/apollographql/apollo-server/blob/master/packages/apollo-gateway/CHANGELOG.md)
 - [__CHANGELOG for `@apollo/federation`__](https://github.com/apollographql/apollo-server/blob/master/packages/apollo-federation/CHANGELOG.md)
 
-### vNEXT
-
-> The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  When a release is being prepared, a new header will be (manually) created below and the the appropriate changes within that release will be moved into the new section.
+### v2.11.0
 
 - _Nothing yet! Stay tuned._
 

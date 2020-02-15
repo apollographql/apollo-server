@@ -2,6 +2,7 @@ import {
   GraphQLRequestContext,
   GraphQLResponse,
   ValueOrPromise,
+  GraphQLRequest,
 } from 'apollo-server-types';
 import {
   ApolloError,
@@ -11,12 +12,12 @@ import {
 import {
   fetch,
   Request,
-  RequestInit,
   Headers,
   Response,
 } from 'apollo-server-env';
 import { isObject } from '../utilities/predicates';
 import { GraphQLDataSource } from './types';
+import createSHA from 'apollo-server-core/dist/utils/createSHA';
 
 export class RemoteGraphQLDataSource implements GraphQLDataSource {
   constructor(
@@ -30,6 +31,26 @@ export class RemoteGraphQLDataSource implements GraphQLDataSource {
   }
 
   url!: string;
+
+  /**
+   * Whether the downstream request should be made with automated persisted
+   * query (APQ) behavior enabled.
+   *
+   * @remarks When enabled, the request to the downstream service will first be
+   * attempted using a SHA-256 hash of the operation rather than including the
+   * operation itself. If the downstream server supports APQ and has this
+   * operation registered in its APQ storage, it will be able to complete the
+   * request without the entirety of the operation document being transmitted.
+   *
+   * In the event that the downstream service is unaware of the operation, it
+   * will respond with an `PersistedQueryNotFound` error and it will be resent
+   * with the full operation body for fulfillment.
+   *
+   * Generally speaking, when the downstream server is processing similar
+   * operations repeatedly, APQ can offer substantial network savings in terms
+   * of bytes transmitted over the wire between gateways and downstream servers.
+   */
+  apq: boolean = false;
 
   async process<TContext>({
     request,
@@ -51,33 +72,94 @@ export class RemoteGraphQLDataSource implements GraphQLDataSource {
       await this.willSendRequest({ request, context });
     }
 
-    const { http, ...graphqlRequest } = request;
-    const options: RequestInit = {
-      ...http,
-      body: JSON.stringify(graphqlRequest),
-    };
+    if (!request.query) {
+      throw new Error("Missing query");
+    }
 
-    const httpRequest = new Request(request.http.url, options);
+    const apqHash = createSHA('sha256')
+       .update(request.query)
+       .digest('hex');
+
+    const { query, ...requestWithoutQuery } = request;
+
+    const respond = (response: GraphQLResponse, request: GraphQLRequest) =>
+      typeof this.didReceiveResponse === "function"
+        ? this.didReceiveResponse({ response, request, context })
+        : response;
+
+    if (this.apq) {
+      // Take the original extensions and extend them with
+      // the necessary "extensions" for APQ handshaking.
+      requestWithoutQuery.extensions = {
+        ...request.extensions,
+        persistedQuery: {
+          version: 1,
+          sha256Hash: apqHash,
+        },
+      };
+
+      const apqOptimisticResponse =
+        await this.sendRequest(requestWithoutQuery, context);
+
+      // If we didn't receive notice to retry with APQ, then let's
+      // assume this is the best result we'll get and return it!
+      if (
+        !apqOptimisticResponse.errors ||
+        !apqOptimisticResponse.errors.find(error =>
+          error.message === 'PersistedQueryNotFound')
+      ) {
+        return respond(apqOptimisticResponse, requestWithoutQuery);
+      }
+    }
+
+    // If APQ was enabled, we'll run the same request again, but add in the
+    // previously omitted `query`.  If APQ was NOT enabled, this is the first
+    // request (non-APQ, all the way).
+    const requestWithQuery: GraphQLRequest = {
+      query,
+      ...requestWithoutQuery,
+    };
+    const response = await this.sendRequest(requestWithQuery, context);
+    return respond(response, requestWithQuery);
+  }
+
+  private async sendRequest<TContext>(
+    request: GraphQLRequest,
+    context: TContext,
+  ): Promise<GraphQLResponse> {
+
+    // This would represent an internal programming error since this shouldn't
+    // be possible in the way that this method is invoked right now.
+    if (!request.http) {
+      throw new Error("Internal error: Only 'http' requests are supported.")
+    }
+
+    // We don't want to serialize the `http` properties into the body that is
+    // being transmitted.  Instead, we want those to be used to indicate what
+    // we're accessing (e.g. url) and what we access it with (e.g. headers).
+    const { http, ...requestWithoutHttp } = request;
+    const httpRequest = new Request(http.url, {
+      ...http,
+      body: JSON.stringify(requestWithoutHttp),
+    });
 
     try {
       const httpResponse = await fetch(httpRequest);
 
-      const body = await this.didReceiveResponse(
-        httpResponse,
-        httpRequest,
-        context,
-      );
+      if (!httpResponse.ok) {
+        throw await this.errorFromResponse(httpResponse);
+      }
+
+      const body = await this.parseBody(httpResponse, httpRequest, context);
 
       if (!isObject(body)) {
         throw new Error(`Expected JSON response body, but received: ${body}`);
       }
 
-      const response: GraphQLResponse = {
+      return {
         ...body,
         http: httpResponse,
       };
-
-      return response;
     } catch (error) {
       this.didEncounterError(error, httpRequest);
       throw error;
@@ -91,23 +173,22 @@ export class RemoteGraphQLDataSource implements GraphQLDataSource {
     >,
   ): ValueOrPromise<void>;
 
-  public async didReceiveResponse<TResult = any, TContext = any>(
-    response: Response,
-    _request: Request,
-    _context?: TContext,
-  ): Promise<TResult> {
-    if (response.ok) {
-      return (this.parseBody(response) as any) as Promise<TResult>;
-    } else {
-      throw await this.errorFromResponse(response);
-    }
-  }
+  public didReceiveResponse?<TContext = any>(
+    requestContext: Required<Pick<
+      GraphQLRequestContext<TContext>,
+      'request' | 'response' | 'context'>
+    >,
+  ): ValueOrPromise<GraphQLResponse>;
 
   public didEncounterError(error: Error, _request: Request) {
     throw error;
   }
 
-  public parseBody(response: Response): Promise<object | string> {
+  public parseBody<TContext>(
+    response: Response,
+    _request?: Request,
+    _context?: TContext,
+  ): Promise<object | string> {
     const contentType = response.headers.get('Content-Type');
     if (contentType && contentType.startsWith('application/json')) {
       return response.json();
