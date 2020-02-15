@@ -898,7 +898,7 @@ describe('buildQueryPlan', () => {
 
       const queryPlan = buildQueryPlan(
         buildOperationContext(schema, query, undefined),
-        { compressDownstreamRequests: true }
+        { compressDownstreamRequests: true },
       );
 
       expect(queryPlan).toMatchInlineSnapshot(`
@@ -1014,7 +1014,7 @@ describe('buildQueryPlan', () => {
 
       const queryPlan = buildQueryPlan(
         buildOperationContext(schema, query, undefined),
-        { compressDownstreamRequests: true }
+        { compressDownstreamRequests: true },
       );
 
       expect(queryPlan).toMatchInlineSnapshot(`
@@ -1044,7 +1044,7 @@ describe('buildQueryPlan', () => {
 
       const queryPlan = buildQueryPlan(
         buildOperationContext(schema, query, undefined),
-        { compressDownstreamRequests: true }
+        { compressDownstreamRequests: true },
       );
 
       expect(queryPlan).toMatchInlineSnapshot(`
@@ -1060,6 +1060,129 @@ describe('buildQueryPlan', () => {
               body
               author
             }
+          },
+        }
+      `);
+    });
+
+    it(`should generate fragments correctly when aliases are used`, () => {
+      const query = gql`
+        query {
+          reviews: topReviews {
+            content: body
+            author
+            product {
+              name
+              cost: price
+              details {
+                origin: country
+              }
+            }
+          }
+        }
+      `;
+
+      const queryPlan = buildQueryPlan(
+        buildOperationContext(schema, query, undefined),
+        { compressDownstreamRequests: true },
+      );
+
+      expect(queryPlan).toMatchInlineSnapshot(`
+        QueryPlan {
+          Sequence {
+            Fetch(service: "reviews") {
+              {
+                reviews: topReviews {
+                  ...__QueryPlanFragment_1__
+                }
+              }
+              fragment __QueryPlanFragment_1__ on Review {
+                content: body
+                author
+                product {
+                  ...__QueryPlanFragment_0__
+                }
+              }
+              fragment __QueryPlanFragment_0__ on Product {
+                __typename
+                ... on Book {
+                  __typename
+                  isbn
+                }
+                ... on Furniture {
+                  __typename
+                  upc
+                }
+              }
+            },
+            Parallel {
+              Sequence {
+                Flatten(path: "reviews.@.product") {
+                  Fetch(service: "books") {
+                    {
+                      ... on Book {
+                        __typename
+                        isbn
+                      }
+                    } =>
+                    {
+                      ... on Book {
+                        __typename
+                        isbn
+                        title
+                        year
+                      }
+                    }
+                  },
+                },
+                Flatten(path: "reviews.@.product") {
+                  Fetch(service: "product") {
+                    {
+                      ... on Book {
+                        __typename
+                        isbn
+                        title
+                        year
+                      }
+                    } =>
+                    {
+                      ... on Book {
+                        name
+                      }
+                    }
+                  },
+                },
+              },
+              Flatten(path: "reviews.@.product") {
+                Fetch(service: "product") {
+                  {
+                    ... on Furniture {
+                      __typename
+                      upc
+                    }
+                    ... on Book {
+                      __typename
+                      isbn
+                    }
+                  } =>
+                  {
+                    ... on Furniture {
+                      name
+                      cost: price
+                      details {
+                        origin: country
+                      }
+                    }
+                    ... on Book {
+                      cost: price
+                      details {
+                        origin: country
+                      }
+                    }
+                  }
+                },
+              },
+            },
           },
         }
       `);
