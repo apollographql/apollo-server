@@ -29,6 +29,7 @@ import {
   ASTNode,
   DirectiveDefinitionNode,
   GraphQLDirective,
+  ObjectTypeDefinitionNode,
 } from 'graphql';
 import Maybe from 'graphql/tsutils/Maybe';
 import { ExternalFieldDefinition } from './types';
@@ -83,6 +84,19 @@ export function stripExternalFieldsFromTypeDefs(
   return { typeDefsWithoutExternalFields, strippedFields };
 }
 
+export function stripInternalFieldsFromTypeDefs(
+  typeDefs: DocumentNode,
+): {
+  typeDefsWithoutInternalFields: DocumentNode;
+} {
+  const typeDefsWithoutInternalFields = visit(typeDefs, {
+    ObjectTypeExtension: removeInternalFieldsFromExtensionVisitor(),
+    ObjectTypeDefinition: removeInternalFieldsFromExtensionVisitor(),
+  }) as DocumentNode;
+
+  return { typeDefsWithoutInternalFields };
+}
+
 export function stripTypeSystemDirectivesFromTypeDefs(typeDefs: DocumentNode) {
   const typeDefsWithoutTypeSystemDirectives = visit(typeDefs, {
     Directive(node) {
@@ -124,6 +138,28 @@ function removeExternalFieldsFromExtensionVisitor<
           return false;
         }
         return true;
+      });
+    }
+    return {
+      ...node,
+      fields,
+    };
+  };
+}
+
+/**
+ * Returns a closure that strips fields marked with `@internal`
+ */
+function removeInternalFieldsFromExtensionVisitor() {
+  return (node: ObjectTypeExtensionNode | ObjectTypeDefinitionNode) => {
+    let fields = node.fields;
+    if (fields) {
+      fields = fields.filter(field => {
+        const internalDirectives = findDirectivesOnTypeOrField(
+          field,
+          'internal',
+        );
+        return internalDirectives.length === 0
       });
     }
     return {

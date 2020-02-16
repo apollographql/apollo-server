@@ -30,6 +30,7 @@ import {
   isFederationDirective,
   executableDirectiveLocations,
   stripTypeSystemDirectivesFromTypeDefs,
+  stripInternalFieldsFromTypeDefs,
 } from './utils';
 import {
   ServiceDefinition,
@@ -136,12 +137,16 @@ export function buildMapsFromServiceList(serviceList: ServiceDefinition[]) {
 
     externalFields.push(...strippedFields);
 
+    const {
+      typeDefsWithoutInternalFields,
+    } = stripInternalFieldsFromTypeDefs(typeDefsWithoutExternalFields)
+
     // Type system directives from downstream services are not a concern of the
     // gateway, but rather the services on which the fields live which serve
     // those types.  In other words, its up to an implementing service to
     // act on such directives, not the gateway.
     const typeDefsWithoutTypeSystemDirectives =
-      stripTypeSystemDirectivesFromTypeDefs(typeDefsWithoutExternalFields);
+      stripTypeSystemDirectivesFromTypeDefs(typeDefsWithoutInternalFields);
 
     for (const definition of typeDefsWithoutTypeSystemDirectives.definitions) {
       if (
