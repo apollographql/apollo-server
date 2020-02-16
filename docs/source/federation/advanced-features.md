@@ -121,3 +121,22 @@ query {
   }
 }
 ```
+
+## Filtering fields
+
+In some cases services might have queries or mutations that are meant to be used internally for inter-service communication or for private API calls. In such cases, we don't want the gateway to expose those queries or mutations. For that we can use the `@internal` directive.
+
+```graphql
+type Mutation {
+  updateNotification: Notification
+  scheduledNotifications: Boolean @internal
+}
+```
+
+And then the schema exposed by the gateway will only include:
+
+```graphql
+type Mutation {
+  updateNotification: Notification
+}
+```

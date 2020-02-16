@@ -309,3 +309,26 @@ extend type User @key(fields: "email") {
 ```
 
 This type extension in the Reviews service extends the `User` type from the Users service. It extends it for the purpose of adding a new field called `reviews`, which returns a list of `Review`s.
+
+### `@internal`
+
+```graphql
+directive @internal on FIELD_DEFINITION
+```
+
+The `@internal` directive is used to mark a field as an internal field that should not be exposed by the gateway. This can be useful for queries or mutations that are used for inter-service communication or for private APIs that are only exposed to specific consumers. For example:
+
+```graphql
+type Mutation {
+  updateNotification: Notification
+  scheduledNotifications: Boolean @internal
+}
+```
+
+And then the schema exposed by the gateway will only include:
+
+```graphql
+type Mutation {
+  updateNotification: Notification
+}
+```
