@@ -68,7 +68,7 @@ export type DataSources<TContext> = {
 };
 
 export interface PersistedQueryOptions {
-  cache: KeyValueCache;
+  cache?: KeyValueCache;
   /**
    * Specified in **seconds**, this time-to-live (TTL) value limits the lifespan
    * of how long the persisted query should be cached.  To specify a desired
