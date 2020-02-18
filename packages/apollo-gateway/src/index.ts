@@ -41,7 +41,6 @@ import { RemoteGraphQLDataSource } from './datasources/RemoteGraphQLDataSource';
 import { HeadersInit } from 'node-fetch';
 import { getVariableValues } from 'graphql/execution/values';
 import fetcher, { Fetcher } from 'make-fetch-happen';
-import { Request, Response } from 'apollo-server-env';
 import { Cache } from './cache';
 
 export type ServiceEndpointDefinition = Pick<ServiceDefinition, 'name' | 'url'>;
