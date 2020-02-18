@@ -1,32 +1,41 @@
 ---
-title: Understanding errors
-description: Rules for schema composition
+title: Federation error codes
+sidebar_title: Error codes
 ---
+
 Apollo Federation implements a strict composition model. When building a gateway using the `@apollo/gateway` package, `ApolloServer` validates that the provided services compose into a valid GraphQL schema **and** that the gateway has all of the information it needs to execute operations against the composed schema. Any errors will fail composition. This section documents the composition errors that can be thrown by the `new ApolloServer()` call.
 
-### Types and extensions
+### Extending types
 
-- `EXTENSION_OF_WRONG_KIND`: An extension is attempting to extend a different type. For example, an interface extension, `extend interface MyType`, would be invalid for a type definition such as `type MyType`.
-- `EXTENSION_WITH_NO_BASE`: An extension is attempting to extend a type which does not exist.
+| Code | Description |
+|---|---|
+| `EXTENSION_OF_WRONG_KIND`  | An implementing service is attempting to `extend` another service's type, but there is a declaration mismatch. For example, `extend interface MyType` is invalid if `MyType` is not defined as an `interface` in its originating service. |
+| `EXTENSION_WITH_NO_BASE` | An implementing service is attempting to `extend` a type that is not originally defined in any known service. |
 
-### `@key` directives
+### The `@key` directive
 
-- `KEY_FIELDS_SELECT_INVALID_TYPE`: The fields argument can not have root fields that result in a list, interface, or union type.
-- `KEY_FIELDS_MISSING_ON_BASE`: the fields argument can not select fields that were overwritten by another service.
-- `KEY_FIELDS_MISSING_EXTERNAL`: On extended types, keys must reference a field marked as `@external`.
+| Code | Description |
+|---|---|
+| `KEY_FIELDS_SELECT_INVALID_TYPE`  | The `fields` argument of an entity's `@key` includes at least one root field that results in a list, interface, or union type. Root fields of these types cannot be part of a `@key`. |
+| `KEY_FIELDS_MISSING_ON_BASE` | The `fields` argument of an entity's `@key` includes at least one field that's also defined in another service. Each field of an entity should be defined in exactly one service. |
+| `KEY_FIELDS_MISSING_EXTERNAL` | An implementing service is attempting to `extend` another service's entity, but its `@key` includes at least one field that is not marked as `@external`. |
 
-### `@external` directives
+### The `@external` directive
 
-- `EXTERNAL_UNUSED`: For every `@external` field, there should be at least one `@requires`, `@provides`, or `@key` directive that references it.
-- `EXTERNAL_TYPE_MISMATCH`: All fields marked with `@external` must match the type definition of the base service.
-- `EXTERNAL_MISSING_ON_BASE`: All fields marked with `@external` must exist on the base type.
-- `EXTERNAL_USED_ON_BASE`: There should be no fields with `@external` on base type definitions.
+| Code | Description |
+|---|---|
+| `EXTERNAL_UNUSED` | An `@external` entity field is not currently being used by any instance of `@key`, `@requires`, or `@provides`. |
+| `EXTERNAL_TYPE_MISMATCH` | An `@external` entity field does not match the type of the declaration in the entity's originating service. |
+| `EXTERNAL_MISSING_ON_BASE` | An entity field marked as `@external` is not defined in the entity's originating service. |
+| `EXTERNAL_USED_ON_BASE` | An entity field is marked as `@external` in the entity's originating service, which is invalid. |
 
-### `@provides` directives
+### The `@provides` directive
 
-- `PROVIDES_FIELDS_MISSING_EXTERNAL`: The fields argument can only use fields marked as `@external` on types from external services. These external types and fields must be included in the service for validation.
-- `PROVIDES_NOT_ON_ENTITY`: The `@provides` directive can only be used on Object types with at least one @key, or Lists of such Objects.
-- `PROVIDES_FIELDS_SELECT_INVALID_TYPE`: The fields argument can not reference fields that result in a list or interface.
+| Code | Description |
+|---|---|
+| `PROVIDES_FIELDS_MISSING_EXTERNAL` | The `fields` argument of an entity field's `@provides` directive includes a field that is not marked as `@external`. |
+| `PROVIDES_NOT_ON_ENTITY` | The `@provides` directive is being applied to a type that is not an entity. |
+| `PROVIDES_FIELDS_SELECT_INVALID_TYPE` | The `fields` argument of an entity field's `@provides` directive includes at least one root field that results in a list or interface. Root fields of these types cannot be included in `@provides`. |
 
 ### `@requires` directives
 
