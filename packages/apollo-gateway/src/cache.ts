@@ -44,6 +44,7 @@ export class Cache implements CacheManager {
         body,
         status: response.status,
         statusText: response.statusText,
+        // @ts-ignore - TODO? New types for `.raw()` are going unrecognized by CI for some reason.
         headers: response.headers.raw(),
       }),
     );
