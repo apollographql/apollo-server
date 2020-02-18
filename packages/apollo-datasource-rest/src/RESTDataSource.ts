@@ -267,7 +267,17 @@ export abstract class RESTDataSource<TContext = any> extends DataSource {
 
     if (request.method === 'GET') {
       let promise = this.memoizedResults.get(cacheKey);
-      if (promise) return promise;
+      if (promise) {
+        return promise.then((value) => {
+          if (Array.isArray(value)) {
+            return [...value];
+          }
+          if (typeof value === 'object') {
+            return { ...value };
+          }
+          return value;
+        });
+      }
 
       promise = performRequest();
       this.memoizedResults.set(cacheKey, promise);
