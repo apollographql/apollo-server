@@ -273,7 +273,7 @@ export abstract class RESTDataSource<TContext = any> extends DataSource {
             return [...value];
           }
           if (typeof value === 'object') {
-            return { ...value };
+            return JSON.parse(JSON.stringify(value));
           }
           return value;
         });
