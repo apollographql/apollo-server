@@ -66,9 +66,9 @@ export async function getServiceDefinitionsFromStorage({
   // fetch the storage secret
   const storageSecretUrl = getStorageSecretUrl(graphId, apiKeyHash);
 
-  const secret = await fetcher(storageSecretUrl).then(response => {
-    return response.json();
-  });
+  const secret: string = await fetcher(storageSecretUrl).then(response =>
+    response.json(),
+  );
 
   if (!graphVariant) {
     graphVariant = 'current';
@@ -82,19 +82,19 @@ export async function getServiceDefinitionsFromStorage({
     return { isNewSchema: false };
   }
 
-  const linkFileResult = await response.json() as LinkFileResult;
+  const linkFileResult: LinkFileResult = await response.json();
 
-  const compositionMetadata = (await fetcher(
+  const compositionMetadata: CompositionMetadata = await fetcher(
     `${urlPartialSchemaBase}/${linkFileResult.configPath}`,
-  ).then(response => response.json())) as CompositionMetadata;
+  ).then(response => response.json());
 
   // It's important to maintain the original order here
   const serviceDefinitions = await Promise.all(
     compositionMetadata.implementingServiceLocations.map(
       async ({ name, path }) => {
-        const { url, partialSchemaPath } = (await fetcher(
+        const { url, partialSchemaPath }: ImplementingService = await fetcher(
           `${urlPartialSchemaBase}/${path}`,
-        ).then(response => response.json())) as ImplementingService;
+        ).then(response => response.json());
 
         const sdl = await fetcher(
           `${urlPartialSchemaBase}/${partialSchemaPath}`,
