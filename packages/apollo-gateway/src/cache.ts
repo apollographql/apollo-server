@@ -1,4 +1,5 @@
 import { URL, format } from 'url';
+import { CacheManager } from 'make-fetch-happen';
 import { Request, Response } from 'apollo-server-env';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 
@@ -19,7 +20,7 @@ function cacheKey(request: Request) {
   return key;
 }
 
-export class Cache {
+export class Cache implements CacheManager {
   constructor(
     public cache: InMemoryLRUCache<string> = new InMemoryLRUCache({
       maxSize: MAX_SIZE,
@@ -51,10 +52,9 @@ export class Cache {
   }
 
   async match(request: Request) {
-
     return this.cache.get(cacheKey(request)).then(response => {
       if (response) {
-        const {body, ...requestInit} = JSON.parse(response);
+        const { body, ...requestInit } = JSON.parse(response);
         return new Response(body, requestInit);
       }
       return;
