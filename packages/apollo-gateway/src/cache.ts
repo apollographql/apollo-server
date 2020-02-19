@@ -20,7 +20,7 @@ function cacheKey(request: Request) {
   return key;
 }
 
-export class Cache implements CacheManager {
+export class HttpRequestCache implements CacheManager {
   constructor(
     public cache: InMemoryLRUCache<string> = new InMemoryLRUCache({
       maxSize: MAX_SIZE,
