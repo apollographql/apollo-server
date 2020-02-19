@@ -1,23 +1,11 @@
-import { URL, format } from 'url';
 import { CacheManager } from 'make-fetch-happen';
 import { Request, Response } from 'apollo-server-env';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 
 const MAX_SIZE = 5 * 1024 * 1024; // 5MB
 
-/**
- * @see: https://github.com/npm/make-fetch-happen/blob/master/cache.js
- */
 function cacheKey(request: Request) {
-  const parsed = new URL(request.url);
-  const key = `gateway:request-cache:${format({
-    protocol: parsed.protocol,
-    slashes: true,
-    port: parsed.port,
-    hostname: parsed.hostname,
-    pathname: parsed.pathname,
-  })}`;
-  return key;
+  return `gateway:request-cache:${request.method}:${request.url}`;
 }
 
 export class HttpRequestCache implements CacheManager {
