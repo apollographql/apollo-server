@@ -43,7 +43,7 @@ export const mockGetImplementingServices = ({
   federatedServiceName: string;
 }) =>
   nock('https://storage.googleapis.com:443').get(
-    `/engine-partial-schema-prod/${storageSecret}/current/v1/implementing-services/${federatedServiceName}/${implementingServicePath}.json`,
+    `/engine-partial-schema-prod/${storageSecret}/current/v1/implementing-services/${federatedServiceName}/${implementingServicePath}`,
   );
 
 // get raw-partial-schema, using received composition-config

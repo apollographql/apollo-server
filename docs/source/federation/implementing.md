@@ -1,25 +1,21 @@
 ---
-title: Implementing a federated graph
-description: Putting the pieces together
+title: Implementing services and the gateway
 ---
 
 An Apollo Federation architecture consists of:
 
 * A collection of **implementing services** that each define a distinct GraphQL schema
-* A **gateway** that composes the distinct schemas into a **federated data graph** and executes queries across that graph
+* A **gateway** that composes the distinct schemas into a **federated data graph** and executes queries across the services in the graph
 
-Each of these components can be implemented in any language and framework.
-
-To be part of a federated graph, an implementing service must conform to the [Apollo Federation specification](/federation/federation-spec/), which exposes the service's capabilities to the gateway,
-as well as to tools like Apollo Graph Manager. A service can **extend** GraphQL types that are defined by _other_ services, and it can define types for other services to extend. An implementing service can be written in any language.
+Apollo Server provides libraries for acting both as an implementing service and as a gateway, but these components can be implemented in any language and framework.
 
 Let's look at how to get a federated graph up and running. We'll start by preparing an existing implementing service for federation, and then we'll set up a gateway in front of it.
 
-## Defining a federated service
+## Defining an implementing service
 
-Converting an existing schema into a federated service is the first step in building a federated graph. To do this, we'll use the `buildFederatedSchema()` function from the `@apollo/federation` package.
+> To be part of a federated graph, an implementing service must conform to the [Apollo Federation specification](/federation/federation-spec/), which exposes the service's capabilities to the gateway, as well as to tools like Apollo Graph Manager.
 
-To start, here's a *non-federated* Apollo Server setup:
+Converting an existing schema into an implementing service is the first step in building a federated graph. To start, here's a *non-federated* Apollo Server setup:
 
 ```javascript:title=index.js
 const { ApolloServer, gql } = require('apollo-server');
@@ -55,15 +51,15 @@ server.listen(4001).then(({ url }) => {
 
 This should look familiar if you've [set up Apollo Server](/getting-started/) before. If it doesn't, we recommend you familiarize yourself with the basics before jumping into federation.
 
-Now, let's convert this to a federated service. The first step is to install the `@apollo/federation` package in our project:
+Now, let's convert this to an implementing service. The first step is to install the `@apollo/federation` package in our project:
 
 ```shell
 npm install @apollo/federation
 ```
 
-In our federated server definition, we want _other_ services to be able to extend the
-`User` type we define. To enable this, we add the `@key` directive to the
-`User` type's definition to make it an **entity**:
+### Defining an entity
+
+As part of our federated architecture, we want _other_ implementing services to be able to extend the `User` type this service defines. To enable this, we add the `@key` directive to the `User` type's definition to designate it as an **entity**:
 
 ```js:title=index.js
 const { ApolloServer, gql } = require('apollo-server');
@@ -83,9 +79,7 @@ const typeDefs = gql`
 
 The `@key` directive tells other services which field(s) of the `User` type to use
 to uniquely identify a particular instance. In this case, services should use the
-single field `id`. You can even include nested fields in this directive, as shown in
-[Compound and nested keys](/federation/advanced-features/#compound-and-nested-keys).
-
+single field `id`.
 
 Next, we add a **reference resolver** for the `User` type. A reference resolver tells the gateway how to fetch an entity by its `@key` fields:
 
@@ -107,9 +101,11 @@ const resolvers = {
 We would then define the `fetchUserById` function to obtain the appropriate `User`
 from our backing data store.
 
-Finally, we use the `buildFederatedSchema` function to augment our schema definition
-with federation support. We provide the result of this function to the
-`ApolloServer` constructor:
+> See [Core concepts](./core-concepts/) for more information on working with entities.
+
+### Generating a federated schema
+
+Finally, we use the `buildFederatedSchema` function from the `@apollo/federation` package to augment our schema definition with federation support. We provide the result of this function to the `ApolloServer` constructor:
 
 ```js:title=index.js
 const server = new ApolloServer({
@@ -121,7 +117,9 @@ server.listen(4001).then(({ url }) => {
 });
 ```
 
-The server is now ready to be added to a federated data graph!
+The server is now ready to act as an implementing service in a federated data graph!
+
+### Full example
 
 Here are the snippets above combined (again, note that for this sample to be complete,
  you must define the `fetchUserById` function for your data source):
@@ -163,10 +161,9 @@ server.listen(4001).then(({ url }) => {
 });
 ```
 
-## Running a gateway
+## Defining the gateway
 
-Now that we have a federation-ready service, we can set up a federated gateway
-to sit in front of it. First, let's install the necessary packages:
+Now that we have a federation-ready implementing service, we can set up a federated **gateway** to sit in front of it. First, let's install the necessary packages:
 
 ```shell
 npm install @apollo/gateway apollo-server graphql
@@ -372,4 +369,4 @@ The gateway currently provides limited support for custom, service-level directi
 
 ## Managing a federated graph
 
-With Apollo Federation, teams are able to move quickly as they build out their GraphQL services. However, distributed systems introduce complexities which require special tooling and coordination across teams to safely rollout changes. The [Apollo Graph Manager](https://engine.apollographql.com) provides solutions to problems like schema change validation, graph update coordination, and metrics collection.  For more information on the value of Graph Manager, read our [article on managed federation](https://www.apollographql.com/docs/graph-manager/federation/).
+With Apollo Federation, teams are able to move quickly as they build out their GraphQL services. However, distributed systems introduce complexities that require special tooling and coordination across teams to safely roll out changes. [Apollo Graph Manager](https://engine.apollographql.com) provides solutions to problems like schema change validation, graph update coordination, and metrics collection.  For more information on Graph Manager see [Managed federation](https://www.apollographql.com/docs/graph-manager/federation/).
