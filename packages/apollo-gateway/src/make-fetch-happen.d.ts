@@ -1,5 +1,10 @@
 declare module 'make-fetch-happen' {
-  import { Response, Request } from 'apollo-server-env';
+  import {
+    Response,
+    Request,
+    RequestInfo,
+    RequestInit,
+  } from 'apollo-server-env';
 
   // If adding to these options, they should mirror those from `make-fetch-happen`
   // @see: https://github.com/npm/make-fetch-happen/#extra-options
@@ -29,12 +34,20 @@ declare module 'make-fetch-happen' {
     put(req: Request, res: Response): Promise<Response>;
     match(req: Request): Promise<Response | undefined>;
   }
+
+  /**
+   * This is an augmentation of the fetch function types provided by `apollo-server-env`
+   * @see: https://git.io/JvBwX
+   */
   export interface Fetcher {
-    (url: string): Promise<Response>;
-    defaults(opts?: FetcherOptions): Fetcher;
+    (input?: RequestInfo, init?: RequestInit & FetcherOptions): Promise<
+      Response
+    >;
   }
 
-  let fetch: Fetcher;
+  let fetch: Fetcher & {
+    defaults(opts?: FetcherOptions): Fetcher;
+  };
 
   export default fetch;
 }
