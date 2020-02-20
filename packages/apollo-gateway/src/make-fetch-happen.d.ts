@@ -21,7 +21,7 @@ declare module 'make-fetch-happen' {
           // Randomizes the timeouts by multiplying with a factor between 1 to 2. Default is false.
           randomize?: boolean;
         };
-    onRetry(): void;
+    onRetry?(): void;
   }
 
   export interface CacheManager {
@@ -31,7 +31,7 @@ declare module 'make-fetch-happen' {
   }
   export interface Fetcher {
     (url: string): Promise<Response>;
-    defaults(opts?: any): Fetcher;
+    defaults(opts?: FetcherOptions): Fetcher;
   }
 
   let fetch: Fetcher;
