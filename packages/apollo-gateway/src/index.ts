@@ -165,7 +165,13 @@ export class ApolloGateway implements GraphQLService {
   private serviceSdlCache = new Map<string, string>();
 
   private fetcher: Fetcher = fetcher.defaults({
-    cacheManager: new HttpRequestCache()
+    cacheManager: new HttpRequestCache(),
+    // All headers should be lower-cased here, as `make-fetch-happen`
+    // treats differently cased headers as unique (unlike the `Headers` object).
+    // @see: https://git.io/JvRUa
+    headers: {
+      'user-agent': `apollo-gateway/${require('../package.json').version}`
+    }
   });
 
   // Observe query plan, service info, and operation info prior to execution.
