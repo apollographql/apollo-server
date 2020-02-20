@@ -306,7 +306,7 @@ export class ApolloGateway implements GraphQLService {
       result = await this.updateServiceDefinitions(this.config);
     } catch (e) {
       this.logger.warn('Error checking for schema updates.', e);
-      return;
+      throw e;
     }
 
     if (
