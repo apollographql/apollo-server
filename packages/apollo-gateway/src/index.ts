@@ -246,7 +246,7 @@ export class ApolloGateway implements GraphQLService {
 
       // Warn against using the pollInterval and a serviceList simulatenously
       if (config.experimental_pollInterval && isRemoteConfig(config)) {
-        console.warn(
+        this.logger.warn(
           'Polling running services is dangerous and not recommended in production. ' +
             'Polling should only be used against a registry. ' +
             'If you are polling running services, use with caution.',
@@ -285,7 +285,7 @@ export class ApolloGateway implements GraphQLService {
     // instead of here. We can remove this as a breaking change in the future.
     if (options && options.engine) {
       if (!options.engine.graphVariant)
-        console.warn('No graph variant provided. Defaulting to `current`.');
+        this.logger.warn('No graph variant provided. Defaulting to `current`.');
       this.engineConfig = options.engine;
     }
 
