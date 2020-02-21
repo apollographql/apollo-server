@@ -7,6 +7,19 @@ An Apollo Federation architecture consists of:
 * A collection of **implementing services** that each define a distinct GraphQL schema
 * A **gateway** that composes the distinct schemas into a **federated data graph** and executes queries across the services in the graph
 
+```mermaid
+graph BT;
+  webapp(Web app);
+  iosapp(iOS app);
+  gateway([Gateway]);
+  serviceA[Products service];
+  serviceB[Reviews service];
+  serviceC[Inventory service];
+  webapp & iosapp -.- gateway;
+  gateway --- serviceA & serviceB & serviceC;
+  class webapp,iosapp tertiary;
+```
+
 Apollo Server provides libraries for acting both as an implementing service and as a gateway, but these components can be implemented in any language and framework.
 
 Let's look at how to get a federated graph up and running. We'll start by preparing an existing implementing service for federation, and then we'll set up a gateway in front of it.
