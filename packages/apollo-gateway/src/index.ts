@@ -301,7 +301,7 @@ export class ApolloGateway implements GraphQLService {
     try {
       result = await this.updateServiceDefinitions(this.config);
     } catch (e) {
-      this.logger.warn('Error checking for changes to service defintions:', e);
+      this.logger.error("Error checking for changes to service definitions", e);
       throw e;
     }
 
