@@ -115,15 +115,40 @@ defines functions that respond to request lifecycle events. This structure
 organizes and encapsulates all of your plugin's request lifecycle logic, making it
 easier to reason about.
 
-The following request lifecycle event handlers can optionally return a function
-that will be invoked after the lifecycle phase is complete:
+#### Request lifecycle event flow
+
+The following diagram illustrates the sequence of events that fire for each request. Each of these events is documented [below](#request-lifecycle-events).
+
+```mermaid
+graph TB;
+  request(requestDidStart) --> parsing(parsingDidStart*);
+  parsing --"Success"--> validation(validationDidStart*);
+  validation --"Success"--> resolve(didResolveOperation);
+  resolve --"Success"--> response(responseForOperation);
+  execution(executionDidStart*);
+  errors(didEncounterErrors);
+  response --"Response provided"--> send;
+  response --"No response provided"--> execution;
+  execution --"Success"--> send(willSendResponse);
+
+  execution & resolve & parsing & validation --"Failure"--> errors;
+  errors --> send;
+  class server,request secondary;
+```
+
+<sup>*The indicated events also support <a href="#end-hooks">end hooks</a> that fire when their associated step <em>completes</em>.</sup>
+
+#### End hooks
+
+Event handlers for the following events can optionally return a function
+that is invoked after the corresponding lifecycle phase _ends_:
 
 * [`parsingDidStart`](#parsingdidstart)
 * [`validationDidStart`](#validationdidstart)
 * [`executionDidStart`](#executiondidstart)
 
-These "end hooks" will be invoked with any error(s) that occurred during the
-execution of that lifecycle phase. For example, the following plugin will log
+These **end hooks** are passed any errors that occurred during the
+execution of that lifecycle phase. For example, the following plugin logs
 any errors that occur during any of the above lifecycle events:
 
 ```js
@@ -139,7 +164,7 @@ const myPlugin = {
       },
       validationDidStart() {
         // This end hook is unique in that it can receive an array of errors,
-        // which will contain every validation error that occurred
+        // which will contain every validation error that occurred.
         return (errs) => {
           if (errs) {
             errs.forEach(err => console.error(err));
@@ -158,10 +183,9 @@ const myPlugin = {
 }
 ```
 
-Note that the `validationDidStart` end hook receives an array of errors, which
-will contain every validation error that occurred, if any. The arguments to each
-end hook are documented in the type definitions in the [request lifecycle events
-docs](#request-lifecycle-events) below.
+Note that the `validationDidStart` end hook receives an _array_ of errors that
+contains every validation error that occurred (if any). The arguments to each
+end hook are documented in the type definitions in [Request lifecycle events](#request-lifecycle-events).
 
 ### Inspecting request and response details
 
@@ -217,28 +241,6 @@ Server lifecycle events are high-level events related to the lifecycle of Apollo
 Currently, two server lifecycle events are supported: [`serverWillStart`](#serverwillstart) and [`requestDidStart`](#requestdidstart).
 
 Request lifecycle events are associated with a specific request. You define responses to these events _within_ the response to a `requestDidStart` event, as described in [Responding to request lifecycle events](#responding-to-request-lifecycle-events).
-
-### Event flow
-
-```mermaid
-graph TB;
-  server(serverWillStart);
-  request(requestDidStart) --> parsing(parsingDidStart);
-  parsing --"Success"--> validation(validationDidStart);
-  validation --"Success"--> resolve(didResolveOperation);
-  resolve --"Success"--> response(responseForOperation);
-  execution(executionDidStart);
-  errors(didEncounterErrors);
-  response --"Response provided"--> send;
-  response --"No response provided"--> execution;
-  execution --"Success"--> send(willSendResponse);
-
-  execution --"Failure"--> errors;
-  errors --> send;
-  parsing --"Failure"--> errors;
-  validation --"Failure"--> errors;
-  class server,request secondary;
-```
 
 ### Server lifecycle events
 
