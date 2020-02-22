@@ -114,7 +114,7 @@
     "node-fetch": "2.3.0",
     "prettier": "1.19.1",
     "qs-middleware": "1.0.3",
-    "request": "2.88.0",
+    "request": "2.88.2",
     "request-promise": "4.2.5",
     "subscriptions-transport-ws": "0.9.16",
     "supertest": "4.0.2",
