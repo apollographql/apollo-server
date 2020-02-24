@@ -114,7 +114,7 @@ const resolvers = {
 We would then define the `fetchUserById` function to obtain the appropriate `User`
 from our backing data store.
 
-> See [Core concepts](./core-concepts/) for more information on working with entities.
+> [Learn more about entities](./entities/)
 
 ### Generating a federated schema
 
