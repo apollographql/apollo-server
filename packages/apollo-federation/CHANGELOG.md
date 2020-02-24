@@ -1,6 +1,6 @@
 # CHANGELOG for `@apollo/federation`
 
-## 0.13.1 (pre-release; `@next` tag)
+## 0.13.2 (pre-release; `@next` tag)
 
 - Only changes in the similarly versioned `@apollo/gateway` package.
 
