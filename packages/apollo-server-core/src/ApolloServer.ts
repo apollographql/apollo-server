@@ -788,14 +788,7 @@ export class ApolloServerBase {
   }
 
   public async executeOperation(request: GraphQLRequest) {
-    let options;
-
-    try {
-      options = await this.graphQLServerOptions();
-    } catch (e) {
-      e.message = `Invalid options provided to ApolloServer: ${e.message}`;
-      throw new Error(e);
-    }
+    const options = await this.graphQLServerOptions();
 
     if (typeof options.context === 'function') {
       options.context = (options.context as () => never)();
