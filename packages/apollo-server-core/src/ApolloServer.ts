@@ -186,7 +186,6 @@ export class ApolloServerBase {
     } = config;
 
     if (gateway && (modules || schema || typeDefs || resolvers)) {
-      // TODO: this could be handled by adjusting the typings to keep gateway configs and non-gateway configs seprate.
       throw new Error(
         'Cannot define both `gateway` and any of: `modules`, `schema`, `typeDefs`, or `resolvers`',
       );
