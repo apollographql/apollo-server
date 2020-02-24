@@ -38,7 +38,7 @@ module.exports = {
           'Apollo Federation': [
             'federation/introduction',
             'federation/implementing',
-            'federation/core-concepts',
+            'federation/entities',
             'federation/value-types',
             'federation/errors',
             'federation/metrics',

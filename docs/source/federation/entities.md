@@ -1,13 +1,11 @@
 ---
-title: Working with entities
-description: Reference and extend another service's types
+title: Entities
+description: Reference and extend types across services
 ---
 
 In Apollo Federation, an **entity** is a type that you define canonically in _one_ implementing service and can then reference and extend in _other_ implementing services. Entities are the core building block of a federated graph.
 
->In a federated graph, every object that is _not_ an entity is a [value type](./value-types/).
-
-## Declaring
+## Defining
 
 In a GraphQL schema, you can designate any object type as an entity by adding a `@key` directive to its definition, like so:
 
@@ -19,7 +17,7 @@ type Product @key(fields: "upc") {
 }
 ```
 
-The `@key` directive declares the entity's **primary key**, which consists of one or more of the type's `fields`. In the example above, the `Product` entity's primary key is its `upc` field. Apollo Gateway's query planner uses an entity's primary key to identify a given instance of the type.
+The `@key` directive defines the entity's **primary key**, which consists of one or more of the type's `fields`. In the example above, the `Product` entity's primary key is its `upc` field. The gateway's query planner uses an entity's primary key to identify a given instance of the type.
 
 > An entity's `@key` cannot include fields that hold unions or interfaces.
 
@@ -38,8 +36,6 @@ type Product @key(fields: "upc") @key(fields: "sku") {
 ```
 
 This pattern is helpful when different services interact with different fields of an entity. For example, a `reviews` service might refer to products by their UPC, whereas an `inventory` service might use SKUs.
-
-> You cannot list multiple primary keys when you [extend an entity](#extending), only when you declare the entity in its originating service.
 
 ### Defining a compound primary key
 
@@ -76,7 +72,7 @@ extend type Product @key(fields: "upc") {
 Because the `Product` entity is defined in another service, the `reviews` service needs to define a **stub** of it to make its own schema valid. The stub includes just enough information for the service to know how to interact with a `Product`:
 
 * The `extend` keyword indicates that `Product` is an entity that is defined in another implementing service (in this case, the `products` service).
-* The `@key` directive indicates that `Product` uses the `upc` field as its primary key. **This value must match the value of a `@key` specified in the entity's originating service.**
+* The `@key` directive indicates that `Product` uses the `upc` field as its primary key. This value must match the value of exactly one `@key` defined in the entity's originating service, even if the entity defines [multiple primary keys](#defining-multiple-primary-keys).
 * The `upc` field must be included in the stub because it is part of the specified `@key`. It also must be annotated with the `@external` directive to indicate that the field originates in another service.
 
 This explicit syntax has several benefits:
@@ -100,7 +96,7 @@ In our example, the `reviews` service needs to define its own resolver for the `
 
 This return value is a **representation** of a `Product` entity. Services use representations to reference entities from other services. A representation requires only an explicit `__typename` definition and values for the entity's primary key fields.
 
-Apollo Gateway provides this representation to the entity's originating service to fetch the full object. For this to work, the originating service (in this case, `products`) must define a **reference resolver** for the `Product` entity:
+The gateway provides this representation to the entity's originating service to fetch the full object. For this to work, the originating service (in this case, `products`) must define a **reference resolver** for the `Product` entity:
 
 ```js{3-5}
 {
@@ -131,9 +127,9 @@ With this model, each implementing service's schema represents a true subset of 
 
 An implementing service can add fields to an entity that's defined in another service. This is called **extending** the entity.
 
-When a service extends an entity, the entity's _originating_ service is not aware of the added fields. Only the _extending_ service (along with Apollo Gateway) knows about these fields.
+When a service extends an entity, the entity's _originating_ service is not aware of the added fields. Only the _extending_ service (along with the gateway) knows about these fields.
 
-> It is invalid for more than one service to extend the same entity with the same field name. Each individual field of an entity must originate in exactly one service.
+> Each field of an entity should be defined in exactly one service. Otherwise, a schema composition error will occur.
 
 ### Example #1
 
@@ -150,7 +146,7 @@ extend type Product @key(fields: "upc") {
 
 This definition is nearly identical to the stub we defined for the `Product` type in [Referencing](#referencing). All we've added is the `reviews` field. We _don't_ include an `@external` directive, because this field _does_ originate in the `reviews` service.
 
-Whenever a service extends an entity with a new field, it is also responsible for _resolving_ the field. Apollo Gateway is automatically aware of this responsibility. In our example, the generated query plan will fetch the `upc` field for each `Product` from the `products` service and pass those to the `reviews` service, where you can then access these fields on the object passed into your `reviews` resolver:
+Whenever a service extends an entity with a new field, it is also responsible for _resolving_ the field. The gateway is automatically aware of this responsibility. In our example, the generated query plan will fetch the `upc` field for each `Product` from the `products` service and pass those to the `reviews` service, where you can then access these fields on the object passed into your `reviews` resolver:
 
 ```js
 {
@@ -183,7 +179,7 @@ extend type Product @key(fields: "upc") {
 }
 ```
 
-Similar to the `reviews` relationship example above, Apollo Gateway fetches the required `upc` field from the `products` service and passes it to the `inventory` service, even if the query didn't ask for the `upc`:
+Similar to the `reviews` relationship example above, the gateway fetches the required `upc` field from the `products` service and passes it to the `inventory` service, even if the query didn't ask for the `upc`:
 
 ```graphql
 query {
@@ -193,9 +189,9 @@ query {
 }
 ```
 
-## The `Query` and `Mutation` entities
+## The `Query` and `Mutation` types
 
-In Apollo Federation, the `Query` and `Mutation` base types are _automatically_ entities that originate in Apollo Gateway itself. Consequently, _all_ of your implementing services should [extend](#extending) these types to add the operations they support.
+In Apollo Federation, the `Query` and `Mutation` base types originate in the gateway itself. Consequently, _all_ of your implementing services should [extend](#extending) these types to add the operations they support.
 
 For example, the `products` service might extend the root `Query` type to add a `topProducts` query, like so:
 
@@ -209,19 +205,31 @@ extend type Query {
 
 As your federated graph grows, you might decide that you want a particular field of an entity to originate in a different service.
 
-For example, let's say the `products` service defines a `Product` entity that includes an `inStock` boolean field. Then, you add an `inventory` service to your federated graph. It now makes sense for the `inStock` field to originate in the `inventory` service instead.
+For example, let's say your `products` service defines a `Product` entity that includes an `inStock` boolean field. Then, you add an `inventory` service to your federated graph. It now makes sense for the `inStock` field to originate in the `inventory` service instead.
 
 Apollo Gateway helps you perform this migration much like you perform a database migration, with the following steps:
 
-1. In the `inventory` service, [extend](#extending) the `Product` entity to add the `inStock` field. **Note that this is technically a federation error**, because this field is already defined in the `products` service.
+1. In the `inventory` service's schema, [extend](#extending) the `Product` entity to add the `inStock` field.
+
+    _Note that this is technically a composition error, because `inStock` is already defined in the `products` service. However, this error is handled gracefully, as described below._
 
 2. In the `inventory` service, add a resolver for the `inStock` field. This service should resolve the field with the exact same outcome as the resolver in the `products` service.
 
-3. Push the updated `inventory` service to your environment. **Again, this is a federation error**. When Apollo Gateway detects a duplicate field like this, it ignores the _newer_ declaration (i.e., the one in the `inventory` service) and continues to resolve the field in the `products` service.
+3. Push the updated `inventory` service to your environment.
 
-4. In the `products` service, remove the `inStock` field and its resolver.
+    _Again, this technically deploys a composition error. **However**, this error is handled gracefully in one of two ways, depending on whether you are using [managed federation](https://www.apollographql.com/docs/graph-manager/federation/):_
 
-5. Push the updated `products` service to your environment. This removes the invalid duplicate, and Apollo Gateway will begin resolving the `inStock` field in the `inventory` service.
+    * _If you **are** using managed federation, Graph Manager does **not** push an updated schema to your gateway, and the gateway continues to resolve the `inStock` field in the `products` service._
+
+    * _If you are **not** using managed federation, your gateway starts resolving the `inStock` field in whichever service is listed **last** in your gateway's [`serviceList`](/api/apollo-gateway/#apollogateway)._
+
+4. In the `products` service's schema, remove the `inStock` field and push the updated service to your environment.
+
+    _This takes care of the composition error, regardless of whether you are using managed federation. The gateway will begin resolving the `inStock` field in the `inventory` service._
+
+5. Remove the resolver for `inStock` from the `products` service and push the updated service to your environment.
+
+    _By removing the `inStock` field from `products` **before** removing its associated resolver, you guarantee that the gateway never attempts to resolve the field in a service that lacks a resolver for it._
 
 ## Extending an entity with computed fields (advanced)
 
@@ -240,7 +248,7 @@ As shown, you use the `@requires` directive to indicate which fields (and subfie
 
 >You **cannot** require fields that are defined in a service besides the entity's originating service.
 
-In the above example, if a client requests a product's `shippingEstimate`, Apollo Gateway will first obtain the product's `size` and `weight` from the `products` service, then pass those values to the `shipping` service. This enables you to access those values directly from your resolver:
+In the above example, if a client requests a product's `shippingEstimate`, the gateway will first obtain the product's `size` and `weight` from the `products` service, then pass those values to the `shipping` service. This enables you to access those values directly from your resolver:
 
 ```js{4}
 {
@@ -259,7 +267,7 @@ Sometimes, multiple implementing services are capable of resolving a particular 
 When you [extend an entity](#extending) in this case, you can specify that the extending service `@provides` the field, like so:
 
 ```graphql{2,8-9}:title=inventory
-type InStockCont {
+type InStockCount {
   product: Product! @provides(fields: "name price")
   quantity: Integer!
 }
@@ -271,7 +279,7 @@ extend type Product @key(fields: "sku") {
 }
 ```
 
-**This is a completely optional optimization.** When Apollo Gateway plans a query's execution, it looks at which fields are available from each implementing service. It then attempts to optimize performance by executing the query across the fewest services needed to access all required fields.
+**This is a completely optional optimization.** When the gateway plans a query's execution, it looks at which fields are available from each implementing service. It can then attempt to optimize performance by executing the query across the fewest services needed to access all required fields.
 
 Keep the following in mind when using the `@provides` directive:
 
