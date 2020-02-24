@@ -422,7 +422,7 @@ export class ApolloServerBase {
       });
     }
 
-    let constructedSchema;
+    let constructedSchema: GraphQLSchema;
     if (schema) {
       constructedSchema = schema;
     } else if (modules) {
