@@ -414,8 +414,12 @@ export class ApolloGateway implements GraphQLService {
   private startPollingServices() {
     if (this.pollingTimer) clearInterval(this.pollingTimer);
 
-    this.pollingTimer = setInterval(() => {
-      this.updateComposition();
+    this.pollingTimer = setInterval(async () => {
+      try {
+        await this.updateComposition();
+      } catch (err) {
+        this.logger.error(err && err.message || err);
+      }
     }, this.experimental_pollInterval || 10000);
 
     // Prevent the Node.js event loop from remaining active (and preventing,
