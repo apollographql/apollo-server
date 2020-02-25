@@ -347,7 +347,12 @@ function printDescription(
   }
 
   const lines = descriptionLines(def.description, 120 - indentation.length);
-  if (lines.length === 1) {
+
+  // If a description uses the double quote character, it absolutely must use
+  // a multi-line comment.
+  const requireMultiline = lines.some(line => line.includes('"'));
+
+  if (lines.length === 1 && !requireMultiline) {
     return indentation + `"${lines[0]}"\n`;
   } else {
     return (

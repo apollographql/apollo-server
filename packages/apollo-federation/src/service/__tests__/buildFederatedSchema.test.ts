@@ -128,6 +128,35 @@ type User @key(fields: "id") {
 `);
   });
 
+  it('should preserve multiline descriptions correctly (and with quotes)', async () => {
+    const query = `query GetServiceDetails {
+      _service {
+        sdl
+      }
+    }`;
+    const schema = buildFederatedSchema(gql`
+      type User {
+        """
+        The unique ID of the "user"
+        """
+        id: ID!
+      }
+    `);
+
+    const { data, errors } = await graphql(schema, query);
+    expect(errors).toBeUndefined();
+
+    expect(data._service.sdl).toMatchInlineSnapshot(`
+      "type User {
+        \\"\\"\\"
+        The unique ID of the \\"user\\"
+        \\"\\"\\"
+        id: ID!
+      }
+      "
+    `);
+  });
+
   describe(`should add an _entities query root field to the schema`, () => {
     it(`when a query root type with the default name has been defined`, () => {
       const schema = buildFederatedSchema(gql`
