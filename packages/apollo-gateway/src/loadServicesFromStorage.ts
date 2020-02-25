@@ -1,4 +1,4 @@
-import { Fetcher } from 'make-fetch-happen';
+import { fetch } from 'apollo-server-env';
 import { parse } from 'graphql';
 import { Experimental_UpdateServiceDefinitions } from '.';
 
@@ -61,7 +61,7 @@ export async function getServiceDefinitionsFromStorage({
   apiKeyHash: string;
   graphVariant?: string;
   federationVersion: number;
-  fetcher: Fetcher;
+  fetcher: typeof fetch;
 }): ReturnType<Experimental_UpdateServiceDefinitions> {
   // fetch the storage secret
   const storageSecretUrl = getStorageSecretUrl(graphId, apiKeyHash);
