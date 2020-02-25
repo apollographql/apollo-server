@@ -21,12 +21,12 @@ describe('buildFederatedSchema', () => {
     `);
 
     expect(schema.getType('Product')).toMatchInlineSnapshot(`
-type Product {
-  upc: String!
-  name: String
-  price: Int
-}
-`);
+      type Product {
+        upc: String!
+        name: String
+        price: Int
+      }
+    `);
 
     expect(schema.getType('_Entity')).toMatchInlineSnapshot(
       `union _Entity = Product`,
@@ -44,13 +44,13 @@ type Product {
     `);
 
     expect(schema.getType('Product')).toMatchInlineSnapshot(`
-type Product {
-  upc: String!
-  sku: String!
-  name: String
-  price: Int
-}
-`);
+      type Product {
+        upc: String!
+        sku: String!
+        name: String
+        price: Int
+      }
+    `);
 
     expect(schema.getType('_Entity')).toMatchInlineSnapshot(
       `union _Entity = Product`,
@@ -66,11 +66,11 @@ type Product {
     `);
 
     expect(schema.getType('Money')).toMatchInlineSnapshot(`
-type Money {
-  amount: Int!
-  currencyCode: String!
-}
-`);
+      type Money {
+        amount: Int!
+        currencyCode: String!
+      }
+    `);
   });
 
   it('should preserve description text in generated SDL', async () => {
@@ -169,12 +169,12 @@ type User @key(fields: "id") {
       `);
 
       expect(schema.getQueryType()).toMatchInlineSnapshot(`
-type Query {
-  _entities(representations: [_Any!]!): [_Entity]!
-  _service: _Service!
-  rootField: String
-}
-`);
+        type Query {
+          _entities(representations: [_Any!]!): [_Entity]!
+          _service: _Service!
+          rootField: String
+        }
+      `);
     });
 
     it(`when a query root type with a non-default name has been defined`, () => {
@@ -192,12 +192,12 @@ type Query {
       `);
 
       expect(schema.getQueryType()).toMatchInlineSnapshot(`
-type QueryRoot {
-  _entities(representations: [_Any!]!): [_Entity]!
-  _service: _Service!
-  rootField: String
-}
-`);
+        type QueryRoot {
+          _entities(representations: [_Any!]!): [_Entity]!
+          _service: _Service!
+          rootField: String
+        }
+      `);
     });
   });
   describe(`should not add an _entities query root field to the schema`, () => {
@@ -205,10 +205,10 @@ type QueryRoot {
       const schema = buildFederatedSchema(EMPTY_DOCUMENT);
 
       expect(schema.getQueryType()).toMatchInlineSnapshot(`
-type Query {
-  _service: _Service!
-}
-`);
+        type Query {
+          _service: _Service!
+        }
+      `);
     });
     it(`when no types with keys are found`, () => {
       const schema = buildFederatedSchema(gql`
@@ -218,11 +218,11 @@ type Query {
       `);
 
       expect(schema.getQueryType()).toMatchInlineSnapshot(`
-type Query {
-  _service: _Service!
-  rootField: String
-}
-`);
+        type Query {
+          _service: _Service!
+          rootField: String
+        }
+      `);
     });
     it(`when only an interface with keys are found`, () => {
       const schema = buildFederatedSchema(gql`
@@ -235,11 +235,11 @@ type Query {
       `);
 
       expect(schema.getQueryType()).toMatchInlineSnapshot(`
-type Query {
-  _service: _Service!
-  rootField: String
-}
-`);
+        type Query {
+          _service: _Service!
+          rootField: String
+        }
+      `);
     });
   });
   describe('_entities root field', () => {
@@ -630,12 +630,12 @@ describe('legacy interface', () => {
       `,
     });
     expect(schema.getType('Product')).toMatchInlineSnapshot(`
-type Product {
-  upc: String!
-  name: String
-  price: Int
-}
-`);
+      type Product {
+        upc: String!
+        name: String
+        price: Int
+      }
+    `);
     expect(schema.getType('_Entity')).toMatchInlineSnapshot(
       `union _Entity = Product`,
     );
@@ -643,12 +643,12 @@ type Product {
   it('allows legacy schema module interface as a simple array of documents', async () => {
     const schema = buildFederatedSchema({ typeDefs });
     expect(schema.getType('Product')).toMatchInlineSnapshot(`
-type Product {
-  upc: String!
-  name: String
-  price: Int
-}
-`);
+      type Product {
+        upc: String!
+        name: String
+        price: Int
+      }
+    `);
     expect(schema.getType('_Entity')).toMatchInlineSnapshot(
       `union _Entity = Product`,
     );
