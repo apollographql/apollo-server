@@ -1,6 +1,6 @@
 {
   "name": "@apollo/federation",
-  "version": "0.13.2-alpha.2",
+  "version": "0.13.2-alpha.3",
   "description": "Apollo Federation Utilities",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
