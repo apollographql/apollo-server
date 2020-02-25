@@ -38,8 +38,8 @@ module.exports = {
           'Apollo Federation': [
             'federation/introduction',
             'federation/implementing',
-            'federation/core-concepts',
-            'federation/advanced-features',
+            'federation/entities',
+            'federation/value-types',
             'federation/errors',
             'federation/metrics',
             'federation/migrating-from-stitching',
