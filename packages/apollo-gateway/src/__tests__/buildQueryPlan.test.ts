@@ -856,25 +856,163 @@ describe('buildQueryPlan', () => {
     const queryPlan = buildQueryPlan(buildOperationContext(schema, query));
 
     expect(queryPlan).toMatchInlineSnapshot(`
-    QueryPlan {
-      Fetch(service: "product") {
-        {
-          product(upc: "") {
-            __typename
-            ... on Book {
-              details {
-                country
+          QueryPlan {
+            Fetch(service: "product") {
+              {
+                product(upc: "") {
+                  __typename
+                  ... on Book {
+                    details {
+                      country
+                    }
+                  }
+                  ... on Furniture {
+                    details {
+                      country
+                    }
+                  }
+                }
               }
-            }
-            ... on Furniture {
-              details {
-                country
-              }
-            }
+            },
+          }
+        `);
+  });
+
+  fit(`minimal repro1`, () => {
+    const query = gql`
+      query {
+        topProducts(first: 20) {
+          ... on Furniture {
+            ...ProductFragment
+          }
+          ... on Book {
+            ...ProductFragment
+            title
           }
         }
-      },
-    }
+      }
+      fragment ProductFragment on Product {
+        name
+        price
+      }
+    `;
+
+    const queryPlan = buildQueryPlan(buildOperationContext(schema, query));
+
+    expect(queryPlan).toMatchInlineSnapshot(`
+      QueryPlan {
+        Sequence {
+          Fetch(service: "product") {
+            {
+              topProducts(first: 20) {
+                __typename
+                name
+                price
+                ... on Book {
+                  __typename
+                  isbn
+                }
+              }
+            }
+          },
+          Flatten(path: "topProducts.@") {
+            Fetch(service: "books") {
+              {
+                ... on Book {
+                  __typename
+                  isbn
+                }
+              } =>
+              {
+                ... on Book {
+                  title
+                }
+              }
+            },
+          },
+        },
+      }
+    `);
+  });
+
+  fit(`minimal repro2`, () => {
+    const query = gql`
+      query {
+        topProducts(first: 20) {
+          ... on Furniture {
+            __typename
+            name
+            price
+          }
+          ... on Book {
+            __typename
+            name
+            price
+            title
+          }
+        }
+      }
+    `;
+
+    const queryPlan = buildQueryPlan(buildOperationContext(schema, query));
+
+    expect(queryPlan).toMatchInlineSnapshot(`
+      QueryPlan {
+        Sequence {
+          Fetch(service: "product") {
+            {
+              topProducts(first: 20) {
+                __typename
+                ... on Furniture {
+                  __typename
+                  name
+                  price
+                }
+                ... on Book {
+                  __typename
+                  isbn
+                  price
+                }
+              }
+            }
+          },
+          Flatten(path: "topProducts.@") {
+            Fetch(service: "books") {
+              {
+                ... on Book {
+                  __typename
+                  isbn
+                }
+              } =>
+              {
+                ... on Book {
+                  __typename
+                  isbn
+                  title
+                  year
+                }
+              }
+            },
+          },
+          Flatten(path: "topProducts.@") {
+            Fetch(service: "product") {
+              {
+                ... on Book {
+                  __typename
+                  isbn
+                  title
+                  year
+                }
+              } =>
+              {
+                ... on Book {
+                  name
+                }
+              }
+            },
+          },
+        },
+      }
     `);
   });
 });
