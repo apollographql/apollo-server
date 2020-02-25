@@ -40,8 +40,9 @@ import { GraphQLDataSource } from './datasources/types';
 import { RemoteGraphQLDataSource } from './datasources/RemoteGraphQLDataSource';
 import { HeadersInit } from 'node-fetch';
 import { getVariableValues } from 'graphql/execution/values';
-import fetcher, { Fetcher } from 'make-fetch-happen';
+import fetcher from 'make-fetch-happen';
 import { HttpRequestCache } from './cache';
+import { fetch } from 'apollo-server-env';
 
 export type ServiceEndpointDefinition = Pick<ServiceDefinition, 'name' | 'url'>;
 
@@ -61,7 +62,7 @@ interface GatewayConfigBase {
   experimental_pollInterval?: number;
   experimental_approximateQueryPlanStoreMiB?: number;
   experimental_autoFragmentization?: boolean;
-  fetcher?: Fetcher;
+  fetcher?: typeof fetch;
 }
 
 interface RemoteGatewayConfig extends GatewayConfigBase {
@@ -164,7 +165,7 @@ export class ApolloGateway implements GraphQLService {
   private compositionMetadata?: CompositionMetadata;
   private serviceSdlCache = new Map<string, string>();
 
-  private fetcher: Fetcher = fetcher.defaults({
+  private fetcher: typeof fetch = fetcher.defaults({
     cacheManager: new HttpRequestCache(),
     // All headers should be lower-cased here, as `make-fetch-happen`
     // treats differently cased headers as unique (unlike the `Headers` object).
