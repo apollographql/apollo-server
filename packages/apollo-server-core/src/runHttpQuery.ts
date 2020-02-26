@@ -38,7 +38,7 @@ export interface HttpQueryRequest {
 export interface ApolloServerHttpResponse {
   headers?: Record<string, string>;
   // ResponseInit contains the follow, which we do not use
-  // status?: number;
+  status?: number;
   // statusText?: string;
 }
 
@@ -270,6 +270,7 @@ export async function processHTTPRequest<TContext>(
   }
 
   const responseInit: ApolloServerHttpResponse = {
+    status: 200,
     headers: {
       'Content-Type': 'application/json',
     },

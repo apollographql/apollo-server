@@ -48,7 +48,7 @@ export function graphqlAzureFunction(
       ({ graphqlResponse, responseInit }) => {
         callback(null, {
           body: graphqlResponse,
-          status: 200,
+          status: responseInit.status || 200,
           headers: responseInit.headers,
         });
       },

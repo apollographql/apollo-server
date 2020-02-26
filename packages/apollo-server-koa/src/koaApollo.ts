@@ -41,6 +41,7 @@ export function graphqlKoa(
       request: convertNodeHttpToRequest(ctx.req),
     }).then(
       ({ graphqlResponse, responseInit }) => {
+        ctx.status = responseInit.status || 200;
         Object.keys(responseInit.headers).forEach(key =>
           ctx.set(key, responseInit.headers[key]),
         );

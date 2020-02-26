@@ -55,7 +55,7 @@ export function graphqlLambda(
       ({ graphqlResponse, responseInit }) => {
         callback(null, {
           body: graphqlResponse,
-          statusCode: 200,
+          statusCode: responseInit.status || 200,
           headers: responseInit.headers,
         });
       },

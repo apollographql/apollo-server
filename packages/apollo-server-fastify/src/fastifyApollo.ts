@@ -32,6 +32,8 @@ export async function graphqlFastify(
         },
       );
 
+      reply.status(responseInit.status || 200);
+
       if (responseInit.headers) {
         for (const [name, value] of Object.entries<string>(
           responseInit.headers,

@@ -37,6 +37,8 @@ export function graphqlExpress(
       request: convertNodeHttpToRequest(req),
     }).then(
       ({ graphqlResponse, responseInit }) => {
+        res.statusCode = responseInit.status || 200;
+
         if (responseInit.headers) {
           for (const [name, value] of Object.entries(responseInit.headers)) {
             res.setHeader(name, value);

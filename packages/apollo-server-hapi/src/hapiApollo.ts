@@ -55,7 +55,10 @@ const graphqlHapi: IPlugin = {
             },
           );
 
-          const response = h.response(graphqlResponse);
+          const response = h
+            .response(graphqlResponse)
+            .code(responseInit.status || 200);
+
           Object.keys(responseInit.headers).forEach(key =>
             response.header(key, responseInit.headers[key]),
           );

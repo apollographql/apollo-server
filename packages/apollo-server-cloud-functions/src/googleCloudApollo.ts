@@ -43,7 +43,7 @@ export function graphqlCloudFunction(
     }).then(
       ({ graphqlResponse, responseInit }) => {
         res
-          .status(200)
+          .status(responseInit.status || 200)
           .set(responseInit.headers)
           .send(graphqlResponse);
       },

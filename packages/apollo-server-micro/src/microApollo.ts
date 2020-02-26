@@ -56,6 +56,7 @@ export function graphqlMicro(
         query,
         request: convertNodeHttpToRequest(req),
       });
+      res.statusCode = responseInit.status || 200;
       setHeaders(res, responseInit.headers);
       return graphqlResponse;
     } catch (error) {
