@@ -573,7 +573,20 @@ export class ApolloServerBase {
   }
 
   protected async willStart() {
-    const { schema, schemaHash } = await this.schemaDerivedData;
+    try {
+      var { schema, schemaHash } = await this.schemaDerivedData;
+    } catch (err) {
+      // The `schemaDerivedData` can throw if the Promise it points to does not
+      // resolve with a `GraphQLSchema`. As errors from `willStart` are start-up
+      // errors, other Apollo middleware after us will not be called, including
+      // our health check, CORS, etc.
+      //
+      // Returning here allows the integration's other Apollo middleware to
+      // function properly in the event of a failure to obtain the data graph
+      // configuration from the gateway's `load` method during initialization.
+      return;
+    }
+
     const service: GraphQLServiceContext = {
       schema: schema,
       schemaHash: schemaHash,
