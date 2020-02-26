@@ -116,9 +116,11 @@ const schema = new GraphQLSchema({
 const makeGatewayMock = ({
   optionsSpy = _options => {},
   unsubscribeSpy = () => {},
+  executor = () => ({}),
 }: {
   optionsSpy?: (_options: any) => void;
   unsubscribeSpy?: () => void;
+  executor?: GraphQLExecutor;
 } = {}) => {
   const eventuallyAssigned = {
     resolveLoad: null as ({ schema, executor }) => void,
@@ -134,6 +136,7 @@ const makeGatewayMock = ({
   });
 
   const mockedGateway: GraphQLService = {
+    executor,
     load: options => {
       optionsSpy(options);
       return mockedLoadResults;
@@ -354,12 +357,12 @@ export function testApolloServer<AS extends ApolloServerBase>(
         });
 
         it("accepts a gateway's schema and calls its executor", async () => {
-          const { gateway, triggers } = makeGatewayMock();
-
           const executor = jest.fn();
           executor.mockReturnValue(
             Promise.resolve({ data: { testString: 'hi - but federated!' } }),
           );
+
+          const { gateway, triggers } = makeGatewayMock({ executor });
 
           triggers.resolveLoad({ schema, executor });
 
@@ -2833,12 +2836,12 @@ export function testApolloServer<AS extends ApolloServerBase>(
             }),
           });
 
-        const { gateway, triggers } = makeGatewayMock();
-
         const executor = req =>
           (req.source as string).match(/1/)
             ? Promise.resolve({ data: { testString1: 'hello' } })
             : Promise.resolve({ data: { testString2: 'aloha' } });
+
+        const { gateway, triggers } = makeGatewayMock({ executor });
 
         triggers.resolveLoad({
           schema: makeQueryTypeWithField('testString1'),
@@ -2895,7 +2898,6 @@ export function testApolloServer<AS extends ApolloServerBase>(
       });
 
       it('waits until gateway has resolved a schema to respond to queries', async () => {
-        const { gateway, triggers } = makeGatewayMock();
         const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
         let resolveExecutor;
         const executor = () =>
@@ -2904,6 +2906,8 @@ export function testApolloServer<AS extends ApolloServerBase>(
               resolve({ data: { testString: 'hi - but federated!' } });
             };
           });
+
+        const { gateway, triggers } = makeGatewayMock({ executor });
 
         triggers.resolveLoad({ schema, executor });
         const { url: uri } = await createApolloServer({
@@ -2941,8 +2945,6 @@ export function testApolloServer<AS extends ApolloServerBase>(
             }),
           });
 
-        const { gateway, triggers } = makeGatewayMock();
-
         const makeEventuallyResolvingPromise = val => {
           let resolver;
           const promise = new Promise(
@@ -2967,6 +2969,8 @@ export function testApolloServer<AS extends ApolloServerBase>(
             : (req.source as string).match(/2/)
             ? p2
             : p3;
+
+        const { gateway, triggers } = makeGatewayMock({ executor });
 
         triggers.resolveLoad({
           schema: makeQueryTypeWithField('testString1'),

@@ -5,7 +5,13 @@ import {
   IMocks,
   GraphQLParseOptions,
 } from 'graphql-tools';
-import { ValueOrPromise, GraphQLExecutor } from 'apollo-server-types';
+import {
+  ValueOrPromise,
+  GraphQLExecutor,
+  GraphQLExecutionResult,
+  WithRequired,
+  GraphQLRequestContext,
+} from 'apollo-server-types';
 import { ConnectionContext } from 'subscriptions-transport-ws';
 // The types for `ws` use `export = WebSocket`, so we'll use the
 // matching `import =` to bring in its sole export.
@@ -87,6 +93,12 @@ export interface GraphQLService {
     engine?: GraphQLServiceEngineConfig;
   }): Promise<GraphQLServiceConfig>;
   onSchemaChange(callback: SchemaChangeCallback): Unsubscriber;
+  executor<TContext>(
+    requestContext: WithRequired<
+      GraphQLRequestContext<TContext>,
+      'document' | 'queryHash' | 'operationName' | 'operation'
+    >,
+  ): ValueOrPromise<GraphQLExecutionResult>;
 }
 
 // This configuration is shared between all integrations and should include

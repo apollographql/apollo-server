@@ -416,10 +416,14 @@ export class ApolloServerBase {
             }
           : undefined;
 
-      return gateway.load({ engine: engineConfig }).then(config => {
-        this.requestOptions.executor = config.executor;
-        return config.schema;
-      });
+      // Set the executor whether the gateway 'load' call succeeds or not.
+      // If the schema becomes available eventually (after a setInterval retry)
+      // this executor will still be necessary in order to be able to support
+      // a federated schema!
+      this.requestOptions.executor = gateway.executor;
+
+      return gateway.load({ engine: engineConfig })
+        .then(config => config.schema);
     }
 
     let constructedSchema: GraphQLSchema;
