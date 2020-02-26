@@ -124,14 +124,18 @@ const makeGatewayMock = ({
 } = {}) => {
   const eventuallyAssigned = {
     resolveLoad: null as ({ schema, executor }) => void,
+    rejectLoad: null as (err: Error) => void,
     triggerSchemaChange: null as (newSchema) => void,
   };
   const mockedLoadResults = new Promise<{
     schema: GraphQLSchema;
     executor: GraphQLExecutor;
-  }>(resolve => {
+  }>((resolve, reject) => {
     eventuallyAssigned.resolveLoad = ({ schema, executor }) => {
       resolve({ schema, executor });
+    };
+    eventuallyAssigned.rejectLoad = (err: Error) => {
+      reject(err);
     };
   });
 
@@ -377,6 +381,47 @@ export function testApolloServer<AS extends ApolloServerBase>(
           expect(result.data).toEqual({ testString: 'hi - but federated!' });
           expect(result.errors).toBeUndefined();
           expect(executor).toHaveBeenCalled();
+        });
+
+        it("rejected load promise acts as an error boundary", async () => {
+          const executor = jest.fn();
+          executor.mockResolvedValueOnce(
+            { data: { testString: 'should not get this' } }
+          );
+
+          executor.mockRejectedValueOnce(
+            { errors: [{errorWhichShouldNot: "ever be triggered"}] }
+          );
+
+          const consoleErrorSpy =
+            jest.spyOn(console, 'error').mockImplementation();
+
+          const { gateway, triggers } = makeGatewayMock({ executor });
+
+          triggers.rejectLoad(new Error("load error which should be masked"));
+
+          const { url: uri } = await createApolloServer({
+            gateway,
+            subscriptions: false,
+          });
+
+          const apolloFetch = createApolloFetch({ uri });
+          const result = await apolloFetch({ query: '{testString}' });
+
+          expect(result.data).toBeUndefined();
+          expect(result.errors).toContainEqual(
+            expect.objectContaining({
+              extensions: expect.objectContaining({
+                code: "INTERNAL_SERVER_ERROR",
+              }),
+              message: "This data graph lacks a valid configuration. " +
+                "More details may be available in the server logs."
+            })
+          );
+          expect(consoleErrorSpy).toHaveBeenCalledWith(
+            "This data graph lacks a valid configuration. " +
+              "load error which should be masked");
+          expect(executor).not.toHaveBeenCalled();
         });
 
         it('uses schema over resolvers + typeDefs', async () => {

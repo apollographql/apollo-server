@@ -423,7 +423,17 @@ export class ApolloServerBase {
       this.requestOptions.executor = gateway.executor;
 
       return gateway.load({ engine: engineConfig })
-        .then(config => config.schema);
+        .then(config => config.schema)
+        .catch(err => {
+          // We intentionally do not re-throw the exact error from the gateway
+          // configuration as it may contain implementation details and this
+          // error will propogate to the client. We will, however, log the error
+          // for observation in the logs.
+          const message = "This data graph lacks a valid configuration.";
+          console.error(message + " " + (err && err.message || err));
+          throw new Error(
+            message + " More details may be available in the server logs.");
+        });
     }
 
     let constructedSchema: GraphQLSchema;
