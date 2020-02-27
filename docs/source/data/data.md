@@ -1,35 +1,110 @@
 ---
-title: Fetching data with resolvers
-sidebar_title: Resolvers
+title: Resolvers
 ---
 
-GraphQL is the best way to work with data from **any** back-end that your product needs. It is not a mapping of your database, but rather a graph of the data sources and shapes your product is made of. Resolvers are the key to this graph. Each resolver represents a single field, and can be used to fetch data from any source(s) you may have.
+Whenever Apollo Server receives a GraphQL query, it needs to know how to populate each field included in that query. To accomplish this, it uses resolvers.
 
-Resolvers provide the instructions for turning a GraphQL operation into data. Resolvers are organized into a one to one mapping to the fields in a GraphQL schema. This section describes resolvers' organization, every field's default resolver, and their signature.
+**A resolver is a function that's responsible for populating the data for a single field in your schema.** It can populate that data in any way you define, such as by fetching data from a back-end database or a third-party API.
 
-## The resolver map
+If you _don't_ define a resolver for a particular field, Apollo Server automatically defines a [default resolver](#default-resolvers) for it.
 
-In order to respond to queries, a schema needs to have resolve functions for all fields. This collection of functions is called the "resolver map". This map relates the schema fields and types to a function.
+## Defining a resolver
+
+### Base syntax
+
+Let's say our server defines the following (very short) schema:
+
+```graphql
+type Query {
+  numberSix: Int! # Should always return the number 6 when queried
+  numberSeven: Int! # Should always return 7
+}
+```
+
+We want to define resolvers for the `numberSix` and `numberSeven` fields of the `Query` type so that they always return `6` and `7` when they're queried.
+
+Those resolver definitions look like this:
 
 ```js
+const resolvers = {
+  Query: {
+    numberSix() {
+      return 6;
+    },
+    numberSeven() {
+      return 7;
+    }
+  }
+};
+```
 
-const { gql } = require('apollo-server');
+#### As this example shows:
+
+* You define all of your server's resolvers in a single JavaScript object (named `resolvers` above). This object is also known as your **resolver map**.
+* The resolver map has top-level fields that correspond to your schema's types (such as `Query`).
+* Each resolver belongs to whichever type its corresponding field belongs to.
+
+### Handling arguments
+
+Now let's say our server defines the following (slightly longer) schema:
+
+```graphql
+type User {
+  id: ID!
+  name: String
+}
+
+type Query {
+  user(id: ID!): User
+}
+```
+
+With this schema, we want the `user` field of the `Query` type to fetch a user by its `id`.
+
+To achieve this, our server needs access to user data. For this example, assume our server defines the following hardcoded array:
+
+```js
+const users = [
+  {
+    id: '1',
+    name: 'Elizabeth Bennet'
+  },
+  {
+    id: '2',
+    name: 'Fitzwilliam Darcy'
+  }
+];
+```
+
+Now we can define a resolver for the `user` field, like so:
+
+```js
+const { find } = require('lodash');
+
+const resolvers = {
+  Query: {
+    user(parent, args, context, info) {
+      return find(users, { id: args.id });
+    }
+  }
+}
+```
+
+#### As this example shows:
+
+* A resolver can optionally accept four positional arguments: `(parent, args, context, info)`.
+
+    _[Learn more about these arguments](#arguments)_
+* The `args` argument is an object that contains all _GraphQL_ arguments that were provided for the field by the GraphQL operation.
+
+> Notice that this example _doesn't_ define resolvers for `User` fields (`id` and `name`). That's because the [default resolver](#default-resolvers) that Apollo Server creates for each of these fields does the right thing: obtain the value directly from the object returned by the `user` resolver.
+
+### Chaining resolvers
+
+TODO
+
+```js
 const { find, filter } = require('lodash');
-
-const schema = gql`
-  type Book {
-    title: String
-    author: Author
-  }
-
-  type Author {
-    books: [Book]
-  }
-
-  type Query {
-    author: Author
-  }
-`;
 
 const resolvers = {
   Query: {
@@ -49,29 +124,18 @@ With the resolver map above, the query, `{ author { books } }`, will call the `Q
 
 Note that you don't have to put all of your resolvers in one object. Refer to the ["modularizing resolvers"](#modularizing-resolvers) section to learn how to combine multiple resolver maps into one.
 
-## Resolver type signature
+## Arguments
 
-In addition to the parent resolvers' value, resolvers receive a couple more arguments. The full resolver function signature contains four positional arguments: `(parent, args, context, info)` and can return an object or [Promise](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Using_promises). Once a promise resolves, then the children resolvers will continue executing. This is useful for fetching data from a backend.
+Resolver functions take the following positional arguments, in order:
 
-The resolver parameters generally follow this naming convention and are described in detail:
+| Argument  | Description  |
+|---|---|
+| `parent` | <p>The result returned by the resolver of this field's _parent_ field. <p>See [The `parent` argument](#the-parent-argument) for more information.  |
+| `args` |  <p>An object that contains all GraphQL arguments provided for this field.<p> For example, when executing `query{ user(id: "4") }`, the `args` object passed to the `user` resolver is `{ "id": "4" }`. |
+| `context` | <p>An object shared across all resolvers that are executing for a particular operation. Use this to share per-operation state, including authentication information, dataloader instances, and anything else to track across resolvers. <p>See [The `context` argument](#the-context-argument) for more information. |
+| `info` | <p>Contains information about the operation's execution state, including the field name, the path to the field from the root, and more. <p>Its core fields are listed in the [GraphQL.js source code](https://github.com/graphql/graphql-js/blob/master/src/type/definition.js#L917-L928), and it is extended with additional functionality by other modules, like [`apollo-cache-control`](https://github.com/apollographql/apollo-server/tree/master/packages/apollo-cache-control). |
 
-1. `parent`: The object that contains the result returned from the resolver on the parent field, or, in the case of a top-level `Query` field, the `rootValue` passed from the server configuration. This argument enables the nested nature of GraphQL queries.
-2. `args`: An object with the arguments passed into the field in the query. For example, if the field was called with `query{ key(arg: "you meant") }`, the `args` object would be: `{ "arg": "you meant" }`.
-3. `context`: This is an object shared by all resolvers in a particular query, and is used to contain per-request state, including authentication information, dataloader instances, and anything else that should be taken into account when resolving the query. Read [this section](#context-argument) for an explanation of when and how to use context.
-4. `info`: This argument contains information about the execution state of the query, including the field name, path to the field from the root, and more. It's only documented in the [GraphQL.js source code](https://github.com/graphql/graphql-js/blob/c82ff68f52722c20f10da69c9e50a030a1f218ae/src/type/definition.js#L489-L500), but is extended with additional functionality by other modules, like [`apollo-cache-control`](https://github.com/apollographql/apollo-server/tree/master/packages/apollo-cache-control).
-
-In addition to returning GraphQL defined [scalars](/schema/schema/#scalar-types), you can return [custom scalars](/schema/scalars-enums/) for special use cases, such as JSON or big integers.
-
-### Resolver results
-
-Resolvers in GraphQL can return different kinds of results which are treated differently:
-
-1. `null` or `undefined` - this indicates the object could not be found. If your schema says that field is _nullable_, then the result will have a `null` value at that position. If the field is `non-null`, the result will "bubble up" to the nearest nullable field and that result will be set to `null`. This is to ensure that the API consumer never gets a `null` value when they were expecting a result.
-2. An array - this is only valid if the schema indicates that the result of a field should be a list. The sub-selection of the query will run once for every item in this array.
-3. A promise - resolvers often do asynchronous actions like fetching from a database or backend API, so they can return promises. This can be combined with arrays, so a resolver can return a promise that resolves to an array, or an array of promises, and both are handled correctly.
-4. A scalar or object value - a resolver can also return any other kind of value, which doesn't have any special meaning but is simply passed down into any nested resolvers, as described in the next section.
-
-### Parent argument
+### The `parent` argument
 
 The first argument to every resolver, `parent`, can be a bit confusing at first, but it makes sense when you consider what a GraphQL query looks like:
 
@@ -96,9 +160,12 @@ Every GraphQL query is a tree of function calls in the server. So the `parent` c
 3. `parent` in `Post.title` and `Post.author` will be one item from the `posts` result array.
 4. `parent` in `Author.name` is the result from the above `Post.author` call.
 
+For resolvers of top-level fields with no parent (such as fields of `Query`), this value is obtained from the `rootValue` function passed to [Apollo Server's constructor](/api/apollo-server/#apolloserver).
+
+
 Every resolver function is called according to the nesting of the query. To understand this transition from query to resolvers from another perspective, read this [blog post](https://blog.apollographql.com/graphql-explained-5844742f195e#.fq5jjdw7t).
 
-### Context argument
+### The `context` argument
 
 The context is how you access your shared connections and fetchers in resolvers to get data.
 
@@ -137,14 +204,34 @@ context: async () => ({
 }
 ```
 
+## Return values
+
+A resolver function's return value is treated differently by Apollo Server depending on its type:
+
+| Type  | Description  |
+|---|---|
+| Scalar / object | <p>A resolver can return a single value or an object, as shown in [Defining a resolver](#defining-a-resolver). This return value is passed down to any nested resolvers via the `parent` argument. |
+| `Array` | <p>Return an array if and only if your schema indicates that the resolver's associated field contains a list.<p>After you return an array, Apollo Server executes nested resolvers for each item in the array. |
+| `null` / `undefined` | <p>Indicates that the value for the field could not be found. <p>If your schema indicates that this resolver's field is nullable, then the operation result has a `null` value at the field's position.<p>If this resolver's field is _not_ nullable, Apollo Server sets the field's _parent_ to `null`. If necessary, this process continues up the resolver chain until it reaches a field that _is_ nullable. This ensures that a response never includes a `null` value for a non-nullable field. |
+| [`Promise`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Using_promises) | <p>Resolvers often perform asynchronous actions, such as fetching from a database or back-end API. To support this, a resolver can return a promise that resolves to any other supported return type. |
+
+
 ## Default resolvers
 
-Explicit resolvers are not needed for every type, since Apollo Server provides a [default](https://github.com/graphql/graphql-js/blob/69d90c601ad5a6f49c06b4ebbc8c73d51ef03566/src/execution/execute.js#L1264-L1278) that can perform two actions depending on the contents of `parent`:
+If you don't define a resolver for a particular schema field, Apollo Server defines a [default resolver](https://github.com/graphql/graphql-js/blob/master/src/execution/execute.js#L1181-L1199) for it.
 
-1. Return the property from `parent` with the relevant field name
-2. Calls a function on `parent` with the relevant field name and provide the remaining resolver parameters as arguments
+The default resolver function uses the following logic:
 
-For the following schema, the `title` field of `Book` would not need a resolver if the result of the `books` resolver provided a list of objects that already contained a `title` field.
+```mermaid
+graph TB;
+  parent("Does the parent argument have a<br/>property with this resolver's exact name?");
+  parent--No-->null("Return undefined");
+  parent--Yes-->function("Is that property's value a function?");
+  function--No-->return("Return the property's value");
+  function--Yes-->call("Call the function and<br/>return its return value");
+```
+
+As an example, consider the following schema excerpt: 
 
 ```graphql
 type Book {
@@ -156,7 +243,11 @@ type Author {
 }
 ```
 
+If the resolver for the `books` field returns an array of objects that each contain a `title` field, then you can use a default resolver for the `title` field. The default resolver will correctly return `parent.title`.
+
 ## Modularizing resolvers
+
+TODO
 
 We can accomplish the same modularity with resolvers by passing around multiple resolver objects and combining them together with Lodash's `merge` or other equivalent:
 
@@ -201,7 +292,9 @@ server.listen().then(({ url }) => {
 });
 ```
 
-## Monitoring your resolvers
+## Monitoring resolvers
+
+TODO
 
 As with all code, the performance of individual resolvers will be dependent on the workload embedded within them.  The actual resolvers invoked by a client's request will depend on the operation itself.  GraphQL allows the avoidance of most costly fields when their return data is not necessary by not including them in the request, but it's still important to understand what those computationally costly fields are.
 
@@ -217,48 +310,3 @@ const server = new ApolloServer({
   tracing: true,
 });
 ```
-
-## Sending queries
-
-Once your resolver map is complete, it's time to start testing out your queries in GraphQL Playground.
-
-### Naming operations
-
-When sending the queries and mutations in the above examples, we've used either `query { ... }` or `mutation { ... }` respectively.  While this is fine, and particularly convenient when running queries by hand, it makes sense to name the operation in order to quickly identify operations during debugging or to aggregate similar operations together for application performance metrics, for example, when using [Apollo Graph Manager](https://engine.apollographql.com/) to monitor an API.
-
-Operations can be named by placing an identifier after the `query` or `mutation` keyword, as we've done with `HomeBookListing` here:
-
-```graphql
-query HomeBookListing {
-  getBooks {
-    title
-  }
-}
-```
-
-### Queries with variables
-
-In the examples above, we've used static strings as values for both queries and mutations.  This is a great shortcut when running "one-off" operations, but GraphQL also provides the ability to pass variables as arguments and avoid the need for clients to dynamically manipulate operations at run-time.
-
-By defining a map of variables on the root `query` or `mutation` operation, which are sent from the client, variables can be used (and re-used) within the types and fields themselves.
-
-For example, with a slight change to the mutation we used in the previous step, we enable the client to pass `title` and `author` variables alongside the operation itself.  We can also provide defaults for those variables for when they aren't explicitly set:
-
-```graphql
-mutation HomeQuickAddBook($title: String, $author: String = "Anonymous") {
-  addBook(title: $title, author: $author) {
-    title
-  }
-}
-```
-
-GraphQL clients, like [Apollo Client](https://www.apollographql.com/docs/react/), take care of sending the variables to the server separate from the operation itself:
-
-```json
-{
-  "query": "...",
-  "variables": { "title": "Green Eggs and Ham", "author": "Dr. Seuss" }
-}
-```
-
-This functionality is also supported by tools like GraphQL Playground.
