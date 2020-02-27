@@ -162,6 +162,28 @@ type WarnedStates = {
   remoteWithLocalConfig?: boolean;
 };
 
+export const GCS_RETRY_COUNT = 5;
+
+export function getDefaultGcsFetcher() {
+  return fetcher.defaults({
+    cacheManager: new HttpRequestCache(),
+    // All headers should be lower-cased here, as `make-fetch-happen`
+    // treats differently cased headers as unique (unlike the `Headers` object).
+    // @see: https://git.io/JvRUa
+    headers: {
+      'user-agent': `apollo-gateway/${require('../package.json').version}`,
+    },
+    retry: {
+      retries: GCS_RETRY_COUNT,
+      // 1 second
+      minTimeout: 1000,
+      // 60 seconds - but this shouldn't be reachable based on current settings
+      maxTimeout: 60 * 1000,
+      randomize: true,
+    },
+  });
+}
+
 export class ApolloGateway implements GraphQLService {
   public schema?: GraphQLSchema;
   protected serviceMap: DataSourceCache = Object.create(null);
@@ -176,15 +198,7 @@ export class ApolloGateway implements GraphQLService {
   private serviceSdlCache = new Map<string, string>();
   private warnedStates: WarnedStates = Object.create(null);
 
-  private fetcher: typeof fetch = fetcher.defaults({
-    cacheManager: new HttpRequestCache(),
-    // All headers should be lower-cased here, as `make-fetch-happen`
-    // treats differently cased headers as unique (unlike the `Headers` object).
-    // @see: https://git.io/JvRUa
-    headers: {
-      'user-agent': `apollo-gateway/${require('../package.json').version}`
-    }
-  });
+  private fetcher: typeof fetch = getDefaultGcsFetcher();
 
   // Observe query plan, service info, and operation info prior to execution.
   // The information made available here will give insight into the resulting
