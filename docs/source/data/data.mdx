@@ -175,15 +175,16 @@ Therefore, whenever Apollo Server _resolves_ a field that contains an object typ
 Let's say our server defines the following schema:
 
 ```graphql
-# A library has books
+# A library has a branch and books
 type Library {
+  branch: String!
   books: [Book!]
 }
 
-# A book has a title and authors
+# A book has a title and author
 type Book {
   title: String!
-  authors: [Author!]
+  author: Author!
 }
 
 # An author has a name
@@ -202,7 +203,7 @@ Here's a valid query against that schema:
 query {
   libraries {
     books {
-      authors {
+      author {
         name
       }
     }
@@ -215,11 +216,113 @@ The resulting resolver chain for this query matches the hierarchical structure o
 ```mermaid
 graph LR;
   libraries("Query.libraries()") --> books("Library.books()");
-  books --> authors("Book.authors()");
-  authors --> name("Author.name()");
+  books --> author("Book.author()");
+  author --> name("Author.name()");
 ```
 
 These resolvers execute in the order shown above, passing their return value to the next resolver in the chain via the [`parent` argument](#resolver-arguments).
+
+Here's a code sample that can resolve the query above with this resolver chain (note that it requires the `lodash` library in addition to `apollo-server`):
+
+<ExpansionPanel title="Expand example">
+
+```javascript
+const { ApolloServer, gql } = require('apollo-server');
+const { filter } = require('lodash');
+
+const libraries = [
+  {
+    'branch': 'downtown'
+  },
+  {
+    'branch': 'riverside'
+  },
+];
+
+// The branch field of a book indicates which library has it in stock
+const books = [
+  {
+    title: 'Harry Potter and the Chamber of Secrets',
+    author: 'J.K. Rowling',
+    branch: 'riverside'
+  },
+  {
+    title: 'Jurassic Park',
+    author: 'Michael Crichton',
+    branch: 'downtown'
+  },
+];
+
+// Schema definition
+const typeDefs = gql`
+
+# A library has a branch and books
+  type Library {
+    branch: String!
+    books: [Book!]
+  }
+
+  # A book has a title and author
+  type Book {
+    title: String!
+    author: [Author!]
+  }
+
+  # An author has a name
+  type Author {
+    name: String!
+  }
+
+  type Query {
+    libraries: [Library]
+  }
+`;
+
+// Resolver map
+const resolvers = {
+  Query: {
+    libraries() {
+
+      // Return our hardcoded array of libraries
+      return libraries;
+    }
+  },
+  Library: {
+    books(parent) {
+
+      // Filter the hardcoded array of books to only include
+      // books that are located at the correct branch
+      return filter(books, { branch: parent.branch });
+    }
+  },
+  Book: {
+
+    // The parent resolver (Library.books) returns an object with the
+    // author's name in the "author" field. Return a JSON object containing
+    // the name, because this field expects an object.
+    author(parent) {
+      return {
+        name: parent.author
+      };
+    }
+  }
+
+  // Because Book.author returns an object with a "name" field,
+  // Apollo Server's default resolver for Author.name will work.
+  // We don't need to define one.
+};
+
+// Pass schema definition and resolvers to the
+// ApolloServer constructor
+const server = new ApolloServer({ typeDefs, resolvers });
+
+// Launch the server
+server.listen().then(({ url }) => {
+  console.log(`🚀  Server ready at ${url}`);
+});
+```
+
+</ExpansionPanel>
 
 If we update our query to also ask for each book's `title`, the resolver chain looks like this:
 
@@ -227,8 +330,8 @@ If we update our query to also ask for each book's `title`, the resolver chain l
 graph LR;
   libraries("Query.libraries()") --> books("Library.books()");
   books --> title("Book.title()");
-  books --> authors("Book.authors()");
-  authors --> name("Author.name()");
+  books --> author("Book.author()");
+  author --> name("Author.name()");
 ```
 
 When a chain "diverges" like this, each subchain executes in parallel.
