@@ -22,6 +22,28 @@ implement _only_ the part of your data graph that it should be responsible for.
 This way, your organization can represent an enterprise-scale data graph as a
 collection of separately maintained GraphQL services.
 
+## Architecture
+
+An Apollo Federation architecture consists of:
+
+* A collection of **implementing services** that each define a distinct GraphQL schema
+* A **gateway** that composes the distinct schemas into a **federated data graph** and executes queries across the services in the graph
+
+```mermaid
+graph BT;
+  webapp(Web app);
+  iosapp(iOS app);
+  gateway([Gateway]);
+  serviceA[Products service];
+  serviceB[Reviews service];
+  serviceC[Inventory service];
+  webapp & iosapp -.- gateway;
+  gateway --- serviceA & serviceB & serviceC;
+  class webapp,iosapp tertiary;
+```
+
+Apollo Server provides libraries for acting both as an implementing service and as a gateway, but these components can be implemented in any language and framework.
+
 ## Core principles
 
 ### Incremental adoption
@@ -65,10 +87,9 @@ The difference is that now, each service defines the types and fields that it is
 
 The result is the best of both worlds: an implementation that keeps all the code for a given feature in a single service and separated from unrelated concerns, and a product-centric schema with rich types that reflects the natural way an application developer would want to consume the graph.
 
-## Apollo Server implementation
+## Apollo Server libraries
 
-Apollo Server supports Apollo Federation via two open-source extensions:
-`@apollo/federation` and `@apollo/gateway`.
+Apollo Server supports Apollo Federation via two open-source extension libraries:
 
 * `@apollo/federation` provides primitives that your implementing services use to make their individual GraphQL schemas composable.
 * `@apollo/gateway` enables you to set up an instance of Apollo Server as a **gateway** that distributes incoming GraphQL operations across one or more  implementing services.
@@ -76,7 +97,7 @@ Apollo Server supports Apollo Federation via two open-source extensions:
 ## Federated schema example
 
 Let's look at an example. Below, we define the schema for a basic e-commerce
-application as three _federated_ schemas, each of which can be implemented as
+application as three _federated_ schemas, each of which is implemented as
 a standalone GraphQL service:
 
 ```graphql:title=accounts
@@ -158,31 +179,19 @@ That’s it! With Apollo Federation, schemas and resolvers live in your
 implementing services. The gateway serves only to plan and execute GraphQL
 operations across those implementing services.
 
-In addition to running a gateway with a static list of services, Apollo
-Gateway can also operate in _managed federation_ mode where Apollo Graph
-Manager acts as the source of truth for the underlying services' SDL. This mode of operation enables multiple
-teams working on a data graph to help them coordinate when underlying
-services change using federation-aware tooling. For more information, read about
-[managed federation](https://www.apollographql.com/docs/graph-manager/federation/)
-in Apollo Graph Manager.
+### Managed federation
 
-## Query examples
+In addition to running a gateway with a static list of services, Apollo Gateway can operate in **managed federation** mode, where [Apollo Graph Manager](https://www.apollographql.com/docs/graph-manager/) acts as the source of truth for each implementing service's schema.
+
+This mode enables multiple teams working on a data graph to coordinate when and how underlying services change. For more information, read [Managing a federated graph](https://www.apollographql.com/docs/graph-manager/federation/).
+
+## Query example
 
 Now we can execute GraphQL operations against our composed schema just as if it
-were implemented as a monolithic service:
+were implemented as a single, monolithic service:
 
 ```graphql
-# a query that the gateway can resolve by calling only the products service
-query {
-  topProducts {
-    upc
-    name
-  }
-}
-```
-
-```graphql
-# a query that the gateway must call all three services to fully resolve
+# A query that the gateway resolves by calling all three services
 query {
   me {
     username
@@ -197,4 +206,4 @@ query {
 }
 ```
 
-Next, you can [clone a demo schema](https://github.com/apollographql/federation-demo) or [check out the CodeSandbox demo in your browser](https://codesandbox.io/s/v368r9ml47).
+Next, learn how to [define an implementing service](./implementing-services/).
