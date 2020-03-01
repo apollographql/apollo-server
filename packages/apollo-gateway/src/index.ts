@@ -40,6 +40,7 @@ import { GraphQLDataSource } from './datasources/types';
 import { RemoteGraphQLDataSource } from './datasources/RemoteGraphQLDataSource';
 import { HeadersInit } from 'node-fetch';
 import { getVariableValues } from 'graphql/execution/values';
+import { CachedFetcher } from './cachedFetcher';
 
 export type ServiceEndpointDefinition = Pick<ServiceDefinition, 'name' | 'url'>;
 
@@ -57,6 +58,7 @@ interface GatewayConfigBase {
   experimental_updateServiceDefinitions?: Experimental_UpdateServiceDefinitions;
   experimental_didUpdateComposition?: Experimental_DidUpdateCompositionCallback;
   experimental_pollInterval?: number;
+  experimental_approximateQueryPlanStoreMiB?: number;
 }
 
 interface RemoteGatewayConfig extends GatewayConfigBase {
@@ -158,6 +160,7 @@ export class ApolloGateway implements GraphQLService {
   private serviceDefinitions: ServiceDefinition[] = [];
   private compositionMetadata?: CompositionMetadata;
   private serviceSdlCache = new Map<string, string>();
+  private fetcher = new CachedFetcher();
 
   // Observe query plan, service info, and operation info prior to execution.
   // The information made available here will give insight into the resulting
@@ -175,6 +178,8 @@ export class ApolloGateway implements GraphQLService {
   protected updateServiceDefinitions: Experimental_UpdateServiceDefinitions;
   // how often service defs should be loaded/updated (in ms)
   protected experimental_pollInterval?: number;
+
+  private experimental_approximateQueryPlanStoreMiB?: number;
 
   constructor(config?: GatewayConfig) {
     this.config = {
@@ -216,6 +221,9 @@ export class ApolloGateway implements GraphQLService {
         config.experimental_didFailComposition;
       this.experimental_didUpdateComposition =
         config.experimental_didUpdateComposition;
+
+      this.experimental_approximateQueryPlanStoreMiB =
+        config.experimental_approximateQueryPlanStoreMiB;
 
       if (
         isManagedConfig(config) &&
@@ -467,6 +475,7 @@ export class ApolloGateway implements GraphQLService {
       apiKeyHash: this.engineConfig.apiKeyHash,
       graphVariant: this.engineConfig.graphVariant,
       federationVersion: config.federationVersion || 1,
+      fetcher: this.fetcher
     });
   }
 
@@ -606,7 +615,9 @@ export class ApolloGateway implements GraphQLService {
       // only using JSON.stringify on the DocumentNode (and thus doesn't account
       // for unicode characters, etc.), but it should do a reasonable job at
       // providing a caching document store for most operations.
-      maxSize: Math.pow(2, 20) * 30,
+      maxSize:
+        Math.pow(2, 20) *
+        (this.experimental_approximateQueryPlanStoreMiB || 30),
       sizeCalculator: approximateObjectSize,
     });
   }

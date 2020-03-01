@@ -490,8 +490,9 @@ export class EngineReportingAgent<TContext = any> {
       return queryString as string;
     }
 
-    const generatedSignature = (this.options.calculateSignature ||
-      defaultEngineReportingSignature)(documentAST, operationName);
+    const generatedSignature = (
+      this.options.calculateSignature || defaultEngineReportingSignature
+    )(documentAST, operationName);
 
     // Intentionally not awaited so the cache can be written to at leisure.
     this.signatureCache.set(cacheKey, generatedSignature);
