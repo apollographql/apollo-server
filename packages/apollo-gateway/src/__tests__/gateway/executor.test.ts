@@ -54,6 +54,6 @@ describe('ApolloGateway executor', () => {
     await expect(
       server.executeOperation({ query: '{ __typename }' })).rejects.toThrow();
 
-    expect(server.requestOptions.executor).toStrictEqual(gateway.executor);
+    expect(server.requestOptions.executor).toBe(gateway.executor);
   });
 });
