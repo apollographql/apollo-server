@@ -7,7 +7,6 @@ import {
   execute,
   GraphQLError,
   Kind,
-  OperationDefinitionNode,
   OperationTypeNode,
   print,
   SelectionSetNode,
@@ -15,6 +14,7 @@ import {
   VariableDefinitionNode,
   GraphQLFieldResolver,
   stripIgnoredCharacters,
+  DocumentNode,
 } from 'graphql';
 import { Trace, google } from 'apollo-engine-reporting-protobuf';
 import { GraphQLDataSource } from './datasources/types';
@@ -287,7 +287,7 @@ async function executeFetch<TContext>(
 
   async function sendOperation<TContext>(
     context: ExecutionContext<TContext>,
-    operation: OperationDefinitionNode,
+    operation: DocumentNode,
     variables: Record<string, any>,
   ): Promise<ResultMap | void | null> {
     const source = stripIgnoredCharacters(print(operation));
@@ -488,65 +488,77 @@ function mapFetchNodeToVariableDefinitions(
 function operationForRootFetch(
   fetch: FetchNode,
   operation: OperationTypeNode = 'query',
-): OperationDefinitionNode {
+): DocumentNode {
   return {
-    kind: Kind.OPERATION_DEFINITION,
-    operation,
-    selectionSet: fetch.selectionSet,
-    variableDefinitions: mapFetchNodeToVariableDefinitions(fetch),
+    kind: Kind.DOCUMENT,
+    definitions: [
+      {
+        kind: Kind.OPERATION_DEFINITION,
+        operation,
+        selectionSet: fetch.selectionSet,
+        variableDefinitions: mapFetchNodeToVariableDefinitions(fetch),
+      },
+      ...fetch.internalFragments,
+    ],
   };
 }
 
-function operationForEntitiesFetch(fetch: FetchNode): OperationDefinitionNode {
+function operationForEntitiesFetch(fetch: FetchNode): DocumentNode {
   const representationsVariable = {
     kind: Kind.VARIABLE,
     name: { kind: Kind.NAME, value: 'representations' },
   };
 
   return {
-    kind: Kind.OPERATION_DEFINITION,
-    operation: 'query',
-    variableDefinitions: ([
+    kind: Kind.DOCUMENT,
+    definitions: [
       {
-        kind: Kind.VARIABLE_DEFINITION,
-        variable: representationsVariable,
-        type: {
-          kind: Kind.NON_NULL_TYPE,
-          type: {
-            kind: Kind.LIST_TYPE,
+        kind: Kind.OPERATION_DEFINITION,
+        operation: 'query',
+        variableDefinitions: ([
+          {
+            kind: Kind.VARIABLE_DEFINITION,
+            variable: representationsVariable,
             type: {
               kind: Kind.NON_NULL_TYPE,
               type: {
-                kind: Kind.NAMED_TYPE,
-                name: { kind: Kind.NAME, value: '_Any' },
+                kind: Kind.LIST_TYPE,
+                type: {
+                  kind: Kind.NON_NULL_TYPE,
+                  type: {
+                    kind: Kind.NAMED_TYPE,
+                    name: { kind: Kind.NAME, value: '_Any' },
+                  },
+                },
               },
             },
           },
-        },
-      },
-    ] as VariableDefinitionNode[]).concat(
-      mapFetchNodeToVariableDefinitions(fetch),
-    ),
-    selectionSet: {
-      kind: Kind.SELECTION_SET,
-      selections: [
-        {
-          kind: Kind.FIELD,
-          name: { kind: Kind.NAME, value: '_entities' },
-          arguments: [
+        ] as VariableDefinitionNode[]).concat(
+          mapFetchNodeToVariableDefinitions(fetch),
+        ),
+        selectionSet: {
+          kind: Kind.SELECTION_SET,
+          selections: [
             {
-              kind: Kind.ARGUMENT,
-              name: {
-                kind: Kind.NAME,
-                value: representationsVariable.name.value,
-              },
-              value: representationsVariable,
+              kind: Kind.FIELD,
+              name: { kind: Kind.NAME, value: '_entities' },
+              arguments: [
+                {
+                  kind: Kind.ARGUMENT,
+                  name: {
+                    kind: Kind.NAME,
+                    value: representationsVariable.name.value,
+                  },
+                  value: representationsVariable,
+                },
+              ],
+              selectionSet: fetch.selectionSet,
             },
           ],
-          selectionSet: fetch.selectionSet,
         },
-      ],
-    },
+      },
+      ...fetch.internalFragments
+    ],
   };
 }
 

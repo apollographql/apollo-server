@@ -313,14 +313,15 @@ const { ApolloGateway, RemoteGraphQLDataSource } = require('@apollo/gateway');
 
 class DataSourceWithServerId extends RemoteGraphQLDataSource {
   // highlight-start
-  async didReceiveResponse(response, request, context) {
-    const body = await super.didReceiveResponse(response, request, context);
+  async didReceiveResponse({ response, request, context }) {
     // Parse the Server-Id header and add it to the array on context
-    const serverId = response.headers.get('Server-Id');
+    const serverId = response.http.headers.get('Server-Id');
     if (serverId) {
       context.serverIds.push(serverId);
     }
-    return body;
+
+    // Return the response, even when unchanged.
+    return response;
   }
   // highlight-end
 }

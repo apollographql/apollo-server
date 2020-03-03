@@ -1,14 +1,59 @@
 import nock from 'nock';
 import { ApolloGateway } from '../..';
-
 import {
-  mockGetRawPartialSchema,
-  mockFetchStorageSecret,
-  mockGetCompositionConfigLink,
-  mockGetCompositionConfigs,
-  mockGetImplementingServices,
   mockLocalhostSDLQuery,
+  mockStorageSecretSuccess,
+  mockCompositionConfigLinkSuccess,
+  mockCompositionConfigsSuccess,
+  mockImplementingServicesSuccess,
+  mockRawPartialSchemaSuccess,
+  apiKeyHash,
+  graphId,
+  mockImplementingServices,
+  mockRawPartialSchema,
 } from './nockMocks';
+
+// This is a nice DX hack for GraphQL code highlighting and formatting within the file.
+// Anything wrapped within the gql tag within this file is just a string, not an AST.
+const gql = String.raw;
+
+const service = {
+  implementingServicePath: 'service-definition.json',
+  partialSchemaPath: 'accounts-partial-schema.json',
+  federatedServiceURL: 'http://localhost:4001',
+  federatedServiceSchema: gql`
+    extend type Query {
+      me: User
+      everyone: [User]
+    }
+
+    "This is my User"
+    type User @key(fields: "id") {
+      id: ID!
+      name: String
+      username: String
+    }
+  `
+};
+
+const updatedService = {
+  implementingServicePath: 'updated-service-definition.json',
+  partialSchemaPath: 'updated-accounts-partial-schema.json',
+  federatedServiceURL: 'http://localhost:4002',
+  federatedServiceSchema: gql`
+    extend type Query {
+      me: User
+      everyone: [User]
+    }
+
+    "This is my updated User"
+    type User @key(fields: "id") {
+      id: ID!
+      name: String
+      username: String
+    }
+  `
+}
 
 beforeEach(() => {
   if (!nock.isActive()) nock.activate();
@@ -22,246 +67,60 @@ afterEach(() => {
 });
 
 it('Queries remote endpoints for their SDLs', async () => {
-  const url = 'http://localhost:4001';
-  const sdl = `
-  extend type Query {
-      me: User
-      everyone: [User]
-  }
-
-  "My User."
-  type User @key(fields: "id") {
-    id: ID!
-    name: String
-    username: String
-  }
-  `;
-
-  mockLocalhostSDLQuery({ url }).reply(200, {
-    data: { _service: { sdl } },
+  mockLocalhostSDLQuery({ url: service.federatedServiceURL }).reply(200, {
+    data: { _service: { sdl: service.federatedServiceSchema } },
   });
 
   const gateway = new ApolloGateway({
-    serviceList: [{ name: 'accounts', url: `${url}/graphql` }],
+    serviceList: [
+      { name: 'accounts', url: `${service.federatedServiceURL}/graphql` },
+    ],
   });
   await gateway.load();
-  expect(gateway.schema!.getType('User')!.description).toBe('My User.');
+  expect(gateway.schema!.getType('User')!.description).toBe('This is my User');
 });
 
 // This test is maybe a bit terrible, but IDK a better way to mock all the requests
 it('Extracts service definitions from remote storage', async () => {
-  const serviceName = 'jacksons-service';
-  const apiKeyHash = 'abc123';
-
-  const storageSecret = 'secret';
-  const implementingServicePath =
-    'path-to-implementing-service-definition.json';
-  const partialSchemaPath = 'path-to-accounts-partial-schema.json';
-  const federatedServiceName = 'accounts';
-  const federatedServiceURL = 'http://localhost:4001';
-  const federatedServiceSchema = `
-        extend type Query {
-        me: User
-        everyone: [User]
-      }
-
-      "This is my User"
-      type User @key(fields: "id") {
-        id: ID!
-        name: String
-        username: String
-      }`;
-
-  mockFetchStorageSecret({ apiKeyHash, serviceName }).reply(
-    200,
-    `"${storageSecret}"`,
-  );
-
-  mockGetCompositionConfigLink(storageSecret).reply(200, {
-    configPath: `${storageSecret}/current/v1/composition-configs/composition-config-path.json`,
-  });
-
-  mockGetCompositionConfigs({
-    storageSecret,
-  }).reply(200, {
-    implementingServiceLocations: [
-      {
-        name: federatedServiceName,
-        path: `${storageSecret}/current/v1/implementing-services/${federatedServiceName}/${implementingServicePath}`,
-      },
-    ],
-  });
-
-  mockGetImplementingServices({
-    storageSecret,
-    implementingServicePath,
-    federatedServiceName,
-  }).reply(200, {
-    name: federatedServiceName,
-    partialSchemaPath: `${storageSecret}/current/raw-partial-schemas/${partialSchemaPath}`,
-    url: federatedServiceURL,
-  });
-
-  mockGetRawPartialSchema({
-    storageSecret,
-    partialSchemaPath,
-  }).reply(200, federatedServiceSchema);
+  mockStorageSecretSuccess();
+  mockCompositionConfigLinkSuccess();
+  mockCompositionConfigsSuccess([service.implementingServicePath]);
+  mockImplementingServicesSuccess(service);
+  mockRawPartialSchemaSuccess(service);
 
   const gateway = new ApolloGateway({});
 
-  await gateway.load({ engine: { apiKeyHash, graphId: serviceName } });
+  await gateway.load({ engine: { apiKeyHash, graphId } });
   expect(gateway.schema!.getType('User')!.description).toBe('This is my User');
 });
 
 it('Rollsback to a previous schema when triggered', async () => {
-  const serviceName = 'jacksons-service';
-  const apiKeyHash = 'abc123';
-
-  const storageSecret = 'secret';
-  const implementingServicePath1 =
-    'path-to-implementing-service-definition1.json';
-  const implementingServicePath2 =
-    'path-to-implementing-service-definition2.json';
-  const partialSchemaPath1 = 'path-to-accounts-partial-schema1.json';
-  const partialSchemaPath2 = 'path-to-accounts-partial-schema2.json';
-  const federatedServiceName = 'accounts';
-  const federatedServiceURL1 = 'http://localhost:4001';
-  const federatedServiceSchema1 = `
-        extend type Query {
-        me: User
-        everyone: [User]
-      }
-
-      "This is my User"
-      type User @key(fields: "id") {
-        id: ID!
-        name: String
-        username: String
-      }`;
-
-  const federatedServiceURL2 = 'http://localhost:4002';
-  const federatedServiceSchema2 = `
-        extend type Query {
-        me: User
-        everyone: [User]
-      }
-
-      "This is my User 2"
-      type User @key(fields: "id") {
-        id: ID!
-        name: String
-        username: String
-      }`;
-
   // Init
-  mockFetchStorageSecret({ apiKeyHash, serviceName }).reply(
-    200,
-    `"${storageSecret}"`,
-  );
-
-  mockGetCompositionConfigLink(storageSecret).reply(200, {
-    configPath: `${storageSecret}/current/v1/composition-configs/composition-config-path.json`,
-  });
-
-  mockGetCompositionConfigs({
-    storageSecret,
-  }).reply(200, {
-    implementingServiceLocations: [
-      {
-        name: federatedServiceName,
-        path: `${storageSecret}/current/v1/implementing-services/${federatedServiceName}/${implementingServicePath1}`,
-      },
-    ],
-  });
-
-  mockGetImplementingServices({
-    storageSecret,
-    implementingServicePath: implementingServicePath1,
-    federatedServiceName,
-  }).reply(200, {
-    name: federatedServiceName,
-    partialSchemaPath: `${storageSecret}/current/raw-partial-schemas/${partialSchemaPath1}`,
-    url: federatedServiceURL1,
-  });
-
-  mockGetRawPartialSchema({
-    storageSecret,
-    partialSchemaPath: partialSchemaPath1,
-  }).reply(200, federatedServiceSchema1);
+  mockStorageSecretSuccess();
+  mockCompositionConfigLinkSuccess();
+  mockCompositionConfigsSuccess([service.implementingServicePath]);
+  mockImplementingServicesSuccess(service);
+  mockRawPartialSchemaSuccess(service);
 
   // Update 1
-  mockFetchStorageSecret({ apiKeyHash, serviceName }).reply(
-    200,
-    `"${storageSecret}"`,
-  );
-
-  mockGetCompositionConfigLink(storageSecret).reply(200, {
-    configPath: `${storageSecret}/current/v1/composition-configs/composition-config-path.json`,
-  });
-
-  mockGetCompositionConfigs({
-    storageSecret,
-  }).reply(200, {
-    implementingServiceLocations: [
-      {
-        name: federatedServiceName,
-        path: `${storageSecret}/current/v1/implementing-services/${federatedServiceName}/${implementingServicePath2}`,
-      },
-    ],
-  });
-
-  mockGetImplementingServices({
-    storageSecret,
-    implementingServicePath: implementingServicePath2,
-    federatedServiceName,
-  }).reply(200, {
-    name: federatedServiceName,
-    partialSchemaPath: `${storageSecret}/current/raw-partial-schemas/${partialSchemaPath2}`,
-    url: federatedServiceURL2,
-  });
-
-  mockGetRawPartialSchema({
-    storageSecret,
-    partialSchemaPath: partialSchemaPath2,
-  }).reply(200, federatedServiceSchema2);
+  mockStorageSecretSuccess();
+  mockCompositionConfigLinkSuccess();
+  mockCompositionConfigsSuccess([updatedService.implementingServicePath]);
+  mockImplementingServicesSuccess(updatedService);
+  mockRawPartialSchemaSuccess(updatedService);
 
   // Rollback
-  mockFetchStorageSecret({ apiKeyHash, serviceName }).reply(
-    200,
-    `"${storageSecret}"`,
-  );
-
-  mockGetCompositionConfigLink(storageSecret).reply(200, {
-    configPath: `${storageSecret}/current/v1/composition-configs/composition-config-path.json`,
-  });
-
-  mockGetCompositionConfigs({
-    storageSecret,
-  }).reply(200, {
-    implementingServiceLocations: [
-      {
-        name: federatedServiceName,
-        path: `${storageSecret}/current/v1/implementing-services/${federatedServiceName}/${implementingServicePath1}`,
-      },
-    ],
-  });
-
-  mockGetImplementingServices({
-    storageSecret,
-    implementingServicePath: implementingServicePath1,
-    federatedServiceName,
-  }).reply(304);
-
-  mockGetRawPartialSchema({
-    storageSecret,
-    partialSchemaPath: partialSchemaPath1,
-  }).reply(304);
+  mockStorageSecretSuccess();
+  mockCompositionConfigLinkSuccess();
+  mockCompositionConfigsSuccess([service.implementingServicePath]);
+  mockImplementingServices(service).reply(304);
+  mockRawPartialSchema(service).reply(304);
 
   jest.useFakeTimers();
 
   const onChange = jest.fn();
   const gateway = new ApolloGateway();
-  await gateway.load({ engine: { apiKeyHash, graphId: serviceName } });
+  await gateway.load({ engine: { apiKeyHash, graphId } });
   gateway.onSchemaChange(onChange);
 
   // 10000 ms is the default pollInterval
