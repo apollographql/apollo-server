@@ -59,12 +59,12 @@
   },
   "devDependencies": {
     "@types/async-retry": "1.4.1",
-    "@types/aws-lambda": "8.10.44",
+    "@types/aws-lambda": "8.10.45",
     "@types/body-parser": "1.19.0",
     "@types/connect": "3.4.33",
     "@types/fast-json-stable-stringify": "2.0.0",
     "@types/hapi": "17.8.7",
-    "@types/ioredis": "4.14.7",
+    "@types/ioredis": "4.14.8",
     "@types/jest": "24.9.1",
     "@types/koa-router": "7.4.0",
     "@types/lodash": "4.14.149",
@@ -120,7 +120,7 @@
     "supertest": "4.0.2",
     "test-listen": "1.1.0",
     "ts-jest": "24.3.0",
-    "typescript": "3.8.2",
+    "typescript": "3.8.3",
     "ws": "6.2.1"
   },
   "jest": {
