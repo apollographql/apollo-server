@@ -80,16 +80,15 @@ function fetchApolloGcs(
       // Google Cloud Storage returns an `application/xml` error under error
       // conditions.  We'll special-case our known errors, and resort to
       // printing the body for others.
-      if (response.headers.get('content-type') === 'application/xml') {
-        if (
-          response.status === 403 &&
-          body.includes("<Error><Code>AccessDenied</Code>") &&
-          body.includes("Anonymous caller does not have storage.objects.get")
-        ) {
+      if (
+        response.headers.get('content-type') === 'application/xml' &&
+        response.status === 403 &&
+        body.includes("<Error><Code>AccessDenied</Code>") &&
+        body.includes("Anonymous caller does not have storage.objects.get")
+      ) {
           throw new Error(
             "Unable to authenticate with Apollo Graph Manager storage " +
             "while fetching " + url);
-        }
       }
 
       // Normally, we'll try to keep the logs clean with errors we expect.
