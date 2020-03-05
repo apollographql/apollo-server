@@ -19,11 +19,11 @@ import { isObject } from '../utilities/predicates';
 import { GraphQLDataSource } from './types';
 import createSHA from 'apollo-server-core/dist/utils/createSHA';
 
-export class RemoteGraphQLDataSource implements GraphQLDataSource {
+export class RemoteGraphQLDataSource<TContext = any> implements GraphQLDataSource<TContext> {
   constructor(
-    config?: Partial<RemoteGraphQLDataSource> &
+    config?: Partial<RemoteGraphQLDataSource<TContext>> &
       object &
-      ThisType<RemoteGraphQLDataSource>,
+      ThisType<RemoteGraphQLDataSource<TContext>>,
   ) {
     if (config) {
       return Object.assign(this, config);
@@ -52,7 +52,7 @@ export class RemoteGraphQLDataSource implements GraphQLDataSource {
    */
   apq: boolean = false;
 
-  async process<TContext>({
+  async process({
     request,
     context,
   }: Pick<GraphQLRequestContext<TContext>, 'request' | 'context'>): Promise<
@@ -123,7 +123,7 @@ export class RemoteGraphQLDataSource implements GraphQLDataSource {
     return respond(response, requestWithQuery);
   }
 
-  private async sendRequest<TContext>(
+  private async sendRequest(
     request: GraphQLRequest,
     context: TContext,
   ): Promise<GraphQLResponse> {
@@ -166,14 +166,14 @@ export class RemoteGraphQLDataSource implements GraphQLDataSource {
     }
   }
 
-  public willSendRequest?<TContext>(
+  public willSendRequest?(
     requestContext: Pick<
       GraphQLRequestContext<TContext>,
       'request' | 'context'
     >,
   ): ValueOrPromise<void>;
 
-  public didReceiveResponse?<TContext = any>(
+  public didReceiveResponse?(
     requestContext: Required<Pick<
       GraphQLRequestContext<TContext>,
       'request' | 'response' | 'context'>
@@ -184,7 +184,7 @@ export class RemoteGraphQLDataSource implements GraphQLDataSource {
     throw error;
   }
 
-  public parseBody<TContext>(
+  public parseBody(
     response: Response,
     _request?: Request,
     _context?: TContext,
