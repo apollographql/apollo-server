@@ -626,6 +626,8 @@ export class ApolloServerBase {
       onConnect,
       keepAlive,
       path,
+      onOperation,
+      onOperationComplete,
     } = this.subscriptionServerOptions;
 
     // TODO: This shouldn't use this.schema, as it is deprecated in favor of the schemaDerivedData promise.
@@ -644,7 +646,7 @@ export class ApolloServerBase {
           ? onConnect
           : (connectionParams: Object) => ({ ...connectionParams }),
         onDisconnect: onDisconnect,
-        onOperation: async (
+        onOperation: onOperation ? onOperation : (async (
           message: { payload: any },
           connection: ExecutionParams,
         ) => {
@@ -675,7 +677,8 @@ export class ApolloServerBase {
           }
 
           return { ...connection, context };
-        },
+        }),
+        onOperationComplete,
         keepAlive,
       },
       {
