@@ -14,7 +14,7 @@
   "engines": {
     "node": ">=8"
   },
-  "license": "SEE LICENSE IN LICENSE.md",
+  "license": "MIT",
   "publishConfig": {
     "access": "public"
   },
