@@ -88,7 +88,10 @@ function fetchApolloGcs(
       ) {
           throw new Error(
             "Unable to authenticate with Apollo Graph Manager storage " +
-            "while fetching " + url);
+            "while fetching " + url + ".  Ensure that the API key is " +
+            "configured properly and that a federated service has been " +
+            "pushed.  For details, see " +
+            "https://go.apollo.dev/g/resolve-access-denied.");
       }
 
       // Normally, we'll try to keep the logs clean with errors we expect.
