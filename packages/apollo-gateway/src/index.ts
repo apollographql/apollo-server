@@ -296,20 +296,16 @@ export class ApolloGateway implements GraphQLService {
       this.engineConfig = options.engine;
     }
 
-    const previousSchema = this.schema;
-    const previousServiceDefinitions = this.serviceDefinitions;
-    const previousCompositionMetadata = this.compositionMetadata;
-
     let result: Await<ReturnType<Experimental_UpdateServiceDefinitions>>;
-    this.logger.debug('Loading configuration for gateway');
+    this.logger.debug('Checking service definitions...');
     try {
       result = await this.updateServiceDefinitions(this.config);
     } catch (e) {
-      this.logger.warn(
-        'Error checking for schema updates. Falling back to existing schema.',
-        e,
+      this.logger.error(
+        "Error checking for changes to service definitions: " +
+         (e && e.message || e)
       );
-      return;
+      throw e;
     }
 
     if (
@@ -317,12 +313,16 @@ export class ApolloGateway implements GraphQLService {
       JSON.stringify(this.serviceDefinitions) ===
         JSON.stringify(result.serviceDefinitions)
     ) {
-      this.logger.debug('No change in service definitions since last check');
+      this.logger.debug('No change in service definitions since last check.');
       return;
     }
 
+    const previousSchema = this.schema;
+    const previousServiceDefinitions = this.serviceDefinitions;
+    const previousCompositionMetadata = this.compositionMetadata;
+
     if (previousSchema) {
-      this.logger.info('Gateway config has changed, updating schema');
+      this.logger.info("New service definitions were found.");
     }
 
     this.compositionMetadata = result.compositionMetadata;
@@ -335,9 +335,8 @@ export class ApolloGateway implements GraphQLService {
       this.onSchemaChangeListeners.forEach(listener => listener(this.schema!));
     } catch (e) {
       this.logger.error(
-        'Error notifying schema change listener of update to schema.',
-        e,
-      );
+        "An error was thrown from an 'onSchemaChange' listener. " +
+        "The schema will still update: ", e);
     }
 
     if (this.experimental_didUpdateComposition) {
@@ -415,8 +414,12 @@ export class ApolloGateway implements GraphQLService {
   private startPollingServices() {
     if (this.pollingTimer) clearInterval(this.pollingTimer);
 
-    this.pollingTimer = setInterval(() => {
-      this.updateComposition();
+    this.pollingTimer = setInterval(async () => {
+      try {
+        await this.updateComposition();
+      } catch (err) {
+        this.logger.error(err && err.message || err);
+      }
     }, this.experimental_pollInterval || 10000);
 
     // Prevent the Node.js event loop from remaining active (and preventing,

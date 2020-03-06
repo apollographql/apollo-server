@@ -127,10 +127,6 @@ export async function runHttpQuery(
     // the normal options provided by the user, such as: formatError,
     // debug. Therefore, we need to do some unnatural things, such
     // as use NODE_ENV to determine the debug settings
-    e.message = `Invalid options provided to ApolloServer: ${e.message}`;
-    if (!debugDefault) {
-      e.warning = `To remove the stacktrace, set the NODE_ENV environment variable to production if the options creation can fail`;
-    }
     return throwHttpGraphQLError(500, [e], { debug: debugDefault });
   }
   if (options.debug === undefined) {

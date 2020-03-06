@@ -29,7 +29,8 @@ export async function getServiceDefinitionsFromRemoteEndpoint({
   const serviceDefinitions: ServiceDefinition[] = (await Promise.all(
     serviceList.map(({ name, url, dataSource }) => {
       if (!url) {
-        throw new Error(`Tried to load schema from ${name} but no url found`);
+        throw new Error(
+          `Tried to load schema for '${name}' but no 'url' was specified.`);
       }
 
       const request: GraphQLRequest = {

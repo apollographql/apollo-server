@@ -186,7 +186,6 @@ export class ApolloServerBase {
     } = config;
 
     if (gateway && (modules || schema || typeDefs || resolvers)) {
-      // TODO: this could be handled by adjusting the typings to keep gateway configs and non-gateway configs seprate.
       throw new Error(
         'Cannot define both `gateway` and any of: `modules`, `schema`, `typeDefs`, or `resolvers`',
       );
@@ -417,13 +416,27 @@ export class ApolloServerBase {
             }
           : undefined;
 
-      return gateway.load({ engine: engineConfig }).then(config => {
-        this.requestOptions.executor = config.executor;
-        return config.schema;
-      });
+      // Set the executor whether the gateway 'load' call succeeds or not.
+      // If the schema becomes available eventually (after a setInterval retry)
+      // this executor will still be necessary in order to be able to support
+      // a federated schema!
+      this.requestOptions.executor = gateway.executor;
+
+      return gateway.load({ engine: engineConfig })
+        .then(config => config.schema)
+        .catch(err => {
+          // We intentionally do not re-throw the exact error from the gateway
+          // configuration as it may contain implementation details and this
+          // error will propogate to the client. We will, however, log the error
+          // for observation in the logs.
+          const message = "This data graph is missing a valid configuration.";
+          console.error(message + " " + (err && err.message || err));
+          throw new Error(
+            message + " More details may be available in the server logs.");
+        });
     }
 
-    let constructedSchema;
+    let constructedSchema: GraphQLSchema;
     if (schema) {
       constructedSchema = schema;
     } else if (modules) {
@@ -560,7 +573,20 @@ export class ApolloServerBase {
   }
 
   protected async willStart() {
-    const { schema, schemaHash } = await this.schemaDerivedData;
+    try {
+      var { schema, schemaHash } = await this.schemaDerivedData;
+    } catch (err) {
+      // The `schemaDerivedData` can throw if the Promise it points to does not
+      // resolve with a `GraphQLSchema`. As errors from `willStart` are start-up
+      // errors, other Apollo middleware after us will not be called, including
+      // our health check, CORS, etc.
+      //
+      // Returning here allows the integration's other Apollo middleware to
+      // function properly in the event of a failure to obtain the data graph
+      // configuration from the gateway's `load` method during initialization.
+      return;
+    }
+
     const service: GraphQLServiceContext = {
       schema: schema,
       schemaHash: schemaHash,
@@ -789,14 +815,7 @@ export class ApolloServerBase {
   }
 
   public async executeOperation(request: GraphQLRequest) {
-    let options;
-
-    try {
-      options = await this.graphQLServerOptions();
-    } catch (e) {
-      e.message = `Invalid options provided to ApolloServer: ${e.message}`;
-      throw new Error(e);
-    }
+    const options = await this.graphQLServerOptions();
 
     if (typeof options.context === 'function') {
       options.context = (options.context as () => never)();
