@@ -414,12 +414,12 @@ export function testApolloServer<AS extends ApolloServerBase>(
               extensions: expect.objectContaining({
                 code: "INTERNAL_SERVER_ERROR",
               }),
-              message: "This data graph lacks a valid configuration. " +
+              message: "This data graph is missing a valid configuration. " +
                 "More details may be available in the server logs."
             })
           );
           expect(consoleErrorSpy).toHaveBeenCalledWith(
-            "This data graph lacks a valid configuration. " +
+            "This data graph is missing a valid configuration. " +
               "load error which should be masked");
           expect(executor).not.toHaveBeenCalled();
         });

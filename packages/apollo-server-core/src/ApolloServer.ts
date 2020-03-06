@@ -429,7 +429,7 @@ export class ApolloServerBase {
           // configuration as it may contain implementation details and this
           // error will propogate to the client. We will, however, log the error
           // for observation in the logs.
-          const message = "This data graph lacks a valid configuration.";
+          const message = "This data graph is missing a valid configuration.";
           console.error(message + " " + (err && err.message || err));
           throw new Error(
             message + " More details may be available in the server logs.");
