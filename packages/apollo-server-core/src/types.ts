@@ -93,6 +93,8 @@ export interface GraphQLService {
     engine?: GraphQLServiceEngineConfig;
   }): Promise<GraphQLServiceConfig>;
   onSchemaChange(callback: SchemaChangeCallback): Unsubscriber;
+  // Note: The `TContext` typing here is not conclusively behaving as we expect:
+  // https://github.com/apollographql/apollo-server/pull/3811#discussion_r387381605
   executor<TContext>(
     requestContext: WithRequired<
       GraphQLRequestContext<TContext>,
