@@ -2,6 +2,8 @@
 title: Implementing services
 ---
 
+import FederationArchitecture from '../../shared/diagrams/federation-architecture.mdx';
+
 This article describes how to create an **implementing service** for a federated data graph using Apollo Server.
 
 ## Defining an implementing service
@@ -52,7 +54,7 @@ npm install @apollo/federation
 
 ### Defining an entity
 
-As part of our federated architecture, we want _other_ implementing services to be able to extend the `User` type this service defines. To enable this, we add the `@key` directive to the `User` type's definition to designate it as an **entity**:
+As part of our federated architecture, we want _other_ implementing services to be able to extend the `User` type this service defines. To enable this, we add the `@key` directive to the `User` type's definition to designate it as an [entity](./entities/):
 
 ```js:title=index.js
 const { ApolloServer, gql } = require('apollo-server');
@@ -91,8 +93,7 @@ const resolvers = {
 };
 ```
 
-We would then define the `fetchUserById` function to obtain the appropriate `User`
-from our backing data store.
+(This example requires defining the `fetchUserById` function to obtain the appropriate `User` from our backing data store.)
 
 > [Learn more about entities](./entities/)
 
@@ -112,10 +113,9 @@ server.listen(4001).then(({ url }) => {
 
 The server is now ready to act as an implementing service in a federated data graph!
 
-### Full example
+### Combined example
 
-Here are the snippets above combined (again, note that for this sample to be complete,
- you must define the `fetchUserById` function for your data source):
+Here are the snippets above combined (again, note that for this sample to be complete, you must define the `fetchUserById` function for your data source):
 
 ```js:title=index.js
 const { ApolloServer, gql } = require('apollo-server');
@@ -153,3 +153,13 @@ server.listen(4001).then(({ url }) => {
     console.log(`🚀 Server ready at ${url}`);
 });
 ```
+
+## Securing implementing services
+
+Because of the power and flexibility of Apollo Federation's `_entities` field, your implementing services should **not** be directly accessible by clients. Instead, only your [gateway](./gateway/) should have access to your implementing serivces. Clients then communicate with the gateway:
+
+<FederationArchitecture />
+
+Make sure to implement any necessary firewall rules, access control
+lists, or other measures to ensure that individual implementing services can
+be accessed only via the gateway.

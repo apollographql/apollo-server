@@ -1,8 +1,10 @@
 ---
-title: The federated gateway
+title: The gateway
 ---
 
-After you set up at least one federation-ready [implementing service](./implementing-services/), you can configure up a **federated gateway** to sit in front of it.
+After you set up at least one federation-ready [implementing service](./implementing-services/), you can configure a **gateway** to sit in front of your services. The gateway **composes** the individual schemas of your services into a federated data graph and then executes incoming operations across those services.
+
+The `@apollo/gateway` package extends Apollo Server's functionality, enabling it to act as a gateway for an Apollo Federation architecture.
 
 ## Setup
 
@@ -12,19 +14,18 @@ First, let's install the necessary packages:
 npm install @apollo/gateway apollo-server graphql
 ```
 
-Now we can set up an `ApolloServer` instance that acts as a gateway to our underlying
-implementing services:
+The `@apollo/gateway` package includes the [`ApolloGateway` class](/api/apollo-gateway/). To configure Apollo Sever to act as a gateway, you pass an instance of `ApolloGateway` to the `ApolloServer` constructor, like so:
 
 ```js
 const { ApolloServer } = require('apollo-server');
-const { ApolloGateway } = require("@apollo/gateway");
+const { ApolloGateway } = require('@apollo/gateway');
 
-// Initialize an ApolloGateway instance and pass it an array of implementing
-// service names and URLs
+// Initialize an ApolloGateway instance and pass it an array of
+// your implementing service names and URLs
 const gateway = new ApolloGateway({
   serviceList: [
     { name: 'accounts', url: 'http://localhost:4001' },
-    // more services
+    // Define additional services here
   ],
 });
 
@@ -46,28 +47,20 @@ In the above example, we provide the `serviceList` configuration option to the
 of our implementing services. You can specify any string value for `name`, which
 is used primarily for query planner output, error messages, and logging.
 
-> In production, we recommend configuring the gateway in a managed mode, which relies on static files rather than introspection. For details on how to use the [Apollo schema registry](https://www.apollographql.com/docs/graph-manager/schema-registry/) to support this workflow, see [the Graph Manager documentation](https://www.apollographql.com/docs/graph-manager/federation/).
+> In production, we recommend running the gateway in a **managed mode**, which relies on static files rather than introspection. For details, see the [Apollo Graph Manager documentation](https://www.apollographql.com/docs/graph-manager/federation/).
 
-On startup, the gateway fetches each implementing service's capabilities and composes
-a federated data graph. It accepts incoming requests and creates query plans that query the graph's implementing services.
+On startup, the gateway fetches each implementing service's schema from its `url` and composes those schemas into a single federated data graph. It then begins accepting incoming requests and creates query plans for them that execute across one or more services.
 
 > If there are any composition errors, the `new ApolloServer` call throws an exception
 > with a list of [validation errors](/federation/errors/).
 
-### Securing implementing services
+## Customizing requests and responses
 
-Due to the power and flexibility of federation's `_entities` field, **only the gateway should be accessible by GraphQL clients**. Individual implementing services
-should **not** be accessible. Make sure to implement firewall rules, access control
-lists, or other measures to ensure that individual implementing services can
-be accessed only via the gateway.
+The gateway can modify the details of an incoming request before executing it across your implementing services. For example, your services might all use the same authorization token to associate an incoming request with a particular user. The gateway can add that token to each operation it sends to your services.
 
-## Sharing context across services
+Similarly, the gateway can modify the details of its response to a client, based on the result of each implementing service.
 
 ### Customizing incoming requests
-
-If you have an existing set of services, you've probably already
-implemented some form of authentication to associate each request with a user, or
-you require that some information be passed to each service via request headers. The `@apollo/gateway` package enables you to reuse Apollo Server's context feature to customize which information is sent to implementing services.
 
 The following example demonstrates passing user information from the gateway
 to each implementing service via the `user-id` HTTP header:
@@ -125,15 +118,23 @@ The `buildService` function enables us to customize the requests that are sent t
 
 ### Customizing outgoing responses
 
-Similarly, the `didReceiveResponse` callback allows us to inspect an implementing
-service's `response` in order to modify the `context`. The lifecycle of a request to
-a federated server involves a number of responses, multiple of which might contain
-headers that should be passed back to the client.
+The `didReceiveResponse` callback of the `RemoteGraphQLDataSource` class enables the gatway to inspect each implementing service's result to modify the `context` before sending a final response to the client.
 
 Suppose our implementing services all use the `Server-Id` header to uniquely
 identify themselves in a response. We want the gateway's `Server-Id` header to include _all_ of these returned values. In this case, we can tell the gateway to aggregate the various server IDs into a single, comma-separated list in its response:
 
-<img alt="Flowchart demonstrating willSendResponse usage" src="../images/willSendResponse-flowchart.png" width=500>
+```mermaid
+sequenceDiagram;
+  Client->>Gateway: Send GraphQL operation
+  Gateway->>Gateway: Generate query plan for operation
+  loop For each operation in the query plan
+    Gateway->>Implementing Services: Send the operation to the applicable service
+    Implementing Services->>Gateway: Respond with result and Server-Id header
+    Gateway->>Gateway: Add the returned Server-Id to the shared context
+  end
+  Gateway->>Gateway: Add all returned Server-Ids to the response header
+  Gateway->>Client: Send operation response
+```
 
  To implement this behavior, we define a `didReceiveResponse` callback and an `ApolloServerPlugin` in our gateway:
 
@@ -202,15 +203,10 @@ To learn more about `buildService` and `RemoteGraphQLDataSource`, see the [API d
 
 ## Implementing custom directives
 
-> Note: Apollo Server does not currently support executable directives, however they are supported by the gateway.
+The `@apollo/gateway` library provides limited support for custom directives that are implemented by your implementing services. To use this feature, there are a few requirements that must be met in order to compose a valid graph:
 
-The gateway currently provides limited support for custom, service-level directives. To use this feature, there are a few requirements that must be met in order to compose a valid graph:
-
-* Directives can only implement executable locations. Executable directive locations are documented in the [spec](https://graphql.github.io/graphql-spec/June2018/#ExecutableDirectiveLocation).
-> The following locations are considered valid to the gateway: QUERY, MUTATION, SUBSCRIPTION, FIELD, FRAGMENT\_DEFINITION, FRAGMENT\_SPREAD, INLINE\_FRAGMENT
-* Directives must be implemented by *every* service that's part of the graph. It's acceptable for a service to do nothing with a particular directive, but a directive definition must exist within every service's schema.
+* Custom directives can only be used in **executable locations**, as defined in the [GraphQL specification](https://graphql.github.io/graphql-spec/June2018/#ExecutableDirectiveLocation).
+* Custom directives must be implemented by *every* implementing service in the data graph. It's acceptable for a service to do nothing with a particular directive, but a directive definition must exist within every service's schema.
 * Directive definitions must be identical across all services. A directive definition is identical if its name, arguments and their types, and locations are all the same.
 
-## Managing a federated graph
-
-With Apollo Federation, teams are able to move quickly as they build out their GraphQL services. However, distributed systems introduce complexities that require special tooling and coordination across teams to safely roll out changes. [Apollo Graph Manager](https://engine.apollographql.com) provides solutions to problems like schema change validation, graph update coordination, and metrics collection.  For more information on Graph Manager see [Managed federation](https://www.apollographql.com/docs/graph-manager/federation/).
+>Apollo Server does not currently support executable directives, however they are supported by the gateway.

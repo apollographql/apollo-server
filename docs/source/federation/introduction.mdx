@@ -4,6 +4,8 @@ sidebar_title: Overview
 description: Implement a single data graph across multiple services
 ---
 
+import FederationArchitecture from '../../shared/diagrams/federation-architecture.mdx';
+
 To get the most out of GraphQL, your organization should expose a [single data
 graph](https://principledgraphql.com/integrity#1-one-graph) that provides a
 unified interface for querying all of your backing data sources. This
@@ -29,18 +31,7 @@ An Apollo Federation architecture consists of:
 * A collection of **implementing services** that each define a distinct GraphQL schema
 * A **gateway** that composes the distinct schemas into a **federated data graph** and executes queries across the services in the graph
 
-```mermaid
-graph BT;
-  webapp(Web app);
-  iosapp(iOS app);
-  gateway([Gateway]);
-  serviceA[Products service];
-  serviceB[Reviews service];
-  serviceC[Inventory service];
-  webapp & iosapp -.- gateway;
-  gateway --- serviceA & serviceB & serviceC;
-  class webapp,iosapp tertiary;
-```
+<FederationArchitecture />
 
 Apollo Server provides libraries for acting both as an implementing service and as a gateway, but these components can be implemented in any language and framework.
 
