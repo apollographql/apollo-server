@@ -1,6 +1,11 @@
 ---
-title: The gateway
+title: "Apollo Federation: The gateway"
+sidebar_title: "The gateway"
 ---
+
+import {
+  ExpansionPanel,
+} from 'gatsby-theme-apollo-docs/src/components/expansion-panel';
 
 After you set up at least one federation-ready [implementing service](./implementing-services/), you can configure a **gateway** to sit in front of your services. The gateway **composes** the individual schemas of your services into a federated data graph and then executes incoming operations across those services.
 
@@ -58,12 +63,15 @@ On startup, the gateway fetches each implementing service's schema from its `url
 
 The gateway can modify the details of an incoming request before executing it across your implementing services. For example, your services might all use the same authorization token to associate an incoming request with a particular user. The gateway can add that token to each operation it sends to your services.
 
-Similarly, the gateway can modify the details of its response to a client, based on the result of each implementing service.
+Similarly, the gateway can modify the details of its response to a client, based on the result returned by each implementing service.
 
-### Customizing incoming requests
+### Customizing requests
 
-The following example demonstrates passing user information from the gateway
-to each implementing service via the `user-id` HTTP header:
+In the following example, each incoming request to the gateway includes an `Authorization` header. The gateway sets the shared `context` for an operation  by pulling the value of that header and using it to fetch the associated user's ID.
+
+After adding the `userId` to the shared `context` object, the gateway can then add that value to a header that it includes in its requests to each implementing service.
+
+<ExpansionPanel title="Expand example">
 
 ```javascript
 const { ApolloServer } = require('apollo-server');
@@ -114,29 +122,34 @@ server.listen().then(({ url }) => {
 });
 ```
 
+</ExpansionPanel>
+
 The `buildService` function enables us to customize the requests that are sent to our implementing services. In this example, we return a custom `RemoteGraphQLDataSource`. The datasource allows us to modify the outgoing request with information from the Apollo Server `context` before it's sent. Here, we add the `user-id` header to pass an authenticated user ID to downstream services.
 
-### Customizing outgoing responses
+### Customizing responses
 
-The `didReceiveResponse` callback of the `RemoteGraphQLDataSource` class enables the gatway to inspect each implementing service's result to modify the `context` before sending a final response to the client.
+Let's say that whenever our implementing services return an operation result to the gateway, they include a `Server-Id` header in the response. The value of the header uniquely identifies the service in our graph.
 
-Suppose our implementing services all use the `Server-Id` header to uniquely
-identify themselves in a response. We want the gateway's `Server-Id` header to include _all_ of these returned values. In this case, we can tell the gateway to aggregate the various server IDs into a single, comma-separated list in its response:
+When the gateway then responds to a client, we want _its_ `Server-Id` header to include the identifier for _every_ service that contributed to the response. In this case, we can tell the gateway to aggregate the various server IDs into a single, comma-separated list.
+
+The flow for processing a single operation from a client application then looks like this:
 
 ```mermaid
 sequenceDiagram;
-  Client->>Gateway: Send GraphQL operation
-  Gateway->>Gateway: Generate query plan for operation
+  Client app->>Gateway: Sends GraphQL operation
+  Gateway->>Gateway: Generates query plan for operation
   loop For each operation in the query plan
-    Gateway->>Implementing Services: Send the operation to the applicable service
-    Implementing Services->>Gateway: Respond with result and Server-Id header
-    Gateway->>Gateway: Add the returned Server-Id to the shared context
+    Gateway->>Implementing Services: Sends the operation to the applicable service
+    Implementing Services->>Gateway: Responds with result and Server-Id header
+    Gateway->>Gateway: Adds the returned Server-Id to the shared context
   end
-  Gateway->>Gateway: Add all returned Server-Ids to the response header
-  Gateway->>Client: Send operation response
+  Gateway->>Gateway: Adds all Server-Ids in the shared context to the response header
+  Gateway->>Client app: Sends operation response
 ```
 
- To implement this behavior, we define a `didReceiveResponse` callback and an `ApolloServerPlugin` in our gateway:
+To implement this flow, we can use the `didReceiveResponse` callback of the `RemoteGraphQLDataSource` class to inspect each implementing service's result as it comes in. We can add the `Server-Id` to the shared `context` in this callback, then pull the full list from the `context` when sending the final response to the client.
+
+<ExpansionPanel title="Expand example">
 
 ```javascript
 const { ApolloServer } = require('apollo-server');
@@ -199,14 +212,16 @@ server.listen().then(({ url }) => {
 });
 ```
 
+</ExpansionPanel>
+
 To learn more about `buildService` and `RemoteGraphQLDataSource`, see the [API docs](/api/apollo-gateway/).
 
 ## Implementing custom directives
 
-The `@apollo/gateway` library provides limited support for custom directives that are implemented by your implementing services. To use this feature, there are a few requirements that must be met in order to compose a valid graph:
+The `@apollo/gateway` library provides limited support for custom [directives](/schema/directives/) that are implemented by your implementing services. Directives must meet all of the following criteria to be compatible with the gateway:
 
 * Custom directives can only be used in **executable locations**, as defined in the [GraphQL specification](https://graphql.github.io/graphql-spec/June2018/#ExecutableDirectiveLocation).
-* Custom directives must be implemented by *every* implementing service in the data graph. It's acceptable for a service to do nothing with a particular directive, but a directive definition must exist within every service's schema.
-* Directive definitions must be identical across all services. A directive definition is identical if its name, arguments and their types, and locations are all the same.
+* Your custom directives must be defined by *every* implementing service in your data graph, even if not all of your services use them.
+* Directive definitions must be identical across all of your service schemas. Directive definitions are identical if their names, locations, arguments, and argument types are all identical.
 
 >Apollo Server does not currently support executable directives, however they are supported by the gateway.
