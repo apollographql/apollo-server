@@ -200,17 +200,16 @@ export class RemoteGraphQLDataSource<TContext extends Record<string, any> = Reco
     }
   }
 
+  protected errorBaseFromResponseAndMessage(response: Response, message: string): ApolloError {
+    if (response.status === 401) return new AuthenticationError(message);
+    if (response.status === 403) return new ForbiddenError(message);
+    return new ApolloError(message);
+  }
+
   public async errorFromResponse(response: Response) {
     const message = `${response.status}: ${response.statusText}`;
 
-    let error: ApolloError;
-    if (response.status === 401) {
-      error = new AuthenticationError(message);
-    } else if (response.status === 403) {
-      error = new ForbiddenError(message);
-    } else {
-      error = new ApolloError(message);
-    }
+    const error = this.errorBaseFromResponseAndMessage(response, message);
 
     const body = await this.parseBody(response);
 
