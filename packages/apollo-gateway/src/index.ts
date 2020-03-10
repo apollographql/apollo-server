@@ -46,8 +46,9 @@ import { fetch } from 'apollo-server-env';
 
 export type ServiceEndpointDefinition = Pick<ServiceDefinition, 'name' | 'url'>;
 
-interface GatewayConfigBase {
-  debug?: boolean;
+type LoggerConfig = { debug?: boolean; }
+
+type GatewayConfigBase = {
   // TODO: expose the query plan in a more flexible JSON format in the future
   // and remove this config option in favor of `exposeQueryPlan`. Playground
   // should cutover to use the new option when it's built.
@@ -63,17 +64,17 @@ interface GatewayConfigBase {
   experimental_approximateQueryPlanStoreMiB?: number;
   experimental_autoFragmentization?: boolean;
   fetcher?: typeof fetch;
-}
+} & LoggerConfig;
 
-interface RemoteGatewayConfig extends GatewayConfigBase {
+type RemoteGatewayConfig = GatewayConfigBase & {
   serviceList: ServiceEndpointDefinition[];
   introspectionHeaders?: HeadersInit;
 }
 
-interface ManagedGatewayConfig extends GatewayConfigBase {
+type ManagedGatewayConfig = GatewayConfigBase & {
   federationVersion?: number;
 }
-interface LocalGatewayConfig extends GatewayConfigBase {
+type LocalGatewayConfig = GatewayConfigBase & {
   localServiceList: ServiceDefinition[];
 }
 
