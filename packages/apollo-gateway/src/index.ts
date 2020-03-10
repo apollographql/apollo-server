@@ -346,7 +346,7 @@ export class ApolloGateway implements GraphQLService {
     } catch (e) {
       this.logger.error(
         "An error was thrown from an 'onSchemaChange' listener. " +
-        "The schema will still update: ", e);
+        "The schema will still update: " + (e && e.message || e));
     }
 
     if (this.experimental_didUpdateComposition) {
@@ -588,7 +588,11 @@ export class ApolloGateway implements GraphQLService {
         // is returning a non-native `Promise` (e.g. Bluebird, etc.).
         Promise.resolve(
           this.queryPlanStore.set(queryPlanStoreKey, queryPlan),
-        ).catch(err => this.logger.warn('Could not store queryPlan', err));
+        ).catch(err =>
+          this.logger.warn(
+            'Could not store queryPlan' + ((err && err.messsage) || err),
+          ),
+        );
       }
     }
 
