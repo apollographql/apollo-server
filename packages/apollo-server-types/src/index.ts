@@ -107,3 +107,11 @@ export type GraphQLExecutionResult = {
   errors?: ReadonlyArray<GraphQLError>;
   extensions?: Record<string, any>;
 };
+
+export type Logger = {
+  // Ordered from least-severe to most-severe.
+  debug(message?: any): void;
+  info(message?: any): void;
+  warn(message?: any): void;
+  error(message?: any): void;
+}
