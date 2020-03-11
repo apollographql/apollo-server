@@ -1,10 +1,11 @@
 # CHANGELOG for `@apollo/gateway`
 
-## vNEXT
+## 0.13.2
 
-> The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  When a release is being prepared, a new header will be (manually) created below and the the appropriate changes within that release will be moved into the new section.
-
-- _Nothing yet! Stay tuned._
+- __BREAKING__: The behavior and signature of `RemoteGraphQLDataSource`'s `didReceiveResponse` method has been changed.  No changes are necessary _unless_ your implementation has overridden the default behavior of this method by either extending the class and overriding the method or by providing `didReceiveResponse` as a parameter to the `RemoteGraphQLDataSource`'s constructor options.  Implementations which have provided their own `didReceiveResponse` using either of these methods should view the PR linked here for details on what has changed.  [PR #3743](https://github.com/apollographql/apollo-server/pull/3743)
+- __NEW__: Setting the `apq` option to `true` on the `RemoteGraphQLDataSource` will enable the use of [automated persisted queries (APQ)](https://www.apollographql.com/docs/apollo-server/performance/apq/) when sending queries to downstream services.  Depending on the complexity of queries sent to downstream services, this technique can greatly reduce the size of the payloads being transmitted over the network.  Downstream implementing services must also support APQ functionality to participate in this feature (Apollo Server does by default unless it has been explicitly disabled).  As with normal APQ behavior, a downstream server must have received and registered a query once before it will be able to serve an APQ request. [#3744](https://github.com/apollographql/apollo-server/pull/3744)
+- __NEW__: Experimental feature: compress downstream requests via generated fragments [#3791](https://github.com/apollographql/apollo-server/pull/3791) This feature enables the gateway to generate fragments for queries to downstream services in order to minimize bytes over the wire and parse time. This can be enabled via the gateway config by setting `experimental_autoFragmentization: true`. It is currently disabled by default.
+- Introduce `make-fetch-happen` package. Remove `cachedFetcher` in favor of the caching implementation provided by this package. [#3783](https://github.com/apollographql/apollo-server/pull/3783/files)
 
 ## v0.12.1
 

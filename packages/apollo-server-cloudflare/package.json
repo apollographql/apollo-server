@@ -1,6 +1,6 @@
 {
   "name": "apollo-server-cloudflare",
-  "version": "2.10.1",
+  "version": "2.11.0",
   "description": "Production-ready Node.js GraphQL server for Cloudflare workers",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -26,6 +26,6 @@
     "apollo-server-types": "file:../apollo-server-types"
   },
   "peerDependencies": {
-    "graphql": "^0.12.0 || ^0.13.0 || ^14.0.0"
+    "graphql": "^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0-rc.2"
   }
 }

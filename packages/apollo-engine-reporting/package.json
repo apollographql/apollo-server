@@ -1,6 +1,6 @@
 {
   "name": "apollo-engine-reporting",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "description": "Send reports about your GraphQL services to Apollo Graph Manager (previously known as Apollo Engine)",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -21,6 +21,6 @@
     "graphql-extensions": "file:../graphql-extensions"
   },
   "peerDependencies": {
-    "graphql": "^0.12.0 || ^0.13.0 || ^14.0.0"
+    "graphql": "^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0-rc.2"
   }
 }
