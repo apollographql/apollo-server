@@ -6,7 +6,8 @@
   "types": "./dist/index.d.ts",
   "repository": {
     "type": "git",
-    "url": "apollographql/graphql-extensions"
+    "url": "apollographql/apollo-server",
+    "directory": "packages/react"
   },
   "author": "Martijn Walraven <martijn@martijnwalraven.com>",
   "license": "MIT",
