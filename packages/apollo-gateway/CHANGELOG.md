@@ -8,7 +8,7 @@
 
 ## 0.14.0 (pre-release; `@next` tag)
 
-- During composition, the unavailability of a downstream service in unmanaged federation mode will no longer result in a partially composed schema which merely lacks the types provided by the downed service.  This prevents unexpected validation errors for clients querying a graph which lacks types which were merely unavailable during the initial composition but were intended to be part of the graph. [PR #TODO](https://github.com/apollographql/apollo-server/pull/TODO)
+- During composition, the unavailability of a downstream service in unmanaged federation mode will no longer result in a partially composed schema which merely lacks the types provided by the downed service.  This prevents unexpected validation errors for clients querying a graph which lacks types which were merely unavailable during the initial composition but were intended to be part of the graph. [PR #3867](https://github.com/apollographql/apollo-server/pull/3867)
 
 ## 0.13.2
 
