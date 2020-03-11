@@ -71,7 +71,7 @@ beforeEach(() => {
       retries: GCS_RETRY_COUNT,
       minTimeout: 10,
       maxTimeout: 100,
-    }
+    },
   });
 });
 
@@ -237,7 +237,8 @@ it(`Retries GCS (up to ${GCS_RETRY_COUNT} times) on failure for each request and
   expect(gateway.schema!.getType('User')!.description).toBe('This is my User');
 });
 
-it(`Fails after the ${GCS_RETRY_COUNT + 1}th attempt to reach GCS`, async () => {
+it(`Fails after the ${GCS_RETRY_COUNT +
+  1}th attempt to reach GCS`, async () => {
   failNTimes(GCS_RETRY_COUNT + 1, mockStorageSecret);
 
   const gateway = new ApolloGateway({ fetcher });
@@ -260,6 +261,6 @@ it(`Errors when the secret isn't hosted on GCS`, async () => {
   await expect(
     gateway.load({ engine: { apiKeyHash, graphId } }),
   ).rejects.toThrowErrorMatchingInlineSnapshot(
-    `"Unable to authenticate with Apollo Graph Manager storage while fetching https://storage.googleapis.com/engine-partial-schema-prod/federated-service/storage-secret/dd55a79d467976346d229a7b12b673ce.json"`,
+    `"Unable to authenticate with Apollo Graph Manager storage while fetching https://storage.googleapis.com/engine-partial-schema-prod/federated-service/storage-secret/dd55a79d467976346d229a7b12b673ce.json.  Ensure that the API key is configured properly and that a federated service has been pushed.  For details, see https://go.apollo.dev/g/resolve-access-denied."`,
   );
 });
