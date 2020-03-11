@@ -7,7 +7,7 @@
   "repository": {
     "type": "git",
     "url": "apollographql/apollo-server",
-    "directory": "packages/react"
+    "directory": "packages/graphql-extensions"
   },
   "author": "Martijn Walraven <martijn@martijnwalraven.com>",
   "license": "MIT",
