@@ -156,6 +156,10 @@ export class ApolloServer extends ApolloServerBase {
             },
           ];
 
+          if (this.subscriptionServerOptions) {
+            await this.installSubscriptionHandlers(instance.server);
+          }
+
           if (typeof processFileUploads === 'function' && this.uploadsConfig) {
             instance.addContentTypeParser(
               'multipart',
