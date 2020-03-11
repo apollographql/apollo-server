@@ -6,6 +6,10 @@
 - Provide a more helpful error message when encountering expected errors. [PR #3811](https://github.com/apollographql/apollo-server/pull/3811)
 - General improvements and clarity to error messages and logging. [PR #3811](https://github.com/apollographql/apollo-server/pull/3811)
 
+## 0.14.0 (pre-release; `@next` tag)
+
+- During composition, the unavailability of a downstream service in unmanaged federation mode will no longer result in a partially composed schema which merely lacks the types provided by the downed service.  This prevents unexpected validation errors for clients querying a graph which lacks types which were merely unavailable during the initial composition but were intended to be part of the graph. [PR #3867](https://github.com/apollographql/apollo-server/pull/3867)
+
 ## 0.13.2
 
 - __BREAKING__: The behavior and signature of `RemoteGraphQLDataSource`'s `didReceiveResponse` method has been changed.  No changes are necessary _unless_ your implementation has overridden the default behavior of this method by either extending the class and overriding the method or by providing `didReceiveResponse` as a parameter to the `RemoteGraphQLDataSource`'s constructor options.  Implementations which have provided their own `didReceiveResponse` using either of these methods should view the PR linked here for details on what has changed.  [PR #3743](https://github.com/apollographql/apollo-server/pull/3743)
