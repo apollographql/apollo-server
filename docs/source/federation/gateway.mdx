@@ -216,10 +216,52 @@ To learn more about `buildService` and `RemoteGraphQLDataSource`, see the [API d
 
 ## Implementing custom directives
 
->Apollo Server does **not** currently support executable directives, however they are supported by the gateway. This guidance is provided primarily for architectures that use the `@apollo/gateway` library in combination with implementing services that do _not_ use Apollo Server.
+The `@apollo/gateway` library supports the use of custom [directives](/schema/directives/) in your implementing service schemas. This support differs depending on whether a given directive is a **type system directive** or an **executable directive**.
 
-The `@apollo/gateway` library provides limited support for custom [directives](/schema/directives/) that are implemented by your implementing services. Directives must meet all of the following criteria to be compatible with the gateway:
+### Type system directives
 
-* Custom directives can only be used in **executable locations**, as defined in the [GraphQL specification](https://graphql.github.io/graphql-spec/June2018/#ExecutableDirectiveLocation).
-* Your custom directives must be defined by *every* implementing service in your data graph, even if not all of your services use them.
-* Directive definitions must be identical across all of your service schemas. Directive definitions are identical if their names, locations, arguments, and argument types are all identical.
+Type system directives are directives that are applied to one of [these locations](http://spec.graphql.org/June2018/#TypeSystemDirectiveLocation). These directives are _not_ used within operations, but rather are applied to locations within the schema itself.
+
+The `@deprecated` directive below is an example of a type system directive:
+
+```graphql
+directive @deprecated(
+  reason: String = "No longer supported"
+) on FIELD_DEFINITION | ENUM_VALUE
+
+type ExampleType {
+  newField: String
+  oldField: String @deprecated(reason: "Use `newField`.")
+}
+```
+
+At composition time, `ApolloGateway` strips all definitions _and_ uses of type system directives from your composed schema. This has no effect on your implementing service schemas, which retain this information.
+
+Effectively, the gateway supports type system directives by _ignoring_ them, making them the responsibility of the implementing services that define them.
+
+### Executable directives
+
+Executable directives are directives that are applied to one of [these locations](http://spec.graphql.org/June2018/#ExecutableDirectiveLocation). These directives are _defined_ in your schema, but they're _used_ in operations that are sent by clients.
+
+>**Although the `@apollo/gateway` library supports executable directives, Apollo Server itself does not**. This guidance is provided primarily for architectures that use the `@apollo/gateway` library in combination with implementing services that do _not_ use Apollo Server.
+
+Here's an example of an executable directive definition:
+
+```graphql
+# Uppercase this field's value (assuming it's a string)
+directive @uppercase on FIELD
+```
+
+And here's an example of a query that uses that directive:
+
+```graphql
+query {
+  users {
+    name @uppercase
+  }
+}
+```
+
+At composition time, `ApolloGateway` makes sure that **all of your implementing services define the exact same set of executable directives**. If any service is missing a definition, or if definitions differ in their locations, arguments, or argument types, a composition error occurs.
+
+> Note that different implementing services _can_ use different logic to handle the same executable directive, but this is not recommended.
