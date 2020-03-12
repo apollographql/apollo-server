@@ -475,15 +475,13 @@ export class ApolloGateway implements GraphQLService {
   protected async loadServiceDefinitions(
     config: GatewayConfig,
   ): ReturnType<Experimental_UpdateServiceDefinitions> {
-    const getRemoteConfig = (engineConfig: GraphQLServiceEngineConfig) => {
-      return getServiceDefinitionsFromStorage({
-        graphId: engineConfig.graphId,
-        apiKeyHash: engineConfig.apiKeyHash,
-        graphVariant: engineConfig.graphVariant,
-        federationVersion:
-          (config as ManagedGatewayConfig).federationVersion || 1,
-        fetcher: this.fetcher,
-      });
+    const storageOptions = {
+      graphId: this.engineConfig.graphId,
+      apiKeyHash: this.engineConfig.apiKeyHash,
+      graphVariant: this.engineConfig.graphVariant,
+      federationVersion:
+        (config as ManagedGatewayConfig).federationVersion || 1,
+      fetcher: this.fetcher,
     };
 
     if (isLocalConfig(config) || isRemoteConfig(config)) {
@@ -493,7 +491,7 @@ export class ApolloGateway implements GraphQLService {
         // This error helps avoid common misconfiguration.
         // We don't await this because a local configuration should assume
         // remote is unavailable for one reason or another.
-        getRemoteConfig(this.engineConfig).then(() => {
+        getServiceDefinitionsFromStorage(storageOptions).then(() => {
           this.logger.warn(
             "A local gateway service list is overriding an Apollo Graph " +
             "Manager managed configuration.  To use the managed " +
@@ -528,7 +526,7 @@ export class ApolloGateway implements GraphQLService {
       );
     }
 
-    return getRemoteConfig(this.engineConfig);
+    return getServiceDefinitionsFromStorage(storageOptions);
   }
 
   // XXX Nothing guarantees that the only errors thrown or returned in
