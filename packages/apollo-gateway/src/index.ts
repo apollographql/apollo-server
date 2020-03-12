@@ -475,13 +475,19 @@ export class ApolloGateway implements GraphQLService {
   protected async loadServiceDefinitions(
     config: GatewayConfig,
   ): ReturnType<Experimental_UpdateServiceDefinitions> {
-    const storageOptions = {
-      graphId: this.engineConfig.graphId,
-      apiKeyHash: this.engineConfig.apiKeyHash,
-      graphVariant: this.engineConfig.graphVariant,
-      federationVersion:
-        (config as ManagedGatewayConfig).federationVersion || 1,
-      fetcher: this.fetcher,
+    // This helper avoids the repetition of options in the two cases this method
+    // is invoked below. It is a helper, rather than an options object, since it
+    // depends on the presence of `this.engineConfig`, which is guarded against
+    // further down in this method in two separate places.
+    const getRemoteConfig = (engineConfig: GraphQLServiceEngineConfig) => {
+      return getServiceDefinitionsFromStorage({
+        graphId: engineConfig.graphId,
+        apiKeyHash: engineConfig.apiKeyHash,
+        graphVariant: engineConfig.graphVariant,
+        federationVersion:
+          (config as ManagedGatewayConfig).federationVersion || 1,
+        fetcher: this.fetcher,
+      });
     };
 
     if (isLocalConfig(config) || isRemoteConfig(config)) {
@@ -491,7 +497,7 @@ export class ApolloGateway implements GraphQLService {
         // This error helps avoid common misconfiguration.
         // We don't await this because a local configuration should assume
         // remote is unavailable for one reason or another.
-        getServiceDefinitionsFromStorage(storageOptions).then(() => {
+        getRemoteConfig(this.engineConfig).then(() => {
           this.logger.warn(
             "A local gateway service list is overriding an Apollo Graph " +
             "Manager managed configuration.  To use the managed " +
@@ -526,7 +532,7 @@ export class ApolloGateway implements GraphQLService {
       );
     }
 
-    return getServiceDefinitionsFromStorage(storageOptions);
+    return getRemoteConfig(this.engineConfig);
   }
 
   // XXX Nothing guarantees that the only errors thrown or returned in
