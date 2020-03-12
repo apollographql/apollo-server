@@ -108,9 +108,9 @@ example of using `ApolloGateway`, see [Implementing a federated graph](/federati
   
     When specified, overrides the default
     [Fetch API](https://fetch.spec.whatwg.org/#fetch-api) implementation
-    which is used when communicating with downstream servcies.   By default,
+    which is used when communicating with downstream services.   By default,
     [`make-fetch-happen`](https://npm.im/make-fetch-happen) is used with its
-    default settings.  Another compliant implementation can be provided
+    own defaults.  Another compliant implementation can be provided
     (e.g. [`node-fetch`](https://npm.im/node-fetch) by setting
     `fetcher: require('node-fetch')`) or different [default options for
     `make-fetch-happen`](https://www.npmjs.com/package/make-fetch-happen#extra-options)
