@@ -73,30 +73,26 @@ After adding the `userId` to the shared `context` object, the gateway can then a
 
 <ExpansionPanel title="Expand example">
 
-```javascript
+```javascript{4-10,17-19,28-35}
 const { ApolloServer } = require('apollo-server');
 const { ApolloGateway, RemoteGraphQLDataSource } = require('@apollo/gateway');
 
-// highlight-start
 class AuthenticatedDataSource extends RemoteGraphQLDataSource {
   willSendRequest({ request, context }) {
-    // pass the user's id from the context to underlying services
+    // Pass the user's id from the context to underlying services
     // as a header called `user-id`
     request.http.headers.set('user-id', context.userId);
   }
 }
-// highlight-end
 
 const gateway = new ApolloGateway({
   serviceList: [
     { name: 'products', url: 'http://localhost:4001' },
-    // other services
+    // List other services here
   ],
-  // highlight-start
   buildService({ name, url }) {
     return new AuthenticatedDataSource({ url });
   },
-  // highlight-end
 });
 
 const server = new ApolloServer({
@@ -106,13 +102,11 @@ const server = new ApolloServer({
   subscriptions: false,
 
   context: ({ req }) => {
-    // get the user token from the headers
+    // Get the user token from the headers
     const token = req.headers.authorization || '';
-
-    // try to retrieve a user with the token
+    // Try to retrieve a user with the token
     const userId = getUserId(token);
-
-    // add the user to the context
+    // Add the user ID to the context
     return { userId };
   },
 });
@@ -123,6 +117,8 @@ server.listen().then(({ url }) => {
 ```
 
 </ExpansionPanel>
+
+> The fields of the object passed to your `context` function differ if you're using middleware besides Express. [See the API reference for details.](/docs/apollo-server/api/apollo-server/#apolloserver)
 
 The `buildService` function enables us to customize the requests that are sent to our implementing services. In this example, we return a custom `RemoteGraphQLDataSource`. The datasource allows us to modify the outgoing request with information from the Apollo Server `context` before it's sent. Here, we add the `user-id` header to pass an authenticated user ID to downstream services.
 
@@ -195,7 +191,7 @@ const server = new ApolloServer({
         return {
           willSendResponse({ context, response }) {
             // Append our final result to the outgoing response headers
-            response.http.headers.append(
+            response.http.headers.set(
               'Server-Id',
               context.serverIds.join(',')
             );
@@ -214,14 +210,16 @@ server.listen().then(({ url }) => {
 
 </ExpansionPanel>
 
+> In this example, multiple calls to `didReceiveResponse` are `push`ing a value onto the shared `context.serverIds` array. The order of these calls cannot be guaranteed. If you write logic that modifies the shared `context` object, make sure that modifications are not destructive, and that the order of modifications doesn't matter.
+
 To learn more about `buildService` and `RemoteGraphQLDataSource`, see the [API docs](/api/apollo-gateway/).
 
 ## Implementing custom directives
+
+>Apollo Server does **not** currently support executable directives, however they are supported by the gateway. This guidance is provided primarily for architectures that use the `@apollo/gateway` library in combination with implementing services that do _not_ use Apollo Server.
 
 The `@apollo/gateway` library provides limited support for custom [directives](/schema/directives/) that are implemented by your implementing services. Directives must meet all of the following criteria to be compatible with the gateway:
 
 * Custom directives can only be used in **executable locations**, as defined in the [GraphQL specification](https://graphql.github.io/graphql-spec/June2018/#ExecutableDirectiveLocation).
 * Your custom directives must be defined by *every* implementing service in your data graph, even if not all of your services use them.
 * Directive definitions must be identical across all of your service schemas. Directive definitions are identical if their names, locations, arguments, and argument types are all identical.
-
->Apollo Server does not currently support executable directives, however they are supported by the gateway.
