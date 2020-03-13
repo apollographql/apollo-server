@@ -108,6 +108,11 @@ export async function processGraphQLRequest<TContext>(
   config: GraphQLRequestPipelineConfig<TContext>,
   requestContext: Mutable<GraphQLRequestContext<TContext>>,
 ): Promise<GraphQLResponse> {
+  // For legacy reasons, this exported method may exist without a `logger` on
+  // the context.  We'll need to make sure we account for that, even though
+  // all of our own machinery will certainly set it now.
+  const logger = requestContext.logger || console;
+
   let cacheControlExtension: CacheControlExtension | undefined;
   const extensionStack = initializeExtensionStack();
   (requestContext.context as any)._extensionStack = extensionStack;
@@ -215,9 +220,9 @@ export async function processGraphQLRequest<TContext>(
       try {
         requestContext.document = await config.documentStore.get(queryHash);
       } catch (err) {
-        console.warn(
-          'An error occurred while attempting to read from the documentStore.',
-          err,
+        logger.warn(
+          'An error occurred while attempting to read from the documentStore. '
+          + (err && err.messsage) || err,
         );
       }
     }
@@ -274,7 +279,10 @@ export async function processGraphQLRequest<TContext>(
         Promise.resolve(
           config.documentStore.set(queryHash, requestContext.document),
         ).catch(err =>
-          console.warn('Could not store validated document.', err),
+          logger.warn(
+            'Could not store validated document. ' +
+            (err && err.message) || err
+          )
         );
       }
     }
@@ -341,7 +349,7 @@ export async function processGraphQLRequest<TContext>(
               }
             : Object.create(null),
         ),
-      ).catch(console.warn);
+      ).catch(logger.warn);
     }
 
     let response: GraphQLResponse | null = await dispatcher.invokeHooksUntilNonNull(

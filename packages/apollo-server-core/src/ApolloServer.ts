@@ -4,6 +4,7 @@ import {
   GraphQLParseOptions,
 } from 'graphql-tools';
 import { Server as HttpServer } from 'http';
+import loglevel from 'loglevel';
 import {
   execute,
   GraphQLSchema,
@@ -68,6 +69,7 @@ import {
 
 import { Headers } from 'apollo-server-env';
 import { buildServiceDefinition } from '@apollographql/apollo-tools';
+import { Logger } from "apollo-server-types";
 
 const NoIntrospection = (context: ValidationContext) => ({
   Field(node: FieldDefinitionNode) {
@@ -131,6 +133,7 @@ type SchemaDerivedData = {
 };
 
 export class ApolloServerBase {
+  private logger: Logger;
   public subscriptionsPath?: string;
   public graphqlPath: string = '/graphql';
   public requestOptions: Partial<GraphQLServerOptions<any>> = Object.create(null);
@@ -184,6 +187,28 @@ export class ApolloServerBase {
       experimental_approximateDocumentStoreMiB,
       ...requestOptions
     } = config;
+
+    // Setup logging facilities
+    if (config.logger) {
+      this.logger = config.logger;
+    } else {
+      // If the user didn't prvoide their own logger, we'll initialize one.
+      const loglevelLogger = loglevel.getLogger("apollo-server");
+
+      // We don't do much logging in Apollo Server right now.  There's a notion
+      // of a `debug` flag, but it doesn't so much besides change stack traces
+      // in some error messages, but it would be odd for it to not introduce
+      // debug or higher level errors (which includes `info`, if we happen to
+      // start introducing those.  We'll default to `warn` as a sensible default
+      // of things you'd probably want to be alerted to.
+      if (this.config.debug === true) {
+        loglevelLogger.setLevel(loglevel.levels.DEBUG);
+      } else {
+        loglevelLogger.setLevel(loglevel.levels.WARN);
+      }
+
+      this.logger = loglevelLogger;
+    }
 
     if (gateway && (modules || schema || typeDefs || resolvers)) {
       throw new Error(
@@ -267,7 +292,7 @@ export class ApolloServerBase {
     if (uploads !== false && !forbidUploadsForTesting) {
       if (this.supportsUploads()) {
         if (!runtimeSupportsUploads) {
-          printNodeFileUploadsMessage();
+          printNodeFileUploadsMessage(this.logger);
           throw new Error(
             '`graphql-upload` is no longer supported on Node.js < v8.5.0.  ' +
               'See https://bit.ly/gql-upload-node-6.',
@@ -288,8 +313,13 @@ export class ApolloServerBase {
       }
     }
 
-    // Normalize the legacy option maskErrorDetails.
     if (engine && typeof engine === 'object') {
+      // Use the `ApolloServer` logger unless a more granular logger is set.
+      if (!engine.logger) {
+        engine.logger = this.logger;
+      }
+
+      // Normalize the legacy option maskErrorDetails.
       if (engine.maskErrorDetails && engine.rewriteError) {
         throw new Error("Can't set both maskErrorDetails and rewriteError!");
       } else if (
@@ -318,7 +348,9 @@ export class ApolloServerBase {
     if (this.engineServiceId) {
       const { EngineReportingAgent } = require('apollo-engine-reporting');
       this.engineReportingAgent = new EngineReportingAgent(
-        typeof engine === 'object' ? engine : Object.create(null),
+        typeof engine === 'object' ? engine : Object.create({
+          logger: this.logger,
+        }),
       );
       // Don't add the extension here (we want to add it later in generateSchemaDerivedData).
     }
@@ -430,7 +462,7 @@ export class ApolloServerBase {
           // error will propogate to the client. We will, however, log the error
           // for observation in the logs.
           const message = "This data graph is missing a valid configuration.";
-          console.error(message + " " + (err && err.message || err));
+          this.logger.error(message + " " + (err && err.message || err));
           throw new Error(
             message + " More details may be available in the server logs.");
         });
@@ -534,7 +566,7 @@ export class ApolloServerBase {
         // their own gateway or running a federated service on its own. Nonetheless, in
         // the likely case it was accidental, we warn users that they should only report
         // metrics from the Gateway.
-        console.warn(
+        this.logger.warn(
           "It looks like you're running a federated schema and you've configured your service " +
             'to report metrics to Apollo Graph Manager. You should only configure your Apollo gateway ' +
             'to report metrics to Apollo Graph Manager.',
@@ -588,6 +620,7 @@ export class ApolloServerBase {
     }
 
     const service: GraphQLServiceContext = {
+      logger: this.logger,
       schema: schema,
       schemaHash: schemaHash,
       engine: {
@@ -795,6 +828,7 @@ export class ApolloServerBase {
 
     return {
       schema,
+      logger: this.logger,
       plugins: this.plugins,
       documentStore,
       extensions,
@@ -822,6 +856,7 @@ export class ApolloServerBase {
     }
 
     const requestCtx: GraphQLRequestContext = {
+      logger: this.logger,
       request,
       context: options.context || Object.create(null),
       cache: options.cache!,
@@ -836,8 +871,8 @@ export class ApolloServerBase {
   }
 }
 
-function printNodeFileUploadsMessage() {
-  console.error(
+function printNodeFileUploadsMessage(logger: Logger) {
+  logger.error(
     [
       '*****************************************************************',
       '*                                                               *',
