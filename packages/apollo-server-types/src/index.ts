@@ -19,6 +19,7 @@ export type WithRequired<T, K extends keyof T> = T & Required<Pick<T, K>>;
 type Mutable<T> = { -readonly [P in keyof T]: T[P] };
 
 export interface GraphQLServiceContext {
+  logger?: Logger;
   schema: GraphQLSchema;
   schemaHash: string;
   engine: {
@@ -61,6 +62,8 @@ export interface GraphQLRequestMetrics {
 export interface GraphQLRequestContext<TContext = Record<string, any>> {
   readonly request: GraphQLRequest;
   readonly response?: GraphQLResponse;
+
+  logger?: Logger;
 
   readonly context: TContext;
   readonly cache: KeyValueCache;
