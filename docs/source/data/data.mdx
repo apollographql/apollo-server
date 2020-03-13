@@ -86,12 +86,10 @@ const users = [
 Now we can define a resolver for the `user` field, like so:
 
 ```js
-const { find } = require('lodash');
-
 const resolvers = {
   Query: {
     user(parent, args, context, info) {
-      return find(users, { id: args.id });
+      return users.find(user => user.id === args.id);
     }
   }
 }
@@ -108,7 +106,7 @@ const resolvers = {
 
 ## Passing resolvers to Apollo Server
 
-After you define all of your resolvers, you pass them them to the constructor of `ApolloServer`, along with your schema's definition.
+After you define all of your resolvers, you pass them to the constructor of `ApolloServer` (as the `resolvers` property), along with your schema's definition (as the `typeDefs` property).
 
 The following example defines a hardcoded data set, a schema, and a resolver map. It then initializes an `ApolloServer` instance, passing the schema and resolvers to it.
 
@@ -222,13 +220,12 @@ graph LR;
 
 These resolvers execute in the order shown above, passing their return value to the next resolver in the chain via the [`parent` argument](#resolver-arguments).
 
-Here's a code sample that can resolve the query above with this resolver chain (note that it requires the `lodash` library in addition to `apollo-server`):
+Here's a code sample that can resolve the query above with this resolver chain:
 
 <ExpansionPanel title="Expand example">
 
 ```javascript
 const { ApolloServer, gql } = require('apollo-server');
-const { filter } = require('lodash');
 
 const libraries = [
   {
@@ -273,6 +270,7 @@ const typeDefs = gql`
     name: String!
   }
 
+  # Queries can fetch a list of libraries
   type Query {
     libraries: [Library]
   }
@@ -292,7 +290,7 @@ const resolvers = {
 
       // Filter the hardcoded array of books to only include
       // books that are located at the correct branch
-      return filter(books, { branch: parent.branch });
+      return books.filter(book => book.branch === parent.branch);
     }
   },
   Book: {
@@ -324,7 +322,22 @@ server.listen().then(({ url }) => {
 
 </ExpansionPanel>
 
-If we update our query to also ask for each book's `title`, the resolver chain looks like this:
+If we now update our query to also ask for each book's `title`:
+
+```graphql{4}
+query {
+  libraries {
+    books {
+      title
+      author {
+        name
+      }
+    }
+  }
+}
+```
+
+Then the resolver chain looks like this:
 
 ```mermaid
 graph LR;
@@ -351,7 +364,7 @@ Resolver functions take the following positional arguments, in order:
 
 The `context` argument is useful for passing things that any resolver might need, like [authentication scope](https://blog.apollographql.com/authorization-in-graphql-452b1c402a9), database connections, and custom fetch functions. If you're using [dataloaders to batch requests](/data/data-sources/#what-about-dataloader) across resolvers, you can attach them to the `context` as well.
 
-**Resolvers should never modify the `context` argument.** This ensures consistency across all resolvers and prevents unexpected errors.
+**Resolvers should never destructively modify the `context` argument.** This ensures consistency across all resolvers and prevents unexpected errors.
 
 To provide a `context` to your resolvers, add a `context` initialization function to the `ApolloServer` constructor. This function is called with every request, so you can set the context based on the request's details (such as HTTP headers).
 
@@ -372,6 +385,8 @@ const server = new ApolloServer({
   // Proceed
 }
 ```
+
+> The fields of the object passed to your `context` function differ if you're using middleware besides Express. [See the API reference for details.](/api/apollo-server/#apolloserver)
 
 Context initialization can be asynchronous, allowing database connections and other operations to complete:
 
