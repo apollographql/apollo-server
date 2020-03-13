@@ -264,4 +264,4 @@ query {
 
 At composition time, `ApolloGateway` makes sure that **all of your implementing services define the exact same set of executable directives**. If any service is missing a definition, or if definitions differ in their locations, arguments, or argument types, a composition error occurs.
 
-> Note that different implementing services _can_ use different logic to handle the same executable directive, but this is not recommended.
+> It's strongly recommended that all of your implementing services also use the exact same _logic_ for a given executable directive. Otherwise, operations might produce inconsistent or confusing results for clients.
