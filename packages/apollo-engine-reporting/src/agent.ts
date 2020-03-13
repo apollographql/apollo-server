@@ -12,7 +12,7 @@ import { fetch, RequestAgent, Response } from 'apollo-server-env';
 import retry from 'async-retry';
 
 import { EngineReportingExtension } from './extension';
-import { GraphQLRequestContext } from 'apollo-server-types';
+import { GraphQLRequestContext, Logger } from 'apollo-server-types';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import { defaultEngineReportingSignature } from 'apollo-graphql';
 
@@ -185,6 +185,13 @@ export interface EngineReportingOptions<TContext> {
    * Creates the client information for operation traces.
    */
   generateClientInfo?: GenerateClientInfo<TContext>;
+
+  /**
+   * A logger interface to be used for output and errors.  When not provided
+   * it will default to the server's own `logger` implementation and use
+   * `console` when that is not available.
+   */
+  logger?: Logger;
 }
 
 export interface AddTraceArgs {
@@ -209,6 +216,7 @@ const serviceHeaderDefaults = {
 // to the Engine server.
 export class EngineReportingAgent<TContext = any> {
   private options: EngineReportingOptions<TContext>;
+  private logger: Logger = console;
   private apiKey: string;
   private reports: { [schemaHash: string]: FullTracesReport } = Object.create(
     null,
@@ -226,6 +234,7 @@ export class EngineReportingAgent<TContext = any> {
 
   public constructor(options: EngineReportingOptions<TContext> = {}) {
     this.options = options;
+    if (options.logger) this.logger = options.logger;
     this.apiKey = options.apiKey || process.env.ENGINE_API_KEY || '';
     if (!this.apiKey) {
       throw new Error(
@@ -236,7 +245,7 @@ export class EngineReportingAgent<TContext = any> {
     // Since calculating the signature for Engine reporting is potentially an
     // expensive operation, we'll cache the signatures we generate and re-use
     // them based on repeated traces for the same `queryHash`.
-    this.signatureCache = createSignatureCache();
+    this.signatureCache = createSignatureCache({ logger: this.logger });
 
     this.sendReportsImmediately = options.sendReportsImmediately;
     if (!this.sendReportsImmediately) {
@@ -353,7 +362,9 @@ export class EngineReportingAgent<TContext = any> {
     await Promise.resolve();
 
     if (this.options.debugPrintReports) {
-      console.log(`Engine sending report: ${JSON.stringify(report.toJSON())}`);
+      this.logger.debug(
+        `Engine sending report: ${JSON.stringify(report.toJSON())}`,
+      );
     }
 
     const protobufError = FullTracesReport.verify(report);
@@ -430,7 +441,7 @@ export class EngineReportingAgent<TContext = any> {
       );
     }
     if (this.options.debugPrintReports) {
-      console.log(`Engine report: status ${response.status}`);
+      this.logger.debug(`Engine report: status ${response.status}`);
     }
   }
 
@@ -516,7 +527,7 @@ export class EngineReportingAgent<TContext = any> {
       if (this.options.reportErrorFunction) {
         this.options.reportErrorFunction(err);
       } else {
-        console.error(err.message);
+        this.logger.error(err.message);
       }
     });
   }
@@ -529,7 +540,11 @@ export class EngineReportingAgent<TContext = any> {
   }
 }
 
-function createSignatureCache(): InMemoryLRUCache<string> {
+function createSignatureCache({
+  logger,
+}: {
+  logger: Logger;
+}): InMemoryLRUCache<string> {
   let lastSignatureCacheWarn: Date;
   let lastSignatureCacheDisposals: number = 0;
   return new InMemoryLRUCache<string>({
@@ -558,7 +573,7 @@ function createSignatureCache(): InMemoryLRUCache<string> {
       ) {
         // Log the time that we last displayed the message.
         lastSignatureCacheWarn = new Date();
-        console.warn(
+        logger.warn(
           [
             'This server is processing a high number of unique operations.  ',
             `A total of ${lastSignatureCacheDisposals} records have been `,
