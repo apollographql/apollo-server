@@ -29,7 +29,7 @@ module.exports = {
             'schema/creating-directives',
           ],
           'Fetching Data': [
-            'data/data',
+            'data/resolvers',
             'data/data-sources',
             'data/errors',
             'data/file-uploads',
