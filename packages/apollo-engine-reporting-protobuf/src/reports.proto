@@ -131,7 +131,9 @@ message Trace {
 			// XXX When we want to include more details about the sub-operation that was
 			// executed against this service, we should include that here in each fetch node.
 			// This might include an operation signature, requires directive, reference resolutions, etc.
-			string serviceName = 1;
+			string service_name = 1;
+
+			bool trace_parsing_failed = 2;
 
 			// This Trace only contains start_time, end_time, duration_ns, and root;
 			// all timings were calculated **on the federated service**, and clock skew
