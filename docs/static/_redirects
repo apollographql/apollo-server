@@ -1,5 +1,7 @@
 / /docs/apollo-server/
 
+/docs/apollo-server/data/data/ /docs/apollo-server/data/resolvers/
+
 /docs/apollo-server/federation/core-concepts/ /docs/apollo-server/federation/entities/
 /docs/apollo-server/federation/advanced-features/ /docs/apollo-server/federation/entities/
 /docs/apollo-server/federation/concerns/ /docs/apollo-server/federation/introduction/#separation-of-concerns
