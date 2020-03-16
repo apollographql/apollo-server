@@ -228,5 +228,5 @@ Apollo Server. Check out the following resources to learn more about the basics
 of schemas, resolvers, and deployment:
 
 * [Schema basics](/schema/schema/)
-* [Fetching data with resolvers](/data/data/)
+* [Resolvers](/data/resolvers/)
 * [Deploying with Heroku](/deployment/heroku/)

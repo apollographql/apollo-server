@@ -1,4 +1,4 @@
-import http from 'http';
+import http, { Server } from 'http';
 
 import { RESTDataSource } from 'apollo-datasource-rest';
 
@@ -11,10 +11,9 @@ import {
 
 import { gql } from 'apollo-server-core';
 
-const restPort = 4002;
-
 export class IdAPI extends RESTDataSource {
-  baseURL = `http://localhost:${restPort}/`;
+  // We will set this inside tests.
+  // baseURL = `http://localhost:${restPort}/`;
 
   async getId(id: string) {
     return this.get(`id/${id}`);
@@ -77,11 +76,15 @@ const resolvers = {
   restAPI.use(router.routes());
   restAPI.use(router.allowedMethods());
 
-  let restServer;
+  let restServer: Server;
+  let restUrl: string;
 
   beforeAll(async () => {
-    await new Promise(resolve => {
-      restServer = restAPI.listen(restPort, resolve);
+    restUrl = await new Promise(resolve => {
+      restServer = restAPI.listen(0, () => {
+        const { port } = restServer.address();
+        resolve(`http://localhost:${port}`);
+      });
     });
   });
 
@@ -106,7 +109,9 @@ const resolvers = {
       typeDefs,
       resolvers,
       dataSources: () => ({
-        id: new IdAPI(),
+        id: new class extends IdAPI {
+          baseURL = restUrl;
+        },
       }),
     });
     const app = new Koa();
@@ -136,7 +141,9 @@ const resolvers = {
       typeDefs,
       resolvers,
       dataSources: () => ({
-        id: new IdAPI(),
+        id: new class extends IdAPI {
+          baseURL = restUrl;
+        },
       }),
     });
     const app = new Koa();
