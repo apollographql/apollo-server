@@ -362,7 +362,15 @@ export class EngineReportingAgent<TContext = any> {
     await Promise.resolve();
 
     if (this.options.debugPrintReports) {
-      this.logger.debug(
+      // In terms of verbosity, and as the name of this option suggests, this
+      // message is either an "info" or a "debug" level message.  However,
+      // we are using `warn` here for compatibility reasons since the
+      // `debugPrintReports` flag pre-dated the existence of log-levels and
+      // changing this to also require `debug: true` (in addition to
+      // `debugPrintReports`) just to reach the level of verbosity to produce
+      // the output would be a breaking change.  The "warn" level is on by
+      // default.  There is a similar theory and comment applied below.
+      this.logger.warn(
         `Engine sending report: ${JSON.stringify(report.toJSON())}`,
       );
     }
@@ -441,7 +449,15 @@ export class EngineReportingAgent<TContext = any> {
       );
     }
     if (this.options.debugPrintReports) {
-      this.logger.debug(`Engine report: status ${response.status}`);
+      // In terms of verbosity, and as the name of this option suggests, this
+      // message is either an "info" or a "debug" level message.  However,
+      // we are using `warn` here for compatibility reasons since the
+      // `debugPrintReports` flag pre-dated the existence of log-levels and
+      // changing this to also require `debug: true` (in addition to
+      // `debugPrintReports`) just to reach the level of verbosity to produce
+      // the output would be a breaking change.  The "warn" level is on by
+      // default.  There is a similar theory and comment applied above.
+      this.logger.warn(`Engine report: status ${response.status}`);
     }
   }
 
