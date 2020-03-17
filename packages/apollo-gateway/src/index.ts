@@ -40,7 +40,9 @@ import { GraphQLDataSource } from './datasources/types';
 import { RemoteGraphQLDataSource } from './datasources/RemoteGraphQLDataSource';
 import { HeadersInit } from 'node-fetch';
 import { getVariableValues } from 'graphql/execution/values';
-import { CachedFetcher } from './cachedFetcher';
+import fetcher from 'make-fetch-happen';
+import { HttpRequestCache } from './cache';
+import { fetch } from 'apollo-server-env';
 
 export type ServiceEndpointDefinition = Pick<ServiceDefinition, 'name' | 'url'>;
 
@@ -59,6 +61,8 @@ interface GatewayConfigBase {
   experimental_didUpdateComposition?: Experimental_DidUpdateCompositionCallback;
   experimental_pollInterval?: number;
   experimental_approximateQueryPlanStoreMiB?: number;
+  experimental_autoFragmentization?: boolean;
+  fetcher?: typeof fetch;
 }
 
 interface RemoteGatewayConfig extends GatewayConfigBase {
@@ -160,7 +164,16 @@ export class ApolloGateway implements GraphQLService {
   private serviceDefinitions: ServiceDefinition[] = [];
   private compositionMetadata?: CompositionMetadata;
   private serviceSdlCache = new Map<string, string>();
-  private fetcher = new CachedFetcher();
+
+  private fetcher: typeof fetch = fetcher.defaults({
+    cacheManager: new HttpRequestCache(),
+    // All headers should be lower-cased here, as `make-fetch-happen`
+    // treats differently cased headers as unique (unlike the `Headers` object).
+    // @see: https://git.io/JvRUa
+    headers: {
+      'user-agent': `apollo-gateway/${require('../package.json').version}`
+    }
+  });
 
   // Observe query plan, service info, and operation info prior to execution.
   // The information made available here will give insight into the resulting
@@ -240,11 +253,15 @@ export class ApolloGateway implements GraphQLService {
 
       // Warn against using the pollInterval and a serviceList simulatenously
       if (config.experimental_pollInterval && isRemoteConfig(config)) {
-        console.warn(
+        this.logger.warn(
           'Polling running services is dangerous and not recommended in production. ' +
             'Polling should only be used against a registry. ' +
             'If you are polling running services, use with caution.',
         );
+      }
+
+      if (config.fetcher) {
+        this.fetcher = config.fetcher;
       }
     }
   }
@@ -275,7 +292,7 @@ export class ApolloGateway implements GraphQLService {
     // instead of here. We can remove this as a breaking change in the future.
     if (options && options.engine) {
       if (!options.engine.graphVariant)
-        console.warn('No graph variant provided. Defaulting to `current`.');
+        this.logger.warn('No graph variant provided. Defaulting to `current`.');
       this.engineConfig = options.engine;
     }
 
@@ -512,7 +529,11 @@ export class ApolloGateway implements GraphQLService {
     }
 
     if (!queryPlan) {
-      queryPlan = buildQueryPlan(operationContext);
+      queryPlan = buildQueryPlan(operationContext, {
+        autoFragmentization: Boolean(
+          this.config.experimental_autoFragmentization,
+        ),
+      });
       if (this.queryPlanStore) {
         // The underlying cache store behind the `documentStore` returns a
         // `Promise` which is resolved (or rejected), eventually, based on the

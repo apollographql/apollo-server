@@ -40,7 +40,7 @@ server.listen().then(({ url }) => {
 });
 ```
 
-In the example above, we are describing the shapes of our data, how they relate to each other, and how to fetch what our client needs from our data source. Apollo Server uses simple functions called [resolvers](/data/data/) to bring to life the schema described in SDL type definitions. When a request comes in to `/graphql`, Apollo Server will translate that request into what it takes to execute the query, will run the resolvers for you to load your data, and return the result in JSON so your app can render it out easily!
+In the example above, we are describing the shapes of our data, how they relate to each other, and how to fetch what our client needs from our data source. Apollo Server uses simple functions called [resolvers](/data/resolvers/) to bring to life the schema described in SDL type definitions. When a request comes in to `/graphql`, Apollo Server will translate that request into what it takes to execute the query, will run the resolvers for you to load your data, and return the result in JSON so your app can render it out easily!
 
 Apollo Server takes care of every step of translating the query your client asks for into the data it needs. It is designed to give you maximum control over how you load the data while taking care of everything else for you! You don't need to worry about parsing the request, validating the query, delivering the response, or even profiling your app. Instead, all you have to do is describe the shape of your data and how to find it; Apollo Server does the rest! 💪
 

@@ -85,7 +85,8 @@ const resolvers = {
 };
 
 const apolloServer = new ApolloServer({ typeDefs, resolvers });
-module.exports = cors(apolloServer.createHandler()); // highlight-line
+const handler = apolloServer.createHandler(); // highlight-line
+module.exports = cors((req, res) => req.method === 'OPTIONS' ? res.end() : handler(req, res)) // highlight-line
 ```
 
 3) `package.json`

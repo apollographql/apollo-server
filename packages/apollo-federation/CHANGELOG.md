@@ -1,10 +1,12 @@
 # CHANGELOG for `@apollo/federation`
 
-## vNEXT
+## 0.13.2
 
-> The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  When a release is being prepared, a new header will be (manually) created below and the the appropriate changes within that release will be moved into the new section.
+- Only changes in the similarly versioned `@apollo/gateway` package.
 
-- _Nothing yet! Stay tuned._
+## v0.12.1
+
+- Fix `v0.12.0` regression: Preserve the `@deprecated` type-system directive as a special case when removing type system directives during composition, resolving an unintentional breaking change introduced by [#3736](https://github.com/apollographql/apollo-server/pull/3736). [#3792](https://github.com/apollographql/apollo-server/pull/3792)
 
 ## v0.12.0
 
