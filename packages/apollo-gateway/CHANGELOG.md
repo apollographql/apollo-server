@@ -6,9 +6,6 @@
 - Provide a more helpful error message when encountering expected errors. [PR #3811](https://github.com/apollographql/apollo-server/pull/3811)
 - General improvements and clarity to error messages and logging. [PR #3811](https://github.com/apollographql/apollo-server/pull/3811)
 - Warn of a possible misconfiguration when local service configuration is provided (via `serviceList` or `localServiceList`) and a remote Apollo Graph Manager configuration is subsequently found as well. [PR #3868](https://github.com/apollographql/apollo-server/pull/3868)
-
-## 0.14.0 (pre-release; `@next` tag)
-
 - During composition, the unavailability of a downstream service in unmanaged federation mode will no longer result in a partially composed schema which merely lacks the types provided by the downed service.  This prevents unexpected validation errors for clients querying a graph which lacks types which were merely unavailable during the initial composition but were intended to be part of the graph. [PR #3867](https://github.com/apollographql/apollo-server/pull/3867)
 
 ## 0.13.2
