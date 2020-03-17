@@ -219,7 +219,7 @@ export class ApolloGateway implements GraphQLService {
       this.logger = this.config.logger;
     } else {
       // If the user didn't provide their own logger, we'll initialize one.
-      const loglevelLogger = loglevel.getLogger(`apollo-gateway:`);
+      const loglevelLogger = loglevel.getLogger(`apollo-gateway`);
 
       // And also support the `debug` option, if it's truthy.
       if (this.config.debug === true) {
