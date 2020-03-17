@@ -29,7 +29,7 @@ module.exports = {
             'schema/creating-directives',
           ],
           'Fetching Data': [
-            'data/data',
+            'data/resolvers',
             'data/data-sources',
             'data/errors',
             'data/file-uploads',
@@ -37,7 +37,8 @@ module.exports = {
           ],
           'Apollo Federation': [
             'federation/introduction',
-            'federation/implementing',
+            'federation/implementing-services',
+            'federation/gateway',
             'federation/entities',
             'federation/value-types',
             'federation/errors',
