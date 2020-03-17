@@ -1,4 +1,4 @@
-# CHANGELOG for `@apollo/gatewae`
+# CHANGELOG for `@apollo/gateway`
 
 ## 0.14.0 (pre-release; `@next` tag)
 
