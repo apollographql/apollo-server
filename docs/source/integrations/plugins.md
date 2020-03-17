@@ -269,6 +269,15 @@ const server = new ApolloServer({
 
 The `requestDidStart` event fires whenever Apollo Server begins fulfilling a GraphQL request.
 
+```typescript
+requestDidStart?(
+  requestContext: WithRequired<
+    GraphQLRequestContext<TContext>,
+    'request' | 'context' | 'logger'
+  >
+): GraphQLRequestListener<TContext> | void;
+```
+
 This function can optionally return an object that includes functions for responding
 to request lifecycle events that might follow `requestDidStart`.
 
@@ -318,7 +327,7 @@ does not occur.
 parsingDidStart?(
   requestContext: WithRequired<
     GraphQLRequestContext<TContext>,
-    'metrics' | 'source'
+    'metrics' | 'source' | 'logger'
   >,
 ): (err?: Error) => void | void;
 ```
@@ -338,7 +347,7 @@ available at this stage, because parsing must succeed for validation to occur.
 validationDidStart?(
   requestContext: WithRequired<
     GraphQLRequestContext<TContext>,
-    'metrics' | 'source' | 'document'
+    'metrics' | 'source' | 'document' | 'logger'
   >,
 ): (err?: ReadonlyArray<Error>) => void | void;
 ```
@@ -355,7 +364,7 @@ both the `operationName` string and `operation` AST are available.
 didResolveOperation?(
   requestContext: WithRequired<
     GraphQLRequestContext<TContext>,
-    'metrics' | 'source' | 'document' | 'operationName' | 'operation'
+    'metrics' | 'source' | 'document' | 'operationName' | 'operation' | 'logger'
   >,
 ): ValueOrPromise<void>;
 ```
@@ -371,7 +380,7 @@ are invoked in series, and the first non-null response is used.
 responseForOperation?(
   requestContext: WithRequired<
     GraphQLRequestContext<TContext>,
-    'metrics' | 'source' | 'document' | 'operationName' | 'operation'
+    'metrics' | 'source' | 'document' | 'operationName' | 'operation' | 'logger'
   >,
 ): ValueOrPromise<GraphQLResponse | null>;
 ```
@@ -385,7 +394,7 @@ GraphQL operation specified by a request's `document` AST.
 executionDidStart?(
   requestContext: WithRequired<
     GraphQLRequestContext<TContext>,
-    'metrics' | 'source' | 'document' | 'operationName' | 'operation'
+    'metrics' | 'source' | 'document' | 'operationName' | 'operation' | 'logger'
   >,
 ): (err?: Error) => void | void;
 ```
@@ -399,7 +408,7 @@ parsing, validating, or executing a GraphQL operation.
 didEncounterErrors?(
   requestContext: WithRequired<
     GraphQLRequestContext<TContext>,
-    'metrics' | 'source' | 'errors'
+    'metrics' | 'source' | 'errors' | 'logger'
   >,
 ): ValueOrPromise<void>;
 ```
@@ -414,7 +423,7 @@ if the GraphQL operation encounters one or more errors.
 willSendResponse?(
   requestContext: WithRequired<
     GraphQLRequestContext<TContext>,
-    'metrics' | 'response'
+    'metrics' | 'response' | 'logger'
   >,
 ): ValueOrPromise<void>;
 ```
