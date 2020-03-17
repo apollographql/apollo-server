@@ -223,7 +223,9 @@ export class ApolloGateway implements GraphQLService {
 
       // And also support the `debug` option, if it's truthy.
       if (this.config.debug === true) {
-        loglevelLogger.enableAll();
+        loglevelLogger.setLevel(loglevelLogger.levels.DEBUG);
+      } else {
+        loglevelLogger.setLevel(loglevelLogger.levels.WARN);
       }
 
       this.logger = loglevelLogger;
