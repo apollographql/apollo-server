@@ -192,11 +192,11 @@ export class ApolloServerBase {
     if (config.logger) {
       this.logger = config.logger;
     } else {
-      // If the user didn't prvoide their own logger, we'll initialize one.
+      // If the user didn't provide their own logger, we'll initialize one.
       const loglevelLogger = loglevel.getLogger("apollo-server");
 
       // We don't do much logging in Apollo Server right now.  There's a notion
-      // of a `debug` flag, but it doesn't so much besides change stack traces
+      // of a `debug` flag, but it doesn't do much besides change stack traces
       // in some error messages, but it would be odd for it to not introduce
       // debug or higher level errors (which includes `info`, if we happen to
       // start introducing those.  We'll default to `warn` as a sensible default
