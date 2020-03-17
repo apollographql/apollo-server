@@ -7,6 +7,7 @@ import {
 import {
   GraphQLExecutionResult,
   GraphQLRequestContext,
+  Logger,
   WithRequired,
 } from 'apollo-server-types';
 import { InMemoryLRUCache } from 'apollo-server-caching';
@@ -19,7 +20,7 @@ import {
 } from 'graphql';
 import { GraphQLSchemaValidationError } from 'apollo-graphql';
 import { composeAndValidate, ServiceDefinition } from '@apollo/federation';
-import loglevel, { Logger } from 'loglevel';
+import loglevel from 'loglevel';
 import loglevelDebug from 'loglevel-debug';
 
 import { buildQueryPlan, buildOperationContext } from './buildQueryPlan';
@@ -48,6 +49,7 @@ export type ServiceEndpointDefinition = Pick<ServiceDefinition, 'name' | 'url'>;
 
 interface GatewayConfigBase {
   debug?: boolean;
+  logger?: Logger;
   // TODO: expose the query plan in a more flexible JSON format in the future
   // and remove this config option in favor of `exposeQueryPlan`. Playground
   // should cutover to use the new option when it's built.
@@ -165,7 +167,7 @@ export class ApolloGateway implements GraphQLService {
   public schema?: GraphQLSchema;
   protected serviceMap: DataSourceCache = Object.create(null);
   protected config: GatewayConfig;
-  protected logger: Logger;
+  private logger: Logger;
   protected queryPlanStore?: InMemoryLRUCache<QueryPlan>;
   private engineConfig: GraphQLServiceEngineConfig | undefined;
   private pollingTimer?: NodeJS.Timer;
@@ -213,15 +215,22 @@ export class ApolloGateway implements GraphQLService {
       ...config,
     };
 
-    // Setup logging facilities, scoped under the appropriate name.
-    this.logger = loglevel.getLogger(`apollo-gateway:`);
+    // Setup logging facilities
+    if (this.config.logger) {
+      this.logger = this.config.logger;
+    } else {
+      // If the user didn't provide their own logger, we'll initialize one.
+      const loglevelLogger = loglevel.getLogger(`apollo-gateway:`);
 
-    // Support DEBUG environment variable, à la https://npm.im/debug/.
-    loglevelDebug(this.logger);
+      // Support DEBUG environment variable, à la https://npm.im/debug/.
+      loglevelDebug(loglevelLogger);
 
-    // And also support the `debug` option, if it's truthy.
-    if (this.config.debug === true) {
-      this.logger.enableAll();
+      // And also support the `debug` option, if it's truthy.
+      if (this.config.debug === true) {
+        loglevelLogger.enableAll();
+      }
+
+      this.logger = loglevelLogger;
     }
 
     if (isLocalConfig(this.config)) {
@@ -346,7 +355,7 @@ export class ApolloGateway implements GraphQLService {
     } catch (e) {
       this.logger.error(
         "An error was thrown from an 'onSchemaChange' listener. " +
-        "The schema will still update: ", e);
+        "The schema will still update: " + (e && e.message || e));
     }
 
     if (this.experimental_didUpdateComposition) {
@@ -588,7 +597,11 @@ export class ApolloGateway implements GraphQLService {
         // is returning a non-native `Promise` (e.g. Bluebird, etc.).
         Promise.resolve(
           this.queryPlanStore.set(queryPlanStoreKey, queryPlan),
-        ).catch(err => this.logger.warn('Could not store queryPlan', err));
+        ).catch(err =>
+          this.logger.warn(
+            'Could not store queryPlan' + ((err && err.messsage) || err),
+          ),
+        );
       }
     }
 

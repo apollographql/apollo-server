@@ -61,6 +61,7 @@
     "@types/async-retry": "1.4.1",
     "@types/aws-lambda": "8.10.46",
     "@types/body-parser": "1.19.0",
+    "@types/bunyan": "1.8.6",
     "@types/connect": "3.4.33",
     "@types/fast-json-stable-stringify": "2.0.0",
     "@types/hapi": "17.8.7",
@@ -89,6 +90,7 @@
     "apollo-link-persisted-queries": "0.2.2",
     "azure-functions-ts-essentials": "1.3.2",
     "body-parser": "1.19.0",
+    "bunyan": "1.8.12",
     "codecov": "3.6.5",
     "connect": "3.7.0",
     "deep-freeze": "0.0.1",
@@ -108,6 +110,7 @@
     "js-sha256": "0.9.0",
     "koa": "2.11.0",
     "lerna": "3.20.2",
+    "log4js": "4.5.1",
     "memcached-mock": "0.1.0",
     "mock-req": "0.2.0",
     "nock": "10.0.6",
@@ -121,6 +124,8 @@
     "test-listen": "1.1.0",
     "ts-jest": "24.3.0",
     "typescript": "3.8.3",
+    "winston": "3.2.1",
+    "winston-transport": "4.3.0",
     "ws": "6.2.1"
   },
   "jest": {

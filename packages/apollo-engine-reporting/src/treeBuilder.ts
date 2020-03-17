@@ -9,7 +9,7 @@ import {
   PersistedQueryNotFoundError,
   PersistedQueryNotSupportedError,
 } from 'apollo-server-errors';
-import { InvalidGraphQLRequestError } from 'apollo-server-types';
+import { InvalidGraphQLRequestError, Logger } from 'apollo-server-types';
 
 function internalError(message: string) {
   return new Error(`[internal apollo-server error] ${message}`);
@@ -17,6 +17,7 @@ function internalError(message: string) {
 
 export class EngineReportingTreeBuilder {
   private rootNode = new Trace.Node();
+  private logger: Logger = console;
   public trace = new Trace({ root: this.rootNode });
   public startHrTime?: [number, number];
   private stopped = false;
@@ -26,9 +27,11 @@ export class EngineReportingTreeBuilder {
   private rewriteError?: (err: GraphQLError) => GraphQLError | null;
 
   public constructor(options: {
+    logger?: Logger;
     rewriteError?: (err: GraphQLError) => GraphQLError | null;
   }) {
     this.rewriteError = options.rewriteError;
+    if (options.logger) this.logger = options.logger;
   }
 
   public startTiming() {
@@ -137,7 +140,7 @@ export class EngineReportingTreeBuilder {
       if (specificNode) {
         node = specificNode;
       } else {
-        console.warn(
+        this.logger.warn(
           `Could not find node with path ${path.join(
             '.',
           )}; defaulting to put errors on root node.`,
