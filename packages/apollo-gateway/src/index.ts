@@ -21,7 +21,6 @@ import {
 import { GraphQLSchemaValidationError } from 'apollo-graphql';
 import { composeAndValidate, ServiceDefinition } from '@apollo/federation';
 import loglevel from 'loglevel';
-import loglevelDebug from 'loglevel-debug';
 
 import { buildQueryPlan, buildOperationContext } from './buildQueryPlan';
 import {
@@ -220,14 +219,13 @@ export class ApolloGateway implements GraphQLService {
       this.logger = this.config.logger;
     } else {
       // If the user didn't provide their own logger, we'll initialize one.
-      const loglevelLogger = loglevel.getLogger(`apollo-gateway:`);
-
-      // Support DEBUG environment variable, à la https://npm.im/debug/.
-      loglevelDebug(loglevelLogger);
+      const loglevelLogger = loglevel.getLogger(`apollo-gateway`);
 
       // And also support the `debug` option, if it's truthy.
       if (this.config.debug === true) {
-        loglevelLogger.enableAll();
+        loglevelLogger.setLevel(loglevelLogger.levels.DEBUG);
+      } else {
+        loglevelLogger.setLevel(loglevelLogger.levels.WARN);
       }
 
       this.logger = loglevelLogger;

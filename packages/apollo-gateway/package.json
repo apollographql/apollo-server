@@ -30,7 +30,6 @@
     "apollo-server-types": "file:../apollo-server-types",
     "graphql-extensions": "file:../graphql-extensions",
     "loglevel": "^1.6.1",
-    "loglevel-debug": "^0.0.1",
     "make-fetch-happen": "^7.1.1",
     "pretty-format": "^24.7.0"
   },
