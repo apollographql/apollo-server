@@ -19,7 +19,7 @@ import { isObject } from '../utilities/predicates';
 import { GraphQLDataSource } from './types';
 import createSHA from 'apollo-server-core/dist/utils/createSHA';
 
-export class RemoteGraphQLDataSource<TContext = any> implements GraphQLDataSource<TContext> {
+export class RemoteGraphQLDataSource<TContext extends Record<string, any> = Record<string, any>> implements GraphQLDataSource<TContext> {
   constructor(
     config?: Partial<RemoteGraphQLDataSource<TContext>> &
       object &
