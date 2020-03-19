@@ -7,7 +7,7 @@ description: Apollo Gateway API reference
 ## `ApolloGateway`
 
 The core class of Apollo Server's federated gateway implementation. For an
-example of using `ApolloGateway`, see [Implementing a federated graph](/federation/implementing/).
+example of using `ApolloGateway`, see [The gateway](/federation/gateway/).
 
 ### `constructor(options)`: `ApolloGateway`
 
@@ -103,6 +103,30 @@ example of using `ApolloGateway`, see [Implementing a federated graph](/federati
 
     If `true`, the gateway logs startup messages, along with the query plan for
     each incoming request. The default value is `false`.
+    
+  * `fetcher`: `typeof fetch`
+  
+    When specified, overrides the default
+    [Fetch API](https://fetch.spec.whatwg.org/#fetch-api) implementation
+    which is used when communicating with downstream services.  By default,
+    [`make-fetch-happen`](https://npm.im/make-fetch-happen) is used with its
+    own defaults.  Another compliant implementation can be provided
+    (e.g. [`node-fetch`](https://npm.im/node-fetch) by setting
+    `fetcher: require('node-fetch')`) or different [default options for
+    `make-fetch-happen`](https://www.npmjs.com/package/make-fetch-happen#extra-options)
+    can be defined entirely. E.g.:
+    
+    ```javascript
+    const gateway = new ApolloGateway({
+      /* ... */
+      fetcher: require('make-fetch-happen').defaults({
+        onRetry() {
+          console.log('we will retry!')
+        },
+      }),
+      /* ... */
+    });
+    ```
 
   * `experimental_approximateQueryPlanStoreMiB`: `number`
 

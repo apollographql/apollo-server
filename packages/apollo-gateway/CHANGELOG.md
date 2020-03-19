@@ -1,6 +1,6 @@
 # CHANGELOG for `@apollo/gateway`
 
-## 0.13.2 (pre-release; `@next` tag)
+## 0.13.2
 
 - __BREAKING__: The behavior and signature of `RemoteGraphQLDataSource`'s `didReceiveResponse` method has been changed.  No changes are necessary _unless_ your implementation has overridden the default behavior of this method by either extending the class and overriding the method or by providing `didReceiveResponse` as a parameter to the `RemoteGraphQLDataSource`'s constructor options.  Implementations which have provided their own `didReceiveResponse` using either of these methods should view the PR linked here for details on what has changed.  [PR #3743](https://github.com/apollographql/apollo-server/pull/3743)
 - __NEW__: Setting the `apq` option to `true` on the `RemoteGraphQLDataSource` will enable the use of [automated persisted queries (APQ)](https://www.apollographql.com/docs/apollo-server/performance/apq/) when sending queries to downstream services.  Depending on the complexity of queries sent to downstream services, this technique can greatly reduce the size of the payloads being transmitted over the network.  Downstream implementing services must also support APQ functionality to participate in this feature (Apollo Server does by default unless it has been explicitly disabled).  As with normal APQ behavior, a downstream server must have received and registered a query once before it will be able to serve an APQ request. [#3744](https://github.com/apollographql/apollo-server/pull/3744)
