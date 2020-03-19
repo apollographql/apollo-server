@@ -120,6 +120,7 @@ export type GraphQLRequestContextParsingDidStart<TContext> =
   WithRequired<GraphQLRequestContext<TContext>,
     | 'metrics'
     | 'source'
+    | 'queryHash'
   >;
 export type GraphQLRequestContextValidationDidStart<TContext> =
   GraphQLRequestContextParsingDidStart<TContext> &
