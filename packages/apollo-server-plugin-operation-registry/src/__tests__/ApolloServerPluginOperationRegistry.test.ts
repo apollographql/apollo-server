@@ -19,6 +19,22 @@ import {
   nockGoodManifestsUnderStorageSecret,
   genericStorageSecret,
 } from './helpers.test-helpers';
+import { Headers } from 'apollo-server-env';
+import { GraphQLRequest } from 'apollo-server-plugin-base';
+
+// While not ideal, today, Apollo Server has a very real expectation of an HTTP
+// request context.  That will change in the future.  While we can sometimes
+// make by without it, that is no longer the case when Engine Reporting is
+// enabled since it relies on the HTTP "method" property of the HTTP context
+// when building the traces.  Therefore, we'll need to make sure that we provide
+// a fake HTTP context to `executeOperation` when testing with Engine enabled,
+// to ensure that it doesn't fail.
+const mockHttpRequestContextForExecuteOperation: Required<Pick<
+  GraphQLRequest,
+  'http'
+>> = {
+  http: { method: 'GET', headers: new Headers(), url: '/mocked' },
+};
 
 describe('Operation registry plugin', () => {
   it('will instantiate when not called with options', () => {
@@ -84,6 +100,7 @@ describe('Operation registry plugin', () => {
         });
         await server.willStart();
         const result = await server.executeOperation({
+          ...mockHttpRequestContextForExecuteOperation,
           query: print(query),
           operationName: 'HelloFam',
         });
@@ -136,6 +153,7 @@ describe('Operation registry plugin', () => {
         });
         await server.willStart();
         const result = await server.executeOperation({
+          ...mockHttpRequestContextForExecuteOperation,
           query: print(query),
           operationName: 'HelloFam',
         });
@@ -175,6 +193,7 @@ describe('Operation registry plugin', () => {
         });
         await server.willStart();
         const result = await server.executeOperation({
+          ...mockHttpRequestContextForExecuteOperation,
           query: print(query),
           operationName: 'HelloFam',
         });
@@ -230,6 +249,7 @@ describe('Operation registry plugin', () => {
         });
         await server.willStart();
         const result = await server.executeOperation({
+          ...mockHttpRequestContextForExecuteOperation,
           query: print(query),
           operationName: 'HelloFam',
         });
@@ -269,6 +289,7 @@ describe('Operation registry plugin', () => {
         });
         await server.willStart();
         const result = await server.executeOperation({
+          ...mockHttpRequestContextForExecuteOperation,
           query: print(query),
           operationName: 'HelloFam',
         });
