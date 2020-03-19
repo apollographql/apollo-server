@@ -172,30 +172,26 @@ it('Rollsback to a previous schema when triggered', async () => {
   mockImplementingServices(service).reply(304);
   mockRawPartialSchema(service).reply(304);
 
-  jest.useFakeTimers();
+  let firstResolve: () => void;
+  let secondResolve: () => void;
+  const firstSchemaChangeBlocker = new Promise(res => (firstResolve = res));
+  const secondSchemaChangePromise = new Promise(res => (secondResolve = res));
 
-  const onChange = jest.fn();
+  const onChange = jest
+    .fn()
+    .mockImplementationOnce(() => firstResolve())
+    .mockImplementationOnce(() => secondResolve());
+
   const gateway = new ApolloGateway();
+  // @ts-ignore for testing purposes, a short pollInterval is ideal so we'll override here
+  gateway.experimental_pollInterval = 100;
+
   await gateway.load({ engine: { apiKeyHash, graphId } });
   gateway.onSchemaChange(onChange);
 
-  // 10000 ms is the default pollInterval
-  jest.advanceTimersByTime(10000);
-
-  // This useReal/useFake is challenging to explain the need for, and I probably
-  // don't have the _correct_ answer here, but it seems that pushing this process
-  // to the back of the task queue is insufficient.
-  jest.useRealTimers();
-  await new Promise(resolve => setTimeout(resolve, 100));
-  jest.useFakeTimers();
-
+  await firstSchemaChangeBlocker;
   expect(onChange.mock.calls.length).toBe(1);
 
-  jest.advanceTimersByTime(10000);
-
-  jest.useRealTimers();
-  await new Promise(resolve => setTimeout(resolve, 100));
-  jest.useFakeTimers();
-
+  await secondSchemaChangePromise;
   expect(onChange.mock.calls.length).toBe(2);
 });
