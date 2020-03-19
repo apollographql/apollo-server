@@ -6,9 +6,8 @@ import {
 } from 'apollo-server-core';
 import {
   GraphQLExecutionResult,
-  GraphQLRequestContext,
   Logger,
-  WithRequired,
+  GraphQLRequestContextExecutionDidStart,
 } from 'apollo-server-types';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import {
@@ -147,11 +146,6 @@ export type Experimental_UpdateServiceDefinitions = (
 }>;
 
 type Await<T> = T extends Promise<infer U> ? U : T;
-
-type RequestContext<TContext> = WithRequired<
-  GraphQLRequestContext<TContext>,
-  'document' | 'queryHash'
->;
 
 // Local state to track whether particular UX-improving warning messages have
 // already been emitted.  This is particularly useful to prevent recurring
@@ -548,7 +542,7 @@ export class ApolloGateway implements GraphQLService {
   // are unlikely to show up as GraphQLErrors. Do we need to use
   // formatApolloErrors or something?
   public executor = async <TContext>(
-    requestContext: RequestContext<TContext>,
+    requestContext: GraphQLRequestContextExecutionDidStart<TContext>,
   ): Promise<GraphQLExecutionResult> => {
     const { request, document, queryHash } = requestContext;
     const queryPlanStoreKey = queryHash + (request.operationName || '');
@@ -661,7 +655,7 @@ export class ApolloGateway implements GraphQLService {
   };
 
   protected validateIncomingRequest<TContext>(
-    requestContext: RequestContext<TContext>,
+    requestContext: GraphQLRequestContextExecutionDidStart<TContext>,
     operationContext: OperationContext,
   ) {
     // casting out of `readonly`
