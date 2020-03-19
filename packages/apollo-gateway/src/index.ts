@@ -431,7 +431,7 @@ export class ApolloGateway implements GraphQLService {
     }
 
     this.onSchemaChangeListeners.add(callback);
-    if (!this.pollingTimer) this.startPollingServices();
+    if (!this.pollingTimer) this.pollServices();
 
     return () => {
       this.onSchemaChangeListeners.delete(callback);
@@ -442,21 +442,28 @@ export class ApolloGateway implements GraphQLService {
     };
   }
 
-  private startPollingServices() {
-    if (this.pollingTimer) clearInterval(this.pollingTimer);
+  private async pollServices() {
+    if (this.pollingTimer) clearTimeout(this.pollingTimer);
 
-    this.pollingTimer = setInterval(async () => {
-      try {
-        await this.updateComposition();
-      } catch (err) {
-        this.logger.error(err && err.message || err);
-      }
-    }, this.experimental_pollInterval || 10000);
+    try {
+      await this.updateComposition();
+    } catch (err) {
+      this.logger.error(err && err.message || err);
+    }
 
-    // Prevent the Node.js event loop from remaining active (and preventing,
-    // e.g. process shutdown) by calling `unref` on the `Timeout`.  For more
-    // information, see https://nodejs.org/api/timers.html#timers_timeout_unref.
-    this.pollingTimer.unref();
+    // Sleep for the specified pollInterval before kicking off another round of polling
+    await new Promise(res => {
+      this.pollingTimer = setTimeout(
+        res,
+        this.experimental_pollInterval || 10000,
+      );
+      // Prevent the Node.js event loop from remaining active (and preventing,
+      // e.g. process shutdown) by calling `unref` on the `Timeout`.  For more
+      // information, see https://nodejs.org/api/timers.html#timers_timeout_unref.
+      this.pollingTimer?.unref();
+    });
+
+    this.pollServices();
   }
 
   private createAndCacheDataSource(
@@ -522,7 +529,7 @@ export class ApolloGateway implements GraphQLService {
           this.logger.warn(
             "A local gateway service list is overriding an Apollo Graph " +
             "Manager managed configuration.  To use the managed " +
-            "configuration, do not specifiy a service list locally.",
+            "configuration, do not specify a service list locally.",
           );
         }).catch(() => {}); // Don't mind errors if managed config is missing.
       }

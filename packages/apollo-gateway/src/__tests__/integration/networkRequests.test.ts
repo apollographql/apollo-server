@@ -237,8 +237,7 @@ it(`Retries GCS (up to ${GCS_RETRY_COUNT} times) on failure for each request and
   expect(gateway.schema!.getType('User')!.description).toBe('This is my User');
 });
 
-it(`Fails after the ${GCS_RETRY_COUNT +
-  1}th attempt to reach GCS`, async () => {
+it(`Fails after the ${GCS_RETRY_COUNT + 1}th attempt to reach GCS`, async () => {
   failNTimes(GCS_RETRY_COUNT + 1, mockStorageSecret);
 
   const gateway = new ApolloGateway({ fetcher });
