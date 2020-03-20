@@ -11,7 +11,7 @@ After you set up at least one federation-ready [implementing service](./implemen
 
 The `@apollo/gateway` package extends Apollo Server's functionality, enabling it to act as a gateway for an Apollo Federation architecture.
 
-> If you run your gateway in a serverless environment (such as AWS Lambda), we recommend setting your function's timeout to at least 10 seconds to prevent unexpected errors.
+> We recommend against running your gateway in a serverless environment (such as AWS Lambda), because schema composition increases Apollo Server's startup time. If you do run your gateway in a serverless environment, set your function's timeout to at least 10 seconds to prevent unexpected errors.
 
 ## Setup
 
