@@ -23,8 +23,6 @@ import loadServicesFromStorage = require("../../loadServicesFromStorage");
 // Anything wrapped within the gql tag within this file is just a string, not an AST.
 const gql = String.raw;
 
-let fetcher: typeof fetch;
-
 const service = {
   implementingServicePath: 'service-definition.json',
   partialSchemaPath: 'accounts-partial-schema.json',
@@ -63,14 +61,16 @@ const updatedService = {
   `,
 };
 
+let fetcher: typeof fetch;
+
 beforeEach(() => {
   if (!nock.isActive()) nock.activate();
 
   fetcher = getDefaultGcsFetcher().defaults({
     retry: {
       retries: GCS_RETRY_COUNT,
-      minTimeout: 10,
-      maxTimeout: 100,
+      minTimeout: 0,
+      maxTimeout: 0,
     },
   });
 });
