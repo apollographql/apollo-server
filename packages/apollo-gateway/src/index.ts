@@ -175,10 +175,10 @@ export function getDefaultGcsFetcher() {
     },
     retry: {
       retries: GCS_RETRY_COUNT,
+      // The default factor: expected attempts at 0, 1, 3, 7, 15, and 31 seconds elapsed
+      factor: 2,
       // 1 second
       minTimeout: 1000,
-      // 60 seconds - but this shouldn't be reachable based on current settings
-      maxTimeout: 60 * 1000,
       randomize: true,
     },
   });
