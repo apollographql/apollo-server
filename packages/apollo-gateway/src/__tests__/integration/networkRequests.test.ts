@@ -175,7 +175,7 @@ it('Rollsback to a previous schema when triggered', async () => {
   let firstResolve: () => void;
   let secondResolve: () => void;
   const firstSchemaChangeBlocker = new Promise(res => (firstResolve = res));
-  const secondSchemaChangePromise = new Promise(res => (secondResolve = res));
+  const secondSchemaChangeBlocker = new Promise(res => (secondResolve = res));
 
   const onChange = jest
     .fn()
@@ -192,6 +192,6 @@ it('Rollsback to a previous schema when triggered', async () => {
   await firstSchemaChangeBlocker;
   expect(onChange.mock.calls.length).toBe(1);
 
-  await secondSchemaChangePromise;
+  await secondSchemaChangeBlocker;
   expect(onChange.mock.calls.length).toBe(2);
 });
