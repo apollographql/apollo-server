@@ -9,6 +9,7 @@ export const typeDefs = gql`
 
   extend type Query {
     product(upc: String!): Product
+    products(upcs: [String!]!): [Product]
     vehicle(id: String!): Vehicle
     topProducts(first: Int = 5): [Product]
     topCars(first: Int = 5): [Car]
@@ -151,7 +152,8 @@ const products = [
   { __typename: 'Book', isbn: '0201633612', price: 49 },
   { __typename: 'Book', isbn: '1234567890', price: 59 },
   { __typename: 'Book', isbn: '404404404', price: 0 },
-  { __typename: 'Book', isbn: '0987654321', price: 29 },
+  { __typename: 'Book', isbn: '0987654321', price: 29, upc: '0987654321' },
+  { __typename: 'Book', isbn: '9999999999', price: 31, upc: '9999999999' },
 ];
 
 const vehicles = [
@@ -231,6 +233,10 @@ export const resolvers: GraphQLResolverMap<any> = {
   Query: {
     product(_, args) {
       return products.find(product => product.upc === args.upc);
+    },
+    products(_, args) {
+      const upcs: Array<string> = args.upcs
+      return upcs.map(upc => products.find(product => product.upc === upc));
     },
     vehicle(_, args) {
       return vehicles.find(vehicles => vehicles.id === args.id);
