@@ -233,6 +233,8 @@ function responsePathAsString(p?: ResponsePath): string {
     return '';
   }
 
+  // A previous implementation used `responsePathAsArray` from `graphql-js/execution`,
+  // however, that employed an approach that created new arrays unnecessarily.
   let res = String(p.key);
 
   while ((p = p.prev) !== undefined) {
