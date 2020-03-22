@@ -228,7 +228,7 @@ function durationHrTimeToNanos(hrtime: [number, number]) {
 
 // Convert from the linked-list ResponsePath format to a dot-joined
 // string. Includes the full path (field names and array indices).
-function responsePathAsString(p: ResponsePath | undefined): string {
+function responsePathAsString(p?: ResponsePath): string {
   if (p === undefined) {
     return '';
   }
