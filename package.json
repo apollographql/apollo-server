@@ -79,7 +79,7 @@
     "@types/node-fetch": "2.3.2",
     "@types/qs-middleware": "1.0.1",
     "@types/request": "2.48.4",
-    "@types/request-promise": "4.1.45",
+    "@types/request-promise": "4.1.46",
     "@types/test-listen": "1.1.0",
     "@types/type-is": "1.6.3",
     "@types/ws": "6.0.4",
