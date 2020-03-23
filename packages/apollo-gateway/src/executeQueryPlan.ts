@@ -286,7 +286,7 @@ async function executeFetch<TContext>(
     }
   }
 
-  async function sendOperation<TContext>(
+  async function sendOperation(
     context: ExecutionContext<TContext>,
     operation: DocumentNode,
     variables: Record<string, any>,
@@ -314,7 +314,7 @@ async function executeFetch<TContext>(
       traceNode.sentTime = dateToProtoTimestamp(new Date());
     }
 
-    const response = await service.process<TContext>({
+    const response = await service.process({
       request: {
         query: source,
         variables,
