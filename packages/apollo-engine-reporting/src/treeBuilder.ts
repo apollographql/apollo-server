@@ -16,7 +16,7 @@ export class EngineReportingTreeBuilder {
   public startHrTime?: [number, number];
   private stopped = false;
   private nodes = new Map<string, Trace.Node>([
-    [responsePathAsString(undefined), this.rootNode],
+    [responsePathAsString(), this.rootNode],
   ]);
   private rewriteError?: (err: GraphQLError) => GraphQLError | null;
 
