@@ -472,9 +472,7 @@ export async function processGraphQLRequest<TContext>(
         // XXX Nothing guarantees that the only errors thrown or returned
         // in result.errors are GraphQLErrors, even though other code
         // (eg apollo-engine-reporting) assumes that.
-        return await config.executor(
-          requestContext as GraphQLRequestContextExecutionDidStart<TContext>,
-        );
+        return await config.executor(requestContext);
       } else {
         return await graphql.execute(executionArgs);
       }
