@@ -366,7 +366,7 @@ function parseGraphQLRequest(
   let queryString: string | undefined = requestParams.query;
   let extensions = requestParams.extensions;
 
-  if (typeof extensions === 'string') {
+  if (typeof extensions === 'string' && extensions !== '') {
     // For GET requests, we have to JSON-parse extensions. (For POST
     // requests they get parsed as part of parsing the larger body they're
     // inside.)
@@ -397,7 +397,7 @@ function parseGraphQLRequest(
   const operationName = requestParams.operationName;
 
   let variables = requestParams.variables;
-  if (typeof variables === 'string') {
+  if (typeof variables === 'string' && variables !== '') {
     try {
       // XXX Really we should only do this for GET requests, but for
       // compatibility reasons we'll keep doing this at least for now for

@@ -29,8 +29,9 @@ describe('externalUnused', () => {
       name: 'serviceB',
     };
 
-    const { schema, errors } = composeServices([serviceA, serviceB]);
-    const warnings = validateExternalUnused(schema);
+    const serviceList = [serviceA, serviceB];
+    const { schema } = composeServices(serviceList);
+    const warnings = validateExternalUnused({ schema, serviceList });
     expect(warnings).toMatchInlineSnapshot(`
       Array [
         Object {
@@ -61,8 +62,9 @@ describe('externalUnused', () => {
       name: 'serviceB',
     };
 
-    const { schema, errors } = composeServices([serviceA, serviceB]);
-    const warnings = validateExternalUnused(schema);
+    const serviceList = [serviceA, serviceB];
+    const { schema } = composeServices(serviceList);
+    const warnings = validateExternalUnused({ schema, serviceList });
     expect(warnings).toEqual([]);
   });
 
@@ -86,8 +88,9 @@ describe('externalUnused', () => {
       name: 'serviceB',
     };
 
-    const { schema, errors } = composeServices([serviceA, serviceB]);
-    const warnings = validateExternalUnused(schema);
+    const serviceList = [serviceA, serviceB];
+    const { schema } = composeServices(serviceList);
+    const warnings = validateExternalUnused({ schema, serviceList });
     expect(warnings).toEqual([]);
   });
 
@@ -112,8 +115,9 @@ describe('externalUnused', () => {
       name: 'serviceB',
     };
 
-    const { schema, errors } = composeServices([serviceA, serviceB]);
-    const warnings = validateExternalUnused(schema);
+    const serviceList = [serviceA, serviceB];
+    const { schema } = composeServices(serviceList);
+    const warnings = validateExternalUnused({ schema, serviceList });
     expect(warnings).toEqual([]);
   });
 
@@ -141,8 +145,9 @@ describe('externalUnused', () => {
       name: 'serviceB',
     };
 
-    const { schema, errors } = composeServices([serviceA, serviceB]);
-    const warnings = validateExternalUnused(schema);
+    const serviceList = [serviceA, serviceB];
+    const { schema } = composeServices(serviceList);
+    const warnings = validateExternalUnused({ schema, serviceList });
     expect(warnings).toEqual([]);
   });
 
@@ -187,8 +192,9 @@ describe('externalUnused', () => {
       name: 'serviceB',
     };
 
-    const { schema, errors } = composeServices([serviceA, serviceB]);
-    const warnings = validateExternalUnused(schema);
+    const serviceList = [serviceA, serviceB];
+    const { schema } = composeServices(serviceList);
+    const warnings = validateExternalUnused({ schema, serviceList });
     expect(warnings).toEqual([]);
   });
 
@@ -256,8 +262,9 @@ describe('externalUnused', () => {
       name: 'serviceB',
     };
 
-    const { schema, errors } = composeServices([serviceA, serviceB]);
-    const warnings = validateExternalUnused(schema);
+    const serviceList = [serviceA, serviceB];
+    const { schema } = composeServices(serviceList);
+    const warnings = validateExternalUnused({ schema, serviceList });
     expect(warnings).toEqual([]);
   });
 
@@ -290,8 +297,9 @@ describe('externalUnused', () => {
       name: 'serviceC',
     };
 
-    const { schema, errors } = composeServices([serviceA, serviceB, serviceC]);
-    const warnings = validateExternalUnused(schema);
+    const serviceList = [serviceA, serviceB, serviceC];
+    const { schema } = composeServices(serviceList);
+    const warnings = validateExternalUnused({ schema, serviceList });
     expect(warnings).toEqual([]);
   });
 });

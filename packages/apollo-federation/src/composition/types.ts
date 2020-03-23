@@ -1,4 +1,9 @@
-import { SelectionNode, DocumentNode, FieldDefinitionNode } from 'graphql';
+import {
+  SelectionNode,
+  DocumentNode,
+  FieldDefinitionNode,
+  DirectiveDefinitionNode,
+} from 'graphql';
 
 export type ServiceName = string | null;
 
@@ -74,6 +79,16 @@ declare module 'graphql/type/definition' {
 
   interface GraphQLField<TSource, TContext> {
     federation?: FederationField;
+  }
+}
+
+declare module 'graphql/type/directives' {
+  interface GraphQLDirective {
+    federation?: {
+      directiveDefinitions: {
+        [serviceName: string]: DirectiveDefinitionNode;
+      };
+    };
   }
 }
 

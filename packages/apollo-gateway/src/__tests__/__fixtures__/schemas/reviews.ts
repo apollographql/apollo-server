@@ -3,6 +3,9 @@ import gql from 'graphql-tag';
 
 export const name = 'reviews';
 export const typeDefs = gql`
+  directive @stream on FIELD
+  directive @transform(from: String!) on FIELD
+
   extend type Query {
     topReviews(first: Int = 5): [Review]
   }
@@ -49,7 +52,17 @@ export const typeDefs = gql`
     relatedReviews: [Review!]! @requires(fields: "similarBooks { isbn }")
   }
 
-  extend type Car @key(fields: "id") {
+  extend interface Vehicle {
+    retailPrice: String
+  }
+
+  extend type Car implements Vehicle @key(fields: "id") {
+    id: String! @external
+    price: String @external
+    retailPrice: String @requires(fields: "price")
+  }
+
+  extend type Van implements Vehicle @key(fields: "id") {
     id: String! @external
     price: String @external
     retailPrice: String @requires(fields: "price")
@@ -212,6 +225,11 @@ export const resolvers: GraphQLResolverMap<any> = {
   Car: {
     retailPrice(car) {
       return car.price;
+    },
+  },
+  Van: {
+    retailPrice(van) {
+      return van.price;
     },
   },
   MetadataOrError: {

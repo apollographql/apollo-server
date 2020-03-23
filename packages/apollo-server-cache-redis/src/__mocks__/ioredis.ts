@@ -22,9 +22,11 @@ const setKey = (key, value, type, ttl) => {
     value,
     ttl,
   };
-  setTimeout(() => {
-    delete keyValue[key];
-  }, ttl * 1000);
+  if (ttl) {
+    setTimeout(() => {
+      delete keyValue[key];
+    }, ttl * 1000);
+  }
   return Promise.resolve(true);
 };
 

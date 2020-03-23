@@ -127,6 +127,8 @@ describe('lifecycle hooks', () => {
     expect(mockUpdate).toBeCalledTimes(1);
     expect(mockDidUpdate).toBeCalledTimes(1);
 
+    gateway.onSchemaChange(() => {});
+
     jest.runOnlyPendingTimers();
     // XXX This allows the ApolloGateway.updateComposition() Promise to resolve
     // after the poll ticks, and is necessary for allowing mockDidUpdate to see the expected calls.
@@ -176,5 +178,32 @@ describe('lifecycle hooks', () => {
       'Polling running services is dangerous and not recommended in production. Polling should only be used against a registry. If you are polling running services, use with caution.',
     );
     consoleSpy.mockRestore();
+  });
+
+  it('registers schema change callbacks when experimental_pollInterval is set for unmanaged configs', async () => {
+    jest.useFakeTimers();
+
+    const experimental_updateServiceDefinitions: Experimental_UpdateServiceDefinitions = jest.fn(
+      async (_config: GatewayConfig) => {
+        return { serviceDefinitions, isNewSchema: true };
+      },
+    );
+
+    const gateway = new ApolloGateway({
+      serviceList: [{ name: 'book', url: 'http://localhost:32542' }],
+      experimental_updateServiceDefinitions,
+      experimental_pollInterval: 10,
+    });
+
+    const schemaChangeCallback = jest.fn();
+
+    gateway.onSchemaChange(schemaChangeCallback);
+
+    jest.runOnlyPendingTimers();
+    await Promise.resolve();
+
+    expect(schemaChangeCallback).toBeCalledTimes(1);
+
+    jest.useRealTimers();
   });
 });

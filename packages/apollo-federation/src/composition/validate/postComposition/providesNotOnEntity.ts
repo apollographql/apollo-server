@@ -1,17 +1,16 @@
 import {
-  GraphQLSchema,
   isObjectType,
   GraphQLError,
   isListType,
   isNonNullType,
 } from 'graphql';
-
 import { logServiceAndType, errorWithCode } from '../../utils';
+import { PostCompositionValidator } from '.';
 
 /**
  *  Provides directive can only be added to return types that are entities
  */
-export const providesNotOnEntity = (schema: GraphQLSchema) => {
+export const providesNotOnEntity: PostCompositionValidator = ({ schema }) => {
   const errors: GraphQLError[] = [];
 
   const types = schema.getTypeMap();

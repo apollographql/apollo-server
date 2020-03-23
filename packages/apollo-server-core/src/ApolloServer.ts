@@ -16,13 +16,17 @@ import {
   DocumentNode,
   isObjectType,
   isScalarType,
+  isSchema,
 } from 'graphql';
 import { GraphQLExtension } from 'graphql-extensions';
 import {
   InMemoryLRUCache,
   PrefixingKeyValueCache,
 } from 'apollo-server-caching';
-import { ApolloServerPlugin } from 'apollo-server-plugin-base';
+import {
+  ApolloServerPlugin,
+  GraphQLServiceContext,
+} from 'apollo-server-plugin-base';
 import runtimeSupportsUploads from './utils/runtimeSupportsUploads';
 
 import {
@@ -152,6 +156,8 @@ export class ApolloServerBase {
   /** @deprecated: This is undefined for servers operating as gateways, and will be removed in a future release **/
   protected schema?: GraphQLSchema;
   private toDispose = new Set<() => void>();
+  private experimental_approximateDocumentStoreMiB:
+    Config['experimental_approximateDocumentStoreMiB'];
 
   // The constructor should be universal across all environments. All environment specific behavior should be set by adding or overriding methods
   constructor(config: Config) {
@@ -175,6 +181,7 @@ export class ApolloServerBase {
       playground,
       plugins,
       gateway,
+      experimental_approximateDocumentStoreMiB,
       ...requestOptions
     } = config;
 
@@ -242,13 +249,14 @@ export class ApolloServerBase {
     }
 
     if (requestOptions.persistedQueries !== false) {
+      const {
+        cache: apqCache = requestOptions.cache!,
+        ...apqOtherOptions
+      } = requestOptions.persistedQueries || Object.create(null);
+
       requestOptions.persistedQueries = {
-        cache: new PrefixingKeyValueCache(
-          (requestOptions.persistedQueries &&
-            requestOptions.persistedQueries.cache) ||
-            requestOptions.cache!,
-          APQ_CACHE_PREFIX,
-        ),
+        cache: new PrefixingKeyValueCache(apqCache, APQ_CACHE_PREFIX),
+        ...apqOtherOptions,
       };
     } else {
       // the user does not want to use persisted queries, so we remove the field
@@ -357,14 +365,16 @@ export class ApolloServerBase {
     // TODO: This is a bit nasty because the subscription server needs this.schema synchronously, for reasons of backwards compatibility.
     const _schema = this.initSchema();
 
-    if (_schema instanceof GraphQLSchema) {
+    if (isSchema(_schema)) {
       const derivedData = this.generateSchemaDerivedData(_schema);
       this.schema = derivedData.schema;
       this.schemaDerivedData = Promise.resolve(derivedData);
-    } else {
+    } else if (typeof _schema.then === 'function') {
       this.schemaDerivedData = _schema.then(schema =>
         this.generateSchemaDerivedData(schema),
       );
+    } else {
+      throw new Error("Unexpected error: Unable to resolve a valid GraphQLSchema.  Please file an issue with a reproduction of this error, if possible.");
     }
   }
 
@@ -551,19 +561,35 @@ export class ApolloServerBase {
 
   protected async willStart() {
     const { schema, schemaHash } = await this.schemaDerivedData;
+    const service: GraphQLServiceContext = {
+      schema: schema,
+      schemaHash: schemaHash,
+      engine: {
+        serviceID: this.engineServiceId,
+        apiKeyHash: this.engineApiKeyHash,
+      },
+    };
+
+    // The `persistedQueries` attribute on the GraphQLServiceContext was
+    // originally used by the operation registry, which shared the cache with
+    // it.  This is no longer the case.  However, while we are continuing to
+    // expand the support of the interface for `persistedQueries`, e.g. with
+    // additions like https://github.com/apollographql/apollo-server/pull/3623,
+    // we don't want to continually expand the API surface of what we expose
+    // to the plugin API.   In this particular case, it certainly doesn't need
+    // to get the `ttl` default value which are intended for APQ only.
+    if (this.requestOptions.persistedQueries?.cache) {
+      service.persistedQueries = {
+        cache: this.requestOptions.persistedQueries.cache,
+      }
+    }
+
+      persistedQueries: this.requestOptions.persistedQueries,
     await Promise.all(
       this.plugins.map(
         plugin =>
           plugin.serverWillStart &&
-          plugin.serverWillStart({
-            schema: schema,
-            schemaHash: schemaHash,
-            engine: {
-              serviceID: this.engineServiceId,
-              apiKeyHash: this.engineApiKeyHash,
-            },
-            persistedQueries: this.requestOptions.persistedQueries,
-          }),
+          plugin.serverWillStart(service),
       ),
     );
   }
@@ -712,7 +738,9 @@ export class ApolloServerBase {
       // only using JSON.stringify on the DocumentNode (and thus doesn't account
       // for unicode characters, etc.), but it should do a reasonable job at
       // providing a caching document store for most operations.
-      maxSize: Math.pow(2, 20) * 30,
+      maxSize:
+        Math.pow(2, 20) *
+        (this.experimental_approximateDocumentStoreMiB || 30),
       sizeCalculator: approximateObjectSize,
     });
   }
