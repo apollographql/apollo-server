@@ -1,5 +1,9 @@
 # CHANGELOG for `@apollo/gateway`
 
+## vNEXT
+
+- Fix Typescript generic typing for datasource contexts [#3865](https://github.com/apollographql/apollo-server/pull/3865) This is a fix for the `TContext` typings of the gateway's exposed `GraphQLDataSource` implementations. In their current form, they don't work as intended, or in any manner that's useful for typing the `context` property throughout the class methods. This introduces a type argument `TContext` to the class itself (which defaults to `Record<string, any>` for existing implementations) and removes the non-operational type arguments on the class methods themselves.
+
 ## 0.13.2
 
 - __BREAKING__: The behavior and signature of `RemoteGraphQLDataSource`'s `didReceiveResponse` method has been changed.  No changes are necessary _unless_ your implementation has overridden the default behavior of this method by either extending the class and overriding the method or by providing `didReceiveResponse` as a parameter to the `RemoteGraphQLDataSource`'s constructor options.  Implementations which have provided their own `didReceiveResponse` using either of these methods should view the PR linked here for details on what has changed.  [PR #3743](https://github.com/apollographql/apollo-server/pull/3743)

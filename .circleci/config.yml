@@ -4,7 +4,7 @@ version: 2.1
 # across projects.  See https://circleci.com/orbs/ for more information.
 orbs:
   # `oss` is a local reference to the package.  The source for Apollo Orbs can
-  # be found at http://github.com/apollographql/CircleCI-Orbs.
+  # be found at http://github.com/apollographql/CircleCI-Orbs/.
   oss: apollo/oss-ci-cd-tooling@0.0.5
 
 commands:
