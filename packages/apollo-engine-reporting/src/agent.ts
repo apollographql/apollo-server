@@ -17,7 +17,11 @@ import { fetch, RequestAgent, Response } from 'apollo-server-env';
 import retry from 'async-retry';
 
 import { plugin } from './plugin';
-import { GraphQLRequestContext, Logger } from 'apollo-server-types';
+import {
+  GraphQLRequestContext,
+  GraphQLRequestContextDidResolveOperation,
+  Logger,
+} from "apollo-server-types";
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import { defaultEngineReportingSignature } from 'apollo-graphql';
 import { ApolloServerPlugin } from 'apollo-server-plugin-base';
@@ -51,6 +55,9 @@ export type VariableValueOptions =
       ) => Record<string, any>;
     }
   | SendValuesBaseOptions;
+
+export type ReportOptions<TContext> =
+  ((request: GraphQLRequestContextDidResolveOperation<TContext>) => Promise<boolean>) | boolean;
 
 export type GenerateClientInfo<TContext> = (
   requestContext: GraphQLRequestContext<TContext>,
@@ -203,6 +210,14 @@ export interface EngineReportingOptions<TContext> {
    * TODO(helen): LINK TO EXAMPLE FUNCTION? e.g. a function recursively search for keys to be blocklisted
    */
   sendVariableValues?: VariableValueOptions;
+  /**
+   * By default Apollo server will report all queries to Graph Manager.
+   * If you would like to disable reporting and tracing for certain queries you can give a function that takes in
+   * graphqlRequestContext. The return value of the function will be used to determine if any stats or tracing information will be collected for the query.
+   * Always returning false will behave similarly to turning off reporting and no instrumentation will take place.
+   *
+   */
+  traceReporting?: ReportOptions<TContext>
   /**
    * [DEPRECATED] Use sendVariableValues
    * Passing an array into privateVariables is equivalent to passing { exceptNames: array } into

@@ -139,6 +139,15 @@ export default async function pluginTestHarness<TContext>({
     // This execution dispatcher logic is duplicated in the request pipeline
     // right now.
     dispatcher.invokeHookSync(
+      'didResolveOperation',
+      requestContext as GraphQLRequestContextExecutionDidStart<TContext>,
+    );
+  }
+
+  if (typeof listener.executionDidStart === 'function') {
+    // This execution dispatcher logic is duplicated in the request pipeline
+    // right now.
+    dispatcher.invokeHookSync(
       'executionDidStart',
       requestContext as GraphQLRequestContextExecutionDidStart<TContext>,
     ).forEach(executionListener => {

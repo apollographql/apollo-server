@@ -3,6 +3,7 @@ import {
   Logger,
   GraphQLRequestContextDidEncounterErrors,
   GraphQLRequestContextWillSendResponse,
+  GraphQLRequestContextDidResolveOperation,
 } from 'apollo-server-types';
 import { Headers } from 'apollo-server-env';
 import { GraphQLSchema, printSchema } from 'graphql';
@@ -78,6 +79,9 @@ export const plugin = <TContext>(
        */
       const logger = requestLogger || loggerForPlugin;
 
+      // If the options are false don't do any metrics timing.
+      if (options.traceReporting === false) return {};
+
       const treeBuilder: EngineReportingTreeBuilder = new EngineReportingTreeBuilder(
         {
           rewriteError: options.rewriteError,
@@ -128,11 +132,18 @@ export const plugin = <TContext>(
       function didEnd(
         requestContext:
           | GraphQLRequestContextWillSendResponse<TContext>
-          | GraphQLRequestContextDidEncounterErrors<TContext>,
+          | GraphQLRequestContextDidEncounterErrors<TContext>
+          | GraphQLRequestContextDidResolveOperation<TContext>,
+        reportTrace: boolean,
       ) {
         if (endDone) return;
         endDone = true;
         treeBuilder.stopTiming();
+
+        // Returning here if we aren't reporting the trace to make sure,
+        // endDone is set and the treeBuilder has stopped
+
+        if (!reportTrace) return;
 
         treeBuilder.trace.fullQueryCacheHit = !!metrics.responseCacheHit;
         treeBuilder.trace.forbiddenOperation = !!metrics.forbiddenOperation;
@@ -192,7 +203,18 @@ export const plugin = <TContext>(
       let didResolveSource: boolean = false;
 
       return {
+        didResolveOperation(requestContext) {
+          if (typeof options.traceReporting === 'function') {
+            options.traceReporting(requestContext).then(shouldReportTrace => {
+              if (!shouldReportTrace) didEnd(requestContext, false);
+            });
+          }
+        },
         didResolveSource(requestContext) {
+          // We can early abort if traceReporting returned false
+          // In this case the treeBuilder is already stopped so
+          // we can ignore everything in this function
+          if (endDone) return;
           didResolveSource = true;
 
           if (metrics.persistedQueryHit) {
@@ -227,7 +249,11 @@ export const plugin = <TContext>(
         executionDidStart() {
           return {
             willResolveField({ info }) {
-              return treeBuilder.willResolveField(info);
+              // We can early abort if traceReporting returned false
+              // In this case the treeBuilder is already stopped so
+              // we don't want to get resolver timings
+
+              if (!endDone) treeBuilder.willResolveField(info);
               // We could save the error into the trace during the end handler, but
               // it won't have all the information that graphql-js adds to it later,
               // like 'locations'.
@@ -237,17 +263,17 @@ export const plugin = <TContext>(
 
         willSendResponse(requestContext) {
           // See comment above for why `didEnd` must be called in two hooks.
-          didEnd(requestContext);
+          didEnd(requestContext, true);
         },
 
         didEncounterErrors(requestContext) {
           // Search above for a comment about "didResolveSource" to see which
           // of the pre-source-resolution errors we are intentionally avoiding.
-          if (!didResolveSource) return;
+          if (!didResolveSource || endDone) return;
           treeBuilder.didEncounterErrors(requestContext.errors);
 
           // See comment above for why `didEnd` must be called in two hooks.
-          didEnd(requestContext);
+          didEnd(requestContext, true);
         },
       };
     },
