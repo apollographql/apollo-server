@@ -282,7 +282,7 @@ export class ApolloGateway implements GraphQLService {
         this.experimental_pollInterval = config.experimental_pollInterval;
       }
 
-      // Warn against using the pollInterval and a serviceList simulatenously
+      // Warn against using the pollInterval and a serviceList simultaneously
       if (config.experimental_pollInterval && isRemoteConfig(config)) {
         this.logger.warn(
           'Polling running services is dangerous and not recommended in production. ' +
@@ -319,7 +319,7 @@ export class ApolloGateway implements GraphQLService {
   protected async updateComposition(options?: {
     engine?: GraphQLServiceEngineConfig;
   }): Promise<void> {
-    // The options argument and internal config update coule be handled by this.load()
+    // The options argument and internal config update could be handled by this.load()
     // instead of here. We can remove this as a breaking change in the future.
     if (options && options.engine) {
       if (!options.engine.graphVariant)
@@ -420,8 +420,8 @@ export class ApolloGateway implements GraphQLService {
     // this is a temporary workaround for GraphQLFieldExtensions automatic
     // wrapping of all fields when using ApolloServer. Here we wrap all fields
     // with support for resolving aliases as part of the root value which
-    // happens because alises are resolved by sub services and the shape
-    // of the rootvalue already contains the aliased fields as responseNames
+    // happens because aliases are resolved by sub services and the shape
+    // of the root value already contains the aliased fields as responseNames
     return wrapSchemaWithAliasResolver(schema);
   }
 
@@ -618,7 +618,7 @@ export class ApolloGateway implements GraphQLService {
           this.queryPlanStore.set(queryPlanStoreKey, queryPlan),
         ).catch(err =>
           this.logger.warn(
-            'Could not store queryPlan' + ((err && err.messsage) || err),
+            'Could not store queryPlan' + ((err && err.message) || err),
           ),
         );
       }

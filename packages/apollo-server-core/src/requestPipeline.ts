@@ -179,7 +179,7 @@ export async function processGraphQLRequest<TContext>(
       }
 
       // We won't write to the persisted query cache until later.
-      // Defering the writing gives plugins the ability to "win" from use of
+      // Deferring the writing gives plugins the ability to "win" from use of
       // the cache, but also have their say in whether or not the cache is
       // written to (by interrupting the request with an error).
       metrics.persistedQueryRegister = true;
@@ -222,7 +222,7 @@ export async function processGraphQLRequest<TContext>(
       } catch (err) {
         logger.warn(
           'An error occurred while attempting to read from the documentStore. '
-          + (err && err.messsage) || err,
+          + (err && err.message) || err,
         );
       }
     }

@@ -227,7 +227,7 @@ export class ApolloServerBase {
     // once per run, so we place the env check inside the constructor. If env
     // should be used outside of the constructor context, place it as a private
     // or protected field of the class instead of a global. Keeping the read in
-    // the contructor enables testing of different environments
+    // the constructor enables testing of different environments
     const isDev = process.env.NODE_ENV !== 'production';
 
     // if this is local dev, introspection should turned on
@@ -335,7 +335,7 @@ export class ApolloServerBase {
 
     // In an effort to avoid over-exposing the API key itself, extract the
     // service ID from the API key for plugins which only needs service ID.
-    // The truthyness of this value can also be used in other forks of logic
+    // The truthiness of this value can also be used in other forks of logic
     // related to Engine, as is the case with EngineReportingAgent just below.
     this.engineServiceId = getEngineServiceId(engine);
     const apiKey = getEngineApiKey(engine);
@@ -356,7 +356,7 @@ export class ApolloServerBase {
     }
 
     if (gateway && subscriptions !== false) {
-      // TODO: this could be handled by adjusting the typings to keep gateway configs and non-gateway configs seprate.
+      // TODO: this could be handled by adjusting the typings to keep gateway configs and non-gateway configs separate.
       throw new Error(
         [
           'Subscriptions are not yet compatible with the gateway.',
@@ -459,7 +459,7 @@ export class ApolloServerBase {
         .catch(err => {
           // We intentionally do not re-throw the exact error from the gateway
           // configuration as it may contain implementation details and this
-          // error will propogate to the client. We will, however, log the error
+          // error will propagate to the client. We will, however, log the error
           // for observation in the logs.
           const message = "This data graph is missing a valid configuration.";
           this.logger.error(message + " " + (err && err.message || err));
