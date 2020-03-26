@@ -9,8 +9,7 @@ import {
   ValueOrPromise,
   GraphQLExecutor,
   GraphQLExecutionResult,
-  WithRequired,
-  GraphQLRequestContext,
+  GraphQLRequestContextExecutionDidStart,
 } from 'apollo-server-types';
 import { ConnectionContext } from 'subscriptions-transport-ws';
 // The types for `ws` use `export = WebSocket`, so we'll use the
@@ -97,10 +96,7 @@ export interface GraphQLService {
   // Note: The `TContext` typing here is not conclusively behaving as we expect:
   // https://github.com/apollographql/apollo-server/pull/3811#discussion_r387381605
   executor<TContext>(
-    requestContext: WithRequired<
-      GraphQLRequestContext<TContext>,
-      'document' | 'queryHash' | 'operationName' | 'operation'
-    >,
+    requestContext: GraphQLRequestContextExecutionDidStart<TContext>,
   ): ValueOrPromise<GraphQLExecutionResult>;
 }
 

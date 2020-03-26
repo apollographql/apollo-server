@@ -99,10 +99,7 @@ export type ValidationRule = (context: ValidationContext) => ASTVisitor;
 export class InvalidGraphQLRequestError extends GraphQLError {}
 
 export type GraphQLExecutor<TContext = Record<string, any>> = (
-  requestContext: WithRequired<
-    GraphQLRequestContext<TContext>,
-    'document' | 'operationName' | 'operation' | 'queryHash'
-  >,
+  requestContext: GraphQLRequestContextExecutionDidStart<TContext>,
 ) => ValueOrPromise<GraphQLExecutionResult>;
 
 export type GraphQLExecutionResult = {
@@ -118,3 +115,46 @@ export type Logger = {
   warn(message?: any): void;
   error(message?: any): void;
 }
+
+export type GraphQLRequestContextParsingDidStart<TContext> =
+  WithRequired<GraphQLRequestContext<TContext>,
+    | 'metrics'
+    | 'source'
+    | 'queryHash'
+  >;
+export type GraphQLRequestContextValidationDidStart<TContext> =
+  GraphQLRequestContextParsingDidStart<TContext> &
+  WithRequired<GraphQLRequestContext<TContext>,
+    | 'document'
+  >;
+export type GraphQLRequestContextDidResolveOperation<TContext> =
+  GraphQLRequestContextValidationDidStart<TContext> &
+  WithRequired<GraphQLRequestContext<TContext>,
+    | 'operation'
+    | 'operationName'
+  >;
+export type GraphQLRequestContextDidEncounterErrors<TContext> =
+  WithRequired<GraphQLRequestContext<TContext>,
+    | 'metrics'
+    | 'errors'
+  >;
+export type GraphQLRequestContextResponseForOperation<TContext> =
+  WithRequired<GraphQLRequestContext<TContext>,
+    | 'metrics'
+    | 'source'
+    | 'document'
+    | 'operation'
+    | 'operationName'
+  >;
+export type GraphQLRequestContextExecutionDidStart<TContext> =
+  GraphQLRequestContextParsingDidStart<TContext> &
+  WithRequired<GraphQLRequestContext<TContext>,
+    | 'document'
+    | 'operation'
+    | 'operationName'
+  >;
+export type GraphQLRequestContextWillSendResponse<TContext> =
+  WithRequired<GraphQLRequestContext<TContext>,
+    | 'metrics'
+    | 'response'
+  >;

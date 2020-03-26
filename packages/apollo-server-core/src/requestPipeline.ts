@@ -43,6 +43,13 @@ import {
 import {
   ApolloServerPlugin,
   GraphQLRequestListener,
+  GraphQLRequestContextExecutionDidStart,
+  GraphQLRequestContextResponseForOperation,
+  GraphQLRequestContextDidResolveOperation,
+  GraphQLRequestContextParsingDidStart,
+  GraphQLRequestContextValidationDidStart,
+  GraphQLRequestContextWillSendResponse,
+  GraphQLRequestContextDidEncounterErrors,
 } from 'apollo-server-plugin-base';
 
 import { Dispatcher } from './utils/dispatcher';
@@ -232,10 +239,7 @@ export async function processGraphQLRequest<TContext>(
     if (!requestContext.document) {
       const parsingDidEnd = await dispatcher.invokeDidStartHook(
         'parsingDidStart',
-        requestContext as WithRequired<
-          typeof requestContext,
-          'metrics' | 'source'
-        >,
+        requestContext as GraphQLRequestContextParsingDidStart<TContext>,
       );
 
       try {
@@ -248,10 +252,7 @@ export async function processGraphQLRequest<TContext>(
 
       const validationDidEnd = await dispatcher.invokeDidStartHook(
         'validationDidStart',
-        requestContext as WithRequired<
-          typeof requestContext,
-          'document' | 'source' | 'metrics'
-        >,
+        requestContext as GraphQLRequestContextValidationDidStart<TContext>,
       );
 
       const validationErrors = validate(requestContext.document);
@@ -307,10 +308,7 @@ export async function processGraphQLRequest<TContext>(
     try {
       await dispatcher.invokeHookAsync(
         'didResolveOperation',
-        requestContext as WithRequired<
-          typeof requestContext,
-          'document' | 'source' | 'operation' | 'operationName' | 'metrics'
-        >,
+        requestContext as GraphQLRequestContextDidResolveOperation<TContext>,
       );
     } catch (err) {
       // XXX: The HttpQueryError is special-cased here because we currently
@@ -354,25 +352,18 @@ export async function processGraphQLRequest<TContext>(
 
     let response: GraphQLResponse | null = await dispatcher.invokeHooksUntilNonNull(
       'responseForOperation',
-      requestContext as WithRequired<
-        typeof requestContext,
-        'document' | 'source' | 'operation' | 'operationName' | 'metrics'
-      >,
+      requestContext as GraphQLRequestContextResponseForOperation<TContext>,
     );
     if (response == null) {
       const executionDidEnd = await dispatcher.invokeDidStartHook(
         'executionDidStart',
-        requestContext as WithRequired<
-          typeof requestContext,
-          'document' | 'source' | 'operation' | 'operationName' | 'metrics'
-        >,
+        requestContext as GraphQLRequestContextExecutionDidStart<TContext>,
       );
 
       try {
-        const result = await execute(requestContext as WithRequired<
-          typeof requestContext,
-          'document' | 'operation' | 'operationName' | 'queryHash'
-        >);
+        const result = await execute(
+          requestContext as GraphQLRequestContextExecutionDidStart<TContext>,
+        );
 
         if (result.errors) {
           await didEncounterErrors(result.errors);
@@ -455,10 +446,7 @@ export async function processGraphQLRequest<TContext>(
   }
 
   async function execute(
-    requestContext: WithRequired<
-      GraphQLRequestContext<TContext>,
-      'document' | 'operationName' | 'operation' | 'queryHash'
-    >,
+    requestContext: GraphQLRequestContextExecutionDidStart<TContext>,
   ): Promise<GraphQLExecutionResult> {
     const { request, document } = requestContext;
 
@@ -509,10 +497,7 @@ export async function processGraphQLRequest<TContext>(
     }).graphqlResponse;
     await dispatcher.invokeHookAsync(
       'willSendResponse',
-      requestContext as WithRequired<
-        typeof requestContext,
-        'metrics' | 'response'
-      >,
+      requestContext as GraphQLRequestContextWillSendResponse<TContext>,
     );
     return requestContext.response!;
   }
@@ -543,10 +528,7 @@ export async function processGraphQLRequest<TContext>(
 
     return await dispatcher.invokeHookAsync(
       'didEncounterErrors',
-      requestContext as WithRequired<
-        typeof requestContext,
-        'metrics' | 'source' | 'errors'
-      >,
+      requestContext as GraphQLRequestContextDidEncounterErrors<TContext>,
     );
   }
 
