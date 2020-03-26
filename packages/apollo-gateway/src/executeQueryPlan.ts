@@ -93,7 +93,7 @@ export async function executeQueryPlan<TContext>(
       },
       rootValue: data,
       variableValues: requestContext.request.variables,
-      // FIXME: GraphQL extensions currentl wraps every field and creates
+      // FIXME: GraphQL extensions currently wraps every field and creates
       // a field resolver. Because of this, when using with ApolloServer
       // the defaultFieldResolver isn't called. We keep this here
       // because it is the correct solution and when ApolloServer removes
