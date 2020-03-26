@@ -7,8 +7,10 @@ import {
   ExecutionArgs,
   GraphQLError,
   GraphQLFormattedError,
+  validate as graphqlValidate,
+  parse as graphqlParse,
+  execute as graphqlExecute,
 } from 'graphql';
-import * as graphql from 'graphql';
 import {
   GraphQLExtension,
   GraphQLExtensionStack,
@@ -424,7 +426,7 @@ export async function processGraphQLRequest<TContext>(
     });
 
     try {
-      return graphql.parse(query, parseOptions);
+      return graphqlParse(query, parseOptions);
     } finally {
       parsingDidEnd();
     }
@@ -439,7 +441,7 @@ export async function processGraphQLRequest<TContext>(
     const validationDidEnd = extensionStack.validationDidStart();
 
     try {
-      return graphql.validate(config.schema, document, rules);
+      return graphqlValidate(config.schema, document, rules);
     } finally {
       validationDidEnd();
     }
@@ -474,7 +476,7 @@ export async function processGraphQLRequest<TContext>(
         // (eg apollo-engine-reporting) assumes that.
         return await config.executor(requestContext);
       } else {
-        return await graphql.execute(executionArgs);
+        return await graphqlExecute(executionArgs);
       }
     } finally {
       executionDidEnd();
