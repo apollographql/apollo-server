@@ -17,7 +17,11 @@ import {
   enableGraphQLExtensions,
 } from 'graphql-extensions';
 import { DataSource } from 'apollo-datasource';
-import { PersistedQueryOptions } from '.';
+import {
+  PersistedQueryOptions,
+  symbolRequestListenerDispatcher,
+  enablePluginsForSchemaResolvers,
+} from '.';
 import {
   CacheControlExtension,
   CacheControlExtensionOptions,
@@ -127,6 +131,9 @@ export async function processGraphQLRequest<TContext>(
   (requestContext.context as any)._extensionStack = extensionStack;
 
   const dispatcher = initializeRequestListenerDispatcher();
+  Object.defineProperty(requestContext.context, symbolRequestListenerDispatcher, {
+    value: dispatcher,
+  });
 
   await initializeDataSources();
 
@@ -571,6 +578,8 @@ export async function processGraphQLRequest<TContext>(
   function initializeRequestListenerDispatcher(): Dispatcher<
     GraphQLRequestListener
   > {
+    enablePluginsForSchemaResolvers(config.schema);
+
     const requestListeners: GraphQLRequestListener<TContext>[] = [];
     if (config.plugins) {
       for (const plugin of config.plugins) {
@@ -633,3 +642,4 @@ export async function processGraphQLRequest<TContext>(
     }
   }
 }
+
