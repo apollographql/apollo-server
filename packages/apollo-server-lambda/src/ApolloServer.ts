@@ -3,7 +3,13 @@ import {
   APIGatewayProxyEvent,
   Context as LambdaContext,
 } from 'aws-lambda';
-import { ApolloServerBase, GraphQLOptions, Config } from 'apollo-server-core';
+import {
+  formatApolloErrors,
+  processFileUploads,
+  ApolloServerBase,
+  GraphQLOptions,
+  Config,
+} from 'apollo-server-core';
 import {
   renderPlaygroundPage,
   RenderPageOptions as PlaygroundRenderPageOptions,
@@ -11,6 +17,7 @@ import {
 
 import { graphqlLambda } from './lambdaApollo';
 import { Headers } from 'apollo-server-env';
+import { Readable, Writable } from 'stream';
 
 export interface CreateHandlerOptions {
   cors?: {
@@ -211,6 +218,41 @@ export class ApolloServer extends ApolloServerBase {
             },
           });
         }
+      }
+
+      // File upload middleware
+      const contentType = event.headers["content-type"]
+        || event.headers["Content-Type"];
+
+      if (contentType === "multipart/form-data"
+          && typeof processFileUploads === "function") {
+        const request = new Readable() as any;
+        const response = new Writable() as any;
+        const serverParams = {
+          response,
+          uploadsConfig: this.uploadsConfig || {},
+          requestOptions: this.requestOptions
+        }
+        request.push(
+          Buffer.from(
+            <any>event.body,
+            event.isBase64Encoded ? "base64" : "ascii"
+          )
+        );
+        request.push(null);
+        request.headers = event.headers;
+        request.headers["content-type"] = contentType;
+
+        processFileUploads(request, serverParams.response, serverParams.uploadsConfig)
+        .then((body: any) => {
+          event.body = JSON.stringify(body);
+        })
+        .catch(error => {
+          throw formatApolloErrors([error], {
+            formatter: serverParams.requestOptions.formatError,
+            debug: serverParams.requestOptions.debug,
+          });
+        });
       }
 
       const callbackFilter: APIGatewayProxyCallback = (error, result) => {
