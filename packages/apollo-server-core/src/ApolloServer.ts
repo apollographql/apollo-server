@@ -68,6 +68,7 @@ import {
 
 import { Headers } from 'apollo-server-env';
 import { buildServiceDefinition } from '@apollographql/apollo-tools';
+import { keyEnvVar, legacyKeyEnvVar } from 'apollo-engine-reporting/src/agent';
 
 const NoIntrospection = (context: ValidationContext) => ({
   Field(node: FieldDefinitionNode) {
@@ -83,7 +84,7 @@ const NoIntrospection = (context: ValidationContext) => ({
 });
 
 function getEngineApiKey(engine: Config['engine']): string | undefined {
-  const keyFromEnv = process.env.ENGINE_API_KEY || '';
+  const keyFromEnv = process.env[keyEnvVar] || process.env[legacyKeyEnvVar] || '';
   if (engine === false) {
     return;
   } else if (typeof engine === 'object' && engine.apiKey) {

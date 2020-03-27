@@ -16,6 +16,11 @@ import { GraphQLRequestContext } from 'apollo-server-types';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import { defaultEngineReportingSignature } from 'apollo-graphql';
 
+// TDOD: Reviewer, should we consider moving these exports to a different package
+// Maybe apollo-server-env?
+export const legacyKeyEnvVar = 'ENGINE_API_KEY';
+export const keyEnvVar = 'APOLLO_KEY'
+
 export interface ClientInfo {
   clientName?: string;
   clientVersion?: string;
@@ -226,11 +231,22 @@ export class EngineReportingAgent<TContext = any> {
 
   public constructor(options: EngineReportingOptions<TContext> = {}) {
     this.options = options;
-    this.apiKey = options.apiKey || process.env.ENGINE_API_KEY || '';
+    const legacyApiKeyFromEnv = process.env.ENGINE_API_KEY;
+    const apiKeyFromEnv = process.env.APOLLO_KEY;
+
+    if(legacyApiKeyFromEnv && apiKeyFromEnv) {
+      throw new Error(`Cannot set both ${legacyKeyEnvVar} and ${keyEnvVar}. Please only set ${keyEnvVar}`);
+    }
+
+    this.apiKey = options.apiKey || apiKeyFromEnv || legacyApiKeyFromEnv || '';
     if (!this.apiKey) {
       throw new Error(
-        'To use EngineReportingAgent, you must specify an API key via the apiKey option or the ENGINE_API_KEY environment variable.',
+        `To use EngineReportingAgent, you must specify an API key via the apiKey option or the ${keyEnvVar} environment variable.`,
       );
+    }
+
+    if(legacyApiKeyFromEnv) {
+      console.warn(`[Deprecation warning] Setting the key via ${legacyKeyEnvVar} is deprecated and will not be supported in future versions.`)
     }
 
     // Since calculating the signature for Engine reporting is potentially an

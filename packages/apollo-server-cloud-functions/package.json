@@ -29,6 +29,7 @@
     "apollo-server-core": "file:../apollo-server-core",
     "apollo-server-env": "file:../apollo-server-env",
     "apollo-server-types": "file:../apollo-server-types",
+    "apollo-engine-reporting":"file:../apollo-engine-reporting",
     "graphql-tools": "^4.0.0"
   },
   "devDependencies": {

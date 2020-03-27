@@ -6,6 +6,7 @@ import {
 import { Request, Response } from 'express';
 
 import { graphqlCloudFunction } from './googleCloudApollo';
+import { keyEnvVar, legacyKeyEnvVar } from 'apollo-engine-reporting/src/agent';
 
 export interface CreateHandlerOptions {
   cors?: {
@@ -23,7 +24,7 @@ export class ApolloServer extends ApolloServerBase {
   // another place, since the documentation becomes much more complicated when
   // the constructor is not longer shared between all integration
   constructor(options: Config) {
-    if (process.env.ENGINE_API_KEY || options.engine) {
+    if (process.env[keyEnvVar] || process.env[legacyKeyEnvVar] || options.engine) {
       options.engine = {
         sendReportsImmediately: true,
         ...(typeof options.engine !== 'boolean' ? options.engine : {}),
@@ -114,7 +115,7 @@ export class ApolloServer extends ApolloServerBase {
           );
         }
       }
-      
+
       res.set(corsHeaders);
 
       if (req.method === 'OPTIONS') {
