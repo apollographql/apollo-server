@@ -8,7 +8,7 @@ import {
 } from '@apollographql/graphql-playground-html';
 
 import { graphqlAzureFunction } from './azureFunctionApollo';
-import { legacyKeyEnvVar, keyEnvVar } from 'apollo-engine-reporting/src/agent';
+import { legacyKeyEnvVar, keyEnvVar } from 'apollo-engine-reporting';
 
 export interface CreateHandlerOptions {
   cors?: {

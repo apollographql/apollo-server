@@ -68,7 +68,7 @@ import {
 
 import { Headers } from 'apollo-server-env';
 import { buildServiceDefinition } from '@apollographql/apollo-tools';
-import { keyEnvVar, legacyKeyEnvVar } from 'apollo-engine-reporting/src/agent';
+import { keyEnvVar, legacyKeyEnvVar } from 'apollo-engine-reporting';
 
 const NoIntrospection = (context: ValidationContext) => ({
   Field(node: FieldDefinitionNode) {

@@ -1,2 +1,2 @@
-export { EngineReportingOptions, EngineReportingAgent } from './agent';
+export { EngineReportingOptions, EngineReportingAgent, keyEnvVar, legacyKeyEnvVar } from './agent';
 export { EngineFederatedTracingExtension } from './federatedExtension';

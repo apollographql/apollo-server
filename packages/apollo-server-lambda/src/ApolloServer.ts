@@ -11,7 +11,7 @@ import {
 
 import { graphqlLambda } from './lambdaApollo';
 import { Headers } from 'apollo-server-env';
-import { keyEnvVar, legacyKeyEnvVar } from 'apollo-engine-reporting/src/agent';
+import { keyEnvVar, legacyKeyEnvVar } from 'apollo-engine-reporting';
 
 export interface CreateHandlerOptions {
   cors?: {

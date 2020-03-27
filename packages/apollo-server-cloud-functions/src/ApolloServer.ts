@@ -6,7 +6,7 @@ import {
 import { Request, Response } from 'express';
 
 import { graphqlCloudFunction } from './googleCloudApollo';
-import { keyEnvVar, legacyKeyEnvVar } from 'apollo-engine-reporting/src/agent';
+import { keyEnvVar, legacyKeyEnvVar } from 'apollo-engine-reporting';
 
 export interface CreateHandlerOptions {
   cors?: {
