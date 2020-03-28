@@ -38,7 +38,7 @@ export interface CreateHandlerOptions {
   onHealthCheck?: (req: APIGatewayProxyEvent) => Promise<any>;
 }
 
-export class GqlReadable extends Readable {
+export class FileUploadRequest extends Readable {
   headers!: IncomingHttpHeaders;
 }
 
@@ -256,7 +256,7 @@ export class ApolloServer extends ApolloServerBase {
           event.headers["content-type"] || event.headers["Content-Type"];
         if (contentType && contentType.startsWith("multipart/form-data")
           && typeof processFileUploads === "function") {
-          const request = new GqlReadable() as IncomingMessage;
+          const request = new FileUploadRequest() as IncomingMessage;
           request.push(
             Buffer.from(
               <any>event.body,
