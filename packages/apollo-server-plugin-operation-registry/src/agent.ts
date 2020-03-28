@@ -183,7 +183,7 @@ export default class Agent {
     this.logger.debug(`Fetching legacy manifest.`);
     if (this.options.graphVariant !== 'current') {
       this.logger.warn(
-        `The legacy manifest contains operations registered for the "current" tag, but the specified schema tag is "${this.options.graphVariant}".`,
+        `The legacy manifest contains operations registered for the "current" variant, but the specified variant is "${this.options.graphVariant}".`,
       );
     }
     const legacyManifestUrl = getLegacyOperationManifestUrl(

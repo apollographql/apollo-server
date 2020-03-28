@@ -1,5 +1,9 @@
 # Change Log
 
+### Upcoming
+
+- Deprecate schemaTag option, add preferred graphVariant option [PR #295](https://github.com/apollographql/apollo-platform-commercial/pull/295)
+
 ### vNEXT (Currently `alpha` tag)
 
 - Add lifecycle hooks: `onUnregisteredOperation`, and `onForbiddenOperation`. [PR #158](https://github.com/apollographql/apollo-platform-commercial/pull/158) [PR #251](https://github.com/apollographql/apollo-platform-commercial/pull/251) [PR #TODO](https://github.com/apollographql/apollo-platform-commercial/pull/TODO)

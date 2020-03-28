@@ -2,7 +2,7 @@
 
 The operation registry plugin is the interface into the Apollo Platform's **operation registry** and enables operation **safelisting**, which allows selective execution based on the operation. Safelisting eliminates the risk of unexpected operations that could cause downtime from being run against a graph.
 
-In order to enable safelisting, follow the [step by step guide in the Apollo docs](https://www.apollographql.com/docs/platform/operation-registry/). These steps describe how to extract and upload operations defined within client applications to the [Apollo Graph Manager](https://engine.apollographql.com) using the Apollo CLI. Once operations have been registered, this plugin for Apollo Server fetches the manifest of these operations from the [Apollo Graph Manager](https://engine.apollographql.com) and forbids the execution of any operations that are not in that manifest. 
+In order to enable safelisting, follow the [step by step guide in the Apollo docs](https://www.apollographql.com/docs/platform/operation-registry/). These steps describe how to extract and upload operations defined within client applications to the [Apollo Graph Manager](https://engine.apollographql.com) using the Apollo CLI. Once operations have been registered, this plugin for Apollo Server fetches the manifest of these operations from the [Apollo Graph Manager](https://engine.apollographql.com) and forbids the execution of any operations that are not in that manifest.
 
 ### Usage
 
@@ -59,15 +59,15 @@ server.listen().then(({ url }) => {
 ```
 </details>
 
-#### Schema Tag/Variant
+#### Variant
 
-Clients can register their operations to specific tags/variants, so the plugin contains the `schemaTag` field to specify which tag/variant to pull operation manifests from.
+Clients can register their operations to a specific variant, so the plugin contains the `graphVariant` field to specify which variant to pull operation manifests from.
 
 ```js
 const server = new ApolloServer({
   plugins: [
     require("apollo-server-plugin-operation-registry")({
-      schemaTag: "overrideTag" 
+      graphVariant: "production"
     })
   ]
 });
@@ -76,11 +76,11 @@ const server = new ApolloServer({
 
 ### Metrics
 
-The plugin will transmit metrics regarding unregistered operations which can be viewed within [the Apollo Graph Manager](https://engine.apollographql.com). The following example shows the unregistered operations sent by a particular client: 
+The plugin will transmit metrics regarding unregistered operations which can be viewed within [the Apollo Graph Manager](https://engine.apollographql.com). The following example shows the unregistered operations sent by a particular client:
 
 <p align="center">
   <img
     src="https://cl.ly/2a5b9c82287d/download/clients-page.png"
     alt="The clients page showing unregistered operations"
-  /> 
+  />
 </p>
