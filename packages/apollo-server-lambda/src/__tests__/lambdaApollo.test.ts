@@ -155,7 +155,7 @@ const supportedNodeVersion =
       .field('map', JSON.stringify({ 0: ['variables.file'] }))
       .attach('0', 'package.json');
     return req.then((res: any) => {
-      // expect(res.status).toEqual(200);
+      expect(res.status).toEqual(200);
       expect(res.body.errors).toBeUndefined();
       expect(res.body.data.singleUpload).toEqual(expected);
     });

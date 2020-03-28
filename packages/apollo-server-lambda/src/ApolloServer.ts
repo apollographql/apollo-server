@@ -15,11 +15,15 @@ import {
   renderPlaygroundPage,
   RenderPageOptions as PlaygroundRenderPageOptions,
 } from '@apollographql/graphql-playground-html';
+import {
+  ServerResponse,
+  IncomingHttpHeaders,
+  IncomingMessage,
+} from 'http';
 
 import { graphqlLambda } from './lambdaApollo';
 import { Headers } from 'apollo-server-env';
 import { Readable, Writable } from 'stream';
-import { ServerResponse, IncomingHttpHeaders, IncomingMessage } from 'http';
 
 export interface CreateHandlerOptions {
   cors?: {
@@ -247,50 +251,48 @@ export class ApolloServer extends ApolloServerBase {
         );
       };
 
-      const startServer = () => {
-        graphqlLambda(async () => {
-          // In a world where this `createHandler` was async, we might avoid this
-          // but since we don't want to introduce a breaking change to this API
-          // (by switching it to `async`), we'll leverage the
-          // `GraphQLServerOptions`, which are dynamically built on each request,
-          // to `await` the `promiseWillStart` which we kicked off at the top of
-          // this method to ensure that it runs to completion (which is part of
-          // its contract) prior to processing the request.
-          await promiseWillStart;
-          return this.createGraphQLServerOptions(event, context);
-        })(event, context, callbackFilter);
-      }
-
-      // File upload middleware
-      const contentType = event.headers["content-type"] || event.headers["Content-Type"];
-      if (contentType && contentType.startsWith("multipart/form-data")
-        && typeof processFileUploads === "function") {
-        const request = new GqlReadable() as IncomingMessage;
-        request.push(
-          Buffer.from(
-            <any>event.body,
-            event.isBase64Encoded ? "base64" : "ascii"
-          )
-        );
-        request.push(null);
-        request.headers = event.headers;
-        request.headers["content-type"] = contentType;
-        processFileUploads(request, response, this.uploadsConfig || {})
-          .then(body => {
-            event.body = body as any;
-            // File upload output
-            startServer();
-          })
-          .catch(error => {
-            throw formatApolloErrors([error], {
-              formatter: this.requestOptions.formatError,
-              debug: this.requestOptions.debug,
+      const fileUploadHandler = (next: Function) => {
+        const contentType =
+          event.headers["content-type"] || event.headers["Content-Type"];
+        if (contentType && contentType.startsWith("multipart/form-data")
+          && typeof processFileUploads === "function") {
+          const request = new GqlReadable() as IncomingMessage;
+          request.push(
+            Buffer.from(
+              <any>event.body,
+              event.isBase64Encoded ? "base64" : "ascii"
+            )
+          );
+          request.push(null);
+          request.headers = event.headers;
+          request.headers["content-type"] = contentType;
+          processFileUploads(request, response, this.uploadsConfig || {})
+            .then(body => {
+              event.body = body as any;
+              return next();
+            })
+            .catch(error => {
+              throw formatApolloErrors([error], {
+                formatter: this.requestOptions.formatError,
+                debug: this.requestOptions.debug,
+              });
             });
-          });
-      } else {
-        // Default output
-        startServer();
-      }
+        } else {
+          return next();
+        }
+      };
+
+      fileUploadHandler(() => graphqlLambda(async () => {
+        // In a world where this `createHandler` was async, we might avoid this
+        // but since we don't want to introduce a breaking change to this API
+        // (by switching it to `async`), we'll leverage the
+        // `GraphQLServerOptions`, which are dynamically built on each request,
+        // to `await` the `promiseWillStart` which we kicked off at the top of
+        // this method to ensure that it runs to completion (which is part of
+        // its contract) prior to processing the request.
+        await promiseWillStart;
+        return this.createGraphQLServerOptions(event, context);
+      })(event, context, callbackFilter));
     };
   }
 }
