@@ -50,6 +50,7 @@ export interface Options {
     | ForbidUnregisteredOperationsPredicate;
   dryRun?: boolean;
   schemaTag?: string;
+  graphVariant?: string;
   onUnregisteredOperation?: (
     requestContext: GraphQLRequestContext,
     operationRegistryRequestContext: OperationRegistryRequestContext,
@@ -63,7 +64,13 @@ export interface Options {
 export default function plugin(options: Options = Object.create(null)) {
   let agent: Agent;
   let store: InMemoryLRUCache;
-  let schemaTag = options.schemaTag || 'current';
+  const graphVariant = options.graphVariant || options.schemaTag || 'current';
+  if (options.graphVariant && options.schemaTag) {
+    throw new Error('Cannot specify both graphVariant and schemaTag. Please use graphVariant.');
+  }
+  if (options.schemaTag) {
+    console.warn('[Deprecation warning] schemaTag option is deprecated. Please use graphVariant options instead.');
+  }
 
   // Setup logging facilities, scoped under the appropriate name.
   const logger = loglevel.getLogger(`apollo-server:${pluginName}`);
@@ -109,7 +116,7 @@ for observability purposes, but all operations will be permitted.`,
 
       if (!engine || !engine.serviceID) {
         const messageEngineConfigurationRequired =
-          'The Engine API key must be set to use the operation registry.';
+          'The Apollo API key must be set to use the operation registry.';
         throw new Error(`${pluginName}: ${messageEngineConfigurationRequired}`);
       }
 
@@ -125,7 +132,7 @@ for observability purposes, but all operations will be permitted.`,
 
       agent = new Agent({
         schemaHash,
-        schemaTag,
+        graphVariant,
         engine,
         store,
         logger,
@@ -211,9 +218,7 @@ for observability purposes, but all operations will be permitted.`,
           let shouldForbidOperation: boolean =
             typeof options.forbidUnregisteredOperations === 'boolean'
               ? options.forbidUnregisteredOperations
-              : typeof options.forbidUnregisteredOperations === 'function'
-              ? true
-              : false;
+              : typeof options.forbidUnregisteredOperations === 'function';
 
           if (typeof options.forbidUnregisteredOperations === 'function') {
             logger.debug(
@@ -301,7 +306,7 @@ for observability purposes, but all operations will be permitted.`,
           Object.assign(error.extensions, {
             operationSignature: signature,
             exception: {
-              message: `Please register your operation with \`npx apollo client:push --tag="${schemaTag}"\`. See https://www.apollographql.com/docs/platform/operation-registry/ for more details.`,
+              message: `Please register your operation with \`npx apollo client:push --tag="${graphVariant}"\`. See https://www.apollographql.com/docs/platform/operation-registry/ for more details.`,
             },
           });
           throw error;

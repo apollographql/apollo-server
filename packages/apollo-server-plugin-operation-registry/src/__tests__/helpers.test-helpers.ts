@@ -28,7 +28,7 @@ export const defaultAgentOptions: AgentOptions = {
   engine: { serviceID: genericServiceID, apiKeyHash: genericApiKeyHash },
   store: defaultStore(),
   pollSeconds: defaultTestAgentPollSeconds,
-  schemaTag: 'current',
+  graphVariant: 'current',
 };
 
 // Each nock is good for exactly one request!
