@@ -98,12 +98,6 @@ function getEngineGraphVariant(engine: Config['engine']): string | undefined {
   if (engine === false) {
     return;
   } else if (typeof engine === 'object' && (engine.graphVariant || engine.schemaTag)) {
-    if (engine.graphVariant && engine.schemaTag) {
-      throw new Error('Cannot set both engine.graphVariant and engine.schemaTag. Please use engine.graphVariant.');
-    }
-    if (engine.schemaTag) {
-      console.warn('[Deprecation warning] Usage of engine.schemaTag is deprecated. Please use engine.graphVariant instead.');
-    }
     return engine.graphVariant || engine.schemaTag;
   } else {
     if (process.env.ENGINE_SCHEMA_TAG) {
