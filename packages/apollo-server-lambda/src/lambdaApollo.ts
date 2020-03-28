@@ -39,13 +39,27 @@ export function graphqlLambda(
         statusCode: 500,
       });
     }
+
+    const contentType = event.headers["content-type"] || event.headers["Content-Type"];
+    let query: Record<string, any> | Record<string, any>[];
+
+    if (contentType && contentType.startsWith("multipart/form-data")
+      && event.httpMethod === 'POST' && event.body
+    ) {
+      query = event.body as any;
+    }
+    else if (event.httpMethod === 'POST' && event.body) {
+      query = JSON.parse(event.body);
+    } else if (event.queryStringParameters) {
+      query = event.queryStringParameters;
+    } else {
+      throw new Error(`Apollo Server expects corrctly formatted body`);
+    }
+
     runHttpQuery([event, context], {
       method: event.httpMethod,
       options: options,
-      query:
-        event.httpMethod === 'POST' && event.body
-          ? JSON.parse(event.body)
-          : event.queryStringParameters,
+      query,
       request: {
         url: event.path,
         method: event.httpMethod,
