@@ -43,17 +43,14 @@ export function graphqlLambda(
     const contentType = event.headers["content-type"] || event.headers["Content-Type"];
     let query: Record<string, any> | Record<string, any>[];
 
-    if (contentType && contentType.startsWith("multipart/form-data")
-      && event.httpMethod === 'POST' && event.body
+    if (event.body && event.httpMethod === 'POST' &&
+      contentType && contentType.startsWith("multipart/form-data")
     ) {
       query = event.body as any;
-    }
-    else if (event.httpMethod === 'POST' && event.body) {
+    } else if (event.body && event.httpMethod === 'POST') {
       query = JSON.parse(event.body);
-    } else if (event.queryStringParameters) {
-      query = event.queryStringParameters;
     } else {
-      throw new Error(`Apollo Server expects corrctly formatted body`);
+      query = event.queryStringParameters || {};
     }
 
     runHttpQuery([event, context], {
