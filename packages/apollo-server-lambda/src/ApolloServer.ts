@@ -265,7 +265,6 @@ export class ApolloServer extends ApolloServerBase {
           );
           request.push(null);
           request.headers = event.headers;
-          request.headers["content-type"] = contentType;
           processFileUploads(request, response, this.uploadsConfig || {})
             .then(body => {
               event.body = body as any;
