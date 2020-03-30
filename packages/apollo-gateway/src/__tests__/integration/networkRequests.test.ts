@@ -4,6 +4,8 @@ import { Logger } from 'apollo-server-types';
 import { ApolloGateway, GCS_RETRY_COUNT, getDefaultGcsFetcher } from '../..';
 import {
   mockSDLQuerySuccess,
+  mockServiceHealthCheckSuccess,
+  mockServiceHealthCheck,
   mockStorageSecretSuccess,
   mockStorageSecret,
   mockCompositionConfigLinkSuccess,
@@ -276,4 +278,142 @@ it(`Errors when the secret isn't hosted on GCS`, async () => {
   ).rejects.toThrowErrorMatchingInlineSnapshot(
     `"Unable to authenticate with Apollo Graph Manager storage while fetching https://storage.googleapis.com/engine-partial-schema-prod/federated-service/storage-secret/dd55a79d467976346d229a7b12b673ce.json.  Ensure that the API key is configured properly and that a federated service has been pushed.  For details, see https://go.apollo.dev/g/resolve-access-denied."`,
   );
+});
+
+describe('Downstream service health checks', () => {
+  describe('Unmanaged mode', () => {
+    it(`Performs health checks to downstream services on load`, async () => {
+      mockSDLQuerySuccess(service);
+      mockServiceHealthCheckSuccess(service);
+
+      const gateway = new ApolloGateway({
+        logger,
+        serviceList: [{ name: 'accounts', url: service.url }],
+        performServiceHealthChecks: true,
+      });
+
+      await gateway.load();
+      expect(gateway.schema!.getType('User')!.description).toBe('This is my User');
+    });
+
+    it(`Rejects on initial load when health check fails`, async () => {
+      mockSDLQuerySuccess(service);
+      mockServiceHealthCheck(service).reply(500);
+
+      const gateway = new ApolloGateway({
+        serviceList: [{ name: 'accounts', url: service.url }],
+        performServiceHealthChecks: true,
+        logger,
+      });
+
+      await expect(gateway.load()).rejects.toThrowErrorMatchingInlineSnapshot(
+        `"500: Internal Server Error"`,
+      );
+    });
+  });
+
+  describe('Managed mode', () => {
+    it('Performs health checks to downstream services on load', async () => {
+      mockStorageSecretSuccess();
+      mockCompositionConfigLinkSuccess();
+      mockCompositionConfigsSuccess([service]);
+      mockImplementingServicesSuccess(service);
+      mockRawPartialSchemaSuccess(service);
+
+      mockServiceHealthCheckSuccess(service);
+
+      const gateway = new ApolloGateway({ performServiceHealthChecks: true, logger });
+
+      await gateway.load({ engine: { apiKeyHash, graphId } });
+      expect(gateway.schema!.getType('User')!.description).toBe('This is my User');
+    });
+
+    it('Rejects on initial load when health check fails', async () => {
+      mockStorageSecretSuccess();
+      mockCompositionConfigLinkSuccess();
+      mockCompositionConfigsSuccess([service]);
+      mockImplementingServicesSuccess(service);
+      mockRawPartialSchemaSuccess(service);
+
+      mockServiceHealthCheck(service).reply(500);
+
+      const gateway = new ApolloGateway({ performServiceHealthChecks: true, logger });
+
+      await expect(
+        gateway.load({ engine: { apiKeyHash, graphId } }),
+      ).rejects.toThrowErrorMatchingInlineSnapshot(`"500: Internal Server Error"`);
+    });
+
+    it('Rolls over to new schema when health check succeeds', async () => {
+      mockStorageSecretSuccess();
+      mockCompositionConfigLinkSuccess();
+      mockCompositionConfigsSuccess([service]);
+      mockImplementingServicesSuccess(service);
+      mockRawPartialSchemaSuccess(service);
+      mockServiceHealthCheckSuccess(service);
+
+      // Update
+      mockStorageSecretSuccess();
+      mockCompositionConfigLinkSuccess();
+      mockCompositionConfigsSuccess([updatedService]);
+      mockImplementingServicesSuccess(updatedService);
+      mockRawPartialSchemaSuccess(updatedService);
+      mockServiceHealthCheckSuccess(updatedService);
+
+      let resolve: () => void;
+      const schemaChangeBlocker = new Promise(res => (resolve = res));
+      const onChange = jest.fn().mockImplementationOnce(() => resolve());
+
+      const gateway = new ApolloGateway({
+        performServiceHealthChecks: true,
+        logger,
+      });
+      // @ts-ignore for testing purposes, a short pollInterval is ideal so we'll override here
+      gateway.experimental_pollInterval = 100;
+
+      await gateway.load({ engine: { apiKeyHash, graphId } });
+      gateway.onSchemaChange(onChange);
+
+      await schemaChangeBlocker;
+      expect(onChange.mock.calls.length).toBe(1);
+
+      expect(gateway.schema!.getType('User')!.description).toBe('This is my updated User');
+    });
+
+    it('Preserves original schema when health check fails', async () => {
+      mockStorageSecretSuccess();
+      mockCompositionConfigLinkSuccess();
+      mockCompositionConfigsSuccess([service]);
+      mockImplementingServicesSuccess(service);
+      mockRawPartialSchemaSuccess(service);
+      mockServiceHealthCheckSuccess(service);
+
+      // Update
+      mockStorageSecretSuccess();
+      mockCompositionConfigLinkSuccess();
+      mockCompositionConfigsSuccess([updatedService]);
+      mockImplementingServicesSuccess(updatedService);
+      mockRawPartialSchemaSuccess(updatedService);
+      mockServiceHealthCheck(updatedService).reply(500);
+
+      let resolve: () => void;
+      const schemaChangeBlocker = new Promise(res => (resolve = res));
+
+      const onChange = jest
+        .fn()
+        .mockImplementationOnce(() => resolve())
+
+      const gateway = new ApolloGateway({ performServiceHealthChecks: true, logger });
+      // @ts-ignore for testing purposes, a short pollInterval is ideal so we'll override here
+      gateway.experimental_pollInterval = 300;
+
+      await gateway.load({ engine: { apiKeyHash, graphId } });
+      gateway.onSchemaChange(onChange);
+
+      await schemaChangeBlocker;
+      expect(onChange.mock.calls.length).toBe(1);
+
+      expect(gateway.schema!.getType('User')!.description).toBe('This is my User');
+    });
+  })
 });
