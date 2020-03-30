@@ -70,6 +70,7 @@ import {
 import { Headers } from 'apollo-server-env';
 import { buildServiceDefinition } from '@apollographql/apollo-tools';
 import { Logger } from "apollo-server-types";
+import { plugin as pluginTracing } from "apollo-tracing";
 
 const NoIntrospection = (context: ValidationContext) => ({
   Field(node: FieldDefinitionNode) {
@@ -783,11 +784,13 @@ export class ApolloServerBase {
   }
 
   private ensurePluginInstantiation(plugins?: PluginDefinition[]): void {
-    if (!plugins || !plugins.length) {
-      return;
+    const pluginsToInit = [...plugins || []];
+
+    if (this.config.tracing) {
+      pluginsToInit.push(pluginTracing())
     }
 
-    this.plugins = plugins.map(plugin => {
+    this.plugins = pluginsToInit.map(plugin => {
       if (typeof plugin === 'function') {
         return plugin();
       }

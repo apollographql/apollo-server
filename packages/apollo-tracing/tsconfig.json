@@ -8,5 +8,6 @@
   "exclude": ["**/__tests__", "**/__mocks__"],
   "references": [
     { "path": "../graphql-extensions" },
+    { "path": "../apollo-server-plugin-base" },
   ]
 }
