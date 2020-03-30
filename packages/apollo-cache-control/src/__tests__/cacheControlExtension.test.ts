@@ -1,59 +1,110 @@
 import { ResponsePath, GraphQLError } from 'graphql';
 import { GraphQLResponse } from 'graphql-extensions';
 import { Headers } from 'apollo-server-env';
-import { CacheControlExtension, CacheScope } from '../';
+import {
+  CacheScope,
+  CacheControlExtensionOptions,
+  CacheHint,
+  __testing__,
+  plugin,
+} from '../';
+const { addHint, computeOverallCachePolicy } = __testing__;
+import {
+  GraphQLRequestContextWillSendResponse,
+} from 'apollo-server-plugin-base';
+import pluginTestHarness from 'apollo-server-core/dist/utils/pluginTestHarness';
 
 describe('CacheControlExtension', () => {
-  let cacheControlExtension: CacheControlExtension;
-
-  beforeEach(() => {
-    cacheControlExtension = new CacheControlExtension();
-  });
-
   describe('willSendResponse', () => {
-    let graphqlResponse: GraphQLResponse;
+    function makePluginWithOptions({
+      pluginInitializationOptions,
+      overallCachePolicy,
+      errors = false,
+    }: {
+      pluginInitializationOptions?: CacheControlExtensionOptions;
+      overallCachePolicy?: Required<CacheHint>;
+      errors?: boolean;
+    } = Object.create(null)) {
+      const pluginInstance = plugin(pluginInitializationOptions);
 
-    beforeEach(() => {
-      cacheControlExtension.options.calculateHttpHeaders = true;
-      cacheControlExtension.computeOverallCachePolicy = () => ({
+      return pluginTestHarness({
+        pluginInstance,
+        overallCachePolicy,
+        graphqlRequest: { query: 'does not matter' },
+        executor: () => {
+          const response: GraphQLResponse = {
+            http: {
+              headers: new Headers(),
+            },
+            data: { test: 'test' },
+          };
+
+          if (errors) {
+            response.errors = [new GraphQLError('Test Error')];
+          }
+
+          return response;
+        },
+      });
+    }
+
+    describe('HTTP cache-control header', () => {
+      const overallCachePolicy: Required<CacheHint> = {
         maxAge: 300,
         scope: CacheScope.Public,
-      });
-      graphqlResponse = {
-        http: {
-          headers: new Headers(),
-        },
-        data: { test: 'test' },
       };
-    });
 
-    it('sets cache-control header', () => {
-      cacheControlExtension.willSendResponse &&
-        cacheControlExtension.willSendResponse({ graphqlResponse });
-      expect(graphqlResponse.http!.headers.get('Cache-Control')).toBe(
-        'max-age=300, public',
-      );
-    });
+      it('is set when calculateHttpHeaders is set to true', async () => {
+        const requestContext = await makePluginWithOptions({
+          pluginInitializationOptions: {
+            calculateHttpHeaders: true,
+          },
+          overallCachePolicy,
+        });
+        expect(requestContext.response.http!.headers.get('Cache-Control')).toBe(
+          'max-age=300, public',
+        );
+      });
 
-    const shouldNotSetCacheControlHeader = () => {
-      cacheControlExtension.willSendResponse &&
-        cacheControlExtension.willSendResponse({ graphqlResponse });
-      expect(graphqlResponse.http!.headers.get('Cache-Control')).toBeNull();
-    };
+      const shouldNotSetCacheControlHeader = (
+        requestContext: GraphQLRequestContextWillSendResponse<any>,
+      ) => {
+        expect(
+          requestContext.response.http!.headers.get('Cache-Control'),
+        ).toBeNull();
+      };
 
-    it('does not set cache-control header if calculateHttpHeaders is set to false', () => {
-      cacheControlExtension.options.calculateHttpHeaders = false;
-      shouldNotSetCacheControlHeader();
-    });
+      it('is not set when calculateHttpHeaders is set to false', async () => {
+        const requestContext = await makePluginWithOptions({
+          pluginInitializationOptions: {
+            calculateHttpHeaders: false,
+          },
+          overallCachePolicy,
+        });
+        shouldNotSetCacheControlHeader(requestContext);
+      });
 
-    it('does not set cache-control header if graphqlResponse has errors', () => {
-      graphqlResponse.errors = [new GraphQLError('Test Error')];
-      shouldNotSetCacheControlHeader();
-    });
+      it('is not set if response has errors', async () => {
+        const requestContext = await makePluginWithOptions({
+          pluginInitializationOptions: {
+            calculateHttpHeaders: false,
+          },
+          overallCachePolicy,
+          errors: true,
+        });
+        shouldNotSetCacheControlHeader(requestContext);
+      });
 
-    it('does not set cache-control header if there is no overall cache policy', () => {
-      cacheControlExtension.computeOverallCachePolicy = () => undefined;
-      shouldNotSetCacheControlHeader();
+      it('does not set cache-control header if there is no overall cache policy', async () => {
+        const requestContext = await makePluginWithOptions({
+          pluginInitializationOptions: {
+            calculateHttpHeaders: false,
+          },
+          overallCachePolicy: undefined,
+          errors: true,
+        });
+        shouldNotSetCacheControlHeader(requestContext);
+      });
     });
   });
 
@@ -71,46 +122,49 @@ describe('CacheControlExtension', () => {
       prev: responseSubPath,
     };
 
+    const hints = new Map();
+    afterEach(() => hints.clear());
+
     it('returns undefined without cache hints', () => {
-      const cachePolicy = cacheControlExtension.computeOverallCachePolicy();
+      const cachePolicy = computeOverallCachePolicy(hints);
       expect(cachePolicy).toBeUndefined();
     });
 
     it('returns lowest max age value', () => {
-      cacheControlExtension.addHint(responsePath, { maxAge: 10 });
-      cacheControlExtension.addHint(responseSubPath, { maxAge: 20 });
+      addHint(hints, responsePath, { maxAge: 10 });
+      addHint(hints, responseSubPath, { maxAge: 20 });
 
-      const cachePolicy = cacheControlExtension.computeOverallCachePolicy();
+      const cachePolicy = computeOverallCachePolicy(hints);
       expect(cachePolicy).toHaveProperty('maxAge', 10);
     });
 
     it('returns undefined if any cache hint has a maxAge of 0', () => {
-      cacheControlExtension.addHint(responsePath, { maxAge: 120 });
-      cacheControlExtension.addHint(responseSubPath, { maxAge: 0 });
-      cacheControlExtension.addHint(responseSubSubPath, { maxAge: 20 });
+      addHint(hints, responsePath, { maxAge: 120 });
+      addHint(hints, responseSubPath, { maxAge: 0 });
+      addHint(hints, responseSubSubPath, { maxAge: 20 });
 
-      const cachePolicy = cacheControlExtension.computeOverallCachePolicy();
+      const cachePolicy = computeOverallCachePolicy(hints);
       expect(cachePolicy).toBeUndefined();
     });
 
     it('returns PUBLIC scope by default', () => {
-      cacheControlExtension.addHint(responsePath, { maxAge: 10 });
+      addHint(hints, responsePath, { maxAge: 10 });
 
-      const cachePolicy = cacheControlExtension.computeOverallCachePolicy();
+      const cachePolicy = computeOverallCachePolicy(hints);
       expect(cachePolicy).toHaveProperty('scope', CacheScope.Public);
     });
 
     it('returns PRIVATE scope if any cache hint has PRIVATE scope', () => {
-      cacheControlExtension.addHint(responsePath, {
+      addHint(hints, responsePath, {
         maxAge: 10,
         scope: CacheScope.Public,
       });
-      cacheControlExtension.addHint(responseSubPath, {
+      addHint(hints, responseSubPath, {
         maxAge: 10,
         scope: CacheScope.Private,
       });
 
-      const cachePolicy = cacheControlExtension.computeOverallCachePolicy();
+      const cachePolicy = computeOverallCachePolicy(hints);
       expect(cachePolicy).toHaveProperty('scope', CacheScope.Private);
     });
   });
