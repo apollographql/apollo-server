@@ -1,5 +1,6 @@
 import nock from 'nock';
 import { fetch } from 'apollo-server-env';
+import { Logger } from 'apollo-server-types';
 import { ApolloGateway, GCS_RETRY_COUNT, getDefaultGcsFetcher } from '../..';
 import {
   mockSDLQuerySuccess,
@@ -69,6 +70,7 @@ const updatedService: MockService = {
 };
 
 let fetcher: typeof fetch;
+let logger: Logger;
 
 beforeEach(() => {
   if (!nock.isActive()) nock.activate();
@@ -80,6 +82,18 @@ beforeEach(() => {
       maxTimeout: 0,
     },
   });
+
+  const warn = jest.fn();
+  const debug = jest.fn();
+  const error = jest.fn();
+  const info = jest.fn();
+
+  logger = {
+    warn,
+    debug,
+    error,
+    info,
+  };
 });
 
 afterEach(() => {
@@ -94,6 +108,7 @@ it('Queries remote endpoints for their SDLs', async () => {
 
   const gateway = new ApolloGateway({
     serviceList: [{ name: 'accounts', url: service.url }],
+    logger
   });
   await gateway.load();
   expect(gateway.schema!.getType('User')!.description).toBe('This is my User');
@@ -106,7 +121,7 @@ it('Extracts service definitions from remote storage', async () => {
   mockImplementingServicesSuccess(service);
   mockRawPartialSchemaSuccess(service);
 
-  const gateway = new ApolloGateway({});
+  const gateway = new ApolloGateway({ logger });
 
   await gateway.load({ engine: { apiKeyHash, graphId } });
   expect(gateway.schema!.getType('User')!.description).toBe('This is my User');
@@ -117,7 +132,6 @@ it.each([
   ['not warned', 'absent'],
 ])('conflicting configurations are %s about when %s', async (_word, mode) => {
   const isConflict = mode === 'present';
-  const spyConsoleWarn = jest.spyOn(console, 'warn');
   let blockerResolve: () => void;
   const blocker = new Promise(resolve => (blockerResolve = resolve));
   const original = loadServicesFromStorage.getServiceDefinitionsFromStorage;
@@ -149,18 +163,18 @@ it.each([
     serviceList: [
       { name: 'accounts', url: service.url },
     ],
+    logger
   });
 
   await gateway.load({ engine: { apiKeyHash, graphId } });
   await blocker; // Wait for the definitions to be "fetched".
 
   (isConflict
-    ? expect(spyConsoleWarn)
-    : expect(spyConsoleWarn).not
+    ? expect(logger.warn)
+    : expect(logger.warn).not
   ).toHaveBeenCalledWith(expect.stringMatching(
     /A local gateway service list is overriding an Apollo Graph Manager managed configuration/));
   spyGetServiceDefinitionsFromStorage.mockRestore();
-  spyConsoleWarn.mockRestore();
 });
 
 it('Rollsback to a previous schema when triggered', async () => {
@@ -195,7 +209,7 @@ it('Rollsback to a previous schema when triggered', async () => {
     .mockImplementationOnce(() => firstResolve())
     .mockImplementationOnce(() => secondResolve());
 
-  const gateway = new ApolloGateway();
+  const gateway = new ApolloGateway({ logger });
   // @ts-ignore for testing purposes, a short pollInterval is ideal so we'll override here
   gateway.experimental_pollInterval = 100;
 
@@ -231,7 +245,7 @@ it(`Retries GCS (up to ${GCS_RETRY_COUNT} times) on failure for each request and
   failNTimes(GCS_RETRY_COUNT, () => mockRawPartialSchema(service));
   mockRawPartialSchemaSuccess(service);
 
-  const gateway = new ApolloGateway({ fetcher });
+  const gateway = new ApolloGateway({ fetcher, logger });
 
   await gateway.load({ engine: { apiKeyHash, graphId } });
   expect(gateway.schema!.getType('User')!.description).toBe('This is my User');
@@ -240,7 +254,7 @@ it(`Retries GCS (up to ${GCS_RETRY_COUNT} times) on failure for each request and
 it(`Fails after the ${GCS_RETRY_COUNT + 1}th attempt to reach GCS`, async () => {
   failNTimes(GCS_RETRY_COUNT + 1, mockStorageSecret);
 
-  const gateway = new ApolloGateway({ fetcher });
+  const gateway = new ApolloGateway({ fetcher, logger });
   await expect(
     gateway.load({ engine: { apiKeyHash, graphId } }),
   ).rejects.toThrowErrorMatchingInlineSnapshot(
@@ -256,7 +270,7 @@ it(`Errors when the secret isn't hosted on GCS`, async () => {
     { 'content-type': 'application/xml' },
   );
 
-  const gateway = new ApolloGateway({ fetcher });
+  const gateway = new ApolloGateway({ fetcher, logger });
   await expect(
     gateway.load({ engine: { apiKeyHash, graphId } }),
   ).rejects.toThrowErrorMatchingInlineSnapshot(
