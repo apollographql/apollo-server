@@ -1,19 +1,11 @@
 import { makeExecutableSchema, addMockFunctionsToSchema } from 'graphql-tools';
-import {
-  GraphQLExtensionStack,
-  enableGraphQLExtensions,
-} from 'graphql-extensions';
 import { graphql, GraphQLError } from 'graphql';
 import { Request } from 'node-fetch';
-import {
-  EngineReportingExtension,
-  makeTraceDetails,
-  makeHTTPRequestHeaders,
-} from '../extension';
+import { makeTraceDetails, makeHTTPRequestHeaders, plugin } from '../extension';
 import { Headers } from 'apollo-server-env';
-import { InMemoryLRUCache } from 'apollo-server-caching';
 import { AddTraceArgs } from '../agent';
 import { Trace } from 'apollo-engine-reporting-protobuf';
+import pluginTestHarness from 'apollo-server-core/dist/utils/pluginTestHarness';
 
 it('trace construction', async () => {
   const typeDefs = `
@@ -53,41 +45,33 @@ it('trace construction', async () => {
 
   const schema = makeExecutableSchema({ typeDefs });
   addMockFunctionsToSchema({ schema });
-  enableGraphQLExtensions(schema);
 
   const traces: Array<AddTraceArgs> = [];
   async function addTrace(args: AddTraceArgs) {
     traces.push(args);
   }
 
-  const reportingExtension = new EngineReportingExtension(
-    {},
-    addTrace,
-    'schema-hash',
-  );
-  const stack = new GraphQLExtensionStack([reportingExtension]);
-  const requestDidEnd = stack.requestDidStart({
-    request: new Request('http://localhost:123/foo'),
-    queryString: query,
-    requestContext: {
-      request: {
-        query,
-        operationName: 'q',
-        extensions: {
-          clientName: 'testing suite',
-        },
-      },
-      context: {},
-      cache: new InMemoryLRUCache(),
-    },
-    context: {},
-  });
-  await graphql({
+  const pluginInstance = plugin({ /* no options!*/ }, addTrace);
+
+  pluginTestHarness({
+    pluginInstance,
     schema,
-    source: query,
-    contextValue: { _extensionStack: stack },
+    graphqlRequest: {
+      query,
+      operationName: 'q',
+      extensions: {
+        clientName: 'testing suite',
+      },
+      http: new Request('http://localhost:123/foo'),
+    },
+    executor: async ({ request: { query: source }}) => {
+      return await graphql({
+        schema,
+        source,
+      });
+    },
   });
-  requestDidEnd();
+
   // XXX actually write some tests
 });
 

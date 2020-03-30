@@ -78,7 +78,7 @@ export class EngineReportingTreeBuilder {
     };
   }
 
-  public didEncounterErrors(errors: GraphQLError[]) {
+  public didEncounterErrors(errors: readonly GraphQLError[]) {
     errors.forEach(err => {
       if (
         err instanceof PersistedQueryNotFoundError ||

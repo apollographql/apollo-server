@@ -11,10 +11,11 @@ import {
 import { fetch, RequestAgent, Response } from 'apollo-server-env';
 import retry from 'async-retry';
 
-import { EngineReportingExtension } from './extension';
+import { plugin } from './extension';
 import { GraphQLRequestContext, Logger, SchemaHash } from 'apollo-server-types';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import { defaultEngineReportingSignature } from 'apollo-graphql';
+import { ApolloServerPlugin } from "apollo-server-plugin-base";
 
 export interface ClientInfo {
   clientName?: string;
@@ -278,12 +279,8 @@ export class EngineReportingAgent<TContext = any> {
     handleLegacyOptions(this.options);
   }
 
-  public newExtension(schemaHash: SchemaHash): EngineReportingExtension<TContext> {
-    return new EngineReportingExtension<TContext>(
-      this.options,
-      this.addTrace.bind(this),
-      schemaHash,
-    );
+  public newExtension(): ApolloServerPlugin<TContext> {
+    return plugin(this.options, this.addTrace.bind(this));
   }
 
   public async addTrace({

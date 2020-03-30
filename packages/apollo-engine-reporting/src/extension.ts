@@ -22,6 +22,9 @@ import {
   SendValuesBaseOptions,
 } from './agent';
 import { EngineReportingTreeBuilder } from './treeBuilder';
+import { ApolloServerPlugin } from "apollo-server-plugin-base";
+
+type Mutable<T> = { -readonly [P in keyof T]: T[P] };
 
 const clientNameHeaderKey = 'apollographql-client-name';
 const clientReferenceIdHeaderKey = 'apollographql-client-reference-id';
@@ -207,6 +210,177 @@ export class EngineReportingExtension<TContext = any>
     this.treeBuilder.didEncounterErrors(errors);
   }
 }
+
+// This plugin is instantiated once at server start-up. Each request that the
+// server processes will invoke the `requestDidStart` method which will produce
+// a trace (in protobuf Trace format) for that single request. When the request
+// is done, it passes the Trace back to its associated EngineReportingAgent via
+// the addTrace callback. This class isn't for direct use; its constructor is a
+// private API for communicating with EngineReportingAgent.
+export const plugin = <TContext>(
+  options: EngineReportingOptions<TContext> = Object.create(null),
+  addTrace: (args: AddTraceArgs) => Promise<void>,
+  // schemaHash: string,
+): ApolloServerPlugin<TContext> => {
+  const logger: Logger = options.logger || console;
+  const generateClientInfo: GenerateClientInfo<TContext> =
+    options.generateClientInfo || defaultGenerateClientInfo;
+
+
+  return {
+    requestDidStart(requestContext) {
+      let queryString: string | undefined;
+      const treeBuilder: EngineReportingTreeBuilder =
+        new EngineReportingTreeBuilder({
+          rewriteError: options.rewriteError,
+          logger: requestContext.logger || logger,
+        });
+
+      const metrics: NonNullable<typeof requestContext['metrics']> =
+        ((requestContext as Mutable<typeof requestContext>)
+          .metrics = requestContext.metrics || Object.create(null));
+
+      treeBuilder.startTiming();
+      metrics.startHrTime = treeBuilder.startHrTime;
+
+      if (requestContext.request.http) {
+        treeBuilder.trace.http = new Trace.HTTP({
+          method:
+            Trace.HTTP.Method[
+              requestContext.request.http
+                .method as keyof typeof Trace.HTTP.Method
+            ] || Trace.HTTP.Method.UNKNOWN,
+          // Host and path are not used anywhere on the backend, so let's not bother
+          // trying to parse request.url to get them, which is a potential
+          // source of bugs because integrations have different behavior here.
+          // On Node's HTTP module, request.url only includes the path
+          // (see https://nodejs.org/api/http.html#http_message_url)
+          // The same is true on Lambda (where we pass event.path)
+          // But on environments like Cloudflare we do get a complete URL.
+          host: null,
+          path: null,
+        });
+      }
+
+      let preflightDone: boolean = false;
+      function ensurePreflight() {
+        if (preflightDone) return;
+        preflightDone = true;
+
+        if (options.sendHeaders) {
+          if (requestContext.request.http && treeBuilder.trace.http) {
+            makeHTTPRequestHeaders(
+              treeBuilder.trace.http,
+              requestContext.request.http.headers,
+              options.sendHeaders,
+            );
+          }
+        }
+
+        if (metrics.persistedQueryHit) {
+          treeBuilder.trace.persistedQueryHit = true;
+        }
+        if (metrics.persistedQueryRegister) {
+          treeBuilder.trace.persistedQueryRegister = true;
+        }
+
+        // Generally, we'll get queryString here and not parsedQuery; we only get
+        // parsedQuery if you're using an OperationStore. In normal cases we'll
+        // get our documentAST in the execution callback after it is parsed.
+        queryString = requestContext.source;
+
+        if (requestContext.request.variables) {
+          treeBuilder.trace.details = makeTraceDetails(
+            requestContext.request.variables,
+            options.sendVariableValues,
+            queryString,
+          );
+        }
+
+        const clientInfo = generateClientInfo(requestContext);
+        if (clientInfo) {
+          // While clientAddress could be a part of the protobuf, we'll ignore it for
+          // now, since the backend does not group by it and Engine frontend will not
+          // support it in the short term
+          const { clientName, clientVersion, clientReferenceId } = clientInfo;
+          // the backend makes the choice of mapping clientName => clientReferenceId if
+          // no custom reference id is provided
+          treeBuilder.trace.clientVersion = clientVersion || '';
+          treeBuilder.trace.clientReferenceId = clientReferenceId || '';
+          treeBuilder.trace.clientName = clientName || '';
+        }
+      }
+
+      let endDone: boolean = false;
+      function didEnd() {
+        if (endDone) return;
+        endDone = true;
+        treeBuilder.stopTiming();
+
+        treeBuilder.trace.fullQueryCacheHit = !!metrics.responseCacheHit;
+        treeBuilder.trace.forbiddenOperation = !!metrics.forbiddenOperation;
+        treeBuilder.trace.registeredOperation = !!metrics.registeredOperation;
+
+        // If the user did not explicitly specify an operation name (which we
+        // would have saved in `executionDidStart`), but the request pipeline made
+        // it far enough to figure out what the operation name must be and store
+        // it on requestContext.operationName, use that name.  (Note that this
+        // depends on the assumption that the RequestContext passed to
+        // requestDidStart, which does not yet have operationName, will be mutated
+        // to add operationName later.)
+        const operationName = requestContext.operationName || '';
+
+        // If this was a federated operation and we're the gateway, add the query plan
+        // to the trace.
+        if (metrics.queryPlanTrace) {
+          treeBuilder.trace.queryPlan = metrics.queryPlanTrace;
+        }
+
+        addTrace({
+          operationName,
+          queryHash: requestContext.queryHash!,
+          documentAST: requestContext.document,
+          queryString,
+          trace: treeBuilder.trace,
+          schemaHash: requestContext.schemaHash,
+        });
+      }
+
+      return {
+        parsingDidStart() {
+          ensurePreflight();
+        },
+
+        validationDidStart() {
+          ensurePreflight();
+        },
+
+        didResolveOperation() {
+          ensurePreflight();
+        },
+
+        executionDidStart() {
+          ensurePreflight();
+          return didEnd;
+        },
+
+        willResolveField(...args) {
+          const [, , , info] = args;
+          return treeBuilder.willResolveField(info);
+          // We could save the error into the trace during the end handler, but
+          // it won't have all the information that graphql-js adds to it later,
+          // like 'locations'.
+        },
+
+        didEncounterErrors({ errors }) {
+          ensurePreflight();
+          treeBuilder.didEncounterErrors(errors);
+          didEnd();
+        },
+      };
+    }
+  };
+};
 
 // Helpers for producing traces.
 
