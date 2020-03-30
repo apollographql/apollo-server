@@ -2,7 +2,7 @@ import nock from 'nock';
 import { fetch } from 'apollo-server-env';
 import { ApolloGateway, GCS_RETRY_COUNT, getDefaultGcsFetcher } from '../..';
 import {
-  mockLocalhostSDLQuery,
+  mockSDLQuerySuccess,
   mockStorageSecretSuccess,
   mockStorageSecret,
   mockCompositionConfigLinkSuccess,
@@ -23,11 +23,18 @@ import loadServicesFromStorage = require("../../loadServicesFromStorage");
 // Anything wrapped within the gql tag within this file is just a string, not an AST.
 const gql = String.raw;
 
-const service = {
-  implementingServicePath: 'service-definition.json',
+export interface MockService {
+  gcsDefinitionPath: string;
+  partialSchemaPath: string;
+  url: string;
+  sdl: string;
+}
+
+const service: MockService = {
+  gcsDefinitionPath: 'service-definition.json',
   partialSchemaPath: 'accounts-partial-schema.json',
-  federatedServiceURL: 'http://localhost:4001',
-  federatedServiceSchema: gql`
+  url: 'http://localhost:4001',
+  sdl: gql`
     extend type Query {
       me: User
       everyone: [User]
@@ -42,11 +49,11 @@ const service = {
   `,
 };
 
-const updatedService = {
-  implementingServicePath: 'updated-service-definition.json',
+const updatedService: MockService = {
+  gcsDefinitionPath: 'updated-service-definition.json',
   partialSchemaPath: 'updated-accounts-partial-schema.json',
-  federatedServiceURL: 'http://localhost:4002',
-  federatedServiceSchema: gql`
+  url: 'http://localhost:4002',
+  sdl: gql`
     extend type Query {
       me: User
       everyone: [User]
@@ -83,24 +90,19 @@ afterEach(() => {
 });
 
 it('Queries remote endpoints for their SDLs', async () => {
-  mockLocalhostSDLQuery({ url: service.federatedServiceURL }).reply(200, {
-    data: { _service: { sdl: service.federatedServiceSchema } },
-  });
+  mockSDLQuerySuccess(service);
 
   const gateway = new ApolloGateway({
-    serviceList: [
-      { name: 'accounts', url: `${service.federatedServiceURL}/graphql` },
-    ],
+    serviceList: [{ name: 'accounts', url: service.url }],
   });
   await gateway.load();
   expect(gateway.schema!.getType('User')!.description).toBe('This is my User');
 });
 
-// This test is maybe a bit terrible, but IDK a better way to mock all the requests
 it('Extracts service definitions from remote storage', async () => {
   mockStorageSecretSuccess();
   mockCompositionConfigLinkSuccess();
-  mockCompositionConfigsSuccess([service.implementingServicePath]);
+  mockCompositionConfigsSuccess([service]);
   mockImplementingServicesSuccess(service);
   mockRawPartialSchemaSuccess(service);
 
@@ -134,20 +136,18 @@ it.each([
   mockStorageSecretSuccess();
   if (isConflict) {
     mockCompositionConfigLinkSuccess();
-    mockCompositionConfigsSuccess([service.implementingServicePath]);
+    mockCompositionConfigsSuccess([service]);
     mockImplementingServicesSuccess(service);
     mockRawPartialSchemaSuccess(service);
   } else {
     mockCompositionConfigLink().reply(403);
   }
 
-  mockLocalhostSDLQuery({ url: service.federatedServiceURL }).reply(200, {
-    data: { _service: { sdl: service.federatedServiceSchema } },
-  });
+  mockSDLQuerySuccess(service);
 
   const gateway = new ApolloGateway({
     serviceList: [
-      { name: 'accounts', url: `${service.federatedServiceURL}/graphql` },
+      { name: 'accounts', url: service.url },
     ],
   });
 
@@ -167,21 +167,21 @@ it('Rollsback to a previous schema when triggered', async () => {
   // Init
   mockStorageSecretSuccess();
   mockCompositionConfigLinkSuccess();
-  mockCompositionConfigsSuccess([service.implementingServicePath]);
+  mockCompositionConfigsSuccess([service]);
   mockImplementingServicesSuccess(service);
   mockRawPartialSchemaSuccess(service);
 
   // Update 1
   mockStorageSecretSuccess();
   mockCompositionConfigLinkSuccess();
-  mockCompositionConfigsSuccess([updatedService.implementingServicePath]);
+  mockCompositionConfigsSuccess([updatedService]);
   mockImplementingServicesSuccess(updatedService);
   mockRawPartialSchemaSuccess(updatedService);
 
   // Rollback
   mockStorageSecretSuccess();
   mockCompositionConfigLinkSuccess();
-  mockCompositionConfigsSuccess([service.implementingServicePath]);
+  mockCompositionConfigsSuccess([service]);
   mockImplementingServices(service).reply(304);
   mockRawPartialSchema(service).reply(304);
 
@@ -223,7 +223,7 @@ it(`Retries GCS (up to ${GCS_RETRY_COUNT} times) on failure for each request and
   mockCompositionConfigLinkSuccess();
 
   failNTimes(GCS_RETRY_COUNT, mockCompositionConfigs);
-  mockCompositionConfigsSuccess([service.implementingServicePath]);
+  mockCompositionConfigsSuccess([service]);
 
   failNTimes(GCS_RETRY_COUNT, () => mockImplementingServices(service));
   mockImplementingServicesSuccess(service);
