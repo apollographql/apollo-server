@@ -8,7 +8,6 @@ import {
 import { RESTDataSource, RequestOptions } from '../RESTDataSource';
 
 import { HTTPCache } from '../HTTPCache';
-import { Headers } from 'apollo-server-env';
 
 describe('RESTDataSource', () => {
   const store = new Map<string, string>();
