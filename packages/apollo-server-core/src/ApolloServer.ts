@@ -68,7 +68,7 @@ import {
 
 import { Headers } from 'apollo-server-env';
 import { buildServiceDefinition } from '@apollographql/apollo-tools';
-import { keyEnvVar, legacyKeyEnvVar } from 'apollo-engine-reporting';
+import {getEngineApiKey} from "apollo-engine-reporting/dist/agent";
 
 const NoIntrospection = (context: ValidationContext) => ({
   Field(node: FieldDefinitionNode) {
@@ -83,18 +83,6 @@ const NoIntrospection = (context: ValidationContext) => ({
   },
 });
 
-function getEngineApiKey(engine: Config['engine']): string | undefined {
-  const keyFromEnv = process.env[keyEnvVar] || process.env[legacyKeyEnvVar] || '';
-  if (engine === false) {
-    return;
-  } else if (typeof engine === 'object' && engine.apiKey) {
-    return engine.apiKey;
-  } else if (keyFromEnv) {
-    return keyFromEnv;
-  }
-  return;
-}
-
 function getEngineGraphVariant(engine: Config['engine']): string | undefined {
   if (engine === false) {
     return;
@@ -106,7 +94,7 @@ function getEngineGraphVariant(engine: Config['engine']): string | undefined {
 }
 
 function getEngineServiceId(engine: Config['engine']): string | undefined {
-  const engineApiKey = getEngineApiKey(engine);
+  const engineApiKey = getEngineApiKey({engine, shouldWarnOnDeprecatedUsage: false});
   if (engineApiKey) {
     return engineApiKey.split(':', 2)[1];
   }
@@ -310,7 +298,7 @@ export class ApolloServerBase {
     // The truthyness of this value can also be used in other forks of logic
     // related to Engine, as is the case with EngineReportingAgent just below.
     this.engineServiceId = getEngineServiceId(engine);
-    const apiKey = getEngineApiKey(engine);
+    const apiKey = getEngineApiKey({engine, shouldWarnOnDeprecatedUsage: false});
     if (apiKey) {
       this.engineApiKeyHash = createSHA('sha512')
         .update(apiKey)

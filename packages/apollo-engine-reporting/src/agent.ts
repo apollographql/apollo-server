@@ -16,11 +16,6 @@ import { GraphQLRequestContext } from 'apollo-server-types';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import { defaultEngineReportingSignature } from 'apollo-graphql';
 
-// TDOD: Reviewer, should we consider moving these exports to a different package
-// Maybe apollo-server-env?
-export const legacyKeyEnvVar = 'ENGINE_API_KEY';
-export const keyEnvVar = 'APOLLO_KEY'
-
 export interface ClientInfo {
   clientName?: string;
   clientVersion?: string;
@@ -49,6 +44,22 @@ export type VariableValueOptions =
 export type GenerateClientInfo<TContext> = (
   requestContext: GraphQLRequestContext<TContext>,
 ) => ClientInfo;
+
+export function getEngineApiKey({engine, shouldWarnOnDeprecatedUsage = true}: { engine: EngineReportingOptions<any> | boolean | undefined, shouldWarnOnDeprecatedUsage?: boolean }) {
+  if (typeof engine === 'object' && engine.apiKey) {
+    return engine.apiKey;
+  }
+  const legacyApiKeyFromEnv = process.env.ENGINE_API_KEY;
+  const apiKeyFromEnv = process.env.APOLLO_KEY;
+
+  if(legacyApiKeyFromEnv && apiKeyFromEnv) {
+    throw new Error(`Cannot set both APOLLO_KEY and ENGINE_API_KEY. Please only set APOLLO_KEY`);
+  }
+  if(legacyApiKeyFromEnv && shouldWarnOnDeprecatedUsage) {
+    console.warn(`[Deprecation warning] Setting the key via ENGINE_API_KEY is deprecated and will not be supported in future versions.`)
+  }
+  return  apiKeyFromEnv || legacyApiKeyFromEnv || ''
+}
 
 export interface EngineReportingOptions<TContext> {
   /**
@@ -213,8 +224,8 @@ const serviceHeaderDefaults = {
 // EngineReportingExtensions for each request and sends batches of trace reports
 // to the Engine server.
 export class EngineReportingAgent<TContext = any> {
-  private options: EngineReportingOptions<TContext>;
-  private apiKey: string;
+  private readonly options: EngineReportingOptions<TContext>;
+  private readonly apiKey: string;
   private reports: { [schemaHash: string]: FullTracesReport } = Object.create(
     null,
   );
@@ -231,22 +242,12 @@ export class EngineReportingAgent<TContext = any> {
 
   public constructor(options: EngineReportingOptions<TContext> = {}) {
     this.options = options;
-    const legacyApiKeyFromEnv = process.env.ENGINE_API_KEY;
-    const apiKeyFromEnv = process.env.APOLLO_KEY;
 
-    if(legacyApiKeyFromEnv && apiKeyFromEnv) {
-      throw new Error(`Cannot set both ${legacyKeyEnvVar} and ${keyEnvVar}. Please only set ${keyEnvVar}`);
-    }
-
-    this.apiKey = options.apiKey || apiKeyFromEnv || legacyApiKeyFromEnv || '';
+    this.apiKey = getEngineApiKey({engine: this.options});
     if (!this.apiKey) {
       throw new Error(
-        `To use EngineReportingAgent, you must specify an API key via the apiKey option or the ${keyEnvVar} environment variable.`,
+        `To use EngineReportingAgent, you must specify an API key via the apiKey option or the APOLLO_KEY environment variable.`,
       );
-    }
-
-    if(legacyApiKeyFromEnv) {
-      console.warn(`[Deprecation warning] Setting the key via ${legacyKeyEnvVar} is deprecated and will not be supported in future versions.`)
     }
 
     // Since calculating the signature for Engine reporting is potentially an
