@@ -68,6 +68,7 @@ import {
 
 import { Headers } from 'apollo-server-env';
 import { buildServiceDefinition } from '@apollographql/apollo-tools';
+import {getEngineGraphVariant} from "apollo-engine-reporting/dist/agent";
 
 const NoIntrospection = (context: ValidationContext) => ({
   Field(node: FieldDefinitionNode) {
@@ -92,28 +93,6 @@ function getEngineApiKey(engine: Config['engine']): string | undefined {
     return keyFromEnv;
   }
   return;
-}
-
-function getEngineGraphVariant(engine: Config['engine']): string | undefined {
-  if (engine === false) {
-    return;
-  } else if (typeof engine === 'object' && (engine.graphVariant || engine.schemaTag)) {
-    if (engine.graphVariant && engine.schemaTag) {
-      throw new Error('Cannot set both engine.graphVariant and engine.schemaTag. Please use engine.graphVariant.');
-    }
-    if (engine.schemaTag) {
-      console.warn('[Deprecation warning] Usage of engine.schemaTag is deprecated. Please use engine.graphVariant instead.');
-    }
-    return engine.graphVariant || engine.schemaTag;
-  } else {
-    if (process.env.ENGINE_SCHEMA_TAG) {
-      console.warn('[Deprecation warning] Usage of ENGINE_SCHEMA_TAG is deprecated. Please use APOLLO_GRAPH_VARIANT instead.');
-    }
-    if (process.env.ENGINE_SCHEMA_TAG && process.env.APOLLO_GRAPH_VARIANT) {
-      throw new Error('Cannot set both ENGINE_SCHEMA_TAG and APOLLO_GRAPH_VARIANT. Please use APOLLO_GRAPH_VARIANT.')
-    }
-    return process.env.APOLLO_GRAPH_VARIANT || process.env.ENGINE_SCHEMA_TAG;
-  }
 }
 
 function getEngineServiceId(engine: Config['engine']): string | undefined {
