@@ -46,6 +46,7 @@ describe('ApolloServerBase construction', () => {
   });
 
   it('spits out a deprecation warning when passed a schemaTag in construction', () => {
+    const spyConsoleWarn = jest.spyOn(console, 'warn').mockImplementation();
     let serverBase;
     expect(
       () =>
@@ -57,6 +58,8 @@ describe('ApolloServerBase construction', () => {
           },
         }),
     ).not.toThrow();
+    expect(spyConsoleWarn).toBeCalled();
+    spyConsoleWarn.mockRestore();
     (serverBase as unknown as ApolloServerBase).stop();
   });
 
