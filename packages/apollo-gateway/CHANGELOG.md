@@ -3,6 +3,7 @@
 ## vNEXT
 
 - Fix Typescript generic typing for datasource contexts [#3865](https://github.com/apollographql/apollo-server/pull/3865) This is a fix for the `TContext` typings of the gateway's exposed `GraphQLDataSource` implementations. In their current form, they don't work as intended, or in any manner that's useful for typing the `context` property throughout the class methods. This introduces a type argument `TContext` to the class itself (which defaults to `Record<string, any>` for existing implementations) and removes the non-operational type arguments on the class methods themselves.
+- Support APOLLO_KEY for setting the API key for which to report metrics to Apollo Graph Manager and fetch managed configuration for a managed gateway. This change deprecates the ENGINE_API_KEY environment variable in favor of the APOLLO_KEY environment variable and does not allow both to be set. [#3923](https://github.com/apollographql/apollo-server/pull/3923)
 
 ## 0.13.2
 
