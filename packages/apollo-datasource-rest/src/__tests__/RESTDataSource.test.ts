@@ -8,6 +8,7 @@ import {
 import { RESTDataSource, RequestOptions } from '../RESTDataSource';
 
 import { HTTPCache } from '../HTTPCache';
+import { Headers } from 'apollo-server-env';
 
 describe('RESTDataSource', () => {
   const store = new Map<string, string>();
@@ -759,6 +760,55 @@ describe('RESTDataSource', () => {
                 },
               ],
             },
+          },
+        },
+      });
+    });
+
+    it('append response headers on the error as an object', async () => {
+      const dataSource = new (class extends RESTDataSource {
+        baseURL = 'https://api.example.com';
+        appendHeadersToError = true;
+
+        getFoo() {
+          return this.get('foo');
+        }
+      })();
+
+      dataSource.httpCache = httpCache;
+
+      fetch.mockResponseOnce(
+        JSON.stringify({
+          errors: [
+            {
+              message: 'Houston, we have a problem.',
+            },
+          ],
+        }),
+        {
+          'Content-Type': 'application/json',
+          'User-Agent': 'Apollo User Agent',
+        },
+        500,
+      );
+
+      const result = dataSource.getFoo();
+      await expect(result).rejects.toThrow(ApolloError);
+      await expect(result).rejects.toMatchObject({
+        extensions: {
+          response: {
+            status: 500,
+            body: {
+              errors: [
+                {
+                  message: 'Houston, we have a problem.',
+                },
+              ],
+            },
+            headers: {
+              'content-type': 'application/json',
+              'user-agent': 'Apollo User Agent',
+            }
           },
         },
       });

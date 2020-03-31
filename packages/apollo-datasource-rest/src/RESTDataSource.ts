@@ -60,6 +60,8 @@ export abstract class RESTDataSource<TContext = any> extends DataSource {
 
   baseURL?: string;
 
+  appendHeadersToError?: boolean;
+
   // By default, we use the full request URL as the cache key.
   // You can override this to remove query parameters or compute a cache key in any way that makes sense.
   // For example, you could use this to take Vary header fields into account.
@@ -139,13 +141,27 @@ export abstract class RESTDataSource<TContext = any> extends DataSource {
 
     const body = await this.parseBody(response);
 
+    const responseData = {
+      url: response.url,
+      status: response.status,
+      statusText: response.statusText,
+      body,
+    };
+
+    if (this.appendHeadersToError) {
+      const headers: any = {};
+
+      for (let [key, value] of response.headers) {
+        headers[key] = value;
+      }
+
+      Object.assign(responseData, {
+        headers
+      });
+    }
+
     Object.assign(error.extensions, {
-      response: {
-        url: response.url,
-        status: response.status,
-        statusText: response.statusText,
-        body,
-      },
+      response: responseData,
     });
 
     return error;
