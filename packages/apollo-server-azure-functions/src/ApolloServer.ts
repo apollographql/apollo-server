@@ -8,7 +8,6 @@ import {
 } from '@apollographql/graphql-playground-html';
 
 import { graphqlAzureFunction } from './azureFunctionApollo';
-import { legacyKeyEnvVar, keyEnvVar } from 'apollo-engine-reporting';
 
 export interface CreateHandlerOptions {
   cors?: {
@@ -26,12 +25,6 @@ export class ApolloServer extends ApolloServerBase {
   // another place, since the documentation becomes much more complicated when
   // the constructor is not longer shared between all integration
   constructor(options: Config) {
-    if (process.env[keyEnvVar] || process.env[legacyKeyEnvVar] || options.engine) {
-      options.engine = {
-        sendReportsImmediately: true,
-        ...(typeof options.engine !== 'boolean' ? options.engine : {}),
-      };
-    }
     super(options);
   }
 
