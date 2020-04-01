@@ -63,7 +63,7 @@ interface GatewayConfigBase {
   experimental_approximateQueryPlanStoreMiB?: number;
   experimental_autoFragmentization?: boolean;
   fetcher?: typeof fetch;
-  performServiceHealthChecks?: boolean;
+  serviceHealthCheck?: boolean;
 }
 
 interface RemoteGatewayConfig extends GatewayConfigBase {
@@ -358,7 +358,7 @@ export class ApolloGateway implements GraphQLService {
 
     // Run service health checks before we commit and update the new schema.
     // This is the last chance to bail out of a schema update.
-    if (this.config.performServiceHealthChecks) {
+    if (this.config.serviceHealthCheck) {
       // Here we need to construct new datasources based on the new schema info
       // so we can check the health of the services we're _updating to_.
       const serviceMap = result.serviceDefinitions.reduce(
@@ -373,7 +373,7 @@ export class ApolloGateway implements GraphQLService {
       );
 
       try {
-        await this.performServiceHealthChecks(serviceMap);
+        await this.serviceHealthCheck(serviceMap);
       } catch (e) {
         this.logger.error(
           'The gateway did not update its schema due to failed service health checks.  ' +
@@ -431,7 +431,7 @@ export class ApolloGateway implements GraphQLService {
    * @example
    * ```
    * try {
-   *   await gateway.performServiceHealthChecks();
+   *   await gateway.serviceHealthCheck();
    * } catch(e) {
    *   /* your error handling here *\/
    * }
@@ -439,7 +439,7 @@ export class ApolloGateway implements GraphQLService {
    *
    * @param serviceMap {DataSourceMap}
    */
-  protected performServiceHealthChecks(serviceMap: DataSourceMap = this.serviceMap) {
+  protected serviceHealthCheck(serviceMap: DataSourceMap = this.serviceMap) {
     return Promise.all(
       Object.entries(serviceMap).map(([name, { dataSource }]) =>
         dataSource

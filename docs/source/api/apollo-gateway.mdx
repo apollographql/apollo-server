@@ -134,7 +134,7 @@ example of using `ApolloGateway`, see [The gateway](/federation/gateway/).
     });
     ```
 
-  * `performServiceHealthChecks`: `boolean`
+  * `serviceHealthCheck`: `boolean`
 
     When set to true, the gateway will issue a small query (`{ __typename }`) to
     its downstream services on load and on schema update. On load, the gateway
@@ -164,7 +164,7 @@ const server = new ApolloServer({
 });
 ```
 
-### `performServiceHealthChecks`
+### `serviceHealthCheck`
 
 Calling this function on the gateway will issue a small query (`{ __typename }`)
 to each downstream service to ensure they are all responsive. This function

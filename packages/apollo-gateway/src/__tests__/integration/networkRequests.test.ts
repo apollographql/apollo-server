@@ -289,7 +289,7 @@ describe('Downstream service health checks', () => {
       const gateway = new ApolloGateway({
         logger,
         serviceList: [{ name: 'accounts', url: service.url }],
-        performServiceHealthChecks: true,
+        serviceHealthCheck: true,
       });
 
       await gateway.load();
@@ -302,7 +302,7 @@ describe('Downstream service health checks', () => {
 
       const gateway = new ApolloGateway({
         serviceList: [{ name: 'accounts', url: service.url }],
-        performServiceHealthChecks: true,
+        serviceHealthCheck: true,
         logger,
       });
 
@@ -322,7 +322,7 @@ describe('Downstream service health checks', () => {
 
       mockServiceHealthCheckSuccess(service);
 
-      const gateway = new ApolloGateway({ performServiceHealthChecks: true, logger });
+      const gateway = new ApolloGateway({ serviceHealthCheck: true, logger });
 
       await gateway.load({ engine: { apiKeyHash, graphId } });
       expect(gateway.schema!.getType('User')!.description).toBe('This is my User');
@@ -337,7 +337,7 @@ describe('Downstream service health checks', () => {
 
       mockServiceHealthCheck(service).reply(500);
 
-      const gateway = new ApolloGateway({ performServiceHealthChecks: true, logger });
+      const gateway = new ApolloGateway({ serviceHealthCheck: true, logger });
 
       await expect(
         gateway.load({ engine: { apiKeyHash, graphId } }),
@@ -365,7 +365,7 @@ describe('Downstream service health checks', () => {
       const onChange = jest.fn().mockImplementationOnce(() => resolve());
 
       const gateway = new ApolloGateway({
-        performServiceHealthChecks: true,
+        serviceHealthCheck: true,
         logger,
       });
       // @ts-ignore for testing purposes, a short pollInterval is ideal so we'll override here
@@ -403,7 +403,7 @@ describe('Downstream service health checks', () => {
         .fn()
         .mockImplementationOnce(() => resolve())
 
-      const gateway = new ApolloGateway({ performServiceHealthChecks: true, logger });
+      const gateway = new ApolloGateway({ serviceHealthCheck: true, logger });
       // @ts-ignore for testing purposes, a short pollInterval is ideal so we'll override here
       gateway.experimental_pollInterval = 300;
 
