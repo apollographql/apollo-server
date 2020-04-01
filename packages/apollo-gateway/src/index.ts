@@ -424,13 +424,21 @@ export class ApolloGateway implements GraphQLService {
     }
   }
 
-  // This can be used without an argument in order to perform an ad-hoc health check
-  // of the downstream services like so:
-  // try {
-  //   await gateway.performServiceHealthChecks();
-  // } catch(e) {
-  //   /* your error handling here */
-  // }
+  /**
+   * This can be used without an argument in order to perform an ad-hoc health check
+   * of the downstream services like so:
+   *
+   * @example
+   * ```
+   * try {
+   *   await gateway.performServiceHealthChecks();
+   * } catch(e) {
+   *   /* your error handling here *\/
+   * }
+   * ```
+   *
+   * @param serviceMap {DataSourceMap}
+   */
   protected performServiceHealthChecks(serviceMap: DataSourceMap = this.serviceMap) {
     return Promise.all(
       Object.entries(serviceMap).map(([name, { dataSource }]) =>
