@@ -25,7 +25,7 @@
     "node": ">=6"
   },
   "dependencies": {
-    "@apollographql/apollo-tools": "0.4.4",
+    "@apollographql/apollo-tools": "0.4.5",
     "@apollo/federation": "file:packages/apollo-federation",
     "@apollo/gateway": "file:packages/apollo-gateway",
     "apollo-cache-control": "file:packages/apollo-cache-control",
@@ -100,7 +100,7 @@
     "graphql-tag": "2.10.3",
     "graphql-tools": "4.0.7",
     "hapi": "17.8.5",
-    "ioredis": "4.16.0",
+    "ioredis": "4.16.1",
     "jest": "24.9.0",
     "jest-config": "24.9.0",
     "jest-junit": "9.0.0",

@@ -86,10 +86,16 @@ const NoIntrospection = (context: ValidationContext) => ({
 function getEngineGraphVariant(engine: Config['engine']): string | undefined {
   if (engine === false) {
     return;
-  } else if (typeof engine === 'object' && engine.schemaTag) {
-    return engine.schemaTag;
+  } else if (typeof engine === 'object' && (engine.graphVariant || engine.schemaTag)) {
+    return engine.graphVariant || engine.schemaTag;
   } else {
-    return process.env.ENGINE_SCHEMA_TAG;
+    if (process.env.ENGINE_SCHEMA_TAG) {
+      console.warn('[Deprecation warning] Usage of ENGINE_SCHEMA_TAG is deprecated. Please use APOLLO_GRAPH_VARIANT instead.');
+    }
+    if (process.env.ENGINE_SCHEMA_TAG && process.env.APOLLO_GRAPH_VARIANT) {
+      throw new Error('Cannot set both ENGINE_SCHEMA_TAG and APOLLO_GRAPH_VARIANT. Please use APOLLO_GRAPH_VARIANT.')
+    }
+    return process.env.APOLLO_GRAPH_VARIANT || process.env.ENGINE_SCHEMA_TAG;
   }
 }
 
