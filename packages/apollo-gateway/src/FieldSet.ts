@@ -10,6 +10,7 @@ import {
   GraphQLObjectType,
 } from 'graphql';
 import { getResponseName } from './utilities/graphql';
+import { QueryPlanningContext } from './buildQueryPlan';
 
 export interface Field<
   TParent extends GraphQLCompositeType = GraphQLCompositeType
@@ -74,6 +75,7 @@ export const groupByParentType = groupBy<Field, GraphQLCompositeType>(
 
 export function selectionSetFromFieldSet(
   fields: FieldSet,
+  context: QueryPlanningContext,
   parentType?: GraphQLCompositeType,
 ): SelectionSetNode {
   return {
@@ -83,7 +85,7 @@ export function selectionSetFromFieldSet(
         wrapInInlineFragmentIfNeeded(
           Array.from(groupByResponseName(fieldsByParentType).values()).map(
             fieldsByResponseName => {
-              return combineFields(fieldsByResponseName)
+              return combineFields(fieldsByResponseName, context)
                 .fieldNode;
             },
           ),
@@ -118,35 +120,25 @@ function wrapInInlineFragmentIfNeeded(
 
 function combineFields(
   fields: FieldSet,
+  context: QueryPlanningContext
 ): Field {
   const { scope, fieldNode, fieldDef } = fields[0];
   const returnType = getNamedType(fieldDef.type);
 
   if (isCompositeType(returnType)) {
+    const fieldSet = fields.flatMap(field =>
+      context.getSubFields(returnType, field)
+    );
+
     return {
       scope,
       fieldNode: {
         ...fieldNode,
-        selectionSet: mergeSelectionSets(fields.map(field => field.fieldNode)),
+        selectionSet: selectionSetFromFieldSet(fieldSet, context, returnType)
       },
       fieldDef,
     };
   } else {
     return { scope, fieldNode, fieldDef };
   }
-}
-
-function mergeSelectionSets(fieldNodes: FieldNode[]): SelectionSetNode {
-  const selections: SelectionNode[] = [];
-
-  for (const fieldNode of fieldNodes) {
-    if (!fieldNode.selectionSet) continue;
-
-    selections.push(...fieldNode.selectionSet.selections);
-  }
-
-  return {
-    kind: 'SelectionSet',
-    selections,
-  };
 }

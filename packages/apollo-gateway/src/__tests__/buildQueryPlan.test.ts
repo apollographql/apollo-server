@@ -931,7 +931,9 @@ describe('buildQueryPlan', () => {
         query {
           topReviews {
             body
-            author
+            author {
+              username
+            }
             product {
               name
               price
@@ -959,7 +961,9 @@ describe('buildQueryPlan', () => {
               }
               fragment __QueryPlanFragment_1__ on Review {
                 body
-                author
+                author {
+                  username
+                }
                 product {
                   ...__QueryPlanFragment_0__
                 }
@@ -1084,7 +1088,9 @@ describe('buildQueryPlan', () => {
           topReviews {
             id
             body
-            author
+            author {
+              username
+            }
           }
         }
       `;
@@ -1105,7 +1111,9 @@ describe('buildQueryPlan', () => {
             fragment __QueryPlanFragment_0__ on Review {
               id
               body
-              author
+              author {
+                username
+              }
             }
           },
         }
@@ -1117,7 +1125,9 @@ describe('buildQueryPlan', () => {
         query {
           reviews: topReviews {
             content: body
-            author
+            author {
+              username
+            }
             product {
               name
               cost: price
@@ -1145,7 +1155,9 @@ describe('buildQueryPlan', () => {
               }
               fragment __QueryPlanFragment_1__ on Review {
                 content: body
-                author
+                author {
+                  username
+                }
                 product {
                   ...__QueryPlanFragment_0__
                 }

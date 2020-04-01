@@ -117,10 +117,10 @@ function executionNodeForGroup(
   }: FetchGroup,
   parentType?: GraphQLCompositeType,
 ): PlanNode {
-  const selectionSet = selectionSetFromFieldSet(fields, parentType);
+  const selectionSet = selectionSetFromFieldSet(fields, context, parentType);
   const requires =
     requiredFields.length > 0
-      ? selectionSetFromFieldSet(requiredFields)
+      ? selectionSetFromFieldSet(requiredFields, context)
       : undefined;
   const variableUsages = context.getVariableUsages(
     selectionSet,
@@ -685,7 +685,7 @@ function completeField(
     parentGroup.otherDependentGroups.push(...subGroup.dependentGroups);
 
     let definition: FragmentDefinitionNode;
-    let selectionSet = selectionSetFromFieldSet(subGroup.fields, returnType);
+    let selectionSet = selectionSetFromFieldSet(subGroup.fields, context, returnType);
 
     if (context.autoFragmentization && subGroup.fields.length > 2) {
       ({ definition, selectionSet } = getInternalFragment(
@@ -1166,6 +1166,13 @@ export class QueryPlanningContext {
     }
 
     return providedFields;
+  }
+
+  getSubFields(
+    parentType: GraphQLCompositeType,
+    field: Field,
+  ): FieldSet {
+    return collectSubfields(this, parentType, [field]);
   }
 }
 
