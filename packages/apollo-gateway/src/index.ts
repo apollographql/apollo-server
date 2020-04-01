@@ -179,7 +179,10 @@ export function getDefaultGcsFetcher() {
   });
 }
 
-export const HEALTH_CHECK_QUERY = 'query ServiceHealthCheck { __typename }';
+export const HEALTH_CHECK_QUERY =
+  'query __ApolloServiceHealthCheck__ { __typename }';
+export const SERVICE_DEFINITION_QUERY =
+  'query __ApolloGetServiceDefinition__ { _service { sdl } }';
 
 export class ApolloGateway implements GraphQLService {
   public schema?: GraphQLSchema;

@@ -1,5 +1,5 @@
 import nock from 'nock';
-import { HEALTH_CHECK_QUERY } from '../..';
+import { HEALTH_CHECK_QUERY, SERVICE_DEFINITION_QUERY } from '../..';
 import { MockService } from './networkRequests.test';
 
 export const graphId = 'federated-service';
@@ -10,7 +10,7 @@ const accountsService = 'accounts';
 // Service mocks
 function mockSDLQuery({ url }: MockService) {
   return nock(url).post('/', {
-    query: 'query GetServiceDefinition { _service { sdl } }',
+    query: SERVICE_DEFINITION_QUERY,
   });
 }
 

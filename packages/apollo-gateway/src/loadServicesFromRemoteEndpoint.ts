@@ -2,7 +2,7 @@ import { GraphQLRequest } from 'apollo-server-types';
 import { parse } from 'graphql';
 import { Headers, HeadersInit } from 'node-fetch';
 import { GraphQLDataSource } from './datasources/types';
-import { Experimental_UpdateServiceDefinitions } from './';
+import { Experimental_UpdateServiceDefinitions, SERVICE_DEFINITION_QUERY } from './';
 import { ServiceDefinition } from '@apollo/federation';
 
 export async function getServiceDefinitionsFromRemoteEndpoint({
@@ -33,7 +33,7 @@ export async function getServiceDefinitionsFromRemoteEndpoint({
     }
 
     const request: GraphQLRequest = {
-      query: 'query GetServiceDefinition { _service { sdl } }',
+      query: SERVICE_DEFINITION_QUERY,
       http: {
         url,
         method: 'POST',
