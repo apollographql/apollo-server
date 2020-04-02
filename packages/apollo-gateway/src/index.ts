@@ -435,7 +435,7 @@ export class ApolloGateway implements GraphQLService {
    *
    * @param serviceMap {DataSourceMap}
    */
-  protected serviceHealthCheck(serviceMap: DataSourceMap = this.serviceMap) {
+  public serviceHealthCheck(serviceMap: DataSourceMap = this.serviceMap) {
     return Promise.all(
       Object.entries(serviceMap).map(([name, { dataSource }]) =>
         dataSource
