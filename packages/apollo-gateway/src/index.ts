@@ -63,6 +63,7 @@ interface GatewayConfigBase {
   experimental_approximateQueryPlanStoreMiB?: number;
   experimental_autoFragmentization?: boolean;
   fetcher?: typeof fetch;
+  serviceHealthCheck?: boolean;
 }
 
 interface RemoteGatewayConfig extends GatewayConfigBase {
@@ -82,7 +83,7 @@ export type GatewayConfig =
   | LocalGatewayConfig
   | ManagedGatewayConfig;
 
-type DataSourceCache = {
+type DataSourceMap = {
   [serviceName: string]: { url?: string; dataSource: GraphQLDataSource };
 };
 
@@ -178,9 +179,14 @@ export function getDefaultGcsFetcher() {
   });
 }
 
+export const HEALTH_CHECK_QUERY =
+  'query __ApolloServiceHealthCheck__ { __typename }';
+export const SERVICE_DEFINITION_QUERY =
+  'query __ApolloGetServiceDefinition__ { _service { sdl } }';
+
 export class ApolloGateway implements GraphQLService {
   public schema?: GraphQLSchema;
-  protected serviceMap: DataSourceCache = Object.create(null);
+  protected serviceMap: DataSourceMap = Object.create(null);
   protected config: GatewayConfig;
   private logger: Logger;
   protected queryPlanStore?: InMemoryLRUCache<QueryPlan>;
@@ -350,12 +356,41 @@ export class ApolloGateway implements GraphQLService {
       this.logger.info("New service definitions were found.");
     }
 
+    // Run service health checks before we commit and update the new schema.
+    // This is the last chance to bail out of a schema update.
+    if (this.config.serviceHealthCheck) {
+      // Here we need to construct new datasources based on the new schema info
+      // so we can check the health of the services we're _updating to_.
+      const serviceMap = result.serviceDefinitions.reduce(
+        (serviceMap, serviceDef) => {
+          serviceMap[serviceDef.name] = {
+            url: serviceDef.url,
+            dataSource: this.createDataSource(serviceDef),
+          };
+          return serviceMap;
+        },
+        Object.create(null) as DataSourceMap,
+      );
+
+      try {
+        await this.serviceHealthCheck(serviceMap);
+      } catch (e) {
+        this.logger.error(
+          'The gateway did not update its schema due to failed service health checks.  ' +
+          'The gateway will continue to operate with the previous schema and reattempt updates.' + e
+        );
+        throw e;
+      }
+    }
+
     this.compositionMetadata = result.compositionMetadata;
     this.serviceDefinitions = result.serviceDefinitions;
 
     if (this.queryPlanStore) this.queryPlanStore.flush();
 
     this.schema = this.createSchema(result.serviceDefinitions);
+
+    // Notify the schema listeners of the updated schema
     try {
       this.onSchemaChangeListeners.forEach(listener => listener(this.schema!));
     } catch (e) {
@@ -383,6 +418,31 @@ export class ApolloGateway implements GraphQLService {
           },
       );
     }
+  }
+
+  /**
+   * This can be used without an argument in order to perform an ad-hoc health check
+   * of the downstream services like so:
+   *
+   * @example
+   * ```
+   * try {
+   *   await gateway.serviceHealthCheck();
+   * } catch(e) {
+   *   /* your error handling here *\/
+   * }
+   * ```
+   * @throws
+   * @param serviceMap {DataSourceMap}
+   */
+  public serviceHealthCheck(serviceMap: DataSourceMap = this.serviceMap) {
+    return Promise.all(
+      Object.entries(serviceMap).map(([name, { dataSource }]) =>
+        dataSource
+          .process({ request: { query: HEALTH_CHECK_QUERY }, context: {} })
+          .then(response => ({ name, response })),
+      ),
+    );
   }
 
   protected createSchema(serviceList: ServiceDefinition[]) {
@@ -470,22 +530,28 @@ export class ApolloGateway implements GraphQLService {
     )
       return this.serviceMap[serviceDef.name].dataSource;
 
+    const dataSource = this.createDataSource(serviceDef);
+
+    // Cache the created DataSource
+    this.serviceMap[serviceDef.name] = { url: serviceDef.url, dataSource };
+
+    return dataSource;
+  }
+
+  private createDataSource(
+    serviceDef: ServiceEndpointDefinition,
+  ): GraphQLDataSource {
     if (!serviceDef.url && !isLocalConfig(this.config)) {
       this.logger.error(
         `Service definition for service ${serviceDef.name} is missing a url`,
       );
     }
 
-    const dataSource = this.config.buildService
+    return this.config.buildService
       ? this.config.buildService(serviceDef)
       : new RemoteGraphQLDataSource({
           url: serviceDef.url,
         });
-
-    // Cache the created DataSource
-    this.serviceMap[serviceDef.name] = { url: serviceDef.url, dataSource };
-
-    return dataSource;
   }
 
   protected createServices(services: ServiceEndpointDefinition[]) {
@@ -710,7 +776,7 @@ export class ApolloGateway implements GraphQLService {
 
   public async stop() {
     if (this.pollingTimer) {
-      clearInterval(this.pollingTimer);
+      clearTimeout(this.pollingTimer);
       this.pollingTimer = undefined;
     }
   }

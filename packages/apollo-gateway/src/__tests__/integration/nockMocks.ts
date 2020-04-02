@@ -1,4 +1,5 @@
 import nock from 'nock';
+import { HEALTH_CHECK_QUERY, SERVICE_DEFINITION_QUERY } from '../..';
 import { MockService } from './networkRequests.test';
 
 export const graphId = 'federated-service';
@@ -9,7 +10,7 @@ const accountsService = 'accounts';
 // Service mocks
 function mockSDLQuery({ url }: MockService) {
   return nock(url).post('/', {
-    query: 'query GetServiceDefinition { _service { sdl } }',
+    query: SERVICE_DEFINITION_QUERY,
   });
 }
 
@@ -19,6 +20,19 @@ export function mockSDLQuerySuccess(service: MockService) {
   });
 }
 
+export function mockServiceHealthCheck({ url }: MockService) {
+  return nock(url).post('/', {
+    query: HEALTH_CHECK_QUERY,
+  });
+}
+
+export function mockServiceHealthCheckSuccess(service: MockService) {
+  return mockServiceHealthCheck(service).reply(200, {
+    data: { __typename: 'Query' },
+  });
+}
+
+// GCS mocks
 function gcsNock(url: Parameters<typeof nock>[0]): nock.Scope {
   return nock(url, {
     reqheaders: {
