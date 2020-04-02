@@ -34,33 +34,30 @@ describe('ApolloServerBase construction', () => {
     let serverBase;
     expect(
       () =>
-        serverBase = new ApolloServerBase({
+        new ApolloServerBase({
           schema: buildServiceDefinition([{ typeDefs, resolvers }]).schema,
           engine: {
             graphVariant: 'foo',
             apiKey: 'not:real:key',
           },
-        }),
+        }).stop()
     ).not.toThrow();
-    (serverBase as unknown as ApolloServerBase).stop();
   });
 
   it('spits out a deprecation warning when passed a schemaTag in construction', () => {
     const spyConsoleWarn = jest.spyOn(console, 'warn').mockImplementation();
-    let serverBase;
     expect(
       () =>
-        serverBase = new ApolloServerBase({
+        new ApolloServerBase({
           schema: buildServiceDefinition([{ typeDefs, resolvers }]).schema,
           engine: {
             schemaTag: 'foo',
             apiKey: 'not:real:key',
           },
-        }),
+        }).stop()
     ).not.toThrow();
     expect(spyConsoleWarn).toBeCalled();
     spyConsoleWarn.mockRestore();
-    (serverBase as unknown as ApolloServerBase).stop();
   });
 
   it('throws when passed a schemaTag and graphVariant in construction', () => {

@@ -45,6 +45,7 @@ export type GenerateClientInfo<TContext> = (
   requestContext: GraphQLRequestContext<TContext>,
 ) => ClientInfo;
 
+// AS3: Drop support for deprecated bits.
 export function getEngineGraphVariant(engine: EngineReportingOptions<any> | boolean | undefined): string | undefined {
   if (engine === false) {
     return;

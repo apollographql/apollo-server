@@ -3,7 +3,7 @@
 ## vNEXT
 
 - Fix Typescript generic typing for datasource contexts [#3865](https://github.com/apollographql/apollo-server/pull/3865) This is a fix for the `TContext` typings of the gateway's exposed `GraphQLDataSource` implementations. In their current form, they don't work as intended, or in any manner that's useful for typing the `context` property throughout the class methods. This introduces a type argument `TContext` to the class itself (which defaults to `Record<string, any>` for existing implementations) and removes the non-operational type arguments on the class methods themselves.
-- Support `APOLLO_GRAPH_VARIANT` in favor of `ENGINE_SCHEMA_TAG` in order to set the graph variant to fetch managed configuration for. [#3855](https://github.com/apollographql/apollo-server/pull/3855)
+- Deprecated the `APOLLO_SCHEMA_TAG` environment variable in favor of its new name, `APOLLO_GRAPH_VARIANT`.  The functionality remains otherwise identical, but the new name mirrors the name used within Apollo Graph Manager.  Use of the now-deprecated name will result in a deprecation warning and support will be dropped completely in a future "major" update.  To avoid misconfiguration, runtime errors will be thrown if the new and deprecated name are _both_ set. [#3855](https://github.com/apollographql/apollo-server/pull/3855)
 
 ## 0.13.2
 
