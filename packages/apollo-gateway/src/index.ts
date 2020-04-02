@@ -432,7 +432,7 @@ export class ApolloGateway implements GraphQLService {
    *   /* your error handling here *\/
    * }
    * ```
-   *
+   * @throws
    * @param serviceMap {DataSourceMap}
    */
   public serviceHealthCheck(serviceMap: DataSourceMap = this.serviceMap) {
