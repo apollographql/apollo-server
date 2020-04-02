@@ -7,7 +7,7 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 ### vNEXT
 
-- `apollo-engine-reporting` Add support for specifying the graph variant to report metrics on (or fetch managed configuration for, in the case of the gateway) using the `engine.graphVariant` constructor argument or the `APOLLO_GRAPH_VARIANT` environment variable. An error will be thrown if a user attempts to set both `engine.graphVariant` and `engine.schemaTag`, and the latter is deprecated in favor of the former. [#3855](https://github.com/apollographql/apollo-server/pull/3855)
+- `apollo-engine-reporting`: Deprecated the `APOLLO_SCHEMA_TAG` environment variable in favor of its new name, `APOLLO_GRAPH_VARIANT`.  Similarly, within the `engine` configuration object, the `schemaTag` property has been renamed `graphVariant`.  The functionality remains otherwise unchanged, but their new names mirror the name used within Apollo Graph Manager.  Continued use of the now-deprecated names will result in deprecation warnings and support will be dropped completely in the next "major" update.  To avoid misconfiguration, a runtime error will be thrown if _both_ new and deprecated names are set. [PR #3855](https://github.com/apollographql/apollo-server/pull/3855)
 
 ### v2.11.0
 
