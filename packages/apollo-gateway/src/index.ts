@@ -379,8 +379,6 @@ export class ApolloGateway implements GraphQLService {
           'The gateway did not update its schema due to failed service health checks.  ' +
           'The gateway will continue to operate with the previous schema and reattempt updates.' + e
         );
-        // TODO: Questionable notify here, but it does enable code-driven testing via schema listener callbacks
-        this.notifySchemaListeners(this.schema);
         throw e;
       }
     }
@@ -391,7 +389,15 @@ export class ApolloGateway implements GraphQLService {
     if (this.queryPlanStore) this.queryPlanStore.flush();
 
     this.schema = this.createSchema(result.serviceDefinitions);
-    this.notifySchemaListeners(this.schema);
+
+    // Notify the schema listeners of the updated schema
+    try {
+      this.onSchemaChangeListeners.forEach(listener => listener(this.schema!));
+    } catch (e) {
+      this.logger.error(
+        "An error was thrown from an 'onSchemaChange' listener. " +
+        "The schema will still update: " + (e && e.message || e));
+    }
 
     if (this.experimental_didUpdateComposition) {
       this.experimental_didUpdateComposition(
@@ -411,16 +417,6 @@ export class ApolloGateway implements GraphQLService {
             }),
           },
       );
-    }
-  }
-
-  private notifySchemaListeners(schema?: GraphQLSchema) {
-    try {
-      this.onSchemaChangeListeners.forEach(listener => listener(schema!));
-    } catch (e) {
-      this.logger.error(
-        "An error was thrown from an 'onSchemaChange' listener. " +
-        "The schema will still update: " + (e && e.message || e));
     }
   }
 
@@ -780,7 +776,7 @@ export class ApolloGateway implements GraphQLService {
 
   public async stop() {
     if (this.pollingTimer) {
-      clearInterval(this.pollingTimer);
+      clearTimeout(this.pollingTimer);
       this.pollingTimer = undefined;
     }
   }

@@ -102,7 +102,6 @@ afterEach(() => {
   expect(nock.isDone()).toBeTruthy();
   nock.cleanAll();
   nock.restore();
-  jest.useRealTimers();
 });
 
 it('Queries remote endpoints for their SDLs', async () => {
@@ -399,21 +398,44 @@ describe('Downstream service health checks', () => {
       let resolve: () => void;
       const schemaChangeBlocker = new Promise(res => (resolve = res));
 
-      const onChange = jest
-        .fn()
-        .mockImplementationOnce(() => resolve())
-
       const gateway = new ApolloGateway({ serviceHealthCheck: true, logger });
       // @ts-ignore for testing purposes, a short pollInterval is ideal so we'll override here
-      gateway.experimental_pollInterval = 300;
+      gateway.experimental_pollInterval = 100;
 
+      // load the gateway as usual
       await gateway.load({ engine: { apiKeyHash, graphId } });
-      gateway.onSchemaChange(onChange);
+      expect(gateway.schema!.getType('User')!.description).toBe('This is my User');
+
+      // @ts-ignore for testing purposes, we'll call the original `updateComposition`
+      // function from our mock
+      const original = gateway.updateComposition;
+      const mockUpdateComposition = jest
+        .fn(original)
+        .mockImplementationOnce(async opts => {
+          // mock the first poll and handle the error which would otherwise be caught
+          // and logged from within the `pollServices` class method
+          await expect(original.apply(gateway, [opts]))
+            .rejects
+            .toThrowErrorMatchingInlineSnapshot(
+              `"500: Internal Server Error"`,
+            );
+          // finally resolve the promise which drives this test
+          resolve();
+        });
+
+      // @ts-ignore for testing purposes, replace the `updateComposition`
+      // function on the gateway with our mock
+      gateway.updateComposition = mockUpdateComposition;
+
+      // This kicks off polling within the gateway
+      gateway.onSchemaChange(() => {});
 
       await schemaChangeBlocker;
-      expect(onChange.mock.calls.length).toBe(1);
 
+      // At this point, the mock update should have been called but the schema
+      // should not have updated to the new one.
+      expect(mockUpdateComposition.mock.calls.length).toBe(1);
       expect(gateway.schema!.getType('User')!.description).toBe('This is my User');
     });
-  })
+  });
 });
