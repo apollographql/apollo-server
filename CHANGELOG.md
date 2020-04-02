@@ -11,7 +11,8 @@ The version headers in this history reflect the versions of Apollo Server itself
 - `apollo-server-core`: When operating in gateway mode using the `gateway` property of the Apollo Server constructor options, the failure to initialize a schema during initial start-up, e.g. connectivity problems, will no longer result in the federated executor from being assigned when the schema eventually becomes available.  This precludes a state where the gateway may never become available to serve federated requests, even when failure conditions are no longer present. [PR #3811](https://github.com/apollographql/apollo-server/pull/3811)
 - `apollo-server-core`: Prevent a condition which prefixed an error message on each request when the initial gateway initialization resulted in a Promise-rejection which was memoized and re-prepended with `Invalid options provided to ApolloServer:` on each request. [PR #3811](https://github.com/apollographql/apollo-server/pull/3811)
 - `apollo-server-express`: Disable the automatic inclusion of the `x-powered-by: express` header. [PR #3821](https://github.com/apollographql/apollo-server/pull/3821)
-- `apollo-engine-reporting`: Avoid creating new arrays when building trace trees. [PR #3479](https://github.com/apollographql/apollo-server/pull/3479) 
+- `apollo-engine-reporting`: Avoid creating new arrays when building trace trees. [PR #3479](https://github.com/apollographql/apollo-server/pull/3479)
+- `apollo-server-core`: Bump `graphql` peerDependencies to `^15.0.0`. [PR #3944](https://github.com/apollographql/apollo-server/pull/3944)
 
 ### v2.11.0
 
