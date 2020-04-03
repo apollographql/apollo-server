@@ -37,7 +37,7 @@ Http Functions:
         graphql: http://localhost:7071/api/graphql
 ```
 
-Go to [http://localhost:7071/api/apollo-example?name=Apollo](http://localhost:7071/api/apollo-example?name=Apollo) and verify if the text with the content: **Hello Apollo** is appearing at your browser.
+Go to [http://localhost:7071/api/graphql?name=Apollo](http://localhost:7071/api/apollo-example?name=Apollo) and verify if the text with the content: **Hello Apollo** is appearing at your browser.
 
 If you would like to remove the `api` from the url structure, set the prefix in your `host.json` file like below:
 
@@ -61,7 +61,7 @@ We will now install the dependencies and test our azure function app using apoll
 ```shell
 cd apollo-example
 npm init -y
-npm install apollo-server-azure-functions graphql
+npm install apollo-server-azure-functions
 ```
 
 Copy the code below and paste at you **index.js** file.
