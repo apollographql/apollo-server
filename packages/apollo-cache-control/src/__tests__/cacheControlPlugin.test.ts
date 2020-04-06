@@ -1,5 +1,4 @@
 import { ResponsePath, GraphQLError } from 'graphql';
-import { GraphQLResponse } from 'graphql-extensions';
 import { Headers } from 'apollo-server-env';
 import {
   CacheScope,
@@ -11,10 +10,11 @@ import {
 const { addHint, computeOverallCachePolicy } = __testing__;
 import {
   GraphQLRequestContextWillSendResponse,
+  GraphQLResponse,
 } from 'apollo-server-plugin-base';
 import pluginTestHarness from 'apollo-server-core/dist/utils/pluginTestHarness';
 
-describe('CacheControlExtension', () => {
+describe('plugin', () => {
   describe('willSendResponse', () => {
     function makePluginWithOptions({
       pluginInitializationOptions,
