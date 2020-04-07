@@ -1,6 +1,6 @@
 # CHANGELOG for `@apollo/gateway`
 
-## 0.14.0 (pre-release; `@next` tag)
+## 0.14.0
 
 - Several previously unhandled Promise rejection errors stemming from, e.g. connectivity, failures when communicating with Apollo Graph Manager within asynchronous code are now handled. [PR #3811](https://github.com/apollographql/apollo-server/pull/3811)
 - Provide a more helpful error message when encountering expected errors. [PR #3811](https://github.com/apollographql/apollo-server/pull/3811)
