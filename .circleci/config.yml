@@ -104,7 +104,7 @@ workflows:
           name: Package tarballs
           <<: *common_non_publish_filters
           requires:
-            - NodeJS 6
+            # - NodeJS 6
             - NodeJS 8
             - NodeJS 10
             - NodeJS 12
@@ -112,7 +112,7 @@ workflows:
           name: Dry-run
           <<: *common_publish_filters
           requires:
-            - NodeJS 6
+            # - NodeJS 6
             - NodeJS 8
             - NodeJS 10
             - NodeJS 12
