@@ -33,6 +33,10 @@
       "allowedVersions": "<3"
     },
     {
+      "packageNames": ["log4js"],
+      "allowedVersions": "<5"
+    },
+    {
       "packageNames": ["hapi", "@types/hapi"],
       "allowedVersions": "<18"
     },

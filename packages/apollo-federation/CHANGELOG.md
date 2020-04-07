@@ -1,5 +1,9 @@
 # CHANGELOG for `@apollo/federation`
 
+## 0.14.0
+
+- Only changes in the similarly versioned `@apollo/gateway` package.
+
 ## 0.13.2
 
 - Only changes in the similarly versioned `@apollo/gateway` package.

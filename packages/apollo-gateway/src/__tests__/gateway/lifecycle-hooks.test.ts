@@ -56,9 +56,7 @@ describe('lifecycle hooks', () => {
       experimental_didFailComposition,
     });
 
-    try {
-      await gateway.load();
-    } catch {}
+    await expect(gateway.load()).rejects.toThrowError();
 
     const callbackArgs = experimental_didFailComposition.mock.calls[0][0];
     expect(callbackArgs.serviceList).toHaveLength(1);
