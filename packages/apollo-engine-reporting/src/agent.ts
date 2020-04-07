@@ -178,9 +178,13 @@ export interface EngineReportingOptions<TContext> {
    */
   rewriteError?: (err: GraphQLError) => GraphQLError | null;
   /**
-   * A human readable name to tag this variant of a schema (i.e. staging, EU)
+   * [DEPRECATED: use graphVariant] A human readable name to tag this variant of a schema (i.e. staging, EU)
    */
   schemaTag?: string;
+  /**
+   * A human readable name to refer to the variant of the graph for which metrics are reported
+   */
+  graphVariant?: string;
   /**
    * Creates the client information for operation traces.
    */
@@ -291,7 +295,11 @@ export class EngineReportingAgent<TContext = any> {
         ...serviceHeaderDefaults,
         schemaHash,
         schemaTag:
-          this.options.schemaTag || process.env.ENGINE_SCHEMA_TAG || '',
+          this.options.graphVariant
+          || this.options.schemaTag
+          || process.env.APOLLO_GRAPH_VARIANT
+          || process.env.ENGINE_SCHEMA_TAG
+          || '',
       });
       // initializes this.reports[reportHash]
       this.resetReport(schemaHash);
@@ -490,8 +498,9 @@ export class EngineReportingAgent<TContext = any> {
       return queryString as string;
     }
 
-    const generatedSignature = (this.options.calculateSignature ||
-      defaultEngineReportingSignature)(documentAST, operationName);
+    const generatedSignature = (
+      this.options.calculateSignature || defaultEngineReportingSignature
+    )(documentAST, operationName);
 
     // Intentionally not awaited so the cache can be written to at leisure.
     this.signatureCache.set(cacheKey, generatedSignature);

@@ -3,7 +3,7 @@ const diff = require('jest-diff');
 
 declare global {
   namespace jest {
-    interface Matchers<R> {
+    interface Matchers<R, T> {
       toMatchAST(expected: ASTNode): R;
     }
   }
