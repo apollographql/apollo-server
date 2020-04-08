@@ -116,24 +116,31 @@ const schema = new GraphQLSchema({
 const makeGatewayMock = ({
   optionsSpy = _options => {},
   unsubscribeSpy = () => {},
+  executor = () => ({}),
 }: {
   optionsSpy?: (_options: any) => void;
   unsubscribeSpy?: () => void;
+  executor?: GraphQLExecutor;
 } = {}) => {
   const eventuallyAssigned = {
     resolveLoad: null as ({ schema, executor }) => void,
+    rejectLoad: null as (err: Error) => void,
     triggerSchemaChange: null as (newSchema) => void,
   };
   const mockedLoadResults = new Promise<{
     schema: GraphQLSchema;
     executor: GraphQLExecutor;
-  }>(resolve => {
+  }>((resolve, reject) => {
     eventuallyAssigned.resolveLoad = ({ schema, executor }) => {
       resolve({ schema, executor });
+    };
+    eventuallyAssigned.rejectLoad = (err: Error) => {
+      reject(err);
     };
   });
 
   const mockedGateway: GraphQLService = {
+    executor,
     load: options => {
       optionsSpy(options);
       return mockedLoadResults;
@@ -354,12 +361,12 @@ export function testApolloServer<AS extends ApolloServerBase>(
         });
 
         it("accepts a gateway's schema and calls its executor", async () => {
-          const { gateway, triggers } = makeGatewayMock();
-
           const executor = jest.fn();
           executor.mockReturnValue(
             Promise.resolve({ data: { testString: 'hi - but federated!' } }),
           );
+
+          const { gateway, triggers } = makeGatewayMock({ executor });
 
           triggers.resolveLoad({ schema, executor });
 
@@ -374,6 +381,47 @@ export function testApolloServer<AS extends ApolloServerBase>(
           expect(result.data).toEqual({ testString: 'hi - but federated!' });
           expect(result.errors).toBeUndefined();
           expect(executor).toHaveBeenCalled();
+        });
+
+        it("rejected load promise acts as an error boundary", async () => {
+          const executor = jest.fn();
+          executor.mockResolvedValueOnce(
+            { data: { testString: 'should not get this' } }
+          );
+
+          executor.mockRejectedValueOnce(
+            { errors: [{errorWhichShouldNot: "ever be triggered"}] }
+          );
+
+          const consoleErrorSpy =
+            jest.spyOn(console, 'error').mockImplementation();
+
+          const { gateway, triggers } = makeGatewayMock({ executor });
+
+          triggers.rejectLoad(new Error("load error which should be masked"));
+
+          const { url: uri } = await createApolloServer({
+            gateway,
+            subscriptions: false,
+          });
+
+          const apolloFetch = createApolloFetch({ uri });
+          const result = await apolloFetch({ query: '{testString}' });
+
+          expect(result.data).toBeUndefined();
+          expect(result.errors).toContainEqual(
+            expect.objectContaining({
+              extensions: expect.objectContaining({
+                code: "INTERNAL_SERVER_ERROR",
+              }),
+              message: "This data graph is missing a valid configuration. " +
+                "More details may be available in the server logs."
+            })
+          );
+          expect(consoleErrorSpy).toHaveBeenCalledWith(
+            "This data graph is missing a valid configuration. " +
+              "load error which should be masked");
+          expect(executor).not.toHaveBeenCalled();
         });
 
         it('uses schema over resolvers + typeDefs', async () => {
@@ -2034,6 +2082,50 @@ export function testApolloServer<AS extends ApolloServerBase>(
     });
 
     describe('apollo-engine-reporting', () => {
+      async function makeFakeTestableEngineServer({
+        status,
+        waitWriteResponse = false,
+      }: {
+        status: number;
+        waitWriteResponse?: boolean;
+      }) {
+        let writeResponseResolve: () => void;
+        const writeResponsePromise = new Promise(
+          resolve => (writeResponseResolve = resolve),
+        );
+        const fakeEngineServer = http.createServer(async (_, res) => {
+          await writeResponsePromise;
+          res.writeHead(status);
+          res.end('Important text in the body');
+        });
+        await new Promise(resolve => {
+          fakeEngineServer.listen(0, '127.0.0.1', () => {
+            resolve();
+          });
+        });
+        async function closeServer() {
+          await new Promise(resolve => fakeEngineServer.close(() => resolve()));
+        }
+
+        const { family, address, port } = fakeEngineServer.address();
+        if (family !== 'IPv4') {
+          throw new Error(`The family was unexpectedly ${family}.`);
+        }
+
+        const fakeEngineUrl = `http://${address}:${port}`;
+
+        if (!waitWriteResponse) {
+          writeResponseResolve();
+        }
+
+        return {
+          closeServer,
+          fakeEngineServer,
+          fakeEngineUrl,
+          writeResponseResolve,
+        };
+      }
+
       describe('graphql server functions even when Apollo servers are down', () => {
         async function testWithStatus(
           status: number,
@@ -2041,32 +2133,16 @@ export function testApolloServer<AS extends ApolloServerBase>(
         ) {
           const networkError = status === 0;
 
-          let writeResponseResolve: () => void;
-          const writeResponsePromise = new Promise(
-            resolve => (writeResponseResolve = resolve),
-          );
-          const fakeEngineServer = http.createServer(async (_, res) => {
-            await writeResponsePromise;
-            res.writeHead(status);
-            res.end('Important text in the body');
+          const {
+            closeServer,
+            fakeEngineUrl,
+            writeResponseResolve,
+          } = await makeFakeTestableEngineServer({
+            status,
+            waitWriteResponse: true,
           });
-          await new Promise(resolve => {
-            fakeEngineServer.listen(0, '127.0.0.1', () => {
-              resolve();
-            });
-          });
-          async function closeServer() {
-            await new Promise(resolve =>
-              fakeEngineServer.close(() => resolve()),
-            );
-          }
-          try {
-            const { family, address, port } = fakeEngineServer.address();
-            if (family !== 'IPv4') {
-              throw new Error(`The family was unexpectedly ${family}.`);
-            }
-            const fakeEngineUrl = `http://${address}:${port}`;
 
+          try {
             // To simulate a network error, we create and close the server.
             // This lets us still generate a port that is hopefully unused.
             if (networkError) {
@@ -2805,12 +2881,12 @@ export function testApolloServer<AS extends ApolloServerBase>(
             }),
           });
 
-        const { gateway, triggers } = makeGatewayMock();
-
         const executor = req =>
           (req.source as string).match(/1/)
             ? Promise.resolve({ data: { testString1: 'hello' } })
             : Promise.resolve({ data: { testString2: 'aloha' } });
+
+        const { gateway, triggers } = makeGatewayMock({ executor });
 
         triggers.resolveLoad({
           schema: makeQueryTypeWithField('testString1'),
@@ -2867,7 +2943,6 @@ export function testApolloServer<AS extends ApolloServerBase>(
       });
 
       it('waits until gateway has resolved a schema to respond to queries', async () => {
-        const { gateway, triggers } = makeGatewayMock();
         const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
         let resolveExecutor;
         const executor = () =>
@@ -2876,6 +2951,8 @@ export function testApolloServer<AS extends ApolloServerBase>(
               resolve({ data: { testString: 'hi - but federated!' } });
             };
           });
+
+        const { gateway, triggers } = makeGatewayMock({ executor });
 
         triggers.resolveLoad({ schema, executor });
         const { url: uri } = await createApolloServer({
@@ -2913,8 +2990,6 @@ export function testApolloServer<AS extends ApolloServerBase>(
             }),
           });
 
-        const { gateway, triggers } = makeGatewayMock();
-
         const makeEventuallyResolvingPromise = val => {
           let resolver;
           const promise = new Promise(
@@ -2939,6 +3014,8 @@ export function testApolloServer<AS extends ApolloServerBase>(
             : (req.source as string).match(/2/)
             ? p2
             : p3;
+
+        const { gateway, triggers } = makeGatewayMock({ executor });
 
         triggers.resolveLoad({
           schema: makeQueryTypeWithField('testString1'),

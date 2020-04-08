@@ -40,7 +40,7 @@ server.listen().then(({ url }) => {
 });
 ```
 
-In the example above, we are describing the shapes of our data, how they relate to each other, and how to fetch what our client needs from our data source. Apollo Server uses simple functions called [resolvers](/data/data/) to bring to life the schema described in SDL type definitions. When a request comes in to `/graphql`, Apollo Server will translate that request into what it takes to execute the query, will run the resolvers for you to load your data, and return the result in JSON so your app can render it out easily!
+In the example above, we are describing the shapes of our data, how they relate to each other, and how to fetch what our client needs from our data source. Apollo Server uses simple functions called [resolvers](/data/resolvers/) to bring to life the schema described in SDL type definitions. When a request comes in to `/graphql`, Apollo Server will translate that request into what it takes to execute the query, will run the resolvers for you to load your data, and return the result in JSON so your app can render it out easily!
 
 Apollo Server takes care of every step of translating the query your client asks for into the data it needs. It is designed to give you maximum control over how you load the data while taking care of everything else for you! You don't need to worry about parsing the request, validating the query, delivering the response, or even profiling your app. Instead, all you have to do is describe the shape of your data and how to find it; Apollo Server does the rest! 💪
 
@@ -57,4 +57,4 @@ Companies ranging from enterprise to startups trust Apollo Server to power their
 [Implementing GraphQL at Major League Soccer](https://labs.mlssoccer.com/implementing-graphql-at-major-league-soccer-ff0a002b20ca)
 [The New York Times Now on Apollo](https://open.nytimes.com/the-new-york-times-now-on-apollo-b9a78a5038c).
 
-If your company is using Apollo Server in production, we'd love to feature a case study on the Apollo blog! Please get in touch via Slack so we can learn more about how you're using Apollo. Alternatively, if you already have a blog post or a conference talk that you'd like to feature here, please send a [Pull Request](https://github.com/apollographql/apollo-server/pulls).
+If your company is using Apollo Server in production, we'd love to feature a case study on the Apollo blog! Please get in touch via Spectrum so we can learn more about how you're using Apollo. Alternatively, if you already have a blog post or a conference talk that you'd like to feature here, please send a [Pull Request](https://github.com/apollographql/apollo-server/pulls).
