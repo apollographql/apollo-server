@@ -227,3 +227,23 @@ exports.graphqlHandler = server.createHandler({
   },
 });
 ```
+
+## Setting up GraphQL Playground
+
+By default, `serverless` will deploy to AWS with the `stage` set to `development` resulting in an API endpoint at `/dev/graphql`.
+
+To allow GraphQL Playground to correctly use the `dev` endpoint, add a new `endpoint` configuration within the `playground` option to the `ApolloServer` instantiation options:
+
+```js
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  // highlight-start
+  playground: {
+    endpoint: "/dev/graphql"
+  }
+  // highlight-end
+});
+```
+
+For information on additional configuration options, see [GraphQL Playground](https://www.apollographql.com/docs/apollo-server/testing/graphql-playground/).
