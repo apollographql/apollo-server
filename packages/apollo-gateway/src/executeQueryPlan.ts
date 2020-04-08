@@ -93,7 +93,7 @@ export async function executeQueryPlan<TContext>(
       },
       rootValue: data,
       variableValues: requestContext.request.variables,
-      // FIXME: GraphQL extensions currentl wraps every field and creates
+      // FIXME: GraphQL extensions currently wraps every field and creates
       // a field resolver. Because of this, when using with ApolloServer
       // the defaultFieldResolver isn't called. We keep this here
       // because it is the correct solution and when ApolloServer removes
@@ -202,6 +202,7 @@ async function executeFetch<TContext>(
   _path: ResponsePath,
   traceNode: Trace.QueryPlanNode.FetchNode | null,
 ): Promise<void> {
+  const logger = context.requestContext.logger || console;
   const service = context.serviceMap[fetch.serviceName];
   if (!service) {
     throw new Error(`Couldn't find service with name "${fetch.serviceName}"`);
@@ -351,7 +352,7 @@ async function executeFetch<TContext>(
           // supports that, but there's not a no-deps base64 implementation.
           traceBuffer = Buffer.from(traceBase64, 'base64');
         } catch (err) {
-          console.error(
+          logger.error(
             `error decoding base64 for federated trace from ${fetch.serviceName}: ${err}`,
           );
           traceParsingFailed = true;
@@ -362,7 +363,7 @@ async function executeFetch<TContext>(
             const trace = Trace.decode(traceBuffer);
             traceNode.trace = trace;
           } catch (err) {
-            console.error(
+            logger.error(
               `error decoding protobuf for federated trace from ${fetch.serviceName}: ${err}`,
             );
             traceParsingFailed = true;
