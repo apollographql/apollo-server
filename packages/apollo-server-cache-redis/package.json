@@ -19,7 +19,7 @@
   "dependencies": {
     "apollo-server-caching": "file:../apollo-server-caching",
     "apollo-server-env": "file:../apollo-server-env",
-    "dataloader": "^1.4.0",
+    "dataloader": "^2.0.0",
     "ioredis": "^4.0.0"
   }
 }
