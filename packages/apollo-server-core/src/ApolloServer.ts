@@ -649,7 +649,6 @@ export class ApolloServerBase {
       }
     }
 
-      persistedQueries: this.requestOptions.persistedQueries,
     await Promise.all(
       this.plugins.map(
         plugin =>
