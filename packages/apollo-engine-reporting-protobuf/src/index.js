@@ -15,8 +15,8 @@ protobufJS.configure();
 // a casually noticeable effect on p50 times. This also makes it easier for us
 // to implement maxUncompressedReportSize as we know the encoded size of traces
 // as we go.
-const originalTracesEncode = protobuf.Traces.encode;
-protobuf.Traces.encode = function(message, originalWriter) {
+const originalTracesEncode = protobuf.TracesAndStats.encode;
+protobuf.TracesAndStats.encode = function(message, originalWriter) {
   const writer = originalTracesEncode(message, originalWriter);
   const encodedTraces = message.encodedTraces;
   if (encodedTraces != null && encodedTraces.length) {
