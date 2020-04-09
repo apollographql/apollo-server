@@ -341,10 +341,11 @@ message Type {
 // is designed for the apollo-engine-reporting TypeScript agent and will
 // eventually be documented as a public ingress API. This message consists
 // solely of traces; the equivalent of the StatsReport is automatically
-// generated server-side from this message.  Agents should send traces
-// for all requests in this report.  Generally, buffering up until a large
+// generated server-side from this message. Agent should either send a trace or include it in the stats
+// for every request in this report. Generally, buffering up until a large
 // size has been reached (say, 4MB) or 5-10 seconds has passed is appropriate.
-message FullTracesReport {
+// This message used to be know as FullTracesReport, but got renamed since it isn't just for traces anymore
+message Report {
 	ReportHeader header = 1;
 
 	// key is statsReportKey (# operationName\nsignature) Note that the nested
@@ -355,7 +356,13 @@ message FullTracesReport {
 	// legacy_per_query_implicit_operation_name, and we don't require them to have
 	// details.raw_query (which would consume a lot of space and has privacy/data
 	// access issues, and isn't currently exposed by our app anyway).
-	map<string, Traces> traces_per_query = 5;
+	map<string, TracesAndStats> traces_per_query = 5;
+
+	// This is the time that the requests in this trace are considered to have taken place
+	// If this field is not present the max of the end_time of each trace will be used instead.
+	// If there are no traces and no end_time present the report will not be able to be processed.
+	// Note: This will override the end_time from traces.
+	google.protobuf.Timestamp end_time = 2; // required if no traces in this message
 }
 
 message ContextualizedStats {
@@ -366,7 +373,7 @@ message ContextualizedStats {
 }
 
 // A sequence of traces and stats. An individual trace should either be counted as a stat or trace
-message Traces {
+message TracesAndStats {
 	repeated Trace trace = 1;
 	repeated ContextualizedStats stats_with_context = 2;
 }

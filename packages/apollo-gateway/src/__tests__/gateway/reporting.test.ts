@@ -5,7 +5,7 @@ import { GraphQLSchemaModule } from 'apollo-graphql';
 import gql from 'graphql-tag';
 import { buildFederatedSchema } from '@apollo/federation';
 import { ApolloServer } from 'apollo-server';
-import { FullTracesReport } from 'apollo-engine-reporting-protobuf';
+import { Reports } from 'apollo-engine-reporting-protobuf';
 import { execute, toPromise } from 'apollo-link';
 import { createHttpLink } from 'apollo-link-http';
 import fetch from 'node-fetch';
@@ -189,7 +189,7 @@ describe('reporting', () => {
     // nock returns binary bodies as hex strings
     const gzipReportBuffer = Buffer.from(reportBody, 'hex');
     const reportBuffer = gunzipSync(gzipReportBuffer);
-    const report = FullTracesReport.decode(reportBuffer);
+    const report = Reports.decode(reportBuffer);
 
     // Some handwritten tests to capture salient properties.
     const statsReportKey = '# -\n{me{name}topProducts{name}}';

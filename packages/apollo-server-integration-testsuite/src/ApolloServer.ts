@@ -4,7 +4,7 @@ import { URL } from 'url';
 import express = require('express');
 import bodyParser = require('body-parser');
 
-import { FullTracesReport, Trace } from 'apollo-engine-reporting-protobuf';
+import { Reports, Trace } from 'apollo-engine-reporting-protobuf';
 
 import {
   GraphQLSchema,
@@ -795,12 +795,12 @@ export function testApolloServer<AS extends ApolloServerBase>(
         class EngineMockServer {
           private app: express.Application;
           private server: http.Server;
-          private reports: FullTracesReport[] = [];
-          public readonly promiseOfReports: Promise<FullTracesReport[]>;
+          private reports: Reports[] = [];
+          public readonly promiseOfReports: Promise<Reports[]>;
 
           constructor() {
-            let reportResolver: (reports: FullTracesReport[]) => void;
-            this.promiseOfReports = new Promise<FullTracesReport[]>(resolve => {
+            let reportResolver: (reports: Reports[]) => void;
+            this.promiseOfReports = new Promise<Reports[]>(resolve => {
               reportResolver = resolve;
             });
 
@@ -818,7 +818,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             );
 
             this.app.use((req, res) => {
-              const report = FullTracesReport.decode(req.body);
+              const report = Reports.decode(req.body);
               this.reports.push(report);
               res.end();
 
