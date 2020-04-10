@@ -5,6 +5,12 @@ The version headers in this history reflect the versions of Apollo Server itself
 - [__CHANGELOG for `@apollo/gateway`__](https://github.com/apollographql/apollo-server/blob/master/packages/apollo-gateway/CHANGELOG.md)
 - [__CHANGELOG for `@apollo/federation`__](https://github.com/apollographql/apollo-server/blob/master/packages/apollo-federation/CHANGELOG.md)
 
+### vNEXT
+
+> The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  When a release is being prepared, a new header will be (manually) created below and the the appropriate changes within that release will be moved into the new section.
+
+- _Nothing yet! Stay tuned._
+
 ### v2.12.0
 
 - `apollo-server-core`: Support providing a custom logger implementation (e.g. [`winston`](https://npm.im/winston), [`bunyan`](https://npm.im/bunyan), etc.) to capture server console messages.  Though there has historically been limited output from Apollo Server, some messages are important to capture in the larger context of production logging facilities or can benefit from using more advanced structure, like JSON-based logging.  This also introduces a `logger` property to the `GraphQLRequestContext` that is exposed to plugins, making it possible for plugins to leverage the same server-level logger, and allowing implementors to create request-specific log contexts, if desired.  When not provided, these will still output to `console`. [PR #3894](https://github.com/apollographql/apollo-server/pull/3894)
