@@ -16,7 +16,7 @@ import { defaultEngineReportingSignature } from 'apollo-graphql';
 import {
   Report,
   TracesAndStats
-} from "apollo-engine-reporting-protobuf/dist/protobuf";
+} from "apollo-engine-reporting-protobuf";
 
 export interface ClientInfo {
   clientName?: string;
