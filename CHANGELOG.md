@@ -10,6 +10,7 @@ The version headers in this history reflect the versions of Apollo Server itself
 > The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  When a release is being prepared, a new header will be (manually) created below and the the appropriate changes within that release will be moved into the new section.
 
 - `apollo-server-lambda`: Support file uploads on AWS Lambda [Issue #1419](https://github.com/apollographql/apollo-server/issues/1419) [Issue #1703](https://github.com/apollographql/apollo-server/issues/1703) [PR #3926](https://github.com/apollographql/apollo-server/pull/3926)
+- **breaking** `apollo-engine-reporting-protobuf`: Drop legacy fields that were never used by `apollo-engine-reporting`. Added new fields `StatsContext` to allow `apollo-server` to send summary stats instead of full traces, and renamed `FullTracesReport` to `Report` and `Traces` to `TracesAndStats` since reports now can include stats as well as traces.
 
 ### v2.12.0
 
