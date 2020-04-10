@@ -10,7 +10,7 @@ import { IncomingMessage, ServerResponse } from 'http';
 
 import url from 'url';
 import gql from 'graphql-tag';
-import request = require('supertest');
+import request from 'supertest';
 
 const createLambda = (options: CreateAppOptions = {}) => {
   const server = new ApolloServer(
