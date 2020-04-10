@@ -6,7 +6,7 @@
   "types": "dist/index.d.ts",
   "keywords": [],
   "author": "Apollo <opensource@apollographql.com>",
-  "license": "SEE LICENSE IN LICENSE.md",
+  "license": "MIT",
   "engines": {
     "node": ">=8"
   },
