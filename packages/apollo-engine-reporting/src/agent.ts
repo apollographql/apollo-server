@@ -4,6 +4,8 @@ import { DocumentNode, GraphQLError } from 'graphql';
 import {
   ReportHeader,
   Trace,
+  Report,
+  TracesAndStats
 } from 'apollo-engine-reporting-protobuf';
 
 import { fetch, RequestAgent, Response } from 'apollo-server-env';
@@ -13,10 +15,6 @@ import { EngineReportingExtension } from './extension';
 import { GraphQLRequestContext, Logger } from 'apollo-server-types';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import { defaultEngineReportingSignature } from 'apollo-graphql';
-import {
-  Report,
-  TracesAndStats
-} from "apollo-engine-reporting-protobuf";
 
 export interface ClientInfo {
   clientName?: string;
