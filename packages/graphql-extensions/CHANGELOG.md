@@ -1,3 +1,16 @@
+# Change Log
+
+All notable changes to this project will be documented in this file.
+See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
+
+# [0.12.0-alpha.0](https://github.com/apollographql/apollo-server/compare/graphql-extensions@0.11.1...graphql-extensions@0.12.0-alpha.0) (2020-04-10)
+
+**Note:** Version bump only for package graphql-extensions
+
+
+
+
+
 # Changelog
 
 ### vNext
