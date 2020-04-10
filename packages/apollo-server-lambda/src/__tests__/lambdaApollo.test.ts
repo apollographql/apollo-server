@@ -3,7 +3,6 @@ import testSuite, {
   schema as Schema,
   CreateAppOptions,
   NODE_MAJOR_VERSION,
-  NODE_MINOR_VERSION,
 } from 'apollo-server-integration-testsuite';
 import { Config } from 'apollo-server-core';
 import { IncomingMessage, ServerResponse } from 'http';
@@ -98,10 +97,7 @@ const resolvers = {
 
 // NODE: graphql-upload (8.0.0) requires Node 8.5 or higher
 
-const supportedNodeVersion =
-  ((NODE_MAJOR_VERSION === 8 && NODE_MINOR_VERSION >= 5) || NODE_MAJOR_VERSION > 8);
-
-(supportedNodeVersion ? describe : describe.skip)('file uploads', () => {
+(NODE_MAJOR_VERSION < 8 ? describe.skip : describe)('file uploads', () => {
   let app = <any>null
   beforeAll(async () => {
     app = await createLambda({
