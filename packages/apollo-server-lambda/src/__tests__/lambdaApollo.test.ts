@@ -10,6 +10,7 @@ import { IncomingMessage, ServerResponse } from 'http';
 import url from 'url';
 import gql from 'graphql-tag';
 import request from 'supertest';
+import { APIGatewayProxyCallback } from "aws-lambda";
 
 const createLambda = (options: CreateAppOptions = {}) => {
   const server = new ApolloServer(
@@ -39,12 +40,22 @@ const createLambda = (options: CreateAppOptions = {}) => {
         },
         headers: req.headers,
       };
-      const callback = (error: any, result: any) => {
-        if (error) throw error;
+      const callback: APIGatewayProxyCallback = (error, result) => {
+        if (error) {
+          throw error;
+        } else {
+          result = result as NonNullable<typeof result>;
+        }
         res.statusCode = result.statusCode;
         for (let key in result.headers) {
           if (result.headers.hasOwnProperty(key)) {
-            res.setHeader(key, result.headers[key]);
+            if (typeof result.headers[key] === 'boolean') {
+              res.setHeader(key, result.headers[key].toString());
+            } else {
+              // Without casting this to `any`, TS still believes `boolean`
+              // is possible.
+              res.setHeader(key, result.headers[key] as any);
+            }
           }
         }
         res.write(result.body);
