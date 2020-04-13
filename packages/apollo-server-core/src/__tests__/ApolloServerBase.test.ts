@@ -69,8 +69,8 @@ describe('environment variables', () => {
     const spyConsoleWarn = jest.spyOn(console, 'warn').mockImplementation();
 
     const server = new ApolloServerBase({
-        schema: buildServiceDefinition([{ typeDefs, resolvers }]).schema,
-      });
+      schema: buildServiceDefinition([{ typeDefs, resolvers }]).schema,
+    });
 
     await server.stop();
     expect(spyConsoleWarn).toHaveBeenCalledTimes(1);

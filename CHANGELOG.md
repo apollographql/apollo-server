@@ -7,7 +7,8 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 ### vNEXT
 
-- Support APOLLO_KEY for setting the API key for which to report metrics to Apollo Graph Manager and fetch managed configuration for a managed gateway. This change deprecates the ENGINE_API_KEY environment variable in favor of the APOLLO_KEY environment variable and does not allow both to be set. [#3923](https://github.com/apollographql/apollo-server/pull/3923)
+- Deprecate the `ENGINE_API_KEY` environment variable in favor of a newly introduced `APOLLO_KEY`.  Continued use of `ENGINE_API_KEY` will result in deprecation warnings and support for it will be removed in a future major version. 
+ [#3923](https://github.com/apollographql/apollo-server/pull/3923)
 
 ### v2.11.0
 
