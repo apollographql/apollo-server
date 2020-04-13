@@ -63,7 +63,7 @@ describe('environment variables', () => {
     process.env = OLD_ENV;
   });
 
-  it('constructs a reporting agent with the legacy env var and warns', async () => {
+  it('constructs a reporting agent with the ENGINE_API_KEY (deprecated) environment variable and warns', async () => {
     // set the variables
     process.env.ENGINE_API_KEY = 'just:fake:stuff';
     const spyConsoleWarn = jest.spyOn(console, 'warn').mockImplementation();
