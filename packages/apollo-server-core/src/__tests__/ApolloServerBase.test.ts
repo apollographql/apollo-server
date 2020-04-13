@@ -35,7 +35,8 @@ describe('ApolloServerBase construction', () => {
     expect(
       () =>
         new ApolloServerBase({
-          schema: buildServiceDefinition([{ typeDefs, resolvers }]).schema,
+          typeDefs,
+          resolvers,
           engine: {
             graphVariant: 'foo',
             apiKey: 'not:real:key',
