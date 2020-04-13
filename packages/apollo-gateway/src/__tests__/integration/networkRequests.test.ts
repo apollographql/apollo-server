@@ -402,15 +402,16 @@ describe('Downstream service health checks', () => {
       // @ts-ignore for testing purposes, a short pollInterval is ideal so we'll override here
       gateway.experimental_pollInterval = 100;
 
-      // load the gateway as usual
-      await gateway.load({ engine: { apiKeyHash, graphId } });
-      expect(gateway.schema!.getType('User')!.description).toBe('This is my User');
-
       // @ts-ignore for testing purposes, we'll call the original `updateComposition`
-      // function from our mock
+      // function from our mock. The first call should mimic original behavior,
+      // but the second call needs to handle the PromiseRejection. Typically for tests
+      // like these we would leverage the `gateway.onSchemaChange` callback to drive
+      // the test, but in this case, that callback isn't triggered when the update
+      // fails (as expected) so we get creative with the second mock as seen below.
       const original = gateway.updateComposition;
       const mockUpdateComposition = jest
         .fn(original)
+        .mockImplementationOnce(original)
         .mockImplementationOnce(async opts => {
           // mock the first poll and handle the error which would otherwise be caught
           // and logged from within the `pollServices` class method
@@ -427,14 +428,16 @@ describe('Downstream service health checks', () => {
       // function on the gateway with our mock
       gateway.updateComposition = mockUpdateComposition;
 
-      // This kicks off polling within the gateway
-      gateway.onSchemaChange(() => {});
+      // load the gateway as usual
+      await gateway.load({ engine: { apiKeyHash, graphId } });
+
+      expect(gateway.schema!.getType('User')!.description).toBe('This is my User');
 
       await schemaChangeBlocker;
 
       // At this point, the mock update should have been called but the schema
       // should not have updated to the new one.
-      expect(mockUpdateComposition.mock.calls.length).toBe(1);
+      expect(mockUpdateComposition.mock.calls.length).toBe(2);
       expect(gateway.schema!.getType('User')!.description).toBe('This is my User');
     });
   });
