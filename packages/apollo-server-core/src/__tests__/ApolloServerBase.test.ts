@@ -69,7 +69,8 @@ describe('environment variables', () => {
     const spyConsoleWarn = jest.spyOn(console, 'warn').mockImplementation();
 
     const server = new ApolloServerBase({
-      schema: buildServiceDefinition([{ typeDefs, resolvers }]).schema,
+      typeDefs,
+      resolvers
     });
 
     await server.stop();
@@ -77,13 +78,20 @@ describe('environment variables', () => {
     spyConsoleWarn.mockReset();
   });
 
-  it('throws an error with both the legacy env var and new env var set', async () => {
+  it('warns with both the legacy env var and new env var set', async () => {
     // set the variables
     process.env.ENGINE_API_KEY = 'just:fake:stuff';
     process.env.APOLLO_KEY = 'also:fake:stuff';
+    const spyConsoleWarn = jest.spyOn(console, 'warn').mockImplementation();
 
-    expect( () => new ApolloServerBase({
-      schema: buildServiceDefinition([{ typeDefs, resolvers }]).schema,
-    })).toThrow();
+    const server = new ApolloServerBase({
+      typeDefs,
+      resolvers
+    });
+
+    await server.stop();
+    // Once for deprecation, once for double-set
+    expect(spyConsoleWarn).toHaveBeenCalledTimes(2);
+    spyConsoleWarn.mockReset();
   });
 });

@@ -47,18 +47,20 @@ export type GenerateClientInfo<TContext> = (
   requestContext: GraphQLRequestContext<TContext>,
 ) => ClientInfo;
 
-export function getEngineApiKey(engine: EngineReportingOptions<any> | boolean | undefined) {
-  if (typeof engine === 'object' && engine.apiKey) {
-    return engine.apiKey;
+export function getEngineApiKey(engine: EngineReportingOptions<any> | boolean | undefined, skipWarn: boolean = false) {
+  if (typeof engine === 'object') {
+    if (engine.apiKey) {
+      return engine.apiKey;
+    }
   }
   const legacyApiKeyFromEnv = process.env.ENGINE_API_KEY;
   const apiKeyFromEnv = process.env.APOLLO_KEY;
 
-  if(legacyApiKeyFromEnv && apiKeyFromEnv) {
-    throw new Error(`Cannot set both APOLLO_KEY and ENGINE_API_KEY. Please only set APOLLO_KEY.`);
+  if(legacyApiKeyFromEnv && apiKeyFromEnv && !skipWarn) {
+    console.warn(`Both ENGINE_API_KEY (deprecated) and APOLLO_KEY are set; defaulting to APOLLO_KEY.`);
   }
-  if(legacyApiKeyFromEnv && !warnedOnDeprecatedApiKey) {
-    console.warn(`[Deprecation warning] Setting the key via ENGINE_API_KEY is deprecated and will not be supported in future versions.`);
+  if(legacyApiKeyFromEnv && !warnedOnDeprecatedApiKey && !skipWarn) {
+    console.warn(`[deprecated] Setting the key via ENGINE_API_KEY is deprecated and will not be supported in future versions.`);
     warnedOnDeprecatedApiKey = true;
   }
   return  apiKeyFromEnv || legacyApiKeyFromEnv || ''

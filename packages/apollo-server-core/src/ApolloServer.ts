@@ -90,7 +90,7 @@ function getEngineGraphVariant(engine: Config['engine']): string | undefined {
     return engine.graphVariant || engine.schemaTag;
   } else {
     if (process.env.ENGINE_SCHEMA_TAG) {
-      console.warn('[Deprecation warning] Usage of ENGINE_SCHEMA_TAG is deprecated. Please use APOLLO_GRAPH_VARIANT instead.');
+      console.warn('[deprecated] Usage of ENGINE_SCHEMA_TAG is deprecated. Please use APOLLO_GRAPH_VARIANT instead.');
     }
     if (process.env.ENGINE_SCHEMA_TAG && process.env.APOLLO_GRAPH_VARIANT) {
       throw new Error('Cannot set both ENGINE_SCHEMA_TAG and APOLLO_GRAPH_VARIANT. Please use APOLLO_GRAPH_VARIANT.')
@@ -100,7 +100,7 @@ function getEngineGraphVariant(engine: Config['engine']): string | undefined {
 }
 
 function getEngineServiceId(engine: Config['engine']): string | undefined {
-  const engineApiKey = getEngineApiKey(engine);
+  const engineApiKey = getEngineApiKey(engine, true);
   if (engineApiKey) {
     return engineApiKey.split(':', 2)[1];
   }
@@ -304,7 +304,7 @@ export class ApolloServerBase {
     // The truthyness of this value can also be used in other forks of logic
     // related to Engine, as is the case with EngineReportingAgent just below.
     this.engineServiceId = getEngineServiceId(engine);
-    const apiKey = getEngineApiKey(engine);
+    const apiKey = getEngineApiKey(engine, true);
     if (apiKey) {
       this.engineApiKeyHash = createSHA('sha512')
         .update(apiKey)
@@ -314,7 +314,7 @@ export class ApolloServerBase {
     if (this.engineServiceId) {
       const { EngineReportingAgent } = require('apollo-engine-reporting');
       this.engineReportingAgent = new EngineReportingAgent(
-        typeof engine === 'object' ? engine : Object.create(null),
+        typeof engine === 'object' ? engine : Object.create(null)
       );
       // Don't add the extension here (we want to add it later in generateSchemaDerivedData).
     }
