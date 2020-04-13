@@ -16,6 +16,8 @@ import { GraphQLRequestContext } from 'apollo-server-types';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import { defaultEngineReportingSignature } from 'apollo-graphql';
 
+let warnedOnDeprecatedApiKey = false;
+
 export interface ClientInfo {
   clientName?: string;
   clientVersion?: string;
@@ -45,7 +47,7 @@ export type GenerateClientInfo<TContext> = (
   requestContext: GraphQLRequestContext<TContext>,
 ) => ClientInfo;
 
-export function getEngineApiKey({engine, shouldWarnOnDeprecatedUsage = true}: { engine: EngineReportingOptions<any> | boolean | undefined, shouldWarnOnDeprecatedUsage?: boolean }) {
+export function getEngineApiKey(engine: EngineReportingOptions<any> | boolean | undefined) {
   if (typeof engine === 'object' && engine.apiKey) {
     return engine.apiKey;
   }
@@ -55,8 +57,9 @@ export function getEngineApiKey({engine, shouldWarnOnDeprecatedUsage = true}: { 
   if(legacyApiKeyFromEnv && apiKeyFromEnv) {
     throw new Error(`Cannot set both APOLLO_KEY and ENGINE_API_KEY. Please only set APOLLO_KEY`);
   }
-  if(legacyApiKeyFromEnv && shouldWarnOnDeprecatedUsage) {
+  if(legacyApiKeyFromEnv && !warnedOnDeprecatedApiKey) {
     console.warn(`[Deprecation warning] Setting the key via ENGINE_API_KEY is deprecated and will not be supported in future versions.`)
+    warnedOnDeprecatedApiKey = true;
   }
   return  apiKeyFromEnv || legacyApiKeyFromEnv || ''
 }
@@ -247,7 +250,7 @@ export class EngineReportingAgent<TContext = any> {
   public constructor(options: EngineReportingOptions<TContext> = {}) {
     this.options = options;
 
-    this.apiKey = getEngineApiKey({engine: this.options});
+    this.apiKey = getEngineApiKey(this.options);
     if (!this.apiKey) {
       throw new Error(
         `To use EngineReportingAgent, you must specify an API key via the apiKey option or the APOLLO_KEY environment variable.`,

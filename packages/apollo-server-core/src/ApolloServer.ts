@@ -100,7 +100,7 @@ function getEngineGraphVariant(engine: Config['engine']): string | undefined {
 }
 
 function getEngineServiceId(engine: Config['engine']): string | undefined {
-  const engineApiKey = getEngineApiKey({engine, shouldWarnOnDeprecatedUsage: false});
+  const engineApiKey = getEngineApiKey(engine);
   if (engineApiKey) {
     return engineApiKey.split(':', 2)[1];
   }
@@ -304,7 +304,7 @@ export class ApolloServerBase {
     // The truthyness of this value can also be used in other forks of logic
     // related to Engine, as is the case with EngineReportingAgent just below.
     this.engineServiceId = getEngineServiceId(engine);
-    const apiKey = getEngineApiKey({engine, shouldWarnOnDeprecatedUsage: false});
+    const apiKey = getEngineApiKey(engine);
     if (apiKey) {
       this.engineApiKeyHash = createSHA('sha512')
         .update(apiKey)
