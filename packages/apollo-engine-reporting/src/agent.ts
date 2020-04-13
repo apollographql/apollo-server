@@ -55,10 +55,10 @@ export function getEngineApiKey(engine: EngineReportingOptions<any> | boolean | 
   const apiKeyFromEnv = process.env.APOLLO_KEY;
 
   if(legacyApiKeyFromEnv && apiKeyFromEnv) {
-    throw new Error(`Cannot set both APOLLO_KEY and ENGINE_API_KEY. Please only set APOLLO_KEY`);
+    throw new Error(`Cannot set both APOLLO_KEY and ENGINE_API_KEY. Please only set APOLLO_KEY.`);
   }
   if(legacyApiKeyFromEnv && !warnedOnDeprecatedApiKey) {
-    console.warn(`[Deprecation warning] Setting the key via ENGINE_API_KEY is deprecated and will not be supported in future versions.`)
+    console.warn(`[Deprecation warning] Setting the key via ENGINE_API_KEY is deprecated and will not be supported in future versions.`);
     warnedOnDeprecatedApiKey = true;
   }
   return  apiKeyFromEnv || legacyApiKeyFromEnv || ''
