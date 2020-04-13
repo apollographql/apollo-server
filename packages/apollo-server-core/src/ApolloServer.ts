@@ -4,7 +4,6 @@ import {
   GraphQLParseOptions,
 } from 'graphql-tools';
 import { Server as HttpServer } from 'http';
-import loglevel from 'loglevel';
 import {
   execute,
   GraphQLSchema,
@@ -69,7 +68,6 @@ import {
 
 import { Headers } from 'apollo-server-env';
 import { buildServiceDefinition } from '@apollographql/apollo-tools';
-import { Logger } from "apollo-server-types";
 
 const NoIntrospection = (context: ValidationContext) => ({
   Field(node: FieldDefinitionNode) {
@@ -139,7 +137,6 @@ type SchemaDerivedData = {
 };
 
 export class ApolloServerBase {
-  private logger: Logger;
   public subscriptionsPath?: string;
   public graphqlPath: string = '/graphql';
   public requestOptions: Partial<GraphQLServerOptions<any>> = Object.create(null);
@@ -194,29 +191,8 @@ export class ApolloServerBase {
       ...requestOptions
     } = config;
 
-    // Setup logging facilities
-    if (config.logger) {
-      this.logger = config.logger;
-    } else {
-      // If the user didn't provide their own logger, we'll initialize one.
-      const loglevelLogger = loglevel.getLogger("apollo-server");
-
-      // We don't do much logging in Apollo Server right now.  There's a notion
-      // of a `debug` flag, but it doesn't do much besides change stack traces
-      // in some error messages, but it would be odd for it to not introduce
-      // debug or higher level errors (which includes `info`, if we happen to
-      // start introducing those.  We'll default to `warn` as a sensible default
-      // of things you'd probably want to be alerted to.
-      if (this.config.debug === true) {
-        loglevelLogger.setLevel(loglevel.levels.DEBUG);
-      } else {
-        loglevelLogger.setLevel(loglevel.levels.WARN);
-      }
-
-      this.logger = loglevelLogger;
-    }
-
     if (gateway && (modules || schema || typeDefs || resolvers)) {
+      // TODO: this could be handled by adjusting the typings to keep gateway configs and non-gateway configs seprate.
       throw new Error(
         'Cannot define both `gateway` and any of: `modules`, `schema`, `typeDefs`, or `resolvers`',
       );
@@ -233,7 +209,7 @@ export class ApolloServerBase {
     // once per run, so we place the env check inside the constructor. If env
     // should be used outside of the constructor context, place it as a private
     // or protected field of the class instead of a global. Keeping the read in
-    // the constructor enables testing of different environments
+    // the contructor enables testing of different environments
     const isDev = process.env.NODE_ENV !== 'production';
 
     // if this is local dev, introspection should turned on
@@ -298,7 +274,7 @@ export class ApolloServerBase {
     if (uploads !== false && !forbidUploadsForTesting) {
       if (this.supportsUploads()) {
         if (!runtimeSupportsUploads) {
-          printNodeFileUploadsMessage(this.logger);
+          printNodeFileUploadsMessage();
           throw new Error(
             '`graphql-upload` is no longer supported on Node.js < v8.5.0.  ' +
               'See https://bit.ly/gql-upload-node-6.',
@@ -319,13 +295,8 @@ export class ApolloServerBase {
       }
     }
 
+    // Normalize the legacy option maskErrorDetails.
     if (engine && typeof engine === 'object') {
-      // Use the `ApolloServer` logger unless a more granular logger is set.
-      if (!engine.logger) {
-        engine.logger = this.logger;
-      }
-
-      // Normalize the legacy option maskErrorDetails.
       if (engine.maskErrorDetails && engine.rewriteError) {
         throw new Error("Can't set both maskErrorDetails and rewriteError!");
       } else if (
@@ -341,7 +312,7 @@ export class ApolloServerBase {
 
     // In an effort to avoid over-exposing the API key itself, extract the
     // service ID from the API key for plugins which only needs service ID.
-    // The truthiness of this value can also be used in other forks of logic
+    // The truthyness of this value can also be used in other forks of logic
     // related to Engine, as is the case with EngineReportingAgent just below.
     this.engineServiceId = getEngineServiceId(engine);
     const apiKey = getEngineApiKey(engine);
@@ -354,15 +325,13 @@ export class ApolloServerBase {
     if (this.engineServiceId) {
       const { EngineReportingAgent } = require('apollo-engine-reporting');
       this.engineReportingAgent = new EngineReportingAgent(
-        typeof engine === 'object' ? engine : Object.create({
-          logger: this.logger,
-        }),
+        typeof engine === 'object' ? engine : Object.create(null),
       );
       // Don't add the extension here (we want to add it later in generateSchemaDerivedData).
     }
 
     if (gateway && subscriptions !== false) {
-      // TODO: this could be handled by adjusting the typings to keep gateway configs and non-gateway configs separate.
+      // TODO: this could be handled by adjusting the typings to keep gateway configs and non-gateway configs seprate.
       throw new Error(
         [
           'Subscriptions are not yet compatible with the gateway.',
@@ -454,27 +423,13 @@ export class ApolloServerBase {
             }
           : undefined;
 
-      // Set the executor whether the gateway 'load' call succeeds or not.
-      // If the schema becomes available eventually (after a setInterval retry)
-      // this executor will still be necessary in order to be able to support
-      // a federated schema!
-      this.requestOptions.executor = gateway.executor;
-
-      return gateway.load({ engine: engineConfig })
-        .then(config => config.schema)
-        .catch(err => {
-          // We intentionally do not re-throw the exact error from the gateway
-          // configuration as it may contain implementation details and this
-          // error will propagate to the client. We will, however, log the error
-          // for observation in the logs.
-          const message = "This data graph is missing a valid configuration.";
-          this.logger.error(message + " " + (err && err.message || err));
-          throw new Error(
-            message + " More details may be available in the server logs.");
-        });
+      return gateway.load({ engine: engineConfig }).then(config => {
+        this.requestOptions.executor = config.executor;
+        return config.schema;
+      });
     }
 
-    let constructedSchema: GraphQLSchema;
+    let constructedSchema;
     if (schema) {
       constructedSchema = schema;
     } else if (modules) {
@@ -572,7 +527,7 @@ export class ApolloServerBase {
         // their own gateway or running a federated service on its own. Nonetheless, in
         // the likely case it was accidental, we warn users that they should only report
         // metrics from the Gateway.
-        this.logger.warn(
+        console.warn(
           "It looks like you're running a federated schema and you've configured your service " +
             'to report metrics to Apollo Graph Manager. You should only configure your Apollo gateway ' +
             'to report metrics to Apollo Graph Manager.',
@@ -611,22 +566,8 @@ export class ApolloServerBase {
   }
 
   protected async willStart() {
-    try {
-      var { schema, schemaHash } = await this.schemaDerivedData;
-    } catch (err) {
-      // The `schemaDerivedData` can throw if the Promise it points to does not
-      // resolve with a `GraphQLSchema`. As errors from `willStart` are start-up
-      // errors, other Apollo middleware after us will not be called, including
-      // our health check, CORS, etc.
-      //
-      // Returning here allows the integration's other Apollo middleware to
-      // function properly in the event of a failure to obtain the data graph
-      // configuration from the gateway's `load` method during initialization.
-      return;
-    }
-
+    const { schema, schemaHash } = await this.schemaDerivedData;
     const service: GraphQLServiceContext = {
-      logger: this.logger,
       schema: schema,
       schemaHash: schemaHash,
       engine: {
@@ -833,7 +774,6 @@ export class ApolloServerBase {
 
     return {
       schema,
-      logger: this.logger,
       plugins: this.plugins,
       documentStore,
       extensions,
@@ -854,14 +794,20 @@ export class ApolloServerBase {
   }
 
   public async executeOperation(request: GraphQLRequest) {
-    const options = await this.graphQLServerOptions();
+    let options;
+
+    try {
+      options = await this.graphQLServerOptions();
+    } catch (e) {
+      e.message = `Invalid options provided to ApolloServer: ${e.message}`;
+      throw new Error(e);
+    }
 
     if (typeof options.context === 'function') {
       options.context = (options.context as () => never)();
     }
 
     const requestCtx: GraphQLRequestContext = {
-      logger: this.logger,
       request,
       context: options.context || Object.create(null),
       cache: options.cache!,
@@ -876,8 +822,8 @@ export class ApolloServerBase {
   }
 }
 
-function printNodeFileUploadsMessage(logger: Logger) {
-  logger.error(
+function printNodeFileUploadsMessage() {
+  console.error(
     [
       '*****************************************************************',
       '*                                                               *',

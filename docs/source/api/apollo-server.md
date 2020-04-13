@@ -68,12 +68,6 @@ new ApolloServer({
     | AWS Lambda | <code>{<br/>&nbsp;&nbsp;event: [`APIGatewayProxyEvent`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/50adc95acf873e714256074311353232fcc1b5ed/types/aws-lambda/index.d.ts#L78-L92),<br/>&nbsp;&nbsp;context: [`LambdaContext`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/50adc95acf873e714256074311353232fcc1b5ed/types/aws-lambda/index.d.ts#L510-L534)<br/>}</code> |
     | Micro | <code>{ req: [`MicroRequest`](https://github.com/apollographql/apollo-server/blob/c356bcf3f2864b8d2fcca0add455071e0606ef46/packages/apollo-server-micro/src/types.ts#L3-L5), res: [`ServerResponse`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/50adc95acf873e714256074311353232fcc1b5ed/types/node/v10/http.d.ts#L145-L158) }</code> |
 
-  * `logger`: `Logger`
-
-    A logging implementation to be used in place of `console`.  The implementation must provide the methods which satisfy the requirements of [the `Logger` interface](https://github.com/apollographql/apollo-server/blob/80a12d89ea1ae9a0892f4a81d9213eddf95ca965/packages/apollo-server-types/src/index.ts#L114-L121) (i.e. it must provide `debug`, `info`, `warn` and `error` methods).  When a custom logger is provided, it will receive all levels of logging and it is up to the logger itself to determine how it wishes to handle each level.  When a custom logger is _not_ provided, Apollo Server will default to outputting `warn` and `error` levels unless `debug: true` is specified,  in which case it will output all log levels (i.e. `debug` through `error`).
-
-    Additionally, this `logger` will be made available on the `GraphQLRequestContext` and available to plugins.  This allows a plugin to, e.g., augment the logger on a per-request basis within the `requestDidStart` life-cycle hook.
-
   * `rootValue`: <`Any`> | <`Function`>
 
     A value or function called with the parsed `Document`, creating the root value passed to the graphql executor. The function is useful if you wish to provide a different root value based on the query operation type.
@@ -342,10 +336,6 @@ addMockFunctionsToSchema({
   [Graph Manager](https://engine.apollographql.com) by logging in and creating
   a service. You can also specify an API key with the `ENGINE_API_KEY`
   environment variable, although the `apiKey` option takes precedence.
-
-* `logger`: `Logger`
-
-  By default, this will inherit from the `logger` provided to `ApolloServer` which defaults to `console` when not provided.  If specified within the `EngineReportingOptions` it can be used to send engine reporting to a separate logger.  If provided, the implementation must provide the methods which satisfy the requirements of [the `Logger` interface](https://github.com/apollographql/apollo-server/blob/80a12d89ea1ae9a0892f4a81d9213eddf95ca965/packages/apollo-server-types/src/index.ts#L114-L121) (i.e. it must provide `debug`, `info`, `warn` and `error` methods).
 
 *  `calculateSignature`: (ast: DocumentNode, operationName: string) => string
 

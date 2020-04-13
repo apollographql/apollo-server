@@ -97,8 +97,6 @@ export class ApolloServer extends ApolloServerBase {
     // object, so we have to create it.
     const app = express();
 
-    app.disable('x-powered-by');
-
     // provide generous values for the getting started experience
     super.applyMiddleware({
       app,

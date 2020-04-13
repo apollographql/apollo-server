@@ -222,8 +222,6 @@ export default function plugin(
         },
 
         async willSendResponse(requestContext) {
-          const logger = requestContext.logger || console;
-
           if (!isGraphQLQuery(requestContext)) {
             return;
           }
@@ -297,13 +295,13 @@ export default function plugin(
             // InMemoryLRUCache synchronously).
             cache
               .set(key, serializedValue, { ttl: overallCachePolicy!.maxAge })
-              .catch(logger.warn);
+              .catch(console.warn);
           }
 
           const isPrivate = overallCachePolicy.scope === CacheScope.Private;
           if (isPrivate) {
             if (!options.sessionId) {
-              logger.warn(
+              console.warn(
                 'A GraphQL response used @cacheControl or setCacheHint to set cache hints with scope ' +
                   "Private, but you didn't define the sessionId hook for " +
                   'apollo-server-plugin-response-cache. Not caching.',

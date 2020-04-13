@@ -1,43 +1,27 @@
 import nock from 'nock';
-import { fetch } from 'apollo-server-env';
-import { Logger } from 'apollo-server-types';
-import { ApolloGateway, GCS_RETRY_COUNT, getDefaultGcsFetcher } from '../..';
+import { ApolloGateway } from '../..';
 import {
-  mockSDLQuerySuccess,
-  mockServiceHealthCheckSuccess,
-  mockServiceHealthCheck,
+  mockLocalhostSDLQuery,
   mockStorageSecretSuccess,
-  mockStorageSecret,
   mockCompositionConfigLinkSuccess,
-  mockCompositionConfigLink,
   mockCompositionConfigsSuccess,
-  mockCompositionConfigs,
   mockImplementingServicesSuccess,
-  mockImplementingServices,
   mockRawPartialSchemaSuccess,
-  mockRawPartialSchema,
   apiKeyHash,
   graphId,
+  mockImplementingServices,
+  mockRawPartialSchema,
 } from './nockMocks';
-
-import loadServicesFromStorage = require("../../loadServicesFromStorage");
 
 // This is a nice DX hack for GraphQL code highlighting and formatting within the file.
 // Anything wrapped within the gql tag within this file is just a string, not an AST.
 const gql = String.raw;
 
-export interface MockService {
-  gcsDefinitionPath: string;
-  partialSchemaPath: string;
-  url: string;
-  sdl: string;
-}
-
-const service: MockService = {
-  gcsDefinitionPath: 'service-definition.json',
+const service = {
+  implementingServicePath: 'service-definition.json',
   partialSchemaPath: 'accounts-partial-schema.json',
-  url: 'http://localhost:4001',
-  sdl: gql`
+  federatedServiceURL: 'http://localhost:4001',
+  federatedServiceSchema: gql`
     extend type Query {
       me: User
       everyone: [User]
@@ -49,14 +33,14 @@ const service: MockService = {
       name: String
       username: String
     }
-  `,
+  `
 };
 
-const updatedService: MockService = {
-  gcsDefinitionPath: 'updated-service-definition.json',
+const updatedService = {
+  implementingServicePath: 'updated-service-definition.json',
   partialSchemaPath: 'updated-accounts-partial-schema.json',
-  url: 'http://localhost:4002',
-  sdl: gql`
+  federatedServiceURL: 'http://localhost:4002',
+  federatedServiceSchema: gql`
     extend type Query {
       me: User
       everyone: [User]
@@ -68,374 +52,94 @@ const updatedService: MockService = {
       name: String
       username: String
     }
-  `,
-};
-
-let fetcher: typeof fetch;
-let logger: Logger;
+  `
+}
 
 beforeEach(() => {
   if (!nock.isActive()) nock.activate();
-
-  fetcher = getDefaultGcsFetcher().defaults({
-    retry: {
-      retries: GCS_RETRY_COUNT,
-      minTimeout: 0,
-      maxTimeout: 0,
-    },
-  });
-
-  const warn = jest.fn();
-  const debug = jest.fn();
-  const error = jest.fn();
-  const info = jest.fn();
-
-  logger = {
-    warn,
-    debug,
-    error,
-    info,
-  };
 });
 
 afterEach(() => {
   expect(nock.isDone()).toBeTruthy();
   nock.cleanAll();
   nock.restore();
+  jest.useRealTimers();
 });
 
 it('Queries remote endpoints for their SDLs', async () => {
-  mockSDLQuerySuccess(service);
+  mockLocalhostSDLQuery({ url: service.federatedServiceURL }).reply(200, {
+    data: { _service: { sdl: service.federatedServiceSchema } },
+  });
 
   const gateway = new ApolloGateway({
-    serviceList: [{ name: 'accounts', url: service.url }],
-    logger
+    serviceList: [
+      { name: 'accounts', url: `${service.federatedServiceURL}/graphql` },
+    ],
   });
   await gateway.load();
   expect(gateway.schema!.getType('User')!.description).toBe('This is my User');
 });
 
+// This test is maybe a bit terrible, but IDK a better way to mock all the requests
 it('Extracts service definitions from remote storage', async () => {
   mockStorageSecretSuccess();
   mockCompositionConfigLinkSuccess();
-  mockCompositionConfigsSuccess([service]);
+  mockCompositionConfigsSuccess([service.implementingServicePath]);
   mockImplementingServicesSuccess(service);
   mockRawPartialSchemaSuccess(service);
 
-  const gateway = new ApolloGateway({ logger });
+  const gateway = new ApolloGateway({});
 
   await gateway.load({ engine: { apiKeyHash, graphId } });
   expect(gateway.schema!.getType('User')!.description).toBe('This is my User');
-});
-
-it.each([
-  ['warned', 'present'],
-  ['not warned', 'absent'],
-])('conflicting configurations are %s about when %s', async (_word, mode) => {
-  const isConflict = mode === 'present';
-  let blockerResolve: () => void;
-  const blocker = new Promise(resolve => (blockerResolve = resolve));
-  const original = loadServicesFromStorage.getServiceDefinitionsFromStorage;
-  const spyGetServiceDefinitionsFromStorage = jest
-    .spyOn(loadServicesFromStorage, 'getServiceDefinitionsFromStorage')
-    .mockImplementationOnce(async (...args) => {
-      try {
-        return await original(...args);
-      } catch (e) {
-        throw e;
-      } finally {
-        setImmediate(blockerResolve);
-      }
-    });
-
-  mockStorageSecretSuccess();
-  if (isConflict) {
-    mockCompositionConfigLinkSuccess();
-    mockCompositionConfigsSuccess([service]);
-    mockImplementingServicesSuccess(service);
-    mockRawPartialSchemaSuccess(service);
-  } else {
-    mockCompositionConfigLink().reply(403);
-  }
-
-  mockSDLQuerySuccess(service);
-
-  const gateway = new ApolloGateway({
-    serviceList: [
-      { name: 'accounts', url: service.url },
-    ],
-    logger
-  });
-
-  await gateway.load({ engine: { apiKeyHash, graphId } });
-  await blocker; // Wait for the definitions to be "fetched".
-
-  (isConflict
-    ? expect(logger.warn)
-    : expect(logger.warn).not
-  ).toHaveBeenCalledWith(expect.stringMatching(
-    /A local gateway service list is overriding an Apollo Graph Manager managed configuration/));
-  spyGetServiceDefinitionsFromStorage.mockRestore();
 });
 
 it('Rollsback to a previous schema when triggered', async () => {
   // Init
   mockStorageSecretSuccess();
   mockCompositionConfigLinkSuccess();
-  mockCompositionConfigsSuccess([service]);
+  mockCompositionConfigsSuccess([service.implementingServicePath]);
   mockImplementingServicesSuccess(service);
   mockRawPartialSchemaSuccess(service);
 
   // Update 1
   mockStorageSecretSuccess();
   mockCompositionConfigLinkSuccess();
-  mockCompositionConfigsSuccess([updatedService]);
+  mockCompositionConfigsSuccess([updatedService.implementingServicePath]);
   mockImplementingServicesSuccess(updatedService);
   mockRawPartialSchemaSuccess(updatedService);
 
   // Rollback
   mockStorageSecretSuccess();
   mockCompositionConfigLinkSuccess();
-  mockCompositionConfigsSuccess([service]);
+  mockCompositionConfigsSuccess([service.implementingServicePath]);
   mockImplementingServices(service).reply(304);
   mockRawPartialSchema(service).reply(304);
 
-  let firstResolve: () => void;
-  let secondResolve: () => void;
-  const firstSchemaChangeBlocker = new Promise(res => (firstResolve = res));
-  const secondSchemaChangeBlocker = new Promise(res => (secondResolve = res));
+  jest.useFakeTimers();
 
-  const onChange = jest
-    .fn()
-    .mockImplementationOnce(() => firstResolve())
-    .mockImplementationOnce(() => secondResolve());
-
-  const gateway = new ApolloGateway({ logger });
-  // @ts-ignore for testing purposes, a short pollInterval is ideal so we'll override here
-  gateway.experimental_pollInterval = 100;
-
+  const onChange = jest.fn();
+  const gateway = new ApolloGateway();
   await gateway.load({ engine: { apiKeyHash, graphId } });
   gateway.onSchemaChange(onChange);
 
-  await firstSchemaChangeBlocker;
+  // 10000 ms is the default pollInterval
+  jest.advanceTimersByTime(10000);
+
+  // This useReal/useFake is challenging to explain the need for, and I probably
+  // don't have the _correct_ answer here, but it seems that pushing this process
+  // to the back of the task queue is insufficient.
+  jest.useRealTimers();
+  await new Promise(resolve => setTimeout(resolve, 100));
+  jest.useFakeTimers();
+
   expect(onChange.mock.calls.length).toBe(1);
 
-  await secondSchemaChangeBlocker;
+  jest.advanceTimersByTime(10000);
+
+  jest.useRealTimers();
+  await new Promise(resolve => setTimeout(resolve, 100));
+  jest.useFakeTimers();
+
   expect(onChange.mock.calls.length).toBe(2);
-});
-
-function failNTimes(n: number, fn: () => nock.Interceptor) {
-  for (let i = 0; i < n; i++) {
-    fn().reply(500);
-  }
-}
-
-it(`Retries GCS (up to ${GCS_RETRY_COUNT} times) on failure for each request and succeeds`, async () => {
-  failNTimes(GCS_RETRY_COUNT, mockStorageSecret);
-  mockStorageSecretSuccess();
-
-  failNTimes(GCS_RETRY_COUNT, mockCompositionConfigLink);
-  mockCompositionConfigLinkSuccess();
-
-  failNTimes(GCS_RETRY_COUNT, mockCompositionConfigs);
-  mockCompositionConfigsSuccess([service]);
-
-  failNTimes(GCS_RETRY_COUNT, () => mockImplementingServices(service));
-  mockImplementingServicesSuccess(service);
-
-  failNTimes(GCS_RETRY_COUNT, () => mockRawPartialSchema(service));
-  mockRawPartialSchemaSuccess(service);
-
-  const gateway = new ApolloGateway({ fetcher, logger });
-
-  await gateway.load({ engine: { apiKeyHash, graphId } });
-  expect(gateway.schema!.getType('User')!.description).toBe('This is my User');
-});
-
-it(`Fails after the ${GCS_RETRY_COUNT + 1}th attempt to reach GCS`, async () => {
-  failNTimes(GCS_RETRY_COUNT + 1, mockStorageSecret);
-
-  const gateway = new ApolloGateway({ fetcher, logger });
-  await expect(
-    gateway.load({ engine: { apiKeyHash, graphId } }),
-  ).rejects.toThrowErrorMatchingInlineSnapshot(
-    `"Could not communicate with Apollo Graph Manager storage: "`,
-  );
-});
-
-it(`Errors when the secret isn't hosted on GCS`, async () => {
-  mockStorageSecret().reply(
-    403,
-    `<Error><Code>AccessDenied</Code>
-    Anonymous caller does not have storage.objects.get`,
-    { 'content-type': 'application/xml' },
-  );
-
-  const gateway = new ApolloGateway({ fetcher, logger });
-  await expect(
-    gateway.load({ engine: { apiKeyHash, graphId } }),
-  ).rejects.toThrowErrorMatchingInlineSnapshot(
-    `"Unable to authenticate with Apollo Graph Manager storage while fetching https://storage.googleapis.com/engine-partial-schema-prod/federated-service/storage-secret/dd55a79d467976346d229a7b12b673ce.json.  Ensure that the API key is configured properly and that a federated service has been pushed.  For details, see https://go.apollo.dev/g/resolve-access-denied."`,
-  );
-});
-
-describe('Downstream service health checks', () => {
-  describe('Unmanaged mode', () => {
-    it(`Performs health checks to downstream services on load`, async () => {
-      mockSDLQuerySuccess(service);
-      mockServiceHealthCheckSuccess(service);
-
-      const gateway = new ApolloGateway({
-        logger,
-        serviceList: [{ name: 'accounts', url: service.url }],
-        serviceHealthCheck: true,
-      });
-
-      await gateway.load();
-      expect(gateway.schema!.getType('User')!.description).toBe('This is my User');
-    });
-
-    it(`Rejects on initial load when health check fails`, async () => {
-      mockSDLQuerySuccess(service);
-      mockServiceHealthCheck(service).reply(500);
-
-      const gateway = new ApolloGateway({
-        serviceList: [{ name: 'accounts', url: service.url }],
-        serviceHealthCheck: true,
-        logger,
-      });
-
-      await expect(gateway.load()).rejects.toThrowErrorMatchingInlineSnapshot(
-        `"500: Internal Server Error"`,
-      );
-    });
-  });
-
-  describe('Managed mode', () => {
-    it('Performs health checks to downstream services on load', async () => {
-      mockStorageSecretSuccess();
-      mockCompositionConfigLinkSuccess();
-      mockCompositionConfigsSuccess([service]);
-      mockImplementingServicesSuccess(service);
-      mockRawPartialSchemaSuccess(service);
-
-      mockServiceHealthCheckSuccess(service);
-
-      const gateway = new ApolloGateway({ serviceHealthCheck: true, logger });
-
-      await gateway.load({ engine: { apiKeyHash, graphId } });
-      expect(gateway.schema!.getType('User')!.description).toBe('This is my User');
-    });
-
-    it('Rejects on initial load when health check fails', async () => {
-      mockStorageSecretSuccess();
-      mockCompositionConfigLinkSuccess();
-      mockCompositionConfigsSuccess([service]);
-      mockImplementingServicesSuccess(service);
-      mockRawPartialSchemaSuccess(service);
-
-      mockServiceHealthCheck(service).reply(500);
-
-      const gateway = new ApolloGateway({ serviceHealthCheck: true, logger });
-
-      await expect(
-        gateway.load({ engine: { apiKeyHash, graphId } }),
-      ).rejects.toThrowErrorMatchingInlineSnapshot(`"500: Internal Server Error"`);
-    });
-
-    it('Rolls over to new schema when health check succeeds', async () => {
-      mockStorageSecretSuccess();
-      mockCompositionConfigLinkSuccess();
-      mockCompositionConfigsSuccess([service]);
-      mockImplementingServicesSuccess(service);
-      mockRawPartialSchemaSuccess(service);
-      mockServiceHealthCheckSuccess(service);
-
-      // Update
-      mockStorageSecretSuccess();
-      mockCompositionConfigLinkSuccess();
-      mockCompositionConfigsSuccess([updatedService]);
-      mockImplementingServicesSuccess(updatedService);
-      mockRawPartialSchemaSuccess(updatedService);
-      mockServiceHealthCheckSuccess(updatedService);
-
-      let resolve: () => void;
-      const schemaChangeBlocker = new Promise(res => (resolve = res));
-      const onChange = jest.fn().mockImplementationOnce(() => resolve());
-
-      const gateway = new ApolloGateway({
-        serviceHealthCheck: true,
-        logger,
-      });
-      // @ts-ignore for testing purposes, a short pollInterval is ideal so we'll override here
-      gateway.experimental_pollInterval = 100;
-
-      await gateway.load({ engine: { apiKeyHash, graphId } });
-      gateway.onSchemaChange(onChange);
-
-      await schemaChangeBlocker;
-      expect(onChange.mock.calls.length).toBe(1);
-
-      expect(gateway.schema!.getType('User')!.description).toBe('This is my updated User');
-    });
-
-    it('Preserves original schema when health check fails', async () => {
-      mockStorageSecretSuccess();
-      mockCompositionConfigLinkSuccess();
-      mockCompositionConfigsSuccess([service]);
-      mockImplementingServicesSuccess(service);
-      mockRawPartialSchemaSuccess(service);
-      mockServiceHealthCheckSuccess(service);
-
-      // Update
-      mockStorageSecretSuccess();
-      mockCompositionConfigLinkSuccess();
-      mockCompositionConfigsSuccess([updatedService]);
-      mockImplementingServicesSuccess(updatedService);
-      mockRawPartialSchemaSuccess(updatedService);
-      mockServiceHealthCheck(updatedService).reply(500);
-
-      let resolve: () => void;
-      const schemaChangeBlocker = new Promise(res => (resolve = res));
-
-      const gateway = new ApolloGateway({ serviceHealthCheck: true, logger });
-      // @ts-ignore for testing purposes, a short pollInterval is ideal so we'll override here
-      gateway.experimental_pollInterval = 100;
-
-      // load the gateway as usual
-      await gateway.load({ engine: { apiKeyHash, graphId } });
-      expect(gateway.schema!.getType('User')!.description).toBe('This is my User');
-
-      // @ts-ignore for testing purposes, we'll call the original `updateComposition`
-      // function from our mock
-      const original = gateway.updateComposition;
-      const mockUpdateComposition = jest
-        .fn(original)
-        .mockImplementationOnce(async opts => {
-          // mock the first poll and handle the error which would otherwise be caught
-          // and logged from within the `pollServices` class method
-          await expect(original.apply(gateway, [opts]))
-            .rejects
-            .toThrowErrorMatchingInlineSnapshot(
-              `"500: Internal Server Error"`,
-            );
-          // finally resolve the promise which drives this test
-          resolve();
-        });
-
-      // @ts-ignore for testing purposes, replace the `updateComposition`
-      // function on the gateway with our mock
-      gateway.updateComposition = mockUpdateComposition;
-
-      // This kicks off polling within the gateway
-      gateway.onSchemaChange(() => {});
-
-      await schemaChangeBlocker;
-
-      // At this point, the mock update should have been called but the schema
-      // should not have updated to the new one.
-      expect(mockUpdateComposition.mock.calls.length).toBe(1);
-      expect(gateway.schema!.getType('User')!.description).toBe('This is my User');
-    });
-  });
 });

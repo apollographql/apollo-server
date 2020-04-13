@@ -19,7 +19,6 @@ export type WithRequired<T, K extends keyof T> = T & Required<Pick<T, K>>;
 type Mutable<T> = { -readonly [P in keyof T]: T[P] };
 
 export interface GraphQLServiceContext {
-  logger: Logger;
   schema: GraphQLSchema;
   schemaHash: string;
   engine: {
@@ -63,8 +62,6 @@ export interface GraphQLRequestContext<TContext = Record<string, any>> {
   readonly request: GraphQLRequest;
   readonly response?: GraphQLResponse;
 
-  logger: Logger;
-
   readonly context: TContext;
   readonly cache: KeyValueCache;
 
@@ -99,7 +96,10 @@ export type ValidationRule = (context: ValidationContext) => ASTVisitor;
 export class InvalidGraphQLRequestError extends GraphQLError {}
 
 export type GraphQLExecutor<TContext = Record<string, any>> = (
-  requestContext: GraphQLRequestContextExecutionDidStart<TContext>,
+  requestContext: WithRequired<
+    GraphQLRequestContext<TContext>,
+    'document' | 'operationName' | 'operation' | 'queryHash'
+  >,
 ) => ValueOrPromise<GraphQLExecutionResult>;
 
 export type GraphQLExecutionResult = {
@@ -107,54 +107,3 @@ export type GraphQLExecutionResult = {
   errors?: ReadonlyArray<GraphQLError>;
   extensions?: Record<string, any>;
 };
-
-export type Logger = {
-  // Ordered from least-severe to most-severe.
-  debug(message?: any): void;
-  info(message?: any): void;
-  warn(message?: any): void;
-  error(message?: any): void;
-}
-
-export type GraphQLRequestContextParsingDidStart<TContext> =
-  WithRequired<GraphQLRequestContext<TContext>,
-    | 'metrics'
-    | 'source'
-    | 'queryHash'
-  >;
-export type GraphQLRequestContextValidationDidStart<TContext> =
-  GraphQLRequestContextParsingDidStart<TContext> &
-  WithRequired<GraphQLRequestContext<TContext>,
-    | 'document'
-  >;
-export type GraphQLRequestContextDidResolveOperation<TContext> =
-  GraphQLRequestContextValidationDidStart<TContext> &
-  WithRequired<GraphQLRequestContext<TContext>,
-    | 'operation'
-    | 'operationName'
-  >;
-export type GraphQLRequestContextDidEncounterErrors<TContext> =
-  WithRequired<GraphQLRequestContext<TContext>,
-    | 'metrics'
-    | 'errors'
-  >;
-export type GraphQLRequestContextResponseForOperation<TContext> =
-  WithRequired<GraphQLRequestContext<TContext>,
-    | 'metrics'
-    | 'source'
-    | 'document'
-    | 'operation'
-    | 'operationName'
-  >;
-export type GraphQLRequestContextExecutionDidStart<TContext> =
-  GraphQLRequestContextParsingDidStart<TContext> &
-  WithRequired<GraphQLRequestContext<TContext>,
-    | 'document'
-    | 'operation'
-    | 'operationName'
-  >;
-export type GraphQLRequestContextWillSendResponse<TContext> =
-  WithRequired<GraphQLRequestContext<TContext>,
-    | 'metrics'
-    | 'response'
-  >;

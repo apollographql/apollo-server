@@ -6,6 +6,10 @@
 
 - _Nothing yet! Stay tuned._
 
+## 0.14.1
+
+- Revert everything from the `release-2.12.0` merge commit
+
 ## 0.14.0
 
 > [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/71a3863f59f4ab2c9052c316479d94c6708c4309)

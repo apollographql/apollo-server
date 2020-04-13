@@ -2,7 +2,7 @@ import { GraphQLRequest } from 'apollo-server-types';
 import { parse } from 'graphql';
 import { Headers, HeadersInit } from 'node-fetch';
 import { GraphQLDataSource } from './datasources/types';
-import { Experimental_UpdateServiceDefinitions, SERVICE_DEFINITION_QUERY } from './';
+import { Experimental_UpdateServiceDefinitions } from './';
 import { ServiceDefinition } from '@apollo/federation';
 
 export async function getServiceDefinitionsFromRemoteEndpoint({
@@ -26,51 +26,57 @@ export async function getServiceDefinitionsFromRemoteEndpoint({
 
   let isNewSchema = false;
   // for each service, fetch its introspection schema
-  const promiseOfServiceList = serviceList.map(({ name, url, dataSource }) => {
-    if (!url) {
-      throw new Error(
-        `Tried to load schema for '${name}' but no 'url' was specified.`);
-    }
+  const serviceDefinitions: ServiceDefinition[] = (await Promise.all(
+    serviceList.map(({ name, url, dataSource }) => {
+      if (!url) {
+        throw new Error(`Tried to load schema from ${name} but no url found`);
+      }
 
-    const request: GraphQLRequest = {
-      query: SERVICE_DEFINITION_QUERY,
-      http: {
-        url,
-        method: 'POST',
-        headers: new Headers(headers),
-      },
-    };
+      const request: GraphQLRequest = {
+        query: 'query GetServiceDefinition { _service { sdl } }',
+        http: {
+          url,
+          method: 'POST',
+          headers: new Headers(headers),
+        },
+      };
 
-    return dataSource
-      .process({ request, context: {} })
-      .then(({ data, errors }): ServiceDefinition => {
-        if (data && !errors) {
-          const typeDefs = data._service.sdl as string;
-          const previousDefinition = serviceSdlCache.get(name);
-          // this lets us know if any downstream service has changed
-          // and we need to recalculate the schema
-          if (previousDefinition !== typeDefs) {
-            isNewSchema = true;
+      return dataSource
+        .process({ request, context: {} })
+        .then(({ data, errors }) => {
+          if (data && !errors) {
+            const typeDefs = data._service.sdl as string;
+            const previousDefinition = serviceSdlCache.get(name);
+            // this lets us know if any downstream service has changed
+            // and we need to recalculate the schema
+            if (previousDefinition !== typeDefs) {
+              isNewSchema = true;
+            }
+            serviceSdlCache.set(name, typeDefs);
+            return {
+              name,
+              url,
+              typeDefs: parse(typeDefs),
+            };
           }
-          serviceSdlCache.set(name, typeDefs);
-          return {
-            name,
-            url,
-            typeDefs: parse(typeDefs),
-          };
-        }
 
-        throw new Error(errors?.map(e => e.message).join("\n"));
-      })
-      .catch(err => {
-        const errorMessage =
-          `Couldn't load service definitions for "${name}" at ${url}` +
-          (err && err.message ? ": " + err.message || err : "");
+          // XXX handle local errors better for local development
+          if (errors) {
+            errors.forEach(console.error);
+          }
 
-        throw new Error(errorMessage);
-      });
-  });
+          return false;
+        })
+        .catch(error => {
+          console.warn(
+            `Encountered error when loading ${name} at ${url}: ${error.message}`,
+          );
+          return false;
+        });
+    }),
+  ).then(serviceDefinitions =>
+    serviceDefinitions.filter(Boolean),
+  )) as ServiceDefinition[];
 
-  const serviceDefinitions = await Promise.all(promiseOfServiceList);
   return { serviceDefinitions, isNewSchema }
 }

@@ -12,14 +12,14 @@ export class RedisClusterCache implements KeyValueCache {
     ttl: 300,
   };
 
-  private loader: DataLoader<string, string | null>;
+  private loader: DataLoader<string, string>;
 
   constructor(nodes: ClusterNode[], options?: ClusterOptions) {
-    const client = this.client = new Redis.Cluster(nodes, options);
+    this.client = new Redis.Cluster(nodes, options);
 
     this.loader = new DataLoader(
       (keys = []) =>
-        Promise.all(keys.map(key => client.get(key).catch(() => null))),
+        Promise.all(keys.map(key => this.client.get(key).catch(() => null))),
       { cache: false },
     );
   }

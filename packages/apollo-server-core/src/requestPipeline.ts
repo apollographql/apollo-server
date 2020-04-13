@@ -7,10 +7,8 @@ import {
   ExecutionArgs,
   GraphQLError,
   GraphQLFormattedError,
-  validate as graphqlValidate,
-  parse as graphqlParse,
-  execute as graphqlExecute,
 } from 'graphql';
+import * as graphql from 'graphql';
 import {
   GraphQLExtension,
   GraphQLExtensionStack,
@@ -45,13 +43,6 @@ import {
 import {
   ApolloServerPlugin,
   GraphQLRequestListener,
-  GraphQLRequestContextExecutionDidStart,
-  GraphQLRequestContextResponseForOperation,
-  GraphQLRequestContextDidResolveOperation,
-  GraphQLRequestContextParsingDidStart,
-  GraphQLRequestContextValidationDidStart,
-  GraphQLRequestContextWillSendResponse,
-  GraphQLRequestContextDidEncounterErrors,
 } from 'apollo-server-plugin-base';
 
 import { Dispatcher } from './utils/dispatcher';
@@ -117,11 +108,6 @@ export async function processGraphQLRequest<TContext>(
   config: GraphQLRequestPipelineConfig<TContext>,
   requestContext: Mutable<GraphQLRequestContext<TContext>>,
 ): Promise<GraphQLResponse> {
-  // For legacy reasons, this exported method may exist without a `logger` on
-  // the context.  We'll need to make sure we account for that, even though
-  // all of our own machinery will certainly set it now.
-  const logger = requestContext.logger || console;
-
   let cacheControlExtension: CacheControlExtension | undefined;
   const extensionStack = initializeExtensionStack();
   (requestContext.context as any)._extensionStack = extensionStack;
@@ -188,7 +174,7 @@ export async function processGraphQLRequest<TContext>(
       }
 
       // We won't write to the persisted query cache until later.
-      // Deferring the writing gives plugins the ability to "win" from use of
+      // Defering the writing gives plugins the ability to "win" from use of
       // the cache, but also have their say in whether or not the cache is
       // written to (by interrupting the request with an error).
       metrics.persistedQueryRegister = true;
@@ -229,9 +215,9 @@ export async function processGraphQLRequest<TContext>(
       try {
         requestContext.document = await config.documentStore.get(queryHash);
       } catch (err) {
-        logger.warn(
-          'An error occurred while attempting to read from the documentStore. '
-          + (err && err.message) || err,
+        console.warn(
+          'An error occurred while attempting to read from the documentStore.',
+          err,
         );
       }
     }
@@ -241,7 +227,10 @@ export async function processGraphQLRequest<TContext>(
     if (!requestContext.document) {
       const parsingDidEnd = await dispatcher.invokeDidStartHook(
         'parsingDidStart',
-        requestContext as GraphQLRequestContextParsingDidStart<TContext>,
+        requestContext as WithRequired<
+          typeof requestContext,
+          'metrics' | 'source'
+        >,
       );
 
       try {
@@ -254,7 +243,10 @@ export async function processGraphQLRequest<TContext>(
 
       const validationDidEnd = await dispatcher.invokeDidStartHook(
         'validationDidStart',
-        requestContext as GraphQLRequestContextValidationDidStart<TContext>,
+        requestContext as WithRequired<
+          typeof requestContext,
+          'document' | 'source' | 'metrics'
+        >,
       );
 
       const validationErrors = validate(requestContext.document);
@@ -282,10 +274,7 @@ export async function processGraphQLRequest<TContext>(
         Promise.resolve(
           config.documentStore.set(queryHash, requestContext.document),
         ).catch(err =>
-          logger.warn(
-            'Could not store validated document. ' +
-            (err && err.message) || err
-          )
+          console.warn('Could not store validated document.', err),
         );
       }
     }
@@ -310,7 +299,10 @@ export async function processGraphQLRequest<TContext>(
     try {
       await dispatcher.invokeHookAsync(
         'didResolveOperation',
-        requestContext as GraphQLRequestContextDidResolveOperation<TContext>,
+        requestContext as WithRequired<
+          typeof requestContext,
+          'document' | 'source' | 'operation' | 'operationName' | 'metrics'
+        >,
       );
     } catch (err) {
       // XXX: The HttpQueryError is special-cased here because we currently
@@ -349,23 +341,30 @@ export async function processGraphQLRequest<TContext>(
               }
             : Object.create(null),
         ),
-      ).catch(logger.warn);
+      ).catch(console.warn);
     }
 
     let response: GraphQLResponse | null = await dispatcher.invokeHooksUntilNonNull(
       'responseForOperation',
-      requestContext as GraphQLRequestContextResponseForOperation<TContext>,
+      requestContext as WithRequired<
+        typeof requestContext,
+        'document' | 'source' | 'operation' | 'operationName' | 'metrics'
+      >,
     );
     if (response == null) {
       const executionDidEnd = await dispatcher.invokeDidStartHook(
         'executionDidStart',
-        requestContext as GraphQLRequestContextExecutionDidStart<TContext>,
+        requestContext as WithRequired<
+          typeof requestContext,
+          'document' | 'source' | 'operation' | 'operationName' | 'metrics'
+        >,
       );
 
       try {
-        const result = await execute(
-          requestContext as GraphQLRequestContextExecutionDidStart<TContext>,
-        );
+        const result = await execute(requestContext as WithRequired<
+          typeof requestContext,
+          'document' | 'operation' | 'operationName' | 'queryHash'
+        >);
 
         if (result.errors) {
           await didEncounterErrors(result.errors);
@@ -426,7 +425,7 @@ export async function processGraphQLRequest<TContext>(
     });
 
     try {
-      return graphqlParse(query, parseOptions);
+      return graphql.parse(query, parseOptions);
     } finally {
       parsingDidEnd();
     }
@@ -441,14 +440,17 @@ export async function processGraphQLRequest<TContext>(
     const validationDidEnd = extensionStack.validationDidStart();
 
     try {
-      return graphqlValidate(config.schema, document, rules);
+      return graphql.validate(config.schema, document, rules);
     } finally {
       validationDidEnd();
     }
   }
 
   async function execute(
-    requestContext: GraphQLRequestContextExecutionDidStart<TContext>,
+    requestContext: WithRequired<
+      GraphQLRequestContext<TContext>,
+      'document' | 'operationName' | 'operation' | 'queryHash'
+    >,
   ): Promise<GraphQLExecutionResult> {
     const { request, document } = requestContext;
 
@@ -476,7 +478,7 @@ export async function processGraphQLRequest<TContext>(
         // (eg apollo-engine-reporting) assumes that.
         return await config.executor(requestContext);
       } else {
-        return await graphqlExecute(executionArgs);
+        return await graphql.execute(executionArgs);
       }
     } finally {
       executionDidEnd();
@@ -499,7 +501,10 @@ export async function processGraphQLRequest<TContext>(
     }).graphqlResponse;
     await dispatcher.invokeHookAsync(
       'willSendResponse',
-      requestContext as GraphQLRequestContextWillSendResponse<TContext>,
+      requestContext as WithRequired<
+        typeof requestContext,
+        'metrics' | 'response'
+      >,
     );
     return requestContext.response!;
   }
@@ -530,7 +535,10 @@ export async function processGraphQLRequest<TContext>(
 
     return await dispatcher.invokeHookAsync(
       'didEncounterErrors',
-      requestContext as GraphQLRequestContextDidEncounterErrors<TContext>,
+      requestContext as WithRequired<
+        typeof requestContext,
+        'metrics' | 'source' | 'errors'
+      >,
     );
   }
 

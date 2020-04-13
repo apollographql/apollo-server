@@ -1,4 +1,4 @@
-import { GraphQLRequestContext, WithRequired, Logger } from 'apollo-server-types';
+import { GraphQLRequestContext, WithRequired } from 'apollo-server-types';
 import { Request, Headers } from 'apollo-server-env';
 import {
   GraphQLResolveInfo,
@@ -30,7 +30,6 @@ const clientVersionHeaderKey = 'apollographql-client-version';
 // Its public methods all implement the GraphQLExtension interface.
 export class EngineReportingExtension<TContext = any>
   implements GraphQLExtension<TContext> {
-  private logger: Logger = console;
   private treeBuilder: EngineReportingTreeBuilder;
   private explicitOperationName?: string | null;
   private queryString?: string;
@@ -47,14 +46,12 @@ export class EngineReportingExtension<TContext = any>
     this.options = {
       ...options,
     };
-    if (options.logger) this.logger = options.logger;
     this.addTrace = addTrace;
     this.generateClientInfo =
       options.generateClientInfo || defaultGenerateClientInfo;
 
     this.treeBuilder = new EngineReportingTreeBuilder({
       rewriteError: options.rewriteError,
-      logger: this.logger,
     });
   }
 

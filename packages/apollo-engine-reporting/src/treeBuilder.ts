@@ -1,10 +1,15 @@
-import { GraphQLError, GraphQLResolveInfo, ResponsePath } from 'graphql';
+import {
+  GraphQLResolveInfo,
+  GraphQLError,
+  ResponsePath,
+  responsePathAsArray,
+} from 'graphql';
 import { Trace, google } from 'apollo-engine-reporting-protobuf';
 import {
   PersistedQueryNotFoundError,
   PersistedQueryNotSupportedError,
 } from 'apollo-server-errors';
-import { InvalidGraphQLRequestError, Logger } from 'apollo-server-types';
+import { InvalidGraphQLRequestError } from 'apollo-server-types';
 
 function internalError(message: string) {
   return new Error(`[internal apollo-server error] ${message}`);
@@ -12,21 +17,18 @@ function internalError(message: string) {
 
 export class EngineReportingTreeBuilder {
   private rootNode = new Trace.Node();
-  private logger: Logger = console;
   public trace = new Trace({ root: this.rootNode });
   public startHrTime?: [number, number];
   private stopped = false;
   private nodes = new Map<string, Trace.Node>([
-    [responsePathAsString(), this.rootNode],
+    [rootResponsePath, this.rootNode],
   ]);
   private rewriteError?: (err: GraphQLError) => GraphQLError | null;
 
   public constructor(options: {
-    logger?: Logger;
     rewriteError?: (err: GraphQLError) => GraphQLError | null;
   }) {
     this.rewriteError = options.rewriteError;
-    if (options.logger) this.logger = options.logger;
   }
 
   public startTiming() {
@@ -135,7 +137,7 @@ export class EngineReportingTreeBuilder {
       if (specificNode) {
         node = specificNode;
       } else {
-        this.logger.warn(
+        console.warn(
           `Could not find node with path ${path.join(
             '.',
           )}; defaulting to put errors on root node.`,
@@ -244,21 +246,14 @@ function durationHrTimeToNanos(hrtime: [number, number]) {
 
 // Convert from the linked-list ResponsePath format to a dot-joined
 // string. Includes the full path (field names and array indices).
-function responsePathAsString(p?: ResponsePath): string {
+function responsePathAsString(p: ResponsePath | undefined) {
   if (p === undefined) {
     return '';
   }
-
-  // A previous implementation used `responsePathAsArray` from `graphql-js/execution`,
-  // however, that employed an approach that created new arrays unnecessarily.
-  let res = String(p.key);
-
-  while ((p = p.prev) !== undefined) {
-    res = `${p.key}.${res}`;
-  }
-
-  return res;
+  return responsePathAsArray(p).join('.');
 }
+
+const rootResponsePath = responsePathAsString(undefined);
 
 function errorToProtobufError(error: GraphQLError): Trace.Error {
   return new Trace.Error({
