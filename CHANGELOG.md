@@ -13,7 +13,7 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 ### v2.12.1
 
-- Revert everything from the `release-2.12.0` merge commit
+- Rollback the `release-2.12.0` branch merge commit. Due to a couple issues (#3976)[https://github.com/apollographql/apollo-server/issues/3976] and (#3978)[https://github.com/apollographql/apollo-server/issues/3978], this version is a temporary rollback to the previously working versions of `apollo-server-*` and associated packages. New behavior will be reintroduced in either a patch or minor update once the two issues have been resolved. Bumping the version in this fashion allows current users who have already taken the bad version to be graduated "up" to the previous version with a regular update of their dependencies.
 
 ### v2.12.0
 
