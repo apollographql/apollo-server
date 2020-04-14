@@ -299,6 +299,11 @@ export class ApolloGateway implements GraphQLService {
 
   public async load(options?: { engine?: GraphQLServiceEngineConfig }) {
     await this.updateComposition(options);
+
+    if (isManagedConfig(this.config) || this.experimental_pollInterval) {
+      if (!this.pollingTimer) this.pollServices();
+    }
+
     const { graphId, graphVariant } = (options && options.engine) || {};
     const mode = isManagedConfig(this.config) ? 'managed' : 'unmanaged';
 
@@ -480,19 +485,10 @@ export class ApolloGateway implements GraphQLService {
   }
 
   public onSchemaChange(callback: SchemaChangeCallback): Unsubscriber {
-    if (!isManagedConfig(this.config) && !this.experimental_pollInterval) {
-      return () => {};
-    }
-
     this.onSchemaChangeListeners.add(callback);
-    if (!this.pollingTimer) this.pollServices();
 
     return () => {
       this.onSchemaChangeListeners.delete(callback);
-      if (this.onSchemaChangeListeners.size === 0 && this.pollingTimer) {
-        clearInterval(this.pollingTimer!);
-        this.pollingTimer = undefined;
-      }
     };
   }
 
