@@ -8,6 +8,8 @@
 
 ## 0.14.1
 
+> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/b898396e9fcd3b9092b168f9aac8466ca186fa6b)
+
 - Only changes in the similarly versioned `@apollo/gateway` package.
 
 ## 0.14.0
