@@ -3,6 +3,7 @@ import {
   WithRequired,
   Logger,
   SchemaHash,
+  InvalidGraphQLRequestError,
 } from 'apollo-server-types';
 import { Request, Headers } from 'apollo-server-env';
 import {
@@ -23,6 +24,10 @@ import {
 } from './agent';
 import { EngineReportingTreeBuilder } from './treeBuilder';
 import { ApolloServerPlugin } from "apollo-server-plugin-base";
+import {
+  PersistedQueryNotFoundError,
+  PersistedQueryNotSupportedError,
+} from 'apollo-server-errors';
 
 type Mutable<T> = { -readonly [P in keyof T]: T[P] };
 
@@ -373,6 +378,12 @@ export const plugin = <TContext>(
         },
 
         didEncounterErrors({ errors }) {
+          // We don't report some special-cased errors to Graph Manager.
+          // See the definition of this function for the reasons.
+          if (allUnreportableSpecialCasedErrors(errors)) {
+            return;
+          }
+
           ensurePreflight();
           treeBuilder.didEncounterErrors(errors);
           didEnd();
@@ -381,6 +392,39 @@ export const plugin = <TContext>(
     }
   };
 };
+
+/**
+ * Previously, prior to the new plugin API, the Apollo Engine Reporting
+ * mechanism was implemented using `graphql-extensions`, the API for which
+ * didn't invoke `requestDidStart` until _after_ APQ had been negotiated.
+ *
+ * The new plugin API starts its `requestDidStart` _before_ APQ validation and
+ * various other assertions which weren't included in the `requestDidStart`
+ * life-cycle, even if they perhaps should be in terms of error reporting.
+ *
+ * The new plugin API is able to properly capture such errors within its
+ * `didEncounterErrors` lifecycle hook, however, for behavioral consistency
+ * reasons, we will still special-case those errors and maintain the legacy
+ * behavior to avoid a breaking change.  We can reconsider this in a future
+ * version of Apollo Engine Reporting (AS3, perhaps!).
+ *
+ * @param errors A list of errors to scan for special-cased instances.
+ */
+function allUnreportableSpecialCasedErrors(
+  errors: readonly GraphQLError[],
+): boolean {
+  return errors.every(err => {
+    if (
+      err instanceof PersistedQueryNotFoundError ||
+      err instanceof PersistedQueryNotSupportedError ||
+      err instanceof InvalidGraphQLRequestError
+    ) {
+      return true;
+    }
+
+    return false;
+  });
+}
 
 // Helpers for producing traces.
 
