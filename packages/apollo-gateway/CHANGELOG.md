@@ -6,6 +6,10 @@
 
 - _Nothing yet! Stay tuned._
 
+## 0.14.1
+
+- __FIX__: Resolve condition which surfaced in `0.14.0` which prevented loading the configuration using managed federation. [PR #3979](https://github.com/apollographql/apollo-server/pull/3979)
+
 ## 0.14.0
 
 > [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/71a3863f59f4ab2c9052c316479d94c6708c4309)
