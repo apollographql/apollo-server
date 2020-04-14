@@ -202,26 +202,32 @@ it('Rollsback to a previous schema when triggered', async () => {
 
   let firstResolve: () => void;
   let secondResolve: () => void;
+  let thirdResolve: () => void
   const firstSchemaChangeBlocker = new Promise(res => (firstResolve = res));
   const secondSchemaChangeBlocker = new Promise(res => (secondResolve = res));
+  const thirdSchemaChangeBlocker = new Promise(res => (thirdResolve = res));
 
   const onChange = jest
     .fn()
     .mockImplementationOnce(() => firstResolve())
-    .mockImplementationOnce(() => secondResolve());
+    .mockImplementationOnce(() => secondResolve())
+    .mockImplementationOnce(() => thirdResolve());
 
   const gateway = new ApolloGateway({ logger });
   // @ts-ignore for testing purposes, a short pollInterval is ideal so we'll override here
   gateway.experimental_pollInterval = 100;
 
-  await gateway.load({ engine: { apiKeyHash, graphId } });
   gateway.onSchemaChange(onChange);
+  await gateway.load({ engine: { apiKeyHash, graphId } });
 
   await firstSchemaChangeBlocker;
   expect(onChange.mock.calls.length).toBe(1);
 
   await secondSchemaChangeBlocker;
   expect(onChange.mock.calls.length).toBe(2);
+
+  await thirdSchemaChangeBlocker;
+  expect(onChange.mock.calls.length).toBe(3);
 });
 
 function failNTimes(n: number, fn: () => nock.Interceptor) {
@@ -359,9 +365,14 @@ describe('Downstream service health checks', () => {
       mockRawPartialSchemaSuccess(updatedService);
       mockServiceHealthCheckSuccess(updatedService);
 
-      let resolve: () => void;
-      const schemaChangeBlocker = new Promise(res => (resolve = res));
-      const onChange = jest.fn().mockImplementationOnce(() => resolve());
+      let resolve1: () => void;
+      let resolve2: () => void;
+      const schemaChangeBlocker1 = new Promise(res => (resolve1 = res));
+      const schemaChangeBlocker2 = new Promise(res => (resolve2 = res));
+      const onChange = jest
+        .fn()
+        .mockImplementationOnce(() => resolve1())
+        .mockImplementationOnce(() => resolve2());
 
       const gateway = new ApolloGateway({
         serviceHealthCheck: true,
@@ -370,12 +381,13 @@ describe('Downstream service health checks', () => {
       // @ts-ignore for testing purposes, a short pollInterval is ideal so we'll override here
       gateway.experimental_pollInterval = 100;
 
-      await gateway.load({ engine: { apiKeyHash, graphId } });
       gateway.onSchemaChange(onChange);
+      gateway.load({ engine: { apiKeyHash, graphId } });
 
-      await schemaChangeBlocker;
+      await schemaChangeBlocker1;
       expect(onChange.mock.calls.length).toBe(1);
 
+      await schemaChangeBlocker2;
       expect(gateway.schema!.getType('User')!.description).toBe('This is my updated User');
     });
 
