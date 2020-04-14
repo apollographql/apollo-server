@@ -5,7 +5,15 @@ The version headers in this history reflect the versions of Apollo Server itself
 - [__CHANGELOG for `@apollo/gateway`__](https://github.com/apollographql/apollo-server/blob/master/packages/apollo-gateway/CHANGELOG.md)
 - [__CHANGELOG for `@apollo/federation`__](https://github.com/apollographql/apollo-server/blob/master/packages/apollo-federation/CHANGELOG.md)
 
+### vNEXT
+
+> The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  When a release is being prepared, a new header will be (manually) created below and the the appropriate changes within that release will be moved into the new section.
+
+- _Nothing yet! Stay tuned._
+
 ### v2.12.0
+
+> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/71a3863f59f4ab2c9052c316479d94c6708c4309)
 
 - `apollo-server-core`: Support providing a custom logger implementation (e.g. [`winston`](https://npm.im/winston), [`bunyan`](https://npm.im/bunyan), etc.) to capture server console messages.  Though there has historically been limited output from Apollo Server, some messages are important to capture in the larger context of production logging facilities or can benefit from using more advanced structure, like JSON-based logging.  This also introduces a `logger` property to the `GraphQLRequestContext` that is exposed to plugins, making it possible for plugins to leverage the same server-level logger, and allowing implementors to create request-specific log contexts, if desired.  When not provided, these will still output to `console`. [PR #3894](https://github.com/apollographql/apollo-server/pull/3894)
 - `apollo-server-core`: When operating in gateway mode using the `gateway` property of the Apollo Server constructor options, the failure to initialize a schema during initial start-up, e.g. connectivity problems, will no longer result in the federated executor from being assigned when the schema eventually becomes available.  This precludes a state where the gateway may never become available to serve federated requests, even when failure conditions are no longer present. [PR #3811](https://github.com/apollographql/apollo-server/pull/3811)
@@ -16,14 +24,20 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 ### v2.11.0
 
+> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/056f083ddaf116633e6f759a2b3d69248bb18f66)
+
 - The range of accepted `peerDepedencies` versions for `graphql` has been widened to include `graphql@^15.0.0-rc.2` so as to accommodate the latest release-candidate of the `graphql@15` package, and an intention to support it when it is finally released on the `latest` npm tag.  While this change will subdue peer dependency warnings for Apollo Server packages, many dependencies from outside of this repository will continue to raise similar warnings until those packages own `peerDependencies` are updated.  It is unlikely that all of those packages will update their ranges prior to the final version of `graphql@15` being released, but if everything is working as expected, the warnings can be safely ignored. [PR #3825](https://github.com/apollographql/apollo-server/pull/3825)
 
 ### v2.10.1
+
+> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/dba97895485d6444535a684d4646f1363954f698)
 
 - `apollo-server-core`: Update GraphQL Playground to latest version to remove a rogue curly-brace appearing in the top-right corner of the interface under certain conditions. [PR #3702](https://github.com/apollographql/apollo-server/pull/3702) [Playground PR](https://github.com/apollographql/graphql-playground/pull/21)
 - `apollo-server-core`: Typings: Allow the `cache` property inside `persistedQueries` to be optional.  This was already optional at runtime where it defaults to the top-level global cache when unspecified, but with the introduction of the `ttl` property, it now makes sense that one may be provided without the other. [#3671](https://github.com/apollographql/apollo-server/pull/3671)
 
 ### v2.10.0
+
+> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/9c0aa1e661ccc2c5a1471b781102637dd47e21b1)
 
 - `apollo-server-express`: Support `CorsOptionsDelegate` type on `cors` parameter to `applyMiddleware`, to align with the supported type of the underlying [`cors`](https://npm.im/cors) middleware [itself](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/31483b781ac30f98bdf4d40a517e921f2fc2ce37/types/cors/index.d.ts#L32). [#3613](https://github.com/apollographql/apollo-server/pull/3613)
 - `apollo-server-core`: Allow asynchronous initialization of datasources: the `initialize` method on datasources may now return a Promise, which will be settled before any resolvers are called. [#3639](https://github.com/apollographql/apollo-server/pull/3639)
