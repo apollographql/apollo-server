@@ -1,20 +1,8 @@
-# Change Log
-
-All notable changes to this project will be documented in this file.
-See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
-
-## [0.14.1-alpha.0](https://github.com/apollographql/apollo-server/compare/@apollo/gateway@0.14.0...@apollo/gateway@0.14.1-alpha.0) (2020-04-14)
-
-
-### Bug Fixes
-
-* Engine config load issue ([#3979](https://github.com/apollographql/apollo-server/issues/3979)) ([fcbff5b](https://github.com/apollographql/apollo-server/commit/fcbff5bc358f938f169d5b998880cad8d171cf43))
-
-
-
-
-
 # CHANGELOG for `@apollo/gateway`
+
+## 0.14.1
+
+- __FIX__: Resolve condition which surfaced in `0.14.0` which prevented loading the configuration using managed federation. [PR #3979](https://github.com/apollographql/apollo-server/pull/3979)
 
 ## 0.14.0
 

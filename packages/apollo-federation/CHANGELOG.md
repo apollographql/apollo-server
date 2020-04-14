@@ -1,17 +1,8 @@
-# Change Log
-
-All notable changes to this project will be documented in this file.
-See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
-
-## [0.14.1-alpha.0](https://github.com/apollographql/apollo-server/compare/@apollo/federation@0.14.0...@apollo/federation@0.14.1-alpha.0) (2020-04-14)
-
-**Note:** Version bump only for package @apollo/federation
-
-
-
-
-
 # CHANGELOG for `@apollo/federation`
+
+## 0.14.1
+
+- Only changes in the similarly versioned `@apollo/gateway` package.
 
 ## 0.14.0
 
