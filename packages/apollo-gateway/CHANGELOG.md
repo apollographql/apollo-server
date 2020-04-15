@@ -1,9 +1,31 @@
 # CHANGELOG for `@apollo/gateway`
 
-## vNEXT
+### vNEXT
 
-- Fix Typescript generic typing for datasource contexts [#3865](https://github.com/apollographql/apollo-server/pull/3865) This is a fix for the `TContext` typings of the gateway's exposed `GraphQLDataSource` implementations. In their current form, they don't work as intended, or in any manner that's useful for typing the `context` property throughout the class methods. This introduces a type argument `TContext` to the class itself (which defaults to `Record<string, any>` for existing implementations) and removes the non-operational type arguments on the class methods themselves.
+> The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  When a release is being prepared, a new header will be (manually) created below and the the appropriate changes within that release will be moved into the new section.
+
 - Deprecated the `APOLLO_SCHEMA_TAG` environment variable in favor of its new name, `APOLLO_GRAPH_VARIANT`.  The functionality remains otherwise identical, but the new name mirrors the name used within Apollo Graph Manager.  Use of the now-deprecated name will result in a deprecation warning and support will be dropped completely in a future "major" update.  To avoid misconfiguration, runtime errors will be thrown if the new and deprecated name are _both_ set. [#3855](https://github.com/apollographql/apollo-server/pull/3855)
+
+## 0.14.1
+
+> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/b898396e9fcd3b9092b168f9aac8466ca186fa6b)
+
+- __FIX__: Resolve condition which surfaced in `0.14.0` which prevented loading the configuration using managed federation. [PR #3979](https://github.com/apollographql/apollo-server/pull/3979)
+
+## 0.14.0
+
+> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/71a3863f59f4ab2c9052c316479d94c6708c4309)
+
+- Several previously unhandled Promise rejection errors stemming from, e.g. connectivity, failures when communicating with Apollo Graph Manager within asynchronous code are now handled. [PR #3811](https://github.com/apollographql/apollo-server/pull/3811)
+- Provide a more helpful error message when encountering expected errors. [PR #3811](https://github.com/apollographql/apollo-server/pull/3811)
+- General improvements and clarity to error messages and logging. [PR #3811](https://github.com/apollographql/apollo-server/pull/3811)
+- Warn of a possible misconfiguration when local service configuration is provided (via `serviceList` or `localServiceList`) and a remote Apollo Graph Manager configuration is subsequently found as well. [PR #3868](https://github.com/apollographql/apollo-server/pull/3868)
+- During composition, the unavailability of a downstream service in unmanaged federation mode will no longer result in a partially composed schema which merely lacks the types provided by the downed service.  This prevents unexpected validation errors for clients querying a graph which lacks types which were merely unavailable during the initial composition but were intended to be part of the graph. [PR #3867](https://github.com/apollographql/apollo-server/pull/3867)
+- Support providing a custom logger implementation (e.g. [`winston`](https://npm.im/winston), [`bunyan`](https://npm.im/bunyan), etc.) to capture gateway-sourced console output.  This allows the use of existing, production logging facilities or the possibiltiy to use advanced structure in logging, such as console output which is encapsulated in JSON.  The same PR that introduces this support also introduces a `logger` property to the `GraphQLRequestContext` that is exposed to `GraphQLDataSource`s and Apollo Server plugins, making it possible to attach additional properties (as supported by the logger implementation) to specific requests, if desired, by leveraging custom implementations in those components respectively.  When not provided, these will still output to `console`. [PR #3894](https://github.com/apollographql/apollo-server/pull/3894)
+- Drop use of `loglevel-debug`.  This removes the very long date and time prefix in front of each log line and also the support for the `DEBUG=apollo-gateway:` environment variable.  Both of these were uncommonly necessary or seldom used (with the environment variable also being undocumented).  The existing behavior can be preserved by providing a `logger` that uses `loglevel-debug`, if desired, and more details can be found in the PR.  [PR #3896](https://github.com/apollographql/apollo-server/pull/3896)
+- Fix Typescript generic typing for datasource contexts [#3865](https://github.com/apollographql/apollo-server/pull/3865) This is a fix for the `TContext` typings of the gateway's exposed `GraphQLDataSource` implementations. In their current form, they don't work as intended, or in any manner that's useful for typing the `context` property throughout the class methods. This introduces a type argument `TContext` to the class itself (which defaults to `Record<string, any>` for existing implementations) and removes the non-operational type arguments on the class methods themselves.
+- Implement retry logic for requests to GCS [PR #3836](https://github.com/apollographql/apollo-server/pull/3836) Note: coupled with this change is a small alteration in how the gateway polls GCS for updates in managed mode. Previously, the tick was on a specific interval. Now, every tick starts after the round of fetches to GCS completes. For more details, see the linked PR.
+- Gateway issues health checks to downstream services via `serviceHealthCheck` configuration option. Note: expected behavior differs between managed and unmanaged federation. See PR for new test cases and documentation. [#3930](https://github.com/apollographql/apollo-server/pull/3930)
 
 ## 0.13.2
 
