@@ -47,7 +47,10 @@ export type GenerateClientInfo<TContext> = (
   requestContext: GraphQLRequestContext<TContext>,
 ) => ClientInfo;
 
-export function getEngineApiKey(engine: EngineReportingOptions<any> | boolean | undefined, skipWarn: boolean = false) {
+export function getEngineApiKey(
+  {engine, skipWarn = false, logger= console }:
+    {engine: EngineReportingOptions<any> | boolean | undefined, skipWarn?: boolean, logger?: Logger }
+    ) {
   if (typeof engine === 'object') {
     if (engine.apiKey) {
       return engine.apiKey;
@@ -57,10 +60,10 @@ export function getEngineApiKey(engine: EngineReportingOptions<any> | boolean | 
   const apiKeyFromEnv = process.env.APOLLO_KEY;
 
   if(legacyApiKeyFromEnv && apiKeyFromEnv && !skipWarn) {
-    console.warn(`Both ENGINE_API_KEY (deprecated) and APOLLO_KEY are set; defaulting to APOLLO_KEY.`);
+    logger.warn(`Both ENGINE_API_KEY (deprecated) and APOLLO_KEY are set; defaulting to APOLLO_KEY.`);
   }
   if(legacyApiKeyFromEnv && !warnedOnDeprecatedApiKey && !skipWarn) {
-    console.warn(`[deprecated] Setting the key via ENGINE_API_KEY is deprecated and will not be supported in future versions.`);
+    logger.warn(`[deprecated] Setting the key via ENGINE_API_KEY is deprecated and will not be supported in future versions.`);
     warnedOnDeprecatedApiKey = true;
   }
   return  apiKeyFromEnv || legacyApiKeyFromEnv || ''
@@ -259,7 +262,7 @@ export class EngineReportingAgent<TContext = any> {
 
   public constructor(options: EngineReportingOptions<TContext> = {}) {
     this.options = options;
-    this.apiKey = getEngineApiKey(this.options);
+    this.apiKey = getEngineApiKey({engine: this.options, skipWarn: false, logger: this.logger});
     if (options.logger) this.logger = options.logger;
     if (!this.apiKey) {
       throw new Error(

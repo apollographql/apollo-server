@@ -101,8 +101,8 @@ function getEngineGraphVariant(engine: Config['engine']): string | undefined {
   }
 }
 
-function getEngineServiceId(engine: Config['engine']): string | undefined {
-  const engineApiKey = getEngineApiKey(engine, true);
+function getEngineServiceId(engine: Config['engine'], logger: Logger): string | undefined {
+  const engineApiKey = getEngineApiKey({engine, skipWarn: true, logger} );
   if (engineApiKey) {
     return engineApiKey.split(':', 2)[1];
   }
@@ -332,8 +332,8 @@ export class ApolloServerBase {
     // service ID from the API key for plugins which only needs service ID.
     // The truthiness of this value can also be used in other forks of logic
     // related to Engine, as is the case with EngineReportingAgent just below.
-    this.engineServiceId = getEngineServiceId(engine);
-    const apiKey = getEngineApiKey(engine, true);
+    this.engineServiceId = getEngineServiceId(engine, this.logger);
+    const apiKey = getEngineApiKey({engine, skipWarn: true, logger: this.logger});
     if (apiKey) {
       this.engineApiKeyHash = createSHA('sha512')
         .update(apiKey)
