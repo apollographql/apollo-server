@@ -331,7 +331,10 @@ function splitSubfields(
           parentGroup.providedFields.some(matchesField(requiredField)),
         )
       ) {
-        if (owningService === parentGroup.serviceName) {
+        if (
+          owningService === parentGroup.serviceName ||
+          parentGroup.providedFields.some(matchesField(field))
+        ) {
           return parentGroup;
         } else {
           return parentGroup.dependentGroupForService(

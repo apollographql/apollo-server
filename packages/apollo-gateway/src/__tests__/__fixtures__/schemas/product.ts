@@ -29,6 +29,7 @@ export const typeDefs = gql`
     name: String
     price: String
     details: ProductDetails
+    manufacturer: String
   }
 
   interface ProductDetails {
@@ -53,6 +54,7 @@ export const typeDefs = gql`
     brand: Brand
     metadata: [MetadataOrError]
     details: ProductDetailsFurniture
+    manufacturer: String
   }
 
   extend type Book implements Product @key(fields: "isbn") {
@@ -64,6 +66,7 @@ export const typeDefs = gql`
     name(delimeter: String = " "): String @requires(fields: "title year")
     price: String
     details: ProductDetailsBook
+    manufacturer: String
   }
 
   interface Vehicle {

@@ -8,6 +8,7 @@ import {
   SelectionNode,
   SelectionSetNode,
   GraphQLObjectType,
+  isObjectType,
 } from 'graphql';
 import { getResponseName } from './utilities/graphql';
 
@@ -41,7 +42,11 @@ export function printFields(fields?: FieldSet) {
 export function matchesField(field: Field) {
   // TODO: Compare parent type and arguments
   return (otherField: Field) => {
-    return field.fieldDef.name === otherField.fieldDef.name;
+    return (
+      field.fieldDef.name === otherField.fieldDef.name &&
+      isObjectType(field.scope.parentType) &&
+      otherField.scope.possibleTypes.includes(field.scope.parentType)
+    );
   };
 }
 

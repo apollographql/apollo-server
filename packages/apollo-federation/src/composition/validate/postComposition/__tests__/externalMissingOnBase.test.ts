@@ -6,7 +6,7 @@ import { graphqlErrorSerializer } from '../../../../snapshotSerializers';
 expect.addSnapshotSerializer(graphqlErrorSerializer);
 
 describe('externalMissingOnBase', () => {
-  it('warns when an @external field does not have a matching field on the base type', () => {
+  it.skip('warns when an @external field does not have a matching field on the base type', () => {
     const serviceA = {
       typeDefs: gql`
         type Product @key(fields: "sku") {

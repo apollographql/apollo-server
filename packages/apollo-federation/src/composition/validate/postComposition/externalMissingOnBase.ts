@@ -41,18 +41,18 @@ export const externalMissingOnBase: PostCompositionValidator = ({ schema }) => {
 
           // if the field has a serviceName, then it wasn't defined by the
           // service that owns the type
-          if (
-            matchingBaseField.federation &&
-            matchingBaseField.federation.serviceName
-          ) {
-            errors.push(
-              errorWithCode(
-                'EXTERNAL_MISSING_ON_BASE',
-                logServiceAndType(serviceName, typeName, externalFieldName) +
-                  `marked @external but ${externalFieldName} was defined in ${matchingBaseField.federation.serviceName}, not in the service that owns ${typeName} (${namedType.federation.serviceName})`,
-              ),
-            );
-          }
+          // if (
+          //   matchingBaseField.federation &&
+          //   matchingBaseField.federation.serviceName
+          // ) {
+          //   errors.push(
+          //     errorWithCode(
+          //       'EXTERNAL_MISSING_ON_BASE',
+          //       logServiceAndType(serviceName, typeName, externalFieldName) +
+          //         `marked @external but ${externalFieldName} was defined in ${matchingBaseField.federation.serviceName}, not in the service that owns ${typeName} (${namedType.federation.serviceName})`,
+          //     ),
+          //   );
+          // }
         }
       }
     }

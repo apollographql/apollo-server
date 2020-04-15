@@ -14,7 +14,7 @@ export const typeDefs = gql`
     id: ID!
     body(format: Boolean = false): String
     author: User @provides(fields: "username")
-    product: Product
+    product: Product @provides(fields: "manufacturer")
     metadata: [MetadataOrError]
   }
 
@@ -36,16 +36,18 @@ export const typeDefs = gql`
     goodAddress: Boolean @requires(fields: "metadata { address }")
   }
 
-  extend interface Product {
+  extend interface Product @key(fields:"upc") {
     reviews: [Review]
   }
 
   extend type Furniture implements Product @key(fields: "upc") {
+    manufacturer: String @external
     upc: String! @external
     reviews: [Review]
   }
 
   extend type Book implements Product @key(fields: "isbn") {
+    manufacturer: String @external
     isbn: String! @external
     reviews: [Review]
     similarBooks: [Book]! @external
@@ -98,14 +100,14 @@ const reviews = [
   {
     id: '1',
     authorID: '1',
-    product: { __typename: 'Furniture', upc: '1' },
+    product: { __typename: 'Furniture', upc: '1', manufacturer:'factoryA' },
     body: 'Love it!',
     metadata: [{ code: 418, message: "I'm a teapot" }],
   },
   {
     id: '2',
     authorID: '1',
-    product: { __typename: 'Furniture', upc: '2' },
+    product: { __typename: 'Furniture', upc: '2', manufacturer:'factoryB' },
     body: 'Too expensive.',
   },
   {
