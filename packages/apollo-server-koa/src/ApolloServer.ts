@@ -210,9 +210,3 @@ export class ApolloServer extends ApolloServerBase {
     return compose(middlewares);
   }
 }
-
-export const registerServer = () => {
-  throw new Error(
-    'Please use server.applyMiddleware instead of registerServer. This warning will be removed in the next release',
-  );
-};

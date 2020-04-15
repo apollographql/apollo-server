@@ -27,8 +27,9 @@ describe('providesNotOnEntity', () => {
       name: 'serviceB',
     };
 
-    const { schema, errors } = composeServices([serviceA, serviceB]);
-    const warnings = validateProvidesNotOnEntity(schema);
+    const serviceList = [serviceA, serviceB];
+    const { schema } = composeServices(serviceList);
+    const warnings = validateProvidesNotOnEntity({ schema, serviceList });
     expect(warnings).toMatchInlineSnapshot(`Array []`);
   });
 
@@ -56,8 +57,9 @@ describe('providesNotOnEntity', () => {
       name: 'serviceB',
     };
 
-    const { schema, errors } = composeServices([serviceA, serviceB]);
-    const warnings = validateProvidesNotOnEntity(schema);
+    const serviceList = [serviceA, serviceB];
+    const { schema } = composeServices(serviceList);
+    const warnings = validateProvidesNotOnEntity({ schema, serviceList });
     expect(warnings).toMatchInlineSnapshot(`Array []`);
   });
 
@@ -85,8 +87,9 @@ describe('providesNotOnEntity', () => {
       name: 'serviceB',
     };
 
-    const { schema, errors } = composeServices([serviceA, serviceB]);
-    const warnings = validateProvidesNotOnEntity(schema);
+    const serviceList = [serviceA, serviceB];
+    const { schema } = composeServices(serviceList);
+    const warnings = validateProvidesNotOnEntity({ schema, serviceList });
     expect(warnings).toEqual([]);
   });
 
@@ -117,8 +120,9 @@ describe('providesNotOnEntity', () => {
       name: 'serviceB',
     };
 
-    const { schema, errors } = composeServices([serviceA, serviceB]);
-    const warnings = validateProvidesNotOnEntity(schema);
+    const serviceList = [serviceA, serviceB];
+    const { schema } = composeServices(serviceList);
+    const warnings = validateProvidesNotOnEntity({ schema, serviceList });
     expect(warnings).toMatchInlineSnapshot(`
       Array [
         Object {
@@ -156,8 +160,9 @@ describe('providesNotOnEntity', () => {
       name: 'serviceB',
     };
 
-    const { schema, errors } = composeServices([serviceA, serviceB]);
-    const warnings = validateProvidesNotOnEntity(schema);
+    const serviceList = [serviceA, serviceB];
+    const { schema } = composeServices(serviceList);
+    const warnings = validateProvidesNotOnEntity({ schema, serviceList });
     expect(warnings).toMatchInlineSnapshot(`
       Array [
         Object {
@@ -197,8 +202,9 @@ describe('providesNotOnEntity', () => {
       name: 'serviceB',
     };
 
-    const { schema, errors } = composeServices([serviceA, serviceB]);
-    const warnings = validateProvidesNotOnEntity(schema);
+    const serviceList = [serviceA, serviceB];
+    const { schema } = composeServices(serviceList);
+    const warnings = validateProvidesNotOnEntity({ schema, serviceList });
     expect(warnings).toMatchInlineSnapshot(`
       Array [
         Object {
@@ -238,8 +244,9 @@ describe('providesNotOnEntity', () => {
       name: 'serviceB',
     };
 
-    const { schema, errors } = composeServices([serviceA, serviceB]);
-    const warnings = validateProvidesNotOnEntity(schema);
+    const serviceList = [serviceA, serviceB];
+    const { schema } = composeServices(serviceList);
+    const warnings = validateProvidesNotOnEntity({ schema, serviceList });
     expect(warnings).toMatchInlineSnapshot(`
       Array [
         Object {

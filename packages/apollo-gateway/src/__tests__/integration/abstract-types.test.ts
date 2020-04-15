@@ -6,6 +6,11 @@ import * as inventory from '../__fixtures__/schemas/inventory';
 import * as product from '../__fixtures__/schemas/product';
 import * as reviews from '../__fixtures__/schemas/reviews';
 
+import { astSerializer, queryPlanSerializer } from '../../snapshotSerializers';
+
+expect.addSnapshotSerializer(astSerializer);
+expect.addSnapshotSerializer(queryPlanSerializer);
+
 it('handles an abstract type from the base service', async () => {
   const query = gql`
     query GetProduct($upc: String!) {
@@ -35,6 +40,65 @@ it('handles an abstract type from the base service', async () => {
   });
 
   expect(queryPlan).toCallService('product');
+  expect(queryPlan).toMatchInlineSnapshot(`
+    QueryPlan {
+      Sequence {
+        Fetch(service: "product") {
+          {
+            product(upc: $upc) {
+              __typename
+              ... on Book {
+                upc
+                __typename
+                isbn
+                price
+              }
+              ... on Furniture {
+                upc
+                name
+                price
+              }
+            }
+          }
+        },
+        Flatten(path: "product") {
+          Fetch(service: "books") {
+            {
+              ... on Book {
+                __typename
+                isbn
+              }
+            } =>
+            {
+              ... on Book {
+                __typename
+                isbn
+                title
+                year
+              }
+            }
+          },
+        },
+        Flatten(path: "product") {
+          Fetch(service: "product") {
+            {
+              ... on Book {
+                __typename
+                isbn
+                title
+                year
+              }
+            } =>
+            {
+              ... on Book {
+                name
+              }
+            }
+          },
+        },
+      },
+    }
+  `);
 });
 
 it('can request fields on extended interfaces', async () => {
@@ -59,6 +123,49 @@ it('can request fields on extended interfaces', async () => {
   expect(data).toEqual({ product: { inStock: true } });
   expect(queryPlan).toCallService('product');
   expect(queryPlan).toCallService('inventory');
+  expect(queryPlan).toMatchInlineSnapshot(`
+    QueryPlan {
+      Sequence {
+        Fetch(service: "product") {
+          {
+            product(upc: $upc) {
+              __typename
+              ... on Book {
+                __typename
+                isbn
+              }
+              ... on Furniture {
+                __typename
+                sku
+              }
+            }
+          }
+        },
+        Flatten(path: "product") {
+          Fetch(service: "inventory") {
+            {
+              ... on Book {
+                __typename
+                isbn
+              }
+              ... on Furniture {
+                __typename
+                sku
+              }
+            } =>
+            {
+              ... on Book {
+                inStock
+              }
+              ... on Furniture {
+                inStock
+              }
+            }
+          },
+        },
+      },
+    }
+  `);
 });
 
 it('can request fields on extended types that implement an interface', async () => {
@@ -85,6 +192,50 @@ it('can request fields on extended types that implement an interface', async () 
   expect(data).toEqual({ product: { inStock: true, isHeavy: false } });
   expect(queryPlan).toCallService('product');
   expect(queryPlan).toCallService('inventory');
+  expect(queryPlan).toMatchInlineSnapshot(`
+    QueryPlan {
+      Sequence {
+        Fetch(service: "product") {
+          {
+            product(upc: $upc) {
+              __typename
+              ... on Book {
+                __typename
+                isbn
+              }
+              ... on Furniture {
+                __typename
+                sku
+              }
+            }
+          }
+        },
+        Flatten(path: "product") {
+          Fetch(service: "inventory") {
+            {
+              ... on Book {
+                __typename
+                isbn
+              }
+              ... on Furniture {
+                __typename
+                sku
+              }
+            } =>
+            {
+              ... on Book {
+                inStock
+              }
+              ... on Furniture {
+                inStock
+                isHeavy
+              }
+            }
+          },
+        },
+      },
+    }
+  `);
 });
 
 it('prunes unfilled type conditions', async () => {
@@ -114,6 +265,51 @@ it('prunes unfilled type conditions', async () => {
   expect(data).toEqual({ product: { inStock: true, isHeavy: false } });
   expect(queryPlan).toCallService('product');
   expect(queryPlan).toCallService('inventory');
+  expect(queryPlan).toMatchInlineSnapshot(`
+    QueryPlan {
+      Sequence {
+        Fetch(service: "product") {
+          {
+            product(upc: $upc) {
+              __typename
+              ... on Book {
+                __typename
+                isbn
+              }
+              ... on Furniture {
+                __typename
+                sku
+              }
+            }
+          }
+        },
+        Flatten(path: "product") {
+          Fetch(service: "inventory") {
+            {
+              ... on Book {
+                __typename
+                isbn
+              }
+              ... on Furniture {
+                __typename
+                sku
+              }
+            } =>
+            {
+              ... on Book {
+                inStock
+                isCheckedOut
+              }
+              ... on Furniture {
+                inStock
+                isHeavy
+              }
+            }
+          },
+        },
+      },
+    }
+  `);
 });
 
 it('fetches interfaces returned from other services', async () => {
@@ -152,6 +348,86 @@ it('fetches interfaces returned from other services', async () => {
   expect(queryPlan).toCallService('accounts');
   expect(queryPlan).toCallService('reviews');
   expect(queryPlan).toCallService('product');
+  expect(queryPlan).toMatchInlineSnapshot(`
+    QueryPlan {
+      Sequence {
+        Fetch(service: "accounts") {
+          {
+            me {
+              __typename
+              id
+            }
+          }
+        },
+        Flatten(path: "me") {
+          Fetch(service: "reviews") {
+            {
+              ... on User {
+                __typename
+                id
+              }
+            } =>
+            {
+              ... on User {
+                reviews {
+                  product {
+                    __typename
+                    ... on Book {
+                      __typename
+                      isbn
+                    }
+                    ... on Furniture {
+                      __typename
+                      upc
+                    }
+                  }
+                }
+              }
+            }
+          },
+        },
+        Parallel {
+          Flatten(path: "me.reviews.@.product") {
+            Fetch(service: "product") {
+              {
+                ... on Book {
+                  __typename
+                  isbn
+                }
+                ... on Furniture {
+                  __typename
+                  upc
+                }
+              } =>
+              {
+                ... on Book {
+                  price
+                }
+                ... on Furniture {
+                  price
+                }
+              }
+            },
+          },
+          Flatten(path: "me.reviews.@.product") {
+            Fetch(service: "books") {
+              {
+                ... on Book {
+                  __typename
+                  isbn
+                }
+              } =>
+              {
+                ... on Book {
+                  title
+                }
+              }
+            },
+          },
+        },
+      },
+    }
+  `);
 });
 
 it('fetches composite fields from a foreign type casted to an interface [@provides field]', async () => {
@@ -190,6 +466,108 @@ it('fetches composite fields from a foreign type casted to an interface [@provid
   expect(queryPlan).toCallService('accounts');
   expect(queryPlan).toCallService('reviews');
   expect(queryPlan).toCallService('product');
+  expect(queryPlan).toMatchInlineSnapshot(`
+    QueryPlan {
+      Sequence {
+        Fetch(service: "accounts") {
+          {
+            me {
+              __typename
+              id
+            }
+          }
+        },
+        Flatten(path: "me") {
+          Fetch(service: "reviews") {
+            {
+              ... on User {
+                __typename
+                id
+              }
+            } =>
+            {
+              ... on User {
+                reviews {
+                  product {
+                    __typename
+                    ... on Book {
+                      __typename
+                      isbn
+                    }
+                    ... on Furniture {
+                      __typename
+                      upc
+                    }
+                  }
+                }
+              }
+            }
+          },
+        },
+        Parallel {
+          Flatten(path: "me.reviews.@.product") {
+            Fetch(service: "product") {
+              {
+                ... on Book {
+                  __typename
+                  isbn
+                }
+                ... on Furniture {
+                  __typename
+                  upc
+                }
+              } =>
+              {
+                ... on Book {
+                  price
+                }
+                ... on Furniture {
+                  price
+                }
+              }
+            },
+          },
+          Sequence {
+            Flatten(path: "me.reviews.@.product") {
+              Fetch(service: "books") {
+                {
+                  ... on Book {
+                    __typename
+                    isbn
+                  }
+                } =>
+                {
+                  ... on Book {
+                    __typename
+                    isbn
+                    title
+                    year
+                  }
+                }
+              },
+            },
+            Flatten(path: "me.reviews.@.product") {
+              Fetch(service: "product") {
+                {
+                  ... on Book {
+                    __typename
+                    isbn
+                    title
+                    year
+                  }
+                } =>
+                {
+                  ... on Book {
+                    name
+                  }
+                }
+              },
+            },
+          },
+        },
+      },
+    }
+  `);
 });
 
 it('allows for extending an interface from another service with fields', async () => {
@@ -220,6 +598,53 @@ it('allows for extending an interface from another service with fields', async (
 
   expect(queryPlan).toCallService('reviews');
   expect(queryPlan).toCallService('product');
+  expect(queryPlan).toMatchInlineSnapshot(`
+    QueryPlan {
+      Sequence {
+        Fetch(service: "product") {
+          {
+            product(upc: $upc) {
+              __typename
+              ... on Book {
+                __typename
+                isbn
+              }
+              ... on Furniture {
+                __typename
+                upc
+              }
+            }
+          }
+        },
+        Flatten(path: "product") {
+          Fetch(service: "reviews") {
+            {
+              ... on Book {
+                __typename
+                isbn
+              }
+              ... on Furniture {
+                __typename
+                upc
+              }
+            } =>
+            {
+              ... on Book {
+                reviews {
+                  body
+                }
+              }
+              ... on Furniture {
+                reviews {
+                  body
+                }
+              }
+            }
+          },
+        },
+      },
+    }
+  `);
 });
 
 describe('unions', () => {
@@ -271,6 +696,128 @@ describe('unions', () => {
     expect(queryPlan).toCallService('accounts');
     expect(queryPlan).toCallService('reviews');
     expect(queryPlan).toCallService('product');
+    expect(queryPlan).toMatchInlineSnapshot(`
+      QueryPlan {
+        Sequence {
+          Fetch(service: "accounts") {
+            {
+              me {
+                __typename
+                id
+              }
+            }
+          },
+          Flatten(path: "me") {
+            Fetch(service: "reviews") {
+              {
+                ... on User {
+                  __typename
+                  id
+                }
+              } =>
+              {
+                ... on User {
+                  reviews {
+                    product {
+                      __typename
+                      ... on Book {
+                        __typename
+                        isbn
+                      }
+                      ... on Furniture {
+                        __typename
+                        upc
+                      }
+                    }
+                  }
+                }
+              }
+            },
+          },
+          Flatten(path: "me.reviews.@.product") {
+            Fetch(service: "product") {
+              {
+                ... on Book {
+                  __typename
+                  isbn
+                }
+                ... on Furniture {
+                  __typename
+                  upc
+                }
+              } =>
+              {
+                ... on Book {
+                  price
+                }
+                ... on Furniture {
+                  price
+                  brand {
+                    __typename
+                    ... on Ikea {
+                      asile
+                    }
+                    ... on Amazon {
+                      referrer
+                    }
+                  }
+                }
+              }
+            },
+          },
+        },
+      }
+    `);
+  });
+
+  it("doesn't expand interfaces with inline type conditions if all possibilities are fufilled by one service", async () => {
+    const query = gql`
+      query GetProducts {
+        topProducts {
+          name
+        }
+      }
+    `;
+
+    const { queryPlan, errors } = await execute(
+      [
+        {
+          name: 'products',
+          typeDefs: gql`
+            extend type Query {
+              topProducts: [Product]
+            }
+
+            interface Product {
+              name: String
+            }
+
+            type Shoe implements Product {
+              name: String
+            }
+
+            type Car implements Product {
+              name: String
+            }
+          `,
+        },
+      ],
+      { query },
+    );
+
+    expect(errors).toBeUndefined();
+    expect(queryPlan).toMatchInlineSnapshot(`
+      QueryPlan {
+        Fetch(service: "products") {
+          {
+            topProducts {
+              __typename
+              name
+            }
+          }
+        },
+      }
+    `);
   });
 
   // FIXME: turn back on when extending unions is supported in composition

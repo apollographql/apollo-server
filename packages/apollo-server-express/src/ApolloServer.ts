@@ -24,7 +24,7 @@ export { GraphQLOptions, GraphQLExtension } from 'apollo-server-core';
 
 export interface GetMiddlewareOptions {
   path?: string;
-  cors?: corsMiddleware.CorsOptions | boolean;
+  cors?: corsMiddleware.CorsOptions | corsMiddleware.CorsOptionsDelegate | boolean;
   bodyParserConfig?: OptionsJson | boolean;
   onHealthCheck?: (req: express.Request) => Promise<any>;
   disableHealthCheck?: boolean;
@@ -227,9 +227,3 @@ export class ApolloServer extends ApolloServerBase {
     return router;
   }
 }
-
-export const registerServer = () => {
-  throw new Error(
-    'Please use server.applyMiddleware instead of registerServer. This warning will be removed in the next release',
-  );
-};

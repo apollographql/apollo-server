@@ -1,4 +1,4 @@
-[![npm version](https://badge.fury.io/js/apollo-server-core.svg)](https://badge.fury.io/js/apollo-server-core) [![Build Status](https://circleci.com/gh/apollographql/apollo-cache-control-js.svg?style=svg)](https://circleci.com/gh/apollographql/apollo-cache-control-js) [![Join the community on Spectrum](https://withspectrum.github.io/badge/badge.svg)](https://spectrum.chat/apollo)
+[![npm version](https://badge.fury.io/js/apollo-server-core.svg)](https://badge.fury.io/js/apollo-server-core) [![Build Status](https://circleci.com/gh/apollographql/apollo-server.svg?style=svg)](https://circleci.com/gh/apollographql/apollo-server) [![Join the community on Spectrum](https://withspectrum.github.io/badge/badge.svg)](https://spectrum.chat/apollo)
 
 
 This is the [Micro](https://github.com/zeit/micro) integration for the Apollo community GraphQL Server. [Read the docs.](https://www.apollographql.com/docs/apollo-server/) [Read the CHANGELOG.](https://github.com/apollographql/apollo-server/blob/master/CHANGELOG.md)
@@ -85,7 +85,8 @@ const resolvers = {
 };
 
 const apolloServer = new ApolloServer({ typeDefs, resolvers });
-module.exports = cors(apolloServer.createHandler()); // highlight-line
+const handler = apolloServer.createHandler(); // highlight-line
+module.exports = cors((req, res) => req.method === 'OPTIONS' ? res.end() : handler(req, res)) // highlight-line
 ```
 
 3) `package.json`
@@ -149,7 +150,7 @@ module.exports = apolloServer.createHandler({ path: '/data' }); // highlight-lin
 }
 ```
 
-4) After an `npm start`, access `http://localhost:3000/graphql` in your
+4) After an `npm start`, access `http://localhost:3000/data` in your
 browser to run queries using
 [`graphql-playground`](https://github.com/prismagraphql/graphql-playground),
 or send GraphQL requests directly to the same URL.
@@ -207,7 +208,7 @@ module.exports = router(
 }
 ```
 
-4) After an `npm start`, access `http://localhost:3000/graphql` in your
+4) After an `npm start`, access `http://localhost:3000/data` in your
 browser to run queries using
 [`graphql-playground`](https://github.com/prismagraphql/graphql-playground),
 or send GraphQL requests directly to the same URL.

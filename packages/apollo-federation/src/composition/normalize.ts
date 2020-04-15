@@ -84,13 +84,19 @@ export function defaultRootOperationTypes(
     // }
     schemaWithoutConflictingDefaultDefinitions = visit(typeDefs, {
       ObjectTypeDefinition(node) {
-        if ((defaultRootOperationNames as string[]).includes(node.name.value)) {
+        if (
+            (defaultRootOperationNames as string[]).includes(node.name.value) &&
+            !rootOperationTypeMap[node.name.value]
+        ) {
           return null;
         }
         return;
       },
       ObjectTypeExtension(node) {
-        if ((defaultRootOperationNames as string[]).includes(node.name.value)) {
+        if (
+            (defaultRootOperationNames as string[]).includes(node.name.value) &&
+            !rootOperationTypeMap[node.name.value]
+        ) {
           return null;
         }
         return;

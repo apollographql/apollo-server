@@ -1,5 +1,4 @@
-import { GraphQLSchema, isObjectType, GraphQLError, Kind } from 'graphql';
-
+import { isObjectType, GraphQLError, Kind } from 'graphql';
 import {
   findDirectivesOnTypeOrField,
   logServiceAndType,
@@ -10,12 +9,13 @@ import {
   isStringValueNode,
   selectionIncludesField,
 } from '../../utils';
+import { PostCompositionValidator } from '.';
 
 /**
  *  for every @external field, there should be a @requires, @key, or @provides
  *  directive that uses it
  */
-export const externalUnused = (schema: GraphQLSchema) => {
+export const externalUnused: PostCompositionValidator = ({ schema }) => {
   const errors: GraphQLError[] = [];
   const types = schema.getTypeMap();
   for (const [parentTypeName, parentType] of Object.entries(types)) {

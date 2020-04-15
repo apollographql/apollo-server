@@ -1,5 +1,17 @@
 / /docs/apollo-server/
 
+# The v2 docs were beta for a while, and non-default, but now that they are
+# default, the v2 docs don't exist anymore.  So redirect them to the default!
+/docs/apollo-server/v2 /docs/apollo-server/
+/docs/apollo-server/v2/* /docs/apollo-server/:splat
+
+/docs/apollo-server/data/data/ /docs/apollo-server/data/resolvers/
+
+/docs/apollo-server/federation/implementing/ /docs/apollo-server/federation/implementing-services/
+/docs/apollo-server/federation/core-concepts/ /docs/apollo-server/federation/entities/
+/docs/apollo-server/federation/advanced-features/ /docs/apollo-server/federation/entities/
+/docs/apollo-server/federation/concerns/ /docs/apollo-server/federation/introduction/#separation-of-concerns
+
 # The test-utils lived at its current home for about 5 days.
 # It at least exists on some slides and Tweets.
 /docs/apollo-server/features/test-utils.html /docs/apollo-server/features/testing.html
@@ -15,6 +27,7 @@
 /docs/apollo-server/features/creating-directives/ /docs/apollo-server/schema/creating-directives/
 /docs/apollo-server/features/data-sources/ /docs/apollo-server/data/data-sources/
 /docs/apollo-server/features/directives/ /docs/apollo-server/schema/directives/
+/docs/apollo-server/features/errors/ /docs/apollo-server/data/errors/
 /docs/apollo-server/features/file-uploads/ /docs/apollo-server/data/file-uploads/
 /docs/apollo-server/features/graphql-playground/ /docs/apollo-server/testing/graphql-playground/
 /docs/apollo-server/features/health-checks/ /docs/apollo-server/monitoring/health-checks/
@@ -24,3 +37,5 @@
 /docs/apollo-server/features/subscriptions/ /docs/apollo-server/data/subscriptions/
 /docs/apollo-server/features/testing/ /docs/apollo-server/testing/testing/
 /docs/apollo-server/features/unions-interfaces/ /docs/apollo-server/schema/unions-interfaces/
+
+/docs/apollo-server/federation/managed-federation /docs/graph-manager/federation/#connecting-apollo-server-to-the-graph-manager

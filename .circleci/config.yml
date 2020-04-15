@@ -4,7 +4,7 @@ version: 2.1
 # across projects.  See https://circleci.com/orbs/ for more information.
 orbs:
   # `oss` is a local reference to the package.  The source for Apollo Orbs can
-  # be found at http://github.com/apollographql/CircleCI-Orbs.
+  # be found at http://github.com/apollographql/CircleCI-Orbs/.
   oss: apollo/oss-ci-cd-tooling@0.0.5
 
 commands:
@@ -22,7 +22,7 @@ commands:
       - run:
           command: npm run test:ci
           environment:
-            JEST_JUNIT_OUTPUT: "reports/junit/js-test-results.xml"
+            JEST_JUNIT_OUTPUT_DIR: "reports/junit/"
       - run: npm run coverage:upload
       - store_test_results:
           path: reports/junit
@@ -37,10 +37,10 @@ jobs:
   # at https://hub.docker.com/r/circleci/node/.
 
   # NODE: Note certain tests are currently being skipped for Node.js 6.
-  NodeJS 6:
-    executor: { name: oss/node, tag: '6' }
-    steps:
-      - common_test_steps
+  # NodeJS 6:
+  #   executor: { name: oss/node, tag: '6' }
+  #   steps:
+  #     - common_test_steps
 
   NodeJS 8:
     executor: { name: oss/node, tag: '8' }
@@ -92,8 +92,8 @@ workflows:
   version: 2
   Build:
     jobs:
-      - NodeJS 6:
-          <<: *common_non_publish_filters
+      # - NodeJS 6:
+      #     <<: *common_non_publish_filters
       - NodeJS 8:
           <<: *common_non_publish_filters
       - NodeJS 10:
@@ -104,7 +104,7 @@ workflows:
           name: Package tarballs
           <<: *common_non_publish_filters
           requires:
-            - NodeJS 6
+            # - NodeJS 6
             - NodeJS 8
             - NodeJS 10
             - NodeJS 12
@@ -112,7 +112,7 @@ workflows:
           name: Dry-run
           <<: *common_publish_filters
           requires:
-            - NodeJS 6
+            # - NodeJS 6
             - NodeJS 8
             - NodeJS 10
             - NodeJS 12

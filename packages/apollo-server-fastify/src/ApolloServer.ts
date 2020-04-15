@@ -184,9 +184,3 @@ export class ApolloServer extends ApolloServerBase {
     };
   }
 }
-
-export const registerServer = () => {
-  throw new Error(
-    'Please use server.createHandler instead of registerServer. This warning will be removed in the next release',
-  );
-};

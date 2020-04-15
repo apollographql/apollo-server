@@ -23,3 +23,6 @@ node_modules/
 
 # Mac OS
 .DS_Store
+
+# Intellij Configuration Files
+.idea/
