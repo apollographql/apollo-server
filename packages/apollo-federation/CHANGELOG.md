@@ -19,6 +19,12 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 - _Nothing yet! Stay tuned._
 
+## 0.14.1
+
+> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/b898396e9fcd3b9092b168f9aac8466ca186fa6b)
+
+- Only changes in the similarly versioned `@apollo/gateway` package.
+
 ## 0.14.0
 
 > [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/71a3863f59f4ab2c9052c316479d94c6708c4309)
