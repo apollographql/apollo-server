@@ -46,7 +46,7 @@ export type GenerateClientInfo<TContext> = (
 ) => ClientInfo;
 
 // AS3: Drop support for deprecated bits.
-export function getEngineGraphVariant(engine: EngineReportingOptions<any> | boolean | undefined): string | undefined {
+export function getEngineGraphVariant(engine: EngineReportingOptions<any> | boolean | undefined, logger: Logger = console): string | undefined {
   if (engine === false) {
     return;
   } else if (typeof engine === 'object' && (engine.graphVariant || engine.schemaTag)) {
@@ -54,12 +54,12 @@ export function getEngineGraphVariant(engine: EngineReportingOptions<any> | bool
       throw new Error('Cannot set both engine.graphVariant and engine.schemaTag. Please use engine.graphVariant.');
     }
     if (engine.schemaTag) {
-      console.warn('[Deprecation warning] Usage of engine.schemaTag is deprecated. Please use engine.graphVariant instead.');
+      logger.warn('[Deprecation warning] Usage of engine.schemaTag is deprecated. Please use engine.graphVariant instead.');
     }
     return engine.graphVariant || engine.schemaTag;
   } else {
     if (process.env.ENGINE_SCHEMA_TAG) {
-      console.warn('[Deprecation warning] Usage of ENGINE_SCHEMA_TAG is deprecated. Please use APOLLO_GRAPH_VARIANT instead.');
+      logger.warn('[Deprecation warning] Usage of ENGINE_SCHEMA_TAG is deprecated. Please use APOLLO_GRAPH_VARIANT instead.');
     }
     if (process.env.ENGINE_SCHEMA_TAG && process.env.APOLLO_GRAPH_VARIANT) {
       throw new Error('Cannot set both ENGINE_SCHEMA_TAG and APOLLO_GRAPH_VARIANT. Please use APOLLO_GRAPH_VARIANT.')
@@ -264,7 +264,7 @@ export class EngineReportingAgent<TContext = any> {
     this.options = options;
     if (options.logger) this.logger = options.logger;
     this.apiKey = options.apiKey || process.env.ENGINE_API_KEY || '';
-    this.graphVariant = getEngineGraphVariant(options) || '';
+    this.graphVariant = getEngineGraphVariant(options, this.logger) || '';
     if (!this.apiKey) {
       throw new Error(
         'To use EngineReportingAgent, you must specify an API key via the apiKey option or the ENGINE_API_KEY environment variable.',

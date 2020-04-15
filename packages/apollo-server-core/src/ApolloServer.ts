@@ -429,7 +429,7 @@ export class ApolloServerBase {
         ),
       );
 
-      const graphVariant = getEngineGraphVariant(engine);
+      const graphVariant = getEngineGraphVariant(engine, this.logger);
       const engineConfig =
         this.engineApiKeyHash && this.engineServiceId
           ? {
