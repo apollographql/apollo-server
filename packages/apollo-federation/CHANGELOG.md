@@ -1,5 +1,23 @@
 # CHANGELOG for `@apollo/federation`
 
+### vNEXT
+
+> The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  When a release is being prepared, a new header will be (manually) created below and the the appropriate changes within that release will be moved into the new section.
+
+- _Nothing yet! Stay tuned._
+
+## 0.14.1
+
+> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/b898396e9fcd3b9092b168f9aac8466ca186fa6b)
+
+- Only changes in the similarly versioned `@apollo/gateway` package.
+
+## 0.14.0
+
+> [See complete versioning details.](https://github.com/apollographql/apollo-server/commit/71a3863f59f4ab2c9052c316479d94c6708c4309)
+
+- Only changes in the similarly versioned `@apollo/gateway` package.
+
 ## 0.13.2
 
 - Only changes in the similarly versioned `@apollo/gateway` package.

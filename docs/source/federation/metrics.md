@@ -16,7 +16,7 @@ The model of federated metrics is that implementing services report timing and e
 
 ## Turning it on
 
-Ensure that all dependencies on `apollo-server` are at version `2.7.0` or higher. Provide an API key to your gateway via the `ENGINE_API_KEY` environment variable for the gateway to report metrics to the default ingress. To ensure that implementing services do not report metrics as well, do not provide them with an `ENGINE_API_KEY` or set `{ engine: true, reporting: false }` in the constructor options to ApolloServer.
+Ensure that all dependencies on `apollo-server` are at version `2.7.0` or higher. Provide an API key to your gateway via the `ENGINE_API_KEY` environment variable for the gateway to report metrics to the default ingress. To ensure that implementing services do not report metrics as well, do not provide them with an `ENGINE_API_KEY` or set `{ engine: false }` in the constructor options to `ApolloServer`.
 
 These options will cause the Apollo gateway to collect tracing information from the underlying federated services and pass them on, along with the query plan, to the Apollo metrics ingress. Currently, only Apollo Server supports detailed metrics insights as an implementing service, but we would love to work with you to implement the protocol in other languages!
 
