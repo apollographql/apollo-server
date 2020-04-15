@@ -39,6 +39,38 @@ it('does not have to go to another service when field is given', async () => {
   expect(queryPlan).toCallService('reviews');
 });
 
+it('does not have to go to another service when field is given for interface', async () => {
+  const query = gql`
+    query GetReviewers {
+      topReviews(first: 3) {
+        product {
+          manufacturer
+        }
+      }
+    }
+  `;
+
+  const { data,errors, queryPlan } = await execute(
+    [accounts, books, inventory, product, reviews],
+    {
+      query,
+    },
+  );
+
+  expect(data).toEqual({
+    topReviews: [
+      { product: { manufacturer: 'factoryA' } },
+      { product: { manufacturer: 'factoryB' } },
+      { product: { manufacturer: null } },
+    ],
+  });
+
+  expect(errors).toBeUndefined()
+  expect(queryPlan).not.toCallService('product');
+  expect(queryPlan).not.toCallService('book');
+  expect(queryPlan).toCallService('reviews');
+});
+
 it('does not load fields provided even when going to other service', async () => {
   const username = jest.fn();
   const localAccounts = overrideResolversInService(accounts, {
