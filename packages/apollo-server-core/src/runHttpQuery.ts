@@ -127,10 +127,6 @@ export async function runHttpQuery(
     // the normal options provided by the user, such as: formatError,
     // debug. Therefore, we need to do some unnatural things, such
     // as use NODE_ENV to determine the debug settings
-    e.message = `Invalid options provided to ApolloServer: ${e.message}`;
-    if (!debugDefault) {
-      e.warning = `To remove the stacktrace, set the NODE_ENV environment variable to production if the options creation can fail`;
-    }
     return throwHttpGraphQLError(500, [e], { debug: debugDefault });
   }
   if (options.debug === undefined) {
@@ -165,6 +161,7 @@ export async function runHttpQuery(
 
   const config = {
     schema: options.schema,
+    logger: options.logger,
     rootValue: options.rootValue,
     context: options.context || {},
     validationRules: options.validationRules,
@@ -254,6 +251,11 @@ export async function processHTTPRequest<TContext>(
     // in ApolloServer#graphQLServerOptions, before runHttpQuery is invoked).
     const context = cloneObject(options.context);
     return {
+      // While `logger` is guaranteed by internal Apollo Server usage of
+      // this `processHTTPRequest` method, this method has been publicly
+      // exported since perhaps as far back as Apollo Server 1.x.  Therefore,
+      // for compatibility reasons, we'll default to `console`.
+      logger: options.logger || console,
       request,
       response: {
         http: {
