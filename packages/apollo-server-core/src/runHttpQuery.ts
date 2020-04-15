@@ -161,6 +161,7 @@ export async function runHttpQuery(
 
   const config = {
     schema: options.schema,
+    schemaHash: options.schemaHash,
     logger: options.logger,
     rootValue: options.rootValue,
     context: options.context || {},
@@ -256,6 +257,8 @@ export async function processHTTPRequest<TContext>(
       // exported since perhaps as far back as Apollo Server 1.x.  Therefore,
       // for compatibility reasons, we'll default to `console`.
       logger: options.logger || console,
+      schema: options.schema,
+      schemaHash: options.schemaHash,
       request,
       response: {
         http: {
