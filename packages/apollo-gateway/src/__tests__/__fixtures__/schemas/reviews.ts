@@ -16,6 +16,7 @@ export const typeDefs = gql`
     author: User @provides(fields: "username")
     product: Product
     metadata: [MetadataOrError]
+    vehicle: Vehicle @provides(fields:"description")
   }
 
   input UpdateReviewInput {
@@ -52,19 +53,22 @@ export const typeDefs = gql`
     relatedReviews: [Review!]! @requires(fields: "similarBooks { isbn }")
   }
 
-  extend interface Vehicle {
+  extend interface Vehicle @key(fields: "id") {
+    description: String @external
     retailPrice: String
   }
 
   extend type Car implements Vehicle @key(fields: "id") {
     id: String! @external
     price: String @external
+    description: String @external
     retailPrice: String @requires(fields: "price")
   }
 
   extend type Van implements Vehicle @key(fields: "id") {
     id: String! @external
     price: String @external
+    description: String @external
     retailPrice: String @requires(fields: "price")
   }
 
@@ -101,12 +105,14 @@ const reviews = [
     product: { __typename: 'Furniture', upc: '1' },
     body: 'Love it!',
     metadata: [{ code: 418, message: "I'm a teapot" }],
+    vehicle: { __typename: 'Car', id: '1', description: 'Humble Toyota' },
   },
   {
     id: '2',
     authorID: '1',
     product: { __typename: 'Furniture', upc: '2' },
     body: 'Too expensive.',
+    vehicle: { __typename: 'Car', id: '2', description: 'Awesome Tesla' },
   },
   {
     id: '3',
