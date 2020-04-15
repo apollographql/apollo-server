@@ -1,2 +1,2 @@
 export { EngineReportingOptions, EngineReportingAgent } from './agent';
-export { plugin as federatedPlugin } from './federatedExtension';
+export { default as federatedPlugin } from './federatedPlugin';

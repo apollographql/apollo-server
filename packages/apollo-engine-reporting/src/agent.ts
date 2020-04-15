@@ -11,7 +11,7 @@ import {
 import { fetch, RequestAgent, Response } from 'apollo-server-env';
 import retry from 'async-retry';
 
-import { plugin } from './extension';
+import { plugin } from './plugin';
 import { GraphQLRequestContext, Logger, SchemaHash } from 'apollo-server-types';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import { defaultEngineReportingSignature } from 'apollo-graphql';
