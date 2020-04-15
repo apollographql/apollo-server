@@ -4,8 +4,9 @@ import { getIntrospectionQuery, IntrospectionSchema } from 'graphql/utilities';
 import stableStringify from 'fast-json-stable-stringify';
 import { GraphQLSchema } from 'graphql/type';
 import createSHA from './createSHA';
+import { SchemaHash } from "apollo-server-types";
 
-export function generateSchemaHash(schema: GraphQLSchema): string {
+export function generateSchemaHash(schema: GraphQLSchema): SchemaHash {
   const introspectionQuery = getIntrospectionQuery();
   const documentAST = parse(introspectionQuery);
   const result = execute(schema, documentAST) as ExecutionResult;
@@ -40,5 +41,5 @@ export function generateSchemaHash(schema: GraphQLSchema): string {
 
   return createSHA('sha512')
     .update(stringifiedSchema)
-    .digest('hex');
+    .digest('hex') as SchemaHash;
 }
