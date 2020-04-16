@@ -782,12 +782,16 @@ export class ApolloServerBase {
     return sdlFieldType.name == 'String';
   }
 
-  private ensurePluginInstantiation(plugins?: PluginDefinition[]): void {
-    if (!plugins || !plugins.length) {
-      return;
-    }
+  private ensurePluginInstantiation(plugins: PluginDefinition[] = []): void {
+    const pluginsToInit: PluginDefinition[] = [];
 
-    this.plugins = plugins.map(plugin => {
+    // Internal plugins should be added to `pluginsToInit` here.
+    // User's plugins, provided as an argument to this method, will be added
+    // at the end of that list so they take precidence.
+    // A follow-up commit will actually introduce this.
+
+    pluginsToInit.push(...plugins);
+    this.plugins = pluginsToInit.map(plugin => {
       if (typeof plugin === 'function') {
         return plugin();
       }
