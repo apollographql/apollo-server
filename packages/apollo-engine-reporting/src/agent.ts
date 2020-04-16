@@ -499,7 +499,7 @@ export class EngineReportingAgent<TContext = any> {
   }): Promise<string> {
     if (!documentAST && !queryString) {
       // This shouldn't happen: one of those options must be passed to runQuery.
-      throw new Error('No queryString or parsedQuery?');
+      throw new Error('No queryString or documentAST?');
     }
 
     const cacheKey = signatureCacheKey(queryHash, operationName);

@@ -68,7 +68,6 @@ export interface GraphQLRequestContext<TContext = Record<string, any>> {
   readonly context: TContext;
   readonly cache: KeyValueCache;
 
-  // This will be replaced with the `operationID`.
   readonly queryHash?: string;
 
   readonly document?: DocumentNode;
