@@ -20,7 +20,7 @@ Ensure that all dependencies on `apollo-server` are at version `2.7.0` or higher
 
 These options will cause the Apollo gateway to collect tracing information from the underlying federated services and pass them on, along with the query plan, to the Apollo metrics ingress. Currently, only Apollo Server supports detailed metrics insights as an implementing service, but we would love to work with you to implement the protocol in other languages!
 
-> NOTE: By default, metrics will be reported to the `current` variant. To change the variant for reporting, set the `ENGINE_GRAPH_VARIANT` environment variable.
+> NOTE: By default, metrics will be reported to the `current` variant. To change the variant for reporting, set the `ENGINE_SCHEMA_TAG` environment variable.
 
 ## How tracing data is exposed from a federated service
 
