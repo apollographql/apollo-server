@@ -6,6 +6,7 @@ import {
   ValueOrPromise,
   GraphQLRequestContextWillSendResponse,
   GraphQLRequestContext,
+  Logger,
 } from 'apollo-server-types';
 import { GraphQLSchema, GraphQLObjectType, GraphQLString } from 'graphql/type';
 import { CacheHint } from 'apollo-cache-control';
@@ -27,6 +28,7 @@ type IPluginTestHarnessExecutionDidStart<TContext> =
 export default async function pluginTestHarness<TContext>({
   pluginInstance,
   schema,
+  logger,
   graphqlRequest,
   overallCachePolicy,
   executor,
@@ -45,6 +47,11 @@ export default async function pluginTestHarness<TContext>({
    * that lifecycle hook's implementations plugins.
    */
   schema?: GraphQLSchema;
+
+  /**
+   * An optional logger (Defaults to `console`)
+   */
+  logger?: Logger;
 
   /**
    * The `GraphQLRequest` which will be received by the `executor`.  The
@@ -90,7 +97,7 @@ export default async function pluginTestHarness<TContext>({
   enablePluginsForSchemaResolvers(schema);
 
   const requestContext: GraphQLRequestContext<TContext> = {
-    logger: console,
+    logger: logger || console,
     request: graphqlRequest,
     metrics: Object.create(null),
     source: graphqlRequest.query,
