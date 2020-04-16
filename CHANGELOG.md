@@ -9,7 +9,7 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 > The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  When a release is being prepared, a new header will be (manually) created below and the the appropriate changes within that release will be moved into the new section.
 
-- _Nothing yet! Stay tuned._
+- `apollo-engine-reporting`: Fix inadvertant conditional formatting which prevented automated persisted query (APQ) hits and misses from being reported to Apollo Graph Manager. [PR #3986](https://github.com/apollographql/apollo-server/pull/3986)
 
 ### v2.12.0
 
