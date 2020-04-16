@@ -144,16 +144,14 @@ export function whenResultIsFinished(
 
 function forEachField(schema: GraphQLSchema, fn: FieldIteratorFn): void {
   const typeMap = schema.getTypeMap();
-  Object.keys(typeMap).forEach(typeName => {
-    const type = typeMap[typeName];
+  Object.entries(typeMap).forEach(([typeName, type]) => {
 
     if (
       !getNamedType(type).name.startsWith('__') &&
       type instanceof GraphQLObjectType
     ) {
       const fields = type.getFields();
-      Object.keys(fields).forEach(fieldName => {
-        const field = fields[fieldName];
+      Object.entries(fields).forEach(([fieldName, field]) => {
         fn(field, typeName, fieldName);
       });
     }

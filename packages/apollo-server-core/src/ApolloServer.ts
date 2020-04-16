@@ -783,13 +783,19 @@ export class ApolloServerBase {
     return sdlFieldType.name == 'String';
   }
 
-  private ensurePluginInstantiation(plugins?: PluginDefinition[]): void {
-    const pluginsToInit = [...plugins || []];
+  private ensurePluginInstantiation(plugins: PluginDefinition[] = []): void {
+    const pluginsToInit: PluginDefinition[] = [];
 
+    // Internal plugins should be added to `pluginsToInit` here.
+    // User's plugins, provided as an argument to this method, will be added
+    // at the end of that list so they take precidence.
+
+    // If the user has enabled it explicitly, add our tracing lugin.
     if (this.config.tracing) {
       pluginsToInit.push(pluginTracing())
     }
 
+    pluginsToInit.push(...plugins);
     this.plugins = pluginsToInit.map(plugin => {
       if (typeof plugin === 'function') {
         return plugin();
