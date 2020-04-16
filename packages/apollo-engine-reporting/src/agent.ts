@@ -2,10 +2,10 @@ import os from 'os';
 import { gzip } from 'zlib';
 import { DocumentNode, GraphQLError } from 'graphql';
 import {
-  FullTracesReport,
   ReportHeader,
-  Traces,
   Trace,
+  Report,
+  TracesAndStats
 } from 'apollo-engine-reporting-protobuf';
 
 import { fetch, RequestAgent, Response } from 'apollo-server-env';
@@ -222,12 +222,12 @@ export class EngineReportingAgent<TContext = any> {
   private options: EngineReportingOptions<TContext>;
   private logger: Logger = console;
   private apiKey: string;
-  private reports: { [schemaHash: string]: FullTracesReport } = Object.create(
+  private reports: { [schemaHash: string]: Report } = Object.create(
     null,
   );
   private reportSizes: { [schemaHash: string]: number } = Object.create(null);
   private reportTimer: any; // timer typing is weird and node-specific
-  private sendReportsImmediately?: boolean;
+  private readonly sendReportsImmediately?: boolean;
   private stopped: boolean = false;
   private reportHeaders: { [schemaHash: string]: ReportHeader } = Object.create(
     null,
@@ -330,7 +330,7 @@ export class EngineReportingAgent<TContext = any> {
 
     const statsReportKey = `# ${operationName || '-'}\n${signature}`;
     if (!report.tracesPerQuery.hasOwnProperty(statsReportKey)) {
-      report.tracesPerQuery[statsReportKey] = new Traces();
+      report.tracesPerQuery[statsReportKey] = new TracesAndStats();
       (report.tracesPerQuery[statsReportKey] as any).encodedTraces = [];
     }
     // See comment on our override of Traces.encode inside of
@@ -383,11 +383,11 @@ export class EngineReportingAgent<TContext = any> {
       );
     }
 
-    const protobufError = FullTracesReport.verify(report);
+    const protobufError = Report.verify(report);
     if (protobufError) {
       throw new Error(`Error encoding report: ${protobufError}`);
     }
-    const message = FullTracesReport.encode(report).finish();
+    const message = Report.encode(report).finish();
 
     const compressed = await new Promise<Buffer>((resolve, reject) => {
       // The protobuf library gives us a Uint8Array. Node 8's zlib lets us
@@ -557,7 +557,7 @@ export class EngineReportingAgent<TContext = any> {
   }
 
   private resetReport(schemaHash: string) {
-    this.reports[schemaHash] = new FullTracesReport({
+    this.reports[schemaHash] = new Report({
       header: this.reportHeaders[schemaHash],
     });
     this.reportSizes[schemaHash] = 0;

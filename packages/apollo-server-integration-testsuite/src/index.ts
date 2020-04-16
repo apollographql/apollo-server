@@ -16,7 +16,7 @@ import {
   getOperationAST,
 } from 'graphql';
 
-import request = require('supertest');
+import request from 'supertest';
 
 import { GraphQLOptions, Config } from 'apollo-server-core';
 import gql from 'graphql-tag';
