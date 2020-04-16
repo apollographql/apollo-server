@@ -5,6 +5,8 @@ import {
 } from 'graphql';
 import { ApolloServerPlugin } from "apollo-server-plugin-base";
 
+const { PACKAGE_NAME } = require("../package.json").name;
+
 export interface TracingFormat {
   version: 1;
   startTime: string;
@@ -88,8 +90,11 @@ export const plugin = (_futureOptions = {}) => (): ApolloServerPlugin => ({
         const extensions =
           response.extensions || (response.extensions = Object.create(null));
 
+        // Be defensive and make sure nothing else (other plugin, etc.) has
+        // already used the `tracing` property on `extensions`.
         if (typeof extensions.tracing !== 'undefined') {
-          throw new Error("The tracing information already existed.");
+          throw new Error(PACKAGE_NAME + ": Could not add `tracing` to " +
+            "`extensions` since `tracing` was unexpectedly already present.");
         }
 
         // Set the extensions.
