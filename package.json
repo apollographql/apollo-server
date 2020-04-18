@@ -60,7 +60,7 @@
   },
   "devDependencies": {
     "@types/async-retry": "1.4.1",
-    "@types/aws-lambda": "8.10.48",
+    "@types/aws-lambda": "8.10.50",
     "@types/body-parser": "1.19.0",
     "@types/bunyan": "1.8.6",
     "@types/connect": "3.4.33",
