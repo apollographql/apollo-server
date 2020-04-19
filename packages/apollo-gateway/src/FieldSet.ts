@@ -147,6 +147,40 @@ function mergeSelectionSets(fieldNodes: FieldNode[]): SelectionSetNode {
 
   return {
     kind: 'SelectionSet',
-    selections,
+    selections: mergeSelectionsSetsInternal(selections),
   };
+}
+
+function mergeSelectionsSetsInternal(fieldNodes: SelectionNode[]): SelectionNode[] {
+  const scalars: SelectionNode[] = [];
+  const selectionMap: Map<string, {field: SelectionNode[], selections: SelectionNode[]}> = new Map();
+
+  for (const fieldNode of fieldNodes) {
+    // @ts-ignore
+    if (!fieldNode.selectionSet) {
+      scalars.push(fieldNode);
+      continue;
+    }
+    // @ts-ignore
+    const name = fieldNode.name?.value || fieldNode.typeCondition.name.value
+    const selections: {field: SelectionNode[], selections: SelectionNode[]} = selectionMap.get(name) || {field: [fieldNode], selections: []};
+    // @ts-ignore
+    selections.selections.push(...fieldNode.selectionSet.selections);
+    selections.field.push(fieldNode);
+    selectionMap.set(name, selections)
+  }
+
+  const result = Array.from(selectionMap.values()).map(selection => {
+    // @ts-ignore
+    const name = selection.field[0].name?.value || selection.field[0].typeCondition.name.value
+    const field = selectionMap.get(name)?.field[0];
+    // @ts-ignore
+    const clone = {...field}
+    // @ts-ignore
+    clone.selectionSet?.selections = mergeSelectionsSetsInternal(selection.selections)
+    return clone;
+  })
+  result.unshift(...scalars);
+
+  return result.flat();
 }

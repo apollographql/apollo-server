@@ -179,5 +179,67 @@ it('supports passing additional deeply nested fields defined by a requires', asy
     query,
   });
 
-  console.log(data)
+  console.log(data);
+  expect(queryPlan).toMatchInlineSnapshot(`
+    QueryPlan {
+      Sequence {
+        Fetch(service: "user") {
+          {
+            me {
+              name
+              __typename
+              id
+              organization {
+                name
+                address {
+                  country
+                  city
+                  city
+                  coordinates {
+                    type
+                    value
+                    type
+                    value
+                  }
+                }
+              }
+            }
+          }
+        },
+        Flatten(path: "me") {
+          Fetch(service: "publisher") {
+            {
+              ... on User {
+                __typename
+                id
+                organization {
+                  name
+                  address {
+                    country
+                    city
+                    city
+                    coordinates {
+                      type
+                      value
+                      type
+                      value
+                    }
+                  }
+                }
+              }
+            } =>
+            {
+              ... on User {
+                publisher {
+                  id
+                  name
+                }
+                publisherCity
+              }
+            }
+          },
+        },
+      },
+    }
+  `);
 });

@@ -71,6 +71,7 @@ describe('value types', () => {
                 }
                 ... on Furniture {
                   upc
+                  __typename
                   metadata {
                     __typename
                     ... on KeyValue {
@@ -82,7 +83,6 @@ describe('value types', () => {
                       message
                     }
                   }
-                  __typename
                 }
               }
             }
