@@ -299,6 +299,11 @@ export class ApolloGateway implements GraphQLService {
 
   public async load(options?: { engine?: GraphQLServiceEngineConfig }) {
     await this.updateComposition(options);
+
+    if (isManagedConfig(this.config) || this.experimental_pollInterval) {
+      if (!this.pollingTimer) this.pollServices();
+    }
+
     const { graphId, graphVariant } = (options && options.engine) || {};
     const mode = isManagedConfig(this.config) ? 'managed' : 'unmanaged';
 
@@ -480,19 +485,10 @@ export class ApolloGateway implements GraphQLService {
   }
 
   public onSchemaChange(callback: SchemaChangeCallback): Unsubscriber {
-    if (!isManagedConfig(this.config) && !this.experimental_pollInterval) {
-      return () => {};
-    }
-
     this.onSchemaChangeListeners.add(callback);
-    if (!this.pollingTimer) this.pollServices();
 
     return () => {
       this.onSchemaChangeListeners.delete(callback);
-      if (this.onSchemaChangeListeners.size === 0 && this.pollingTimer) {
-        clearInterval(this.pollingTimer!);
-        this.pollingTimer = undefined;
-      }
     };
   }
 
@@ -567,7 +563,7 @@ export class ApolloGateway implements GraphQLService {
     // is invoked below. It is a helper, rather than an options object, since it
     // depends on the presence of `this.engineConfig`, which is guarded against
     // further down in this method in two separate places.
-    const getRemoteConfig = (engineConfig: GraphQLServiceEngineConfig) => {
+    const getManagedConfig = (engineConfig: GraphQLServiceEngineConfig) => {
       return getServiceDefinitionsFromStorage({
         graphId: engineConfig.graphId,
         apiKeyHash: engineConfig.apiKeyHash,
@@ -585,7 +581,7 @@ export class ApolloGateway implements GraphQLService {
         // This error helps avoid common misconfiguration.
         // We don't await this because a local configuration should assume
         // remote is unavailable for one reason or another.
-        getRemoteConfig(this.engineConfig).then(() => {
+        getManagedConfig(this.engineConfig).then(() => {
           this.logger.warn(
             "A local gateway service list is overriding an Apollo Graph " +
             "Manager managed configuration.  To use the managed " +
@@ -620,7 +616,7 @@ export class ApolloGateway implements GraphQLService {
       );
     }
 
-    return getRemoteConfig(this.engineConfig);
+    return getManagedConfig(this.engineConfig);
   }
 
   // XXX Nothing guarantees that the only errors thrown or returned in

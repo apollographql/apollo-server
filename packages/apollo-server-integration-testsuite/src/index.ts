@@ -433,7 +433,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
             cacheControl: {
               defaultMaxAge: 5,
               stripFormattedExtensions: false,
-              calculateCacheControlHeaders: false,
+              calculateHttpHeaders: false,
             },
           },
         });
