@@ -26,6 +26,9 @@ import {
   TypeNameMetaFieldDef,
   visit,
   VariableDefinitionNode,
+  OperationTypeNode,
+  print,
+  stripIgnoredCharacters,
 } from 'graphql';
 import {
   Field,
@@ -104,34 +107,60 @@ export function buildQueryPlan(
 
 function executionNodeForGroup(
   context: QueryPlanningContext,
-  group: FetchGroup,
+  {
+    serviceName,
+    fields,
+    requiredFields,
+    internalFragments,
+    mergeAt,
+    dependentGroups,
+  }: FetchGroup,
   parentType?: GraphQLCompositeType,
 ): PlanNode {
-  const selectionSet = selectionSetFromFieldSet(group.fields, parentType);
+  const selectionSet = selectionSetFromFieldSet(fields, parentType);
+  const requires =
+    requiredFields.length > 0
+      ? selectionSetFromFieldSet(requiredFields)
+      : undefined;
+  const variableUsages = context.getVariableUsages(
+    selectionSet,
+    internalFragments,
+  );
+
+  const operation = requires
+    ? operationForEntitiesFetch({
+        selectionSet,
+        variableUsages,
+        internalFragments,
+      })
+    : operationForRootFetch({
+        selectionSet,
+        variableUsages,
+        internalFragments,
+        operation: context.operation.operation,
+      });
 
   const fetchNode: FetchNode = {
     kind: 'Fetch',
-    serviceName: group.serviceName,
+    serviceName,
     selectionSet,
-    requires:
-      group.requiredFields && group.requiredFields.length > 0
-        ? selectionSetFromFieldSet(group.requiredFields)
-        : undefined,
-    variableUsages: context.getVariableUsages(selectionSet, group.internalFragments),
-    internalFragments: group.internalFragments
+    requires,
+    variableUsages,
+    internalFragments,
+    source: stripIgnoredCharacters(print(operation)),
   };
 
   const node: PlanNode =
-    group.mergeAt && group.mergeAt.length > 0
+    mergeAt && mergeAt.length > 0
       ? {
           kind: 'Flatten',
-          path: group.mergeAt,
+          path: mergeAt,
           node: fetchNode,
         }
       : fetchNode;
 
-  if (group.dependentGroups.length > 0) {
-    const dependentNodes = group.dependentGroups.map(dependentGroup =>
+  if (dependentGroups.length > 0) {
+    const dependentNodes = dependentGroups.map(dependentGroup =>
       executionNodeForGroup(context, dependentGroup),
     );
 
@@ -139,6 +168,108 @@ function executionNodeForGroup(
   } else {
     return node;
   }
+}
+
+interface VariableUsages {
+  [name: string]: VariableDefinitionNode
+}
+
+function mapFetchNodeToVariableDefinitions(
+  variableUsages: VariableUsages,
+): VariableDefinitionNode[] {
+  return variableUsages ? Object.values(variableUsages) : [];
+}
+
+function operationForRootFetch({
+  selectionSet,
+  variableUsages,
+  internalFragments,
+  operation = 'query',
+}: {
+  selectionSet: SelectionSetNode;
+  variableUsages: VariableUsages;
+  internalFragments: Set<FragmentDefinitionNode>;
+  operation?: OperationTypeNode;
+}): DocumentNode {
+  return {
+    kind: Kind.DOCUMENT,
+    definitions: [
+      {
+        kind: Kind.OPERATION_DEFINITION,
+        operation,
+        selectionSet,
+        variableDefinitions: mapFetchNodeToVariableDefinitions(variableUsages),
+      },
+      ...internalFragments,
+    ],
+  };
+}
+
+function operationForEntitiesFetch({
+  selectionSet,
+  variableUsages,
+  internalFragments,
+}: {
+  selectionSet: SelectionSetNode;
+  variableUsages: VariableUsages;
+  internalFragments: Set<FragmentDefinitionNode>;
+}): DocumentNode {
+  const representationsVariable = {
+    kind: Kind.VARIABLE,
+    name: { kind: Kind.NAME, value: 'representations' },
+  };
+
+  return {
+    kind: Kind.DOCUMENT,
+    definitions: [
+      {
+        kind: Kind.OPERATION_DEFINITION,
+        operation: 'query',
+        variableDefinitions: ([
+          {
+            kind: Kind.VARIABLE_DEFINITION,
+            variable: representationsVariable,
+            type: {
+              kind: Kind.NON_NULL_TYPE,
+              type: {
+                kind: Kind.LIST_TYPE,
+                type: {
+                  kind: Kind.NON_NULL_TYPE,
+                  type: {
+                    kind: Kind.NAMED_TYPE,
+                    name: { kind: Kind.NAME, value: '_Any' },
+                  },
+                },
+              },
+            },
+          },
+        ] as VariableDefinitionNode[]).concat(
+          mapFetchNodeToVariableDefinitions(variableUsages),
+        ),
+        selectionSet: {
+          kind: Kind.SELECTION_SET,
+          selections: [
+            {
+              kind: Kind.FIELD,
+              name: { kind: Kind.NAME, value: '_entities' },
+              arguments: [
+                {
+                  kind: Kind.ARGUMENT,
+                  name: {
+                    kind: Kind.NAME,
+                    value: representationsVariable.name.value,
+                  },
+                  value: representationsVariable,
+                },
+              ],
+              selectionSet,
+            },
+          ],
+        },
+      },
+      ...internalFragments,
+    ],
+  };
 }
 
 // Wraps the given nodes in a ParallelNode or SequenceNode, unless there's only
