@@ -29,6 +29,7 @@ import {
   OperationTypeNode,
   print,
   stripIgnoredCharacters,
+  FragmentSpreadNode,
 } from 'graphql';
 import {
   Field,
@@ -679,7 +680,7 @@ function completeField(
       });
     }
 
-    const subfields = collectSubfields(context, returnType, fields);
+    const { subfields } = collectSubfields(context, returnType, fields);
     splitSubfields(context, fieldPath, subfields, subGroup);
 
     parentGroup.otherDependentGroups.push(...subGroup.dependentGroups);
@@ -766,9 +767,9 @@ function collectFields(
   scope: Scope<GraphQLCompositeType>,
   selectionSet: SelectionSetNode,
   fields: FieldSet = [],
-  visitedFragmentNames: { [fragmentName: string]: boolean } = Object.create(
-    null,
-  ),
+  visitedFragments: {
+    [fragmentName: string]: FragmentSpreadNode;
+  } = Object.create(null),
 ): FieldSet {
   for (const selection of selectionSet.selections) {
     switch (selection.kind) {
@@ -782,18 +783,23 @@ function collectFields(
           context.newScope(getFragmentCondition(selection), scope),
           selection.selectionSet,
           fields,
-          visitedFragmentNames,
+          visitedFragments,
         );
         break;
       case Kind.FRAGMENT_SPREAD:
         const fragmentName = selection.name.value;
 
-        if (visitedFragmentNames[fragmentName]) {
+        if (visitedFragments[fragmentName]) {
           continue;
         }
-        visitedFragmentNames[fragmentName] = true;
+        visitedFragments[fragmentName] = selection;
 
-        const fragment = context.fragments[fragmentName];
+        const fragment =
+          context.fragments[fragmentName] ||
+          Array.from(context.internalFragments.values()).find(
+            fragment => fragment.name === fragmentName,
+          );
+
         if (!fragment) {
           continue;
         }
@@ -803,7 +809,7 @@ function collectFields(
           context.newScope(getFragmentCondition(fragment), scope),
           fragment.selectionSet,
           fields,
-          visitedFragmentNames,
+          visitedFragments,
         );
         break;
     }
@@ -832,9 +838,12 @@ export function collectSubfields(
   context: QueryPlanningContext,
   returnType: GraphQLCompositeType,
   fields: FieldSet,
-): FieldSet {
+): {
+  subfields: FieldSet;
+  visitedFragments: { [name: string]: FragmentSpreadNode };
+} {
   let subfields: FieldSet = [];
-  const visitedFragmentNames = Object.create(null);
+  const visitedFragments = Object.create(null);
 
   for (const field of fields) {
     const selectionSet = field.fieldNode.selectionSet;
@@ -845,12 +854,12 @@ export function collectSubfields(
         context.newScope(returnType),
         selectionSet,
         subfields,
-        visitedFragmentNames,
+        visitedFragments,
       );
     }
   }
 
-  return subfields;
+  return { subfields, visitedFragments };
 }
 
 class FetchGroup {
@@ -1171,7 +1180,7 @@ export class QueryPlanningContext {
   getSubFields(
     parentType: GraphQLCompositeType,
     field: Field,
-  ): FieldSet {
+  ): ReturnType<typeof collectSubfields> {
     return collectSubfields(this, parentType, [field]);
   }
 }

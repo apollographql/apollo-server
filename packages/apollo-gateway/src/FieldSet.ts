@@ -8,6 +8,7 @@ import {
   SelectionNode,
   SelectionSetNode,
   GraphQLObjectType,
+  FragmentSpreadNode,
 } from 'graphql';
 import { getResponseName } from './utilities/graphql';
 import { QueryPlanningContext } from './buildQueryPlan';
@@ -77,22 +78,28 @@ export function selectionSetFromFieldSet(
   fields: FieldSet,
   context: QueryPlanningContext,
   parentType?: GraphQLCompositeType,
+  fragmentSpreads?: FragmentSpreadNode[],
 ): SelectionSetNode {
   return {
     kind: Kind.SELECTION_SET,
-    selections: Array.from(groupByParentType(fields)).flatMap(
-      ([typeCondition, fieldsByParentType]: [GraphQLCompositeType, FieldSet]) =>
-        wrapInInlineFragmentIfNeeded(
-          Array.from(groupByResponseName(fieldsByParentType).values()).map(
-            fieldsByResponseName => {
-              return combineFields(fieldsByResponseName, context)
-                .fieldNode;
-            },
+    selections: [
+      ...Array.from(groupByParentType(fields)).flatMap(
+        ([typeCondition, fieldsByParentType]: [
+          GraphQLCompositeType,
+          FieldSet,
+        ]) =>
+          wrapInInlineFragmentIfNeeded(
+            Array.from(groupByResponseName(fieldsByParentType).values()).map(
+              fieldsByResponseName => {
+                return combineFields(fieldsByResponseName, context).fieldNode;
+              },
+            ),
+            typeCondition,
+            parentType,
           ),
-          typeCondition,
-          parentType,
-        ),
-    ),
+      ),
+      ...(fragmentSpreads ? fragmentSpreads : []),
+    ],
   };
 }
 
@@ -126,15 +133,28 @@ function combineFields(
   const returnType = getNamedType(fieldDef.type);
 
   if (isCompositeType(returnType)) {
-    const fieldSet = fields.flatMap(field =>
-      context.getSubFields(returnType, field)
-    );
+    const fragmentSpreads: FragmentSpreadNode[] = [];
+    const fieldSet: FieldSet = [];
+
+    for (const field of fields.flat()) {
+      const { subfields, visitedFragments } = context.getSubFields(
+        returnType,
+        field,
+      );
+      fieldSet.push(...subfields);
+      fragmentSpreads.push(...Object.values(visitedFragments));
+    }
 
     return {
       scope,
       fieldNode: {
         ...fieldNode,
-        selectionSet: selectionSetFromFieldSet(fieldSet, context, returnType)
+        selectionSet: selectionSetFromFieldSet(
+          fieldSet,
+          context,
+          returnType,
+          fragmentSpreads,
+        ),
       },
       fieldDef,
     };
