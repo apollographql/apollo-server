@@ -1,19 +1,19 @@
 ---
-title: Deploying with Zeit Now
-sidebar_title: Now
-description: Deploying your GraphQL server to Zeit Now
+title: Deploying with Vercel Now
+sidebar_title: Vercel
+description: Deploying your GraphQL server to Vercel Now
 ---
 
-[Now](https://zeit.co/now) is a service by Zeit that allows the deployment of an instance of Apollo Server, quickly providing a functional GraphQL endpoint.
+[Now](https://Vercel.com/now) is a service by Vercel that allows the deployment of an instance of Apollo Server, quickly providing a functional GraphQL endpoint.
 
 ## Prerequisites
 
-- A [Now](https://zeit.co/now) account
-- The [Now CLI](https://zeit.co/download#now-cli) (unless using [automatic GitHub deployments](#automatic-github-deployment))
+- A [Now](https://Vercel.com/now) account
+- The [Now CLI](https://Vercel.com/download#now-cli) (unless using [automatic GitHub deployments](#automatic-github-deployment))
 
 ## Setting up the project
 
-Deployment to [Now](https://zeit.co/now) for Node.js apps requires a `package.json` file to be present in the app's root directory.
+Deployment to [Vercel](https://Vercel.com/now) for Node.js apps requires a `package.json` file to be present in the app's root directory.
 
 ```js
 {
@@ -30,11 +30,11 @@ Deployment to [Now](https://zeit.co/now) for Node.js apps requires a `package.js
 }
 ```
 
-[Now](https://zeit.co/now) looks for a `start` script to start the app. As long as that is in the `package.json`, the app should be able to start up.
+[Now](https://Vercel.com/now) looks for a `start` script to start the app. As long as that is in the `package.json`, the app should be able to start up.
 
 ## Deploying with Now
 
-[Now](https://zeit.co/now) offers multiple options for deploying projects.
+[Now](https://Vercel.com/now) offers multiple options for deploying projects.
 
 ### Local Projects
 
@@ -48,7 +48,7 @@ The `now` command immediately deploys a server to the cloud and returns the host
 
 ### Manual GitHub deployment
 
-If a GraphQL server project is publically available on GitHub, [Now](https://zeit.co/now) provides the ability to deploy straight from GitHub by calling the `now` command with the user/organization name and repository name in the format `user/repository-name`.
+If a GraphQL server project is publically available on GitHub, [Now](https://Vercel.com/now) provides the ability to deploy straight from GitHub by calling the `now` command with the user/organization name and repository name in the format `user/repository-name`.
 
 For example, to deploy Apollo's [graphql-server-example](https://github.com/apollographql/graphql-server-example), the command would be:
 
@@ -60,11 +60,11 @@ The `now` command deploys right away and attempts to start the server. This spec
 
 ### Automatic GitHub deployment
 
-[Now](https://zeit.co/now) supports automatic deployment from GitHub on pull requests.
+[Now](https://Vercel.com/now) supports automatic deployment from GitHub on pull requests.
 
-To set up automatic deployment, visit [https://zeit.co/github](https://zeit.co/github) and click **Setup Now**.
+To set up automatic deployment, visit [https://Vercel.com/github](https://Vercel.com/github) and click **Setup Now**.
 
-After signing in with GitHub, the [Now](https://zeit.co/now) GitHub app can be added to any account or organization. Once installed, it's possible to choose which repositories that [Now](https://zeit.co/now) can run on, allowing new deployments on Pull Requests.
+After signing in with GitHub, the [Now](https://Vercel.com/now) GitHub app can be added to any account or organization. Once installed, it's possible to choose which repositories that [Now](https://Vercel.com/now) can run on, allowing new deployments on Pull Requests.
 
 ![now permissions setup](../images/deployment/zeit/now-github-permissions.png)
 
