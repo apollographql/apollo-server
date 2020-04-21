@@ -1,6 +1,6 @@
 ---
 title: Deploying with Vercel Now
-sidebar_title: Vercel
+sidebar_title: Now
 description: Deploying your GraphQL server to Vercel Now
 ---
 
