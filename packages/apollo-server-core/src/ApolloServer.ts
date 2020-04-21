@@ -69,8 +69,8 @@ import {
 
 import { Headers } from 'apollo-server-env';
 import { buildServiceDefinition } from '@apollographql/apollo-tools';
-import { Logger } from "apollo-server-types";
 import { plugin as pluginTracing } from "apollo-tracing";
+import { Logger, SchemaHash } from "apollo-server-types";
 
 const NoIntrospection = (context: ValidationContext) => ({
   Field(node: FieldDefinitionNode) {
@@ -135,7 +135,7 @@ type SchemaDerivedData = {
   // on the same operation to be executed immediately.
   documentStore?: InMemoryLRUCache<DocumentNode>;
   schema: GraphQLSchema;
-  schemaHash: string;
+  schemaHash: SchemaHash;
   extensions: Array<() => GraphQLExtension>;
 };
 
