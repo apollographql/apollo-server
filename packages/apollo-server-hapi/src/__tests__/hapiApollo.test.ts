@@ -10,9 +10,9 @@ import testSuite, {
 // NODE: Intentionally skip on Node.js < 8 since Hapi 17 doesn't support less
 (NODE_MAJOR_VERSION < 8 ? describe.skip : describe)('integration:Hapi', () => {
   async function createApp(options: CreateAppOptions = {}) {
-    const { Server } = require('hapi');
+    const { Server } = require('@hapi/hapi');
 
-    const app: import('hapi').Server = new Server({
+    const app: import('@hapi/hapi').Server = new Server({
       host: 'localhost',
     });
 

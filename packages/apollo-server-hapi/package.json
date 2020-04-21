@@ -26,14 +26,17 @@
   },
   "dependencies": {
     "@apollographql/graphql-playground-html": "1.6.24",
-    "accept": "^3.0.2",
+    "@hapi/accept": "^3.0.2",
+    "@hapi/boom": "^7.1.0",
     "apollo-server-core": "file:../apollo-server-core",
     "apollo-server-types": "file:../apollo-server-types",
-    "boom": "^7.1.0",
     "graphql-subscriptions": "^1.0.0",
     "graphql-tools": "^4.0.0"
   },
   "devDependencies": {
+    "@types/hapi__hapi": "^19.0.2",
+    "@types/hapi__accept": "^5.0.1",
+    "@types/hapi__boom": "^9.0.1",
     "apollo-server-integration-testsuite": "file:../apollo-server-integration-testsuite"
   },
   "peerDependencies": {

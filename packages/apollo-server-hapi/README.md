@@ -13,7 +13,7 @@ The code below requires Hapi 17 or higher.
 
 ```js
 const { ApolloServer, gql } = require('apollo-server-hapi');
-const Hapi = require('hapi');
+const Hapi = require('@hapi/hapi');
 
 async function StartServer() {
   const server = new ApolloServer({ typeDefs, resolvers });
