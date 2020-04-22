@@ -1,21 +1,20 @@
+import { GraphQLSchema } from 'graphql';
 import {
   GraphQLServiceContext,
   GraphQLRequestContext,
   GraphQLRequest,
   GraphQLResponse,
-} from 'apollo-server-core/dist/requestPipelineAPI';
-import { GraphQLSchema } from 'graphql';
+  ValueOrPromise,
+  WithRequired,
+} from 'apollo-server-types';
 export {
   GraphQLServiceContext,
   GraphQLRequestContext,
   GraphQLRequest,
   GraphQLResponse,
+  ValueOrPromise,
+  WithRequired,
 };
-
-// These are copied from apollo-server-env so that we don't need to have a strict
-// non-dev dependency on anything from this package.
-export type ValueOrPromise<T> = T | Promise<T>;
-export type WithRequired<T, K extends keyof T> = T & Required<Pick<T, K>>;
 
 export interface ApolloServerPlugin {
   serverWillStart?(service: GraphQLServiceContext): ValueOrPromise<void>;
@@ -31,13 +30,13 @@ export interface GraphQLRequestListener<TContext = Record<string, any>> {
       GraphQLRequestContext<TContext>,
       'metrics' | 'source'
     >,
-  ): (err?: Error) => void | void;
+  ): ((err?: Error) => void) | void;
   validationDidStart?(
     requestContext: WithRequired<
       GraphQLRequestContext<TContext>,
       'metrics' | 'source' | 'document'
     >,
-  ): (err?: ReadonlyArray<Error>) => void | void;
+  ): ((err?: ReadonlyArray<Error>) => void) | void;
   didResolveOperation?(
     requestContext: WithRequired<
       GraphQLRequestContext<TContext>,
@@ -66,7 +65,7 @@ export interface GraphQLRequestListener<TContext = Record<string, any>> {
       GraphQLRequestContext<TContext>,
       'metrics' | 'source' | 'document' | 'operationName' | 'operation'
     >,
-  ): (err?: Error) => void | void;
+  ): ((err?: Error) => void) | void;
   willSendResponse?(
     requestContext: WithRequired<
       GraphQLRequestContext<TContext>,

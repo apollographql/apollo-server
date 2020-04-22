@@ -29,6 +29,12 @@ export const typeDefs = gql`
   extend type Mutation {
     login(username: String!, password: String!): User
   }
+
+  extend type Library @key(fields: "id") {
+    id: ID! @external
+    name: String @external
+    userAccount(id: ID! = "1"): User @requires(fields: "name")
+  }
 `;
 
 const users = [
@@ -47,6 +53,10 @@ const users = [
     account: { __typename: 'SMSAccount', number: '8675309' },
   },
 ];
+
+const libraryUsers: { [name: string]: string[] } = {
+  'NYC Public Library': ['1', '2'],
+};
 
 export const resolvers: GraphQLResolverMap<any> = {
   Query: {
@@ -68,6 +78,15 @@ export const resolvers: GraphQLResolverMap<any> = {
             timeZone: 'Asia/Samarkand', // UTC + 5
           })
         : user.birthDate;
+    },
+  },
+  Library: {
+    userAccount({ name }, { id: userId }) {
+      const libraryUserIds = libraryUsers[name];
+      return libraryUserIds &&
+        libraryUserIds.find((id: string) => id === userId)
+        ? { id: userId }
+        : null;
     },
   },
   Mutation: {

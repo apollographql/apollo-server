@@ -1,10 +1,10 @@
 import {
   ApolloServerPlugin,
   GraphQLRequestListener,
-  GraphQLRequestContext,
 } from 'apollo-server-plugin-base';
+import { GraphQLRequestContext, GraphQLResponse } from 'apollo-server-types';
 import { KeyValueCache, PrefixingKeyValueCache } from 'apollo-server-caching';
-import { ValueOrPromise } from 'apollo-server-env';
+import { ValueOrPromise } from 'apollo-server-types';
 import { CacheHint, CacheScope } from 'apollo-cache-control';
 
 // XXX This should use createSHA from apollo-server-core in order to work on
@@ -12,7 +12,6 @@ import { CacheHint, CacheScope } from 'apollo-cache-control';
 // apollo-server-sha as its own tiny module? apollo-server-env seems bad because
 // that would add sha.js to unnecessary places, I think?
 import { createHash } from 'crypto';
-import { GraphQLResponse } from 'apollo-server-core/dist/requestPipelineAPI';
 
 interface Options<TContext = Record<string, any>> {
   // Underlying cache used to save results. All writes will be under keys that

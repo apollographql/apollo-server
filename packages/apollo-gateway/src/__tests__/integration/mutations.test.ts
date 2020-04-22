@@ -18,7 +18,7 @@ function spyOnResolver<T extends string>(resolverMap: any, resolverName: T) {
 
 it('supports mutations', async () => {
   const query = gql`
-    mutation Login($username: String, $password: String!) {
+    mutation Login($username: String!, $password: String!) {
       login(username: $username, password: $password) {
         reviews {
           product {
@@ -93,7 +93,7 @@ it('multiple root mutations', async () => {
 
   const query = gql`
     mutation LoginAndReview(
-      $username: String
+      $username: String!
       $password: String!
       $upc: String!
       $body: String!
@@ -160,7 +160,7 @@ it('multiple root mutations with correct service order', async () => {
       $upc: String!
       $body: String!
       $updatedReview: UpdateReviewInput!
-      $username: String
+      $username: String!
       $password: String!
       $reviewId: ID!
     ) {

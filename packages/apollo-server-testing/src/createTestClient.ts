@@ -1,4 +1,5 @@
-import { ApolloServerBase, GraphQLResponse } from 'apollo-server-core';
+import { ApolloServerBase } from 'apollo-server-core';
+import { GraphQLResponse } from 'apollo-server-types';
 import { print, DocumentNode } from 'graphql';
 
 type StringOrAst = string | DocumentNode;

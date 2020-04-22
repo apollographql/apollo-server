@@ -17,21 +17,12 @@ import {
 } from 'apollo-server-core';
 import accepts from 'accepts';
 import typeis from 'type-is';
-import { compose } from 'compose-middleware';
-import parseurl from 'parseurl';
+
 import { graphqlExpress } from './expressApollo';
 
 export { GraphQLOptions, GraphQLExtension } from 'apollo-server-core';
 
-export interface GetMiddlewareOptions {
-  path?: string;
-  cors?: corsMiddleware.CorsOptions | boolean;
-  bodyParserConfig?: OptionsJson | boolean;
-  onHealthCheck?: (req: express.Request) => Promise<any>;
-  disableHealthCheck?: boolean;
-}
-
-export interface ServerRegistration extends GetMiddlewareOptions {
+export interface ServerRegistration {
   // Note: You can also pass a connect.Server here. If we changed this field to
   // `express.Application | connect.Server`, it would be very hard to get the
   // app.use calls to typecheck even though they do work properly. Our
@@ -39,6 +30,11 @@ export interface ServerRegistration extends GetMiddlewareOptions {
   // we suspect the only connect users left writing GraphQL apps are Meteor
   // users).
   app: express.Application;
+  path?: string;
+  cors?: corsMiddleware.CorsOptions | boolean;
+  bodyParserConfig?: OptionsJson | boolean;
+  onHealthCheck?: (req: express.Request) => Promise<any>;
+  disableHealthCheck?: boolean;
 }
 
 const fileUploadMiddleware = (
@@ -74,28 +70,6 @@ const fileUploadMiddleware = (
   }
 };
 
-const middlewareFromPath = (
-  path: string,
-  middleware: express.RequestHandler,
-) => (
-  req: express.Request,
-  res: express.Response,
-  next: express.NextFunction,
-) => {
-  // While Express is quite capable of providing the `path`, `connect` doesn't
-  // provide `req.path` in the same way, even though it's available on the `req`
-  // as `req._parsedUrl`.  That property is a cached representation of a
-  // previous parse done by the `parseurl` package, and by using that (popular)
-  // package here, we can still reap those cache benefits without directly
-  // accessing _parsedUrl ourselves, which could be risky.
-  const parsedUrl = parseurl(req);
-  if (parsedUrl && parsedUrl.pathname === path) {
-    return middleware(req, res, next);
-  } else {
-    return next();
-  }
-};
-
 export interface ExpressContext {
   req: express.Request;
   res: express.Response;
@@ -128,20 +102,17 @@ export class ApolloServer extends ApolloServerBase {
     return true;
   }
 
-  public applyMiddleware({ app, ...rest }: ServerRegistration) {
-    app.use(this.getMiddleware(rest));
-  }
-
   // TODO: While `express` is not Promise-aware, this should become `async` in
   // a major release in order to align the API with other integrations (e.g.
   // Hapi) which must be `async`.
-  public getMiddleware({
+  public applyMiddleware({
+    app,
     path,
     cors,
     bodyParserConfig,
     disableHealthCheck,
     onHealthCheck,
-  }: GetMiddlewareOptions = {}) {
+  }: ServerRegistration) {
     if (!path) path = '/graphql';
 
     // Despite the fact that this `applyMiddleware` function is `async` in
@@ -157,34 +128,27 @@ export class ApolloServer extends ApolloServerBase {
     // request comes in, but we won't call `next` on this middleware until it
     // does. (And we'll take care to surface any errors via the `.catch`-able.)
     const promiseWillStart = this.willStart();
-
-    const middleware: express.RequestHandler[] = [];
-
-    middleware.push(
-      middlewareFromPath(path, (_req, _res, next) => {
-        promiseWillStart.then(() => next()).catch(next);
-      }),
-    );
+    app.use(path, (_req, _res, next) => {
+      promiseWillStart.then(() => next()).catch(next);
+    });
 
     if (!disableHealthCheck) {
-      middleware.push(
-        middlewareFromPath('/.well-known/apollo/server-health', (req, res) => {
-          // Response follows https://tools.ietf.org/html/draft-inadarei-api-health-check-01
-          res.type('application/health+json');
+      app.use('/.well-known/apollo/server-health', (req, res) => {
+        // Response follows https://tools.ietf.org/html/draft-inadarei-api-health-check-01
+        res.type('application/health+json');
 
-          if (onHealthCheck) {
-            onHealthCheck(req)
-              .then(() => {
-                res.json({ status: 'pass' });
-              })
-              .catch(() => {
-                res.status(503).json({ status: 'fail' });
-              });
-          } else {
-            res.json({ status: 'pass' });
-          }
-        }),
-      );
+        if (onHealthCheck) {
+          onHealthCheck(req)
+            .then(() => {
+              res.json({ status: 'pass' });
+            })
+            .catch(() => {
+              res.status(503).json({ status: 'fail' });
+            });
+        } else {
+          res.json({ status: 'pass' });
+        }
+      });
     }
 
     let uploadsMiddleware;
@@ -198,63 +162,54 @@ export class ApolloServer extends ApolloServerBase {
     // Note that we don't just pass all of these handlers to a single app.use call
     // for 'connect' compatibility.
     if (cors === true) {
-      middleware.push(middlewareFromPath(path, corsMiddleware()));
+      app.use(path, corsMiddleware());
     } else if (cors !== false) {
-      middleware.push(middlewareFromPath(path, corsMiddleware(cors)));
+      app.use(path, corsMiddleware(cors));
     }
 
     if (bodyParserConfig === true) {
-      middleware.push(middlewareFromPath(path, json()));
+      app.use(path, json());
     } else if (bodyParserConfig !== false) {
-      middleware.push(middlewareFromPath(path, json(bodyParserConfig)));
+      app.use(path, json(bodyParserConfig));
     }
 
     if (uploadsMiddleware) {
-      middleware.push(middlewareFromPath(path, uploadsMiddleware));
+      app.use(path, uploadsMiddleware);
     }
 
     // Note: if you enable playground in production and expect to be able to see your
     // schema, you'll need to manually specify `introspection: true` in the
     // ApolloServer constructor; by default, the introspection query is only
     // enabled in dev.
-    middleware.push(
-      middlewareFromPath(path, (req, res, next) => {
-        if (this.playgroundOptions && req.method === 'GET') {
-          // perform more expensive content-type check only if necessary
-          // XXX We could potentially move this logic into the GuiOptions lambda,
-          // but I don't think it needs any overriding
-          const accept = accepts(req);
-          const types = accept.types() as string[];
-          const prefersHTML =
-            types.find(
-              (x: string) => x === 'text/html' || x === 'application/json',
-            ) === 'text/html';
+    app.use(path, (req, res, next) => {
+      if (this.playgroundOptions && req.method === 'GET') {
+        // perform more expensive content-type check only if necessary
+        // XXX We could potentially move this logic into the GuiOptions lambda,
+        // but I don't think it needs any overriding
+        const accept = accepts(req);
+        const types = accept.types() as string[];
+        const prefersHTML =
+          types.find(
+            (x: string) => x === 'text/html' || x === 'application/json',
+          ) === 'text/html';
 
-          if (prefersHTML) {
-            const playgroundRenderPageOptions: PlaygroundRenderPageOptions = {
-              endpoint: req.originalUrl,
-              subscriptionEndpoint: this.subscriptionsPath,
-              ...this.playgroundOptions,
-            };
-            res.setHeader('Content-Type', 'text/html');
-            const playground = renderPlaygroundPage(
-              playgroundRenderPageOptions,
-            );
-            res.write(playground);
-            res.end();
-            return;
-          }
+        if (prefersHTML) {
+          const playgroundRenderPageOptions: PlaygroundRenderPageOptions = {
+            endpoint: req.originalUrl,
+            subscriptionEndpoint: this.subscriptionsPath,
+            ...this.playgroundOptions,
+          };
+          res.setHeader('Content-Type', 'text/html');
+          const playground = renderPlaygroundPage(playgroundRenderPageOptions);
+          res.write(playground);
+          res.end();
+          return;
         }
-
-        return graphqlExpress(() => this.createGraphQLServerOptions(req, res))(
-          req,
-          res,
-          next,
-        );
-      }),
-    );
-
-    return compose(middleware);
+      }
+      return graphqlExpress(() => {
+        return this.createGraphQLServerOptions(req, res);
+      })(req, res, next);
+    });
   }
 }
 

@@ -9,6 +9,7 @@
   "references": [
     { "path": "../apollo-cache-control" },
     { "path": "../apollo-server-plugin-base" },
-    { "path": "../apollo-server-caching" }
+    { "path": "../apollo-server-caching" },
+    { "path": "../apollo-server-types" },
   ]
 }

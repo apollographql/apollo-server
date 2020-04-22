@@ -191,7 +191,7 @@ Now any model method in `User` has access to the same `user` information that re
 
 ```js
 getAll: () => {
- if(!user || !user.roles.includes('admin') return null;
+ if(!user || !user.roles.includes('admin')) return null;
  return fetch('http://myurl.com/users');
 }
 ```

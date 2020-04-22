@@ -1,12 +1,11 @@
 /* tslint:disable:no-unused-expression */
 import http from 'http';
-import net from 'net';
 import { sha256 } from 'js-sha256';
 import express = require('express');
 import bodyParser = require('body-parser');
 import yup = require('yup');
 
-import { FullTracesReport } from 'apollo-engine-reporting-protobuf';
+import { FullTracesReport, Trace } from 'apollo-engine-reporting-protobuf';
 
 import {
   GraphQLSchema,
@@ -48,9 +47,9 @@ import { Headers } from 'apollo-server-env';
 import { GraphQLExtension, GraphQLResponse } from 'graphql-extensions';
 import { TracingFormat } from 'apollo-tracing';
 import ApolloServerPluginResponseCache from 'apollo-server-plugin-response-cache';
-import { GraphQLRequestContext } from 'apollo-server-plugin-base';
+import { GraphQLRequestContext } from 'apollo-server-types';
 
-import { mockDate, unmockDate, advanceTimeBy } from '__mocks__/date';
+import { mockDate, unmockDate, advanceTimeBy } from '../../../__mocks__/date';
 import { EngineReportingOptions } from 'apollo-engine-reporting';
 
 export function createServerInfo<AS extends ApolloServerBase>(
@@ -58,7 +57,7 @@ export function createServerInfo<AS extends ApolloServerBase>(
   httpServer: http.Server,
 ): ServerInfo<AS> {
   const serverInfo: any = {
-    ...(httpServer.address() as net.AddressInfo),
+    ...httpServer.address(),
     server,
     httpServer,
   };
@@ -723,7 +722,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             }
 
             return new Promise(resolve => {
-              this.server && this.server.close(resolve);
+              this.server && this.server.close(() => resolve());
             });
           }
 
@@ -737,11 +736,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             if (!this.server) {
               throw new Error('must listen before getting URL');
             }
-            const {
-              family,
-              address,
-              port,
-            } = this.server.address() as net.AddressInfo;
+            const { family, address, port } = this.server.address();
 
             if (family !== 'IPv4') {
               throw new Error(`The family was unexpectedly ${family}.`);
@@ -1302,7 +1297,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           `;
           const resolvers = {
             Query: {
-              hello: (_parent, _args, context) => {
+              hello: (_parent: any, _args: any, context: any) => {
                 expect(context).toEqual(Promise.resolve(uniqueContext));
                 return 'hi';
               },
@@ -1335,7 +1330,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
           `;
           const resolvers = {
             Query: {
-              hello: (_parent, _args, context) => {
+              hello: (_parent: any, _args: any, context: any) => {
                 expect(context.key).toEqual('major');
                 context.key = 'minor';
                 return spy();
@@ -1389,7 +1384,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             `;
             const resolvers = {
               Query: {
-                hello: (_parent, _args, context) => {
+                hello: (_parent: any, _args: any, context: any) => {
                   expect(context.key).toEqual('major');
                   return spy();
                 },
@@ -1539,9 +1534,13 @@ export function testApolloServer<AS extends ApolloServerBase>(
     describe('subscriptions', () => {
       const SOMETHING_CHANGED_TOPIC = 'something_changed';
       const pubsub = new PubSub();
-      let subscription;
+      let subscription:
+        | {
+            unsubscribe: () => void;
+          }
+        | undefined;
 
-      function createEvent(num) {
+      function createEvent(num: number) {
         return setTimeout(
           () =>
             pubsub.publish(SOMETHING_CHANGED_TOPIC, {
@@ -1963,12 +1962,137 @@ export function testApolloServer<AS extends ApolloServerBase>(
         const latestEndOffset = tracing.execution.resolvers
           .map(resolver => resolver.startOffset + resolver.duration)
           .reduce((currentLatestEndOffset, nextEndOffset) =>
-            Math.min(currentLatestEndOffset, nextEndOffset),
+            Math.max(currentLatestEndOffset, nextEndOffset),
           );
 
         const resolverDuration = latestEndOffset - earliestStartOffset;
 
         expect(resolverDuration).not.toBeGreaterThan(tracing.duration);
+      });
+    });
+
+    describe('Federated tracing', () => {
+      // Enable federated tracing by pretending to be federated.
+      const federationTypeDefs = gql`
+        type _Service {
+          sdl: String
+        }
+      `;
+
+      const baseTypeDefs = gql`
+        type Book {
+          title: String
+          author: String
+        }
+
+        type Movie {
+          title: String
+        }
+
+        type Query {
+          books: [Book]
+          movies: [Movie]
+        }
+      `;
+
+      const allTypeDefs = [federationTypeDefs, baseTypeDefs];
+
+      const resolvers = {
+        Query: {
+          books: () =>
+            new Promise(resolve =>
+              setTimeout(() => resolve([{ title: 'H', author: 'J' }]), 10),
+            ),
+          movies: () =>
+            new Promise(resolve =>
+              setTimeout(() => resolve([{ title: 'H' }]), 12),
+            ),
+        },
+      };
+
+      function createApolloFetchAsIfFromGateway(uri: string): ApolloFetch {
+        return createApolloFetch({ uri }).use(({ options }, next) => {
+          options.headers = { 'apollo-federation-include-trace': 'ftv1' };
+          next();
+        });
+      }
+
+      it("doesn't include federated trace without the special header", async () => {
+        const { url: uri } = await createApolloServer({
+          typeDefs: allTypeDefs,
+          resolvers,
+        });
+
+        const apolloFetch = createApolloFetch({ uri });
+
+        const result = await apolloFetch({
+          query: `{ books { title author } }`,
+        });
+
+        expect(result.extensions).toBeUndefined();
+      });
+
+      it("doesn't include federated trace without _Service in the schema", async () => {
+        const { url: uri } = await createApolloServer({
+          typeDefs: baseTypeDefs,
+          resolvers,
+        });
+
+        const apolloFetch = createApolloFetchAsIfFromGateway(uri);
+
+        const result = await apolloFetch({
+          query: `{ books { title author } }`,
+        });
+
+        expect(result.extensions).toBeUndefined();
+      });
+
+      it('reports a total duration that is longer than the duration of its resolvers', async () => {
+        const { url: uri } = await createApolloServer({
+          typeDefs: allTypeDefs,
+          resolvers,
+        });
+
+        const apolloFetch = createApolloFetchAsIfFromGateway(uri);
+        apolloFetch.use(({ options }, next) => {
+          options.headers = { 'apollo-federation-include-trace': 'ftv1' };
+          next();
+        });
+
+        const result = await apolloFetch({
+          query: `{ books { title author } }`,
+        });
+
+        const ftv1: string = result.extensions.ftv1;
+
+        expect(ftv1).toBeTruthy();
+        const encoded = Buffer.from(ftv1, 'base64');
+        const trace = Trace.decode(encoded);
+
+        let earliestStartOffset = Infinity;
+        let latestEndOffset = -Infinity;
+        function walk(node: Trace.INode) {
+          if (node.startTime !== 0 && node.endTime !== 0) {
+            earliestStartOffset = Math.min(earliestStartOffset, node.startTime);
+            latestEndOffset = Math.max(latestEndOffset, node.endTime);
+          }
+          node.child.forEach(n => walk(n));
+        }
+        walk(trace.root);
+        expect(earliestStartOffset).toBeLessThan(Infinity);
+        expect(latestEndOffset).toBeGreaterThan(-Infinity);
+        const resolverDuration = latestEndOffset - earliestStartOffset;
+        expect(resolverDuration).toBeGreaterThan(0);
+        expect(trace.durationNs).toBeGreaterThanOrEqual(resolverDuration);
+
+        expect(trace.startTime.seconds).toBeLessThanOrEqual(
+          trace.endTime.seconds,
+        );
+        if (trace.startTime.seconds === trace.endTime.seconds) {
+          expect(trace.startTime.nanos).toBeLessThanOrEqual(
+            trace.endTime.nanos,
+          );
+        }
       });
     });
 

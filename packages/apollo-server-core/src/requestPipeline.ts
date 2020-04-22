@@ -34,16 +34,16 @@ import {
   GraphQLRequest,
   GraphQLResponse,
   GraphQLRequestContext,
-  InvalidGraphQLRequestError,
-  ValidationRule,
   GraphQLExecutor,
   GraphQLExecutionResult,
-} from '../dist/requestPipelineAPI';
+  InvalidGraphQLRequestError,
+  ValidationRule,
+  WithRequired,
+} from 'apollo-server-types';
 import {
   ApolloServerPlugin,
   GraphQLRequestListener,
 } from 'apollo-server-plugin-base';
-import { WithRequired } from 'apollo-server-env';
 
 import { Dispatcher } from './utils/dispatcher';
 import {

@@ -1,6 +1,6 @@
 {
   "name": "apollo-server-testing",
-  "version": "2.7.0-alpha.3",
+  "version": "2.7.0",
   "description": "Test utils for apollo-server",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -25,6 +25,9 @@
   },
   "dependencies": {
     "apollo-server-core": "file:../apollo-server-core"
+  },
+  "devDependencies": {
+    "apollo-server-types": "file:../apollo-server-types"
   },
   "peerDependencies": {
     "graphql": "^0.12.0 || ^0.13.0 || ^14.0.0"

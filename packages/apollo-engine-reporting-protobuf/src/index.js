@@ -1,4 +1,11 @@
 const protobuf = require('./protobuf');
+const protobufJS = require('protobufjs/minimal');
+
+// Remove Long support.  Our uint64s tend to be small (less
+// than 104 days).
+// https://github.com/protobufjs/protobuf.js/issues/1253
+protobufJS.util.Long = undefined;
+protobufJS.configure();
 
 // Override the generated protobuf Traces.encode function so that it will look
 // for Traces that are already encoded to Buffer as well as unencoded

@@ -1,4 +1,4 @@
-import { GraphQLRequestContext, GraphQLResponse } from 'apollo-server-core';
+import { GraphQLRequestContext, GraphQLResponse } from 'apollo-server-types';
 import {
   GraphQLSchema,
   graphql,

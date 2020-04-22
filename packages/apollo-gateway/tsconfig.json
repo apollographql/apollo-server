@@ -8,6 +8,7 @@
   "exclude": ["**/__tests__", "**/__mocks__"],
   "references": [
     { "path": "../apollo-server-core" },
+    { "path": "../apollo-server-types" },
     { "path": "../apollo-federation" },
   ]
 }

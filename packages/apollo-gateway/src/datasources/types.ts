@@ -1,4 +1,4 @@
-import { GraphQLResponse, GraphQLRequestContext } from 'apollo-server-core';
+import { GraphQLResponse, GraphQLRequestContext } from 'apollo-server-types';
 
 export interface GraphQLDataSource {
   process<TContext>(

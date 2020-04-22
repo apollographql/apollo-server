@@ -47,7 +47,6 @@ const urlStorageSecretBase: string = urlFromEnvOrDefault(
 );
 
 const fetcher = new CachedFetcher();
-const serviceDefinitionList: ServiceDefinition[] = [];
 
 function getStorageSecretUrl(graphId: string, apiKeyHash: string): string {
   return `${urlStorageSecretBase}/${graphId}/storage-secret/${apiKeyHash}.json`;
@@ -88,7 +87,7 @@ export async function getServiceDefinitionsFromStorage({
   } = await fetchLinkFile(baseUrl);
 
   // If the link file is a cache hit, no further work is needed
-  if (linkFileCacheHit) return [serviceDefinitionList, false];
+  if (linkFileCacheHit) return [[], false];
 
   const parsedLink = JSON.parse(linkFileResult) as LinkFileResult;
 
@@ -97,7 +96,16 @@ export async function getServiceDefinitionsFromStorage({
   );
 
   const parsedConfig = JSON.parse(configFileResult) as ConfigFileResult;
-  return fetchPartialSchemaFiles(parsedConfig.implementingServiceLocations);
+
+  const partialSchemaFiles = await fetchPartialSchemaFiles(
+    parsedConfig.implementingServiceLocations,
+  );
+
+  // explicity return that this is a new schema, as the link file has changed.
+  // we can't use the hit property of the fetchPartialSchemaFiles, as the partial
+  // schema may all be cache hits with the final schema still being new
+  // (for instance if a partial schema is removed or a partial schema is rolled back to a prior version, which is still in cache)
+  return [partialSchemaFiles, true];
 }
 
 async function fetchLinkFile(baseUrl: string) {
@@ -107,8 +115,7 @@ async function fetchLinkFile(baseUrl: string) {
 // The order of implementingServices is IMPORTANT
 async function fetchPartialSchemaFiles(
   implementingServices: ImplementingServiceLocation[],
-): Promise<[ServiceDefinition[], boolean]> {
-  let isDirty = false;
+): Promise<ServiceDefinition[]> {
   const fetchPartialSchemasPromises = implementingServices.map(
     async ({ name, path }) => {
       const serviceLocation = await fetcher.fetch(
@@ -119,21 +126,14 @@ async function fetchPartialSchemaFiles(
         serviceLocation.result,
       ) as ImplementingService;
 
-      const { isCacheHit, result } = await fetcher.fetch(
+      const { result } = await fetcher.fetch(
         `${urlPartialSchemaBase}/${partialSchemaPath}`,
       );
-
-      // Cache miss === dirty service, will need to be recomposed
-      if (!isCacheHit) {
-        isDirty = true;
-      }
 
       return { name, url, typeDefs: parse(result) };
     },
   );
 
   // Respect the order here
-  const services = await Promise.all(fetchPartialSchemasPromises);
-
-  return [services, isDirty];
+  return Promise.all(fetchPartialSchemasPromises);
 }

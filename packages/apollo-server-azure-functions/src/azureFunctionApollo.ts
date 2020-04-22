@@ -4,7 +4,8 @@ import {
   HttpQueryError,
   runHttpQuery,
 } from 'apollo-server-core';
-import { Headers, ValueOrPromise } from 'apollo-server-env';
+import { Headers } from 'apollo-server-env';
+import { ValueOrPromise } from 'apollo-server-types';
 
 export interface AzureFunctionGraphQLOptionsFunction {
   (request: HttpRequest, context: Context): ValueOrPromise<GraphQLOptions>;

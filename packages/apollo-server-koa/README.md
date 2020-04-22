@@ -1,8 +1,3 @@
----
-title: Koa
-description: Setting up Apollo Server with Koa
----
-
 [![npm version](https://badge.fury.io/js/apollo-server-koa.svg)](https://badge.fury.io/js/apollo-server-koa) [![Build Status](https://circleci.com/gh/apollographql/apollo-server.svg?style=svg)](https://circleci.com/gh/apollographql/apollo-server) [![Join the community on Spectrum](https://withspectrum.github.io/badge/badge.svg)](https://spectrum.chat/apollo)
 
 
@@ -36,8 +31,6 @@ const server = new ApolloServer({ typeDefs, resolvers });
 
 const app = new Koa();
 server.applyMiddleware({ app });
-// alternatively you can get a composed middleware from the apollo server
-// app.use(server.getMiddleware());
 
 app.listen({ port: 4000 }, () =>
   console.log(`🚀 Server ready at http://localhost:4000${server.graphqlPath}`),

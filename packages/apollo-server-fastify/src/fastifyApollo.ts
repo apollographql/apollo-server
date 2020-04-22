@@ -5,7 +5,7 @@ import {
 } from 'apollo-server-core';
 import { FastifyReply, FastifyRequest, RequestHandler } from 'fastify';
 import { IncomingMessage, OutgoingMessage } from 'http';
-import { ValueOrPromise } from 'apollo-server-env';
+import { ValueOrPromise } from 'apollo-server-types';
 
 export async function graphqlFastify(
   options: (

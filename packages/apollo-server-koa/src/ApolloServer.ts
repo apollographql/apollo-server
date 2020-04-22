@@ -1,4 +1,4 @@
-import Koa, { Middleware } from 'koa';
+import Koa from 'koa';
 import corsMiddleware from '@koa/cors';
 import bodyParser from 'koa-bodyparser';
 import compose from 'koa-compose';
@@ -8,6 +8,8 @@ import {
 } from '@apollographql/graphql-playground-html';
 import {
   ApolloServerBase,
+  FileUploadOptions,
+  GraphQLOptions,
   formatApolloErrors,
   processFileUploads,
 } from 'apollo-server-core';
@@ -17,18 +19,14 @@ import typeis from 'type-is';
 import { graphqlKoa } from './koaApollo';
 
 export { GraphQLOptions, GraphQLExtension } from 'apollo-server-core';
-import { GraphQLOptions, FileUploadOptions } from 'apollo-server-core';
 
-export interface GetMiddlewareOptions {
+export interface ServerRegistration {
+  app: Koa;
   path?: string;
   cors?: corsMiddleware.Options | boolean;
   bodyParserConfig?: bodyParser.Options | boolean;
   onHealthCheck?: (ctx: Koa.Context) => Promise<any>;
   disableHealthCheck?: boolean;
-}
-
-export interface ServerRegistration extends GetMiddlewareOptions {
-  app: Koa;
 }
 
 const fileUploadMiddleware = (
@@ -83,21 +81,18 @@ export class ApolloServer extends ApolloServerBase {
     return true;
   }
 
-  public applyMiddleware({ app, ...rest }: ServerRegistration) {
-    app.use(this.getMiddleware(rest));
-  }
-
   // TODO: While Koa is Promise-aware, this API hasn't been historically, even
   // though other integration's (e.g. Hapi) implementations of this method
   // are `async`.  Therefore, this should become `async` in a major release in
   // order to align the API with other integrations.
-  public getMiddleware({
+  public applyMiddleware({
+    app,
     path,
     cors,
     bodyParserConfig,
     disableHealthCheck,
     onHealthCheck,
-  }: GetMiddlewareOptions = {}): Middleware {
+  }: ServerRegistration) {
     if (!path) path = '/graphql';
 
     // Despite the fact that this `applyMiddleware` function is `async` in
@@ -113,8 +108,7 @@ export class ApolloServer extends ApolloServerBase {
     // work has finished.  Any errors will be surfaced to Koa through its own
     // native Promise-catching facilities.
     const promiseWillStart = this.willStart();
-    const middlewares = [];
-    middlewares.push(
+    app.use(
       middlewareFromPath(path, async (_ctx: Koa.Context, next: Function) => {
         await promiseWillStart;
         return next();
@@ -122,7 +116,7 @@ export class ApolloServer extends ApolloServerBase {
     );
 
     if (!disableHealthCheck) {
-      middlewares.push(
+      app.use(
         middlewareFromPath(
           '/.well-known/apollo/server-health',
           (ctx: Koa.Context) => {
@@ -154,22 +148,22 @@ export class ApolloServer extends ApolloServerBase {
     this.graphqlPath = path;
 
     if (cors === true) {
-      middlewares.push(middlewareFromPath(path, corsMiddleware()));
+      app.use(middlewareFromPath(path, corsMiddleware()));
     } else if (cors !== false) {
-      middlewares.push(middlewareFromPath(path, corsMiddleware(cors)));
+      app.use(middlewareFromPath(path, corsMiddleware(cors)));
     }
 
     if (bodyParserConfig === true) {
-      middlewares.push(middlewareFromPath(path, bodyParser()));
+      app.use(middlewareFromPath(path, bodyParser()));
     } else if (bodyParserConfig !== false) {
-      middlewares.push(middlewareFromPath(path, bodyParser(bodyParserConfig)));
+      app.use(middlewareFromPath(path, bodyParser(bodyParserConfig)));
     }
 
     if (uploadsMiddleware) {
-      middlewares.push(middlewareFromPath(path, uploadsMiddleware));
+      app.use(middlewareFromPath(path, uploadsMiddleware));
     }
 
-    middlewares.push(
+    app.use(
       middlewareFromPath(path, (ctx: Koa.Context, next: Function) => {
         if (ctx.request.method === 'OPTIONS') {
           ctx.status = 204;
@@ -206,7 +200,6 @@ export class ApolloServer extends ApolloServerBase {
         })(ctx, next);
       }),
     );
-    return compose(middlewares);
   }
 }
 

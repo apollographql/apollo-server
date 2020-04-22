@@ -1,14 +1,16 @@
 import {
-  GraphQLExecutionResult,
-  GraphQLRequestContext,
   GraphQLService,
   SchemaChangeCallback,
   Unsubscriber,
   GraphQLServiceEngineConfig,
 } from 'apollo-server-core';
+import {
+  GraphQLExecutionResult,
+  GraphQLRequestContext,
+  WithRequired,
+} from 'apollo-server-types';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import { isObjectType, isIntrospectionType, GraphQLSchema } from 'graphql';
-import { WithRequired } from 'apollo-env';
 import { GraphQLSchemaValidationError } from 'apollo-graphql';
 import { composeAndValidate, ServiceDefinition } from '@apollo/federation';
 import loglevel, { Logger } from 'loglevel';

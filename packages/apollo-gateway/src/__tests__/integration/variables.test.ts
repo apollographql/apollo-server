@@ -25,6 +25,7 @@ it('passes variables to root fields', async () => {
     },
   );
 
+  expect(errors).toBeUndefined();
   expect(data).toEqual({
     product: {
       name: 'Table',
@@ -34,7 +35,7 @@ it('passes variables to root fields', async () => {
   expect(queryPlan).toCallService('product');
 });
 
-it('supports default variables', async () => {
+it('supports default variables in a variable definition', async () => {
   const query = gql`
     query GetProduct($upc: String = "1") {
       product(upc: $upc) {
@@ -50,6 +51,7 @@ it('supports default variables', async () => {
     },
   );
 
+  expect(errors).toBeUndefined();
   expect(data).toEqual({
     product: {
       name: 'Table',
@@ -71,7 +73,7 @@ it('passes variables to nested services', async () => {
   `;
 
   const format = true;
-  const { data, queryPlan } = await execute(
+  const { data, errors, queryPlan } = await execute(
     [accounts, books, inventory, product, reviews],
     {
       query,
@@ -79,6 +81,7 @@ it('passes variables to nested services', async () => {
     },
   );
 
+  expect(errors).toBeUndefined();
   expect(data).toEqual({
     me: {
       reviews: [
@@ -93,4 +96,35 @@ it('passes variables to nested services', async () => {
 
   expect(queryPlan).toCallService('accounts');
   expect(queryPlan).toCallService('reviews');
+});
+
+it('works with default variables in the schema', async () => {
+  const query = gql`
+    query LibraryUser($libraryId: ID!, $userId: ID) {
+      library(id: $libraryId) {
+        userAccount(id: $userId) {
+          id
+          name
+        }
+      }
+    }
+  `;
+
+  const { data, queryPlan, errors } = await execute(
+    [accounts, books, inventory, product, reviews],
+    { query, variables: { libraryId: '1' } },
+  );
+
+  expect(data).toEqual({
+    library: {
+      userAccount: {
+        id: '1',
+        name: 'Ada Lovelace',
+      },
+    },
+  });
+
+  expect(errors).toBeUndefined();
+  expect(queryPlan).toCallService('books');
+  expect(queryPlan).toCallService('accounts');
 });

@@ -8,7 +8,7 @@ import url from 'url';
 import { IncomingMessage, ServerResponse } from 'http';
 
 import { MicroRequest } from './types';
-import { ValueOrPromise } from 'apollo-server-env';
+import { ValueOrPromise } from 'apollo-server-types';
 
 // Allowed Micro Apollo Server options.
 export interface MicroGraphQLOptionsFunction {

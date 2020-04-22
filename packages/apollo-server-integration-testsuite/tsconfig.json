@@ -5,11 +5,12 @@
     "outDir": "./dist",
     "noImplicitAny": false,
     "strictNullChecks": false,
-    "types": ["node", "jest", "apollo-server-env/dist/global"]
+    "types": ["node", "jest"]
   },
   "include": ["src/**/*"],
   "exclude": ["**/__tests__", "**/__mocks__"],
   "references": [
-    { "path": "../apollo-server-core" }
+    { "path": "../apollo-server-core" },
+    { "path": "../apollo-server-types" },
   ]
 }
