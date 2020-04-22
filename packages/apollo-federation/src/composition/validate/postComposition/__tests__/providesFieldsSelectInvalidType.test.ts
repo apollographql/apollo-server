@@ -33,10 +33,14 @@ describe('providesFieldsSelectInvalidType', () => {
       name: 'serviceB',
     };
 
-    const { schema, errors } = composeServices([serviceA, serviceB]);
+    const serviceList = [serviceA, serviceB];
+    const { schema, errors } = composeServices(serviceList);
     expect(errors).toHaveLength(0);
 
-    const warnings = validateprovidesFieldsSelectInvalidType(schema);
+    const warnings = validateprovidesFieldsSelectInvalidType({
+      schema,
+      serviceList,
+    });
     expect(warnings).toHaveLength(0);
   });
 
@@ -74,10 +78,14 @@ describe('providesFieldsSelectInvalidType', () => {
       name: 'serviceB',
     };
 
-    const { schema, errors } = composeServices([serviceA, serviceB]);
+    const serviceList = [serviceA, serviceB];
+    const { schema, errors } = composeServices(serviceList);
     expect(errors).toHaveLength(0);
 
-    const warnings = validateprovidesFieldsSelectInvalidType(schema);
+    const warnings = validateprovidesFieldsSelectInvalidType({
+      schema,
+      serviceList,
+    });
     expect(warnings).toMatchInlineSnapshot(`
       Array [
         Object {
@@ -122,10 +130,14 @@ describe('providesFieldsSelectInvalidType', () => {
       name: 'serviceB',
     };
 
-    const { schema, errors } = composeServices([serviceA, serviceB]);
+    const serviceList = [serviceA, serviceB];
+    const { schema, errors } = composeServices(serviceList);
     expect(errors).toHaveLength(0);
 
-    const warnings = validateprovidesFieldsSelectInvalidType(schema);
+    const warnings = validateprovidesFieldsSelectInvalidType({
+      schema,
+      serviceList,
+    });
     expect(warnings).toMatchInlineSnapshot(`
       Array [
         Object {
@@ -182,10 +194,14 @@ describe('providesFieldsSelectInvalidType', () => {
       name: 'serviceB',
     };
 
-    const { schema, errors } = composeServices([serviceA, serviceB]);
+    const serviceList = [serviceA, serviceB];
+    const { schema, errors } = composeServices(serviceList);
     expect(errors).toHaveLength(0);
 
-    const warnings = validateprovidesFieldsSelectInvalidType(schema);
+    const warnings = validateprovidesFieldsSelectInvalidType({
+      schema,
+      serviceList,
+    });
     expect(warnings).toMatchInlineSnapshot(`
       Array [
         Object {

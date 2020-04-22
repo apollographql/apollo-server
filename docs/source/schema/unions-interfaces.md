@@ -61,7 +61,7 @@ server.listen().then(({ url }) => {
 });
 ```
 
-A possible query for these result could appear as follows. This query demonstrates the need for the `__resolveType`, since it requests different data depending on the types,
+A possible query for these results could appear as follows. This query demonstrates the need for the `__resolveType`, since it requests different data depending on the types,
 
 ```graphql
 {

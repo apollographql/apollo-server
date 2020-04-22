@@ -21,6 +21,7 @@ export interface CreateHandlerOptions {
     credentials?: boolean;
     maxAge?: number;
   };
+  onHealthCheck?: (req: APIGatewayProxyEvent) => Promise<any>;
 }
 
 export class ApolloServer extends ApolloServerBase {
@@ -47,7 +48,7 @@ export class ApolloServer extends ApolloServerBase {
     return super.graphQLServerOptions({ event, context });
   }
 
-  public createHandler({ cors }: CreateHandlerOptions = { cors: undefined }) {
+  public createHandler({ cors, onHealthCheck }: CreateHandlerOptions = { cors: undefined, onHealthCheck: undefined }) {
     // We will kick off the `willStart` event once for the server, and then
     // await it before processing any requests by incorporating its `await` into
     // the GraphQLServerOptions function which is called before each request.
@@ -157,6 +158,35 @@ export class ApolloServer extends ApolloServerBase {
             ...requestCorsHeadersObject,
           },
         });
+      }
+
+      if (event.path === '/.well-known/apollo/server-health') {
+        const successfulResponse = {
+          body: JSON.stringify({ status: 'pass' }),
+          statusCode: 200,
+          headers: {
+            'Content-Type': 'application/json',
+            ...requestCorsHeadersObject,
+          },
+        };
+        if (onHealthCheck) {
+          onHealthCheck(event)
+            .then(() => {
+              return callback(null, successfulResponse);
+            })
+            .catch(() => {
+              return callback(null, {
+                body: JSON.stringify({ status: 'fail' }),
+                statusCode: 503,
+                headers: {
+                  'Content-Type': 'application/json',
+                  ...requestCorsHeadersObject,
+                },
+              });
+            });
+          } else {
+            return callback(null, successfulResponse);
+          }
       }
 
       if (this.playgroundOptions && event.httpMethod === 'GET') {

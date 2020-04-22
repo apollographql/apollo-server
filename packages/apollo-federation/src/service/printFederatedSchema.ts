@@ -36,7 +36,6 @@ import {
   print,
   specifiedDirectives,
 } from 'graphql';
-
 import federationDirectives, { gatherDirectives } from '../directives';
 import { isFederationType } from '../types';
 
@@ -343,7 +342,7 @@ function printDescription(
     | GraphQLUnionType,
   indentation: string = '',
 ): string {
-  if (!def.description) {
+  if (def.description == null) {
     return '';
   }
 

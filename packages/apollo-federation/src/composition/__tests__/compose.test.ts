@@ -1,4 +1,8 @@
-import { GraphQLObjectType, isSpecifiedDirective } from 'graphql';
+import {
+  GraphQLObjectType,
+  isSpecifiedDirective,
+  GraphQLDirective,
+} from 'graphql';
 import gql from 'graphql-tag';
 import { composeServices } from '../compose';
 import {
@@ -1310,6 +1314,47 @@ describe('composeServices', () => {
           }
         `);
       });
+    });
+  });
+  describe('executable directives', () => {
+    it('keeps executable directives in the schema', () => {
+      const serviceA = {
+        typeDefs: gql`
+          directive @defer on  FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT
+        `,
+        name: 'serviceA',
+      };
+
+      const { schema, errors } = composeServices([serviceA]);
+
+      expect(errors).toHaveLength(0);
+
+      const defer = schema.getDirective('defer') as GraphQLDirective;
+      expect(defer).toMatchInlineSnapshot(`"@defer"`);
+    });
+    it('keeps executable directives in the schema', () => {
+      const serviceA = {
+        typeDefs: gql`
+          directive @defer on  FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT
+        `,
+        name: 'serviceA',
+      };
+      const serviceB = {
+        typeDefs: gql`
+          directive @stream on  FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT
+        `,
+        name: 'serviceB',
+      };
+
+      const { schema, errors } = composeServices([serviceA, serviceB]);
+
+      expect(errors).toHaveLength(0);
+
+      const defer = schema.getDirective('defer') as GraphQLDirective;
+      expect(defer).toMatchInlineSnapshot(`"@defer"`);
+
+      const stream = schema.getDirective('stream') as GraphQLDirective;
+      expect(stream).toMatchInlineSnapshot(`"@stream"`);
     });
   });
 });

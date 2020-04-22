@@ -26,8 +26,12 @@ describe('requiresFieldsMissingOnBase', () => {
       name: 'serviceB',
     };
 
-    const { schema, errors } = composeServices([serviceA, serviceB]);
-    const warnings = validateRequiresFieldsMissingOnBase(schema);
+    const serviceList = [serviceA, serviceB];
+    const { schema } = composeServices(serviceList);
+    const warnings = validateRequiresFieldsMissingOnBase({
+      schema,
+      serviceList,
+    });
     expect(warnings).toEqual([]);
   });
 
@@ -57,8 +61,12 @@ describe('requiresFieldsMissingOnBase', () => {
       `,
       name: 'serviceC',
     };
-    const { schema, errors } = composeServices([serviceA, serviceB, serviceC]);
-    const warnings = validateRequiresFieldsMissingOnBase(schema);
+    const serviceList = [serviceA, serviceB, serviceC];
+    const { schema } = composeServices(serviceList);
+    const warnings = validateRequiresFieldsMissingOnBase({
+      schema,
+      serviceList,
+    });
     expect(warnings).toMatchInlineSnapshot(`
       Array [
         Object {

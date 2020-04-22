@@ -33,12 +33,21 @@
       "allowedVersions": "<3"
     },
     {
+      "packageNames": ["log4js"],
+      "allowedVersions": "<5"
+    },
+    {
       "packageNames": ["hapi", "@types/hapi"],
       "allowedVersions": "<18"
     },
     {
       "packageNames": ["ws"],
       "allowedVersions": "<7"
+    },
+    // Remove when we're no longer supporting Node.js v6
+    {
+      "packageNames": ["nock"],
+      "allowedVersions": "<11"
     },
     /*
       Docs-related Renovate rules

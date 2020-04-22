@@ -9,7 +9,7 @@ Apollo Server integrates seamlessly with Apollo Graph Manager to help you monito
 
 ## Sending metrics to Apollo Graph Manager
 
-[Apollo Graph Manager](https://www.apollographql.com/docs/platform/graph-manager-overview/) provides an integrated hub for all of your GraphQL performance data. It [aggregates and displays information](https://www.apollographql.com/docs/platform/performance/) for your schema, queries, requests, and errors. You can also configure alerts that support [Slack and Datadog integrations](https://www.apollographql.com/docs/platform/integrations/).
+[Apollo Graph Manager](https://www.apollographql.com/docs/platform/graph-manager-overview/) provides an integrated hub for all of your GraphQL performance data. It [aggregates and displays information](https://www.apollographql.com/docs/platform/performance/) for your schema, queries, requests, and errors. You can also configure alerts that support [Slack](https://www.apollographql.com/docs/graph-manager/slack-integration/) and [Datadog](https://www.apollographql.com/docs/graph-manager/datadog-integration/) integrations.
 
 ### Connecting to Graph Manager
 
@@ -139,35 +139,43 @@ Specifying this function overrides the [`defaultGenerateClientInfo` function](ht
 
 ## Logging
 
-Apollo Server provides two ways to log a server: per input, response, and errors or periodically throughout a request's lifecycle. Treating the GraphQL execution as a black box by logging the inputs and outputs of the system allows developers to diagnose issues quickly without being mired by lower level logs. Once a problem has been found at a high level, the lower level logs enable accurate tracing of how a request was handled.
+You can set up fine-grained operation logging in Apollo Server by defining a custom **plugin**. Apollo Server plugins enable you to perform actions in response to individual phases of the GraphQL request lifecycle, such as whenever a GraphQL request is received from a client.
 
-### High-level logging
+The example below defines a plugin that responds to three different operation events. As it shows, you provide an array of your defined `plugins` to the `ApolloServer` constructor.
 
-Apollo Server allows `formatError` and `formatResponse` configuration options which can be defined as callback-functions which receive `error` or `response` arguments respectively.
-
-For the sake of simplicity, these examples use `console.log` to output error and debugging information though a more complete example might utilize existing logging or error-reporting facilities.
+For a list of available lifecycle events and their descriptions, see [Plugins](../integrations/plugins/).
 
 ```js
+const myPlugin = {
+
+  // Fires whenever a GraphQL request is received from a client.
+  requestDidStart(requestContext) {
+    console.log('Request started! Query:\n' +
+      requestContext.request.query);
+
+    return {
+
+      // Fires whenever Apollo Server will parse a GraphQL
+      // request to create its associated document AST.
+      parsingDidStart(requestContext) {
+        console.log('Parsing started!');
+      }
+
+      // Fires whenever Apollo Server will validate a
+      // request's document AST against your GraphQL schema.
+      validationDidStart(requestContext) {
+        console.log('Validation started!');
+      }
+
+    }
+  },
+};
+
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  formatError: error => {
-    console.log(error);
-    return error;
-  },
-  formatResponse: response => {
-    console.log(response);
-    return response;
-  },
-});
-
-server.listen().then(({ url }) => {
-  console.log(`🚀  Server ready at ${url}`);
+  plugins: [
+    myPlugin
+  ]
 });
 ```
-
-### Granular logs
-
-For more advanced cases, Apollo Server provides an experimental API that accepts an array of plugins to its `plugins` field. Plugins receive a variety of lifecycle calls for each phase of a GraphQL request, include transport specific properties (e.g. headers), and can keep state, making them great for more specific logging needs.
-
-For more details, see the [article on integrating with plugins](https://deploy-preview-2008--apollo-server-docs.netlify.com/docs/apollo-server/integrations/plugins/#responding-to-events) and check the full API from [the `apollo-server-plugin-base` package](https://github.com/apollographql/apollo-server/blob/7cca442ee39536182b4415fd5eba879d210fa5f9/packages/apollo-server-plugin-base/src/index.ts#L18-L73).

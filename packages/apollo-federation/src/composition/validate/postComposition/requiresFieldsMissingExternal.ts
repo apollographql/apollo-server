@@ -1,11 +1,13 @@
-import { GraphQLSchema, isObjectType, FieldNode, GraphQLError } from 'graphql';
-
+import { isObjectType, FieldNode, GraphQLError } from 'graphql';
 import { logServiceAndType, errorWithCode } from '../../utils';
+import { PostCompositionValidator } from '.';
 
 /**
  *  for every @requires, there should be a matching @external
  */
-export const requiresFieldsMissingExternal = (schema: GraphQLSchema) => {
+export const requiresFieldsMissingExternal: PostCompositionValidator = ({
+  schema,
+}) => {
   const errors: GraphQLError[] = [];
 
   const types = schema.getTypeMap();
