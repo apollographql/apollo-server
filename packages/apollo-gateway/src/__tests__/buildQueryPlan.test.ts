@@ -25,7 +25,7 @@ describe('buildQueryPlan', () => {
 
   beforeEach(() => {
     const serviceMap = Object.fromEntries(
-      ['accounts', 'product', 'inventory', 'reviews', 'books'].map(
+      ['accounts', 'product', 'inventory', 'reviews', 'books', 'documents'].map(
         serviceName => {
           return [
             serviceName,
@@ -52,6 +52,53 @@ describe('buildQueryPlan', () => {
     if (errors && errors.length > 0) {
       throw new GraphQLSchemaValidationError(errors);
     }
+  });
+
+  it(`should not confuse union types with overlapping field names`, () => {
+    const query = gql`
+      query {
+        body {
+          ...on Image {
+            attributes {
+              url
+            }
+          }
+          ...on Text {
+            attributes {
+              bold
+              text
+            }
+          }
+        }
+      }
+    `;
+
+    const queryPlan = buildQueryPlan(
+      buildOperationContext(schema, query, undefined),
+    );
+
+    expect(queryPlan).toMatchInlineSnapshot(`
+      QueryPlan {
+        Fetch(service: "documents") {
+          {
+            body {
+              __typename
+              ... on Image {
+                attributes {
+                  url
+                }
+              }
+              ... on Text {
+                attributes {
+                  bold
+                  text
+                }
+              }
+            }
+          }
+        },
+      }
+    `);
   });
 
   it(`should use a single fetch when requesting a root field from one service`, () => {
@@ -856,25 +903,336 @@ describe('buildQueryPlan', () => {
     const queryPlan = buildQueryPlan(buildOperationContext(schema, query));
 
     expect(queryPlan).toMatchInlineSnapshot(`
-    QueryPlan {
-      Fetch(service: "product") {
-        {
-          product(upc: "") {
-            __typename
-            ... on Book {
-              details {
-                country
+      QueryPlan {
+        Fetch(service: "product") {
+          {
+            product(upc: "") {
+              __typename
+              ... on Book {
+                details {
+                  country
+                }
+              }
+              ... on Furniture {
+                details {
+                  country
+                }
               }
             }
-            ... on Furniture {
+          }
+        },
+      }
+    `);
+  });
+
+  describe(`experimental compression to downstream services`, () => {
+    it(`should generate fragments internally to downstream requests`, () => {
+      const query = gql`
+        query {
+          topReviews {
+            body
+            author
+            product {
+              name
+              price
               details {
                 country
               }
             }
           }
         }
-      },
-    }
-    `);
+      `;
+
+      const queryPlan = buildQueryPlan(
+        buildOperationContext(schema, query, undefined),
+        { autoFragmentization: true },
+      );
+
+      expect(queryPlan).toMatchInlineSnapshot(`
+        QueryPlan {
+          Sequence {
+            Fetch(service: "reviews") {
+              {
+                topReviews {
+                  ...__QueryPlanFragment_1__
+                }
+              }
+              fragment __QueryPlanFragment_1__ on Review {
+                body
+                author
+                product {
+                  ...__QueryPlanFragment_0__
+                }
+              }
+              fragment __QueryPlanFragment_0__ on Product {
+                __typename
+                ... on Book {
+                  __typename
+                  isbn
+                }
+                ... on Furniture {
+                  __typename
+                  upc
+                }
+              }
+            },
+            Parallel {
+              Sequence {
+                Flatten(path: "topReviews.@.product") {
+                  Fetch(service: "books") {
+                    {
+                      ... on Book {
+                        __typename
+                        isbn
+                      }
+                    } =>
+                    {
+                      ... on Book {
+                        __typename
+                        isbn
+                        title
+                        year
+                      }
+                    }
+                  },
+                },
+                Flatten(path: "topReviews.@.product") {
+                  Fetch(service: "product") {
+                    {
+                      ... on Book {
+                        __typename
+                        isbn
+                        title
+                        year
+                      }
+                    } =>
+                    {
+                      ... on Book {
+                        name
+                      }
+                    }
+                  },
+                },
+              },
+              Flatten(path: "topReviews.@.product") {
+                Fetch(service: "product") {
+                  {
+                    ... on Furniture {
+                      __typename
+                      upc
+                    }
+                    ... on Book {
+                      __typename
+                      isbn
+                    }
+                  } =>
+                  {
+                    ... on Furniture {
+                      name
+                      price
+                      details {
+                        country
+                      }
+                    }
+                    ... on Book {
+                      price
+                      details {
+                        country
+                      }
+                    }
+                  }
+                },
+              },
+            },
+          },
+        }
+      `);
+    });
+
+    it(`shouldn't generate fragments for selection sets of length 2 or less`, () => {
+      const query = gql`
+        query {
+          topReviews {
+            body
+            author
+          }
+        }
+      `;
+
+      const queryPlan = buildQueryPlan(
+        buildOperationContext(schema, query, undefined),
+        { autoFragmentization: true },
+      );
+
+      expect(queryPlan).toMatchInlineSnapshot(`
+        QueryPlan {
+          Fetch(service: "reviews") {
+            {
+              topReviews {
+                body
+                author
+              }
+            }
+          },
+        }
+      `);
+    });
+
+    it(`should generate fragments for selection sets of length 3 or greater`, () => {
+      const query = gql`
+        query {
+          topReviews {
+            id
+            body
+            author
+          }
+        }
+      `;
+
+      const queryPlan = buildQueryPlan(
+        buildOperationContext(schema, query, undefined),
+        { autoFragmentization: true },
+      );
+
+      expect(queryPlan).toMatchInlineSnapshot(`
+        QueryPlan {
+          Fetch(service: "reviews") {
+            {
+              topReviews {
+                ...__QueryPlanFragment_0__
+              }
+            }
+            fragment __QueryPlanFragment_0__ on Review {
+              id
+              body
+              author
+            }
+          },
+        }
+      `);
+    });
+
+    it(`should generate fragments correctly when aliases are used`, () => {
+      const query = gql`
+        query {
+          reviews: topReviews {
+            content: body
+            author
+            product {
+              name
+              cost: price
+              details {
+                origin: country
+              }
+            }
+          }
+        }
+      `;
+
+      const queryPlan = buildQueryPlan(
+        buildOperationContext(schema, query, undefined),
+        { autoFragmentization: true },
+      );
+
+      expect(queryPlan).toMatchInlineSnapshot(`
+        QueryPlan {
+          Sequence {
+            Fetch(service: "reviews") {
+              {
+                reviews: topReviews {
+                  ...__QueryPlanFragment_1__
+                }
+              }
+              fragment __QueryPlanFragment_1__ on Review {
+                content: body
+                author
+                product {
+                  ...__QueryPlanFragment_0__
+                }
+              }
+              fragment __QueryPlanFragment_0__ on Product {
+                __typename
+                ... on Book {
+                  __typename
+                  isbn
+                }
+                ... on Furniture {
+                  __typename
+                  upc
+                }
+              }
+            },
+            Parallel {
+              Sequence {
+                Flatten(path: "reviews.@.product") {
+                  Fetch(service: "books") {
+                    {
+                      ... on Book {
+                        __typename
+                        isbn
+                      }
+                    } =>
+                    {
+                      ... on Book {
+                        __typename
+                        isbn
+                        title
+                        year
+                      }
+                    }
+                  },
+                },
+                Flatten(path: "reviews.@.product") {
+                  Fetch(service: "product") {
+                    {
+                      ... on Book {
+                        __typename
+                        isbn
+                        title
+                        year
+                      }
+                    } =>
+                    {
+                      ... on Book {
+                        name
+                      }
+                    }
+                  },
+                },
+              },
+              Flatten(path: "reviews.@.product") {
+                Fetch(service: "product") {
+                  {
+                    ... on Furniture {
+                      __typename
+                      upc
+                    }
+                    ... on Book {
+                      __typename
+                      isbn
+                    }
+                  } =>
+                  {
+                    ... on Furniture {
+                      name
+                      cost: price
+                      details {
+                        origin: country
+                      }
+                    }
+                    ... on Book {
+                      cost: price
+                      details {
+                        origin: country
+                      }
+                    }
+                  }
+                },
+              },
+            },
+          },
+        }
+      `);
+    });
   });
 });

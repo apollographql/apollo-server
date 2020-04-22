@@ -10,7 +10,7 @@ import {
   GraphQLError,
   GraphQLNonNull,
   GraphQLScalarType,
-  introspectionQuery,
+  getIntrospectionQuery,
   BREAK,
   DocumentNode,
   getOperationAST,
@@ -433,7 +433,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
             cacheControl: {
               defaultMaxAge: 5,
               stripFormattedExtensions: false,
-              calculateCacheControlHeaders: false,
+              calculateHttpHeaders: false,
             },
           },
         });
@@ -620,7 +620,7 @@ export default (createApp: CreateAppFunc, destroyApp?: DestroyAppFunc) => {
         app = await createApp();
         const req = request(app)
           .post('/graphql')
-          .send({ query: introspectionQuery });
+          .send({ query: getIntrospectionQuery() });
         return req.then(res => {
           expect(res.status).toEqual(200);
           expect(res.body.data.__schema.types[0].fields[0].name).toEqual(

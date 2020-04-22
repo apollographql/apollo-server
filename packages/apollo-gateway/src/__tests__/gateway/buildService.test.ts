@@ -4,7 +4,7 @@ import { createTestClient } from 'apollo-server-testing';
 import { ApolloServerBase as ApolloServer } from 'apollo-server-core';
 
 import { RemoteGraphQLDataSource } from '../../datasources/RemoteGraphQLDataSource';
-import { ApolloGateway } from '../../';
+import { ApolloGateway, SERVICE_DEFINITION_QUERY } from '../../';
 
 import * as accounts from '../__fixtures__/schemas/accounts';
 import * as books from '../__fixtures__/schemas/books';
@@ -85,11 +85,7 @@ it('correctly passes the context from ApolloServer to datasources', async () => 
   expect(fetch).toHaveFetched({
     url: 'https://api.example.com/foo',
     body: {
-      query: `{
-  me {
-    username
-  }
-}`,
+      query: `{me{username}}`,
       variables: {},
     },
     headers: {
@@ -137,7 +133,7 @@ it('makes enhanced introspection request using datasource', async () => {
   expect(fetch).toHaveFetched({
     url: 'https://api.example.com/override',
     body: {
-      query: `query GetServiceDefinition { _service { sdl } }`,
+      query: SERVICE_DEFINITION_QUERY,
     },
     headers: {
       'custom-header': 'some-custom-value',
@@ -183,7 +179,7 @@ it('customizes request on a per-service basis', async () => {
   expect(fetch).toHaveFetched({
     url: 'https://api.example.com/one',
     body: {
-      query: `query GetServiceDefinition { _service { sdl } }`,
+      query: `query __ApolloGetServiceDefinition__ { _service { sdl } }`,
     },
     headers: {
       'service-name': 'one',
@@ -193,7 +189,7 @@ it('customizes request on a per-service basis', async () => {
   expect(fetch).toHaveFetched({
     url: 'https://api.example.com/two',
     body: {
-      query: `query GetServiceDefinition { _service { sdl } }`,
+      query: `query __ApolloGetServiceDefinition__ { _service { sdl } }`,
     },
     headers: {
       'service-name': 'two',
@@ -203,7 +199,7 @@ it('customizes request on a per-service basis', async () => {
   expect(fetch).toHaveFetched({
     url: 'https://api.example.com/three',
     body: {
-      query: `query GetServiceDefinition { _service { sdl } }`,
+      query: `query __ApolloGetServiceDefinition__ { _service { sdl } }`,
     },
     headers: {
       'service-name': 'three',
