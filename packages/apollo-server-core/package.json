@@ -27,7 +27,7 @@
     "@apollographql/apollo-tools": "^0.4.3",
     "@apollographql/graphql-playground-html": "1.6.24",
     "@types/graphql-upload": "^8.0.0",
-    "@types/ws": "^6.0.0",
+    "@types/ws": "^7.0.0",
     "apollo-cache-control": "file:../apollo-cache-control",
     "apollo-datasource": "file:../apollo-datasource",
     "apollo-engine-reporting": "file:../apollo-engine-reporting",
